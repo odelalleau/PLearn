@@ -4,22 +4,26 @@ GenerateDecisionPlot(
     dxfilename = "dxplot.dx"  ;
 
     # VMat: Dataset to train the learner on, and to include in the generated file
-    dataset = AutoVMatrix(specification = "data/circles.amat") ;
+    dataset = AutoVMatrix(specification = "data/circles.amat", inputsize = 2, targetsize = 1)
     
     # int: Number of x sample coordinates (grid)
-    nx = 10  ;
+    nx = 100  ;
 
     # int: Number of y sample coordinates (grid)
-    ny = 10  ;
+    ny = 100 ;
 
     # string: (Optionally) save trained learner in this file (.psave)
     save_learner_as = "dxplot.psave"  ;
     
     # PP< PLearner >: The learner to train/test
     learner = NNet( 
-    # int:     number of hidden units in first hidden layer (0 means no hidden layer)
-    nhidden = 2;
 
+    # int:     number of hidden units in first hidden layer (0 means no hidden layer)
+    nhidden = 10;
+
+    # int: dimensionality of the output vectors produced by this learner
+    noutputs = 2;
+    
     # double:     global weight decay for all layers
     weight_decay = 0  ;
 
@@ -48,22 +52,13 @@ GenerateDecisionPlot(
     decrease_constant = 0  ;
     )
 
-    # int: dimensionality of input vector (should be same as in trainset)
-    inputsize = 2;
-
-    # int: dimensionality of target (should be same as in trainset)
-    targetsize = 1;
-    
-    # int: dimensionality of the output vectors produced by this learner
-    outputsize = 2;
-    
     # long: The initial seed for the random number generator used to initialize this learner's parameters
     # as typically done in the forget() method... 
     # With a given seed, forget() should always initialize the parameters to the same values.
     seed = 0  ;
 
     # int: Stage until which train() should train this learner and return.
-    nstages = 100 ;
+    nstages = 10000 ;
 
     verbosity = 2;
     );

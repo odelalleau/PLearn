@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.6 2003/05/26 04:12:43 plearner Exp $
+   * $Id: PLearner.cc,v 1.7 2003/06/03 14:52:10 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -55,9 +55,7 @@ namespace PLearn <%
 using namespace std;
 
 PLearner::PLearner()
-  :inputsize_(0), 
-   targetsize_(0), 
-   outputsize_(0), 
+  :
    seed(0), 
    stage(0), nstages(1),
    report_progress(true),
@@ -74,25 +72,36 @@ void PLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 string PLearner::help()
 {
-  return "The base class for learning algorithms, which should be the main 'products' of PLearn.\n"
-    "Data-sets are seen as matrices whose columns or fields are layed out as \n"
-    "follows: a number of input fields, followed by (optional) target fields, \n"
-    "followed by (optional) weight fields (to weigh each example).\n";
+  return "The base class for learning algorithms, which should be the main 'products' of PLearn.\n";
 }
 
 void PLearner::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "inputsize", &PLearner::inputsize_, OptionBase::buildoption, 
-                "dimensionality of input vector (should be same as in trainset)\n");
+  declareOption(ol, "expdir", &PLearner::expdir, OptionBase::buildoption, 
+                "Path of the directory associated with this learner, in which\n"
+                "it should save any file it wishes to create. \n"
+                "The directory will be created if it does not already exist.\n"
+                "If expdir is the empty string (the default), then the learner \n"
+                "should not create *any* file. Note that, anyway, most file creation and \n"
+                "reporting are handled at the level of the PTester class rather than \n"
+                "at the learner's. \n");
 
-  declareOption(ol, "targetsize", &PLearner::targetsize_, OptionBase::buildoption, 
-                "dimensionality of target (should be same as in trainset)\n");
+  declareOption(ol, "train_set", &PLearner::train_set, OptionBase::buildoption,
+                "The dataset this learner is trained on. \n"
+                "You don't have to set this option, if your learner \n"
+                "is embedded in an Experiment or similar class, \n"
+                "as the Experiment will set the train_set it wants to use.\n"
+                "Data-sets are seen as matrices whose columns or fields are layed out as \n"
+                "follows: a number of input fields, followed by (optional) target fields, \n"
+                "followed by a (optional) weight field (to weigh each example).\n"
+                "The sizes of those areas are given by the VMatrix options \n"
+                "inputsize targetsize, and weightsize, which are typically used by the \n"
+                "learner upon building\n");
 
-  declareOption(ol, "weightsize", &PLearner::weightsize_, OptionBase::buildoption, 
-                "Should be the same as in trainset: dimensionality of weights (0 unweighted, 1 weighted) \n");
-
-  declareOption(ol, "outputsize", &PLearner::outputsize_, OptionBase::buildoption, 
-                "dimensionality of the output vectors produced by this learner\n");
+  declareOption(ol, "train_stats", &PLearner::train_stats, OptionBase::buildoption,
+                "The stats_collector responsible for collecting train cost statistics during training. \n"
+                "You don't have to provide this manually. It is typically set by some external \n"
+                "training harness that wants to collect some stats. \n");
 
   declareOption(ol, "seed", &PLearner::seed, OptionBase::buildoption, 
                 "The initial seed for the random number generator used to initialize this learner's parameters\n"
@@ -100,16 +109,28 @@ void PLearner::declareOptions(OptionList& ol)
                 "With a given seed, forget() should always initialize the parameters to the same values.");
 
   declareOption(ol, "stage", &PLearner::stage, OptionBase::learntoption, 
-                "The current training stage: 0 means untrained, n often means after n epochs or optimization steps, etc...\n"
-                "The true meaning is learner-dependant.");
+                "The current training stage, since last fresh initialization (forget()): \n"
+                "0 means untrained, n often means after n epochs or optimization steps, etc...\n"
+                "The true meaning is learner-dependant."
+                "You should never modify this option directly!"
+                "It is the role of forget() to bring it back to 0,\n"
+                "and the role of train() to bring it up to 'nstages'...");
 
   declareOption(ol, "nstages", &PLearner::nstages, OptionBase::buildoption, 
-                "Stage until which train() should train this learner and return.\n");
+                "The stage until which train() should train this learner and return.\n"
+                "The meaning of 'stage' is learner-dependent, but learner's whose \n"
+                "training is incremental (such as involving incremental optimization), \n"
+                "it is typically synonym with the number of 'epochs', i.e. the number \n"
+                "of passages of the optimization process through the whole training set, \n"
+                "since the last fresh initialisation.");
 
   declareOption(ol, "report_progress", &PLearner::report_progress, OptionBase::buildoption, 
                 "should progress in learning and testing be reported in a ProgressBar.\n");
+
   declareOption(ol, "verbosity", &PLearner::verbosity, OptionBase::buildoption, 
-                "Level of verbosity. If 0 should not write anything on cerr. If >0 may write some info on the steps performed\n");
+                "Level of verbosity. If 0 should not write anything on cerr. \n"
+                "If >0 may write some info on the steps performed along the way.\n"
+                "The level of details written should depend on this value.");
 
   inherited::declareOptions(ol);
 }
@@ -127,8 +148,36 @@ void PLearner::setExperimentDirectory(const string& the_expdir)
     }
 }
 
+void PLearner::setTrainingSet(VMat training_set)
+{ 
+  train_set = training_set; 
+  build(); forget();
+}
+
+//! Returns train_set->inputsize()
+int PLearner::inputsize() const
+{ 
+  if(!train_set) 
+    PLERROR("Must specify a training set before calling PLearner::inputsize()"); 
+  return train_set->inputsize(); 
+}
+
+//! Returns train_set->targetsize()
+int PLearner::targetsize() const 
+{ 
+  if(!train_set) 
+    PLERROR("Must specify a training set before calling PLearner::targetsize()"); 
+  return train_set->targetsize(); 
+}
+
 void PLearner::build_()
 {
+  if(expdir!="")
+    {
+      if(!force_mkdir(expdir))
+        PLERROR("In PLearner Could not create experiment directory %s",expdir.c_str());
+      expdir = abspath(expdir);
+    }
 }
 
 void PLearner::build()
@@ -137,14 +186,15 @@ void PLearner::build()
   build_();
 }
 
-void PLearner::forget()
-{
-  stage = 0;
-}
-
 PLearner::~PLearner()
 {
 }
+
+int PLearner::nTestCosts() const 
+{ return getTestCostNames().size(); }
+
+int PLearner::nTrainCosts() const 
+{ return getTrainCostNames().size(); }
 
 int PLearner::getTestCostIndex(const string& costname) const
 {
@@ -165,22 +215,39 @@ int PLearner::getTrainCostIndex(const string& costname) const
 }
                                 
 void PLearner::computeOutputAndCosts(const Vec& input, const Vec& target, 
-                                     Vec& output, Vec& costs)
+                                     Vec& output, Vec& costs) const
 {
   computeOutput(input, output);
   computeCostsFromOutputs(input, output, target, costs);
 }
 
 void PLearner::computeCostsOnly(const Vec& input, const Vec& target,  
-                                Vec& costs)
+                                Vec& costs) const
 {
   static Vec tmp_output;
   tmp_output.resize(outputsize());
   computeOutputAndCosts(input, target, tmp_output, costs);
 }
 
-void PLearner::test(VMat testset, VecStatsCollector& test_stats, 
-             VMat testoutputs, VMat testcosts)
+void PLearner::run()
+{
+  if(verbosity<1)
+    train();
+  else  // verbosity >=1    
+    {
+      cerr << "Training learner of type " << classname() 
+           << " from stage " << stage << " to " << nstages << "..." << endl;
+      train();
+      cerr << "*** Training finished at stage " << stage << " *** " << endl;
+      cerr << "Final mean train costs: " << endl;
+      cerr << getTrainCostNames() << endl;
+      cerr << train_stats->getMean() << endl;
+      cerr << "-----------------------------------------------" << endl;
+    }
+}
+
+void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats, 
+             VMat testoutputs, VMat testcosts) const
 {
   int l = testset.length();
   Vec input;
@@ -192,7 +259,8 @@ void PLearner::test(VMat testset, VecStatsCollector& test_stats,
 
   // testset->defineSizes(inputsize(),targetsize(),weightsize());
 
-  test_stats.forget();
+  if(test_stats)
+    test_stats->forget();
 
   ProgressBar* pb;
   if(report_progress)
@@ -214,13 +282,15 @@ void PLearner::test(VMat testset, VecStatsCollector& test_stats,
       if(testcosts)
         testcosts->putOrAppendRow(i, costs);
 
-      test_stats.update(costs);
+      if(test_stats)
+        test_stats->update(costs);
 
       if(pb)
         pb->update(i);
     }
 
-  test_stats.finalize();
+  if(test_stats)
+    test_stats->finalize();
 
   if(pb)
     delete pb;
@@ -232,6 +302,8 @@ void PLearner::test(VMat testset, VecStatsCollector& test_stats,
 //! If the external stat is omitted in statname, it will be assumed to be "E[...]"
 //! It will set extat and intstat to be for ex. "E"
 //! setnum will be 0 for "train" and 1 for "test1", 2 for "test2", ...
+
+/*
 void parse_statname(const string& statname, string& extstat, string& intstat, int& setnum, string& errorname)
 {
   vector<string> tokens = split(removeallblanks(statname), "[]");
@@ -276,7 +348,9 @@ void parse_statname(const string& statname, string& extstat, string& intstat, in
 
   errorname = set_cost.second;
 }
+*/
 
+/*
 Vec trainTestLearner(PP<PLearner> learner, const VMat &dataset, PP<Splitter> splitter, TVec<string> statnames)
 {
   splitter->setDataSet(dataset);
@@ -317,6 +391,7 @@ Vec trainTestLearner(PP<PLearner> learner, const VMat &dataset, PP<Splitter> spl
       VecStatsCollector& st = stats[0];
       st.forget();
       learner->setTrainingSet(trainset);
+      learner->setTrainStatsCollector();
       if(trainset.length()>0)
         learner->train(st);
       st.finalize();
@@ -351,6 +426,8 @@ Vec trainTestLearner(PP<PLearner> learner, const VMat &dataset, PP<Splitter> spl
 
   return results;
 }
+*/
+
 
 %> // end of namespace PLearn
 

@@ -1627,6 +1627,5 @@ void binread_(PStream& in, float* x, unsigned int n, unsigned char typecode)
     PLERROR("In binread_ incompatible typecode");
 }
 
-
-
 %> //end of namespace PLearn
+

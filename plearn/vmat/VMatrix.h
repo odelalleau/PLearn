@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.17 2003/05/26 04:12:43 plearner Exp $
+   * $Id: VMatrix.h,v 1.18 2003/06/03 14:52:10 plearner Exp $
    ******************************************************* */
 
 
@@ -103,19 +103,9 @@ public:
   mutable Array<VMField> fieldinfos; // don't use this directly (deprecated...) call getFieldInfos() instead
     Array<VMFieldStat> fieldstats;
 
-  VMatrix()
-    :length_(-1), width_(-1), mtime_(0), 
-     inputsize_(-1), targetsize_(-1), weightsize_(-1),
-     writable(false)
-    {}
+  VMatrix();
 
-  VMatrix(int the_length, int the_width)
-    :length_(the_length), width_(the_width), mtime_(0), 
-     writable(false),
-     map_sr(TVec<map<string,real> >(the_width)),
-     map_rs(TVec<map<real,string> >(the_width)),
-     fieldstats(0)
-      {}
+  VMatrix(int the_length, int the_width);
 
   static void declareOptions(OptionList & ol);
 
@@ -131,7 +121,10 @@ public:
   inline int inputsize() const { return inputsize_; }
   inline int targetsize() const { return targetsize_; }
   inline int weightsize() const { return weightsize_; }
-  inline bool isWeighted() const { return weightsize_>0; }
+  inline bool hasWeights() const { return weightsize_>0; }
+
+  inline void setSizes(int the_inputsize, int the_targetsize, int the_weightsize=0)
+  { inputsize_=the_inputsize; targetsize_=the_targetsize; weightsize_=the_weightsize; }
 
   //! Default version calls getSubRow based on inputsize_ targetsize_ and weightsize_
   //! But exotic subclasses may construct, input, target and weight however they please.

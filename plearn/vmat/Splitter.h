@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.h,v 1.3 2002/11/30 04:27:33 plearner Exp $ 
+   * $Id: Splitter.h,v 1.4 2003/06/03 14:52:09 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Splitter.h */
@@ -57,7 +57,7 @@ using namespace std;
   getSplit(i=0..k-1) would be an 2-element array containing the
   corresponding training-set and test-set.
 
-  A splitter is an essential part of a TestMethod.
+  A splitter is an essential part of a PTester.
 */
 
 class Splitter: public Object
@@ -92,8 +92,11 @@ public:
   //! Returns the number of available different "splits"
   virtual int nsplits() const = 0;
 
+  //! Returns the number of sets per split
+  virtual int nSetsPerSplit() const = 0;
+
   //! Returns split number i
-  virtual Array<VMat> getSplit(int i=0) = 0;
+  virtual TVec<VMat> getSplit(int i=0) = 0;
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

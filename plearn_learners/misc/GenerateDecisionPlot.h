@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenerateDecisionPlot.h,v 1.1 2003/05/26 04:12:43 plearner Exp $ 
+   * $Id: GenerateDecisionPlot.h,v 1.2 2003/06/03 14:52:11 plearner Exp $ 
    ******************************************************* */
 
 /*! \file GenerateDecisionPlot.h */
@@ -65,11 +65,12 @@ public:
   // * public build options *
   // ************************
 
-  string dxfilename;
-  VMat dataset;
+  string basename;
   PP<PLearner> learner;
   int nx;
   int ny;
+  bool include_datapoint_grid;
+  real xmin, xmax, ymin, ymax;
   string save_learner_as;
 
   // ****************

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.5 2003/04/10 18:05:03 jkeable Exp $
+   * $Id: getDataSet.cc,v 1.6 2003/06/03 14:52:08 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -174,6 +174,7 @@ VMat getDataSet(const string& datasetstring, const string& alias)
       vm = vconcat(trainset,testset);    
     else 
       PLERROR("In getDataSet specification of predefined dataset: expecting second word to be 'train' or 'test' or 'all' not %s ...",dsetspec[1].c_str());
+    vm->setSizes(inputsize, 1);
     vm->setMetaDataDir("/u/lisa/db/metadata/" + datasetstring);
   }
   

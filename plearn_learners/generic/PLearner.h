@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.5 2003/05/26 04:12:43 plearner Exp $
+   * $Id: PLearner.h,v 1.6 2003/06/03 14:52:10 plearner Exp $
    ******************************************************* */
 
 
@@ -61,42 +61,57 @@ using namespace std;
 */
   class PLearner: public Object
   {
-  protected:
-
-    VMat train_set;  // The training set as set by setTrainingSet
-
-    //! the directory in which to save files related to this model (see setExperimentDirectory())
-    //! You may assume that it ends with a slash (setExperimentDirectory(...) ensures this).
-    string expdir; 
 
   public:
 
     typedef Object inherited;
     
     // Build options
-    //! Data-sets are seen as matrices whose columns or fields are layed out as
-    //! follows: a number of input fields, followed by (optional) target fields, 
-    //! followed by (optional) weight fields (to weigh each example).
-    int inputsize_;  //!<  same as in train VMatrix
-    int targetsize_; //!<  same as in train VMatrix
-    int weightsize_; //!<  same as in train VMatrix
-    int outputsize_; //!<  the computeOutput method produces an output vector of size outputsize().
+
+    //! The directory in which to save files related to this model (see setExperimentDirectory())
+    //! You may assume that it ends with a slash (setExperimentDirectory(...) ensures this).
+    //! If it's the empty string, then this learner should not create any file.
+    string expdir; 
+
     long seed;   //!< the seed used for the random number generator in initializing the learner (see forget() method).
     int stage;
     int nstages;
     bool report_progress; //!< should progress in learning and testing be reported in a ProgressBar
-    int verbosity; //! Level of verbosity. If 0 you should not write anything on cerr. If >0 you may write some info on the steps performed
+    int verbosity; //! Level of verbosity. If 0, should not write anything on cerr. If >0 may write some info on the steps performed (the amount of detail written depends on the value of this option).
+
+  protected:
+
+    //! The training set as set by setTrainingSet 
+    /*!
+    Data-sets are seen as matrices whose columns or fields are layed out as
+    follows: a number of input fields, followed by (optional) target fields,
+    followed by a (optional) weight field (to weigh each example).
+    The sizes of those areas are given by the VMatrix options
+    inputsize targetsize, and weightsize, which are typically used by the
+    learner upon building.
+    */
+    VMat train_set;  
+
+    //! The stats_collector responsible for collecting train cost statistics during training.
+    //! This is typically set by some external training harness that wants to collect some stats.
+    PP<VecStatsCollector> train_stats;
 
   public:
 
     PLearner();
     virtual ~PLearner();
 
-    int inputsize() const { return inputsize_; }
-    int targetsize() const { return targetsize_; }
-    bool weightsize() const { return weightsize_; }
-    inline bool isWeighted() const { return weightsize_>0; }
-    int outputsize() const { return outputsize_; }
+    //! Declares the train_set
+    //! Then calls build() and forget()
+    void setTrainingSet(VMat training_set);
+
+    //! Returns the current train_set
+    inline VMat getTrainingSet() const { return train_set; }
+
+    //! Sets the statistics collector whose update() method will be called 
+    //! during training.
+    void setTrainStatsCollector(PP<VecStatsCollector> statscol)
+    { train_stats = statscol; }
 
     //! The experiment directory is the directory in which files 
     //! related to this model are to be saved.     
@@ -107,23 +122,17 @@ using namespace std;
     //! This returns the currently set expdir (see setExperimentDirectory)
     string getExperimentDirectory() const { return expdir; }
 
-    //!  Does the necessary operations to transform a shallow copy (this)
-    //!  into a deep copy by deep-copying all the members that need to be.
-    DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(PLearner);
-    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Returns train_set->inputsize()
+    int inputsize() const;
 
-  private:
-    /*!       **** SUBCLASS WRITING: ****
-      The build_ and build methods should be redefined in subclasses
-      build_ should do the actual building of the PLearner according
-      to build options (member variables) previously set.  (These may have
-      been set by hand, by a constructor, by the load method, or by
-      setOption) As build() may be called several times (after changing
-      options, to "rebuild" an object with different build options), make
-      sure your implementation can handle this properly.
-    */
-    void build_();
-    
+    //! Returns train_set->targetsize()
+    int targetsize() const; 
+
+    //! SUBCLASS WRITING: overload this so that it returns 
+    //! the size of this learner's output, as a function of 
+    //! its inputsize(), targetsize() and set options
+    virtual int outputsize() const =0;
+
   public:
 
     //! Provides a help message describing this class
@@ -133,58 +142,113 @@ using namespace std;
     //! This method should be redefined in subclasses, to just call inherited::build() and then build_()
     virtual void build();
 
-    //!  Simple accessor methods: (do NOT overload! Set inputsize_ and outputsize_ instead)
-    // inline int inputsize() const { return inputsize_; }
-    // inline int targetsize() const { return targetsize_; }
-    // virtual int outputsize() const { return outputsize_; }
+  private:
+    /*!       **** SUBCLASS WRITING: ****
+    This method should finalize building of the object,
+    according to set 'options', in *any* situation. 
 
-    /*!       *** SUBCLASS WRITING: ***
-      This method should be called AFTER or inside the build method,
-      e.g. in order to re-initialize parameters. It should
-      put the PLearner in a 'fresh' state, not being influenced
-      by any past call to train (everything learned is forgotten!).
+    Typical situations include:
+      - Initial building of an object from a few user-specified options
+      - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+      - Updating or "re-building" of an object after a few "tuning" options 
+        (such as hyper-parameters) have been modified.
+
+      You can assume that the parent class' build_() has already been called.
+
+      A typical build method will want to know the inputsize(), targetsize() and outputsize(),
+      and may also want to check whether train_set->hasWeights(). All these methods require a 
+      train_set to be set, so the first thing you may want to do, is check if(train_set), before
+      doing any heavy building... 
+
+      Note: build() is always called by setTrainingSet.
     */
-    virtual void forget();
-
-    //! Declare the train_set
-    virtual void setTrainingSet(VMat training_set) { train_set = training_set; }
-    inline VMat getTrainingSet() { return train_set; }
+    void build_();
+    
+  public:
+    //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
+    //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
+    /*!       *** SUBCLASS WRITING: ***
+      A typical forget() method should do the following:
+         - initialize a random number generator with the seed option
+         - initialize the learner's parameters, using this random generator
+         - stage = 0;
+      This method is typically called by the build_() method, after 
+      it has finished setting up the parameters, and if it deemed
+      useful to set or reset the learner in its fresh state. 
+      (remember build may be called after modifying options that do not 
+      necessarily require the learner to restart from a fresh state...)
+      It is also called by the setTrainingSet method, after it calling build().
+    */
+    virtual void forget() =0;
 
     
+    //! The role of the train method is to bring the learner up to stage==nstages,
+    //! updating the stats with training costs measured on-line in the process.
+
     /*! *** SUBCLASS WRITING: ***
-      Should do the actual training until epoch==nepochs 
-      and should call update on the stats with training costs measured on-line
+
+      TYPICAL CODE:
+
+      static Vec input;  // static so we don't reallocate/deallocate memory each time...
+      static Vec target;
+      input.resize(inputsize());    // the train_set's inputsize()
+      target.resize(targetsize());  // the train_set's targetsize()
+      real weight;
+
+      if(!train_stats)  // make a default stats collector, in case there's none
+         train_stats = new VecStatsCollector();
+
+      if(nstages<stage) // asking to revert to a previous stage!
+         forget();  // reset the learner to stage=0
+
+
+      while(stage<nstages)
+        {
+          // clear statistics of previous epoch
+          train_stats->forget(); 
+          
+          //... train for 1 stage, and update train_stats,
+          // using train_set->getSample(input, target, weight);
+          // and train_stats->update(train_costs)
+          
+          ++stage;
+          train_stats->finalize(); // finalize statistics for this epoch
+        }
+
+
     */
-    virtual void train(VecStatsCollector& train_stats) =0;
+    virtual void train() =0;
 
 
     //! *** SUBCLASS WRITING: ***
     //! This should be defined in subclasses to compute the output from the input
-    virtual void computeOutput(const Vec& input, Vec& output) =0;
+    virtual void computeOutput(const Vec& input, Vec& output) const =0;
 
     //! *** SUBCLASS WRITING: ***
     //! This should be defined in subclasses to compute the weighted costs from
-    //! already computed output.
+    //! already computed output. 
+    //! NOTE: In exotic cases, the cost may also depend on some info in the input, 
+    //! that's why the method also gets so see it.
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                         const Vec& target, Vec& costs) =0;
+                                         const Vec& target, Vec& costs) const =0;
                                 
     //! Default calls computeOutput and computeCostsFromOutputs
     //! You may overload this if you have a more efficient way to 
     //! compute both output and weighted costs at the same time.
     virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-                                       Vec& output, Vec& costs);
+                                       Vec& output, Vec& costs) const;
 
     //! Default calls computeOutputAndCosts
     //! This may be overloaded if there is a more efficient way to compute the costs
     //! directly, without computing the whole output vector.
-    virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs);
+    virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
     
   
     //! Performs test on testset, updating test cost statistics,
     //! and optionally filling testoutputs and testcosts
     //! The default version repeatedly calls computeOutputAndCosts or computeCostsOnly
-    virtual void test(VMat testset, VecStatsCollector& test_stats, 
-                      VMat testoutputs=0, VMat testcosts=0);
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
+                      VMat testoutputs=0, VMat testcosts=0) const;
 
     //! *** SUBCLASS WRITING: ***
     //! This should return the names of the costs computed by computeCostsFromOutpus
@@ -195,8 +259,13 @@ using namespace std;
     //! for which it updates the VecStatsCollector train_stats
     virtual TVec<string> getTrainCostNames() const =0;
 
-    inline int nTestCosts() const { return getTestCostNames().size(); }
-    inline int nTrainCosts() const { return getTrainCostNames().size(); }
+    //! Default version returns getTestCostNames().size()
+    //! You may overload this in subclasses for efficiency.
+    virtual int nTestCosts() const;
+
+    //! Default version returns getTrainCostNames().size()
+    //! You may overload this in subclasses for efficiency.
+    virtual int nTrainCosts() const;
 
     //! returns the index of the given cost in the vector of testcosts (returns -1 if not found)
     int getTestCostIndex(const string& costname) const;
@@ -204,9 +273,20 @@ using namespace std;
     //! returns the index of the given cost in the vector of traincosts (objectives) (returns -1 if not found)
     int getTrainCostIndex(const string& costname) const;
 
+    //! The run() method simply calls train() and prints the final mean train cost stats
+    //! Thus if you put a PLearner alone in a .plearn script, that's what it will do.
+    //! Note that this is seldom used: you'll probably rather want to run a PTester
+    //! with a PLearner inside.
+    virtual void run();
+
   protected:
     static void declareOptions(OptionList& ol);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+  public:
+    //!  Does the necessary operations to transform a shallow copy (this)
+    //!  into a deep copy by deep-copying all the members that need to be.
+    DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(PLearner);
   };
 
   DECLARE_OBJECT_PTR(PLearner);
@@ -216,9 +296,9 @@ using namespace std;
 //! If the external stat is omitted in statname, it will be assumed to be "E[...]"
 //! It will set extat and intstat to be for ex. "E"
 //! setnum will be 0 for "train" and 1 for "test1", 2 for "test2", ...
-void parse_statname(const string& statname, string& extstat, string& intstat, int& setnum, string& errorname);
+// void parse_statname(const string& statname, string& extstat, string& intstat, int& setnum, string& errorname);
 
-Vec trainTestLearner(PP<PLearner> learner, const VMat &dataset, PP<Splitter> splitter, TVec<string> statnames);
+// Vec trainTestLearner(PP<PLearner> learner, const VMat &dataset, PP<Splitter> splitter, TVec<string> statnames);
 
 
 %> // end of namespace PLearn

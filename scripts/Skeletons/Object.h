@@ -42,12 +42,12 @@ public:
 
 private: 
   //! This does the actual building. 
-  // (Please implement in .cc)
+  // (PLEASE IMPLEMENT IN .cc)
   void build_();
 
 protected: 
   //! Declares this class' options
-  // (Please implement in .cc)
+  // (PLEASE IMPLEMENT IN .cc)
   static void declareOptions(OptionList& ol);
 
 public:
@@ -55,12 +55,16 @@ public:
   virtual void build();
 
   //! Provides a help message describing this class
+  // (PLEASE IMPLEMENT IN .cc)
   static string help();
 
   //! Transforms a shallow copy into a deep copy
+  // (PLEASE IMPLEMENT IN .cc)
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
-  //! Declares name and deepCopy methods
+  // Declares other standard object methods
+  //  If your class is not instantiatable (it has pure virtual methods)
+  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
   PLEARN_DECLARE_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", Object);
 
 };

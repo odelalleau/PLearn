@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// PExperiment.h
+// PTester.h
 // 
 // Copyright (C) 2002 Pascal Vincent, Frederic Morin
 // 
@@ -33,10 +33,10 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.h,v 1.3 2003/05/26 04:12:43 plearner Exp $ 
+   * $Id: PExperiment.h,v 1.4 2003/06/03 14:52:11 plearner Exp $ 
    ******************************************************* */
 
-/*! \file PExperiment.h */
+/*! \file PTester.h */
 #ifndef PExperiment_INC
 #define PExperiment_INC
 
@@ -48,7 +48,7 @@
 namespace PLearn <%
 using namespace std;
 
-class PExperiment: public Object
+class PTester: public Object
 {    
 public:
 
@@ -63,7 +63,6 @@ public:
   //! Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
   string expdir;  
   PP<PLearner> learner;
-  VMat dataset;
   PP<Splitter> splitter;
   TVec<string> statnames;
   bool report_stats;
@@ -81,7 +80,7 @@ public:
   // ****************
 
   // Default constructor
-  PExperiment();
+  PTester();
 
 
   // ******************
@@ -106,7 +105,18 @@ public:
   static string help();
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(PExperiment);
+  DECLARE_NAME_AND_DEEPCOPY(PTester);
+
+  //! The experiment directory is the directory in which files 
+  //! related to this model are to be saved.     
+  //! If it is an empty string, it is understood to mean that the 
+  //! user doesn't want any file created by this learner.
+  void setExperimentDirectory(const string& the_expdir);
+  
+  //! This returns the currently set expdir (see setExperimentDirectory)
+  string getExperimentDirectory() const { return expdir; }
+  
+
 
   //! runs the experiment
   virtual void run();
@@ -121,7 +131,7 @@ public:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(PExperiment);
+DECLARE_OBJECT_PTR(PTester);
   
 %> // end of namespace PLearn
 

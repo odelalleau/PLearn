@@ -78,7 +78,12 @@ int DERIVEDCLASS::nsplits() const
   // ### Return the number of available splits
 }
 
-Array<VMat> DERIVEDCLASS::getSplit(int k)
+int DERIVEDCLASS::nSetsPerSplit() const
+{
+  // ### Return the number of sets per split
+}
+
+TVec<VMat> DERIVEDCLASS::getSplit(int k)
 {
   // ### Build and return the kth split 
 }

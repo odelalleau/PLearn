@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.3 2003/05/26 04:12:43 plearner Exp $
+   * $Id: NNet.h,v 1.4 2003/06/03 14:52:10 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -55,8 +55,7 @@ using namespace std;
   protected:
     Var input;  // Var(inputsize())
     Var target; // Var(targetsize()-weightsize())
-    Var costweights; // Var(weightsize())
-    Var target_and_weights;// hconcat(target&costweights)
+    Var sampleweight; // Var(1) if train_set->hasWeights()
     Var w1; // bias and weights of first hidden layer
     Var w2; // bias and weights of second hidden layer
     Var wout; // bias and weights of output layer
@@ -71,9 +70,9 @@ using namespace std;
     Vec paramsvalues; // values of all parameters
 
   public:
-    Func f; // input -> output
-    Func costf; // input & target -> output & cost
-    Func output_and_target_to_cost; // output & target -> cost
+    mutable Func f; // input -> output
+    mutable Func costf; // input & target -> output & cost
+    mutable Func output_and_target_to_cost; // output & target -> cost
 
   public:
 
@@ -82,10 +81,10 @@ using namespace std;
     // Build options inherited from learner:
     // inputsize, outputszie, targetsize, experiment_name, save_at_every_epoch 
 
-    // Build options:
-    int weightpart; // number of components in target that are actually weights
+    // Build options:    
     int nhidden;    // number of hidden units in first hidden layer (default:0)
     int nhidden2;   // number of hidden units in second hidden layer (default:0)
+    int noutputs;   // number of output units (outputsize)
 
     real weight_decay; // default: 0
     real bias_decay;   // default: 0 
@@ -130,20 +129,19 @@ using namespace std;
     virtual void build();
     virtual void forget(); // simply calls initializeParams()
 
+    virtual int outputsize() const;
     virtual TVec<string> getTrainCostNames() const;
     virtual TVec<string> getTestCostNames() const;
 
-    virtual void setTrainingSet(VMat training_set);
+    virtual void train();
 
-    virtual void train(VecStatsCollector& train_stats);
-
-    virtual void computeOutput(const Vec& input, Vec& output);
+    virtual void computeOutput(const Vec& input, Vec& output) const;
     
     virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-                                       Vec& output, Vec& costs);
+                                       Vec& output, Vec& costs) const;
 
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                         const Vec& target, Vec& costs);
+                                         const Vec& target, Vec& costs) const;
 
 
     virtual void makeDeepCopyFromShallowCopy(CopiesMap &copies);

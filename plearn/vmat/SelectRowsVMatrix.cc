@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.4 2003/05/15 15:10:00 tihocan Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.5 2003/06/03 14:52:09 plearner Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
@@ -47,6 +47,27 @@ using namespace std;
 /** SelectRowsVMatrix **/
 
 PLEARN_IMPLEMENT_OBJECT_METHODS(SelectRowsVMatrix, "SelectRowsVMatrix", VMatrix);
+
+SelectRowsVMatrix::SelectRowsVMatrix() 
+{}
+
+SelectRowsVMatrix::SelectRowsVMatrix(VMat the_distr, TVec<int> the_indices) :
+  VMatrix(the_indices.length(),the_distr->width()),
+  distr(the_distr),indices(the_indices)
+{
+  fieldinfos = the_distr->fieldinfos;
+  build_();
+}
+
+//! Here the indices will be copied locally into an integer vector
+SelectRowsVMatrix::SelectRowsVMatrix(VMat the_distr, Vec the_indices) :
+  VMatrix(the_indices.length(),the_distr->width()),
+  distr(the_distr),indices(the_indices.length())
+{
+  fieldinfos = the_distr->fieldinfos;
+  indices << the_indices; // copy to integer indices
+  build_();
+}
 
 real SelectRowsVMatrix::get(int i, int j) const
 { return distr->get(indices[i], j); }
@@ -107,6 +128,9 @@ void SelectRowsVMatrix::build_()
 {
   length_ = indices.length();
   width_ = distr->width();
+  inputsize_ = distr->inputsize();
+  targetsize_ = distr->targetsize();
+  weightsize_ = distr->weightsize();
   fieldinfos = distr->fieldinfos;
 }
 

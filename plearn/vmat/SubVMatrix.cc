@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.2 2003/05/03 05:02:18 plearner Exp $
+   * $Id: SubVMatrix.cc,v 1.3 2003/06/03 14:52:09 plearner Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -47,6 +47,11 @@ using namespace std;
 /** SubVMatrix **/
 
 IMPLEMENT_NAME_AND_DEEPCOPY(SubVMatrix);
+
+SubVMatrix::SubVMatrix()
+  :istart(0), 
+   jstart(0)
+{}
 
 SubVMatrix::SubVMatrix(VMat the_parent, int the_istart, int the_jstart, int the_length, int the_width)
   :VMatrix(the_length, the_width), parent(the_parent), istart(the_istart), jstart(the_jstart)
@@ -70,6 +75,12 @@ void SubVMatrix::build()
 
 void SubVMatrix::build_()
 {
+  if(length_<0)
+    length_ = parent->length() - istart;
+
+  if(width_<0 && parent->width()>=0)
+    width_ = parent->width() - jstart;
+
   if(istart+length()>parent->length() || jstart+width()>parent->width())
     PLERROR("In SubVMatrix constructor OUT OF BOUNDS of parent VMatrix");
 
@@ -78,6 +89,14 @@ void SubVMatrix::build_()
   if (parent->getFieldInfos().size() > 0)
     for(int j=0; j<width_; j++)
       fieldinfos[j] = parent->getFieldInfos()[jstart+j];
+
+ if(inputsize_<0)
+    inputsize_ = parent->inputsize();
+  if(targetsize_<0)
+    targetsize_ = parent->targetsize();
+  if(weightsize_<0)
+    weightsize_ = parent->weightsize();
+  //  cerr << "inputsize: "<<inputsize_ << "  targetsize:"<<targetsize_<<"weightsize:"<<weightsize_<<endl;
 }
 
 void SubVMatrix::reset_dimensions() 

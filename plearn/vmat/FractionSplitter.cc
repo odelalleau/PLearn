@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FractionSplitter.cc,v 1.1 2003/05/21 09:53:50 plearner Exp $ 
+   * $Id: FractionSplitter.cc,v 1.2 2003/06/03 14:52:09 plearner Exp $ 
    ******************************************************* */
 
 /*! \file FractionSplitter.cc */
@@ -58,11 +58,17 @@ IMPLEMENT_NAME_AND_DEEPCOPY(FractionSplitter);
 
 void FractionSplitter::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "fractions", &FractionSplitter::fractions, OptionBase::buildoption,
-                "A list of vectors. Each vector represents a split. \n"
-                "The elements of each vector, if less than 1, are fractions of the total number of elements in the data set\n"
-                "If they are integers above one, they are an absolute number of elements\n"
-                "Ex: [ [ .10 .20 ] ]  yields a single split with the first part being 10% of the data and the second the next 20% \n");
+  declareOption(ol, "splits", &FractionSplitter::splits, OptionBase::buildoption,
+                "A matrix of start:end pairs. Each row represents a split. \n"
+                "Each start:end element represents a range of samples in the dataset to be splitted. \n"
+                "start and end, which are positions in the datataset, can be specified as either \n"
+                "a fraction of the dataset length (if <=1), or an absolute number of elements (if >1).\n"
+                "The range includes all samples from start to end, but excluding the end sample \n"
+                "(so that, for ex., the same value can be used as the start of the next range \n"
+                "without having the two ranges ovelap). \n"
+                "The value 1 is a bit special as it always means \"until last element inclusive\".\n"
+                "Ex: 1 2 [ 0:0.80, 0.80:1 ]  yields a single split with the first part being the first 80% \n"
+                "of the data, and the second the next 20% \n");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -72,18 +78,12 @@ string FractionSplitter::help()
 {
   // ### Provide some useful description of what the class is ...
   return 
-    "FractionSplitter is a splitter for which fractions (or number of samples) of the training set are specified explicitly";
+    "FractionSplitter is a splitter for which ranges of the training set are specified explicitly\n"
+    "as start:end positions, that can be absolute or relative to the number of samples in the training set\n";
 }
 
 void FractionSplitter::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
 }
 
 // ### Nothing to add here, simply calls build_
@@ -109,28 +109,41 @@ void FractionSplitter::makeDeepCopyFromShallowCopy(map<const void*, void*>& copi
 
 int FractionSplitter::nsplits() const
 {
-  return fractions.length();
+  return splits.length();
 }
 
-Array<VMat> FractionSplitter::getSplit(int k)
+int FractionSplitter::nSetsPerSplit() const
 {
-  Vec frac_k = fractions[k];
+  return splits.width();
+}
+
+
+TVec<VMat> FractionSplitter::getSplit(int k)
+{
+  TVec< pair<real,real> > frac_k = splits(k);
   int n = frac_k.length();
-  Array<VMat> vms(n);
+  TVec<VMat> vms(n);
   int l = dataset.length();
   int start = 0;
   int end = 0;
   for(int i=0; i<n; i++)
     {
-      real f = frac_k[i];
-      if(f>1)
-        end = start + int(f);
-      else 
-        end = start + int(f*l);
-      if(end>l)
+      real fstart = frac_k[i].first;
+      real fend = frac_k[i].second;
+
+      if(fstart>1) // absolute position
+        start = int(fstart);
+      else // relative position
+        start = int(fstart*l);
+
+      if(fend>1) // absolute end position
+        end = int(fend);
+      else if(fend==1) // until last element inclusive
         end = l;
+      else // relative end position
+        end = int(fend*l);
+
       vms[i] = dataset.subMatRows(start, end-start);
-      start = end;
     }
   return vms;
 }

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.cc,v 1.3 2003/05/14 21:15:32 jkeable Exp $
+   * $Id: ConcatRowsVMatrix.cc,v 1.4 2003/06/03 14:52:09 plearner Exp $
    ******************************************************* */
 
 #include "ConcatRowsVMatrix.h"
@@ -70,6 +70,9 @@ void ConcatRowsVMatrix::build_()
   
   width_ = array[0]->width();
   length_ = 0;
+  inputsize_ = array[0]->inputsize();
+  targetsize_ = array[0]->targetsize();
+  weightsize_ = array[0]->weightsize();
   for (int i=0;i<n;i++)
   {
     if (array[i]->width() != width_)

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.10 2003/06/02 23:41:43 jkeable Exp $
+   * $Id: plapack.h,v 1.11 2003/06/03 14:52:09 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -92,7 +92,7 @@ inline void lapack_Xsyevr_(char* JOBZ, char* RANGE, char* UPLO, int* N, double* 
 
 // (will work for float and double)
 template<class num_t>
-void lapackEIGEN(const TMat<num_t>& A, TVec<num_t>& eigenvals, TMat<num_t>& eigenvecs, char RANGE='A', num_t low=0, num_t high=0, num_t ABSTOL=1e-6)
+void lapackEIGEN(const TMat<num_t>& A, TVec<num_t>& eigenvals, TMat<num_t>& eigenvecs, char RANGE='A', num_t low=0, num_t high=0, num_t ABSTOL=0)
 {
 
 #ifdef BOUNDCHECK

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExplicitSplitter.cc,v 1.2 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: ExplicitSplitter.cc,v 1.3 2003/06/03 14:52:09 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ExplicitSplitter.cc */
@@ -52,38 +52,22 @@ IMPLEMENT_NAME_AND_DEEPCOPY(ExplicitSplitter);
 
 void ExplicitSplitter::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "splitsets_specs", &ExplicitSplitter::splitsets_specs, OptionBase::buildoption,
-                "This is an array of arrays of strings, indicating the split datasets with their string specification.\n"
-                "If this is specified, while splitsets is left empty, splitsets will be built from those string specifications.");
   declareOption(ol, "splitsets", &ExplicitSplitter::splitsets, OptionBase::buildoption,
-                "This is an array of arrays of VMat giving explicitly the datasets for each split. Either this OR splitsets_specs must be specified before a build()");
+                "This is a matrix of VMat giving explicitly the datasets for each split.");
   inherited::declareOptions(ol);
 }
 
 string ExplicitSplitter::help()
 {
   return 
-    "ExplicitSplitter allows you to define a 'splitter' by giving eplicitly the datasets for each split, as an array of array of strings or of VMatrices.\n"
-    "ex: ExplicitSplitter( splitsets_specs = [ [ \"/home/db/mypb_train.amat\", \"/home/db/mypb_test.amat\" ] ] ) \n"
+    "ExplicitSplitter allows you to define a 'splitter' by giving eplicitly the datasets for each split\n"
+    "as a matrix VMatrices.\n"
     "(This splitter in effect ignores the 'dataset' it is given with setDataSet) \n"
     + optionHelp();
 }
 
 void ExplicitSplitter::build_()
-{
-  if(!splitsets)
-    {
-      int m = splitsets_specs.size();
-      splitsets.resize(m);
-      for(int i=0; i<m; i++)
-        {
-          int n = splitsets_specs[i].size();
-          splitsets[i].resize(n);
-          for(int j=0; j<n; j++)
-            splitsets[i][j] = PLearn::getDataSet(splitsets_specs[i][j]);
-        }
-    }
-}
+{}
 
 // ### Nothing to add here, simply calls build_
 void ExplicitSplitter::build()
@@ -95,18 +79,23 @@ void ExplicitSplitter::build()
 void ExplicitSplitter::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   Splitter::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(splitsets_specs, copies);
   deepCopyField(splitsets, copies);
 }
 
 int ExplicitSplitter::nsplits() const
 {
-  return splitsets.size();
+  return splitsets.length();
 }
 
-Array<VMat> ExplicitSplitter::getSplit(int k)
+int ExplicitSplitter::nSetsPerSplit() const
 {
-  return splitsets[k];
+  return splitsets.length();
+}
+
+
+TVec<VMat> ExplicitSplitter::getSplit(int k)
+{
+  return splitsets(k);
 }
 
 

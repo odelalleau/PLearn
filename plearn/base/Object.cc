@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.18 2003/05/26 04:12:42 plearner Exp $
+   * $Id: Object.cc,v 1.19 2003/06/03 14:52:08 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -46,6 +46,7 @@
 #include "stringutils.h"
 #include "fileutils.h"
 #include "TypeFactory.h"
+#include <iostream>
 
 namespace PLearn <%
 using namespace std;
@@ -396,32 +397,32 @@ Object* readObject(PStream &in, unsigned int id)
       {
       in >> o;
       } 
-    else 
+    else if(c == '`') // back-quote: reference to an object in another file
       {
-        // It must be a Classname(...) or a load(...) kind of definition
+        in.get(); // skip the opening back-quote
+        string fname;
+        in.getline(fname,'`');
+        fname = removeblanks(fname);
+        // TODO: Check if this is really what we want
+        //       (ie: We could want to use the options
+        //            of 'in' to load the object...)
+        o = loadObject(fname);
+      }
+    else // It must be a Classname(...) kind of definition 
+      {
         string cl;
         in.getline(cl, '(');
         cl = removeblanks(cl);
-        if (cl == "load") {
-            // It's a load("...")
-            string fname;
-            in.getline(fname, ')');
-            fname = removeblanks(fname);
-            // TODO: Check if this is really what we want
-            //       (ie: We could want to use the options
-            //            of 'in' to load the object...)
-            o = loadObject(fname);
-        } else {
-            // It's a Classname(opt1 = ...; ...; optn = ...); --> calls newread()
-            o = TypeFactory::instance().newObject(cl);
-            if (!o)
-                PLERROR("readObject() - Type \"%s\" not declared in TypeFactory map (did you do a proper DECLARE_NAME_AND_DEEPCOPY?)", cl.c_str());
-            in.pl_rdbuf()->seekmark(fence);
-            o->newread(in);
-        }
-        if (id != LONG_MAX)
-            in.copies_map_in[id] = o;
-    }
+        // It's a Classname(opt1 = ...; ...; optn = ...); --> calls newread()
+        o = TypeFactory::instance().newObject(cl);
+        if (!o)
+          PLERROR("readObject() - Type \"%s\" not declared in TypeFactory map (did you do a proper DECLARE_NAME_AND_DEEPCOPY?)", cl.c_str());
+        in.pl_rdbuf()->seekmark(fence);
+        o->newread(in);
+      }
+       
+    if (id != LONG_MAX)
+      in.copies_map_in[id] = o;
     return o;
 }
 
@@ -498,7 +499,17 @@ PStream& operator>>(PStream &in, Object * &o)
 }
 */
 
-
-
 %> // end of namespace PLearn
+
+
+//! Useful function for debugging inside gdb:
+extern "C"
+{
+  void printobj(PLearn::Object* p)
+  {
+    PLearn::PStream perr(&std::cerr);
+    perr << *p << std::endl;
+  }
+}
+
 

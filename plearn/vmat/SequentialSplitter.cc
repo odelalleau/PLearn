@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SequentialSplitter.cc,v 1.2 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: SequentialSplitter.cc,v 1.3 2003/06/03 14:52:09 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
@@ -80,6 +80,11 @@ void SequentialSplitter::build()
     build_();
 }
 
+int SequentialSplitter::nSetsPerSplit() const
+{
+  return 2;
+}
+
 int SequentialSplitter::nsplits() const
 {
     // Ugly...
@@ -93,7 +98,7 @@ int SequentialSplitter::nsplits() const
     return n_splits;
 }
 
-Array<VMat> SequentialSplitter::getSplit(int k)
+TVec<VMat> SequentialSplitter::getSplit(int k)
 {
     int n_splits = nsplits();
     if (dataset.isNull())
@@ -110,7 +115,7 @@ Array<VMat> SequentialSplitter::getSplit(int k)
     if (t + n_test > seq_length)
         n_test = seq_length - t; // truncate so it fits
     
-    Array<VMat> split_(2);
+    TVec<VMat> split_(2);
     split_[0] = dataset.subMatRows(0, t);
     split_[1] = dataset.subMatRows(t, n_test);
     return split_;

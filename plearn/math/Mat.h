@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Mat.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: Mat.h,v 1.2 2003/06/03 14:52:09 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,9 +68,6 @@ inline istream& operator>>(istream& in, const Vec& v)
 Vec* newVecArray(int n);
 Vec* newVecArray(int n, int the_length);
 
-//!  For use within debugger (gdb) only
-void printvec(const Vec& v);
-
 template <> void deepCopyField(Vec& field, CopiesMap& copies);
 
 Mat* newMatArray(int n);
@@ -98,12 +95,13 @@ Mat unitmatrix(int n);
 */
 Mat operator^(const Mat& m1, const Mat& m2);
 
-//!  For use within debugger (gdb) only
-void printmat(const Mat& m);
-
 template <> void deepCopyField(Mat& field, CopiesMap& copies);
 
 %> // end of namespace PLearn
+
+//!  For use within debugger (gdb) only
+void printvec(const PLearn::Vec& v);
+void printmat(const PLearn::Mat& m);
 
 #endif
 

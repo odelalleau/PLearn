@@ -2,12 +2,12 @@
 %%
 %%  Copyright (c) 1998-2002 by Pascal Vincent
 %%
-%%  $Id: programmers_guide.tex,v 1.2 2003/05/08 17:06:08 plearner Exp $
+%%  $Id: programmers_guide.tex,v 1.3 2003/06/03 14:52:07 plearner Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
 \usepackage{ae}                 % use virtual fonts for getting good PDF
-\usepackage{isolatin1}		% support for French accents
+\usepackage{isolatin1}    % support for French accents
 
 %%%%%%%%% Definitions %%%%%%%%%%%%
 \newcommand{\PLearn}{{\bf \it PLearn}}
@@ -1107,6 +1107,143 @@ for the accessor method.
  base is not carved in stone, it is an evolving being, and the source code
  is there so that you can tweak it and adapt it to your needs, and
  hopefully help make it better.
+
+\chapter{Debugging}
+
+There are several types of problems you'll encounter, and each has a
+proven solving technique.
+
+\section{Compilation problems}
+
+{\bf Solution: } learn how to program in C++
+
+No, I mean seriously, learn C++, {\em thorouhly}, until you are able to
+truly and fully understand every single bit of the cryptic message issued
+by the compiler, and why on earth it may have chosen to insult your
+intelligence with it. Because that cryptic message always contains the
+solution. 
+
+In particular, you need to really understand the difference between a const
+thingy and a non-const thingy, because to C++ they are often two totally
+different beasts (although to a decent human, they may look the same at first inspection).
+
+So make sure you truly understand {\em all} the subtle differences between for ex.: \\
+\verb!const char* MyObj::mymethod(const char* &foo, const int& bar)!  \\
+and
+\verb!char* MyObj::mymethod(const char *const foo, int& bar) const! \\
+
+
+On rare occasions, you might occasionaly stumble upon a compiler {\em bug}
+(as in {\em compiler internal error!!!} ), in which case you may try the
+following: upgrade your dusty compiler to the newest less-buggy version;
+check on google to see if anybody else had the same problem and if they
+found a workaround; try to find a workaround yourself (split your call in
+several pieces, using intermediate variables, add a cout here, reorder the
+instructions there... and pray!); try posting an SOS on the appropriate
+newsgroups; write a bug report! Somebody somewhere, is responsible for it
+and might be interested in fixing the mess, or already has\ldots.
+
+
+\subsection{Frequently encountered compilation errors}
+
+To save you some time, you may look up in the following list if somebody
+stumbled upon the same problem.
+
+\begin{itemize}
+
+\item {\bf typical error msg } \\ 
+explanation and fix.
+
+\end{itemize}
+
+
+
+\section{Linking problems}
+
+Problems reported by the linker can have several causes:
+
+\begin{itemize}
+\item It doesn't find a function that's supposed to be defined somewhere in
+  your code but isn't.  A frequent case is that of instantiating an object
+  of a class derived from a base class with a pure virtual mamber function
+  that you forgot to define in the subclass. Another case is declaring a
+  function in the .h and forgetting to implement it in the .cc, or (more
+  often) implementing it with a slightly different signature (forgot
+  Classname:: ?, forgot to put a const somewhere?)
+\item It doesn't find symbols because it doesn't find the required
+  libraries. Examine the linking command, are all the necessary libraries there? Are they
+  indeed located where you say they are? There should be no space between the
+  -L and the library path.
+\item Libraries are specified in an inappropriate order. A library that
+  depends on another library should appear before it in the linking
+  command; the most basic libraries should be last.
+\end{itemize}
+
+
+
+\section{Clean runtime errors}
+
+What I mean by clean runtime errors, is that the program displayed a nice
+error message and exited.
+
+This most likely means that something in your program caused a call to the
+PLERROR macro, which called the {\tt errormsg} function, which threw a
+PLearnException, which got caught in the very external try/catch of your
+main program, which printed it out (you main program {\em does} catch
+PLearn exceptions and report them, doesn't it???).
+
+Tracing the problem is easy: 
+\begin{itemize}
+\item Launch your favorite debugger ({\tt gdb}) from within your favorite 
+development environment ({\tt emacs}). 
+\item Put a breakpoint in the {\tt errormsg} function by typing: \\
+\verb!br 'PLearn::errormsg(!{\it TAB} \\ 
+Pressing the {\it TAB} key will complete the
+signature of the function for you. Note that the single quote at the beginning is important for this to work.
+\item {\tt run} your program until it reaches the breakpoint.
+\item trace {\tt up} the call stack and figure out what and why it happens.
+\end{itemize}
+
+{\bf Hints for using gdb:} \\
+gdb is always at quite a lag behind, playing catch-up with the latest compiler. Sot it {\em has} problems.
+Here are a few hints for working with it, or in spite of it\ldots
+\begin{itemize}
+\item printing a {\tt std::string} doesn't work. Cast it to a {\tt char*} first, as in \verb!p (char *) my_string!
+\item gdb often seems lost when you attempt to examine the insides of a complex
+  object, replying that it can't find info on that class.  In this case,
+  unfortunately, you'll have to insert instructions in the code to print the desired debug info
+  (with \verb!cerr << ...!), recompile and rerun gdb.
+\item If you want to see an object on which you have a {\tt PP} smart
+  pointer (or similar type), you can access the raw pointer inside (it's
+  called {\tt ptr}!), for ex: \verb!p my_var.ptr->value.length_!
+\end{itemize}
+
+I also suggest you learn using a good integrated development environment
+(IDE) like Emacs. Emacs has multiple windows, a compilation mode (pressing
+return on an error will bring you directly to the problematic line of the
+problematic file), and a gdb mode (with which you can easily follow the step by step execution, 
+as an arrow is always displayed before the next instruction to be executed, and you can rapidly put a breakpoint (Ctrl-X
+SPACE) anywhere). With the proper key definitions (learn how to define your
+own keys for maximum efficiencey!), a complete recompile of your code, and
+reload in gdb is just one key away.  You won't have to touch the rat. And
+yes, it even all works perfectly fine (multiple windows and all) inside a
+{\em single} text terminal over a telnet connexion for ex. (invoke it using
+\verb!emacs -nw!).
+  
+
+\section{Dirty runtime errors}
+
+By this, I mean {\tt segmentation fault} and the like.
+
+\begin{itemize}
+\item First try running your code in {\tt gdb}, as above.
+\item If this doesn't appear too helpful on its own (and probably won't),
+  try running your program with {\tt valgrind}. It's a great tool for
+  catching memory bugs (like writing or reading from memory areas you never
+  allocated or initialized.). You can run it like that, from a shell: \\
+  \verb!valgrind --gdb-attach=yes your_prg_and_its_args!
+\end{itemize}
+
 
 
 \chapter*{License}

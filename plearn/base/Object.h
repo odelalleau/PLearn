@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.17 2003/05/27 04:03:56 plearner Exp $
+   * $Id: Object.h,v 1.18 2003/06/03 14:52:08 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -374,7 +374,11 @@ using namespace std;
     */
     virtual void call(const string& methodname, int nargs, PStream& in_parameters, PStream& out_results);
 
-    //! Overload this for runnable objects (default method issues a runtime error)
+    //! Overload this for runnable objects 
+    //! (default method issues a runtime error)
+    //! Runnable objects are objects that can be used
+    //! as *THE* object of a .plearn script.
+    //! The run() method specifies what they should do when executed. 
     virtual void run();
 
     //! DEPRECATED For backward compatibility with old saved object
@@ -646,5 +650,13 @@ template<class T> Object *toIndexedObjectPtr(const T&, int) // Never to be calle
 	    return 0; }
       
 %> // end of namespace PLearn
+
+//! Useful function for debugging inside gdb:
+extern "C"
+{
+  void printobj(PLearn::Object* p);
+}
+
+
 
 #endif //!<  Object_INC

@@ -72,8 +72,11 @@ public:
   //! Returns the number of available different "splits"
   virtual int nsplits() const;
 
+  //! Returns the number of sets per split
+  virtual int nSetsPerSplit() const;
+
   //! Returns split number i
-  virtual Array<VMat> getSplit(int i=0);
+  virtual TVec<VMat> getSplit(int i=0);
 
 };
 

@@ -578,7 +578,7 @@ class FileInfo:
             for optlib in optional_libraries_defs:
                 if optlib.is_triggered_by(includefile):
                     self.triggered_libraries.append(optlib)
-                    print optlib.name + ' TRIGGERED BY INCLUDE ' + includefile + ' IN ' + self.filepath 
+                    # print optlib.name + ' TRIGGERED BY INCLUDE ' + includefile + ' IN ' + self.filepath 
 
             fullpath = os.path.join(self.filedir, includefile)
             if os.path.isfile(fullpath):
@@ -675,25 +675,66 @@ class FileInfo:
             self.collect_ccfiles_to_link(self.ccfiles_to_link,visited_hfiles)
         return self.ccfiles_to_link
 
+
+    def collect_optional_libraries(self, optlibs, visited_files):
+        # print 'collecting optional libraries for file', self.filebase+self.fileext
+        if self not in visited_files:
+            # print 'ENTERING'
+            visited_files.append(self)
+            if hasattr(self,'optional_libraries'):
+                # print 'hasattr: ', map(lambda(x): x.name, self.optional_libraries)
+                appendunique(optlibs, self.optional_libraries)
+            else:
+                # print 'appending triggered libraries'
+                appendunique(optlibs, self.triggered_libraries)
+                for include in self.includes_from_sourcedirs:
+                    # print 'lookin up include', include.filebase+include.fileext
+                    include.collect_optional_libraries(optlibs, visited_files)        
+
     def get_optional_libraries(self):
-        """returns the list of *all* OptionalLibrary that need to be linked with any program that uses this file, in the right order"""
+        """returns the list of all OptionalLibrary that this file triggers directly or indirectly"""
         if not hasattr(self,'optional_libraries'):
-            self.optional_libraries = []
-            appendunique(self.optional_libraries, self.triggered_libraries)
-            if not self.is_ccfile and self.corresponding_ccfile:
-                appendunique(self.optional_libraries, self.corresponding_ccfile.get_optional_libraries())
-            for include in self.includes_from_sourcedirs:
-                appendunique(self.optional_libraries, include.get_optional_libraries())
-            # reorder self.optional_libraries in the order in which they appear in optional_libraries_defs
-            # self.optional_libraries = [ x for x in optional_libraries_defs if x in self.optional_libraries ]
-            # old-fashioned python that will work on troll (xsm):
-            sol= []
-            for x in optional_libraries_defs:
-                if x in self.optional_libraries:
-                    sol = sol + [x]
-            self.optional_libraries = sol
-                    
+            optlibs = []
+            self.collect_optional_libraries(optlibs, [])
+            self.optional_libraries = optlibs
         return self.optional_libraries
+
+    def get_all_optional_libraries_to_link(self):
+        """returns the list of all optional libraries to link with this .cc"""
+        # reorder self.optional_libraries in the order in which they appear in optional_libraries_defs
+        # self.optional_libraries = [ x for x in optional_libraries_defs if x in self.optional_libraries ]
+        # old-fashioned python that will work on troll (xsm):
+        optlibs = []
+        for ccfile in self.get_ccfiles_to_link():
+            appendunique(optlibs, ccfile.get_optional_libraries())
+        sol= []
+        for x in optional_libraries_defs:
+            if x in optlibs:
+                sol = sol + [x]
+        return sol            
+        
+#     def get_optional_libraries(self):
+#         """returns the list of *all* OptionalLibrary that need to be linked with any program that uses this file, in the right order"""
+#         print "go(",self.filebase+self.fileext,")"
+#         if not hasattr(self,'optional_libraries'):
+#             self.optional_libraries = []
+#             appendunique(self.optional_libraries, self.triggered_libraries)
+#             if not self.is_ccfile and self.corresponding_ccfile:
+#                 print self.filebase+self.fileext, " moving into corresponding .cc file"
+#                 appendunique(self.optional_libraries, self.corresponding_ccfile.get_optional_libraries())
+#             print self.filebase+self.fileext, " moving into INCLUDES: ", map( lambda(x): x.filebase, self.includes_from_sourcedirs)
+#             for include in self.includes_from_sourcedirs:
+#                 appendunique(self.optional_libraries, include.get_optional_libraries())
+#             # reorder self.optional_libraries in the order in which they appear in optional_libraries_defs
+#             # self.optional_libraries = [ x for x in optional_libraries_defs if x in self.optional_libraries ]
+#             # old-fashioned python that will work on troll (xsm):
+#             sol= []
+#             for x in optional_libraries_defs:
+#                 if x in self.optional_libraries:
+#                     sol = sol + [x]
+#             self.optional_libraries = sol
+#         print "optlib(",self.filebase+self.fileext, " = ", map(lambda(x): x.name, self.optional_libraries)
+#         return self.optional_libraries
 
     def get_optional_libraries_compileroptions(self):
         compopts = []
@@ -715,7 +756,7 @@ class FileInfo:
 
     def get_optional_libraries_linkeroptions(self):
         linkeroptions = ''
-        for optlib in self.get_optional_libraries():
+        for optlib in self.get_all_optional_libraries_to_link():
             linkeroptions = linkeroptions + optlib.linkeroptions + ' '
 
         if useqt:
@@ -914,6 +955,8 @@ class FileInfo:
                 linker = optdef.linker
 
         command = linker + ' -o ' + self.corresponding_executable + ' ' + string.join(objsfilelist,' ') + ' ' + self.get_optional_libraries_linkeroptions() + ' ' + linkeroptions + ' ' + linkeroptions_tail
+
+        # print "CALLED link_command WITH oprtional_libraries_lineroptions of: ", self.get_optional_libraries_linkeroptions()        
         return command
 
     def launch_linking(self):

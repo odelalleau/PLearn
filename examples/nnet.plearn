@@ -22,12 +22,7 @@ NNet(
           # int: dimensionality of output
           # (for classification the output is typically a vector of class scores
           # so this is the number of classes)
-          outputsize = 26;  # 26 letters
-
-          # int: dimensionality of target
-          # (here target is simply the class number between 0 and 9)
-          targetsize = 1;
-
+          noutputs = 26;  # 26 letters
           # int: number of hidden units in first hidden layer (0 means no hidden layer)
           nhidden = 100;
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.cc,v 1.9 2003/05/07 05:39:19 plearner Exp $ 
+   * $Id: Experiment.cc,v 1.10 2003/06/03 14:52:11 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.cc */
@@ -151,7 +151,7 @@ void Experiment::run()
 
   for(int k=0; k<nsplits; k++)
     {
-      Array<VMat> train_test = splitter->getSplit(k);
+      TVec<VMat> train_test = splitter->getSplit(k);
       if(train_test.size()!=2) 
         PLERROR("Splitter returned a split with %d subsets, instead of the expected 2: train&test",train_test.size());
       VMat trainset = train_test[0];

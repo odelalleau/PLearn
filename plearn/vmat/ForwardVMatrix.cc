@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: ForwardVMatrix.cc,v 1.4 2003/03/22 04:37:00 plearner Exp $
+ * $Id: ForwardVMatrix.cc,v 1.5 2003/06/03 14:52:09 plearner Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -63,6 +63,12 @@ void ForwardVMatrix::setVMat(VMat the_vm)
       length_ = vm->length();
       width_ = vm->width();
       writable = vm->isWritable();
+      if(inputsize_<0)
+        inputsize_ = vm->inputsize();
+      if(targetsize_<0)
+        targetsize_ = vm->targetsize();
+      if(weightsize_<0)
+        weightsize_ = vm->weightsize();
       setMtime(vm->getMtime());
       setMetaDataDir(vm->getMetaDataDir());
       setAlias(vm->getAlias());
@@ -156,6 +162,9 @@ void ForwardVMatrix::reset_dimensions()
   vm->reset_dimensions();
   length_ = vm->length();
   width_ = vm->width();
+  inputsize_ = vm->inputsize();
+  targetsize_ = vm->targetsize();
+  weightsize_ = vm->weightsize();
 }
 
 VMat ForwardVMatrix::subMat(int i, int j, int l, int w)

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Mat.cc,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: Mat.cc,v 1.2 2003/06/03 14:52:09 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -75,10 +75,6 @@ Vec* newVecArray(int n, int the_length)
   return varray;
 }
 
-
-// For use within debugger (gdb) only
-void printvec(const Vec& v)
-{ cout << v << endl; }
 
 template <>
 void deepCopyField(Vec& field, CopiesMap& copies)
@@ -155,10 +151,6 @@ Mat unitmatrix(int n)
   return m;
 }
 
-// For use within debugger (gdb) only
-void printmat(const Mat& m)
-{ cout << m << endl; }
-
 template <>
 void deepCopyField(Mat& field, CopiesMap& copies)
 {
@@ -166,3 +158,13 @@ void deepCopyField(Mat& field, CopiesMap& copies)
 }
 
 %> // end of namespace PLearn
+
+
+// For use within debugger (gdb) only
+// For use within debugger (gdb) only
+void printvec(const PLearn::Vec& v)
+{ std::cout << v << std::endl; }
+
+void printmat(const PLearn::Mat& m)
+{ std::cout << m << std::endl; }
+

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.h,v 1.3 2003/05/15 14:47:52 tihocan Exp $
+   * $Id: SelectRowsVMatrix.h,v 1.4 2003/06/03 14:52:09 plearner Exp $
    ******************************************************* */
 
 
@@ -65,24 +65,14 @@ public:
 
 public:
 
+  SelectRowsVMatrix();
+
   //! Also copies the original fieldinfos upon construction
   //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
-  SelectRowsVMatrix() {};
-  SelectRowsVMatrix(VMat the_distr, TVec<int> the_indices) :
-    VMatrix(the_indices.length(),the_distr->width()),
-    distr(the_distr),indices(the_indices)
-    {
-      fieldinfos = the_distr->fieldinfos;
-    }
-
+  SelectRowsVMatrix(VMat the_distr, TVec<int> the_indices);
+  
   //! Here the indices will be copied locally into an integer vector
-  SelectRowsVMatrix(VMat the_distr, Vec the_indices) :
-    VMatrix(the_indices.length(),the_distr->width()),
-    distr(the_distr),indices(the_indices.length())
-    {
-      fieldinfos = the_distr->fieldinfos;
-      indices << the_indices; // copy to integer indices
-    }
+  SelectRowsVMatrix(VMat the_distr, Vec the_indices);
   
   PLEARN_DECLARE_OBJECT_METHODS(SelectRowsVMatrix, "SelectRowsVMatrix", VMatrix);
 

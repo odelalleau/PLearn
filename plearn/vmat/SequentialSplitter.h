@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SequentialSplitter.h,v 1.2 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: SequentialSplitter.h,v 1.3 2003/06/03 14:52:09 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.h */
@@ -109,8 +109,11 @@ public:
     //! Returns the number of available different "splits"
     virtual int nsplits() const;
 
+  //! Returns the number of sets per split
+  virtual int nSetsPerSplit() const;
+
     //! Returns split number i
-    virtual Array<VMat> getSplit(int i=0);
+    virtual TVec<VMat> getSplit(int i=0);
 
 };
 

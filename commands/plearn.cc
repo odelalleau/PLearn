@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.28 2003/05/26 04:12:41 plearner Exp $
+   * $Id: plearn.cc,v 1.29 2003/06/03 14:52:05 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -81,7 +81,7 @@
 #include "Experiment.h"
 
 // New generation system
-#include "PExperiment.h"
+#include "PTester.h"
 #include "GenerateDecisionPlot.h"
 #include "NNet.h"
 //#include "HyperLearner.h"

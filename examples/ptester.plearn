@@ -1,0 +1,113 @@
+PTester( 
+# string: Path of this tester's directory in which to save all tester results.
+# The directory will be created if it does not already exist.
+# If this is an empty string, no directory is created and no output file is generated.
+expdir = "ptester"  ;
+
+# PP< PLearner >: The learner to train/test.
+# learner.train_set will be used as the dataset for this tester
+# (you may omit learner.train_set if your splitter is an ExplicitSplitter)
+learner =
+NNet(
+          train_set = AutoVMatrix(specification="letters all normalize");
+
+          # int: dimensionality of output
+          # (for classification the output is typically a vector of class scores
+          # so this is the number of classes)
+          noutputs = 26;  # 26 letters
+
+          # int: number of hidden units in first hidden layer (0 means no hidden layer)
+          nhidden = 100;
+
+          # double: global weight decay for all layers
+          weight_decay = 0;
+
+          # string: what transfer function to use for ouput layer?
+          # one of: tanh, sigmoid, exp, softmax
+          # an empty string means no output transfer function
+          output_transfer_func = "softmax"  ;
+
+          # Array< string >:     a list of cost functions to use
+          # in the form "[ cf1; cf2; cf3; ... ]" where each function is one of:
+          #   mse (for regression)
+          #   mse_onehot (for classification)
+          #   NLL (negative log likelihood -log(p[c]) for classification)
+          #   class_error (classification error)
+          # The first function of the list will be used as
+          # the objective function to optimize
+          # (possibly with an added weight decay penalty)
+          cost_funcs = [ "NLL", "class_error" ];
+
+          # PP< Optimizer >:     specify the optimizer to use
+          optimizer = GradientOptimizer(
+                      # double: the initial learning rate
+                      start_learning_rate = 0.01  ;
+
+                      # double: the learning rate decrease constant
+                      decrease_constant = 0  ;
+                      )
+
+          # int: how many samples to use to estimate the avergage gradient before updating the weights
+          # 0 is equivalent to specifying training_set->length()
+          # NOTE: this overrides the optimizer s 'n_updates' and 'every_iterations'.
+          batch_size = 1;
+
+          # long: The initial seed for the random number generator used to initialize this learner's parameters
+          # as typically done in the forget() method...
+          # With a given seed, forget() should always initialize the parameters to the same values.
+          seed = 0  ;
+
+          # int: how many times the optimizer gets to see the whole training set.
+          nstages = 10;
+
+          )
+
+
+# PP< Splitter >: The splitter to use to generate one or several train/test tuples from the dataset.
+# splitter = TrainTestSplitter(test_fraction=.10) ;
+splitter = KFoldSplitter(K=10) ;
+
+# TVec< string >: A list of global statistics we are interested in.
+# These are strings of the form S1[S2[dataset.cost_name]] where:
+#   - dataset is train or test1 or test2 ... (train being 
+#     the first dataset in a split, test1 the second, ...) 
+#   - cost_name is one of the training or test cost names (depending on dataset) understood 
+#     by the underlying learner (see its getTrainCostNames and getTestCostNames methods) 
+#   - S1 and S2 are a statistic, i.e. one of: E (expectation), V(variance), MIN, MAX, STDDEV, ... 
+#     S2 is computed over the samples of a given dataset split. S1 is over the splits. 
+statnames = ["E[E[train.NLL]]" "E[[E[train.class_error]]" "E[E[test.NLL]]" "E[[E[test.class_error]]" ]
+ ;
+
+# bool: If true, the computed global statistics specified in statnames will be saved in global_stats.pmat 
+# and the corresponding per-split statistics will be saved in split_stats.pmat 
+# For reference, all cost names (as given by the learner's getTrainCostNames() and getTestCostNames() ) 
+# will be reported in files train_cost_names.txt and test_cost_names.txt
+report_stats = 1  ;
+
+# bool: If true, this PTester object will be saved in its initial state in tester.psave 
+# Thus if the initial .plearn file gets lost, or modified, we can always see what this tester was.
+save_initial_tester = 1  ;
+
+# bool: If true, stat collectors for split#k will be saved in Split#k/train_stats.psave and Split#k/test#i_stats.psave
+save_stat_collectors = 1  ;
+
+# bool: If true, the final trained learner for split#k will be saved in Split#k/final_learner.psave
+save_learners = 1  ;
+
+# bool: If true, the initial untrained learner for split#k (just after forget() has been called) will be saved in Split#k/initial_learner.psave
+save_initial_learners = 0  ;
+
+# bool: If true, the data set generated for split #k will be saved as Split#k/training_set.psave Split#k/test1_set.psave ...
+save_data_sets = 0  ;
+
+# bool: If true, the outputs of the test for split #k will be saved in Split#k/test#i_outputs.pmat
+save_test_outputs = 0  ;
+
+# bool: If true, the costs of the test for split #k will be saved in Split#k/test#i_costs.pmat
+save_test_costs = 0  ;
+
+# bool: If true, each learner to be trained will have its experiment directory set to Split#k/LearnerExpdir/
+provide_learner_expdir = 0  ;
+
+);
+

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.16 2003/05/28 15:02:13 ducharme Exp $
+   * $Id: TMat.h,v 1.17 2003/06/03 14:52:09 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -223,12 +223,13 @@ class TVec
     void write(PStream& out) const
     {
       const TVec<T>& v = *this; // simple alias
-      if(out.implicit_storage 
-         || out.outmode==PStream::raw_ascii
-         || out.outmode==PStream::raw_binary
-         || out.outmode==PStream::pretty_ascii )
+      if(storage && 
+         ( out.implicit_storage 
+           || out.outmode==PStream::raw_ascii
+           || out.outmode==PStream::raw_binary
+           || out.outmode==PStream::pretty_ascii ) )
         writeSequence(out,v);
-      else // explicit storage
+      else // write explicit storage
         {
           out.write("TVec("); 
           out << v.length();
@@ -1018,7 +1019,10 @@ public:
   //! Note that users should rather use the form out << m;
   void write(PStream& out) const
   {
-    T* ptr = data();
+    T* ptr = 0;
+    if(storage)
+      ptr = data();
+
     switch(out.outmode)
     {
       case PStream::raw_ascii:      

@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.cc,v 1.4 2003/05/15 19:29:46 genji256 Exp $ 
+   * $Id: KFoldSplitter.cc,v 1.5 2003/06/03 14:52:09 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
@@ -82,7 +82,12 @@ int KFoldSplitter::nsplits() const
     return K;
 }
 
-Array<VMat> KFoldSplitter::getSplit(int k)
+int KFoldSplitter::nSetsPerSplit() const
+{
+  return 2;
+}
+
+TVec<VMat> KFoldSplitter::getSplit(int k)
 {
     if (k >= K)
         PLERROR("KFoldSplitter::getSplit() - k (%d) cannot be greater than K (%d)", k, K);
@@ -92,7 +97,7 @@ Array<VMat> KFoldSplitter::getSplit(int k)
     if ((int)(test_fraction) < 1)
         test_fraction = 1; // leave-one-out cross-validation
 
-    Array<VMat> split_(2);
+    TVec<VMat> split_(2);
     split(dataset, test_fraction, split_[0], split_[1], k);
     return split_;
 }

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: SubVMatrix.h,v 1.2 2003/06/03 14:52:09 plearner Exp $
    ******************************************************* */
 
 
@@ -60,7 +60,7 @@ protected:
 public:
   //! The appropriate VMFields of the parent VMat are copied upon
   //! construction
-  SubVMatrix() {};
+  SubVMatrix();
   SubVMatrix(VMat the_parent, int the_istart, int the_jstart, int the_length, int the_width);
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
