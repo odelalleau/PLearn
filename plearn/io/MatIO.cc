@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.10 2004/05/03 16:09:03 dorionc Exp $
+   * $Id: MatIO.cc,v 1.11 2004/07/09 18:16:42 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -1054,7 +1054,7 @@ static int compare_string_pointers(const void *ts1, const void *ts2)
 
 
 // UCI machine-learning-database format
-Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols)
+Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols, TVec<int>* the_max_in_col)
 {
   FILE *f = fopen(filename.c_str(),"r");
   int n_rows= -1, n_cols=1, i,j;
@@ -1095,6 +1095,15 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols)
   /*  figure out the set of symbols used for each symbolic row, if any  */
   symbols = (char ***)calloc(n_cols,sizeof(char **));
   n_symbols = (int *)calloc(n_cols,sizeof(int));
+
+  TVec<int>* max_in_col;
+  if (the_max_in_col) {
+    max_in_col = the_max_in_col;
+  } else {
+    max_in_col = new TVec<int>();
+  }
+  max_in_col->resize(n_cols);
+  max_in_col->fill(-1);
   if(to_symbols)
   {
     *to_symbols = symbols;
@@ -1113,9 +1122,10 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols)
       *cp=0;
       /*  is this symbolic?  */
       cp2=word;
+      string the_val = word;
       while (!isalpha((int)*cp2) && *cp2!='?' && cp2 < cp) cp2++;
       if (isalpha((int)*cp2) && *cp2!='?') { 
-        /*  yes, non-misisng symbolic character was found:  */
+        /*  yes, non-missing symbolic character was found:  */
         if (symbols[j])
         { 
           /*  we already had found symbols in this column  */
@@ -1140,6 +1150,15 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols)
           symbols[j][0] = (char *)calloc(strlen(word)+1,sizeof(char));
           strcpy(symbols[j][0], word);
           n_symbols[j]=1;
+        }
+      } else {
+        // This is a numerical character: we use it to keep track of the
+        // maximum in this column.
+        real real_val;
+        if (the_val != "?" && pl_isnumber(the_val, &real_val)) {
+          if (int(real_val) > (*max_in_col)[j]) {
+            (*max_in_col)[j] = int(real_val);
+          }
         }
       }
       word = cp+1;
@@ -1172,20 +1191,22 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols)
         /*  is this missing?  */
         if (*word == '?')
           *p = MISSING_VALUE;
-        else
+        else {
           /*  is this symbolic?  */
+          bool is_symbolic = false;
           if (symbols[j]) {
-            /*  read symbolic data  */
+            /*  Try to read symbolic data  */
             int w=0;
             while (symbols[j][w] && /*  look for this symbol  */
                    strcmp(symbols[j][w],word)!=0 &&
                    w<n_symbols[j]) w++;
-            if (w==n_rows || !symbols[j][w])
-              PLERROR("logic error in loadUCIMLDB");
-            *p = w;
+            if (w != n_rows && symbols[j][w]) {
+              // The symbol does exist.
+              is_symbolic = true;
+              *p = w + (*max_in_col)[j] + 1;
+            }
           }
-          else
-          {
+          if (!is_symbolic) {
             /*  read numeric data  */
 #ifdef USEDOUBLE
             sscanf(word,"%lf",p);
@@ -1193,6 +1214,7 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols)
             sscanf(word,"%f",p);
 #endif
           }
+        }
         word=cp+1;
         p++;
       }
@@ -1211,6 +1233,8 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols)
     free(symbols);
     free(n_symbols);
   }
+  if (!the_max_in_col)
+    delete max_in_col;
 #undef convert_UCIMLDB_BUF_LEN
 
   return mat;

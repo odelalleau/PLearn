@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.17 2004/06/18 16:41:16 tihocan Exp $
+   * $Id: MatIO.h,v 1.18 2004/07/09 18:16:42 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -158,8 +158,11 @@ Vec loadADVec(const string& filename);
       order). The *to_symbols table has one element per column,
       each of which is a table of strings. The number of strings
       (i.e., symbols) for each column is given in the table *to_n_symbols. 
+      Additionally, if provided, the 'max_in_col' vector will contain
+      the (rounded to lowest integer) value of the maxium in each column
+      (this will be -1 if there is no numerical value in the column).
 */
-Mat loadUCIMLDB(const string& filename, char ****to_symbols=0, int **to_n_symbols=0);
+Mat loadUCIMLDB(const string& filename, char ****to_symbols=0, int **to_n_symbols=0, TVec<int>* max_in_col = 0);
 
 /*!     STATLOG machine-learning-database-format
       Format used for most of the STATLOG machine-learning-database.
