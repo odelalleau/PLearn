@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.1 2003/08/13 08:13:16 plearner Exp $ 
+   * $Id: RunCommand.cc,v 1.2 2003/10/07 20:49:26 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
@@ -54,7 +54,7 @@ void RunCommand::run(const vector<string>& args)
 {
   string scriptfile = args[0];
   if(!file_exists(scriptfile))
-    PLERROR("Non exstant script file: %s\n",scriptfile.c_str());
+    PLERROR("Non existant script file: %s\n",scriptfile.c_str());
 
   map<string, string> vars;
   // populate vars with the arguments passed on the command line
