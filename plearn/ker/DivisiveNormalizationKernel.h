@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DivisiveNormalizationKernel.h,v 1.2 2004/06/10 20:08:34 tihocan Exp $ 
+   * $Id: DivisiveNormalizationKernel.h,v 1.3 2004/06/11 13:22:27 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -68,10 +68,10 @@ protected:
   // Fields below are not options.
 
   //! The last average computed in evaluate_i_x_again().
-  real avg_evaluate_i_x_again;
+  mutable real avg_evaluate_i_x_again;
 
   //! The last average computed in evaluate_x_i_again().
-  real avg_evaluate_x_i_again;
+  mutable real avg_evaluate_x_i_again;
 
 public:
 
@@ -134,8 +134,8 @@ public:
   virtual real evaluate_i_j(int i, int j) const;
   virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
   virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
-  virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false);
-  virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false);
+  virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
+  virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
   virtual void computeGramMatrix(Mat K) const;
   virtual void setDataForKernelMatrix(VMat the_data);
   

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.h,v 1.4 2004/05/17 13:11:33 tihocan Exp $ 
+   * $Id: AdditiveNormalizationKernel.h,v 1.5 2004/06/11 13:22:06 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -70,10 +70,10 @@ protected:
   // Fields below are not options.
 
   //! The last average computed in evaluate_i_x_again().
-  real avg_evaluate_i_x_again;
+  mutable real avg_evaluate_i_x_again;
 
   //! The last average computed in evaluate_x_i_again().
-  real avg_evaluate_x_i_again;
+  mutable real avg_evaluate_x_i_again;
 
   //! A multiplicative factor to scale the result (1 or -1/2).
   real factor;
@@ -143,8 +143,8 @@ public:
   virtual real evaluate_i_j(int i, int j) const;
   virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
   virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
-  virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false);
-  virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false);
+  virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
+  virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
   virtual void computeGramMatrix(Mat K) const;
   virtual void setDataForKernelMatrix(VMat the_data);
   

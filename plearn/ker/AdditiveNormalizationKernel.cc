@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.cc,v 1.6 2004/06/03 13:48:00 tihocan Exp $ 
+   * $Id: AdditiveNormalizationKernel.cc,v 1.7 2004/06/11 13:22:06 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -205,7 +205,7 @@ real AdditiveNormalizationKernel::evaluate_i_x(int i, const Vec& x, real squared
 ////////////////////////
 // evaluate_i_x_again //
 ////////////////////////
-real AdditiveNormalizationKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) {
+real AdditiveNormalizationKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) const {
   if (first_time) {
     avg_evaluate_i_x_again = computeAverage(x, false, squared_norm_of_x);
   }
@@ -224,7 +224,7 @@ real AdditiveNormalizationKernel::evaluate_x_i(const Vec& x, int i, real squared
 ////////////////////////
 // evaluate_x_i_again //
 ////////////////////////
-real AdditiveNormalizationKernel::evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x, bool first_time) {
+real AdditiveNormalizationKernel::evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x, bool first_time) const {
   if (first_time) {
     avg_evaluate_x_i_again = computeAverage(x, true, squared_norm_of_x);
   }

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DivisiveNormalizationKernel.cc,v 1.2 2004/06/10 20:08:34 tihocan Exp $ 
+   * $Id: DivisiveNormalizationKernel.cc,v 1.3 2004/06/11 13:22:27 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -169,7 +169,7 @@ real DivisiveNormalizationKernel::evaluate_i_x(int i, const Vec& x, real squared
 ////////////////////////
 // evaluate_i_x_again //
 ////////////////////////
-real DivisiveNormalizationKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) {
+real DivisiveNormalizationKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) const {
   if (first_time) {
     avg_evaluate_i_x_again = computeAverage(x, false, squared_norm_of_x);
   }
@@ -188,7 +188,7 @@ real DivisiveNormalizationKernel::evaluate_x_i(const Vec& x, int i, real squared
 ////////////////////////
 // evaluate_x_i_again //
 ////////////////////////
-real DivisiveNormalizationKernel::evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x, bool first_time) {
+real DivisiveNormalizationKernel::evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x, bool first_time) const {
   if (first_time) {
     avg_evaluate_x_i_again = computeAverage(x, true, squared_norm_of_x);
   }
