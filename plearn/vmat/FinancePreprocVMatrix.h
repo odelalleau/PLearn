@@ -1,7 +1,7 @@
 
 // -*- C++ -*-
 
-// AddTradableColumnVMatrix.h
+// FinancePreprocVMatrix.h
 //
 // Copyright (C) 2003  Rejean Ducharme 
 // 
@@ -34,12 +34,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddTradableColumnVMatrix.h,v 1.4 2003/08/27 19:20:49 ducharme Exp $ 
+   * $Id: FinancePreprocVMatrix.h,v 1.1 2003/09/03 21:01:00 ducharme Exp $ 
    ******************************************************* */
 
-/*! \file AddTradableColumnVMatrix.h */
-#ifndef AddTradableColumnVMatrix_INC
-#define AddTradableColumnVMatrix_INC
+/*! \file FinancePreprocVMatrix.h */
+#ifndef FinancePreprocVMatrix_INC
+#define FinancePreprocVMatrix_INC
 
 #include "RowBufferedVMatrix.h"
 #include "VMat.h"
@@ -47,21 +47,28 @@
 namespace PLearn <%
 using namespace std;
 
-class AddTradableColumnVMatrix: public RowBufferedVMatrix
+class FinancePreprocVMatrix: public RowBufferedVMatrix
 {
 public:
 
   VMat underlying; //! the underlying vmat
+  TVec<string> asset_name; //! all the asset names
+  bool add_tradable; //! do we include the information telling if this day is tradable or not
+  bool add_last_day_of_month; //! do we include the information about the last tradable day of the month
+  bool add_moving_average; //! do we include the moving average statistics on the price_tag indexes
   int min_volume_threshold; //! tradable = 1 if volume>min_volume_threshold
-  bool add_last_day_of_month; //! tells if we also include the information about the last tradable day of the month
+  TVec<string> prices_tag; //! all the price tags on which we want to compute the moving average (e.g. close:level)
+  TVec<int> moving_average_window; //! the window size of the moving average
   string volume_tag; //! "volume" by default
   string date_tag; //! "Date" by default.  Only used if add_last_day_of_month==true
 
 protected:
 
-  vector< pair<string,int> > name_col; //! all the (asset:is_tradable)/(volume column) pairs
+  TVec<int> volume_index; //! the indexes (in the vmat) of all the volume columns
+  TVec<int> price_index; //! the indexes of all the prices on which we want to compute some stats
   Vec row_buffer; //! a row buffer for the getRow method
   Vec last_day_of_month_index; //! the index of all the last tradable day of the month, base on the date column of the underlying matrix
+  int max_moving_average_window; //! the maximum value of moving_average_window
 
 public:
 
@@ -71,13 +78,16 @@ public:
 
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
-  AddTradableColumnVMatrix();
+  FinancePreprocVMatrix();
 
   //! Simple constructor: takes as input only the underlying matrix,
   //! the number of assets and the threshold on the volume.
-  AddTradableColumnVMatrix(VMat vm, int nb_assets,  bool add_last_day=false,
-      int threshold=20, string the_volume_tag="volume",
-      string the_date_tag="Date");
+  FinancePreprocVMatrix(VMat vm, TVec<string> the_asset_names,
+      bool add_tradable_info=true,
+      bool add_last_day=false, bool add_moving_average_stats=false,
+      int threshold=20, TVec<string> the_price_tags=TVec<string>(),
+      TVec<int> moving_average_window_length=TVec<int>(),
+      string the_volume_tag="volume", string the_date_tag="Date");
 
   // ******************
   // * Object methods *
@@ -97,7 +107,7 @@ protected:
 
 public:
   virtual void getRow(int i, Vec v) const;
-  virtual real get(int i, int j) const;
+  //virtual real get(int i, int j) const;
 
   // simply calls inherited::build() then build_() 
   virtual void build();
@@ -109,11 +119,11 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(AddTradableColumnVMatrix);
+  PLEARN_DECLARE_OBJECT(FinancePreprocVMatrix);
   typedef RowBufferedVMatrix inherited;
 
 };
-DECLARE_OBJECT_PTR(AddTradableColumnVMatrix);
+DECLARE_OBJECT_PTR(FinancePreprocVMatrix);
 
 %> // end of namespace PLearn
 #endif

@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.20 2003/08/13 08:13:46 plearner Exp $
+   * $Id: VMatrix.h,v 1.21 2003/09/03 21:01:00 ducharme Exp $
    ******************************************************* */
 
 
@@ -139,7 +139,7 @@ public:
                    2 tenseur plein de la forme: rank size_1...size_n val ... 
                    3 tenseur sparse de la forme: rank size_1...size_n nvals i_1...i_n val i1...i_n val ...
   */
-  #define SPECIAL_FORMAT ((real)3.1e36))
+  #define SPECIAL_FORMAT ((real)3.1e36)
 
   // Field types...
   void setFieldInfos(const Array<VMField>& finfo);

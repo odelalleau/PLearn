@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.7 2003/09/02 21:10:52 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.8 2003/09/03 21:01:17 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -139,6 +139,9 @@ void MountLucasIndex::train()
     build_complete = true;
   }
 
+
+  Vec tbill_return(index_value.size());
+
   int start_t = last_train_t+1;
   ProgressBar* pb;
   if (report_progress)
@@ -172,6 +175,7 @@ void MountLucasIndex::train()
         // last trading day of the month
         unit_asset_value.fill(1000.0); // arbitrary initial value
         index_value[0] = 1000.0; // MLM Index initial value
+        tbill_return[0] = 1000.0; // MLM Index initial value
         last_month_last_price << price;
         last_month_risk_free_rate = risk_free_rate;
       }
@@ -206,6 +210,7 @@ void MountLucasIndex::train()
         if (is_missing(delta)) delta = 0.0; // first year
         index_value[current_month] = index_value[current_month-1]*(1.0 + delta);
         last_month_risk_free_rate = risk_free_rate;
+        tbill_return[current_month] = is_missing(risk_free_rate_return) ? tbill_return[current_month-1] : tbill_return[current_month-1]*(1+risk_free_rate_return);
       }
       errors(current_month,0) = index_value[current_month];
       real mean_unit_asset_value = mean(unit_asset_value);
@@ -234,6 +239,9 @@ void MountLucasIndex::train()
   if (pb) delete pb;
 
   savePVec("MLMIndex.pvec", index_value);
+  savePVec("TBill_return.pvec", tbill_return);
+  cout << "Rendement du MLM Index = " << exp(log(index_value[current_month-1]/index_value[10])*12.0/(current_month-10)) << endl;
+  cout << "Rendement du TBill = " << exp(log(tbill_return[current_month-1]/tbill_return[10])*12.0/(current_month-10)) << endl;
 }
 
 // nothing to do in test
