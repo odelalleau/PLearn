@@ -192,7 +192,7 @@ pymakeOption( name = 'opt',
 
 pymakeOption( name = 'gprof',
               description = 'optimized mode with profiler support (-pg)',
-              compileroptions = '-Wall -O3 -funroll-loops -fstrength-reduce -ffast-math -fPIC -pg',
+              compileroptions = '-Wall -O3 -funroll-loops -fstrength-reduce -ffast-math -pg',
               linkeroptions = '-pg' )
 
 pymakeOption( name = 'noblas',
