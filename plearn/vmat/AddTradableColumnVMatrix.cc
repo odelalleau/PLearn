@@ -34,11 +34,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddTradableColumnVMatrix.cc,v 1.1 2003/08/07 20:21:37 ducharme Exp $ 
+   * $Id: AddTradableColumnVMatrix.cc,v 1.2 2003/08/12 19:17:32 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file AddTradableColumnVMatrix.cc */
 #include "AddTradableColumnVMatrix.h"
+#include "PDate.h"
 
 namespace PLearn <%
 using namespace std;
@@ -49,11 +50,13 @@ AddTradableColumnVMatrix::AddTradableColumnVMatrix()
 {}
 
 AddTradableColumnVMatrix::AddTradableColumnVMatrix(VMat vm, int nb_assets,
-    int threshold)
-  :parentclass(vm->length(), vm->width()+nb_assets),
-   min_volume_threshold(threshold), underlying(vm), name_col(nb_assets),
-   row_buffer(vm->width())
+    bool add_last_day, int threshold, string the_volume_tag, string the_date_tag)
+  :parentclass(vm->length(), vm->width()+nb_assets+(add_last_day?1:0)),
+   underlying(vm), min_volume_threshold(threshold),
+   add_last_day_of_month(add_last_day), volume_tag(the_volume_tag),
+   date_tag(the_date_tag), name_col(nb_assets), row_buffer(vm->width())
 {
+  build();
 }
 
 PLEARN_IMPLEMENT_OBJECT_METHODS(AddTradableColumnVMatrix, "AddTradableColumnVMatrix", RowBufferedVMatrix);
@@ -69,11 +72,35 @@ void AddTradableColumnVMatrix::getRow(int i, Vec v) const
   int pos = underlying.width();
   for ( ; it != last; ++it, ++pos)
   {
-    real volume = underlying->get(i, it->second);
-    if (!is_missing(volume) && (int)volume>min_volume_threshold)
+    real volume = row_buffer[it->second];
+    if (!is_missing(volume) && (int)volume>=min_volume_threshold)
       v[pos] = 1.0;
     else
       v[pos] = 0.0;
+  }
+
+  if (add_last_day_of_month)
+    v[pos] = (last_day_of_month_index.contains(i)) ? 1.0 : 0.0;
+}
+
+real AddTradableColumnVMatrix::get(int i, int j) const
+{
+  if (j < underlying.width())
+    return underlying->get(i,j);
+  else if (j < underlying.width()+name_col.size())
+  {
+    pair<string,int> this_name_col = name_col[j - underlying.width()];
+    real volume = underlying->get(i, this_name_col.second);
+    if (!is_missing(volume) && (int)volume>=min_volume_threshold)
+      return 1.0;
+    else
+      return 0.0;
+  }
+  else
+  {
+    if (!add_last_day_of_month)
+      PLERROR("Out of bound!");
+    return last_day_of_month_index.contains(i) ? 1.0 : 0.0;
   }
 }
 
@@ -81,6 +108,15 @@ void AddTradableColumnVMatrix::declareOptions(OptionList& ol)
 {
   declareOption(ol, "min_volume_threshold", &AddTradableColumnVMatrix::min_volume_threshold, OptionBase::buildoption,
                 "The threshold saying if the asset is tradable or not.");
+
+  declareOption(ol, "add_last_day_of_month", &AddTradableColumnVMatrix::add_last_day_of_month, OptionBase::buildoption,
+                "Do we include the information about the last tradable day of the month or not.");
+
+  declareOption(ol, "volume_tag", &AddTradableColumnVMatrix::volume_tag, OptionBase::buildoption,
+                "The tag searched for the volume column.");
+
+  declareOption(ol, "date_tag", &AddTradableColumnVMatrix::date_tag, OptionBase::buildoption,
+                "The fieldInfo name of the date column.");
 
   // Now call the parent class' declareOptions
   parentclass::declareOptions(ol);
@@ -106,6 +142,9 @@ void AddTradableColumnVMatrix::setVMFields()
   int pos = underlying.width();
   for ( ; it != last; ++it, ++pos)
     declareField(pos, it->first, VMField::DiscrGeneral);
+
+  if (add_last_day_of_month)
+    declareField(pos, "is_last_day_of_month", VMField::DiscrGeneral);
 }
 
 void AddTradableColumnVMatrix::build_()
@@ -121,19 +160,39 @@ void AddTradableColumnVMatrix::build_()
     string is_tradable_name = asset_name + ":is_tradable";
     for (vector<string>::iterator it=words.begin(), last=words.end(); it!=last; ++it)
     {
-      if (*it == "volume")
+      if (*it == volume_tag)
       {
         int pos = underlying->fieldIndex(fieldname);
-        name_col[nb_assets++].first = is_tradable_name;
-        name_col[nb_assets++].second = pos;
+        name_col[nb_assets].first = is_tradable_name;
+        name_col[nb_assets].second = pos;
+        nb_assets++;
       }
     }
   }
-
   if (nb_assets != name_col.size())
     PLERROR("In AddTradableColumnVMatrix::build_: bad number of assets.");
 
+  if (add_last_day_of_month)
+  {
+    int date_col = underlying->fieldIndex(date_tag);
+    int julian_day = int(underlying->get(0,date_col));
+    PDate first_day(julian_day);
+    int previous_month = first_day.month;
+    for (int i=1; i<underlying.length(); i++)
+    {
+      julian_day = int(underlying->get(i,date_col));
+      PDate today(julian_day);
+      int this_month = today.month;
+      if (this_month != previous_month) last_day_of_month_index.append(i-1);
+      previous_month = this_month;
+    }
+    // we set the last day as a last tradable day of month (by default)
+    if (last_day_of_month_index.lastElement() != underlying.length()-1)
+      last_day_of_month_index.append(underlying.length()-1);
+  }
+
   setVMFields();
+  saveFieldInfos();
 }
 
 // ### Nothing to add here, simply calls build_

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddTradableColumnVMatrix.h,v 1.1 2003/08/07 20:21:37 ducharme Exp $ 
+   * $Id: AddTradableColumnVMatrix.h,v 1.2 2003/08/12 19:17:32 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file AddTradableColumnVMatrix.h */
@@ -51,13 +51,17 @@ class AddTradableColumnVMatrix: public RowBufferedVMatrix
 {
 public:
 
+  VMat underlying; //! the underlying vmat
   int min_volume_threshold; //! tradable = 1 if volume>min_volume_threshold
+  bool add_last_day_of_month; //! tells if we also include the information about the last tradable day of the month
+  string volume_tag; //! "volume" by default
+  string date_tag; //! "Date" by default.  Only used if add_last_day_of_month==true
 
 protected:
 
-  VMat underlying; //! the underlying vmat
   vector< pair<string,int> > name_col; //! all the (asset:is_tradable)/(volume column) pairs
   Vec row_buffer; //! a row buffer for the getRow method
+  Vec last_day_of_month_index; //! the index of all the last tradable day of the month, base on the date column of the underlying matrix
 
 public:
 
@@ -71,7 +75,9 @@ public:
 
   //! Simple constructor: takes as input only the underlying matrix,
   //! the number of assets and the threshold on the volume.
-  AddTradableColumnVMatrix(VMat vm, int nb_assets, int threshold=20);
+  AddTradableColumnVMatrix(VMat vm, int nb_assets,  bool add_last_day=false,
+      int threshold=20, string the_volume_tag="volume",
+      string the_date_tag="Date");
 
   // ******************
   // * Object methods *
@@ -90,8 +96,8 @@ protected:
   void setVMFields();
 
 public:
-  //!  This is the only method requiring implementation
   virtual void getRow(int i, Vec v) const;
+  virtual real get(int i, int j) const;
 
   // simply calls parentclass::build() then build_() 
   virtual void build();
