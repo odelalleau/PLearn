@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.20 2003/10/18 23:20:12 yoshua Exp $
+   * $Id: PLearner.cc,v 1.21 2003/10/22 18:18:49 yoshua Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -135,8 +135,15 @@ void PLearner::setExperimentDirectory(const string& the_expdir)
 
 void PLearner::setTrainingSet(VMat training_set, bool call_forget)
 { 
+  // YB: je ne suis pas sur qu'il soit necessaire de faire un build si la LONGUEUR du train_set a change? 
+  // les methodes non-parametriques qui utilisent la longueur devrait faire leur "resize" dans train, pas dans build.
+  bool training_set_has_changed =
+    !train_set || train_set->width()!=training_set->width() ||
+    train_set->length()!=training_set->length() || train_set->inputsize()!=training_set->inputsize()
+    || train_set->weightsize()!= training_set->weightsize();
   train_set = training_set;
-  build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un NNet train_set = training_set;
+  if (training_set_has_changed || call_forget)
+    build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un NNet train_set = training_set;
   if (call_forget)
     forget();
 }
