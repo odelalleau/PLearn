@@ -43,7 +43,9 @@ echo "@" >> $MATNAME.vmat
 echo "SortRowsVMatrix(" >> $MATNAME.vmat
 echo "  distr =" >> $MATNAME.vmat
 echo "    AutoVMatrix(specification = \"$MATNAME.amat\")" >> $MATNAME.vmat
-echo "    sort_columns = [ ]  # Add here the columns you want to get sorted" >> $MATNAME.vmat
+echo "    sort_columns = [" >> $MATNAME.vmat
+echo "      # Add here the columns you want to get sorted." >> $MATNAME.vmat
+echo "    ]" >> $MATNAME.vmat
 echo ")" >> $MATNAME.vmat
 echo "</SOURCES>" >> $MATNAME.vmat
 
