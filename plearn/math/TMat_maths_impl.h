@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.45 2004/05/04 21:07:31 ducharme Exp $
+   * $Id: TMat_maths_impl.h,v 1.46 2004/05/14 17:49:13 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -2388,7 +2388,7 @@ T matRowDotVec(const TMat<T>& mat, int i, const TVec<T> v)
         i,v.length(),mat.width());
 #endif
   T s = 0;
-  T* rowi = rowdata(i);
+  T* rowi = mat.rowdata(i);
   T* v_=v.data();
   for (int j=0;j<mat.width();j++)
     s += rowi[j] * v_[j];
@@ -5297,7 +5297,7 @@ void classification_confusion_matrix(TMat<T> outputs, TMat<T> target_classes, TM
 // of a row when projected orthogonal to the previous ones for this row
 // to contribute to the basis.
 template<class T>
-int GramSchmidtOrthogonalization(TMat<T> A, T tolerance)
+int GramSchmidtOrthogonalization(TMat<T> A, T tolerance=1e-6)
 {
   int n_basis = 0;
   for (int i=0;i<A.length();i++)

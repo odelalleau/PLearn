@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array_decl.h,v 1.1 2004/04/17 00:48:46 plearner Exp $
+   * $Id: Array_decl.h,v 1.2 2004/05/14 17:49:10 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -163,7 +163,7 @@ class Array: public TVec<T>
     bool operator==(const Array<T>& other) const
     {
 #ifdef BOUNDCHECK
-      if (size()!=other.size())
+      if (this->size()!=other.size())
         PLERROR("Array::operator== works on same-size arguments");
 #endif
       iterator array = data();
@@ -175,7 +175,7 @@ class Array: public TVec<T>
     bool operator<(const Array<T>& other) const
     {
 #ifdef BOUNDCHECK
-      if (size()!=other.size())
+      if (this->size()!=other.size())
         PLERROR("Array::operator< works on same-size arguments");
 #endif
       iterator array = data();
@@ -190,7 +190,7 @@ class Array: public TVec<T>
     bool operator<=(const Array<T>& other) const
     {
 #ifdef BOUNDCHECK
-      if (size()!=other.size())
+      if (this->size()!=other.size())
         PLERROR("Array::operator< works on same-size arguments");
 #endif
       iterator array = data();
@@ -206,7 +206,7 @@ class Array: public TVec<T>
     bool operator>(const Array<T>& other) const
     {
 #ifdef BOUNDCHECK
-      if (size()!=other.size())
+      if (this->size()!=other.size())
         PLERROR("Array::operator< works on same-size arguments");
 #endif
       iterator array = data();
@@ -221,7 +221,7 @@ class Array: public TVec<T>
     bool operator>=(const Array<T>& other) const
     {
 #ifdef BOUNDCHECK
-      if (size()!=other.size())
+      if (this->size()!=other.size())
         PLERROR("Array::operator< works on same-size arguments");
 #endif
       iterator array = data();
@@ -250,8 +250,8 @@ class Array: public TVec<T>
 
   int findFirstOccurence(const T& elem)
     {
-      for(int i=0;i<array_size;i++)
-        if(elem==array[i])
+      for(int i=0;i<this->array_size;i++)
+        if(elem==this->array[i])
           return i;
       return -1;
     }
@@ -281,12 +281,12 @@ class Array: public TVec<T>
     }
 
   //!  used by Hash  (VERY DIRTY: TO BE REMOVED [Pascal])
-  inline operator char*() const { if(isNull()) return 0; else return (char*)data(); }
+  inline operator char*() const { if(this->isNull()) return 0; else return (char*)data(); }
 
   // norman: removed const. With inline is useless (and .NET doesn't like it)
   // Old code:
   //inline const size_t byteLength() const { return length()*sizeof(T); }
-  inline size_t byteLength() const { return size()*sizeof(T); }
+  inline size_t byteLength() const { return this->size()*sizeof(T); }
 
 /*  PAS UTILISE
     void increaseCapacity(int increase = 10)

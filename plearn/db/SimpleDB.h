@@ -324,14 +324,15 @@ public:
 private:
   FieldType field_type_;
   int precision_;
+  struct DateVal_t {
+    short year;
+    unsigned char month, day;
+  };
   union {
     char* string_val_;
     long long_val_;
     double double_val_;
-    struct {
-      short year;
-      unsigned char month, day;
-    } date_val_;
+    struct DateVal_t date_val_;
   };
 };
 

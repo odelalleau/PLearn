@@ -35,9 +35,10 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.14 2004/05/13 20:22:31 nova77 Exp $
+   * $Id: DiskVMatrix.cc,v 1.15 2004/05/14 17:49:14 chrish42 Exp $
    ******************************************************* */
 
+#include <errno.h>
 #include "DiskVMatrix.h"
 #include "pl_io.h"
 #include <errno.h>

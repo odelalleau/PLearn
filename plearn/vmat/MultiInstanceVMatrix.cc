@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.11 2004/05/13 20:22:31 nova77 Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.12 2004/05/14 17:49:17 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -214,7 +214,7 @@ void MultiInstanceVMatrix::build_()
     
 	 // get the actual data columns + the target
     mat_i = data_[lineNum];
-    for(i = 0; i < inputsize_ + source_targetsize; i++)
+    for(int i = 0; i < inputsize_ + source_targetsize; i++)
     {
       inFile >> inp_element;
       mat_i[i] = strtod(inp_element.c_str(), 0);

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.51 2004/04/30 13:12:45 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.52 2004/05/14 17:49:13 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -336,7 +336,7 @@ real ConjGradientOptimizer::conjpomdp (
     return 0;
   else
     return gamma;
-};
+}
 
 ///////////////////
 // cubicInterpol //

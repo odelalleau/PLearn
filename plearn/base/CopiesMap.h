@@ -35,12 +35,12 @@ using namespace std;
 */
 
   //! Types that do not require deep copy.
-  NODEEPCOPY(double);
-  NODEEPCOPY(float);
-  NODEEPCOPY(int);
-  NODEEPCOPY(string);
-  NODEEPCOPY(VMField);
-  NODEEPCOPY(VMFieldStat);
+  NODEEPCOPY(double)
+  NODEEPCOPY(float)
+  NODEEPCOPY(int)
+  NODEEPCOPY(string)
+  NODEEPCOPY(VMField)
+  NODEEPCOPY(VMFieldStat)
 
   //!  Any type not handled below: do nothing
   template <class T>

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array_impl.h,v 1.1 2004/04/17 00:48:46 plearner Exp $
+   * $Id: Array_impl.h,v 1.2 2004/05/14 17:49:10 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,7 +62,7 @@ void swap(Array<T>& a1, Array<T>& a2)
   if (a1.size()!=a2.size())
     PLERROR("Array::swap expects two same-size arguments");
 #endif
-  for(int i=0; i<length_; i++)
+  for(int i=0; i<a1.size(); i++)
   {
     tmp = a1d[i];
     a1d[i]=a2d[i];
@@ -76,7 +76,7 @@ inline PStream & operator>>(PStream &in, Array<T> &a)
 
 template <class T>
 inline PStream & operator<<(PStream &out, const Array<T> &a)
-{ writeSequence(out, a); return out; };
+{ writeSequence(out, a); return out; }
 
 template<class T>
 ostream& operator<<(ostream& out, const Array<T>& a)

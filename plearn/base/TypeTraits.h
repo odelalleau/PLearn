@@ -34,7 +34,7 @@
 
  
 /* *******************************************************      
-   * $Id: TypeTraits.h,v 1.6 2004/05/12 23:06:23 nova77 Exp $
+   * $Id: TypeTraits.h,v 1.7 2004/05/14 17:49:10 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -95,8 +95,6 @@ public:
   { return 0xFF; }
 };
 
-// Need explicit namespace declaration, since this macro may
-// be invoked when a different namespace is current
 #define DECLARE_TYPE_TRAITS_FOR_BASETYPE(T,LITTLE_ENDIAN_TYPECODE,BIG_ENDIAN_TYPECODE) \
 template<>                                       \
 class TypeTraits<T>                              \

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.26 2004/03/02 22:48:00 plearner Exp $
+   * $Id: Object.h,v 1.27 2004/05/14 17:49:10 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -100,7 +100,7 @@ using namespace std;
         static bool _isa_(Object* o);                                      \
         virtual CLASSTYPE* deepCopy(CopiesMap &copies) const;             \
         static void _static_initialize_();                                \
-	      static StaticInitializer _static_initializer_;                    
+	      static StaticInitializer _static_initializer_
 
 #define PLEARN_IMPLEMENT_OBJECT(CLASSTYPE, ONELINEDESCR, MULTILINEHELP)     \
 	      string CLASSTYPE::_classname_()                                       \
@@ -129,7 +129,7 @@ using namespace std;
             &CLASSTYPE::_isa_,  \
             ONELINEDESCR,   \
             MULTILINEHELP  ); }\
-	      StaticInitializer CLASSTYPE::_static_initializer_(&CLASSTYPE::_static_initialize_);               
+	      StaticInitializer CLASSTYPE::_static_initializer_(&CLASSTYPE::_static_initialize_)
 
 
 #define PLEARN_DECLARE_ABSTRACT_OBJECT(CLASSTYPE)    \
@@ -139,7 +139,7 @@ using namespace std;
         static bool _isa_(Object* o);                                      \
         virtual CLASSTYPE* deepCopy(CopiesMap &copies) const;             \
         static void _static_initialize_();                                \
-	      static StaticInitializer _static_initializer_;                    
+	      static StaticInitializer _static_initializer_
 
 #define PLEARN_IMPLEMENT_ABSTRACT_OBJECT(CLASSTYPE, ONELINEDESCR, MULTILINEHELP)     \
 	      string CLASSTYPE::_classname_()                                       \
@@ -163,7 +163,7 @@ using namespace std;
             &CLASSTYPE::_isa_, \
             ONELINEDESCR, \
             MULTILINEHELP  ); }\
-	      StaticInitializer CLASSTYPE::_static_initializer_(&CLASSTYPE::_static_initialize_);               
+	      StaticInitializer CLASSTYPE::_static_initializer_(&CLASSTYPE::_static_initialize_)
 
 
 // Now for TEMPLATEs...
@@ -249,45 +249,45 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
 
 #define DECLARE_OBJECT_PTR(CLASSTYPE)                                      \
         inline Object *toObjectPtr(const CLASSTYPE &o)                     \
-          { return const_cast<CLASSTYPE *>(&o); };                         \
-        inline PStream &operator>>(PStream &in, CLASSTYPE &o)        \
-          { o.newread(in); return in; };                                   \
-        inline PStream &operator>>(PStream &in, CLASSTYPE * &o)      \
+          { return const_cast<CLASSTYPE *>(&o); }                          \
+        inline PStream &operator>>(PStream &in, CLASSTYPE &o)              \
+          { o.newread(in); return in; }                                    \
+        inline PStream &operator>>(PStream &in, CLASSTYPE * &o)            \
           { if (o) o->newread(in);                                         \
             else o = static_cast<CLASSTYPE *>(readObject(in));             \
-            return in; };                                                  \
-        inline PStream &operator<<(PStream &out, const CLASSTYPE &o) \
-          { o.newwrite(out); return out; };                                \
-        inline PStream &operator>>(PStream &in, PP<CLASSTYPE> &o)    \
+            return in; }                                                   \
+        inline PStream &operator<<(PStream &out, const CLASSTYPE &o)       \
+          { o.newwrite(out); return out; }                                 \
+        inline PStream &operator>>(PStream &in, PP<CLASSTYPE> &o)          \
           { Object *ptr = (CLASSTYPE *)o;                                  \
             in >> ptr;                                                     \
             o = dynamic_cast<CLASSTYPE *>(ptr);                            \
             return in;                                                     \
-          };                                                               \
+          }                                                                \
         DECLARE_TYPE_TRAITS(CLASSTYPE)
 
 #define DECLARE_TEMPLATE_OBJECT_PTR(CLASSTYPE)                                      \
         template < TEMPLATE_DEF_ ## CLASSTYPE > \
         inline Object *toObjectPtr(const CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  &o)                     \
-          { return const_cast<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  *>(&o); };                         \
+          { return const_cast<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  *>(&o); }                          \
         template < TEMPLATE_DEF_ ## CLASSTYPE > \
         inline PStream &operator>>(PStream &in, CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  &o)        \
-          { o.newread(in); return in; };                                   \
+          { o.newread(in); return in; }                                    \
         template < TEMPLATE_DEF_ ## CLASSTYPE > \
         inline PStream &operator>>(PStream &in, CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  * &o)      \
           { if (o) o->newread(in);                                         \
             else o = static_cast<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  *>(readObject(in));             \
-            return in; };                                                  \
+            return in; }                                                   \
         template < TEMPLATE_DEF_ ## CLASSTYPE > \
         inline PStream &operator<<(PStream &out, const CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  &o) \
-          { o.newwrite(out); return out; };                                \
+          { o.newwrite(out); return out; }                                 \
         template < TEMPLATE_DEF_ ## CLASSTYPE > \
         inline PStream &operator>>(PStream &in, PP<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE > > &o)    \
           { Object *ptr = (CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  *)o;                                  \
             in >> ptr;                                                     \
             o = dynamic_cast<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  *>(ptr);                            \
             return in;                                                     \
-          };                                                               \
+          }                                                                \
         template < TEMPLATE_DEF_ ## CLASSTYPE > \
          class TypeTraits< CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE > >       \
            {                                                    \
@@ -298,7 +298,7 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
              { return 0xFF; }                                                      \
             static inline unsigned char big_endian_typecode()                \
              { return 0xFF; }                                                \
-            };
+            } 
 
 
 
@@ -311,10 +311,10 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
           { Object *ptr = 0;                                               \
             in >> ptr;                                                     \
             o = dynamic_cast<CLASSTYPE *>(ptr);                            \
-            return in; };                                                  \
+            return in; }                                                  \
         inline PStream &operator<<(PStream &out, const PPCLASSTYPE &o)    \
-          { out << static_cast<const PP<CLASSTYPE> &>(o); return out; };  \
-        DECLARE_TYPE_TRAITS(PPCLASSTYPE);
+          { out << static_cast<const PP<CLASSTYPE> &>(o); return out; }  \
+        DECLARE_TYPE_TRAITS(PPCLASSTYPE)
 
 
 //! The Object class
@@ -345,7 +345,7 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
 
     // hack:
     typedef Object inherited;
-    PLEARN_DECLARE_OBJECT(Object);   
+    PLEARN_DECLARE_OBJECT(Object);
 
     //! SUBCLASS WRITING 
     //! Note: all subclasses should define a default constructor (one that can be called without arguments),
@@ -559,10 +559,10 @@ template<class T> inline Object* toObjectPtr(const T& x) // Never to be called s
 
 
 template<> inline Object* toObjectPtr(const Object &x)
-{ return const_cast<Object *>(&x); };
+{ return const_cast<Object *>(&x); }
 
 template<> inline Object* toObjectPtr(const Object *x)
-{ return const_cast<Object *>(x); };
+{ return const_cast<Object *>(x); }
 
 
 template<class T> inline Object* toObjectPtr(const PP<T>& x)
@@ -572,7 +572,7 @@ template<class T> Object* toIndexedObjectPtr(const Array<T> &x, int i)
 { return toObjectPtr(static_cast<T &>(x[i])); }
 
 template<class T> Object *toIndexedObjectPtr(const T&, int) // Never to be called stub
-{ PLERROR("toIndexedObjectPtr() - Unexpected error"); return 0; };
+{ PLERROR("toIndexedObjectPtr() - Unexpected error"); return 0; }
 
 
 /*! This function builds an object from its representation in the stream.
@@ -587,7 +587,7 @@ template<class T> Object *toIndexedObjectPtr(const T&, int) // Never to be calle
 */
   Object *readObject(PStream &in, unsigned int id = LONG_MAX);
   inline Object *readObject(istream &in_)
-      { PStream in(&in_); return readObject(in); };
+      { PStream in(&in_); return readObject(in); }
 
 //! Loads an object from the given file (no macro-preprocessing is performed)
 Object *loadObject(const string &filename);

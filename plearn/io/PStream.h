@@ -50,6 +50,7 @@
 #include <fstream>
 //#include "TypeTraits.h"
 #include "byte_order.h"
+#include "fileutils.h"
 
 namespace PLearn {
 

@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.cc,v 1.10 2004/04/26 13:11:49 tihocan Exp $ 
+   * $Id: KFoldSplitter.cc,v 1.11 2004/05/14 17:49:14 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
@@ -47,7 +47,7 @@ using namespace std;
 
 KFoldSplitter::KFoldSplitter(int k)
     : K(k),append_train(0)
-{};
+{}
 
 PLEARN_IMPLEMENT_OBJECT(KFoldSplitter,
     "K-fold cross-validation splitter.", 

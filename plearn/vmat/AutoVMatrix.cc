@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: AutoVMatrix.cc,v 1.7 2004/05/13 20:22:31 nova77 Exp $
+ * $Id: AutoVMatrix.cc,v 1.8 2004/05/14 17:49:13 chrish42 Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -65,9 +65,6 @@ void AutoVMatrix::declareOptions(OptionList& ol)
 
   // Hide the 'vm' option, that is overwritten at build time anyway.
   redeclareOption(ol, "vm", &AutoVMatrix::vm, OptionBase::nosave, "");
-	// This old version is theoretically correct but doesn't work on the
-	// Intel compiler (nor .NET)
-  //redeclareOption(ol, "vm", &ForwardVMatrix::vm, OptionBase::nosave, "");
 }
 
 void AutoVMatrix::build_()

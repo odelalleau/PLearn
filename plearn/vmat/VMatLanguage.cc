@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.22 2004/05/05 19:24:09 nova77 Exp $
+   * $Id: VMatLanguage.cc,v 1.23 2004/05/14 17:49:17 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -163,11 +163,11 @@ using namespace std;
         // did we find a fieldcopy macro?
         else if(token[0]=='[')
           {
-            vector<string> parts=split(token.substr(1),":]");
+	    vector<string> parts=split(token.substr(1),":]");
 
             // fieldcopy macro type is [start,end]
             // fields can be refered to as %number or @name
-            if(parts.size()==2)
+	    if(parts.size()==2)
               {
                 string astr=parts[0].substr(1);
                 string bstr=parts[1].substr(1);
@@ -786,8 +786,7 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
       PLERROR("Parsing VMatLanguage: left with %d missing items on the stack!",
               result.length()-pstack.length());
     pstack >> result;
-
-  };
+  }
 
 void VMatLanguage::run(int rowindex, const Vec& result) const
 {

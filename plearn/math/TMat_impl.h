@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_impl.h,v 1.6 2004/04/17 00:44:55 plearner Exp $
+   * $Id: TMat_impl.h,v 1.7 2004/05/14 17:49:13 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -78,8 +78,8 @@ using namespace std;
     if(n)
     {
       resize(n);
-      TVec<T>::iterator it = begin();
-      TVec<T>::iterator itend = end();      
+      iterator it = begin();
+      iterator itend = end();      
       for(val=start; it!=itend; ++it, val+=step)
         *it = val;
     }

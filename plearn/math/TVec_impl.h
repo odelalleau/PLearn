@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TVec_impl.h,v 1.1 2004/04/17 00:44:55 plearner Exp $
+   * $Id: TVec_impl.h,v 1.2 2004/05/14 17:49:13 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -49,6 +49,7 @@
 #define TVec_impl_INC
 
 #include "TVec_decl.h"
+#include "pl_io.h"
 
 namespace PLearn {
 using namespace std;

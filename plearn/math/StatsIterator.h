@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: StatsIterator.h,v 1.7 2004/04/09 19:21:38 plearner Exp $
+   * $Id: StatsIterator.h,v 1.8 2004/05/14 17:49:13 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -392,10 +392,10 @@ public:
 DECLARE_TYPE_TRAITS(StatsItArray);
 
 inline PStream &operator>>(PStream &in, StatsItArray &o)
-{ in >> static_cast<Array<StatsIt> &>(o); return in; };
+{ in >> static_cast<Array<StatsIt> &>(o); return in; }
 
 inline PStream &operator<<(PStream &out, const StatsItArray &o)
-{ out << static_cast<const Array<StatsIt> &>(o); return out; };
+{ out << static_cast<const Array<StatsIt> &>(o); return out; }
 
 
 template <>

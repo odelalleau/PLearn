@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.14 2004/04/27 16:06:12 morinf Exp $
+   * $Id: Variable.cc,v 1.15 2004/05/14 17:49:13 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -341,13 +341,10 @@ string Variable::getName() const
 }
 
 void Variable::oldread(istream& in)
-{ PLearn::read(in, value); }; //value.read(in); }
+{ PLearn::read(in, value); }
 
 void Variable::write(ostream& out)
-{ PLearn::write(out, value); }; //value.write(out); }
-
-
-
+{ PLearn::write(out, value); }
 
 
 Var Variable::subVec(int start, int len, bool transpose)
