@@ -1,8 +1,7 @@
 // -*- C++ -*-
 
-// ManifoldParzen2.cc
 // 
-// Copyright (C) 2003 Pascal Vincent, Julien Keable
+// Copyright (C) 2004 Université de Montréal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -36,19 +35,21 @@
 /*! \file ParzenWindow.cc */
 #include "ParzenWindow.h"
 
-#include <plearn/math/plapack.h>
-#include <plearn/base/general.h>
-#include <plearn/math/TMat.h>
-#include <plearn/math/TMat_maths.h>
-#include <plearn/math/BottomNI.h>
+//#include <plearn/math/plapack.h>
+//#include <plearn/base/general.h>
+//#include <plearn/math/TMat.h>
+//#include <plearn/math/TMat_maths.h>
+//#include <plearn/math/BottomNI.h>
 
 namespace PLearn {
 
 PLEARN_IMPLEMENT_OBJECT(ParzenWindow, 
-                        "Parzen Window density estimate ", 
+                        "Parzen Window density estimate.", 
                         "Standard Parzen Window algorithm. The user only needs\n"
                         "to set the sigma_square parameter"
 );
+
+// TODO Allow the user to specify the kernel.
 
 /////////////////////
 // ParzenWindow //
@@ -90,7 +91,7 @@ void ParzenWindow::build_()
 
 void ParzenWindow::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  PLearner::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
 
   // ### Call deepCopyField on all "pointer-like" fields 
   // ### that you wish to be deepCopied rather than 
