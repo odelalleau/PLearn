@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDateTime.h,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: PDateTime.h,v 1.2 2003/07/31 05:23:52 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -96,6 +96,10 @@ public:
   //!  allow specifying hours/minutes/seconds as a FRACTION of days.
   PDateTime(double julian_day);
 
+  //!  Convert a string in "YYYY/MM/DD" or "YYYY/MM/DD hh:mm:ss" into
+  //!  a PDateTime.  The format has to match exactly.
+  PDateTime(string datetime);
+  
   //!  Missing date/time handling
   bool isMissing() const;
   void setMissing();

@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDateTime.cc,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: PDateTime.cc,v 1.2 2003/07/31 05:23:52 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -70,6 +70,28 @@ PDateTime::PDateTime(double julian_day)
   hour = hh;
   min = mm;
   sec = ss;
+}
+
+PDateTime::PDateTime(string date)
+{
+  // Parse either "YYYY/MM/DD" or "YYYY/MM/DD hh:mm:ss" format
+  if ((date.size() == 10 || date.size() == 19) &&
+      date[4] == '/' && date[7] == '/' &&
+      (date.size() == 19? date[13] == ':' && date[16] == ':' : true)) {
+    year = toint(date.substr(0,4));
+    month = toint(date.substr(5,2));
+    day = toint(date.substr(8,2));
+    if (date.size() == 10)
+      hour = min = sec = 0;
+    else {
+      hour = toint(date.substr(11,2));
+      min  = toint(date.substr(14,2));
+      sec  = toint(date.substr(17,2));
+    }
+  }
+  else
+    PLERROR("PDateTime::PDateTime: the passed date-time string is not in "
+            "\"YYYY/MM/DD\" or \"YYYY/MM/DD hh:mm:ss\" format");
 }
 
 bool PDateTime::isMissing() const

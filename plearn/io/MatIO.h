@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.3 2003/02/13 21:45:24 ducharme Exp $
+   * $Id: MatIO.h,v 1.4 2003/07/31 05:23:56 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,6 +46,7 @@
 
 #include "TMat.h"
 #include "fileutils.h"
+#include <stdlib.h>                          //!< for strtod
 
 namespace PLearn <%
 using namespace std;
@@ -209,7 +210,7 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames)
     }
     int nfields2 = split(line).size();
     int guesslength = countNonBlankLinesOfFile(filename);    
-    real a, b;
+    real a = -1, b = -1;
     if(could_be_old_amat && nfields1==2) // could be an old .amat with first 2 numbers being length width
     {
       in.seekg(0);
@@ -250,13 +251,25 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames)
   if(length==-1)
     PLERROR("In loadAscii: trying to load but couldn't determine file format automatically for %s",filename.c_str());
 
+  // We are now more careful about the possibility of the stream being in a
+  // bad state.
   mat.resize(length,width);
+  string inp_element;
   for(int i=0; i<length; i++)
   {
     T* mat_i = mat[i];
     skipBlanksAndComments(in);
-    for(int j=0; j<width; j++)
-      in >> mat_i[j];
+    for(int j=0; j<width; j++) {
+      // C99 strtod handles NAN's and INF's.
+      if (in) {
+        in >> inp_element;
+        mat_i[j] = strtod(inp_element.c_str(), 0);
+      }
+      if (!in) {
+        in.clear();
+        mat_i[j] = MISSING_VALUE;
+      }
+    }
   }
 }
 
@@ -267,15 +280,28 @@ void loadAscii(const string& filename, TVec<T>& vec)
   if(!in)
     PLERROR("In loadAscii could not open file %s for reading",filename.c_str());
  
-  int size;
+  int size = -1;
   in >> size;
   if (size<0 || size>1e10)
     PLERROR("In Vec::loadAscii the file is probably not in the right format: size=%d", size);
   vec.resize(size);
   typename TVec<T>::iterator it = vec.begin();
   typename TVec<T>::iterator itend = vec.end();
-  for(; it!=itend; ++it)
-    in >> *it;
+
+  // We are now more careful about the possibility of the stream being in a
+  // bad state
+  string inp_element;
+  for(; it!=itend; ++it) {
+    // C99 strtod handles NAN's and INF's.
+    if (in) {
+      in >> inp_element;
+      *it = strtod(inp_element.c_str(), 0);
+    }
+    if (!in) {
+      in.clear();
+      *it = MISSING_VALUE;
+    }
+  }
 }
 
 template<class T> 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.13 2003/07/24 18:57:07 jkeable Exp $
+   * $Id: TMat_maths_impl.h,v 1.14 2003/07/31 05:23:56 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -2884,9 +2884,13 @@ void makeRowsSumTo1(const TMat<T>& mat)
   }
 }
 
-  // This implementation should be very efficient,
-  // but it does two memory allocation: a first one of mat.length()*(sizeof(real)+sizeof(int))
-  // and a second one of mat.length()*sizeof(int)
+//! This implementation should be very efficient,
+//! but it does two memory allocation: a first one of mat.length()*(sizeof(real)+sizeof(int))
+//! and a second one of mat.length()*sizeof(int).
+//! (Note: due to the implementation of the column sorting, this function
+//! always performs a STABLE SORT (in the sense of the STL stable_sort
+//! function).  There is no need to explicitly call stable_sort to achieve
+//! the effect, iff increasing_order=true)
 template<class T>
   void sortRows(const TMat<T>& mat, int col=0, bool increasing_order=true)
   {
@@ -2898,9 +2902,10 @@ template<class T>
       it->first = *ptr;
       it->second = i;
     }
+
     if(increasing_order)
       sort(order.begin(),order.end());
-    else // decreasing order
+    else 
       sort(order.begin(), order.end(), greater< pair<T,int> >() );
 
     // Build the new destination position array

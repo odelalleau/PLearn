@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDate.cc,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: PDate.cc,v 1.2 2003/07/31 05:23:52 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,6 +65,18 @@ PDate::PDate(int julian_day)
   day = jb - jd - jf;
   month = (je>13) ? je-13 : je-1;
   year = (month>2) ? jc-4716 : jc-4715;
+}
+
+PDate::PDate(string date)
+{
+  // Parse the YYYY/MM/DD format
+  if (date.size() == 10 && date[4] == '/' && date[7] == '/') {
+    year = toint(date.substr(0,4));
+    month = toint(date.substr(5,2));
+    day = toint(date.substr(8,2));
+  }
+  else
+    PLERROR("PDate::PDate: the passed date string is not in YYYY/MM/DD format");
 }
 
 bool PDate::isMissing() const

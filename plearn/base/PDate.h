@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PDate.h,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: PDate.h,v 1.2 2003/07/31 05:23:52 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -78,6 +78,10 @@ public:
   //!  convert a Julian day into a PDate. Day 0 of the Julian calendar
   //!  is about 6000 years ago... 
   PDate(int julian_day);
+
+  //!  Initialize a date from a string.  Currently, only the format
+  //!  YYYY/MM/DD is recognized
+  PDate(string date);
 
   //!  Missing date handling
   bool isMissing() const;
