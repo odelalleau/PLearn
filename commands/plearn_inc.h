@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.7 2004/06/30 16:52:27 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.8 2004/07/06 13:01:38 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -147,6 +147,7 @@
 #include "RegularGridVMatrix.h"
 #include "SortRowsVMatrix.h"
 #include "SubInputVMatrix.h"
+#include "TransposeVMatrix.h"
 #include "VMatrixFromDistribution.h"
 
 #endif
