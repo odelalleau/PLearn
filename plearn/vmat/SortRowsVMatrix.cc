@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.cc,v 1.10 2005/01/11 20:05:20 tihocan Exp $
+   * $Id: SortRowsVMatrix.cc,v 1.11 2005/03/03 19:17:22 tihocan Exp $
    ******************************************************* */
 
 #include "SortRowsVMatrix.h"
@@ -131,7 +131,7 @@ void SortRowsVMatrix::build_()
 // sortRows //
 //////////////
 void SortRowsVMatrix::sortRows(VMat& m, TVec<int>& indices, TVec<int>& sort_columns, int istart, int iend, int colstart, bool increasing_order) {
-  real best;
+  real best = 0; // Initialization only to prevent compiler warning.
   real jval;
   int tmp;
   bool better;
@@ -139,15 +139,25 @@ void SortRowsVMatrix::sortRows(VMat& m, TVec<int>& indices, TVec<int>& sort_colu
     int col = sort_columns[colstart]; // The current column used to perform sorting.
     for (int i = istart; i <= iend-1; i++) {
       // Let's look for the i-th element of our result.
-      best = m(indices[i],col);
+      int i_nan = i;
+      // Find first non-missing.
+      while (i_nan <= iend && is_missing(best = m(indices[i_nan],col))) i_nan++;
+      if (i_nan > iend)
+        // All nan !
+        break;
+      else if (i_nan > i) {
+        // There were some nans. We swap i_nan and i.
+        tmp = indices[i];
+        indices[i] = indices[i_nan];
+        indices[i_nan] = tmp;
+      }
       for (int j = i+1; j <= iend; j++) {
         better = false;
         jval = m(indices[j],col);
-        if (increasing_order && jval < best) {
+        if (increasing_order && jval < best)
           better = true;
-        } else if (!increasing_order && jval > best) {
+        else if (!increasing_order && jval > best)
           better = true;
-        }
         if (better) {
           // Swap i and j.
           tmp = indices[j];
@@ -159,14 +169,16 @@ void SortRowsVMatrix::sortRows(VMat& m, TVec<int>& indices, TVec<int>& sort_colu
     }
     // At this point, we have only sorted according to one column.
     if (sort_columns.length() > colstart + 1) {
-      // There are other sorting criterions.
+      // There are other sorting criteria.
       // Let's find where we need to apply them.
       int i = istart;
       real val;
       while (i <= iend - 1) {
         val = m(indices[i],col);
         int j = i+1;
-        while (j <= iend && m(indices[j],col) == val)
+        while (   j <= iend
+               && (   (m(indices[j],col) == val)
+                   || (is_missing(val) && is_missing(m(indices[j], col)))))
           j++;
         j--;
         if (j > i) {
@@ -180,4 +192,4 @@ void SortRowsVMatrix::sortRows(VMat& m, TVec<int>& indices, TVec<int>& sort_colu
   }
 }
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
