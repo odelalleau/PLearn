@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.6 2003/10/29 16:55:49 plearner Exp $ 
+   * $Id: PTester.h,v 1.7 2003/11/04 14:43:00 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -77,6 +77,7 @@ public:
   bool provide_learner_expdir;
   bool train; // whether or not to train or just test
   PP<VecStatsCollector> template_stats_collector;
+  PP<VecStatsCollector> global_template_stats_collector;
 
   // ****************
   // * Constructors *

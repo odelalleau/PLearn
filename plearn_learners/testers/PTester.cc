@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.14 2003/11/04 14:42:24 chapados Exp $ 
+   * $Id: PTester.cc,v 1.15 2003/11/04 14:43:00 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -147,6 +147,9 @@ PTester::PTester()
     declareOption(ol, "template_stats_collector", &PTester::template_stats_collector, OptionBase::buildoption,
                   "If provided, this instance of a subclass of VecStatsCollector will be used as a template\n"
                   "to build all the stats collector used during training and testing of the learner");
+    declareOption(ol, "global_template_stats_collector", &PTester::global_template_stats_collector, OptionBase::buildoption,
+                  "If provided, this instance of a subclass of VecStatsCollector will be used as a template\n"
+                  "to build all the global stats collector that collects statistics over splits");
     inherited::declareOptions(ol);
   }
 
@@ -237,10 +240,10 @@ Vec PTester::perform(bool call_forget)
 
   // Global stats collector
   PP<VecStatsCollector> global_statscol;
-  if (template_stats_collector)
+  if (global_template_stats_collector)
   {
     CopiesMap copies;
-    global_statscol = template_stats_collector->deepCopy(copies);
+    global_statscol = global_template_stats_collector->deepCopy(copies);
     global_statscol->build();
     global_statscol->forget();
   }
@@ -310,7 +313,6 @@ Vec PTester::perform(bool call_forget)
         }
       else
         learner->build();
-
       for(int setnum=1; setnum<dsets.length(); setnum++)
         {
           VMat testset = dsets[setnum];
