@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.cc,v 1.9 2005/02/01 23:41:38 plearner Exp $
+   * $Id: pl_io.cc,v 1.10 2005/02/17 17:36:19 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -431,8 +431,14 @@ inline void write_compr_mode_and_size_ptr(char*& out, unsigned char mode, int si
   union {unsigned short s;char cs[2];} unis;
   union {unsigned int i;char ci[4];} unii;
 
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
   if(sizeof(unsigned int)!=4)
     PLERROR("Function write_compr_mode_and_size_ptr is not ready for 64 bit.");
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
 
 #ifdef BOUNDCHECK
   if(size<0 || size>=(1<<30))

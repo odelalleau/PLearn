@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.cc,v 1.11 2005/02/07 19:05:18 tihocan Exp $
+   * $Id: pl_math.cc,v 1.12 2005/02/17 17:36:21 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -72,6 +72,9 @@ _plearn_nan_type plearn_nan = { 0, 0, 0xc0, 0x7f };
   
   PLMathInitializer pl_math_initializer;
 
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
 //////////////
 // is_equal //
 //////////////
@@ -92,6 +95,9 @@ bool is_equal(real a, real b, real absolute_tolerance_threshold,
     return false;
   return fast_is_equal(a, b, absolute_tolerance_threshold, absolute_tolerance, relative_tolerance);
 }
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
 
 real safeflog(real a)
 {
