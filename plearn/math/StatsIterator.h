@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: StatsIterator.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: StatsIterator.h,v 1.2 2002/09/17 01:27:33 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -354,6 +354,8 @@ DECLARE_OBJECT_PTR(QuantilesStatsIterator);
 
 typedef PP<StatsIterator> StatsIt;
 
+
+
 class StatsItArray: public Array<StatsIt>
 {
 public:
@@ -390,10 +392,10 @@ public:
 
 DECLARE_TYPE_TRAITS(StatsItArray);
 
-inline pl_istream &operator>>(pl_istream &in, StatsItArray &o)
+inline PStream &operator>>(PStream &in, StatsItArray &o)
 { in >> static_cast<Array<StatsIt> &>(o); return in; };
 
-inline pl_ostream &operator<<(pl_ostream &out, const StatsItArray &o)
+inline PStream &operator<<(PStream &out, const StatsItArray &o)
 { out << static_cast<const Array<StatsIt> &>(o); return out; };
 
 

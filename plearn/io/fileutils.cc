@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.3 2002/08/07 01:49:49 morinf Exp $
+   * $Id: fileutils.cc,v 1.4 2002/09/17 01:27:33 zouave Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -335,6 +335,8 @@ int smartReadUntilNext(istream& in, string closingsymbols, string& characters_re
     {
       if(closingsymbols.find(c)!=string::npos)
         return c;
+      if(characters_read.length() == characters_read.capacity())
+	characters_read.reserve(characters_read.length()*2); //don't realloc&copy every time a char is appended...
       characters_read+= static_cast<char>(c);
       switch(c)
         {

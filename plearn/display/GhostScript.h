@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: GhostScript.h,v 1.2 2002/09/17 01:27:33 zouave Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -51,6 +51,7 @@
 #include "general.h"
 #include <cstdio>
 #include <fstream>
+#include "pl_io.h"
 #include "Mat.h"
 
 namespace PLearn <%
@@ -67,11 +68,19 @@ class GhostScript
 {
  protected:
   FILE* gs_cstream;
-  ofstream togs;
+  PStream togs; 
   char command_string[1000];
-  static void writeBitmapHexString1Bit(const Mat& bm, ostream& out, bool lastrowfirst=false);
-  static void writeBitmapHexString8Bits(const Mat& bm, ostream& out, bool lastrowfirst=false);
-  static void writeBitmapHexString24Bits(const Mat& bm, ostream& out, bool lastrowfirst=false);
+  static void writeBitmapHexString1Bit(const Mat& bm, PStream& out, bool lastrowfirst=false);
+  static void writeBitmapHexString8Bits(const Mat& bm, PStream& out, bool lastrowfirst=false);
+  static void writeBitmapHexString24Bits(const Mat& bm, PStream& out, bool lastrowfirst=false);
+
+#if __GNUC__ < 3
+  typedef _IO_wchar_t char_type;
+  typedef long ioflag_type;
+#else
+  typedef ios::char_type char_type;
+  typedef _Ios_Fmtflags ioflag_type;
+#endif
 
  public:
 
@@ -85,7 +94,7 @@ class GhostScript
 
   void flush();
 
-  ostream& operator<<(char* str)
+  PStream& operator<<(char* str)
     { return togs<<str; }
 
   void run(const char* filename)

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.cc,v 1.2 2002/08/19 18:18:27 yoshua Exp $
+   * $Id: Gnuplot.cc,v 1.3 2002/09/17 01:27:33 zouave Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -52,35 +52,39 @@ using namespace std;
 
 Gnuplot::Gnuplot(int nb_max_plot) 
   : tmpfilenames(nb_max_plot,"/tmp/","gp"),
-    gp_cstream(popen("gnuplot","w")),
-    tognuplot(fileno(gp_cstream))
+    gp_cstream(popen("gnuplot","w"))  //, tognuplot(fileno(gp_cstream))
 {
+  tognuplot.attach(fileno(gp_cstream));
+  tognuplot.outmode=PStream::raw_ascii;
   tognuplot << "set data style lines" << endl;
 }
 
 Gnuplot::Gnuplot(const Vec& v1, const string& opt1)
   : tmpfilenames(5,"/tmp/","gp"),
-    gp_cstream(popen("gnuplot","w")),
-    tognuplot(fileno(gp_cstream))
+    gp_cstream(popen("gnuplot","w")) //, tognuplot(fileno(gp_cstream))
 {
+  tognuplot.attach(fileno(gp_cstream));
+  tognuplot.outmode=PStream::raw_ascii;
   tognuplot << "set data style lines" << endl;
   plot(v1,opt1);
 }
 
 Gnuplot::Gnuplot(const Vec& v1, const string& opt1, const Vec& v2, const string& opt2) 
   : tmpfilenames(5,"/tmp/","gp"),
-    gp_cstream(popen("gnuplot","w")),
-    tognuplot(fileno(gp_cstream))
+    gp_cstream(popen("gnuplot","w")) //,    tognuplot(fileno(gp_cstream))
 {
+  tognuplot.attach(fileno(gp_cstream));
+  tognuplot.outmode=PStream::raw_ascii;
   tognuplot << "set data style lines" << endl;
   plot(v1,opt1,v2,opt2);
 }
 
 Gnuplot::Gnuplot(const Vec& v1, const string& opt1, const Vec& v2, const string& opt2, const Vec& v3, const string& opt3)
   : tmpfilenames(5,"/tmp/","gp"),
-    gp_cstream(popen("gnuplot","w")),
-    tognuplot(fileno(gp_cstream))
+    gp_cstream(popen("gnuplot","w")) //,    tognuplot(fileno(gp_cstream))
 {
+  tognuplot.attach(fileno(gp_cstream));
+  tognuplot.outmode=PStream::raw_ascii;
   tognuplot << "set data style lines" << endl;
   plot(v1,opt1,v2,opt2,v3,opt3);
 }
@@ -92,8 +96,11 @@ Gnuplot::~Gnuplot()
   pclose(gp_cstream);
 }
 
-ostream& Gnuplot::operator<<(const string& str)
-{ return tognuplot << str; }
+PStream& Gnuplot::operator<<(const string& str)
+{ 
+  tognuplot << str; 
+  return tognuplot;
+}
 
 void Gnuplot::flush()
 { tognuplot.flush(); }

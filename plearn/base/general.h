@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.h,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: general.h,v 1.2 2002/09/17 01:27:33 zouave Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -86,10 +86,11 @@
 #include "pl_math.h"
 #include "pl_io.h"
 #include "pl_io_deprecated.h"
-#include "plstreams.h"
+//#include "plstreams.h"
 #include "stringutils.h"
 #include "pl_hash_fun.h"
 #include "TypeTraits.h"
+#include "CopiesMap.h"
 
 //!  Size of header (in bytes) for native PLearn 
 //!  data files (.pmat and .pvec)
@@ -221,53 +222,14 @@ using std::max;
   int   file_size(const string& filename);
   bool file_exists(const string& filename);
 
-  
-/*! Support for generic deep copying
-    
-    Deep copying is defined for objects in the following manner:
-    + copy constructors should always do a shallow copy.
-    + a public method OBJTYPE* deepCopy(map<const void*, void*>& copies) const 
-      should be defined to allow deepCopying
-    + the deepCopy method should be virtual for classes that are designed to be subclassed
-    Take a close look at the Object class in Object.h to see how this is done.
-*/
-
-  //!  Global typedef to make the map of copied objects (needed by the deep
-  //!  copy mechanism in Object) more palatable
-  typedef map<const void*,void*> CopiesMap;
-
-  //!  Any type not handled below: do nothing
-  template <class T>
-  inline void deepCopyField(T&, CopiesMap&)
-  {
-    /*! no op */
-  }
-
-  template <class T>
-  inline void deepCopyField(T*& field, CopiesMap& copies)
-  {
-    if (field)
-      field = field->deepCopy(copies);
-  }
-
-  //!  A simple template function that calls the method
-  template<class T>
-  T* deepCopy(const T* source, CopiesMap& copies)
-  { return source->deepCopy(copies); }
-
-//!  This function simply calls the previous one with an initially empty map
-template<class T>
-inline T* deepCopy(const T* source)
-{ 
-  CopiesMap copies; //!<  create empty map
-  return deepCopy(source, copies);
-}
-
+	
   //!  check that all keys of the map are int values
   bool isMapKeysAreInt(map<real,int>& m);
 
 // return the name of host, e.g. with getenv("HOSTNAME") or getenv("HOST")
 string hostname();
+
+
 
 %> // end of namespace PLearn
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.3 2002/08/07 16:54:21 morinf Exp $
+   * $Id: Object.cc,v 1.4 2002/09/17 01:27:33 zouave Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -65,7 +65,7 @@ void Object::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 string OptionBase::writeIntoString(const Object* o) const
   {
     ostrstream out_;
-    pl_ostream out = out_;
+    PStream out(&out_);
     write(o, out);
     char* buf = out_.str();
     int n = out_.pcount();
@@ -127,8 +127,8 @@ string Object::optionHelp(bool buildoptions_only) const
 void Object::setOption(const string& optionname, const string& value)
 {
     istrstream in_(value.c_str());
-    pl_istream in = in_;
-    in >> user_flags(dft_option_flag | OptionBase::nosave);
+    PStream in(&in_);
+    in >> option_flags(dft_option_flag | OptionBase::nosave);
     readOptionVal(in, optionname);
 }
 
@@ -140,8 +140,8 @@ string Object::help() const
 string Object::getOption(const string &optionname) const
 { 
   ostrstream out_;
-  pl_ostream out = out_;
-  out << user_flags(dft_option_flag | OptionBase::nosave);
+  PStream out(&out_);
+  out << option_flags(dft_option_flag | OptionBase::nosave);
   writeOptionVal(out, optionname);
   char* buf = out_.str();
   int n = out_.pcount();
@@ -165,8 +165,8 @@ string Object::info() const { return classname(); }
 void Object::print(ostream& out) const
 { out << "{" << info() << "}"; }
 
-void
-Object::readOptionVal(pl_istream &in, const string &optionname)
+
+void Object::readOptionVal(PStream &in, const string &optionname)
 {
     OptionList &options = getOptionList();
     for (OptionList::iterator it = options.begin(); it != options.end(); ++it) {
@@ -211,7 +211,7 @@ Object::readOptionVal(pl_istream &in, const string &optionname)
 }
 
 void
-Object::writeOptionVal(pl_ostream &out, const string &optionname) const
+Object::writeOptionVal(PStream &out, const string &optionname) const
 {
     OptionList &options = getOptionList();
     for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
@@ -255,6 +255,12 @@ Object::writeOptionVal(pl_ostream &out, const string &optionname) const
     PLERROR("Object::writeOptionVal() - Unknown option \"%s\"", optionname.c_str());    
 }
 
+
+
+
+
+
+
 string Object::getOptionsToSave(OBflag_t option_flags) const
 {
   string res = "";
@@ -269,39 +275,39 @@ string Object::getOptionsToSave(OBflag_t option_flags) const
   return res;
 }
 
-void
-Object::newread(pl_istream &in)
+
+void Object::newread(PStream &in)
 {
     string cl;
-    getline(in, cl, '(');
+    getline(in.rawin(), cl, '(');
     cl = removeblanks(cl);
     if (cl != classname())
         PLERROR("Object::newread() - Was expecting \"%s\", but read \"%s\"",
                 classname().c_str(), cl.c_str());
 
-    skipBlanksAndComments(in);
+    skipBlanksAndComments(in.rawin());
     if (in.get() != ')') {
         in.unget();
         for (;;) {
             // Read all specified options
             string optionname;
-            getline(in, optionname, '=');
+            getline(in.rawin(), optionname, '=');
             optionname = removeblanks(optionname);
-            skipBlanksAndComments(in);
+            skipBlanksAndComments(in.rawin());
 
             OptionList &options = getOptionList();
             OptionList::iterator it = find_if(options.begin(), options.end(),
                                               bind2nd(mem_fun(&OptionBase::isOptionNamed), optionname));
-            if (it != options.end() && ((*it)->flags() & in.user_flags_) == 0)
+            if (it != options.end() && ((*it)->flags() & in.option_flags_in) == 0)
                 (*it)->read_and_discard(in);
             else
                 readOptionVal(in, optionname);
-            skipBlanksAndComments(in);
+            skipBlanksAndComments(in.rawin());
             int c = in.get();
             if (c == ')')
                 break;
             else if (c == ';') {
-                skipBlanksAndComments(in);
+                skipBlanksAndComments(in.rawin());
                 if (in.peek() == ')') {
                     in.get();
                     break;
@@ -316,9 +322,9 @@ Object::newread(pl_istream &in)
 }
 
 void
-Object::newwrite(pl_ostream &out) const
+Object::newwrite(PStream &out) const
 {
-    vector<string> optnames = split(getOptionsToSave(out.user_flags_));
+    vector<string> optnames = split(getOptionsToSave(out.option_flags_out));
     out << raw << classname() << "(\n";
     for (unsigned int i = 0; i < optnames.size(); ++i) {
         out << raw << optnames[i] << " = ";
@@ -329,9 +335,11 @@ Object::newwrite(pl_ostream &out) const
     out << raw << " )\n";
 }
 
+
+
 void Object::write(ostream& out_) const
 {
-    pl_ostream out = out_;
+    PStream out(&out_);
     newwrite(out);
 }
 
@@ -342,7 +350,7 @@ void Object::read(istream& in_)
     if(c=='<') // --> it's an "old-style" <Classname> ... </Classname> kind of definition
         oldread(in_);
     else { // assume it's a "new-style" Classname(...) 
-        pl_istream in = in_;
+        PStream in(&in_);
         newread(in);
     }
 }
@@ -373,8 +381,8 @@ Object::~Object()
 
 Object* deepReadObject(istream& in, DeepReadMap& old2new)
 {
-  streambuf* buffer = in.rdbuf();
-  streammarker fence(buffer);
+  pl_streambuf* buffer = dynamic_cast<pl_streambuf*>(in.rdbuf());
+  pl_streammarker fence(buffer);
   while(in && in.get()!='<') ;
   string str_type_name;
   char tmpchar;
@@ -393,20 +401,32 @@ Object* deepReadObject(istream& in, DeepReadMap& old2new)
   return res;
 }
 
-Object *
-readObject(pl_istream &in, unsigned int id)
+Object* loadObject(const string &filename)
+{
+    ifstream in_(filename.c_str());
+    if (!in_)
+        PLERROR("loadObject() - Could not open file \"%s\" for reading", filename.c_str());
+
+    PStream in(&in_);
+    Object *o = readObject(in);
+    o->build();
+    return o;
+}
+
+
+Object* readObject(PStream &in, unsigned int id)
 {
     Object *o;
     in >> ws;
 
-    streambuf *buf = in.rdbuf();
-    streammarker fence(buf);
+    //pl_streambuf* buf = dynamic_cast<pl_streambuf*>(in.rdbuf());
+    pl_streammarker fence(in.pl_rdbuf());
 
     int c = in.peek();
     if (c == '<') {
         in.get(); // Eat '<'
         string cl;
-        getline(in, cl, '>');
+        getline(in.rawin(), cl, '>');
         cl = removeblanks(cl);
         if (cl == "null")
             return 0;
@@ -417,19 +437,19 @@ readObject(pl_istream &in, unsigned int id)
         if (!o)
             PLERROR("readObject() - Type \"%s\" not declared in TypeFactory map (did you do a proper DECLARE_NAME_AND_DEEPCOPY?)", cl.c_str());
         // Go back before the header starts
-        buf->seekmark(fence);
-        o->read(in);
+        in.pl_rdbuf()->seekmark(fence);
+        o->read(in.rawin());
     } else if (c == '*') {
         in >> o;
     } else {
         // It must be a Classname(...) or a load(...) kind of definition
         string cl;
-        getline(in, cl, '(');
+        getline(in.rawin(), cl, '(');
         cl = removeblanks(cl);
         if (cl == "load") {
             // It's a load("...")
             string fname;
-            getline(in, fname, ')');
+            getline(in.rawin(), fname, ')');
             fname = removeblanks(fname);
             // TODO: Check if this is really what we want
             //       (ie: We could want to use the options
@@ -440,38 +460,22 @@ readObject(pl_istream &in, unsigned int id)
             o = TypeFactory::instance().newObject(cl);
             if (!o)
                 PLERROR("readObject() - Type \"%s\" not declared in TypeFactory map (did you do a proper DECLARE_NAME_AND_DEEPCOPY?)", cl.c_str());
-            buf->seekmark(fence);
+            in.pl_rdbuf()->seekmark(fence);
             o->newread(in);
         }
         if (id != LONG_MAX)
-            in.map_[id] = o;
+            in.copies_map_in[id] = o;
     }
     return o;
 }
 
-Object *
-loadObject(const string &filename)
-{
-    ifstream in_(filename.c_str());
-    if (!in_)
-        PLERROR("loadObject() - Could not open file \"%s\" for reading", filename.c_str());
-
-    pl_istream in = in_;
-    Object *o = readObject(in);
-    o->build();
-    return o;
-}
-
-
-pl_ostream &
-operator<<(pl_ostream &out, const Object * &o)
+PStream& operator<<(PStream &out, const Object * &o)
 {
     PLERROR("Not yet implemented");
     return out;
 }
 
-pl_istream &
-operator>>(pl_istream &in, Object * &o)
+PStream& operator>>(PStream &in, Object * &o)
 {
     if (in.peek() == '*') {
         in.get(); // Eat '*'
@@ -485,8 +489,8 @@ operator>>(pl_istream &in, Object * &o)
             o = readObject(in, id);
         } else {
             // Find it in map and return ptr
-            map<unsigned int, void *>::iterator it = in.map_.find(id);
-            if (it == in.map_.end())
+            map<unsigned int, void *>::iterator it = in.copies_map_in.find(id);
+            if (it == in.copies_map_in.end())
                 PLERROR("read() - Object to be read has not been previously defined");
             o = static_cast<Object *>(it->second);
         }

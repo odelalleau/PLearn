@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: IPopen.h,v 1.2 2002/08/08 22:54:05 morinf Exp $
+   * $Id: IPopen.h,v 1.3 2002/09/17 01:27:34 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,6 +44,7 @@
 #include <vector>
 #include <unistd.h>
 #include "PP.h"
+#include "general.h" 
 
 #ifndef _MINGW_
 #include <unistd.h>
@@ -112,7 +113,7 @@ using namespace std;
     class IPopen: public PPointable {        
     public:
         // Attributs
-        fstream pipe;  // Bi-directional pipe
+        PStream pipe;  // Bi-directional pipe
 
         // Methods
         IPopen(IPServer &server)

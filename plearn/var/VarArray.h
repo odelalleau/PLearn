@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: VarArray.h,v 1.2 2002/09/17 01:27:34 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -288,12 +288,12 @@ inline VarArray operator&(Var v1, Var v2)
 
  DECLARE_TYPE_TRAITS(VarArray);
 
- inline pl_istream &operator>>(pl_istream &in, VarArray &o)
-     { in >> static_cast<Array<Var> &>(o); return in; };
-
- inline pl_ostream &operator<<(pl_ostream &out, const VarArray &o)
-     { out << static_cast<const Array<Var> &>(o); return out; };
-
+ inline PStream &operator>>(PStream &in, VarArray &o)
+   { in >> static_cast<Array<Var> &>(o); return in; };
+ 
+ inline PStream &operator<<(PStream &out, const VarArray &o)
+   { out << static_cast<const Array<Var> &>(o); return out; };
+ 
 %> // end of namespace PLearn
 
 #endif

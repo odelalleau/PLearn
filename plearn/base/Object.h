@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.3 2002/09/10 23:32:21 plearner Exp $
+   * $Id: Object.h,v 1.4 2002/09/17 01:27:33 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -173,11 +173,11 @@ using namespace std;
         inherited::readOptionVal(in, optionname);
       } 
     */    
-    void readOptionVal(pl_istream &in, const string &optionname);
+    void readOptionVal(PStream &in, const string &optionname);
     
     //! Writes the value of the specified option to the specified stream
     /*! Subclasses should overload this, following a similar parretn to readOptionVal */
-    void writeOptionVal(pl_ostream &out, const string &optionname) const;
+    void writeOptionVal(PStream &out, const string &optionname) const;
 
     //! returns a string of the names of all options to save 
     //! (optionnames are to be separated by a space, and must be supported by writeOptionVal)
@@ -185,11 +185,12 @@ using namespace std;
 
     //! Serializes this object in the new format 
     //! Classname(optionname=optionval; optionname=optionval; ...)
-    void newwrite(pl_ostream& out) const;
+    void newwrite(PStream& out) const;
+
 
     //! reads and builds an object in the new format 
     //! Classname(optionname=optionval; optionname=optionval; ...)
-    void newread(pl_istream& in);
+    void newread(PStream& in);
 
 /*!       This is a generic method to be able to set an option in an object in
       the most generic manner value is a string representation of the
@@ -377,9 +378,9 @@ public:
     optiontype_(optiontype), defaultval_(defaultval),
     description_(description) {}
 
-  virtual void read(Object* o, pl_istream& in) const = 0;
-  virtual void read_and_discard(pl_istream& in) const = 0;
-  virtual void write(const Object* o, pl_ostream& out) const = 0;
+  virtual void read(Object* o, PStream& in) const = 0;
+  virtual void read_and_discard(PStream& in) const = 0;
+  virtual void write(const Object* o, PStream& out) const = 0;
 
   // writes the option into a string instead of a stream
   // (calls write on a string stream) 
@@ -423,17 +424,17 @@ public:
          const string& description)
     :OptionBase(optionname, flags, optiontype, defaultval, description),
     ptr(member_ptr) {}
-
-  virtual void read(Object* o, pl_istream& in) const
+  virtual void read(Object* o, PStream& in) const
   { in >> dynamic_cast<ObjectType*>(o)->*ptr; }
-
-  virtual void read_and_discard(pl_istream& in) const
+  virtual void read_and_discard(PStream& in) const
   { 
-    OptionType op; //dummy object that will be destroyed after read
-    in >> op; //read dummy object
+    string dummy;
+    smartReadUntilNext(in.rawin(), ";)", dummy);
+    in.unget();
+    //OptionType op; //dummy object that will be destroyed after read
+    //in >> op; //read dummy object
   }
-
-  virtual void write(const Object* o, pl_ostream& out) const
+  virtual void write(const Object* o, PStream& out) const
   { out << static_cast<ConstOptionType>(dynamic_cast<const ObjectType *>(o)->*ptr); }
 
   virtual Object* getAsObject(Object* o) const
@@ -488,9 +489,9 @@ inline void declareOption(OptionList& ol, const string& optionname, OptionType *
       appropriate calls of the object's setOption() followed by its build().
     - load( filepath ) will call loadObject
 */
-  Object *readObject(pl_istream &in, unsigned int id = LONG_MAX);
+  Object *readObject(PStream &in, unsigned int id = LONG_MAX);
   inline Object *readObject(istream &in_)
-      { pl_istream in = in_; return readObject(in); };
+      { PStream in(&in_); return readObject(in); };
 
   //!  Same as previously, but takes a filename rather than a istream
   Object *loadObject(const string &filename);
@@ -505,6 +506,7 @@ inline void declareOption(OptionList& ol, const string& optionname, OptionType *
   Object* deepReadObject(istream& in, DeepReadMap& old2new);
   inline Object* deepReadObject(istream& in)
   { DeepReadMap old2new; return deepReadObject(in, old2new); }
+
 
   inline ostream& operator<<(ostream& out, const Object& obj)
     { obj.print(out); return out; }
@@ -557,16 +559,15 @@ inline void declareOption(OptionList& ol, const string& optionname, OptionType *
     }
   }
  
-
-  inline pl_istream &operator>>(pl_istream &in, Object &o)
+  inline PStream &operator>>(PStream &in, Object &o)
     { o.newread(in); return in; }
-  inline pl_ostream &operator<<(pl_ostream &out, const Object &o)
+  inline PStream &operator<<(PStream &out, const Object &o)
     { o.newwrite(out); return out; }
 
-  pl_istream &operator>>(pl_istream &in, Object * &o);
-  pl_ostream &operator<<(pl_ostream &out, const Object * &o);
-
-/*  inline pl_istream &
+  PStream &operator>>(PStream &in, Object * &o);
+  PStream &operator<<(PStream &out, const Object * &o);
+/*
+  inline pl_istream &
   operator>>(pl_istream &in, PP<Object> &o)
   {
 
@@ -579,30 +580,6 @@ inline void declareOption(OptionList& ol, const string& optionname, OptionType *
       return in;
   }
 */
-
-template <class T> inline pl_istream &
-operator>>(pl_istream &in, PP<T> &o)
-{
-    T *ptr;
-    if (o.isNull())
-        ptr = 0;
-    else
-        ptr = o;
-    in >> ptr;
-    o = ptr;
-    return in;
-}
-
-template <class T> inline pl_ostream &
-operator<<(pl_ostream &out, const PP<T> &o)
-{
-    if (o) {
-        T *ptr = static_cast<T *>(o);
-        out << const_cast<const T * &>(ptr);
-    } else
-        out << raw << "<null>";
-    return out;
-}
 
 /*!     The following macros are meant to help you write the classname() and
     deepCopy() methods in a systematic manner for every class.  Within your
@@ -700,15 +677,15 @@ operator<<(pl_ostream &out, const PP<T> &o)
 #define DECLARE_OBJECT_PTR(CLASSNAME)                                      \
         inline Object *toObjectPtr(const CLASSNAME &o)                     \
           { return const_cast<CLASSNAME *>(&o); };                         \
-        inline pl_istream &operator>>(pl_istream &in, CLASSNAME &o)        \
+        inline PStream &operator>>(PStream &in, CLASSNAME &o)        \
           { o.newread(in); return in; };                                   \
-        inline pl_istream &operator>>(pl_istream &in, CLASSNAME * &o)      \
+        inline PStream &operator>>(PStream &in, CLASSNAME * &o)      \
           { if (o) o->newread(in);                                         \
             else o = static_cast<CLASSNAME *>(readObject(in));             \
             return in; };                                                  \
-        inline pl_ostream &operator<<(pl_ostream &out, const CLASSNAME &o) \
+        inline PStream &operator<<(PStream &out, const CLASSNAME &o) \
           { o.newwrite(out); return out; };                                \
-        inline pl_istream &operator>>(pl_istream &in, PP<CLASSNAME> &o)    \
+        inline PStream &operator>>(PStream &in, PP<CLASSNAME> &o)    \
           { Object *ptr = (CLASSNAME *)o;                                  \
             in >> ptr;                                                     \
             o = dynamic_cast<CLASSNAME *>(ptr);                            \
@@ -717,12 +694,12 @@ operator<<(pl_ostream &out, const PP<T> &o)
         DECLARE_TYPE_TRAITS(CLASSNAME)
 
 #define DECLARE_OBJECT_PP(PPCLASSNAME, CLASSNAME)                          \
-        inline pl_istream &operator>>(pl_istream &in, PPCLASSNAME &o)      \
+        inline PStream &operator>>(PStream &in, PPCLASSNAME &o)      \
           { Object *ptr;                                                   \
             in >> ptr;                                                     \
             o = dynamic_cast<CLASSNAME *>(ptr);                            \
             return in; };                                                  \
-        inline pl_ostream &operator<<(pl_ostream &out, const PPCLASSNAME &o) \
+        inline PStream &operator<<(PStream &out, const PPCLASSNAME &o) \
           { out << static_cast<const PP<CLASSNAME> &>(o); return out; };
 
 #define DECLARE_NAME_AND_DEEPCOPY(CLASSNAME)                               \

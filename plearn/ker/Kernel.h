@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.2 2002/08/08 22:53:14 morinf Exp $
+   * $Id: Kernel.h,v 1.3 2002/09/17 01:27:33 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,8 +45,8 @@
 #ifndef Kernel_INC
 #define Kernel_INC
 
-#include "Object.h"
 #include "Mat.h"
+#include "Object.h"
 #include "VMat.h"
 #include "PLMPI.h"
 

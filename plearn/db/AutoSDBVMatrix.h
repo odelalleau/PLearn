@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: AutoSDBVMatrix.h,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: AutoSDBVMatrix.h,v 1.2 2002/09/17 01:27:33 zouave Exp $
    * AUTHOR: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -50,7 +50,11 @@
 #include "general.h"
 #include "SimpleDB.h"
 #include "VMat.h"
-#include <hash_map>
+#if __GNUC__ < 3
+#  include <hash_map>
+#else
+#  include <ext/hash_map>
+#endif
 
 namespace PLearn <%
 using namespace std;

@@ -1,12 +1,25 @@
+#!python
+
 # PLearn specific directories:
+
 # If the PLEARNDIR environment variable is not defined, we use the default "$HOME/PLearn/"
 plearndir = os.environ.get('PLEARNDIR', os.path.join(homedir,'PLearn'))
 
 # If the LISAPLEARNDIR environment variable is not defined, we use the default "$HOME/LisaPLearn/"
 lisaplearndir = os.environ.get('LISAPLEARNDIR', os.path.join(homedir,'LisaPLearn'))
-# lisaplearndir = plearndir
 
 libdir = '/u/lisa/local/'+platform+'/lib'
+
+
+if sys.version.find('Mandrake Linux 8.2')>=0:
+    host_os = 'mdk8'
+elif sys.version.find('Red Hat Linux 7.2')>=0:
+    host_os = 'rh7'
+else:
+    host_os = '?'
+
+rshcommand= 'ssh'
+
 
 # List of directories in which to look for .h includes and corresponding .cc files to compile and link with your program
 # (no need to include the current directory, it is implicit)
@@ -24,6 +37,7 @@ os.path.join(plearndir,'plearn/randomvar'),
 os.path.join(plearndir,'plearn/sys'),
 os.path.join(plearndir,'plearn/var'),
 os.path.join(plearndir,'plearn/vmat'),
+os.path.join(plearndir,'plearn_learners'),
 os.path.join(plearndir,'plearn_learners/generic'),
 os.path.join(plearndir,'plearn_learners/testers'),
 os.path.join(plearndir,'plearn_learners/meta'),
@@ -95,6 +109,7 @@ optionalLibrary( name = 'wxwindows',
                  compileroptions = '-DwxINSTALL_PREFIX=\"/u/lisa/local/linux-i386/\"  -D__WXGTK__ -DGTK_NO_CHECK_CASTS -D_REENTRANT -MMD -Wno-long-long',
                  linkeroptions = '/u/lisa/local/linux-i386/Install/wxWindows/wxGTK-2.2.9/lib/libwx_gtk-2.2.so.6.2.6 -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lgthread -lglib -lpthread -ldl -lXi -lXext -lX11 -lm  -lpng -ljpeg -ltiff  -ldl -lpthread -lz -lm' )
 
+
 optionalLibrary( name = 'minigoose',        
                  includedirs = os.path.join(lisaplearndir,'Contrib/minigoose'), 
                  triggers = 'specfns_protos.h',
@@ -106,23 +121,23 @@ optionalLibrary( name = 'arpack',
 
 optionalLibrary( name = 'lapack',
                  triggers = 'lapack_proto.h',
-                 linkeroptions = '-llapack' 
-#                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_lapack'
+                 linkeroptions = '-lg2c -llapack /usr/lib/gcc-lib/i586-mandrake-linux-gnu/3.0.4/libg2c.a' 
+                 #                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_lapack'
                  )
 
-optionalLibrary( name = 'blas',
-                 triggers = ['blas_proto.h','lapack_proto.h'],
-                 linkeroptions = '-lblas'
+#optionalLibrary( name = 'blas',
+#                 triggers = ['blas_proto.h','lapack_proto.h'],
+#                 linkeroptions = '-lblas'
 #                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread'
 #                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p3 -lmkl_vml_p3 -lpthread'
 #                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl -lvml -lpthread'
 #                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/atlas_athlon256 -lcblas -lf77blas -latlas'
-                 )
+#                 )
 
-optionalLibrary( name = 'g2c',
-                 triggers = ['blas_proto.h','lapack_proto.h'],
-                 linkeroptions = '-lg2c'
-                 )
+#optionalLibrary( name = 'g2c',
+#                 triggers = ['blas_proto.h','lapack_proto.h'],
+#                 linkeroptions = '-lg2c'
+#                 )
 
 optionalLibrary( name = 'ncurses',
                  triggers = 'curses.h',
@@ -148,23 +163,40 @@ options_choices = [
   [ 'dbg', 'opt', 'gprof' ],
   [ 'double', 'float' ],
   [ 'exiterrors', 'throwerrors' ], 
+  [ 'noblas', 'blas', 'p3blas','p4blas','athlonblas','pentiumblas'],
 ]
 
 
 # Description of options, and associated settings
 
 
-pymakeOption( name = 'g++',
-              description = 'compiling with default g++, with no MPI support',
-              compiler = 'g++',
-              compileroptions = '-pedantic-errors -DUSING_MPI=0',
-              linker = 'g++' )
+if myhostname[0:6]=='apstat':
+    pymakeOption( name = 'g++',
+                  description = 'compiling with default g++, with no MPI support',
+                  compiler = 'g++-2.96',
+                  compileroptions = '-pedantic-errors -DUSING_MPI=0',
+                  linker = 'g++-2.96' )
+else:
+    pymakeOption( name = 'g++',
+                  description = 'compiling with default g++, with no MPI support',
+                  compiler = 'g++',
+                  compileroptions = '-pedantic-errors -DUSING_MPI=0',
+                  linker = 'g++' )
 
-pymakeOption( name = 'g++3',
-              description = 'compiling with g++3, with no MPI support',
-              compiler = '/u/collober/Addons/Linux/bin/g++',
-              compileroptions = '-pedantic-errors -DUSING_MPI=0',
-              linker = '/u/collober/Addons/Linux/bin/g++' )
+if myhostname[0:6]=='apstat':
+	# g++ 3  - Apstat
+	pymakeOption( name = 'g++3',
+        	      description = 'compiling with g++3, with no MPI support',
+	              compiler = 'g++',
+	              compileroptions = '-pedantic-errors -DUSING_MPI=0 ',
+	              linker = 'g++' )
+else:
+	# g++ 3 LISA
+	pymakeOption( name = 'g++3',
+        	      description = 'compiling with g++3, with no MPI support',
+              	      compiler = '/u/collober/Addons/Linux/bin/g++',
+                      compileroptions = '-pedantic-errors -DUSING_MPI=0',
+                      linker = '/u/collober/Addons/Linux/bin/g++' )
 
 pymakeOption( name = 'mpi',
               description = 'compiling and linking with MPI support (and USING_MPI=1)',
@@ -200,6 +232,33 @@ pymakeOption( name = 'gprof',
               compileroptions = '-Wall -O3 -funroll-loops -fstrength-reduce -ffast-math -fPIC -pg',
               linkeroptions = '-pg' )
 
+pymakeOption( name = 'noblas',
+              description = 'compilation and linking without BLAS',
+              #linkeroptions = '-lg2c'              
+              )
+
+pymakeOption( name = 'blas',
+              description = 'compilation and linking basic BLAS',
+              linkeroptions = '-lblas -lg2c-pic -D USE_BLAS_SPECIALISATIONS'
+#	      linkeroptions = '-lblas -lg2c -D USE_BLAS_SPECIALISATIONS'
+              )
+
+pymakeOption( name = 'pentiumblas',
+              description = 'compilation and linking BLAS for Intel Pentium processor',
+              linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl -lvml -lpthread -lg2c -D USE_BLAS_SPECIALISATIONS')
+
+pymakeOption( name = 'p3blas',
+              description = 'compilation and linking BLAS for Intel Pentium 3 processor',
+              linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p3 -lmkl_vml_p3 -lpthread -lg2c -D USE_BLAS_SPECIALISATIONS')
+
+pymakeOption( name = 'athlonblas',
+              description = 'compilation and linking atlas BLAS for AMD Athlon processor',
+	      linkeroptions = '-L/u/lisa/local/linux-i386/lib/atlas_athlon256 -lcblas -lf77blas -latlas -lg2c -D USE_BLAS_SPECIALISATIONS')
+
+pymakeOption( name = 'p4blas',
+              description = 'compilation and linking BLAS for Intel Pentium 4 processor',
+              linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread -lg2c -D USE_BLAS_SPECIALISATIONS')
+
 pymakeOption( name = 'float',
               description = 'float mode (real==float)',
               compileroptions = '-DUSEFLOAT')
@@ -224,6 +283,10 @@ if myhostname[0:4]=='zeus':
     nprocesses_per_processor = 18
 if myhostname[0:6]=='canari':
     nprocesses_per_processor = 2
+
+# APSTAT hack... to avoid swapping on merlin
+if myhostname[0:6]=='merlin':
+    nprocesses_per_processor = 1
 
 
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLMPI.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: PLMPI.cc,v 1.2 2002/09/17 01:27:34 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,9 +59,9 @@ bool PLMPI::synchronized = true;
 int PLMPI::size = 0;
 int PLMPI::rank = 0;
 
-ostream PLMPI::mycout;
-ostream PLMPI::mycerr;
-istream PLMPI::mycin;
+PStream PLMPI::mycout;
+PStream PLMPI::mycerr;
+PStream PLMPI::mycin;
 
 int PLMPI::tag = 2909;
 

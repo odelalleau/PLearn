@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: IPopen.cc,v 1.2 2002/08/08 22:54:05 morinf Exp $
+   * $Id: IPopen.cc,v 1.3 2002/09/17 01:27:34 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,7 +65,7 @@ using namespace std;
     }
 
     IPopen::~IPopen() {
-        pipe.close(); // Not strictly necessary
+      //pipe.close(); // Not strictly necessary
         shutdown(socket_fd, 2);
         close(socket_fd);
     }
@@ -87,8 +87,10 @@ using namespace std;
         if (socket_fd <= 0)
             PLERROR("Failure to connect with client");
 
+
         pipe.attach(socket_fd);
-        pipe.setbuf(0, 0); // Somehow this solves some problems
+       //following commented out since pipe is a PStream instead of an fstream...
+       //pipe.setbuf(0, 0); // Somehow this solves some problems
     }
 
     // Called from the client program to establish communication

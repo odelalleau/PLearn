@@ -1,7 +1,9 @@
 // -*- C++ -*-
 
 // PLearn (A C++ Machine Learning Library)
-// Copyright (C) 2002 Xavier Saint-Mleux <saintmlx@iro.umontreal.ca>
+// Copyright (C) 1998 Pascal Vincent
+// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 2002 Frederic Morin, Xavier Saint-Mleux <saintmlx@iro.umontreal.ca>
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -33,44 +35,69 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
-#ifndef pl_nullstreambuf_INC
-#define pl_nullstreambuf_INC
-
-#if __GNUC__ < 3
-#  include <streambuf.h>
-#else
-#  include <streambuf>
-#endif
+#include "PStream_util.h"
+#include <iostream>
 
 namespace PLearn <%
 using namespace std;
 
-/*!
- * pl_nullstreambuf:
- *  streambuf equivalent of a black hole...
- *  you can get nothing out of it and what goes into it is lost forever.
- */
 
-class pl_nullstreambuf : public streambuf
+// *** LITTLE-ENDIAN / BIG-ENDIAN HELL... ***
+
+// Functions to swap representation in memory
+
+void endianswap2(void* ptr, int n)
 {
-private:
-#if __GNUC__ < 3
-  typedef int int_type;
-#endif
-  static const int_type eof = EOF;
+  char *mptr = (char *) ptr;
+  char tmp;
+  while(n--)
+    {
+      tmp = mptr[0]; mptr[0]=mptr[1]; mptr[1]=tmp;
+      mptr+=2;
+    }
+}
 
-protected:
-  //! underflow: always return eof
-  virtual int_type underflow() { return pl_nullstreambuf::eof; }
+void endianswap4(void* ptr, int n)
+{
+  char *mptr = (char *) ptr;
+  char tmp;
+  while(n--)
+    {
+    tmp = mptr[0]; mptr[0]=mptr[3]; mptr[3]=tmp;
+    tmp = mptr[1]; mptr[1]=mptr[2]; mptr[2]=tmp;
+    mptr+=4;
+  }
+}
 
-  //! overflow: do nothing; just return the passed value.
-  virtual int_type overflow(int_type meta = pl_nullstreambuf::eof) { return meta; }
+void endianswap8(void* ptr, int n)
+{
+  char *mptr = (char *) ptr;
+  char tmp;
+  while(n--)
+    {
+      tmp = mptr[0]; mptr[0]=mptr[7]; mptr[7]=tmp;
+      tmp = mptr[1]; mptr[1]=mptr[6]; mptr[6]=tmp;
+      tmp = mptr[2]; mptr[2]=mptr[5]; mptr[5]=tmp;
+      tmp = mptr[3]; mptr[3]=mptr[4]; mptr[4]=tmp;
+      mptr+=8;
+    }
+}
 
-public:
-  //! default and only ctor.
-  pl_nullstreambuf() :streambuf() {}
-};
 
-%> // namespace PLearn
 
-#endif //ndef pl_nullstreambuf_INC
+
+
+pl_stream_raw raw;
+pl_stream_clear_flags clear_flags;
+pl_stream_option_flags option_flags;
+pl_stream_initiate initiate;
+
+
+static pl_nullstreambuf null_streambuf;
+
+istream nullin(&null_streambuf);
+ostream nullout(&null_streambuf);
+iostream nullinout(&null_streambuf);
+
+
+%>

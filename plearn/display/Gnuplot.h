@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.h,v 1.2 2002/08/19 18:18:27 yoshua Exp $
+   * $Id: Gnuplot.h,v 1.3 2002/09/17 01:27:33 zouave Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -51,6 +51,7 @@
 #include "general.h"
 #include <cstdio>
 #include <fstream>
+#include "pl_io.h"
 #include "Mat.h"
 #include "TmpFilenames.h"
 #include "Array.h"
@@ -64,7 +65,7 @@ class Gnuplot
  protected:
   TmpFilenames tmpfilenames;
   FILE* gp_cstream;  
-  ofstream tognuplot;
+  PStream tognuplot;
 
  public:
   Gnuplot(int max_nb_plot=20);   
@@ -72,9 +73,9 @@ class Gnuplot
   Gnuplot(const Vec& v1, const string& opt1, const Vec& v2, const string& opt2);
   Gnuplot(const Vec& v1, const string& opt1, const Vec& v2, const string& opt2, const Vec& v3, const string& opt3);
 
-  ~Gnuplot();
+ ~Gnuplot();
   
-  ostream& operator<<(const string& str);
+  PStream& operator<<(const string& str);
   void flush();
 
   void setxrange(real xmin, real xmax);

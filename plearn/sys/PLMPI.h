@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLMPI.h,v 1.2 2002/08/08 22:54:05 morinf Exp $
+   * $Id: PLMPI.h,v 1.3 2002/09/17 01:27:34 zouave Exp $
    * AUTHORS: Pascal Vincent 
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -246,9 +246,12 @@ public:
     tamper with them (init changes cout and cin, redirecting them to/from
     /dev/null for nodes other than the rank#0 node)
 */
-  static ostream mycout;
-  static ostream mycerr;
-  static istream mycin;
+//  static oassignstream mycout;
+//  static oassignstream mycerr;
+//  static iassignstream mycin;
+  static PStream mycout;
+  static PStream mycerr;
+  static PStream mycin;
 
   //!  The default tag to be used by all send/receive 
   //!  (we typically use this single tag through all of PLearn)
@@ -321,9 +324,9 @@ typedef ofstream pofstream;
 
 inline void PLMPI::init(int* argc, char*** argv)
   {
-    mycout.rdbuf(cout.rdbuf());
-    mycerr.rdbuf(cerr.rdbuf());
-    mycin.rdbuf(cin.rdbuf());
+    mycout(&cout);//.rdbuf(cout.rdbuf());
+    mycerr(&cerr);//.rdbuf(cerr.rdbuf());
+    mycin(&cin);//.rdbuf(cin.rdbuf());
 
 #if USING_MPI
     MPI_Init( argc, argv );

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearnmain.cc,v 1.1 2002/09/05 07:56:30 plearner Exp $
+   * $Id: plearnmain.cc,v 1.2 2002/09/17 01:27:34 zouave Exp $
    ******************************************************* */
 
 
@@ -68,7 +68,7 @@ map<string, string> getModelAliases(const string& filename)
     if(alias.find_first_of(" \t\n\r")!=string::npos)
       PLERROR("In getModelAliases: problem, expecting a single word alias followed by an equal (=) sign; read %s",alias.c_str());
 
-    skipBlanks(in);
+    in >> ws;//skipBlanks(in);
     string definition;
     smartReadUntilNext(in, ";", definition);
     remove_comments(definition);

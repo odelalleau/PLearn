@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: Popen.cc,v 1.2 2002/08/08 22:54:05 morinf Exp $
+   * $Id: Popen.cc,v 1.3 2002/09/17 01:27:34 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,6 +47,7 @@
 #include <unistd.h>
 #include "stringutils.h"
 #include "Popen.h"
+#include <errno.h>
 
 namespace PLearn <%
 using namespace std;
@@ -127,7 +128,7 @@ vector<string> execute(const string& command)
         dup2(fromcommand[1],1);
         char **argv = new char*[commandoptions.size()+2];
         argv[0] = (char*)command.c_str();
-        ofstream out("dbg.out");
+        //ofstream out("dbg.out"); //commented out by xsm (??? what is this line for ???)
         for(unsigned int i=0; i<commandoptions.size(); i++)
           argv[i+1] = (char*)commandoptions[i].c_str();
         argv[commandoptions.size()+1] = 0;
@@ -172,7 +173,7 @@ vector<string> execute(const string& command)
     vector<string> result;
     while(p.in)
     {
-      string line = pgetline(p.in);
+      string line = pgetline(p.in.rawin());
       //cout << line << endl;
       result.push_back(line);
     }

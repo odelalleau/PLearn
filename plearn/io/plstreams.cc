@@ -40,6 +40,16 @@
 namespace PLearn <%
 using namespace std;
 
+
+/*
+void ioassignstream::attach(int fd)
+{
+  the_fdbuf= new pl_fdstreambuf(fd, pl_dftbuflen);
+  the_buf= new pl_streambuf(*the_fdbuf);
+  rdbuf(the_buf);
+}
+*/
+/*
 static pl_nullstreambuf null_streambuf;
 
 istream nullin(&null_streambuf);
@@ -48,7 +58,7 @@ iostream nullinout(&null_streambuf);
 
 pl_stream_raw raw;
 pl_stream_clear_flags clear_flags;
-pl_stream_user_flags user_flags;
+pl_stream_option_flags option_flags;
 pl_stream_initiate initiate;
-
+*/
 %> // end of namespace PLearn

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.4 2002/08/21 18:40:41 jkeable Exp $
+   * $Id: stringutils.h,v 1.5 2002/09/17 01:27:33 zouave Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -55,6 +55,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include "PStream.h"
 
 //!  to be replaced ultimately by the use of sstream, but including it currently produces a thousand warnings... [Pascal]
 #include <strstream.h>
@@ -234,7 +235,8 @@ vector<string> remove(const vector<string> &v, string element);
 class ProgressBar
 {
 protected:
-  ostream& out;
+  //ostream& out;
+  PStream out;
   int currentpos; // current position
   int maxpos;
 
@@ -242,6 +244,7 @@ public:
 
   // creates a new progressbar on the given logstream with the given title and maxpos
   ProgressBar(ostream& logstream, string title, int the_maxpos);
+  ProgressBar(PStream& logstream, string title, int the_maxpos);
 
   // moves the progressbar up to position newpos
   void operator()(int newpos);

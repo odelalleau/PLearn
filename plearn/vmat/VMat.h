@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.5 2002/08/21 18:40:42 jkeable Exp $
+   * $Id: VMat.h,v 1.6 2002/09/17 01:27:34 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -88,15 +88,15 @@ using namespace std;
   };
 
 inline ostream& operator<<(ostream& out, const VMField& f) { f.print(out); return out; }
-/*
-  inline void write(ostream& out, const VMField& f) { f.write(out); }
-  inline void read(istream& in, VMField& f) { f.read(in); }
-*/
-inline pl_ostream &operator<<(pl_ostream &out, const VMField &f)
-{ f.write(out); return out; };
 
-inline pl_istream &operator>>(pl_istream &in, VMField &f)
-{ f.read(in); return in; };
+inline void write(ostream& out, const VMField& f) { f.write(out); }
+inline void read(istream& in, VMField& f) { f.read(in); }
+
+inline PStream &operator<<(PStream &out, const VMField &f)
+{ f.write(out.rawout()); return out; };
+
+inline PStream &operator>>(PStream &in, VMField &f)
+{ f.read(in.rawin()); return in; };
 
   //!  this class holds simple statistics about a field
   class VMFieldStat
@@ -143,15 +143,15 @@ inline pl_istream &operator>>(pl_istream &in, VMField &f)
       void write(ostream& out) const;
       void read(istream& in);
   };
-/*
-  inline void write(ostream& out, const VMFieldStat& f) { f.write(out); }
-  inline void read(istream& in, VMFieldStat& f) { f.read(in); }
-*/
-inline pl_ostream &operator<<(pl_ostream &out, const VMFieldStat &f)
-{ f.write(out); return out; };
 
-inline pl_istream &operator>>(pl_istream &in, VMFieldStat &f)
-{ f.read(in); return in; };
+inline void write(ostream& out, const VMFieldStat& f) { f.write(out); }
+inline void read(istream& in, VMFieldStat& f) { f.read(in); }
+
+inline PStream &operator<<(PStream &out, const VMFieldStat &f)
+{ f.write(out.rawout()); return out; };
+
+inline PStream &operator>>(PStream &in, VMFieldStat &f)
+{ f.read(in.rawin()); return in; };
 
 /*! ** VMatrix ** */
 

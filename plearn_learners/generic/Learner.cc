@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.2 2002/09/09 15:57:25 morinf Exp $
+   * $Id: Learner.cc,v 1.3 2002/09/17 01:27:34 zouave Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -54,9 +54,11 @@
 namespace PLearn <%
 using namespace std;
 
-oassignstream& Learner::default_vlog()
+PStream& /*oassignstream&*/ Learner::default_vlog()
 {
-  static oassignstream default_vlog = cout;
+  //  static oassignstream default_vlog = cout;
+  static PStream default_vlog(&cout);
+  default_vlog.outmode=PStream::raw_ascii;
   return default_vlog;
 }
 int Learner::use_file_if_bigger = 64000000L;
@@ -91,8 +93,16 @@ void Learner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void Learner::outputResultLineToFile(const string & fname, const Vec& results,bool append,const string& names)
 {
+#if __GNUC__ < 3
   ofstream teststream(fname.c_str(),ios::out|(append?ios::app:0));
+#else
+  ofstream teststream(fname.c_str(),ios_base::out|(append?ios_base::app:static_cast<_Ios_Openmode>(0)));
+#endif
+#if __GNUC__ < 3
   if(teststream.tellp()==0)
+#else
+  if(teststream.tellp() == streampos(0))
+#endif
     teststream << "#: epoch " << names << endl;
   teststream << setw(5) << epoch_ << "  " << results << endl;
 }
@@ -401,7 +411,7 @@ void Learner::computeCost(const Vec& input, const Vec& target, const Vec& output
 
 void Learner::setTestDuringTrain(ostream& out, int every, Array<VMat> testsets)
 {
-  testout = out;
+  testout(&out);//testout = out;
   test_every = every;
   test_sets = testsets;
 }
@@ -415,7 +425,11 @@ void Learner::openTrainObjectiveStream()
   ostream& out = *train_objective_stream;
   if(out.bad())
     PLERROR("could not open file %s for appending",filename.c_str());
+#if __GNUC__ < 3
   if(out.tellp()==0)
+#else
+  if(out.tellp() == streampos(0))
+#endif
     out << "#  epoch | " << join(trainObjectiveNames()," | ") << endl;
 }
 
@@ -442,7 +456,11 @@ void Learner::openTestResultsStreams()
       ostream& out = *test_results_streams[k];
       if(out.bad())
         PLERROR("In Learner::openTestResultsStreams could not open file %s for appending",filename.c_str());
-      if(out.tellp()==0)
+#if __GNUC__ < 3
+      if(out.tellp() == 0)
+#else
+      if(out.tellp() == streampos(0))
+#endif
         out << "#: epoch " << join(testResultsNames()," ") << endl;
     }
 }
@@ -760,7 +778,7 @@ Vec Learner::test(VMat test_set, const string& save_test_outputs, const string& 
     costs = new FileVMatrix(save_test_costs, test_set.length(), ncostfuncs);
 
   int l = test_set.length();
-  //ProgressBar progbar(vlog, "Testing " + test_set->getAlias(), l);
+  ProgressBar progbar(vlog, "Testing " + test_set->getAlias(), l);
   // ProgressBar progbar(cerr, "Testing " + test_set->getAlias(), l);
   // ProgressBar progbar(nullout(), "Testing " + test_set->getAlias(), l);
 
@@ -812,7 +830,7 @@ Vec Learner::test(VMat test_set, const string& save_test_outputs, const string& 
                 costs->putRow(i,cost);
               if(!multipass) // stats can be computed in a single pass?
                 test_statistics.update(cost);
-              //progbar(i);
+              progbar(i);
             }
         }
       else // other processes compute output and cost on different rows of the test_set and send them to process 0
@@ -891,7 +909,7 @@ Vec Learner::test(VMat test_set, const string& save_test_outputs, const string& 
           // test_set->getRow(i, sample);
           // useAndCost(input, target, output, cost);
 
-          //progbar(i);
+          progbar(i);
 
         }
 

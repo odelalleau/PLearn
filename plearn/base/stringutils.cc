@@ -37,33 +37,59 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.2 2002/08/21 18:40:41 jkeable Exp $
+   * $Id: stringutils.cc,v 1.3 2002/09/17 01:27:33 zouave Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "stringutils.h"
 #include "general.h"
+
+#if USING_MPI
 #include "PLMPI.h"
+#endif //USING_MPI
 
 namespace PLearn <%
 using namespace std;
 
   ProgressBar::ProgressBar(ostream& logstream, string title, int the_maxpos)
-    :out(logstream), currentpos(0), maxpos(the_maxpos)
+    :out(&logstream), currentpos(0), maxpos(the_maxpos)
   {
+    out.outmode=PStream::raw_ascii;
+#if USING_MPI
     if(PLMPI::rank==0)
       {
+#endif
         string fulltitle = string(" ") + title + " (" + tostring(maxpos) + ") ";
         out << "[" + center(fulltitle,100,'-') + "]\n[";
         out.flush();
+#if USING_MPI
       }
+#endif
+  }
+
+  ProgressBar::ProgressBar(PStream& logstream, string title, int the_maxpos)
+    :out(logstream), currentpos(0), maxpos(the_maxpos)
+  {
+    out.outmode=PStream::raw_ascii;
+#if USING_MPI
+    if(PLMPI::rank==0)
+      {
+#endif
+        string fulltitle = string(" ") + title + " (" + tostring(maxpos) + ") ";
+        out << "[" + center(fulltitle,100,'-') + "]\n[";
+        out.flush();
+#if USING_MPI
+      }
+#endif
   }
 
   void ProgressBar::operator()(int newpos)
   {
+#if USING_MPI
     if(PLMPI::rank==0)
       {
+#endif
         if(!maxpos)
           return;
         int ndots = newpos*100/maxpos - currentpos*100/maxpos;
@@ -73,7 +99,9 @@ using namespace std;
         currentpos = newpos;
         if(currentpos==maxpos)
           out << "]" << endl;
+#if USING_MPI
       }
+#endif
   }
 
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PP.h,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: PP.h,v 1.2 2002/09/17 01:27:33 zouave Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -50,7 +50,7 @@
 
 #include <typeinfo>
 #include "TypeTraits.h"
-#include "general.h"
+#include "CopiesMap.h"
 
 namespace PLearn <%
 using namespace std;
@@ -164,7 +164,7 @@ class PP
     { return *ptr; }
   
   //! affectation operator to ordinary ptr
-  inline void operator=(const T* otherptr)
+  inline PP<T>& operator=(const T* otherptr)
     {
       if(otherptr!=ptr)
         {
@@ -174,11 +174,12 @@ class PP
           if(ptr)
             ptr->ref();
         }
+      return *this;
     }
 
   //! affectation operator to same type PP
-  inline void operator=(const PP<T>& other)
-    { operator=((T*)other); }
+  inline PP<T>& operator=(const PP<T>& other)
+    { return operator=((T*)other); }
 
   inline ~PP()
     { 

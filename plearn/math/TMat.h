@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: TMat.h,v 1.2 2002/09/17 01:27:34 zouave Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -352,11 +352,11 @@ template <class T> class TMat;
       bool isNotEmpty() const
       { return storage!=0; }
 
-      /*
+      
       //!  To allow if(v) statements
       operator bool() const
       { return storage!=0; }
-      */
+      
 
       //!  To allow if(!v) statements
       bool operator!() const
@@ -550,6 +550,15 @@ template <class T> class TMat;
 
       //!  return true if (*this)[i]==value[i] for all i, 0 otherwise
       bool operator==(const TVec<T>& value) const
+      {
+        if (value.length()!=length()) return false;
+        T* x=data();
+        T* y=value.data();
+        for (int i=0;i<length();i++)
+          if (x[i]!=y[i]) return false;
+        return true;
+      }
+      bool operator==(TVec<T>& value)
       {
         if (value.length()!=length()) return false;
         T* x=data();
@@ -1292,16 +1301,16 @@ void loadPVec(const string& filename, TVec<float>& vec)
 //!  Read and Write from C++ stream:
 //!  write saves length and read resizes accordingly
 
-template <class T> inline pl_ostream &
-operator<<(pl_ostream &out, const TVec<T> &v)
+template <class T> inline PStream &
+operator<<(PStream &out, const TVec<T> &v)
 {
     int l = v.length();
     out << l;
-    if (out.flags.test(plf_binary)) {
+    if (out.outmode==PStream::raw_binary) {
         if (l < 200000)
-            PLearn::binwrite(out, v.data(), l);
+            PLearn::binwrite(out.rawout(), v.data(), l);
         else for (int i = 0; i < l; i += 200000)
-            PLearn::binwrite(out, &v[i], std::min(200000, l - i));
+            PLearn::binwrite(out.rawout(), &v[i], std::min(200000, l - i));
     } else { // plf_plain
         out << raw << '\n';
         for (int i = 0; i < v.length(); ++i)
@@ -1312,17 +1321,17 @@ operator<<(pl_ostream &out, const TVec<T> &v)
     return out;
 }
 
-template <class T> inline pl_istream &
-operator>>(pl_istream &in, TVec<T> &v)
+template <class T> inline PStream &
+operator>>(PStream &in, TVec<T> &v)
 {
     int l;
     in >> l;
     v.resize(l);
-    if (in.flags.test(plf_binary)) {
+    if (in.inmode==PStream::raw_binary) {
         if (l < 200000) {
-            PLearn::binread(in, v.data(), l);
+            PLearn::binread(in.rawin(), v.data(), l);
         } else for (int i = 0; i < l; i += 200000)
-            PLearn::binread(in, &v[i], std::min(200000, l - i));
+            PLearn::binread(in.rawin(), &v[i], std::min(200000, l - i));
     } else { // plf_plain
         in >> ws;
         for (int i = 0; i < l; ++i)
@@ -1670,14 +1679,14 @@ void loadPMat(const string& filename, TMat<float>& mat)
 //!  Read and Write from C++ stream:
 //!  write saves length() and width(), and read resizes accordingly
 
-template <class T> pl_ostream &
-operator<<(pl_ostream &out, const TMat<T> &m)
+template <class T> PStream &
+operator<<(PStream &out, const TMat<T> &m)
 {
     out << m.length();
     out << m.width();
-    if (out.flags.test(plf_binary)) {
+    if (out.outmode==PStream::raw_binary) {
         for (int i= 0; i < m.length(); ++i)
-            binwrite(out, m[i], m.width());
+            binwrite(out.rawout(), m[i], m.width());
     } else {
         out << raw << '\n';
         for (int i = 0; i < m.length(); ++i) {
@@ -1689,16 +1698,16 @@ operator<<(pl_ostream &out, const TMat<T> &m)
     return out;
 }
 
-template <class T> pl_istream &
-operator>>(pl_istream &in, TMat<T> &m)
+template <class T> PStream &
+operator>>(PStream &in, TMat<T> &m)
 {
     int l, w;
     in >> l;
     in >> w;
     m.resize(l, w);
-    if (in.flags.test(plf_binary)) {
+    if (in.inmode==PStream::raw_binary) {
         for (int i = 0; i < l; ++i)
-            binread(in, m[i], w);
+            binread(in.rawin(), m[i], w);
     } else {
         in >> ws;
         for (int i = 0; i < l; ++i) {
@@ -1710,6 +1719,10 @@ operator>>(pl_istream &in, TMat<T> &m)
     }
     return in;
 }
+
+/*^*************************************^*/
+
+
 
 /*
 template<class T>
@@ -1741,6 +1754,7 @@ void read(istream& in, TMat<T>& m)
       in.get();
     }
 }
+
 
 template<class T>
 void binwrite(ostream& out, const TMat<T>& m)
@@ -1782,6 +1796,7 @@ void binread_double(istream& in, TMat<T>& m)
     PLearn::binread_double(in,m[i],w);
 }
 */
+
 template<class T>
 inline void deepWrite(ostream& out, DeepWriteSet& already_saved, const TMat<T>& m) 
 { m.deepWrite(out, already_saved); }

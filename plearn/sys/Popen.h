@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: Popen.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: Popen.h,v 1.2 2002/09/17 01:27:34 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,11 +47,7 @@
 #ifndef Popen_INC
 #define Popen_INC
 
-#include <fstream>
-#include <string>
-#include <vector>
-#include <unistd.h>
-#include "PP.h"
+#include "general.h"
 
 namespace PLearn <%
 using namespace std;
@@ -74,8 +70,8 @@ using namespace std;
     
     int fdin;
     int fdout;    
-    ifstream in;
-    ofstream out;
+    PStream in; //should these be only one I/O PStream? -xsm
+    PStream out;
     
     Popen(const string& command, 
 	  bool the_verbose = false) 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.3 2002/08/21 18:40:41 jkeable Exp $
+   * $Id: Array.h,v 1.4 2002/09/17 01:27:33 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -291,11 +291,11 @@ public:
 
     void write(ostream &out_) const
     {
-        pl_ostream out = out_;
+        PStream out(&out_);
         newwrite(out);
     }
 
-    void newwrite(pl_ostream& out) const
+    void newwrite(PStream& out) const
     {
         out << raw << size() << " [ ";
         for(int i=0; i<array_size; i++)
@@ -303,22 +303,31 @@ public:
         out << raw << " ]\n";
     }
 
+
+      /*
+       * NOTE: FIX_ME
+       * If newread changes the state of the stream (e.g. eof), 
+       * the original stream will NOT reflect this state... 
+       * 'in' will have it's state changed, but not 'in_'.
+       * This can be a major problem w/ 'asignstreams'...
+       *                            - xsm
+       */
     void read(istream &in_)
     {
-        pl_istream in = in_;
+        PStream in(&in_);
         newread(in);
     }
 
-    void newread(pl_istream &in)
+    void newread(PStream &in)
     {  
       T val;
-      skipBlanksAndComments(in);
+      skipBlanksAndComments(in.rawin());
       int c = in.peek();
       if(c=='[') // format is "[val1; val2; va3; ...]"
         {
           in.get(); // skip '['
           resize(0);
-          skipBlanksAndComments(in);
+          skipBlanksAndComments(in.rawin());
           c = in.peek();
           if(c!=']')
             {
@@ -328,7 +337,7 @@ public:
                   if(!in)
                     PLERROR("In Array::read with format [ v1; v2; v3 ] problem while reading value");
                   push_back(val);
-                  skipBlanksAndComments(in);
+                  skipBlanksAndComments(in.rawin());
                   c = in.get();
                   if(c==']')
                     break;
@@ -344,7 +353,7 @@ public:
           int size;
           in >> size;
           resize(size);
-          skipBlanksAndComments(in);
+          skipBlanksAndComments(in.rawin());
           c = in.get();
           if(c!='[')
             in.unget();
@@ -352,7 +361,7 @@ public:
               in >> array[i];
           if(c=='[')
             {
-              skipBlanksAndComments(in);
+              skipBlanksAndComments(in.rawin());
               if((c=in.get())!=']')
                 PLERROR("In Array::read(istream&) wrong array format, read %c when expecting a ']' ",c);                 
             }
@@ -406,6 +415,7 @@ template <class T>
 template <class T>
   void read(istream& in, Array<T>& a) { a.read(in); }
 */
+/*
 template <class T> inline pl_istream &
 operator>>(pl_istream &in, Array<T> &a)
 { a.newread(in); return in; }
@@ -428,14 +438,49 @@ operator>>(pl_istream &in, vector<T> &v)
     return in;
 }
 
-template <class T> inline pl_ostream &
-operator<<(pl_ostream &out, const vector<T> &v)
+template <class T> inline PStream &
+operator<<(PStream &out, const vector<T> &v)
 {
     // Easy way
     Array<T> a = v;
     a.newwrite(out);
     return out;
 }
+*/
+
+
+template <class T> inline PStream &
+operator>>(PStream &in, Array<T> &a)
+{ a.newread(in); return in; }
+
+template <class T> inline PStream &
+operator<<(PStream &out, const Array<T> &a)
+{ a.newwrite(out); return out; };
+
+template <class T> inline PStream &
+operator>>(PStream &in, vector<T> &v)
+{
+    // Easy way
+    Array<T> a;
+    a.newread(in);
+    v.clear();
+    v.reserve(a.size());
+    for (int i= 0; i < a.size(); ++i) {
+        v.push_back(a[i]);
+    }
+    return in;
+}
+
+template <class T> inline PStream &
+operator<<(PStream &out, const vector<T> &v)
+{
+    // Easy way
+    Array<T> a = v;
+    a.newwrite(out);
+    return out;
+}
+
+
 
 template <class T>
   void deepWrite(ostream& out, DeepWriteSet& already_saved, const Array<T>& a)

@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StrTableVMatrix.h,v 1.2 2002/08/09 01:54:40 jkeable Exp $
+   * $Id: StrTableVMatrix.h,v 1.3 2002/09/17 01:27:34 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -40,7 +40,11 @@
 
 #include "StringTable.h"
 #include "VMat.h"
-#include <hash_map>
+#if __GNUC__ < 3
+#  include <hash_map>
+#else
+#  include <ext/hash_map>
+#endif
 
 namespace PLearn <%
 using namespace std;

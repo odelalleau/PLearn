@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.2 2002/09/04 22:42:52 jkeable Exp $
+   * $Id: RealMapping.cc,v 1.3 2002/09/17 01:27:33 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -121,7 +121,7 @@ using namespace std;
     missing_mapsto = MISSING_VALUE;
     keep_other_as_is = true;
 
-    skipBlanks(in);
+    in >> ws;//skipBlanks(in);
     char c=in.get();
     bool uses_headers = false;
     
@@ -132,7 +132,7 @@ using namespace std;
         if(version!=0)
           PLERROR("In RealMapping::read reading of version #%d not implemented",version);
         uses_headers = true;
-        skipBlanks(in);
+        in >> ws;//skipBlanks(in);
         c = in.get();
       }
 
@@ -147,7 +147,7 @@ using namespace std;
         else if(c=='[' || c==']')
           {
             r.read(in);
-            skipBlanks(in);
+            in >> ws;//skipBlanks(in);
             if(in.get()!='-' || in.get()!='>')
                 PLERROR("Expecting -> after range specification ( range syntax example : ]100 200] -> 10 )");
             real val;
@@ -192,7 +192,7 @@ using namespace std;
 
     if(uses_headers)
       {
-        skipBlanks(in);
+        in >> ws;//skipBlanks(in);
         readFooter(in,"RealMapping");        
       }
   }

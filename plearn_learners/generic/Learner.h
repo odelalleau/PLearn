@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.2 2002/09/10 22:30:48 morinf Exp $
+   * $Id: Learner.h,v 1.3 2002/09/17 01:27:34 zouave Exp $
    ******************************************************* */
 
 
@@ -121,7 +121,8 @@ using namespace std;
 
 
     //!  test during train specifications
-    oassignstream testout;
+    //oassignstream testout;
+    PStream testout;
     int test_every;
     Vec avg_objective; //!<  average of the objective function(s) over the last test_every steps
     Vec avgsq_objective; //!<  average of the squared objective function(s) over the last test_every steps
@@ -181,9 +182,11 @@ using namespace std;
 
     static bool force_saving_on_all_processes; //!< otherwise in MPI only CPU0 actually saves
 
-    static oassignstream& default_vlog(); //!<  The default stream to which lout is set upon construction of all Learners (defaults to cout)
-    oassignstream vlog; //!<  The log stream to which all the verbose output from this learner should be sent
-    oassignstream objectiveout; //!<  The log stream to use to record the objective function during training
+    static PStream& /*oassignstream&*/ default_vlog(); //!<  The default stream to which lout is set upon construction of all Learners (defaults to cout)
+    //oassignstream vlog; //!<  The log stream to which all the verbose output from this learner should be sent
+    //oassignstream objectiveout; //!<  The log stream to use to record the objective function during training
+    PStream vlog; //!<  The log stream to which all the verbose output from this learner should be sent
+    PStream objectiveout; //!<  The log stream to use to record the objective function during training
 
 /*!       **** SUBCLASS WRITING: ****
       All subclasses of Learner should implement this form of constructor
