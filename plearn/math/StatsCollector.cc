@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.23 2003/11/19 19:03:57 tihocan Exp $
+   * $Id: StatsCollector.cc,v 1.24 2003/11/20 19:10:30 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -115,7 +115,7 @@ void StatsCollector::declareOptions(OptionList& ol)
 void StatsCollector::build_()
 {
   // make sure count.size==0. If not, the object must have been loaded, and FLT_MAX is an existing key
-  // but rounded to some precision, and it would there would be 2 keys approx.=  FLT_MAX
+  // but rounded to some precision, and there would be 2 keys approx.=  FLT_MAX
   if(maxnvalues>0 && counts.size()==0)
     counts[FLT_MAX] = StatsCollectorCounts();
 }
@@ -331,19 +331,15 @@ RealMapping StatsCollector::getAllValuesMapping(TVec<bool>* to_be_included,
   double count=0;
     
   for(map<real,StatsCollectorCounts>::const_iterator it = counts.begin() ;
-      it!=counts.end(); ++it)
+      i < counts.size() - 1; ++it)
   {
-//    cout<<it->first<<" "<<FLT_MAX<<endl;
-
-    if(it->first!=FLT_MAX) {
-      if (!to_be_included) {
-          mapping.addMapping(RealRange('[',it->first,it->first,']'),i);
-      } else {
-        // Must make sure this range is to be included.
-        if ((*to_be_included)[i]) {
-          mapping.addMapping(RealRange('[',it->first,it->first,']'),k);
-          k++;
-        }
+    if (!to_be_included) {
+      mapping.addMapping(RealRange('[',it->first,it->first,']'),i);
+    } else {
+      // Must make sure this range is to be included.
+      if ((*to_be_included)[i]) {
+        mapping.addMapping(RealRange('[',it->first,it->first,']'),k);
+        k++;
       }
       i++;
     }
