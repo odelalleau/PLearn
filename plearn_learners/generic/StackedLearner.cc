@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.8 2003/11/29 17:43:23 tihocan Exp $
+   * $Id: StackedLearner.cc,v 1.9 2003/11/29 18:02:51 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -155,6 +155,8 @@ StackedLearner::StackedLearner()
       deepCopyField(combiner, copies);
     if (splitter)
       deepCopyField(splitter, copies);
+    if (base_train_splitter)
+      deepCopyField(base_train_splitter, copies);
   }
 
 
