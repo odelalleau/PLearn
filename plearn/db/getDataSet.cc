@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.1 2002/11/28 04:25:38 jkeable Exp $
+   * $Id: getDataSet.cc,v 1.2 2002/11/28 05:05:22 jkeable Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -55,6 +55,7 @@
 #include "VVMatrix.h"
 #include "StrTableVMatrix.h"
 #include "databases.h"
+#include "StringTable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -130,7 +131,7 @@ VMat getDataSet(const string& datasetstring, const string& alias)
           else if(ext==".amat")
             vm = loadAsciiAsVMat(datasetstring);
           else if(ext==".strtable")
-            vm = new StrTableVMatrix(loadStrTable(datasetstring));
+            vm = new StrTableVMatrix(StringTable(datasetstring));
           else if(ext==".sdb")
             vm = new AutoSDBVMatrix(remove_extension(datasetstring));            
           else
