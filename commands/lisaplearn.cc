@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.25 2004/05/13 13:08:34 tihocan Exp $
+   * $Id: lisaplearn.cc,v 1.26 2004/05/17 13:09:48 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -85,6 +85,7 @@
 #include "Distribution.h"
 #include "GaussianDistribution.h"
 #include "KernelProjection.h"
+#include "KernelPCA.h"
 #include "LinearRegressor.h"
 #include "LocallyWeightedDistribution.h"
 #include "MultiInstanceNNet.h"
