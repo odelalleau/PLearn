@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.29 2005/02/18 17:13:39 tihocan Exp $
+   * $Id: FileVMatrix.cc,v 1.30 2005/02/24 14:09:14 tihocan Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -284,7 +284,7 @@ void FileVMatrix::declareOptions(OptionList & ol)
 
   declareOption(ol, "remove_when_done", &FileVMatrix::remove_when_done, OptionBase::buildoption,
       "If set to 1, the file 'filename' will be deleted when this object is deleted\n"
-      "(and we think no other FileVMatrix is accessing it.");
+      "(and we think no other FileVMatrix is accessing it).");
 
   declareOption(ol, "track_ref", &FileVMatrix::track_ref, OptionBase::buildoption,
       "If set to 1, will be counted in the FileVMatrix that access 'filename', which may prevent conflicts.");
