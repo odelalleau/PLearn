@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReconstructionWeightsKernel.h,v 1.1 2004/07/15 21:06:17 tihocan Exp $ 
+   * $Id: ReconstructionWeightsKernel.h,v 1.2 2004/07/19 13:27:41 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -45,6 +45,7 @@
 #define ReconstructionWeightsKernel_INC
 
 #include "Kernel.h"
+#include "SelectRowsVMatrix.h"
 
 namespace PLearn {
 using namespace std;
@@ -77,6 +78,9 @@ protected:
     
   //! The indices of the neighbors of each data point.
   TMat<int> neighbors;
+
+  //! Points toward a subset of the training data (typically, a neighborhood).
+  PP<SelectRowsVMatrix> sub_data;
 
   //! The matrix with the weights W_{ij}.
   Mat weights;
@@ -141,14 +145,16 @@ public:
 
   virtual real evaluate_i_j(int i, int j) const;
 
+  virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
+
+  virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
+
   virtual void setDataForKernelMatrix(VMat the_data);
 
   // *** SUBCLASS WRITING: ***
   // While in general not necessary, in case of particular needs 
   // (efficiency concerns for ex) you may also want to overload
   // some of the following methods:
-  // virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
-  // virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
   // virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
   // virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
   // virtual void computeGramMatrix(Mat K) const;
@@ -161,6 +167,8 @@ protected:
   //! Precompute the weights W_{ij}.
   void computeWeights();
   
+  //! Compute the reconstruction weights for a vector, given its nearest neighbors.
+  void reconstruct(const Vec& x, const TVec<int>& neighbors, Vec& w) const;
 
 };
 
