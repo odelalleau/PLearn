@@ -35,6 +35,7 @@
 #include "BPTTVariable.h"
 #include "PLMPI.h"
 #include "DisplayUtils.h"
+#include "pl_math.h"
 
 namespace PLearn {
   using namespace std;
@@ -86,23 +87,19 @@ namespace PLearn {
   }
 
   void BPTTVariable::set_neuron(int i, int j, real val) {
-    real *r = neuron[i] + j;
-    *r = val;
+    neuron[i][j] = val;
   }
 
   void BPTTVariable::set_cost(int i, int j, real val) {
-    real *r = cost[i] + j;
-    *r = val;
+    cost[i][j] = val;
   }
 
   void BPTTVariable::set_gradient(int i, int j, real val) {
-    real *r = neu_gradient[i] + j;
-    *r = val;
+    neu_gradient[i][j] = val;
   }
 
   void BPTTVariable::set_indexDest(int i, int j, int val) {
-    int *r = indexDest[i] + j;
-    *r = val;
+    indexDest[i][j] = val;
   }
 
 
@@ -129,7 +126,7 @@ namespace PLearn {
 	topsort(src_neuron, mark, orderCount);
       }
     }
-    order[nunits - *orderCount - 1] = v;
+    order[*orderCount] = v;
     (*orderCount)++;
   }
 
@@ -175,8 +172,8 @@ namespace PLearn {
 	Vec row = s(j);
 	for (int o = 0; o < nunits; o++) { // Loop on each units(neuron)
 	  int v = order[o];
-	  if (isInput(v) && row[v] != MISSING_VALUE) {
-	    set_neuron(t, v, row[v] + bias->value[v]);
+	  if (isInput(v) && !is_missing(row[v])) {
+	    set_neuron(t, v, squash(v,row[v] + bias->value[v]));
 	  } else {
 	    real total = bias->value[v];
 	    for (int e = 1; e <= get_indexDest(v,0); e++) { // Loop on each edge that comes to the neuron
@@ -207,8 +204,8 @@ namespace PLearn {
       Vec row = input(t);
       for (int o = 0; o < nunits; o++) { // Loop on each units(neuron)
 	int v = order[o];
-	if (isInput(v) && row[v] != MISSING_VALUE) {
-	  set_neuron(t, v, row[v] + bias->value[v]);
+	if (isInput(v) && !is_missing(row[v])) {
+	  set_neuron(t, v, squash(v,row[v] + bias->value[v]));
 	} else {
 	  real total = bias->value[v];
 	  for (int e = 1; e <= get_indexDest(v,0); e++) { // Loop on each edge that comes to the neuron
@@ -250,7 +247,7 @@ namespace PLearn {
 
     Var weights = varray[0];
     int t = neuron_size - 1;
-    
+
     for (int i = currpos + nsamples - 1; i >= currpos; i--) { // Backward loop on seqs
       int nrow = seqs->getNbRowInSeq(i);
       Mat s = Mat(nrow, ncol);
@@ -259,8 +256,8 @@ namespace PLearn {
 	Vec row = s(j);
 	for (int o = nunits - 1; o >= 0; o--) { // Backward loop on each units(neuron)
 	  int u = order[o];
-	  if (isOutput(u)) {
-	    real err = gradient[0] * computeGradErr(get_neuron(t, u),row[u-nunits_hidden]);
+	  if (isOutput(u) && !is_missing(row[u-nunits_hidden])) {
+	    real err = computeGradErr(get_neuron(t, u),row[u-nunits_hidden]);
 	    set_gradient(t, u, get_gradient(t, u) + err);
 	  }
 	  real der = squash_d(u, get_neuron(t, u));
@@ -312,6 +309,9 @@ namespace PLearn {
 	bias->gradient[u] += get_gradient(t, u);
       }      
     }
+    for (int w = 0; w < links.nrows(); w++) {
+      weights->gradient[w] = weights->gradient[w] * gradient[0];
+    }
   }
 
   real BPTTVariable::computeGradErr(real o, real t) {
@@ -333,7 +333,7 @@ namespace PLearn {
       for (int i = 0; i < seqs->targetsize(); i++) {
 	real target = row[seqs->inputsize() + i];
 	real out = get_neuron(t, nunits - seqs->targetsize() + i);
-	if (target != MISSING_VALUE && out != MISSING_VALUE) {
+	if (!is_missing(target) && !is_missing(out)) {
 	  set_cost(t, i, computeErr(out,target));
 	  value[0] += get_cost(t, i);
 	}
@@ -344,8 +344,8 @@ namespace PLearn {
   real BPTTVariable::squash_d(int v, real r) {
     if (units_type[v] == "TANH")
       return 1.0 - r * r;
-    else if (units_type[v] == "LIN")
-      return 1.0;
+    else if (units_type[v] == "EXP")
+      return r * (1.0 - r);
     PLERROR("BPTTVariable : The cost_type %s is unknown", cost_type[v]);
     return 0.0;    
   }
@@ -353,12 +353,26 @@ namespace PLearn {
   real BPTTVariable::squash(int v, real r) {
     if (units_type[v] == "TANH")
       return tanh(r);
-    else if (units_type[v] == "LIN")
-      return r;
+    else if (units_type[v] == "EXP")
+      return 1.0 / (1.0 + exp(-r));
     PLERROR("BPTTVariable : The cost_type %s is unknown", cost_type[v]);
     return 0.0;
   }
-  
+
+  void BPTTVariable::updateWeights() {
+    Var weights = varray[0];
+    for (int w = 0; w < links.nrows(); w++) {
+      weights->value[w] += weights->gradient[w];
+    }    
+  }
+
+  void BPTTVariable::updateBias() {
+    Var bias = varray[1];
+    for (int u = 0; u < nunits; u++) {
+      bias->value[u] += bias->gradient[u];
+    }    
+  }
+
   void BPTTVariable::printState() {
     Var weights = varray[0];
     for (int t = 0; t < neuron_size; t++) {
@@ -393,7 +407,7 @@ namespace PLearn {
       cout << "w(" << src_neuron << "," << dst_neuron << "," << 
 	delay << ")=" <<  weights->value[w] << endl;
     }
-    cout << "alpha : " << alpha << endl;
+    cout << "alpha : " << gradient[0] << endl;
   }  
 
   void BPTTVariable::printOrder() {

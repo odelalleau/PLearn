@@ -126,6 +126,8 @@ class BPTTVariable: public NaryVariable
   virtual void rfprop();  
 
   void updateGradient();
+  void updateWeights();
+  void updateBias();
 
   void computeOutputFromInput(const Mat&, Mat&);
   void computeCostFromOutput(const Mat&, const Mat&, Mat&);

@@ -97,6 +97,7 @@ using namespace std;
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
                       VMat testoutputs=0, VMat testcosts=0) const;
 
+    void printITO( Vec&,  Vec&,  Vec&, int&) const;
   protected:
     static void declareOptions(OptionList& ol);
     void initializeParams();

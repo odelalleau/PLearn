@@ -57,7 +57,7 @@
 
 #include "ConcatColumnsVMatrix.h"
 //#include "DisplayUtils.h"
-//#include "GradientOptimizer.h"
+#include "GradientOptimizer.h"
 #include "BPTT.h"
 #include "random.h"
 #include "SubVMatrix.h"
@@ -196,16 +196,25 @@ void BPTT::train()
 
   int initial_stage = stage;
   bool early_stop=false;
+  rec_net->gradient[0] = (dynamic_cast<GradientOptimizer*>((Optimizer*)optimizer))->start_learning_rate;
+  cout << rec_net->gradient[0] << endl;
+  rec_net->gradient[0] = - ((dynamic_cast<GradientOptimizer*>((Optimizer*)optimizer))->start_learning_rate);
+  cout << rec_net->gradient[0] << endl;
   while(stage<nstages && !early_stop) {
-    optimizer->nstages = optstage_per_lstage;
+    /*   optimizer->nstages = optstage_per_lstage;
     train_stats->forget();
     optimizer->early_stop = false;
     optimizer->optimizeN(*train_stats);
     train_stats->finalize();
+    */
+    rec_net->fbprop();
+    rec_net->updateWeights();
+    rec_net->updateBias();
+
     if(verbosity>2) {
-      cout << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
-      cout << weights;
-      cout << endl;
+      cout << "Epoch " << stage << " train objective: " << rec_net->value[0] << endl;
+      cout << "Weights : " << weights << endl;
+      cout << "Bias : " << bias << endl;
     }
     ++stage;
     if(pb)
@@ -265,6 +274,10 @@ void BPTT::test(VMat testset, PP<VecStatsCollector> test_stats,
 
       if(pb)
         pb->update(i);
+      if (i < 3) {
+	cout << "ex " << i << endl;
+	printITO(input, target, output, l);
+      }
     }
 
   if(test_stats)
@@ -275,6 +288,23 @@ void BPTT::test(VMat testset, PP<VecStatsCollector> test_stats,
 
 }
 
+void BPTT::printITO(Vec& input, Vec& target, Vec& output, int& l) const {
+  int i = 0;
+  int t = 0;
+  int o = 0;
+  for (int j = 0; j < input.size(); j++) {
+    for (int k = 0; k < 1; k++) {
+      cout << input[i++] << " ";
+    }
+    for (int k = 0; k < 1; k++) {
+      cout << target[t++] << " ";
+    }
+    for (int k = 0; k < 1; k++) {
+      cout << output[o++] << " ";
+    }
+    cout << endl;
+  }
+} 
 
 void BPTT::computeOutput(const Vec& inputv, Vec& outputv) const
 {
@@ -299,6 +329,7 @@ void BPTT::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv,
 
 void BPTT::run() {
   rec_net->gradient[0] = 1.0;
+  rec_net->printOrder();
   cout << rec_net->gradient[0] << endl;
   rec_net->verifyGradient();
 }
@@ -312,7 +343,7 @@ void BPTT::initializeParams() {
 void BPTT::forget() {
   if (train_set) initializeParams();
   for (int i=0;i<nneuron_input + nneuron_hidden + nneuron_output;i++) {
-    bias[i] = 0.01;
+    bias[i] = 1.0;
     int fanin = rec_net->get_indexDest(i,0);
     real r = 1.0/sqrt((float)fanin);
     for (int l = 1; l <= rec_net->get_indexDest(i,0); l++) {
@@ -320,6 +351,9 @@ void BPTT::forget() {
       weights[nlink] = bounded_uniform(-r,r);
     }
   }
+  cout << "forget()" << endl;
+  cout << "weights : " << weights << endl;
+  cout << "bias : " << bias << endl;
   stage = 0;
 }
 
