@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.5 2003/04/29 17:25:53 tihocan Exp $
+   * $Id: Optimizer.h,v 1.6 2003/04/29 19:44:48 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -81,16 +81,20 @@ using namespace std;
       VarArray update_for_measure; // not used if length()==0
       //OptimizerCallback callback; //!<  callback function
 
-    //oassignstream vlog;
-    PStream vlog;
-			
+      Vec meancost; // TODO Remove when not usefull anymore
+
+      //oassignstream vlog;
+      PStream vlog;
+
     protected:
+
       Array<Measurer*> measurers;
-      
+
+      // TODO Put back to protected later !
       //!  call measure <every> <nupdates> iterations
       //!  saving the results in the <filename>.
       string filename; // JS - that was const...
-    
+      
   public:
       int every; //!<  if = 0 don't print or measure anything
 

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.19 2003/04/29 18:16:19 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.20 2003/04/29 19:44:47 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -98,7 +98,6 @@ public:
 private:
 
   // Internal data
-  Vec meancost;              // used to store the mean cost
   Vec current_opp_gradient;  // current opposite gradient value
   Vec search_direction;      // current search direction for the line search
   Vec tmp_storage;           // used for temporary storage of data

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.h,v 1.7 2003/04/29 17:51:21 tihocan Exp $
+   * $Id: GradientOptimizer.h,v 1.8 2003/04/29 19:44:49 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -83,8 +83,6 @@ using namespace std;
     private:
       bool stochastic_hack; // true when we're computing a stochastic gradient
       Vec learning_rates;   // used to store the individual learning rates
-      Vec meancost;         // used to store the mean cost
-                            // TODO Will it be useless with stats_coll ?
       Vec gradient;         // used to store the gradient
       Vec tmp_storage;      // used to store various stuff
       // used to store the previous learning rates evolution
