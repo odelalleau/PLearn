@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: RowBufferedVMatrix.cc,v 1.5 2004/06/22 18:22:15 tatien Exp $
    ******************************************************* */
 
 #include "RowBufferedVMatrix.h"
@@ -79,7 +79,7 @@ void RowBufferedVMatrix::getSubRow(int i, int j, Vec v) const
       getRow(i,current_row);
       current_row_index = i;
     }
-  v << current_row.subVec(j,v.length());
+  v.copyFrom(current_row.data()+j, v.length());
 }
 
 real RowBufferedVMatrix::dot(int i1, int i2, int inputsize) const
