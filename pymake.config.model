@@ -1,0 +1,226 @@
+# PLearn specific directories:
+# If the PLEARNDIR environment variable is not defined, we use the default "$HOME/PLearn/"
+plearndir = os.environ.get('PLEARNDIR', os.path.join(homedir,'PLearn'))
+
+# If the LISAPLEARNDIR environment variable is not defined, we use the default "$HOME/LisaPLearn/"
+lisaplearndir = os.environ.get('LISAPLEARNDIR', os.path.join(homedir,'LisaPLearn'))
+# lisaplearndir = plearndir
+
+libdir = '/u/lisa/local/'+platform+'/lib'
+
+# List of directories in which to look for .h includes and corresponding .cc files to compile and link with your program
+# (no need to include the current directory, it is implicit)
+sourcedirs = [
+#os.path.join(plearndir,'plearn'),
+os.path.join(plearndir,'plearn/base'),
+os.path.join(plearndir,'plearn/db'),
+os.path.join(plearndir,'plearn/display'),
+os.path.join(plearndir,'plearn/io'),
+os.path.join(plearndir,'plearn/ker'),
+os.path.join(plearndir,'plearn/math'),
+os.path.join(plearndir,'plearn/misc'),
+os.path.join(plearndir,'plearn/opt'),
+os.path.join(plearndir,'plearn/randomvar'),
+os.path.join(plearndir,'plearn/sys'),
+os.path.join(plearndir,'plearn/var'),
+os.path.join(plearndir,'plearn/vmat'),
+os.path.join(plearndir,'plearn_learners'),
+os.path.join(plearndir,'plearn_learners/classifiers'),
+os.path.join(plearndir,'plearn_learners/densities'),
+os.path.join(plearndir,'plearn_learners/language'),
+os.path.join(plearndir,'plearn_learners/regressors'),
+os.path.join(plearndir,'plearn_learners_experimental'),
+
+os.path.join(lisaplearndir,'PLearnLibrary/PLearnCore'),
+os.path.join(lisaplearndir,'PLearnLibrary/PLearnAlgo'),
+os.path.join(lisaplearndir,'PLearnLibrary/PLearnUtil'),
+os.path.join(lisaplearndir,'Databases'),
+]
+
+# will be added as list of includes (-I...) to all compilations
+mandatory_includedirs = []
+
+# The platform variable contains the type of platform from which pymake has been invoked. 
+# This is something like 'linux-i386', 'linux-alpha', 'sunos5', 'irix6', 'irix6-n32' etc...
+# Feel free to use it to adapt configuration to that platform.
+
+# (sys.byteorder does not exist in older versions of python)
+if platform=='linux-i386':
+    compileflags = '-DLINUX -DLITTLEENDIAN -mcpu=i686 -march=i686'
+elif platform=='linux-ppc':
+    compileflags = '-DLINUXPPC -DBIGENDIAN'    
+elif platform=='linux-alpha':
+    compileflags = '-DSPARC -DBIGENDIAN'
+elif platform=='sunos5' :
+    compileflags = '-DSPARC -DBIGENDIAN'
+elif platform=='irix6'  :
+    compileflags = '-DSGI -DBIGENDIAN'
+elif platform=='irix6-n32' :
+    compileflags = '-DSGI -DBIGENDIAN'
+else:
+    print 'Unknown platform: ' + platform
+    sys.exit()
+
+# If the DBDIR environment variable is not defined, we use the default "/u/lisa/Database"
+dbdir = os.environ.get('DBDIR','/u/lisa/Database')
+compileflags = compileflags + ' -DDBDIR=\\"' + dbdir + '\\"' 
+
+# Add available external libraries In the order in which the linkeroptions
+# must appear on the linker command line (typically most basic libraries
+# last) If you do not give any specific triggers, any included .h file
+# found in the specified includedirs will trigger the library Triggers can
+# be a list of includes that will trigger the use of the library, and they
+# can have wildcards (such as ['GreatLibInc/*.h','Magick*.h'] for instance)
+
+optionalLibrary( name = 'xml',
+                 includedirs = [os.path.join(libdir,'xml/xerces-c-src1_5_1/include'), 
+                                os.path.join(libdir,'xml/xml-xalan/c/src')],
+                 linkeroptions = (' -Xlinker -rpath -Xlinker ' +
+                                  os.path.join(libdir,'xml/xerces-c-src1_5_1/lib') +
+                                  ' -Xlinker -rpath -Xlinker ' +
+                                  os.path.join(libdir,'xml/xml-xalan/lib') + ' -L' +
+                                  os.path.join(libdir,'xml/xerces-c-src1_5_1/lib') + ' -L' +
+                                  os.path.join(libdir,'xml/xml-xalan/lib') + ' -lxalan-c1_2 -lxerces-c1_5_1' ) )
+
+# optionalLibrary( name = 'lapack',
+#                 triggers = 'Lapackincl/*.h',
+#                 linkeroptions = '-llapack' )
+
+optionalLibrary( name = 'wxwindows',
+                 triggers = 'wx/*.h',        
+                 includedirs = ['/u/lisa/local/linux-i386/Install/wxWindows/wxGTK-2.2.9/lib/wx/include/gtk-2.2', '/u/lisa/local/linux-i386/Install/wxWindows/wxGTK-2.2.9/include','/usr/include/gtk-1.2', '/usr/include/glib-1.2', '/usr/lib/glib/include', '/usr/X11R6/include'],
+                 compileroptions = '-DwxINSTALL_PREFIX=\"/u/lisa/local/linux-i386/\"  -D__WXGTK__ -DGTK_NO_CHECK_CASTS -D_REENTRANT -MMD -Wno-long-long',
+                 linkeroptions = '/u/lisa/local/linux-i386/Install/wxWindows/wxGTK-2.2.9/lib/libwx_gtk-2.2.so.6.2.6 -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lgthread -lglib -lpthread -ldl -lXi -lXext -lX11 -lm  -lpng -ljpeg -ltiff  -ldl -lpthread -lz -lm' )
+
+optionalLibrary( name = 'minigoose',        
+                 includedirs = os.path.join(lisaplearndir,'Contrib/minigoose'), 
+                 triggers = 'specfns_protos.h',
+                 linkeroptions = '-L'+lisaplearndir+'/Contrib/minigoose -lminigoose' )
+
+optionalLibrary( name = 'arpack',
+                 triggers = 'arpack_proto.h',
+                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/ARPACK/OBJS/' + platform + ' -larpack' )
+
+optionalLibrary( name = 'lapack',
+                 triggers = 'lapack_proto.h',
+                 linkeroptions = '-llapack' 
+#                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_lapack'
+                 )
+
+optionalLibrary( name = 'blas',
+                 triggers = ['blas_proto.h','lapack_proto.h'],
+                 linkeroptions = '-lblas'
+#                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread'
+#                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p3 -lmkl_vml_p3 -lpthread'
+#                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl -lvml -lpthread'
+#                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/atlas_athlon256 -lcblas -lf77blas -latlas'
+                 )
+
+optionalLibrary( name = 'g2c',
+                 triggers = ['blas_proto.h','lapack_proto.h'],
+                 linkeroptions = '-lg2c'
+                 )
+
+optionalLibrary( name = 'ncurses',
+                 triggers = 'curses.h',
+                 linkeroptions = '-lncurses'
+                 )
+
+
+wndir = os.environ.get('WNHOME', '')
+wndir17 = os.environ.get('WNHOME17', '')
+optionalLibrary( name = 'wordnet',
+                 triggers = 'wn.h',
+                 includedirs = wndir17 + '/include',
+                 linkeroptions = '-L' + wndir + '/lib -lwn'
+                 )
+
+# What linker options to put always after those from the optional libraries
+linkeroptions_tail = '-lstdc++ -lm'
+
+# List of lists of mutually exclusive pymake options.
+# First option that appears in each group is the default, and is assumed if you don't specify any option from that group
+options_choices = [
+  [ 'g++', 'g++3', 'mpi', 'purify' ],
+  [ 'dbg', 'opt', 'gprof' ],
+  [ 'double', 'float' ],
+  [ 'exiterrors', 'throwerrors' ], 
+]
+
+
+# Description of options, and associated settings
+
+
+pymakeOption( name = 'g++',
+              description = 'compiling with default g++, with no MPI support',
+              compiler = 'g++',
+              compileroptions = '-pedantic-errors -DUSING_MPI=0',
+              linker = 'g++' )
+
+pymakeOption( name = 'g++3',
+              description = 'compiling with g++3, with no MPI support',
+              compiler = '/u/collober/Addons/Linux/bin/g++',
+              compileroptions = '-pedantic-errors -DUSING_MPI=0',
+              linker = '/u/collober/Addons/Linux/bin/g++' )
+
+pymakeOption( name = 'mpi',
+              description = 'compiling and linking with MPI support (and USING_MPI=1)',
+              compiler = 'mpiCC',               
+              compileroptions = '-DUSING_MPI=1',
+              linker = 'mpiCC' )
+
+pymakeOption( name = 'purify',
+              description = 'compiling and linking with purify g++',
+              compiler = 'purify g++',               
+              compileroptions = '-DUSING_MPI=0',
+              linker = 'purify g++' )
+
+pymakeOption( name = 'dbg',
+              description = 'debug mode',
+              compileroptions = '-Wall -g -DBOUNDCHECK' )
+
+#pymakeOption( name = 'wx',
+#              description = 'wxWindos support',
+#              compileroptions = '
+    
+
+# is -fomit-frame-pointer helping?
+# does -malign-double indeed create core-dumps?
+# is -finline hurting?
+# is -funroll-loops hurting?
+pymakeOption( name = 'opt',
+              description = 'optimized mode',
+              compileroptions = '-Wall -O3 -funroll-loops -ffast-math' )
+
+pymakeOption( name = 'gprof',
+              description = 'optimized mode with profiler support (-pg)',
+              compileroptions = '-Wall -O3 -funroll-loops -fstrength-reduce -ffast-math -fPIC -pg',
+              linkeroptions = '-pg' )
+
+pymakeOption( name = 'float',
+              description = 'float mode (real==float)',
+              compileroptions = '-DUSEFLOAT')
+
+pymakeOption( name = 'double',
+              description = 'double mode (real==double)',
+              compileroptions = '-DUSEDOUBLE')
+
+pymakeOption( name = 'throwerrors',
+              description = 'defines the USE_EXCEPTIONS flag so that PLERROR throws an exception (?)',
+              compileroptions = '-DUSE_EXCEPTIONS' )
+
+pymakeOption( name = 'exiterrors',
+              description = 'PLERROR will not throw exceptions, but write the error message and exit' )
+
+nprocesses_per_processor = 2
+
+# LISA hack to set the number of processes per processor on a 'machine name' basis
+if myhostname[0:5]=='troll':
+    nprocesses_per_processor = 16
+if myhostname[0:4]=='zeus':
+    nprocesses_per_processor = 18
+if myhostname[0:6]=='canari':
+    nprocesses_per_processor = 2
+
+
+
