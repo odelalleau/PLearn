@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.cc,v 1.6 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: KFoldSplitter.cc,v 1.7 2003/11/27 14:43:02 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
@@ -46,7 +46,7 @@ namespace PLearn <%
 using namespace std;
 
 KFoldSplitter::KFoldSplitter(int k)
-    : K(k)
+    : K(k),append_train(0)
 {};
 
 PLEARN_IMPLEMENT_OBJECT(KFoldSplitter, "ONE LINE DESCR", "NO HELP");
@@ -55,6 +55,11 @@ void KFoldSplitter::declareOptions(OptionList& ol)
 {
     declareOption(ol, "K", &KFoldSplitter::K, OptionBase::buildoption,
                   "split dataset in K parts");
+
+    declareOption(ol, "append_train", &KFoldSplitter::append_train, OptionBase::buildoption,
+                  "if set to 1, the trainset will be appended after the test set (thus each split"
+                  " will contain three sets");
+
     inherited::declareOptions(ol);
 }
 
@@ -84,7 +89,10 @@ int KFoldSplitter::nsplits() const
 
 int KFoldSplitter::nSetsPerSplit() const
 {
-  return 2;
+  if (append_train)
+    return 3;
+  else
+    return 2;
 }
 
 TVec<VMat> KFoldSplitter::getSplit(int k)
@@ -99,8 +107,11 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
 
     TVec<VMat> split_(2);
     split(dataset, test_fraction, split_[0], split_[1], k);
+    if (append_train) {
+      split_.resize(3);
+      split_[2] = split_[0];
+    }
     return split_;
 }
-
 
 %> // end of namespace PLearn
