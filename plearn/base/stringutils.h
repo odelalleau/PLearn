@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.23 2004/05/25 04:20:28 chapados Exp $
+   * $Id: stringutils.h,v 1.24 2004/05/31 21:10:34 tatien Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -56,6 +56,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include "PStream.h"
 // #include "TMat.h"
 
 namespace PLearn {
@@ -275,7 +276,8 @@ vector<string> remove(const vector<string> &v, string element);
   template<class T> string tostring(const T& x)
     {
       ostringstream out;
-      out << x;
+      PStream pout(&out);
+      pout << x;
       return out.str();
 
       /* Old strstream code
