@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RepeatSplitter.cc,v 1.7 2004/04/01 18:04:35 tihocan Exp $ 
+   * $Id: RepeatSplitter.cc,v 1.8 2004/04/28 18:42:49 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file RepeatSplitter.cc */
@@ -116,7 +116,7 @@ void RepeatSplitter::build_()
     else
       PLearn::seed();
     int n_splits = nsplits();
-    indices.resize(n_splits, dataset.length());
+    indices = TMat<int>(n_splits, dataset.length());
     TVec<int> shuffled;
     for (int i = 0; i < n_splits; i++) {
       shuffled = TVec<int>(0, dataset.length()-1, 1);
@@ -267,7 +267,7 @@ void RepeatSplitter::build_()
       indices(i) << shuffled;
     }
   } else {
-    indices.resize(0,0);
+    indices = TMat<int>();
   }
   last_n = -1;
 }
