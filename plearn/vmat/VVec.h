@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VVec.h,v 1.7 2003/08/13 08:13:46 plearner Exp $
+   * $Id: VVec.h,v 1.8 2004/02/17 15:55:06 dorionc Exp $
    ******************************************************* */
 
 
@@ -112,6 +112,9 @@ class VVec : public Object
     return v;
   }
 
+  virtual void print(ostream& out) const
+  { out << ((Vec)*this) << flush; }
+
   typedef Object inherited;
   PLEARN_DECLARE_OBJECT(VVec);
 };
@@ -127,7 +130,6 @@ inline void operator<<(const Vec& v, const VVec& vv)
 
 inline void operator>>(const Vec& v, const VVec& vv)
 { vv.copyFrom(v); }
-
 
 %> // end of namespace PLearn
 

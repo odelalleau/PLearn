@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.cc,v 1.4 2003/10/27 21:35:21 ducharme Exp $ 
+   * $Id: FinancePreprocVMatrix.cc,v 1.5 2004/02/17 15:55:06 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.cc */
@@ -220,6 +220,16 @@ void FinancePreprocVMatrix::setVMFields()
 
 void FinancePreprocVMatrix::build_()
 {
+  if(length_ == -1 || width_ == -1)
+  {
+    length_ = underlying->length(); 
+    width_  = ( underlying->width() +
+                (add_tradable?asset_name.size():0) + 
+                (add_last_day_of_month?1:0) + 
+                (add_moving_average?asset_name.size()*prices_tag.size()*moving_average_window.size():0) + 
+                (add_rollover_info?asset_name.size():0) );
+  } 
+
   // stuff about the tradable information
   int nb_assets = asset_name.size();
   if (add_tradable)
@@ -290,7 +300,7 @@ void FinancePreprocVMatrix::build_()
       }
     }
   }
-
+  
   setVMFields();
   saveFieldInfos();
 }

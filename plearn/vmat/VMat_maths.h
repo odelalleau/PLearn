@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat_maths.h,v 1.11 2004/02/10 16:22:23 tihocan Exp $
+   * $Id: VMat_maths.h,v 1.12 2004/02/17 15:55:06 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -100,6 +100,8 @@ void computeMeanAndVariance(VMat d, Vec& meanvec, Vec& variancevec);
 void computeMeanAndStddev(VMat d, Vec& meanvec, Vec& stddevvec);
 void computeMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, ostream& logstream=cerr);
 void computeWeightedMeanAndCovar(Vec weights, VMat d, Vec& meanvec, Mat& covarmat);
+
+void autocorrelation_function(const VMat& data, Mat& acf);
 
 //! Computes the (possibly weighted) mean and covariance of the input part of the dataset.
 //! This will only call d->getExamplev

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.9 2004/02/06 21:12:49 ducharme Exp $
+   * $Id: DiskVMatrix.cc,v 1.10 2004/02/17 15:55:06 dorionc Exp $
    ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -48,7 +48,6 @@ using namespace std;
 
 
 /** DiskVMatrix **/
-
 /* Format description
 
 The directory in variable dirname, which should end in .dmat, 

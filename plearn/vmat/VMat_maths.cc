@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.14 2004/02/10 16:22:23 tihocan Exp $
+* $Id: VMat_maths.cc,v 1.15 2004/02/17 15:55:06 dorionc Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -579,6 +579,61 @@ void computeMeanAndStddev(VMat d, Vec& meanvec, Vec& stddevvec)
   for(int i=0; i<stddevvec.length(); i++)
     stddevvec[i] = sqrt(stddevvec[i]);
 }
+
+void autocorrelation_function(const VMat& data, Mat& acf)
+{
+  int T = data.length();
+  int N = data.width();
+  acf.resize(T-2, N);
+
+  for(int delta=0; delta < T-2; delta++)
+  {    
+    Vec sumT(N);
+    Vec sumD(N);   
+    TVec<Vec> products(N);
+    
+    // t = delta
+    for(int k=0; k < N; k++)
+    {
+      real ts = data(delta, k);
+      real ds = data(0, k);
+      
+      sumT[k] = ts;
+      sumD[k] = ds;
+            
+      products[k].resize(3);
+      products[k][0] = ts*ts;
+      products[k][1] = ds*ds;
+      products[k][2] = ts*ds;
+    }
+ 
+    for(int t=delta+1; t < T; t++)
+    {
+      for(int k=0; k < N; k++)
+      {
+        real ts = data(t, k);
+        real ds = data(t-delta, k);
+        
+        sumT[k] += ts;
+        sumD[k] += ds;
+        
+        products[k][0] += ts*ts;
+        products[k][1] += ds*ds;
+        products[k][2] += ts*ds;
+      }
+    }
+    
+    // Actual computation of the correlation
+    for(int k=0; k < N; k++)
+    {
+      int count = T-delta;
+      real multiplied_var_t = products[k][0] - square(sumT[k])/count;
+      real multiplied_var_d = products[k][1] - square(sumD[k])/count;
+      acf(delta, k) = (products[k][2] - sumT[k]*sumD[k]/count) / sqrt(multiplied_var_t * multiplied_var_d);
+    }
+  }
+} 
+
 
 VMat normalize(VMat d, Vec meanvec, Vec stddevvec)
 {
