@@ -47,7 +47,7 @@ PLEARN_IMPLEMENT_OBJECT(DelaySequenceVMatrix, "ONE LINE DESCR", "NO HELP");
 // SequenceVMatrix //
 ////////////////
 DelaySequenceVMatrix::DelaySequenceVMatrix()
-  :SequenceVMatrix(200)
+  :SequenceVMatrix(200, 2)
 {
   delay = 1;
 }
@@ -90,18 +90,7 @@ void DelaySequenceVMatrix::build_()
   }
 }
 
-void DelaySequenceVMatrix::run()
-{
-  Vec input, target;
-  real weight;
-
-  getExample(3 ,input, target, weight);
-
-  cout << input << endl;
-  cout << endl;
-  cout << target << endl;
-  cout << endl;
-}
+void DelaySequenceVMatrix::run() {}
 
 } // end of namespcae PLearn
   

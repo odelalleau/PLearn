@@ -78,7 +78,7 @@ void VarLengthPTester::run()
   bptt_learner->build();
   bptt_learner->forget();
   bptt_learner->run();
-  */ 
+  */
   
   perform(true);
 }
@@ -91,193 +91,64 @@ Vec VarLengthPTester::perform(bool call_forget)
   if(!splitter)
     PLERROR("No splitter specified for PTester");
 
-
-  int nstats = statnames.length();
-  Vec global_result(nstats);
-
-  {
-
-  if(expdir!="")
-    {
-      // Save this tester description in the expdir
-      if(save_initial_tester)
-        PLearn::save(append_slash(expdir)+"tester.psave", *this);
-    }
-
   splitter->setDataSet(dataset);
 
   int nsplits = splitter->nsplits();
   if(nsplits>1)
     call_forget = true;
 
-  TVec<string> testcostnames = bptt_learner->getTestCostNames();
-  TVec<string> traincostnames = bptt_learner->getTrainCostNames();
+  for(int splitnum=0; splitnum<nsplits; splitnum++) {
+    TVec<VMat> dsets = splitter->getSplit(splitnum);
+    VMat trainset = dsets[0];
+    
+    if(dsets.size()>1)
+      bptt_learner->setValidationSet(dsets[1]);
 
-  int nsets = splitter->nSetsPerSplit();
+    bptt_learner->setTrainStatsCollector(new VecStatsCollector());
+    bptt_learner->setTrainingSet(trainset, call_forget && train);
+    
+    if (train) {
+      bptt_learner->train();
+    } else
+      bptt_learner->build();
 
-  // Stats collectors for individual sets of a split:
-  TVec< PP<VecStatsCollector> > stcol(nsets);
-  for(int setnum=0; setnum<nsets; setnum++)
-    {
-      if (template_stats_collector)
-        {
-          CopiesMap copies;
-          stcol[setnum] = template_stats_collector->deepCopy(copies);
-        }
-      else
-        stcol[setnum] = new VecStatsCollector();
+    for(int setnum=1; setnum<dsets.length(); setnum++) {
+      SequenceVMat testset = dynamic_cast<SequenceVMatrix*>((VMatrix*)dsets[setnum]);
 
-      if(setnum==0)
-        stcol[setnum]->setFieldNames(traincostnames);
-      else
-        stcol[setnum]->setFieldNames(testcostnames);
+      PP<VecStatsCollector> test_stats = new VecStatsCollector();
+      SequenceVMat test_outputs = new SequenceVMatrix();
+      SequenceVMat test_costs = new SequenceVMatrix();
 
-      stcol[setnum]->build();
-      stcol[setnum]->forget();      
-    }
-
-  PP<VecStatsCollector> train_stats = stcol[0];
-  bptt_learner->setTrainStatsCollector(train_stats);
-
-  // Global stats collector
-  PP<VecStatsCollector> global_statscol;
-  if (global_template_stats_collector)
-  {
-    CopiesMap copies;
-    global_statscol = global_template_stats_collector->deepCopy(copies);
-    global_statscol->build();
-    global_statscol->forget();
-  }
-  else
-    global_statscol = new VecStatsCollector();
-
-  // Stat specs
-  TVec<StatSpec> statspecs(nstats);
-  for(int k=0; k<nstats; k++)
-    statspecs[k].init(statnames[k]);
-  
-  // int traincostsize = traincostnames.size();
-  int testcostsize = testcostnames.size();
-
-  VMat global_stats_vm;    // the vmat in which to save global result stats specified in statnames
-  VMat split_stats_vm;   // the vmat in which to save per split result stats
-  if(expdir!="" && report_stats)
-    {
-      saveStringInFile(expdir+"train_cost_names.txt", join(traincostnames,"\n")+"\n"); 
-      saveStringInFile(expdir+"test_cost_names.txt", join(testcostnames,"\n")+"\n"); 
-
-      global_stats_vm = new FileVMatrix(expdir+"global_stats.pmat", 1, nstats);
-      for(int k=0; k<nstats; k++)
-        global_stats_vm->declareField(k,statspecs[k].statName());
-      global_stats_vm->saveFieldInfos();
-
-      split_stats_vm = new FileVMatrix(expdir+"split_stats.pmat", 0, 1+nstats);
-      split_stats_vm->declareField(0,"splitnum");
-      for(int k=0; k<nstats; k++)
-        split_stats_vm->declareField(k+1,statspecs[k].setname + "." + statspecs[k].intstatname);
-      split_stats_vm->saveFieldInfos();
-    }
-
-  for(int splitnum=0; splitnum<nsplits; splitnum++)
-    {
-      string splitdir;
-      if(expdir!="")
-        splitdir = append_slash(append_slash(expdir)+"Split"+tostring(splitnum));
-
-      TVec<VMat> dsets = splitter->getSplit(splitnum);
-      VMat trainset = dsets[0];
-      if(splitdir!="" && save_data_sets)
-        PLearn::save(splitdir+"training_set.psave",trainset);
-
-      if(splitdir!="" && train && provide_learner_expdir)
-        bptt_learner->setExperimentDirectory(append_slash(splitdir+"LearnerExpdir"));
-
-      bptt_learner->setTrainingSet(trainset, call_forget && train);
-      if(dsets.size()>1)
-        bptt_learner->setValidationSet(dsets[1]);
-
-
-
-      if (train)
-        {
-          if(splitdir!="" && save_initial_learners)
-            PLearn::save(splitdir+"initial_learner.psave",bptt_learner);
-      
-          train_stats->forget();
-          bptt_learner->train();
-          train_stats->finalize();
-          if(splitdir != "" && save_stat_collectors)
-            PLearn::save(splitdir+"train_stats.psave",train_stats);
-          if(splitdir != "" && save_learners)
-            PLearn::save(splitdir+"final_learner.psave",bptt_learner);
-        }
-      else
-        bptt_learner->build();
-      for(int setnum=1; setnum<dsets.length(); setnum++)
-        {
-          VMat testset = dsets[setnum];
-	  int outputsize = bptt_learner->outputsize(testset);
-          PP<VecStatsCollector> test_stats = stcol[setnum];
-          string setname = "test"+tostring(setnum);
-          if(splitdir!="" && save_data_sets)
-            PLearn::save(splitdir+setname+"_set.psave",testset);
-          VMat test_outputs;
-          VMat test_costs;
-          force_mkdir(splitdir);
-          if(splitdir != "" && save_test_outputs)
-            test_outputs = new FileVMatrix(splitdir+setname+"_outputs.pmat",0,outputsize);
-          if(splitdir != "" && save_test_costs)
-            test_costs = new FileVMatrix(splitdir+setname+"_costs.pmat",0,testcostsize);
-      
-          test_stats->forget();
-          if (testset->length()==0) {
-            PLWARNING("PTester:: test set % is of length 0, costs will be set to -1",setname.c_str());
-          }
-          bptt_learner->test(testset, test_stats, test_outputs, test_costs);      
-          test_stats->finalize();
-          if(splitdir != "" && save_stat_collectors)
-            PLearn::save(splitdir+setname+"_stats.psave",test_stats);
-        }
-   
-      Vec splitres(1+nstats);
-      splitres[0] = splitnum;
-
-      for(int k=0; k<nstats; k++)
-        {
-          StatSpec& sp = statspecs[k];
-          if (sp.setnum>=stcol.length())
-            splitres[k+1] = MISSING_VALUE;
-//            PLERROR("PTester::perform, trying to access a test set (test%d) beyond the last one (test%d)",
-//                    sp.setnum, stcol.length()-1);
-          else
-            splitres[k+1] = stcol[sp.setnum]->getStat(sp.intstatname);
-        }
-
-      if(split_stats_vm) {
-        split_stats_vm->appendRow(splitres);
-        split_stats_vm->flush();
+      if (testset->length()==0) {
+	PLWARNING("PTester:: test set is of length 0, costs will be set to -1");
       }
+      cout << test_costs->getNbSeq() << endl;
+      cout << test_costs->length() << endl;
 
-      global_statscol->update(splitres.subVec(1,nstats));
+      bptt_learner->test(testset, test_stats, test_outputs, test_costs);
+      save(testset, test_outputs, test_costs, setnum);
     }
-
-
-  global_statscol->finalize();
-  for(int k=0; k<nstats; k++)
-    global_result[k] = global_statscol->getStats(k).getStat(statspecs[k].extstat);
-  
-
-  if(global_stats_vm)
-    global_stats_vm->appendRow(global_result);
-
   }
 
-  // Perform the final commands provided in final_commands.
-  for (int i = 0; i < final_commands.length(); i++) {
-    system(final_commands[i].c_str());
-  }
+  return Vec();
+}
 
-  return global_result;
+void VarLengthPTester::save(SequenceVMat test_set, SequenceVMat test_outputs,
+			    SequenceVMat test_costs, int nsetnum) {
+  force_mkdir(expdir);
+  SequenceVMat all = test_set & test_outputs & test_costs;
+  int nligne = all->getNbRowInSeqs(0, all->getNbSeq()) + all->getNbSeq();
+  Vec sep = Vec(all->getNbSeq(), -1.0);
+  FileVMatrix file = FileVMatrix(append_slash(expdir) + "out" + tostring(nsetnum) + ".pmat", nligne, all->width());
+  for (int i = 0; i < all->getNbSeq(); i++) {
+    Mat seq = Mat(all->getNbRowInSeq(i), all->width());
+    for (int j = 0; j < seq.nrows(); j++) {
+      Vec row = seq(j);
+      file.appendRow(row);
+    }
+    file.appendRow(sep);
+  }
+  file.flush();
 }
 
 } // end of namespace PLearn

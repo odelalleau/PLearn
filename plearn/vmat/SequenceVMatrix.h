@@ -52,7 +52,7 @@ protected:
 public:
   
   SequenceVMatrix();
-  SequenceVMatrix(int nbSequences);
+  SequenceVMatrix(int nbSequences, int the_width);
 
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
@@ -61,7 +61,7 @@ public:
   virtual void putSubRow(int i, int j, Vec v);
   virtual void putMat(int i, int j, Mat m);
   virtual VMat subMat(int i, int j, int l, int w);
-  virtual void getExample(int i, Vec&, Vec&, real&);
+  virtual void getExample(int i, Mat&, Mat&);
 
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
@@ -76,6 +76,8 @@ public:
   int getNbRowInSeq(int i) const;
   int getNbRowInSeqs(int, int) const;
 
+  void putOrAppendSequence(int, Mat);
+
   virtual void run();
 
   virtual void reset_dimensions();
@@ -86,6 +88,10 @@ public:
   void build_();
 
 };
+
+  typedef PP<SequenceVMatrix> SequenceVMat;
+
+  SequenceVMat operator&(const SequenceVMat&, const SequenceVMat&);
 
 DECLARE_OBJECT_PTR(SequenceVMatrix);
 

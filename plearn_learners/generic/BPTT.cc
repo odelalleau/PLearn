@@ -72,6 +72,7 @@ BPTT::BPTT() // DEFAULT VALUES FOR ALL OPTIONS
 {
   batch_size = 1;
   links = TMat<int>(0,3);
+  units_type = TVec<string>(0);
 }
 
 BPTT::~BPTT()
@@ -95,9 +96,6 @@ void BPTT::declareOptions(OptionList& ol)
 
   declareOption(ol, "nneuron_output", &BPTT::nneuron_output, OptionBase::buildoption, 
                 "    number of output neuron in the network.");
-
-  declareOption(ol, "seqs", &BPTT::temp, OptionBase::buildoption, 
-                "    A sequence for the train set. (Temp. Testing and debug)");
 
   declareOption(ol, "links", &BPTT::links, OptionBase::buildoption, 
                 "    A TMat of 3 columns use to define the links between neurons in the reccurent neural network. The first column correspond the no of the parent neuron. The second colunm correspond to the no of the child neuron. The third column correspond to the delay that the value will stay in the parent node before it will propagate the child neuron.");
@@ -132,16 +130,26 @@ void BPTT::build_()
   if(inputsize_>=0 && targetsize_>=0 && weightsize_>=0) {
     if (links.nrows() == 0)
       build_fully_connected_network();
+    if (units_type.size() == 0)
+      build_default_units_type();
     weights = Vec(links.nrows(), 0.5);
     bias = Vec(nneuron_input + nneuron_hidden + nneuron_output, 1.0);
     params = VarArray(Var(weights), Var(bias));
     rec_net = new BPTTVariable(params, dynamic_cast<SequenceVMatrix*>((VMatrix*)train_set), batch_size,
 			       links, nneuron_input, nneuron_hidden, nneuron_output, units_type, cost_type);
-    rec_net->printState();
   } else {
     rec_net = 0;
   }
     
+}
+
+void BPTT::build_default_units_type() {
+  units_type = TVec<string>(nneuron_input + nneuron_hidden + nneuron_output);
+  for (int i = 0; i < nneuron_input; i++)
+    units_type[i] = "ID";
+
+  for (int i = nneuron_input; i < nneuron_input + nneuron_hidden + nneuron_output; i++)
+    units_type[i] = "TANH";  
 }
 
 void BPTT::build_fully_connected_network() {
@@ -245,10 +253,10 @@ void BPTT::train()
     pb = new ProgressBar("Training BPTT from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
   int initial_stage = stage;
-  bool early_stop=false;
+
   real last_value = 0.0;
 
-  while(stage<nstages && !early_stop) {
+  while(stage<nstages && !optimizer->early_stop) {
     optimizer->nstages = optstage_per_lstage;
     train_stats->forget();
     optimizer->early_stop = false;
@@ -270,8 +278,6 @@ void BPTT::train()
 	last_value = rec_net->value[0];
       }
     }
-    if (rec_net->value[0] < 2.0)
-      break;
     ++stage;
     if(pb)
       pb->update(stage-initial_stage);
@@ -288,89 +294,83 @@ void BPTT::train()
 */
 
 void BPTT::test(VMat testset, PP<VecStatsCollector> test_stats, 
-		VMat testoutputs, VMat testcosts) const
+		VMat testoutputs, VMat testcosts) const {
+  PLERROR("test(VMat, PP<VecStatsCollector>, VMat, VMat) cannot be used with a SequenceLearner");
+}
+
+void BPTT::test(SequenceVMat testset, PP<VecStatsCollector> test_stats, 
+		SequenceVMat testoutputs, SequenceVMat testcosts) const
 {
-  int l = testset.length();
-  Vec input;
-  Vec target;
-  real weight;
+  int l = testset->length();
+  Mat input;
+  Mat target;
 
-  Vec output(testoutputs ?outputsize(testset) :0);
-
-  Vec costs(nTestCosts());
-
-  if(test_stats)
-    test_stats->forget();
 
   ProgressBar* pb = NULL;
   if(report_progress) 
     pb = new ProgressBar("Testing learner",l);
 
-  if (l == 0) {
-    // Empty test set: we give -1 cost arbitrarily.
-    costs.fill(-1);
-    test_stats->update(costs);
-  }
-
   for(int i=0; i<l; i++) {
-    testset.getExample(i, input, target, weight);
+    testset->getExample(i, input, target);
+    Mat output = Mat(target.length(), target.width());
+    Mat costs = Mat(target.length(), 1);
     if(testoutputs) {
       computeOutputAndCosts(input, target, output, costs);
-      testoutputs->putOrAppendRow(i,output);
+      testoutputs->putOrAppendSequence(i,output);
     } else // no need to compute outputs
       computeCostsOnly(input, target, costs);
     if(testcosts)
-      testcosts->putOrAppendRow(i, costs);
-    if(test_stats)
-      test_stats->update(costs,weight);
+      testcosts->putOrAppendSequence(i, costs);
+
     if(pb)
       pb->update(i);
-    if (i < 10) {
-      cout << "ex " << i << endl;
-      printITO(input, target, output, l);
-    }
   }
   
-  if(test_stats)
-    test_stats->finalize();
-
   if(pb)
     delete pb;
 }
 
+void BPTT::computeOutput(const Vec& input, Vec& output) const {
+  PLERROR("SequencePTester cannot use the computeOutput(const Vec&, Vec&) function");
+}
+
+void BPTT::computeOutput(const Mat& input, Mat& output) const
+{
+  rec_net->computeOutputFromInput(input, output);
+}
+
+void BPTT::computeCostsFromOutputs(const Vec& input, const Vec& output, 
+				     const Vec& target, Vec& costs) const {
+  PLERROR("SequencePTester cannot use the computeCostsFromOutputs(const Vec&, const Vec&, const Vec&, Vec&) function");  
+}
+
+void BPTT::computeCostsFromOutputs(const Mat& input, const Mat& output, 
+                                   const Mat& target, Mat& costs) const {
+  rec_net->computeCostFromOutput(output, target, costs);  
+}
+
+void BPTT::computeOutputAndCosts(const Vec& input, const Vec& target,
+				 Vec& output, Vec& costs) const {
+  PLERROR("SequencePTester cannot use the computeOutputAndCosts(const Vec&, const Vec&, Vec&, Vec&) function");  
+}
+
+void BPTT::computeOutputAndCosts(const Mat& input, const Mat& target,
+				 Mat& output, Mat& costs) const {
+  computeOutput(input, output);
+  computeCostsFromOutputs(input, output, target, costs);
+}
+
+void BPTT::computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const {
+  PLERROR("SequencePTester cannot use the computeCostsOnly(const Vec&, const Vec&, Vec&) function");  
+}
+
+void BPTT::computeCostsOnly(const Mat& input, const Mat& target, Mat& costs) const {
+  Mat output = Mat(target.length(), target.width());
+  computeOutput(input, output);
+  computeCostsFromOutputs(input, output, target, costs); 
+}
+
 /*
- A nice presentation of the input, target and output.
-*/
-
-void BPTT::printITO(Vec& input, Vec& target, Vec& output, int& l) const {
-  int i = 0;
-  int t = 0;
-  int o = 0;
-  for (int j = 0; j < input.size(); j++) {
-    for (int k = 0; k < 1; k++) {
-      cout << input[i++] << " ";
-    }
-    for (int k = 0; k < 1; k++) {
-      cout << target[t++] << " ";
-    }
-    for (int k = 0; k < 1; k++) {
-      cout << output[o++] << " ";
-    }
-    cout << endl;
-  }
-} 
-
-/*
-  For these function (computeOutput, computeCostsFromOutputs), a little hack is
-  done. In the definition of a learner in PLearn, an example is simply a Vector
-  of n input and m targets, but now with sequence an example is a sequence so
-  a matrix. To fit in the function prototype with Vec, we suppose that the
-  vec is a "flat" matrix we can transpose in Matrix of width input
-
-..... to be continue.....
-
-*/
-
 void BPTT::computeOutput(const Vec& inputv, Vec& outputv) const
 {
   int ninputrow = inputv.length() / inputsize_;
@@ -399,7 +399,7 @@ void BPTT::computeCostsOnly(const Vec& inputv, const Vec& targetv,
   computeOutput(inputv, outputv);
   computeCostsFromOutputs(inputv, outputv, targetv, costsv);
 }
-
+*/
 /*
 To test the verify gradient
 */
@@ -407,7 +407,7 @@ void BPTT::run() {
   /*  train();
       rec_net->verifyGradient();*/
   cout << "I'(-0.5)=" << rec_net->squash_d(0, -0.5) << " I'(0.5)=" << rec_net->squash_d(0, 0.5) << endl;
-  cout << "I'(-0.5)=" << rec_net->squash(0, -0.5) << " I'(0.5)=" << rec_net->squash(0, 0.5) << endl;
+  cout << "I(-0.5)=" << rec_net->squash(0, -0.5) << " I(0.5)=" << rec_net->squash(0, 0.5) << endl;
   cout << "T'(-0.5)=" << rec_net->squash_d(1, tanh(-0.5)) << " T'(0.5)=" << rec_net->squash_d(1, tanh(0.5)) << endl;
   cout << "T'(-0.5)=" << (1.0 - square(tanh(-0.5))) << " T'(0.5)=" << (1.0 - square(tanh(0.5))) << endl;
 }

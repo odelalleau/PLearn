@@ -52,10 +52,10 @@ using namespace std;
     int nneuron_hidden; // number of hidden neuron
     int nneuron_output; // number of output neuron
     TVec<string> units_type;
+
     string cost_type; // Function to minimize
 
-    SequenceVMatrix temp;
-
+    void build_default_units_type();
     void build_fully_connected_network();
 
   public:
@@ -87,20 +87,28 @@ using namespace std;
 
     virtual void train();
 
-    virtual void computeOutput(const Vec& input, Vec& output) const;
+    // The vec version of compute function cannot be use in a Sequence learner
+    virtual void computeOutput(const Vec&, Vec&) const;
+    virtual void computeOutput(const Mat&, Mat&) const;
     
-    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                         const Vec& target, Vec& costs) const;
+    virtual void computeCostsFromOutputs(const Vec&, const Vec&, const Vec&, Vec&) const;
+    virtual void computeCostsFromOutputs(const Mat&, const Mat&, const Mat&, Mat&) const;
 
-    virtual void computeCostsOnly(const Vec& inputv, const Vec& targetv,  
-				  Vec& costsv) const;
+    virtual void computeCostsOnly(const Vec&, const Vec&, Vec&) const;
+    virtual void computeCostsOnly(const Mat&, const Mat&, Mat&) const;
+
+    virtual void computeOutputAndCosts(const Vec&, const Vec&, Vec&, Vec&) const;
+    virtual void computeOutputAndCosts(const Mat&, const Mat&, Mat&, Mat&) const;
+
+
     virtual void run();
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
                       VMat testoutputs=0, VMat testcosts=0) const;
+    virtual void test(SequenceVMat testset, PP<VecStatsCollector> test_stats, 
+                      SequenceVMat testoutputs, SequenceVMat testcosts) const;
 
-    void printITO( Vec&,  Vec&,  Vec&, int&) const;
   protected:
     static void declareOptions(OptionList& ol);
     void initializeParams();

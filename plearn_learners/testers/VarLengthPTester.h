@@ -36,6 +36,7 @@
 #define VarLengthPTester_INC
 
 #include "PTester.h"
+#include "SequenceVMatrix.h"
 
 namespace PLearn {
 using namespace std;
@@ -77,6 +78,8 @@ public:
   virtual void run();
 
   Vec perform(bool call_forget=true);
+
+  void save(SequenceVMat, SequenceVMat, SequenceVMat, int);
 
 };
 

@@ -47,7 +47,7 @@ PLEARN_IMPLEMENT_OBJECT(XORSequenceVMatrix, "ONE LINE DESCR", "NO HELP");
 // SequenceVMatrix //
 ////////////////
 XORSequenceVMatrix::XORSequenceVMatrix()
-  :SequenceVMatrix(200)
+  :SequenceVMatrix(200, 2)
 {
   xor_length = 0;  
   min_seq_length = 5;  
@@ -109,18 +109,7 @@ int XORSequenceVMatrix::get_parity(int s, int pos) {
   return 1;
 }
 
-void XORSequenceVMatrix::run()
-{
-  Vec input, target;
-  real weight;
-
-  getExample(3 ,input, target, weight);
-
-  cout << input << endl;
-  cout << endl;
-  cout << target << endl;
-  cout << endl;
-}
+void XORSequenceVMatrix::run() {}
 
 } // end of namespcae PLearn
   

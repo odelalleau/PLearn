@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: SequenceVMatrix.cc,v 1.4 2004/05/18 14:18:13 lapalmej Exp $
+   * $Id: SequenceVMatrix.cc,v 1.5 2004/05/26 00:00:23 lapalmej Exp $
    ******************************************************* */
 
 #include "SequenceVMatrix.h"
@@ -51,14 +51,20 @@ PLEARN_IMPLEMENT_OBJECT(SequenceVMatrix, "ONE LINE DESCR", "NO HELP");
 ////////////////
 SequenceVMatrix::SequenceVMatrix()
 {
-  SequenceVMatrix(0);
+  SequenceVMatrix(0,0);
 }
 
-SequenceVMatrix::SequenceVMatrix(int nbSequences)
-  :nbSeq(nbSequences)
-{
+SequenceVMatrix::SequenceVMatrix(int nbSequences, int the_width) {
+  nbSeq = nbSequences;
   sequences = TVec<Mat>(nbSeq);
-  build_();
+  inputsize_ = 0;
+  targetsize_ = 0;
+  weightsize_ = 0;
+  width_ = the_width;
+  length_ = nbSeq;
+  cout << "w" << width_ << endl;
+  cout << "l" << length() << endl;
+  cout << "s" << nbSeq << endl;
 }
 
 ////////////////////
@@ -98,33 +104,31 @@ void SequenceVMatrix::getSubRow(int i, int j, Vec v) const
   PLERROR("SequenceVMatrix doesn't handle getSubRow function");
 }
 
-void SequenceVMatrix::getExample(int i, Vec& input, Vec& target, real& weight) {
+void SequenceVMatrix::getExample(int i, Mat& input, Mat& target) {
   int nrowseq = getNbRowInSeq(i);
   Mat seq = Mat(nrowseq, inputsize_ + targetsize_ + weightsize_);
   getSeq(i, seq);
 
   if(inputsize_<0)
     PLERROR("In SequenceVMatrix::getExample, inputsize_ not defined for this vmat");
-  input.resize(inputsize_*nrowseq);             
-  Mat in = seq.subMat(0, 0, nrowseq, inputsize_);
-  input = in.toVecCopy();
+  input.resize(nrowseq, inputsize_);    
+  input << seq.subMat(0, 0, nrowseq, inputsize_);
   
   if(targetsize_<0)
     PLERROR("In SequenceVMatrix::getExample, targetsize_ not defined for this vmat");
-  target.resize(targetsize_*nrowseq);
-  if (targetsize_ > 0) {
-    Mat t = seq.subMat(0, inputsize_, nrowseq, targetsize_);
-    target = t.toVecCopy();    
-  }
+  target.resize(nrowseq, targetsize_);
+  if (targetsize_ > 0)
+    target << seq.subMat(0, inputsize_, nrowseq, targetsize_);
+}
 
-  if(weightsize_==0)
-    weight = 1;
-  else if(weightsize_<0)
-    PLERROR("In SequenceVMatrix::getExample, weightsize_ not defined for this vmat");
-  else if(weightsize_>1)
-    PLERROR("In SequenceVMatrix::getExample, weightsize_ >1 not supported by this call");
-  else
-    PLERROR("In SequenceVMatrix::getExample, weightsize==1 not supported by this call");
+void SequenceVMatrix::putOrAppendSequence(int i, Mat m) {
+  if (i >= nbSeq) {
+    sequences.resize(i+1);
+    nbSeq = i + 1;
+    length_ = i + 1;
+  }
+  sequences[i] = Mat(m.length(), m.width());
+  putSeq(i, m);
 }
 
 void SequenceVMatrix::getRowInSeq(int i, int j, Vec v) const
@@ -158,7 +162,7 @@ void SequenceVMatrix::putMat(int i, int j, Mat m)
 
 VMat SequenceVMatrix::subMat(int i, int j, int l, int w)
 {
-  SequenceVMatrix *subseq = new SequenceVMatrix(l);
+  SequenceVMat subseq = new SequenceVMatrix(l, w);
   for (int s = 0; s < l; s++) {
     subseq->sequences[s] = sequences[i+s].subMat(0, j, sequences[i+s].nrows(), w);
   }
@@ -173,7 +177,7 @@ real SequenceVMatrix::dot(int i1, int i2, int inputsize) const
 
 real SequenceVMatrix::dot(int i, const Vec& v) const
 {
-  PLERROR("dot(iny, Vec) not implemented");
+  PLERROR("dot(int, Vec) not implemented");
   return 0.0;
 }
 
@@ -210,15 +214,37 @@ int SequenceVMatrix::getNbRowInSeq(int i) const
 
 void SequenceVMatrix::run()
 {
-  Vec input, target;
-  real weight;
+  Mat input, target;
 
-  getExample(3 ,input, target, weight);
+  getExample(3 ,input, target);
 
   cout << input << endl;
   cout << endl;
   cout << target << endl;
   cout << endl;
+}
+
+SequenceVMat operator&(const SequenceVMat& s1, const SequenceVMat& s2) {
+#ifdef BOUNDCHECK
+  if (s1->getNbSeq() != s2->getNbSeq())
+    PLERROR("In operator& : the two SequenceVMat must have the same number of row");
+#endif
+  SequenceVMat new_seq = new SequenceVMatrix(s1->getNbSeq(), s1->width() + s2->width());
+
+  for (int i = 0; i < s1->getNbSeq(); i++) {
+    Mat m1 = Mat(s1->getNbRowInSeq(i), s1->width());
+    Mat m2 = Mat(s2->getNbRowInSeq(i), s2->width());
+    s1->getSeq(i, m1);
+    s2->getSeq(i, m2);
+    m1.resize(s1->getNbRowInSeq(i), s1->width() + s2->width());
+    for (int j = 0; j < s1->getNbRowInSeq(i); j++) {
+      for (int k = 0; k < s2->width(); k++) {
+	m1[j][s1->width()+k] = m2[j][k];
+      }
+    }
+    new_seq->putOrAppendSequence(i, m1);
+  }
+  return new_seq;
 }
 
 } // end of namespcae PLearn
