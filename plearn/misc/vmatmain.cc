@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.32 2004/07/21 16:30:53 chrish42 Exp $
+   * $Id: vmatmain.cc,v 1.33 2004/08/04 13:21:41 tihocan Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -758,9 +758,14 @@ void viewVMat(const VMat& vm)
           mvprintw(LINES-1,0,strmsg);
           clrtoeol();
           move(LINES-1, (int)strlen(strmsg));
-          char c[10];
+          char c[200];
           getnstr(c, 10);
-          if(c[0] == '\0' || !pl_isnumber(c) || toint(c) < 0 || toint(c)>=vm_showed->width())
+          string the_col = c;
+          int col_num = -1;
+          try {
+            col_num = vm_showed->getFieldIndex(the_col);
+          } catch (...) {}
+          if(col_num < 0)
           {
             mvprintw(LINES-1,0,"*** Invalid column number ***");
             clrtoeol();
@@ -771,7 +776,7 @@ void viewVMat(const VMat& vm)
           }
           else
           {
-            curj = toint(c);
+            curj = col_num;
             startj = max(curj-nj + 1, 0);
           }
           noecho();
