@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.h,v 1.9 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: MultiInstanceVMatrix.h,v 1.10 2005/02/03 16:22:25 crompb Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -47,6 +47,7 @@
 #include <vector>
 #include <utility>
 #include "RowBufferedVMatrix.h"
+#include <plearn/io/PPath.h>
 
 namespace PLearn {
 using namespace std;
@@ -58,7 +59,7 @@ class MultiInstanceVMatrix: public RowBufferedVMatrix
 protected:
 
   Mat         data_;
-  string      filename_;  // The *.mimat file name
+  PPath      filename_;  // The *.mimat file name
   vector<int> configs_;
   vector< pair<string, int> > names_;
   int source_targetsize; // number of target columns in the mimat file == targetsize()-1

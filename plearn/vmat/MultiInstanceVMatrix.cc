@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.16 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.17 2005/02/03 16:22:26 crompb Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -120,9 +120,10 @@ void MultiInstanceVMatrix::build_()
   // To be used in the end.. it is about 5 secs slower in debug
   //int nRows = countNonBlankLinesOfFile(filename_);
 
-  ifstream inFile(filename_.c_str());
+  ifstream inFile(filename_.absolute().c_str());
+//    PStream inFile = openFile(filename_, PStream::raw_ascii, "r");
   if(!inFile)
-    PLERROR("In MultiInstanceVMatrix could not open file %s for reading", filename_.c_str());
+    PLERROR("In MultiInstanceVMatrix could not open file %s for reading", filename_.absolute().c_str());
 
   inFile.seekg(0);
   skipBlanksAndComments(inFile);
