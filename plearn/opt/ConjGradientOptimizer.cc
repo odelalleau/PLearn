@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.47 2003/10/22 14:28:51 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.48 2003/11/21 16:28:47 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -186,8 +186,9 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
     declareOption(ol, "stop_epsilon", &ConjGradientOptimizer::stop_epsilon, OptionBase::buildoption, 
                   "    Fletcher's line search specific option : stopping criterium.\n \
            This option allows the algorithm to detect when no improvement is possible along\n \
-           the search direction. It should be set to a very small value, or we may stop too\n \
-           early.\n");
+           the search direction. It should be set to a small value, or we may stop too early.\n \
+           IMPORTANT: this same option is also used to compute the next step size. If you get\n \
+           a nan in the cost, try a higher stop_epsilon.\n");
 
     declareOption(ol, "tau1", &ConjGradientOptimizer::tau1, OptionBase::buildoption, 
                   "    Fletcher's line search specific option : bracketing parameter.\n \
