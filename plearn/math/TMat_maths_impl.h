@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.59 2004/07/22 14:00:31 tihocan Exp $
+   * $Id: TMat_maths_impl.h,v 1.60 2004/09/29 16:24:11 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -5731,7 +5731,7 @@ inline TMat<T> operator/(const TMat<T>& m1, const TMat<T>& m2)
 
 template<class T>
 inline void choleskySolve(const TMat<T>& L, TVec<T> b, TVec<T> x) //!<  So that y be optional
-{ TVec<T> y; choleskySolve(L,b,x,y); }
+{ TVec<T> y(b.size()); choleskySolve(L,b,x,y); }
 
 //!  Same as above, but with a single value argument
 template<class T>
