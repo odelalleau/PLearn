@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.10 2004/03/06 18:29:29 yoshua Exp $
+   * $Id: MatIO.h,v 1.11 2004/03/08 20:58:54 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -105,6 +105,13 @@ template<class T> void loadAscii(const string& filename, TVec<T>& vec);
 void loadGnuplot(const string& filename, Mat& mat);
 void saveGnuplot(const string& filename, const Vec& vec);
 void saveGnuplot(const string& filename, const Mat& mat);
+
+//! Format readable by matlab
+void matlabSave( const string& dir, const string& plot_title, const Vec& data, 
+                 const Vec& add_col, const Vec& bounds, string lengend="", bool save_plot=true);  
+
+void matlabSave( const string& dir, const string& plot_title, const Mat& data, 
+                 const Vec& add_col, const Vec& bounds, TVec<string> legend=TVec<string>(), bool save_plot=true);
 
 //!  Reads and writes an ascii file without the size header (assuming that the size(length() and width()) is set)
 void loadAsciiWithoutSize(const string& filename, const Vec& vec);
