@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrPStreamBuf.h,v 1.7 2005/01/31 15:06:04 tihocan Exp $ 
+   * $Id: PrPStreamBuf.h,v 1.8 2005/01/31 17:10:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -51,11 +51,13 @@ struct PRFileDesc;
 
 namespace PLearn {
 
+class Poll;
+  
 /** An implementation of the PStreamBuf interface using Mozilla's
     NSPR library. */
 class PrPStreamBuf: public PStreamBuf
 {
-//  friend class PLearn::Poll;
+  friend class PLearn::Poll;
   
 private:
   
