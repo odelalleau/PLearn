@@ -47,7 +47,7 @@ class BPTTVariable: public NaryVariable
     //!  protected default constructor for persistence
 
   Mat neuron;  // Values of each neuron (in, hidden, out) for each timestep
-  Mat gradient;  // Gradient values of each neuron (in, hidden, out) for each timestep
+  Mat neu_gradient;  // Gradient values of each neuron (in, hidden, out) for each timestep
   Mat cost;  // The cost at each timestep, maybe there'll be just a cost a 
                   // the end depending on the type of cost
   int neuron_size; // length of the neuron array (i.e The number of time step)
@@ -76,7 +76,6 @@ class BPTTVariable: public NaryVariable
   real get_neuron(int, int);
   real get_cost(int, int);
   real get_gradient(int, int);
-  int get_indexDest(int, int);
 
   void set_neuron(int, int, real);
   void set_cost(int, int, real);
@@ -84,13 +83,9 @@ class BPTTVariable: public NaryVariable
   void set_gradient(int, int, real);
 
   real squash(int, real);
-  real computeGradErr(real, real);
   real squash_d(int, real);
-
-  void updateWeights();
-  void updateGradient();
-
-  void nextBatch();
+  real computeGradErr(real, real);
+  real computeErr(real, real);
 
   int currpos;
 
@@ -116,17 +111,26 @@ class BPTTVariable: public NaryVariable
   public:
   
   BPTTVariable() : currpos(0), batch_size(0) {}
-  BPTTVariable(VarArray, SequenceVMatrix*, int, TMat<int> , int, int, int, real, 
+  BPTTVariable(VarArray, SequenceVMatrix*, int, TMat<int> , int, int, int, 
 	       TVec<string> , string);
   
   PLEARN_DECLARE_OBJECT(BPTTVariable);
   
+  int get_indexDest(int, int);
+
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual void fprop();
   virtual void bprop();
   virtual void fbprop();
   virtual void symbolicBprop();
   virtual void rfprop();  
+
+  void updateGradient();
+
+  void computeOutputFromInput(const Mat&, Mat&);
+  void computeCostFromOutput(const Mat&, const Mat&, Mat&);
+
+  void nextBatch();
 
   void printState();
   void printOrder();

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: SequenceVMatrix.cc,v 1.3 2004/05/12 16:52:14 lapalmej Exp $
+   * $Id: SequenceVMatrix.cc,v 1.4 2004/05/18 14:18:13 lapalmej Exp $
    ******************************************************* */
 
 #include "SequenceVMatrix.h"
@@ -79,7 +79,8 @@ void SequenceVMatrix::build()
 
 void SequenceVMatrix::build_()
 {
-  
+  length_ = nbSeq;
+  width_ = inputsize_ + targetsize_ + weightsize_;
 }
 
 void SequenceVMatrix::reset_dimensions() 
@@ -94,7 +95,36 @@ real SequenceVMatrix::get(int i, int j) const
 
 void SequenceVMatrix::getSubRow(int i, int j, Vec v) const
 {
-  getRowInSeq(i, j, v);
+  PLERROR("SequenceVMatrix doesn't handle getSubRow function");
+}
+
+void SequenceVMatrix::getExample(int i, Vec& input, Vec& target, real& weight) {
+  int nrowseq = getNbRowInSeq(i);
+  Mat seq = Mat(nrowseq, inputsize_ + targetsize_ + weightsize_);
+  getSeq(i, seq);
+
+  if(inputsize_<0)
+    PLERROR("In SequenceVMatrix::getExample, inputsize_ not defined for this vmat");
+  input.resize(inputsize_*nrowseq);             
+  Mat in = seq.subMat(0, 0, nrowseq, inputsize_);
+  input = in.toVecCopy();
+  
+  if(targetsize_<0)
+    PLERROR("In SequenceVMatrix::getExample, targetsize_ not defined for this vmat");
+  target.resize(targetsize_*nrowseq);
+  if (targetsize_ > 0) {
+    Mat t = seq.subMat(0, inputsize_, nrowseq, targetsize_);
+    target = t.toVecCopy();    
+  }
+
+  if(weightsize_==0)
+    weight = 1;
+  else if(weightsize_<0)
+    PLERROR("In SequenceVMatrix::getExample, weightsize_ not defined for this vmat");
+  else if(weightsize_>1)
+    PLERROR("In SequenceVMatrix::getExample, weightsize_ >1 not supported by this call");
+  else
+    PLERROR("In SequenceVMatrix::getExample, weightsize==1 not supported by this call");
 }
 
 void SequenceVMatrix::getRowInSeq(int i, int j, Vec v) const
@@ -113,7 +143,7 @@ void SequenceVMatrix::put(int i, int j, real value)
 }
 void SequenceVMatrix::putSubRow(int i, int j, Vec v)
 {
-  putRowInSeq(i, j, v);
+  PLERROR("SequenceVMatrix doesn't handle putSubRow(i, j, v)");
 }
 
 void SequenceVMatrix::putRowInSeq(int i, int j, Vec v)
@@ -128,8 +158,11 @@ void SequenceVMatrix::putMat(int i, int j, Mat m)
 
 VMat SequenceVMatrix::subMat(int i, int j, int l, int w)
 {
-  PLERROR("subMat not implemented");
-  return ((VMat)0);
+  SequenceVMatrix *subseq = new SequenceVMatrix(l);
+  for (int s = 0; s < l; s++) {
+    subseq->sequences[s] = sequences[i+s].subMat(0, j, sequences[i+s].nrows(), w);
+  }
+  return VMat(subseq);
 }
 
 real SequenceVMatrix::dot(int i1, int i2, int inputsize) const
@@ -177,26 +210,15 @@ int SequenceVMatrix::getNbRowInSeq(int i) const
 
 void SequenceVMatrix::run()
 {
-  for (int i = 0; i < sequences.size(); i++) {
-    real* data = sequences[i].data();
-    cout << "Seq : " << i << " (size = " << sequences[i].length() << ")" << endl;
-    for (int j = 0; j < sequences[i].length(); j++) {
-      *data = 15;
-      cout << "[" << *data;
-      data++;
-      for (int k = 1; k < sequences[i].width(); k++) {
-	cout << "," << *data;
-	data++;
-      }
-      cout << "]" << endl;
-    }
-  }
+  Vec input, target;
+  real weight;
 
-  Vec v(2);
+  getExample(3 ,input, target, weight);
 
-  getRowInSeq(1,2,v);
-
-  cout << v << endl;
+  cout << input << endl;
+  cout << endl;
+  cout << target << endl;
+  cout << endl;
 }
 
 } // end of namespcae PLearn

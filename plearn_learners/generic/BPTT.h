@@ -44,14 +44,13 @@ using namespace std;
   class BPTT: public PLearner
   {
   protected:
-    BPTTVariable rec_net;
+    BPTTVariable* rec_net;
     VarArray params;
     Vec weights, bias;
     TMat<int> links;
     int nneuron_input; // number of input neuron
     int nneuron_hidden; // number of hidden neuron
     int nneuron_output; // number of output neuron
-    real alpha; // coef use when we update the weights
     TVec<string> units_type;
     string cost_type; // Function to minimize
 
@@ -80,6 +79,7 @@ using namespace std;
     virtual void forget(); // simply calls initializeParams()
 
     virtual int outputsize() const;
+    virtual int outputsize(VMat) const; // Give the outputsize depending on the VMat(must be a SequenceVMatrix) set
     virtual TVec<string> getTrainCostNames() const;
     virtual TVec<string> getTestCostNames() const;
 
@@ -87,16 +87,15 @@ using namespace std;
 
     virtual void computeOutput(const Vec& input, Vec& output) const;
     
-    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-                                       Vec& output, Vec& costs) const;
-
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                          const Vec& target, Vec& costs) const;
 
 
-    virtual void makeDeepCopyFromShallowCopy(CopiesMap &copies);
-
     virtual void run();
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
+                      VMat testoutputs=0, VMat testcosts=0) const;
 
   protected:
     static void declareOptions(OptionList& ol);

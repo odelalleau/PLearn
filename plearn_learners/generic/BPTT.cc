@@ -70,7 +70,6 @@ PLEARN_IMPLEMENT_OBJECT(BPTT, "Backpropagation through time on a recurrent neura
 
 BPTT::BPTT() // DEFAULT VALUES FOR ALL OPTIONS
 {
-  alpha = 0.01;
   batch_size = 1;
 }
 
@@ -105,9 +104,6 @@ void BPTT::declareOptions(OptionList& ol)
   declareOption(ol, "units_type", &BPTT::units_type, OptionBase::buildoption, 
                 "    A TVec of string with width equals to nneuron. Use to specified the squashing function of each neuron. The choices are LIN or TANH");
 
-  declareOption(ol, "alpha", &BPTT::alpha, OptionBase::buildoption, 
-                "    Coefficent use when update the weights");
-
   declareOption(ol, "cost_type", &BPTT::cost_type, OptionBase::buildoption, 
                 "    A string to specify the function to minimise. The choices are MSE");
 
@@ -115,6 +111,10 @@ void BPTT::declareOptions(OptionList& ol)
                 "    The learned parameter vector");
 
   inherited::declareOptions(ol);
+}
+
+void BPTT::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
+  inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 void BPTT::build()
@@ -125,84 +125,202 @@ void BPTT::build()
 
 void BPTT::build_()
 {
-  // Don't do anything if we don't have a train_set
-  // It's the only one who knows the inputsize and targetsize anyway...
-  cout << "build_()" << endl;
-  inputsize_ = temp.inputsize();
-  targetsize_ = temp.targetsize();
-  weightsize_ = temp.weightsize();
-  if(inputsize_>=0 && targetsize_>=0 && weightsize_>=0)
-    {
-      weights = Vec(links.nrows(), (real)0.5);
-      bias = Vec(nneuron_input + nneuron_hidden + nneuron_output, (real)0.01);
-      params = VarArray(Var(weights), Var(bias));
-      rec_net = BPTTVariable(params, &temp /*dynamic_cast<SequenceVMatrix*>((VMatrix*)train_set)*/, batch_size,
-			     links, nneuron_input, nneuron_hidden, nneuron_output, alpha, units_type, cost_type);
-    }
+  if(inputsize_>=0 && targetsize_>=0 && weightsize_>=0) {
+    weights = Vec(links.nrows(), 0.5);
+    bias = Vec(nneuron_input + nneuron_hidden + nneuron_output, 1.0);
+    params = VarArray(Var(weights), Var(bias));
+    rec_net = new BPTTVariable(params, dynamic_cast<SequenceVMatrix*>((VMatrix*)train_set), batch_size,
+			       links, nneuron_input, nneuron_hidden, nneuron_output, units_type, cost_type);
+  } else {
+    rec_net = 0;
+  }
+    
 }
 
 int BPTT::outputsize() const
-{ return targetsize_; }
+{
+  PLERROR("Unable to evaluate the output size without knowing the input set");
+  return 0;
+}
+
+int BPTT::outputsize(VMat set) const
+{ 
+  SequenceVMatrix *seq = dynamic_cast<SequenceVMatrix*>((VMatrix*)set);
+  if (!seq)
+    PLERROR("The VMat given to BPTT::outputsize is not a SequenceVMatrix");
+  return seq->getNbRowInSeqs(0, seq->getNbSeq());
+}
 
 TVec<string> BPTT::getTrainCostNames() const
 {
-  return TVec<string>();
+  return TVec<string>(1, "MSE");
 }
 
 TVec<string> BPTT::getTestCostNames() const
 { 
-  return TVec<string>();
+  return TVec<string>(1, "MSE");
 }
 
 
 void BPTT::train()
 {
-  cout << "train()" << endl;
-  rec_net.fbprop();
-  rec_net.printState();
-  cout << "Error : " << rec_net.value[0] << endl;
+  if(!train_set)
+    PLERROR("In BPTT::train, you did not setTrainingSet");
+    
+  if(!train_stats)
+    PLERROR("In BPTT::train, you did not setTrainStatsCollector");
+
+  if(!rec_net)
+    build();
+
+  if(!rec_net)
+    PLERROR("In BBPT::train, the reccurent network is not set properly");
+
+  int l = train_set->length();
+
+  // number of samples seen by optimizer before each optimizer update
+  int nsamples = batch_size>0 ? batch_size : l;
+  if(optimizer)
+    {
+      optimizer->setToOptimize(params, VarArray(rec_net));  
+      optimizer->build();
+    }
+  else PLERROR("BPTT::train can't train without setting an optimizer first!");
+
+  // number of optimizer stages corresponding to one learner stage (one epoch)
+  int optstage_per_lstage = l/nsamples;
+
+  ProgressBar* pb = 0;
+  if(report_progress)
+    pb = new ProgressBar("Training BPTT from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
+
+  int initial_stage = stage;
+  bool early_stop=false;
+  while(stage<nstages && !early_stop) {
+    optimizer->nstages = optstage_per_lstage;
+    train_stats->forget();
+    optimizer->early_stop = false;
+    optimizer->optimizeN(*train_stats);
+    train_stats->finalize();
+    if(verbosity>2) {
+      cout << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
+      cout << weights;
+      cout << endl;
+    }
+    ++stage;
+    if(pb)
+      pb->update(stage-initial_stage);
+  }
+  if(verbosity>1)
+    cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
+  
+  if(pb)
+    delete pb;
+}
+
+void BPTT::test(VMat testset, PP<VecStatsCollector> test_stats, 
+		VMat testoutputs, VMat testcosts) const
+{
+  int l = testset.length();
+  Vec input;
+  Vec target;
+  real weight;
+
+  Vec output(testoutputs ?outputsize(testset) :0);
+
+  Vec costs(nTestCosts());
+
+  // testset->defineSizes(inputsize(),targetsize(),weightsize());
+
+  if(test_stats)
+    test_stats->forget();
+
+  ProgressBar* pb = NULL;
+  if(report_progress) 
+    pb = new ProgressBar("Testing learner",l);
+
+  if (l == 0) {
+    // Empty test set: we give -1 cost arbitrarily.
+    costs.fill(-1);
+    test_stats->update(costs);
+  }
+
+  for(int i=0; i<l; i++)
+    {
+      testset.getExample(i, input, target, weight);
+
+      if(testoutputs)
+        {
+          computeOutputAndCosts(input, target, output, costs);
+	  testoutputs->putOrAppendRow(i,output);
+        }
+      else // no need to compute outputs
+        computeCostsOnly(input, target, costs);
+
+      if(testcosts)
+        testcosts->putOrAppendRow(i, costs);
+
+      if(test_stats)
+        test_stats->update(costs,weight);
+
+      if(pb)
+        pb->update(i);
+    }
+
+  if(test_stats)
+    test_stats->finalize();
+
+  if(pb)
+    delete pb;
+
 }
 
 
 void BPTT::computeOutput(const Vec& inputv, Vec& outputv) const
 {
-
+  int ninputrow = inputv.length() / inputsize_;
+  int ntargetrow = outputv.length() / targetsize_;
+  Mat inputm = inputv.toMat(ninputrow, inputsize_);
+  Mat outputm = Mat(ntargetrow, targetsize_);
+  rec_net->computeOutputFromInput(inputm, outputm);
+  outputv = outputm.toVecCopy();
 }
-
-void BPTT::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
-                                 Vec& outputv, Vec& costsv) const
-{
-}
-
 
 void BPTT::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, 
                                    const Vec& targetv, Vec& costsv) const
 {
-
+  int nrow = outputv.length() / targetsize_;
+  Mat outputm = outputv.toMat(nrow, targetsize_);
+  Mat targetm = targetv.toMat(nrow, targetsize_);
+  Mat costsm = Mat(nrow, targetsize_);
+  rec_net->computeCostFromOutput(outputm, targetm, costsm);
+  costsv = costsm.toVecCopy();
 }
 
 void BPTT::run() {
-  cout << "run()" << endl;
-  rec_net.printOrder();
-  rec_net.verifyGradient();
+  rec_net->gradient[0] = 1.0;
+  cout << rec_net->gradient[0] << endl;
+  rec_net->verifyGradient();
 }
 
-void BPTT::initializeParams()
-{
+void BPTT::initializeParams() {
   // Reset optimizer
   if(optimizer)
     optimizer->reset();
 }
 
-void BPTT::forget()
-{
+void BPTT::forget() {
   if (train_set) initializeParams();
+  for (int i=0;i<nneuron_input + nneuron_hidden + nneuron_output;i++) {
+    bias[i] = 0.01;
+    int fanin = rec_net->get_indexDest(i,0);
+    real r = 1.0/sqrt((float)fanin);
+    for (int l = 1; l <= rec_net->get_indexDest(i,0); l++) {
+      int nlink =  rec_net->get_indexDest(i,l);
+      weights[nlink] = bounded_uniform(-r,r);
+    }
+  }
   stage = 0;
-}
-
-void BPTT::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-{
-  inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 } // end of namespace PLearn

@@ -1,17 +1,9 @@
-BPTT(
-batch_size = 2;
-nneuron_input = 1;
-nneuron_hidden = 2;
-nneuron_output = 1;
-links = 6 3 [ 0 1 1 
-               0 2 1
-               1 3 1
-               2 3 1
-               3 1 1
-               3 2 1 ];
-units_type = ["TANH" "TANH" "TANH" "TANH" ];
-cost_type = "MSE";
-seqs = SequenceVMatrix(
+PBPTTTester(
+# string: Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
+expdir = "bptt";
+
+# VMat: The dataset to use for training/testing (will be split according to what is specified in the testmethod)
+dataset = SequenceVMatrix(
    nbSeq = 250;
    inputsize = 1;
    targetsize = 1;
@@ -242,7 +234,11 @@ seqs = SequenceVMatrix(
  20 2 [ 0 0 0 0 0 0 0 0 1 1 0 1 0 0 1 1 0 1 0 0 0 0 0 0 0 0 0 0 1 1 0 1 1 1 0 1 0 0 1 1],
  20 2 [ 1 0 1 0 1 0 1 0 1 0 1 0 0 1 0 0 1 1 1 0 0 1 1 1 0 1 1 1 1 0 0 1 1 1 1 0 0 1 0 0],
  20 2 [ 1 1 1 0 1 0 0 1 0 0 0 0 0 0 1 1 1 0 0 1 0 0 1 1 1 0 0 1 1 1 1 0 1 0 1 0 1 0 1 0],
- 20 2 [ 0 1 0 0 1 1 0 1 0 0 0 0 1 1 1 0 0 1 1 1 0 1 0 0 1 1 0 1 0 0 0 0 0 0 1 1 1 0 1 0],
+ 20 2 [ 0 1 
+        0 0
+        1 1
+        0 1
+  0 0 0 0 1 1 1 0 0 1 1 1 0 1 0 0 1 1 0 1 0 0 0 0 0 0 1 1 1 0 1 0],
  20 2 [ 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 0 1 0 0 1 1 0 1 0 0 1 1 1 0 0 1 0 0 1 1 1 0],
  20 2 [ 1 0 1 0 1 0 1 0 0 1 0 0 1 1 1 0 0 1 1 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1],
  20 2 [ 0 1 0 0 1 1 0 1 1 1 0 1 0 0 1 1 1 0 1 0 0 1 1 1 0 1 1 1 1 0 0 1 1 1 1 0 0 1 1 1],
@@ -266,5 +262,37 @@ seqs = SequenceVMatrix(
  20 2 [ 1 0 0 1 0 0 0 0 1 1 0 1 0 0 0 0 1 1 1 0 1 0 1 0 0 1 0 0 1 1 0 1 1 1 1 0 1 0 1 0],
  20 2 [ 0 1 1 1 1 0 0 1 0 0 1 1 0 1 0 0 0 0 1 1 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 0 1 0 0],
  20 2 [ 1 1 0 1 0 0 1 1 1 0 1 0 0 1 1 1 0 1 0 0 1 1 1 0 0 1 0 0 1 1 1 0 1 0 1 0 0 1 1 1]];
+);
+
+# PP< Splitter >: The splitter to use to generate one or several train/test pairs.
+splitter = TrainTestSplitter(test_fraction=.10) ;
+
+save_test_outputs = 1;
+save_test_costs = 1;
+save_initial_tester = 1;
+save_stat_collectors = 1;
+save_learners = 1,
+save_data_sets = 1;
+
+learner = BPTT( batch_size = 0;
+		verbosity = 3;
+		nstages = 300;
+                nneuron_input = 1;
+                nneuron_hidden = 2;
+                nneuron_output = 1;
+                optimizer = GradientOptimizer(
+                              start_learning_rate = 0.0005  ;
+                              decrease_constant = 0.0 ;
+                            );
+                links = 8 3 [ 0 1 0 
+                              0 2 0
+                              2 3 0
+                              1 3 0
+                              1 1 1
+                              2 2 1
+                              1 2 1
+                              2 1 1 ];
+                units_type = ["TANH" "TANH" "TANH" "TANH"];
+                cost_type = "MSE";
 );
 );

@@ -45,11 +45,10 @@ namespace PLearn {
 
   BPTTVariable::BPTTVariable(VarArray params, SequenceVMatrix* the_seqs, int bs, 
 			     TMat<int> the_links, int the_nunits_input, int the_nunits_hidden,
-			     int the_nunits_output, real the_alpha, TVec<string> the_units_type, 
+			     int the_nunits_output, TVec<string> the_units_type, 
 			     string the_cost_type)
     :NaryVariable(params, 1, 1)
   {
-    cout << "BPTTVariable" << endl;
     seqs = the_seqs;
     batch_size = bs;
     links = the_links;
@@ -57,7 +56,6 @@ namespace PLearn {
     nunits_input = the_nunits_input;
     nunits_hidden = the_nunits_hidden;
     nunits_output = the_nunits_output;
-    alpha = the_alpha;
     nunits = nunits_input + nunits_hidden + nunits_output;
     units_type = the_units_type;
     cost_type = the_cost_type;
@@ -66,6 +64,8 @@ namespace PLearn {
     updateOrder();
     if (cost_type == "MSE") {
       resize(1,1);
+      gradient[0] = 0.0;
+      value[0] = 0.0;
     }
   }
 
@@ -78,7 +78,7 @@ namespace PLearn {
   }
 
   real BPTTVariable::get_gradient(int i, int j) {
-    return gradient(i, j);
+    return neu_gradient(i, j);
   }
 
   int BPTTVariable::get_indexDest(int i, int j) {
@@ -96,7 +96,7 @@ namespace PLearn {
   }
 
   void BPTTVariable::set_gradient(int i, int j, real val) {
-    real *r = gradient[i] + j;
+    real *r = neu_gradient[i] + j;
     *r = val;
   }
 
@@ -112,7 +112,7 @@ namespace PLearn {
     order = TVec<int>(nunits);
     TVec<int> mark = TVec<int>(nunits, 0); // 0 = unmark, 1 = mark
     int orderCount = 0;
-    for (int i = nunits - 1; i >= 0; i--) {
+    for (int i = 0; i < nunits; i++) {
       if (mark[i] == 0) {
 	topsort(i, mark, &orderCount);
       }
@@ -124,11 +124,12 @@ namespace PLearn {
     for (int i = 1; i <= get_indexDest(v, 0); i++) {
       int edge_num = get_indexDest(v, i);
       int src_neuron = links(edge_num, 0);
-      if (mark[src_neuron] == 0) {
+      int delay = links(edge_num, 2);
+      if (delay == 0 && mark[src_neuron] == 0) {
 	topsort(src_neuron, mark, orderCount);
       }
     }
-    order[*orderCount] = v;
+    order[nunits - *orderCount - 1] = v;
     (*orderCount)++;
   }
 
@@ -136,7 +137,6 @@ namespace PLearn {
     /* Create the map of links by the destination neuron.
        Remember that index[n][0] contains the number of links that comes
        to the neuron n */
-    cout << "BPTTVariable" << endl;
     int nr = links.nrows();
     indexDest = TMat<int>(nunits,nr+1, 0);
     for (int i = 0; i < links.nrows(); i++) {
@@ -146,15 +146,6 @@ namespace PLearn {
       set_indexDest(dst, nb, i);
     }
 
-    for (int i = 0; i < nunits; i++) {
-      cout << "Le neuron " << i << " est connecte de ";
-      for (int j = 1; j <= get_indexDest(i, 0); j++) {
-	int edge_num = get_indexDest(i,j);
-	int src_neuron = links(edge_num, 0);
-	cout << src_neuron << " ";
-      }
-      cout << endl;
-    }
   }
 
 
@@ -185,7 +176,7 @@ namespace PLearn {
 	for (int o = 0; o < nunits; o++) { // Loop on each units(neuron)
 	  int v = order[o];
 	  if (isInput(v) && row[v] != MISSING_VALUE) {
-	    set_neuron(t, v, row[v]);
+	    set_neuron(t, v, row[v] + bias->value[v]);
 	  } else {
 	    real total = bias->value[v];
 	    for (int e = 1; e <= get_indexDest(v,0); e++) { // Loop on each edge that comes to the neuron
@@ -207,9 +198,47 @@ namespace PLearn {
     }
   }
 
-  void BPTTVariable::bprop()
-  { fbprop(); }
-  
+  void BPTTVariable::computeOutputFromInput(const Mat &input, Mat &output) {
+    Var weights = varray[0];
+    Var bias = varray[1];
+   
+    neuron = Mat(input.nrows(), nunits, (real)0.0);
+    for (int t = 0; t < input.nrows(); t++) { // Loop on each example in seq
+      Vec row = input(t);
+      for (int o = 0; o < nunits; o++) { // Loop on each units(neuron)
+	int v = order[o];
+	if (isInput(v) && row[v] != MISSING_VALUE) {
+	  set_neuron(t, v, row[v] + bias->value[v]);
+	} else {
+	  real total = bias->value[v];
+	  for (int e = 1; e <= get_indexDest(v,0); e++) { // Loop on each edge that comes to the neuron
+	    int edge_num = get_indexDest(v,e);
+	    int src_neuron = links(edge_num, 0);
+	    int delay = links(edge_num, 2);
+	    if (t - delay >= 0) {
+	      real w = weights->value[edge_num];
+	      real x = get_neuron(t-delay,src_neuron);
+	      total += w * x;
+	    }
+	  }
+	  set_neuron(t, v, squash(v, total));
+	  if (isOutput(v)) {
+	    output[t][v-nunits_input-nunits_hidden] = get_neuron(t, v);
+	  }
+	}
+      }
+    }
+  }
+
+  void BPTTVariable::computeCostFromOutput(const Mat &output, const Mat &target, Mat &costs) {
+    for (int i = 0; i < output.nrows(); i++) {
+      for (int j = 0; j < output.ncols(); j++) {
+	costs[i][j] = computeErr(output[i][j], target[i][j]);
+      }
+    }
+  }
+
+  void BPTTVariable::bprop() { fbprop(); }
   
   void BPTTVariable::fbprop() {
     fprop();
@@ -217,7 +246,7 @@ namespace PLearn {
     int l = seqs->getNbSeq() - currpos; // Number of seqs remaining
     int nsamples = batch_size>0 ? batch_size : l;
     int ncol = seqs->inputsize() + seqs->targetsize() + seqs->weightsize();
-    gradient = Mat(neuron_size, nunits, (real)0.0);
+    neu_gradient = Mat(neuron_size, nunits, (real)0.0);
 
     Var weights = varray[0];
     int t = neuron_size - 1;
@@ -231,7 +260,7 @@ namespace PLearn {
 	for (int o = nunits - 1; o >= 0; o--) { // Backward loop on each units(neuron)
 	  int u = order[o];
 	  if (isOutput(u)) {
-	    real err = computeGradErr(get_neuron(t, u),row[u-nunits_hidden]);
+	    real err = gradient[0] * computeGradErr(get_neuron(t, u),row[u-nunits_hidden]);
 	    set_gradient(t, u, get_gradient(t, u) + err);
 	  }
 	  real der = squash_d(u, get_neuron(t, u));
@@ -252,32 +281,36 @@ namespace PLearn {
       }
     }
     updateGradient();
+    nextBatch();
   }
 
   void BPTTVariable::nextBatch() {
     currpos += batch_size;
   }
 
-  void BPTTVariable::updateWeights() {
-    Var weights = varray[0];
-    for (int w = 0; w < links.nrows(); w++) {
-      weights->value[w] = weights->value[w] + weights->gradient[w] * alpha;
-    }    
-  }
-
   void BPTTVariable::updateGradient() {
     Var weights = varray[0];
+    Var bias = varray[1];
     for (int w = 0; w < links.nrows(); w++) {
-      int src_neuron = links(w, 0);
-      int dst_neuron = links(w, 1);
-      int delay = links(w, 2);
-      real total = 0.0;
-      for (int t = delay; t < neuron_size; t++) {
-	real g = get_gradient(t, dst_neuron);
-	real x = get_neuron(t-delay, src_neuron);
-	total += g * x;
+      weights->gradient[w] = 0.0;
+    }
+    for (int u = 0; u < nunits; u++) {
+      bias->gradient[u] = 0.0;
+    }
+    for (int t = 0; t < neuron_size; t++) {
+      for (int w = 0; w < links.nrows(); w++) {
+	int src_neuron = links(w, 0);
+	int dst_neuron = links(w, 1);
+	int delay = links(w, 2);
+	if (t - delay >= 0) {
+	  real g = get_gradient(t, dst_neuron);
+	  real x = get_neuron(t-delay, src_neuron);
+	  weights->gradient[w] += g * x;
+	}
       }
-      weights->gradient[w] = total;
+      for (int u = 0; u < nunits; u++) {
+	bias->gradient[u] += get_gradient(t, u);
+      }      
     }
   }
 
@@ -288,13 +321,20 @@ namespace PLearn {
     return 0.0;
   }
 
+  real BPTTVariable::computeErr(real o, real t) {
+    if (cost_type == "MSE") {
+      return (o - t) * (o - t) / 2.0;
+    }
+    return 0.0;
+  }
+
   void BPTTVariable::computeCost(int t, Vec row) {
     if (cost_type == "MSE") {
       for (int i = 0; i < seqs->targetsize(); i++) {
 	real target = row[seqs->inputsize() + i];
 	real out = get_neuron(t, nunits - seqs->targetsize() + i);
 	if (target != MISSING_VALUE && out != MISSING_VALUE) {
-	  set_cost(t, i, (out - target) * (out - target) / 2.0);
+	  set_cost(t, i, computeErr(out,target));
 	  value[0] += get_cost(t, i);
 	}
       }
@@ -340,9 +380,9 @@ namespace PLearn {
       if (t < 100) cout << " ";
       cout << t << " ";
       for (int n = 0; n < nunits; n++) {
-	if (gradient[t][n] < 10) cout << " ";
-	if (gradient[t][n] < 100) cout << " ";
-	cout << setprecision(3) << gradient[t][n] << " ";
+	if (neu_gradient[t][n] < 10) cout << " ";
+	if (neu_gradient[t][n] < 100) cout << " ";
+	cout << setprecision(3) << neu_gradient[t][n] << " ";
       }
       cout << endl;
     }

@@ -1,8 +1,9 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
+// VarLengthPTester.h
+// 
 // Copyright (C) 2004 Jasmin Lapalme
-//
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -31,63 +32,57 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
+#ifndef VarLengthPTester_INC
+#define VarLengthPTester_INC
 
-#ifndef SequenceVMatrix_INC
-#define SequenceVMatrix_INC
-
-#include "VMat.h"
+#include "PTester.h"
 
 namespace PLearn {
 using namespace std;
- 
-class SequenceVMatrix: public VMatrix
-{
-  typedef VMatrix inherited;
 
-protected:
-  //! Build options.
-  TVec<Mat> sequences;
-  int nbSeq;
+/*
+This class is the Tester for neural network with sequences.
+We cannot do it with a simple PTester because the output of each sequence
+is variable. 
+*/
+
+class VarLengthPTester: public PTester
+{    
+public:
+
+  typedef PTester inherited;
+
+  // ************************
+  // * public build options *
+  // ************************
+
+  // Default constructor
+  VarLengthPTester();
+
+  // ******************
+  // * Object methods *
+  // ******************
+
+private: 
+  void build_();
+
+protected: 
+  static void declareOptions(OptionList& ol);
 
 public:
-  
-  SequenceVMatrix();
-  SequenceVMatrix(int nbSequences);
+  virtual void build();
 
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
-  virtual void getMat(int i, int j, Mat m) const;
-  virtual void put(int i, int j, real value);
-  virtual void putSubRow(int i, int j, Vec v);
-  virtual void putMat(int i, int j, Mat m);
-  virtual VMat subMat(int i, int j, int l, int w);
-  virtual void getExample(int i, Vec&, Vec&, real&);
-
-  virtual real dot(int i1, int i2, int inputsize) const;
-  virtual real dot(int i, const Vec& v) const;
-
-  void getRowInSeq(int i, int j, Vec v) const;
-  void putRowInSeq(int i, int j, Vec v);
- 
-  void getSeq(int i, Mat m) const;
-  void putSeq(int i, Mat m);
-
-  int getNbSeq() const;
-  int getNbRowInSeq(int i) const;
-  int getNbRowInSeqs(int, int) const;
+  PLEARN_DECLARE_OBJECT(VarLengthPTester);
 
   virtual void run();
 
-  virtual void reset_dimensions();
-
-  PLEARN_DECLARE_OBJECT(SequenceVMatrix);
-  static void declareOptions(OptionList &ol);
-  virtual void build();
-  void build_();
+  Vec perform(bool call_forget=true);
 
 };
 
-DECLARE_OBJECT_PTR(SequenceVMatrix);
+// Declares a few other classes and functions related to this class
+DECLARE_OBJECT_PTR(VarLengthPTester);
+  
+} // end of namespace PLearn
 
-} // end of namespcae PLearn
 #endif

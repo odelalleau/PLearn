@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.60 2004/05/12 16:51:41 lapalmej Exp $
+   * $Id: plearn.cc,v 1.61 2004/05/18 14:18:49 lapalmej Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -94,7 +94,7 @@
 #include "Experiment.h"
 
 // New generation system
-#include "PTester.h"
+#include "VarLengthPTester.h"
 #include "NNet.h"
 #include "Grapher.h"
 #include "ConstantRegressor.h"
