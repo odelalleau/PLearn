@@ -157,7 +157,7 @@ options_choices = [
   [ 'dbg', 'opt', 'gprof', 'safeopt', 'checkopt' ],
   [ 'double', 'float' ],
   [ 'throwerrors', 'exiterrors' ], 
-  [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'noblas'],
+  [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'noblas', 'veclib'],
 ]
 
 
@@ -244,6 +244,11 @@ pymakeOption( name = 'p4blas',
               description = 'compilation and linking BLAS for Intel Pentium 4 processor',
               compileroptions = '-D USE_BLAS_SPECIALISATIONS',
               linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread -lg2c')
+
+pymakeOption( name = 'veclib',
+              description = "Apple's vecLib library, a version of the BLAS library for the G4 and G5 under OS X",
+              compileroptions = '-D USE_BLAS_SPECIALISATIONS',
+              linkeroptions = '-framework vecLib')
 
 pymakeOption( name = 'float',
               description = 'float mode (real==float)',
