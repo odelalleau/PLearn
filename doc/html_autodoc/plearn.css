@@ -87,3 +87,6 @@ h4  { margin: 0; padding-left: 1em; padding-top: 1em; }
 .opttype  { color:#007AA8; font-family:monospace }
 .optname  { font-weight: bold; font-size: 115%; font-style: italic }
 .optvalue { color:#007AA8; font-family:monospace }
+
+.fromclass { font-style: italic ; float:right }
+address { padding-left: 15px ; padding-right: 15px ; border-top: 1px solid #809fff ; font-size:80%; }
