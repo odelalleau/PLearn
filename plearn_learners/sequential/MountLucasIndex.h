@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.h,v 1.4 2003/08/13 08:13:47 plearner Exp $ 
+   * $Id: MountLucasIndex.h,v 1.5 2003/08/27 21:00:58 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.h */
@@ -53,23 +53,25 @@ using namespace std;
 
 class MountLucasIndex: public SequentialLearner
 {
+  public:
+    TVec<string> commodity_price_columns; // the commodity price columns in the input data
+    string last_day_of_month_column; // the last_day_of_month column in the input data
+    string risk_free_rate_column; // the risk free rate column in the input data
+
   protected:
     TVec<bool> is_long_position; // long or short position (for this month)
     Vec twelve_month_moving_average;
-    Mat monthly_unit_asset_value;
+    Mat next_to_last_unit_asset_value;
+    Vec unit_asset_value;
     Mat monthly_rate_return; // rate return for this month
     Vec index_value; // the monthly MLM Index
     int current_month; // the current month (=0 for the first month of the train_set)
     int nb_commodities; // number of commodities included in the MLM Index
-
-    string julian_day_column; // the julian day number column in the input data
-    int julian_day_index; // the corresponding index
-    TVec<string> commodity_price_columns; // the commodity price columns in the input data
-    TVec<int> commodity_price_index; // the corresponding indexes
+    TVec<int> commodity_price_index; // the index corresponding to commodity_price_columns
+    int last_day_of_month_index; // the index corresponding to last_day_of_month_column
+    int risk_free_rate_index; // the index corresponding to risk_free_rate_column
     bool build_complete;
  
-  public:
-
   private:
     //! This does the actual building
     void build_();
@@ -86,7 +88,7 @@ class MountLucasIndex: public SequentialLearner
     //! simply calls inherited::build() then build_()
     virtual void build();
 
-    bool next_position(int pos, const Mat& unit_asset_value) const;
+    bool next_position(int pos, const Mat& unit_asset_value_) const;
 
     //! *** SUBCLASS WRITING: ***
     virtual void train();
@@ -116,10 +118,6 @@ class MountLucasIndex: public SequentialLearner
     PLEARN_DECLARE_OBJECT(MountLucasIndex);
     //virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
-
-//! Compute the julian date number for the last day of the month, given
-//! the julian date number of today.
-int lastJulianDayOfMonth(int julian_day);
 
 //! Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(MountLucasIndex);
