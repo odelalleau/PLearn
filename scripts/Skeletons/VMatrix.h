@@ -60,6 +60,8 @@ protected:
 
 public:
 
+  typedef VMatrix inherited;
+
   // ************************
   // **** Object methods ****
   // ************************

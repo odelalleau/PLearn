@@ -19,6 +19,7 @@ protected:
 public:
 
   
+  typedef Splitter inherited;
 
   // ************************
   // * public build options *

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.11 2003/08/13 01:25:38 yoshua Exp $
+   * $Id: fileutils.cc,v 1.12 2003/09/09 18:05:19 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -501,70 +501,87 @@ string readFileAndMacroProcess(const string& fname, map<string, string>& variabl
 string readAndMacroProcess(istream& in, map<string, string>& variables)
 {
   string text; // the processed text to return
-  string chunk;
 
   while(in)
     {
-      getline(in, chunk, '$');
-      text += chunk;
-      int c = in.peek();
+      int c = in.get();
+      if(c=='#')  // It's a comment: skip rest of line
+        {
+          while(c!=EOF && c!='\n' && c!='\r')
+            c = in.get();
+        }
+
       if(c==EOF)
         break;
-
-      switch(c)
+      else if(c!='$')
+        text += c;
+      else  // We have a $ macro command
         {
-        case '{':  // expand a defined variable ${varname}
-          {
-            string varname; // name of a variable
-            in.get(); // skip '{'
-            getline(in,varname,'}');
-            varname = removeblanks(varname);
-            map<string, string>::iterator it = variables.find(varname);
-            if(it==variables.end())
-              PLERROR("Macro variable ${%s} undefined", varname.c_str());
-            istrstream varin(it->second.c_str());
-            text += readAndMacroProcess(varin, variables);
-          }
-          break;
+          int c = in.peek();
+          switch(c)
+            {
+            case '{':  // expand a defined variable ${varname}
+              {
+                string varname; // name of a variable
+                in.get(); // skip '{'
+                getline(in,varname,'}');
+                varname = removeblanks(varname);
+                map<string, string>::iterator it = variables.find(varname);
+                if(it==variables.end())
+                  PLERROR("Macro variable ${%s} undefined", varname.c_str());
+                istrstream varin(it->second.c_str());
+                text += readAndMacroProcess(varin, variables);
+              }
+              break;
 
-        case 'I': // it's an INCLUDE{filepath}
-          {
-            string includefile; // path of the file in a $INCLUDE{...} directive
-            readWhileMatches(in, "INCLUDE<");
-            getline(in,includefile,'>');
-            istringstream includefilestream(includefile);
-            includefile = readAndMacroProcess(includefilestream,variables);
-            includefile = removeblanks(includefile);
-            string dirname = extract_directory(includefile);
-            string filename = extract_filename(includefile);
-            string olddir = getcwd();
-            chdir(dirname);
-            text += readFileAndMacroProcess(filename, variables);
-            chdir(olddir);
-          }
-          break;
+            case 'I': // it's an INCLUDE{filepath}
+              {
+                string includefile; // path of the file in a $INCLUDE{...} directive
+                readWhileMatches(in, "INCLUDE");
+                int c = in.get();
+                if(c=='<')
+                  smartReadUntilNext(in, ">", includefile);
+                else if(c=='{')
+                  smartReadUntilNext(in, "}", includefile);
+                else
+                  PLERROR("$INCLUDE must be followed immediately by a { or <");
+                istringstream includefilestream(includefile);
+                includefile = readAndMacroProcess(includefilestream,variables);
+                includefile = removeblanks(includefile);
+                string dirname = extract_directory(includefile);
+                string filename = extract_filename(includefile);
+                string olddir = getcwd();
+                chdir(dirname);
+                text += readFileAndMacroProcess(filename, variables);
+                chdir(olddir);
+              }
+              break;
 
-        case 'D': // it's a DEFINE{ varname }{ ... }
-          {
-            string varname; // name of a variable
-            string vardef; // definition of a variable
-            readWhileMatches(in, "DEFINE{");
-            getline(in,varname, '}');
-            varname = removeblanks(varname);
-            skipBlanksAndComments(in);
-            if(in.get()!='{')
-              PLERROR("Bad syntax in .plearn DEFINE macro: correct syntax is $DEFINE{name}{definition}");
-            smartReadUntilNext(in, "}", vardef);
-            variables[varname] = vardef;
-          }
-          break;
+            case 'D': // it's a DEFINE{ varname }{ ... }
+              {
+                string varname; // name of a variable
+                string vardef; // definition of a variable
+                readWhileMatches(in, "DEFINE{");
+                getline(in,varname, '}');
+                varname = removeblanks(varname);
+                skipBlanksAndComments(in);
+                if(in.get()!='{')
+                  PLERROR("Bad syntax in .plearn DEFINE macro: correct syntax is $DEFINE{name}{definition}");
+                smartReadUntilNext(in, "}", vardef);
+                variables[varname] = vardef;
+              }
+              break;
 
-        default:
-          PLERROR("In readAndMacroProcess: only supported macro commands are \n"
-                  "$DEFINE{varname=...} $INCLUDE{filepath} and ${varname} for macro expansion."
-                  "But I read $%c !!",c);
+            default:
+              PLERROR("In readAndMacroProcess: only supported macro commands are \n"
+                      "$DEFINE{varname=...} $INCLUDE{filepath} and ${varname} for macro expansion."
+                      "But I read $%c !!",c);
+            }
         }
     }
+
+  // cerr << "MACRO PROCESSEd TEXT: \n" << text << endl;
+
   return text;
 }
 

@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.24 2003/08/13 08:13:46 plearner Exp $
+* $Id: VMatrix.cc,v 1.25 2003/09/09 18:05:19 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -445,6 +445,7 @@ void VMatrix::saveStringMappings(int col,string fname)
     return;
   }
   //POFStream o(fname.c_str());
+  force_mkdir_for_file(fname);
   ofstream o(fname.c_str());
   if(o.bad())
     PLERROR( "File %s can't be opened",fname.c_str());

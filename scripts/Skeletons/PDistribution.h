@@ -18,7 +18,7 @@ protected:
     
 public:
 
-  
+  typedef PDistribution inherited;  
 
   // ************************
   // * public build options *

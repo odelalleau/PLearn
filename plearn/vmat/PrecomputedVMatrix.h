@@ -1,10 +1,9 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+// PrecomputedVMatrix.h
 //
-
+// Copyright (C) 2003 Pascal Vincent 
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -33,51 +32,78 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
- 
-
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.h,v 1.3 2003/09/09 18:05:19 plearner Exp $
-   * This file is part of the PLearn library.
+   * $Id: PrecomputedVMatrix.h,v 1.1 2003/09/09 18:06:25 plearner Exp $ 
    ******************************************************* */
 
+// Authors: Pascal Vincent
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file PrecomputedVMatrix.h */
 
-#ifndef RowBufferedRowBufferedVMatrix_INC
-#define RowBufferedRowBufferedVMatrix_INC
 
-#include "VMatrix.h"
+#ifndef PrecomputedVMatrix_INC
+#define PrecomputedVMatrix_INC
+
+#include "RowBufferedVMatrix.h"
+#include "VMat.h"
 
 namespace PLearn <%
 using namespace std;
 
-class RowBufferedVMatrix: public VMatrix
+class PrecomputedVMatrix: public RowBufferedVMatrix
 {
 protected:
-  mutable int current_row_index;
-  mutable Vec current_row;
-  mutable int other_row_index; //!<  used by dot
-  mutable Vec other_row;
+  VMat precomp_source; // The precomputed source, as a DiskVMatrix
 
 public:
 
-  typedef VMatrix inherited;
+  typedef RowBufferedVMatrix inherited;
 
-  RowBufferedVMatrix();
-  RowBufferedVMatrix(int the_length, int the_width);
+  // ************************
+  // * public build options *
+  // ************************
+
+  VMat source;
+  string precomp_type;
+
+  // ****************
+  // * Constructors *
+  // ****************
+
+  // Default constructor, make sure the implementation in the .cc
+  // initializes all fields to reasonable default values.
+  PrecomputedVMatrix();
+
+  // ******************
+  // * Object methods *
+  // ******************
+
+private: 
+  //! This does the actual building. 
+  // (Please implement in .cc)
+  void build_();
+
+protected: 
+  //! Declares this class' options
+  // (Please implement in .cc)
+  static void declareOptions(OptionList& ol);
+
+public:
+
+  virtual void setMetaDataDir(const string& the_metadatadir);
 
   //!  This is the only method requiring implementation
-  virtual void getRow(int i, Vec v) const =0;
+  virtual void getRow(int i, Vec v) const;
 
-  //!  These methods are implemented by buffering calls to getRow
-  virtual real get(int i, int j) const; //!<  returns element (i,j)
-  virtual void getSubRow(int i, int j, Vec v) const; //!<  fills v with the subrow i laying between columns j (inclusive) and j+v.length() (exclusive)
+  // simply calls inherited::build() then build_() 
+  virtual void build();
 
-  virtual real dot(int i1, int i2, int inputsize) const;
-  virtual real dot(int i, const Vec& v) const;
+  //! Transforms a shallow copy into a deep copy
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
-  PLEARN_DECLARE_ABSTRACT_OBJECT(RowBufferedVMatrix);
+  //! Declares name and deepCopy methods
+  PLEARN_DECLARE_OBJECT(PrecomputedVMatrix);
+
 };
 
 %> // end of namespace PLearn

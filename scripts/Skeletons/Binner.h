@@ -18,7 +18,7 @@ protected:
     
 public:
 
-  
+  typedef Binner inherited;  
 
   // ************************
   // * public build options *

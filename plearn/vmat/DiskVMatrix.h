@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.h,v 1.5 2003/08/27 19:20:49 ducharme Exp $
+   * $Id: DiskVMatrix.h,v 1.6 2003/09/09 18:05:19 plearner Exp $
    ******************************************************* */
 
 
@@ -45,6 +45,7 @@
 #define DiskVMatrix_INC
 
 #include "RowBufferedVMatrix.h"
+#include <cstdio>
 
 namespace PLearn <%
 using namespace std;
@@ -55,14 +56,19 @@ using namespace std;
 class DiskVMatrix: public RowBufferedVMatrix
 {
 protected:
-  mutable fstream * indexf;
-  mutable Array<fstream*> dataf;
-  bool readwritemode;
+  mutable FILE* indexf;
+  mutable TVec<FILE*> dataf;
   bool freshnewfile;
+  bool old_format; // is thisfile in the old deprecated format?
+  bool swap_endians; // was this file written in the opposite endian order
 public:
+
+  // Build options
   string dirname;
+  bool readwritemode;
+  double tolerance;    // the error tolerance for storing doubles as floats
   
-  DiskVMatrix(){};
+  DiskVMatrix();
 
 /*!     Opens an existing one. If directory does not exist or has missing files, an error is issued.
     If readwrite is true, then the files are opened in read/write mode and appendRow can be called.
@@ -84,9 +90,6 @@ public:
   virtual void putRow(int i, Vec v);
   virtual void appendRow(Vec v);
   virtual void flush();
-
-  static void writeRow(ostream& out, const Vec& v);
-  static void readRow(istream& in, const Vec& v);
 
   virtual void build();
   void build_();

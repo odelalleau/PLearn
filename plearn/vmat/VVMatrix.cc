@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.6 2003/08/26 23:42:14 chapados Exp $
+   * $Id: VVMatrix.cc,v 1.7 2003/09/09 18:05:19 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -549,9 +549,18 @@ void VVMatrix::build_()
   setMetaDataDir(makeExplicitPath(the_filename+".metadata"));
   force_mkdir(getMetaDataDir());
 
-  the_mat=createPreproVMat(the_filename);
-  setMtime(the_mat->getMtime());
   code = readFileAndMacroProcess(the_filename);
+  if(removeblanks(code)[0]=='<') // old xml-like format 
+    the_mat=createPreproVMat(the_filename);
+  else  // New standard PLearn object description format
+    {
+      the_mat = dynamic_cast<VMatrix*>(newObject(code));
+      if(the_mat.isNull())
+        PLERROR("Object described in %s is not a VMatrix subclass",the_filename.c_str());
+      the_mat->setMetaDataDir(getMetaDataDir());
+    }
+
+  setMtime(the_mat->getMtime());
   length_ = the_mat.length();
   width_ = the_mat.width();
 

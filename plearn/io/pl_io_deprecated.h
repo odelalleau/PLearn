@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io_deprecated.h,v 1.3 2003/08/13 08:13:17 plearner Exp $
+   * $Id: pl_io_deprecated.h,v 1.4 2003/09/09 18:05:19 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -63,7 +63,7 @@ using namespace std;
 // *************************************************************************
 
 //!  Swap bytes between Big-Endian and Little-Endian representation in memory
-  //! NOTE: these calls are deprecated, use directly endianswap above
+  //! NOTE: these calls are deprecated, use directly endianswap from base/byte_order.h
 inline void reverse_uint(const unsigned int* ptr, int n) { endianswap((unsigned int*) ptr,n); }
 inline void reverse_int(const int* ptr, int n) { endianswap((int*)ptr,n); }
 inline void reverse_float(const float* ptr, int n) { endianswap((float*)ptr,n); }

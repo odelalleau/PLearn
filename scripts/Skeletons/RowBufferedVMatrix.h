@@ -15,7 +15,7 @@ protected:
 
 public:
 
-  
+  typedef RowBufferedVMatrix inherited;
 
   // ************************
   // * public build options *

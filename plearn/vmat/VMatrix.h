@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.21 2003/09/03 21:01:00 ducharme Exp $
+   * $Id: VMatrix.h,v 1.22 2003/09/09 18:05:19 plearner Exp $
    ******************************************************* */
 
 
@@ -247,7 +247,7 @@ public:
 
   //! this should be called by the build method of every VMatrix that has a metadatadir
   //! It will create said directory if it doesn's already exist.
-  void setMetaDataDir(const string& the_metadatadir);
+  virtual void setMetaDataDir(const string& the_metadatadir);
   string getMetaDataDir() const { return metadatadir; }
 
   //! returns the 'alias' for this dataset. The alias is a short name that 

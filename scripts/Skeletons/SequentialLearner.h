@@ -11,7 +11,8 @@ class DERIVEDCLASS: public SequentialLearner
   protected:
  
   public:
-
+  typedef SequentialLearner inherited;
+  
   private:
     //! This does the actual building
     void build_();

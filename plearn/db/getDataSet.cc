@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.8 2003/08/13 08:13:16 plearner Exp $
+   * $Id: getDataSet.cc,v 1.9 2003/09/09 18:05:19 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -134,8 +134,10 @@ VMat getDataSet(const string& datasetstring, const string& alias)
             vm = new StrTableVMatrix(StringTable(datasetstring));
           else if(ext==".sdb")
             vm = new AutoSDBVMatrix(remove_extension(datasetstring));            
-          else
+          else if(ext==".mat")
               vm=loadAsciiAsVMat(datasetstring);
+          else // Suppose it's a file containing a PLearn serialized subclass of VMatrix
+            PLearn::load(datasetstring, vm);
           vm->setMetaDataDir(extract_directory(datasetstring) + extract_filename(datasetstring) + ".metadata");
         }
       else // it's a directory

@@ -8,8 +8,6 @@ using namespace std;
 
 class DERIVEDCLASS: public PLearner
 {
-  typedef PLearner inherited;
-
 protected:
   // *********************
   // * protected options *
@@ -20,6 +18,7 @@ protected:
     
 public:
 
+  typedef PLearner inherited;
   
 
   // ************************

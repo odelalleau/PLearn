@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDate.cc,v 1.2 2003/07/31 05:23:52 chapados Exp $
+   * $Id: PDate.cc,v 1.3 2003/09/09 18:05:14 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -42,6 +42,7 @@
 #include "stringutils.h"            // from PLearn
 #include "PDate.h"
 #include "general.h"                // for MISSING_VALUE
+#include <ctype.h>
 
 namespace PLearn <%
 using namespace std;
@@ -69,14 +70,48 @@ PDate::PDate(int julian_day)
 
 PDate::PDate(string date)
 {
-  // Parse the YYYY/MM/DD format
-  if (date.size() == 10 && date[4] == '/' && date[7] == '/') {
-    year = toint(date.substr(0,4));
-    month = toint(date.substr(5,2));
-    day = toint(date.substr(8,2));
-  }
+  // Format "2003/01/27"
+  if (date.size() == 10 && date[4] == '/' && date[7] == '/') 
+    {
+      year = toint(date.substr(0,4));
+      month = toint(date.substr(5,2));
+      day = toint(date.substr(8,2));
+    }
+  // Format "27JAN2003"
+  else if(date.size()==9 && isupper(date[2]) && isupper(date[3]) && isupper(date[4]))
+    {
+      year = toint(date.substr(5,4));
+      day = toint(date.substr(0,2));
+      string mo = date.substr(2,3);
+      if(mo=="JAN")
+        month = 1;
+      else if(mo=="FEB")
+        month = 2;
+      else if(mo=="MAR")
+        month = 3;
+      else if(mo=="APR")
+        month = 4;
+      else if(mo=="MAY")
+        month = 5;
+      else if(mo=="JUN")
+        month = 6;
+      else if(mo=="JUL")
+        month = 7;
+      else if(mo=="AUG")
+        month = 8;
+      else if(mo=="SEP")
+        month = 9;
+      else if(mo=="OCT")
+        month = 10;
+      else if(mo=="NOV")
+        month = 11;
+      else if(mo=="DEC")
+        month = 12;
+      else
+        PLERROR("Invalid month string: %s",mo.c_str());
+    }
   else
-    PLERROR("PDate::PDate: the passed date string is not in YYYY/MM/DD format");
+    PLERROR("PDate::PDate: the passed date string is not in a known format: %s", date.c_str());
 }
 
 bool PDate::isMissing() const

@@ -18,6 +18,7 @@ protected:
     
 public:
 
+  typedef Smoother inherited;
   
 
   // ************************
