@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.5 2003/08/13 08:13:17 plearner Exp $
+   * $Id: Kernel.cc,v 1.6 2003/10/09 23:06:42 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,25 +48,44 @@
 namespace PLearn <%
 using namespace std;
   
-  PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Kernel, "ONE LINE DESCR", "NO HELP");
-  Kernel::~Kernel() {}
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Kernel, "ONE LINE DESCR", "NO HELP");
+Kernel::~Kernel() {}
 
-  void Kernel::setDataForKernelMatrix(VMat the_data)
-  { data = the_data; }
+void Kernel::declareOptions(OptionList &ol)
+{
+  declareOption(ol, "is_symmetric", &Kernel::is_symmetric, OptionBase::buildoption,
+                "TODO: Give some comments");
+  
+  declareOption(ol, "is_sequential", &Kernel::is_sequential, OptionBase::buildoption,
+                "To be set true if the kernel is to be used is a sequential context.\n"
+                "That is if the data matrix is meant to be grown from the previous one\n"
+                "at each call to setDataForKernelMatrix. Given this information,\n"
+                "the kernel may not recompute informations still true from the previous data matrix.");
+  
+  inherited::declareOptions(ol);
+}
 
-  real Kernel::evaluate_i_j(int i, int j) const
-  { return evaluate(data(i),data(j)); }
+void Kernel::setDataForKernelMatrix(VMat the_data)
+{ 
+  if(data.isNotNull() && is_sequential && the_data.length() < data.length())
+    PLERROR("The Kernel::is_sequential flag was set to true but the new data\n"
+            "matrix is shorter (%d) than the previous one (%d)", the_data.length(), data.length());
+  data = the_data; 
+}
 
-  real Kernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const 
-  { return evaluate(data(i),x); }
+real Kernel::evaluate_i_j(int i, int j) const
+{ return evaluate(data(i),data(j)); }
 
-  real Kernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
-  { 
-    if(is_symmetric)
-      return evaluate_i_x(i,x,squared_norm_of_x);
-    else
-      return evaluate(x,data(i));
-  }
+real Kernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const 
+{ return evaluate(data(i),x); }
+
+real Kernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
+{ 
+  if(is_symmetric)
+    return evaluate_i_x(i,x,squared_norm_of_x);
+  else
+    return evaluate(x,data(i));
+}
 
 void Kernel::computeGramMatrix(Mat K) const
 {
@@ -86,7 +105,7 @@ void Kernel::computeGramMatrix(Mat K) const
     }
   }
 }
-    
+
 void Kernel::setParameters(Vec paramvec)
 { PLERROR("setParameters(Vec paramvec) not implemented for this kernel"); }
 
@@ -585,10 +604,27 @@ void GaussianKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies
 
 void GaussianKernel::setDataForKernelMatrix(VMat the_data)
 { 
+  // Will be needed if is_sequential is true
+  int previous_data_length;
+  if(data.isNotNull()){
+    cout << "B squarednorms: " << squarednorms << endl;  
+    previous_data_length = data.length();
+  }
+
   Kernel::setDataForKernelMatrix(the_data);
   squarednorms.resize(data.length());
-  for(int i=0; i<data.length(); i++)
-    squarednorms[i] = data->dot(i,i);
+
+  int index = 0;
+  if(is_sequential)
+    index = previous_data_length;
+
+  int tmp=0;
+  for(; index<data.length(); index++){
+    tmp++;
+    squarednorms[index] = data->dot(index,index);
+  }
+  cout << "After squarednorms: " << squarednorms << endl;
+  cout << "In " << tmp << " op" << endl;
 }
 
 real GaussianKernel::evaluate(const Vec& x1, const Vec& x2) const
@@ -658,34 +694,89 @@ void GaussianKernel::build()
 
 PLEARN_IMPLEMENT_OBJECT(PrecomputedKernel, "ONE LINE DESCR", "NO HELP");
 
-PrecomputedKernel::~PrecomputedKernel()
+// PrecomputedKernel::~PrecomputedKernel()
+// {
+//   if(precomputedK)
+//     delete[] precomputedK;
+// }
+
+void PrecomputedKernel::build_()
 {
-  if(precomputedK)
-    delete[] precomputedK;
+  // If the flag was provided to only one of the kernel or the embedded, 
+  //  the two will be considered sequential
+  is_sequential = is_sequential || ker->is_sequential;
+  ker->is_sequential = is_sequential; 
 }
+
+void PrecomputedKernel::build()
+{
+  inherited::build();
+  build_();
+}
+
 
 void PrecomputedKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
-  precomputedK = 0; // not a real deep copy, but this will do for now...
+  //precomputedK = 0; // not a real deep copy, but this will do for now...
+  deepCopyField(precomputedK, copies);
 }
 
+// Old
+// void PrecomputedKernel::setDataForKernelMatrix(VMat the_data)
+// { 
+//   Kernel::setDataForKernelMatrix(the_data);
+//   ker->setDataForKernelMatrix(the_data);
+  
+//   if(precomputedK)
+//     delete[] precomputedK;
+//   int l = data.length();
+//   precomputedK = new float(l*l);
+//   float* Kdata = precomputedK;
+//   for(int i=0; i<l; i++)
+//     {
+//       cerr << "Precomputing Kernel Matrix Row " << i << " of " << l << " ..." << endl;
+//       for(int j=0; j<l; j++)
+//         Kdata[j] = (float)ker->evaluate_i_j(i,j);
+//       Kdata += l;
+//     }
+// }
+
+/*!
+  Given that the matrix is symetric, we reduce the computation from n^2 to
+  (n^2)/2 + n/2 calls to evaluate_i_j. 
+
+  Assume that n is the previous data length and n+1 the new one. 
+    Then the sequential processing (triggered by the 'is_sequential' flag)
+    will allow to reduce the computation from (n+1)^2 to 2n+1 calls to evaluate_i_j.
+    If the matrix is symetric, it goes down from ((n+1)^2)/2 + (n+1)/2 to (n+1) calls. 
+*/
 void PrecomputedKernel::setDataForKernelMatrix(VMat the_data)
 { 
+  int prev_len = 0;
+  if(data.isNotNull())
+    prev_len = data.length();
+  
   Kernel::setDataForKernelMatrix(the_data);
   ker->setDataForKernelMatrix(the_data);
-  if(precomputedK)
-    delete[] precomputedK;
-  int l = data.length();
-  precomputedK = new float(l*l);
-  float* Kdata = precomputedK;
-  for(int i=0; i<l; i++)
+  
+  int len = data.length();
+  precomputedK.resize(len); //TVec of lines!!!
+  for(int i=0; i < len; i++)
+  {
+    precomputedK[i].resize(len);
+    
+    int j=0;
+    if(is_sequential && i < prev_len)
+      j = prev_len;
+    for(; j < len; j++)
     {
-      cerr << "Precomputing Kernel Matrix Row " << i << " of " << l << " ..." << endl;
-      for(int j=0; j<l; j++)
-        Kdata[j] = (float)ker->evaluate_i_j(i,j);
-      Kdata += l;
+      if(is_symmetric && j<i)
+        precomputedK[i][j] = precomputedK[j][i];
+      else
+        precomputedK[i][j] = ker->evaluate_i_j(i,j);
     }
+  }
 }
 
 real PrecomputedKernel::evaluate(const Vec& x1, const Vec& x2) const
@@ -694,12 +785,12 @@ real PrecomputedKernel::evaluate(const Vec& x1, const Vec& x2) const
 real PrecomputedKernel::evaluate_i_j(int i, int j) const
 { 
 #ifdef BOUNDCHECK
-  if(!precomputedK)
+  if(precomputedK.isNull())
     PLERROR("In PrecomputedKernel::evaluate_i_j data must first be set with setDataForKernelMatrix");
   else if(i<0 || j<0 || i>=data.length() || j>=data.length())
     PLERROR("In PrecomputedKernel::evaluate_i_j i and j must be between 0 and data.length()");
 #endif
-  return precomputedK[i*data.length()+j];
+  return precomputedK[i][j];//[i*data.length()+j];
 }
 
 real PrecomputedKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const 
@@ -712,7 +803,7 @@ void PrecomputedKernel::write(ostream& out) const
 {
   writeHeader(out,"PrecomputedKernel");
   inherited::oldwrite(out);
-	ker->write(out);
+  ker->write(out);
   writeFooter(out,"PrecomputedKernel");
 }
 

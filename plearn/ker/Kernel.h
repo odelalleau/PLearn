@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.7 2003/08/13 08:13:17 plearner Exp $
+   * $Id: Kernel.h,v 1.8 2003/10/09 23:06:42 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,12 +59,14 @@ class Kernel: public Object
 		
 protected:
   VMat data; //!<  data for kernel matrix, which will be used for calls to evaluate_i_j and the like 
-  
+
+  static void declareOptions(OptionList& ol);
 public:
   bool is_symmetric;
+  bool is_sequential;
 
   Kernel(bool is__symmetric = true) 
-    : is_symmetric(is__symmetric) 
+    : is_symmetric(is__symmetric), is_sequential(false) 
     {}
 
   PLEARN_DECLARE_ABSTRACT_OBJECT(Kernel);
@@ -120,8 +122,8 @@ public:
   Mat estimateHistograms(Mat input_and_class, real minval, real maxval, int nbins) const;
   real test(VMat d, real threshold, real sameness_below_threshold, real sameness_above_threshold) const;
   virtual void build() {}
-	virtual void oldwrite(ostream& out) const;
-	virtual void oldread(istream& in);
+  virtual void oldwrite(ostream& out) const;
+  virtual void oldread(istream& in);
   virtual ~Kernel();
 };
 
@@ -340,7 +342,13 @@ private:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   inline real evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const
-  { return exp(sqnorm_of_diff*minus_one_over_sigmasquare); }
+  { 
+    // cout << "sqnorm_of_diff: " << sqnorm_of_diff << endl
+//          << "minus_one_over_sigmasquare: " << minus_one_over_sigmasquare << endl
+//          << "a*b: " << sqnorm_of_diff*minus_one_over_sigmasquare << endl
+//          << "res: " << exp(sqnorm_of_diff*minus_one_over_sigmasquare) << endl; 
+    return exp(sqnorm_of_diff*minus_one_over_sigmasquare); 
+  }
 
   inline real evaluateFromDotAndSquaredNorm(real sqnorm_x1, real dot_x1_x2, real sqnorm_x2) const
   { return evaluateFromSquaredNormOfDifference((sqnorm_x1+sqnorm_x2)-(dot_x1_x2+dot_x1_x2)); }
@@ -368,36 +376,40 @@ class PrecomputedKernel: public Kernel
 		
 protected:
   Ker ker; //!<  the real underlying kernel
-  float* precomputedK; //!<  the precomputed kernel matrix
+  //float* precomputedK; //!<  the precomputed kernel matrix
+  TVec<Vec> precomputedK; //!<  the precomputed kernel matrix
 
+private:
+  void build_();
+  
 public:
-  PrecomputedKernel():
-    precomputedK(0) {}
+  PrecomputedKernel() //: precomputedK(0) 
+    {}
 
   PrecomputedKernel(Ker the_ker): 
-    ker(the_ker),
-    precomputedK(0) {}
+    ker(the_ker) //, precomputedK(0) 
+    {}
 
-  virtual ~PrecomputedKernel();
+  virtual void build();
+  //virtual ~PrecomputedKernel();
 
   PLEARN_DECLARE_OBJECT(PrecomputedKernel);
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //!  This method precomputes and stores all kernel values 
   virtual void setDataForKernelMatrix(VMat the_data);
-
+  
   virtual real evaluate(const Vec& x1, const Vec& x2) const; //!<  returns K(x1,x2) 
   virtual real evaluate_i_j(int i, int j) const; //!<  returns evaluate(data(i),data(j))
   virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const; //!<  returns evaluate(data(i),x)
   virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; //!<  returns evaluate(x,data(i))
-
-    //virtual void readOptionVal(istream& in, const string& optionname);
-    static void declareOptions(OptionList &ol);
+  
+  //virtual void readOptionVal(istream& in, const string& optionname);
+  static void declareOptions(OptionList &ol);
   virtual void write(ostream& out) const;
   virtual void oldread(istream& in);
-
-  //!  simply forwards to underlying kernel
-    
+  
+  //!  simply forwards to underlying kernel  
 };
 
 DECLARE_OBJECT_PTR(PrecomputedKernel);
