@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.43 2004/04/17 00:44:55 plearner Exp $
+   * $Id: TMat_maths_impl.h,v 1.44 2004/05/04 14:45:33 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -301,6 +301,30 @@ T mean(const TVec<T>& vec, bool ignore_missing=false)
 
   if (n == 0) return MISSING_VALUE;
   return T(res/double(n));
+}
+
+template<class T>
+T harmonic_mean(const TVec<T>& vec, bool ignore_missing=false)
+{
+  #ifdef BOUNDCHECK
+  if(vec.length()==0)
+    PLERROR("IN T mean(const TVec<T>& vec) vec has zero length");
+  #endif
+  double res = 0.0;
+  int n = 0;
+  T* v = vec.data();
+  for(int i=0; i<vec.length(); i++)
+  {
+    if (!is_missing(v[i]))
+    {
+      res += 1.0/v[i];
+      n++;
+    }
+    else if (!ignore_missing) return MISSING_VALUE;
+  }
+
+  if (n == 0) return MISSING_VALUE;
+  return T(double(n)/res);
 }
 
 template<class T>

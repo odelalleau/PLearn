@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.16 2004/02/20 21:14:44 chrish42 Exp $
+* $Id: VMat_maths.cc,v 1.17 2004/05/04 14:45:38 yoshua Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -366,6 +366,7 @@ void computeInputMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat)
 {
   static Vec input;
   static Vec target;
+  static Vec offset;
   real weight;
   int l = d->length();
   int n = d->inputsize();
@@ -374,22 +375,26 @@ void computeInputMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat)
   meanvec.clear();
   covarmat.resize(n,n);
   covarmat.clear();
+  offset.resize(n);
   for(int i=0; i<l; i++)
   {
     d->getExample(i,input,target,weight);
     weightsum += weight;
     multiplyAcc(meanvec,input,weight);
+    input-=offset;
     externalProductScaleAcc(covarmat, input, input, weight);
   }
   meanvec *= 1/weightsum;
   covarmat *= 1/weightsum;
-  externalProductScaleAcc(covarmat, meanvec, meanvec, real(-1));
+  offset-=meanvec;
+  externalProductScaleAcc(covarmat, offset, offset, real(-1));
 }
 
 void computeInputMeanAndVariance(VMat d, Vec& meanvec, Vec& var)
 {
   static Vec input;
   static Vec target;
+  static Vec offset;
   real weight;
   int l = d->length();
   int n = d->inputsize();
@@ -398,20 +403,26 @@ void computeInputMeanAndVariance(VMat d, Vec& meanvec, Vec& var)
   meanvec.clear();
   var.resize(n);
   var.clear();
+  offset.resize(n);
   for(int i=0; i<l; i++)
   {
     d->getExample(i,input,target,weight);
+    if (i==0) offset<<input;
     weightsum+=weight;
     for(int i=0;i<input.size();i++)
-      var[i]+=weight*input[i]*input[i];
+    {
+      real xi = input[i]-offset[i];
+      var[i]+=weight*xi*xi;
+    }
     multiplyAcc(meanvec,input,weight);
-
   }
   meanvec /= weightsum;
   var /= weightsum;
   for(int i=0;i<input.size();i++)
-    var[i]-=meanvec[i]*meanvec[i];
-  
+  {
+    real mu=meanvec[i]-offset[i];
+    var[i]-=mu*mu;
+  }
 }
 
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.14 2004/04/26 22:03:10 yoshua Exp $ 
+ * $Id: GaussMix.cc,v 1.15 2004/05/04 14:45:38 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -136,7 +136,7 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
   real weight;
     
   Vec samples_per_cluster(nclust);
-  Vec old_clust_idx(nsamples);
+  TVec<int> old_clust_idx(nsamples);
   bool ok=false;
 
   // build a nclust-long vector of samples indexes to initialize clusters centers
@@ -183,19 +183,18 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
       newclust(bestclust)+=input;
     }
     for(int i=0; i<nclust; i++)
-      newclust(i)/=samples_per_cluster[i];
+      if (samples_per_cluster[i]>0)
+        newclust(i)/=samples_per_cluster[i];
     clust << newclust;
     ok=true;
     for(int i=0;i<nsamples;i++)
       if(old_clust_idx[i]!=clust_idx[i])
-      {ok=false;break;}
+      {
+        ok=false;
+        break;
+      }
     
   }
-
-  // ca na pas de sens de faire ca:
-  //clust.resize(nclust,samples->inputsize());
-  //fill_random_normal(clust);
-
 }
 
 void GaussMix::setMixtureTypeSpherical(int _L, int _D)
@@ -336,7 +335,7 @@ void GaussMix::setGaussianSphericalWSamples(int l, real _alpha, VMat samples)
   Vec wmeans(D);
   Vec wvar(D);
   computeInputMeanAndVariance(samples, wmeans,wvar);
-  setGaussianSpherical(l, _alpha, wmeans, mean(wvar));
+  setGaussianSpherical(l, _alpha, wmeans, harmonic_mean(wvar));
 }
 
 void GaussMix::setGaussianDiagonalWSamples(int l, real _alpha, VMat samples)
@@ -352,7 +351,7 @@ void GaussMix::setGaussianDiagonalWSamples(int l, real _alpha, VMat samples)
 void GaussMix::setGaussianGeneralWSamples(int l, real _alpha, real _sigma, int ncomponents, VMat samples)
 {
   if(ncomponents==0)
-    PLERROR("With general gaussians, you must set EM_ncomponents to a number greater than 0 before calling EM");
+    PLERROR("With general gaussians, you must set n_principal_components to a number greater than 0.");
 
   Vec wmeans(D);
   Mat wcovar(D,D);
@@ -360,9 +359,6 @@ void GaussMix::setGaussianGeneralWSamples(int l, real _alpha, real _sigma, int n
   Vec eig_values(ncomponents);
 
   computeInputMeanAndCovar(samples, wmeans,wcovar);
-//  cout<<wcovar<<endl;
-//  computeWeightedMeanAndCovar(samples.getColumn(samples.width()-1), samples.subMatColumns(0,samples.width()-1),wmeans,wcovar);
-
   eigenVecOfSymmMat(wcovar, ncomponents,  eig_values, eig_vectors); 
   setGaussianGeneral(l, _alpha, wmeans, eig_values, eig_vectors, _sigma );
 }
@@ -370,27 +366,36 @@ void GaussMix::setGaussianGeneralWSamples(int l, real _alpha, real _sigma, int n
 /*
   Use EM to fit a factor analyser on a group of (possibly) weighted samples.
 
-  For now, initialisation is done by setting the factor analyser to have a factor loading matrix (V, in this code) 
-  composed of the N greatest eigenvectors of the weighted covariance matrix  multiplied by their eigenvalue, while the psi 
-  is set to be I * EM_lambda0
+  For now, initialisation is done by setting the factor analyser to have a
+  factor loading matrix (V, in this code) composed of the N greatest
+  eigenvectors of the weighted covariance matrix multiplied by their
+  eigenvalue, while the psi (noise on each of the output dimensions) is set
+  to be I * EM_lambda0
   
-  The EM steps for a single factor analyzer are (taken from : The EM algorithm for mixtures of Factor Analyzer, 1996, Ghahramani & Hinton) :
+  The Factor Analysis model is as follows:
+    x = Vz + mu + psi, with
 
-  E-step : compute E(z|x_i) and E(zz'|x_i) for each sample given V and psi
-  M-step : Vnew = ( sum_i {x_i E(z|x_i)'} ) ( sum_l {x_l E(zz'|x_l)} )^-1
-           psi_new = 1/n diag{ sum_i{x_i x_i'} - Vnew E[x|x_i]x_i'}
+    V, a DxK matrix (factor loading matrix)
+    z, a K vector (values of the hidden factors)
+    mu, a D vector (mean of x)
+    psi, a D vector (random noise added on each output dimension).
 
-  with E(z|x) = Bx, where B is the covariance matrix of the factor analyser : (VV' + psi). 
-  and  E(zz'|x) = Var(z|x) + E(z|x)E(z|x)'  = I + BV + Bxx'B'  ( dimension is k x k )
+  The EM steps for a single factor analyzer are (taken from : The EM
+  algorithm for mixtures of Factor Analyzer, 1996, Ghahramani & Hinton) :
+
+  E-step : compute E(z|x_i) and E(zz'|x_i) for each sample x_i given V and psi
+  M-step : Vnew = ( sum_i {(x_i-mu)E(z|x_i)'} ) ( sum_l E(zz'|x_l) )^-1
+           psi_new = 1/n diag{ sum_i{(x_i-mu)(x_i-mu)'} - Vnew E(z|x_i) (x_i-mu)'}
+
+  with E(z|x) = B(x-mu), where B = V'(psi + V V')^{-1}
+  and  E(zz'|x) = Var(z|x) + E(z|x)E(z|x)'  = I - BV + B(x-mu)(x-mu)'B'  ( dimension is k x k )
 
   Using the matrix inversion lemma, we can reexpress B as
 
-  (psi^-1 - psi^-1 * V * (I + V'*psi^-1*V) ^-1 * V' * psi^-1)
+  B = V' (psi^-1 - psi^-1 * V * (I + V'*psi^-1*V)^-1 * V' * psi^-1)
 
 
 */
-  
-
 void GaussMix::setGaussianFactorWSamples(int l, real _alpha, VMat samples)
 {
 /*
@@ -402,8 +407,8 @@ void GaussMix::setGaussianFactorWSamples(int l, real _alpha, VMat samples)
   Vec target(samples->targetsize());
   real weight;
 
-  Mat eig_vectors(EM_ncomponents,D);
-  Vec eig_values(EM_ncomponents);
+  Mat eig_vectors(n_principal_components,D);
+  Vec eig_values(n_principal_components);
 
   Mat Vnew(K,D);
   
@@ -411,11 +416,11 @@ void GaussMix::setGaussianFactorWSamples(int l, real _alpha, VMat samples)
   Mat weights(nsamples, N);
 
   computeInputMeanAndCovar(samples, wmeans,wcovar);
-  eigenVecOfSymmMat(wcovar, EM_ncomponents,  eig_values, eig_vectors); 
+  eigenVecOfSymmMat(wcovar, n_principal_components,  eig_values, eig_vectors); 
   real * data = eig_vectors.data();
 
   // multiply row[i] of eig_vectors by eig_values[i]
-  for(int i=0;i<EM_ncomponents;i++)
+  for(int i=0;i<n_principal_components;i++)
     for(int j=0;j<D;j++)
       (*data++)*=eig_values[i];
 
@@ -660,7 +665,7 @@ void GaussMix::EMFactorAnalyser(VMat samples, real relativ_change_stop_value)
 
   real scale=pow(product(diag(cX)), 1.0/D);
   
-  V.resize(EM_ncomponents * L , D);
+  V.resize(n_principal_components * L , D);
   for
 fill_random_normal(Vconst Mat& dest, real mean=0, real sdev=1);  
 
@@ -742,7 +747,7 @@ void GaussMix::train()
                                                samples.subMatColumns(0,samples->inputsize()), 
                                                weights.column(i)));
     weighted_samples->defineSizes(samples->inputsize(),0,1);
-    setGaussianGeneralWSamples(i, alphas[i],EM_lambda0,EM_ncomponents,weighted_samples);
+    setGaussianGeneralWSamples(i, alphas[i],EM_lambda0,n_principal_components,weighted_samples);
   }
 
   // build();
@@ -798,13 +803,13 @@ void GaussMix::train()
           wvec[j] *= weights(j,i);
         VMat weighted_samples(ConcatColumnsVMatrix(samples.subMatColumns(0,samples->inputsize()), wvec.toMat(nsamples,1)));
         weighted_samples->defineSizes(samples->inputsize(),0,1);
-        setGaussianGeneralWSamples(i, alphas[i],EM_lambda0,EM_ncomponents,weighted_samples);
+        setGaussianGeneralWSamples(i, alphas[i],EM_lambda0,n_principal_components,weighted_samples);
       }
       else
       {
         VMat weighted_samples(ConcatColumnsVMatrix(samples, weights.column(i)));
         weighted_samples->defineSizes(samples.width(),0,1);
-        setGaussianGeneralWSamples(i, alphas[i],EM_lambda0,EM_ncomponents,weighted_samples);
+        setGaussianGeneralWSamples(i, alphas[i],EM_lambda0,n_principal_components,weighted_samples);
       }
     }
     
@@ -1207,7 +1212,7 @@ void GaussMix::forget()
   type="Unknown";
   L=D=0;
   avg_K=0;
-  EM_ncomponents = 0;
+  n_principal_components = 0;
   EM_lambda0 = 0;
 
   initArrays();

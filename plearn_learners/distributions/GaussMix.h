@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.9 2004/04/26 19:50:21 yoshua Exp $ 
+   * $Id: GaussMix.h,v 1.10 2004/05/04 14:45:38 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -171,7 +171,7 @@ public:
   int D;
 
   // used if type=="General". Number of components and lambda0 used to perform EM training.
-  int EM_ncomponents;
+  int n_principal_components;
   real EM_lambda0;
 
   real relativ_change_stop_value;
