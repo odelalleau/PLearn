@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.2 2002/10/18 21:03:04 ducharme Exp $
+   * $Id: MatIO.h,v 1.3 2003/02/13 21:45:24 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -160,104 +160,104 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames)
   string line;
 
   while(in.peek()=='#')
-    {
-      getline(in, line);
-      could_be_old_amat = false;
+  {
+    getline(in, line);
+    could_be_old_amat = false;
  
-      unsigned int pos=line.find(":");
-      if(pos!=string::npos)
-        {
-          string sub=line.substr(0,pos);
-          if(sub=="#size") // we've found the dimension specification line
-            {
-              string siz=removeblanks((line.substr(pos)).substr(1));
-              vector<string> dim = split(siz," ");
-              if(dim.size()!=2)PLERROR("I need exactly 2 dimensions for matrix");
-              length = toint(dim[0]);
-              width = toint(dim[1]);
-            }
-          else if(sub=="#") // we've found the fieldnames specification line
-            {
-              string fnl=line.substr(pos).substr(1);
-              fieldnames = split(fnl," ");
-              width=fieldnames.size();
-            }              
-        }
-      in >> ws;
+    unsigned int pos=line.find(":");
+    if(pos!=string::npos)
+    {
+      string sub=line.substr(0,pos);
+      if(sub=="#size") // we've found the dimension specification line
+      {
+        string siz=removeblanks((line.substr(pos)).substr(1));
+        vector<string> dim = split(siz," ");
+        if(dim.size()!=2)  PLERROR("I need exactly 2 dimensions for matrix");
+        length = toint(dim[0]);
+        width = toint(dim[1]);
+      }
+      else if(sub=="#") // we've found the fieldnames specification line
+      {
+        string fnl=line.substr(pos).substr(1);
+        fieldnames = split(fnl," ");
+        width=fieldnames.size();
+      }              
     }
+    in >> ws;
+  }
 
   if(length==-1)  // still looking for size info...
-    {      
-      string line;
-      getNextNonBlankLine(in,line);
-      if(line=="")
-      {
-        width=length=0;
-        in.seekg(0);
-        in.clear();
-        could_be_old_amat=false; 
-      }
-      int nfields1 = split(line).size();
-      getNextNonBlankLine(in,line);
-      if(line=="")
-      {
-        length=1;
-        width=nfields1;
-        in.seekg(0);
-        in.clear();
-        could_be_old_amat=false; 
-      }
-      int nfields2 = split(line).size();
-      int guesslength = countNonBlankLinesOfFile(filename);    
-      real a, b;
-      if(could_be_old_amat && nfields1==2) // could be an old .amat with first 2 numbers being length width
-        {
-          in.seekg(0);
-          in.clear();
-          in >> a >> b;
-          if(guesslength == int(a)+1 && real(int(a))==a && real(int(b))==b && a>0 && b>0 && int(b)==nfields2) // it's clearly an old .amat
-            {
-              length = int(a);
-              width = int(b);
-            }
-        }
-
-      if(length==-1) // still don't know size info...
-        {
-          if(nfields1==nfields2) // looks like a plain ascii file
-            {
-              length=guesslength;
-              if(width!=-1 && width!=nfields1)
-		{
-		  PLWARNING("In loadAscii:  Number of fieldnames and width mismatch in file %s.  "
-			    "Replacing fieldnames by 'Field-0', 'Field-1', ...", filename.c_str());
-		  fieldnames.resize(nfields1);
-		  for(int i= 0; i < nfields1; ++i)
-		    fieldnames[i]= string("Field-") + tostring(i);
-		}
-              width = nfields1;
-              in.seekg(0); 
-              in.clear();
-            }
-          else if (real(int(a))==a && real(int(b))==b && a>0 && b>0 && int(b)==nfields2)
-            {
-              length = int(a);
-              width = int(b);
-            }
-        }
+  {
+    string line;
+    getNextNonBlankLine(in,line);
+    if(line=="")
+    {
+      width=length=0;
+      in.seekg(0);
+      in.clear();
+      could_be_old_amat=false; 
     }
+    int nfields1 = split(line).size();
+    getNextNonBlankLine(in,line);
+    if(line=="")
+    {
+      length=1;
+      width=nfields1;
+      in.seekg(0);
+      in.clear();
+      could_be_old_amat=false; 
+    }
+    int nfields2 = split(line).size();
+    int guesslength = countNonBlankLinesOfFile(filename);    
+    real a, b;
+    if(could_be_old_amat && nfields1==2) // could be an old .amat with first 2 numbers being length width
+    {
+      in.seekg(0);
+      in.clear();
+      in >> a >> b;
+      if(guesslength == int(a)+1 && real(int(a))==a && real(int(b))==b && a>0 && b>0 && int(b)==nfields2) // it's clearly an old .amat
+      {
+        length = int(a);
+        width = int(b);
+      }
+    }
+
+    if(length==-1) // still don't know size info...
+    {
+      if(nfields1==nfields2) // looks like a plain ascii file
+      {
+        length=guesslength;
+        if(width!=-1 && width!=nfields1)
+        {
+          PLWARNING("In loadAscii:  Number of fieldnames and width mismatch in file %s.  "
+              "Replacing fieldnames by 'Field-0', 'Field-1', ...", filename.c_str());
+          fieldnames.resize(nfields1);
+          for(int i= 0; i < nfields1; ++i)
+            fieldnames[i]= string("Field-") + tostring(i);
+        }
+        width = nfields1;
+        in.seekg(0); 
+        in.clear();
+      }
+      else if (real(int(a))==a && real(int(b))==b && a>0 && b>0 && int(b)==nfields2)
+      {
+        length = int(a);
+        width = int(b);
+      }
+    }
+  }
 
   if(length==-1)
     PLERROR("In loadAscii: trying to load but couldn't determine file format automatically for %s",filename.c_str());
 
   mat.resize(length,width);
   for(int i=0; i<length; i++)
-    {
-      T* mat_i = mat[i];
-      skipBlanksAndComments(in);
-      for(int j=0; j<width; j++)
-        in >> mat_i[j];
-    }
+  {
+    T* mat_i = mat[i];
+    skipBlanksAndComments(in);
+    for(int j=0; j<width; j++)
+      in >> mat_i[j];
+  }
 }
 
 template<class T>
@@ -288,21 +288,21 @@ void saveAscii(const string& filename, const TMat<T>& mat, const TVec<string>& f
   out << "#size: "<< mat.length() << ' ' << mat.width() << endl;
   out.precision(15);
   if(fieldnames.size()>0)
-    {
-      out << "#: ";
-      for(int k=0; k<fieldnames.size(); k++)
-	//there must not be any space in a field name...
-        out << space_to_underscore(fieldnames[k]) << ' ';
-      out << endl;
-    }
+  {
+    out << "#: ";
+    for(int k=0; k<fieldnames.size(); k++)
+      //there must not be any space in a field name...
+      out << space_to_underscore(fieldnames[k]) << ' ';
+    out << endl;
+  }
 
   for(int i=0; i<mat.length(); i++) 
-    {
-      const T* row_i = mat[i];
-      for(int j=0; j<mat.width(); j++)
-        out << row_i[j] << ' ';
-      out << '\n';
-    }
+  {
+    const T* row_i = mat[i];
+    for(int j=0; j<mat.width(); j++)
+      out << row_i[j] << ' ';
+    out << '\n';
+  }
 }
   
 template<class T> 

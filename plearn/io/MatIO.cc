@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: MatIO.cc,v 1.2 2003/02/13 21:45:24 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -94,17 +94,17 @@ void loadMat(const string& file_name, TMat<float>& mat)
   else if (ext==".pmat" || ext==".lpmat" || ext==".bpmat")
     loadPMat(file_name,mat);
   else // try to guess the format from the header
-    {
-      ifstream in(file_name.c_str());
-      if(!in)
-        PLERROR("In loadMat: could not open file %s",file_name.c_str());      
-      char c = in.get();
-      in.close();
-      if(c=='M') // it's most likely a .pmat format
-        loadPMat(file_name,mat);
-      else 
-        loadAscii(file_name,mat);
-    }
+  {
+    ifstream in(file_name.c_str());
+    if(!in)
+      PLERROR("In loadMat: could not open file %s",file_name.c_str());      
+    char c = in.get();
+    in.close();
+    if(c=='M') // it's most likely a .pmat format
+      loadPMat(file_name,mat);
+    else 
+      loadAscii(file_name,mat);
+  }
 }
 
 void loadMat(const string& file_name, TMat<double>& mat)
@@ -116,17 +116,17 @@ void loadMat(const string& file_name, TMat<double>& mat)
   else if (ext==".pmat" || ext==".lpmat" || ext==".bpmat")
     loadPMat(file_name,mat);
   else // try to guess the format from the header
-    {
-      ifstream in(file_name.c_str());
-      if(!in)
-        PLERROR("In loadMat: could not open file %s",file_name.c_str());      
-      char c = in.get();
-      in.close();
-      if(c=='M') // it's most likely a .pmat format
-        loadPMat(file_name,mat);
-      else 
-        loadAscii(file_name,mat);
-    }
+  {
+    ifstream in(file_name.c_str());
+    if(!in)
+      PLERROR("In loadMat: could not open file %s",file_name.c_str());      
+    char c = in.get();
+    in.close();
+    if(c=='M') // it's most likely a .pmat format
+      loadPMat(file_name,mat);
+    else 
+      loadAscii(file_name,mat);
+  }
 }
 
 
@@ -182,10 +182,10 @@ void savePVec(const string& filename, const TVec<float>& vec)
 
   // write the data to the file
   if(0 < vec.length())
-    {
-      const float* p = vec.data();
-      fwrite(p,sizeof(float),vec.length(),f);
-    }
+  {
+    const float* p = vec.data();
+    fwrite(p,sizeof(float),vec.length(),f);
+  }
 
   fclose(f);
 }
@@ -215,10 +215,10 @@ void savePVec(const string& filename, const TVec<double>& vec)
 
   // write the data to the file
   if(0 < vec.length())
-    {
-      const double* p = vec.data();
-      fwrite(p,sizeof(double),vec.length(),f);
-    }
+  {
+    const double* p = vec.data();
+    fwrite(p,sizeof(double),vec.length(),f);
+  }
 
   fclose(f);
 }
@@ -252,20 +252,20 @@ void loadPVec(const string& filename, TVec<float>& vec)
     PLERROR("In loadPVec, wrong header for PLearn binary vector format. Please use checkheader (in PLearn/Scripts) to check the file.");
 
   if (strcmp(datatype,"FLOAT")==0)
-    {
-      float* p = vec.data();
-      fread_float(f,p,vec.length(),is_file_bigendian);
-    }
+  {
+    float* p = vec.data();
+    fread_float(f,p,vec.length(),is_file_bigendian);
+  }
 
   else if (strcmp(datatype,"DOUBLE")==0)
-    {
-      double* buffer = new double[vec.length()];
-      float* p = vec.data();
-      fread_double(f,buffer,vec.length(),is_file_bigendian);
-      for(int j=0; j<vec.length(); j++)
-        p[j] = float(buffer[j]);
-      delete[] buffer;
-    }
+  {
+    double* buffer = new double[vec.length()];
+    float* p = vec.data();
+    fread_double(f,buffer,vec.length(),is_file_bigendian);
+    for(int j=0; j<vec.length(); j++)
+      p[j] = float(buffer[j]);
+    delete[] buffer;
+  }
 
   else
     PLERROR("In loadPVec, wrong header for PLearn binary vector format. Please use checkheader (in PLearn/Scripts) to check the file.");
@@ -301,27 +301,27 @@ void loadPVec(const string& filename, TVec<double>& vec)
   else
     PLERROR("In loadPVec, wrong header for PLearn binary vector format. Please use checkheader (in PLearn/Scripts) to check the file.");
 
-  if(0 < the_length)
+  if (0 < the_length)
+  {
+    if (strcmp(datatype,"FLOAT")==0)
     {
-      if (strcmp(datatype,"FLOAT")==0)
-	{
-	  float* buffer = new float[vec.length()];
-	  double* p = vec.data();
-	  fread_float(f,buffer,vec.length(),is_file_bigendian);
-	  for(int j=0; j<vec.length(); j++)
-	    p[j] = double(buffer[j]);
-	  delete[] buffer;
-	}
-      
-      else if (strcmp(datatype,"DOUBLE")==0)
-	{
-	  double* p = vec.data();
-	  fread_double(f,p,vec.length(),is_file_bigendian);
-	}
-      
-      else
-	PLERROR("In loadPVec, wrong header for PLearn binary vector format. Please use checkheader (in PLearn/Scripts) to check the file.");
+      float* buffer = new float[vec.length()];
+      double* p = vec.data();
+      fread_float(f,buffer,vec.length(),is_file_bigendian);
+      for(int j=0; j<vec.length(); j++)
+        p[j] = double(buffer[j]);
+      delete[] buffer;
     }
+
+    else if (strcmp(datatype,"DOUBLE")==0)
+    {
+      double* p = vec.data();
+      fread_double(f,p,vec.length(),is_file_bigendian);
+    }
+      
+    else
+      PLERROR("In loadPVec, wrong header for PLearn binary vector format. Please use checkheader (in PLearn/Scripts) to check the file.");
+  }
   fclose(f);
 }
 
@@ -351,10 +351,10 @@ void savePMat(const string& filename, const TMat<float>& mat)
 
   // write the data to the file
   for (int i=0; i<mat.length(); i++) 
-    {
-      const float* p = mat[i];
-      fwrite(p,sizeof(float),mat.width(),f);
-    }
+  {
+    const float* p = mat[i];
+    fwrite(p,sizeof(float),mat.width(),f);
+  }
   fclose(f);
 }
 
@@ -383,10 +383,10 @@ void savePMat(const string& filename, const TMat<double>& mat)
 
   // write the data to the file
   for (int i=0; i<mat.length(); i++) 
-    {
-      const double* p = mat[i];
-      fwrite(p,sizeof(double),mat.width(),f);
-    }
+  {
+    const double* p = mat[i];
+    fwrite(p,sizeof(double),mat.width(),f);
+  }
   fclose(f);
 }
 
@@ -420,25 +420,25 @@ void loadPMat(const string& filename, TMat<float>& mat)
     PLERROR("In loadPMat, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.");
 
   if (strcmp(datatype,"FLOAT")==0)
+  {
+    for (int i=0; i<mat.length(); i++)
     {
-      for (int i=0; i<mat.length(); i++)
-        {
-          float* p = mat[i];
-          fread_float(f,p,mat.width(),is_file_bigendian);
-        }
+      float* p = mat[i];
+      fread_float(f,p,mat.width(),is_file_bigendian);
     }
+  }
   else if (strcmp(datatype,"DOUBLE")==0)
+  {
+    double* buffer = new double[mat.width()];
+    for (int i=0; i<mat.length(); i++)
     {
-      double* buffer = new double[mat.width()];
-      for (int i=0; i<mat.length(); i++)
-        {
-          float* p = mat[i];
-          fread_double(f,buffer,mat.width(),is_file_bigendian);
-          for(int j=0; j<mat.width(); j++)
-            p[j] = float(buffer[j]);
-        }
-      delete[] buffer;
+      float* p = mat[i];
+      fread_double(f,buffer,mat.width(),is_file_bigendian);
+      for(int j=0; j<mat.width(); j++)
+        p[j] = float(buffer[j]);
     }
+    delete[] buffer;
+  }
 
   else
     PLERROR("In loadPMat, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.");
@@ -476,26 +476,26 @@ void loadPMat(const string& filename, TMat<double>& mat)
     PLERROR("In loadPMat, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.");
 
   if (strcmp(datatype,"FLOAT")==0)
+  {
+    float* buffer = new float[mat.width()];
+    for (int i=0; i<mat.length(); i++)
     {
-      float* buffer = new float[mat.width()];
-      for (int i=0; i<mat.length(); i++)
-        {
-          double* p = mat[i];
-          fread_float(f,buffer,mat.width(),is_file_bigendian);
-          for(int j=0; j<mat.width(); j++)
-            p[j] = double(buffer[j]);
-        }
-      delete[] buffer;
+      double* p = mat[i];
+      fread_float(f,buffer,mat.width(),is_file_bigendian);
+      for(int j=0; j<mat.width(); j++)
+        p[j] = double(buffer[j]);
     }
+    delete[] buffer;
+  }
 
   else if (strcmp(datatype,"DOUBLE")==0)
+  {
+    for (int i=0; i<mat.length(); i++)
     {
-      for (int i=0; i<mat.length(); i++)
-        {
-          double* p = mat[i];
-          fread_double(f,p,mat.width(),is_file_bigendian);
-        }
+      double* p = mat[i];
+      fread_double(f,p,mat.width(),is_file_bigendian);
     }
+  }
 
   else
     PLERROR("In loadPMat, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.");
@@ -518,64 +518,64 @@ void newLoadAscii(const string& filename, TMat<double>& mat)
     c = in.get();
 
   if(c=='#') // starts with a comment
-    {
-      could_be_old_amat = false;
+  {
+    could_be_old_amat = false;
 
-      // If it's followed by another # and only 2 numbers before the end of line, it's a new .amat format
-      if(in.get()=='#')
-        {
-          in >> length;
-          in >> width;
-        }
-      c = in.get();
-      while(c==' ' || c=='\t')
-        c = in.get();
-      if(c!='\n' && c!='\r') // it wasn't a new .amat format after all... 
-        length = -1;
+    // If it's followed by another # and only 2 numbers before the end of line, it's a new .amat format
+    if(in.get()=='#')
+    {
+      in >> length;
+      in >> width;
     }
+    c = in.get();
+    while(c==' ' || c=='\t')
+      c = in.get();
+    if(c!='\n' && c!='\r') // it wasn't a new .amat format after all... 
+      length = -1;
+  }
 
   if(length==-1)  // still looking for size info...
-    {      
-      in.unget();
-      string line;
-      getNextNonBlankLine(in,line);
-      int nfields1 = split(line).size();
-      getNextNonBlankLine(in,line);
-      int nfields2 = split(line).size();
-      if(could_be_old_amat && nfields1==2) // could be an old .amat with first 2 numbers being length width
-        {
-          in.seekg(0);
-          real a, b;
-          in >> a >> b;
-          if(real(int(a))==a && real(int(b))==b && a>0 && b>0 && int(b)==nfields2) // it's clearly an old .amat
-            {
-              length = int(a);
-              width = int(b);
-            }
-        }
-
-      if(length==-1) // still don't know size info...
-        {
-          if(nfields1==nfields2) // looks like a plain ascii file
-            {
-              length = countNonBlankLinesOfFile(filename);
-              width = nfields1;
-              in.seekg(0); 
-            }
-        }
+  {      
+    in.unget();
+    string line;
+    getNextNonBlankLine(in,line);
+    int nfields1 = split(line).size();
+    getNextNonBlankLine(in,line);
+    int nfields2 = split(line).size();
+    if(could_be_old_amat && nfields1==2) // could be an old .amat with first 2 numbers being length width
+    {
+      in.seekg(0);
+      real a, b;
+      in >> a >> b;
+      if(real(int(a))==a && real(int(b))==b && a>0 && b>0 && int(b)==nfields2) // it's clearly an old .amat
+      {
+        length = int(a);
+        width = int(b);
+      }
     }
+
+    if(length==-1) // still don't know size info...
+    {
+      if(nfields1==nfields2) // looks like a plain ascii file
+      {
+        length = countNonBlankLinesOfFile(filename);
+        width = nfields1;
+        in.seekg(0); 
+      }
+    }
+  }
 
   if(length==-1)
     PLERROR("In loadAscii: couldn't determine file format automatically");
 
   mat.resize(length,width);
   for(int i=0; i<length; i++)
-    {
-      real* mat_i = mat[i];
-      skipBlanks(in);
-      for(int j=0; j<width; j++)
-        in >> mat_i[j];
-    }
+  {
+    real* mat_i = mat[i];
+    skipBlanks(in);
+    for(int j=0; j<width; j++)
+      in >> mat_i[j];
+  }
 
 }
 */
@@ -601,12 +601,12 @@ void saveGnuplot(const string& filename, const Mat& mat)
     PLERROR("In saveGnuplot, couldn't open %s for writing.",filename.c_str());
   out.flags(ios::left);
   for(int i=0; i<mat.length(); i++)
-    {
-      const real* m_i = mat[i];
-      for(int j=0; j<mat.width(); j++)
-        out << setw(11) << m_i[j] << ' ';
-      out << "\n";
-    }
+  {
+    const real* m_i = mat[i];
+    for(int j=0; j<mat.width(); j++)
+      out << setw(11) << m_i[j] << ' ';
+    out << "\n";
+  }
   out.flush();
 }
 
@@ -622,45 +622,45 @@ void loadGnuplot(const string& filename, Mat& mat)
   int ncols = 0;
   in.getline(buf,sizeof(buf)-1);
   while(in)
+  {
+    int pos=0;
+    while(buf[pos]==' ' || buf[pos]=='\t')
+      pos++;
+    if(buf[pos]!='#' && buf[pos]!='\n' && buf[pos]!='\r')
     {
-      int pos=0;
-      while(buf[pos]==' ' || buf[pos]=='\t')
-        pos++;
-      if(buf[pos]!='#' && buf[pos]!='\n' && buf[pos]!='\r')
+      nrows++;
+      if(ncols==0)
+      {
+        istrstream inputline(buf);
+        real value;
+        while(inputline)
         {
-          nrows++;
-          if(ncols==0)
-            {
-              istrstream inputline(buf);
-              real value;
-              while(inputline)
-                {
-                  inputline >> value;
-                  ncols++;
-                }
-              ncols--; // correct count
-            }
+          inputline >> value;
+          ncols++;
         }
-      in.getline(buf,sizeof(buf)-1);
+        ncols--; // correct count
+      }
     }
+    in.getline(buf,sizeof(buf)-1);
+  }
   in.close();
   mat.resize(nrows,ncols);
   in.open(filename.c_str());
   for(int i=0; i<nrows; i++)
+  {
+    char firstchar = '#';
+    while(firstchar == '#' || firstchar == '\n' || firstchar=='\r')
     {
-      char firstchar = '#';
-      while(firstchar == '#' || firstchar == '\n' || firstchar=='\r')
-        {
-          in.getline(buf,sizeof(buf)-1);
-          int pos=0;
-          while(buf[pos]==' ' || buf[pos]=='\t')
-            pos++;
-          firstchar = buf[pos];
-        }
-      istrstream inputline(buf);      
-      for(int j=0; j<ncols; j++)
-        inputline >> mat(i,j);
+      in.getline(buf,sizeof(buf)-1);
+      int pos=0;
+      while(buf[pos]==' ' || buf[pos]=='\t')
+        pos++;
+      firstchar = buf[pos];
     }
+    istrstream inputline(buf);      
+    for(int j=0; j<ncols; j++)
+      inputline >> mat(i,j);
+  }
   in.close();
 }
 
@@ -695,13 +695,13 @@ void loadAsciiWithoutSize(const string& filename, const Vec& vec)
 
   real* p = vec.data();
   for (int i=0;i<vec.length();i++,p++)
-    {
+  {
 #ifdef USEDOUBLE
-      fscanf(f,"%lf",p);
+    fscanf(f,"%lf",p);
 #else
-      fscanf(f,"%f",p);
+    fscanf(f,"%f",p);
 #endif
-    }
+  }
 }
 
 void saveAsciiWithoutSize(const string& filename, const Mat& mat)
@@ -735,15 +735,15 @@ void loadAsciiWithoutSize(const string& filename, const Mat& mat)
     PLERROR("In loadAsciiWithoutSize, the size of the matrix is not defined yet");
 
   for(int i=0; i<mat.length(); i++)
-    {
-      real* row_i = mat[i];
-      for(int j=0; j<mat.width(); j++)
+  {
+    real* row_i = mat[i];
+    for(int j=0; j<mat.width(); j++)
 #ifdef USEDOUBLE
-        fscanf(f,"%lf",&row_i[j]);
+      fscanf(f,"%lf",&row_i[j]);
 #else
-        fscanf(f,"%f",&row_i[j]);
+      fscanf(f,"%f",&row_i[j]);
 #endif
-    }
+  }
 }
 
 
@@ -928,11 +928,13 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols)
 
   /*  first figure out number of columns and number of rows  */
   
-  while (!feof(f)) {
+  while (!feof(f))
+  {
     fgets(buffer,convert_UCIMLDB_BUF_LEN,f);
     if (n_rows == -1) {
       /*  read number of columns  */
-      while ((cp=strchr(cp,','))) {
+      while ((cp=strchr(cp,',')))
+      {
         cp++;
         n_cols++;
       }
@@ -946,16 +948,18 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols)
   symbols = (char ***)calloc(n_cols,sizeof(char **));
   n_symbols = (int *)calloc(n_cols,sizeof(int));
   if(to_symbols)
-    {
-      *to_symbols = symbols;
-      *to_n_symbols = n_symbols;
-    }
+  {
+    *to_symbols = symbols;
+    *to_n_symbols = n_symbols;
+  }
   f = fopen(filename.c_str(),"r");
-  for (i=0;i<n_rows;i++) {
+  for (i=0;i<n_rows;i++)
+  {
     fgets(buffer,convert_UCIMLDB_BUF_LEN,f);
     line_len=strlen(buffer);
     cp=word=buffer;
-    for (j=0;j<n_cols;j++) {
+    for (j=0;j<n_cols;j++)
+    {
       /*  find next end of word  */
       while ((*cp!=',' && *cp!='\n') && cp<=buffer+line_len) cp++;
       *cp=0;
@@ -964,7 +968,8 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols)
       while (!isalpha((int)*cp2) && *cp2!='?' && cp2 < cp) cp2++;
       if (isalpha((int)*cp2) && *cp2!='?') { 
         /*  yes, non-misisng symbolic character was found:  */
-        if (symbols[j]) { 
+        if (symbols[j])
+        { 
           /*  we already had found symbols in this column  */
           int w=0;
           while (symbols[j][w] &&  /*  look for this symbol  */
@@ -972,13 +977,16 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols)
                  w<n_symbols[j]) w++;
           if (w==n_rows)
             PLERROR("logic error in loadUCIMLDB");
-          if (!symbols[j][w]) {
+          if (!symbols[j][w])
+          {
             /*  new symbol  */
             symbols[j][w] = (char *)calloc(strlen(word)+1,sizeof(char));
             strcpy(symbols[j][w],word);
             n_symbols[j]++;
           }
-        } else {
+        }
+        else
+        {
           /*  it's the first time we find a symbol in this column  */
           symbols[j] = (char **)calloc(n_rows,sizeof(char *));
           symbols[j][0] = (char *)calloc(strlen(word)+1,sizeof(char));
@@ -1001,13 +1009,15 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols)
   {
     p = mat.data();
     f = fopen(filename.c_str(),"r");
-    for (i=0;i<n_rows;i++) {
+    for (i=0;i<n_rows;i++)
+    {
       /*  read a row  */
       fgets(buffer,convert_UCIMLDB_BUF_LEN,f);
       line_len=strlen(buffer);
       cp=word=buffer;
       /*  interpret a row  */
-      for (j=0;j<n_cols;j++) {
+      for (j=0;j<n_cols;j++)
+      {
         /*  find end of word  */
         while ((*cp!=',' && *cp!='\n') && cp<=buffer+line_len) cp++;
         *cp=0;
@@ -1025,7 +1035,9 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols)
             if (w==n_rows || !symbols[j][w])
               PLERROR("logic error in loadUCIMLDB");
             *p = w;
-          } else {
+          }
+          else
+          {
             /*  read numeric data  */
 #ifdef USEDOUBLE
             sscanf(word,"%lf",p);
@@ -1041,16 +1053,16 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols)
   }
 
   if(!to_symbols)
+  {
+    for (int i=0; i<mat.width(); i++) 
     {
-      for (int i=0; i<mat.width(); i++) 
-        {
-          for (int j=0; j<n_symbols[i]; j++)
-            free(symbols[i][j]);
-          free(symbols[i]);
-        }
-      free(symbols);
-      free(n_symbols);
+      for (int j=0; j<n_symbols[i]; j++)
+        free(symbols[i][j]);
+      free(symbols[i]);
     }
+    free(symbols);
+    free(n_symbols);
+  }
 #undef convert_UCIMLDB_BUF_LEN
 
   return mat;
@@ -1080,18 +1092,23 @@ Mat loadSTATLOG(const string& filename, char ****to_symbols, int **to_n_symbols)
 
   /*  first figure out number of columns and number of rows  */
    
-  while (!feof(f)) {
+  while (!feof(f))
+  {
     fgets(buffer,convert_STATLOG_BUF_LEN,f);
-    if (n_rows == -1) {
+    if (n_rows == -1)
+    {
       /*  read number of columns  */
       while (*cp == ' ')  
         cp++;   /*  jumping over blancs at the start of a new line  */
-      while ( *cp!=0 && *cp!='\n' ) {
-        while ( *cp != 0 && *cp != '\n' && *cp != ' ')  {
+      while ( *cp!=0 && *cp!='\n' )
+      {
+        while ( *cp != 0 && *cp != '\n' && *cp != ' ')
+        {
           cp++; /*  read one colomn  */
         }
         n_cols++;
-        while ( *cp != 0 && *cp != '\n' && *cp == ' ') {
+        while ( *cp != 0 && *cp != '\n' && *cp == ' ')
+        {
           cp++;   /*  jumping over blancs separating columns  */  
         }              
       }
@@ -1104,19 +1121,22 @@ Mat loadSTATLOG(const string& filename, char ****to_symbols, int **to_n_symbols)
   /*  figure out the set of symbols used for each symbolic row, if any  */
   symbols = (char ***)calloc(n_cols,sizeof(char **));
   n_symbols = (int *)calloc(n_cols,sizeof(int));
-  if(to_symbols)
-    {
-      *to_symbols = symbols;
-      *to_n_symbols = n_symbols;
-    }
+  if (to_symbols)
+  {
+    *to_symbols = symbols;
+    *to_n_symbols = n_symbols;
+  }
   f = fopen(filename.c_str(),"r");
-  for (i=0;i<n_rows;i++) {
+  for (i=0;i<n_rows;i++)
+  {
     fgets(buffer,convert_STATLOG_BUF_LEN,f);
     line_len=strlen(buffer);
     cp=word=buffer;
-    for (j=0;j<n_cols;j++) {
+    for (j=0;j<n_cols;j++)
+    {
       /*  jumping over blancs at the start of a new line  */ 
-      while (*cp == ' ')  {
+      while (*cp == ' ')
+      {
         cp++;   
         word++;
       } 
@@ -1126,7 +1146,8 @@ Mat loadSTATLOG(const string& filename, char ****to_symbols, int **to_n_symbols)
       /*  is this symbolic?  */
       cp2=word;
       while (!isalpha((int)*cp2) && *cp2!='?' && cp2 < cp) cp2++;
-      if (isalpha((int)*cp2) && *cp2!='?') { 
+      if (isalpha((int)*cp2) && *cp2!='?')
+      { 
         /*  yes, non-misisng symbolic character was found:  */
         if (symbols[j]) { 
           /*  we already had found symbols in this column  */
@@ -1136,13 +1157,16 @@ Mat loadSTATLOG(const string& filename, char ****to_symbols, int **to_n_symbols)
                  w<n_symbols[j]) w++;
           if (w==n_rows)
             PLERROR("logic error in loadSTATLOG");
-          if (!symbols[j][w]) {
+          if (!symbols[j][w])
+          {
             /*  new symbol  */
             symbols[j][w] = (char *)calloc(strlen(word)+1,sizeof(char));
             strcpy(symbols[j][w],word);
             n_symbols[j]++;
           }
-        } else {
+        }
+        else
+        {
           /*  it's the first time we find a symbol in this column  */
           symbols[j] = (char **)calloc(n_rows,sizeof(char *));
           symbols[j][0] = (char *)calloc(strlen(word)+1,sizeof(char));
@@ -1165,15 +1189,18 @@ Mat loadSTATLOG(const string& filename, char ****to_symbols, int **to_n_symbols)
   {
     p = mat.data();
     f = fopen(filename.c_str(),"r");
-    for (i=0;i<n_rows;i++) {
+    for (i=0;i<n_rows;i++)
+    {
       /*  read a row  */
       fgets(buffer,convert_STATLOG_BUF_LEN,f);
       line_len=strlen(buffer);
       cp=word=buffer;
       /*  interpret a row  */
-      for (j=0;j<n_cols;j++) {
+      for (j=0;j<n_cols;j++)
+      {
         /*  jumping over blancs at the start of a new line  */ 
-        while (*cp == ' ')  {
+        while (*cp == ' ')
+        {
           cp++;   
           word++;
         } 
@@ -1194,7 +1221,9 @@ Mat loadSTATLOG(const string& filename, char ****to_symbols, int **to_n_symbols)
             if (w==n_rows || !symbols[j][w])
               PLERROR("logic error in loadSTATLOG");
             *p = w;
-          } else {
+          }
+          else
+          {
             /*  read numeric data  */
 #ifdef USEDOUBLE
             sscanf(word,"%lf",p);
@@ -1210,16 +1239,16 @@ Mat loadSTATLOG(const string& filename, char ****to_symbols, int **to_n_symbols)
   }
 
   if(!to_symbols)
+  {
+    for (int i=0; i<mat.width(); i++) 
     {
-      for (int i=0; i<mat.width(); i++) 
-        {
-          for (int j=0; j<n_symbols[i]; j++)
-            free(symbols[i][j]);
-          free(symbols[i]);
-        }
-      free(symbols);
-      free(n_symbols);
+      for (int j=0; j<n_symbols[i]; j++)
+        free(symbols[i][j]);
+      free(symbols[i]);
     }
+    free(symbols);
+    free(n_symbols);
+  }
 #undef convert_STATLOG_BUF_LEN
 
   return mat;
@@ -1252,7 +1281,5 @@ void loadJPEGrgb(const string& jpeg_filename, Mat& rgbmat, int& row_size, int sc
   system(command);
   row_size = w;
 }
-
-
 
 %> // end of namespace PLearn

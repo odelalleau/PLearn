@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: FileVMatrix.cc,v 1.2 2003/02/13 21:45:28 ducharme Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -72,23 +72,23 @@ FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
 #ifdef USEFLOAT
   file_is_float = true;
 #ifdef LITTLEENDIAN
- file_is_bigendian = false; 
- sprintf(header,"MATRIX %d %d FLOAT LITTLE_ENDIAN", length_, width_);
+  file_is_bigendian = false; 
+  sprintf(header,"MATRIX %d %d FLOAT LITTLE_ENDIAN", length_, width_);
 #endif
 #ifdef BIGENDIAN
- file_is_bigendian = true; 
- sprintf(header,"MATRIX %d %d FLOAT BIG_ENDIAN", length_, width_);
+  file_is_bigendian = true; 
+  sprintf(header,"MATRIX %d %d FLOAT BIG_ENDIAN", length_, width_);
 #endif
 #endif
 #ifdef USEDOUBLE
- file_is_float = false;
+  file_is_float = false;
 #ifdef LITTLEENDIAN
- file_is_bigendian = false; 
- sprintf(header,"MATRIX %d %d DOUBLE LITTLE_ENDIAN", length_, width_);
+  file_is_bigendian = false; 
+  sprintf(header,"MATRIX %d %d DOUBLE LITTLE_ENDIAN", length_, width_);
 #endif
 #ifdef BIGENDIAN
- file_is_bigendian = true; 
- sprintf(header,"MATRIX %d %d DOUBLE BIG_ENDIAN", length_, width_);
+  file_is_bigendian = true; 
+  sprintf(header,"MATRIX %d %d DOUBLE BIG_ENDIAN", length_, width_);
 #endif
 #endif
 
@@ -101,14 +101,14 @@ FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
   fwrite(header,DATAFILE_HEADERLENGTH,1,f);
 
   if(length_ > 0 && width_ > 0) //ensure we can allocate enough space... if len>0, to ensure
-    {             // that the header ends with a '\n'.
-      if( fseek(f, DATAFILE_HEADERLENGTH+length_*width_*sizeof(real)-1, SEEK_SET) <0 )
-	{
-	  perror("");
-	  PLERROR("In FileVMatrix constructor Could not fseek to last byte");
-	}
-      fputc('\0',f);
+  {             // that the header ends with a '\n'.
+    if( fseek(f, DATAFILE_HEADERLENGTH+length_*width_*sizeof(real)-1, SEEK_SET) <0 )
+    {
+      perror("");
+      PLERROR("In FileVMatrix constructor Could not fseek to last byte");
     }
+    fputc('\0',f);
+  }
 
   string fieldinfosfname = filename+".fieldnames";
   if(isfile(fieldinfosfname))
@@ -178,89 +178,89 @@ FileVMatrix::~FileVMatrix()
 real FileVMatrix::get(int i, int j) const
 {
   if(file_is_float)
-    {
-      fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(float), SEEK_SET);
-      return (real) fread_float(f,file_is_bigendian);
-    }
+  {
+    fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(float), SEEK_SET);
+    return (real) fread_float(f,file_is_bigendian);
+  }
   else
-    {
-      fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
-      return (real) fread_double(f,file_is_bigendian);
-    }
+  {
+    fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
+    return (real) fread_double(f,file_is_bigendian);
+  }
 }
 
 void FileVMatrix::getSubRow(int i, int j, Vec v) const
 {
   if(file_is_float)
-    {
-      fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(float), SEEK_SET);
-      fread_float(f, v.data(), v.length(), file_is_bigendian);
-    }
+  {
+    fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(float), SEEK_SET);
+    fread_float(f, v.data(), v.length(), file_is_bigendian);
+  }
   else
-    {
-      fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
-      fread_double(f, v.data(), v.length(), file_is_bigendian);
-    }  
+  {
+    fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
+    fread_double(f, v.data(), v.length(), file_is_bigendian);
+  }  
 }
 
 void FileVMatrix::putSubRow(int i, int j, Vec v)
 {
   if(file_is_float)
-    {
-      fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(float), SEEK_SET);
-      fwrite_float(f, v.data(), v.length(), file_is_bigendian);
-    }
+  {
+    fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(float), SEEK_SET);
+    fwrite_float(f, v.data(), v.length(), file_is_bigendian);
+  }
   else
-    {
-      fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
-      fwrite_double(f, v.data(), v.length(), file_is_bigendian);
-    }  
+  {
+    fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
+    fwrite_double(f, v.data(), v.length(), file_is_bigendian);
+  }  
 }
 
 void FileVMatrix::put(int i, int j, real value)
 {
   if(file_is_float)
-    {
-      fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(float), SEEK_SET);
-      fwrite_float(f,float(value),file_is_bigendian);
-    }
+  {
+    fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(float), SEEK_SET);
+    fwrite_float(f,float(value),file_is_bigendian);
+  }
   else
-    {
-      fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
-      fwrite_double(f,double(value),file_is_bigendian);
-    }
+  {
+    fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
+    fwrite_double(f,double(value),file_is_bigendian);
+  }
 }
 
 void FileVMatrix::appendRow(Vec v)
 {
   if(file_is_float)
-    {
-      fseek(f,DATAFILE_HEADERLENGTH+length_*width_*sizeof(float), SEEK_SET);
-      fwrite_float(f, v.data(), v.length(), file_is_bigendian);
-    }
+  {
+    fseek(f,DATAFILE_HEADERLENGTH+length_*width_*sizeof(float), SEEK_SET);
+    fwrite_float(f, v.data(), v.length(), file_is_bigendian);
+  }
   else
-    {
-      fseek(f,DATAFILE_HEADERLENGTH+length_*width_*sizeof(double), SEEK_SET);
-      fwrite_double(f, v.data(), v.length(), file_is_bigendian);
-    }
+  {
+    fseek(f,DATAFILE_HEADERLENGTH+length_*width_*sizeof(double), SEEK_SET);
+    fwrite_double(f, v.data(), v.length(), file_is_bigendian);
+  }
   length_++;
 
   char header[DATAFILE_HEADERLENGTH]; 
 
 #ifdef USEFLOAT
 #ifdef LITTLEENDIAN
- sprintf(header,"MATRIX %d %d FLOAT LITTLE_ENDIAN", length_, width_);
+  sprintf(header,"MATRIX %d %d FLOAT LITTLE_ENDIAN", length_, width_);
 #endif
 #ifdef BIGENDIAN
- sprintf(header,"MATRIX %d %d FLOAT BIG_ENDIAN", length_, width_);
+  sprintf(header,"MATRIX %d %d FLOAT BIG_ENDIAN", length_, width_);
 #endif
 #endif
 #ifdef USEDOUBLE
 #ifdef LITTLEENDIAN
- sprintf(header,"MATRIX %d %d DOUBLE LITTLE_ENDIAN", length_, width_);
+  sprintf(header,"MATRIX %d %d DOUBLE LITTLE_ENDIAN", length_, width_);
 #endif
 #ifdef BIGENDIAN
- sprintf(header,"MATRIX %d %d DOUBLE BIG_ENDIAN", length_, width_);
+  sprintf(header,"MATRIX %d %d DOUBLE BIG_ENDIAN", length_, width_);
 #endif
 #endif
 
