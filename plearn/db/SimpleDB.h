@@ -64,7 +64,7 @@
 
 //!  From PLearn
 //#include "general.h"
-//#include "stringutils.h"
+#include "stringutils.h"     //!< For slash.
 //#include "random.h"
 #include "PDate.h"			     //!<  for PDate
 #include "Hash.h"
