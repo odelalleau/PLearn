@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.12 2003/06/30 15:13:52 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.13 2003/07/24 18:57:07 jkeable Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -836,6 +836,17 @@ void invertElements(const TVec<T>& vec)
   for(int i=0; i<vec.length(); i++)
     v[i] = 1.0/v[i];
 }
+
+template<class T>
+TVec<T> inverted(const TVec<T>& vec)
+{
+  TVec<T> ret(vec.length());
+  T* v = vec.data();
+  for(int i=0; i<vec.length(); i++)
+    ret[i] = 1.0/v[i];
+  return ret;
+}
+
 
 template<class T>
 void operator+=(const TVec<T>& vec, T scalar)
