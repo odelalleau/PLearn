@@ -6,6 +6,9 @@ expdir_prefix   = "expdir"
 metainfos_fname = "metainfos.txt"
 
 class Metainfos:
+    ## The order is important! See rhs() implementation.
+    casts = [ int , float ]
+    
     def __init__( self, path, find ):
         self.path  = path
         self.infos = self.parse_file( os.path.join(path, metainfos_fname),
@@ -20,12 +23,26 @@ class Metainfos:
         for line in file(mipath, "r"):
             lhs_len = line.find( "=" )
             lhs     = line[:lhs_len]
+
+            ## Parsing the right hand side
+            rhs     = self.rhs( line[lhs_len+1:] )
             
             if not find or toolkit.find_one(lhs, find) is not None:
-                infos.append( "    %s"%line )
+                infos.append( ("    %s"%lhs, rhs) )
 
         return infos
 
+    def rhs( self, rhs_str ):        
+        for cast in self.casts:
+            try:
+                rhs = cast(rhs_str)
+                return rhs
+            except ValueError:
+                pass
+
+        ## Keep it as a string
+        return rhs_str.strip('\n')
+        
     def __cmp__( self, other ):
         if self.path == other.path:
             return 0
@@ -38,14 +55,14 @@ class Metainfos:
 
             oinfo = other.infos[i]
             if info != oinfo:
-                return cmp(info, oinfo)
+                return cmp(info[1], oinfo[1])
 
         ## Non-Positive ( <= or == )
         return len(self.infos) - len_o
         
     def __str__( self ):
         return "%s\n%s\n" % ( self.path,
-                              "".join( self.infos )
+                              "\n".join( [ "%s= %s"%(lhs,str(rhs)) for (lhs,rhs) in self.infos ] )
                               )
 
 def start( targets ):
