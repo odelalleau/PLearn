@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_impl.h,v 1.10 2004/06/15 19:31:41 dpopovici Exp $
+   * $Id: TMat_impl.h,v 1.11 2004/07/08 15:42:29 monperrm Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -282,6 +282,8 @@ TVec<T> TMat<T>::toVecCopy() const
 }
 
 //!  Views same data (not always possible)
+//!  Actually it's the matrix view rows by rows
+
 template <class T>
 TVec<T> TMat<T>::toVec() const
 {
