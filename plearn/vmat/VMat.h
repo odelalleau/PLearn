@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.17 2004/06/17 15:28:02 monperrm Exp $
+   * $Id: VMat.h,v 1.18 2004/06/18 13:10:42 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,7 +53,6 @@
 #include "VMField.h"
 #include "VMatrix.h"
 #include "VVec.h"
-#include "getDataSet.h"
 
 namespace PLearn {
 using namespace std;
