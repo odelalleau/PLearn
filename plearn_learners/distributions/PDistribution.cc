@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.18 2004/05/31 12:59:14 tihocan Exp $ 
+   * $Id: PDistribution.cc,v 1.19 2004/06/01 13:17:37 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -154,17 +154,8 @@ void PDistribution::build_()
   if (n_curve_points > 0) {
     delta_curve = (upper_bound - lower_bound) / real(n_curve_points);
   }
-  // Make sure input_part.length() == n_input.
-  resizeParts();
-  // Initialize things needed for the conditional distributions.
-  initializeForConditional();
   // Precompute the stuff associated to the conditional flags.
-  setConditionalFlags(conditional_flags);
-  // Set the input part for a conditional distribution, if provided.
-  if (provide_input.isNotEmpty() && provide_input.length() == n_input) {
-    input_part << provide_input;
-    setInput(input_part);
-  }
+  setConditionalFlagsWithoutUpdate(conditional_flags);
 }
 
 ///////////////////
@@ -283,11 +274,24 @@ bool PDistribution::ensureFullJointDistribution(TVec<int>& old_flags) {
     old_flags.resize(conditional_flags.length());
     old_flags << conditional_flags;
     // Set flags to compute the full joint distribution.
-    setConditionalFlags(TVec<int>());
+    TVec<int> tmp;
+    setConditionalFlags(tmp);
   } else {
     old_flags.resize(0);
   }
   return restore_flags;
+}
+
+////////////////////////////
+// finishConditionalBuild //
+////////////////////////////
+void PDistribution::finishConditionalBuild() {
+  updateFromConditionalSorting();
+  // Set the input part for a conditional distribution, if provided.
+  if (provide_input.isNotEmpty() && provide_input.length() == n_input) {
+    input_part << provide_input;
+    setInput(input_part);
+  }
 }
 
 //////////////////////
@@ -321,14 +325,6 @@ void PDistribution::generateN(const Mat& X) const
     Vec v = X(i);
     generate(v);
   }
-}
-
-//////////////////////////////
-// initializeForConditional //
-//////////////////////////////
-void PDistribution::initializeForConditional() {
-  // Default does nothing.
-  return;
 }
 
 /////////////////////////////////
@@ -375,7 +371,18 @@ void PDistribution::resizeParts() {
 /////////////////////////
 // setConditionalFlags //
 /////////////////////////
-void PDistribution::setConditionalFlags(TVec<int> flags) {
+void PDistribution::setConditionalFlags(TVec<int>& flags) {
+  // Update the conditional flags.
+  setConditionalFlagsWithoutUpdate(flags);
+  // And call the method that updates the internal Vec and Mat given the new
+  // sorting (this method should be written in subclasses).
+  updateFromConditionalSorting();
+}
+
+//////////////////////////////////////
+// setConditionalFlagsWithoutUpdate //
+//////////////////////////////////////
+void PDistribution::setConditionalFlagsWithoutUpdate(TVec<int>& flags) {
   static TVec<int> input;
   static TVec<int> target;
   static TVec<int> margin;
@@ -465,9 +472,6 @@ void PDistribution::setConditionalFlags(TVec<int> flags) {
   // Copy the new flags.
   conditional_flags.resize(flags.length());
   conditional_flags << flags;
-  // And call the method that updates the internal Vec and Mat given the new
-  // sorting (this method should be written in subclasses).
-  updateFromConditionalSorting();
 }
 
 //////////////

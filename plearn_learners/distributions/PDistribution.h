@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.13 2004/05/27 14:26:19 tihocan Exp $ 
+   * $Id: PDistribution.h,v 1.14 2004/06/01 13:17:37 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.h */
@@ -179,22 +179,34 @@ public:
   // **** PDistribution methods ****
   // *******************************
 
+private:
+
+  //! Set the conditional flags, but does not call updateFromConditionalSorting().
+  //! This method is called at build time so that flags information is available
+  //! to subclasses during their build. The updateFromConditionalSorting() method
+  //! should then be called when the subclass' build ends.
+  void setConditionalFlagsWithoutUpdate(TVec<int>& flags);
+
+protected:
+
+  //! Finish the build of a conditional distribution. This method should be called
+  //! at the end of the build_() method in a subclass.
+  //! It will call updateFromConditionalSorting() and setInput() (if necessary).
+  void finishConditionalBuild();
+
+public:
+
   //! If the full joint distribution was already the one computed, return
   //! false and old_flags is of length 0.
   //! Otherwise, return true, conditional_flags is emptied (in order to compute
   //! the full joint distribution), with a backup in old_flags.
   bool ensureFullJointDistribution(TVec<int>& old_flags);
 
-  //! Initialize everything needed for the conditional distribution, so that
-  //! a call to setConditionalFlags() can be made. This method should be
-  //! implemented in conditional distributions (default version does nothing).
-  virtual void initializeForConditional();
-
   //! Resize input_part and target_part according to n_input and n_target.
   void resizeParts();
 
   //! Set the conditional flags.
-  void setConditionalFlags(TVec<int> flags);
+  void setConditionalFlags(TVec<int>& flags);
 
   //! Set the value for the input part of a conditional probability.
   //! This needs to be implemented in subclasses if there is something
