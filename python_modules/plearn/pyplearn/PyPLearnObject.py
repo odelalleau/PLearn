@@ -143,7 +143,7 @@ or private '__').
         public2                        = "public again"
         )
 """
-__cvs_id__ = "$Id: PyPLearnObject.py,v 1.10 2005/02/09 15:38:35 dorionc Exp $"
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.11 2005/02/11 09:32:23 dorionc Exp $"
 
 import inspect, string, types
 
@@ -151,7 +151,8 @@ from   pyplearn                   import PLearnRepr
 from   plearn.utilities.toolkit   import no_none
 import plearn.utilities.metaprog  as     metaprog
 
-__all__ = [ "PyPLearnObject", "PyPLearnList", "frozen_metaclass" ]
+__all__ = [ "PyPLearnObject", "PyPLearnList",
+            "frozen_metaclass", "public_attribute_predicate" ]
 
 ##########################################
 ### Helper functions 

@@ -2,9 +2,9 @@
 
 Note that including this package simply includes the pyplearn module it contains.
 """
-__cvs_id__ = "$Id: __init__.py,v 1.5 2005/02/11 09:16:54 dorionc Exp $"
+__cvs_id__ = "$Id: __init__.py,v 1.6 2005/02/11 09:32:23 dorionc Exp $"
 
-import new
+import new, string
 from pyplearn        import *
 from PyPLearnObject  import *
 
@@ -41,13 +41,13 @@ class PyPLearnScript( PyPLearnObject ):
         from pyplearn import _postprocess_refs
         self.plearn_script = _postprocess_refs( str( main_object ) )
 
-        def get_metainfos(self):
-            import inspect
-            pretty            = lambda attr_name: string.ljust(attr_name, 30)
-            attribute_strings = [ '%s = %s' % ( pretty(attr_name), attr_val) 
-                                  for (attr_name, attr_val)
-                                  in inspect.getmembers( plargs )
-                                  if public_attribute_predicate(attr_name, attr_val)
-                                  ]
-            return "\n".join( attribute_strings )
+    def get_metainfos(self):
+        import inspect
+        pretty            = lambda attr_name: string.ljust(attr_name, 30)
+        attribute_strings = [ '%s = %s' % ( pretty(attr_name), attr_val) 
+                              for (attr_name, attr_val)
+                              in inspect.getmembers( plargs )
+                              if public_attribute_predicate(attr_name, attr_val)
+                              ]
+        return "\n".join( attribute_strings )
 
