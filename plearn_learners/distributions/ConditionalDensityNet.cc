@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.24 2004/01/20 00:23:58 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.25 2004/01/20 01:03:42 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -821,7 +821,7 @@ void ConditionalDensityNet::initializeParams()
     PLearn::seed();
 
   //real delta = 1./sqrt(inputsize());
-  real delta = 1./inputsize();
+  real delta = 3.0/inputsize();
   /*
   if(direct_in_to_out)
     {
@@ -841,7 +841,7 @@ void ConditionalDensityNet::initializeParams()
         fill_random_normal(wdirect->value, 0, 0.01*delta);
         wdirect->matValue(0).clear();
       }
-      delta = 0.5/nhidden;
+      delta = 4.0/nhidden;
       w1->matValue(0).clear();
     }
   if(nhidden2>0)
@@ -854,6 +854,8 @@ void ConditionalDensityNet::initializeParams()
     }
   //fill_random_uniform(wout->value, -delta, +delta);
   fill_random_normal(wout->value, 0, delta);
+  Mat a_weights = wout->matValue.column(0);
+  a_weights *= 3.0; // to get more dynamic range
   Vec output_biases = wout->matValue(0);
   int i=0;
   Vec a_ = output_biases.subVec(i++,1);
