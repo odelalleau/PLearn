@@ -8,8 +8,8 @@ int convertPOS2WNO(string pos);
 
 int main(int argc, char** argv)
 {
-  if (argc != 8)
-    PLERROR("usage : n_files voc synsets ontology in.text out.ttext out.bttext (argc = %d)", argc);
+  if (argc != 7)
+    PLERROR("usage : n_files voc synsets ontology out.ttext out.bttext (argc = %d)", argc);
   WordNetOntology ontology;
   set<string> pos_types;
   set<string> ignored_pos_types;
@@ -24,9 +24,8 @@ int main(int argc, char** argv)
   ShellProgressBar progress(0, total_lines - 1, "building", 50);
   progress.draw();
   int n = 0;
-  ifstream in_text(argv[5]);
-  ofstream out_ttext(argv[6]);
-  ofstream out_btext(argv[7]);
+  ofstream out_ttext(argv[5]);
+  ofstream out_bttext(argv[6]);
   int n_unknown_errors = 0;
   int n_human_ambig_errors = 0;
   int n_tagged_words = 0;
