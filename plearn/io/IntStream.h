@@ -50,6 +50,7 @@
 
 #include <cstdio>
 #include "VMat.h" //!<  to make a sub-class of VMat with an IntStream inside
+#include "RowBufferedVMatrix.h"
 
 namespace PLearn <%
 using namespace std;
