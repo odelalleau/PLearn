@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.8 2004/03/23 23:08:08 morinf Exp $
+   * $Id: FileVMatrix.h,v 1.9 2004/03/25 21:40:31 plearner Exp $
    ******************************************************* */
 
 
@@ -68,6 +68,7 @@ class FileVMatrix: public VMatrix
   FileVMatrix();
   FileVMatrix(const string& filename); //!<  opens an existing file
   FileVMatrix(const string& filename, int the_length, int the_width); //!<  create a new matrix file
+  FileVMatrix(const string& filename, int the_length, const TVec<string>& fieldnames); //!<  create a new matrix file
 
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.16 2004/03/18 14:42:17 ducharme Exp $
+   * $Id: FileVMatrix.cc,v 1.17 2004/03/25 21:40:31 plearner Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -78,6 +78,16 @@ FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
 {
   writable = true;
   build_();
+}
+
+FileVMatrix::FileVMatrix(const string& filename, int the_length, const TVec<string>& fieldnames)
+  :VMatrix(the_length, fieldnames.length()), filename_(abspath(filename)), f(0),
+   build_new_file(true)
+{
+  writable = true;
+  build_();
+  declareFieldNames(fieldnames);
+  saveFieldInfos();
 }
 
 ///////////
