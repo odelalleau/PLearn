@@ -1,0 +1,26 @@
+PTester( 
+
+learner = LinearRegressor()
+
+expdir = "exp_linear_regression_${DATETIME}"  ;
+
+splitter = ExplicitSplitter(splitsets = 1 2 [
+    AutoVMatrix(
+        specification = "data/linreg_train.amat"
+        inputsize = 1
+        targetsize = 1
+        weightsize = 0
+    ) 
+    AutoVMatrix(
+        specification = "data/linreg_test.amat"
+        inputsize = 1
+        targetsize = 1
+        weightsize = 0
+    )
+    ]
+) ;
+
+statnames = ["E[E[train.mse]]" "E[E[test.mse]]" ];
+
+);
+
