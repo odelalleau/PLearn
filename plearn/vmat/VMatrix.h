@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.44 2004/06/18 19:12:37 tihocan Exp $
+   * $Id: VMatrix.h,v 1.45 2004/06/29 13:24:05 tihocan Exp $
    ******************************************************* */
 
 
@@ -337,7 +337,10 @@ public:
 
   virtual void savePMAT(const string& pmatfile) const;
   virtual void saveDMAT(const string& dmatdir) const;
-  virtual void saveAMAT(const string& amatfile, bool verbose=true) const;
+  //! Save the content of the matrix in the AMAT ASCII format into a file.
+  //! If 'no_header' is set to 'true', then the AMAT header won't be saved,
+  //! which can be useful to export data to other applications.
+  virtual void saveAMAT(const string& amatfile, bool verbose=true, bool no_header = false) const;
 
   inline int width() const { return width_; }
   inline int length() const { return length_; }
