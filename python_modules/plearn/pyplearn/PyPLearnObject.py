@@ -143,7 +143,7 @@ or private '__').
         public2                        = "public again"
         )
 """
-__cvs_id__ = "$Id: PyPLearnObject.py,v 1.13 2005/02/18 22:19:06 dorionc Exp $"
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.14 2005/03/31 15:40:58 dorionc Exp $"
 
 import inspect, string, types
 
@@ -415,6 +415,12 @@ class _manage_attributes:
             self._list_of_attributes.sort()
 
         self.__dict__[attribute_name] = attribute_value        
+
+    def add_attribute( self, attname, attvalue ):
+        if hasattr( self, attname ):
+            raise AssertionError( "Can not add %s to object; attribute already exists." % attname )
+        self.__dict__[ attname ] = attvalue
+        self._list_of_attributes.append( attname )
             
     def attribute_pairs(self):
         """Returns the list of (name, value) pairs for all attributes."""
