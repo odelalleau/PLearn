@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.8 2002/12/12 23:07:11 jkeable Exp $
+   * $Id: stringutils.h,v 1.9 2002/12/12 23:10:06 dorionc Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -307,10 +307,6 @@ private:
   bool closed;
   static ProgressBarPlugin * plugin;
 };
-
-// Special progress bar object : 
-// assign your progressbar object to this object to force its destruction
-static ProgressBar void_progress_bar = ProgressBar("__VOID__",0);
 
 ////////////////////////////////////////////////////////////////
 

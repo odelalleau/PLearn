@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.6 2002/12/12 23:07:10 jkeable Exp $
+   * $Id: stringutils.cc,v 1.7 2002/12/12 23:10:05 dorionc Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -59,23 +59,20 @@ ProgressBarPlugin * ProgressBar::plugin = new TextProgressBarPlugin(cerr);
 
 ProgressBar::ProgressBar(string _title, int the_maxpos)
   :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
-  {
-    if(title!="__VOID__")
-      plugin->addProgressBar(this);
-  }
+{
+  plugin->addProgressBar(this);
+}
 
 ProgressBar::ProgressBar(ostream& _out,string _title, int the_maxpos)
   :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
-  {
-    if(title!="__VOID__")
-      plugin->addProgressBar(this);
-  }
+{
+  plugin->addProgressBar(this);
+}
 ProgressBar::ProgressBar(PStream& _out,string _title, int the_maxpos)
   :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
-  {
-    if(title!="__VOID__")
-      plugin->addProgressBar(this);
-  }
+{
+  plugin->addProgressBar(this);
+}
 
 ProgressBar::~ProgressBar() 
 {
