@@ -9,18 +9,41 @@ import os, popen2, string, sys, time, types
 import epydoc.markup 
 import epydoc.markup.epytext
 
-def boxed_string(s, box_width):
-    if len(s) > box_width:
-        words = string.split(s)
-        s = ''
-        for word in words:
-            if len(s) == 0:
-                s = word
-            elif len(s) < box_width-len(word):
-                s = "%s %s" % (s, word)
-            else:
-                s = "%s\n%s" % (s, word)
-    return s
+def boxed_string(s, box_width, indent=''):
+    if len(s) <= box_width:
+        return s
+
+    words = string.split(s)
+    return boxed_string_from_words(words, box_width, indent)
+
+def boxed_string_from_words(words, box_width, indent=''):
+    box_width = box_width+len(indent)
+
+    boxed = None
+    for i, word in enumerate(words):
+        if boxed is None:
+            boxed = "%s%s" % (indent, word)
+        elif len(boxed) < box_width-len(word):
+            boxed = "%s %s" % (boxed, word)
+        else:
+            end   = boxed_string_from_words(words[i:], box_width, indent) 
+            boxed = "%s\n%s" % (boxed, end)
+            break
+        
+    return boxed
+
+## def boxed_string(s, box_width):
+##     if len(s) > box_width:
+##         words = string.split(s)
+##         s = ''
+##         for word in words:
+##             if len(s) == 0:
+##                 s = word
+##             elif len(s) < box_width-len(word):
+##                 s = "%s %s" % (s, word)
+##             else:
+##                 s = "%s\n%s" % (s, word)
+##     return s
     
 def command_output(command):
     process = popen2.Popen4( command )
