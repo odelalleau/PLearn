@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.3 2002/09/26 05:06:53 plearner Exp $
+   * $Id: StatsCollector.cc,v 1.4 2002/10/15 17:30:37 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,7 +56,27 @@ using namespace std;
     if(maxnvalues>0)
       counts[FLT_MAX] = StatsCollectorCounts();
   }
-  
+
+int sortIdComparator(const void* i1, const void* i2)
+{
+  double d = ((PairRealSCCType*)i1)->first - ((PairRealSCCType*)i2)->first;
+  return (d<0)?-1:(d==0?0:1);
+}
+
+//! fix 'id' attribute of all StatCollectorCounts so that increasing ids correspond to increasing real values
+//! *** NOT TESTED YET
+void StatsCollector::sortIds()
+{
+  PairRealSCCType* allreals= new PairRealSCCType[counts.size()];
+  int i=0;
+  for(map<real,StatsCollectorCounts>::iterator it = counts.begin();it!=counts.end();++it,i++)
+    allreals[i]=make_pair(it->first,&(it->second));
+  qsort(allreals,counts.size(),sizeof(PairRealSCCType),sortIdComparator);
+  for(int i=0;i<(int)counts.size();i++)
+    allreals[i].second->id=i;
+  delete allreals;
+}
+
 void StatsCollector::declareOptions(OptionList& ol)
 {
   // buid options
@@ -109,6 +129,7 @@ void StatsCollector::forget()
 }
 
 void StatsCollector::update(real val)
+
   {
     if(is_missing(val))
       nmissing_++;
@@ -167,7 +188,7 @@ void StatsCollector::update(real val)
       {
         high = it->first;
         count += it->second.nbelow;
-        cout<<count<<endl;
+        // cerr << "it->first:"<<it->first<<" nbelow:"<<it->second.nbelow<<" n:"<<it->second.n<<endl;
         if(count>=continuous_mincount)
           {
             // append continuous range
@@ -213,6 +234,15 @@ void StatsCollector::update(real val)
 
     return mapping;
   }
+
+  RealMapping StatsCollector::getAllValuesMapping() const
+  {
+    RealMapping mapping;
+    int i=0;
+    for(map<real,StatsCollectorCounts>::const_iterator it = counts.begin();it!=counts.end();++it,++i)
+      mapping.addMapping(RealRange('[',it->first,it->first,']'),i);
+    return mapping;
+  }    
 
   Mat StatsCollector::cdf(bool normalized) const
   {
@@ -421,7 +451,6 @@ TVec<RealMapping> computeRanges(TVec<StatsCollector> stats, int discrete_mincoun
     ranges[k] = stats[k].getBinMapping(discrete_mincount, continuous_mincount);
   return ranges;
 }
-
 
 %> // end of namespace PLearn
 

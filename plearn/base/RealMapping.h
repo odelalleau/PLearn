@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.3 2002/09/04 22:42:52 jkeable Exp $
+   * $Id: RealMapping.h,v 1.4 2002/10/15 17:31:07 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -67,6 +67,8 @@ using namespace std;
       low(low_), high(high_), leftbracket(leftbracket_), rightbracket(rightbracket_)
     { checkbrackets(); } 
 
+    real span(){return abs(high-low);}
+    
     void checkbrackets() const
     {
       if( (leftbracket!='[' && leftbracket!=']') || (rightbracket!='[' && rightbracket!=']') )

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.5 2002/09/26 05:06:53 plearner Exp $
+   * $Id: StatsCollector.h,v 1.6 2002/10/15 17:30:38 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,12 +55,16 @@ public:
   int nbelow; //!<  counts the number of occurences of values below this counter's value but above the previous one
   double sum; //!<  sum of the values below this counter's but above the previous one
   double sumsquare; //!<  sum of squares of the values below this counter's but above the previous one
-  int id; //!< a unique identifier. ( id == the number of known values at the first occurence of this one)
+  int id; //!< a unique int identifier corresponding to this value (ids will span from 0 to # of known values) also, take a look at StatsCollector::sortIds()
   
   StatsCollectorCounts(): 
     n(0), nbelow(0),
     sum(0.), sumsquare(0.),id(0) {}          
 };
+
+typedef pair<real,StatsCollectorCounts*> PairRealSCCType;
+
+//!  this class holds simple statistics about a field
 
 inline PStream& operator>>(PStream& in, StatsCollectorCounts& c)
 { in >> c.n >> c.nbelow >> c.sum >> c.sumsquare >> c.id; return in; }
@@ -74,7 +78,6 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     "The first maxnvalues encountered values will be used as points to define\n"
     "the ranges, so to get reasonable results, your sequence should be iid, and NOT sorted!"
 */
-
   class StatsCollector: public Object
   {
     public:
@@ -137,10 +140,16 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     //! only if normalized will the cdf go to 1, otherwise it will go to nsamples
     Mat cdf(bool normalized=true) const;
 
+    //! fix 'id' attribute of all StatCollectorCounts so that increasing ids correspond to increasing real values
+    //! *** NOT TESTED YET
+    void sortIds();
+
     //! returns a mapping that maps values to a bin number (from 0 to mapping.length()-1)
     //! The mapping will leave missing values as MISSING_VALUE
     //! And values outside the [min, max] range will be mapped to -1
     RealMapping getBinMapping(int discrete_mincount, int continuous_mincount) const;
+
+    RealMapping getAllValuesMapping() const;
 
     virtual void oldwrite(ostream& out) const;
     virtual void oldread(istream& in);
