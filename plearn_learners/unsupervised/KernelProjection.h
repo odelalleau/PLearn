@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.h,v 1.7 2004/07/19 13:30:33 tihocan Exp $ 
+   * $Id: KernelProjection.h,v 1.8 2004/07/20 21:58:11 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -87,7 +87,7 @@ public:
   real min_eigenvalue;
   int n_comp;
   int n_comp_for_cost;
-  bool normalize;
+  int normalize;
   
   // ************************
   // * public learnt options *
@@ -100,8 +100,7 @@ public:
   // * Constructors *
   // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
+  //! Default constructor.
   KernelProjection();
 
   // ********************
