@@ -61,6 +61,8 @@ void EmbeddedSequentialLearner::build_()
     PLERROR("EmbeddedSequentialLearner::build()_ - learner attribute is NULL");
 
   learner->build();
+
+  forget();
 }
 
 void EmbeddedSequentialLearner::build()

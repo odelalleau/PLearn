@@ -61,7 +61,15 @@ SequentialValidation::SequentialValidation()
 {}
 
 void SequentialValidation::build_()
-{}
+{
+  if (expdir != "")
+  {
+    if(pathexists(expdir))
+      PLERROR("Directory (or file) %s already exists. First move it out of the way.", expdir.c_str());
+    if(!force_mkdir(expdir))
+      PLERROR("Could not create experiment directory %s", expdir.c_str());
+  }
+}
 
 void SequentialValidation::build()
 {
@@ -134,10 +142,6 @@ void SequentialValidation::run()
     PLERROR("No expdir specified for SequentialValidation.");
   if (!learner)
     PLERROR("No learner specified for SequentialValidation.");
-  if(pathexists(expdir))
-    PLERROR("Directory (or file) %s already exists. First move it out of the way.", expdir.c_str());
-  if(!force_mkdir(expdir))
-    PLERROR("Could not create experiment directory %s", expdir.c_str());
 
   // This is to set inputsize() and targetsize()
   learner->setTrainingSet(dataset, false);

@@ -56,6 +56,8 @@ void MovingAverage::build_()
     PLERROR("In MovingAverage::build_()  window_length has not been set!");
 
   max_train_len = window_length;
+
+  forget();
 }
 
 void MovingAverage::build()

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.2 2003/08/05 21:09:02 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.3 2003/08/06 17:58:04 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -48,14 +48,14 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT_METHODS(MountLucasIndex, "MountLucasIndex", SequentialLearner);
 
 MountLucasIndex::MountLucasIndex()
-  : current_month(0), julian_day_column("julian_day")
+  : current_month(0), julian_day_column("julian_day"), build_complete(false)
 {
 }
 
 void MountLucasIndex::build()
 {
-  build_();
   parentclass::build();
+  build_();
 }
 
 void MountLucasIndex::build_()
@@ -66,16 +66,21 @@ void MountLucasIndex::build_()
     PLERROR("The field max_seq_len must be set before building the MountLucasIndex Object");
 
   nb_commodities = commodity_price_columns.length();
-  julian_day_index = train_set->fieldIndex(julian_day_column);
-  commodity_price_index.resize(nb_commodities);
-  for (int i=0; i<nb_commodities; i++)
-    commodity_price_index[i] = train_set->fieldIndex(commodity_price_columns[i]);
 
   is_long_position.resize(nb_commodities);
   twelve_month_moving_average.resize(nb_commodities);
   monthly_unit_asset_value.resize(max_seq_len,nb_commodities);
   monthly_rate_return.resize(max_seq_len,nb_commodities);
   index_value.resize(max_seq_len);
+
+  if (train_set)
+  {
+    julian_day_index = train_set->fieldIndex(julian_day_column);
+    commodity_price_index.resize(nb_commodities);
+    for (int i=0; i<nb_commodities; i++)
+      commodity_price_index[i] = train_set->fieldIndex(commodity_price_columns[i]);
+    build_complete = true;
+  }
 
   forget();
 }
@@ -107,10 +112,19 @@ void MountLucasIndex::declareOptions(OptionList& ol)
 
 void MountLucasIndex::train()
 {
+  if (!build_complete)
+  {
+    julian_day_index = train_set->fieldIndex(julian_day_column);
+    commodity_price_index.resize(nb_commodities);
+    for (int i=0; i<nb_commodities; i++)
+      commodity_price_index[i] = train_set->fieldIndex(commodity_price_columns[i]);
+    build_complete = true;
+  }
+
   int start_t = last_train_t+1;
   ProgressBar* pb;
   if (report_progress)
-    pb = new ProgressBar("Training SequentialModelSelector learner",train_set.length()-start_t);
+    pb = new ProgressBar("Training MountLucasIndex learner",train_set.length()-start_t);
 
   Vec last_price(nb_commodities);
   Vec next_to_last_price(nb_commodities);
@@ -166,8 +180,8 @@ void MountLucasIndex::train()
         }
         index_value[current_month] = index_value[current_month-1]*mean(rate_return);
         predictions(current_month,0) = index_value[current_month];
-        ++current_month;
       }
+      ++current_month;
     }
 
     if (pb) pb->update(t-start_t);
@@ -210,7 +224,7 @@ void MountLucasIndex::computeCostsFromOutputs(const Vec& input,
 
 TVec<string> MountLucasIndex::getTrainCostNames() const
 {
-  TVec<string> dummy_string(1, "No Cost");
+  TVec<string> dummy_string(1, "NoCost");
   return dummy_string;
 }
 

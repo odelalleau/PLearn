@@ -66,7 +66,7 @@ void SequentialLearner::build_()
             "nTestCosts() returns 0 but errors will later be assumed to have nonzero width.");
   errors.resize(max_seq_len, nTestCosts());
 
-  forget();
+  //forget();
 }
 
 void SequentialLearner::build()

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.h,v 1.2 2003/08/05 21:09:02 ducharme Exp $ 
+   * $Id: MountLucasIndex.h,v 1.3 2003/08/06 17:58:04 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.h */
@@ -66,6 +66,7 @@ class MountLucasIndex: public SequentialLearner
     int julian_day_index; // the corresponding index
     TVec<string> commodity_price_columns; // the commodity price columns in the input data
     TVec<int> commodity_price_index; // the corresponding indexes
+    bool build_complete;
  
   public:
 
