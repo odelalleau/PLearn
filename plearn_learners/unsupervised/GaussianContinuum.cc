@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuum.cc,v 1.9 2005/01/26 18:06:12 larocheh Exp $
+   * $Id: GaussianContinuum.cc,v 1.10 2005/01/26 18:22:29 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -117,7 +117,7 @@ Mat smartInitialization(VMat v, int n, real c, real regularization)
 
 GaussianContinuum::GaussianContinuum() 
 /* ### Initialize all fields to their default value here */
-  : weight_mu_and_tangent(0), include_current_point(false), random_walk_step_prop(1), use_noise(false),use_noise_direction(false), noise(-1), noise_type("uniform"), n_random_walk_step(0), n_random_walk_per_point(0),save_image_mat(false),walk_on_noise(true),min_sigma(0.00001), min_diff(0.01), min_p_x(0.001),print_parameters(false),sm_bigger_than_sn(true),use_best_model(true), n_neighbors(5), n_neighbors_density(-1), mu_n_neighbors(2), n_dim(1), compute_cost_every_n_epochs(5), variances_transfer_function("softplus"), validation_prop(0), architecture_type("single_neural_network"),
+  : weight_mu_and_tangent(0), include_current_point(false), random_walk_step_prop(1), use_noise(false),use_noise_direction(false), noise(-1), noise_type("uniform"), n_random_walk_step(0), n_random_walk_per_point(0),save_image_mat(false),walk_on_noise(true),min_sigma(0.00001), min_diff(0.01), min_p_x(0.001),print_parameters(false),sm_bigger_than_sn(true), n_neighbors(5), n_neighbors_density(-1), mu_n_neighbors(2), n_dim(1), compute_cost_every_n_epochs(5), variances_transfer_function("softplus"), validation_prop(0), architecture_type("single_neural_network"),
     n_hidden_units(-1), batch_size(1), norm_penalization(0), svd_threshold(1e-5)
     
 {
@@ -463,10 +463,6 @@ void GaussianContinuum::declareOptions(OptionList& ol)
 		"Indication that sm should always be bigger than sn.\n"
 		);
 
-  declareOption(ol, "use_best_model", &GaussianContinuum::use_best_model, OptionBase::buildoption,
-		"Indication that the best model on the validation set should be used.\n"
-		);
-
   declareOption(ol, "save_image_mat", &GaussianContinuum::save_image_mat, OptionBase::buildoption,
 		"Indication that a matrix corresponding to the probabilities of the points on a 2d grid should be created.\n"
                 );
@@ -562,7 +558,12 @@ void GaussianContinuum::declareOptions(OptionList& ol)
   declareOption(ol, "validation_prop", &GaussianContinuum::validation_prop, OptionBase::buildoption,
 		"Proportion of points for validation set (if uncorrect value, validtion_set == train_set).\n"
                 );
-
+  
+  declareOption(ol, "reference_set", &GaussianContinuum::reference_set, OptionBase::learntoption,
+		"Reference points for density computation.\n"
+                );
+  
+  
 
 
   // Now call the parent class' declareOptions
@@ -1252,12 +1253,6 @@ void GaussianContinuum::compute_train_and_validation_costs()
 
   if(verbosity > 2) cout << "NLL validation = " << nll_validation << endl;
 
-  if(use_best_model && nll_validation < best_validation_cost)
-  {
-    best_validation_cost = nll_validation;
-    PLearn::save("temp_learner.psave",*this);
-  }
-
 }
 
 // ### Nothing to add here, simply calls build_
@@ -1273,6 +1268,7 @@ void GaussianContinuum::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {  inherited::makeDeepCopyFromShallowCopy(copies);
 
   deepCopyField(cost_of_one_example, copies);
+  deepCopyField(reference_set,copies);
   varDeepCopyField(x, copies);
   varDeepCopyField(noise_var, copies);  
   varDeepCopyField(b, copies);
@@ -1436,9 +1432,6 @@ void GaussianContinuum::train()
   if(pb)
     delete pb;
   
-  if(use_best_model)
-    PLearn::load("temp_learner.psave",*this);
-
   update_reference_set_parameters();
 
   cout << "best train: " << get_nll(train_set,train_set,0,n_neighbors_density) << endl;

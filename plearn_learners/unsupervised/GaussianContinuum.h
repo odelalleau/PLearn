@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuum.h,v 1.8 2005/01/26 18:06:12 larocheh Exp $
+   * $Id: GaussianContinuum.h,v 1.9 2005/01/26 18:22:29 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -145,7 +145,6 @@ public:
   real min_p_x;
   bool print_parameters;
   bool sm_bigger_than_sn;
-  bool use_best_model;
   int n_neighbors; // number of neighbors used for gradient descent
   int n_neighbors_density; // number of neighbors for the p(x) density estimation
   int mu_n_neighbors; // number of neighbors to learn the mus
