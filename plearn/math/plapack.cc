@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: plapack.cc,v 1.2 2002/08/09 22:21:34 yoshua Exp $
+   * $Id: plapack.cc,v 1.3 2002/08/21 20:00:00 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -618,6 +618,22 @@ Vec multivariate_normal(const Vec& mu, const Vec& e_values, const Mat& e_vectors
   return x;
 }
 
+void affineNormalization(Mat data, Mat W, Vec bias, real regularizer)
+{
+  int d=data.width();
+  Vec& mu = bias;
+  Mat covar(d,d);
+  computeMeanAndCovar(data,mu,covar);
+  Vec evalues(d);
+  if (regularizer!=0)
+    for (int i=0;i<d;i++)
+      covar(i,i) += regularizer; 
+  int nev=0;
+  eigen_SymmMat(covar,evalues,W,nev,true,d,true,true);
+  for (int i=0;i<d;i++)
+    W(i) *= 1.0 / sqrt(evalues[i]);
+  mu *= -1.0; // bias = -mu
+}
 
 
 %> // end of namespace PLearn

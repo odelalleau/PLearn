@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.2 2002/08/09 22:21:34 yoshua Exp $
+   * $Id: plapack.h,v 1.3 2002/08/21 20:00:00 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -212,6 +212,21 @@ void solveTransposeLinearSystem(const Mat& A, const Mat& Y, Mat& X);
   This doesn't include any bias term.
 */
 Vec constrainedLinearRegression(const Mat& Xt, const Vec& Y, real lambda=0.);
+
+// Return the affine transformation that
+// is such that the transformed data has
+// zero mean and identity covariance.
+// The input data matrix is (n x d).
+// The results are the matrix W and the bias vector 
+// such that the
+//   transformed_row = W row + bias
+// have the desired properties.
+// Note that W is obtained by doing an eigen-decomposition
+// of the data covariance matrix. In case this matrix
+// is ill-conditionned, the user can add a regularization
+// term on its diagonal before the inversion, by providing
+// a regularizer>0 as argument.
+void affineNormalization(Mat data, Mat W, Vec bias, real regularizer=0);
 
 //!  closest point to x on hyperplane that passes through all points (with weight decay)
 inline Vec closestPointOnHyperplane(const Vec& x, const Mat& points, real weight_decay = 0.)
