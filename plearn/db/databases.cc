@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.12 2004/07/12 21:32:05 tihocan Exp $
+   * $Id: databases.cc,v 1.13 2004/07/14 22:39:22 mariusmuja Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -872,12 +872,32 @@ void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string
   string db_dir = dbdir_name + "/UCI_MLDB/" + db_spec;
   Object* obj = PLearn::macroLoadObject(db_dir + "/" + script_file);
   PP<UCISpecification> uci_spec = static_cast<UCISpecification*>(obj);
-  if (uci_spec->file_train != "")
-    loadUCISet(trainset, db_dir + "/" + uci_spec->file_train, uci_spec);
-  if (uci_spec->file_test != "")
-    loadUCISet(testset, db_dir + "/" + uci_spec->file_test, uci_spec);
+  if (uci_spec->file_train != "") {
+    if (uci_spec->format=="UCI") {
+      loadUCISet(trainset, db_dir + "/" + uci_spec->file_train, uci_spec);
+    } else if (uci_spec->format=="AMAT") {
+      trainset=loadAsciiAsVMat(db_dir + "/" + uci_spec->file_train);
+    } else {
+      PLERROR("In loadUCI: Format '%s' unsupported",uci_spec->format.c_str());
+    }
+  }
+  if (uci_spec->file_test != "") {
+    if (uci_spec->format=="UCI") {
+      loadUCISet(testset, db_dir + "/" + uci_spec->file_test, uci_spec);
+    } else if (uci_spec->format=="AMAT") {
+      testset=loadAsciiAsVMat(db_dir + "/" + uci_spec->file_test);
+    } else {
+      PLERROR("In loadUCI: Format '%s' unsupported",uci_spec->format.c_str());
+    }
+  }
   if (uci_spec->file_all != "") {
-    loadUCISet(allset, db_dir + "/" + uci_spec->file_all, uci_spec);
+    if (uci_spec->format=="UCI") {
+      loadUCISet(allset, db_dir + "/" + uci_spec->file_all, uci_spec);
+    } else if (uci_spec->format=="AMAT") {
+      allset=loadAsciiAsVMat(db_dir + "/" + uci_spec->file_all);
+    } else {
+      PLERROR("In loadUCI: Format '%s' unsupported",uci_spec->format.c_str());
+    }
   } else {
     allset = vconcat(trainset, testset);
   }
@@ -905,8 +925,14 @@ void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec) {
   char *** to_symbols;
   int * to_n_symbols;
   TVec<int> max_in_col;
-  Mat the_data = loadUCIMLDB(file, &to_symbols, &to_n_symbols, &max_in_col);
-  if (uci_spec->target_is_first) {
+  TVec<string> header_columns;
+  Mat the_data;
+  if (uci_spec->header_exists) {
+    the_data = loadUCIMLDB(file, &to_symbols, &to_n_symbols, &max_in_col,&header_columns);
+  } else {
+    the_data = loadUCIMLDB(file, &to_symbols, &to_n_symbols, &max_in_col);
+  }
+    if (uci_spec->target_is_first) {
     // We need to move the target to the last columns.
     int ts = uci_spec->targetsize;
     if (ts == -1) {
@@ -915,25 +941,96 @@ void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec) {
     if (uci_spec->weightsize > 0) {
       PLERROR("In loadUCISet - Damnit, I don't like weights");
     }
-    the_data.resize(the_data.length(), the_data.width() + ts);
     Vec row;
+    Vec target;
+
+    target.resize(ts);
     for (int i = 0; i < the_data.length(); i++) {
       row = the_data(i);
-      row.subVec(the_data.width() - ts - 1, ts) << row.subVec(0, ts);
+      target << row.subVec(0,ts);
+      row.subVec(0, the_data.width() - ts ) << row.subVec(ts, the_data.width() - ts);
+      row.subVec(the_data.width() - ts , ts) << target;
     }
-    the_data = the_data.subMatColumns(ts, the_data.width() - ts);
   }
   data = VMat(the_data);
   data->defineSizes(uci_spec->inputsize, uci_spec->targetsize, uci_spec->weightsize);
-  
+ 
+  if (uci_spec->header_exists) {
+    if (uci_spec->header_fields.size()==0) {
+      
+      if (uci_spec->target_is_first) {
+        int ts = uci_spec->targetsize;
+        int is = the_data.width()-ts;
+        TVec<string> tmp;
+        tmp.resize(ts);
+        tmp << header_columns.subVec(0,ts);
+        header_columns.subVec(0,is) << header_columns.subVec(ts,is);
+        header_columns.subVec(is,ts) << tmp;
+      }
+      data->declareFieldNames(header_columns);
+    } else {
+      TVec<string> field_names;
+      field_names.resize(the_data.width());
+      int last = 0;
+      int cnt=0;
+      for (int i=0; i<uci_spec->header_fields.size(); i++) {
+        for (int j=last;j<uci_spec->header_fields[i].first;j++) {
+          field_names[j] = "";
+        }
+        for (int j=uci_spec->header_fields[i].first;j<=uci_spec->header_fields[i].second;j++) {
+          if (cnt>=header_columns.size()) {
+            PLERROR("In loadUCISet: 'header_fields' setting is incorrect");
+          }
+          field_names[j] = header_columns[cnt++];
+        }
+        last = uci_spec->header_fields[i].second+1;
+      }  
+      for (int i=last;i<field_names.size();i++) {
+        field_names[i] = "";
+      }
+      if (uci_spec->target_is_first) {
+        int ts = uci_spec->targetsize;
+        int is = the_data.width()-ts;
+        TVec<string> tmp;
+        tmp.resize(ts);
+        tmp << field_names.subVec(0,ts);
+        field_names.subVec(0,is) << field_names.subVec(ts,is);
+        field_names.subVec(is,ts) << tmp;
+      }
+      data->declareFieldNames(field_names);
+    }
+  }
   
   // Add symbol mappings
+  
+  if (uci_spec->target_is_first) {
+    int ts = uci_spec->targetsize;
+    int is = the_data.width()-ts;
+    TVec<char**> tmp_sym(ts);
+    TVec<int> tmp_len(ts); 
+    for(int i=0;i<ts;i++) {
+      tmp_sym[i] = to_symbols[i];
+      tmp_len[i] = to_n_symbols[i];
+    }
+    for (int i=ts;i<is+ts;i++) {
+      to_symbols[i-ts] = to_symbols[i];
+      to_n_symbols[i-ts] = to_n_symbols[i];
+    }
+    for(int i=is;i<is+ts;i++) {
+      to_symbols[i] = tmp_sym[i-is];
+      to_n_symbols[i] = tmp_len[i-is];
+    }
+    
+    tmp_len << max_in_col.subVec(0,ts);
+    max_in_col.subVec(0,is) << max_in_col.subVec(ts,is);
+    max_in_col.subVec(is,ts) << tmp_len;
+  }
   for (int j=0;j<data->width();j++) {
     for (int k=0;k<to_n_symbols[j];k++) {
       data->addStringMapping(j,string(to_symbols[j][k]),real(max_in_col[j]+k+1));
     }
   }
-  
+
   // Free up the symbols
   for (int i=0; i<data->width(); i++) 
   {
