@@ -328,7 +328,7 @@ def printusage():
     print
     print 'Other possible options are:'
     print '  -force: forces recompilation of all necessary files, even if they are up to date.'
-    print '  -local: don\'t use parallel compilation, even if there is a .pymake/<platform>.hosts file.'
+    #print '  -local: don\'t use parallel compilation, even if there is a .pymake/<platform>.hosts file.'
     print '  -clean: removes all OBJS subrdirectories recursively in all given directories'
     print '  -checkobj: will report all source files that don\'t have *any* correponding .o in OBJS.'
     print '             This processes recursively from  given directories and is typically called'
@@ -435,10 +435,10 @@ if 'force' in optionargs:
     force_recompilation = 1
     optionargs.remove('force')
 
-local_compilation = 0 # do we want to do everything locally?
-if 'local' in optionargs:
-    local_compilation = 1
-    optionargs.remove('local')
+local_compilation = 1 # do we want to do everything locally?
+#if 'local' in optionargs:
+#    local_compilation = 1
+#    optionargs.remove('local')
 
 # fill the list of options from the optionargs, adding necessary default options (if no option of a group choice was specified)
 options = []
@@ -464,21 +464,21 @@ if optionargs: # there are remaining optionargs
 objsdir = myjoin('OBJS', platform + '__' + string.join(options,'_'))
 print '*** Running pymake using following options: ' + string.join(map(lambda o: '-'+o, options))
 
-list_of_hosts = []
-
-if local_compilation:
-    list_of_hosts = ['localhost']
-else:
-    hostspath = locatehostsfile()
-    if hostspath:
-        print '*** Parallel compilation using list of hosts from file: ' + hostspath
-        f = open(hostspath,'r')
-        list_of_hosts = filter(lambda s: s and s[0]!='#', map(string.strip,f.readlines()))
-        f.close()
-    else:
-        list_of_hosts = ['localhost']
-        print '*** No hosts file found: no parallel compilation, using localhost'
-        print '    (create a ~/.pymake/' + platform + '.hosts file to list hosts for parallel compilation.)'
+list_of_hosts = ['localhost']
+#list_of_hosts = []
+#if local_compilation:
+#    list_of_hosts = ['localhost']
+#else:
+#    hostspath = locatehostsfile()
+#    if hostspath:
+#        print '*** Parallel compilation using list of hosts from file: ' + hostspath
+#        f = open(hostspath,'r')
+#        list_of_hosts = filter(lambda s: s and s[0]!='#', map(string.strip,f.readlines()))
+#        f.close()
+#    else:
+#        list_of_hosts = ['localhost']
+#        print '*** No hosts file found: no parallel compilation, using localhost'
+#        print '    (create a ~/.pymake/' + platform + '.hosts file to list hosts for parallel compilation.)'
 
 # We could just do random.shuffle(list) but that's not in Python 1.5.2
 def shuffle(list):
