@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.35 2004/07/21 20:26:30 tihocan Exp $
+   * $Id: PLearner.cc,v 1.36 2004/07/23 20:25:14 ducharme Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -69,8 +69,8 @@ void PLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(tmp_output, copies);
-  deepCopyField(train_set, copies);
-  deepCopyField(validation_set, copies);
+  //deepCopyField(train_set, copies);
+  //deepCopyField(validation_set, copies);
   deepCopyField(train_stats, copies);
 }
 
