@@ -23,7 +23,7 @@ else:
 sourcedirs =   lsdirs(os.path.join(plearndir,'plearn/')) \
              + lsdirs(os.path.join(plearndir,'plearn_learners/')) \
              + lsdirs(os.path.join(plearndir,'../LisaPLearn/PLearnLibrary/')) \
-             + lsdirs('/u/lisa/local/linux-i386/lib/apstatsoft/apstatlib/') \
+             + lsdirs('/RQexec/casagran/apstatlib/') \
              + lsdirs(os.path.join(plearndir,'commands/'))[1:] 
 
 # will be added as list of includes (-I...) to all compilations
@@ -42,7 +42,7 @@ elif platform=='linux-ppc':
 elif platform=='linux-alpha':
     compileflags = '-DSPARC -DBIGENDIAN'
 elif platform=='linux-ia64':
-    compileflags = '-DLINUX -DLITTLEENDIAN -ftemplate-depth-30'
+    compileflags = '-DLINUX -DLITTLEENDIAN'
 elif platform=='sunos5' :
     compileflags = '-DSPARC -DBIGENDIAN'
 elif platform=='irix6'  :
@@ -95,14 +95,11 @@ optionalLibrary( name = 'arpack',
                  triggers = 'arpack_proto.h',
                  linkeroptions = '-L/u/lisa/local/linux-i386/lib/ARPACK/OBJS/' + platform + ' -larpack' )
 
-lapack_linkeroptions = '-llapack'
-if platform=='darwin':
-    lapack_linkeroptions = '-L/sw/lib/ -llapack'
-
-optionalLibrary( name = 'lapack',
-                 triggers = 'lapack_proto.h',
-                 linkeroptions = lapack_linkeroptions 
-                 )
+# Note: now blas and lapack are together.
+#optionalLibrary( name = 'lapack',
+#                 triggers = 'lapack_proto.h',
+#                 linkeroptions = lapack_linkeroptions 
+#                 )
 
 optionalLibrary( name = 'opengl',
                  triggers = 'GL/gl.h',
@@ -141,17 +138,18 @@ optionalLibrary( name = 'boost',
                  linkeroptions = ''
                  )
 
+
 # What linker options to put always after those from the optional libraries
-linkeroptions_tail = '-lstdc++ -lm'
+linkeroptions_tail = '-lm'
 
 # List of lists of mutually exclusive pymake options.
 # First option that appears in each group is the default, and is assumed if you don't specify any option from that group
 options_choices = [
-  [ 'g++', 'g++3', 'mpi', 'purify' ],
-  [ 'dbg', 'opt', 'gprof', 'safeopt', 'checkopt' ],
+  [ 'g++', 'g++3', 'icc', 'mpi', 'purify' ],
+  [ 'dbg', 'opt', 'optintel', 'pintel', 'gprof', 'safeopt', 'checkopt' ],
   [ 'double', 'float' ],
   [ 'throwerrors', 'exiterrors' ], 
-  [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'noblas', 'veclib'],
+  [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'noblas', 'veclib', 'scs'],
 ]
 
 
@@ -168,6 +166,13 @@ pymakeOption( name = 'g++3',
               compiler = 'g++3',
               compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 ',
               linker = 'g++3' )
+
+pymakeOption( name = 'icc',
+              description = 'compiling with Intel Compiler (version 8.0), with no MPI support',
+              compiler = 'icc',
+              compileroptions = '-DUSING_MPI=0 ',
+              linker = 'icc'
+						)
 
 pymakeOption( name = 'mpi',
               description = 'compiling and linking with MPI support (and USING_MPI=1)',
@@ -194,9 +199,19 @@ pymakeOption( name = 'dbg',
 # does -malign-double indeed create core-dumps?
 # is -finline hurting?
 # is -funroll-loops hurting?
-pymakeOption( name = 'opt',
-              description = 'optimized mode',
-              compileroptions = '-Wall -O3 -funroll-loops' )
+
+if usingIntelCompiler:
+    pymakeOption( name = 'opt',
+                  description = 'optimized mode',
+                  compileroptions = '-Wall -O3 -funroll-loops' )
+else:
+    pymakeOption( name = 'opt',
+                  description = 'optimized for intel compiler',
+				    			compileroptions = '-O3');
+
+pymakeOption( name = 'pintel',
+              description = 'parallelized for intel compiler',
+							compileroptions = '-O3 -parallel');
 
 pymakeOption( name = 'safeopt',
               description = 'safe optimized mode',
@@ -211,7 +226,13 @@ pymakeOption( name = 'gprof',
               compileroptions = '-Wall -O3 -funroll-loops -fstrength-reduce -ffast-math -pg',
               linkeroptions = '-pg' )
 
+lapack_linkeroptions = '-llapack'
+
+if platform=='darwin':
+    lapack_linkeroptions = '-L/sw/lib/ -llapack'
+
 blas_linkeroptions = '-lblas -lg2c'
+
 if platform=='darwin':
     blas_linkeroptions = '-L/sw/lib/ -lcblas -lf77blas -latlas -lg2c'
 
@@ -223,7 +244,7 @@ pymakeOption( name = 'noblas',
 pymakeOption( name = 'blas',
               description = 'compilation and linking basic BLAS',
               compileroptions = '-D USE_BLAS_SPECIALISATIONS',
-              linkeroptions = blas_linkeroptions
+              linkeroptions = blas_linkeroptions + ' ' + lapack_linkeroptions
               )
 
 pymakeOption( name = 'pentiumblas',
@@ -249,6 +270,11 @@ pymakeOption( name = 'veclib',
               description = "Apple's vecLib library, a version of the BLAS library for the G4 and G5 under OS X",
               compileroptions = '-D USE_BLAS_SPECIALISATIONS',
               linkeroptions = '-framework vecLib')
+
+pymakeOption( name = 'scs',
+              description = "BLAS and lapack intel super optimized library",
+              compileroptions = '-D USE_BLAS_SPECIALISATIONS',
+              linkeroptions = '-lscs')
 
 pymakeOption( name = 'float',
               description = 'float mode (real==float)',
