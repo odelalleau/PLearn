@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.h,v 1.2 2002/11/05 16:30:35 zouave Exp $ 
+   * $Id: HistogramDistribution.h,v 1.3 2002/11/11 20:16:23 zouave Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.h */
@@ -71,6 +71,8 @@ public: //TEMP!!! s/b protected -xsm
   //! this Smoother is used at training time.
   PP<Smoother> the_smoother;
 
+  bool smooth_density; //if false, smoothing is done on survival
+
     
 public:
 
@@ -93,7 +95,7 @@ public:
 
   //! This constructor calls train as part of the construction process.
   //! The use function can then be used right away.
-  HistogramDistribution(VMat data, PP<Binner> the_binner_= 0, PP<Smoother> the_smoother_= 0);
+  HistogramDistribution(VMat data, PP<Binner> the_binner_= 0, PP<Smoother> the_smoother_= 0, bool smooth_density_= true);
 
   // ******************
   // * Object methods *

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.6 2002/10/21 21:42:08 zouave Exp $
+   * $Id: TMat.h,v 1.7 2002/11/11 20:16:23 zouave Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1751,7 +1751,7 @@ inline void operator<<(const TMat<T>& m1, const TVec<T>& m2)
 {
 #ifdef BOUNDCHECK
   if(m1.size()!=m2.size())
-    PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements");
+    PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements;\t m1.size()= %d;\t m2.size= %d", m1.size(), m2.size());
 #endif
   copy(m2.begin(), m2.end(), m1.begin());
 }

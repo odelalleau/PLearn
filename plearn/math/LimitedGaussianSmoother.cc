@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LimitedGaussianSmoother.cc,v 1.1 2002/11/05 16:34:32 zouave Exp $ 
+   * $Id: LimitedGaussianSmoother.cc,v 1.2 2002/11/11 20:16:22 zouave Exp $ 
    ******************************************************* */
 
 /*! \file LimitedGaussianSmoother.cc */
@@ -81,7 +81,7 @@ LimitedGaussianSmoother::LimitedGaussianSmoother(int window_size_wrt_sigma_, rea
   {
     // ### Provide some useful description of what the class is ...
     return 
-      "LimitedGaussianSmoother implements a ..."
+      "LimitedGaussianSmoother implements a ... limited gaussian smoother."
       + optionHelp();
   }
 
@@ -122,6 +122,15 @@ LimitedGaussianSmoother::LimitedGaussianSmoother(int window_size_wrt_sigma_, rea
 real LimitedGaussianSmoother::smooth(const Vec& source_function, Vec smoothed_function, 
 				     Vec bin_positions, Vec dest_bin_positions) const
 {
+// smoothed_function[k] = sum_{j=max(0,k-window_size)}^{min(l-1,k+window_size)} w_{k,j} source_function[j]
+//                        / sum_{j=max(0,k-window_size)}^{min(l-1,k+window_size)} w_{k,j} 
+// with w_{k,j} = phi(bin_positions[j+1];mu_k,sigma_k)-phi(bin_positions[j];mu_k,sigma_k)
+// where mu_k = 0.5*(bin_positions[k+1]+bin_positions[k]),
+//       sigma_k = bin_positions[k+window_size]-bin_positions[k]
+// where phi(x;mu,sigma) = cdf of normal(mu,sigma) at x,
+// window_size = window_size_wrt_sigma * sigma_bin
+
+
   smoothed_function.resize(source_function.length());
   smoothed_function.fill(0.0);
   real window_size= window_size_wrt_sigma * sigma_bin;
@@ -133,15 +142,14 @@ real LimitedGaussianSmoother::smooth(const Vec& source_function, Vec smoothed_fu
       real sum_weights= 0.0;
       real mu= 0.5*(bin_positions[i+1]+bin_positions[i]),
 	sigma= bin_positions[max_j-1]-bin_positions[i];
-      for(int j= min_j; j < max_j; ++j)
+      for(int j= min_j; j < max_j-1; ++j)
 	{
-	  real z1= (bin_positions[j+1]-mu)/sigma, 
-	    z0= (bin_positions[j]-mu)/sigma;
-	  sum_weights+= gauss_01_cum(z1)-gauss_01_cum(z0);
+	  sum_weights+= gauss_cum(bin_positions[j+1], mu, sigma) -
+	    gauss_cum(bin_positions[j], mu, sigma);
 	}
-      for(int j= min_j; j < max_j; ++j)
-	  smoothed_function[i]+= ( gauss_01_cum((bin_positions[j+1]-mu)/sigma) 
-				   - gauss_01_cum((bin_positions[j]-mu)/sigma)
+      for(int j= min_j; j < max_j-1; ++j)
+	  smoothed_function[i]+= ( gauss_cum(bin_positions[j+1], mu, sigma) 
+				   - gauss_cum(bin_positions[j], mu, sigma)
 				   ) 
 	    * source_function[j] / sum_weights;
     }

@@ -33,19 +33,20 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.cc,v 1.3 2002/11/05 16:30:35 zouave Exp $ 
+   * $Id: HistogramDistribution.cc,v 1.4 2002/11/11 20:16:23 zouave Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.cc */
 #include "HistogramDistribution.h"
 #include <algorithm>
-
+#include <cmath>
 
 namespace PLearn <%
 using namespace std;
 
 HistogramDistribution::HistogramDistribution() 
-  :Distribution(), bin_positions(), bin_density(), survival_values(), the_binner(0)
+  :Distribution(), bin_positions(), bin_density(), survival_values(), the_binner(0),
+   the_smoother(0), smooth_density(true)
   {
     // ### Possibly call setTestCostFunctions(...) to define the cost functions 
     // ### you are interested in (these are used by the default useAndCost() method,
@@ -62,9 +63,10 @@ HistogramDistribution::HistogramDistribution()
     // ### You may want to set the Distribution::use_returns_what parameter
   }
 
-HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_, PP<Smoother> the_smoother_) 
+HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_, 
+					     PP<Smoother> the_smoother_, bool smooth_density_) 
   :Distribution(), bin_positions(data.length()+1), bin_density(data.length()), survival_values(data.length()),
-   the_binner(the_binner_), the_smoother(the_smoother_)
+   the_binner(the_binner_), the_smoother(the_smoother_), smooth_density(smooth_density_)
 {
   train(data);
 }
@@ -84,6 +86,15 @@ HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_, 
 
     declareOption(ol, "survival_values", &HistogramDistribution::survival_values, OptionBase::learntoption,
                   "Redundant with density is the pre-computed survival function.");
+
+    declareOption(ol, "the_binner", &HistogramDistribution::the_binner, OptionBase::buildoption,
+                  "Used to do binning at training time.");
+
+    declareOption(ol, "the_smoother", &HistogramDistribution::the_smoother, OptionBase::buildoption,
+                  "Used to smooth learned density (or survival) at train time.");
+
+    declareOption(ol, "smooth_density", &HistogramDistribution::smooth_density, OptionBase::buildoption,
+                  "Indicates wether to smooth the density or the survival.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -118,6 +129,22 @@ HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_, 
 
   void HistogramDistribution::train(VMat training_set)
   { 
+
+    /*
+      - prend la distri empirique
+      | trie les points
+      | merge les bins (possiblement sous contraintes)
+      |     - points de coupure predefinis (option include_cutpoints) ManualBinner
+      |     - largeur des bins > a une valeur minimale 
+      |     - bins contenir un minimum de points
+      Binner
+      
+      Smoother
+      (recalcule la densite)
+      
+      calculer survival_values
+    */
+
     if(training_set->width() != inputsize()+targetsize())
       PLERROR("In HistogramDistribution::train(VMat training_set) training_set->width() != inputsize()+targetsize()");
     if(training_set->width() != 1)
@@ -141,42 +168,29 @@ HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_, 
 
     for(int i= 0; i < data.length(); ++i)
       ++survival_values[static_cast<int>(data[i])];
-    //    bin_density << survival_values;
     for(int i= survival_values.length()-2; i >= 0; --i)
       survival_values[i]+= survival_values[i+1];
     for(int i= survival_values.length()-1; i >= 0; --i)
       survival_values[i]/= survival_values[0];
 
     if(the_smoother)
-      {
-	Vec sv(survival_values.length());
-	sv << survival_values;
-	the_smoother->smooth(sv, survival_values, bin_positions, bin_positions);
-      }
-    
-
-    calc_density_from_survival();
-
-    
-    
-
-    /*
- - prend la distri empirique
- | trie les points
- | merge les bins (possiblement sous contraintes)
- |     - points de coupure predefinis (option include_cutpoints) ManualBinner
- |     - largeur des bins > a une valeur minimale 
- |     - bins contenir un minimum de points
-Binner
-
-
-
-Smoother
-(recalcule la densite)
-
-calculer survival_values
-*/
-
+      if(smooth_density)
+	{
+	  calc_density_from_survival();
+	  Vec df(bin_density.length());
+	  df << bin_density;
+	  the_smoother->smooth(df, bin_density, bin_positions, bin_positions);
+	  calc_survival_from_density();
+	}
+      else
+	{
+	  Vec sv(survival_values.length());
+	  sv << survival_values;
+	  the_smoother->smooth(sv, survival_values, bin_positions, bin_positions);
+	  calc_density_from_survival();
+	}
+    else
+      calc_density_from_survival();
   }
 
   void HistogramDistribution::use(const Vec& input, Vec& output)
@@ -214,22 +228,36 @@ double HistogramDistribution::density(const Vec& x) const
 
 double HistogramDistribution::survival_fn(const Vec& x) const
 { 
-  PLERROR("survival_fn not implemented for HistogramDistribution"); return 0.0; 
+  if(x.size() != 1)
+    PLERROR("survival_fn implemented only for reals (vec size == 1).");
+
+  return survival_values[find_bin(x[0])];
 }
 
 double HistogramDistribution::cdf(const Vec& x) const
 { 
-  PLERROR("cdf not implemented for HistogramDistribution"); return 0.0; 
+  return 1-survival_fn(x);
 }
 
 double HistogramDistribution::expectation() const
 { 
-  PLERROR("expectation not implemented for HistogramDistribution"); return 0.0; 
+  real sum= 0.0;
+  for(int i= 0; i < bin_density.size(); ++i)
+    //    sum+= bin_density[i] * (bin_positions[i]+bin_positions[i+1])/2;
+    sum+= bin_density[i] * bin_positions[i+1];
+  return sum; 
 }
 
 double HistogramDistribution::variance() const
 { 
-  PLERROR("variance not implemented for HistogramDistribution"); return 0.0; 
+  real sumsq= 0.0, sum= 0.0, s;
+  for(int i= 0; i < bin_density.size(); ++i)
+    {
+      s= bin_density[i] * (bin_positions[i]+bin_positions[i+1])/2;
+      sum+= s;
+      sumsq+= s*s;
+    }
+  return abs(sumsq-(sum*sum));
 }
 
 
@@ -256,14 +284,17 @@ void HistogramDistribution::calc_density_from_survival()
 {
   int n= bin_positions.length()-1;
   bin_density.resize(n);
+  real sum= 0.0;
   for(int i= 0; i < n; ++i)
     if(bin_positions[i+1] != bin_positions[i])
       if(i == n-1)
-	bin_density[i]= survival_values[i] / (bin_positions[i+1]-bin_positions[i]);
+	sum+= (bin_density[i]= survival_values[i] / (bin_positions[i+1]-bin_positions[i]));
       else
-	bin_density[i]= (survival_values[i] - survival_values[i+1]) / (bin_positions[i+1]-bin_positions[i]);
+	sum+= (bin_density[i]= (survival_values[i] - survival_values[i+1]) / (bin_positions[i+1]-bin_positions[i]));
     else
-      bin_density[i]= 0;
+      bin_density[i]= 0.0;
+  for(int i= 0; i < n; ++i)
+    bin_density[i]/= sum;
 }
 
 void HistogramDistribution::calc_survival_from_density()
