@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.27 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: VMatLanguage.cc,v 1.28 2004/07/29 13:04:22 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -472,6 +472,7 @@ using namespace std;
         opcodes["memput"] = 52; // a mempos -->    ( a is saved in memory position mempos)
         opcodes["memget"] = 53; // mempos --> val  ( gets val from memory in position mempos)
         opcodes["neg"]    = 54; // a --> -a
+        opcodes["missing"] = 55;  // a missing value
       }
   }
 
@@ -774,7 +775,9 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
           case 54: // neg
             pstack.push(-pstack.pop());
             break;
-          
+          case 55: // missing
+            pstack.push(MISSING_VALUE);
+            break;
           default:
             PLERROR("BUG IN PreproInterpretor::run while running program: invalid opcode: %d", op);
           }
