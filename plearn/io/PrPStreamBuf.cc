@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrPStreamBuf.cc,v 1.5 2005/01/14 19:40:49 plearner Exp $ 
+   * $Id: PrPStreamBuf.cc,v 1.6 2005/01/14 20:11:44 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -65,6 +65,8 @@ using namespace std;
       }
     if (out && own_out)
       {
+        // If "in" and "out" were pointing to the same PRFileDesc,
+        // don't close it a second time.
         if (!in_and_out_equal)
           PR_Close(out);
         out = 0;
