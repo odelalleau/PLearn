@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.24 2005/02/04 15:11:21 tihocan Exp $
+   * $Id: Learner.cc,v 1.25 2005/02/08 21:42:19 tihocan Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -216,7 +216,7 @@ void Learner::declareOptions(OptionList& ol)
 }
 
 
-void Learner::setExperimentDirectory(const string& the_expdir) 
+void Learner::setExperimentDirectory(const PPath& the_expdir) 
 { 
 #if USING_MPI
   if(PLMPI::rank==0) {
@@ -227,7 +227,7 @@ void Learner::setExperimentDirectory(const string& the_expdir)
 #if USING_MPI
   }
 #endif
-  expdir = abspath(the_expdir);
+  expdir = the_expdir.absolute();
 }
 
 void Learner::build_()
@@ -882,6 +882,7 @@ Array<string> Learner::trainObjectiveNames() const
     writeFooter(out,"Learner");
   }
 
+/* TODO Remove (deprecated)
   void Learner::oldread(istream& in)
   {
     int version=readHeader(in,"Learner");
@@ -911,6 +912,7 @@ Array<string> Learner::trainObjectiveNames() const
     readField(in,"test_statistics",test_statistics);
     readFooter(in,"Learner");
   }
+  */
 
   void Learner::save(const PPath& filename) const
   {

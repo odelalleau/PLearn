@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.16 2005/02/01 14:43:27 tihocan Exp $
+   * $Id: Learner.h,v 1.17 2005/02/08 21:42:20 tihocan Exp $
    ******************************************************* */
 
 
@@ -225,7 +225,7 @@ using namespace std;
       model#.<trainset_alias>.objective (training objective and costs after each epoch)
       model#.<testset_alias>.results  (test results after each epoch)
     */
-    virtual void setExperimentDirectory(const string& the_expdir);
+    virtual void setExperimentDirectory(const PPath& the_expdir);
     string getExperimentDirectory() const { return expdir; }
 
     //!  Does the necessary operations to transform a shallow copy (this)
@@ -385,7 +385,9 @@ using namespace std;
       the current options and the early stopping parameters.
 */
     virtual void oldwrite(ostream& out) const;
+    /* TODO Remove (deprecated)
     virtual void oldread(istream& in);
+    */
 
     //! DEPRECATED. Call PLearn::save(filename, object) instead
     void save(const PPath& filename="") const;
