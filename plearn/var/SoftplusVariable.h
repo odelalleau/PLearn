@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftplusVariable.h,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: SoftplusVariable.h,v 1.2 2002/11/08 20:09:55 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,6 +68,8 @@ public:
   virtual void symbolicBprop();
 };
 
+inline Var softplus(Var v)
+{ return new SoftplusVariable(v); }
 
 %> // end of namespace PLearn
 

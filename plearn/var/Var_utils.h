@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Var_utils.h,v 1.2 2002/10/25 22:06:07 plearner Exp $
+   * $Id: Var_utils.h,v 1.3 2002/11/08 20:09:56 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -294,9 +294,6 @@ inline Var tanh(Var v)
 
 inline Var sigmoid(Var v)
 { return new SigmoidVariable(v); }
-
-inline Var softplus(Var v)
-{ return new SoftplusVariable(v); }
 
 inline Var square(Var v)
 { return new SquareVariable(v); }
