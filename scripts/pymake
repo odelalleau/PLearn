@@ -366,6 +366,10 @@ def printusage():
     print '  -so: create a shared object (.so) instead of an executable file.'
     print '  -dll: create a dll instead of an executable file.'
     print '        It probably works ONLY on Windows with MinGW installed.'
+    print '  -m32: force compilation in 32bits mode.'
+    print '        Works on AMD64 (linux-x86_64) and linux-i386 machines, probably also on ia64.'
+    print '        Allows to compile on .pymake/linux-x86_64.hosts,'
+    print '        linux-ia64.hosts and linux-i386.hosts.'
     print
     print """The configuration file 'config' for pymake is searched for
 first in the .pymake subdirectory of the current directory, then similarly
@@ -479,6 +483,11 @@ if 'force' in optionargs:
     force_recompilation = 1
     optionargs.remove('force')
 
+force_32bits = 0
+if 'm32' in optionargs:
+    force_32bits = 1
+    optionargs.remove('m32')
+
 if 'dist' in optionargs:
     distribute = 1
     force_link = 1
@@ -558,11 +567,12 @@ if 'tmp' in optionargs:
 else:
     temp_objs = 0
 
-  
 
 # fill the list of options from the optionargs, adding necessary default options (if no option of a group choice was specified)
 def getOptions(options_choices,optionargs):
     options = []
+
+
     for choice in options_choices:
         nmatches = 0
         for item in choice:
@@ -579,6 +589,7 @@ def getOptions(options_choices,optionargs):
         print 'Invalid options: ' + string.join(map(lambda s: '-'+s, optionargs))
         printusage()
         sys.exit()
+
     return options
 
 list_of_hosts = []
@@ -587,15 +598,22 @@ if local_compilation:
     list_of_hosts = ['localhost']
 else:
     if SPC:
-        hostspath = locateconfigfile('SPC.hosts',homedir,'localhost');
+        hostspath_list = [ locateconfigfile('SPC.hosts',homedir,'localhost') ]
+    elif force_32bits:
+        hostspath_list = [
+            locateconfigfile('linux-i386.hosts',homedir,'localhost'),
+            locateconfigfile('linux-x86_64.hosts',homedir,'localhost'),
+            locateconfigfile('linux-ia64.hosts',homedir,'localhost')
+        ]
     else:
-        hostspath = locateconfigfile(platform+'.hosts',os.getcwd(),'localhost')
-            
-    if hostspath:
-        print '*** Parallel compilation using list of hosts from file: ' + hostspath
-        f = open(hostspath,'r')
-        list_of_hosts = filter(lambda s: s and s[0]!='#', map(string.strip,f.readlines()))
-        f.close()
+        hostspath_list = [ locateconfigfile(platform+'.hosts',os.getcwd(),'localhost') ]
+
+    if hostspath_list:
+        print '*** Parallel compilation using list of hosts from file(s): ' + string.join( hostspath_list, ', ' )
+        for hostspath in hostspath_list:
+            f = open(hostspath,'r')
+            list_of_hosts = list_of_hosts + filter(lambda s: s and s[0]!='#', map(string.strip,f.readlines()))
+            f.close()
     else:
         list_of_hosts = ['localhost']
         print '*** No hosts file found: no parallel compilation, using localhost'
@@ -1025,6 +1043,10 @@ class FileInfo:
 
         compiler = default_compiler
         compileroptions = ""
+
+        if force_32bits:
+            compileroptions = compileroptions + ' -m32'
+
         for opt in options:
             optdef = pymake_options_defs[opt]
             if options_override.has_key(opt):
@@ -1040,12 +1062,13 @@ class FileInfo:
           nice = ''
         else:
           nice = nice_command + nice_value + ' '
-          
+
         command = nice + compiler + ' ' + compileflags + ' ' + compileroptions + ' ' + string.join(optlib_compopt, ' ')
         includedirs = [] + sourcedirs + mandatory_includedirs + self.get_optional_libraries_includedirs()
         if includedirs:
             command = command + ' -I' + string.join(includedirs,' -I')
-        command = command + ' -o ' + self.corresponding_ofile + ' -c ' + self.filepath        
+        command = command + ' -o ' + self.corresponding_ofile + ' -c ' + self.filepath
+
         return command
 
     def get_rel_dir_file(self):
@@ -1215,6 +1238,8 @@ digraph G
         linker = default_linker
         linkeroptions = ""
         so_options = ""
+        if force_32bits:
+            linkeroptions = linkeroptions + ' -m32'
         if create_so:
             so_options = " -shared "
         for opt in options:
@@ -1229,6 +1254,7 @@ digraph G
         # print "CALLED link_command WITH optional_libraries_linkeroptions of: ", self.get_optional_libraries_linkeroptions()        
         if dorionc_hacked_pymake:
             log_link_command( command, self.corresponding_output )
+
         return command
 
     def launch_linking(self):
@@ -1469,6 +1495,8 @@ def distribute_source(target, cfiles_to_compile, executables_to_link, linkname):
     linker = default_linker
     linkeroptions = ""
     so_options = ""
+    if force_32bits:
+        linkeroptions = linkeroptions + ' -m32'
     if create_so:
         so_options = " -shared "
     for opt in options:
@@ -1478,6 +1506,8 @@ def distribute_source(target, cfiles_to_compile, executables_to_link, linkname):
         if optdef.linker:
             linker = optdef.linker
 
+    if force_32bits:
+        compileroptions = compileroptions + ' -m32'
     for opt in options:
         optdef = pymake_options_defs[opt]
         compileroptions = compileroptions + ' ' + optdef.compileroptions
@@ -1546,14 +1576,23 @@ for target in otherargs:
         os.system('dot -T ps '+target+'.dot > '+target+'.ps')
 
     else: # We want to compile and possibly link
-        
-        options = getOptions(options_choices,optionargs)    
-    
-        # Building name of object subdirectory    
+
+        options = getOptions(options_choices,optionargs)
+
+        # Building name of object subdirectory
+        target_platform = platform
+        if force_32bits:
+            if platform=='linux-x86_64' or platform=='linux-ia64':
+                target_platform = 'linux-i386'
+            elif platform=='linux-i386':
+                pass
+            else:
+                print 'Warning: you probably shouldn\'t be using "-m32" option'
+
         if  objspolicy== 1:
-          objsdir = join('OBJS', platform + '__' + string.join(options,'_'))
+          objsdir = join('OBJS', target_platform + '__' + string.join(options,'_'))
         elif objspolicy == 2:
-          objsdir = join(objsdir,platform + '__' + string.join(options,'_'))
+          objsdir = join(objsdir, target_platform + '__' + string.join(options,'_'))
 
         print '*** Running pymake on '+os.path.basename(target)+' using configuration file: ' + configpath
         print '*** Running pymake on '+os.path.basename(target)+' using options: ' + string.join(map(lambda o: '-'+o, options))
