@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.19 2004/08/19 20:53:16 lamblin Exp $
+   * $Id: pl_math.h,v 1.20 2004/10/07 23:42:43 tatien Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -72,8 +72,12 @@ union _plearn_nan_type { unsigned char c[4]; float d; };
 extern _plearn_nan_type plearn_nan;
 
 //!  Quiet NaN (float pattern)
+#ifdef NAN
+#define MISSING_VALUE NAN
+#else
 #define MISSING_VALUE (plearn_nan.d)
-
+#endif
+  
   using namespace std;
 
   using std::log;
