@@ -75,6 +75,9 @@ class SequentialLearner: public PLearner
     Mat predictions; // each element indexed by (time_index, output_index), there are (max_seq_len,outputsize) elements.
     // initial values may be 'missing value' 
     Mat errors; // each element indexed by (time_index, cost_index), there are (max_seq_len,nCosts) elements.
+  
+  //! This field is mainly used in financial learner such as FuturesTrader to get AND modify portofolios' positions during test
+  mutable Mat state;
 
   private:
     //! This does the actual building
