@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IsSmallerVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
+   * $Id: IsSmallerVariable.h,v 1.6 2004/05/14 21:20:34 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -79,7 +79,7 @@ inline Var operator<(Var v1, Var v2)
 { return new IsSmallerVariable(v1, v2); }
 
 inline Var operator>=(Var v1, Var v2)
-{ return new IsSmallerVariable(v2, v1); };
+{ return new IsSmallerVariable(v2, v1); }
 
 } // end of namespace PLearn
 
