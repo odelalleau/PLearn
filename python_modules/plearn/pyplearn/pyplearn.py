@@ -593,7 +593,8 @@ def _plearn_repr(x):
     elif isinstance(x, int):
         return str(x)
     elif isinstance(x, str):
-        return '"' + x + '"'
+        # Escape double quotes inside the string...
+        return '"' + x.replace('"', r'\"') + '"'
     elif isinstance(x, list):
         return str(len(x)) + ' [' + ', '.join([_plearn_repr(e) for e in x]) + ']'
     elif isinstance(x, dict):
