@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.15 2004/02/29 16:44:06 nova77 Exp $
+   * $Id: VMatLanguage.cc,v 1.16 2004/03/28 02:52:47 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -612,7 +612,10 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
           case 34: //yeardiff
             b= pstack.pop();
             a= pstack.pop();
-            pstack.push((float_to_date(a)-float_to_date(b))/365.25);
+            if (is_missing(a) || is_missing(b))
+              pstack.push(MISSING_VALUE);
+            else
+              pstack.push((float_to_date(a)-float_to_date(b))/365.25);
             break;
           case 35: //year_month_day
             {
