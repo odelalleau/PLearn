@@ -17,35 +17,38 @@ def scores_to_winner_margin(scores):
 
 # def plot_2D_decision_surface(training_points
 
+if __name__ == "__main__":
 
-x = arange(7)
-y = arange(5)
-X, Y = meshgrid(x,y)
-Z = rand( len(x), len(y))
-pcolor_classic(X, Y, transpose(Z))
-show()
-print 'pcolor'
+    print "Still under development. Do not use!!!"
 
-for interpol in ['bicubic',
-                 'bilinear',
-                 'blackman100',
-                 'blackman256',
-                 'blackman64',
-                 'nearest',
-                 'sinc144',
-                 'sinc256',
-                 'sinc64',
-                 'spline16',
-                 'spline36']:
-    
-    raw_input()
-    clf()
-    imshow(Z, interpolation=interpol)
-    # show()
-    draw()
-    print interpol
-    
-show()
+    x = arange(7)
+    y = arange(5)
+    X, Y = meshgrid(x,y)
+    Z = rand( len(x), len(y))
+    pcolor_classic(X, Y, transpose(Z))
+    show()
+    print 'pcolor'
+
+    for interpol in ['bicubic',
+                     'bilinear',
+                     'blackman100',
+                     'blackman256',
+                     'blackman64',
+                     'nearest',
+                     'sinc144',
+                     'sinc256',
+                     'sinc64',
+                     'spline16',
+                     'spline36']:
+
+        raw_input()
+        clf()
+        imshow(Z, interpolation=interpol)
+        # show()
+        draw()
+        print interpol
+
+    show()
 
 
 
