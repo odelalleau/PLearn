@@ -320,6 +320,7 @@ public:
 #endif
   }
   
+  //! If you put back the result of a call to get(), make sure it is not EOF.
   inline PStream& putback(char c) 
   { 
 #if STREAMBUFVER == 1 
@@ -330,11 +331,17 @@ public:
     return *this; 
   }
 
+  //! Put back the last character read by the get() or read() methods.
+  //! You can only call this method once (use the unread() method if you want
+  //! to put back more than one character).
+  inline PStream& unget() {
 #if STREAMBUFVER == 1 
-  // We do not define unget. Use putback(c) instead.
+    ptr->unget();
+    return *this;
 #else
-  inline PStream& unget() { ptr->rawin()->unget(); return *this; }
+    ptr->rawin()->unget(); return *this; 
 #endif
+  }
 
   inline PStream& unread(const char* p, streamsize n)
   {
