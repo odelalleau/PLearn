@@ -1,0 +1,10 @@
+# -*-python-*-
+
+from defs import *
+Import('base.pyste')
+
+# Splitters...
+
+p_explicitsplitter = Class('PLearn::ExplicitSplitter', 'plearn/vmat/ExplicitSplitter.h')
+exclude_stuff(p_explicitsplitter)
+set_our_policy(p_explicitsplitter)

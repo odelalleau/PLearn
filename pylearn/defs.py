@@ -1,5 +1,5 @@
-# -*-python-*-
-
+from policies import *
+from infos import *
 
 # Exclude begin, end. etc. temporarily until we figure out
 # how to map them to Python iterators
@@ -17,7 +17,12 @@ exclude_list = [ 'begin', 'end', 'top', 'firstElement', 'lastElement',
                  '_static_initializer_',
                  # Exclude this because there are two overloaded versions,
                  # one which requires a policy and the other which does not.
-                 'getStats'
+                 'getStats',
+                 # Exclude TMat iterators
+                 'compact_begin', 'compact_end', 'rowelements_begin',
+                 'rowelements_end', 'rowdata',
+                 # Exclude some more stuff to wrap TVec<string> and TMat<VMat>
+                 'findIndices', 'find', 'input'
                  ]
 
 # We exclude the operator<< and operator>> because wrapping them using
@@ -47,56 +52,3 @@ def set_our_policy(c):
         set_policy(getattr(c, attr), pol)
 
 
-# Additional includes
-
-declaration_code('''#include <plearn/ker/Kernel.h>
-#include <plearn/var/Func.h>
-''')
-
-# PLearn base classes...
-
-Class('PLearn::PPointable', 'plearn/base/PP.h')
-
-p_object = Class('PLearn::Object', 'plearn/base/Object.h')
-exclude_stuff(p_object, 'deepCopy')
-set_our_policy(p_object)
-
-
-# Useful global functions
-
-set_policy(Function('PLearn::newObject', 'plearn/base/Object.h'), return_value_policy(manage_new_object))
-set_policy(Function('PLearn::macroLoadObject', 'plearn/base/Object.h'), return_value_policy(manage_new_object))
-set_policy(Function('PLearn::loadObject', 'plearn/base/Object.h'), return_value_policy(manage_new_object))
-
-Function('PLearn::getDataSetHelp', 'plearn/db/getDataSet.h')
-Function('PLearn::getDataSet', 'plearn/db/getDataSet.h')
-
-
-# Vector and matrix classes.
-
-p_tvec = Template('PLearn::TVec', 'plearn/math/TVec.h')
-exclude_stuff(p_tvec)
-exclude(p_tvec.operator['char*'])
-p_tvec('double', 'TVec_double')
-p_tvec('float', 'TVec_float')
-
-p_vmat = Class('PLearn::VMat', 'plearn/vmat/VMat.h')
-exclude_stuff(p_vmat)
-
-# VMatrix.h only includes forward declarations for PLearn::Ker
-# and PLearn::Func, but that isn't enough to get
-# the Pyste-generated wrapper to compile. Disabled for now.
-p_vmatrix = Class('PLearn::VMatrix', 'plearn/vmat/VMatrix.h')
-exclude_stuff(p_vmatrix)
-set_our_policy(p_vmatrix)
-
-
-# Learners...
-
-p_plearner = Class('PLearn::PLearner', 'plearn_learners/generic/PLearner.h')
-exclude_stuff(p_plearner)
-set_our_policy(p_plearner)
-
-p_constantregressor = Class('PLearn::ConstantRegressor', 'plearn_learners/regressors/ConstantRegressor.h')
-exclude_stuff(p_constantregressor)
-set_our_policy(p_constantregressor)

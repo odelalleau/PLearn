@@ -1,0 +1,11 @@
+# -*-python-*-
+
+from defs import *
+Import('base.pyste')
+
+
+# Testers...
+
+p_ptester = Class('PLearn::PTester', 'plearn_learners/testers/PTester.h')
+exclude_stuff(p_ptester)
+set_our_policy(p_ptester)

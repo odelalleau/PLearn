@@ -1,0 +1,14 @@
+# -*-python-*-
+
+from defs import *
+Import('base.pyste')
+
+# Learners...
+
+p_plearner = Class('PLearn::PLearner', 'plearn_learners/generic/PLearner.h')
+exclude_stuff(p_plearner)
+set_our_policy(p_plearner)
+
+p_constantregressor = Class('PLearn::ConstantRegressor', 'plearn_learners/regressors/ConstantRegressor.h')
+exclude_stuff(p_constantregressor)
+set_our_policy(p_constantregressor)

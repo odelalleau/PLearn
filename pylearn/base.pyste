@@ -1,0 +1,25 @@
+# -*-python-*-
+
+from defs import *
+
+# PLearn base classes...
+
+Class('PLearn::PPointable', 'plearn/base/PP.h')
+
+p_object = Class('PLearn::Object', 'plearn/base/Object.h')
+exclude_stuff(p_object, 'deepCopy')
+set_our_policy(p_object)
+
+
+# Useful global functions
+
+set_policy(Function('PLearn::newObject', 'plearn/base/Object.h'), return_value_policy(manage_new_object))
+set_policy(Function('PLearn::macroLoadObject', 'plearn/base/Object.h'), return_value_policy(manage_new_object))
+set_policy(Function('PLearn::loadObject', 'plearn/base/Object.h'), return_value_policy(manage_new_object))
+
+Function('PLearn::getDataSetHelp', 'plearn/db/getDataSet.h')
+Function('PLearn::getDataSet', 'plearn/db/getDataSet.h')
+
+# TODO: figure out how to wrap function templates. The following doesn't work.
+#p_saveAscii = Template('PLearn::saveAscii', 'plearn/io/MatIO.h')
+#p_saveAscii('double', 'saveAscii_double')
