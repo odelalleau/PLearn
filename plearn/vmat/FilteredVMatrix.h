@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $ 
+   * $Id: FilteredVMatrix.h,v 1.6 2004/04/05 23:14:13 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -115,6 +115,8 @@ public:
   PLEARN_DECLARE_OBJECT(FilteredVMatrix);
 
 };
+
+DECLARE_OBJECT_PTR(FilteredVMatrix);
 
 } // end of namespace PLearn
 #endif

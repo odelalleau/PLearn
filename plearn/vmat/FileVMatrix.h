@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.9 2004/03/25 21:40:31 plearner Exp $
+   * $Id: FileVMatrix.h,v 1.10 2004/04/05 23:14:13 morinf Exp $
    ******************************************************* */
 
 
@@ -82,7 +82,6 @@ class FileVMatrix: public VMatrix
   virtual void flush();
 
   virtual void build();
-  void build_();
 
   PLEARN_DECLARE_OBJECT(FileVMatrix);
 
@@ -92,6 +91,8 @@ class FileVMatrix: public VMatrix
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   virtual ~FileVMatrix();
+private:
+  void build_();
 };
 
 DECLARE_OBJECT_PTR(FileVMatrix);

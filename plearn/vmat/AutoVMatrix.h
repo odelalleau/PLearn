@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: AutoVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $
+   * $Id: AutoVMatrix.h,v 1.6 2004/04/05 23:14:13 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -84,9 +84,6 @@ protected:
 public:
   // simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
 };
 

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: AutoVMatrix.cc,v 1.4 2004/02/20 21:14:29 chrish42 Exp $
+ * $Id: AutoVMatrix.cc,v 1.5 2004/04/05 23:14:13 morinf Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -47,7 +47,7 @@
 namespace PLearn {
 using namespace std;
 
-PLEARN_IMPLEMENT_OBJECT(AutoVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(AutoVMatrix, "ONE LINE DESCR", "AutoVMatrix tries to interpret the given 'specification' (it will call getDataSet) and will be a wrapper around the appropriate VMatrix type, simply forwarding calls to it.");
 
 AutoVMatrix::AutoVMatrix(const string& the_specification)
   :specification(the_specification)
@@ -59,13 +59,6 @@ void AutoVMatrix::declareOptions(OptionList& ol)
                 "This is any string understood by getDataSet. Typically a file or directory path");
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
-}
-
-string AutoVMatrix::help()
-{
-  return 
-    "AutoVMatrix tries to interpret the given 'specification' (it will call getDataSet) and will be a wrapper around the appropriate VMatrix type, simply forwarding calls to it."
-    + optionHelp();
 }
 
 void AutoVMatrix::build_()

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.cc,v 1.10 2004/02/29 16:44:06 nova77 Exp $ 
+   * $Id: AsciiVMatrix.cc,v 1.11 2004/04/05 23:14:13 morinf Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
@@ -43,10 +43,10 @@ namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(AsciiVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(AsciiVMatrix, "ONE LINE DESCR", "AsciiVMatrix implements a file in ascii format");
 
 AsciiVMatrix::AsciiVMatrix()
-  :file(0), readwritemode(false), newfile(false),
+  :file(0), readwritemode(false), newfile(true),
    rewrite_length(true)
 {}
 
@@ -301,14 +301,6 @@ void AsciiVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "filename", &AsciiVMatrix::filename, OptionBase::buildoption, "Filename of the matrix");
   declareOption(ol, "readwritemode", &AsciiVMatrix::readwritemode, OptionBase::buildoption, "Is the file to be opened in read/write mode");
   inherited::declareOptions(ol);
-}
-
-string AsciiVMatrix::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "AsciiVMatrix implements a file in ascii format"
-    + optionHelp();
 }
 
 AsciiVMatrix::~AsciiVMatrix()

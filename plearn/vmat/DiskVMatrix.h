@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.h,v 1.9 2004/03/23 23:08:08 morinf Exp $
+   * $Id: DiskVMatrix.h,v 1.10 2004/04/05 23:14:13 morinf Exp $
    ******************************************************* */
 
 
@@ -94,13 +94,14 @@ public:
   virtual void flush();
 
   virtual void build();
-  void build_();
 
   PLEARN_DECLARE_OBJECT(DiskVMatrix);
 
   static void declareOptions(OptionList & ol);
   
   virtual ~DiskVMatrix();
+private:
+  void build_();
 };
 
 DECLARE_OBJECT_PTR(DiskVMatrix);

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.h,v 1.8 2004/03/23 23:08:09 morinf Exp $
+   * $Id: SubVMatrix.h,v 1.9 2004/04/05 23:14:13 morinf Exp $
    ******************************************************* */
 
 
@@ -84,8 +84,8 @@ public:
   PLEARN_DECLARE_OBJECT(SubVMatrix);
   static void declareOptions(OptionList &ol);
   virtual void build();
+private:
   void build_();
-
 };
 
 DECLARE_OBJECT_PTR(SubVMatrix);

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $
+   * $Id: RowBufferedVMatrix.h,v 1.6 2004/04/05 23:14:13 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -78,6 +78,8 @@ public:
 
   PLEARN_DECLARE_ABSTRACT_OBJECT(RowBufferedVMatrix);
 };
+
+DECLARE_OBJECT_PTR(RowBufferedVMatrix);
 
 } // end of namespace PLearn
 #endif

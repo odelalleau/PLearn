@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $
+   * $Id: ConcatRowsVMatrix.h,v 1.6 2004/04/05 23:14:13 morinf Exp $
    ******************************************************* */
 
 
@@ -100,6 +100,7 @@ class ConcatRowsVMatrix: public VMatrix
   PLEARN_DECLARE_OBJECT(ConcatRowsVMatrix);
   static void declareOptions(OptionList &ol);
   virtual void build();
+private:
   void build_();
 };
 

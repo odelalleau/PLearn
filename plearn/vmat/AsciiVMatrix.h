@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.h,v 1.9 2004/03/23 23:08:08 morinf Exp $ 
+   * $Id: AsciiVMatrix.h,v 1.10 2004/04/05 23:14:13 morinf Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.h */
@@ -104,15 +104,15 @@ public:
   // simply calls inherited::build() then build_() 
   virtual void build();
 
-  //! Provides a help message describing this class
-  static string help();
-
   virtual ~AsciiVMatrix();
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(AsciiVMatrix);
 
 };
+
+// Declares a few other classes and functions related to this class
+DECLARE_OBJECT_PTR(AsciiVMatrix);
 
 } // end of namespace PLearn
 #endif

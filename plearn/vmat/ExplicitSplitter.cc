@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExplicitSplitter.cc,v 1.6 2004/02/20 21:14:29 chrish42 Exp $ 
+   * $Id: ExplicitSplitter.cc,v 1.7 2004/04/05 23:14:13 morinf Exp $ 
    ******************************************************* */
 
 /*! \file ExplicitSplitter.cc */
@@ -48,7 +48,10 @@ ExplicitSplitter::ExplicitSplitter()
 {}
 
 
-PLEARN_IMPLEMENT_OBJECT(ExplicitSplitter, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(ExplicitSplitter, "ONE LINE DESCR",
+    "ExplicitSplitter allows you to define a 'splitter' by giving eplicitly the datasets for each split\n"
+    "as a matrix VMatrices.\n"
+    "(This splitter in effect ignores the 'dataset' it is given with setDataSet) \n");
 
 void ExplicitSplitter::declareOptions(OptionList& ol)
 {
@@ -57,17 +60,9 @@ void ExplicitSplitter::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-string ExplicitSplitter::help()
-{
-  return 
-    "ExplicitSplitter allows you to define a 'splitter' by giving eplicitly the datasets for each split\n"
-    "as a matrix VMatrices.\n"
-    "(This splitter in effect ignores the 'dataset' it is given with setDataSet) \n"
-    + optionHelp();
-}
-
 void ExplicitSplitter::build_()
-{}
+{
+}
 
 // ### Nothing to add here, simply calls build_
 void ExplicitSplitter::build()
