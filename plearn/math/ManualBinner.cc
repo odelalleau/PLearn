@@ -1,12 +1,8 @@
-
-
 // -*- C++ -*-
 
-// Binner.cc
+// ManualBinner.cc
 // 
-// Copyright (C) *YEAR* *AUTHOR(S)* 
-// ...
-// Copyright (C) *YEAR* *AUTHOR(S)* 
+// Copyright (C) 2002 Xavier Saint-Mleux
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -37,18 +33,17 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.cc,v 1.2 2002/10/24 20:17:15 zouave Exp $ 
+   * $Id: ManualBinner.cc,v 1.1 2002/10/24 20:17:15 zouave Exp $ 
    ******************************************************* */
 
-/*! \file Binner.cc */
-#include "Binner.h"
+/*! \file ManualBinner.cc */
+#include "ManualBinner.h"
 
 namespace PLearn <%
 using namespace std;
 
-Binner::Binner() 
-  :Object()
-/* ### Initialise all fields to their default value */
+ManualBinner::ManualBinner() 
+  :Binner(), the_mapping(), bin_positions()
   {
     // ...
 
@@ -56,54 +51,54 @@ Binner::Binner()
     // build_();
   }
 
-
-  IMPLEMENT_NAME_AND_DEEPCOPY(Binner);
-
-  void Binner::declareOptions(OptionList& ol)
+ManualBinner::ManualBinner(Vec bin_positions_) 
+  :Binner(), the_mapping(), bin_positions(bin_positions_.copy())
   {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
+    build_();
+  }
 
-    // ### ex:
-    // declareOption(ol, "myoption", &Binner::myoption, OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
+
+  IMPLEMENT_NAME_AND_DEEPCOPY(ManualBinner);
+
+  void ManualBinner::declareOptions(OptionList& ol)
+  {
+    declareOption(ol, "bin_positions", &ManualBinner::bin_positions, OptionBase::buildoption,
+                   "The supplied cut points; should be sorted in ascending order.");
+
+    declareOption(ol, "the_mapping", &ManualBinner::the_mapping, OptionBase::learntoption,
+                   "Pre-calculated RealMapping object that is returned by getBinning");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
   }
 
-  string Binner::help() const
+  string ManualBinner::help() const
   {
     // ### Provide some useful description of what the class is ...
     return 
-      "Binner implements a ..."
+      "ManualBinner implements a Binner for which cutpoints are predefined.  "
+      "It's getBinning function doesn't have to look at the data; it simply "
+      "builds a RealMapping from the supplied bin_positions."
       + optionHelp();
   }
 
-  void Binner::build_()
+  void ManualBinner::build_()
   {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
+    // create the pre-calculated RealMapping from bin_position
+    the_mapping.clear();
+    for(int i= 1; i < bin_positions.length(); ++i)
+      the_mapping.addMapping(RealRange(']', bin_positions[i-1], bin_positions[i], ']'), i-1);
   }
 
   // ### Nothing to add here, simply calls build_
-  void Binner::build()
+  void ManualBinner::build()
   {
     inherited::build();
     build_();
   }
 
 
-  void Binner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  void ManualBinner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   {
     Object::makeDeepCopyFromShallowCopy(copies);
 
@@ -114,11 +109,13 @@ Binner::Binner()
     // deepCopyField(trainvec, copies);
 
     // ### Remove this line when you have fully implemented this method.
-    PLERROR("Binner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    PLERROR("ManualBinner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
   }
 
+
 //! Returns a binning for a single column vmatrix v 
-RealMapping getBinning(VMat v) const
-{ PLERROR("getBinning not implemented for this Binner"); return RealMapping(); }
+PP<RealMapping> ManualBinner::getBinning(VMat v) const
+{ return the_mapping; }
+
 
 %> // end of namespace PLearn

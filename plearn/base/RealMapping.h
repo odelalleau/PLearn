@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.4 2002/10/15 17:31:07 jkeable Exp $
+   * $Id: RealMapping.h,v 1.5 2002/10/24 20:17:12 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -113,6 +113,9 @@ using namespace std;
 
     int size() const { return mapping.length(); }
     int length() const { return mapping.length(); }
+
+    //! Removes all entries in mapping.  Does not change other params.
+    inline void clear() { mapping.clear(); }
     
     void addMapping(const RealRange& range, real val)
     { mapping.push_back(make_pair(range,val)); }
