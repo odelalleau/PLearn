@@ -214,6 +214,13 @@ void SequentialValidation::run()
   int horizon = learner->horizon;
   learner->init_train_size = init_train_size;
   
+  VMat test_outputs;
+  VMat test_costs;
+  if (save_test_outputs)
+    test_outputs = new FileVMatrix(expdir+"/test_outputs.pmat",0,outputsize);
+  if (save_test_costs)
+    test_costs = new FileVMatrix(expdir+"/test_costs.pmat",0,testcostsize);
+
   int splitnum = 0;
   for (int t=init_train_size; t<=dataset.length()-horizon; t++, splitnum++)
   {
@@ -224,7 +231,7 @@ void SequentialValidation::run()
     VMat sub_test = dataset.subMatRows(0, t+horizon);
 
     string splitdir = expdir+"train_t="+tostring(t)+"/";
-    if (save_data_sets || save_initial_model)
+    if (save_data_sets || save_initial_model || save_stat_collectors || save_final_model)
       force_mkdir(splitdir);
     if (save_data_sets)
       PLearn::save(splitdir+"training_set.psave", sub_train);
@@ -244,13 +251,6 @@ void SequentialValidation::run()
       PLearn::save(splitdir+"final_learner.psave",learner);
 
     // Test
-    VMat test_outputs;
-    VMat test_costs;
-    if (save_test_outputs)
-      test_outputs = new FileVMatrix(splitdir+"test_outputs.pmat",0,outputsize);
-    if (save_test_costs)
-      test_costs = new FileVMatrix(splitdir+"test_costs.pmat",0,testcostsize);
-
     if (save_data_sets)
       PLearn::save(splitdir+"test_set.psave", sub_test);
 
