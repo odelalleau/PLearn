@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.10 2003/06/12 20:45:20 ducharme Exp $
+   * $Id: PLearner.h,v 1.11 2003/08/07 19:23:40 dorionc Exp $
    ******************************************************* */
 
 
@@ -117,7 +117,7 @@ using namespace std;
     //! related to this model are to be saved.     
     //! If it is an empty string, it is understood to mean that the 
     //! user doesn't want any file created by this learner.
-    void setExperimentDirectory(const string& the_expdir);
+    virtual void setExperimentDirectory(const string& the_expdir);
 
     //! This returns the currently set expdir (see setExperimentDirectory)
     string getExperimentDirectory() const { return expdir; }
