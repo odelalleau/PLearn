@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.29 2004/05/11 20:57:54 tihocan Exp $ 
+   * $Id: PTester.cc,v 1.30 2004/07/19 13:29:29 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -451,6 +451,8 @@ void StatSpec::parseStatname(const string& statname)
     PLERROR("Expected dataset.xxxSTATxxx after the opening bracket. Got %s", token.c_str());
   else if(nextsep=='[') // Old format (for backward compatibility) ex: E[E[train.mse]]
     {
+      PLWARNING("In StatSpec::parseStatname - You are still using the old statnames format, please use the new one!");
+      // TODO Remove the old format some day?
       intstatname = token;
       if(in.smartReadUntilNext(".",setname)==EOF)
         PLERROR("Error while parsing statname: expected a dot");
