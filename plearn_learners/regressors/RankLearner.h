@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RankLearner.h,v 1.1 2004/10/29 16:03:04 tihocan Exp $ 
+   * $Id: RankLearner.h,v 1.2 2004/11/05 16:08:38 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -45,6 +45,7 @@
 #define RankLearner_INC
 
 #include <plearn_learners/generic/EmbeddedLearner.h>
+#include <plearn/vmat/RankedVMatrix.h>
 
 namespace PLearn {
 
@@ -64,8 +65,19 @@ protected:
 
   // Fields below are not options.
 
+  //! Used to store the last output computed, in order not to have to recompute
+  //! the sub-learner's output in computeCostsFromOutputs().
+  mutable Vec last_output;
+  
   //! Used to store the sub-learner's output.
   mutable Vec learner_output;
+
+  //! A vector used to store the desired sub-learner's target when computing
+  //! the output.
+  Vec learner_target;
+
+  //! A pointer to the ranked training set given to the sub-learner.
+  PP<RankedVMatrix> ranked_trainset;
 
 public:
 
@@ -144,6 +156,9 @@ public:
   //! Overridden to sort the targets by rank and provide the modified training
   //! set to the underlying learner.
   virtual void setTrainingSet(VMat training_set, bool call_forget = true);
+
+  //! Overridden so as to learn the 'sorted_targets' option.
+  virtual void train();
 
   // *** SUBCLASS WRITING: ***
   // While in general not necessary, in case of particular needs 

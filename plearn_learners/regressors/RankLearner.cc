@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RankLearner.cc,v 1.2 2004/10/29 17:46:44 tihocan Exp $ 
+   * $Id: RankLearner.cc,v 1.3 2004/11/05 16:08:37 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -42,7 +42,6 @@
 
 
 #include "RankLearner.h"
-#include <plearn/vmat/RankedVMatrix.h>
 
 namespace PLearn {
 using namespace std;
@@ -62,8 +61,9 @@ PLEARN_IMPLEMENT_OBJECT(RankLearner,
     "linear interpolation between the two closest targets is used, and the\n"
     "output is bounded by the lowest and highest targets in the training set.\n"
     "\n"
-    "For the moment, no costs are computed. Access to sub-learner costs\n"
-    "should be implemented in the future.\n"
+    "The costs computed are those of the sub-learner, and they are preceded\n"
+    "with the 'learner.' prefix. For instance, if the sub-learner computes the\n"
+    "'mse' cost, this learner will rename it into 'learner.mse'.\n"
 );
 
 ////////////////////
@@ -104,16 +104,59 @@ void RankLearner::build_()
   if (learner_ && learner_->outputsize() >= 0) {
     learner_output.resize(learner_->outputsize());
   }
+  // The sub-learner's target is a rank, thus of dimension 1.
+  learner_target.resize(1);
+  // Currently, only works with 1-dimensional targets.
+  last_output.resize(1);
 }
 
 /////////////////////////////
 // computeCostsFromOutputs //
 /////////////////////////////
 void RankLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                           const Vec& target, Vec& costs) const
+                                          const Vec& target, Vec& costs) const
 {
-  // No cost computed.
-  costs.resize(0);
+  static real desired_rank, val, frac;
+  static int n, left, right, mid;
+  // Find the desired rank.
+  val = output[0];
+  n = sorted_targets.length();
+  if (val <= sorted_targets[0])
+    // Lowest than all targets.
+    desired_rank = 0;
+  else if (val >= sorted_targets[n - 1])
+    // Highest than all targets.
+    desired_rank = n-1;
+  else {
+    // Looking for the closest targets by binary search.
+    left = 0;
+    right = n - 1;
+    while (right > left + 1) {
+      mid = (left + right) / 2;
+      if (val < sorted_targets[mid])
+        right = mid;
+      else
+        left = mid;
+    }
+    if (right == left)
+      if (left == n - 1)
+        left--;
+      else
+        right++;
+    frac = sorted_targets[right] - sorted_targets[left];
+    if (frac < 1e-30)
+      // Equal targets, up to numerical precision.
+      desired_rank = left;
+    else
+      desired_rank = left + (val - sorted_targets[left]) / frac;
+  }
+  learner_target[0] = desired_rank;
+  if (last_output[0] != output[0])
+    // This case is not handled yet.
+    PLERROR("In RankLearner::computeCostsFromOutputs - Currently, one can only use computeCostsFromOutputs() "
+            "after calling computeOutput.");
+  // In this case, the sub-learner's output is the last one computed in computeOutput().
+  learner_->computeCostsFromOutputs(input, learner_output, learner_target, costs);
 }                                
 
 ///////////////////
@@ -138,6 +181,7 @@ void RankLearner::computeOutput(const Vec& input, Vec& output) const
     rank_inf = int(val);
     output[0] = sorted_targets[rank_inf] + (val - rank_inf) * (sorted_targets[rank_inf + 1] - sorted_targets[rank_inf]);
   }
+  last_output[0] = output[0];
 }    
 
 ///////////////////////////
@@ -145,6 +189,7 @@ void RankLearner::computeOutput(const Vec& input, Vec& output) const
 ///////////////////////////
 void RankLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
                                    Vec& output, Vec& costs) const {
+  // TODO Optimize to take advantage of the sub-learner's method.
   PLearner::computeOutputAndCosts(input, target, output, costs);
 }
 
@@ -162,8 +207,12 @@ void RankLearner::forget()
 //////////////////////
 TVec<string> RankLearner::getTestCostNames() const
 {
-  // No cost computed.
-  return TVec<string>();
+  // Add 'learner.' in front of the sub-learner's costs.
+  TVec<string> learner_costs = learner_->getTestCostNames();
+  TVec<string> costs(learner_costs.length());
+  for (int i = 0; i < costs.length(); i++)
+    costs[i] = "learner." + learner_costs[i];
+  return costs;
 }
 
 ///////////////////////
@@ -171,8 +220,12 @@ TVec<string> RankLearner::getTestCostNames() const
 ///////////////////////
 TVec<string> RankLearner::getTrainCostNames() const
 {
-  // No cost computed.
-  return TVec<string>();
+  // Add 'learner.' in front of the sub-learner's costs.
+  TVec<string> learner_costs = learner_->getTrainCostNames();
+  TVec<string> costs(learner_costs.length());
+  for (int i = 0; i < costs.length(); i++)
+    costs[i] = "learner." + learner_costs[i];
+  return costs;
 }
 
 /////////////////////////////////
@@ -204,17 +257,27 @@ int RankLearner::outputsize() const
 // setTrainingSet //
 ////////////////////
 void RankLearner::setTrainingSet(VMat training_set, bool call_forget) {
-  PLearner::setTrainingSet(training_set, call_forget);
-  PP<RankedVMatrix> ranked_trainset = new RankedVMatrix(training_set);
-  // Avoid calling learner_->forget() twice.
+  // Some stuff similar to EmbeddedLearner.
+  bool training_set_has_changed = !train_set || !(train_set->looksTheSameAs(training_set));
+  ranked_trainset = new RankedVMatrix(training_set);
   learner_->setTrainingSet((RankedVMatrix *) ranked_trainset, false);
+  if (call_forget && !training_set_has_changed)
+    learner_->build();
+  // Resize work variable.
+  if (learner_->outputsize() >= 0)
+    learner_output.resize(learner_->outputsize());
+  PLearner::setTrainingSet(training_set, call_forget);
+}
+
+///////////
+// train //
+///////////
+void RankLearner::train() {
   // Remember the sorted targets, because we will need them for prediction.
   Mat mat_sorted_targets = ranked_trainset->getSortedTargets().column(0);
   sorted_targets.resize(mat_sorted_targets.length());
   sorted_targets << mat_sorted_targets;
-  // Resize work variable.
-  if (learner_->outputsize() >= 0)
-    learner_output.resize(learner_->outputsize());
+  inherited::train();
 }
-
+ 
 } // end of namespace PLearn
