@@ -36,12 +36,12 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.1 2003/04/14 18:50:42 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.2 2003/04/14 19:30:09 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include "ConjugateGradient.h"
 #include "ConjGradientOptimizer.h"
+#include "TMat_maths_impl.h"
 
 namespace PLearn <%
 using namespace std;
@@ -127,9 +127,135 @@ void ConjGradientOptimizer::oldread(istream& in)
 //
 IMPLEMENT_NAME_AND_DEEPCOPY(ConjGradientOptimizer);
 
-//
-// optimize
-//
+/*************************
+ * MAIN SPECIFIC METHODS *
+ *************************/
+
+/////////////////////////////
+// computeOppositeGradient //
+/////////////////////////////
+void ConjGradientOptimizer::computeOppositeGradient(
+    VarArray params,
+    Var cost,
+    VarArray proppath,
+    const Vec& gradient) {
+  proppath.clearGradient(); // TODO What does that do exactly ?
+  params.clearGradient();
+  cost->gradient[0] = -1;
+  proppath.fbprop();
+  params.copyGradientTo(gradient);
+}
+
+///////////////
+// conjpomdp //
+///////////////
+bool ConjGradientOptimizer::conjpomdp (
+    void (*grad)(VarArray, Var, VarArray, const Vec&),
+    VarArray params,
+    Var costs,
+    VarArray proppath,
+    real starting_step_size,
+    real epsilon,
+    Vec g,
+    Vec h,
+    Vec delta) {
+
+  int i;
+  // First perform a line search in the current search direction (h)
+  gSearch(grad, params, costs, proppath, h, starting_step_size, epsilon);
+
+  (*grad)(params, costs, proppath, delta);
+//  cout << "norm(grad)" << pownorm(g) << endl;
+  real norm_g = pownorm(g);
+  // g <- delta - g
+  for (i=0; i<g.length(); i++) {
+    g[i] = delta[i] - g[i];
+  }
+  real gamma = dot(g, delta) / norm_g;
+  // h <- delta + gamma * h
+  for (i=0; i<h.length(); i++) {
+    h[i] = delta[i] + gamma * h[i];
+  }
+  if (dot(h, delta) < 0) {
+    // h <- delta
+    for (i=0; i<h.length(); i++) {
+      h[i] = delta[i];
+    }
+  }
+  // g <- delta
+  for (i=0; i<g.length(); i++) {
+    g[i] = delta[i];
+  }
+  // We stop when the norm of the gradient is small enough
+  return (pownorm(g) < epsilon);
+};
+
+/////////////
+// gSearch //
+/////////////
+void ConjGradientOptimizer::gSearch (
+    void (*grad)(VarArray, Var, VarArray, const Vec&),
+    VarArray params,
+    Var costs,
+    VarArray proppath,
+    Vec search_direction,
+    real starting_step_size,
+    real epsilon) {
+
+  real step = starting_step_size;
+  real sp, sm, pp, pm;
+  Vec initial_values(params.nelems());
+
+  // Backup the initial paremeters values
+  params.copyTo(initial_values);
+
+  params.update(step, search_direction);
+  Vec delta(params.nelems());
+  (*grad)(params, costs, proppath, delta);
+  real prod = dot(delta, search_direction);
+
+  if (prod < 0) {
+    // Step back to bracket the maximum
+    while (prod < -epsilon) {
+      sp = step;
+      pp = prod;
+      step = step / 2;
+      // TODO Find a more efficient way to do this !
+      params.copyFrom(initial_values);
+      params.update(step, search_direction);
+      (*grad)(params, costs, proppath, delta);
+      prod = dot(delta, search_direction);
+    }
+    sm = step;
+    pm = prod;
+  }
+  else {
+    // Step forward to bracket the maximum
+    while (prod > epsilon) {
+      sm = step;
+      pm = prod;
+      step = step * 2;
+      params.copyFrom(initial_values);
+      params.update(step, search_direction);
+      (*grad)(params, costs, proppath, delta);
+      prod = dot(delta, search_direction);
+    }
+    sp = step;
+    pp = prod;
+  }
+
+  if (pm > 0 && pp < 0)
+    step = (sm*pp - sp*pm) / (pp - pm);
+  else
+    step = (sm+sp) / 2;
+
+  params.copyFrom(initial_values);
+  params.update(step, search_direction);
+}
+
+//////////////
+// optimize //
+//////////////
 real ConjGradientOptimizer::optimize()
 {
   ofstream out;
@@ -157,7 +283,7 @@ real ConjGradientOptimizer::optimize()
     // Make one iteration through the CONJPOMDP algorithm
     cost->fprop();
     cout << "cost = " << cost->value[0] << " " << cost->value[1] << " " << cost->value[2] << endl;
-    early_stop = ConjugateGradient::conjpomdp(
+    early_stop = conjpomdp(
         computeOppositeGradient, 
         params, 
         cost,
@@ -192,20 +318,4 @@ real ConjGradientOptimizer::optimize()
   return lastmeancost[0];
 }
 
-//
-// computeOppositeGradient
-//
-void ConjGradientOptimizer::computeOppositeGradient(
-    VarArray params,
-    Var cost,
-    VarArray proppath,
-    const Vec& gradient) {
-  proppath.clearGradient(); // TODO What does that do exactly ?
-  params.clearGradient();
-  cost->gradient[0] = -1;
-  proppath.fbprop();
-  params.copyGradientTo(gradient);
-}
-
 %> // end of namespace PLearn
-

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.1 2003/04/14 18:50:45 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.2 2003/04/14 19:30:12 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,7 +51,7 @@ using namespace std;
 
 
 /*
- * CLASS ConjGradientOptimizer
+ * CLASS CONJGRADIENTOPTIMIZER
  *
  * An optimizer using the conjugate gradient method.
  * Currently only implements one method, but will hopefully evolve to be able
@@ -112,6 +112,12 @@ public:
   virtual void oldread(istream& in);
   virtual real optimize();
 
+
+protected:
+  static void declareOptions(OptionList& ol);
+
+private:
+
   // Given a propagation path and the parameters params,
   // compute the opposite of the gradient and store it in the "gradient" Vec.
   static void computeOppositeGradient(
@@ -120,9 +126,37 @@ public:
       VarArray proppath,
       const Vec& gradient);
 
-protected:
-  static void declareOptions(OptionList& ol);
+  // The CONJPOMDP algorithm as described in
+  // "Direct Gradient-Based Reinforcement Learning:
+  // II. Gradient Ascent Algorithms and Experiments"
+  // by J.Baxter, L. Weaver, P. Bartlett.
+  // This is just one single iteration of the algorithm.
+  // Return true when the convergence is obtained.
+  static bool conjpomdp (
+      // the given grad function needs to compute the gradient
+      void (*grad)(VarArray params, Var cost, VarArray proppath, const Vec& gradient),
+      VarArray params,    // the current parameters of the model
+      Var costs,          // the cost to optimize
+      VarArray proppath,  // the propagation path from params to costs
+      real starting_step_size, // the initial step size for the line search
+      real epsilon,       // the gradient resolution (stop criterion)
+      Vec g,              // storage place, first initialized as the gradient
+      Vec h,              // same as g
+      Vec delta);         // storage place, size of the gradient
 
+  // The GSearch algorithm as described in
+  // "Direct Gradient-Based Reinforcement Learning:
+  // II. Gradient Ascent Algorithms and Experiments"
+  // by J.Baxter, L. Weaver, P. Bartlett.
+  // See conjpomdp for more explainations on the parameters.
+  static void gSearch (
+      void (*grad)(VarArray, Var, VarArray, const Vec&),
+      VarArray params,
+      Var costs,
+      VarArray proppath,
+      Vec search_direction, // current direction
+      real starting_step_size,
+      real epsilon);
 };
 
 %> // end of namespace PLearn
