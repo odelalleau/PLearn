@@ -84,22 +84,33 @@ void SequentialLearner::declareOptions(OptionList& ol)
 {
   declareOption(ol, "init_train_size", &SequentialLearner::init_train_size, OptionBase::buildoption,
                 "Before the length of train_set reaches init_train_size, train doesn't do anything.\n"
-                "Default: 1.");
+                "Default = 1.");
 
   declareOption(ol, "max_seq_len", &SequentialLearner::max_seq_len,
-    OptionBase::buildoption, "max length of the training matrice \n");
+                OptionBase::buildoption,
+                "Maximum length that the training matrix will ever reach;\n"
+                "this is used as an optimization to preallocate buffers\n"
+                "and avoid reallocations as training/testing proceeds.");
 
   declareOption(ol, "max_train_len", &SequentialLearner::max_train_len,
-    OptionBase::buildoption, "max nb of (input,target) pairs used for the training \n");
+                OptionBase::buildoption,
+                "Maximum number of (input,target) pairs used for training;\n"
+                "for longer training sequences, only the last max_train_len\n"
+                "pairs are actually used for training");
 
   declareOption(ol, "train_step", &SequentialLearner::train_step,
-    OptionBase::buildoption, "how often we have to re-train a model, value of 1 = after every time step \n");
+                OptionBase::buildoption,
+                "How often we have to re-train a model;\n"
+                "value of 1 = after every time step");
 
   declareOption(ol, "horizon", &SequentialLearner::horizon,
-    OptionBase::buildoption, " by how much to offset the target columns wrt the input columns \n");
+                OptionBase::buildoption,
+                "How much to offset the target columns with respect to\n"
+                "the input columns");
 
   declareOption(ol, "outputsize", &SequentialLearner::outputsize_,
-    OptionBase::buildoption, " the outputsize \n");
+                OptionBase::buildoption,
+                "Size of the output vector (number of outputs)");
 
   inherited::declareOptions(ol);
 }
@@ -112,8 +123,10 @@ void SequentialLearner::setTrainingSet(VMat training_set, bool call_forget)
 
 void SequentialLearner::forget()
 {
-  if (predictions) predictions.fill(MISSING_VALUE);
-  if (errors) errors.fill(MISSING_VALUE);
+  if (predictions.isNotEmpty())
+    predictions.fill(MISSING_VALUE);
+  if (errors.isNotEmpty())
+    errors.fill(MISSING_VALUE);
   last_train_t = -1;
   last_test_t = -1;
 }
