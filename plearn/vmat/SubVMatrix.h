@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.h,v 1.4 2004/01/26 14:13:03 tihocan Exp $
+   * $Id: SubVMatrix.h,v 1.5 2004/02/10 16:21:14 tihocan Exp $
    ******************************************************* */
 
 
@@ -67,6 +67,8 @@ public:
   //! construction
   SubVMatrix();
   SubVMatrix(VMat the_parent, int the_istart, int the_jstart, int the_length, int the_width);
+  SubVMatrix(VMat the_parent, real the_fistart, int the_jstart, real the_flength, int the_width);
+
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
   virtual void getMat(int i, int j, Mat m) const;

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.7 2004/01/26 14:13:03 tihocan Exp $
+   * $Id: SubVMatrix.cc,v 1.8 2004/02/10 16:21:14 tihocan Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -48,6 +48,9 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(SubVMatrix, "ONE LINE DESCR", "NO HELP");
 
+////////////////
+// SubVMatrix //
+////////////////
 SubVMatrix::SubVMatrix()
   :istart(0), 
    jstart(0),
@@ -62,6 +65,17 @@ SubVMatrix::SubVMatrix(VMat the_parent, int the_istart, int the_jstart, int the_
   build_();
 }
 
+SubVMatrix::SubVMatrix(VMat the_parent, real the_fistart, int the_jstart, real the_flength, int the_width)
+  : VMatrix(int(the_flength * the_parent->length()), the_width),
+    parent(the_parent), istart(-1), jstart(the_jstart), fistart(the_fistart), flength(the_flength)
+    // Note that istart will be set to the right value in build_().
+{
+  build_();
+}
+
+////////////////////
+// declareOptions //
+////////////////////
 void SubVMatrix::declareOptions(OptionList &ol)
 {
   declareOption(ol, "parent", &SubVMatrix::parent, OptionBase::buildoption, "Source VMatrix");
