@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.12 2003/04/24 14:30:12 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.13 2003/04/24 15:41:37 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,6 +51,7 @@ using namespace std;
 //
 ConjGradientOptimizer::ConjGradientOptimizer(
     real the_starting_step_size, 
+    real the_restart_coeff,
     real the_epsilon,
     real the_sigma,
     real the_rho,
@@ -62,16 +63,17 @@ ConjGradientOptimizer::ConjGradientOptimizer(
     int n_updates, const string& filename, 
     int every_iterations)
   :inherited(n_updates, filename, every_iterations),
-  starting_step_size(the_starting_step_size),
+  starting_step_size(the_starting_step_size), restart_coeff(the_restart_coeff),
   epsilon(the_epsilon),
   sigma(the_sigma), rho(the_rho), fmax(the_fmax),
   stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
-  tau3(the_tau3) {}
+  tau3(the_tau3)  {}
 
 ConjGradientOptimizer::ConjGradientOptimizer(
     VarArray the_params, 
     Var the_cost,
     real the_starting_step_size, 
+    real the_restart_coeff,
     real the_epsilon,
     real the_sigma,
     real the_rho,
@@ -83,17 +85,18 @@ ConjGradientOptimizer::ConjGradientOptimizer(
     int n_updates, const string& filename, 
     int every_iterations)
   :inherited(the_params, the_cost, n_updates, filename, every_iterations),
-  starting_step_size(the_starting_step_size),
+  starting_step_size(the_starting_step_size), restart_coeff(the_restart_coeff),
   epsilon(the_epsilon),
   sigma(the_sigma), rho(the_rho), fmax(the_fmax),
   stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
-  tau3(the_tau3) {}
+  tau3(the_tau3)  {}
 
 ConjGradientOptimizer::ConjGradientOptimizer(
     VarArray the_params, 
     Var the_cost, 
     VarArray the_update_for_measure,
     real the_starting_step_size, 
+    real the_restart_coeff,
     real the_epsilon,
     real the_sigma,
     real the_rho,
@@ -106,7 +109,7 @@ ConjGradientOptimizer::ConjGradientOptimizer(
     int every_iterations)
   :inherited(the_params, the_cost, the_update_for_measure,
              n_updates, filename, every_iterations),
-  starting_step_size(the_starting_step_size),
+  starting_step_size(the_starting_step_size), restart_coeff(the_restart_coeff),
   epsilon(the_epsilon),
   sigma(the_sigma), rho(the_rho), fmax(the_fmax),
   stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
@@ -150,6 +153,9 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
     declareOption(ol, "tau3", &ConjGradientOptimizer::tau3, OptionBase::buildoption, 
                   "    tau3\n");
 
+    declareOption(ol, "restart_coeff", &ConjGradientOptimizer::tau3, OptionBase::buildoption, 
+                  "    the restart coefficient (put a high value, like 100, if you want no restart\n");
+
     inherited::declareOptions(ol);
 }
 
@@ -171,6 +177,7 @@ void ConjGradientOptimizer::oldwrite(ostream& out) const
   writeField(out, "tau1", tau1);
   writeField(out, "tau2", tau2);
   writeField(out, "tau3", tau3);
+  writeField(out, "restart_coeff", restart_coeff);
   writeFooter(out, "ConjGradientOptimizer");
 }
 
@@ -194,6 +201,7 @@ void ConjGradientOptimizer::oldread(istream& in)
   readField(in, "tau1", tau1);
   readField(in, "tau2", tau2);
   readField(in, "tau3", tau3);
+  readField(in, "restart_coeff", restart_coeff);
   readFooter(in, "ConjGradientOptimizer");
 }
 
@@ -269,7 +277,7 @@ void ConjGradientOptimizer::computeOppositeGradient(
 ///////////////
 // conjpomdp //
 ///////////////
-bool ConjGradientOptimizer::conjpomdp (
+real ConjGradientOptimizer::conjpomdp (
     void (*grad)(Optimizer*, const Vec& gradient),
     ConjGradientOptimizer* opt) {
   int i;
@@ -278,21 +286,17 @@ bool ConjGradientOptimizer::conjpomdp (
   real norm_g = pownorm(opt->current_opp_gradient);
   // g <- delta - g (g = current_opp_gradient)
   for (i=0; i<opt->current_opp_gradient.length(); i++) {
-    opt->current_opp_gradient[i] = opt->delta[i]-opt->current_opp_gradient[i];
+    opt->tmp_storage[i] = opt->delta[i]-opt->current_opp_gradient[i];
   }
-  real gamma = dot(opt->current_opp_gradient, opt->delta) / norm_g;
+  real gamma = dot(opt->tmp_storage, opt->delta) / norm_g;
   // h <- delta + gamma * h (h = search_direction)
   for (i=0; i<opt->search_direction.length(); i++) {
-    opt->search_direction[i] = opt->delta[i] + gamma * opt->search_direction[i];
+    opt->tmp_storage[i] = opt->delta[i] + gamma * opt->search_direction[i];
   }
-  if (dot(opt->search_direction, opt->delta) < 0) {
-    // h <- delta
-    opt->search_direction << opt->delta;
-  }
-  // g <- delta
-  opt->current_opp_gradient << opt->delta;
-  // We want to stop when the norm of the gradient is small enough
-  return (pownorm(opt->current_opp_gradient) < opt->epsilon);
+  if (dot(opt->tmp_storage, opt->delta) < 0)
+    return 0;
+  else
+    return gamma;
 };
 
 ///////////////////
@@ -310,34 +314,15 @@ void ConjGradientOptimizer::cubicInterpol(
 /////////////
 // dayYuan //
 /////////////
-void ConjGradientOptimizer::daiYuan (
+real ConjGradientOptimizer::daiYuan (
     void (*grad)(Optimizer*, const Vec&),
     ConjGradientOptimizer* opt) {
-  // delta = opposite gradient
   (*grad)(opt, opt->delta);
-  real gamma = daiYuanMain(
-      opt->delta, opt->current_opp_gradient, opt->search_direction,
-      opt->tmp_storage);
-  for (int i=0; i<opt->search_direction.length(); i++) {
-    opt->search_direction[i] = 
-      opt->delta[i] + gamma * opt->search_direction[i];
+  real norm_grad = pownorm(opt->delta);
+  for (int i=0; i<opt->current_opp_gradient.length(); i++) {
+    opt->tmp_storage[i] = -opt->delta[i] + opt->current_opp_gradient[i];
   }
-  opt->current_opp_gradient << opt->delta;
-}
-
-/////////////////
-// daiYuanMain //
-/////////////////
-real ConjGradientOptimizer::daiYuanMain (
-    Vec new_gradient,
-    Vec old_gradient,
-    Vec old_search_direction,
-    Vec tmp_storage) {
-  real norm_grad = pownorm(new_gradient);
-  for (int i=0; i<old_gradient.length(); i++) {
-    tmp_storage[i] = -new_gradient[i] + old_gradient[i];
-  }
-  real gamma = norm_grad / dot(old_search_direction, tmp_storage);
+  real gamma = norm_grad / dot(opt->search_direction, opt->tmp_storage);
   return gamma;
 }
 
@@ -346,24 +331,35 @@ real ConjGradientOptimizer::daiYuanMain (
 ///////////////////
 bool ConjGradientOptimizer::findDirection() {
   bool isFinished = false;
+  real gamma;
   switch (find_new_direction_formula) {
     case 0:
-      isFinished = conjpomdp(computeOppositeGradient, this);
+      gamma = conjpomdp(computeOppositeGradient, this);
       break;
     case 1:
-      daiYuan(computeOppositeGradient, this);
+      gamma = daiYuan(computeOppositeGradient, this);
       break;
     case 2:
-      fletcherReeves(computeOppositeGradient, this);
+      gamma = fletcherReeves(computeOppositeGradient, this);
       break;
     case 3:
-      hestenesStiefel(computeOppositeGradient, this);
+      gamma = hestenesStiefel(computeOppositeGradient, this);
       break;
     case 4:
-      polakRibiere(computeOppositeGradient, this);
+      gamma = polakRibiere(computeOppositeGradient, this);
       break;
   }
-  return isFinished;
+  // It is suggested to keep gamma >= 0
+  if (gamma < 0) {
+    cout << "gamma < 0 ! gamma = " << gamma << " ==> Restarting" << endl;
+    gamma = 0;
+  }
+  if (abs(dot(delta, current_opp_gradient)) > restart_coeff * pownorm(delta)) {
+    cout << "Restart triggered !" << endl;
+    gamma = 0;
+  }
+  updateSearchDirection(gamma);
+  return isFinished; // TODO Should stop if gradient is small enough ?
 }
 
 //////////////////////////////
@@ -416,17 +412,13 @@ real ConjGradientOptimizer::findMinWithCubicInterpol (
 ////////////////////
 // fletcherReeves //
 ////////////////////
-void ConjGradientOptimizer::fletcherReeves (
+real ConjGradientOptimizer::fletcherReeves (
     void (*grad)(Optimizer*, const Vec&),
     ConjGradientOptimizer* opt) {
   // delta = opposite gradient
   (*grad)(opt, opt->delta);
   real gamma = pownorm(opt->delta) / pownorm(opt->current_opp_gradient);
-  for (int i=0; i<opt->search_direction.length(); i++) {
-    opt->search_direction[i] = 
-      opt->delta[i] + gamma * opt->search_direction[i];
-  }
-  opt->current_opp_gradient << opt->delta;
+  return gamma;
 }
 
 ////////////////////
@@ -633,20 +625,17 @@ void ConjGradientOptimizer::gSearch (void (*grad)(Optimizer*, const Vec&)) {
 /////////////////////
 // hestenesStiefel //
 /////////////////////
-void ConjGradientOptimizer::hestenesStiefel (
+real ConjGradientOptimizer::hestenesStiefel (
     void (*grad)(Optimizer*, const Vec&),
     ConjGradientOptimizer* opt) {
   int i;
   // delta = opposite gradient
   (*grad)(opt, opt->delta);
   for (i=0; i<opt->current_opp_gradient.length(); i++) {
-    opt->current_opp_gradient[i] = opt->delta[i] - opt->current_opp_gradient[i];
+    opt->tmp_storage[i] = opt->delta[i] - opt->current_opp_gradient[i];
   }
-  real gamma = -dot(opt->delta, opt->current_opp_gradient) / dot(opt->search_direction, opt->current_opp_gradient);
-  for (i=0; i<opt->search_direction.length(); i++) {
-    opt->search_direction[i] = opt->delta[i] + gamma * opt->search_direction[i];
-  }
-  opt->current_opp_gradient << opt->delta;
+  real gamma = -dot(opt->delta, opt->tmp_storage) / dot(opt->search_direction, opt->tmp_storage);
+  return gamma;
 }
 
 ////////////////
@@ -819,7 +808,7 @@ real ConjGradientOptimizer::optimize()
 //////////////////
 // polakRibiere //
 //////////////////
-void ConjGradientOptimizer::polakRibiere (
+real ConjGradientOptimizer::polakRibiere (
     void (*grad)(Optimizer*, const Vec&),
     ConjGradientOptimizer* opt) {
   int i;
@@ -827,13 +816,10 @@ void ConjGradientOptimizer::polakRibiere (
   (*grad)(opt, opt->delta);
   real normg = pownorm(opt->current_opp_gradient);
   for (i=0; i<opt->current_opp_gradient.length(); i++) {
-    opt->current_opp_gradient[i] = opt->delta[i] - opt->current_opp_gradient[i];
+    opt->tmp_storage[i] = opt->delta[i] - opt->current_opp_gradient[i];
   }
-  real gamma = dot(opt->current_opp_gradient,opt->delta) / normg;
-  for (int i=0; i<opt->search_direction.length(); i++) {
-    opt->search_direction[i] = opt->delta[i] + gamma * opt->search_direction[i];
-  }
-  opt->current_opp_gradient << opt->delta;
+  real gamma = dot(opt->tmp_storage,opt->delta) / normg;
+  return gamma;
 }
 
 ///////////////////////
@@ -845,6 +831,16 @@ void ConjGradientOptimizer::quadraticInterpol(
   c = f0;
   b = g0;
   a = f1 - f0 - g0;
+}
+
+///////////////////////////
+// updateSearchDirection //
+///////////////////////////
+void ConjGradientOptimizer::updateSearchDirection(real gamma) {
+  for (int i=0; i<search_direction.length(); i++) {
+    search_direction[i] = delta[i] + gamma * search_direction[i];
+  }
+  current_opp_gradient << delta;
 }
 
 %> // end of namespace PLearn

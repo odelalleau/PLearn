@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.12 2003/04/24 14:30:13 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.13 2003/04/24 15:41:38 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -82,6 +82,8 @@ public:
   int line_search_algo; // the line search algorithm used
   int find_new_direction_formula; // the formula used
   real starting_step_size;  // initial step for line search
+  real restart_coeff;       // we restart when : 
+                            // abs(g(n).g(n-1)) > restart_coeff*norm(g(n))^2
 
   // GSearch specific options
   real epsilon;             // gradient resolution
@@ -107,6 +109,7 @@ public:
   // Constructors and other usual stuff
   ConjGradientOptimizer(
       real the_starting_step_size=0.01, 
+      real the_restart_coeff = 0.2,
       real the_epsilon=0.01,
       real the_sigma=0.01,
       real the_rho=0.005,
@@ -122,6 +125,7 @@ public:
       VarArray the_params, 
       Var the_cost,
       real the_starting_step_size=0.01, 
+      real the_restart_coeff = 0.2,
       real the_epsilon=0.01,
       real the_sigma=0.01,
       real the_rho=0.005,
@@ -138,6 +142,7 @@ public:
       Var the_cost, 
       VarArray the_update_for_measure,
       real the_starting_step_size=0.01, 
+      real the_restart_coeff = 0.2,
       real the_epsilon=0.01,
       real the_sigma=0.01,
       real the_rho=0.005,
@@ -187,18 +192,25 @@ private:
   // Return the value of the minimum found
   real lineSearch();
 
+  // Update the search_direction by
+  // search_direction = delta + gamma * search_direction
+  // Delta is supposed to be the current opposite gradient
+  // Also update current_opp_gradient to be equal to delta
+  void updateSearchDirection(real gamma);
+
   //----------------------- CONJUGATE GRADIENT FORMULAS ---------------------
   //
   // A Conjugate Gradient formula finds the new search direction, given
   // the current gradient, the previous one, and the current search direction.
-  // It updates "search_direction" and "current_opp_gradient".
+  // It returns a constant gamma, which will be used in :
+  // h(n) = -g(n) + gamma * h(n-1)
 
   // The CONJPOMDP algorithm as described in
   // "Direct Gradient-Based Reinforcement Learning:
   // II. Gradient Ascent Algorithms and Experiments"
   // by J.Baxter, L. Weaver, P. Bartlett.
   // Actually this is almost the same as the Polak-Ribiere formula
-  static bool conjpomdp (
+  static real conjpomdp (
       // The given grad function needs to compute the gradient
       // (or the opposite of the gradient if we need the minimum, as the
       // algorithm tries to find the maximum)
@@ -208,25 +220,25 @@ private:
   // The Dai-Yuan formula proposed in
   // "A nonlinear conjugate gradient method with a strong gloval convergence
   // property" by Dai, Yuan (1999)
-  void daiYuan (
+  static real daiYuan (
       void (*grad)(Optimizer*, const Vec&),
       ConjGradientOptimizer* opt);
 
   // The Fletcher-Reeves formula used to find the new direction
   // h(n) = -g(n) + norm2(g(n)) / norm2(g(n-1)) * h(n-1)
-  static void fletcherReeves (
+  static real fletcherReeves (
       void (*grad)(Optimizer*, const Vec&),
       ConjGradientOptimizer* opt);
 
   // The Hestenes-Stiefel formula used to find the new direction
   // h(n) = -g(n) + dot(g(n), g(n)-g(n-1)) / dot(h(n-1), g(n)-g(n-1)) * h(n-1)
-  static void hestenesStiefel (
+  static real hestenesStiefel (
       void (*grad)(Optimizer*, const Vec&),
       ConjGradientOptimizer* opt);
 
   // The Polak-Ribiere formula used to find the new direction
   // h(n) = -g(n) + dot(g(n), g(n)-g(n-1)) / norm2(g(n-1)) * h(n-1)
-  static void polakRibiere (
+  static real polakRibiere (
       void (*grad)(Optimizer*, const Vec&),
       ConjGradientOptimizer* opt);
 
