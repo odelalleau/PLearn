@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.50 2005/01/27 14:26:47 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.51 2005/01/27 20:01:11 godbougi Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -56,6 +56,7 @@
  * Miscellaneous *
  *****************/
 #include <plearn_learners/misc/Grapher.h>
+#include <plearn_learners/misc/VariableSelectionWithDirectedGradientDescent.h>
 #include <plearn/math/ManualBinner.h>
 #include <plearn/math/SoftHistogramBinner.h>
 #include <plearn/misc/ShellScript.h>
