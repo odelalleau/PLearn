@@ -2,8 +2,8 @@
 
 # pymake
 # Copyright (C) 2001 Pascal Vincent
-#
-#  Redistribution and use in source and binary forms, with or without
+#/u/bengioy/PLearn/scripts/pymake
+#  Redistribution and use in source and binary forms, with or without/u/bengioy/PLearn/scripts/pymake
 #  modification, are permitted provided that the following conditions are met:
 #
 #   1. Redistributions of source code must retain the above copyright
@@ -70,7 +70,7 @@ sourcedirs = []
 mandatory_includedirs = []
 linkeroptions_tail = '-lstdc++ -lm'
 options_choices = []
-nprocesses_per_processor = 3
+nprocesses_per_processor = 1
 rshcommand = 'rsh '
 compileflags = ''
 
@@ -702,11 +702,15 @@ class FileInfo:
         "returns the single latest last modification time of"
         "this file and all its .h dependencies through includes"
         if not hasattr(self,"depmtime"):
+            # YB DEBUGGING
+            self.mtime = os.path.getmtime(self.filepath)
+            #
             self.depmtime = self.mtime
             for includefile in self.includes_from_sourcedirs:
                 depmtime = includefile.get_depmtime()
                 if depmtime>self.depmtime:
                     self.depmtime = depmtime
+                    #print "time of ",includefile.filepath," = ",depmtime
         return self.depmtime
 
 
@@ -715,9 +719,14 @@ class FileInfo:
         false if it needs recompiling."""
         try:
             if not os.path.exists(self.corresponding_ofile):
+                print "path of ",self.corresponding_ofile," does not exist!"
                 return 0
             else:
-                return self.get_depmtime() <= os.path.getmtime(self.corresponding_ofile)
+                t1 = self.get_depmtime()
+                t2 = os.path.getmtime(self.corresponding_ofile)
+                #print "t1 = source of ",self.filepath," time = ",t1
+                #print "t2 = object ",self.corresponding_ofile," time = ",t2
+                return t1 <= t2
         except OSError: # OSError: [Errno 116] Stale NFS file handle
             print "OSError... (probably NFS latency); Will be retrying"
             return 0

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: stats_utils.cc,v 1.1 2003/02/28 22:47:57 plearner Exp $
+   * $Id: stats_utils.cc,v 1.2 2003/03/01 16:00:46 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -142,7 +142,7 @@ void KS_test(Vec& v1, Vec& v2, int conv, real& D, real& ks_stat)
 {
   int n1 = v1.length();
   int n2 = v2.length();
-  real N = n1*n2/real(n1+n2);
+  real N = (n1/real(n1+n2))*n2;
   D = max_cdf_diff(v1, v2);
   ks_stat = KS_test(D,N,conv);
 }
@@ -176,7 +176,7 @@ void verify_ks(int n1=1000, int n2=1000, int k=100)
   for(int i=0; i<k; i++)
     {
       fill_random_normal(v1, 0, 1);
-      fill_random_normal(v2, 0, 1);
+      fill_random_normal(v2, 0.1, 1);
       // fill_random_uniform(v2, -0.5, 0.5);
 
       ks[i] = KS_test(v1,v2);
