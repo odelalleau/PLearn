@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.34 2004/09/24 13:22:55 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.35 2004/10/18 23:41:17 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -180,13 +180,12 @@
 #include <plearn/vmat/RegularGridVMatrix.h>
 #include <plearn/vmat/RemoveDuplicateVMatrix.h>
 #include <plearn/vmat/SelectAttributsSequenceVMatrix.h>
+#include <plearn/vmat/ShuffleColumnsVMatrix.h>
 #include <plearn/vmat/SortRowsVMatrix.h>
 #include <plearn/vmat/SparseVMatrix.h>
 #include <plearn/vmat/SubInputVMatrix.h>
 #include <plearn/vmat/ThresholdVMatrix.h>
 #include <plearn/vmat/TransposeVMatrix.h>
-#include <plearn/vmat/SelectAttributsSequenceVMatrix.h>
-#include <plearn/vmat/DictionaryVMatrix.h>
 
 #endif
 
