@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VVec.h,v 1.10 2004/03/23 23:08:09 morinf Exp $
+   * $Id: VVec.h,v 1.11 2004/04/05 23:11:33 morinf Exp $
    ******************************************************* */
 
 
@@ -55,8 +55,7 @@ class VVec : public Object
 {
   typedef Object inherited;
 
-  public:
-
+public:
   // We leave the actual representation choice to some
   // underlying virtual matrix. A VVec simply references a subRow of a VMatrix
   PP<VMatrix> data;
@@ -118,6 +117,11 @@ class VVec : public Object
   { out << ((Vec)*this) << flush; }
 
   PLEARN_DECLARE_OBJECT(VVec);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+private:
+  void build_();
 };
 
 inline void operator>>(const VVec& vv, const Vec& v)

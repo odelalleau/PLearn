@@ -35,7 +35,7 @@
 
  
 /*
-* $Id: VVec.cc,v 1.7 2004/02/20 21:14:44 chrish42 Exp $
+* $Id: VVec.cc,v 1.8 2004/04/05 23:11:32 morinf Exp $
 ******************************************************* */
 
 
@@ -44,11 +44,33 @@
 
 namespace PLearn {
 
+PLEARN_IMPLEMENT_OBJECT(VVec, "ONE LINE DESCR", "NO HELP");
+
 VVec::VVec(const Vec& v)
   :data(new MemoryVMatrix(rowmatrix(v))),
    row_index(0), col_index(0), length_(v.length())
 {}
 
-PLEARN_IMPLEMENT_OBJECT(VVec, "ONE LINE DESCR", "NO HELP");
+void
+VVec::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+VVec::build_()
+{
+}
+
+void
+VVec::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "data", &VVec::data, OptionBase::buildoption, "");
+    declareOption(ol, "row_index", &VVec::row_index, OptionBase::buildoption, "");
+    declareOption(ol, "col_index", &VVec::col_index, OptionBase::buildoption, "");
+    declareOption(ol, "length_", &VVec::length_, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 } // end of namespace PLearn
