@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.8 2005/01/28 00:24:22 dorionc Exp $ 
+   * $Id: PPath.cc,v 1.9 2005/02/07 18:43:26 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -332,7 +332,14 @@ void PPath::expandMetaprotocols()
     }
   }
 
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
   EXTREME_LOG << left("c_str(): ", 20) << c_str() << endl;
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
+
 }
 
 void PPath::resolveDots()
@@ -438,7 +445,14 @@ void PPath::parseProtocol()
       _protocol = "";
   }
 
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
   EXTREME_LOG << left("_protocol: ", 20) << _protocol << endl;
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
+
 }
 
 PPath PPath::absolute() const
@@ -475,6 +489,9 @@ PPath PPath::canonical() const
   {
     // Remove the file protocol if any.
     canonic_path = removeProtocol().absolute();
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
     DBG_LOG << plhead("canonic_path: "+canonic_path) << endl;
     
     map<string, PPath>::const_iterator it  = metaprotocol_to_metapath.begin();
@@ -491,7 +508,7 @@ PPath PPath::canonical() const
       if ( begpath != 0 || it->second.length() < metapath.length() )
       {
         DBG_LOG << "Invalid or shorter:\n\t"
-                 << it->first << " -> " << it->second.c_str() << endl;
+                << it->first << " -> " << it->second.c_str() << endl;
         ++it;
         continue;
       }
@@ -507,7 +524,7 @@ PPath PPath::canonical() const
            canonic_path[endpath] != _slash_char  )
       {
         DBG_LOG << "Substring:\n\t" 
-                 << it->first << " -> " << it->second.c_str() << endl;
+                << it->first << " -> " << it->second.c_str() << endl;
         ++it;
         continue;
       }
@@ -515,10 +532,11 @@ PPath PPath::canonical() const
       // The current candidate is indeed a subpath of canonic_path.
       metaprotocol = it->first;
       metapath     = it->second;
-
       DBG_LOG << "Kept:\n\t" 
-               << it->first << " -> " << it->second.c_str() << endl;
-
+              << it->first << " -> " << it->second.c_str() << endl;
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
       ++it;
     }
 
