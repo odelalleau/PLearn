@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.cc,v 1.3 2004/04/05 23:05:30 morinf Exp $
+   * $Id: SortRowsVMatrix.cc,v 1.4 2004/05/31 12:57:52 tihocan Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -65,7 +65,7 @@ void SortRowsVMatrix::declareOptions(OptionList &ol)
         "    the column(s) that must be sorted (the first one is the first criterion)");
     
     declareOption(ol, "increasing_order", &SortRowsVMatrix::increasing_order, OptionBase::buildoption,
-        "    if set to 1, the data will be sorted in increasing order)");
+        "    if set to 1, the data will be sorted in increasing order");
     
     inherited::declareOptions(ol);
 }
