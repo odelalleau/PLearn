@@ -1,72 +1,89 @@
 #!plearn
 
-PExperiment(
-# string: Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
-expdir = "nnet";
+PTester(
+  # string: Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
+  expdir = "nnet";
 
-# VMat: The dataset to use for training/testing (will be split according to what is specified in the testmethod)
-dataset = AutoVMatrix(specification="letters all normalize");
+  # VMat: The dataset to use for training/testing (will be split according to what is specified in the testmethod)
+  dataset = AutoVMatrix(specification="UCI_pima-indians-diabetes all" inputsize = 8 targetsize = 1);
 
-# PP< Splitter >: The splitter to use to generate one or several train/test pairs.
-splitter = TrainTestSplitter(test_fraction=.10) ;
+  # TVec< string >: A list of global statistics we are interested in.
+  # These are strings of the form S1[S2[dataset.cost_name]] where:
+  #   - dataset is train or test1 or test2 ... (train being 
+  #     the first dataset in a split, test1 the second, ...) 
+  #   - cost_name is one of the training or test cost names (depending on dataset) understood 
+  #     by the underlying learner (see its getTrainCostNames and getTestCostNames methods) 
+  #   - S1 and S2 are a statistic, i.e. one of: E (expectation), V(variance), MIN, MAX, STDDEV, ... 
+  #     S2 is computed over the samples of a given dataset split. S1 is over the splits. 
+  statnames = [ "test1" "test2" ]
+  # TVec< TVec< string > >: A list of lists of masks. If provided, each of the lists is used to compose the statnames_processed.
+  # If not provided the statnames are those in the 'statnames' list. See the class help for an example.
+  statmask = [ [ "*.E[stable_cross_entropy]" "*.E[binary_class_error]" ] [ "E[*]" ] ]
+  # PP< Splitter >: The splitter to use to generate one or several train/test pairs.
+  splitter = TrainTestSplitter(
+    test_fraction = .10
+    append_train = 1
+  ) ;
 
-# bool: If false, the models won't be saved.
-save_models = 1  ;
+  # PP< PLearner >: The learner to train/test
+  learner =
+    NNet( 
+      # int:     number of hidden units in first hidden layer (0 means no hidden layer)
+      nhidden = 10  ;
+      # int:     number of output units. This gives this learner its outputsize.
+      #     It is typically of the same dimensionality as the target for regression problems 
+      #     But for classification problems where target is just the class number, noutputs is 
+      #     usually of dimensionality number of classes (as we want to output a score or probability 
+      #     vector, one per class)
+      noutputs = 1  ;
+      # double:     global weight decay for all layers
+      weight_decay = 0.0  ;
+      # string:     what transfer function to use for ouput layer? 
+      #     one of: tanh, sigmoid, exp, softplus, softmax, log_softmax 
+      #     or interval(<minval>,<maxval>), which stands for
+      #     <minval>+(<maxval>-<minval>)*sigmoid(.).
+      #     An empty string or "none" means no output transfer function 
+      output_transfer_func = "sigmoid"  ;
+      # Array< string >:     a list of cost functions to use
+      #     in the form "[ cf1; cf2; cf3; ... ]" where each function is one of: 
+      #       mse (for regression)
+      #       mse_onehot (for classification)
+      #       NLL (negative log likelihood -log(p[c]) for classification) 
+      #       class_error (classification error) 
+      #       binary_class_error (classification error for a 0-1 binary classifier)
+      #       multiclass_error
+      #       cross_entropy (for binary classification)
+      #       stable_cross_entropy (more accurate backprop and possible regularization, for binary classification)
+      #       margin_perceptron_cost (a hard version of the cross_entropy, uses the 'margin' option)
+      #       lift_output (not a real cost function, just the output for lift computation)
+      #     The first function of the list will be used as 
+      #     the objective function to optimize 
+      #     (possibly with an added weight decay penalty) 
+      cost_funcs = [ "stable_cross_entropy" "binary_class_error" ]  ;
+      # PP< Optimizer >:     specify the optimizer to use
+      optimizer = 
+        GradientOptimizer( 
+          # double:     the initial learning rate
+          start_learning_rate = 0.05
+          # double:     the learning rate decrease constant 
+          decrease_constant = 0.001  ;
+        );
+      # int:     how many samples to use to estimate the avergage gradient before updating the weights
+      #     0 is equivalent to specifying training_set->length() 
+      batch_size = 0  ;
+      # int: The stage until which train() should train this learner and return.
+      # The meaning of 'stage' is learner-dependent, but for learners whose 
+      # training is incremental (such as involving incremental optimization), 
+      # it is typically synonym with the number of 'epochs', i.e. the number 
+      # of passages of the optimization process through the whole training set, 
+      # since the last fresh initialisation.
+      nstages = 100  ;
+      # int: Level of verbosity. If 0 should not write anything on cerr. 
+      # If >0 may write some info on the steps performed along the way.
+      # The level of details written should depend on this value.
+      verbosity = 10  ;
+      seed = 12345
+    );
 
-# PP< PLearner >: The learner to train/test
-learner =
-NNet(
-          # int: dimensionality of input vector
-          inputsize = 16;
-
-          # int: dimensionality of output
-          # (for classification the output is typically a vector of class scores
-          # so this is the number of classes)
-          noutputs = 26;  # 26 letters
-          # int: number of hidden units in first hidden layer (0 means no hidden layer)
-          nhidden = 100;
-
-          # double: global weight decay for all layers
-          weight_decay = 0;
-
-          # string: what transfer function to use for ouput layer?
-          # one of: tanh, sigmoid, exp, softmax
-          # an empty string means no output transfer function
-          output_transfer_func = "softmax"  ;
-
-          # Array< string >:     a list of cost functions to use
-          # in the form "[ cf1; cf2; cf3; ... ]" where each function is one of:
-          #   mse (for regression)
-          #   mse_onehot (for classification)
-          #   NLL (negative log likelihood -log(p[c]) for classification)
-          #   class_error (classification error)
-          # The first function of the list will be used as
-          # the objective function to optimize
-          # (possibly with an added weight decay penalty)
-          cost_funcs = [ "NLL", "class_error" ];
-
-          # PP< Optimizer >:     specify the optimizer to use
-          optimizer = GradientOptimizer(
-                      # double: the initial learning rate
-                      start_learning_rate = 0.01  ;
-
-                      # double: the learning rate decrease constant
-                      decrease_constant = 0  ;
-                      )
-
-          # int: how many samples to use to estimate the avergage gradient before updating the weights
-          # 0 is equivalent to specifying training_set->length()
-          # NOTE: this overrides the optimizer s 'n_updates' and 'every_iterations'.
-          batch_size = 1;
-
-          # long: The initial seed for the random number generator used to initialize this learner's parameters
-          # as typically done in the forget() method...
-          # With a given seed, forget() should always initialize the parameters to the same values.
-          seed = 0  ;
-
-          # int: how many times the optimizer gets to see the whole training set.
-          nstages = 3;
-
-          )
 )
 
