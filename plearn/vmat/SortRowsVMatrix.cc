@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.cc,v 1.9 2004/10/29 18:38:50 tihocan Exp $
+   * $Id: SortRowsVMatrix.cc,v 1.10 2005/01/11 20:05:20 tihocan Exp $
    ******************************************************* */
 
 #include "SortRowsVMatrix.h"
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(SortRowsVMatrix,
 );
 
 SortRowsVMatrix::SortRowsVMatrix() 
-  : increasing_order(1)
+  : increasing_order(true)
 {
   // Default = no sorting.
   sort_columns.resize(0);

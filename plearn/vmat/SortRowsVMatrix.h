@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.h,v 1.6 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: SortRowsVMatrix.h,v 1.7 2005/01/11 20:05:20 tihocan Exp $
    ******************************************************* */
 
 
@@ -59,7 +59,7 @@ private:
 public:
 
   //! Public build options.
-  int increasing_order;
+  bool increasing_order;
   TVec<int> sort_columns;
 
 public:
