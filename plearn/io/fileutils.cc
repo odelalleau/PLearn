@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.34 2004/03/18 18:23:03 tihocan Exp $
+   * $Id: fileutils.cc,v 1.35 2004/03/23 15:39:18 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -665,6 +665,24 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
               }
               break;
 
+            case 'C': // it's a CHAR{expression}
+              {
+                string expr;
+                readWhileMatches(in, "CHAR");
+                bool syntax_ok = true;
+                int c = in.get();
+                if(c == '{')
+                  smartReadUntilNext(in, "}", expr);
+                else
+                  syntax_ok = false;
+                if (!syntax_ok)
+                  PLERROR("$CHAR syntax is: $CHAR{expr}");
+                istrstream expr_stream(expr.c_str());
+                char ch = (char) toint(readAndMacroProcess(expr_stream, variables));
+                text += ch;
+              }
+              break;
+
             case 'D': // it's a DEFINE{ varname }{ ... }
               {
                 string varname; // name of a variable
@@ -868,6 +886,42 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
               }
               break;
 
+            case 'O': // it's an OR{expr1}{expr2}
+              {
+                string expr1, expr2;
+                readWhileMatches(in, "OR");
+                bool syntax_ok = true;
+                int c = in.get();
+                if (syntax_ok) {
+                  if(c == '{')
+                    smartReadUntilNext(in, "}", expr1);
+                  else
+                    syntax_ok = false;
+                }
+                if (syntax_ok) {
+                  c = in.get();
+                  if(c == '{')
+                    smartReadUntilNext(in, "}", expr2);
+                  else
+                    syntax_ok = false;
+                }
+                if (!syntax_ok)
+                  PLERROR("$OR syntax is: $OR{expr1}{expr2}");
+                istrstream expr1_stream(expr1.c_str());
+                istrstream expr2_stream(expr2.c_str());
+                string expr1_eval = readAndMacroProcess(expr1_stream, variables);
+                string expr2_eval = readAndMacroProcess(expr2_stream, variables);
+                real e1, e2;
+                if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
+                  PLERROR("In $OR{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
+                }
+                int i1 = toint(expr1_eval);
+                int i2 = toint(expr2_eval);
+                bool is_true = i1 || i2;
+                text += tostring(is_true);
+              }
+              break;
+
             case 'S': // it's a SWITCH{expr}{cond1}{val1}{cond2}{val2}...{valdef}
               {
                 string expr, valdef;
@@ -966,7 +1020,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
 
             default:
               PLERROR("In readAndMacroProcess: only supported macro commands are \n"
-                      "${varname}, $DEFINE, $ECHO, $IF, $INCLUDE, $ISDEFINED, $ISEQUAL, $MINUS, $SWITCH, $TIMES."
+                      "${varname}, $CHAR, $DEFINE, $ECHO, $IF, $INCLUDE, $ISDEFINED, $ISEQUAL, $MINUS, $OR, $SWITCH, $TIMES."
                       "But I read $%c !!",c);
             }
         }
