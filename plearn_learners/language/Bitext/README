@@ -1,4 +1,4 @@
-
+How to prepare learning Data for Bitext sense learning
 
 1) Download and compile GIZA++
 	http://www.isi.edu/~och/GIZA++.html
@@ -29,10 +29,15 @@
 	EF.FE.A3.final.word2.src.voc contains the english translations of  EF.FE.A3.final.word2.tgt.voc
 	
 
-	select_trans_per_src  src.voc EF.FE.A3.final.word2 0.02	
 	select_trans_per_src  src.voc EF.FE.A3.final.word2 0.02 > EF.FE.A3.final.word2.tgt.voc
 	select_trans_per_tgt EF.FE.A3.final.word2.tgt.voc EF.FE.A3.final.word2 0.02 > EF.FE.A3.final.word2.src.voc
 
+To use the Noun POS pruning (consider only translation couples which are nouns), the translation file ( EF.FE.A3.final.word2) must be in the following format :
+	french_noun POS english_noun POS
+
+	where POS are Penntree-bank pos tags.
+
+5)
 	
 			
 	

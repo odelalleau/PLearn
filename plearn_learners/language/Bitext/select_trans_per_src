@@ -10,14 +10,22 @@ $NSFIC = shift;
 $NIFIC = shift;
 $THRES = shift;
 $POS = shift;
-if (!defined($NSFIC)&& !defined($NIFIC)){die "usage :select_trans_per_src src_voc  in_file percent_threshold POS\n";}
-    
+
+ if (!defined($NSFIC)&& !defined($NIFIC)){
+    print "usage : prune_train_per_src_voc rc_voc  in_file percent_threshold noun_restriction\n";
+    print" \t tgt_voc : source vocabulary used to prune the translation couples\n";
+    print" \t in_file : translation couples\n";
+    print" \t percent_threshold : consider only couples whose relative frequency is above theshold\n";
+    print" \t noun_restriction : consider only noun couples\n";
+    die;
+}
+   
     
 if (defined($POS)){
-    print STDERR "Use POS restiction\n";
+    print STDERR "Use Noun POS restiction\n";
     $pos_prune = 1;
 }else{
-    print STDERR "Don't use POS restiction\n";
+    print STDERR "Don't use Noun POS restiction\n";
     $pos_prune = 0;
 }
 
