@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.h,v 1.5 2004/03/22 18:14:15 yoshua Exp $
+   * $Id: DatedJoinVMatrix.h,v 1.6 2004/03/23 20:21:18 yoshua Exp $
    ******************************************************* */
 
 // Authors: *Yoshua Bengio*
@@ -66,7 +66,8 @@ protected:
   Vec slave_row, master_row;
   Array<real> key;
   Maptype mp; // maps a key to a list of row indices in the slave
-  TVec<int> master2slave, slave2master; // maps indices in one db to the other and vice-versa
+  TVec<int> master2slave;  // maps indices in one db to the other 
+  TVec<list<int> > slave2master; // there may be more than one master row per slave row, sum them
   int n_master_fields, n_slave_fields; // number of fields of master and slave to copy in result
 
 public:

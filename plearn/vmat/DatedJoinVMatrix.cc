@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.cc,v 1.6 2004/03/22 18:14:14 yoshua Exp $
+   * $Id: DatedJoinVMatrix.cc,v 1.7 2004/03/23 20:21:18 yoshua Exp $
    ******************************************************* */
 
 // Authors: *Yoshua Bengio*
@@ -50,7 +50,7 @@ using namespace std;
 
 DatedJoinVMatrix::DatedJoinVMatrix()
   :inherited(),master_date_field_index(-1),slave_date_interval_start_field_index(-1),
-   slave_date_interval_end_field_index(-1), verbosity(0)
+   slave_date_interval_end_field_index(-1), verbosity(0), output_the_slave(0)
 {
 }
 
@@ -74,13 +74,15 @@ PLEARN_IMPLEMENT_OBJECT(DatedJoinVMatrix,
                         "instead of the default which outputs one row for each master row.\n"
                         "Note that if (output_the_slave) then the non-matching master rows are 'lost'\n"
                         "whereas if (!output_the_slave) then the non-matching slave rows are 'lost'.\n"
+                        "If output_the_slave and more than one master row matches with a given slave_row\n"
+                        "then the SUM of the master fields is computed (i.e. be careful that their sum is meaningful)\n"
                         );
 
 void DatedJoinVMatrix::getRow(int i, Vec v) const
 {
   if (!master || !slave || slave_key_indices.length()==0) // etc...
     PLERROR("DatedJoinVMatrix: object was not build properly!");
-  int master_index=-1;
+  list<int> master_index;
   int slave_index=-1;
   if (output_the_slave)
   {
@@ -89,22 +91,28 @@ void DatedJoinVMatrix::getRow(int i, Vec v) const
   }
   else
   {
-    master_index = i;
+    master_index.push_back(i);
     slave_index = master2slave[i];
   }
 
   Vec master_part = v.subVec(0,n_master_fields);
   Vec slave_part = v.subVec(n_master_fields,n_slave_fields);
 
-  if (master_index>=0)
+  if (master_index.size()>0)
   {
-    // copy the master fields 
-    master->getRow(master_index,master_row);
-    if (master_field_indices.size()>0)
-      for (int j=0;j<master_field_indices.size();j++)
-        master_part[j] = master_row[master_field_indices[j]];
-    else
-      master_part << master_row;
+    list<int>::const_iterator b_it = master_index.begin();
+    list<int>::const_iterator e_it = master_index.end();
+    master_part.clear();
+    for (list<int>::const_iterator it=b_it;it!=e_it;++it)
+    {
+      // copy the master fields 
+      master->getRow(*it,master_row);
+      if (master_field_indices.size()>0)
+        for (int j=0;j<master_field_indices.size();j++)
+          master_part[j] += master_row[master_field_indices[j]];
+      else
+        master_part += master_row;
+    }
   }
   else 
     master_part.fill(MISSING_VALUE);
@@ -112,7 +120,7 @@ void DatedJoinVMatrix::getRow(int i, Vec v) const
   if (slave_index>=0)
   {
     // copy the slave fields 
-    master->getRow(slave_index,slave_row);
+    slave->getRow(slave_index,slave_row);
     if (slave_field_indices.size()>0)
       for (int j=0;j<slave_field_indices.size();j++)
         slave_part[j] = slave_row[slave_field_indices[j]];
@@ -320,6 +328,7 @@ void DatedJoinVMatrix::build_()
       PLERROR("DatedJoinVMatrix: No slave_date_interval_end_field_name was provided and no slave_date_interval_end_field_index was provided!");
 
     // INDEX THE SLAVE
+    ProgressBar* pb=new ProgressBar("DatedJoinVMatrix: indexing the slave.",slave.length());
     key.resize(slave_key_indices.length());
     slave_row.resize(slave.width());
     master_row.resize(master.width());
@@ -329,7 +338,9 @@ void DatedJoinVMatrix::build_()
       for (int j=0;j<slave_key_indices.size();j++)
         key[j] = slave_row[slave_key_indices[j]];
       mp.insert(make_pair(key,i));
+      pb->update(i);
     }
+    delete pb;
 
     // set the width and the length
     if (master_field_indices.size()>0)
@@ -359,11 +370,11 @@ void DatedJoinVMatrix::build_()
         fieldinfos[master.width()+i] = f;
       }
 
+    pb=new ProgressBar("DatedJoinVMatrix: matching the master and slave.",master->length());
     // pre-compute the 'match' (N.B. this is expensive...)
     master2slave.resize(master->length());
     master2slave.fill(-1);
-    slave2master.resize(master->length());
-    slave2master.fill(-1);
+    slave2master.resize(slave->length());
     for (int i=0;i<master->length();i++)
     {
       master->getRow(i,master_row);
@@ -414,7 +425,7 @@ void DatedJoinVMatrix::build_()
         if (matching_slave_row_index>=0)
         {
           master2slave[i] = matching_slave_row_index;
-          slave2master[matching_slave_row_index] = i;
+          slave2master[matching_slave_row_index].push_back(i);
         }
         if (n_matches>1 && verbosity>0)
         {
@@ -424,7 +435,9 @@ void DatedJoinVMatrix::build_()
               cerr << "master row " << i << " matched slave row " << matches[j] << endl;
         }
       }
+      pb->update(i);
     }
+    delete pb;
   }
 }
 
