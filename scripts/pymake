@@ -81,6 +81,11 @@ nprocesses_per_processor = 1
 rshcommand = 'rsh '
 compileflags = ''
 
+#objspolicy=1 -> for dir/truc.cc object file in   dir/platform_opt/truc.o (objects file are in a directory corresponding to the cc file directory)
+#objspolicy=2 -> for dir/truc.cc object file in   objsdir/platform_opt/truc.o (all objects file are in the same directory)
+objspolicy=1
+objsdir=''
+
 # some variables used when creating a dll...
 default_wrapper = 'dllwrap'
 dllwrap_basic_options = '--driver-name=c++ --add-stdcall-alias'
@@ -219,21 +224,10 @@ def optionalLibrary( name, linkeroptions, includedirs=[], triggers='', compilero
 default_config_text = r"""
 # List of directories in which to look for .h includes and corresponding .cc files to compile and link with your program
 # (no need to include the current directory, it is implicit)
-sourcedirs = []
+#sourcedirs = []
 
 # directories other than those in sourcedirs, that will be added as list of includes (-I...) to all compilations
-mandatory_includedirs = []
-
-# The platform variable contains the type of platform from which pymake has been invoked. 
-# This is something like 'linux-i386', 'linux-alpha', 'sunos5', 'irix6', 'irix6-n32' etc...
-# Feel free to use it to adapt configuration to that platform.
-
-if platform=='linux-i386':
-    compileflags = '-DLINUX -DLITTLEENDIAN'
-else:
-    print 'Unknown platform: ' + platform
-    sys.exit()
-
+#mandatory_includedirs = []
 
 # Add available external libraries In the order in which the linkeroptions
 # must appear on the linker command line (typically most basic libraries
@@ -248,38 +242,38 @@ else:
 
 
 # What linker options to put always after those from the optional libraries
-linkeroptions_tail = '-lstdc++ -lm'
+#linkeroptions_tail = '-lstdc++ -lm'
 
 # List of lists of mutually exclusive pymake options.
 # First option that appears in each group is the default, and is assumed if you don't specify any option from that group
-options_choices = [
-  [ 'g++', 'CC'],
-  [ 'dbg', 'opt']
-]
+#options_choices = [
+#  [ 'g++', 'CC'],
+#  [ 'dbg', 'opt']
+#]
 
 
 # Description of options, and associated settings
 # name and description are mandatory (description will appear in usage display of pymake)
 # you can then specify any one or more of compiler, compileroptions, linker, linkeroptions
 
-pymakeOption( name = 'g++',
-              description = 'use g++ compiler and linker',
-              compiler = 'g++',
-              compileroptions = '-pedantic-errors',
-              linker = 'g++' )
+#pymakeOption( name = 'g++',
+#              description = 'use g++ compiler and linker',
+#              compiler = 'g++',
+#              compileroptions = '-pedantic-errors',
+#              linker = 'g++' )
 
-pymakeOption( name = 'CC',
-              description = 'use CC compiler and linker',
-              compiler = 'CC',
-              linker = 'CC' )
+#pymakeOption( name = 'CC',
+#              description = 'use CC compiler and linker',
+#              compiler = 'CC',
+#              linker = 'CC' )
 
-pymakeOption( name = 'dbg',
-              description = 'debug mode (defines BOUNDCHECK)',
-              compileroptions = '-Wall -g -DBOUNDCHECK' )
+#pymakeOption( name = 'dbg',
+#              description = 'debug mode (defines BOUNDCHECK)',
+#              compileroptions = '-Wall -g -DBOUNDCHECK' )
 
-pymakeOption( name = 'opt',
-              description = 'optimized mode',
-              compileroptions = '-Wall -O9 -funroll-loops -finline -fomit-frame-pointer -fstrength-reduce -ffast-math -fPIC' )
+#pymakeOption( name = 'opt',
+#              description = 'optimized mode',
+#              compileroptions = '-Wall -O9 -funroll-loops -finline -fomit-frame-pointer -fstrength-reduce -ffast-math -fPIC' )
 """
 
 def locateconfigfile(file,configdir,config_text=''):
@@ -714,9 +708,13 @@ class FileInfo:
 
         elif self.fileext in ['.cc','.c','.C','.cpp','.CC']:
             self.is_ccfile = 1
-
-            self.corresponding_ofile = join(self.filedir, objsdir, self.filebase+'.o')
-
+            
+            if objspolicy == 1:
+              self.corresponding_ofile = join(self.filedir, objsdir, self.filebase+'.o')
+            elif objspolicy == 2:
+              self.corresponding_ofile = join(objsdir, self.filebase+'.o')
+#               print self.corresponding_ofile
+              
             if self.hasmain:
                 self.corresponding_output = join(self.filedir, objsdir, self.filebase)
             if create_dll:
@@ -1318,14 +1316,20 @@ for target in otherargs:
         target_path = os.path.abspath(target)
     else:
         target_path = os.path.dirname(os.path.abspath(target))
-    configpath = locateconfigfile('config',target_path,default_config_text)
-    
+        
+    configpath = locateconfigfile('config',target_path,default_config_text)    
     execfile(configpath)
+    
     # remove duplicates from sourcedirs
     sourcedirs = unique(sourcedirs)
     options = getOptions(options_choices,optionargs)
-    # Building name of object subdirectory
-    objsdir = join('OBJS', platform + '__' + string.join(options,'_'))
+    
+    # Building name of object subdirectory    
+    if  objspolicy== 1:
+      objsdir = join('OBJS', platform + '__' + string.join(options,'_'))
+    elif objspolicy == 2:
+      objsdir = join(objsdir,platform + '__' + string.join(options,'_'))
+    
     print '*** Running pymake on '+os.path.basename(target)+' using configuration file: ' + configpath
     print '*** Running pymake on '+os.path.basename(target)+' using options: ' + string.join(map(lambda o: '-'+o, options))
     print '++++ Computing dependencies of '+target+' ...'
