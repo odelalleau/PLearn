@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: RealMapping.cc,v 1.2 2002/09/04 22:42:52 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -60,6 +60,19 @@ using namespace std;
     else
       return other_mapsto;      
   }
+
+  int RealMapping::binnumber(real val) const
+  {
+    if(is_missing(val))
+      return -2;
+    mapping_t::iterator it = mapping.begin();
+    mapping_t::iterator itend = mapping.end();
+    for(int num=0; it!=itend; ++it,num++)
+      if(it->first.contains(val))
+        return num;
+      return -1;      
+  }
+
 
   void RealMapping::transform(const Vec& v) const
   {

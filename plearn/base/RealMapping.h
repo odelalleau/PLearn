@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.2 2002/08/08 22:52:37 morinf Exp $
+   * $Id: RealMapping.h,v 1.3 2002/09/04 22:42:52 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -128,6 +128,9 @@ using namespace std;
 
     // returns the mapped value corresponding to val
     real map(real val) const;
+
+    // returns the number of the bin in which 'val' falls
+    int binnumber(real val) const;
 
     // transforms v by applying the mapping on all its elements
     void transform(const Vec& v) const;

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.3 2002/08/09 16:14:33 jkeable Exp $
+   * $Id: StatsCollector.h,v 1.4 2002/09/04 22:41:46 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -103,7 +103,7 @@ public:
       
       void update(real val);
 
-    const map<real,StatsCollectorCounts>& getCounts(){return counts;}
+    map<real,StatsCollectorCounts> * getCounts(){return &counts;}
 
       //! returns a Mat with x,y coordinates for plotting the cdf
       //! only if normalized will the cdf go to 1, otherwise it will go to nsamples
