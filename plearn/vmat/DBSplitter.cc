@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DBSplitter.cc,v 1.2 2004/07/21 16:30:55 chrish42 Exp $ 
+   * $Id: DBSplitter.cc,v 1.3 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Marius Muja
@@ -78,7 +78,7 @@ void DBSplitter::build()
   build_();
 }
 
-void DBSplitter::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void DBSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Splitter::makeDeepCopyFromShallowCopy(copies);
 

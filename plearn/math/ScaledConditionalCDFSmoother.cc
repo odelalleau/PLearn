@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: ScaledConditionalCDFSmoother.cc,v 1.8 2004/02/20 21:11:46 chrish42 Exp $ 
+ * $Id: ScaledConditionalCDFSmoother.cc,v 1.9 2004/09/14 16:04:37 chrish42 Exp $ 
  ******************************************************* */
 
 /*! \file ScaledConditionalCDFSmoother.cc */
@@ -98,7 +98,7 @@ void ScaledConditionalCDFSmoother::build()
 }
 
 
-void ScaledConditionalCDFSmoother::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void ScaledConditionalCDFSmoother::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Object::makeDeepCopyFromShallowCopy(copies);
 }

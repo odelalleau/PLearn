@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UpsideDownVMatrix.cc,v 1.5 2004/06/29 19:55:55 tihocan Exp $ 
+   * $Id: UpsideDownVMatrix.cc,v 1.6 2004/09/14 16:04:40 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -82,7 +82,7 @@ void UpsideDownVMatrix::build()
   build_();
 }
 
-void UpsideDownVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void UpsideDownVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

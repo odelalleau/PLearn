@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.cc,v 1.12 2004/02/20 21:14:46 chrish42 Exp $ 
+   * $Id: HistogramDistribution.cc,v 1.13 2004/09/14 16:04:55 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.cc */
@@ -185,7 +185,7 @@ void HistogramDistribution::computeOutput(const Vec& input, Vec& output)
   else PLERROR("In HistogramDistribution::use  unknown value for outputs_def= \"%s\"", outputs_def.c_str());
 }
 
-void HistogramDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void HistogramDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   PLearner::makeDeepCopyFromShallowCopy(copies);
 

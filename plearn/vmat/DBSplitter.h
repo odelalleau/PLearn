@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DBSplitter.h,v 1.1 2004/07/16 21:58:29 mariusmuja Exp $ 
+   * $Id: DBSplitter.h,v 1.2 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Marius Muja
@@ -100,7 +100,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(DBSplitter);

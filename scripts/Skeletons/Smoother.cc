@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(DERIVEDCLASS, "ONE LINE DESCR", "NO HELP");
   }
 
 
-  void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   {
     Object::makeDeepCopyFromShallowCopy(copies);
 

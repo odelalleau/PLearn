@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceKernel.h,v 1.1 2004/04/20 20:38:36 tihocan Exp $ 
+   * $Id: SourceKernel.h,v 1.2 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -101,7 +101,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   // Declares other standard object methods.
   PLEARN_DECLARE_OBJECT(SourceKernel);

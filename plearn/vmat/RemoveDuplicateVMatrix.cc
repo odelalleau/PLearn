@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RemoveDuplicateVMatrix.cc,v 1.3 2004/08/03 19:05:31 tihocan Exp $ 
+   * $Id: RemoveDuplicateVMatrix.cc,v 1.4 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -137,7 +137,7 @@ void RemoveDuplicateVMatrix::build_()
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void RemoveDuplicateVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void RemoveDuplicateVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

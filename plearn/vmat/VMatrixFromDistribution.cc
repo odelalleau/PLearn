@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: VMatrixFromDistribution.cc,v 1.9 2004/05/20 17:04:42 tihocan Exp $ 
+ * $Id: VMatrixFromDistribution.cc,v 1.10 2004/09/14 16:04:40 chrish42 Exp $ 
  ******************************************************* */
 
 /*! \file VMatrixFromDistribution.cc */
@@ -156,7 +156,7 @@ void VMatrixFromDistribution::build()
   build_();
 }
 
-void VMatrixFromDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void VMatrixFromDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReconstructionWeightsKernel.cc,v 1.8 2004/07/23 16:35:28 tihocan Exp $ 
+   * $Id: ReconstructionWeightsKernel.cc,v 1.9 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -342,7 +342,7 @@ real ReconstructionWeightsKernel::evaluate_x_i_again(const Vec& x, int i, real s
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void ReconstructionWeightsKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void ReconstructionWeightsKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

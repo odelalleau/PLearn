@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PDistributionVariable.h,v 1.1 2004/08/17 15:37:05 larocheh Exp $
+   * $Id: PDistributionVariable.h,v 1.2 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -70,7 +70,7 @@ public:
   PLEARN_DECLARE_OBJECT(PDistributionVariable);
 
   virtual void build();
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
   
   virtual void recomputeSize(int& l, int& w) const;  
   virtual void fprop();

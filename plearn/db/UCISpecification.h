@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UCISpecification.h,v 1.3 2004/07/21 16:30:51 chrish42 Exp $ 
+   * $Id: UCISpecification.h,v 1.4 2004/09/14 16:04:35 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -116,7 +116,7 @@ public:
 
   //! Transforms a shallow copy into a deep copy
   // (PLEASE IMPLEMENT IN .cc)
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 

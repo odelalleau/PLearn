@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.h,v 1.11 2004/07/21 16:30:56 chrish42 Exp $
+   * $Id: StackedLearner.h,v 1.12 2004/09/14 16:04:56 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -145,7 +145,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   // Declares other standard object methods
   //  If your class is not instantiatable (it has pure virtual methods)

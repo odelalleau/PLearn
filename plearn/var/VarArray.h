@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.h,v 1.17 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: VarArray.h,v 1.18 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -71,7 +71,7 @@ public:
   VarArray(Variable* v);
   VarArray(Variable* v1, Variable* v2);
 
-  void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   operator Var()
   { 

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.cc,v 1.10 2004/07/21 16:30:56 chrish42 Exp $ 
+   * $Id: SpiralDistribution.cc,v 1.11 2004/09/14 16:04:56 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.cc */
@@ -94,7 +94,7 @@ SpiralDistribution::SpiralDistribution()
     build_();
   }
 
-  void SpiralDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  void SpiralDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   {
     inherited::makeDeepCopyFromShallowCopy(copies);
 

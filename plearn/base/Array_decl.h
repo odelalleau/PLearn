@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array_decl.h,v 1.5 2004/08/04 13:28:17 tihocan Exp $
+   * $Id: Array_decl.h,v 1.6 2004/09/14 16:04:35 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -258,7 +258,7 @@ class Array: public TVec<T>
 
     //! Deep copy of an array is not the same as for a TVec, because
     //! the shallow copy automatically creates a new storage.
-    void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 
     // DEPRECATED! Call PStream& << arr instead (This is for backward compatibility only)

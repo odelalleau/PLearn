@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalCDFSmoother.cc,v 1.5 2004/02/20 21:11:46 chrish42 Exp $ 
+   * $Id: ConditionalCDFSmoother.cc,v 1.6 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ConditionalCDFSmoother.cc */
@@ -80,7 +80,7 @@ void ConditionalCDFSmoother::build()
   build_();
 }
 
-void ConditionalCDFSmoother::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void ConditionalCDFSmoother::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Object::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(prior_cdf, copies);

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_impl.h,v 1.13 2004/07/22 17:19:47 lapalmej Exp $
+   * $Id: TMat_impl.h,v 1.14 2004/09/14 16:04:37 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -343,13 +343,13 @@ void TMat<T>::input(istream& in) const
 // Deep copying
 
 template<class T>
-void TMat<T>::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void TMat<T>::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   deepCopyField(storage, copies);
 }
 
 template<class T>
-TMat<T> TMat<T>::deepCopy(map<const void*, void*>& copies) const
+TMat<T> TMat<T>::deepCopy(CopiesMap& copies) const
 {
   // First do a shallow copy
   TMat<T> deep_copy = *this;

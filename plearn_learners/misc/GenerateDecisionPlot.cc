@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenerateDecisionPlot.cc,v 1.8 2004/07/21 16:30:57 chrish42 Exp $ 
+   * $Id: GenerateDecisionPlot.cc,v 1.9 2004/09/14 16:04:57 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file GenerateDecisionPlot.cc */
@@ -551,7 +551,7 @@ void GenerateDecisionPlot::run()
   }
 
 
-  void GenerateDecisionPlot::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  void GenerateDecisionPlot::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   {
     inherited::makeDeepCopyFromShallowCopy(copies);
   }

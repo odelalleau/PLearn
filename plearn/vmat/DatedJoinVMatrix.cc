@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.cc,v 1.11 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: DatedJoinVMatrix.cc,v 1.12 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 // Authors: *Yoshua Bengio*
@@ -482,7 +482,7 @@ void DatedJoinVMatrix::build()
   build_();
 }
 
-void DatedJoinVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void DatedJoinVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

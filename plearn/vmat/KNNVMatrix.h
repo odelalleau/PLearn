@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.h,v 1.12 2004/07/21 20:11:40 tihocan Exp $ 
+   * $Id: KNNVMatrix.h,v 1.13 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -128,7 +128,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   // Declares other standard object methods
   //  If your class is not instantiatable (it has pure virtual methods)

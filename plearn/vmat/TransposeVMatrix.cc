@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TransposeVMatrix.cc,v 1.2 2004/07/07 17:30:48 tihocan Exp $ 
+   * $Id: TransposeVMatrix.cc,v 1.3 2004/09/14 16:04:40 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -121,7 +121,7 @@ void TransposeVMatrix::getNewRow(int i, const Vec& v) const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void TransposeVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void TransposeVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

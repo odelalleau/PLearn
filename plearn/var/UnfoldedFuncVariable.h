@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.h,v 1.7 2004/04/27 16:05:33 morinf Exp $
+   * $Id: UnfoldedFuncVariable.h,v 1.8 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -75,7 +75,7 @@ public:
   virtual void build();
 
   virtual void recomputeSize(int& l, int& w) const;
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
   virtual void fprop();
   virtual void bprop();
     

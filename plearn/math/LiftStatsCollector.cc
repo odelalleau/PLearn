@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.13 2004/09/09 19:40:21 tihocan Exp $
+ * $Id: LiftStatsCollector.cc,v 1.14 2004/09/14 16:04:36 chrish42 Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -344,7 +344,7 @@ double LiftStatsCollector::getStat(const string& statspec)
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void LiftStatsCollector::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void LiftStatsCollector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(n_first_updates, copies);

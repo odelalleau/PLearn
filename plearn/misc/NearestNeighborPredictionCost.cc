@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NearestNeighborPredictionCost.cc,v 1.1 2004/08/12 16:11:59 monperrm Exp $ 
+   * $Id: NearestNeighborPredictionCost.cc,v 1.2 2004/09/14 16:04:37 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -148,7 +148,7 @@ void NearestNeighborPredictionCost::build()
   build_();
 }
 
-void NearestNeighborPredictionCost::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void NearestNeighborPredictionCost::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

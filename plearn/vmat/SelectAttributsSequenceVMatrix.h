@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectAttributsSequenceVMatrix.h,v 1.5 2004/09/09 22:26:00 larocheh Exp $ 
+   * $Id: SelectAttributsSequenceVMatrix.h,v 1.6 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -226,7 +226,7 @@ public:
   virtual void build();
 
   //! Transform a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   //! returns value associated with a string (or MISSING_VALUE if there's no association for this string)
   virtual real getStringVal(int col, const string & str) const

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrixSplitter.cc,v 1.2 2004/06/10 16:13:08 tihocan Exp $ 
+   * $Id: SourceVMatrixSplitter.cc,v 1.3 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -92,7 +92,7 @@ void SourceVMatrixSplitter::build()
   build_();
 }
 
-void SourceVMatrixSplitter::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SourceVMatrixSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Splitter::makeDeepCopyFromShallowCopy(copies);
 

@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ScaledConditionalCDFSmoother.h,v 1.5 2004/02/20 21:11:46 chrish42 Exp $ 
+   * $Id: ScaledConditionalCDFSmoother.h,v 1.6 2004/09/14 16:04:37 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ScaledConditionalCDFSmoother.h */
@@ -100,7 +100,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(ScaledConditionalCDFSmoother);

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOfVariable.cc,v 1.10 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: SumOfVariable.cc,v 1.11 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -112,7 +112,7 @@ void SumOfVariable::recomputeSize(int& l, int& w) const
 }
 
 
-void SumOfVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SumOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   NaryVariable::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(distr, copies);

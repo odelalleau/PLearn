@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.h,v 1.11 2004/08/21 21:52:26 yoshua Exp $ 
+   * $Id: TangentLearner.h,v 1.12 2004/09/14 16:04:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -143,7 +143,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   // Declares other standard object methods.
   // If your class is not instantiatable (it has pure virtual methods)

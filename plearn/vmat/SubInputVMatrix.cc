@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SubInputVMatrix.cc,v 1.4 2004/07/07 17:30:48 tihocan Exp $ 
+   * $Id: SubInputVMatrix.cc,v 1.5 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -123,7 +123,7 @@ void SubInputVMatrix::getNewRow(int i, const Vec& v) const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void SubInputVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SubInputVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PDistributionVariable.cc,v 1.1 2004/08/17 15:37:05 larocheh Exp $
+   * $Id: PDistributionVariable.cc,v 1.2 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -91,7 +91,7 @@ void PDistributionVariable::build_()
   dist->train();
 }
 
-void PDistributionVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void PDistributionVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Variable::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(dist, copies);

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.h,v 1.7 2004/07/09 19:42:23 tihocan Exp $
+   * $Id: CompactVMatrix.h,v 1.8 2004/09/14 16:04:39 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -190,7 +190,7 @@ class CompactVMatrix : public RowBufferedVMatrix
     //virtual void oldread(istream& in);
 
     PLEARN_DECLARE_OBJECT(CompactVMatrix);
-    void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    void makeDeepCopyFromShallowCopy(CopiesMap& copies);
     virtual void build() {}  //!<  nothing to do...
 
   protected:

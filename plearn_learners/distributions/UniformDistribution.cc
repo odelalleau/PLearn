@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UniformDistribution.cc,v 1.5 2004/07/21 16:30:56 chrish42 Exp $ 
+   * $Id: UniformDistribution.cc,v 1.6 2004/09/14 16:04:56 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -160,7 +160,7 @@ real UniformDistribution::log_density(const Vec& x) const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void UniformDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void UniformDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

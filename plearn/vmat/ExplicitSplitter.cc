@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExplicitSplitter.cc,v 1.9 2004/07/21 16:30:55 chrish42 Exp $ 
+   * $Id: ExplicitSplitter.cc,v 1.10 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ExplicitSplitter.cc */
@@ -71,7 +71,7 @@ void ExplicitSplitter::build()
   build_();
 }
 
-void ExplicitSplitter::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void ExplicitSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Splitter::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(splitsets, copies);

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.11 2004/07/23 14:39:45 tihocan Exp $
+   * $Id: GaussianKernel.cc,v 1.12 2004/09/14 16:04:36 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -101,7 +101,7 @@ void GaussianKernel::build_()
 }
 
 
-void GaussianKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void GaussianKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(squarednorms,copies);

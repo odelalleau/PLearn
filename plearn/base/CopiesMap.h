@@ -37,7 +37,7 @@ using namespace std;
     
     Deep copying is defined for objects in the following manner:
     + copy constructors should always do a shallow copy.
-    + a public method OBJTYPE* deepCopy(map<const void*, void*>& copies) const 
+    + a public method OBJTYPE* deepCopy(CopiesMap& copies) const 
       should be defined to allow deepCopying
     + the deepCopy method should be virtual for classes that are designed to be subclassed
     Take a close look at the Object class in Object.h to see how this is done.

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.15 2004/06/18 16:45:23 tihocan Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.16 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
@@ -105,7 +105,7 @@ void SelectRowsVMatrix::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-void SelectRowsVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SelectRowsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(indices, copies);

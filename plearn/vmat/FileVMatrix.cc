@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.24 2004/08/16 15:45:44 dorionc Exp $
+   * $Id: FileVMatrix.cc,v 1.25 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -241,7 +241,7 @@ void FileVMatrix::declareOptions(OptionList & ol)
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void FileVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void FileVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

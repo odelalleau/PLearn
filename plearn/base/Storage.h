@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.15 2004/07/27 16:37:30 tihocan Exp $
+   * $Id: Storage.h,v 1.16 2004/09/14 16:04:35 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -293,9 +293,9 @@ public:
     }
 
     //!  Deep copying
-    Storage<T>* deepCopy(map<const void*, void*>& copies) const
+    Storage<T>* deepCopy(CopiesMap& copies) const
     {
-      map<const void*, void*>::iterator it = copies.find(this);
+      CopiesMap::iterator it = copies.find(this);
       if(it!=copies.end())  //!<  a copy already exists, so return it
         return (Storage<T>*) it->second;
       

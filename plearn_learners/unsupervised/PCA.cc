@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.15 2004/08/12 12:59:32 tihocan Exp $ 
+   * $Id: PCA.cc,v 1.16 2004/09/14 16:04:59 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
@@ -174,7 +174,7 @@ TVec<string> PCA::getTrainCostNames() const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void PCA::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void PCA::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(mu, copies);

@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.19 2004/07/21 16:30:53 chrish42 Exp $ 
+   * $Id: VecStatsCollector.h,v 1.20 2004/09/14 16:04:37 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -171,7 +171,7 @@ public:
   int getIndexInAllStats(int fieldindex, const string& statname) const;
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(VecStatsCollector);

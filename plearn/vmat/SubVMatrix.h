@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.h,v 1.10 2004/07/26 20:10:43 tihocan Exp $
+   * $Id: SubVMatrix.h,v 1.11 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 
@@ -85,7 +85,7 @@ public:
   virtual void reset_dimensions();
 
   //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   PLEARN_DECLARE_OBJECT(SubVMatrix);
   virtual void build();

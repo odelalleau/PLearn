@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.cc,v 1.10 2004/08/11 12:27:11 tihocan Exp $
+   * $Id: ConcatRowsVMatrix.cc,v 1.11 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 #include "ConcatRowsVMatrix.h"
@@ -384,7 +384,7 @@ void ConcatRowsVMatrix::getSubRow(int i, int j, Vec v) const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void ConcatRowsVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies) {
+void ConcatRowsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
   inherited::makeDeepCopyFromShallowCopy(copies);
 
   // ### Call deepCopyField on all "pointer-like" fields

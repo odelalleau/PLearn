@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.cc,v 1.9 2004/08/09 16:23:52 tihocan Exp $
+   * $Id: SelectColumnsVMatrix.cc,v 1.10 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 #include "SelectColumnsVMatrix.h"
@@ -100,7 +100,7 @@ void SelectColumnsVMatrix::declareOptions(OptionList &ol)
   inherited::declareOptions(ol);
 }
 
-void SelectColumnsVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SelectColumnsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(indices, copies);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.h,v 1.8 2004/07/21 16:30:59 chrish42 Exp $ 
+   * $Id: PCA.h,v 1.9 2004/09/14 16:04:59 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PCA.h */
@@ -99,7 +99,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   // Declares other standard object methods
   //  If your class is not instantiatable (it has pure virtual methods)

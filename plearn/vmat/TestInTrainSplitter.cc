@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestInTrainSplitter.cc,v 1.3 2004/06/08 13:16:29 tihocan Exp $ 
+   * $Id: TestInTrainSplitter.cc,v 1.4 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -108,7 +108,7 @@ void TestInTrainSplitter::build()
   build_();
 }
 
-void TestInTrainSplitter::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void TestInTrainSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Splitter::makeDeepCopyFromShallowCopy(copies);
 

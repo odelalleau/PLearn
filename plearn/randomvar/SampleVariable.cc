@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: SampleVariable.cc,v 1.4 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: SampleVariable.cc,v 1.5 2004/09/14 16:04:38 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -102,9 +102,9 @@ UniformSampleVariable::UniformSampleVariable( int length, int width,
   sprintf(name,"U[%f,%f]",min_value,max_value);
 }
 
-UniformSampleVariable* UniformSampleVariable::deepCopy(map<const void*, void*>& copies) const
+UniformSampleVariable* UniformSampleVariable::deepCopy(CopiesMap& copies) const
 {
-  map<const void*, void*>::iterator it = copies.find(this);
+  CopiesMap::iterator it = copies.find(this);
   if (it!=copies.end()) // a copy already exists, so return it
     return (UniformSampleVariable*)it->second;
   
@@ -137,9 +137,9 @@ MultinomialSampleVariable::MultinomialSampleVariable(Variable* probabilities,
   sprintf(name,"Multinomial[%dx%d]",length,width);
 }
 
-MultinomialSampleVariable* MultinomialSampleVariable::deepCopy(map<const void*, void*>& copies) const
+MultinomialSampleVariable* MultinomialSampleVariable::deepCopy(CopiesMap& copies) const
 {
-  map<const void*, void*>::iterator it = copies.find(this);
+  CopiesMap::iterator it = copies.find(this);
   if (it!=copies.end()) // a copy already exists, so return it
     return (MultinomialSampleVariable*)it->second;
   
@@ -174,9 +174,9 @@ DiagonalNormalSampleVariable::DiagonalNormalSampleVariable
           mu->length(),mu->width(),sigma->length(),sigma->width());
 }
 
-DiagonalNormalSampleVariable* DiagonalNormalSampleVariable::deepCopy(map<const void*, void*>& copies) const
+DiagonalNormalSampleVariable* DiagonalNormalSampleVariable::deepCopy(CopiesMap& copies) const
 {
-  map<const void*, void*>::iterator it = copies.find(this);
+  CopiesMap::iterator it = copies.find(this);
   if (it!=copies.end()) // a copy already exists, so return it
     return (DiagonalNormalSampleVariable*)it->second;
   

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UCISpecification.cc,v 1.3 2004/07/14 22:37:59 mariusmuja Exp $ 
+   * $Id: UCISpecification.cc,v 1.4 2004/09/14 16:04:35 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -128,7 +128,7 @@ void UCISpecification::build()
   build_();
 }
 
-void UCISpecification::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void UCISpecification::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.h,v 1.5 2004/06/18 16:45:02 tihocan Exp $
+   * $Id: SortRowsVMatrix.h,v 1.6 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 
@@ -71,7 +71,7 @@ public:
   static void declareOptions(OptionList &ol);
 
   virtual void build();
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 private:
 

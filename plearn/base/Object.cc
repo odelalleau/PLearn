@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.32 2004/09/01 23:52:19 plearner Exp $
+   * $Id: Object.cc,v 1.33 2004/09/14 16:04:35 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -59,7 +59,7 @@ Object::Object()
 PLEARN_IMPLEMENT_OBJECT(Object, "Base class for PLearn Objects", "NO HELP");   
 
 // by default, do nothing...
-void Object::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void Object::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {}
 
 void Object::setOption(const string& optionname, const string& value)

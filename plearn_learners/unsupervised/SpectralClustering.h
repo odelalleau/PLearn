@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpectralClustering.h,v 1.1 2004/06/10 20:07:10 tihocan Exp $ 
+   * $Id: SpectralClustering.h,v 1.2 2004/09/14 16:04:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -104,7 +104,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   // Declares other standard object methods.
   PLEARN_DECLARE_OBJECT(SpectralClustering);

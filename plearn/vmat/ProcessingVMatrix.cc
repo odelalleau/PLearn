@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ProcessingVMatrix.cc,v 1.8 2004/07/07 17:30:48 tihocan Exp $ 
+   * $Id: ProcessingVMatrix.cc,v 1.9 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -102,7 +102,7 @@ void ProcessingVMatrix::build()
   build_();
 }
 
-void ProcessingVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void ProcessingVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

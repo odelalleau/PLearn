@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StatefulLearner.cc,v 1.5 2004/08/18 22:18:23 chapados Exp $ 
+   * $Id: StatefulLearner.cc,v 1.6 2004/09/14 16:04:56 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Réjean Ducharme
@@ -76,7 +76,7 @@ void StatefulLearner::build()
   build_();
 }
 
-void StatefulLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void StatefulLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

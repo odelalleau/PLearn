@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LimitedGaussianSmoother.cc,v 1.10 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: LimitedGaussianSmoother.cc,v 1.11 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file LimitedGaussianSmoother.cc */
@@ -95,7 +95,7 @@ LimitedGaussianSmoother::LimitedGaussianSmoother(real window_size_wrt_sigma_, re
   }
 
 
-  void LimitedGaussianSmoother::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  void LimitedGaussianSmoother::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   {
     Object::makeDeepCopyFromShallowCopy(copies);
 

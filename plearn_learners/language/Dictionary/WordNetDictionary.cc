@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: WordNetDictionary.cc,v 1.2 2004/09/13 20:24:14 larocheh Exp $ 
+   * $Id: WordNetDictionary.cc,v 1.3 2004/09/14 16:04:57 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -203,7 +203,7 @@ string WordNetDictionary::getSymbol(int id, TVec<int>options )const
 
 }
 
-void WordNetDictionary::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void WordNetDictionary::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

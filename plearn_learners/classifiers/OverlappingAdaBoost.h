@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: OverlappingAdaBoost.h,v 1.1 2004/09/13 20:00:33 larocheh Exp $
+   * $Id: OverlappingAdaBoost.h,v 1.2 2004/09/14 16:04:40 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -146,7 +146,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   // Declares other standard object methods
   //  If your class is not instantiatable (it has pure virtual methods)

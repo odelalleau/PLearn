@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalStatsCollector.cc,v 1.6 2004/03/03 01:31:23 plearner Exp $ 
+   * $Id: ConditionalStatsCollector.cc,v 1.7 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -259,7 +259,7 @@ void ConditionalStatsCollector::update(const Vec& v, real weight)
   }
 }
 
-  void ConditionalStatsCollector::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  void ConditionalStatsCollector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   {
     inherited::makeDeepCopyFromShallowCopy(copies);
 

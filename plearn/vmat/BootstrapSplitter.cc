@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BootstrapSplitter.cc,v 1.3 2004/04/05 22:47:08 morinf Exp $ 
+   * $Id: BootstrapSplitter.cc,v 1.4 2004/09/14 16:04:38 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file BootstrapSplitter.cc */
@@ -102,7 +102,7 @@ void BootstrapSplitter::build()
   build_();
 }
 
-void BootstrapSplitter::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void BootstrapSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Splitter::makeDeepCopyFromShallowCopy(copies);
 

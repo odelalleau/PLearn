@@ -73,7 +73,7 @@ public:
   virtual void build();
   
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
 // Declares a few other classes and functions related to this class

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BatchVMatrix.cc,v 1.5 2004/04/05 22:46:32 morinf Exp $
+   * $Id: BatchVMatrix.cc,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
    ******************************************************* */
 
 #include "BatchVMatrix.h"
@@ -58,7 +58,7 @@ void BatchVMatrix::declareOptions(OptionList& ol)
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void BatchVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void BatchVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(m, copies);

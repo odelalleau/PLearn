@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.cc,v 1.14 2004/07/21 20:32:40 tihocan Exp $ 
+   * $Id: KNNVMatrix.cc,v 1.15 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -265,7 +265,7 @@ void KNNVMatrix::build_() {
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void KNNVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void KNNVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

@@ -85,7 +85,7 @@ void PConditionalDistribution::declareOptions(OptionList& ol)
     build_();
   }
 
-void PConditionalDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void PConditionalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.19 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: Func.cc,v 1.20 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -184,7 +184,7 @@ void Function::build()
   build_();
 }
 
-void Function::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void Function::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Object::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(inputs, copies);

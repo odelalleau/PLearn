@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectedOutputCostFunction.cc,v 1.4 2004/04/07 23:15:58 morinf Exp $
+   * $Id: SelectedOutputCostFunction.cc,v 1.5 2004/09/14 16:04:36 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,7 +49,7 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(SelectedOutputCostFunction, "ONE LINE DESCR", "NO HELP");
 
-void SelectedOutputCostFunction::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SelectedOutputCostFunction::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(costfunc, copies);

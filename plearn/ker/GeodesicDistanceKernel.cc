@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.cc,v 1.11 2004/07/23 13:43:58 tihocan Exp $ 
+   * $Id: GeodesicDistanceKernel.cc,v 1.12 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -223,7 +223,7 @@ real GeodesicDistanceKernel::evaluate_i_x_again(int i, const Vec& x, real square
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void GeodesicDistanceKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void GeodesicDistanceKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

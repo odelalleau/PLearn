@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelPCA.cc,v 1.7 2004/07/21 16:30:59 chrish42 Exp $ 
+   * $Id: KernelPCA.cc,v 1.8 2004/09/14 16:04:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -137,7 +137,7 @@ void KernelPCA::forget()
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void KernelPCA::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void KernelPCA::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

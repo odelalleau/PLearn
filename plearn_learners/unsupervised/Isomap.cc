@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Isomap.cc,v 1.6 2004/07/22 19:10:02 tihocan Exp $ 
+   * $Id: Isomap.cc,v 1.7 2004/09/14 16:04:58 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -149,7 +149,7 @@ void Isomap::forget()
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void Isomap::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void Isomap::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

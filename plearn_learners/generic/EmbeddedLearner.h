@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.10 2004/06/26 00:24:15 plearner Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.11 2004/09/14 16:04:56 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
@@ -84,7 +84,7 @@ public:
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     //! Declares name and deepCopy methods
     PLEARN_DECLARE_OBJECT(EmbeddedLearner);

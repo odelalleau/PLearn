@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.12 2004/06/26 00:24:15 plearner Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.13 2004/09/14 16:04:56 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -122,7 +122,7 @@ TVec<string> EmbeddedLearner::getTestCostNames() const
 TVec<string> EmbeddedLearner::getTrainCostNames() const
 { return learner_->getTrainCostNames(); }
 
-void EmbeddedLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void EmbeddedLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     PLearner::makeDeepCopyFromShallowCopy(copies);
 

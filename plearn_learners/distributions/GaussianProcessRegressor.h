@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: GaussianProcessRegressor.h,v 1.10 2004/07/21 16:30:55 chrish42 Exp $
+ * $Id: GaussianProcessRegressor.h,v 1.11 2004/09/14 16:04:55 chrish42 Exp $
  ******************************************************* */
 
 
@@ -108,7 +108,7 @@ class GaussianProcessRegressor: public PConditionalDistribution
     virtual ~GaussianProcessRegressor();
 
     //! Transforms a shallow copy into a deep copy
-    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     //! Set the input part before using the inherited methods
     virtual void setInput(const Vec& input);

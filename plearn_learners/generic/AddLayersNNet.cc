@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddLayersNNet.cc,v 1.5 2004/09/13 13:27:54 tihocan Exp $ 
+   * $Id: AddLayersNNet.cc,v 1.6 2004/09/14 16:04:56 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -283,7 +283,7 @@ void AddLayersNNet::initializeParams(bool set_seed) {
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void AddLayersNNet::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void AddLayersNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(real_parts_size, copies);

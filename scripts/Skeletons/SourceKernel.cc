@@ -132,7 +132,7 @@ real DERIVEDCLASS::evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.h,v 1.11 2004/07/21 16:30:55 chrish42 Exp $ 
+   * $Id: Distribution.h,v 1.12 2004/09/14 16:04:55 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.h */
@@ -99,7 +99,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(Distribution);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectInputSubsetLearner.cc,v 1.3 2004/07/21 16:30:56 chrish42 Exp $
+   * $Id: SelectInputSubsetLearner.cc,v 1.4 2004/09/14 16:04:56 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -99,7 +99,7 @@ void SelectInputSubsetLearner::build()
 }
 
 
-void SelectInputSubsetLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SelectInputSubsetLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

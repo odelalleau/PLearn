@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunObject.cc,v 1.1 2004/06/21 14:47:57 tihocan Exp $ 
+   * $Id: RunObject.cc,v 1.2 2004/09/14 16:04:37 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -79,7 +79,7 @@ void RunObject::build()
   build_();
 }
 
-void RunObject::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void RunObject::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GetInputVMatrix.cc,v 1.1 2004/06/30 16:51:39 tihocan Exp $ 
+   * $Id: GetInputVMatrix.cc,v 1.2 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -110,7 +110,7 @@ void GetInputVMatrix::build_()
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void GetInputVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void GetInputVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

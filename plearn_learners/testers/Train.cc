@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Train.cc,v 1.2 2004/08/06 15:38:57 monperrm Exp $ 
+   * $Id: Train.cc,v 1.3 2004/09/14 16:04:58 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -114,7 +114,7 @@ void Train::run()
     PLearn::save(psave, learner);
 }
 
-void Train::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void Train::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ScaledGeneralizedDistanceRBFKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
+   * $Id: ScaledGeneralizedDistanceRBFKernel.cc,v 1.5 2004/09/14 16:04:36 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,7 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(ScaledGeneralizedDistanceRBFKernel, "ONE LINE DESCR", "NO HELP");
 
-void ScaledGeneralizedDistanceRBFKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void ScaledGeneralizedDistanceRBFKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(phi, copies);

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianProcessRegressor.cc,v 1.11 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: GaussianProcessRegressor.cc,v 1.12 2004/09/14 16:04:55 chrish42 Exp $
    ******************************************************* */
 
 #include "GaussianProcessRegressor.h"
@@ -53,7 +53,7 @@ GaussianProcessRegressor::GaussianProcessRegressor() :
 
 PLEARN_IMPLEMENT_OBJECT(GaussianProcessRegressor, "Basic version of Gaussian Process regression.", "NO HELP");
 
-void GaussianProcessRegressor::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void GaussianProcessRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

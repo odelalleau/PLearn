@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.20 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: Optimizer.h,v 1.21 2004/09/14 16:04:37 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -128,7 +128,7 @@ using namespace std;
       virtual void setVMatOption(const string& optionname, VMat value);
       
       PLEARN_DECLARE_ABSTRACT_OBJECT(Optimizer);
-      virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+      virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
       
       void addMeasurer(Measurer& measurer);
       

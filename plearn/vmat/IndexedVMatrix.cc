@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: IndexedVMatrix.cc,v 1.5 2004/04/05 22:54:50 morinf Exp $
+   * $Id: IndexedVMatrix.cc,v 1.6 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 #include "IndexedVMatrix.h"
@@ -52,7 +52,7 @@ void IndexedVMatrix::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-void IndexedVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void IndexedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(m, copies);

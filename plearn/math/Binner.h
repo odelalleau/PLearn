@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.h,v 1.7 2004/07/21 16:30:53 chrish42 Exp $ 
+   * $Id: Binner.h,v 1.8 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Binner.h */
@@ -100,7 +100,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   //! Returns a binning for a single column vmatrix v 
   virtual PP<RealMapping> getBinning(VMat v) const;

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: SourceVariable.cc,v 1.5 2004/04/27 16:05:33 morinf Exp $
+   * $Id: SourceVariable.cc,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,7 +63,7 @@ SourceVariable::SourceVariable(const Mat& m)
   : inherited(m)
 {}
 
-void SourceVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SourceVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Variable::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(rows_to_update, copies);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UnconditionalDistribution.cc,v 1.2 2004/07/21 19:11:59 chrish42 Exp $ 
+   * $Id: UnconditionalDistribution.cc,v 1.3 2004/09/14 16:04:56 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -135,7 +135,7 @@ void UnconditionalDistribution::build_()
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void UnconditionalDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void UnconditionalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

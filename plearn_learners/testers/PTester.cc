@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.37 2004/07/26 20:15:02 tihocan Exp $ 
+   * $Id: PTester.cc,v 1.38 2004/09/14 16:04:58 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -544,7 +544,7 @@ void StatSpec::parseStatname(const string& statname)
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void PTester::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies) {
+void PTester::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(statnames_processed, copies);
   deepCopyField(dataset, copies);

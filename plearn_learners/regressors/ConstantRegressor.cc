@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConstantRegressor.cc,v 1.8 2004/07/21 20:26:52 tihocan Exp $ 
+   * $Id: ConstantRegressor.cc,v 1.9 2004/09/14 16:04:58 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ConstantRegressor.cc */
@@ -97,7 +97,7 @@ void ConstantRegressor::build()
 }
 
 
-void ConstantRegressor::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void ConstantRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

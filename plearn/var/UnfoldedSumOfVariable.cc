@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedSumOfVariable.cc,v 1.8 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: UnfoldedSumOfVariable.cc,v 1.9 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -122,7 +122,7 @@ void UnfoldedSumOfVariable::recomputeSize(int& l, int& w) const
 //! To use varDeepCopyField.
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
-void UnfoldedSumOfVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void UnfoldedSumOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   NaryVariable::makeDeepCopyFromShallowCopy(copies);
   varDeepCopyField(input_matrix, copies);

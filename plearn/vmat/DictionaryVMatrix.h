@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.h,v 1.6 2004/09/09 22:24:42 larocheh Exp $ 
+   * $Id: DictionaryVMatrix.h,v 1.7 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christopher Kermorvant
@@ -132,7 +132,7 @@ public:
   virtual void build();
 
   //! Transform a shallow copy into a deep copy.
-   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
   
   //  virtual void save(const string& filename) ;  
   //! Declare name and deepCopy methods.

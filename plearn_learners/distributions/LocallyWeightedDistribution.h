@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.h,v 1.8 2004/07/21 20:23:38 tihocan Exp $ 
+   * $Id: LocallyWeightedDistribution.h,v 1.9 2004/09/14 16:04:55 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.h */
@@ -96,7 +96,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(LocallyWeightedDistribution);

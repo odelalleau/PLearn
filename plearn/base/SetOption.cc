@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SetOption.cc,v 1.5 2004/06/26 00:24:12 plearner Exp $ 
+   * $Id: SetOption.cc,v 1.6 2004/09/14 16:04:35 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file SetOption.cc */
@@ -71,7 +71,7 @@ SetOption::SetOption()
   }
 
 
-  void SetOption::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  void SetOption::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   {
     Object::makeDeepCopyFromShallowCopy(copies);
   }

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: TMat_decl.h,v 1.4 2004/07/22 17:19:47 lapalmej Exp $
+ * $Id: TMat_decl.h,v 1.5 2004/09/14 16:04:37 chrish42 Exp $
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -625,13 +625,13 @@ public:
   ************
   */
 
-  void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   /*!     Notice that deepCopy of a Mat returns a Mat rather than a Mat*.  The
     reason for this being that a Mat is already some kind of "smart
     pointer" to an underlying Storage
   */
-  TMat<T> deepCopy(map<const void*, void*>& copies) const;
+  TMat<T> deepCopy(CopiesMap& copies) const;
 
 
   //!  Copy of data

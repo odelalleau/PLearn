@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ArgminOfVariable.cc,v 1.4 2004/02/20 21:11:49 chrish42 Exp $
+   * $Id: ArgminOfVariable.cc,v 1.5 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -70,7 +70,7 @@ void ArgminOfVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
 
 
-void ArgminOfVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void ArgminOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   NaryVariable::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(inputs, copies);

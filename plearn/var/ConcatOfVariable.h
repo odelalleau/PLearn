@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatOfVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
+   * $Id: ConcatOfVariable.h,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -72,7 +72,7 @@ public:
   virtual void build();
 
   virtual void recomputeSize(int& l, int& w) const;
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   virtual void fprop();
   virtual void bprop();

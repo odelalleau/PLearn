@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: IndexedVMatrix.h,v 1.7 2004/04/05 22:54:50 morinf Exp $
+   * $Id: IndexedVMatrix.h,v 1.8 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 
@@ -65,7 +65,7 @@ public:
   static void declareOptions(OptionList& ol);
     
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
   virtual void build();
   virtual real get(int i, int j) const;
   virtual void put(int i, int j, real value);

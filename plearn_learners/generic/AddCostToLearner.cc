@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.12 2004/08/13 13:54:57 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.13 2004/09/14 16:04:56 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -421,7 +421,7 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void AddCostToLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void AddCostToLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(combined_output, copies);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.13 2004/07/07 17:30:48 tihocan Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.14 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -171,7 +171,7 @@ void PLearnerOutputVMatrix::build()
   build_();
 }
 
-void PLearnerOutputVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void PLearnerOutputVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

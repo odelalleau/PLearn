@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: StatsIterator.cc,v 1.7 2004/05/19 17:23:00 tihocan Exp $
+   * $Id: StatsIterator.cc,v 1.8 2004/09/14 16:04:37 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,7 +50,7 @@ using namespace std;
 // *******************
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(StatsIterator, "ONE LINE DESCR", "NO HELP");
-void StatsIterator::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void StatsIterator::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(result, copies);
@@ -193,7 +193,7 @@ void ExpMeanStatsIterator::oldread(istream& in)
 
 PLEARN_IMPLEMENT_OBJECT(StddevStatsIterator, "ONE LINE DESCR", "NO HELP");
 
-void StddevStatsIterator::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void StddevStatsIterator::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(mean, copies);
@@ -271,7 +271,7 @@ void StddevStatsIterator::oldread(istream& in)
 
 PLEARN_IMPLEMENT_OBJECT(StderrStatsIterator, "ONE LINE DESCR", "NO HELP");
 
-void StderrStatsIterator::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void StderrStatsIterator::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(mean, copies);
@@ -347,7 +347,7 @@ void StderrStatsIterator::oldread(istream& in)
 
 PLEARN_IMPLEMENT_OBJECT(SharpeRatioStatsIterator, "ONE LINE DESCR", "NO HELP");
 
-void SharpeRatioStatsIterator::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SharpeRatioStatsIterator::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(mean, copies);
@@ -510,7 +510,7 @@ void MaxStatsIterator::oldread(istream& in)
 // ***********************
  
 PLEARN_IMPLEMENT_OBJECT(LiftStatsIterator, "ONE LINE DESCR", "NO HELP");
-void LiftStatsIterator::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void LiftStatsIterator::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   StatsIterator::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(output_and_pos, copies);
@@ -625,7 +625,7 @@ void LiftStatsIterator::oldread(istream& in)
 
 PLEARN_IMPLEMENT_OBJECT(QuantilesStatsIterator, "ONE LINE DESCR", "NO HELP");
 
-void QuantilesStatsIterator::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void QuantilesStatsIterator::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   StatsIterator::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(quantiles, copies);

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryVariable.cc,v 1.15 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: UnaryVariable.cc,v 1.16 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,7 +69,7 @@ void UnaryVariable::declareOptions(OptionList& ol)
 
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
-void UnaryVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void UnaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Variable::makeDeepCopyFromShallowCopy(copies);
   //deepCopyField(input, copies);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SetOption.h,v 1.5 2004/06/26 00:24:12 plearner Exp $ 
+   * $Id: SetOption.h,v 1.6 2004/09/14 16:04:35 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file SetOption.h */
@@ -94,7 +94,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   //! Will call obj->setOption(name, value)
   inline void apply(PP<Object> obj)

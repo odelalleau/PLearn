@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IsomapTangentLearner.cc,v 1.5 2004/08/02 16:12:22 monperrm Exp $ 
+   * $Id: IsomapTangentLearner.cc,v 1.6 2004/09/14 16:04:58 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -115,7 +115,7 @@ void IsomapTangentLearner::build()
 }
 
 
-void IsomapTangentLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void IsomapTangentLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

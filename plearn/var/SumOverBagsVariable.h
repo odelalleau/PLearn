@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.h,v 1.10 2004/04/27 16:02:26 morinf Exp $
+   * $Id: SumOverBagsVariable.h,v 1.11 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -102,7 +102,7 @@ public:
     virtual void build();
 
     virtual void recomputeSize(int& l, int& w) const;
-    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
     virtual void fprop();
     virtual void bprop();
     virtual void fbprop();

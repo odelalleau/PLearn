@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilterSplitter.cc,v 1.3 2004/07/21 16:30:55 chrish42 Exp $ 
+   * $Id: FilterSplitter.cc,v 1.4 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pierre-Jean L Heureux
@@ -95,7 +95,7 @@ void FilterSplitter::build()
   build_();
 }
 
-void FilterSplitter::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void FilterSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Splitter::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(filters, copies);

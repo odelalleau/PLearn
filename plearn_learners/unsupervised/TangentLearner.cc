@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.18 2004/08/21 21:52:26 yoshua Exp $ 
+   * $Id: TangentLearner.cc,v 1.19 2004/09/14 16:04:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -380,7 +380,7 @@ void TangentLearner::build()
 
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
-void TangentLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void TangentLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {  inherited::makeDeepCopyFromShallowCopy(copies);
 
   deepCopyField(cost_of_one_example, copies);

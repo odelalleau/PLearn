@@ -87,7 +87,7 @@ void ConditionalGaussianDistribution::declareOptions(OptionList& ol)
   computeMeanAndCovar(training_set, mean, covariance);
 }
 
-void ConditionalGaussianDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void ConditionalGaussianDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Learner::makeDeepCopyFromShallowCopy(copies);
 }

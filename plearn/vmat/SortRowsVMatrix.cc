@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.cc,v 1.6 2004/07/14 20:53:38 tihocan Exp $
+   * $Id: SortRowsVMatrix.cc,v 1.7 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -70,7 +70,7 @@ void SortRowsVMatrix::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-void SortRowsVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SortRowsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   deepCopyField(sort_columns, copies);
   inherited::makeDeepCopyFromShallowCopy(copies);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLEKernel.h,v 1.5 2004/07/21 15:55:21 tihocan Exp $ 
+   * $Id: LLEKernel.h,v 1.6 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -120,7 +120,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   // Declares other standard object methods.
   PLEARN_DECLARE_OBJECT(LLEKernel);

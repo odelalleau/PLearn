@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.21 2004/07/21 16:30:53 chrish42 Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.22 2004/09/14 16:04:37 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -258,7 +258,7 @@ Mat VecStatsCollector::getCorrelation() const
   return getCovariance()/norm;
 }
 
-void VecStatsCollector::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void VecStatsCollector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Object::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(stats, copies);

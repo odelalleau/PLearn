@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.cc,v 1.10 2004/07/26 20:10:19 tihocan Exp $
+   * $Id: RowBufferedVMatrix.cc,v 1.11 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 #include "RowBufferedVMatrix.h"
@@ -169,7 +169,7 @@ real RowBufferedVMatrix::dot(int i, const Vec& v) const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void RowBufferedVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies) {
+void RowBufferedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(current_row, copies);
   deepCopyField(other_row, copies);

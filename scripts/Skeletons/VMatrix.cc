@@ -85,7 +85,7 @@ void DERIVEDCLASS::getSubRow(int i, int j, Vec v) const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

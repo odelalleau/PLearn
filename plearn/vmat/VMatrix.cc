@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.70 2004/09/08 23:52:49 larocheh Exp $
+* $Id: VMatrix.cc,v 1.71 2004/09/14 16:04:40 chrish42 Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -111,7 +111,7 @@ void VMatrix::declareOptions(OptionList & ol)
   inherited::declareOptions(ol);
 }
 
-void VMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void VMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(get_row, copies);

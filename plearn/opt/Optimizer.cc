@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.28 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: Optimizer.cc,v 1.29 2004/09/14 16:04:37 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -176,7 +176,7 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void Optimizer::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void Optimizer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   varDeepCopyField(cost, copies);

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixElementsVariable.cc,v 1.8 2004/05/04 21:15:53 nova77 Exp $
+   * $Id: MatrixElementsVariable.cc,v 1.9 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -108,7 +108,7 @@ void MatrixElementsVariable::recomputeSize(int& l, int& w) const
 
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
-void MatrixElementsVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void MatrixElementsVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   NaryVariable::makeDeepCopyFromShallowCopy(copies);
   varDeepCopyField(i, copies);

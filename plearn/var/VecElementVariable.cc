@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VecElementVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
+   * $Id: VecElementVariable.cc,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -82,7 +82,7 @@ VecElementVariable::declareOptions(OptionList &ol)
 void VecElementVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
 
-void VecElementVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void VecElementVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   UnaryVariable::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(v, copies);

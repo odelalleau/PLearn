@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryVariable.h,v 1.11 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: BinaryVariable.h,v 1.12 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,7 +66,7 @@ public:
 
   virtual void setParents(const VarArray& parents);
   
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
   virtual bool markPath();
   virtual void buildPath(VarArray& proppath);
   virtual VarArray sources();

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.h,v 1.11 2004/07/09 21:36:54 monperrm Exp $
+   * $Id: MemoryVMatrix.h,v 1.12 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 
@@ -92,7 +92,7 @@ public:
   virtual void build();
 
   PLEARN_DECLARE_OBJECT(MemoryVMatrix);
-  void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
 DECLARE_OBJECT_PTR(MemoryVMatrix);

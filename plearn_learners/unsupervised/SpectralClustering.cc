@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpectralClustering.cc,v 1.3 2004/07/21 16:30:59 chrish42 Exp $ 
+   * $Id: SpectralClustering.cc,v 1.4 2004/09/14 16:04:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -126,7 +126,7 @@ void SpectralClustering::forget()
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void SpectralClustering::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SpectralClustering::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

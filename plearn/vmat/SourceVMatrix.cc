@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.cc,v 1.11 2004/07/07 17:30:48 tihocan Exp $ 
+   * $Id: SourceVMatrix.cc,v 1.12 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -166,7 +166,7 @@ void SourceVMatrix::build()
   build_();
 }
 
-void SourceVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SourceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(sourcerow, copies);

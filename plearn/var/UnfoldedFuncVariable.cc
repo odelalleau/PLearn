@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.cc,v 1.10 2004/04/27 16:05:33 morinf Exp $
+   * $Id: UnfoldedFuncVariable.cc,v 1.11 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -131,7 +131,7 @@ void UnfoldedFuncVariable::recomputeSize(int& l, int& w) const
 }
 
 
-void UnfoldedFuncVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void UnfoldedFuncVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   NaryVariable::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(input_matrix, copies);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FractionSplitter.cc,v 1.5 2004/03/30 16:47:15 tihocan Exp $ 
+   * $Id: FractionSplitter.cc,v 1.6 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file FractionSplitter.cc */
@@ -87,7 +87,7 @@ void FractionSplitter::build()
   build_();
 }
 
-void FractionSplitter::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void FractionSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Splitter::makeDeepCopyFromShallowCopy(copies);
 

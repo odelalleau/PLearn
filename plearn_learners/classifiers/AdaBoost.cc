@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdaBoost.cc,v 1.4 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: AdaBoost.cc,v 1.5 2004/09/14 16:04:40 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -136,7 +136,7 @@ void AdaBoost::build()
 }
 
 
-void AdaBoost::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void AdaBoost::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

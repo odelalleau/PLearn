@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatOfVariable.cc,v 1.5 2004/04/27 16:03:34 morinf Exp $
+   * $Id: ConcatOfVariable.cc,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -110,7 +110,7 @@ void ConcatOfVariable::recomputeSize(int& l, int& w) const
 }
 
 
-void ConcatOfVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void ConcatOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   NaryVariable::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(distr, copies);

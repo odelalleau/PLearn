@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UnconditionalDistribution.h,v 1.1 2004/06/21 14:48:32 tihocan Exp $ 
+   * $Id: UnconditionalDistribution.h,v 1.2 2004/09/14 16:04:56 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -100,7 +100,7 @@ public:
   virtual void build();
 
   //! Transform a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   // Declare other standard object methods.
   PLEARN_DECLARE_OBJECT(UnconditionalDistribution);

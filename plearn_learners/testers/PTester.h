@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.15 2004/07/26 20:13:52 tihocan Exp $ 
+   * $Id: PTester.h,v 1.16 2004/09/14 16:04:58 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -152,7 +152,7 @@ public:
   Vec perform(bool call_forget=true);
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.9 2004/07/21 20:27:27 tihocan Exp $
+   * $Id: LinearRegressor.cc,v 1.10 2004/09/14 16:04:58 chrish42 Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
@@ -109,7 +109,7 @@ PLEARN_IMPLEMENT_OBJECT(LinearRegressor, "Ordinary Least Squares and Ridge Regre
   }
 
 
-  void LinearRegressor::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  void LinearRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   {
     inherited::makeDeepCopyFromShallowCopy(copies);
     // ### Call deepCopyField on all "pointer-like" fields 

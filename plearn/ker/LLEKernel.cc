@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLEKernel.cc,v 1.7 2004/07/21 15:55:55 tihocan Exp $ 
+   * $Id: LLEKernel.cc,v 1.8 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -232,7 +232,7 @@ real LLEKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, 
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void LLEKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void LLEKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

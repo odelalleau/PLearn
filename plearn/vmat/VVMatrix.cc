@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.26 2004/08/09 16:16:39 tihocan Exp $
+   * $Id: VVMatrix.cc,v 1.27 2004/09/14 16:04:40 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -663,7 +663,7 @@ void VVMatrix::build_()
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void VVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies) {
+void VVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(the_mat, copies);
 }

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerProcessedVMatrix.cc,v 1.6 2004/07/09 19:42:23 tihocan Exp $ 
+   * $Id: LearnerProcessedVMatrix.cc,v 1.7 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file LearnerProcessedVMatrix.cc */
@@ -118,7 +118,7 @@ void LearnerProcessedVMatrix::build()
   build_();
 }
 
-void LearnerProcessedVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void LearnerProcessedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(source, copies);

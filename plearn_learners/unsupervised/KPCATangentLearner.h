@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KPCATangentLearner.h,v 1.1 2004/08/12 16:11:12 monperrm Exp $ 
+   * $Id: KPCATangentLearner.h,v 1.2 2004/09/14 16:04:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -114,7 +114,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   // Declares other standard object methods.
   // If your class is not instantiatable (it has pure virtual methods)

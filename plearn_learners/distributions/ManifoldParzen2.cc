@@ -78,7 +78,7 @@ void ManifoldParzen2::build()
 void ManifoldParzen2::build_()
 {}
 
-void ManifoldParzen2::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void ManifoldParzen2::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   PLearner::makeDeepCopyFromShallowCopy(copies);
 

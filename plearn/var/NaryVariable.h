@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NaryVariable.h,v 1.10 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: NaryVariable.h,v 1.11 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -74,7 +74,7 @@ public: // Temporarily public for GradientOptimizer hack (speed contest, Pascal)
 public:
   NaryVariable(const VarArray& the_varray, int thelength, int thewidth=1);
   PLEARN_DECLARE_ABSTRACT_OBJECT(NaryVariable);
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   
   

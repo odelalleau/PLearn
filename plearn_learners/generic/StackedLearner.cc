@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.16 2004/07/21 16:30:56 chrish42 Exp $
+   * $Id: StackedLearner.cc,v 1.17 2004/09/14 16:04:56 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -163,7 +163,7 @@ StackedLearner::StackedLearner()
   }
 
 
-  void StackedLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  void StackedLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   {
     inherited::makeDeepCopyFromShallowCopy(copies);
 

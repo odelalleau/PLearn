@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Dictionary.cc,v 1.1 2004/09/09 22:30:49 larocheh Exp $ 
+   * $Id: Dictionary.cc,v 1.2 2004/09/14 16:04:56 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -147,7 +147,7 @@ string Dictionary::getSymbol(int id, TVec<int>options)const
   return "";
 }
 
-void Dictionary::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void Dictionary::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(string_to_int, copies);

@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: StatsIterator.h,v 1.9 2004/07/21 16:30:53 chrish42 Exp $
+   * $Id: StatsIterator.h,v 1.10 2004/09/14 16:04:37 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -91,7 +91,7 @@ public:
   //!  You can call this method after finish has returned true
   virtual Vec getResult();
     
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
   PLEARN_DECLARE_ABSTRACT_OBJECT(StatsIterator);
     
     virtual void build() {}
@@ -169,7 +169,7 @@ public:
   virtual void update(const Vec& input);
   virtual bool finish();
   PLEARN_DECLARE_OBJECT(StddevStatsIterator);
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   virtual void oldwrite(ostream& out) const;
   virtual void oldread(istream& in);
@@ -196,7 +196,7 @@ public:
   virtual void update(const Vec& input);
   virtual bool finish();
   PLEARN_DECLARE_OBJECT(StderrStatsIterator);
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   virtual void oldwrite(ostream& out) const;
   virtual void oldread(istream& in);
@@ -229,7 +229,7 @@ public:
   virtual void update(const Vec& input);
   virtual bool finish();
   PLEARN_DECLARE_OBJECT(SharpeRatioStatsIterator);
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   virtual void oldwrite(ostream& out) const;
   virtual void oldread(istream& in);
@@ -307,7 +307,7 @@ public:
 
   LiftStatsIterator(int the_index=0, real the_fraction=0.1);
   PLEARN_DECLARE_OBJECT(LiftStatsIterator);
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void oldwrite(ostream& out) const;
     virtual void oldread(istream& in);
@@ -340,7 +340,7 @@ class QuantilesStatsIterator: public StatsIterator
     QuantilesStatsIterator(){}
     QuantilesStatsIterator(Vec quantiles, int n_data=1000);
     PLEARN_DECLARE_OBJECT(QuantilesStatsIterator);
-    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void oldwrite(ostream& out) const;
     virtual void oldread(istream& in);

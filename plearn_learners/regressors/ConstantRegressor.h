@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConstantRegressor.h,v 1.7 2004/07/21 16:30:58 chrish42 Exp $ 
+   * $Id: ConstantRegressor.h,v 1.8 2004/09/14 16:04:58 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ConstantRegressor.h */
@@ -104,7 +104,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   // Declares other standard object methods
   //  If your class is not instantiatable (it has pure virtual methods)

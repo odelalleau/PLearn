@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: TemporalHorizonVMatrix.cc,v 1.4 2004/04/05 23:07:07 morinf Exp $
+   * $Id: TemporalHorizonVMatrix.cc,v 1.5 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 #include "TemporalHorizonVMatrix.h"
@@ -109,7 +109,7 @@ void TemporalHorizonVMatrix::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-void TemporalHorizonVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void TemporalHorizonVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(distr, copies);

@@ -122,7 +122,7 @@ real DERIVEDCLASS::log_density(const Vec& y) const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

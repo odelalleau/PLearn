@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: OverlappingAdaBoost.cc,v 1.1 2004/09/13 20:00:33 larocheh Exp $
+   * $Id: OverlappingAdaBoost.cc,v 1.2 2004/09/14 16:04:40 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -133,7 +133,7 @@ void OverlappingAdaBoost::build()
 }
 
 
-void OverlappingAdaBoost::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void OverlappingAdaBoost::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.h,v 1.10 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: PLearnerOutputVMatrix.h,v 1.11 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -110,7 +110,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(PLearnerOutputVMatrix);

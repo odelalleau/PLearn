@@ -40,7 +40,7 @@ void DERIVEDCLASS::build()
   build_();
 }
 
-void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: KernelVMatrix.h,v 1.3 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: KernelVMatrix.h,v 1.4 2004/09/14 16:04:39 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -83,7 +83,7 @@ public:
   virtual void build();
 
   //DECLARE_NAME_AND_DEEPCOPY(KernelVMatrix);
-  //virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  //virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
 private:

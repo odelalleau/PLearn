@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: ForwardVMatrix.h,v 1.8 2004/05/14 02:13:41 tihocan Exp $
+   * $Id: ForwardVMatrix.h,v 1.9 2004/09/14 16:04:39 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -169,7 +169,7 @@ public:
   virtual void oldwrite(ostream& out) const;
   virtual void oldread(istream& in);
 
-  void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 
 /*!     The following methods can be used in a straightforward manner to compute a variety of useful things:

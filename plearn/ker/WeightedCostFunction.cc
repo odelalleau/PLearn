@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: WeightedCostFunction.cc,v 1.4 2004/04/07 23:15:58 morinf Exp $
+   * $Id: WeightedCostFunction.cc,v 1.5 2004/09/14 16:04:36 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,7 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(WeightedCostFunction, "ONE LINE DESCR", "NO HELP");
 
-void WeightedCostFunction::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void WeightedCostFunction::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(costfunc, copies);

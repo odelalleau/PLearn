@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLE.cc,v 1.4 2004/07/20 22:00:07 tihocan Exp $ 
+   * $Id: LLE.cc,v 1.5 2004/09/14 16:04:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -144,7 +144,7 @@ void LLE::forget()
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void LLE::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void LLE::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

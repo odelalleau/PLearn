@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.14 2004/07/26 20:10:43 tihocan Exp $
+   * $Id: SubVMatrix.cc,v 1.15 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -230,7 +230,7 @@ real SubVMatrix::dot(int i, const Vec& v) const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void SubVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies) {
+void SubVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(parent, copies);
 }

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.11 2004/07/21 16:30:55 chrish42 Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.12 2004/09/14 16:04:40 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
@@ -97,7 +97,7 @@ ClassifierFromDensity::ClassifierFromDensity()
   }
 
 
-  void ClassifierFromDensity::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  void ClassifierFromDensity::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(estimators, copies);

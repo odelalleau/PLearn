@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestingLearner.cc,v 1.2 2004/07/19 22:47:00 mariusmuja Exp $ 
+   * $Id: TestingLearner.cc,v 1.3 2004/09/14 16:04:56 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Marius Muja
@@ -84,7 +84,7 @@ void TestingLearner::build()
 }
 
 
-void TestingLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void TestingLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

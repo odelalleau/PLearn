@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecDictionary.cc,v 1.1 2004/09/09 22:30:50 larocheh Exp $ 
+   * $Id: VecDictionary.cc,v 1.2 2004/09/14 16:04:57 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -93,7 +93,7 @@ void VecDictionary::build()
   build_();
 }
 
-void VecDictionary::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void VecDictionary::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(vector_dict, copies);

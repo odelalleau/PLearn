@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectInputSubsetLearner.h,v 1.2 2004/04/14 21:17:32 yoshua Exp $
+   * $Id: SelectInputSubsetLearner.h,v 1.3 2004/09/14 16:04:56 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -116,7 +116,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   // Declares other standard object methods.
   // If your class is not instantiatable (it has pure virtual methods)

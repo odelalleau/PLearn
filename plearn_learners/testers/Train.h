@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Train.h,v 1.1 2004/08/05 13:52:18 monperrm Exp $ 
+   * $Id: Train.h,v 1.2 2004/09/14 16:04:58 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -114,7 +114,7 @@ public:
 
   //! Transforms a shallow copy into a deep copy
   // (PLEASE IMPLEMENT IN .cc)
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 

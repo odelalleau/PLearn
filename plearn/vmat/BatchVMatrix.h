@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BatchVMatrix.h,v 1.5 2004/04/05 22:46:32 morinf Exp $
+   * $Id: BatchVMatrix.h,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
    ******************************************************* */
 
 
@@ -71,7 +71,7 @@ public:
   static void declareOptions(OptionList& ol);
     
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   virtual void build();
   virtual real get(int i, int j) const;

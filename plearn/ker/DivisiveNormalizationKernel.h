@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DivisiveNormalizationKernel.h,v 1.4 2004/07/21 20:09:58 tihocan Exp $ 
+   * $Id: DivisiveNormalizationKernel.h,v 1.5 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -123,7 +123,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   // Declares other standard object methods.
   PLEARN_DECLARE_OBJECT(DivisiveNormalizationKernel);

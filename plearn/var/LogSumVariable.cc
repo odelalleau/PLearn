@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LogSumVariable.cc,v 1.5 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: LogSumVariable.cc,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,7 +68,7 @@ void LogSumVariable::recomputeSize(int& l, int& w) const
 
 
 
-void LogSumVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void LogSumVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   UnaryVariable::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(input_softmax, copies);

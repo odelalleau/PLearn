@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: SampleVariable.h,v 1.5 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: SampleVariable.h,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -62,7 +62,7 @@ class SourceSampleVariable: public SourceVariable
  public:
   SourceSampleVariable(int length, int width)
     :SourceVariable(length, width) {}
-  virtual SourceSampleVariable* deepCopy(map<const void*, void*>& copies) const =0;
+  virtual SourceSampleVariable* deepCopy(CopiesMap& copies) const =0;
   virtual string classname() const;
   virtual void bprop() { }
   VarArray random_sources();
@@ -97,7 +97,7 @@ class UniformSampleVariable: public SourceSampleVariable
  public:
   UniformSampleVariable(int length=1, int width=1,
                         real minvalue=0, real maxvalue=1);
-  virtual UniformSampleVariable* deepCopy(map<const void*, void*>& copies) const;
+  virtual UniformSampleVariable* deepCopy(CopiesMap& copies) const;
   virtual string classname() const;
   virtual void fprop();
 };
@@ -109,7 +109,7 @@ class MultinomialSampleVariable: public UnarySampleVariable
 
  public:
   MultinomialSampleVariable(Variable* probabilities, int length=1, int width=1);
-  virtual MultinomialSampleVariable* deepCopy(map<const void*, void*>& copies) const;
+  virtual MultinomialSampleVariable* deepCopy(CopiesMap& copies) const;
   virtual string classname() const;
   virtual void fprop();
 };
@@ -118,7 +118,7 @@ class DiagonalNormalSampleVariable: public BinarySampleVariable
 {
  public:
   DiagonalNormalSampleVariable(Variable* mu, Variable* sigma);
-  virtual DiagonalNormalSampleVariable* deepCopy(map<const void*, void*>& copies) const;
+  virtual DiagonalNormalSampleVariable* deepCopy(CopiesMap& copies) const;
   virtual string classname() const;
   virtual void fprop();
 };

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalStatsCollector.h,v 1.6 2004/07/21 16:30:53 chrish42 Exp $ 
+   * $Id: ConditionalStatsCollector.h,v 1.7 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -164,7 +164,7 @@ public:
 
   //! Transforms a shallow copy into a deep copy
   // (PLEASE IMPLEMENT IN .cc)
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 

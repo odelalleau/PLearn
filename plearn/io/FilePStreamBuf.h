@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilePStreamBuf.h,v 1.2 2004/08/31 17:22:40 plearner Exp $ 
+   * $Id: FilePStreamBuf.h,v 1.3 2004/09/14 16:04:35 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -109,7 +109,7 @@ public:
 
   //! Transforms a shallow copy into a deep copy
   // (PLEASE IMPLEMENT IN .cc)
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 

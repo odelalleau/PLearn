@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MovingAverageVMatrix.cc,v 1.2 2004/06/29 19:52:56 tihocan Exp $
+   * $Id: MovingAverageVMatrix.cc,v 1.3 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -206,7 +206,7 @@ void MovingAverageVMatrix::build()
   build_();
 }
 
-void MovingAverageVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void MovingAverageVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.h,v 1.11 2004/08/09 16:29:19 tihocan Exp $
+   * $Id: ConcatRowsVMatrix.h,v 1.12 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 
@@ -99,7 +99,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
 

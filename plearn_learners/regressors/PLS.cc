@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLS.cc,v 1.10 2004/07/21 16:30:58 chrish42 Exp $ 
+   * $Id: PLS.cc,v 1.11 2004/09/14 16:04:58 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -293,7 +293,7 @@ TVec<string> PLS::getTrainCostNames() const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void PLS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void PLS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

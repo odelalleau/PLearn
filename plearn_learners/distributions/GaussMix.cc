@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.41 2004/07/21 20:22:36 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.42 2004/09/14 16:04:55 chrish42 Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -665,7 +665,7 @@ real GaussMix::log_density(const Vec& y) const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void GaussMix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(sample_row, copies);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Smoother.cc,v 1.5 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: Smoother.cc,v 1.6 2004/09/14 16:04:37 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Smoother.cc */
@@ -91,7 +91,7 @@ Smoother::Smoother()
   }
 
 
-  void Smoother::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  void Smoother::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   {
     Object::makeDeepCopyFromShallowCopy(copies);
 

@@ -83,7 +83,7 @@ real DERIVEDCLASS::evaluate_i_j(int i, int j) const {
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.18 2004/06/01 13:15:57 tihocan Exp $
+   * $Id: Variable.cc,v 1.19 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -287,7 +287,7 @@ void Variable::print(ostream& out) const
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Variable, "ONE LINE DESCR", "NO HELP");
 
-void Variable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void Variable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Object::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(value, copies);

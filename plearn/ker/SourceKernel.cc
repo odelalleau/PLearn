@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceKernel.cc,v 1.3 2004/06/25 12:58:22 tihocan Exp $ 
+   * $Id: SourceKernel.cc,v 1.4 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -152,7 +152,7 @@ Vec SourceKernel::getParameters() const {
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void SourceKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SourceKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(source_kernel, copies);

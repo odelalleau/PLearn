@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RegularGridVMatrix.cc,v 1.5 2004/07/07 17:30:48 tihocan Exp $ 
+   * $Id: RegularGridVMatrix.cc,v 1.6 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file RegularGridVMatrix.cc */
@@ -120,7 +120,7 @@ void RegularGridVMatrix::build()
   build_();
 }
 
-void RegularGridVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void RegularGridVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(dimensions, copies);

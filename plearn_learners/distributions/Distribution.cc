@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.18 2004/07/21 16:30:55 chrish42 Exp $ 
+   * $Id: Distribution.cc,v 1.19 2004/09/14 16:04:55 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.cc */
@@ -137,7 +137,7 @@ void Distribution::use(const Vec& input, Vec& output)
     }
 }
 
-void Distribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void Distribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Learner::makeDeepCopyFromShallowCopy(copies);
 }

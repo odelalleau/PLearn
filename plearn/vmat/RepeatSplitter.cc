@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RepeatSplitter.cc,v 1.9 2004/07/21 16:30:55 chrish42 Exp $ 
+   * $Id: RepeatSplitter.cc,v 1.10 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file RepeatSplitter.cc */
@@ -275,7 +275,7 @@ void RepeatSplitter::build_()
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void RepeatSplitter::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void RepeatSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Splitter::makeDeepCopyFromShallowCopy(copies);
 

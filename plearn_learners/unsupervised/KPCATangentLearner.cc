@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KPCATangentLearner.cc,v 1.1 2004/08/12 16:11:12 monperrm Exp $ 
+   * $Id: KPCATangentLearner.cc,v 1.2 2004/09/14 16:04:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -101,7 +101,7 @@ void KPCATangentLearner::build()
 }
 
 
-void KPCATangentLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void KPCATangentLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

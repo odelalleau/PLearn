@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RowsSubVMatrix.cc,v 1.4 2004/06/29 19:54:43 tihocan Exp $ 
+   * $Id: RowsSubVMatrix.cc,v 1.5 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -89,7 +89,7 @@ void RowsSubVMatrix::build()
   build_();
 }
 
-void RowsSubVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void RowsSubVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.cc,v 1.15 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: VarArray.cc,v 1.16 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -97,7 +97,7 @@ VarArray::VarArray(Variable*  v1, Variable*  v2)
 //extern void deepCopyField(Var& field, CopiesMap& copies);
 extern void varDeepCopyField(Var& field, CopiesMap& copies); // a cause d'une bug du compilateur
 
-void VarArray::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void VarArray::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   for(int i=0; i<size(); i++)
     varDeepCopyField((*this)[i], copies);

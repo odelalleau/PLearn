@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CumVMatrix.cc,v 1.5 2004/07/07 17:30:48 tihocan Exp $ 
+   * $Id: CumVMatrix.cc,v 1.6 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -162,7 +162,7 @@ void CumVMatrix::build()
   build_();
 }
 
-void CumVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void CumVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

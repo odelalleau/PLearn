@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.56 2004/09/08 23:52:49 larocheh Exp $
+   * $Id: VMatrix.h,v 1.57 2004/09/14 16:04:40 chrish42 Exp $
    ******************************************************* */
 
 
@@ -492,7 +492,7 @@ public:
   virtual void oldread(istream& in);
 
   PLEARN_DECLARE_ABSTRACT_OBJECT(VMatrix);
-  void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 
 /*!     The following methods can be used in a straightforward manner to compute a variety of useful things:

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CenteredVMatrix.cc,v 1.4 2004/07/07 17:30:47 tihocan Exp $ 
+   * $Id: CenteredVMatrix.cc,v 1.5 2004/09/14 16:04:38 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -132,7 +132,7 @@ void CenteredVMatrix::getNewRow(int i, const Vec& v) const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void CenteredVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void CenteredVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

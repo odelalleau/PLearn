@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array_impl.h,v 1.3 2004/08/03 19:29:43 tatien Exp $
+   * $Id: Array_impl.h,v 1.4 2004/09/14 16:04:35 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -219,7 +219,7 @@ inline Array< TMat<T> > operator&(const TMat<T>& m1, const TMat<T>& m2) { return
 
 // Deep copying
 template<class T>
-void Array<T>::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void Array<T>::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   // Shallow copy of an array, contrarily to TVec, already makes a shallow copy of the elements, so we
   // don't want to call deepCopyField(storage, copies) as TVec does, but simply deepCopyField()

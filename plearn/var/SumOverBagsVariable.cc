@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.cc,v 1.13 2004/04/27 16:02:26 morinf Exp $
+   * $Id: SumOverBagsVariable.cc,v 1.14 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -195,7 +195,7 @@ void SumOverBagsVariable::recomputeSize(int& l, int& w) const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void SumOverBagsVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SumOverBagsVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   NaryVariable::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(vmat, copies);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StatefulLearner.h,v 1.5 2004/08/18 22:18:23 chapados Exp $ 
+   * $Id: StatefulLearner.h,v 1.6 2004/09/14 16:04:56 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Réjean Ducharme
@@ -89,7 +89,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   // Declares other standard object methods.
   PLEARN_DECLARE_ABSTRACT_OBJECT(StatefulLearner);

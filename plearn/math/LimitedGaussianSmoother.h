@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LimitedGaussianSmoother.h,v 1.7 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: LimitedGaussianSmoother.h,v 1.8 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file LimitedGaussianSmoother.h */
@@ -107,7 +107,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(LimitedGaussianSmoother);

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NegKernel.cc,v 1.4 2004/04/07 23:15:58 morinf Exp $
+   * $Id: NegKernel.cc,v 1.5 2004/09/14 16:04:36 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,7 +55,7 @@ NegKernel::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-void NegKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void NegKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(ker, copies);

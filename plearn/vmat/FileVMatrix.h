@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.14 2004/08/16 15:45:44 dorionc Exp $
+   * $Id: FileVMatrix.h,v 1.15 2004/09/14 16:04:39 chrish42 Exp $
    ******************************************************* */
 
 
@@ -97,7 +97,7 @@ public:
 
 
   //! Transform a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   virtual ~FileVMatrix();
 

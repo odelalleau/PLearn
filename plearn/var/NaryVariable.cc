@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NaryVariable.cc,v 1.9 2004/04/27 16:06:12 morinf Exp $
+   * $Id: NaryVariable.cc,v 1.10 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,7 +63,7 @@ void NaryVariable::declareOptions(OptionList& ol)
 }
 
 
-void NaryVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void NaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Variable::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(varray, copies);

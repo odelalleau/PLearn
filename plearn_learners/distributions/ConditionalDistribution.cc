@@ -52,7 +52,7 @@ PLEARN_IMPLEMENT_OBJECT(ConditionalDistribution, "ONE LINE DESCR",
                         "You must call setInput to set the condition before using the distribution");
 
 
-void ConditionalDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void ConditionalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

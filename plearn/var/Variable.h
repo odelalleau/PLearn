@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.17 2004/07/26 21:04:14 chrish42 Exp $
+   * $Id: Variable.h,v 1.18 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -196,7 +196,7 @@ public:
 
   PLEARN_DECLARE_ABSTRACT_OBJECT(Variable);
 
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   //!  compute output given input
   virtual void fprop() =0;

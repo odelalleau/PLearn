@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectAttributsSequenceVMatrix.cc,v 1.3 2004/09/03 13:45:15 kermorvc Exp $ 
+   * $Id: SelectAttributsSequenceVMatrix.cc,v 1.4 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -449,7 +449,7 @@ void SelectAttributsSequenceVMatrix::build()
   build_();
 }
 
-void SelectAttributsSequenceVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void SelectAttributsSequenceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

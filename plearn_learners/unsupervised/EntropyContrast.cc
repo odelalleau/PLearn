@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: EntropyContrast.cc,v 1.5 2004/08/20 13:15:18 mariusmuja Exp $ 
+ * $Id: EntropyContrast.cc,v 1.6 2004/09/14 16:04:58 chrish42 Exp $ 
  ******************************************************* */
 
 /*! \file EntropyContrast.cc */
@@ -543,7 +543,7 @@ void EntropyContrast::build()
 }
 
 
-void EntropyContrast::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void EntropyContrast::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     //    deepCopyField(eigenvecs, copies);

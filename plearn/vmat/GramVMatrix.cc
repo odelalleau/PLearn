@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GramVMatrix.cc,v 1.1 2004/07/07 19:50:15 tihocan Exp $ 
+   * $Id: GramVMatrix.cc,v 1.2 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -130,7 +130,7 @@ void GramVMatrix::build_()
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void GramVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void GramVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

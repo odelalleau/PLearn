@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.h,v 1.10 2004/09/09 19:40:21 tihocan Exp $
+ * $Id: LiftStatsCollector.h,v 1.11 2004/09/14 16:04:36 chrish42 Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -157,7 +157,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 

@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.h,v 1.8 2004/07/26 20:12:44 tihocan Exp $
+   * $Id: VVMatrix.h,v 1.9 2004/09/14 16:04:40 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -126,7 +126,7 @@ public:
   virtual void getSubRow(int i, int j, Vec v) const {the_mat->getSubRow(i,j,v);}
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 private:
 

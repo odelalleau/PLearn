@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.cc,v 1.9 2004/07/21 20:23:38 tihocan Exp $ 
+   * $Id: LocallyWeightedDistribution.cc,v 1.10 2004/09/14 16:04:55 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.cc */
@@ -95,7 +95,7 @@ void LocallyWeightedDistribution::build()
   }
 
 
-  void LocallyWeightedDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  void LocallyWeightedDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   {
     Distribution::makeDeepCopyFromShallowCopy(copies);
 

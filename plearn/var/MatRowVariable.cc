@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatRowVariable.cc,v 1.6 2004/05/19 17:26:30 tihocan Exp $
+   * $Id: MatRowVariable.cc,v 1.7 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -95,7 +95,7 @@ MatRowVariable::recomputeSize(int& l, int& w) const
 
 
 
-void MatRowVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void MatRowVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   UnaryVariable::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(m, copies);

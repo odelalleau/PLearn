@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryVariable.h,v 1.10 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: UnaryVariable.h,v 1.11 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,7 +68,7 @@ public:
   PLEARN_DECLARE_ABSTRACT_OBJECT(UnaryVariable);
   
   
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
   virtual bool markPath();
   virtual void buildPath(VarArray& proppath);
   virtual VarArray sources();

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.cc,v 1.9 2004/07/21 16:30:55 chrish42 Exp $ 
+   * $Id: JulianizeVMatrix.cc,v 1.10 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.cc */
@@ -143,7 +143,7 @@ void JulianizeVMatrix::build()
   build_();
 }
 
-void JulianizeVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void JulianizeVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(underlying_, copies);

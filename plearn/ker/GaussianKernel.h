@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.h,v 1.8 2004/06/16 18:25:04 tihocan Exp $
+   * $Id: GaussianKernel.h,v 1.9 2004/09/14 16:04:36 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -83,7 +83,7 @@ protected:
 
   virtual void build();
 
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   inline real evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const;
 

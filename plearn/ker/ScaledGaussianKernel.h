@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ScaledGaussianKernel.h,v 1.3 2004/04/07 23:15:58 morinf Exp $
+   * $Id: ScaledGaussianKernel.h,v 1.4 2004/09/14 16:04:36 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,7 +69,7 @@ public:
     
     PLEARN_DECLARE_OBJECT(ScaledGaussianKernel);
     
-    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
     virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
 protected:

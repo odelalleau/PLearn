@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuum.cc,v 1.5 2004/08/24 21:18:00 larocheh Exp $
+   * $Id: GaussianContinuum.cc,v 1.6 2004/09/14 16:04:58 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -1140,7 +1140,7 @@ void GaussianContinuum::build()
 
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
-void GaussianContinuum::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void GaussianContinuum::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {  inherited::makeDeepCopyFromShallowCopy(copies);
 
   deepCopyField(cost_of_one_example, copies);

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: TVec_decl.h,v 1.16 2004/08/11 07:18:45 chapados Exp $
+ * $Id: TVec_decl.h,v 1.17 2004/09/14 16:04:37 chrish42 Exp $
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -325,13 +325,13 @@ public:
     Deep copying
     ************
     */
-  void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   /*! Notice that deepCopy of a Vec returns a Vec rather than a Vec*. The
     reason for this being that a Vec is already some kind of "smart
     pointer" to an underlying Storage
   */
-  TVec<T> deepCopy(map<const void*, void*>& copies) const;
+  TVec<T> deepCopy(CopiesMap& copies) const;
 
 
   inline TVec<T> subVec(Range r) { return subVec(r.start, r.length); }

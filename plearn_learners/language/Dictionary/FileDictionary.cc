@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FileDictionary.cc,v 1.1 2004/09/09 22:30:49 larocheh Exp $ 
+   * $Id: FileDictionary.cc,v 1.2 2004/09/14 16:04:57 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -98,7 +98,7 @@ void FileDictionary::build()
   build_();
 }
 
-void FileDictionary::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void FileDictionary::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

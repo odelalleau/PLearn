@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.21 2004/07/21 20:24:07 tihocan Exp $ 
+   * $Id: PDistribution.cc,v 1.22 2004/09/14 16:04:56 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -334,7 +334,7 @@ void PDistribution::generateN(const Mat& Y) const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void PDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void PDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(store_expect, copies);

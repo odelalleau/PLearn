@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.cc,v 1.7 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: Binner.cc,v 1.8 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Binner.cc */
@@ -95,7 +95,7 @@ Binner::Binner()
   }
 
 
-  void Binner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  void Binner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   {
     Object::makeDeepCopyFromShallowCopy(copies);
 

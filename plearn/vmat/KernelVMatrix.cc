@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: KernelVMatrix.cc,v 1.3 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: KernelVMatrix.cc,v 1.4 2004/09/14 16:04:39 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -97,7 +97,7 @@ KernelVMatrix::declareOptions(OptionList &ol)
 
 /*
 IMPLEMENT_NAME_AND_DEEPCOPY(KernelVMatrix);
-void KernelVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void KernelVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(d1, copies);

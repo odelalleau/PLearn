@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.cc,v 1.9 2004/07/21 17:04:44 tihocan Exp $ 
+   * $Id: AdditiveNormalizationKernel.cc,v 1.10 2004/09/14 16:04:35 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -233,7 +233,7 @@ real AdditiveNormalizationKernel::evaluate_x_i_again(const Vec& x, int i, real s
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void AdditiveNormalizationKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void AdditiveNormalizationKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.18 2004/07/21 20:28:13 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.19 2004/09/14 16:04:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -274,7 +274,7 @@ TVec<string> KernelProjection::getTrainCostNames() const
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void KernelProjection::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void KernelProjection::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

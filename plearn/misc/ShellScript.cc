@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ShellScript.cc,v 1.1 2004/07/19 14:52:59 tihocan Exp $ 
+   * $Id: ShellScript.cc,v 1.2 2004/09/14 16:04:37 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -92,7 +92,7 @@ void ShellScript::build()
   build_();
 }
 
-void ShellScript::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void ShellScript::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(shell_commands, copies);

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.h,v 1.8 2004/06/26 00:24:15 plearner Exp $ 
+   * $Id: SpiralDistribution.h,v 1.9 2004/09/14 16:04:56 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.h */
@@ -98,7 +98,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   // Declares other standard object methods
   //  If your class is not instantiatable (it has pure virtual methods)

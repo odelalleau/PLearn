@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.cc,v 1.6 2004/09/09 22:24:42 larocheh Exp $ 
+   * $Id: DictionaryVMatrix.cc,v 1.7 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christopher Kermorvant
@@ -202,7 +202,7 @@ void DictionaryVMatrix::build()
   build_();
 }
 
-void DictionaryVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void DictionaryVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

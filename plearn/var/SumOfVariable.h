@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOfVariable.h,v 1.5 2004/04/27 16:05:57 morinf Exp $
+   * $Id: SumOfVariable.h,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -76,7 +76,7 @@ class SumOfVariable: public NaryVariable
     virtual void build();
 
     virtual void recomputeSize(int& l, int& w) const;
-    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
     virtual void fprop();
     virtual void bprop();
     virtual void fbprop();

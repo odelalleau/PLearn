@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: EntropyContrast.h,v 1.4 2004/08/20 13:16:01 mariusmuja Exp $ 
+ * $Id: EntropyContrast.h,v 1.5 2004/09/14 16:04:58 chrish42 Exp $ 
  ******************************************************* */
 
 /*! \file EntropyContrast.h */
@@ -224,7 +224,7 @@ namespace PLearn {
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     // Declares other standard object methods
     //  If your class is not instantiatable (it has pure virtual methods)

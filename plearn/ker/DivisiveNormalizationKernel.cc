@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DivisiveNormalizationKernel.cc,v 1.4 2004/07/21 20:09:58 tihocan Exp $ 
+   * $Id: DivisiveNormalizationKernel.cc,v 1.5 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -198,7 +198,7 @@ real DivisiveNormalizationKernel::evaluate_x_i_again(const Vec& x, int i, real s
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void DivisiveNormalizationKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void DivisiveNormalizationKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 

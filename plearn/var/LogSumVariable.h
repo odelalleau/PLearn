@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LogSumVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: LogSumVariable.h,v 1.5 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,7 +64,7 @@ public:
   virtual void recomputeSize(int& l, int& w) const;
   
   
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ManualBinner.cc,v 1.7 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: ManualBinner.cc,v 1.8 2004/09/14 16:04:36 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ManualBinner.cc */
@@ -93,7 +93,7 @@ ManualBinner::ManualBinner(Vec bin_positions_)
   }
 
 
-  void ManualBinner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  void ManualBinner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   {
     Object::makeDeepCopyFromShallowCopy(copies);
 

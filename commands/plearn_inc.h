@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.30 2004/09/14 14:10:24 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.31 2004/09/14 16:04:29 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -175,7 +175,6 @@
 #include <plearn/vmat/SubInputVMatrix.h>
 #include <plearn/vmat/ThresholdVMatrix.h>
 #include <plearn/vmat/TransposeVMatrix.h>
-#include <plearn_learners/language/TextSenseSequenceVMatrix.h>
 #include <plearn/vmat/SelectAttributsSequenceVMatrix.h>
 #include <plearn/vmat/DictionaryVMatrix.h>
 
@@ -186,7 +185,6 @@
 #include <plearn_learners/language/Dictionary/Dictionary.h>
 #include <plearn_learners/language/Dictionary/FileDictionary.h>
 #include <plearn_learners/language/Dictionary/VecDictionary.h>
-#include <plearn_learners/language/Dictionary/WordNetDictionary.h>
 
 
 

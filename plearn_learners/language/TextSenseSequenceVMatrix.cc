@@ -530,7 +530,7 @@ void TextSenseSequenceVMatrix::build()
   build_();
 }
 
-void TextSenseSequenceVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void TextSenseSequenceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(dvm, copies);

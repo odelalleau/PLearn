@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PrecomputedKernel.h,v 1.6 2004/04/07 23:15:17 morinf Exp $
+   * $Id: PrecomputedKernel.h,v 1.7 2004/09/14 16:04:36 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -78,7 +78,7 @@ public:
   //virtual ~PrecomputedKernel();
 
   PLEARN_DECLARE_OBJECT(PrecomputedKernel);
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   //!  This method precomputes and stores all kernel values 
   virtual void setDataForKernelMatrix(VMat the_data);

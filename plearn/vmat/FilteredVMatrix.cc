@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.cc,v 1.11 2004/08/05 13:51:09 tihocan Exp $ 
+   * $Id: FilteredVMatrix.cc,v 1.12 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -143,7 +143,7 @@ void FilteredVMatrix::build()
   build_();
 }
 
-void FilteredVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void FilteredVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

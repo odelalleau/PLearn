@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryVariable.cc,v 1.13 2004/02/20 21:11:49 chrish42 Exp $
+   * $Id: BinaryVariable.cc,v 1.14 2004/09/14 16:04:38 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -91,7 +91,7 @@ void BinaryVariable::setParents(const VarArray& parents)
 
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
-void BinaryVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void BinaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Variable::makeDeepCopyFromShallowCopy(copies);
   //deepCopyField(input1, copies);

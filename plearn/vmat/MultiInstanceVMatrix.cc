@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.15 2004/07/21 16:30:55 chrish42 Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.16 2004/09/14 16:04:39 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -248,7 +248,7 @@ void MultiInstanceVMatrix::build()
   build_();
 }
 
-void MultiInstanceVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void MultiInstanceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 
