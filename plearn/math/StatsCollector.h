@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.26 2004/03/09 16:41:28 tihocan Exp $
+   * $Id: StatsCollector.h,v 1.27 2004/03/20 03:00:56 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -190,9 +190,16 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
                               TVec<double>* fcount=0) const;
 
     RealMapping getAllValuesMapping(TVec<double>* fcount=0) const;
-    // Same as above, except we can specify a bool vector, that indicates
-    // whether the k-th range should be included or not.
-    RealMapping getAllValuesMapping(TVec<bool>* to_be_included, TVec<double>* fcount=0, bool ignore_other = false) const;
+    //! Same as getAllValuesMapping, except we can specify a bool vector,
+    //! that indicates whether the k-th range should be included or not.
+    //! The boolean 'ignore_other' indicates whether a value not appearing
+    //! in the mapping should be mapped to itself (false), or to -1 (true).
+    //! We can also give a 'tolerance': in this case, each mapping will
+    //! be expanded by '-epsilon' below and '+epsilon' above, with
+    //! epsilon = tolerance * mean(difference between two consecutive values).
+    //! If two consecutive mappings have a non-empty intersection after
+    //! the expansion, they will be merged.
+    RealMapping getAllValuesMapping(TVec<bool>* to_be_included, TVec<double>* fcount=0, bool ignore_other = false, real tolerance = 0) const;
 
     virtual void oldwrite(ostream& out) const;
     virtual void oldread(istream& in);

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.32 2004/02/29 16:44:05 nova77 Exp $
+   * $Id: StatsCollector.cc,v 1.33 2004/03/20 03:00:56 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -327,7 +327,8 @@ RealMapping StatsCollector::getAllValuesMapping(TVec<double> * fcount) const
 }
 
 RealMapping StatsCollector::getAllValuesMapping(TVec<bool>* to_be_included,
-                                                TVec<double>* fcount, bool ignore_other) const {
+                                                TVec<double>* fcount, bool ignore_other,
+                                                real tolerance) const {
   RealMapping mapping;
   if (ignore_other) {
     mapping.keep_other_as_is = false;
@@ -345,25 +346,80 @@ RealMapping StatsCollector::getAllValuesMapping(TVec<bool>* to_be_included,
 
   double count=0;
     
+  real epsilon = 0;
+  if (tolerance > 0) {
+    // Compute the expansion coefficient 'epsilon'.
+    StatsCollector values_diff;
+    for (map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
+         unsigned(i) < counts.size() - 2; i++) {
+      real val1 = it->first;
+      it++;
+      real val2 = it->first;
+      values_diff.update(val2 - val1);
+    }
+    // Mean of the difference between two consecutive values.
+    real mean = values_diff.mean();
+    epsilon = tolerance * mean;
+    if (epsilon < 0) {
+      PLERROR("In StatsCollector::getAllValuesMapping - epsilon < 0, there must be something wrong");
+    }
+  }
+
+  i = 0;
+
   for(map<real,StatsCollectorCounts>::const_iterator it = counts.begin() ;
       unsigned(i) < counts.size() - 1; ++it)
   {
-    if (!to_be_included) {
-      mapping.addMapping(RealRange('[',it->first,it->first,']'),i);
-    } else {
-      // Must make sure this range is to be included.
-      if ((*to_be_included)[i]) {
-        mapping.addMapping(RealRange('[',it->first,it->first,']'),k);
-        k++;
+    real low_val = it->first - epsilon;
+    real up_val = it->first + epsilon;
+    map<real,StatsCollectorCounts>::const_iterator itup = it;
+    itup++;
+    int j = i + 1;
+    bool to_include = true;
+    if (to_be_included) {
+      to_include = (*to_be_included)[i];
+    }
+    int count_in_range = it->second.n;
+    if (tolerance > 0) {
+      for (; itup != counts.end(); itup++) {
+        if (itup->first - epsilon <= up_val) {
+          // The next mapping needs to be merged with the current one.
+          if (fcount) {
+            PLWARNING("In StatsCollector::getAllValuesMapping - You are using fcount and some ranges are merged. "
+                "This case has not been tested yet. Please remove this warning if it works fine.");
+          }
+          up_val = itup->first + epsilon;
+          count_in_range += itup->second.n;
+          if (to_be_included) {
+            // As long as one of the merged mappings needs to be included,
+            // we include the result of the merge.
+            to_include = to_include || (*to_be_included)[j];
+          }
+          j++;
+        } else {
+          // No merging.
+          break;
+        }
       }
-      i++;
     }
-    if(fcount)
-    {
-      count += it->second.n;       
-      fcount->append(it->second.n);
+    // Because the last one won't be merged (even if all are merged, the one
+    // with FLT_MAX won't).
+    itup--;
+    it = itup;
+    i = j - 1;
+
+    if (to_include) {
+      mapping.addMapping(RealRange('[',low_val,up_val,']'),k);
+      k++;
+      if(fcount)
+      {
+        count += count_in_range;
+        fcount->append(count_in_range);
+      }
     }
+    i++;
   }
+
   if(fcount)
     (*fcount)[1] = nnonmissing_ - count;
   return mapping;
