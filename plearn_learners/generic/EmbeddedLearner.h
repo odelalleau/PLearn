@@ -34,12 +34,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.1 2003/02/28 00:12:38 plearner Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.2 2003/02/28 03:21:28 plearner Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
-#ifndef ForwardLearner_INC
-#define ForwardLearner_INC
+#ifndef EmbeddedLearner_INC
+#define EmbeddedLearner_INC
 
 #include "Learner.h"
 
