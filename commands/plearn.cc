@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.50 2004/03/05 14:28:28 yoshua Exp $
+   * $Id: plearn.cc,v 1.51 2004/03/05 14:32:50 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -41,8 +41,9 @@
 // Available Splitters:
 #include "ExplicitSplitter.h"
 #include "FractionSplitter.h"
-#include "TrainTestSplitter.h"
 #include "KFoldSplitter.h"
+#include "TrainTestSplitter.h"
+#include "TrainValidTestSplitter.h"
 
 // Available VMats:
 #include "AutoVMatrix.h"
