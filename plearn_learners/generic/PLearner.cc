@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.39 2004/09/27 20:19:29 plearner Exp $
+   * $Id: PLearner.cc,v 1.40 2004/10/17 06:36:30 chapados Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -293,7 +293,8 @@ void PLearner::use(VMat testset, VMat outputs) const
 // useOnTrain //
 ////////////////
 void PLearner::useOnTrain(Mat& outputs) const {
-  PLWARNING("In PLearner::useOnTrain - This method has not been tested yet, remove this warning if it works fine");
+  // NC declares this method to be tested...
+  // PLWARNING("In PLearner::useOnTrain - This method has not been tested yet, remove this warning if it works fine");
   VMat train_output(outputs);
   use(train_set, train_output);
 }
