@@ -1,13 +1,143 @@
-"""
-Pyplearn is a python preprocessor for .plearn files.
+"""Pyplearn is a python preprocessor for .plearn files.
 
 We use Python function definitions, loops and variables to ease the building
 of .plearn files with lots of repetition. Because of the (almost) compatible
 syntaxes of PLearn and Python, one can write the contents of a Python function
 that generates PLearn pretty much as straight PLearn.
+
+Here is a little introductory tutorial.
+
+Syntax' Basics
+---------------
+
+First lets say you have a plearn file that looks like:
+
+   $DEFINE{DATASET}{ AutoVMatrix( specification = "somefile.pmat";
+                                  inputsize     = 10; 
+                                  targetsize    = 1              ) }
+   
+   PTester( expdir = "constant";
+            dataset = ${DATASET};
+            statnames = ["E[train.E[mse]]" "V[test.E[mse]]"];
+            save_test_outputs = 1;
+            provide_learner_expdir = 1;
+            
+            learner = SomeLearnerClassTakingNoOption();
+            ) # end of PTester
+
+Then, the pyplearn file will be:
+
+   dataset = pl.AutoVMatrix( specification = "somefile.pmat",
+                             inputsize     = 10, 
+                             targetsize    = 1              )
+
+   def main():
+       return pl.PTester( expdir = "constant",
+                          dataset = dataset,
+                          statnames = ["E[test.E[mse]]", "V[test.E[mse]]"],
+                          save_test_outputs = 1, 
+                          provide_learner_expdir = 1,
+                       
+                          learner = pl.SomeLearnerClassTakingNoOption();
+                          ) # end of PTester
+
+First, note that the python affectation works just like the $DEFINE
+plearn statement. Also note that the python syntax requires the use of
+commas (,) instead of semicolons (;) to separate the options
+provided. You can also see that python lists [] are mapped to plearn
+TVec's and that there elements must be separated by commas rather that by
+spaces. Finally, any pyplearn file must contain a single main()
+function that returns the representation of a runnable PLearn object. 
+
+Now, one may wonder what does the 'pl' stands for in 'pl.AutoVMatrix',
+'pl.PTester' or 'pl.SomeLearnerClassTakingNoOption()'.  To answer that
+question, we must first say that the pyplearn mecanism acts as an
+additionnal layer over the plearn scripts mecanism, which means that
+the pyplearn driver simply reads the pyplearn file and generates the
+corresponding plearn script to be read by plearn. The 'pl' object emulates
+a module that, for any PLearn class, accepts all options you may wish
+to provide. 
+
+Remember that the pyplearn mecanism IS NOT a bridge between the C++
+PLearn library and python, it simply is another parsing layer that
+provides us with the power of a programming language. Therefore, the 'pl'
+instance is not really awared of the PLearn classes, which means that
+you could write
+
+   pl.NameOfAClassThatDoesNotExist( any_option_you_like = "bla",
+                                    foo                 = ["bar"] )
+
+and the pyplearn driver would generate the following plearn script
+
+   NameOfAClassThatDoesNotExist( any_option_you_like = "bla";
+                                 foo                 = ["bar"] )
+
+that would fail when plearn would try to create a
+NameOfAClassThatDoesNotExist object. Therefore, we do not have to
+maintain any list of 'known classes' and every new class you may write
+will be managed by the pyplearn mecanism since 'pl' simply acts as a
+parser.
+
+The $INCLUDE statement
+-----------------------
+
+If you are used to program complex plearn scripts, you may have
+developed a tendency to break down your script in simpler and smaller
+plearn files that are to be included in the final plearn script. Lets
+say that you have a file, dataset.plearn, that defines your dataset, i.e.
+
+ ## dataset.plearn
+   $DEFINE{DATASET}{ AutoVMatrix( specification = "somefile.pmat";
+                                  inputsize     = 10; 
+                                  targetsize    = 1              ) }
+ ## end of dataset.plearn
+
+and that you used to include this file in your final plearn script:
+
+ (final_script.plearn)
+   $INCLUDE{dataset.plearn}
+ 
+   PTester( expdir = "constant";
+            dataset = ${DATASET};
+            statnames = ["E[train.E[mse]]" "V[test.E[mse]]"];
+            save_test_outputs = 1;
+            provide_learner_expdir = 1;
+            
+            learner = SomeLearnerClassTakingNoOption();
+            ) # end of PTester
+ ## end of final_script.plearn
+
+Being now under the python syntax, you have to create a python module
+
+ ## dataset.py
+   dataset = pl.AutoVMatrix( specification = "somefile.pmat",
+                             inputsize     = 10, 
+                             targetsize    = 1              )
+ ## end of dataset.py
+
+and include it in the python fashion
+
+ ## final_script.pyplearn
+   from dataset import *
+   
+   def main():
+       return pl.PTester( expdir = "constant",
+                          dataset = dataset,
+                          statnames = ["E[test.E[mse]]", "V[test.E[mse]]"],
+                          save_test_outputs = 1, 
+                          provide_learner_expdir = 1,
+                       
+                          learner = pl.SomeLearnerClassTakingNoOption();
+                          ) # end of PTester
+ ## end of final_script.pyplearn
+   
+Bindings
+---------
+
+bind(name, x)
+ref(name)
+
 """
-
-
 
 class plearn_snippet:
     """Objects of this class are used to wrap the parts of the Python code
@@ -137,7 +267,7 @@ def _parse_plargs(args):
         plargs.__dict__[k] = v
 
 
-class _pyplearn_magic_module(object):
+class _pyplearn_magic_module:
     """An instance of this class (instanciated as pl) is used to provide
     the magic behavior whereas bits of Python code like:
     pl.SequentialAdvisorSelector(comparison_type='foo', etc.) become
@@ -159,6 +289,9 @@ class _pyplearn_magic_module(object):
         return '\n'.join(lines)
 
     def __getattr__(self, name):
+        if name.startswith('__'):
+           raise AttributeError
+       
         def printfunc(**kwargs):
             s = [name, '(\n']
 
