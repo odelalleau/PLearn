@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.31 2004/01/08 18:55:27 plearner Exp $
+   * $Id: VMatrix.h,v 1.32 2004/01/29 18:13:03 plearner Exp $
    ******************************************************* */
 
 
@@ -160,6 +160,7 @@ public:
   Array<VMField>& getFieldInfos() const;
   VMField& getFieldInfos(int fieldindex) const { return getFieldInfos()[fieldindex]; }
   void declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype=VMField::UnknownType);
+  void declareFieldNames(TVec<string> fnames);
 
   //!< returns the column index corresponding to a fieldname
   //!<  or -1 if the name was not found

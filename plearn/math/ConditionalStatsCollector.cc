@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalStatsCollector.cc,v 1.1 2003/12/15 14:05:27 plearner Exp $ 
+   * $Id: ConditionalStatsCollector.cc,v 1.2 2004/01/29 18:13:02 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -88,17 +88,32 @@ ConditionalStatsCollector::ConditionalStatsCollector()
                   "sums[k](i,j) contains the sum of variable k's values that fell in range i while condvar was in range j \n"
                   "(unlike counts, these do not have an extra row and column for misisng value");
 
+    declareOption(ol, "sums_condvar", &ConditionalStatsCollector::sums_condvar, OptionBase::learntoption,
+                  "sums_condvar[k](i,j) contains the (possibly weighted) sum of variable condvar's values that fell in range i while variable k was in range j \n"
+                  "(unlike counts, these do not have an extra row and column for misisng value)");
 
     declareOption(ol, "sumsquares", &ConditionalStatsCollector::sumsquares, OptionBase::learntoption,
-                  "sums[k](i,j) contains the sum of squares of variable k's values that fell in range i while condvar was in range j \n"
+                  "sumsquares[k](i,j) contains the (possibly weighted) sum of squares of variable k's values that fell in range i while condvar was in range j \n"
+                  "(unlike counts, these do not have an extra row and column for misisng value)");
+
+    declareOption(ol, "sumsquares_condvar", &ConditionalStatsCollector::sumsquares_condvar, OptionBase::learntoption,
+                  "sumsquares_condvar[k](i,j) contains the (possibly weighted) sum of squares of condvar's values that fell in range i while variable k was in range j \n"
                   "(unlike counts, these do not have an extra row and column for misisng value)");
 
     declareOption(ol, "minima", &ConditionalStatsCollector::minima, OptionBase::learntoption,
-                  "sums[k](i,j) contains the sum of squares of variable k's values that fell in range i while condvar was in range j \n"
+                  "minima[k](i,j) contains the min of variable k's values that fell in range i while condvar was in range j \n"
+                  "(unlike counts, these do not have an extra row and column for misisng value)");
+
+    declareOption(ol, "minima_condvar", &ConditionalStatsCollector::minima_condvar, OptionBase::learntoption,
+                  "minima_condvar[k](i,j) contains the min of variable condvar's values that fell in range i while variable k was in range j \n"
                   "(unlike counts, these do not have an extra row and column for misisng value)");
 
     declareOption(ol, "maxima", &ConditionalStatsCollector::maxima, OptionBase::learntoption,
-                  "sums[k](i,j) contains the sum of squares of variable k's values that fell in range i while condvar was in range j \n"
+                  "maxima[k](i,j) contains the max of variable k's values that fell in range i while condvar was in range j \n"
+                  "(unlike counts, these do not have an extra row and column for misisng value)");
+
+    declareOption(ol, "maxima_condvar", &ConditionalStatsCollector::maxima_condvar, OptionBase::learntoption,
+                  "maxima_condvar[k](i,j) contains the max of variable condvar's values that fell in range i while variable k was in range j \n"
                   "(unlike counts, these do not have an extra row and column for misisng value)");
 
     // Now call the parent class' declareOptions
@@ -124,6 +139,10 @@ void ConditionalStatsCollector::forget()
   sumsquares.resize(0);
   minima.resize(0);
   maxima.resize(0);
+  sums_condvar.resize(0);
+  sumsquares_condvar.resize(0);
+  minima_condvar.resize(0);
+  maxima_condvar.resize(0);
 }
 
 void ConditionalStatsCollector::setBinMappingsAndCondvar(const TVec<RealMapping>& the_ranges, int the_condvar) 
@@ -136,10 +155,29 @@ void ConditionalStatsCollector::setBinMappingsAndCondvar(const TVec<RealMapping>
 int ConditionalStatsCollector::findrange(int varindex, real val) const
 {
   RealMapping& r = ranges[varindex];
+  int pos = -1;
   if(is_missing(val))
-    return r.length();
+    pos = r.length();
   else
-    return (int) r.map(val);
+    {
+      pos = (int) r.map(val);
+      /*
+      if(pos==-1)
+        {
+          real minimum = r.begin()->first.low;
+          real maximum = (--r.end())->first.high;
+
+          PLWARNING("In ConditionalStatsCollector::findrange(%d, %.18g) value of variable not in mapping (min=%.18g, max=%.18g)",varindex,val,minimum,maximum);
+          cerr << r << endl;
+
+          if(val>maximum && val-maximum<1e-6)
+            pos = r.length()-1;
+          else if(val<minimum && minimum-val<1e-6)
+            pos = 0;
+        }
+      */
+    }
+  return pos;
 }
   
 void ConditionalStatsCollector::update(const Vec& v, real weight)
@@ -152,9 +190,13 @@ void ConditionalStatsCollector::update(const Vec& v, real weight)
     {
       counts.resize(nvars);
       sums.resize(nvars);
+      sums_condvar.resize(nvars);
       sumsquares.resize(nvars);
+      sumsquares_condvar.resize(nvars);
       minima.resize(nvars);
+      minima_condvar.resize(nvars);
       maxima.resize(nvars);
+      maxima_condvar.resize(nvars);
       int nranges_condvar = ranges[condvar].length();
       for(int k=0; k<nvars; k++)
         {        
@@ -163,16 +205,25 @@ void ConditionalStatsCollector::update(const Vec& v, real weight)
           counts[k].fill(0);
           sums[k].resize(nranges_k, nranges_condvar);
           sums[k].fill(0);
+          sums_condvar[k].resize(nranges_condvar, nranges_k);
+          sums_condvar[k].fill(0);
           sumsquares[k].resize(nranges_k, nranges_condvar);
           sumsquares[k].fill(0);
+          sumsquares_condvar[k].resize(nranges_condvar, nranges_k);
+          sumsquares_condvar[k].fill(0);
           minima[k].resize(nranges_k, nranges_condvar);
           minima[k].fill(FLT_MAX);
+          minima_condvar[k].resize(nranges_condvar, nranges_k);
+          minima_condvar[k].fill(FLT_MAX);
           maxima[k].resize(nranges_k, nranges_condvar);
           maxima[k].fill(-FLT_MAX);
+          maxima_condvar[k].resize(nranges_condvar, nranges_k);
+          maxima_condvar[k].fill(-FLT_MAX);
         }
     }
 
-  int j = findrange(condvar, v[condvar]);
+  real condvar_val = v[condvar];
+  int j = findrange(condvar, condvar_val);
   if(j==-1)
     PLWARNING("In ConditionalStatsCollector::update value of conditioning var in none of the ranges");
   for(int k=0; k<nvars; k++)
@@ -180,16 +231,25 @@ void ConditionalStatsCollector::update(const Vec& v, real weight)
     real val = v[k];
     int i = findrange(k, val);
     if(i==-1)
-      PLWARNING("In ConditionalStatsCollector::update value of variable #%d in none of the ranges",k);
+      {
+        PLWARNING("In ConditionalStatsCollector::update value of variable #%d in none of the ranges",k);
+      }
+
     counts[k](i,j)+=weight;
     if(!is_missing(val))
     {
       sums[k](i,j) += weight*val;
+      sums_condvar[k](j,i) += weight*val;
       sumsquares[k](i,j) += weight*square(val);
+      sumsquares_condvar[k](j,i) += weight*square(val);
       if(val<minima[k](i,j))
         minima[k](i,j) = val;
+      if(condvar_val<minima_condvar[k](j,i))
+        minima_condvar[k](j,i) = condvar_val;
       if(val>maxima[k](i,j))
         maxima[k](i,j) = val;
+      if(condvar_val>maxima_condvar[k](j,i))
+        maxima_condvar[k](j,i) = condvar_val;
     }
   }
 }
@@ -204,6 +264,10 @@ void ConditionalStatsCollector::update(const Vec& v, real weight)
     deepCopyField(sumsquares, copies);
     deepCopyField(minima, copies);
     deepCopyField(maxima, copies);
+    deepCopyField(sums_condvar, copies); 
+    deepCopyField(sumsquares_condvar, copies);
+    deepCopyField(minima_condvar, copies);
+    deepCopyField(maxima_condvar, copies);
   }
 
 %> // end of namespace PLearn

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.34 2004/01/28 14:27:38 lheureup Exp $
+   * $Id: TMat_maths_impl.h,v 1.35 2004/01/29 18:13:02 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -4103,10 +4103,10 @@ void normalizeRows(const TMat<T>& m)
 template<class T>
 void normalizeColumns(const TMat<T>& m)
 {
-  int l = m.length();
-  for(int i=0; i<l; i++)
+  int w = m.width();
+  for(int j=0; j<w; j++)
     {
-      TMat<T> v = m.column(i);
+      TMat<T> v = m.column(j);
       v /= sum(v);
     }
 }

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.22 2003/09/17 15:27:29 yoshua Exp $
+   * $Id: Object.h,v 1.23 2004/01/29 18:12:53 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -609,7 +609,7 @@ template<class T> Object *toIndexedObjectPtr(const T&, int) // Never to be calle
   {
     field.makeDeepCopyFromShallowCopy(copies);
   }
- 
+
   inline PStream &operator>>(PStream &in, Object &o)
     { o.newread(in); return in; }
   inline PStream &operator<<(PStream &out, const Object &o)

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.28 2004/01/08 14:08:56 plearner Exp $
+   * $Id: StatsCollector.cc,v 1.29 2004/01/29 18:13:02 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -219,12 +219,12 @@ RealMapping StatsCollector::getBinMapping(double discrete_mincount,
   real low = min_;
   real high = min_;
   bool low_has_been_appended = false;
-  ProgressBar pb("Computing PseudoQ Mapping...",counts.size()-1);
+  // ProgressBar pb("Computing PseudoQ Mapping...",counts.size()-1);
 
   while(nleft--)
   {
     high = it->first;
-    pb(counts.size()-1-nleft);
+    // pb(counts.size()-1-nleft);
     count += it->second.nbelow;
     count2 += it->second.nbelow;
     // cerr << "it->first:"<<it->first<<" nbelow:"<<it->second.nbelow<<" n:"<<it->second.n<<endl;
@@ -272,8 +272,12 @@ RealMapping StatsCollector::getBinMapping(double discrete_mincount,
     PLERROR("Bug in StatsCollector::getBinMapping expected last element of mapping to be FLT_MAX...");
 
   if (mapping.size() == 0)
-    PLERROR("StatsCollector::getBinMapping: no mapping were created; probably a bug");
-  
+    {
+      PLWARNING("StatsCollector::getBinMapping: no mapping were created; probably a bug");
+      mapping.addMapping(RealRange('[',min_,max_,']'), 0);
+      return mapping;
+    }
+
   // make sure we include max_
   pair<RealRange, real> m = mapping.lastMapping();
 

@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.38 2004/01/14 14:39:15 tihocan Exp $
+* $Id: VMatrix.cc,v 1.39 2004/01/29 18:13:02 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -355,6 +355,14 @@ string VMatrix::fieldheader(int elementcharwidth)
 
 void VMatrix::declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype)
 { getFieldInfos(fieldindex) = VMField(fieldname,fieldtype); }
+
+void VMatrix::declareFieldNames(TVec<string> fnames)
+{
+  if(fnames.length()!=width())
+    PLERROR("In VMatrix::declareFieldNames length of fnames differs from width() of VMatrix");
+  for(int i=0; i<fnames.length(); i++)
+    declareField(i,fnames[i]);
+}
 
 void VMatrix::saveFieldInfos() const
 {
