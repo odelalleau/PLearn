@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.10 2003/10/29 16:55:49 plearner Exp $
+* $Id: VMat_maths.cc,v 1.11 2003/12/05 15:43:26 ouimema Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -95,6 +95,17 @@ void computeRange(VMat d, Vec& minvec, Vec& maxvec)
           maxvec[j] = max(v[j],maxvec[j]);
         }
     }
+}
+
+void computeRowMean(VMat d, Vec& meanvec)
+{
+  meanvec.resize(d->length());
+  Vec samplevec(d->width());
+  for(int i=0; i<d->length(); i++)
+  {
+    d->getRow(i,samplevec);
+    meanvec[i] = mean(samplevec);
+  }
 }
 
 void computeMean(VMat d, Vec& meanvec)
@@ -738,6 +749,71 @@ Mat transposeProduct(VMat m1, VMat m2)
   return result;
 }
 
+Vec transposeProduct(VMat m1, Vec v2)
+{
+  if(m1.length()!=v2.length())
+    PLERROR("in Mat transposeProduct(VMat m1, Vec v2) arguments have incompatible dimensions");
+  
+  Vec result(m1.width(),1);
+  result.clear();
+  
+  Vec v1(m1.width());
+  for(int i=0; i<m1.length(); i++)
+  {
+    m1->getRow(i,v1);
+    result += v1 * v2[i];
+  }
+  return result;
+}
+
+Mat productTranspose(VMat m1, VMat m2)
+{
+  if(m1.width()!=m2.width())
+    PLERROR("in Mat productTranspose(VMat m1, VMat m2) arguments have incompatible dimensions");
+
+  int m1l = (m1.length());
+  int m2l = (m2.length());
+  int w = (m1.width());  
+  Mat result(m1l,m2l);
+  
+  Vec v1(w);
+  Vec v2(w);
+
+  for(int i=0; i<m1l; i++)
+  {
+    m1->getRow(i,v1);
+    for(int j=0; j<m2l; j++)
+    {
+      m2->getRow(j,v2);
+      result(i,j) = dot(v1,v2);
+    }
+  }
+  return result;
+}
+
+Mat product(Mat m1, VMat m2)
+{
+  if(m1.width()!=m2.length())
+    PLERROR("in Mat product(VMat m1, VMat m2) arguments have incompatible dimensions");
+  
+  Mat result(m1.length(),m2.width());
+  result.clear();
+  
+  Vec v2(m2.width());
+  Mat v2rowmat = rowmatrix(v2);
+
+  for(int i=0; i<m1.width(); i++)
+  {
+    m2->getRow(i,v2);
+    productAcc(result, m1.column(i), v2rowmat);
+  }
+  return result;
+}
+
+VMat transpose(VMat m1)
+{
+  return VMat(transpose(m1.toMat()));
+}
 
 real linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
                       bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY, real& sum_squared_Y,

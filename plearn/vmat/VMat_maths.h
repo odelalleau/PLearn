@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat_maths.h,v 1.7 2003/10/29 16:55:49 plearner Exp $
+   * $Id: VMat_maths.h,v 1.8 2003/12/05 15:42:27 ouimema Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -92,6 +92,7 @@ void computeStats(VMat m, VecStatsCollector& st);
 //! returns the cooccurence statistics conditioned on the given field
 PP<ConditionalStatsCollector> computeConditionalStats(VMat m, int condfield, TVec<RealMapping> ranges);
 
+void computeRowMean(VMat d, Vec& meanvec);
 void computeMean(VMat d, Vec& meanvec);
 void computeWeightedMean(Vec weights, VMat d, Vec& meanvec);
 void computeMeanAndVariance(VMat d, Vec& meanvec, Vec& variancevec);
@@ -185,6 +186,18 @@ Mat transposeProduct(VMat m1, VMat m2);
 
 //!  computes M'.M
 Mat transposeProduct(VMat m);
+
+//!  computes M1'.V2
+Vec transposeProduct(VMat m1, Vec v2);
+
+//!  computes M1.M2'
+Mat productTranspose(VMat m1, VMat m2);
+
+//!  computes M1.M2
+Mat product(Mat m1, VMat m2);
+
+//!  returns M1'
+VMat transpose(VMat m1);
 
 /*!   computes the result of the linear regression into theta_t
   Parameters must have the following sizes:
