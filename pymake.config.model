@@ -24,7 +24,6 @@ sourcedirs =   lsdirs(os.path.join(plearndir,'plearn/')) \
              + lsdirs(os.path.join(plearndir,'plearn_learners/')) \
              + lsdirs(os.path.join(plearndir,'../LisaPLearn/PLearnLibrary/')) \
              + lsdirs(os.path.join(plearndir,'../LisaPLearn/apstatlib/')) \
-             + lsdirs('/RQexec/casagran/apstatlib/') \
              + lsdirs(os.path.join(plearndir,'commands/'))[1:] 
 
 # will be added as list of includes (-I...) to all compilations
@@ -308,7 +307,8 @@ if myhostname[0:4]=='zeus':
     nprocesses_per_processor = 18
 if myhostname[0:6]=='canari':
     nprocesses_per_processor = 2
-
+if myhostname[0:7]=='frontal':
+    nprocesses_per_processor = 4
 if myhostname[0:6]=='merlin':
     nprocesses_per_processor = 1
 
