@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.23 2004/07/21 16:30:57 chrish42 Exp $
+   * $Id: WordNetOntology.h,v 1.24 2004/09/08 19:50:29 larocheh Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -388,6 +388,9 @@ public:
   map<int, TVec<int> > temp_word_to_adj_senses;
   map<int, TVec<int> > temp_word_to_adv_senses;
   map<int, TVec<int> > temp_word_to_high_level_senses;
+
+  map<int,string> getWords(){return words};
+  map<string,int> getWordsId(){return words_id};
 
   void fillTempWordToSensesTVecMap()
   {
