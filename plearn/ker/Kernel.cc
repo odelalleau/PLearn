@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.18 2004/03/12 19:05:06 dorionc Exp $
+   * $Id: Kernel.cc,v 1.19 2004/03/12 19:11:08 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -102,7 +102,7 @@ void Kernel::build_() {
   }
 }
 
-void makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void Kernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(data, copies);
