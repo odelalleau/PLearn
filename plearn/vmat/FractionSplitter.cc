@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FractionSplitter.cc,v 1.6 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: FractionSplitter.cc,v 1.7 2004/10/17 06:35:22 chapados Exp $ 
    ******************************************************* */
 
 /*! \file FractionSplitter.cc */
@@ -89,16 +89,8 @@ void FractionSplitter::build()
 
 void FractionSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Splitter::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("FractionSplitter::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(splits, copies);
 }
 
 int FractionSplitter::nsplits() const

@@ -4,7 +4,8 @@
 
 #include <map>
 #include <string>
-#include "plerror.h"    //!< For PLWARNING.
+#include <utility>                           //!< for pair
+#include "plerror.h"                         //!< For PLWARNING.
 
 //! Macro to define deep copy for types that actually do not require
 //! any deep copy (such as int, real, etc.).
@@ -18,20 +19,22 @@
 namespace PLearn {
 using std::string;
 using std::map;
+using std::pair;
 
 class VMField;
 class VMFieldStat;
 template <class T> class Array;
 
-  //!  Global typedef to make the map of copied objects (needed by the deep
-  //!  copy mechanism in Object) more palatable
-  typedef map<const void*,void*> CopiesMap;
+//!  Global typedef to make the map of copied objects (needed by the deep
+//!  copy mechanism in Object) more palatable
+typedef map<const void*,void*> CopiesMap;
 
-  //! Some typedefs to use the NODEEPCOPY macro with.
-  typedef map<string, float> map_string_float;
-  typedef map<string, double> map_string_double;
-  typedef map<double, string> map_double_string;
-  typedef map<float, string> map_float_string;
+//! Some typedefs to use the NODEEPCOPY macro with.
+typedef map<string, float> map_string_float;
+typedef map<string, double> map_string_double;
+typedef map<double, string> map_double_string;
+typedef map<float, string> map_float_string;
+typedef map<string, string> map_string_string;
   
 /*! Support for generic deep copying
     
@@ -43,41 +46,50 @@ template <class T> class Array;
     Take a close look at the Object class in Object.h to see how this is done.
 */
 
-  //! Types that do not require deep copy.
-  NODEEPCOPY(double)
-  NODEEPCOPY(float)
-  NODEEPCOPY(int)
-  NODEEPCOPY(bool)
-  NODEEPCOPY(map_string_float)
-  NODEEPCOPY(map_string_double)
-  NODEEPCOPY(map_float_string)
-  NODEEPCOPY(map_double_string)
-  NODEEPCOPY(string)
-  NODEEPCOPY(VMField)
-  NODEEPCOPY(VMFieldStat)
+//! Types that do not require deep copy.
+NODEEPCOPY(double)
+NODEEPCOPY(float)
+NODEEPCOPY(int)
+NODEEPCOPY(bool)
+NODEEPCOPY(map_string_float)
+NODEEPCOPY(map_string_double)
+NODEEPCOPY(map_float_string)
+NODEEPCOPY(map_double_string)
+NODEEPCOPY(map_string_string)
+NODEEPCOPY(string)
+NODEEPCOPY(VMField)
+NODEEPCOPY(VMFieldStat)
 
-  //!  Any type not handled below: do nothing
-  template <class T>
-  inline void deepCopyField(T&, CopiesMap&)
-  {
-    /*! no op */
-    PLWARNING(
-        "In CopiesMap.h - deepCopyField not handled for this type. "
-        "If it actually doesn't need deep copy, edit CopiesMap.h and add NODEEPCOPY(your_type) to remove this warning."
-    );
-  }
+//! Pairs handle deepCopying by distributing it to each element
+template <class T, class U>
+inline void deepCopyField(pair<T,U>& p, CopiesMap& copies)
+{
+  deepCopyField(p.first, copies);
+  deepCopyField(p.second, copies);
+}
+  
+//!  Any type not handled below: do nothing
+template <class T>
+inline void deepCopyField(T&, CopiesMap&)
+{
+  /*! no op */
+  PLWARNING(
+      "In CopiesMap.h - deepCopyField not handled for this type. "
+      "If it actually doesn't need deep copy, edit CopiesMap.h and add NODEEPCOPY(your_type) to remove this warning."
+  );
+}
 
-  template <class T>
-  inline void deepCopyField(T*& field, CopiesMap& copies)
-  {
-    if (field)
-      field = field->deepCopy(copies);
-  }
+template <class T>
+inline void deepCopyField(T*& field, CopiesMap& copies)
+{
+  if (field)
+    field = field->deepCopy(copies);
+}
 
-  //!  A simple template function that calls the method
-  template<class T>
-  T* deepCopy(const T* source, CopiesMap& copies)
-  { return source->deepCopy(copies); }
+//!  A simple template function that calls the method
+template<class T>
+T* deepCopy(const T* source, CopiesMap& copies)
+{ return source->deepCopy(copies); }
 
 //!  This function simply calls the previous one with an initially empty map
 template<class T>
