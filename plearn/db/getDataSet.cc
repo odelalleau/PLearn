@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.16 2004/03/10 18:13:07 lheureup Exp $
+   * $Id: getDataSet.cc,v 1.17 2004/03/10 20:13:03 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -127,37 +127,38 @@ VMat getDataSet(const string& datasetstring, const string& alias)
           if(ext==".pmat")
             vm = new FileVMatrix(datasetstring);
           else if(ext==".vmat" || ext==".txtmat")
+          {
+            string code = readFileAndMacroProcess(datasetstring);
+            if(removeblanks(code)[0]=='<') // old xml-like format 
+              vm = new VVMatrix(datasetstring);
+            else
             {
-              string code = readFileAndMacroProcess(datasetstring);
-              if(removeblanks(code)[0]=='<') // old xml-like format 
-                vm = new VVMatrix(datasetstring);
-              else
-                {
-                  vm = dynamic_cast<VMatrix*>(newObject(code));
-                  if(vm.isNull())
-                    PLERROR("Object described in %s is not a VMatrix subclass",datasetstring.c_str());
-                } 
-            }
+              vm = dynamic_cast<VMatrix*>(newObject(code));
+              if(vm.isNull())
+                PLERROR("Object described in %s is not a VMatrix subclass",datasetstring.c_str());
+            } 
+          }
           else if(ext==".amat")
-				if (datasetstring.find(".bin", 0, 4) != string::npos){
-				  Mat tempMat;
-				  loadAsciiSingleBinaryDescriptor(datasetstring,tempMat);
-				  vm = VMat(tempMat);
-				}else{
-				  vm = loadAsciiAsVMat(datasetstring);
-				}
-          else if(ext==".strtable")
-            vm = new StrTableVMatrix(StringTable(datasetstring));
-          else if(ext==".sdb")
-            vm = new AutoSDBVMatrix(remove_extension(datasetstring));            
-          else if(ext==".mat")
+            // TODO only check the extension is .bin.amat ?
+            if (datasetstring.find(".bin", 0, 4) != string::npos){
+              Mat tempMat;
+              loadAsciiSingleBinaryDescriptor(datasetstring,tempMat);
+              vm = VMat(tempMat);
+            } else {
+              vm = loadAsciiAsVMat(datasetstring);
+            }
+            else if(ext==".strtable")
+              vm = new StrTableVMatrix(StringTable(datasetstring));
+            else if(ext==".sdb")
+              vm = new AutoSDBVMatrix(remove_extension(datasetstring));            
+            else if(ext==".mat")
               vm=loadAsciiAsVMat(datasetstring);
-          else 
-            PLERROR("Unknown extension for vmatrix: %s", ext.c_str());
+            else 
+              PLERROR("Unknown extension for vmatrix: %s", ext.c_str());
           vm->setMetaDataDir(extract_directory(datasetstring) + extract_filename(datasetstring) + ".metadata");
         }
       else // it's a directory
-        {
+      {
           // is it the directory of a DiskVMatrix?
           if(isfile(datasetstring+slash+"indexfile") && isfile(datasetstring+slash+"0.data"))
             {
