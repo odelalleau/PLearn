@@ -169,8 +169,12 @@ public:
 public:  
 
 
+#if STREAMBUFVER == 0
+  PStream();
+#endif
+
   //! constructor from a PStreamBuf
-  PStream(streambuftype* sb=0);
+  PStream(streambuftype* sb);
 
   //! ctor. from an istream (I)
   PStream(istream* pin_, bool own_pin_=false);
