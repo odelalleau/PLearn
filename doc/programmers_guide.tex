@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 1998-2002 by Pascal Vincent
 %%
-%%  $Id: programmers_guide.tex,v 1.5 2004/06/16 16:50:46 monperrm Exp $
+%%  $Id: programmers_guide.tex,v 1.6 2004/06/17 15:46:22 monperrm Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
@@ -118,11 +118,7 @@ In addition, if you wish to develop new learning algorithms, or otherwise
 \section{PLearn for Matrix-Vectors Operations}
 
 PLearn can be used as a kind of Matlab. The notation are much 
-difficult but the efficiency is uncomparable.You must include a 
-
-\begin{verbatim}
-#include "TMat_maths.h"
-\end{verbatim}.
+difficult but the efficiency is uncomparable.
 
 \subsection{Creating}
 
@@ -236,13 +232,37 @@ int main(int argc, char** argv)
 
 \section{How to create a PLearner?}
 
+PLearner is the super class for learner. Here we describe how to create a PLearner. PLearner is a subclass of Object so if you want to know more about what you are doing, go to section \ref{Object}.
+
+\subsection{First steps}
+\begin{enumerate}
+
+\item type \texttt{pyskeleton PLearner MyLearner}
+
+\item edit the file MyLearner.h to add the correct field (int, Mat, etc.). Normally you don't have to has any methods.
+
+\item edit the file MyLearner.cc
+    \begin{enumerate}
+        \item  add short and complete decsription in \texttt{PLEARN\_IMPLEMENT\_OBJECT}
+        \item  add the \texttt{declareOption} corresponding to the field you create in the \texttt{void MyLearner::declareOptions(OptionList\& ol)} method (don't forget to fill the help option). This will be used for saving and loading the PLearner.
+        \item If some fields derive from basic ones, don't add a \texttt{declareOption}, you have to implemement their building in the \texttt{MyLearner::build\_()} method.
+        \item If some fields are filled after training, add a \texttt{declareOption} with a OptionBase::learntoption option.
+        \item edit the remaining methods, \texttt{pyskeleton} has included comments to help you.
+    \end{enumerate}
+\item pray while launching a \texttt{pymake MyLearner.cc}.
+\end{enumerate} 
 
 
+\subsection{How to get the dataset?}
+TODO
+
+\subsection{How to manage the dataset?}
+TODO
 
 
+\subsection{If you need gradients on a cost function...}
 
-
-
+Go read the section \ref{Var} and the section \ref{Optimizer}.
 
 %--------------------------------------------------------------------------------------------------- 
 %--------------------------------------------------------------------------------------------------- 
@@ -355,6 +375,7 @@ StatsIterator &StatsIt \\
  The person who only wishes to use the library typically doesn't need to understand all the details of the designer level hierarchy. Some concepts (such as Var) can be manipulated almost entirely through the smart pointer type and user-level functions, although knowing the most useful methods of the uinderlying base class, and the role of each subclass certainly doesn't harm. 
 
 \section{How to subclass a PLearn Object}
+\label{Object}
 
 \subsection{Object}
  PLearn defines an Object class. There is not much to it. Its role is mainly to standardise the methods for printing, saving to file, and duplicating objects. Not all classes in PLearn are derived from Object (many low-level classes aren't). But all non-strictly-concrete classes (i.e. those with virtual methods) in PLearn derive from Object. This includes the Learner base class.
@@ -372,7 +393,7 @@ StatsIterator &StatsIt \\
 \end{itemize}
 
 
-\subsection{Creating a basic class derriving from Object}
+\subsection{Creating a basic class deriving from Object}
 
 First, you can use \texttt{pyskeleton}, a python script which creates automatically the .h and .cc files.
 
@@ -635,15 +656,13 @@ There is a third conceptual category of options, that we call {\em \bf tuning op
 
 
 
-
-
 %-------------------------------------------------------------------------------------- 
 \section{PLearn for Matrix-Vectors Operations with Gradients}
 %-------------------------------------------------------------------------------------- 
-
+\label{Var}
 
 \subsection{Introduction to Var}
- 
+
  The class Var is at the heart of PLearn and aims at providing matrix-variables in the mathematical sense. It is built on top of the Mat class, that provides matrix-variables in the more traditional sense of sequential computer languages.
  
  Var should be used for Matrix-Vectors operations when you need gradients on operations. Otherwise, use Mat and Vec classes.
@@ -793,8 +812,46 @@ int main(int argc, char** argv)
 }
 
 \end{verbatim}
+
+ In the previous, the \texttt{VarArray} is useful but not essential. Let consider the following example:
  
- You can also use  y->fprop\_from\_all\_sources() but this reconstruct the path each time and so don't store it. It's not efficient for a multi fprop and it's not possible to back-propagated gradients.
+\begin{verbatim}
+#include "Var_all.h"
+#include "TMat_maths.h"
+
+using namespace PLearn;
+
+int main(int argc, char** argv)
+{   
+    
+    Var x(3,1);
+    Var u(3,1);
+ 
+    x->matValue(0,0) = 1;
+    x->matValue(1,0)=2;
+    x->matValue(2,0)=3;
+    u->matValue(0,0)=4;
+    u->matValue(1,0)=5;
+    u->matValue(2,0)=6;
+    
+    cout<<x->matValue<<endl;
+    cout<<u->matValue<<endl;
+    
+    Var z = dot(x,tanh(x+u)); // z is a scalar variable result of the dot product of x and tanh(y)
+    
+    cout<<z->matValue<<endl;
+
+    VarArray path = propagationPath(x & u, z);
+    path.fprop();
+    
+    cout<<z->matValue<<endl;     
+    return 0;
+}       
+\end{verbatim}
+
+ This example performs exactly the same thing as the previous one. But in this case, we don't have any reference to the previous \texttt{Var y,w} to do \texttt{fprop()}. That's why a \texttt{VarArray} could be essential.
+ 
+ You can also use  \texttt{y->fprop\_from\_all\_sources()} instead of a \texttt{VarArray} but this reconstruct the path each time and so don't store it. It's not efficient for a multi fprop and it's not possible to back-propagated gradients.
 
  Once we have this path, we can also back-propagated gradients. For example, if we set the gradient of z to 1, 
  
@@ -884,8 +941,7 @@ You can find numerous var in \texttt{PLearn\/plearn\/var}, some are shortcuted b
 
 \subsection{Loading and saving}
 
-You can load and save easily THE VALUE of a var (not the symbolic path). 
-\begin{verbatim}
+With the following method, you can load and save THE VALUE of a var (not the symbolic path). 
 \begin{verbatim}
 
 #include "VMat.h"
@@ -922,7 +978,6 @@ int main(int argc, char** argv)
 
 
 \chapter{Advanced}
-
  
 \section{RandomVar}
 
@@ -932,13 +987,15 @@ int main(int argc, char** argv)
 \subsection{CostFunc}
 \subsection{StatsIt}
 \section{Optimizers}
+\label{Optimizer}
 
-\section{Learning algorithms}
-
- While all the previously mentionned classes are to be found in the
- PLearnLibrary/PLearnCore directory, the higher level learning algortihms
- are to be found in PLearnLibrary/PLearnAlgo
-
+%% plus a jour au niveau des repertoires 
+% \section{Learning algorithms}
+% 
+%  While all the previously mentionned classes are to be found in the
+%  PLearnLibrary/PLearnCore directory, the higher level learning algortihms
+%  are to be found in PLearnLibrary/PLearnAlgo
+% 
 \section{ Miscalleanous utilities}
 
  The PLearnLibrary/PLearnUtils directory contains classes and functions to
