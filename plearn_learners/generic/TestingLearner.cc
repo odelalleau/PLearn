@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestingLearner.cc,v 1.4 2005/02/08 21:54:23 tihocan Exp $ 
+   * $Id: TestingLearner.cc,v 1.5 2005/03/17 21:50:18 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Marius Muja
@@ -54,7 +54,12 @@ TestingLearner::TestingLearner()
   // build_();
 }
 
-PLEARN_IMPLEMENT_OBJECT(TestingLearner, "ONE LINE DESCRIPTION", "MULTI-LINE \nHELP");
+PLEARN_IMPLEMENT_OBJECT(TestingLearner,
+    "This learner can be used to perform a given experiment on different datasets.",
+    "The experiment's costs are returned in this learner's training costs.\n"
+    "You do not need to specify the underlying PTester's experiment directory,\n"
+    "nor its dataset, as they will be set by this learner.\n"
+);
 
 void TestingLearner::declareOptions(OptionList& ol)
 {
@@ -101,7 +106,7 @@ void TestingLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 int TestingLearner::outputsize() const
 {
-  return tester->learner->outputsize();
+  return 0;
 }
 
 void TestingLearner::forget()
@@ -123,10 +128,7 @@ void TestingLearner::train()
 
 void TestingLearner::computeOutput(const Vec& input, Vec& output) const
 {
-  // Compute the output from the input.
-  // int nout = outputsize();
-  // output.resize(nout);
-  // ...
+  output.resize(0);
 }    
 
 void TestingLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
@@ -138,9 +140,8 @@ void TestingLearner::computeCostsFromOutputs(const Vec& input, const Vec& output
 
 TVec<string> TestingLearner::getTestCostNames() const
 {
-  TVec<string> result;
-
-  return result;
+  static TVec<string> no_cost;
+  return no_cost;
 }
 
 TVec<string> TestingLearner::getTrainCostNames() const
@@ -154,10 +155,10 @@ void TestingLearner::setTrainingSet(VMat training_set, bool call_forget)
   tester->dataset = training_set;
 }
 
-
 void TestingLearner::setExperimentDirectory(const PPath& the_expdir)
 {
   tester->setExperimentDirectory(the_expdir);
 }
 
 } // end of namespace PLearn
+
