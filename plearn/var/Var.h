@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Var.h,v 1.11 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: Var.h,v 1.12 2004/03/09 18:34:23 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,17 +69,21 @@ inline ostream& operator<<(ostream& out, const Var& v)
 inline Var var(real init_value) { Var v(1); v=init_value; return v; }
 
 
+//! Specialized in order to display a warning message.
 template <> 
 inline void deepCopyField(Var& field, CopiesMap& copies)
 {
-  //cout << "in deepCopyField(Var,.) for Var at " << (void*)field << endl;
+  PLWARNING(
+      "In Var.h - You called deepCopyField on a Var, but this is known to sometimes "
+      "cause bugs in optimized mode. Use varDeepCopyField instead! "
+      "This warning may also appear when using a TVec<Var>, in this case, just switch "
+      "to a VarArray."
+  );
   if (field)
     field = field->deepCopy(copies);
-  //else cout << "empty var!" << endl;
 }
 
 } // end of namespace PLearn
 
 #endif
-
 
