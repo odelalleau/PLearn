@@ -1,9 +1,0 @@
-To run a .plearn script type:                       plearn scriptfile.plearn 
-To run a command type:                              plearn command [ command arguments ] 
-
-To get help on the script file format:              plearn help scripts 
-To get a short description of available commands:   plearn help commands 
-To get detailed help on a specific command:         plearn help <command_name> 
-To get help on a specific PLearn object:            plearn help <object_type_name> 
-To get help on datasets:                            plearn help datasets 
-
