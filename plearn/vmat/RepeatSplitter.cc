@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RepeatSplitter.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: RepeatSplitter.cc,v 1.5 2004/03/12 23:35:06 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file RepeatSplitter.cc */
@@ -49,8 +49,11 @@ using namespace std;
 // RepeatSplitter //
 ////////////////////
 RepeatSplitter::RepeatSplitter() 
-  : last_n(-1),
-    n(0),
+  : 
+    last_n(-1),
+    do_not_shuffle_first(0),
+    n(1),
+    seed(-1),
     shuffle(0)
 {
 }
@@ -65,8 +68,16 @@ PLEARN_IMPLEMENT_OBJECT(RepeatSplitter,
 ////////////////////
 void RepeatSplitter::declareOptions(OptionList& ol)
 {
+  declareOption(ol, "do_not_shuffle_first", &RepeatSplitter::do_not_shuffle_first, OptionBase::buildoption,
+                 "If set to 1, then the dataset won't be shuffled the first time we do the splitting.\n"
+                 "It only makes sense to use this option if 'shuffle' is set to 1.");
+
   declareOption(ol, "n", &RepeatSplitter::n, OptionBase::buildoption,
                  "How many times we want to repeat.");
+
+  declareOption(ol, "seed", &RepeatSplitter::seed, OptionBase::buildoption,
+                 "Initializes the random number generator (only if shuffle is set to 1).\n"
+                 "If kept to -1, the initialization will depend on the clock.");
 
   declareOption(ol, "shuffle", &RepeatSplitter::shuffle, OptionBase::buildoption,
                  "If set to 1, the dataset will be shuffled differently at each repetition.");
@@ -93,12 +104,19 @@ void RepeatSplitter::build_()
 {
   if (shuffle && dataset) {
     // Prepare the shuffled indices.
+    if (seed >= 0)
+      manual_seed(seed);
+    else
+      PLearn::seed();
     int n_splits = nsplits();
     indices.resize(n_splits, dataset.length());
     TVec<int> shuffled;
     for (int i = 0; i < n_splits; i++) {
       shuffled = TVec<int>(0, dataset.length()-1, 1);
-      shuffleElements(shuffled);
+      // Don't shuffle if (i == 0) and do_not_shuffle_first is set to 1.
+      if (!do_not_shuffle_first || i > 0) {
+        shuffleElements(shuffled);
+      }
       indices(i) << shuffled;
     }
   } else {

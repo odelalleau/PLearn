@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RepeatSplitter.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: RepeatSplitter.h,v 1.5 2004/03/12 23:35:06 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file RepeatSplitter.h */
@@ -72,7 +72,9 @@ public:
   // * public build options *
   // ************************
 
+  bool do_not_shuffle_first;
   int n;
+  long seed;
   int shuffle;
   PP<Splitter> to_repeat;
 
