@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.4 2003/04/28 17:07:36 tihocan Exp $
+   * $Id: Optimizer.h,v 1.5 2003/04/29 17:25:53 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -130,10 +130,10 @@ using namespace std;
       virtual real optimize() = 0;
 
       //!  sub-classes should define this, which is the new main method
-      virtual bool optimizeN(VecStatsCollector& stat_coll) = 0;
+      virtual bool optimizeN(VecStatsCollector& stats_coll) = 0;
       /* while (stage < nstages) {
        *   params.update(..)
-       *   stat_coll.update(cost)
+       *   stats_coll.update(cost)
        *   stage++
        *   if finished return is_finished
        * }
