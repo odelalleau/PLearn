@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.3 2003/06/04 18:44:53 jkeable Exp $ 
+ * $Id: GaussMix.cc,v 1.4 2003/06/16 15:05:55 jkeable Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -45,7 +45,7 @@ namespace PLearn <%
 using namespace std;
 
 GaussMix::GaussMix() 
-  :Distribution(), type(Spherical)
+  :PDistribution()
 /* ### Initialise all other fields here */
 {
   // ### Possibly call setTestCostFunctions(...) to define the cost functions 
@@ -57,10 +57,7 @@ GaussMix::GaussMix()
   // ### You may also call setTestStatistics(...) if the Learner-default 'mean' and 'stderr' 
   // ### statistics are not appropriate...
 
-  L=D=0;
-  avg_K=0;
-  // ### You may or may not want to call build_() to finish building the object
-  build_();
+  forget();
 
   // ### You may want to set the Distribution::use_returns_what parameter
 }
@@ -81,6 +78,38 @@ void GaussMix::declareOptions(OptionList& ol)
   //               "Help text describing this option");
   // ...
 
+  declareOption(ol,"D", &GaussMix::D, OptionBase::buildoption,
+                "number of dimensions in feature space. (a.k.a inputsize).");
+    
+  declareOption(ol,"L", &GaussMix::L, OptionBase::buildoption,
+                "number of gaussians in mixture.");
+  
+  declareOption(ol,"mixtureType", &GaussMix::type, OptionBase::buildoption,
+                "A string :  Unknown, Spherical, Diagonal, General, Factor");
+
+  declareOption(ol, "alpha", &GaussMix::alpha, OptionBase::buildoption,
+                "Coefficients of each gaussian. (E.g: 1/number_of_gaussians)");
+
+  declareOption(ol, "mu", &GaussMix::mu, OptionBase::buildoption,
+                "A LxD matrix containing the centers of The vertical concatenation of all the K[i] x D matrix, (each contains the K[i] vectors of gaussian i.) ");
+
+  declareOption(ol, "sigma", &GaussMix::sigma, OptionBase::buildoption,
+                "Spherical : the sigma for each gaussian\n"\
+                "Diagonal : not used"\
+                "General & Factor : for each gaussian, the lambda used for all D-K[l] dimensions");
+
+  declareOption(ol, "diags", &GaussMix::diags, OptionBase::buildoption,
+                "Only used in Diagonal : a L x D matrix where row 'l' is the diagonal of the covariance matrix of gaussian l");
+
+  declareOption(ol, "lambda", &GaussMix::inv_lambda_minus_lambda0, OptionBase::buildoption,
+                "The concatenation of all vectors of length K[l] containing the lambdas of the l-th gaussian.");
+
+  declareOption(ol, "V", &GaussMix::V, OptionBase::buildoption,
+                "The vertical concatenation of all the K[i] x D matrix, (each contains the K[i] vectors that define of gaussian i.) ");
+
+  declareOption(ol, "V_idx", &GaussMix::V_idx, OptionBase::buildoption,
+                "A vector of size L. Element 'l' is the index of the first vector of gaussian 'l' in the matrix 'V' (and in the vector 'lambda')");
+
    
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -91,8 +120,20 @@ string GaussMix::help()
 {
   // ### Provide some useful description of what the class is ...
   return 
-    "GaussMix implements a mixture of gaussians. That's about it for now." 
-    + optionHelp();
+    "GaussMix implements a mixture of gaussians, for which \n"\
+    "L : number of gaussians\n"\
+    "D : number of dimensions in the feature space\n"\
+    "There are 4 possible parametrization types.:\n"\
+    "Spherical : gaussians have covar matrix = diag(sigma). User provides sigma.\n"\
+    "Diagonal : gaussians have covar matrix = diag(sigma_i). User provides a vector of D sigmas.\n"\
+    "General : gaussians have an unconstrained covariance matrix. User provides the K<=D greatest eigenvalues\n"
+    "          (thru parameter lambda) and their corresponding eigenvectors (thru KxD matrix V)\n"\
+    "          of the covariance matrix. For the remaining D-K eigenvectors, a user-given eigenvalue (thru sigma) is assumed\n"\
+    "Factor : as in the general case, the gaussians are defined with K<=D vectors (thru KxD matrix 'V'), but these need not be orthogonal.\n"\
+    "         The covariance matrix used will be V(t)V + psi with psi a D-vector (provided thru diags).\n"\
+    "2 parameters are common to all 4 types :\n"\
+    "alpha : the ponderation factor of that gaussian\n"\
+    "mu : its center\n" + optionHelp();
 }
 
 void GaussMix::setMixtureTypeSherical(int _L, int _D)
@@ -100,17 +141,17 @@ void GaussMix::setMixtureTypeSherical(int _L, int _D)
   L=_L;
   D=_D;
   avg_K=0;
-  type=Spherical;
-  build_();
+  type="Spherical";
+  initArrays();
 }
 
-void GaussMix::setMixtureTypeElliptic(int _L, int _D)
+void GaussMix::setMixtureTypeDiagonal(int _L, int _D)
 {
   L=_L;
   D=_D;
   avg_K=0;
-  type=Elliptic;
-  build_();
+  type="Diagonal";
+  initArrays();
 }
 
 void GaussMix::setMixtureTypeGeneral(int _L, int _avg_K, int _D)
@@ -118,8 +159,8 @@ void GaussMix::setMixtureTypeGeneral(int _L, int _avg_K, int _D)
   L=_L;
   D=_D;
   avg_K=_avg_K;
-  type=General;
-  build_();
+  type="General";
+  initArrays();
 }
 
 void GaussMix::setMixtureTypeFactor(int _L, int _avg_K, int _D)
@@ -127,34 +168,30 @@ void GaussMix::setMixtureTypeFactor(int _L, int _avg_K, int _D)
   L=_L;
   D=_D;
   avg_K=_avg_K;
-  type=Factor;
-  build_();
+  type="Factor";
+  initArrays();
 }
 
 // spherical
 void GaussMix::setGaussian(int l, real _alpha, Vec _mu, real _sigma)
 {
-  if(type!=Spherical)
+  if(type!="Spherical")
     PLERROR("GaussMix::setGaussian : type is not Spherical");
 
   alpha[l]=_alpha;
   mu(l)<<_mu;
   sigma[l]=_sigma;
-
-  log_coef[l]=log(1/sqrt(pow(2*3.14159,D) * pow(_sigma,D)));
 }
 
-// elliptic
+// diagonal
 void GaussMix::setGaussian(int l, real _alpha, Vec _mu, Vec diag)
 {
-  if(type!=Elliptic)
-    PLERROR("GaussMix::setGaussian : type is not Elliptic");
+  if(type!="Diagonal")
+    PLERROR("GaussMix::setGaussian : type is not Diagonal");
 
   alpha[l]=_alpha;
   mu(l)<<_mu;
   diags(l)<<diag;
-
-  log_coef[l]=log(1/sqrt(pow(2*3.14159,D) * product(diag)));
 }
 
 //general
@@ -164,7 +201,7 @@ void GaussMix::setGaussian(int l, real _alpha, Vec _mu, Vec _lambda, Mat eigenve
 
   if(num_lambda==0)
     PLERROR("GaussMix::setGaussian : need at least 1 eigenvector");
-  if(type!=General)
+  if(type!="General")
     PLERROR("GaussMix::setGaussian : type is not General");
 
   alpha[l]=_alpha;
@@ -174,14 +211,13 @@ void GaussMix::setGaussian(int l, real _alpha, Vec _mu, Vec _lambda, Mat eigenve
   if(Ks[l]==0)
   {
     // things to do only on the first time this gaussian is set
-    V_idx[l]=sum_Ks;
     Ks[l]=num_lambda;
-    sum_Ks+=Ks[l];
+    V_idx[l]=(l==0)?0:V_idx[l-1]+Ks[l];
 
     if(V.length()< V_idx[l] + Ks[l])
     {
       int newl = MAX(V_idx[l] + Ks[l], (int)ceil((double)V.length()*1.5));
-      V.resize(newl,V.width());
+      V.resize(V_idx[l] + Ks[l],V.width(), newl);
       inv_lambda_minus_lambda0.resize(newl);
     }
   }
@@ -191,19 +227,10 @@ void GaussMix::setGaussian(int l, real _alpha, Vec _mu, Vec _lambda, Mat eigenve
       PLERROR("GaussMix::setGaussian : for the same gaussian, the number of vectors (length of the 'eigenvecs' matrix) that "\
               "define a gaussian must not change between calls. ");
   }
-  
+
+  inv_lambda_minus_lambda0.subVec(V_idx[l],Ks[l])<<_lambda;
   V.subMatRows(V_idx[l],Ks[l])<<eigenvecs;
-  for(int i=0;i<Ks[l];i++)
-    inv_lambda_minus_lambda0[V_idx[l] + i] = 1.0/MAX(0,_lambda[i] - lambda0);
-  
 
-  // compute determinant
-  double log_det = sum_of_log(_lambda);
-
-  if(D - num_lambda > 0)
-    log_det+= log(lambda0)*(D-num_lambda);
-
-  log_coef[l] = -0.5*( D*log(2*3.141549) + log_det );
 }
 
 //factor
@@ -211,7 +238,7 @@ void GaussMix::setGaussian(int l, real _alpha, Vec _mu, Mat vecs, Vec diag )
 {
   if(vecs.length()==0)
     PLERROR("GaussMix::setGaussian : need at least 1 eigenvector");
-  if(type!=Factor)
+  if(type!="Factor")
     PLERROR("GaussMix::setGaussian : type is not General");
   alpha[l]=_alpha;
   mu(l)<<_mu;
@@ -221,92 +248,147 @@ void GaussMix::setGaussian(int l, real _alpha, Vec _mu, Mat vecs, Vec diag )
 
   if(Ks[l]==0)
   {
-    V_idx[l]=sum_Ks;
     Ks[l]=vecs.length();
-    sum_Ks+=Ks[l];
+    V_idx[l]=(l==0)?0:V_idx[l-1]+Ks[l];
 
     if(V.length()< V_idx[l] + Ks[l])
     {
-      int newl = (int)ceil((double)V.length()*1.5);
-      V.resize(newl,V.width());
+      int newl = MAX(V_idx[l] + Ks[l],(int)ceil((double)V.length()*1.5));
+      V.resize(V_idx[l] + Ks[l], V.width(), newl);
     }
     
     if(ivtdv.length()< ivtdv_idx[l] + Ks[l]*Ks[l])
     {
       int newl = MAX(ivtdv_idx[l] + Ks[l]*Ks[l], (int)ceil((double)ivtdv.length()*1.5));
-      ivtdv.resize(newl);
+      ivtdv.resize(ivtdv_idx[l] + Ks[l]*Ks[l],newl);
     }
   }
   else if(Ks[l]!=vecs.length())
     PLERROR("GaussMix::setGaussian : for the same gaussian, the number of vectors (length of the 'eigenvecs' matrix) that "\
             "define a gaussian must not change between calls. ");
   
-  V.subMatRows(V_idx[l],Ks[l])<<transpose(vecs);
-  
-  // compute I + V(t) * psi * V
-
-  Mat i_plus_vt_ipsi_v( Ks[l], Ks[l], 0.0 );
-  
-  for(int i=0;i<Ks[l];i++)
-  {
-    Vec vi(vecs(i));
-    Vec mati(i_plus_vt_ipsi_v(i));
-    for(int j=0;j<Ks[l];j++)
-    {
-      Vec vj(vecs(j));
-      for(int k=0;k < D;k++)
-        mati[j]+=vi[k] * diag[k] * vj[k];
-    }
-  }
-  addToDiagonal(i_plus_vt_ipsi_v,1.0);
-
-  real determinant = det(i_plus_vt_ipsi_v);
-  
-  log_coef = -D/2*log(2*3.14159) - 0.5 * log(determinant) - 0.5 * log(product(diag));
-
-  Mat eigenvec(Ks[l],Ks[l]);
-  Vec eigenval(Ks[l]);
-  
-  eigenVecOfSymmMat(i_plus_vt_ipsi_v, Ks[l], eigenval, eigenvec);
-
-  Mat inv(Ks[l],Ks[l]);
-  for(int i=0;i<Ks[l];i++)
-  {
-    Vec vi(eigenvec(i));
-    Vec mati(inv(i));
-    for(int j=0;j<Ks[l];j++)
-    {
-      Vec vj(eigenvec(j));
-      for(int k=0;k < Ks[l];k++)
-        mati[j]+=vi[k] * eigenval[k] * vj[k];
-    }
-  }
-
-  if(l>0)
-    ivtdv_idx[l] = ivtdv_idx[l-1] + Ks[l]*Ks[l];
-  
-  ivtdv.subVec(ivtdv_idx[l], Ks[l]*Ks[l]) << inv.toVec();
+  V.subMatRows(V_idx[l],Ks[l])<<vecs;
   
 }
 
 void GaussMix::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
+  if(type=="Unknown")
+    return;
+  
+  if(alpha.length()!=L)
+    PLERROR("You provided %i mixture coefficients. need %i",alpha.length(),L);
+  if(mu.length()!=L)
+    PLERROR("You provided %i rows in matrix mu. need %i",mu.length(),L);
 
-  sum_Ks=0;
+  int sum_Ks=0;
+  Ks.resize(L);
+  if(sigma.size()==0)
+  {
+    sigma.resize(L);
+    sigma.fill(0.0);
+  }
+  int l;
+  for(l=0;l<L-1;l++)
+    sum_Ks+=Ks[l]=V_idx[l+1]-V_idx[l];
+  sum_Ks+=Ks[l]=V.length()-V_idx[L-1];
+
+  log_coef.resize(L);
+  mu.resize(L,D);
+  V.resize(sum_Ks,D);
+  inv_lambda_minus_lambda0.resize(sum_Ks);
+
+  if(type=="Spherical")
+    for(int l=0;l<L;l++)
+      log_coef[l]=log(1/sqrt(pow(2*3.14159,D) * pow(sigma[l],D)));
+
+  else if(type=="Diagonal")
+    for(int l=0;l<L;l++)
+      log_coef[l]=log(1/sqrt(pow(2*3.14159,D) * product(diags(l))));
+
+  else if(type=="General")
+    for(int l=0;l<L;l++)
+    {
+      Vec _lambda = inv_lambda_minus_lambda0.subVec(V_idx[l],Ks[l]);
+      for(int i=0;i<Ks[l];i++)
+        _lambda[i] = 1.0/MAX(0,_lambda[i] - sigma[l]);
+  
+      // compute determinant
+      double log_det = sum_of_log(_lambda);
+    
+      if(D - _lambda.size() > 0)
+        log_det+= log(sigma[l])*(D-_lambda.size());
+    
+      log_coef[l] = -0.5*( D*log(2*3.141549) + log_det );
+    }
+  
+  else if(type=="Factor")
+
+    for(int l=0;l<L;l++)
+    {
+      int K=Ks[l];
+
+      // compute I + V(t) * psi * V
+      
+      Mat i_plus_vt_ipsi_v( K, K, 0.0 );
+      Vec diag(diags(l));
+
+      for(int i=0;i<K;i++)
+      {
+        Vec vi(V(V_idx[l]+i));
+        Vec mati(i_plus_vt_ipsi_v(i));
+        for(int j=0;j<K;j++)
+        {
+          Vec vj(V(V_idx[l]+j));
+          for(int k=0;k < D;k++)
+            // diags is psi
+            mati[j]+=vi[k] * diag[k] * vj[k];
+        }
+      }
+      addToDiagonal(i_plus_vt_ipsi_v,1.0);
+      
+      real determinant = det(i_plus_vt_ipsi_v);
+      
+      // see logDensityFactor for explanations on formulas
+      log_coef = -D/2*log(2*3.14159) - 0.5 * log(determinant) - 0.5 * log(product(diag));
+      
+      Mat eigenvec(K,K);
+      Vec eigenval(K);
+      
+      eigenVecOfSymmMat(i_plus_vt_ipsi_v, K, eigenval, eigenvec);
+      
+      // compute (I + V(t) * psi * V)^-1
+      
+      Mat inv(K,K);
+      for(int i=0;i<K;i++)
+      {
+        Vec vi(eigenvec(i));
+        Vec mati(inv(i));
+        for(int j=0;j<K;j++)
+        {
+          Vec vj(eigenvec(j));
+          for(int k=0;k < K;k++)
+            mati[j]+=vi[k] * eigenval[k] * vj[k];
+        }
+      }
+
+      if(l>0)
+        ivtdv_idx[l] = ivtdv_idx[l-1] + K*K;
+      
+      ivtdv.subVec(ivtdv_idx[l], K*K) << inv.toVec();
+      
+    }
+}
+
+void GaussMix::initArrays()
+{
   alpha.resize(L);
   log_coef.resize(L);
   sigma.resize(L);
   diags.resize(L,D);
   mu.resize(L,D);
     
-  if(type==General || type==Factor)
+  if(type=="General" || type=="Factor")
   {
     Ks.resize(L);
     Ks.fill(0);
@@ -322,14 +404,13 @@ void GaussMix::build_()
     inv_lambda_minus_lambda0.resize(0,0);
   }
     
-  if(type==Factor)
+  if(type=="Factor")
   {
     ivtdv_idx.resize(L);
     ivtdv.resize(L*avg_K*avg_K);
   }
 
 }
-
 
 // ### Nothing to add here, simply calls build_
 void GaussMix::build()
@@ -355,15 +436,10 @@ void GaussMix::train(VMat training_set)
   //     break; // exit training loop because early-stopping contditions were met
 }
 
-void GaussMix::use(const Vec& input, Vec& output)
-{
-  // ### You should redefine this method to compute the output
-  // ### corresponfding to a new test input.
-}
 
 void GaussMix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  Learner::makeDeepCopyFromShallowCopy(copies);
+  PLearner::makeDeepCopyFromShallowCopy(copies);
 
   // ### Call deepCopyField on all "pointer-like" fields 
   // ### that you wish to be deepCopied rather than 
@@ -377,26 +453,18 @@ void GaussMix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 
 void GaussMix::generate(Vec& x) const
 {
- switch(type)
-  {
-  case Spherical:
+  if(type[0]=='S')
     generateSpherical(x);
-    return;
-    break;
-  case Elliptic:
-    generateElliptic(x);
-    return;
-    break;
-  case General:
+  else if(type[0]=='E')
+    generateDiagonal(x);
+  else if(type[0]=='G')
     generateGeneral(x);
-    return;
-    break;
-  case Factor:
+  else if(type[0]=='F')
     generateFactor(x);
-    return;
-    break;
-  }
- PLERROR("unknown mixture type.");
+  else if(type=="Unknown")
+    PLERROR("You forgot to specify mixture type (Spherical, Diagonal, General, Factor).");
+  else PLERROR("unknown mixtrure type");
+  return;
 }
 
 void GaussMix::generateSpherical(Vec &x) const
@@ -407,7 +475,7 @@ void GaussMix::generateSpherical(Vec &x) const
   x += mu(l);
 }
 
-void GaussMix::generateElliptic(Vec &x) const
+void GaussMix::generateDiagonal(Vec &x) const
 {
   int l = multinomial_sample(alpha);
   Vec lambda(diags(l));
@@ -421,15 +489,16 @@ void GaussMix::generateGeneral(Vec &x) const
   int l = multinomial_sample(alpha);
   x=0;
   
-  // the covariance can be expressed as :
+  // the covariance matrix of the general gaussian type can be expressed as :
   // C = sum{i=1,K} [ lamda_i Vi Vi(t) ] + sum{i=K+1,D} [ lamda_0 Vi Vi(t) ]
+  // Where Vi is the i-th eigenvector
   // this can also be reformulated as : 
-  // C' = sum{i=1,K} [ (lamda_i-lambda_0) Vi Vi(t) ] + diag(lambda_0) * I 
-  // C' = A + B
-  // since C' and C are diagonalizable and share the same eigenvectors/values, they are equal.
+  // C2 = sum{i=1,K} [ (lamda_i-lambda_0) Vi Vi(t) ] + diag(lambda_0) * I 
+  // C2 = A + B
+  // since C2 and C are diagonalizable and share the same eigenvectors/values, they are equal.
   // thus, to sample from a gaussian with covar. matrix C , we add two samples from a gaussian with covar. A and a one with covar. B
 
-  // to sample from a gaussian with covar matrix A,
+  // to sample from a gaussian with covar matrix A ( == diag(lambda) ),
   // we use x = diag(lambda) * V * z, with z sampled from N(0,1) 
   
   Vec norm(Ks[l]);
@@ -472,22 +541,17 @@ void GaussMix::generateFactor(Vec &x) const
 
 double GaussMix::log_density(const Vec& x) const
 { 
-  switch(type)
-  {
-  case Spherical:
+  if(type[0]=='S')
     return logDensitySpherical(x);
-    break;
-  case Elliptic:
-    return logDensityElliptic(x);
-    break;
-  case General:
+  else if(type[0]=='E')
+    return logDensityDiagonal(x);
+  else if(type[0]=='G')
     return logDensityGeneral(x);
-    break;
-  case Factor:
+  else if(type[0]=='F')
     return logDensityFactor(x);
-    break;
-  }
-  PLERROR("unknown mixture type.");
+  else if(type=="Unknown")
+    PLERROR("You forgot to specify mixture type (Spherical, Diagonal, General, Factor).");
+  else PLERROR("unknown mixtrure type");
   return 0.0;
 }
 
@@ -507,14 +571,14 @@ double GaussMix::logDensitySpherical(const Vec& x, int num) const
     x_minus_mu =x-mu(l);
     logs[idx] += log(alpha[l]) + log_coef[l];
     transposeProduct(tmp, diagonalmatrix(Vec(D,1/sigma[l])), x_minus_mu); 
-    // this is the exponential part in multivariate normal density equation
+    // exponential part in multivariate normal density equation
     logs[idx++]+= -0.5 * dot(tmp, x_minus_mu);
   }
   
   return logadd(logs);
 }
  
-double GaussMix::logDensityElliptic(const Vec& x, int num) const
+double GaussMix::logDensityDiagonal(const Vec& x, int num) const
 {
   Vec x_minus_mu(x.length()), tmp(x.length()),tmp2(x.length());
 
@@ -532,25 +596,45 @@ double GaussMix::logDensityElliptic(const Vec& x, int num) const
     tmp2<<diags(l);
     invertElements(tmp2);
     transposeProduct(tmp, diagonalmatrix(tmp2), x_minus_mu); 
-    // this is the exponential part in multivariate normal density equation
+    // exponential part in multivariate normal density equation
     logs[idx++]+= -0.5 * dot(tmp, x_minus_mu);
   }
  
   return logadd(logs);
 }
 
-
-double logadd2(const Vec& vec) 
-{
-  double *p_x = vec.data();
-  double sum = LOG_INIT;
-  for (int i=0; i<vec.length(); i++, p_x++)
-    sum = logadd(sum, *p_x);
-  return sum;
-}
-
- 
 // return log(p(x)) =  logadd {1..l} ( log(alpha[l]) + log_coeff[l] + q[l] )
+// with q[l] = -0.5 * (x-mu[l])'C-1(x-mu[l])
+//     The expression q = (V'(x-mu))'.inv(D).(V'(x-mu)) can be understood as:
+//        a) projecting vector x-mu on the orthonormal basis V, 
+//           i.e. obtaining a transformed x that we shall call y:  y = V'(x-mu)
+//           (y corresponds to x, expressed in the coordinate system V)
+//           y_i = V'_i.(x-mu)
+//
+//        b) computing the squared norm of y , after first rescaling each coordinate by a factor 1/sqrt(lambda_i)
+//           (i.e. differences in the directions with large lambda_i are given less importance)
+//           Giving  q = sum_i[ 1/lambda_i  y_i^2]
+//
+//     If we only keep the first k eigenvalues, and replace the following d-k ones by the same value gamma
+//     i.e.  lambda_k+1 = ... = lambda_d = gamma
+//    
+//     Then q can be expressed as:
+//       q = \sum_{i=1}^k [ 1/lambda_i y_i^2 ]   +   1/gamma \sum_{i=k+1}^d [ y_i^2 ]
+//
+//     But, as y is just x expressed in another orthonormal basis, we have |y|^2 = |x-mu|^2
+//     ( proof: |y|^2 = |V'(x-mu)|^2 = (V'(x-mu))'.(V'(x-mu)) = (x-mu)'.V.V'.(x-mu) = (x-mu)'(x-mu) = |x-mu|^2 )
+//    
+//     Thus, we know  \sum_{i=1}^d [ y_i^2 ] = |x-mu|^2
+//     Thus \sum_{i=k+1}^d [ y_i^2 ] = |x-mu|^2 - \sum_{i=1}^k [ y_i^2 ]
+//
+//     Consequently: 
+//       q = \sum_{i=1}^k [ 1/lambda_i y_i^2 ]   +  1/gamma ( |x-mu|^2 - \sum_{i=1}^k [ y_i^2 ] )
+//
+//       q = \sum_{i=1}^k [ (1/lambda_i - 1/gamma) y_i^2 ]  +  1/gamma  |x-mu|^2
+//
+//       q = \sum_{i=1}^k [ (1/lambda_i - 1/gamma) (V'_i.(x-mu))^2 ]  +  1/gamma  |x-mu|^2
+//
+//       This gives the efficient algorithm implemented below
 double GaussMix::logDensityGeneral(const Vec& x, int num) const
 {
   Vec x_minus_mu(x.length());
@@ -562,10 +646,17 @@ double GaussMix::logDensityGeneral(const Vec& x, int num) const
   int idx=0;
   for(int l=begin;l<=end;l++)
   {
+//  cout<<"gaussian ="<<l<<endl;
+
     bool galette = Ks[l]<D;
     x_minus_mu = x-mu(l);
+
+/// cout<<" x-mu:"<<x_minus_mu<<endl;
+    
     logs[idx]=log(alpha[l]);
-    //
+
+//  cout<<"logcoef :"<<log_coef[l]<<endl;
+    
     logs[idx]+= log_coef[l];
     // compute q
     Mat subV = V.subMatRows(V_idx[l],Ks[l]);
@@ -593,7 +684,7 @@ double GaussMix::logDensityGeneral(const Vec& x, int num) const
       logs[idx] -= 0.5*(*ptr_inv_lambda_minus_lambda0++) *square(dot(subV(i),x_minus_mu));
     idx++;
   }
-  return logadd2(logs);
+  return logadd(logs);
 }
  
 double GaussMix::logDensityFactor(const Vec& x, int num) const
@@ -624,38 +715,19 @@ Mat GaussMix::variance() const
   PLERROR("variance not implemented for GaussMix"); return Mat(); 
 }
 
-void GaussMix::printInfo()
+void GaussMix::forget()
 {
-  switch(type)
-  {
-  case Spherical:
-    cout<<"type: Spherical"<<endl;
-    cout<<"n_gaussians : "<<L<<endl;;
-    for(int i=0;i<L;i++)
-    {
-      cout<<" gauss "<<i<<":"<<endl;
-      cout<<"  alpha:"<<alpha[i]<<endl;
-      cout<<"  sigma:"<<sigma[i]<<endl;
-      cout<<"  mu   :"<<mu(i)<<endl;
-    }
-    return;
-    break;
-  case Elliptic:
-    cout<<"type: Elliptic"<<endl;
-    cout<<"n_gaussians : "<<L<<endl;;
-    for(int i=0;i<L;i++)
-    {
-      cout<<" gauss "<<i<<":"<<endl;
-      cout<<"  alpha:"<<alpha[i]<<endl;
-      cout<<"  sigmas:"<<diags(i)<<endl;
-      cout<<"  mu   :"<<mu(i)<<endl;
-    }
-    return;
-    break;
-
-  }
-  PLERROR("GaussMix::printInfo not implemented for this type yet.");
+  type="Unknown";
+  L=D=0;
+  avg_K=0;
+  initArrays();
 }
-  
+
+
+void GaussMix::resetGenerator(long g_seed) const
+{ 
+  manual_seed(g_seed);  
+}
+
 
 %> // end of namespace PLearn
