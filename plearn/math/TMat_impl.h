@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_impl.h,v 1.15 2005/01/25 03:15:33 dorionc Exp $
+   * $Id: TMat_impl.h,v 1.16 2005/03/02 22:41:14 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -653,7 +653,8 @@ inline void operator<<(const TMat<T>& m1, const TMat<T>& m2)
     PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements\n"
             "m1: (%d, %d) && m2: (%d, %d)", m1.length(), m1.width(), m2.length(), m2.width());
 #endif
-  copy(m2.begin(), m2.end(), m1.begin());
+  if (m1.isNotEmpty())
+    copy(m2.begin(), m2.end(), m1.begin());
 }
   
 //! copy TMat << TMat  (different types)
@@ -664,7 +665,8 @@ void operator<<(const TMat<T>& m1, const TMat<U>& m2)
   if(m1.size()!=m2.size())
     PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements");
 #endif
-  copy_cast(m2.begin(), m2.end(), m1.begin());
+  if (m1.isNotEmpty())
+    copy_cast(m2.begin(), m2.end(), m1.begin());
 }
 
 //! copy TMat << Tvec 
@@ -675,7 +677,8 @@ inline void operator<<(const TMat<T>& m1, const TVec<T>& m2)
   if(m1.size()!=m2.size())
     PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements;\t m1.size()= %d;\t m2.size= %d", m1.size(), m2.size());
 #endif
-  copy(m2.begin(), m2.end(), m1.begin());
+  if (m1.isNotEmpty())
+    copy(m2.begin(), m2.end(), m1.begin());
 }
 
 //! copy TMat << Tvec  (different types)
@@ -686,7 +689,8 @@ inline void operator<<(const TMat<T>& m1, const TVec<U>& m2)
   if(m1.size()!=m2.size())
     PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements");
 #endif
-  copy_cast(m2.begin(), m2.end(), m1.begin());
+  if (m1.isNotEmpty())
+    copy_cast(m2.begin(), m2.end(), m1.begin());
 }
 
 //! copy TVec << TMat
@@ -697,7 +701,8 @@ inline void operator<<(const TVec<T>& m1, const TMat<T>& m2)
   if(m1.size()!=m2.size())
     PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements");
 #endif
-  copy(m2.begin(), m2.end(), m1.begin());
+  if (m1.isNotEmpty())
+    copy(m2.begin(), m2.end(), m1.begin());
 }
 
 //! copy TVec << TMat  (different types)
@@ -708,7 +713,8 @@ inline void operator<<(const TVec<T>& m1, const TMat<U>& m2)
   if(m1.size()!=m2.size())
     PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements");
 #endif
-  copy_cast(m2.begin(), m2.end(), m1.begin());
+  if (m1.isNotEmpty())
+    copy_cast(m2.begin(), m2.end(), m1.begin());
 }
 
 //! copy TMat >> TMat

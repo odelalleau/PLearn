@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TVec_impl.h,v 1.5 2004/09/14 16:04:37 chrish42 Exp $
+   * $Id: TVec_impl.h,v 1.6 2005/03/02 22:41:14 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -109,7 +109,8 @@ inline void operator<<(const TVec<T>& m1, const TVec<T>& m2)
   if(m1.size()!=m2.size())
     PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements (%d != %d)", m1.size(), m2.size());
 #endif
-  copy(m2.begin(), m2.end(), m1.begin());
+  if (m1.isNotEmpty())
+    copy(m2.begin(), m2.end(), m1.begin());
 }
 
 //! copy TVec << TVec  (different types)
@@ -120,7 +121,8 @@ void operator<<(const TVec<T>& m1, const TVec<U>& m2)
   if(m1.size()!=m2.size())
     PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements (%d != %d)", m1.size(), m2.size());
 #endif
-  copy_cast(m2.begin(), m2.end(), m1.begin());
+  if (m1.isNotEmpty())
+    copy_cast(m2.begin(), m2.end(), m1.begin());
 }
 
 //! copy TVec >> TVec
