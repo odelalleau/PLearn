@@ -1,5 +1,6 @@
 #!/usr/bin/env python2.3
-import os, string, sys, toolkit
+import os, string, sys
+import plearn.utilities.toolkit as toolkit
 from popen2 import *
 
 external = ['__builtin__', 'os', 'sys', 'string']

@@ -33,7 +33,9 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
-import sys, os, string, popen2, toolkit
+import sys, os, string, popen2
+import plearn.utilities.plpath  as plpath 
+import plearn.utilities.toolkit as toolkit
 from time import time, localtime
 
 args = sys.argv[:]
@@ -43,21 +45,21 @@ homedir = os.environ['HOME']
 plearndir = os.environ.get('PLEARNDIR', os.path.join(homedir,'PLearn'))
 
 # Management of multiple Skeletons directory
-default_skeldir = os.path.join(plearndir,'scripts/Skeletons')
-SKELDIRS = string.split(os.getenv('SKELETONS_PATH', default_skeldir), ':')
-baseclasses = [ s[:-2] for s in toolkit.listdirs(SKELDIRS) if s[-2:]=='.h' ]
+baseclasses = [ s[:-2] for s in toolkit.listdirs(plpath.skeleton_directories) if s[-2:]=='.h' ]
 
 if len(args)<2 or args[0] not in baseclasses:
     print ("""
 Usage: pyskeleton <base_class> <name_of_your_derived_class>
-       Will generate skeleton .h and .cc files for your new class, 
+       Will generate skeletons .h and .cc files for your new class, 
        derived form the base_class, based on corresponding models in
        the %s director%s.
        (You can easily add new 'models' in th%s director%s.)
        
 Currently supported base classes are: """
-           % (string.join(SKELDIRS, ' or\n       '),toolkit.plural(len(SKELDIRS), 'y', 'ies'),
-              toolkit.plural(len(SKELDIRS), 'is', 'ese'), toolkit.plural(len(SKELDIRS), 'y', 'ies')) )
+           % ( string.join(plpath.skeleton_directories, ' or\n       '),
+               toolkit.plural(len(plpath.skeleton_directories), 'y', 'ies'),
+               toolkit.plural(len(plpath.skeleton_directories), 'is', 'ese'),
+               toolkit.plural(len(plpath.skeleton_directories), 'y', 'ies')) )
     print string.join(baseclasses,' ')
     sys.exit()
   
@@ -122,7 +124,7 @@ def generate(baseclass, userclass, ext):
     """Generates a userclass+ext file based on the baseclass+ext file to be found in the scripts/Skeleton directory"""
     year = global_year  # so that it appears in vars()
     author = global_author # so that it appears in vars()
-    skeletonpath = toolkit.get_path(SKELDIRS, baseclass+ext)
+    skeletonpath = toolkit.get_path(plpath.skeleton_directories, baseclass+ext)
     filename = userclass+ext
 
     if skeletonpath is None:
