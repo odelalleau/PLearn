@@ -88,12 +88,14 @@ def convertWinToLinux(path):
   else:
     return path
 
-def join(dir,file,file2=""):
+def join(dir,file,file2="",file3=""):
   """simply call os.path.join and convertWinToLinux"""
   if file2=='':
       res = convertWinToLinux(os.path.join(dir, file))
-  else:
+  elif file3=='':
       res = convertWinToLinux(os.path.join(dir, file, file2))
+  else:
+      res = convertWinToLinux(os.path.join(dir, file, file2, file3))
   return res
 
 def abspath(mypath):
