@@ -38,8 +38,6 @@ from popen2 import *
 
 print "pymake 2.0 [ (C) 2001, Pascal Vincent. This is free software distributed under a BSD type license. Report problems to vincentp@iro.umontreal.ca ]"
 
-
-
 # initialise a few variables from the environment
 platform = sys.platform
 if platform=='linux2':
@@ -458,7 +456,6 @@ if 'link' in optionargs:
 else:
     force_link = 0;
 
-
 if 'clean' in optionargs:
     if len(optionargs)!=1 or len(otherargs)==0:
         print 'BAD ARGUMENTS: with -clean, specify one or more directories to clean, but no other -option'
@@ -512,7 +509,6 @@ if 'spc' in optionargs :
 #         print cmd
         os.system(cmd)
     optionargs.remove('spc')
-    
     
 local_compilation = 0 # do we want to do everything locally?
 if platform=='win32':
@@ -1529,7 +1525,7 @@ for target in otherargs:
         target_path = os.path.dirname(os.path.abspath(target))
         
     configpath = locateconfigfile('config',target_path,default_config_text)    
-    execfile(configpath)
+    execfile( configpath )
     #print options_choices
     
     # remove duplicates from sourcedirs

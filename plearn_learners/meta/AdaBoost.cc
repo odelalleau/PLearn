@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdaBoost.cc,v 1.3 2005/01/25 03:15:52 dorionc Exp $
+   * $Id: AdaBoost.cc,v 1.4 2005/01/28 00:24:23 dorionc Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -298,7 +298,7 @@ void AdaBoost::train()
     PLearn::save(file,temp_train_set->data);
     */
     if(expdir!="" && provide_learner_expdir)
-      new_weak_learner->setExperimentDirectory(append_slash(expdir+"WeakLearner" + tostring(stage) + "Expdir"));
+      new_weak_learner->setExperimentDirectory( expdir / ("WeakLearner"+tostring(stage)+"Expdir") );
 
     new_weak_learner->train();
 

@@ -36,7 +36,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperOptimize.cc,v 1.2 2005/01/19 19:34:59 tihocan Exp $ 
+   * $Id: HyperOptimize.cc,v 1.3 2005/01/28 00:24:23 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file HyperOptimize.cc */
@@ -204,7 +204,7 @@ Vec HyperOptimize::runTest(int trialnum)
 
   string testerexpdir = "";
   if(expdir!="" && provide_tester_expdir)
-    testerexpdir = expdir+"Trials/"+tostring(trialnum)+"/";
+    testerexpdir = expdir / "Trials" / tostring(trialnum) / "";
   tester->setExperimentDirectory(testerexpdir);
   
   PP<Splitter> default_splitter = tester->splitter;
@@ -254,7 +254,9 @@ Vec HyperOptimize::optimize()
             {
               sub_strategy[commandnum]->setHyperLearner(hlearner);
               if(expdir!="" && provide_sub_expdir)
-                sub_strategy[commandnum]->setExperimentDirectory(expdir+"Trials/"+tostring(trialnum)+"/Step"+tostring(commandnum));
+                sub_strategy[commandnum]->setExperimentDirectory(
+                  expdir / ("Trials"+tostring(trialnum)) / ("Step"+tostring(commandnum))
+                  );
               best_sub_results = sub_strategy[commandnum]->optimize();
             }
           if(rerun_after_sub)

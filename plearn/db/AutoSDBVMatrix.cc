@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AutoSDBVMatrix.cc,v 1.9 2004/12/22 19:38:12 chrish42 Exp $
+   * $Id: AutoSDBVMatrix.cc,v 1.10 2005/01/28 00:23:42 dorionc Exp $
    * AUTHOR: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -113,16 +113,18 @@ void AutoSDBVMatrix::getMappings()
   
   for(Schema::const_iterator it= sc.begin(); it < sc.end(); ++it)
     if(it->field_type == StringType)
-      {
-	string field_filename= metadatadir + slash + it->name + ".strings";
-	real dft_val= MISSING_VALUE;
-	//get value for others, if file exists
-	if(isfile(field_filename + ".others"))
-	  PLearn::load(field_filename + ".others", dft_val);
-	//get mapping, if it exists
-	string_field_map[it->name]= StringFieldMapping(field_filename, dft_val);
-	num2string_map[it->name]= NumToStringMapping(field_filename);
-      }
+    {
+      PPath field_filename = metadatadir / (it->name + ".strings");
+      real  dft_val        = MISSING_VALUE;
+      
+      // Get value for others, if file exists
+      if( isfile(field_filename + ".others") )
+        PLearn::load(field_filename + ".others", dft_val);
+      
+      // Get mapping, if it exists
+      string_field_map[it->name] = StringFieldMapping(field_filename, dft_val);
+      num2string_map[it->name]   = NumToStringMapping(field_filename);
+    }
 }
 
 

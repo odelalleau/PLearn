@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.7 2005/01/27 20:40:25 dorionc Exp $ 
+   * $Id: PPath.cc,v 1.8 2005/01/28 00:24:22 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -559,18 +559,17 @@ PPath PPath::removeProtocol()  const
 }
 
 // The resolveSlashChars and resolveDots were called on other upon construction
-//!< PPath PPath::operator+(const PPath& other) const
-//!< {
-//!<   return ( PPath(*this) += other );
-//!< }
+PPath PPath::operator+(const PPath& other) const
+{
+  return PPath( string(*this) + string(other) );
+}
 
-//!< PPath& PPath::operator+=(const PPath& other)
-//!< {
-//!<   string::operator+=(other);
-//!<   resolveSlashChars ( );
-//!<   resolveDots       ( );
-//!<   return *this;
-//!< }
+PPath& PPath::operator+=(const PPath& other)
+{
+  string::operator+=(other);
+  resolveDots       ( );
+  return *this;
+}
 
 PPath PPath::operator/(const PPath& other) const
 {
@@ -585,9 +584,7 @@ PPath& PPath::operator/=(const PPath& other)
     string::operator+=(_slash);
   string::operator+=(other);
 
-  // The resolveSlashChars and resolveDots were called on other upon construction
-  // resolveSlashChars ( );
-  // resolveDots       ( );
+  resolveDots       ( );
   return *this;
 }
 

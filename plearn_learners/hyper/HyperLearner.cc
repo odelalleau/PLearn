@@ -34,7 +34,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperLearner.cc,v 1.3 2005/01/20 21:26:32 larocheh Exp $
+   * $Id: HyperLearner.cc,v 1.4 2005/01/28 00:24:23 dorionc Exp $
    ******************************************************* */
 // Author: Pascal Vincent
 
@@ -177,7 +177,7 @@ void HyperLearner::train()
           if(provide_strategy_expdir)
           {
             if(expdir!="")
-              strategy[commandnum]->setExperimentDirectory(expdir+"Strat"+tostring(commandnum));
+              strategy[commandnum]->setExperimentDirectory( expdir / ("Strat"+tostring(commandnum)) );
             else
               strategy[commandnum]->setExperimentDirectory("");
           }

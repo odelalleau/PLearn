@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.h,v 1.4 2005/01/26 16:32:26 dorionc Exp $ 
+   * $Id: PPath.h,v 1.5 2005/01/28 00:24:22 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent, Christian Dorion, Nicolas Chapados
@@ -221,30 +221,7 @@ public:
   // Shorthand
   PPath(const char   path[]) { operator=( PPath(string(path)) ); }
 
-  /*! Returns an absolute path in the form appropriate for the OS
-
-    This method CAN NOT return a PPath instance. Indeed, under windows, the
-    OS dependant format is incompatible with the canonical format. Hence,
-    only one of the two can return a PPath instance. Since it is the one
-    that is OS dependant, absolute is the one to return a string.
-
-    NOTE, however that the following chunk of code will print "True"
-
-        PPath relative("foo/bar")
-        PPath abspath = relative.absolute();
-        if ( abspath.isabs() )
-          cerr << "True" << endl;
-
-    But
-    
-        file = open(abspath, "r");
-
-    would FAIL, while
-    
-        file = open(relative.absolute(), "r");
-
-    would have worked.    
-   */
+  //! Returns an absolute path in the form appropriate for the OS
   PPath absolute() const;   
 
   //! Returns a PPath in the canonical form
@@ -265,12 +242,12 @@ public:
   bool   isFtpPath     ()  const { return _protocol   ==  FTP_PROTOCOL; }  
 
 
-//!<   PPath  operator+  (const char*    other) const { return operator+ (PPath(other)); }
-//!<   PPath& operator+= (const char*    other)       { return operator+=(PPath(other)); }
-//!<   PPath  operator+  (const string&  other) const { return operator+ (PPath(other)); }
-//!<   PPath& operator+= (const string&  other)       { return operator+=(PPath(other)); }
-//!<   PPath  operator+  (const PPath&   other) const;
-//!<   PPath& operator+= (const PPath&   other);  
+  PPath  operator+  (const char*    other) const { return operator+ (PPath(other)); }
+  PPath& operator+= (const char*    other)       { return operator+=(PPath(other)); }
+  PPath  operator+  (const string&  other) const { return operator+ (PPath(other)); }
+  PPath& operator+= (const string&  other)       { return operator+=(PPath(other)); }
+  PPath  operator+  (const PPath&   other) const;
+  PPath& operator+= (const PPath&   other);  
   
   static string _slash;
   static char   _slash_char;  

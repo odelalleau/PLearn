@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.24 2005/01/25 03:15:51 dorionc Exp $
+   * $Id: StackedLearner.cc,v 1.25 2005/01/28 00:24:23 dorionc Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -267,7 +267,7 @@ void StackedLearner::train()
         PP<VecStatsCollector> stats = new VecStatsCollector();
         base_learners[i]->setTrainStatsCollector(stats);
         if (expdir!="")
-          base_learners[i]->setExperimentDirectory(expdir+"Base"+tostring(i));
+          base_learners[i]->setExperimentDirectory( expdir / ("Base"+tostring(i)) );
         base_learners[i]->train();
         stats->finalize(); // WE COULD OPTIONALLY SAVE THEM AS WELL!
       }
