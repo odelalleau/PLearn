@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.19 2004/07/09 21:36:54 monperrm Exp $
+   * $Id: MemoryVMatrix.cc,v 1.20 2004/07/09 22:14:19 monperrm Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -57,7 +57,10 @@ MemoryVMatrix::MemoryVMatrix() : data(Mat())
 {}
 
 MemoryVMatrix::MemoryVMatrix(int l, int w) : VMatrix(l, w)
-{data.resize(l,w);}
+{
+  data.resize(l,w);
+  defineSizes(data.width(), 0, 0);
+}
 
 MemoryVMatrix::MemoryVMatrix(const Mat& the_data)
   :VMatrix(the_data.length(), the_data.width()), data(the_data)
