@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// openSocket.cc
+// PrUtils.h
 //
-// Copyright (C) 2004 Christian Hudon
+// Copyright (C) 2005 Christian Hudon 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,57 +33,23 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openSocket.cc,v 1.3 2005/01/12 17:31:54 chrish42 Exp $ 
+   * $Id: PrUtils.h,v 1.1 2005/01/12 17:31:41 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
 
-/*! \file openSocket.cc */
+/*! \file PrUtils.h */
+
+
+#ifndef PrUtils_INC
+#define PrUtils_INC
 
 #include <string>
-#include <plearn/base/PrUtils.h>
-#include <plearn/io/PStream.h>
-#include <plearn/io/PrPStreamBuf.h>
-#include "openSocket.h"
-#include <mozilla/nspr/prio.h>
-#include <mozilla/nspr/prerror.h>
-#include <mozilla/nspr/prnetdb.h>
-
 
 namespace PLearn {
-using namespace std;
 
-PStream openSocket(const string& hostname, int port,
-                   PStream::mode_t io_formatting,
-                   const int timeout)
-{
-  PRFileDesc* socket = PR_NewTCPSocket();
-  if (!socket)
-    PLERROR("openSocket: socket creation failed! (Maybe you ran out of file descriptors?)");
-
-  // Look up the host name.
-  PRHostEnt host;
-  char buf[PR_NETDB_BUF_SIZE];
-  if (PR_GetHostByName(hostname.c_str(), buf, sizeof(buf), &host) != PR_SUCCESS)
-    PLERROR("openSocket(%s, %d) failed during host name lookup: %s",
-            hostname.c_str(), port, getPrErrorString().c_str());
-
-  // Iterate on every address for the host, until we can connect to one.
-  int host_entry_index = 0;
-  PRNetAddr address;
-  while ((host_entry_index = PR_EnumerateHostEnt(host_entry_index, &host,
-                                                 port, &address)) != 0)
-    {
-      if (PR_Connect(socket, &address, timeout) == PR_SUCCESS)
-        {
-          PStream st = new PrPStreamBuf(socket, socket, true, true);
-          st.setMode(io_formatting);
-          return st;
-        }
-    }
-
-  PLERROR("openSocket(%s, %d) failed while trying to connect: %s",
-          hostname.c_str(), port, getPrErrorString().c_str());
-}
+  std::string getPrErrorString()
 
 } // end of namespace PLearn
+
+#endif
