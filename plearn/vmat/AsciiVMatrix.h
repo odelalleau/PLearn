@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.h,v 1.11 2004/06/29 19:49:20 tihocan Exp $ 
+   * $Id: AsciiVMatrix.h,v 1.12 2004/07/08 15:10:25 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.h */
@@ -88,10 +88,10 @@ protected:
   //! Declares this class' options
   static void declareOptions(OptionList& ol);
 
-public:
   //!  This is the only method requiring implementation
-  virtual void getNewRow(int i, Vec& v) const;
+  virtual void getNewRow(int i, const Vec& v) const;
 
+public:
   //! Append a row at the end of the file
   virtual void appendRow(Vec v);
 

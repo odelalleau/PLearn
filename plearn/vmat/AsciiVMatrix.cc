@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.cc,v 1.13 2004/06/29 19:49:20 tihocan Exp $ 
+   * $Id: AsciiVMatrix.cc,v 1.14 2004/07/08 15:10:09 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
@@ -246,7 +246,7 @@ void AsciiVMatrix::build_()
   }
 }
 
-void AsciiVMatrix::getNewRow(int i, Vec& v) const
+void AsciiVMatrix::getNewRow(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>length())
