@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.cc,v 1.9 2004/08/09 16:29:19 tihocan Exp $
+   * $Id: ConcatRowsVMatrix.cc,v 1.10 2004/08/11 12:27:11 tihocan Exp $
    ******************************************************* */
 
 #include "ConcatRowsVMatrix.h"
@@ -176,7 +176,7 @@ void ConcatRowsVMatrix::ensureMappingsConsistency() {
   map<string, real> other_map;
   map<string, real>* cur_map;
   map<string, real>::iterator it, find_map, jt;
-  bool report_progress = true;
+  bool report_progress = false; // Turn it on for debugging.
   ProgressBar* pb = 0;
   if (report_progress)
     pb = new ProgressBar("Checking mappings consistency", width());
@@ -326,10 +326,12 @@ real ConcatRowsVMatrix::get(int i, int j) const
     return to_concat[whichvm]->get(rowofvm,j);
   else {
     val = to_concat[whichvm]->get(rowofvm,j);
-    map<real, real>::iterator it = fixed_mappings(whichvm, j).find(val);
-    if (it != fixed_mappings(whichvm, j).end()) {
-      // We need to modify this value.
-      return it->second;
+    if (!is_missing(val)) {
+      map<real, real>::iterator it = fixed_mappings(whichvm, j).find(val);
+      if (it != fixed_mappings(whichvm, j).end()) {
+        // We need to modify this value.
+        return it->second;
+      }
     }
     return val;
   }
@@ -370,9 +372,11 @@ void ConcatRowsVMatrix::getSubRow(int i, int j, Vec v) const
   if (need_fix_mappings) {
     for (int k = j; k < j + v.length(); k++) {
       fixed = fixed_mappings(whichvm, k);
-      it = fixed.find(v[k -j]);
-      if (it != fixed.end())
-        v[k - j] = it->second;
+      if (!is_missing(v[k-j])) {
+        it = fixed.find(v[k -j]);
+        if (it != fixed.end())
+          v[k - j] = it->second;
+      }
     }
   }
 }
