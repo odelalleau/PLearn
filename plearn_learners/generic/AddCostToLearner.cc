@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.2 2004/03/10 18:21:59 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.3 2004/03/16 18:37:12 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -72,9 +72,11 @@ PLEARN_IMPLEMENT_OBJECT(AddCostToLearner,
 // AddCostToLearner //
 //////////////////////
 AddCostToLearner::AddCostToLearner()
-: from_max(1),
+: check_output_consistency(1),
+  from_max(1),
   from_min(-1),
-  rescale(0),
+  rescale_output(0),
+  rescale_target(0),
   to_max(1),
   to_min(0)
 {}
@@ -84,31 +86,43 @@ AddCostToLearner::AddCostToLearner()
 ////////////////////
 void AddCostToLearner::declareOptions(OptionList& ol)
 {
+  declareOption(ol, "check_output_consistency", &AddCostToLearner::check_output_consistency, OptionBase::buildoption,
+      "If set to 1, additional checks will be performed to make sure the output\n"
+      "is compatible with the costs to be computed. This may slow down the costs\n"
+      "computation, but is also safer.");
+
   declareOption(ol, "costs", &AddCostToLearner::costs, OptionBase::buildoption,
       "The costs to be added:\n"
       " - 1 : 'lift_output', used to compute the lift cost\n"
       " - 2 : 'cross_entropy', the cross entropy cost t*log(o) + (1-t)*log(1-o)");
 
+  declareOption(ol, "force_output_to_target_interval", &AddCostToLearner::force_output_to_target_interval, OptionBase::buildoption,
+      "If set to 1 and 'rescale_output' is also set to 1, then the scaled output\n"
+      "will be forced to belong to [to_min, to_max], which may not be the case otherwise\n"
+      "if the output doesn't originate from [from_min, from_max].");
+      
   declareOption(ol, "from_max", &AddCostToLearner::from_max, OptionBase::buildoption,
-      "Upper bound of the source interval [from_min, from_max]");
+      "Upper bound of the source interval [from_min, from_max] (used in rescaling).");
 
   declareOption(ol, "from_min", &AddCostToLearner::from_min, OptionBase::buildoption,
-      "Lower bound of the source interval [from_min, from_max]");
+      "Lower bound of the source interval [from_min, from_max] (used in rescaling).");
 
-  declareOption(ol, "rescale", &AddCostToLearner::rescale, OptionBase::buildoption,
-      "If set to 1, then the output and target will be rescaled before computing the costs,\n"
-      "according to the values of from_min, from_max, to_min, to_max. This means it will\n"
-      "map [from_min, from_max] to [to_min, to_max]. If set to 0, those 4 values won't be\n"
-      "used at all in the costs computation.");
+  declareOption(ol, "rescale_output", &AddCostToLearner::rescale_output, OptionBase::buildoption,
+      "If set to 1, then the output will be rescaled before computing the costs, according\n"
+      "to the values of from_min, from_max, to_min, to_max. This means it will map\n"
+      "[from_min, from_max] to [to_min, to_max].");
+
+  declareOption(ol, "rescale_target", &AddCostToLearner::rescale_target, OptionBase::buildoption,
+      "Same as 'rescale_output', but for the target.");
 
   declareOption(ol, "sub_learner", &AddCostToLearner::sub_learner, OptionBase::buildoption,
       "The learner to which we add the costs.");
 
   declareOption(ol, "to_max", &AddCostToLearner::to_max, OptionBase::buildoption,
-      "Upper bound of the destination interval [to_min, to_max]");
+      "Upper bound of the destination interval [to_min, to_max] (used in rescaling).");
 
   declareOption(ol, "to_min", &AddCostToLearner::to_min, OptionBase::buildoption,
-      "Lower bound of the destination interval [to_min, to_max]");
+      "Lower bound of the destination interval [to_min, to_max] (used in rescaling).");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -139,18 +153,25 @@ void AddCostToLearner::build_()
     int os = sub_learner->outputsize();
     sub_learner_output.resize(os);
     desired_target.resize(os);
-    if (rescale) {
+    if (rescale_output || rescale_target) {
       real from_fac = from_max - from_min;
       real to_fac = to_max - to_min;
       fac = to_fac / from_fac;
     }
+    output_min = -REAL_MAX;
+    output_max = REAL_MAX;
     for (int i = 0; i < n; i++) {
       switch(costs[i]) {
         case 1:
           if (display) cout << "lift_output ";
+          // Output should be positive.
+          output_min = max(output_min, real(0));
           break;
         case 2:
           if (display) cout << "cross_entropy ";
+          // Output should be in [0,1].
+          output_min = max(output_min, real(0));
+          output_max = min(output_max, real(1));
           {
             Var zero = var(0);
             output_var = accessElement(sub_learner_output, zero);
@@ -178,16 +199,46 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
   // We give only costs.subVec to the sub_learner because it may want to resize it.
   Vec sub_costs = costs.subVec(0, n_original_costs);
   sub_learner->computeCostsFromOutputs(input, output, target, sub_costs);
-  if (!rescale) {
+
+  // Optional rescaling.
+  if (!rescale_output) {
     sub_learner_output << output;
+  } else {
+    int n = output.length();
+    real scaled_output;
+    for (int i = 0; i < n; i++) {
+      scaled_output = (output[i] - from_min) * fac + to_min;
+      if (force_output_to_target_interval) {
+        if (scaled_output > to_max) {
+          scaled_output = to_max;
+        } else if (scaled_output < to_min) {
+          scaled_output = to_min;
+        }
+      }
+      sub_learner_output[i] = scaled_output;
+    }
+  }
+  if (!rescale_target) {
     desired_target << target;
   } else {
     int n = output.length();
     for (int i = 0; i < n; i++) {
-      sub_learner_output[i] = (output[i] - from_min) * fac + to_min;
       desired_target[i] = (target[i] - from_min) * fac + to_min;
     }
   }
+
+  if (check_output_consistency) {
+    for (int i = 0; i < sub_learner_output; i++) {
+      real out = sub_learner_output[i];
+      if (out < output_min) {
+        PLERROR("In AddCostToLearner::computeCostsFromOutputs - Sub-learner output (%f) is lower than %f", out, output_min);
+      }
+      if (out > output_max) {
+        PLERROR("In AddCostToLearner::computeCostsFromOutputs - Sub-learner output (%f) is higher than %f", out, output_max);
+      }
+    }
+  }
+
   for (int i = 0; i < this->costs.length(); i++) {
     switch(this->costs[i]) {
       case 1: // Lift.

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.h,v 1.1 2004/03/05 18:30:06 tihocan Exp $ 
+   * $Id: AddCostToLearner.h,v 1.2 2004/03/16 18:37:18 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -76,6 +76,10 @@ protected:
   //! A precomputed factor for faster mapping.
   real fac;
 
+  //! Constraints on the output given the costs being computed.
+  real output_max;
+  real output_min;
+
   //! Its value is sub_learner_output[0].
   Var output_var;
   
@@ -91,10 +95,13 @@ public:
   // * public build options *
   // ************************
 
+  bool check_output_consistency;
   TVec<int> costs;
+  bool force_output_to_target_interval;
   real from_max;
   real from_min;
-  bool rescale;
+  bool rescale_output;
+  bool rescale_target;
   PP<PLearner> sub_learner;
   real to_max;
   real to_min;
