@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.h,v 1.9 2004/03/09 16:39:02 tihocan Exp $
+ * $Id: LiftStatsCollector.h,v 1.10 2004/09/09 19:40:21 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -93,9 +93,12 @@ public:
   // * public build options *
   // ************************
 
+  string lift_file;
   real lift_fraction;
   int opposite_lift;
   string output_column;
+  string roc_file;
+  Vec roc_fractions;
   int sign_trick;
   int target_column;
   int verbosity;

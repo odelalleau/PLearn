@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.12 2004/04/14 16:30:15 plearner Exp $
+ * $Id: LiftStatsCollector.cc,v 1.13 2004/09/09 19:40:21 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -43,6 +43,7 @@
 
 #include "LiftStatsCollector.h"
 #include "TMat_maths.h"
+#include <plearn/base/stringutils.h>
 
 namespace PLearn {
 using namespace std;
@@ -58,9 +59,11 @@ LiftStatsCollector::LiftStatsCollector()
   nsamples(0),
   npos(0),
   output_column_index(0),
+  lift_file(""),
   lift_fraction(0.1),
   opposite_lift(0),
   output_column(""),
+  roc_file(""),
   sign_trick(0),
   target_column(1),
   verbosity(0)
@@ -122,6 +125,17 @@ void LiftStatsCollector::declareOptions(OptionList& ol)
 
   declareOption(ol, "verbosity", &LiftStatsCollector::verbosity, OptionBase::buildoption,
       "    to be set >= 2 in order to display more info (default = 0)\n");
+
+  declareOption(ol, "roc_file", &LiftStatsCollector::roc_file, OptionBase::buildoption,
+      "If provided, the points of the ROC curve computed for different fractions (see\n"
+      "'roc_fractions') will be appended in ASCII format to the given file.");
+
+  declareOption(ol, "lift_file", &LiftStatsCollector::lift_file, OptionBase::buildoption,
+      "If provided, the lifts computed for different fractions (see 'roc_fractions')\n"
+      "will be appended in ASCII format to the given file.");
+
+  declareOption(ol, "roc_fractions", &LiftStatsCollector::roc_fractions, OptionBase::buildoption,
+      "(Ordered) fractions used to compute and save points in the ROC curve, or additional lifts.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -213,6 +227,57 @@ void LiftStatsCollector::finalize()
   if (nstored > n_samples_to_keep) {
     // If not, then no change has to be made to n_first_updates.
 
+    // Compute additional lifts (hack) if required.
+    if (roc_fractions.length() > 0 && (roc_file != "" || lift_file != "")) {
+      // Copy data to make sure we do not change anything.
+      Mat data(n_first_updates.length(), n_first_updates.width());
+      data << n_first_updates;
+      sortRows(data, 0, false);
+      // Create result file if does not exist already.
+      string command;
+      if (roc_file != "") {
+        command = "touch " + roc_file;
+        // cout << "Command: " << command << endl;
+        system(command.c_str());
+      }
+      if (lift_file != "") {
+        command = "touch " + lift_file;
+        // cout << "Command: " << command << endl;
+        system(command.c_str());
+      }
+      // Compute lifts.
+      int nones = npos + int(sum(data.column(1)) + 1e-3);
+      real frac_pos = nones / real(nsamples * 100);
+      int lift_index = 0;
+      int count_pos = 0;
+      int sample_index = 0;
+      string result_roc = "";
+      string result_lift = "";
+      while (lift_index < roc_fractions.length()) {
+        while (sample_index < real(nsamples) * roc_fractions[lift_index]) {
+          if (data(sample_index, 1) == 1)
+            count_pos++;
+          sample_index++;
+        }
+        real lift_value = real(count_pos) / real(sample_index) / frac_pos;
+        real roc_value = real(count_pos) / real(nones);
+        lift_index++;
+        result_roc += tostring(roc_value) + "\t";
+        result_lift += tostring(lift_value) + "\t";
+      }
+      // Save the lifts in the given file.
+      if (lift_file != "") {
+        command = "echo " + result_lift + " >> " + lift_file;
+        // cout << "Command: " << command << endl;
+        system(command.c_str());
+      }
+      if (roc_file != "") {
+        command = "echo " + result_roc + " >> " + roc_file;
+        // cout << "Command: " << command << endl;
+        system(command.c_str());
+      }
+    }
+
     // Make sure the highest ouputs are in the last n_samples_to_keep elements
     // of n_first_updates.
     if (n_samples_to_keep > 0) {
@@ -283,6 +348,7 @@ void LiftStatsCollector::makeDeepCopyFromShallowCopy(map<const void*, void*>& co
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(n_first_updates, copies);
+  deepCopyField(roc_fractions, copies);
 }
 
 ////////////
@@ -291,7 +357,12 @@ void LiftStatsCollector::makeDeepCopyFromShallowCopy(map<const void*, void*>& co
 void LiftStatsCollector::update(const Vec& x, real w)
 {
   if (count_fin > 0) {
-    PLWARNING("In LiftStatsCollector::update - Called update after finalize (see help of LiftStatsCollector)");
+    // Depending on whether we compute additional lifts, this may be fatal or not.
+    string msg = "In LiftStatsCollector::update - Called update after finalize (see help of LiftStatsCollector)";
+    if (roc_file != "")
+      PLERROR(msg.c_str());
+    else
+      PLWARNING(msg.c_str());
   }
   if (nstored == n_first_updates.length()) {
     n_first_updates.resize(MAX(1000,10*n_first_updates.length()), 2);
