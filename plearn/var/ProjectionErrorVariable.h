@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ProjectionErrorVariable.h,v 1.3 2004/06/01 20:25:19 monperrm Exp $
+   * $Id: ProjectionErrorVariable.h,v 1.4 2004/06/01 22:14:34 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,7 +68,7 @@ public:
   int n_dim; // nb of vectors in f
   int T; // nb of vectors in t
   Vec S, fw, norm_err, ww, uu, wwuu, rhs, Tu;
-  Mat Ut, V, B, VVt, A, A11, A12, A21, A22, wwuuM;
+  Mat F, TT, dF, Ut, V, B, VVt, A, A11, A12, A21, A22, wwuuM, FT, FT1, FT2;
   Mat fw_minus_t;
   Mat w; // weights in the above minimization, in each row for each t_j
 

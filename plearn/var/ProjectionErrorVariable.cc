@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: ProjectionErrorVariable.cc,v 1.4 2004/06/01 20:25:19 monperrm Exp $
+ * $Id: ProjectionErrorVariable.cc,v 1.5 2004/06/01 22:14:34 yoshua Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -86,7 +86,6 @@ namespace PLearn {
           n_dim = input1->size()/n;
           if (n_dim*n != input1->size())
             PLERROR("ProjectErrorVariable: the first input size should be an integer multiple of n");
-          input1->resize(n_dim,n);
         }
       else 
         n_dim = input1->length();
@@ -97,11 +96,12 @@ namespace PLearn {
           T = input2->size()/n;
           if (T*n != input2->size())
             PLERROR("ProjectErrorVariable: the second input size should be an integer multiple of n");
-          input2->resize(T,n);
         }
       else 
         T = input2->length();
 
+      F = input1->value.toMat(n_dim,n);
+      TT = input2->value.toMat(T,n);
       if (n<0) n = input1->width();
       if (input2->width()!=n)
         PLERROR("ProjectErrorVariable: the two arguments have inconsistant sizes");
@@ -130,6 +130,11 @@ namespace PLearn {
           A21 = A.subMat(n_dim,0,T,n_dim);
           A22 = A.subMat(n_dim,n_dim,T,T);
           Tu.resize(n);
+          FT.resize(n_dim+T,n);
+          FT1 = FT.subMat(0,0,n_dim,n);
+          FT2 = FT.subMat(n_dim,0,T,n);
+          Ut.resize(n,n);
+          V.resize(n_dim+T,n_dim+T);
         }
       fw.resize(n);
       if (norm_penalization>0)
@@ -171,11 +176,10 @@ namespace PLearn {
     // if  norm_penalization>0 then also add the following term:
     //   norm_penalization * sum_i (||f_i||^2 - 1)^2
     //
-    Mat F = input1->matValue;
-    Mat TT = input2->matValue;
     real cost = 0;
     if (use_subspace_distance)
       {
+#if 0        
         productTranspose(A11,F,F);
         productTranspose(A12,F,TT);
         A12 *= -1.0;
@@ -189,7 +193,25 @@ namespace PLearn {
         // note that A is symmetric, which is not exploited here
         lapackSolveLinearSystem(A, wwuuM, pivots);
         // note that A is destroyed here, but wwuu contains the solution
-
+#else
+        // use SVD of (F' -T') instead.
+        FT1 << F;
+        multiply(FT2,TT,-1.0);
+        lapackSVD(FT, Ut, S, V);
+        wwuu.clear();
+        for (int k=0;k<S.length();k++)
+          {
+            real s_k = S[k];
+            if (s_k>epsilon) // ignore the components that have too small singular value (more robust solution)
+              {
+                real sum_first_elements = 0;
+                for (int j=0;j<n_dim;j++) 
+                  sum_first_elements += V(j,k);
+                for (int i=0;i<n_dim+T;i++)
+                  wwuu[i] += V(i,k) * sum_first_elements / (s_k * s_k);
+              }
+          }
+#endif
         static bool debugging=false;
         if (debugging)
           {
@@ -225,13 +247,19 @@ namespace PLearn {
         // N.B. this is the SVD of F'
         lapackSVD(F_copy, Ut, S, V);
         VVt.clear();
-        for (int i=0;i<n_dim;i++)
+        for (int k=0;k<S.length();k++)
           {
-            real s_i = S[i];
-            if (s_i>epsilon) // ignore the components that have too small singular value (more robust solution)
+            real s_k = S[k];
+            if (s_k>epsilon) // ignore the components that have too small singular value (more robust solution)
               {
-                Vec Vi = V(i);
-                externalProductScaleAcc(VVt, Vi, Vi, 1.0 / (s_i * s_i));
+                for (int i=0;i<n_dim;i++)
+                  {
+                    real* VVti = VVt[i];
+                    for (int j=0;j<n_dim;j++)
+                      VVti[j] += V(i,k)*V(j,k)/(s_k*s_k);
+                  }
+                //Vec Vk = V(k);
+                //externalProductScaleAcc(VVt, Vk, Vk, 1.0 / (s_k * s_k));
               }
           }
         product(B,VVt,F);
@@ -292,7 +320,7 @@ namespace PLearn {
           for (int i=0;i<n_dim;i++)
           {
             Vec df_i = dF(i); // n-vector
-              multiplyAcc(df_i, input1->matValue(i), norm_penalization*2*norm_err[i]);
+              multiplyAcc(df_i, F(i), norm_penalization*2*norm_err[i]);
           }
       }
     else
@@ -306,7 +334,7 @@ namespace PLearn {
                 Vec df_i = input1->matGradient(i); // n-vector
                 multiplyAcc(df_i, fw_minus_tj, gradient[0] * wj[i]*2);
                 if (norm_penalization>0)
-                  multiplyAcc(df_i, input1->matValue(i), norm_penalization*2*norm_err[i]);
+                  multiplyAcc(df_i, F(i), norm_penalization*2*norm_err[i]);
               }
           }
       }

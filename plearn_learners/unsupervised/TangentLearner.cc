@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.3 2004/06/01 20:25:26 monperrm Exp $ 
+   * $Id: TangentLearner.cc,v 1.4 2004/06/01 22:14:57 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -197,7 +197,6 @@ void TangentLearner::build_()
           parameters[i] = tangent_predictor->parameters[i];
       }
     
-    tangent_predictor->outputs[0]->resize(n_dim,n);
     if (training_targets=="local_evectors")
       tangent_targets = Var(n_dim,n);
     else if (training_targets=="local_neighbors")
