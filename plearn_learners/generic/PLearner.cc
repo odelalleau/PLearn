@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.23 2003/10/31 20:50:42 plearner Exp $
+   * $Id: PLearner.cc,v 1.24 2004/01/26 14:15:28 tihocan Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -283,9 +283,14 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     test_stats->forget();
 
   ProgressBar* pb = NULL;
-  if(report_progress)
+  if(report_progress) 
     pb = new ProgressBar("Testing learner",l);
 
+  if (l == 0) {
+    // Empty test set: we give -1 cost arbitrarily.
+    costs.fill(-1);
+    test_stats->update(costs);
+  }
 
   for(int i=0; i<l; i++)
     {
