@@ -30,7 +30,8 @@ sourcedirs =   lsdirs(os.path.join(plearndir,'plearn/')) \
              + lsdirs(os.path.join(plearndir,'plearn_learners/')) \
              + lsdirs(os.path.join(plearndir,'commands/')) \
              + lsdirs(os.path.join(lisaplearndir,'PLearnLibrary/')) \
-             + [ os.path.join(lisaplearndir,'Databases/') ]
+             + [ os.path.join(lisaplearndir,'Databases/') ] \
+             + lsdirs(os.path.join(lisaplearndir,'Databases/')) 
 
 # will be added as list of includes (-I...) to all compilations
 mandatory_includedirs = []
@@ -68,14 +69,14 @@ compileflags = compileflags + ' -DDBDIR=\\"' + dbdir + '\\"'
 # can have wildcards (such as ['GreatLibInc/*.h','Magick*.h'] for instance)
 
 optionalLibrary( name = 'xml',
-                 includedirs = [os.path.join(libdir,'xml/xerces-c-src1_5_1/include'), 
-                                os.path.join(libdir,'xml/xml-xalan/c/src')],
+                 includedirs = [os.path.join(libdir,'xml/gcc_3.2/xerces-c-src2_1_0/include'), 
+                                os.path.join(libdir,'xml/gcc_3.2/xml-xalan/c/src')],
                  linkeroptions = (' -Xlinker -rpath -Xlinker ' +
-                                  os.path.join(libdir,'xml/xerces-c-src1_5_1/lib') +
+                                  os.path.join(libdir,'xml/gcc_3.2/xerces-c-src2_1_0/lib') +
                                   ' -Xlinker -rpath -Xlinker ' +
-                                  os.path.join(libdir,'xml/xml-xalan/lib') + ' -L' +
-                                  os.path.join(libdir,'xml/xerces-c-src1_5_1/lib') + ' -L' +
-                                  os.path.join(libdir,'xml/xml-xalan/lib') + ' -lxalan-c1_2 -lxerces-c1_5_1' ) )
+                                  os.path.join(libdir,'xml/gcc_3.2/xml-xalan/lib') + ' -L' +
+                                  os.path.join(libdir,'xml/gcc_3.2/xerces-c-src2_1_0/lib') + ' -L' +
+                                  os.path.join(libdir,'xml/gcc_3.2/xml-xalan/lib') + ' -lxalan-c1_4_0 -lxerces-c' ) )
 
 # optionalLibrary( name = 'lapack',
 #                 triggers = 'Lapackincl/*.h',
