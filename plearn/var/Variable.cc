@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.12 2004/02/29 16:44:06 nova77 Exp $
+   * $Id: Variable.cc,v 1.13 2004/03/09 18:34:49 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -61,6 +61,8 @@
 namespace PLearn {
 using namespace std;
 
+// To be able to use varDeepCopyField.
+extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
 /** Var **/
 
@@ -293,7 +295,7 @@ void Variable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   deepCopyField(matGradient, copies);
   valuedata = value.data();
   gradientdata = gradient.data();
-  deepCopyField(g, copies);
+  varDeepCopyField(g, copies);
 }
 
 void Variable::clearDiagHessian() 

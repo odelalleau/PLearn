@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.24 2004/03/09 16:49:33 tihocan Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.25 2004/03/09 18:35:14 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -599,28 +599,31 @@ void MultiInstanceNNet::forget()
   stage = 0;
 }
 
+//! To use varDeepCopyField.
+extern void varDeepCopyField(Var& field, CopiesMap& copies);
+
 void MultiInstanceNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(input, copies);
-  deepCopyField(target, copies);
-  deepCopyField(sampleweight, copies);
-  deepCopyField(w1, copies);
-  deepCopyField(w2, copies);
-  deepCopyField(wout, copies);
-  deepCopyField(wdirect, copies);
-  deepCopyField(output, copies);
-  deepCopyField(bag_size, copies);
-  deepCopyField(bag_inputs, copies);
-  deepCopyField(bag_output, copies);
+  varDeepCopyField(input, copies);
+  varDeepCopyField(target, copies);
+  varDeepCopyField(sampleweight, copies);
+  varDeepCopyField(w1, copies);
+  varDeepCopyField(w2, copies);
+  varDeepCopyField(wout, copies);
+  varDeepCopyField(wdirect, copies);
+  varDeepCopyField(output, copies);
+  varDeepCopyField(bag_size, copies);
+  varDeepCopyField(bag_inputs, copies);
+  varDeepCopyField(bag_output, copies);
   deepCopyField(inputs_and_targets_to_test_costs, copies);
   deepCopyField(inputs_and_targets_to_training_costs, copies);
   deepCopyField(input_to_logP0, copies);
-  deepCopyField(nll, copies);
+  varDeepCopyField(nll, copies);
   deepCopyField(costs, copies);
   deepCopyField(penalties, copies);
-  deepCopyField(training_cost, copies);
-  deepCopyField(test_costs, copies);
+  varDeepCopyField(training_cost, copies);
+  varDeepCopyField(test_costs, copies);
   deepCopyField(invars, copies);
   deepCopyField(params, copies);
   deepCopyField(paramsvalues, copies);
