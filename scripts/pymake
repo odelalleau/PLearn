@@ -61,6 +61,9 @@ pos = string.find(myhostname,'.')
 if pos>=0:
     myhostname = myhostname[0:pos]
 
+cpp_exts = ['.cc','.c','.C','.cpp','.CC', '.cxx']
+h_exts = ['.h','.H','.hpp'] 
+    
 # QT specific stuff. If this is true, then qt's include dir and library are added for compilation and linkage
 useqt = 0
 qtdir=''
@@ -378,6 +381,7 @@ if len(args)==0:
     printusage()
     sys.exit()
 
+    
 #######################################################
 # special calling options, that don't actually compile anything
 #######################################################
@@ -394,7 +398,7 @@ def reportMissingObj(arg, dirpath, names):
         fpath = join(dirpath,fname)
         if os.path.isfile(fpath):
             basename, ext = os.path.splitext(fname)
-            if ext in ['.cc','.c','.C','.cpp','.CC']:
+            if ext in cpp_exts:
                 foundobj = 0 # found the .o file?
                 for f in glob.glob(join(dirpath,'OBJS','*',basename+'.o')):
                     if os.path.isfile(f): foundobj = 1
@@ -709,18 +713,18 @@ class FileInfo:
         # transform the list of includes from a list of file names to a list of correspondinf FileInfo
         self.includes_from_sourcedirs = map(file_info,self.includes_from_sourcedirs) 
 
-        if self.fileext in ['.h','.H','.hpp']:
+        if self.fileext in h_exts:
             self.is_ccfile = 0
 
             # get the corresponding .cc file's FileInfo (if there is such a file) 
             self.corresponding_ccfile = 0
-            for newext in ['.cc','.c','.C','.cpp','.CC']:
+            for newext in cpp_exts:
                 ccpath = join(self.filedir, self.filebase + newext)
                 if mtime(ccpath):
                     self.corresponding_ccfile = file_info(ccpath)
                     break
 
-        elif self.fileext in ['.cc','.c','.C','.cpp','.CC']:
+        elif self.fileext in cpp_exts:
             self.is_ccfile = 1
             
             if objspolicy == 1:
@@ -1224,7 +1228,7 @@ def get_ccpath_from_noncc_path(filepath):
     "to the given .h (or similar extension) file if it exists"
     "or None if there is no such file"
     (base,ext) = os.path.splitext(filepath)
-    for newext in [".cc",".cpp",".C",".c",".CC"]:
+    for newext in cpp_exts:
         ccpath = base + newext
         if mtime(ccpath):
             return ccpath
@@ -1232,7 +1236,7 @@ def get_ccpath_from_noncc_path(filepath):
 
 def isccfile(filepath):
     (base,ext) = os.path.splitext(filepath)
-    return ext in ['.cc','.CC','.cpp','.c','.C']
+    return ext in cpp_exts
     
 def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link,linkname):
     """A target can be a .cc file, a binary target, or a directory.
