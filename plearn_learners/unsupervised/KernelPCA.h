@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelPCA.h,v 1.3 2004/05/17 13:12:24 tihocan Exp $ 
+   * $Id: KernelPCA.h,v 1.4 2004/07/09 22:21:37 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -62,14 +62,13 @@ protected:
   // * protected options *
   // *********************
 
-  Ker kpca_kernel;
     
 public:
 
   // ************************
   // * public build options *
   // ************************
-
+  Ker kpca_kernel;
   bool kernel_is_distance;
   bool remove_bias;
   bool remove_bias_in_evaluate;
