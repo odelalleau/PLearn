@@ -130,13 +130,15 @@ void computePrincipalComponents(Mat dataset, Vec& eig_values, Mat& eig_vectors)
   eigenVecOfSymmMat(covar, ncomp,  eig_values, eig_vectors); 
 }
 
-void computeLocalPrincipalComponents(Mat& dataset, int which_pattern, Mat& delta_neighbors, Vec& eig_values, Mat& eig_vectors)
+void computeLocalPrincipalComponents(Mat& dataset, int which_pattern, Mat& delta_neighbors, Vec& eig_values, Mat& eig_vectors, Vec& mean)
 {
   Vec center = dataset(which_pattern);
   if (center.hasMissing())
     PLERROR("dataset row %d has missing values!", which_pattern);
   computeNearestNeighbors(dataset, center, delta_neighbors, which_pattern);
-  delta_neighbors -= center;
+  mean.resize(delta_neighbors.width());
+  columnMean(delta_neighbors, mean);
+  delta_neighbors -= mean;
   computePrincipalComponents(delta_neighbors, eig_values, eig_vectors);
 }
 
@@ -160,7 +162,8 @@ void ManifoldParzen2::train()
     // center is sample
     mu(i) << trainset(i);
 
-    computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs);
+    Vec center;
+    computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs, center);
 
 //    cout<<delta_neighbors<<endl;
     
@@ -186,7 +189,7 @@ void ManifoldParzen2::train()
     }
     else lambda0 = global_lambda0;
 
-    setGaussian(i, 1.0/l, trainset(i), eigvals.subVec(0,eigvals.length()-1), components_eigenvecs.subMatRows(0,eigvals.length()-1), lambda0);
+    setGaussianGeneral(i, 1.0/l, center, eigvals.subVec(0,eigvals.length()-1), components_eigenvecs.subMatRows(0,eigvals.length()-1), lambda0);
     }
   build();
 }
