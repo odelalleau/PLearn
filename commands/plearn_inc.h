@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.35 2004/10/18 23:41:17 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.36 2004/10/27 13:21:26 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -177,6 +177,7 @@
 #include <plearn/vmat/PLearnerOutputVMatrix.h>
 #include <plearn/vmat/PrecomputedVMatrix.h>
 #include <plearn/vmat/ProcessingVMatrix.h>
+#include <plearn/vmat/RankedVMatrix.h>
 #include <plearn/vmat/RegularGridVMatrix.h>
 #include <plearn/vmat/RemoveDuplicateVMatrix.h>
 #include <plearn/vmat/SelectAttributsSequenceVMatrix.h>
