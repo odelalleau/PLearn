@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.h,v 1.5 2004/02/20 21:11:40 chrish42 Exp $
+   * $Id: plearn_main.h,v 1.6 2004/02/26 20:33:20 nova77 Exp $
    ******************************************************* */
 
 //#include <string>
@@ -42,7 +42,6 @@
 #define plearn_main_INC
 
 namespace PLearn {
-using namespace std;
 
 int plearn_main(int argc, char** argv);
 
