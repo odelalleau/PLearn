@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.20 2004/05/31 19:58:05 ouimema Exp $
+   * $Id: plapack.h,v 1.21 2004/06/29 13:21:20 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -534,26 +534,27 @@ int eigen_SymmMat_decreasing(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalue
                   bool compute_all, int nb_eigen, bool compute_vectors = true,
                   bool largest_evalues=true);
 
-//!  This function compute the inverse of a matrix.
+//! This function compute the inverse of a matrix.
+//! WARNING: the input matrix 'in' is overwritten in the process.
 int matInvert(Mat& in, Mat& inverse);
 
-  //!  generate N vectors sampled from the normal with mean vector mu
-  //!  and covariance matrix A 
-  Mat multivariate_normal(const Vec& mu, const Mat& A, int N);
+//!  generate N vectors sampled from the normal with mean vector mu
+//!  and covariance matrix A 
+Mat multivariate_normal(const Vec& mu, const Mat& A, int N);
 
-  //!  generate a vector sampled from the normal with mean vector mu 
-  //!  and covariance matrix A
-  Vec multivariate_normal(const Vec& mu, const Mat& A);
+//!  generate a vector sampled from the normal with mean vector mu 
+//!  and covariance matrix A
+Vec multivariate_normal(const Vec& mu, const Mat& A);
 
-  //!  generate 1 vector sampled from the normal with mean mu 
-  //!  and covariance matrix A = evectors * diagonal(e_values) * evectors' 
-  Vec multivariate_normal(const Vec& mu, const Vec& e_values, const Mat& e_vectors);
+//!  generate 1 vector sampled from the normal with mean mu 
+//!  and covariance matrix A = evectors * diagonal(e_values) * evectors' 
+Vec multivariate_normal(const Vec& mu, const Vec& e_values, const Mat& e_vectors);
 
-   //!  generate a vector x sampled from the normal with mean mu 
-   //!  and covariance matrix A = evectors * diagonal(e_values) * evectors' 
-   //! (the normal(0,I) originally sampled to obtain x is stored in z).
-   //! Unlike the other variants of this function, this one does not allocate anything.
-   void multivariate_normal(Vec& x, const Vec& mu, const Vec& e_values, const Mat& e_vectors, Vec& z);
+//!  generate a vector x sampled from the normal with mean mu 
+//!  and covariance matrix A = evectors * diagonal(e_values) * evectors' 
+//! (the normal(0,I) originally sampled to obtain x is stored in z).
+//! Unlike the other variants of this function, this one does not allocate anything.
+void multivariate_normal(Vec& x, const Vec& mu, const Vec& e_values, const Mat& e_vectors, Vec& z);
 
 /*!   Solves AX = B
   This is a simple wrapper over the lapack routine. It expects At and Bt (transposes of A and B) as input, 
