@@ -96,7 +96,7 @@ def _plearn_repr(x):
         return x.value()
     elif x is None:
         return "*0;"
-    elif hasattr(x, 'plearn_repr'):
+    elif hasattr(x, 'plearn_repr') and callable(getattr(x, 'plearn_repr')):
         return _plearn_repr(x.plearn_repr())
     else:
         raise TypeError('Does not know how to handle type %s' % type(x))
