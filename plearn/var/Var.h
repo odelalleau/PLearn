@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Var.h,v 1.5 2002/09/23 20:31:11 wangxian Exp $
+   * $Id: Var.h,v 1.6 2002/10/08 14:56:41 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -476,15 +476,17 @@ inline Var softmax(Var input, Var index)
   else return new MatrixSoftmaxLossVariable(input, index);
 }
 
-inline Var miniBatchIndex(Var mat, Var index)
+inline Var matrixIndex(Var mat, Var index)
 {
-  return new IndexVariable(mat,index);
+  if(index->size()==mat->width())
+     return new ColumnIndexVariable(mat,index);
+  else PLERROR("matrixIndex: index->size() should be equal to mat->width()");
 }
 
 inline Var neg_log_pi(Var p, Var index)
 {
   if(index->isScalar())  return -log(p[index]);
-  else return -log(miniBatchIndex(p,index));
+  else return -log(matrixIndex(p,index));
 }
 
 inline Var softmax(Var input, int index)

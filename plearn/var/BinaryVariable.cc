@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: BinaryVariable.cc,v 1.4 2002/09/09 20:43:23 uid92895 Exp $
+   * $Id: BinaryVariable.cc,v 1.5 2002/10/08 14:56:40 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -229,72 +229,56 @@ void VarRowVariable::rfprop()
 }
 
 
-/** IndexVariable **/
+/** ColumnIndexVariable **/
 
-IndexVariable::IndexVariable(Variable *input1, Variable *input2)
+ColumnIndexVariable::ColumnIndexVariable(Variable *input1, Variable *input2)
   : BinaryVariable(input1, input2, input2->length(), input1->width())
 {
   if(!input2->isVec())
-    PLERROR("In IndexVariable: input2 must be a vector variable representing the indexs of input1");
+    PLERROR("In ColumnIndexVariable: input2 must be a vector variable representing the indexs of input1");
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(IndexVariable);
+IMPLEMENT_NAME_AND_DEEPCOPY(ColumnIndexVariable);
 
-void IndexVariable::recomputeSize(int& l, int& w) const
+void ColumnIndexVariable::recomputeSize(int& l, int& w) const
 { l=input2->length(); w=input1->width(); }
 
-void IndexVariable::deepRead(istream& in, DeepReadMap& old2new)
+void ColumnIndexVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
-  readHeader(in, "IndexVariable");
+  readHeader(in, "ColumnIndexVariable");
   inherited::deepRead(in, old2new);
-  readFooter(in, "IndexVariable");
+  readFooter(in, "ColumnIndexVariable");
 }
 
-void IndexVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
+void ColumnIndexVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
 {
-  writeHeader(out, "IndexVariable");
+  writeHeader(out, "ColumnIndexVariable");
   inherited::deepWrite(out, already_saved);
-  writeFooter(out, "IndexVariable");
+  writeFooter(out, "ColumnIndexVariable");
 }
 
-void IndexVariable::fprop()
+void ColumnIndexVariable::fprop()
 {
-  int n = input2->size();
-  if (input1->length()==n)
-    for (int i=0; i<n; i++)
-      {
-      int num = (int)input2->valuedata[i];
-      valuedata[i] = input1->matValue[i][num];
-      }
-  else if (input1->width()==n)
-    for (int i=0; i<n; i++)
+    for (int i=0; i<input2->size(); i++)
       {
       int num = (int)input2->valuedata[i];
       valuedata[i] = input1->matValue[num][i];
       }
-      else PLERROR("IndexVariable::fprop: The size of the index vector should be equal to the length or width of the matrix");
 }
 
-void IndexVariable::bprop()
+void ColumnIndexVariable::bprop()
 {
-  int n = input2->size();
-  if (input1->length()==n)
-    for (int i=0; i<n; i++)
-      {
-      int num = (int) input2->valuedata[i];
-      input1->matGradient[i][num] += gradientdata[i];
-      }
-  else if (input1->width()==n)
-    for (int i=0; i<n; i++)
+    for (int i=0; i<input2->size(); i++)
       {
       int num = (int) input2->valuedata[i];
       input1->matGradient[num][i] += gradientdata[i];
       }
 }
 
-void IndexVariable::symbolicBprop()
+void ColumnIndexVariable::symbolicBprop()
 {
-  PLERROR("IndexVariable::symbolicBprop() not implemented");
+  input1->accg(new IndexAtPositionVariable(g,input2,input1->length(),input1->width()));
+  //PLERROR("ColumnIndexVariable::symbolicBprop() not implemented");
 }
 
 /** VarRowsVariable **/
@@ -615,6 +599,80 @@ void ElementAtPositionVariable::rfprop()
       int j = (int)input2->valuedata[1];
       rvaluedata[i*width()+j] = input1->rvaluedata[0];
     }
+}
+
+/** IndexAtPositionVariable **/
+
+IndexAtPositionVariable::IndexAtPositionVariable(Variable* input1, Variable* input2, int the_length, int the_width)
+  :BinaryVariable(input1, input2, the_length, the_width), length_(the_length), width_(the_width)
+{
+cout <<"hello" << endl;
+  if(!input1->isVec())
+    PLERROR("In IndexAtPositionVariable: Index must be a vector var");
+  if(input1->size()!=input2->size())
+    PLERROR("In IndexAtPositionVariable: input1 and input2 should be of same size");
+}
+
+IMPLEMENT_NAME_AND_DEEPCOPY(IndexAtPositionVariable);
+
+void IndexAtPositionVariable::recomputeSize(int& l, int& w) const
+{ l=length_; w=width_; }
+
+void IndexAtPositionVariable::deepRead(istream& in, DeepReadMap& old2new)
+{
+  readHeader(in, "IndexAtPositionVariable");
+  inherited::deepRead(in, old2new);
+  readFooter(in, "IndexAtPositionVariable");
+}
+
+void IndexAtPositionVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
+{
+  writeHeader(out, "IndexAtPositionVariable");
+  inherited::deepWrite(out, already_saved);
+  writeFooter(out, "IndexAtPositionVariable");
+}
+
+void IndexAtPositionVariable::fprop()
+{
+  value.clear();
+  for (int j=0; j<input2->size(); j++)
+    {  
+    int i = (int)input2->valuedata[j];
+    valuedata[i*width()+j] = input1->valuedata[j];
+    }
+}
+
+void IndexAtPositionVariable::bprop()
+{
+  for (int j=0; j<input2->size(); j++)
+    {
+    int i = (int)input2->valuedata[j];
+    input1->gradientdata[i*width()+j] += gradientdata[j];
+    }
+}
+
+void IndexAtPositionVariable::symbolicBprop()
+{
+  input1->accg(new ColumnIndexVariable(g,input2));
+  //PLERROR("IndexAtPositionVariable::symbolicBprop() not implemented.");
+}
+
+void IndexAtPositionVariable::rfprop()
+{
+/*  if (rValue.length()==0) resizeRValue();
+  rValue.clear();
+  if (input2->isScalar()) // input2 is a scalar (interpreted as a k)
+    {
+      int k = (int)input2->valuedata[0];
+      rvaluedata[k] = input1->rvaluedata[0];
+    }
+  else // input2 has 2 Indexs (interpreted as (i,j) coordinates)
+    {
+      int i = (int)input2->valuedata[0];
+      int j = (int)input2->valuedata[1];
+      rvaluedata[i*width()+j] = input1->rvaluedata[0];
+    }*/
+    PLERROR("IndexAtPositionVariable::rfprop() not implemented.");
 }
 
 /** PlusScalarVariable **/
@@ -2301,11 +2359,9 @@ void MatrixAffineTransformVariable::recomputeSize(int& l, int& w) const
 void MatrixAffineTransformVariable::fprop()
   {
     Mat lintransform = input2->matValue.subMatRows(1,input2->length()-1);
-    // matValue << input2->matValue.firstRow();
     for (int i = 0; i < length(); i++)
         for (int j = 0; j < width(); j++)
              matValue[i][j] = input2->matValue[0][i];
-    //matValue += transposeProduct(lintransform, input1->matValue);
     transposeProductAcc(matValue,lintransform, input1->matValue);
   }
 
@@ -2313,7 +2369,6 @@ void MatrixAffineTransformVariable::bprop()
   {
     Mat&  afftr = input2->matValue;
     int l = afftr.length();
-    //Vec bias = afftr.firstRow();
     Mat lintr = afftr.subMatRows(1,l-1);
 
     Mat& afftr_g = input2->matGradient;

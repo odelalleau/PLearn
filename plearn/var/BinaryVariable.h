@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: BinaryVariable.h,v 1.3 2002/09/09 20:43:24 uid92895 Exp $
+   * $Id: BinaryVariable.h,v 1.4 2002/10/08 14:56:40 wangxian Exp $
    * PRIMARY AUTHOR: Pascal Vincent
    * CONTRIBUTORS: Yoshua Bengio
    * This file is part of the PLearn library.
@@ -117,16 +117,16 @@ public:
 };
 
 //Mistakes may happened when the length of input1 equals to its width
-class IndexVariable: public BinaryVariable
+class ColumnIndexVariable: public BinaryVariable
 {
 protected:
     typedef BinaryVariable inherited;
   //!  Default constructor for persistence
-  IndexVariable() {}
+  ColumnIndexVariable() {}
 
 public:
-  IndexVariable(Variable* input1, Variable* input2);
-  DECLARE_NAME_AND_DEEPCOPY(IndexVariable);
+  ColumnIndexVariable(Variable* input1, Variable* input2);
+  DECLARE_NAME_AND_DEEPCOPY(ColumnIndexVariable);
   virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
@@ -260,6 +260,25 @@ public:
   virtual void rfprop();
 };
 
+class IndexAtPositionVariable: public BinaryVariable
+{
+protected:
+  typedef BinaryVariable inherited;
+  //!  Default constructor for persistence
+  IndexAtPositionVariable() {}
+  int length_,width_;
+
+public:
+  IndexAtPositionVariable(Variable* input1, Variable* input2, int the_length, int the_width);
+  DECLARE_NAME_AND_DEEPCOPY(IndexAtPositionVariable);
+  virtual void recomputeSize(int& l, int& w) const;
+  virtual void deepRead(istream& in, DeepReadMap& old2new);
+  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
+  virtual void fprop();
+  virtual void bprop();
+  virtual void symbolicBprop();
+  virtual void rfprop();
+};
 
 //!  adds a scalar var to a matrix var
 class PlusScalarVariable: public BinaryVariable

@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: UnaryVariable.cc,v 1.7 2002/09/11 19:35:36 wangxian Exp $
+   * $Id: UnaryVariable.cc,v 1.8 2002/10/08 14:56:40 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -2744,16 +2744,6 @@ void SoftmaxVariable::rfprop()
   {
     real vali = valuedata[i];
     rvaluedata[i] = vali * (1 - vali) * input->rvaluedata[i];
-
-/*    real vali = valuedata[i];
-    rvaluedata[i] = 0.;
-    for(int k=0; k<nelems(); k++)
-    {
-      if(k!=i)
-        rvaluedata[i] =  - vali * valuedata[k] * input->rvaluedata[i];
-      else
-        rvaluedata[i] = vali * (1 - vali) * input->rvaluedata[i];
-    }*/
   }
 }
 
@@ -2782,22 +2772,34 @@ void MatrixSoftmaxVariable::deepWrite(ostream& out, DeepWriteSet& already_saved)
 
 void MatrixSoftmaxVariable::fprop()
 {
-  for(int i=0; i<input->length(); i++)
-    softmax(input->matValue(i),matValue(i));
+  Vec column_max(width());
+  columnMax(input->matValue, column_max);
+
+  for(int j=0; j<input->width(); j++)
+    {
+    real s = 0;
+    real curmax = column_max[j];
+    for(int i=0; i<input->length(); i++)      
+      s += (matValue[i][j] = safeexp(input->matValue[i][j]-curmax));
+    if (s == 0) PLERROR("trying to divide by 0 in softmax");
+    s = 1.0 / s;
+    for(int i=0; i<input->length(); i++)
+      matValue[i][j] *= s;
+    }
 }
 
 void MatrixSoftmaxVariable::bprop()
 {
-  for(int i=0; i<input->length(); i++)
-    for(int j=0; j<input->width(); j++)
+  for(int i=0; i<input->width(); i++)
+    for(int j=0; j<input->length(); j++)
       {
-       real vali = matValue[i][j];
-       for(int k=0; k<width(); k++)
+       real vali = matValue[j][i];
+       for(int k=0; k<length(); k++)
          {
           if(k!=j)
-            input->matGradient[i][j] -= matGradient[i][k]*vali*matValue[i][k];
+            input->matGradient[j][i] -= matGradient[k][i]*vali*matValue[k][i];
           else
-            input->matGradient[i][j] += matGradient[i][j]*vali*(1.-vali);
+            input->matGradient[j][i] += matGradient[j][i]*vali*(1.-vali);
          }
        }
 }
