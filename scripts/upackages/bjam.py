@@ -1,3 +1,8 @@
+upack_version = '2004.12.31'
+maintainer_name = 'Pascal Vincent'
+maintainer_email = 'pascal@apstat.com'
+package_home = 'http://'
+
 # upackages/bjam.py
 #
 # Copyright (C) 2004 ApSTAT Technologies Inc.
@@ -56,7 +61,7 @@ def get_installable_versions():
 
 def get_dependencies(version):
     """Returns a list describing the upackages required to build and use the given version of this one.
-    The returned list is made of pairs (package_name, minimum_required_version_string)"""
+    The returned list is made of tuples (package_name, min_version, max_version, invalid_versions)"""
     return []
 
 def install(version, prefixdir):

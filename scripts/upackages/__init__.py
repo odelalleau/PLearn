@@ -50,6 +50,20 @@ class Error(Exception):
     def __str__(self):
         return repr(self.value)
 
+def ask_choice(question, possible_answers):
+    """Asks the user the question and lets him choose among a list of
+    possible_answers.  The (zero-baased) index of the chosen answer is
+    returned."""
+    print question
+    i = 1
+    for a in possible_answers:
+        print '[',i,'] :',a
+        i = i+1
+    choice = -1
+    while choice<=0 or choice>len(possible_answers):
+        choice = input('? ')
+    return choice-1
+
 def make_usr_structure(prefixdir):
     for name in ['src', 'lib', 'doc', 'include', 'bin', 'share' ]: 
         d = os.path.join(prefixdir,name)
@@ -107,14 +121,11 @@ def download(url, filename=''):
 
 def choose_location_and_download(filename, url_list):
     """Downloads a file from a list of possible alternative urls.
-    Asking the user which one it prefers."""
+    Asking the user which one he prefers."""
     url = url_list[0]
     if len(url_list)>1:
-        print "Choose location from where to download file "+filename+":"
-        for i in range(len(url_list)):
-            print i+1,':',url_list[i]
-        i = input('Which one to use? ')
-        url = url_list[i-1]
+        choice = ask_choice('Choose location from where to download file '+filename, url_list)
+        url = urk_list[choice]
     download(url,filename)
 
 def download_from_sourceforge(project, filename):
@@ -202,10 +213,22 @@ def get_package(packagename):
     exec 'package = upackages.'+packagename
     return package
 
-def version_equal_or_greater(ver, compared_to_ver):
-    """Returns whether ver >= compared_to_ver
-    versions are represented as version strings."""
-    return [ num for num in string.split(ver,'.') ] >= [ num for num in string.split(compared_to_ver,'.') ]
+def compare_versions(a, b):
+    """Compares 2 version strings a and b (of the form 1.2 or 1.2.3).
+    Returns 0 if they are equal
+           -1 if a<b
+           +1 if a>b   """
+    if a==b:
+        return 0
+    else:
+        avec = [ int(n) for n in string.split(a,'.') ]
+        bvec = [ int(n) for n in string.split(b,'.') ]
+        if avec>bvec:
+            return 1
+        elif avec<bvec:
+            return -1
+        else:
+            raise Error('The two version strings '+a+' and '+b+' cannot be compared.')
 
 def remove(path):
     """removes a file, symlink, or an entire directory recursively"""

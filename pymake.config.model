@@ -26,8 +26,8 @@ plearndir = os.environ.get('PLEARNDIR', os.path.join(homedir,'PLearn'))
 libdir = '/u/lisa/local/'+platform+'/lib'
 
 # use ssh @ Apstat
-if myhostname[0:6]=='apstat':
-    rshcommand= 'ssh'
+if socket.getfqdn().endswith('apstat.com'):
+    rshcommand= 'ssh -x'
 else:
     rshcommand= 'rsh'
 

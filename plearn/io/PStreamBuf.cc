@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.cc,v 1.4 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: PStreamBuf.cc,v 1.5 2004/08/31 17:22:40 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.cc */
@@ -42,18 +42,18 @@
 namespace PLearn {
 using namespace std;
 
-PStreamBuf::PStreamBuf(streamsize inbuf_capacity, streamsize outbuf_capacity, 
+PStreamBuf::PStreamBuf(bool is_readable_, bool is_writable_,
+                       streamsize inbuf_capacity, streamsize outbuf_capacity, 
                        streamsize unget_capacity)
-  :ungetsize(unget_capacity),
-   inbuf_chunksize(inbuf_capacity),
+  :is_readable(is_readable_),
+   is_writable(is_writable_),
+   ungetsize(0),
+   inbuf_chunksize(0),
    inbuf(0), inbuf_p(0), inbuf_end(0),
-   outbuf_chunksize(outbuf_capacity),
-   outbuf(0), outbuf_p(0), outbuf_end(0),
-   is_readable(false),
-   is_writable(false),
-   is_random_accessible(false)
+   outbuf_chunksize(0),
+   outbuf(0), outbuf_p(0), outbuf_end(0)
   {
-    build_();
+    setBufferCapacities(inbuf_capacity, outbuf_capacity, unget_capacity);    
   }
 
 PStreamBuf::~PStreamBuf() 
@@ -67,11 +67,24 @@ PStreamBuf::~PStreamBuf()
     }
 }
 
-  void PStreamBuf::build_()
+  void PStreamBuf::setBufferCapacities(streamsize inbuf_capacity, streamsize outbuf_capacity, streamsize unget_capacity)
   {
+    if(inbuf_capacity<0 || unget_capacity<0 || outbuf_capacity<0)
+      PLERROR("In PStreamBuf::setBufferCapacities all capacities must be >=0");
+
+    if(inbuf_capacity<1)
+      inbuf_capacity = 1;
+    if(unget_capacity<1)
+      unget_capacity = 1;
+    ungetsize = unget_capacity;
+    inbuf_chunksize = inbuf_capacity;
+    outbuf_chunksize = outbuf_capacity;
+    
     if(inbuf)
       delete[] inbuf;
-    if(ungetsize+inbuf_chunksize>0)
+    if(ungetsize+inbuf_chunksize<=0)
+      inbuf = inbuf_p = inbuf_end = 0;
+    else
       {
         inbuf = new char[ungetsize+inbuf_chunksize];
         inbuf_p = inbuf+ungetsize;
@@ -83,7 +96,9 @@ PStreamBuf::~PStreamBuf()
         flush();
         delete[] outbuf;
       }
-    if(outbuf_chunksize<0)
+    if(outbuf_chunksize<=0)
+      outbuf = outbuf_p = outbuf_end = 0;
+    else
       {
         outbuf = new char[outbuf_chunksize];
         outbuf_p = outbuf;
@@ -99,78 +114,126 @@ PStreamBuf::~PStreamBuf()
 
   //! writes exactly n characters from p (unbuffered, must flush)
   //! Default version issues a PLERROR
- void PStreamBuf::write_(char* p, streamsize n)
+ void PStreamBuf::write_(const char* p, streamsize n)
  {
    PLERROR("write_ not implemented for this PStremBuf");
  }
+ 
+PStreamBuf::streamsize PStreamBuf::refill_in_buf()
+  {
+#ifdef BOUNDCHECK
+    if(!isReadable())
+      PLERROR("Called PStreamBuf::refill_in_buf on a buffer not marked as readable");
+#endif
 
-  //! should change the position of the next read/write (seek)
-  //! Default version issues a PLERROR
- void PStreamBuf::setpos_(streampos pos)
- {
-   PLERROR("setpos_ not implemented for this PStremBuf");
- }
+    inbuf_p = inbuf+ungetsize;
+    streamsize n = read_(inbuf_p, inbuf_chunksize);
+    inbuf_end = inbuf_p+n;
+    return n;
+  }
+
+PStreamBuf::streamsize PStreamBuf::read(char* p, streamsize n)
+{
+#ifdef BOUNDCHECK
+  if(!isReadable())
+    PLERROR("Called PStreamBuf::read on a buffer not marked as readable");
+#endif
+
+  streamsize nleft = n;
+
+  streamsize inbuf_n = (streamsize)(inbuf_end-inbuf_p);
+  if(inbuf_n) // First copy what's left in the buffer
+    {
+      streamsize k = nleft<inbuf_n ?nleft :inbuf_n;
+      memcpy(p,inbuf_p,k);
+      inbuf_p += k;
+      p += k;
+      nleft -= k;
+    }
+
+  if(nleft) // need some more ?
+    {
+      if(nleft>=inbuf_chunksize) // large block: read it directly
+        nleft -= read_(p,nleft);
+      else // small block: read it in the buffer first
+        {
+          inbuf_n = refill_in_buf();
+          if(inbuf_n)
+            {
+              streamsize k = nleft<inbuf_n ?nleft :inbuf_n;
+              memcpy(p,inbuf_p,k);
+              inbuf_p += k;
+              nleft -= k;
+            }
+        }
+    }
   
-  //! should return the position of the next read/write in 
-  //! number of bytes from start of file.
-  //! Default version issues a PLERROR
- PStreamBuf::streampos PStreamBuf::getpos_()
- {
-   PLERROR("getpos_ not implemented for this PStremBuf");
-   return 0;
- }
+  streamsize nread = n-nleft;
+  return nread;
+}
+
+void PStreamBuf::unread(const char* p, streamsize n)
+{
+  if(streamsize(inbuf_p-inbuf)<n)
+    PLERROR("Cannot unread that many characters: %d, input buffer bound reached", n);
+  
+  inbuf_p -= n;
+  memcpy(inbuf_p,p,n);
+}
+
+void PStreamBuf::putback(char c)
+{
+  if(inbuf_p<=inbuf)
+    PLERROR("Cannot putback('%c') Input buffer bound reached (you may want ot increase the unget_capacity)",c);
+  
+  inbuf_p--;
+  *inbuf_p = c;
+}
 
 
+void PStreamBuf::flush()
+{
+  streamsize n = (streamsize)(outbuf_p-outbuf);
+  if(n)
+    {
+      write_(outbuf, n);
+      outbuf_p = outbuf;
+    }
+}
 
 
-  /*
-
- // Initially I planned to derive this class from Object. 
- // But when attempting compilation I found out  back in include hell!!!
- // (Object needs PStream which needs PStremBuf which needs Object)
- // Getting out of this mess would not be easy: we need efficiency, so many of 
- // the concerned calls really should stay inline (hence in the .h).
- // Finally I opted to have it derive from PPoitable rather than Object.
- // That's why all typical Object stuff are commented out.
- // (Pascal)
-
- PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PStreamBuf, "Base class for PLearn strem-buffers", "");
-
-  void PStreamBuf::declareOptions(OptionList& ol)
+void PStreamBuf::write(const char* p, streamsize n)
   {
-    declareOption(ol, "inbuf_capacity", &PStreamBuf::inbuf_chunksize, OptionBase::buildoption,
-                  "The capacity of the input buffer");
-    declareOption(ol, "outbuf_capacity", &PStreamBuf::outbuf_chunksize, OptionBase::buildoption,
-                  "The capacity of the output buffer");
-    declareOption(ol, "unget_capacity", &PStreamBuf::ungetsize, OptionBase::buildoption,
-                  "Maximum number of characters that are guaranteed you can unget");
-
-    declareOption(ol, "is_readable", &PStreamBuf::is_readable, OptionBase::buildoption,
-                  "Is this an input stream?");
-    declareOption(ol, "is_writable", &PStreamBuf::is_writable, OptionBase::buildoption,
-                  "Is this an output stream?");
-    declareOption(ol, "is_random_accessible", &PStreamBuf::is_random_accessible, OptionBase::buildoption,
-                  "Can we use getpos and setpos on this stream?");
-
-    // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
+#ifdef BOUNDCHECK
+  if(!isWritable())
+    PLERROR("Called PStreamBuf::write on a buffer not marked as writable");
+#endif
+  if(outbuf_chunksize>0) // buffered
+    {
+      streamsize bufrem = (streamsize)(outbuf_end-outbuf_p);
+      if(n<=bufrem)
+        {
+          memcpy(outbuf_p, p, n);
+          outbuf_p += n;
+        }
+      else // n>bufrem
+        {
+          memcpy(outbuf_p, p, bufrem);
+          outbuf_p += bufrem;
+          flush();
+          p += bufrem;
+          n -= bufrem;
+          if(n>outbuf_chunksize)
+            write_(p, n);
+          else
+            {
+              memcpy(outbuf_p, p, n);
+              outbuf_p += n;
+            }
+        }
+    }
+  else // unbuffered
+    write_(p,n);
   }
-
-  // ### Nothing to add here, simply calls build_
-  void PStreamBuf::build()
-  {
-    inherited::build();
-    build_();
-  }
-
-  void PStreamBuf::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
-  {
-    inherited::makeDeepCopyFromShallowCopy(copies);
-  }
-
-  */
-
-
-
 
 } // end of namespace PLearn

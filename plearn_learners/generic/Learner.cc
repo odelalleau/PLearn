@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.20 2004/07/21 16:30:56 chrish42 Exp $
+   * $Id: Learner.cc,v 1.21 2004/08/31 17:22:41 plearner Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -51,6 +51,7 @@
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/vmat/RemoveRowsVMatrix.h>
 #include <plearn/sys/PLMPI.h>
+#include <plearn/io/StdPStreamBuf.h>
 
 namespace PLearn {
 using namespace std;
@@ -286,7 +287,8 @@ void Learner::computeCost(const Vec& input, const Vec& target, const Vec& output
 
 void Learner::setTestDuringTrain(ostream& out, int every, Array<VMat> testsets)
 {
-  testout(&out);//testout = out;
+  // testout(&out);//testout = out;
+  testout = new StdPStreamBuf(&out);
   test_every = every;
   test_sets = testsets;
 }

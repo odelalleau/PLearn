@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StdPStreamBuf.h,v 1.1 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: StdPStreamBuf.h,v 1.2 2004/08/31 17:22:40 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -48,10 +48,7 @@
 #include "PStreamBuf.h"
 #include <iostream>
 
-// old hack for markable input buffers
-#define MARKABLE_STREAM_HACK
-
-#ifdef MARKABLE_STREAM_HACK
+#if STREAMBUFVER == 0
 #include "pl_streambuf.h"
 #include "pl_fdstream.h"
 #endif
@@ -74,7 +71,7 @@ protected:
   ostream* pout; //<! underlying output stream
   bool own_pin, own_pout; //<! true if {pin|pout} was created internally
 
-#ifdef MARKABLE_STREAM_HACK
+#if STREAMBUFVER == 0
   PP<pl_streambuf> the_inbuf;   //<! markable input buffer
   PP<pl_fdstreambuf> the_fdbuf; //<! buffer on a POSIX file descriptor
 
@@ -85,7 +82,6 @@ protected:
 
   //! initInBuf: called by ctors. to ensure that pin's buffer is markable
   void initInBuf();
-
 #endif
 
 
@@ -114,8 +110,10 @@ public:
 
   void setOut(ostream* pout_, bool own_pout_=false);
 
+#if STREAMBUFVER == 0
   //! attach: "attach" to a POSIX file descriptor.
   void attach(int fd);
+#endif
 
   // ******************
   // * Object methods *
@@ -126,23 +124,14 @@ protected:
   virtual streamsize read_(char* p, streamsize n);
 
   //! writes exactly n characters from p (unbuffered, must flush)
-  virtual void write_(char* p, streamsize n);
-
-  //! should change the position of the next read/write (seek)
-  //! Default version issues a PLERROR
-  virtual void setpos_(streampos pos);
-  
-  //! should return the position of the next read/write in 
-  //! number of bytes from start of file.
-  //! Default version issues a PLERROR
-  virtual streampos getpos_();
-
+  virtual void write_(const char* p, streamsize n);
 
 public:
+
   inline istream* rawin() { return pin; }   //<! access to underlying istream
   inline ostream* rawout() { return pout; }
 
-#ifdef MARKABLE_STREAM_HACK
+#if STREAMBUFVER == 0
   //! returns the markable input buffer
   //! DEPRECATED: TO BE REMOVED SOON, DO NOT USE!
   inline pl_streambuf* pl_rdbuf() { return the_inbuf; }

@@ -76,7 +76,13 @@ using namespace std;
  *   - an 'attach' function to attach the stream to a POSIX file descriptor;
  */
 
-class PStream : public PPointable
+class PStream 
+#if STREAMBUFVER == 0
+: public PP<StdPStreamBuf>
+#elif  STREAMBUFVER == 1
+: public PP<PStreamBuf>
+#endif
+
 {
 public:
   //! typedef's for PStream manipulators
@@ -87,6 +93,14 @@ public:
   typedef istream& (*pl_istream_manip_compat)(istream&);
   typedef ostream& (*pl_ostream_manip_compat)(ostream&);
   */
+
+#if STREAMBUFVER == 0
+  typedef PP<StdPStreamBuf> inherited;
+  typedef StdPStreamBuf streambuftype;
+#elif  STREAMBUFVER == 1
+  typedef PP<PStreamBuf> inherited;
+  typedef PStreamBuf streambuftype;
+#endif
 
 // norman: check for win32
 #if __GNUC__ < 3 && !defined(WIN32)
@@ -127,9 +141,6 @@ protected:
   bool own_pin, own_pout; //<! true if {pin|pout} was created internally
   */
 
-  PP<StdPStreamBuf> pstreambuf;
-
-
 public:  
   mode_t inmode;              //<! mode for input formatting
   // bitset<32> pl_stream_flags_in;  //<! format flags for input
@@ -157,8 +168,9 @@ public:
 
 public:  
 
-  //! default ctor: the stream is unusable ...
-  PStream();
+
+  //! constructor from a PStreamBuf
+  PStream(streambuftype* sb=0);
 
   //! ctor. from an istream (I)
   PStream(istream* pin_, bool own_pin_=false);
@@ -176,7 +188,9 @@ public:
 
   //! dtor.
   virtual ~PStream();
-  
+
+  inline void setBufferCapacities(streamsize inbuf_capacity, streamsize outbuf_capacity, streamsize unget_capacity)
+  { ptr->setBufferCapacities(inbuf_capacity, outbuf_capacity, unget_capacity); }
 
   inline void setInMode(mode_t m) { inmode = m; }
   inline void setOutMode(mode_t m) { outmode = m; }
@@ -187,25 +201,40 @@ public:
 
 public:
   //op()'s: re-init with different underlying stream(s)
-  inline PStream& operator()(istream* pin)
-  { pstreambuf->setIn(pin); return *this; }
-
-  inline PStream& operator()(ostream* pout)
-  { pstreambuf->setOut(pout);  return *this; }
-
-  inline PStream& operator()(iostream* pios)
-  { pstreambuf->setIn(pios); pstreambuf->setOut(pios);  return *this; }
-
-  inline PStream& operator()(istream* pin, ostream* pout)
-  { pstreambuf->setIn(pin); pstreambuf->setOut(pout);  return *this; }
 
   PStream& operator=(const PStream& pios);
+  PStream& operator=(streambuftype* streambuf)
+  { inherited::operator=(streambuf); return *this; }
+
+
+#if STREAMBUFVER == 0
+  inline PStream& operator()(istream* pin)
+  { ptr->setIn(pin); return *this; }
+
+  inline PStream& operator()(ostream* pout)
+  { ptr->setOut(pout);  return *this; }
+
+  inline PStream& operator()(iostream* pios)
+  { 
+    ptr->setIn(pios); 
+    ptr->setOut(pios);  
+    return *this; 
+  }
+
+  inline PStream& operator()(istream* pin, ostream* pout)
+  { 
+    ptr->setIn(pin); 
+    ptr->setOut(pout);  
+    return *this; 
+  }
 
   inline PStream& operator=(istream* pin) { return operator()(pin); }
   inline PStream& operator=(ostream* pout)  { return operator()(pout); }
   inline PStream& operator=(iostream* pios)  { return operator()(pios); }
 
   inline PStream& operator()(const PStream& pios)  { return operator=(pios); }
+#endif
+
 
 
   void writeAsciiNum(char x);
@@ -235,48 +264,130 @@ public:
   //! Writes the corresponding 2 hex digits (ex: 0A )
   void writeAsciiHexNum(unsigned char x);
 
+  inline bool eof() const 
+  { 
+#if STREAMBUFVER == 0 
+    return (*this)->rawin()->eof(); 
+#elif STREAMBUFVER == 1
+    return const_cast<PStream*>(this)->peek()==EOF;
+#endif
+  }
+
+#if STREAMBUFVER == 0
+  inline bool good() const
+  { return ptr->rawin() && ptr->rawin()->good() || ptr->rawout() && ptr->rawout()->good(); }
+
   //! op bool: true if the stream is in a valid state (e.g. "while(stm) stm >> x;")
   // This implementation does not seem to work: commented out [Pascal]
   // inline operator bool() { return (!pin || *pin) && (!pout || *pout) && (pin || pout); }
   // This is a temporary fix [Pascal]
-  inline operator bool() { return pstreambuf->rawin() && pstreambuf->rawin()->good() || pstreambuf->rawout() && pstreambuf->rawout()->good(); }
+  inline operator bool() 
+  { return good(); }
 
-  inline bool eof() const { return pstreambuf->rawin()->eof(); }
-  inline bool good() const { return pstreambuf->rawin()->good() && pstreambuf->rawout()->good(); }
-
-  inline istream& _do_not_use_this_method_rawin_() { return *pstreambuf->rawin(); }   //<! access to underlying istream
+  //! DEPRECATED access to underlying istream
+  inline istream& _do_not_use_this_method_rawin_() 
+  { return *(ptr->rawin()); }   
+#endif
   
   /******
    * The folowing methods are 'forwarded' from {i|o}stream.
    */
-  inline int get() { return pstreambuf->rawin()->get(); }
-  inline PStream& get(char& c) { pstreambuf->rawin()->get(c); return *this; }
+  inline int get() 
+  {
+#if STREAMBUFVER == 1 
+    return ptr->get();
+#else
+    return ptr->rawin()->get(); 
+#endif
+  }
 
+  inline PStream& get(char& c) 
+  { 
+#if STREAMBUFVER == 1 
+    c = (char) ptr->get();
+#else
+    ptr->rawin()->get(c); 
+#endif
+    return *this; 
+  }
+
+  //! Delimitor is read from stream but not appended to string. 
   inline PStream& getline(string& line, char delimitor='\n')
-  { std::getline(*pstreambuf->rawin(), line, delimitor); return *this; }
+  { 
+#if STREAMBUFVER == 1 
+    line.clear();
+    int c = get();
+    while(c!=EOF && c!=delimitor)
+      {
+        line+=(char)c;
+        c = get();
+      }
+#else
+    std::getline(*ptr->rawin(), line, delimitor); 
+#endif
+    return *this; 
+  }
 
   inline string getline()
   { string s; getline(s); return s; }
 
-  //   inline int peek() { return pstreambuf->rawin()->peek(); }
+  //   inline int peek() { return ptr->rawin()->peek(); }
   // The previous implementation does not seem to work, so we use this [Pascal]:
   
   inline int peek() 
   { 
-    int c = pstreambuf->rawin()->get(); 
-    pstreambuf->rawin()->unget(); 
+#if STREAMBUFVER == 1 
+    return ptr->peek();
+#else
+    int c = ptr->rawin()->get(); 
+    ptr->rawin()->unget(); 
     return c; 
+#endif
   }
   
+  inline PStream& putback(char c) 
+  { 
+#if STREAMBUFVER == 1 
+    ptr->putback(c);
+#else
+    ptr->rawin()->putback(c); 
+#endif
+    return *this; 
+  }
 
-  inline PStream& putback(char c) { pstreambuf->rawin()->putback(c); return *this; }
-  inline PStream& unget() { pstreambuf->rawin()->unget(); return *this; }
+#if STREAMBUFVER == 1 
+  // we don<t define unget. Use putback(c) instead.
+#else
+  inline PStream& unget() { ptr->rawin()->unget(); return *this; }
+#endif
+
+  inline PStream& unread(const char* p, streamsize n)
+  {
+#if STREAMBUFVER == 1 
+    ptr->unread(p,n);
+#else
+    PLERROR("unread not supported for STREAMBUFVER==0");
+#endif
+    return *this;
+  }
+
+  inline PStream& unread(const char* p)
+  { return unread(p,strlen(p)); }
+
+  inline PStream& unread(const string& s)
+  { return unread(s.data(),s.length()); }
+
+
   inline PStream& read(char* s, streamsize n) 
   { 
-    // The following line does not Work!!!! [Pascal]
-    //    pstreambuf->rawin()->read(s,n);
-    // So it's temporarily replaced by this (ugly and slow):
+#if STREAMBUFVER == 1 
+    ptr->read(s,n);
+    return *this;
 
+#else
+    // The following line does not Work!!!! [Pascal]
+    //    ptr->rawin()->read(s,n);
+    // So it's temporarily replaced by this (ugly and slow):
     while (n)
     {
       int c = get();
@@ -285,14 +396,15 @@ public:
       n--;
     }
     return *this; 
+#endif
   }
 
   inline PStream& read(string& s, streamsize n) 
   {
-    char* buf = new char(n+10);
+    char* buf = new char[n];
     read(buf, n);
-    string dummy(buf,n);
-    s = dummy;
+    s.assign(buf,n);
+    delete[] buf;
     return *this;
   }
 
@@ -308,22 +420,62 @@ public:
   //! The stopping character met is not extracted from the stream.
   streamsize readUntil(char* buf, streamsize n, const char* stop_chars);
 
-  inline PStream& write(const char* s, streamsize n) { pstreambuf->rawout()->write(s,n); return *this; }
-  inline PStream& put(char c) { pstreambuf->rawout()->put(c); return *this; }
+  inline PStream& write(const char* s, streamsize n) 
+  { 
+#if STREAMBUFVER == 1 
+    ptr->write(s,n);
+#else
+    ptr->rawout()->write(s,n); 
+#endif
+    return *this; 
+  }
+
+  inline PStream& put(char c) 
+  { 
+#if STREAMBUFVER == 1 
+    ptr->put(c);
+#else
+    ptr->rawout()->put(c);
+#endif
+    return *this;
+  }
+
   inline PStream& put(unsigned char c) { write(reinterpret_cast<char *>(&c), sizeof(c)); return *this; }
   inline PStream& put(int x) { return put((char)x); }
-  inline PStream& flush() { pstreambuf->rawout()->flush(); return *this; }
-  inline PStream& endl() { pstreambuf->rawout()->put('\n'); pstreambuf->rawout()->flush(); return *this; }
+
+  inline PStream& flush() 
+  { 
+#if STREAMBUFVER == 1 
+    ptr->flush();
+#else
+    ptr->rawout()->flush();
+#endif
+    return *this; 
+  }
+
+  inline PStream& endl() { put('\n'); flush(); return *this; }
   /******/
 
   // These are convenient method for writing raw strings (whatever the outmode):
-  inline PStream& write(const char* s) { (*pstreambuf->rawout()) << s; return *this; }
-  inline PStream& write(const string& s) { (*pstreambuf->rawout()) << s; return *this; }
+  inline PStream& write(const char* s) 
+  { 
+    write(s, strlen(s));
+    return *this; 
+  }
 
+  inline PStream& write(const string& s) 
+  { 
+    write(s.data(),s.length());
+    return *this; 
+  }
+
+#if STREAMBUFVER == 1 
+  // not the way to do it woth new PStreamBuf
+#else
   //! attach this stream to a POSIX file descriptor.
   inline void attach(int fd)
-  { pstreambuf->attach(fd); }
-
+  { ptr->attach(fd); }
+#endif
 
   // Useful skip functions
 
@@ -392,10 +544,10 @@ public:
   PStream& operator<<(unsigned short x);
   PStream& operator<<(pl_pstream_manip func) { return (*func)(*this); }
  
-#ifdef MARKABLE_STREAM_HACK
-  //! returns the markable input buffer
+#if STREAMBUFVER == 0
+   //! returns the markable input buffer
   //! DEPRECATED: TO BE REMOVED SOON, DO NOT USE!
-  inline pl_streambuf* pl_rdbuf() { return pstreambuf->pl_rdbuf(); }
+  inline pl_streambuf* pl_rdbuf() { return ptr->pl_rdbuf(); }
 #endif
 
 };
@@ -1075,36 +1227,6 @@ operator<<(PStream &out, const set<T> &v)
 { writeSet(out, v); return out; }
 
 
-
-// ****************************************
-// *** Generic save and load operations ***
-// ****************************************
-
-template <class T> 
-inline void load(const string &filepath, T &x)
-{
-    ifstream in_(filepath.c_str());
-    if (!in_)
-        PLERROR("Could not open file \"%s\" for reading", filepath.c_str());
-    PStream in(&in_);
-    in >> x;
-}
-
-//! If necessary, missing directories along the filepath will be created
-template<class T> 
-inline void save(const string& filepath, const T& x)
-{ 
-  force_mkdir_for_file(filepath);
-
-  ofstream out_(filepath.c_str()); 
-  if(!out_)
-    PLERROR("Could not open file %s for writing",filepath.c_str());
-  
-  PStream out(&out_);
-  out << x;
-}
-
-
 // **** Useful PStream classes... ****
 // (these can be used similarly to  ifstream, ofstream...)
 
@@ -1138,5 +1260,7 @@ public:
 
 
 } // namespace PLearn
+
+#include <plearn/io/load_and_save.h>
 
 #endif //ndef PStream_INC

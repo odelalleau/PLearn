@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.30 2004/07/21 16:30:50 chrish42 Exp $
+   * $Id: Object.cc,v 1.31 2004/08/31 17:22:40 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -251,7 +251,7 @@ void Object::newread(PStream &in)
   int c = in.get();
   if (c != ')') 
     {
-      in.unget();
+      in.putback(c);
       for (;;) 
         {
           // Read all specified options
@@ -267,9 +267,22 @@ void Object::newread(PStream &in)
           if (it!=options.end() && (*it)->shouldBeSkipped() )
             (*it)->read_and_discard(in);
           else
-            readOptionVal(in, optionname);
-
+            {
+              cerr << "Reading option: " << optionname << endl;
+              readOptionVal(in, optionname);
+              cerr << "returned from reading optiion " << optionname << endl;
+            }
           in.skipBlanksAndCommentsAndSeparators();
+          /*
+          in.skipBlanksAndCommentsAndSeparators();
+          in.skipBlanksAndCommentsAndSeparators();
+          in.skipBlanksAndCommentsAndSeparators();
+          in.skipBlanksAndCommentsAndSeparators();
+          cerr << "PEEK1: " << in.peek() << endl;
+          in.peek(); in.peek(); in.peek();
+          cerr << "PEEK2: " << in.peek() << endl;
+          */
+
           if (in.peek() == ')') 
             {
               in.get();
@@ -339,14 +352,17 @@ Object::~Object()
 
 Object* loadObject(const string &filename)
 {
-    ifstream in_(filename.c_str());
-    if (!in_)
-        PLERROR("loadObject() - Could not open file \"%s\" for reading", filename.c_str());
-
-    PStream in(&in_);
-    Object *o = readObject(in);
-    o->build();
-    return o;
+#if STREAMBUFVER == 1
+  PStream in = openFile(filename, "r", PStream::plearn_ascii);
+#else
+  ifstream in_(filename.c_str());
+  if (!in_)
+    PLERROR("loadObject() - Could not open file \"%s\" for reading", filename.c_str());
+  PStream in(&in_);
+#endif
+  Object *o = readObject(in);
+  o->build();
+  return o;
 }
 
 Object* macroLoadObject(const string &filename, map<string, string>& vars)
@@ -370,27 +386,15 @@ Object* readObject(PStream &in, unsigned int id)
     in.skipBlanksAndCommentsAndSeparators();
 
     //pl_streambuf* buf = dynamic_cast<pl_streambuf*>(in.rdbuf());
+#if STREAMBUFVER == 0
     pl_streammarker fence(in.pl_rdbuf());
+#endif
+
+    string head;
 
     int c = in.peek();
     if (c == '<')  // Old (deprecated) serialization mode 
-      {
-        in.get(); // Eat '<'
-        string cl;
-        in.getline(cl, '>');
-        cl = removeblanks(cl);
-        if (cl == "null")
-            return 0;
-        size_t p = cl.find(":");
-        if (p != string::npos)
-            cl = cl.substr(0, p);
-        o = TypeFactory::instance().newObject(cl);
-        if (!o)
-            PLERROR("readObject() - Type \"%s\" not declared in TypeFactory map (did you do a proper DECLARE_NAME_AND_DEEPCOPY?)", cl.c_str());
-        // Go back before the header starts
-        in.pl_rdbuf()->seekmark(fence);
-        o->read(in._do_not_use_this_method_rawin_());
-      } 
+      PLERROR("Old deprecated serialization mode starting with '<' no longer supported.");
     else if (c == '*') // Pointer to object
       {
       in >> o;
@@ -415,7 +419,11 @@ Object* readObject(PStream &in, unsigned int id)
         o = TypeFactory::instance().newObject(cl);
         if (!o)
           PLERROR("readObject() - Type \"%s\" not declared in TypeFactory map (did you do a proper DECLARE_NAME_AND_DEEPCOPY?)", cl.c_str());
+#if STREAMBUFVER == 0
         in.pl_rdbuf()->seekmark(fence);
+#else
+        in.unread(cl+'(');
+#endif
         o->newread(in);
       }
        

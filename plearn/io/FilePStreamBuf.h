@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilePStreamBuf.h,v 1.1 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: FilePStreamBuf.h,v 1.2 2004/08/31 17:22:40 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -95,16 +95,7 @@ protected:
   virtual streamsize read_(char* p, streamsize n);
 
   //! writes exactly n characters from p (unbuffered, must flush)
-  virtual void write_(char* p, streamsize n);
-
-  //! should change the position of the next read/write (seek)
-  //! Default version issues a PLERROR
-  virtual void setpos_(streampos pos);
-  
-  //! should return the position of the next read/write in 
-  //! number of bytes from start of file.
-  //! Default version issues a PLERROR
-  virtual streampos getpos_();
+  virtual void write_(const char* p, streamsize n);
 
 
 public:

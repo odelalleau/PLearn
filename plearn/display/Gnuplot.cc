@@ -37,13 +37,14 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.cc,v 1.11 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id: Gnuplot.cc,v 1.12 2004/08/31 17:22:40 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "Gnuplot.h"
 #include <plearn/math/TMat_maths.h>
+#include <plearn/io/FdPStreamBuf.h>
 //#include <sys/types.h>
 //#include <sys/stat.h>
 
@@ -64,7 +65,11 @@ Gnuplot::Gnuplot(int nb_max_plot)
   : tmpfilenames(nb_max_plot,"/tmp/","gp"),
     gp_cstream(popen("gnuplot","w"))  //, tognuplot(fileno(gp_cstream))
 {
+#if STREAMBUFVER == 0
   tognuplot.attach(fileno(gp_cstream));
+#else
+  tognuplot = new FdPStreamBuf(-1, fileno(gp_cstream));
+#endif
   tognuplot.outmode=PStream::raw_ascii;
   tognuplot << "set data style lines" << endl;
 }
@@ -73,7 +78,11 @@ Gnuplot::Gnuplot(const Vec& v1, const string& opt1)
   : tmpfilenames(5,"/tmp/","gp"),
     gp_cstream(popen("gnuplot","w")) //, tognuplot(fileno(gp_cstream))
 {
+#if STREAMBUFVER == 0
   tognuplot.attach(fileno(gp_cstream));
+#else
+  tognuplot = new FdPStreamBuf(-1, fileno(gp_cstream));
+#endif
   tognuplot.outmode=PStream::raw_ascii;
   tognuplot << "set data style lines" << endl;
   plot(v1,opt1);
@@ -83,7 +92,11 @@ Gnuplot::Gnuplot(const Vec& v1, const string& opt1, const Vec& v2, const string&
   : tmpfilenames(5,"/tmp/","gp"),
     gp_cstream(popen("gnuplot","w")) //,    tognuplot(fileno(gp_cstream))
 {
+#if STREAMBUFVER == 0
   tognuplot.attach(fileno(gp_cstream));
+#else
+  tognuplot = new FdPStreamBuf(-1, fileno(gp_cstream));
+#endif
   tognuplot.outmode=PStream::raw_ascii;
   tognuplot << "set data style lines" << endl;
   plot(v1,opt1,v2,opt2);
@@ -93,7 +106,11 @@ Gnuplot::Gnuplot(const Vec& v1, const string& opt1, const Vec& v2, const string&
   : tmpfilenames(5,"/tmp/","gp"),
     gp_cstream(popen("gnuplot","w")) //,    tognuplot(fileno(gp_cstream))
 {
+#if STREAMBUFVER == 0
   tognuplot.attach(fileno(gp_cstream));
+#else
+  tognuplot = new FdPStreamBuf(-1, fileno(gp_cstream));
+#endif
   tognuplot.outmode=PStream::raw_ascii;
   tognuplot << "set data style lines" << endl;
   plot(v1,opt1,v2,opt2,v3,opt3);

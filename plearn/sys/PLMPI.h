@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLMPI.h,v 1.7 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: PLMPI.h,v 1.8 2004/08/31 17:22:41 plearner Exp $
    * AUTHORS: Pascal Vincent 
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -57,6 +57,11 @@
 // norman: changed to standard calls
 #include <iostream>
 #include <fstream>
+#include <plearn/io/PStream.h>
+
+#if STREAMBUFVER == 1
+#include <plearn/io/FdPStreamBuf.h>
+#endif
 
 namespace PLearn {
 using namespace std;
@@ -327,9 +332,15 @@ typedef ofstream pofstream;
 
 inline void PLMPI::init(int* argc, char*** argv)
   {
+#if STREAMBUFVER == 0
     mycout(&cout);//.rdbuf(cout.rdbuf());
     mycerr(&cerr);//.rdbuf(cerr.rdbuf());
     mycin(&cin);//.rdbuf(cin.rdbuf());
+#elif STREAMBUFVER == 1
+    mycin = new FdPStreamBuf(0, -1);
+    mycout = new FdPStreamBuf(-1, 1);
+    mycerr = new FdPStreamBuf(-1, 2, false, false, 0, 0, 0);
+#endif
 
 #if USING_MPI
     MPI_Init( argc, argv );

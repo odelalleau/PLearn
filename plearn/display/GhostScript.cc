@@ -37,12 +37,13 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.cc,v 1.9 2004/02/29 16:44:05 nova77 Exp $
+   * $Id: GhostScript.cc,v 1.10 2004/08/31 17:22:40 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "GhostScript.h"
+#include <plearn/io/FdPStreamBuf.h>
 
 #ifdef WIN32
 #include <io.h>
@@ -85,7 +86,11 @@ using namespace std;
     sprintf(command_string,"gs -sDEVICE=x11 -g%d%c%d > /dev/null",width,'x',height);
 
     gs_cstream = popen(command_string,"w");
+#if STREAMBUFVER == 0
     togs.attach(fileno(gs_cstream));
+#else
+    togs = new FdPStreamBuf(-1, fileno(gs_cstream));
+#endif
     togs.outmode=PStream::raw_ascii;
   }
 
@@ -94,7 +99,11 @@ using namespace std;
     // :gs_cstream(0), togs(filename.c_str())
   {
     gs_cstream= fopen(filename.c_str(), "w");
+#if STREAMBUFVER == 0
     togs.attach(fileno(gs_cstream));
+#else
+    togs = new FdPStreamBuf(-1, fileno(gs_cstream));
+#endif
     togs.outmode=PStream::raw_ascii;
     togs << "%!PS-Adobe-2.0 EPSF-2.0" << endl;
     togs << "%%BoundingBox: " << x1 << " " << y1 << " " << x2 << " " << y2 << endl;

@@ -37,14 +37,132 @@
 import sys
 import os
 import string
-import upackages
+import urllib
+
+upackagedir = os.getenv('UPACKAGEDIR',os.path.join(os.getenv(os.getenv('HOME')),'.upackage'))
+
+def check_setup():
+    """Checks setup for upackage."""
+    if not os.path.isdir(upackagedir):
+        mkdir(upackagedir)
+
+    configfile = os.path.join(upackagedir,'config.py')
+    if not os.path.isfile(configfile):
+        f = open(configfile,'w')
+        f.write("""
+upackage_sources = [  
+'/home/pascal/mypackages',
+'upackdb://www.upackages.org/upackdb',
+'ftp://ftp.upackages.org/upackages'
+]
+""")
+        f.close()
+        print "Created "+configfile
+        print "You may edit it to configure the behavior of upackage or to add sources of upackages."
+
+    # make sure we have a upackages sub-directory
+    mkdir(os.path.join(upackagedir,'upackages'))
+
+    improper_environment = False
+    if upackagedir not in string.split(os.getenv('PYTHONPATH'),':'):        
+        print 'You must add '+upackagedir+' to the PYTHONPATH environment variable.'
+        improper_environment = True
+
+    platform = 'intel-linux'
+    prefixpath = os.path.join(os.path.join(upackagedir,'local'),platform)
+    # make sure we have a local/platform sub-directory
+    mkdir(prefixpath)
+
+    libdir = os.path.join(prefixpath,'lib')
+    if libdir not in string.split(os.getenv('LD_LIBRARY_PATH'),':'):
+        print 'You must add '+libdir+' to the LD_LIBRARY_PATH environment variable.'
+        improper_environment = True
+
+    if libdir not in string.split(os.getenv('LIBRARY_PATH'),':'):
+        print 'You must add '+libdir+' to the LIBRARY_PATH environment variable.'
+        improper_environment = True
+
+    includedir = os.path.join(prefixpath,'include')
+    if includedir not in string.split(os.getenv('CPATH'),':'):
+        print 'You must add '+includedir+' to the CPATH environment variable.'
+        improper_environment = True
+
+    execpath = string.split(os.getenv('PATH'),':')
+    bindir = os.path.join(prefixpath,'bin')
+    if bindir not in execpath:
+        print 'You must add '+bindir+' to the PATH environment variable.'
+        improper_environment = True
+
+    if improper_environment:
+        print """\n
+Please edit your startup file (.cshrc or .profile)
+and define your environment variables correctly.
+Then start a new shell and rerun upackage."""
+        sys.exit()
+
+check_setup()
+
+# include config.py
+execfile(os.path.join(upackagedir,'config.py'))
+
+
+
+def ask_upackdb_for_package_url(upackdburl,packagename):    
+    raise Error('Could not contact upackage database '+upackdburl)
+    raise Error('Package '+packagename+' is not known by database '+upackdburl)
+
+def get_upack_version(upack_url):
+    """Attempts to open the given upack and reads its first line,
+    which should be like: upack_version = '2004.06.18'
+    If successful the obtained version string is returned.
+    Otherwise some exception is raised.
+    """
+    f = urllib.urlopen(url)    
+    firstline = f.readline()    
+    tokens = string.split(firstline, " =\t\"\'")
+    if len(tokens!=2) or tokens[0]!='upack_version':
+        raise Error('First line of upackage '+upack_url+" appears invalid. It should be ex: upack_version = '2004.03.29' instead of "+firstline)
+    return tokens[1]
 
 def get_package(packagename):
+    packagepath = os.path.join(os.path.join(upackagedir,'upackages'),packagename+'.py')
+
+    oldversion = ''
+    try: oldversion = get_upack_version(packagepath)
+    except: pass
+    
+    for source in upackage_sources:
+        if string_begins_with(source, 'upackdb:'):
+            url = ''
+            try: url = ask_upackdb_for_package_url(source,packagename)
+            except: pass
+
+            if url!='': # The upackage db query returned a url where to fetch the .upack file from
+                newversion = ''
+                try: newversion = get_upack_version(url)
+                except: pass
+                
+                if newversion!='': # found a .upack file of which we were able to read the version
+                    if oldversion='' or compare_versions(newversion,oldversion)>0:
+                        download(url, packagepath)
+                    break
+
+        elif string_begins_with(source, 'ftp:') or string_begins_with(source,'http:'):
+            url = source+'/'+packagename+'.upack'
+            newversion = ''
+            try: newversion = get_upack_version(url)
+            except: pass
+
+            if newversion!='': # found a .upack file of which we were able to read the version
+                if oldversion='' or compare_versions(newversion,oldversion)>0:
+                    download(url, packagepath)
+                break
+
     exec 'import upackages.'+packagename
     exec 'package = upackages.'+packagename
     return package
 
-def install_single_package(packagename, version, prefixdir):    
+def install_single_package(packagename, version, prefixdir):
     upackages.make_usr_structure(prefixdir)
     package = get_package(packagename)
     srcdir = prefixdir+'/src/'+packagename+'/'+version

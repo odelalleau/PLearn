@@ -68,16 +68,17 @@ PStream& ws(PStream& in)
 }
 
 
-  //! default ctor: the stream is unusable ...
-PStream::PStream()
-    :pstreambuf(new StdPStreamBuf),
+PStream::PStream(streambuftype* sb)
+    :inherited(sb),
      inmode(plearn_ascii), 
      outmode(plearn_ascii), 
      implicit_storage(true), compression_mode(compr_none)
   {}
+
+
   //! ctor. from an istream (I)
 PStream::PStream(istream* pin_, bool own_pin_)
-    :pstreambuf(new StdPStreamBuf(pin_,own_pin_)),
+    :inherited(new StdPStreamBuf(pin_,own_pin_)),
      inmode(plearn_ascii), 
      outmode(plearn_ascii),
      implicit_storage(true), compression_mode(compr_none)
@@ -85,7 +86,7 @@ PStream::PStream(istream* pin_, bool own_pin_)
   //! ctor. from an ostream (O)
 
 PStream::PStream(ostream* pout_, bool own_pout_)
-    :pstreambuf(new StdPStreamBuf(pout_,own_pout_)),
+    :inherited(new StdPStreamBuf(pout_,own_pout_)),
      inmode(plearn_ascii), 
      outmode(plearn_ascii),
      implicit_storage(true), compression_mode(compr_none)
@@ -93,7 +94,7 @@ PStream::PStream(ostream* pout_, bool own_pout_)
 
   //! ctor. from an iostream (IO)
 PStream::PStream(iostream* pios_, bool own_pios_)
-    :pstreambuf(new StdPStreamBuf(pios_,own_pios_)),
+    :inherited(new StdPStreamBuf(pios_,own_pios_)),
      inmode(plearn_ascii), 
      outmode(plearn_ascii),
      implicit_storage(true), compression_mode(compr_none)
@@ -101,7 +102,7 @@ PStream::PStream(iostream* pios_, bool own_pios_)
 
   //! ctor. from an istream and an ostream (IO)
 PStream::PStream(istream* pin_, ostream* pout_, bool own_pin_, bool own_pout_)
-    :pstreambuf(new StdPStreamBuf(pin_,pout_,own_pin_,own_pout_)),
+    :inherited(new StdPStreamBuf(pin_,pout_,own_pin_,own_pout_)),
      inmode(plearn_ascii), 
      outmode(plearn_ascii),
      implicit_storage(true), compression_mode(compr_none)
@@ -123,7 +124,7 @@ streamsize PStream::readUntil(char* buf, streamsize n, char stop_char)
           break;
         if((char)c == stop_char)
           {
-            unget();
+            putback(c);
             break;
           }
         *buf++ = (char)c;
@@ -144,7 +145,7 @@ streamsize PStream::readUntil(char* buf, streamsize n, const char* stop_chars)
           break;
         if(strchr(stop_chars, c))
           {
-            unget();
+            putback(c);
             break;
           }
         *buf++ = (char)c;
@@ -203,7 +204,7 @@ void PStream::skipAll(const char* chars_to_skip)
   while(c!=EOF && strchr(chars_to_skip, c))
     c = get();
   if(c!=EOF)
-    unget();
+    putback(c);
 }
 
 // reads everything until '\n' (also consumes the '\n')
@@ -220,7 +221,7 @@ void PStream::skipBlanks()
   while(c!=EOF && (c==' ' || c=='\t' || c=='\n' || c=='\r'))
     c = get();
   if(c!=EOF)
-    unget();
+    putback(c);
 }
 
 void PStream::skipBlanksAndComments()
@@ -235,7 +236,7 @@ void PStream::skipBlanksAndComments()
       c = get();
     }
   if(c!=EOF)
-    unget();
+    putback(c);
 }
 
 void PStream::skipBlanksAndCommentsAndSeparators()
@@ -250,7 +251,7 @@ void PStream::skipBlanksAndCommentsAndSeparators()
       c = get();
     }
   if(c!=EOF)
-    unget();
+    putback(c);
 }
 
 void PStream::writeAsciiHexNum(unsigned char x)
@@ -406,7 +407,7 @@ void PStream::readAsciiNum(long &x)
     x = x*10 + c-'0';
     c = get();
   }
-  unget();
+  putback(c);
   x *= pos_or_neg;
 }
 
@@ -420,7 +421,7 @@ void PStream::readAsciiNum(unsigned long &x)
     x = x*10 + c-'0';
     c = get();
   }
-  unget();
+  putback(c);
 }
 
 void PStream::readAsciiNum(float &x)
@@ -463,18 +464,17 @@ void PStream::readAsciiNum(double &x)
           c = get();
         }
       tmpbuf[l] = '\0';
-      unget();
+      putback(c);
       sscanf(tmpbuf,"%lf",&x);
       break;
     }
 }
 
-
 PStream& PStream::operator=(const PStream& pios)
 { 
   if(this != &pios)
     {
-      pstreambuf = pios.pstreambuf;
+      inherited::operator=((const inherited&)pios);
       inmode = pios.inmode;
       outmode = pios.outmode;
       implicit_storage = pios.implicit_storage;
@@ -581,7 +581,7 @@ PStream& PStream::operator>>(char *x)
       }
       x[i++] = 0;
       if(!isspace(c))
-        unget();
+        putback(c);
     }
       break;
     case PStream::plearn_ascii:
@@ -606,7 +606,7 @@ PStream& PStream::operator>>(char *x)
         if(c==EOF)
           PLERROR("In read(istream&, char*) unterminated quoted string");
         if(!isspace(c))
-          unget();
+          putback(c);
       }
       else // it's a single word without quotes
       {
@@ -617,7 +617,7 @@ PStream& PStream::operator>>(char *x)
           c= get();
         }
         if(!isspace(c))
-          unget();
+          putback(c);
       }
       x[i++] = 0;
     }
@@ -647,7 +647,7 @@ PStream& PStream::operator>>(string& x)
         c = get();
       }
       if(!isspace(c))
-        unget();
+        putback(c);
     }
       break;
     case PStream::plearn_ascii:
@@ -669,8 +669,9 @@ PStream& PStream::operator>>(string& x)
         }
         if(c==EOF)
           PLERROR("In read(istream&, string&) unterminated quoted string");
-        if(!isspace(get())) // skip following blank if any
-          unget();
+        c = get();
+        if(!isspace(c)) // skip following blank if any
+          putback(c);
       }
       else // it's a single word without quotes
       {
@@ -682,7 +683,7 @@ PStream& PStream::operator>>(string& x)
           c= get();
         }
         if(!isspace(c))
-          unget();
+          putback(c);
       }
     }
       break;
@@ -719,7 +720,7 @@ PStream& PStream::operator>>(int &x)
       }
       else  // plearn_ascii
       {
-        unget();
+        putback(c);
         readAsciiNum(x);
       }
       break;
@@ -757,7 +758,7 @@ PStream& PStream::operator>>(unsigned int &x)
       }
       else  // plearn_ascii
       {
-        unget();
+        putback(c);
         readAsciiNum(x);
       }
       break;
@@ -795,7 +796,7 @@ PStream& PStream::operator>>(long &x)
       }
       else  // plearn_ascii
       {
-        unget();
+        putback(c);
         readAsciiNum(x);
       }
       break;
@@ -833,7 +834,7 @@ PStream& PStream::operator>>(unsigned long &x)
       }
       else  // plearn_ascii
       {
-        unget();
+        putback(c);
         readAsciiNum(x);
       }
       break;
@@ -871,7 +872,7 @@ PStream& PStream::operator>>(short &x)
       }
       else  // plearn_ascii
       {
-        unget();
+        putback(c);
         readAsciiNum(x);
       }
       break;
@@ -909,7 +910,7 @@ PStream& PStream::operator>>(unsigned short &x)
       }
       else  // plearn_ascii
       {
-        unget();
+        putback(c);
         readAsciiNum(x);
       }
       break;
@@ -977,7 +978,7 @@ PStream& PStream::operator>>(float &x)
       }
       else  // plearn_ascii
       {
-        unget();
+        putback(c);
         readAsciiNum(x);
       }
       break;
@@ -1015,7 +1016,7 @@ PStream& PStream::operator>>(double &x)
       }
       else  // ascii
       {
-        unget();
+        putback(c);
         readAsciiNum(x);
       }
       break;

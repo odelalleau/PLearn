@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StdPStreamBuf.cc,v 1.1 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: StdPStreamBuf.cc,v 1.2 2004/08/31 17:22:40 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -48,59 +48,64 @@ using namespace std;
 
 
   StdPStreamBuf::StdPStreamBuf()
-    :pin(0), pout(0), own_pin(false), own_pout(false)
-#ifdef MARKABLE_STREAM_HACK
+    :PStreamBuf(false,false),
+     pin(0), pout(0), own_pin(false), own_pout(false)
+#if STREAMBUFVER == 0
     , original_bufin(0), original_bufout(0)
 #endif
   {}
 
   //! ctor. from an istream (I)
   StdPStreamBuf::StdPStreamBuf(istream* pin_, bool own_pin_)
-    :pin(pin_), pout(0), own_pin(own_pin_), own_pout(false)
-#ifdef MARKABLE_STREAM_HACK
+    :PStreamBuf(true,false),
+     pin(pin_), pout(0), own_pin(own_pin_), own_pout(false)
+#if STREAMBUFVER == 0
     , original_bufin(pin_->rdbuf()), original_bufout(0)
 #endif
   { 
-#ifdef MARKABLE_STREAM_HACK
+#if STREAMBUFVER == 0
     initInBuf(); 
 #endif
   }
 
   //! ctor. from an ostream (O)
   StdPStreamBuf::StdPStreamBuf(ostream* pout_, bool own_pout_)
-    :pin(0), pout(pout_), own_pin(false), own_pout(own_pout_)
-#ifdef MARKABLE_STREAM_HACK
+    :PStreamBuf(false,true),
+     pin(0), pout(pout_), own_pin(false), own_pout(own_pout_)
+#if STREAMBUFVER == 0
     , original_bufin(0), original_bufout(pout_->rdbuf())
 #endif
   {}
 
   //! ctor. from an iostream (IO)
   StdPStreamBuf::StdPStreamBuf(iostream* pios_, bool own_pios_)
-    :pin(pios_), pout(pios_), own_pin(own_pios_), own_pout(own_pios_)
-#ifdef MARKABLE_STREAM_HACK
+    :PStreamBuf(true,true),
+     pin(pios_), pout(pios_), own_pin(own_pios_), own_pout(own_pios_)
+#if STREAMBUFVER == 0
     , original_bufin(pios_->rdbuf()), original_bufout(pios_->rdbuf())
 #endif
   { 
-#ifdef MARKABLE_STREAM_HACK
+#if STREAMBUFVER == 0
     initInBuf(); 
 #endif
   }
 
   //! ctor. from an istream and an ostream (IO)
   StdPStreamBuf::StdPStreamBuf(istream* pin_, ostream* pout_, bool own_pin_, bool own_pout_)
-    :pin(pin_), pout(pout_), own_pin(own_pin_), own_pout(own_pout_)
-#ifdef MARKABLE_STREAM_HACK
+    :PStreamBuf(true,true),
+     pin(pin_), pout(pout_), own_pin(own_pin_), own_pout(own_pout_)
+#if STREAMBUFVER == 0
     , original_bufin(pin_->rdbuf()), original_bufout(pout_->rdbuf())
 #endif
   { 
-#ifdef MARKABLE_STREAM_HACK
+#if STREAMBUFVER == 0
     initInBuf(); 
 #endif
   }
 
   StdPStreamBuf::~StdPStreamBuf()
   {
-#ifdef MARKABLE_STREAM_HACK
+#if STREAMBUFVER == 0
     // am I the only PStream using this buffer?
     if(the_inbuf && 1 == the_inbuf->usage())
       {// reset underlying streams's buffers before destroying the_inbuf
@@ -112,7 +117,7 @@ using namespace std;
     if(own_pout && pout) delete pout; // delete pout if we created it
   }
 
-#ifdef MARKABLE_STREAM_HACK
+#if STREAMBUFVER == 0
 void StdPStreamBuf::initInBuf()
   {
     if(pin)
@@ -128,6 +133,7 @@ void StdPStreamBuf::initInBuf()
 
   void StdPStreamBuf::setIn(istream* pin_, bool own_pin_)
   {
+#if STREAMBUFVER == 0
     if(pin && original_bufin) pin->rdbuf(original_bufin);
     if(own_pin) delete pin;
     pin = pin_;
@@ -136,16 +142,21 @@ void StdPStreamBuf::initInBuf()
     if(pin)
       {
         original_bufin = pin->rdbuf();
-#ifdef MARKABLE_STREAM_HACK
         initInBuf();
-#endif
       }
     else
       original_bufin = 0;
+#else
+    if(own_pin) delete pin;
+    pin = pin_;
+    own_pin = own_pin_;
+#endif
+    is_readable = (pin_!=0);
   }
 
   void StdPStreamBuf::setOut(ostream* pout_, bool own_pout_)
   {
+#if STREAMBUFVER == 0
     if(pout && original_bufout) pout->rdbuf(original_bufout);
     if(own_pout) delete pout;
     pout= pout_;
@@ -154,8 +165,16 @@ void StdPStreamBuf::initInBuf()
       original_bufout= pout->rdbuf();
     else
       original_bufout=0;      
+#else
+    if(own_pout) delete pout;
+    pout= pout_;
+    own_pout = own_pout_;
+#endif    
+    is_writable = (pout_!=0);
   }
+  
 
+#if STREAMBUFVER == 0
   //! attach: "attach" to a POSIX file descriptor.
   void StdPStreamBuf::attach(int fd)
   {
@@ -176,31 +195,22 @@ void StdPStreamBuf::initInBuf()
         pout= new ostream(the_fdbuf);
       }
   }
+#endif
 
   StdPStreamBuf::streamsize StdPStreamBuf::read_(char* p, streamsize n)
   {
-    PLERROR("StdPStreamBuf::read_ not yet implemented");
-    return 0;
+    if(pin==0)
+      PLERROR("StdPStreamBuf::read_ with pin==0");
+    return pin->readsome(p,n);
   }
 
   //! writes exactly n characters from p (unbuffered, must flush)
-  void StdPStreamBuf::write_(char* p, streamsize n)
+  void StdPStreamBuf::write_(const char* p, streamsize n)
   {
-    PLERROR("StdPStreamBuf::write_ not yet implemented");
-  }
-
-  //! should change the position of the next read/write (seek)
-  void StdPStreamBuf::setpos_(streampos pos)
-  {
-    PLERROR("StdPStreamBuf::setpos_ not yet implemented");
-  }
-  
-  //! should return the position of the next read/write in 
-  //! number of bytes from start of file.
-  StdPStreamBuf::streampos StdPStreamBuf::getpos_()
-  {    
-    PLERROR("StdPStreamBuf::getpos_ not yet implemented");
-    return 0;
+    if(pout==0)      
+      PLERROR("StdPStreamBuf::write_ with pout==0");
+    pout->write(p,n);
+    pout->flush();
   }
 
 } // end of namespace PLearn

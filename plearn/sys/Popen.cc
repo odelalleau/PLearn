@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: Popen.cc,v 1.7 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: Popen.cc,v 1.8 2004/08/31 17:22:41 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,6 +49,11 @@
 #include <plearn/base/stringutils.h>
 #include "Popen.h"
 #include <errno.h>
+
+#if STREAMBUFVER == 1 
+#include <plearn/io/FdPStreamBuf.h>
+#endif
+
 
 namespace PLearn {
 using namespace std;
@@ -109,8 +114,13 @@ vector<string> execute(const string& command)
         close(fromcommand[1]);
         fdout = tocommand[1];
         fdin = fromcommand[0];
+#if STREAMBUFVER == 1 
+        in = new FdPStreamBuf(fdin, fdout);
+        out = in;
+#else
         in.attach(fdin);
         out.attach(fdout);
+#endif
       }    
   }
 
@@ -142,8 +152,13 @@ vector<string> execute(const string& command)
         close(fromcommand[1]);
         fdout = tocommand[1];
         fdin = fromcommand[0];
+#if STREAMBUFVER == 1 
+        in = new FdPStreamBuf(fdin, fdout);
+        out = in;
+#else
         in.attach(fdin);
         out.attach(fdout);
+#endif
       }    
   }
 

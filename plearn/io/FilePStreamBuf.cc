@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilePStreamBuf.cc,v 1.1 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: FilePStreamBuf.cc,v 1.2 2004/08/31 17:22:40 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -124,30 +124,12 @@ FilePStreamBuf::FilePStreamBuf()
   }
 
   //! writes exactly n characters from p (unbuffered, must flush)
-  void FilePStreamBuf::write_(char* p, streamsize n)
+  void FilePStreamBuf::write_(const char* p, streamsize n)
   {
     streamsize nwritten = fwrite(p, 1, n, f);
     if(nwritten!=n)
       PLERROR("In FilePStreamBuf::write_ failed to write the requested number of bytes");
     fflush(f);
-  }
-
-  //! should change the position of the next read/write (seek)
-  void FilePStreamBuf::setpos_(streampos pos)
-  {
-    int res = fseek(f, (long)pos, SEEK_SET);
-    if(res<0)
-      PLERROR("In FilePStreamBuf::setpos_(%d) : fseek failed, returned %d",pos,res);
-  }
-  
-  //! should return the position of the next read/write in 
-  //! number of bytes from start of file.
-  FilePStreamBuf::streampos FilePStreamBuf::getpos_()
-  {    
-    long pos = ftell(f);
-    if(pos<0)
-      PLERROR("In FilePStreamBuf::getpos_ : ftell failed, returned %d",pos);
-    return pos;
   }
 
   void FilePStreamBuf::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
