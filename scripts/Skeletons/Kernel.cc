@@ -97,4 +97,15 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   PLERROR("DERIVEDCLASS::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
+/* ### This method will be overridden if computations need to be done,
+   ### or to forward the call to another object.
+   ### In this case, be careful that it may be called BEFORE the build_()
+   ### method has been called, if the 'specify_dataset' option is used.
+////////////////////////////
+// setDataForKernelMatrix //
+////////////////////////////
+void DERIVEDCLASS::setDataForKernelMatrix(VMat the_data) {
+}
+*/
+
 } // end of namespace PLearn
