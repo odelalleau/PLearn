@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.17 2004/02/27 22:48:50 yoshua Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.18 2004/03/04 15:37:32 nova77 Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -459,8 +459,8 @@ void MultiInstanceNNet::train()
   if(pb)
     delete pb;
 
-  if (batch_size==0)
-    optimizer->verifyGradient(0.001);
+  //if (batch_size==0)
+  //  optimizer->verifyGradient(0.001);
 
   //output_and_target_to_cost->recomputeParents();
   //test_costf->recomputeParents();
