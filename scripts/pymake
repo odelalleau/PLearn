@@ -665,7 +665,7 @@ class FileInfo:
         for includefile in FileInfo.include_regexp.findall(text):
             #print 'Considering include ' + includefile
             for optlib in optional_libraries_defs:
-                if optlib.is_triggered_by(includefile):
+                if optlib.is_triggered_by(includefile) and not optlib in self.triggered_libraries:
                     self.triggered_libraries.append(optlib)
                     # print optlib.name + ' TRIGGERED BY INCLUDE ' + includefile + ' IN ' + self.filepath 
 
@@ -1098,9 +1098,6 @@ class FileInfo:
         return self.filebase+self.fileext
 
     def build_dependency_graph(self, dotfile, visited_files):
-        """completes the ccfiles_to_link list by appending the FileInfo
-        for all .cc files related to this file through includes and .cc
-        files corresponding to .h files"""
         if self not in visited_files:
             visited_files.append(self)
 
@@ -1405,13 +1402,14 @@ for target in otherargs:
     sourcedirs = unique(sourcedirs)
     
     if 'graph' in optionargs: # We just want to generate dependency graphs
+        cctarget = target
         if not isccfile(target):
             cctarget = get_ccpath_from_noncc_path(target)            
-            info = file_info(cctarget)
-            print 'Generating dependency graph in '+target+'.dot ...'
-            info.save_dependency_graph(target+'.dot')
-            print 'Generating dependency graph view in '+target+'.ps ...'
-            os.system('dot -T ps '+target+'.dot > '+target+'.ps')
+        info = file_info(cctarget)
+        print 'Generating dependency graph in '+target+'.dot ...'
+        info.save_dependency_graph(target+'.dot')
+        print 'Generating dependency graph view in '+target+'.ps ...'
+        os.system('dot -T ps '+target+'.dot > '+target+'.ps')
 
     else: # We want to compile and possibly link
         
