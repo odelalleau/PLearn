@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.20 2004/11/24 18:40:31 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.21 2005/01/25 14:35:22 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -114,10 +114,12 @@ void AddCostToLearner::declareOptions(OptionList& ol)
 
   declareOption(ol, "costs", &AddCostToLearner::costs, OptionBase::buildoption,
       "The costs to be added:\n"
+      " - 'class_error': 1 if (t != o), 0 otherwise\n"
       " - 'lift_output': used to compute the lift cost\n"
       " - 'cross_entropy': t*log(o) + (1-t)*log(1-o)\n"
       " - 'mse': the mean squared error (o - t)^2\n"
-      " - 'squared_norm_reconstruction_error': | ||i||^2 - ||o||^2 |");
+      " - 'squared_norm_reconstruction_error': | ||i||^2 - ||o||^2 |\n"
+      );
 
   declareOption(ol, "force_output_to_target_interval", &AddCostToLearner::force_output_to_target_interval, OptionBase::buildoption,
       "If set to 1 and 'rescale_output' is also set to 1, then the scaled output\n"
@@ -200,6 +202,7 @@ void AddCostToLearner::build_()
       }
     } else if (c == "mse") {
     } else if (c == "squared_norm_reconstruction_error") {
+    } else if (c == "class_error") {
     } else {
       PLERROR("In AddCostToLearner::build_ - Invalid cost requested (make sure you are using the new costs syntax)");
     }
@@ -361,6 +364,17 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
 #endif
       cross_entropy_prop.fprop();
       costs[ind_cost] = cross_entropy_var->valuedata[0];
+    } else if (c == "class_error") {
+      bool good = true;
+      for (int i = 0; i < desired_target.length(); i++)
+        if (desired_target[i] != sub_learner_output[i]) {
+          good = false;
+          break;
+        }
+      if (good)
+        costs[ind_cost] = 0;
+      else
+        costs[ind_cost] = 1;
     } else if (c == "mse") {
       costs[ind_cost] = powdistance(desired_target, sub_learner_output);
     } else if (c == "squared_norm_reconstruction_error") {
