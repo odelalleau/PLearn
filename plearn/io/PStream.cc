@@ -533,8 +533,6 @@ PStream& PStream::operator>>(char *x)
   {
     case PStream::raw_ascii:
     case PStream::raw_binary:
-    case PStream::plearn_ascii:
-    case PStream::plearn_binary:
     case PStream::pretty_ascii:
     {
       skipBlanksAndComments();
@@ -546,11 +544,49 @@ PStream& PStream::operator>>(char *x)
         x[i++] = static_cast<char>(c);
         c = get();
       }
+      x[i++] = 0;
       if(!isspace(c))
         unget();
     }
       break;
- 
+    case PStream::plearn_ascii:
+    case PStream::plearn_binary:
+    {
+      if(!x)
+        PLERROR("In PStream::operator>>(char*) character array must already be allocated to put the read string in");
+      skipBlanksAndComments();
+      int c = peek();
+      int i=0; // pos within the string
+      if(c=='"') // it's a quoted string "..."
+      {
+        c = get(); // skip the quote
+        c = get(); // get the next character
+        while(c!='"' && c!=EOF)
+        {
+          if(c=='\\') // escaped character
+            c = get();
+          x[i++]= static_cast<char>(c);
+          c = get();
+        }
+        if(c==EOF)
+          PLERROR("In read(istream&, char*) unterminated quoted string");
+        if(!isspace(c))
+          unget();
+      }
+      else // it's a single word without quotes
+      {
+        c= get();
+        while(c != EOF && wordseparators.find(c)==string::npos) // as long as we don't meet a wordseparator (or eof)...
+        {
+          x[i++]= static_cast<char>(c);
+          c= get();
+        }
+        if(!isspace(c))
+          unget();
+      }
+      x[i++] = 0;
+    }
+      break;
     default:
       PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
       break;
@@ -564,8 +600,6 @@ PStream& PStream::operator>>(string& x)
   {
     case PStream::raw_ascii:
     case PStream::raw_binary:
-    case PStream::plearn_ascii:
-    case PStream::plearn_binary:
     case PStream::pretty_ascii:
     {
       skipBlanksAndComments();
@@ -581,7 +615,42 @@ PStream& PStream::operator>>(string& x)
         unget();
     }
       break;
- 
+    case PStream::plearn_ascii:
+    case PStream::plearn_binary:
+    { 
+      skipBlanksAndComments();
+      int c = peek();
+      if(c=='"') // it's a quoted string "..."
+      {
+        x.resize(0);
+        c = get(); // skip the quote
+        c = get(); // get the next character
+        while(c!='"' && c!=EOF)
+        {
+          if(c=='\\') // escaped character
+            c = get();
+          x+= static_cast<char>(c);
+          c = get();
+        }
+        if(c==EOF)
+          PLERROR("In read(istream&, string&) unterminated quoted string");
+        if(!isspace(get())) // skip following blank if any
+          unget();
+      }
+      else // it's a single word without quotes
+      {
+        x.resize(0);      
+        c= get();
+        while(c != EOF && wordseparators.find(c)==string::npos) // as long as we don't meet a wordseparator (or eof)...
+        {
+          x+= static_cast<char>(c);
+          c= get();
+        }
+        if(!isspace(c))
+          unget();
+      }
+    }
+      break;
     default:
       PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
       break;
