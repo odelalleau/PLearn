@@ -35,6 +35,7 @@
 
 #include "EmpiricalDistribution.h"
 #include "random.h"
+#include "VMat_maths.h"
 
 namespace PLearn <%
 using namespace std;
@@ -113,15 +114,26 @@ double EmpiricalDistribution::cdf(const Vec& x) const
 Vec EmpiricalDistribution::expectation() const
 {
   Vec mean(inputsize_);
+  computeMean(data, mean);
+  return mean;
+/*
+  Vec mean(inputsize_);
   mean.fill(0);
   for(int i = 0; i<data.length(); i++){
     mean = mean + data(i);
   }
   return mean / data.length();
+*/
 }
 
 Mat EmpiricalDistribution::variance() const
 {
+
+  Vec mean(inputsize_);
+  Mat covar(inputsize_,inputsize_);
+  computeMeanAndCovar(data, mean, covar);
+  return covar;
+  /*
   Vec mean(inputsize_);
   mean = expectation();
   Mat covariance(inputsize_,inputsize_);
@@ -140,6 +152,7 @@ Mat EmpiricalDistribution::variance() const
     }
   }
   return covariance / (double) data.length();
+  */
 }
 
 
