@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.45 2003/10/16 13:26:43 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.46 2003/10/21 16:55:08 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,6 +63,7 @@ ConjGradientOptimizer::ConjGradientOptimizer(
     int n_updates, const string& filename, 
     int every_iterations)
   :inherited(n_updates, filename, every_iterations),
+  compute_cost(1),
   line_search_algo(1),
   find_new_direction_formula(1),
   starting_step_size(the_starting_step_size), restart_coeff(the_restart_coeff),
@@ -219,6 +220,9 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
     declareOption(ol, "low_enough", &ConjGradientOptimizer::low_enough, OptionBase::buildoption, 
                   "    Newton line search specific option : stopping criterion for the gradient.\n \
            We say the minimum has been found if we have abs(gradient) < low_enough.\n");
+
+    declareOption(ol, "compute_cost", &ConjGradientOptimizer::compute_cost, OptionBase::buildoption, 
+                  "    If set to 1, will compute and display the mean cost at each epoch.\n");
 
     inherited::declareOptions(ol);
 }
@@ -384,7 +388,7 @@ bool ConjGradientOptimizer::findDirection() {
     real dp = dot(delta, current_opp_gradient);
     real delta_n = pownorm(delta);
     if (abs(dp) > restart_coeff *delta_n ) {
-      cout << "Restart triggered !" << endl;
+      // cout << "Restart triggered !" << endl;
       gamma = 0;
     }
   }
@@ -453,27 +457,32 @@ real ConjGradientOptimizer::findMinWithQuadInterpol(
     real sum_c_x_2, real sum_g_x, real sum_c_x, real sum_c, real sum_g) {
 
   real q2 = q*q;
-  // TODO Optimize this a bit to make it faster
+  real sum_x_2_quad = sum_x_2 * sum_x_2;
+  real sum_x_quad = sum_x*sum_x;
+  real sum_x_2_sum_x = sum_x_2*sum_x;
+  real sum_x_2_sum_x_3 = sum_x_2*sum_x_3;
+  real sum_x_3_sum_x = sum_x_3*sum_x;
+  // TODO This could certainly be optimized more.
   real denom = 
-    (-4*q2*sum_x_2 - 3*q*sum_x_2*sum_x_2 + sum_x_2*sum_x_2*sum_x_2 + 
-     q*sum_x_3*sum_x_3 - q2*sum_x_4 - q*sum_x_2*sum_x_4 + 4*q*sum_x_3*sum_x - 
-     2*sum_x_2*sum_x_3*sum_x + 4*q*sum_x*sum_x + sum_x_4*sum_x*sum_x);
+    (-4*q2*sum_x_2 - 3*q*sum_x_2_quad + sum_x_2_quad*sum_x_2 + 
+     q*sum_x_3*sum_x_3 - q2*sum_x_4 - q*sum_x_2*sum_x_4 + 4*q*sum_x_3_sum_x - 
+     2*sum_x_2_sum_x_3*sum_x + 4*q*sum_x_quad + sum_x_4*sum_x_quad);
 
   real a =
     -(q2*sum_c_x_2 + 2*q2*sum_g_x - q*sum_c*sum_x_2 + 
-      q*sum_c_x_2*sum_x_2 + 2*q*sum_g_x*sum_x_2 - sum_c*sum_x_2*sum_x_2 - 
+      q*sum_c_x_2*sum_x_2 + 2*q*sum_g_x*sum_x_2 - sum_c*sum_x_2_quad - 
       q*sum_c_x*sum_x_3 - q*sum_g*sum_x_3 - 2*q*sum_c_x*sum_x - 
-      2*q*sum_g*sum_x + sum_c_x*sum_x_2*sum_x + sum_g*sum_x_2*sum_x + 
-      sum_c*sum_x_3*sum_x + 2*sum_c*sum_x*sum_x - sum_c_x_2*sum_x*sum_x - 
-      2*sum_g_x*sum_x*sum_x) / denom;
+      2*q*sum_g*sum_x + sum_c_x*sum_x_2_sum_x + sum_g*sum_x_2_sum_x + 
+      sum_c*sum_x_3_sum_x + 2*sum_c*sum_x_quad - sum_c_x_2*sum_x_quad - 
+      2*sum_g_x*sum_x_quad) / denom;
   
   real b =
     -(4*q*sum_c_x*sum_x_2 + 4*q*sum_g*sum_x_2 - 
-      sum_c_x*sum_x_2*sum_x_2 - sum_g*sum_x_2*sum_x_2 - q*sum_c_x_2*sum_x_3 - 
-      2*q*sum_g_x*sum_x_3 + sum_c*sum_x_2*sum_x_3 + q*sum_c_x*sum_x_4 + 
+      sum_c_x*sum_x_2_quad - sum_g*sum_x_2_quad - q*sum_c_x_2*sum_x_3 - 
+      2*q*sum_g_x*sum_x_3 + sum_c*sum_x_2_sum_x_3 + q*sum_c_x*sum_x_4 + 
       q*sum_g*sum_x_4 - 2*q*sum_c_x_2*sum_x - 4*q*sum_g_x*sum_x - 
-      2*sum_c*sum_x_2*sum_x + sum_c_x_2*sum_x_2*sum_x + 
-      2*sum_g_x*sum_x_2*sum_x - sum_c*sum_x_4*sum_x) / denom;
+      2*sum_c*sum_x_2_sum_x + sum_c_x_2*sum_x_2_sum_x + 
+      2*sum_g_x*sum_x_2_sum_x - sum_c*sum_x_4*sum_x) / denom;
 
   real xmin = -b / (2*a);
   return xmin;
@@ -933,26 +942,37 @@ real ConjGradientOptimizer::optimize()
     current_step_size = min(1.0, 2*df / dot(search_direction, current_opp_gradient));
     
     // Display results TODO ugly copy/paste from GradientOptimizer: to be cleaned ?
-    meancost += cost->value;
+    if (compute_cost) {
+      meancost += cost->value;
+    }
     if ((every!=0) && ((t+1)%every==0)) 
       // normally this is done every epoch
     { 
       //cerr << ">>>>>> nupdates= " << nupdates << "  every=" << every << "  sumofvar->nsamples=" << sumofvar->nsamples << endl;
-      meancost /= real(every);
+      if (compute_cost) {
+        meancost /= real(every);
+      }
       //if (decrease_constant != 0)
       //  cout << "at t=" << t << ", learning rate = " << learning_rate << endl;
-      // TODO put the line below depending on verbosity
-      // printStep(cout, t+1, meancost);
-      if (out)
+      if (compute_cost) {
+        printStep(cerr, t+1, meancost);
+      }
+      if (compute_cost && out) {
         printStep(out, t+1, meancost);
-      bool early_stop_mesure = measure(t+1,meancost); 
+      }
+      bool early_stop_mesure = false;
+      if (compute_cost) {
+        early_stop_mesure = measure(t+1,meancost); 
+      }
       if (early_stop_dir)
         cout << "Early stopping triggered by the measurer" << endl;
       early_stop = early_stop || early_stop_mesure;
      // early_stop = measure(t+1,meancost); // TODO find which is the best between this and the one above
       // early_stop_i = (t+1)/every; TODO Remove, must be useless now
-      lastmeancost << meancost;
-      meancost.clear();
+      if (compute_cost) {
+        lastmeancost << meancost;
+        meancost.clear();
+      }
     }
   }
   return lastmeancost[0];
@@ -983,7 +1003,9 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
     early_stop = lineSearch();
     computeOppositeGradient(this, delta);
     current_cost = cost->value[0];
-    meancost += cost->value;
+    if (compute_cost) {
+      meancost += cost->value;
+    }
     stats_coll.update(cost->value);
     
     // Find the new search direction
@@ -998,10 +1020,11 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
     
   }
 
-  meancost /= real(nstages);
-  // TODO put the line below depending on verbosity
-  // printStep(cout, stage, meancost);  
-  early_stop = early_stop || measure(stage+1,meancost);
+  if (compute_cost) {
+    meancost /= real(nstages);
+    printStep(cerr, stage, meancost);
+    early_stop = early_stop || measure(stage+1,meancost);
+  }
 
   // TODO Call the Stats collector
   if (early_stop)

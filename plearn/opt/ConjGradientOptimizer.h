@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.31 2003/10/15 20:39:06 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.32 2003/10/21 16:55:08 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,6 +64,10 @@ class ConjGradientOptimizer : public Optimizer {
 public:
 
   // General options (also available through setOption)
+
+  //! If set to 1, will compute and display the mean cost at each epoch
+  int compute_cost;
+
   //! The line search algorithm used
   //! 1  : Fletcher line search
   //! 2  : GSearch
