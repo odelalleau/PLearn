@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.h,v 1.11 2003/05/05 13:00:29 tihocan Exp $
+   * $Id: GradientOptimizer.h,v 1.12 2003/05/06 20:25:17 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,6 @@
 #define GRADIENTOPTIMIZER_INC
 
 #include "Optimizer.h"
-#include "SumOfVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -62,6 +61,7 @@ using namespace std;
       //!  Default constructor for persistence
       //GradientOptimizer () : start_learning_rate(), decrease_constant() {}
   
+    protected:
     public:
       //!  gradient descent specific parameters
       //!  (directly modifiable by the user)
@@ -69,56 +69,21 @@ using namespace std;
 
       // Options (also available through setOption)
       real start_learning_rate;
-      real min_learning_rate;  //!< min value for learning_rate when adapting
-      real max_learning_rate;  //!< max value for learning_rate when adapting
-      //! Learning rate adaptation kind :
-      //! 0  = none
-      //! 1  = basic
-      //! 2  = ALAP1
-      int learning_rate_adaptation;
-      real adapt_coeff1;  //!< a coefficient for learning rate adaptation
-      real adapt_coeff2;  //!< a coefficient for learning rate adaptation
       real decrease_constant;
-
-    private:
-      bool stochastic_hack; // true when we're computing a stochastic gradient
-      Vec learning_rates;   // used to store the individual learning rates
-      Vec gradient;         // used to store the gradient
-      Vec tmp_storage;      // used to store various stuff
-      // used to store the previous learning rates evolution
-      Vec old_evol;
-      Array<Mat> oldgradientlocations; // used for the stochastic hack
-
-    public: 
-
+    
       GradientOptimizer(real the_start_learning_rate=0.01, 
                         real the_decrease_constant=0,
-                        real the_min_learning_rate=0.001,
-                        real the_max_learning_rate=0.02,
-                        int the_learning_rate_adaptation=0,
-                        real the_adapt_coeff1=0,
-                        real the_adapt_coeff2=0,
                         int n_updates=1, const string& filename="", 
                         int every_iterations=1);
       GradientOptimizer(VarArray the_params, Var the_cost,
                         real the_start_learning_rate=0.01, 
                         real the_decrease_constant=0,
-                        real the_min_learning_rate=0.001,
-                        real the_max_learning_rate=0.02,
-                        int the_learning_rate_adaptation=0,
-                        real the_adapt_coeff1=0,
-                        real the_adapt_coeff2=0,
                         int n_updates=1, const string& filename="", 
                         int every_iterations=1);
       GradientOptimizer(VarArray the_params, Var the_cost, 
                         VarArray update_for_measure,
                         real the_start_learning_rate=0.01, 
                         real the_decrease_constant=0,
-                        real the_min_learning_rate=0.001,
-                        real the_max_learning_rate=0.02,
-                        int the_learning_rate_adaptation=0,
-                        real the_adapt_coeff1=0,
-                        real the_adapt_coeff2=0,
                         int n_updates=1, const string& filename="", 
                         int every_iterations=1);
 
@@ -131,39 +96,9 @@ using namespace std;
       inherited::build();
       build_();
     }
-
   private:
-
-    void build_() {
-      early_stop = false;
-      learning_rate = start_learning_rate;
-      SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
-      stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
-      params.clearGradient();
-      int n = params.nelems();
-      if (n > 0) {
-        learning_rates.resize(n);
-        gradient.resize(n);
-        tmp_storage.resize(n);
-        old_evol.resize(n);
-        oldgradientlocations.resize(params.size());
-        meancost.resize(cost->size());
-        learning_rates.fill(start_learning_rate);
-        switch (learning_rate_adaptation) {
-          case 0:
-            break;
-          case 1:
-            // tmp_storage is used to store the old parameters
-            params.copyTo(tmp_storage);
-            old_evol.fill(0);
-            break;
-          case 2:
-            // tmp_storage is used to store the initial opposite gradient
-            Optimizer::computeOppositeGradient(this, tmp_storage);
-            break;
-        }
-      }
-    }
+    void build_()
+    {}
     
   public:
 
@@ -172,26 +107,8 @@ using namespace std;
     virtual real optimize();
     virtual bool optimizeN(VecStatsCollector& stats_coll);
 
-  private:
-
-    // Basic learning rate adaptation
-    // If grad(i) > 0 : lr(i) = lr(i) + lr(i) * adapt_coeff1
-    // else           : lr(i) = lr(i) - lr(i) * adapt_coeff2
-    void adaptLearningRateBasic(
-        Vec learning_rates,
-        Vec old_params,
-        Vec new_evol);
-
-    // ALAP1 formula learning rate adaptation
-    // lr = lr + adapt_coeff1 * dot(grad(k-1), grad(k))
-    void adaptLearningRateALAP1(
-        Vec old_gradient,
-        Vec new_gradient);
-
   protected:
-
     static void declareOptions(OptionList& ol);
-
   };
 
 DECLARE_OBJECT_PTR(GradientOptimizer);
@@ -280,9 +197,6 @@ DECLARE_OBJECT_PTR(GradientOptimizer);
       }
                     
       virtual real optimize();
-
-      // Not implemented
-      virtual bool optimizeN(VecStatsCollector& stat_coll);
   };
 
 

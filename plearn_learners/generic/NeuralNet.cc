@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.cc,v 1.9 2003/05/06 15:19:41 tihocan Exp $
+   * $Id: NeuralNet.cc,v 1.10 2003/05/06 20:25:19 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -346,24 +346,21 @@ int NeuralNet::costsize() const
 
 void NeuralNet::train(VMat training_set)
 {
-  VecStatsCollector stats_coll;
   setTrainingSet(training_set);
   int l = training_set->length();  
   int nsamples = batch_size>0 ? batch_size : l;
   Func paramf = Func(input&target_and_weights, cost); // parameterized function to optimize
-  Var totalcost = meanOf(training_set, paramf, nsamples);
+  Var totalcost = meanOf(training_set,paramf, nsamples);
   optimizer->setToOptimize(params, totalcost);
+  optimizer->nupdates = (nepochs*l)/nsamples;
+  optimizer->every = l/nsamples;
   optimizer->addMeasurer(*this);
-  optimizer->nstages = l / nsamples;
   optimizer->build();
-  bool early_stop = false;
-  for (int e=0; !early_stop && e<nepochs; e++) { // launch optimizeN every epoch
-    early_stop = optimizer->optimizeN(stats_coll);
-  }
+  optimizer->optimize();
+  
   output_and_target_to_cost->recomputeParents();
   costf->recomputeParents();
   cerr << "totalcost->value = " << totalcost->value << endl;
-  cout << "Result for benchmark is: " << totalcost->value << endl;
   setTrainCost(totalcost->value);
 }
 
