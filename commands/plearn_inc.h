@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.39 2004/11/18 14:31:25 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.40 2004/11/23 21:22:02 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -148,6 +148,11 @@
 #include <plearn/vmat/ToBagSplitter.h>
 #include <plearn/vmat/TrainTestSplitter.h>
 #include <plearn/vmat/TrainValidTestSplitter.h>
+
+/************
+ * Variable *
+ ************/
+#include <plearn/var/MatrixElementsVariable.h>
 
 /*********************
  * VecStatsCollector *
