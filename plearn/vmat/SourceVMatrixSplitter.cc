@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrixSplitter.cc,v 1.1 2004/06/04 13:15:18 tihocan Exp $ 
+   * $Id: SourceVMatrixSplitter.cc,v 1.2 2004/06/10 16:13:08 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -53,8 +53,7 @@ SourceVMatrixSplitter::SourceVMatrixSplitter()
 
 PLEARN_IMPLEMENT_OBJECT(SourceVMatrixSplitter,
     "Returns the splits of an underlying splitter, seen by a SourceVMatrix.",
-    "WARNING: ACTUALLY IT CURRENTLY TAKES a SelectRowsVMatrix, but it is planned\n"
-    "to turn a SelectRowsVMatrix into a SourceVMatrix."
+    ""
 );
 
 void SourceVMatrixSplitter::declareOptions(OptionList& ol)
@@ -120,9 +119,9 @@ int SourceVMatrixSplitter::nSetsPerSplit() const
 TVec<VMat> SourceVMatrixSplitter::getSplit(int k)
 {
   TVec<VMat> result = source_splitter->getSplit(k);
-  source_vm->distr = result[to_apply];
+  source_vm->source = result[to_apply];
   source_vm->build();
-  VMat the_vm = static_cast<SelectRowsVMatrix*>(source_vm);
+  VMat the_vm = static_cast<SourceVMatrix*>(source_vm);
   result[to_apply] = the_vm;
   return result;
 }

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrixSplitter.h,v 1.1 2004/06/04 13:15:18 tihocan Exp $ 
+   * $Id: SourceVMatrixSplitter.h,v 1.2 2004/06/10 16:13:08 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -44,7 +44,7 @@
 #ifndef SourceVMatrixSplitter_INC
 #define SourceVMatrixSplitter_INC
 
-#include "SelectRowsVMatrix.h"
+#include "SourceVMatrix.h"
 #include "Splitter.h"
 
 namespace PLearn {
@@ -71,7 +71,7 @@ public:
   // * public build options *
   // ************************
 
-  PP<SelectRowsVMatrix> source_vm;
+  PP<SourceVMatrix> source_vm;
   PP<Splitter> source_splitter;
   int to_apply;
 
