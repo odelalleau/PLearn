@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.40 2004/05/14 02:35:33 tihocan Exp $
+   * $Id: VMatrix.h,v 1.41 2004/06/16 18:29:31 tihocan Exp $
    ******************************************************* */
 
 
@@ -375,6 +375,14 @@ public:
   //!  It is suggested that this method be implemented in subclasses to speed up accesses
   //!  (default version repeatedly calls get(i,j) which may have a significant overhead)
   virtual void getSubRow(int i, int j, Vec v) const; //!<  fills v with the subrow i lying between columns j (inclusive) and j+v.length() (exclusive)
+
+  //! Return a Vec that contains the subrow i lying between columns j (inclusive) and
+  //! j + j_length (exclusive).
+  //! This vector should NOT be modified afterwards (use it only to read data), because
+  //! it may not be a copy of the data.
+  //! Default version uses getSubRow(i, j, v) with v a static Vec resized to j_length,
+  //! but subclasses may override this method to avoid a useless copy.
+  virtual Vec& getSubRow(int i, int j, int j_length) const;
 
 /*!     It is suggested that this method be implemented in subclasses of writable matrices
     to speed up accesses
