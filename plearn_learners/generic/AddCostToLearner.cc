@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.16 2004/10/26 21:10:07 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.17 2004/10/29 15:05:19 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -436,6 +436,7 @@ void AddCostToLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 // setTrainingSet //
 ////////////////////
 void AddCostToLearner::setTrainingSet(VMat training_set, bool call_forget) {
+  PLearner::setTrainingSet(training_set, call_forget);
   if (compute_costs_on_bags) {
     // We need to remove the bag information (assumed to be in the last column
     // of the target) when giving the training set to the sub learner.
@@ -453,11 +454,11 @@ void AddCostToLearner::setTrainingSet(VMat training_set, bool call_forget) {
       sub_training_set = new SubVMatrix(training_set, 0, 0, training_set->length(), training_set->width() - 1);
     }
     sub_training_set->defineSizes(training_set->inputsize(), training_set->targetsize() - 1, training_set->weightsize());
-    learner_->setTrainingSet(sub_training_set, call_forget);
+    learner_->setTrainingSet(sub_training_set, false);
+    // 'call_forget' is set to false for the same reason as in EmbeddedLearner.
   } else {
-    learner_->setTrainingSet(training_set, call_forget);
+    learner_->setTrainingSet(training_set, false);
   }
-  PLearner::setTrainingSet(training_set, call_forget);
 }
 
 } // end of namespace PLearn

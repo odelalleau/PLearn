@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.17 2004/10/21 18:40:16 chapados Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.18 2004/10/29 15:05:20 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -93,7 +93,9 @@ void EmbeddedLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
   assert( learner_ );
   inherited::setTrainingSet(training_set, call_forget);
-  learner_->setTrainingSet(training_set, call_forget);
+  // If 'call_forget' is true, learner_->forget() has already been called
+  // in setTrainingSet, so we don't need to call it again.
+  learner_->setTrainingSet(training_set, false);
 }
 
 void EmbeddedLearner::setValidationSet(VMat validset)
