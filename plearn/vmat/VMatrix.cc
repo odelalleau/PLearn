@@ -37,7 +37,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.77 2004/12/07 22:41:52 chapados Exp $
+* $Id: VMatrix.cc,v 1.78 2004/12/09 19:29:16 tihocan Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -45,6 +45,7 @@
 #include "FileVMatrix.h"
 #include "SubVMatrix.h"
 #include "VMat_computeStats.h"
+#include <plearn/math/random.h>  //!< For uniform_multinomial_sample()
 
 
 namespace PLearn {
@@ -761,6 +762,9 @@ string getUser()
   return "TODO";
 }
 
+/////////////////////
+// lockMetaDataDir //
+/////////////////////
 void VMatrix::lockMetaDataDir() const
 {
   if(!hasMetaDataDir())
@@ -770,28 +774,24 @@ void VMatrix::lockMetaDataDir() const
   if(!pathexists(metadatadir))
     force_mkdir(metadatadir);
   string lockfile = append_slash(metadatadir)+".lock";  
-  lockf_ = fopen(lockfile.c_str(),"w");  
-  if(lockf_==0) //! locked by somebody else
-    {
+  while (isfile(lockfile)) {
       string bywho;
       try{ bywho = loadFileAsString(lockfile); }
       catch(...) { bywho = "UNKNOWN (could not read .lock file)"; }
 
-      cerr << "! Waiting for .lock on directory " << metadatadir 
+      cerr << "Waiting for .lock in directory " << metadatadir 
            << " created by " << bywho << endl;
-    }
-  do
-    { 
-      // try again after a second
-      sleep(1);
-      lockf_ = fopen(lockfile.c_str(),"w");        
-    }   while(lockf_==0);
-  
-  fprintf(lockf_, "host %s, pid %d, user %s", getHost().c_str(), getPid(), getUser().c_str());
-  fflush(lockf_);   // Don't close it: to keep the lock!
-
+      sleep(uniform_multinomial_sample(10) + 1); // Random wait for more safety.
+  }
+  lockf_ = fopen(lockfile.c_str(),"w");  
+  string lock_content = "host " + getHost() + ", pid " + tostring(getPid()) + ", user " + getUser();
+  fprintf(lockf_, lock_content.c_str());
+  fflush(lockf_);   // Don't close it, because we want to keep the lock.
 }
 
+///////////////////////
+// unlockMetaDataDir //
+///////////////////////
 void VMatrix::unlockMetaDataDir() const
 {
   if(lockf_==0)
@@ -881,7 +881,9 @@ void VMatrix::copyStringMappingsFrom(VMat source) {
   }
 }
 
-//! returns the unconditonal statistics for the given field
+//////////////
+// getStats //
+//////////////
 TVec<StatsCollector> VMatrix::getStats() const
 {
   if(!field_stats)
@@ -903,6 +905,9 @@ TVec<StatsCollector> VMatrix::getStats() const
   return field_stats;
 }
 
+///////////////
+// getRanges //
+///////////////
 TVec<RealMapping> VMatrix::getRanges()
 {
   TVec<RealMapping> ranges;
