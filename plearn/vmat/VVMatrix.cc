@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.5 2003/08/13 08:13:46 plearner Exp $
+   * $Id: VVMatrix.cc,v 1.6 2003/08/26 23:42:14 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -499,10 +499,15 @@ VMat VVMatrix::createPreproVMat(const string & filename)
           cout<<"Rendering DMAT : "<<meta_data_dir+"/precomputed.dmat/"<<endl;
           source->saveDMAT(meta_data_dir+"/incomplete.precomputed.dmat/");
           int cnt=0;
-          while(cnt++ < 5 && !force_rmdir(meta_data_dir+"/precomputed.dmat/"))
-          {
-            cerr<<"Could not rm -rf '"+meta_data_dir+"/precomputed.dmat/'. Maybe 'Stale NFS file handle' curse again. Retrying in 2 sec."<<endl;
-            sleep(2);
+          if (isdir(meta_data_dir+"/precomputed.dmat/")) {
+            while(cnt++ < 5 &&
+                  !force_rmdir(meta_data_dir+"/precomputed.dmat/"))
+            {
+              cerr<<"Could not rm -rf '"+meta_data_dir+
+                "/precomputed.dmat/'. Maybe 'Stale NFS file handle' curse again. Retrying in 2 sec."
+                  <<endl;
+              sleep(2);
+            }
           }
 
           mvforce(meta_data_dir+"/incomplete.precomputed.dmat/ "+meta_data_dir+"/precomputed.dmat/");
