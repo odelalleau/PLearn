@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openSocket.h,v 1.1 2004/12/22 19:38:14 chrish42 Exp $
+   * $Id: openSocket.h,v 1.2 2005/01/21 22:21:45 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -50,9 +50,6 @@
 namespace PLearn {
 using namespace std;
 
-  /*! Opens a socket and returns an attached PStream.
-    io_formatting will typically be PStream::raw_ascii or PStream::plearn_ascii
-  */
 PStream openSocket(const string& hostname, int port,
                    PStream::mode_t io_formatting,
                    const int timeout=10);

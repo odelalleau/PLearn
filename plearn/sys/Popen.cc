@@ -36,167 +36,153 @@
  
 
 /* *******************************************************      
-   * $Id: Popen.cc,v 1.8 2004/08/31 17:22:41 plearner Exp $
+   * $Id: Popen.cc,v 1.9 2005/01/21 22:22:36 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include <sys/types.h>
-// norman: added win32
-#if !defined(_MSC_VER) && !defined(_MINGW_) && !defined(WIN32)
-#include <sys/wait.h>
-#include <unistd.h>
-#endif
-#include <plearn/base/stringutils.h>
 #include "Popen.h"
-#include <errno.h>
 
-#if STREAMBUFVER == 1 
-#include <plearn/io/FdPStreamBuf.h>
-#endif
+#include <mozilla/nspr/prio.h>
+#include <mozilla/nspr/prproces.h>
+#include <mozilla/nspr/prenv.h>
+#include <plearn/base/stringutils.h>
+#include <plearn/base/PrUtils.h>
+#include <plearn/io/PrPStreamBuf.h>
+#include <plearn/io/openString.h>
 
 
 namespace PLearn {
 using namespace std;
 
-#if defined(_MINGW_) || defined(WIN32)
-void Popen::launch(const string& command)
-{ PLERROR("Popen - Not implemented for this platform"); }
+void Popen::launch(const string& program, const vector<string>& arguments)
+{
+  // Create pipes to communicate to/from child process.
+  PRFileDesc* stdout_child;
+  PRFileDesc* stdout_parent;
+  
+  if (PR_CreatePipe(&stdout_parent, &stdout_child) != PR_SUCCESS)
+    PLERROR("Popen: error creating first pipe pair. (%s)",
+            getPrErrorString().c_str());
+  PRFileDesc* stdin_child;
+  PRFileDesc* stdin_parent;
 
-void Popen::launch(const string& command, const vector<string>& commandoptions)
-{ PLERROR("Popen - Not implemented for this platform"); }
+  if (PR_CreatePipe(&stdin_child, &stdin_parent) != PR_SUCCESS) {
+    PR_Close(stdout_child);
+    PR_Close(stdout_parent);
+    PLERROR("Popen: error creating second pipe pair. (%s)",
+            getPrErrorString().c_str());
+  }
+
+  // Set up redirection of stdin/stdout for the (future) child process.
+  PRProcessAttr* process_attr = PR_NewProcessAttr();
+  PR_ProcessAttrSetStdioRedirect(process_attr, PR_StandardInput, stdin_child);
+  PR_ProcessAttrSetStdioRedirect(process_attr, PR_StandardOutput, stdout_child);
+
+  // Set up argument list for the CreateProcess call. args[0] shoud be the
+  // name of the program. args[1]...arg[n] hold the actual arguments,
+  // arg[n+1] is NULL.
+#if !defined(_MINGW_) && !defined(WIN32)
+  const char** args = new const char*[4];
+  // NSPR doesn't have a way to search through the PATH when creating
+  // a new process. Use /bin/sh for now to spawn the process as a workaround.
+  args[0] = "/bin/sh";
+  args[1] = "-c";
+
+  string concatenated_args = program;
+  for (vector<string>::const_iterator it = arguments.begin(); it != arguments.end();
+       ++it)
+    {
+      concatenated_args += " '";
+      concatenated_args += *it;
+      concatenated_args += "'";
+    }
+  args[2] = concatenated_args.c_str();
+  args[3] = 0;
+  
+  process = PR_CreateProcess("/bin/sh",
+                             const_cast<char* const *>(args),
+                             NULL, process_attr);
+#else
+  const char** args = new const char*[arguments.size()+2];
+  // PR_CreateProcess on Windows goes through the PATH.
+  // No workaround needed here.
+  args[0] = program.c_str();
+  int i = 1;
+  for (vector<string>::const_iterator it = arguments.begin(); it != arguments.end();
+       ++it)
+    args[i++] = it->c_str();
+  args[i] = 0;
+  
+  process = PR_CreateProcess(program.c_str(),
+                             const_cast<char* const *>(args),
+                             NULL, process_attr);  
+#endif
+
+  // Important: close unused files in the parent.
+  PR_Close(stdin_child);
+  PR_Close(stdout_child);
+  
+  delete[] args;                        
+  if (!process) {
+    PR_Close(stdin_parent);
+    PR_Close(stdout_parent);
+    PLERROR("Popen: could not create subprocess. (%s)",
+            getPrErrorString().c_str());
+  }
+  process_alive = true;
+
+  in = new PrPStreamBuf(stdout_parent, stdin_parent);
+  in.setBufferCapacities(0, 0, 0);
+  out = in;
+}
+
+
+void Popen::launch(const string& commandline)
+{
+  // Parse command line into individual argments
+  PStream s = openString(string("[") + commandline + "]",
+                         PStream::plearn_ascii);
+  
+  vector<string> command_and_args;
+  s >> command_and_args;
+  const string command = command_and_args[0];
+  const vector<string> args(command_and_args.begin()+1,
+                            command_and_args.end());
+  launch(command, args);
+}
+
 
 int Popen::wait()
-{ PLERROR("Popen - Not implemented for this platform"); return 0; }
+{
+  int status = 0;
+  if (process_alive)
+    if (PR_WaitProcess(process, &status) != PR_SUCCESS)
+      PLERROR("Popen: error while waiting for subprocess to terminate. (%s)",
+              getPrErrorString().c_str());
+  process_alive = false;
+  
+  return status;
+}
+
 
 Popen::~Popen()
-{}
+{
+  wait();
+}
 
+  
 vector<string> execute(const string& command)
-{ vector<string> results; PLERROR("Popen - Not implemented for this platform"); return results; }
-
-#else
-
-  void Popen::launch(const string& command)
-  {
-    /*vector<string> args = split(command);
-    vector<string> commandoptions(args.begin()+1, args.end());
-    launch(args[0], commandoptions);*/
-    if (verbose)
-      cout << "Popen launches:" << endl << command << endl;
-    int tocommand[2];
-    int fromcommand[2];
-
-    pipe(tocommand);
-    pipe(fromcommand);
-    pid = fork();
-    if(pid==0) // in child process 
-      {
-        close(tocommand[1]);
-        close(fromcommand[0]);
-        dup2(tocommand[0],0);
-        dup2(fromcommand[1],1);
-	if (verbose)
-	{
-	  ofstream dbg("dbg1");
-	  dbg << command << endl;
-	  dbg.close();
-	}
-        execl("/bin/sh", "sh", "-c", command.c_str(), 0);
-        ofstream dbg2("dbg2");
-        dbg2 << "exec failed: " << errno << " : "  << strerror(errno)
-             << endl;
-        dbg2.close();
-      }
-    else // in parent
-      {
-        process_alive=true;
-        close(tocommand[0]);
-        close(fromcommand[1]);
-        fdout = tocommand[1];
-        fdin = fromcommand[0];
-#if STREAMBUFVER == 1 
-        in = new FdPStreamBuf(fdin, fdout);
-        out = in;
-#else
-        in.attach(fdin);
-        out.attach(fdout);
-#endif
-      }    
-  }
-
-  void Popen::launch(const string& command, const vector<string>& commandoptions)
-  {
-    int tocommand[2];
-    int fromcommand[2];
-    pipe(tocommand);
-    pipe(fromcommand);
-    pid = fork();
-    if(pid==0) // in child process 
-      {
-        close(tocommand[1]);
-        close(fromcommand[0]);
-        dup2(tocommand[0],0);
-        dup2(fromcommand[1],1);
-        char **argv = new char*[commandoptions.size()+2];
-        argv[0] = (char*)command.c_str();
-        //ofstream out("dbg.out"); //commented out by xsm (??? what is this line for ???)
-        for(unsigned int i=0; i<commandoptions.size(); i++)
-          argv[i+1] = (char*)commandoptions[i].c_str();
-        argv[commandoptions.size()+1] = 0;
-        execvp(command.c_str(),argv);
-      }
-    else // in parent
-      { 
-        process_alive=true;
-        close(tocommand[0]);
-        close(fromcommand[1]);
-        fdout = tocommand[1];
-        fdin = fromcommand[0];
-#if STREAMBUFVER == 1 
-        in = new FdPStreamBuf(fdin, fdout);
-        out = in;
-#else
-        in.attach(fdin);
-        out.attach(fdout);
-#endif
-      }    
-  }
-
-  int Popen::wait()
-  {
-    int status;
-    if(process_alive)
-        waitpid(pid, &status, 0);
-    process_alive=false;
-    // the following will return 1 IF THE PROGRAM RETURNED NORMALLY
-    return WIFEXITED(status);
-  }
-    
-  Popen::~Popen()
-  {
-    // cerr << "Entering Popen destructor" << endl;
-    close(fdout);
-    close(fdin);
-    // cerr << "Popen in waitpid()...." << endl;
-    if(process_alive)
-        waitpid(pid, 0, 0);
-    // cerr << "Popen destructor completed." << endl;
-  }
-
-  vector<string> execute(const string& command)
-  {
-    Popen p(command);
-    vector<string> result;
-    while(p.in)
+{
+  Popen p(command);
+  vector<string> result;
+  while(p.in)
     {
       string line = p.in.getline();
-      //cout << line << endl;
       result.push_back(line);
     }
-    return result;
-  }
+  return result;
+}
 
-#endif
 } // end of namespace PLearn
 
 

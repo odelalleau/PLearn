@@ -13,7 +13,7 @@
 // by a prior agreement signed with ApSTAT Technologies Inc.
 
 /* *******************************************************      
-   * $Id: PyPlearnDriver.cc,v 1.1 2004/12/07 22:38:46 chapados Exp $ 
+   * $Id: PyPlearnDriver.cc,v 1.2 2005/01/21 22:21:45 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -50,7 +50,9 @@ string process_pyplearn_script(const string& scriptfile,
   string script;
   bool do_help = false;
   bool do_dump = false;
-  string command = "pyplearn_driver.py '" + scriptfile + '\'';
+
+  vector<string> final_args;
+  final_args.push_back(scriptfile);
 
   // For pyplearn files, we support the following command-line
   // arguments: --help to print the doc string of the .pyplearn file,
@@ -61,7 +63,6 @@ string process_pyplearn_script(const string& scriptfile,
     if (args[1] == "--help")
     {
       do_help = true;
-      command += " --help";
     }
     else if (args[1] == "--dump")
     {
@@ -69,7 +70,11 @@ string process_pyplearn_script(const string& scriptfile,
     }
   }
       
-  if (!do_help)
+  if (do_help)
+  {
+    final_args.push_back("--help");
+  }
+  else
   {
     // Supply the PLearn command-line arguments to the pylearn driver
     // script.
@@ -79,7 +84,7 @@ string process_pyplearn_script(const string& scriptfile,
       // Skip --foo command-lines options.
       if (option.size() < 2 || option.substr(0, 2) != "--")
       {
-        command += " '" + args[i] + '\'';
+        final_args.push_back(args[i]);
       }
     }
 
@@ -94,11 +99,11 @@ string process_pyplearn_script(const string& scriptfile,
     for (map<string, string>::const_iterator it = vars.begin();
          it != vars.end(); ++it)
     {
-      command += " '" + it->first + '=' + it->second + '\'';
+      final_args.push_back(it->first + '=' + it->second);
     }          
   }
       
-  Popen popen(command);      
+  Popen popen(drivername, final_args);
   string script_before_preprocessing;
   while (!popen.in.eof())
   {

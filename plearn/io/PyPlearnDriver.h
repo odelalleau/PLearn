@@ -13,7 +13,7 @@
 // by a prior agreement signed with ApSTAT Technologies Inc.
 
 /* *******************************************************      
-   * $Id: PyPlearnDriver.h,v 1.1 2004/12/07 22:38:46 chapados Exp $ 
+   * $Id: PyPlearnDriver.h,v 1.2 2005/01/21 22:21:45 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -37,8 +37,8 @@ namespace PLearn {
  * the following arguments, passing '--help' passes it unmodified to the
  * subprogram and is assumed to print a help string.  If '--dump' is
  * passed, the Python-preprocessed script is printed to standard output.
- * If either '--dump' or '--help' is passed, nothing is returned from this
- * function. 
+ * If either '--dump' or '--help' is passed, an empty string is returned
+ * from this function. 
  */
 std::string process_pyplearn_script(
   const std::string& filename,

@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: Popen.h,v 1.5 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: Popen.h,v 1.6 2005/01/21 22:22:36 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,6 +48,10 @@
 #define Popen_INC
 
 #include <plearn/base/general.h>
+#include <plearn/io/PStream.h>
+
+#define USE_NSPR
+class PRProcess;
 
 namespace PLearn {
 using namespace std;
@@ -55,25 +59,19 @@ using namespace std;
   class Popen: public PPointable
   {
   protected:
-    //!  multi-argument variant: the arguments 
+    //! Multi-argument variant: the arguments are passed in a vector.
     void launch(const string& command, const vector<string>&
                 commandoptions);
-    //!  full text variant: this one is interpreted like a console
-    //!  /bin/sh command
-    void launch(const string& command); 
+    //! Full text variant. All arguments are passed together in a string.
+    //! @deprecated Use the other version of launch instead.
+    void launch(const string& commandline); 
 
     bool verbose;
     bool process_alive;
 
-  public:
-
-// norman: pid_t not supported
-#ifndef WIN32
-    pid_t pid;
-#endif
+    PRProcess *process;
     
-    int fdin;
-    int fdout;    
+  public:
     PStream in; //should these be only one I/O PStream? -xsm
     PStream out;
     
@@ -85,13 +83,13 @@ using namespace std;
 	  bool the_verbose = false) 
       { verbose = the_verbose; launch(command,commandoptions); }
 
-    // wait for process termination and return exit value
-    // NOTE: this must be called after all output from the program
-    // has been read. (Some progs block until their output is read.)
+    /** Wait for process termination and return exit value.
+        @note This must be called after all output from the program
+        has been read. (Some progs block until their output is read.)
+    */
     int wait();
     
     ~Popen();
-
   };
 
   
