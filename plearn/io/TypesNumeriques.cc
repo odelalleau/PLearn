@@ -4,36 +4,36 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
 //
-// This file is part of the PLearn Library. This library is free
-// software; you can redistribute it and/or modify it under the
-// terms of the GNU General Public License as published by the
-// Free Software Foundation, version 2.
-// 
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-// 
-// You should have received a copy of the GNU General Public License
-// along with this library; see the file GPL.txt  If not, write to the Free
-// Software Foundation, 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
 //
-// As a special exception, you may compile and link this library with files
-// not covered by the GNU General Public License, and distribute the resulting
-// executable file under the terms of your choice, without the requirement to
-// distribute the complete corresponding source code, provided you have
-// obtained explicit written permission to do so from Pascal Vincent (primary
-// author of the library) or Yoshua Bengio or the University of Montreal.
-// This exception does not however invalidate any other reasons why the
-// executable file might be covered by the GNU General Public License.
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
 //
-// See the following URL for more information on PLearn:
-// http://plearn.sourceforge.net 
-
- 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+//
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TypesNumeriques.cc,v 1.1 2004/07/12 13:37:07 tihocan Exp $
+   * $Id: TypesNumeriques.cc,v 1.2 2004/07/12 13:39:30 tihocan Exp $
    * AUTHORS: Steven Pigeon & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
