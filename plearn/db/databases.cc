@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.20 2005/01/25 15:31:37 tihocan Exp $
+   * $Id: databases.cc,v 1.21 2005/03/03 20:10:23 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -325,13 +325,13 @@ int loadATT800(VMat& training_set, VMat& test_set)
   new_classnums << classnums;
   for(int i=0; i<data.length(); i++)
     {
-      new_total_durations(i,0) = sum(new_durations(i));
+      new_total_durations(i,0) = sum(new_durations(i), false);
       if(new_total_durations(i,0) > 0.0)
         {
           Vec new_durations_i = new_durations(i);
           new_durations_i /= new_total_durations(i,0);
         }
-      new_total_daytimes(i,0) = sum(new_daytimes(i));
+      new_total_daytimes(i,0) = sum(new_daytimes(i), false);
       if(new_total_daytimes(i,0) > 0.0)
         {
           Vec new_daytimes_i = new_daytimes(i);
