@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.26 2004/07/21 20:12:42 tihocan Exp $
+* $Id: VMat_maths.cc,v 1.27 2004/08/11 12:28:46 tihocan Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -709,6 +709,10 @@ map<real, int> countOccurencesInColumn(VMat m, int col)
   for(int i=0; i<l; i++)
     {
       real val = m(i,col);
+      if (is_missing(val))
+        // The 'nan' real value has to be dealt with separately. Here, we just
+        // raise an error to keep it simple.
+        PLERROR("In countOccurencesInColumn - Found a missing value, this case is currently not handled");
       found = counts.find(val);
       if(found==counts.end())
         counts[val] = 1;
