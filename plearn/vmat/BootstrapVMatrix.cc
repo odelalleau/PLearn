@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.cc,v 1.3 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: BootstrapVMatrix.cc,v 1.4 2004/04/05 22:47:39 morinf Exp $
    ******************************************************* */
 
 #include "BootstrapVMatrix.h"
@@ -54,10 +54,13 @@ PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
 //////////////////////
 // BootstrapVMatrix //
 //////////////////////
-BootstrapVMatrix::BootstrapVMatrix() : frac(0.6667)
-{}
+BootstrapVMatrix::BootstrapVMatrix()
+  : frac(0.6667)
+{
+}
 
-BootstrapVMatrix::BootstrapVMatrix(VMat m, real frac) {
+BootstrapVMatrix::BootstrapVMatrix(VMat m, real frac)
+{
   this->frac = frac;
   this->distr = m;
   build();
@@ -84,12 +87,14 @@ void BootstrapVMatrix::build()
 ////////////
 void BootstrapVMatrix::build_()
 {
-  indices = TVec<int>(0, distr.length()-1, 1); // Range-vector
-  shuffleElements(indices);
-  indices = indices.subVec(0,int(frac * distr.length()));
-  sortElements(indices);
-  // Because we changed the indices, a rebuild may be needed.
-  inherited::build();
+  if (distr) {
+    indices = TVec<int>(0, distr.length()-1, 1); // Range-vector
+    shuffleElements(indices);
+    indices = indices.subVec(0,int(frac * distr.length()));
+    sortElements(indices);
+    // Because we changed the indices, a rebuild may be needed.
+    inherited::build();
+  }
 }
 
 } // end of namespcae PLearn

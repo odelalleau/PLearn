@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.h,v 1.4 2004/03/23 23:08:08 morinf Exp $
+   * $Id: BootstrapVMatrix.h,v 1.5 2004/04/05 22:47:39 morinf Exp $
    ******************************************************* */
 
 
@@ -74,6 +74,8 @@ private:
   void build_();
 
 };
+
+DECLARE_OBJECT_PTR(BootstrapVMatrix);
 
 } // end of namespcae PLearn
 #endif
