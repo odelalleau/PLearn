@@ -18,7 +18,7 @@ else:
     rshcommand= 'rsh'
 
 # to get more or less verbosity (currently verbose in {0,1})
-verbose = 0;
+verbose = 1;
 
 # to get a SPC Smart Parallel Compilation, i.e. only on free machine
 SPC = 0;
@@ -43,8 +43,8 @@ mandatory_includedirs = []
 
 # (sys.byteorder does not exist in older versions of python)
 if platform=='linux-i386':
-    compileflags = '-DLINUX -DLITTLEENDIAN -ftemplate-depth-30'
-#    compileflags = '-DLINUX -DLITTLEENDIAN -mcpu=i686 -march=i686 -ftemplate-depth-30'
+    compileflags = '-DLINUX -DLITTLEENDIAN -ftemplate-depth-100'
+#    compileflags = '-DLINUX -DLITTLEENDIAN -mcpu=i686 -march=i686 -ftemplate-depth-100'
 elif platform=='linux-ppc':
     compileflags = '-DLINUXPPC -DBIGENDIAN'
 elif platform=='linux-alpha':
@@ -138,6 +138,12 @@ optionalLibrary( name = 'wordnet',
                  triggers = 'wn.h',
                  includedirs = '/u/lisa/WordNet/v2.0/include',
                  linkeroptions = '-L /u/lisa/WordNet/v2.0/lib -lwn'
+                 )
+
+optionalLibrary( name = 'boostpython',
+                 triggers = 'boost/python.hpp',
+                 includedirs = '/usr/include/python2.3',
+                 linkeroptions = '-lboost_python'
                  )
 
 optionalLibrary( name = 'boost',

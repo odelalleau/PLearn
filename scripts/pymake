@@ -1087,6 +1087,7 @@ class FileInfo:
           try: os.remove(corresponding_output)
           except: pass
           os.rename(self.corresponding_output, corresponding_output)
+          print "Successfully created " + self.corresponding_output + " and renamed it to " + corresponding_output 
         self.corresponding_output = corresponding_output
         
     def dll_command(self):
