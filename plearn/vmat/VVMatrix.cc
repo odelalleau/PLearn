@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.19 2004/05/05 19:24:09 nova77 Exp $
+   * $Id: VVMatrix.cc,v 1.20 2004/06/11 19:08:53 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -379,16 +379,17 @@ VMat VVMatrix::createPreproVMat(const string & filename)
 
   if(isfile(meta_data_dir+slash+"precomputed.pmat"))
     {
-      // precomputed version exist in pmat format,
-      // so we use it *if it is up to date*
-      // if(mtime(meta_data_dir+slash+"precomputed.pmat") > date_of_code)
-        {
-          source=new FileVMatrix(meta_data_dir+slash+"precomputed.pmat");
-          source->setMetaDataDir(meta_data_dir);
-          source->setMtime(date_of_code);
-          source->defineSizes(inputsize, targetsize, weightsize);
-          return source;
-        }
+      // Precomputed version exist in pmat format.
+      // If it seems old, we display a warning (one may still want to use it
+      // if he knows the changes made to the vmat code do not alter the data).
+      if(mtime(meta_data_dir+slash+"precomputed.pmat") < date_of_code) {
+        PLWARNING("In VVMatrix::createPreproVMat - The precomputed data is older than current code, you may want to recompute again");
+      }
+      source=new FileVMatrix(meta_data_dir+slash+"precomputed.pmat");
+      source->setMetaDataDir(meta_data_dir);
+      source->setMtime(date_of_code);
+      source->defineSizes(inputsize, targetsize, weightsize);
+      return source;
     }
 
   if(pathexists(meta_data_dir+slash+"precomputed.dmat"+slash))
