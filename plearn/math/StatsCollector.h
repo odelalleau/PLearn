@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.2 2002/08/08 22:53:22 morinf Exp $
+   * $Id: StatsCollector.h,v 1.3 2002/08/09 16:14:33 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,6 +48,20 @@
 namespace PLearn <%
 using namespace std;
 
+class StatsCollectorCounts
+{
+public:
+  int n; //!<  counts the number of occurences of the corresponding value
+  int nbelow; //!<  counts the number of occurences of values below this counter's value but above the previous one
+  double sum; //!<  sum of the values below this counter's but above the previous one
+  double sumsquare; //!<  sum of squares of the values below this counter's but above the previous one
+  int id; //!< a unique identifier. ( id == the number of known values at the first occurence of this one)
+  
+  StatsCollectorCounts(): 
+    n(0), nbelow(0),
+    sum(0.), sumsquare(0.),id(0) {}          
+};
+
 //!  this class holds simple statistics about a field
   class StatsCollector: public Object
   {
@@ -56,18 +70,6 @@ using namespace std;
       
   protected:
 
-    class Counts
-    {
-    public:
-      int n; //!<  counts the number of occurences of the corresponding value
-      int nbelow; //!<  counts the number of occurences of values below this counter's value but above the previous one
-      double sum; //!<  sum of the values below this counter's but above the previous one
-      double sumsquare; //!<  sum of squares of the values below this counter's but above the previous one
-      
-      Counts(): 
-        n(0), nbelow(0),
-        sum(0.), sumsquare(0.) {}          
-    };
     
     int nmissing_;  //!<  number of missing values
     int nnonmissing_; //!<  number of non missing value 
@@ -81,7 +83,7 @@ using namespace std;
 
     //! will contain up to maxnvalues values and associated Counts
     //! as well as a last element which maps FLT_MAX, so that we don't miss anything
-    map<real,Counts> counts; 
+    map<real,StatsCollectorCounts> counts; 
       
   public:
 
@@ -101,6 +103,8 @@ using namespace std;
       
       void update(real val);
 
+    const map<real,StatsCollectorCounts>& getCounts(){return counts;}
+
       //! returns a Mat with x,y coordinates for plotting the cdf
       //! only if normalized will the cdf go to 1, otherwise it will go to nsamples
       Mat cdf(bool normalized=true) const;
@@ -111,7 +115,7 @@ using namespace std;
     RealMapping getBinMapping(int discrete_mincount, int continuous_mincount) const;
 
     virtual void write(ostream& out) const;
-    virtual void oldread(istream& in);
+    virtual void read(istream& in);
     virtual void print(ostream& out) const;
   };
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: StatsCollector.cc,v 1.2 2002/08/09 16:14:32 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,7 +53,7 @@ using namespace std;
     min_(MISSING_VALUE), max_(MISSING_VALUE),
     maxnvalues(the_maxnvalues)
   {
-    counts[FLT_MAX] = Counts();
+    counts[FLT_MAX] = StatsCollectorCounts();
   }
   
   void StatsCollector::update(real val)
@@ -73,11 +73,17 @@ using namespace std;
           max_ = val;
         nnonmissing_++;
 
+        map<real,StatsCollectorCounts>::iterator it;
         if(int(counts.size())<=maxnvalues) // Still remembering new unseen values
+        {
+          it = counts.find(val);
+          if(it==counts.end())
+            counts[val].id=counts.size()-1;
           counts[val].n++;
+        }
         else // We've filled up counts already
           {
-            map<real,Counts>::iterator it = counts.lower_bound(val);
+            it = counts.lower_bound(val);
             if(it->first==val) // found the exact value
               it->second.n++;
             else // found the value just above val (possibly FLT_MAX)
@@ -95,7 +101,7 @@ using namespace std;
     real mapto=0.;
     RealMapping mapping;
     mapping.setMappingForOther(-1);
-    map<real,Counts>::const_iterator it = counts.begin();
+    map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
     int nleft = counts.size()-1; // loop on all but last
 
     int count = 0;
@@ -162,8 +168,8 @@ using namespace std;
     int currentcount = 0;
     xy(i,0) = min_;
     xy(i++,1) = 0;    
-    map<real,Counts>::const_iterator it = counts.begin();
-    map<real,Counts>::const_iterator itend = counts.end();    
+    map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
+    map<real,StatsCollectorCounts>::const_iterator itend = counts.end();    
     for(; it!=itend; ++it)
       {
         real val = it->first;
@@ -221,8 +227,8 @@ using namespace std;
     writeFieldName(out, "counts");
     PLearn::write(out, (int)counts.size());
     writeNewline(out);
-    map<real,Counts>::const_iterator it = counts.begin();
-    map<real,Counts>::const_iterator itend = counts.end();
+    map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
+    map<real,StatsCollectorCounts>::const_iterator itend = counts.end();
     for(; it!=itend; ++it)
     {
       PLearn::write(out, it->first);
@@ -235,7 +241,7 @@ using namespace std;
     writeFooter(out,"StatsCollector");
   }
 
-  void StatsCollector::oldread(istream& in)
+  void StatsCollector::read(istream& in)
   {
     int version = readHeader(in,"StatsCollector");
     if(version!=0)
@@ -256,7 +262,7 @@ using namespace std;
     for(int i=0; i<ncounts; i++)
     {
       real value;
-      Counts c;
+      StatsCollectorCounts c;
       PLearn::read(in, value);
       PLearn::read(in, c.n);
       PLearn::read(in, c.nbelow);

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: VMatLanguage.cc,v 1.2 2002/08/09 16:14:33 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,6 +49,7 @@
 namespace PLearn <%
 using namespace std;
   
+  // set to true for debugging 
   bool VMatLanguage::output_preproc=false;
 
   // returns oldest modification date of a file searching recursively every

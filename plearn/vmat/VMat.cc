@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat.cc,v 1.3 2002/08/09 01:54:40 jkeable Exp $
+* $Id: VMat.cc,v 1.4 2002/08/09 16:14:33 jkeable Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat.h"
@@ -1214,7 +1214,8 @@ TVec<StatsCollector> VMatrix::getStats()
   if(!field_stats)
     {
       string statsfile = getMetaDataDir() + "/stats.psave";
-      if(isfile(statsfile) && getMtime()<mtime(statsfile))
+      PLWARNING("TVec<StatsCollector> VMatrix::getStats() : stats.psave loading disabled until StatsCollector has option system enabled. Julien");
+      if(0 && isfile(statsfile) && getMtime()<mtime(statsfile))
         PLearn::load(statsfile, field_stats);
       else
         {
