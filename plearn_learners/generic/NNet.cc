@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.23 2003/11/04 14:42:24 chapados Exp $
+   * $Id: NNet.cc,v 1.24 2003/11/07 06:18:46 chapados Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -45,6 +45,7 @@
 #include "DisplayUtils.h"
 #include "random.h"
 #include "GradientOptimizer.h"
+#include "NegCrossEntropySigmoidVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -209,6 +210,8 @@ void NNet::build_()
           params.append(wdirect);
         }
 
+      Var before_transfer_func = output;
+      
       /*
        * output_transfer_func
        */
@@ -282,6 +285,9 @@ void NNet::build_()
             costs[k] = multiclass_loss(output, target);
           else if(cost_funcs[k]=="cross_entropy")
             costs[k] = cross_entropy(output, target);
+          else if (cost_funcs[k]=="stable_cross_entropy") {
+            costs[k] = stable_cross_entropy(before_transfer_func, target);
+          }
           else  // Assume we got a Variable name and its options
             {
               costs[k]= dynamic_cast<Variable*>(newObject(cost_funcs[k]));

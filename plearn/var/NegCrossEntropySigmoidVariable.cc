@@ -36,43 +36,48 @@
 
 
 /* *******************************************************      
-   * $Id: CrossEntropyVariable.cc,v 1.5 2003/11/07 06:18:46 chapados Exp $
+   * $Id: NegCrossEntropySigmoidVariable.cc,v 1.1 2003/11/07 06:19:58 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include "CrossEntropyVariable.h"
+#include "NegCrossEntropySigmoidVariable.h"
 
 namespace PLearn <%
 using namespace std;
 
 
 
-/** CrossEntropyVariable **/
+/** NegCrossEntropySigmoidVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(CrossEntropyVariable, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+  NegCrossEntropySigmoidVariable,
+  "Compute sigmoid of its first input, and then computes the negative "
+  "cross-entropy cost",
+  "NO HELP");
 
-CrossEntropyVariable::CrossEntropyVariable(Variable* netout, Variable* target)
+NegCrossEntropySigmoidVariable::
+NegCrossEntropySigmoidVariable(Variable* netout, Variable* target)
   :BinaryVariable(netout,target,1,1)
 {
   if(netout->size() != target->size())
-    PLERROR("In CrossEntropyVariable: netout and target must have the same size");
+    PLERROR("In NegCrossEntropySigmoidVariable: netout and target must have the same size");
 }
 
 
-void CrossEntropyVariable::recomputeSize(int& l, int& w) const
+void NegCrossEntropySigmoidVariable::recomputeSize(int& l, int& w) const
 { l=1, w=1; }
 
 
-void CrossEntropyVariable::fprop()
+void NegCrossEntropySigmoidVariable::fprop()
 {
   real cost = 0.0;
   for (int i=0; i<input1->size(); i++)
   {
-    real output = input1->valuedata[i];
+    real output = sigmoid(input1->valuedata[i]);
     real target = input2->valuedata[i];
 #if BOUNDCHECK
     if (output == 0.0 || output == 1.0)
-      PLERROR("CrossEntropyVariable::fprop: model output is either exactly "
+      PLERROR("NegCrossEntropySigmoidVariable::fprop: model output is either exactly "
               "0.0 or 1.0; cannot compute cost function");
 #endif
     cost += target*log(output) + (1.0-target)*log(1.0-output);
@@ -81,7 +86,7 @@ void CrossEntropyVariable::fprop()
 }
 
 
-void CrossEntropyVariable::bprop()
+void NegCrossEntropySigmoidVariable::bprop()
 {
   real gr = *gradientdata;
   for (int i=0; i<input1->size(); i++)
@@ -90,10 +95,10 @@ void CrossEntropyVariable::bprop()
     real target = input2->valuedata[i];
 #if BOUNDCHECK
     if (output == target)
-      PLERROR("CrossEntropyVariable::bprop: model output is either exactly "
+      PLERROR("NegCrossEntropySigmoidVariable::bprop: model output is either exactly "
               "0.0 or 1.0; cannot compute bprop");
 #endif
-    input1->gradientdata[i] += gr*(-target/output + (1.0-target)/(1.0-output));
+    input1->gradientdata[i] += gr*(sigmoid(output) - target);
   }
 }
 

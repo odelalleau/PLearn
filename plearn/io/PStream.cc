@@ -345,7 +345,7 @@ void PStream::writeAsciiNum(float x)
     write("nan");
   else
     {
-      snprintf(tmpbuf, sizeof(tmpbuf), "%g", x);
+      snprintf(tmpbuf, sizeof(tmpbuf), "%8g", x);
       write(tmpbuf, strlen(tmpbuf));
     }
 }
@@ -356,7 +356,7 @@ void PStream::writeAsciiNum(double x)
     write("nan");
   else
     {
-      snprintf(tmpbuf, sizeof(tmpbuf), "%g", x);
+      snprintf(tmpbuf, sizeof(tmpbuf), "%15g", x);
       write(tmpbuf, strlen(tmpbuf));
     }
 }
