@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixAffineTransformFeedbackVariable.cc,v 1.5 2004/04/27 16:02:26 morinf Exp $
+   * $Id: MatrixAffineTransformFeedbackVariable.cc,v 1.6 2004/11/24 18:25:11 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -60,7 +60,8 @@ void MatrixAffineTransformFeedbackVariable::fprop()
 {
     Mat&  afftr = matValue;
     int l = afftr.length();
-    Mat lintr = afftr.subMatRows(1,l-1);
+//    Mat lintr = afftr.subMatRows(1,l-1);
+    PLWARNING("In MatrixAffineTransformFeedbackVariable::fprop - The variable 'lintr' was defined but not used, this is weird. Someone should check this code is valid");
 
     Mat& afftr_g = matGradient;
     Vec bias_g = afftr_g.firstRow();
