@@ -66,10 +66,10 @@ void DERIVEDCLASS::build_()
   // setMetaInfoFromSource();
 }
 
-////////////
-// getRow //
-////////////
-void DERIVEDCLASS::getRow(int i, Vec v) const
+///////////////
+// getNewRow //
+///////////////
+void DERIVEDCLASS::getNewRow(int i, Vec& v) const
 {
   // ...
 }

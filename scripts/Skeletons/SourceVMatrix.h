@@ -55,8 +55,8 @@ protected:
 
 public:
 
-  //! This is the only method requiring implementation.
-  virtual void getRow(int i, Vec v) const;
+  //! Fill the vector 'v' with the content of the i-th row.
+  virtual void getNewRow(int i, Vec& v) const;
 
   // Simply calls inherited::build() then build_().
   virtual void build();
