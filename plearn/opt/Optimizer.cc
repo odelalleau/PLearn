@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.16 2003/06/13 14:45:25 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.17 2003/06/30 15:15:59 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -359,6 +359,9 @@ void Optimizer::collectGradientStats(Vec gradient) {
     grad.forget();
     abs_grad.forget();
     sign_grad.forget();
+    for (int i=0; i<n_lr; i++) {
+      stat_per_lr[i].forget();
+    }
   }
 }
 
