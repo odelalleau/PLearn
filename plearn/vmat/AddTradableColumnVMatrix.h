@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddTradableColumnVMatrix.h,v 1.3 2003/08/13 08:13:45 plearner Exp $ 
+   * $Id: AddTradableColumnVMatrix.h,v 1.4 2003/08/27 19:20:49 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file AddTradableColumnVMatrix.h */
@@ -110,8 +110,10 @@ public:
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(AddTradableColumnVMatrix);
+  typedef RowBufferedVMatrix inherited;
 
 };
+DECLARE_OBJECT_PTR(AddTradableColumnVMatrix);
 
 %> // end of namespace PLearn
 #endif
