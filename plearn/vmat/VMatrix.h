@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.66 2005/01/25 03:15:47 dorionc Exp $
+   * $Id: VMatrix.h,v 1.67 2005/01/26 15:08:20 ducharme Exp $
    ******************************************************* */
 
 
@@ -441,6 +441,9 @@ public:
     
   //!  This method must be implemented for matrices that are allowed to grow
   virtual void appendRow(Vec v);
+
+  //!  This method must be implemented for matrices that are allowed to grow
+  virtual void insertRow(int i, Vec v);
 
   //! For matrices stored on disk, this should flush all pending buffered write operations
   virtual void flush();

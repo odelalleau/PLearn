@@ -37,7 +37,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.85 2005/01/25 03:15:47 dorionc Exp $
+* $Id: VMatrix.cc,v 1.86 2005/01/26 15:08:20 ducharme Exp $
 ******************************************************* */
 
 #include <plearn/io/load_and_save.h>
@@ -1025,6 +1025,25 @@ void VMatrix::fill(real value)
 void VMatrix::appendRow(Vec v)
 {
   PLERROR("This method (appendRow) not implemented by VMatrix subclass!");
+}
+
+void VMatrix::insertRow(int i, Vec v)
+{
+  if (i<0 || i>length_)
+    PLERROR("In VMatrix::insertRow: row index (%d) outside valid range [%d,%d]", i, 0, length_);
+  else if (i == length_)
+    appendRow(v);
+  else
+  {
+    appendRow(v); // dummy operation to increase VMat length
+    Vec row(width_);
+    for (int j=length_-1; j>i; --j)
+    {
+      getRow(j-1, row);
+      putRow(j, row);
+    }
+    putRow(i, v);
+  }
 }
 
 void VMatrix::flush()
