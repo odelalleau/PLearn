@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.29 2005/01/20 20:07:29 dorionc Exp $
+   * $Id: stringutils.h,v 1.30 2005/02/04 15:09:21 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -94,6 +94,7 @@ using namespace std;
   //!  returns the next line read from the stream,
   //!  after removing any trailing '\r' and/or '\n'
   string pgetline(istream& in=cin);
+  string pgetline(PStream& in);
 
   //! returns true if s is a blank line (containing only space, tab, until end of line or a # comment-character is reached
   bool isBlank(const string& s);

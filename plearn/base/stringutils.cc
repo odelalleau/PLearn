@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.25 2005/01/20 20:07:30 dorionc Exp $
+   * $Id: stringutils.cc,v 1.26 2005/02/04 15:09:21 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -240,6 +240,13 @@ string pgetline(istream& in)
 {
   string line;
   getline(in,line);
+  return removenewline(line);
+}
+
+string pgetline(PStream& in)
+{
+  string line;
+  in.getline(line);
   return removenewline(line);
 }
 
