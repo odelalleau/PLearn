@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_impl.h,v 1.3 2003/10/28 21:02:44 chapados Exp $
+   * $Id: TMat_impl.h,v 1.4 2004/02/16 20:28:27 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -198,11 +198,11 @@ void selectElements(const TVec<T>& source, const TVec<I>& indices, TVec<T>& dest
 template<class T>
 void elementsEqualTo(const TVec<T>& source, const T& value, const TVec<T>& destination)
 {
-  #if BOUNDCHECK
+#ifdef BOUNDCHECK
   if (source.length()!=destination.length())
     PLERROR("elementsEqualTo(Vec(%d),%f,Vec(%d)): incompatible dimensions",
           source.length(),value,destination.length());
-  #endif
+#endif
   T* src=source.data();
   T* dst=destination.data();
   for (int i=0;i<destination.length();i++)
