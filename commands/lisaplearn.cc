@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.9 2004/03/12 14:03:58 tihocan Exp $
+   * $Id: lisaplearn.cc,v 1.10 2004/03/12 23:30:22 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -42,6 +42,8 @@
 #include "ExplicitSplitter.h"
 #include "FractionSplitter.h"
 #include "KFoldSplitter.h"
+#include "RepeatSplitter.h"
+#include "ToBagSplitter.h"
 #include "TrainTestSplitter.h"
 #include "TrainValidTestSplitter.h"
 
