@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.cc,v 1.7 2005/01/25 14:52:29 yoshua Exp $ 
+   * $Id: DeepNNet.cc,v 1.8 2005/01/26 21:20:32 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -61,7 +61,8 @@ DeepNNet::DeepNNet()
     add_connections(true),
     remove_connections(true),
     initial_sparsity(0.9),
-    connections_adaptation_frequency(0)
+    connections_adaptation_frequency(0),
+    init_scale(1)
 {
 }
 
@@ -119,6 +120,9 @@ void DeepNNet::declareOptions(OptionList& ol)
   declareOption(ol, "connections_adaptation_frequency", &DeepNNet::connections_adaptation_frequency, 
                 OptionBase::buildoption, "after how many examples do we try to adapt connections?\n"
                 "if set to 0, this is interpreted as the training set size.");
+
+  declareOption(ol, "init_scale", &DeepNNet::init_scale, OptionBase::buildoption,
+                "scaling factor of random initial weights range.");
 
   declareOption(ol, "sources", &DeepNNet::sources, OptionBase::learntoption, 
                 "The learned connectivity matrix at each layer\n"
@@ -225,8 +229,10 @@ void DeepNNet::initializeParams(bool set_seed)
     if (initial_sparsity>0)
     {
       // first assign randomly some connections to each of the next layer unit
-      int n_in = int(0.66 * (1-initial_sparsity) * n_previous);
-      int n_out = int(0.66 * (1-initial_sparsity) * n_next);
+      int n_in = 1+int(0.66 * (1-initial_sparsity) * n_previous);
+      if (n_in>n_previous) n_in=n_previous;
+      int n_out = 1+int(0.66 * (1-initial_sparsity) * n_next);
+      if (n_out>n_next) n_out=n_next;
       for (int i=0;i<n_next;i++)
       {
         sources[l][i].resize(n_in);
@@ -244,7 +250,7 @@ void DeepNNet::initializeParams(bool set_seed)
       for (int i=0;i<n_next;i++)
       {
         int n_in = sources[l][i].length();
-        real delta = 1.0/sqrt((real)n_in);
+        real delta = init_scale/sqrt((real)n_in);
         weights[l][i].resize(n_in);
         if (n_layers==1)
           weights[l][i].fill(0);
@@ -255,7 +261,7 @@ void DeepNNet::initializeParams(bool set_seed)
     else // fully connected, mostly for debugging
     {
       // real delta = 1.0/sqrt((real)n_previous);
-      real delta = 1.0/n_previous;
+      real delta = init_scale/n_previous;
       for (int i=0;i<n_next;i++)
       {
         sources[l][i].resize(n_previous);

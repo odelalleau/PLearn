@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.h,v 1.6 2005/01/25 14:52:29 yoshua Exp $ 
+   * $Id: DeepNNet.h,v 1.7 2005/01/26 21:20:34 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -99,6 +99,7 @@ public:
   bool remove_connections; // remove the weaker existing connections (smaller absolute value)
   real initial_sparsity; // initial fraction of weights that are 0
   int connections_adaptation_frequency; // after how many examples do we try to adapt connections? 0=train set size.
+  real init_scale; // scaling factor of weights initialization
 
   // ****************
   // * Constructors *
