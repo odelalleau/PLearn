@@ -2,7 +2,7 @@
 
 // -*- C++ -*-
 
-// Distribution.h
+// ConditionalDistribution.h
 // 
 // Copyright (C) *YEAR* *AUTHOR(S)* 
 // ...
@@ -36,20 +36,17 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
-   * $Id: Distribution.h,v 1.6 2003/02/21 18:27:39 paiemeje Exp $ 
-   ******************************************************* */
 
-/*! \file Distribution.h */
-#ifndef Distribution_INC
-#define Distribution_INC
+#ifndef ConditionalDistribution_INC
+#define ConditionalDistribution_INC
 
 #include "Learner.h"
+#include "Distribution.h"
 
 namespace PLearn <%
 using namespace std;
 
-class Distribution: public Learner
+class ConditionalDistribution: public Distribution
 {
 protected:
   // *********************
@@ -61,15 +58,8 @@ protected:
     
 public:
 
-  typedef Learner inherited;
+  typedef Distribution inherited;
 
-  // ************************
-  // * public build options *
-  // ************************
-
-  //! A string where the characters have the following meaning:
-  //! 'l'->log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn, 'e' -> expectation, 'v' -> variance
-  string use_returns_what;
 
   // ****************
   // * Constructors *
@@ -77,26 +67,7 @@ public:
 
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
-  Distribution();
-
-
-  // ******************
-  // * Object methods *
-  // ******************
-
-private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
-
-protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
-
-public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+  ConditionalDistribution();
 
   //! Provides a help message describing this class
   virtual string help() const;
@@ -105,45 +76,14 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(Distribution);
+  DECLARE_NAME_AND_DEEPCOPY(ConditionalDistribution);
 
-  // *******************
-  // * Learner methods *
-  // *******************
-
-  //! trains the model
-  virtual void train(VMat training_set); 
-
-  //! computes the ouptu of a trained model
-  virtual void use(const Vec& input, Vec& output);
-
-
-  //! return log of probability density log(p(x))
-  virtual double log_density(const Vec& x) const;
-
-  //! return probability density p(x)
-  //! [ default version returns exp(log_density(x)) ]
-  virtual double density(const Vec& x) const;
-  
-  //! return survival fn = P(X>x)
-  virtual double survival_fn(const Vec& x) const;
-
-  //! return survival fn = P(X<x)
-  virtual double cdf(const Vec& x) const;
-
-  //! return E[X] 
-  virtual Vec expectation() const;
-
-  //! return Var[X]
-  virtual Mat variance() const;
-
-  //! return a pseudo-random sample generated from the distribution.
-  virtual void generate(Vec& x) const;
-
+  //! Set the input part before using the inherited methods
+  virtual void setInput(const Vec& input) const;
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(Distribution);
+  DECLARE_OBJECT_PTR(ConditionalDistribution);
   
 %> // end of namespace PLearn
 

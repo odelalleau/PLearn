@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.7 2003/02/04 23:15:32 yoshua Exp $ 
+   * $Id: Distribution.cc,v 1.8 2003/02/21 18:27:38 paiemeje Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.cc */
@@ -137,12 +137,6 @@ void Distribution::use(const Vec& input, Vec& output)
         case 's':
           output[i] = (real) survival_fn(input);
           break;
-        case 'e':
-          output[i] = (real) expectation();
-          break;
-        case 'v':
-          output[i] = (real) variance();
-          break;
         default:
           PLERROR("In Distribution::use unknown use_returns_what character");
         }
@@ -166,18 +160,14 @@ double Distribution::survival_fn(const Vec& x) const
 double Distribution::cdf(const Vec& x) const
 { PLERROR("cdf not implemented for this Distribution"); return 0; }
 
-double Distribution::expectation() const
-{ PLERROR("expectation not implemented for this Distribution"); return 0; }
+Vec Distribution::expectation() const
+{ PLERROR("expectation not implemented for this Distribution"); return Vec(); }
 
-double Distribution::variance() const
-{ PLERROR("variance not implemented for this Distribution"); return 0; }
+Mat Distribution::variance() const
+{ PLERROR("variance not implemented for this Distribution"); return Mat(); }
 
 void Distribution::generate(Vec& x) const
 { PLERROR("generate not implemented for this Distribution"); }
-
-void Distribution::setInput(const Vec& input) const
-{ PLERROR("setInput not implemented for this Distribution"); }
-
 
 
 %> // end of namespace PLearn
