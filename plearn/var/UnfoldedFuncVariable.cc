@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.cc,v 1.6 2004/02/24 22:35:26 tihocan Exp $
+   * $Id: UnfoldedFuncVariable.cc,v 1.7 2004/02/25 21:38:26 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -118,9 +118,9 @@ void UnfoldedFuncVariable::recomputeSize(int& l, int& w) const {
   w=f->outputs[0]->length()*f->outputs[0]->width();
   if (transpose) {
     l = w;
-    w =input_matrix->width();
+    w = input_matrix->width();
   } else {
-    l=input_matrix->length();
+    l = input_matrix->length();
   }
 }
 
