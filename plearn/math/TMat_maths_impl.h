@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.2 2002/09/04 23:44:39 plearner Exp $
+   * $Id: TMat_maths_impl.h,v 1.3 2002/09/06 16:43:24 morinf Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -87,6 +87,17 @@ void softmax(const TVec<T>& x, TVec<T>& y)
     for (int i=0;i<n;i++)
       yp[i] *= s;
   }
+}
+
+// returns y = log(sofmax(x))
+template <class T>
+void log_softmax(const TVec<T> &x, TVec<T> &y)
+{
+    if (x.length() > 0) {
+        y << x;
+        y -= max(x);
+        y -= logadd(y);
+    }
 }
 
 //! computes y <- exp(x)
