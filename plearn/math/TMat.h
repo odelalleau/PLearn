@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.2 2002/09/17 01:27:34 zouave Exp $
+   * $Id: TMat.h,v 1.3 2002/10/18 21:03:04 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1481,15 +1481,15 @@ void clear(const TMat<T>& x)
 { 
   if(x.isCompact())
     {
-      TMat<T>::compact_iterator it = x.compact_begin();
-      TMat<T>::compact_iterator itend = x.compact_end();
+      typename TMat<T>::compact_iterator it = x.compact_begin();
+      typename TMat<T>::compact_iterator itend = x.compact_end();
       for(; it!=itend; ++it)
         clear(*it);
     }
   else
     {
-      TMat<T>::iterator it = x.begin();
-      TMat<T>::iterator itend = x.end();
+      typename TMat<T>::iterator it = x.begin();
+      typename TMat<T>::iterator itend = x.end();
       for(; it!=itend; ++it)
         clear(*it);
     }

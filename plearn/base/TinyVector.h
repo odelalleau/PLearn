@@ -192,7 +192,7 @@ public:
 //#####  Implementation of Iterators  #####################################
 
 template <class T, unsigned N, class TTrait>
-TinyVector<T,N,TTrait>::iterator
+typename TinyVector<T,N,TTrait>::iterator
 TinyVector<T,N,TTrait>::begin()
 {
   //!  This is always correct, even for zero-size vectors
@@ -200,7 +200,7 @@ TinyVector<T,N,TTrait>::begin()
 }
 
 template <class T, unsigned N, class TTrait>
-TinyVector<T,N,TTrait>::const_iterator
+typename TinyVector<T,N,TTrait>::const_iterator
 TinyVector<T,N,TTrait>::begin() const
 {
   //!  This is always correct, even for zero-size vectors
@@ -208,14 +208,14 @@ TinyVector<T,N,TTrait>::begin() const
 }
 
 template <class T, unsigned N, class TTrait>
-TinyVector<T,N,TTrait>::iterator
+typename TinyVector<T,N,TTrait>::iterator
 TinyVector<T,N,TTrait>::end()
 {
   return &arr[0] + size();
 }
 
 template <class T, unsigned N, class TTrait>
-TinyVector<T,N,TTrait>::const_iterator
+typename TinyVector<T,N,TTrait>::const_iterator
 TinyVector<T,N,TTrait>::end() const
 {
   return &arr[0] + size();
@@ -225,7 +225,7 @@ TinyVector<T,N,TTrait>::end() const
 //#####  Implementation of Element Access  ################################
 
 template <class T, unsigned N, class TTrait>
-TinyVector<T,N,TTrait>::reference
+typename TinyVector<T,N,TTrait>::reference
 TinyVector<T,N,TTrait>::operator[](size_type n)
 {
 #ifdef BOUNDCHECK
@@ -236,7 +236,7 @@ TinyVector<T,N,TTrait>::operator[](size_type n)
 }
     
 template <class T, unsigned N, class TTrait>
-TinyVector<T,N,TTrait>::const_reference
+typename TinyVector<T,N,TTrait>::const_reference
 TinyVector<T,N,TTrait>::operator[](size_type n) const
 {
 #ifdef BOUNDCHECK
@@ -247,7 +247,7 @@ TinyVector<T,N,TTrait>::operator[](size_type n) const
 }
     
 template <class T, unsigned N, class TTrait>
-TinyVector<T,N,TTrait>::reference
+typename TinyVector<T,N,TTrait>::reference
 TinyVector<T,N,TTrait>::at(size_type n)
 {
   //!  n cannot be less than zero, because size_type is usually unsigned
@@ -258,7 +258,7 @@ TinyVector<T,N,TTrait>::at(size_type n)
 }
     
 template <class T, unsigned N, class TTrait>
-TinyVector<T,N,TTrait>::const_reference
+typename TinyVector<T,N,TTrait>::const_reference
 TinyVector<T,N,TTrait>::at(size_type n) const
 {
   //!  n cannot be less than zero, because size_type is usually unsigned
@@ -269,7 +269,7 @@ TinyVector<T,N,TTrait>::at(size_type n) const
 }
     
 template <class T, unsigned N, class TTrait>
-TinyVector<T,N,TTrait>::reference
+typename TinyVector<T,N,TTrait>::reference
 TinyVector<T,N,TTrait>::front()
 {
   if (empty())
@@ -279,7 +279,7 @@ TinyVector<T,N,TTrait>::front()
 }
     
 template <class T, unsigned N, class TTrait>
-TinyVector<T,N,TTrait>::const_reference
+typename TinyVector<T,N,TTrait>::const_reference
 TinyVector<T,N,TTrait>::front() const
 {
   if (empty())
@@ -289,7 +289,7 @@ TinyVector<T,N,TTrait>::front() const
 }
     
 template <class T, unsigned N, class TTrait>
-TinyVector<T,N,TTrait>::reference
+typename TinyVector<T,N,TTrait>::reference
 TinyVector<T,N,TTrait>::back()
 {
   if (empty())
@@ -299,7 +299,7 @@ TinyVector<T,N,TTrait>::back()
 }
     
 template <class T, unsigned N, class TTrait>
-TinyVector<T,N,TTrait>::const_reference
+typename TinyVector<T,N,TTrait>::const_reference
 TinyVector<T,N,TTrait>::back() const
 {
   if (empty())
@@ -364,7 +364,7 @@ void TinyVector<T,N,TTrait>::pop_back()
 //#####  Implementation of Size/Capacity Operations  ######################
 
 template <class T, unsigned N, class TTrait>
-TinyVector<T,N,TTrait>::size_type
+typename TinyVector<T,N,TTrait>::size_type
 TinyVector<T,N,TTrait>::size() const
 {
   difference_type p = N-1;
@@ -411,7 +411,7 @@ bool operator==(const TinyVector<T,N,TTrait>& x,
                 const TinyVector<T,N,TTrait>& y)
 {
   bool equal = true;
-  TinyVector<T,N,TTrait>::const_iterator
+  typename TinyVector<T,N,TTrait>::const_iterator
     xit=x.begin(), xend=x.end(), yit=y.begin(), yend=y.end();
   if (xend-xit != yend-yit)
     return false;

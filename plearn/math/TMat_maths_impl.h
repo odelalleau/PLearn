@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.4 2002/09/12 14:15:18 wangxian Exp $
+   * $Id: TMat_maths_impl.h,v 1.5 2002/10/18 21:03:04 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -143,8 +143,8 @@ T sumsquare(const TMat<T>& m)
 {  
   if(m.isCompact())
     {
-      TMat<T>::compact_iterator it = m.compact_begin();
-      TMat<T>::compact_iterator itend = m.compact_end();
+      typename TMat<T>::compact_iterator it = m.compact_begin();
+      typename TMat<T>::compact_iterator itend = m.compact_end();
       T res = square(*it);
       ++it;
       for(; it!=itend; ++it)
@@ -153,8 +153,8 @@ T sumsquare(const TMat<T>& m)
     }
   else
     {
-      TMat<T>::iterator it = m.begin();
-      TMat<T>::iterator itend = m.end();
+      typename TMat<T>::iterator it = m.begin();
+      typename TMat<T>::iterator itend = m.end();
       T res = square(*it);
       ++it;
       for(; it!=itend; ++it)
@@ -2867,17 +2867,17 @@ template<class T>
 #endif
     if(result.isCompact() && x.isCompact())
       {
-        TMat<T>::compact_iterator itm = result.compact_begin();
-        TMat<T>::compact_iterator itmend = result.compact_end();
-        TMat<T>::compact_iterator itx = x.compact_begin();
+        typename TMat<T>::compact_iterator itm = result.compact_begin();
+        typename TMat<T>::compact_iterator itmend = result.compact_end();
+        typename TMat<T>::compact_iterator itx = x.compact_begin();
         for(; itm!=itmend; ++itm, ++itx)
           *itm = *itx * scale;
       }
     else // use non-compact iterators
       {
-        TMat<T>::iterator itm = result.begin();
-        TMat<T>::iterator itmend = result.end();
-        TMat<T>::iterator itx = x.begin();
+        typename TMat<T>::iterator itm = result.begin();
+        typename TMat<T>::iterator itmend = result.end();
+        typename TMat<T>::iterator itx = x.begin();
         for(; itm!=itmend; ++itm, ++itx)
           *itm = *itx * scale;
       }
@@ -2911,17 +2911,17 @@ template<class T>
 #endif
     if(mat.isCompact() && x.isCompact())
       {
-        TMat<T>::compact_iterator itm = mat.compact_begin();
-        TMat<T>::compact_iterator itmend = mat.compact_end();
-        TMat<T>::compact_iterator itx = x.compact_begin();
+        typename TMat<T>::compact_iterator itm = mat.compact_begin();
+        typename TMat<T>::compact_iterator itmend = mat.compact_end();
+        typename TMat<T>::compact_iterator itx = x.compact_begin();
         for(; itm!=itmend; ++itm, ++itx)
           *itm += *itx * scale;
       }
     else // use non-compact iterators
       {
-        TMat<T>::iterator itm = mat.begin();
-        TMat<T>::iterator itmend = mat.end();
-        TMat<T>::iterator itx = x.begin();
+        typename TMat<T>::iterator itm = mat.begin();
+        typename TMat<T>::iterator itmend = mat.end();
+        typename TMat<T>::iterator itx = x.begin();
         for(; itm!=itmend; ++itm, ++itx)
           *itm += *itx * scale;
       }

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.h,v 1.2 2002/09/17 01:27:33 zouave Exp $
+   * $Id: general.h,v 1.3 2002/10/18 21:02:53 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -157,7 +157,7 @@ using std::max;
   template<class For>
   inline void clear_n(For begin, int n)
   {
-    static iterator_traits<For>::value_type zero;
+    static typename iterator_traits<For>::value_type zero;
     fill_n(begin, n, zero);
   }
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: MatIO.h,v 1.2 2002/10/18 21:03:04 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -272,8 +272,8 @@ void loadAscii(const string& filename, TVec<T>& vec)
   if (size<0 || size>1e10)
     PLERROR("In Vec::loadAscii the file is probably not in the right format: size=%d", size);
   vec.resize(size);
-  TVec<T>::iterator it = vec.begin();
-  TVec<T>::iterator itend = vec.end();
+  typename TVec<T>::iterator it = vec.begin();
+  typename TVec<T>::iterator itend = vec.end();
   for(; it!=itend; ++it)
     in >> *it;
 }
@@ -315,8 +315,8 @@ void saveAscii(const string& filename, const TVec<T>& vec)
   out << vec.length() << endl;
   out.precision(15);
 
-  TVec<T>::iterator it = vec.begin();
-  TVec<T>::iterator itend = vec.end();
+  typename TVec<T>::iterator it = vec.begin();
+  typename TVec<T>::iterator itend = vec.end();
   for(; it!=itend; ++it)
     out << *it << ' ';
   out << endl;
