@@ -85,9 +85,13 @@ compileflags = ''
 default_wrapper = 'dllwrap'
 dllwrap_basic_options = '--driver-name=c++ --add-stdcall-alias'
 
+# nice default command and value
+nice_command = 'env nice -n'
+nice_value = '10'
+
 # a few useful functions
 def convertWinToLinux(path):
-  """in windows, replace all directory separator \\ by / (for une in MinGW)"""
+  """in windows, replace all directory separator \\ by / (for use in MinGW)"""
   if platform=='win32':
     return string.replace(path,"\\","/")
   else:
@@ -495,6 +499,7 @@ for choice in options_choices:
     if nmatches<1:
         options.append(choice[0])
 
+#if options_choices[0][0] == 'icc'
 if options[0] == 'icc':
     usingIntelCompiler = 1
 
@@ -937,7 +942,12 @@ class FileInfo:
 
         optlib_compopt = self.get_optional_libraries_compileroptions();
         # print optlib_compopt
-        command = compiler + ' ' + compileflags + ' ' + compileroptions + ' ' + string.join(optlib_compopt, ' ')
+        if platform == 'win32' or nice_value == '0':
+          nice = ''
+        else:
+          nice = nice_command + nice_value + ' '
+          
+        command = nice + compiler + ' ' + compileflags + ' ' + compileroptions + ' ' + string.join(optlib_compopt, ' ')
         includedirs = [self.filedir] + mandatory_includedirs + sourcedirs + self.get_optional_libraries_includedirs()
         if includedirs:
             command = command + ' -I' + string.join(includedirs,' -I')
