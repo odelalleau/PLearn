@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.32 2004/02/27 22:55:35 nova77 Exp $
+   * $Id: TMat.h,v 1.33 2004/02/28 18:06:14 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -51,6 +51,7 @@
 #include <iterator>
 #include <numeric>
 #include <functional>
+#include <strstream>
 
 #include "general.h"
 #include "Storage.h"
@@ -219,6 +220,10 @@ class TVec
         if (newlength<0 || extrabytes<0)
           PLERROR("IN TVec::resize(int newlength)\nInvalid argument (<0)");
 #endif
+        if (newlength == length_) {
+          // No need to do anything.
+          return;
+        }
         if (storage.isNull() && newlength>0)
         {
           offset_ = 0;
@@ -685,6 +690,7 @@ class TVec
       }
 
       //!  return the set of indices whose corresponding values are "element". 
+      //! TODO Olivier: hmm, looks like it should return TVec<int>, no ? (same for other find methods)
       TVec<T> findIndices(const T& element)
       {
         TVec<T> indices(0);
