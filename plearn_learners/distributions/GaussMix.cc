@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.8 2003/10/14 01:14:37 yoshua Exp $ 
+ * $Id: GaussMix.cc,v 1.9 2004/01/28 22:42:52 ouimema Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -761,7 +761,7 @@ void GaussMix::EM(VMat samples, real relativ_change_stop_value)
 
   build();
 
-  bool converged=false;
+//  bool converged=false;
   int count = 20;
   Mat pok(900,3);
   for(int i=0;i<900;i++)
@@ -959,7 +959,7 @@ void GaussMix::generateGeneral(Vec &x) const
   // now add sample from N( 0,diag(lambda0) )
   norm.resize(D);
   fill_random_normal(norm);
-  x += norm*sigma[l]; // sigma[l] has lambda_0[l]
+  x += norm*sqrt(sigma[l]); // sigma[l] has lambda_0[l]
   x += mu(l);
 }
 
