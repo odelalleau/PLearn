@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.26 2004/01/20 18:28:10 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.27 2004/01/20 21:17:41 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -71,6 +71,7 @@ ConditionalDensityNet::ConditionalDensityNet()
    batch_size(1),
    maxY(1), // if Y is normalized to be in interval [0,1], that would be OK
    log_likelihood_vs_squared_error_balance(1),
+   separate_mass_point(1),
    n_output_density_terms(0),
    steps_type("sloped_steps"),
    centers_initialization("data"),
