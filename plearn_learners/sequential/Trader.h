@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.h,v 1.1 2003/09/24 19:41:01 dorionc Exp $ 
+ * $Id: Trader.h,v 1.2 2003/09/27 04:05:24 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -60,6 +60,17 @@ public:
 private:  
   bool build_complete;
   
+  //! Time at which test was called the very first time
+  mutable int very_first_test_t;
+
+  //! The index of the SP500 column in the vmat (if sp500 != ""; see below)
+  int sp500_index;
+  mutable VecStatsCollector internal_stats; //log_returns; //!< If sp500 != ""; see below
+  enum stats_indices { rt=0, log_rel_rt=1, log_sp=2 };
+  
+  mutable VMat internal_data_set;                 //!< A reference to the largest of train_set/testset  
+  
+  
 protected:
   
   int nb_assets;               //!< Simply assets_names.length()
@@ -70,28 +81,39 @@ protected:
   //! List of indices associated with the tradable flag fields in the VMat
   TVec<int> assets_tradable_indices;
 
-  //! The index of the SP500 column in the vmat (if sp500 != ""; see below)
-  int sp500_index;
-  mutable VecStatsCollector log_returns; //!< If sp500 != ""; see below
-  
-  mutable VMat internal_data_set;                 //!< A reference to the largest of train_set/testset
-  
-  mutable StatsCollector Rt_stat;
-
   //Dans le stats collector mutable Vec test_Rt;                 //!< The return on each test period
   mutable Vec stop_loss_values;        //!< Will be used to keep track of the losses/gains
 
-  real& weights(int k, int t) const;
+  
+  /*! The portfolios matrix is used to store the positions (weights) in each asset under the 
+        convention that, if needed, the first asset is the margin account position. The portfolio 
+        matrix will have a length of max_seq_len. Its r^th row will be initialized with the portfolio 
+        predicted by the advisor at time r, therefor corresponding to the ideal portfolio at time
+        t=r+horizon given the information at time r. 
 
-public:
+      The ideal portfolios suggested by the advisor will then by faced to market reality of corrected 
+        directly in the portfolios matrix.
+  */
+  mutable Mat portfolios;
   
-private:
-  //! This does the actual building
-  void build_();
+  //! Access the portfolio weight k at time t (see the portfolios matrix comment) 
+  real& weight(int k, int t) const { return portfolios(t-horizon, k); }
+
+  //***********************
+  // Abstract Methods     *   
+  //***********************
   
-protected:
-  //! Declare this class' options
-  static void declareOptions(OptionList& ol);
+  /*! 
+    SUBCLASS WRITING:
+      Trader::test method SHOULD NOT BE OVERLOADED by ANY subclass!!! It does 
+        some pre and postprocessing to the body of the test method.
+
+      The method to be overloaded is trader_test and it will be called by
+        Trader::test for each of test's time step. The method must set the 
+        absolute & relative returns on test period t.
+  */
+  virtual void trader_test(int t, VMat testset, 
+                           real& absolute_return_t, real& relative_return_t) const =0;
   
 public:
   
@@ -170,15 +192,11 @@ public:
   bool deduce_assets_names;
 
   //**************
-  // Methods     *   
+  // Methods     *  
   //**************
   
   //! This parses the train_set VMat to get the infos on the assets
-  static void assets_info(const VMat& vmat, TVec<string>& names,
-                          bool the_first_asset_is_cash,  const string& risk_free_rate_,
-                          TVec<int>& price_indices,      const string& price_tag_,
-                          TVec<int>& tradable_indices,   const string& tradable_tag_,
-                          bool deduce_assets_names_);
+  void assets_info();
   
   //! Returns the price of the given asset at a given *TEST* time. 
   inline real price(int k, int t) const
@@ -202,15 +220,15 @@ public:
     }
   
   /*!  
-    Returns |test_weights(k, t) - test_weights(k, t+1)| (if < rebalancing_threshold) 
+    Returns |weight(k, t) - weight(k, t+1)| (if < rebalancing_threshold) 
     or 0, otherwise.
 
     Also calls stop_loss
   */
   real delta(int k, int t) const;
-  
-  virtual bool stop_loss(int k, int t) const = 0;
 
+  //! Ensures a basic stop loss
+  virtual bool stop_loss(int k, int t) const;
   
   //! Calls the inherited::setTrainingSet and the advisor one
   virtual void setTrainingSet(VMat training_set, bool call_forget=true);
@@ -220,17 +238,32 @@ public:
   //**********************
   // Learner Methods     *   
   //**********************
+private:
+  //! This does the actual building
+  void build_();
+  
+protected:
+  //! Declare this class' options
+  static void declareOptions(OptionList& ol);
 
+public:
   //! simply calls inherited::build() then build_()
   virtual void build();
   
-  /*! This method should be a generic way to do things within a Trader
-       and will be overloaded only by models have special particularities
+  /*! 
+    This method should be a generic way to do things within a Trader
+      and will be overloaded only by models have special particularities
    */
   virtual void train();
   
+  /*! 
+    SUBCLASS WRITING:
+      This method SHOULD NOT BE OVERLOADED by ANY subclass!!! It does 
+        some pre and postprocessing to the body of the test method.
+        (see the trader_test method comment above)
+  */
   virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
-                    VMat testoutputs=0, VMat testcosts=0) const     =0;
+                    VMat testoutputs=0, VMat testcosts=0) const;
   
   virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                      Vec& output, Vec& costs) const;

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancialAdvisor.cc,v 1.1 2003/09/24 19:41:01 dorionc Exp $ 
+   * $Id: FinancialAdvisor.cc,v 1.2 2003/09/27 04:05:24 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -49,7 +49,8 @@ using namespace std;
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(FinancialAdvisor, "ONE LINE DESCR", "NO HELP");
 
-FinancialAdvisor::FinancialAdvisor()
+FinancialAdvisor::FinancialAdvisor():
+  trader(0)
 {}
 
 void FinancialAdvisor::build()
@@ -60,17 +61,11 @@ void FinancialAdvisor::build()
 
 void FinancialAdvisor::build_()
 {      
-  if(max_seq_len != -1)
-  {
-    state.resize(max_seq_len, outputsize());
-    state.fill(MISSING_VALUE);
-  }
 }
 
 void FinancialAdvisor::forget()
 {
   inherited::forget();
-  if(state) state.fill(MISSING_VALUE);
 }
 
 void FinancialAdvisor::declareOptions(OptionList& ol)

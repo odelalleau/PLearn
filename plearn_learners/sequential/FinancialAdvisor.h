@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancialAdvisor.h,v 1.1 2003/09/24 19:41:01 dorionc Exp $ 
+   * $Id: FinancialAdvisor.h,v 1.2 2003/09/27 04:05:24 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -58,9 +58,6 @@ public:
 
   //! The learner on which this advisor is synchronised
   Trader* trader;
-
-  //! This field is mainly used in financial learner such as FuturesTrader to get AND modify portofolios' positions during test
-  mutable Mat state;
 
 protected:
   

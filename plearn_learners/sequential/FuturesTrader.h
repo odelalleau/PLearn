@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.h,v 1.6 2003/09/24 19:22:43 dorionc Exp $ 
+   * $Id: FuturesTrader.h,v 1.7 2003/09/27 04:05:24 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.h */
@@ -49,15 +49,30 @@ using namespace std;
 class FuturesTrader: public Trader
 {
 public:
-  typedef SequentialLearner inherited;
+  typedef Trader inherited;
   
 protected:
   // *********************
   // * protected options *
   // *********************
-  
-  //! Time at which test was called the very first time
-  mutable int very_first_test_t;
+
+
+  // *********************
+  // * protected members *
+  // * SUBCLASS WRITING  *
+  // *********************
+
+  /*! 
+    SUBCLASS WRITING:
+      Trader::test method SHOULD NOT BE OVERLOADED by ANY subclass!!! It does 
+        some pre and postprocessing to the body of the test method.
+
+      The method to be overloaded is trader_test and it will be called by
+        Trader::test for each of test's time step. The method must set the 
+        absolute & relative returns on test period t.
+  */
+  virtual void trader_test(int t, VMat testset, 
+                           real& absolute_return_t, real& relative_return_t) const;
   
 public:
   
@@ -74,10 +89,7 @@ public:
   //**************
   // Methods     *   
   //**************
-  
-  //! Ensures a basic stop loss
-  virtual bool stop_loss(int k, int t) const;
-  
+      
 private:
   //! This does the actual building
   void build_();
@@ -90,10 +102,7 @@ public:
   
   //! simply calls inherited::build() then build_()
   virtual void build();
-  
-  virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
-                    VMat testoutputs=0, VMat testcosts=0) const;
-  
+    
   virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                      Vec& output, Vec& costs) const;
   
