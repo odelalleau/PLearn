@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.h,v 1.3 2003/05/22 16:30:18 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.h,v 1.4 2003/05/22 18:26:45 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -93,6 +93,7 @@ using namespace std;
       // used to store the previous learning rates evolution
       Vec old_evol;
       Array<Mat> oldgradientlocations; // used for the stochastic hack
+      int cost_stage; // the last stage when cost was computed
 
     public: 
 
@@ -139,41 +140,14 @@ using namespace std;
 
   private:
 
-    void build_() {
-      early_stop = false;
-      learning_rate = start_learning_rate;
-      SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
-      stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
-      params.clearGradient();
-      int n = params.nelems();
-      if (n > 0) {
-        learning_rates.resize(n);
-        gradient.resize(n);
-        tmp_storage.resize(n);
-        old_evol.resize(n);
-        oldgradientlocations.resize(params.size());
-        meancost.resize(cost->size());
-        learning_rates.fill(start_learning_rate);
-        switch (learning_rate_adaptation) {
-          case 0:
-            break;
-          case 1:
-            // tmp_storage is used to store the old parameters
-            params.copyTo(tmp_storage);
-            old_evol.fill(0);
-            break;
-          case 2:
-            // tmp_storage is used to store the initial opposite gradient
-            Optimizer::computeOppositeGradient(this, tmp_storage);
-            break;
-        }
-      }
-    }
+    void build_();
     
   public:
 
     virtual real optimize();
     virtual bool optimizeN(VecStatsCollector& stats_coll);
+
+    void computeCost();
 
   private:
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.12 2003/05/21 13:42:11 tihocan Exp $
+   * $Id: Optimizer.h,v 1.13 2003/05/22 18:26:45 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -88,7 +88,7 @@ using namespace std;
       
       //! Used by the gradient stats collector, to know when an epoch is
       //! finished. Should be set by the learner.
-      int nstages_per_epoch;
+      int nstages_per_epoch; // TODO See how redundant it is with nstages
       
     private:
       Vec temp_grad;  //!< used to store temp stuff for gradient stats
@@ -138,6 +138,11 @@ using namespace std;
       void addMeasurer(Measurer& measurer);
       
       virtual bool measure(int t, const Vec& costs);
+      
+      //! Compute the mean cost from the last time we called computeCost()
+      //! This method should be called by the Learner
+      virtual void computeCost();
+      
       
       //!  sub-classes should define this, which is the main method
       virtual real optimize() = 0;

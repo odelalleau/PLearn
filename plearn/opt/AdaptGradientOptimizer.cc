@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.cc,v 1.4 2003/05/22 16:30:17 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.cc,v 1.5 2003/05/22 18:26:45 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -142,6 +142,42 @@ void AdaptGradientOptimizer::declareOptions(OptionList& ol)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(AdaptGradientOptimizer);
 
+////////////
+// build_ //
+////////////
+void AdaptGradientOptimizer::build_(){
+  early_stop = false;
+  cost_stage = 0;
+  learning_rate = start_learning_rate;
+  SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
+  stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
+  params.clearGradient();
+  int n = params.nelems();
+  if (n > 0) {
+    learning_rates.resize(n);
+    gradient.resize(n);
+    tmp_storage.resize(n);
+    old_evol.resize(n);
+    oldgradientlocations.resize(params.size());
+    meancost.resize(cost->size());
+    meancost.clear();
+    learning_rates.fill(start_learning_rate);
+    switch (learning_rate_adaptation) {
+      case 0:
+        break;
+      case 1:
+        // tmp_storage is used to store the old parameters
+        params.copyTo(tmp_storage);
+        old_evol.fill(0);
+        break;
+      case 2:
+        // tmp_storage is used to store the initial opposite gradient
+        Optimizer::computeOppositeGradient(this, tmp_storage);
+        break;
+    }
+  }
+}
+
 ////////////////////////////
 // adaptLearningRateALAP1 //
 ////////////////////////////
@@ -231,7 +267,7 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
         // there has been no change
         old_evol[j] = 0;
       }
-      real coeff = min(10.0, abs(old_evol[j]));
+//      real coeff = min(10.0, abs(old_evol[j]));
 //      old_evol[j] = array[i]->valuedata[j-k] - old_params[j];
       if (u * old_evol[j] > 0)
         learning_rates[j] += learning_rates[j] * adapt_coeff1; // * coeff;
@@ -283,6 +319,17 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
   // cout << endl;
 }
 
+/////////////////
+// computeCost //
+/////////////////
+void AdaptGradientOptimizer::computeCost() {
+  meancost /= real(stage - cost_stage);
+  cout << stage << " : " << meancost << endl;
+  early_stop = measure(stage,meancost);
+  meancost.clear();
+  cost_stage = stage;
+}
+
 //////////////
 // optimize //
 //////////////
@@ -310,8 +357,6 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
       oldgradientlocations[i] = params[i]->defineGradientLocation(params[i]->matValue);
   }
 
-  meancost.clear();
-  
   int stage_max = stage + nstages; // the stage to reach
 
   for (; !early_stop && stage<stage_max; stage++) {
@@ -368,11 +413,6 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
 
     stats_coll.update(cost->value);
   }
-
-  meancost /= real(nstages);
-
-  cout << stage << " : " << meancost << endl;
-  early_stop = measure(stage+1,meancost);
 
   // Learning rate adaptation after a full epoch
   switch (learning_rate_adaptation) {
