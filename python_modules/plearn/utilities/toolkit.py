@@ -157,6 +157,22 @@ def listdirs(dirs):
             dirs_list.extend( os.listdir(dirc) )
     return dirs_list
 
+def no_none( orig ):
+    """Parses the I{None} elements out of a list.  
+
+    @param orig: The list to parse I{None} elements out of.
+    @type  orig: List.
+
+    @return: An array that has the same elements than the original list
+    I{orig} except for elements that were I{None}.
+    @rtype:  Array.
+    """
+    nonone = []
+    for elem in orig:
+        if elem is not None:
+            nonone.append(elem)
+    return nonone
+
 def plural(nb, sing='', plur='s'):
     if nb > 1:
         return plur
@@ -166,6 +182,11 @@ def quote(s):
     if string.find(s, '\n') != -1:
         return '"""%s"""' % s
     return '"%s"' % s
+
+def quote_if(s):
+    if isinstance(s, types.StringType):
+        return quote(s)
+    return s
 
 def short_doc(obj):
     return doc(obj, True)

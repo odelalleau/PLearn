@@ -86,6 +86,10 @@ class CompilableProgramDefaults(ProgramDefaults):
                               ('compile_options', types.StringTypes) ] )
 
 class Compilable:
+    ## This map will be used to ensure that there are no doubled
+    ## compilation attempts.
+    compilation_status = {}
+    
     def __init__(self):
         raise NotImplementedError(
             "Compilable is an abstract class: use one of "
@@ -93,16 +97,28 @@ class Compilable:
             )
 
     def compilation_succeeded(self):
+        if Compilable.compilation_status.has_key(self.path):
+            return Compilable.compilation_status[self.path]
+
+        ## Internal call: add the status to the map
+        status = None
         if not os.path.exists( self.path ):
-            return False
+            status = False
 
-        if ( os.path.islink( self.path )
-             and not os.path.exists( self.path_to_target() ) ):
-                return False
+        elif ( os.path.islink( self.path )
+               and not os.path.exists( self.path_to_target() ) ):
+            status = False
 
-        return True
+        else: 
+            status = True
+
+        assert isinstance(status, type(True))
+        Compilable.compilation_status[self.path] = status
     
     def compile(self):
+        if Compilable.compilation_status.has_key(self.path):
+            return
+        
         directory_when_called = os.getcwd()
         os.chdir( self.processing_directory )
 
@@ -119,6 +135,9 @@ class Compilable:
         os.system(compile_cmd)
         
         os.chdir( directory_when_called )
+
+        ## This initializes the compilation status
+        self.compilation_succeeded()
 
     def path_to_target(self):
         raise NotImplementedError
