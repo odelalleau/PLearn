@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLEKernel.h,v 1.4 2004/07/20 19:27:46 tihocan Exp $ 
+   * $Id: LLEKernel.h,v 1.5 2004/07/21 15:55:21 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -60,20 +60,25 @@ private:
   //! True iff build() has been called but build_() has not been called yet.
   bool build_in_progress;
   
+  //! Used in 'evaluate_i_x_again' to remember whether x is a training point
+  //! or not.
+  mutable bool x_is_training_point;
+
+  //! Used in 'evaluate_i_x_again' to remember the index of x when it is a
+  //! training point.
+  mutable int x_index;
+    
 protected:
 
   // *********************
   // * Protected options *
   // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
-
   // Fields below are not options.
 
   //! The kernel used to compute the reconstruction weights.
   PP<ReconstructionWeightsKernel> reconstruct_ker;
-    
+
 public:
 
   // ************************
@@ -89,8 +94,6 @@ public:
   // ****************
 
   //! Default constructor.
-  // Make sure the implementation in the .cc initializes all fields to
-  // reasonable default values.
   LLEKernel();
 
   // ******************
@@ -100,13 +103,11 @@ public:
 private: 
 
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
 
 protected: 
   
   //! Declares this class' options.
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
 public:
@@ -122,8 +123,6 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   // Declares other standard object methods.
-  // If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
   PLEARN_DECLARE_OBJECT(LLEKernel);
 
   // **************************
