@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.28 2003/05/21 19:26:17 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.29 2003/07/24 18:18:42 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -91,7 +91,9 @@ ConjGradientOptimizer::ConjGradientOptimizer(
   epsilon(the_epsilon),
   sigma(the_sigma), rho(the_rho), fmax(the_fmax),
   stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
-  tau3(the_tau3)  {}
+  tau3(the_tau3)  {
+    cout << "Warning: you should use the constructor ConjGradientOptimizer(), or some default options may not be set properly" << endl;
+  }
 
 ConjGradientOptimizer::ConjGradientOptimizer(
     VarArray the_params, 
@@ -115,7 +117,9 @@ ConjGradientOptimizer::ConjGradientOptimizer(
   epsilon(the_epsilon),
   sigma(the_sigma), rho(the_rho), fmax(the_fmax),
   stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
-  tau3(the_tau3) {}
+  tau3(the_tau3) {
+    cout << "Warning: you should use the constructor ConjGradientOptimizer(), or some default options may not be set properly" << endl;
+  }
   
 // 
 // declareOptions
