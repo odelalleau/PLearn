@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.cc,v 1.8 2004/04/05 23:05:10 morinf Exp $
+   * $Id: ShiftAndRescaleVMatrix.cc,v 1.9 2004/07/09 18:20:23 tihocan Exp $
    ******************************************************* */
 
 #include "ShiftAndRescaleVMatrix.h"
@@ -51,27 +51,36 @@ PLEARN_IMPLEMENT_OBJECT(ShiftAndRescaleVMatrix, "ONE LINE DESCR",
 
 ShiftAndRescaleVMatrix::
 ShiftAndRescaleVMatrix(VMat underlying_vm, Vec the_shift, Vec the_scale)
-  : shift(the_shift), scale(the_scale), automatic(0), n_train(0), n_inputs(-1)
+: shift(the_shift), scale(the_scale), automatic(0), n_train(0), n_inputs(-1),
+  ignore_missing(false),
+  verbosity(1)
 {
   vm = underlying_vm;
   build_();
 }
 
 
-ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix() :automatic(1),n_train(0), n_inputs(-1) {}
+ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix()
+: automatic(1),n_train(0), n_inputs(-1),
+  ignore_missing(false),
+  verbosity(1)
+{}
 
-ShiftAndRescaleVMatrix::
-ShiftAndRescaleVMatrix(VMat underlying_vm, int n_inputs_)
-  :shift(underlying_vm->width()),
-   scale(underlying_vm->width()), automatic(1),n_train(0), n_inputs(n_inputs_)
+ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix(VMat underlying_vm, int n_inputs_)
+: shift(underlying_vm->width()),
+  scale(underlying_vm->width()), automatic(1),n_train(0), n_inputs(n_inputs_),
+  ignore_missing(false),
+  verbosity(1)
 {
   vm = underlying_vm;
   build_();
 }
 
 ShiftAndRescaleVMatrix::
-ShiftAndRescaleVMatrix(VMat underlying_vm, int n_inputs_, int n_train_)
-  : shift(underlying_vm->width()), scale(underlying_vm->width()), automatic(1), n_train(n_train_), n_inputs(n_inputs_)
+ShiftAndRescaleVMatrix(VMat underlying_vm, int n_inputs_, int n_train_, bool the_ignore_missing, bool the_verbosity)
+: shift(underlying_vm->width()), scale(underlying_vm->width()), automatic(1), n_train(n_train_), n_inputs(n_inputs_),
+  ignore_missing(the_ignore_missing),
+  verbosity(the_verbosity)
 {
   vm = underlying_vm;
   build_();  
@@ -91,6 +100,10 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
                 "when automatic, use only the n_train first examples to estimate shift and scale, if n_train>0.");
   declareOption(ol, "n_inputs", &ShiftAndRescaleVMatrix::n_inputs, OptionBase::buildoption,
                 "when automatic, shift and scale only the first n_inputs columns (If n_inputs<0, set n_inputs from underlying_vmat->inputsize()).");
+  declareOption(ol, "ignore_missing", &ShiftAndRescaleVMatrix::ignore_missing, OptionBase::buildoption,
+                "If set to 1, then missing values will be ignored when computed mean and standard deviation.");
+  declareOption(ol, "verbosity", &ShiftAndRescaleVMatrix::verbosity, OptionBase::buildoption,
+                "Controls the amount of output.");
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
@@ -121,15 +134,31 @@ void ShiftAndRescaleVMatrix::build_()
         if (n_inputs<0)
           PLERROR("ShiftAndRescaleVMatrix: either n_inputs should be provided explicitly or the underlying VMatrix should have a set value of inputsize");
       }
-      if (n_train>0)
-        computeMeanAndStddev(vm.subMatRows(0,n_train), shift, scale);
-      else
-        computeMeanAndStddev(vm, shift, scale);
+      if (ignore_missing) {
+        VMat vm_to_normalize;
+        if (n_train>0)
+          vm_to_normalize = vm.subMat(0, 0, n_train, n_inputs);
+        else
+          vm_to_normalize = vm.subMatColumns(0, n_inputs);
+        TVec<StatsCollector> stats = PLearn::computeStats(vm_to_normalize, 1, false);
+        shift.resize(n_inputs);
+        scale.resize(n_inputs);
+        for (int i = 0; i < n_inputs; i++) {
+          shift[i] = stats[i].mean();
+          scale[i] = stats[i].stddev();
+        }
+      } else {
+        if (n_train>0)
+          computeMeanAndStddev(vm.subMatRows(0,n_train), shift, scale);
+        else
+          computeMeanAndStddev(vm, shift, scale);
+      }
       negateElements(shift);
       for (int i=0;i<scale.length();i++) 
         if (scale[i]==0)
         {
-          PLWARNING("ShiftAndRescale: data column number %d is constant",i);
+          if (verbosity >= 1)
+            PLWARNING("ShiftAndRescale: data column number %d is constant",i);
           scale[i]=1;
         }
       invertElements(scale);

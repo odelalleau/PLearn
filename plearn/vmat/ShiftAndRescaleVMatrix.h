@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.h,v 1.7 2004/06/26 15:11:15 tihocan Exp $
+   * $Id: ShiftAndRescaleVMatrix.h,v 1.8 2004/07/09 18:20:23 tihocan Exp $
    ******************************************************* */
 
 
@@ -66,12 +66,14 @@ public:
   bool automatic; // find shift and scale automatically?
   int n_train; // when automatic, use the n_train first examples to estimate shift and scale
   int n_inputs; // when automatic, 
+  bool ignore_missing;
+  int verbosity;
 
   //! For all constructors, the original VMFields are copied upon construction
   ShiftAndRescaleVMatrix();
   ShiftAndRescaleVMatrix(VMat underlying_distr, Vec the_shift, Vec the_scale);
   ShiftAndRescaleVMatrix(VMat underlying_distr, int n_inputs);
-  ShiftAndRescaleVMatrix(VMat underlying_distr, int n_inputs, int n_train);
+  ShiftAndRescaleVMatrix(VMat underlying_distr, int n_inputs, int n_train, bool the_ignore_missing = false, bool the_verbosity = 1);
 
   PLEARN_DECLARE_OBJECT(ShiftAndRescaleVMatrix);
 
