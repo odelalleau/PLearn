@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.h,v 1.4 2003/07/03 23:31:41 plearner Exp $
+   * $Id: Func.h,v 1.5 2003/07/04 18:30:14 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -88,12 +88,12 @@ public:
 
   // Build options:
   VarArray inputs;
+  VarArray parameters;  //!< nonInputSources
   VarArray outputs;
 
   // Other variables
   int inputsize;
   int outputsize;
-  VarArray parameters;  //!< nonInputSources
   VarArray fproppath;
   VarArray bproppath;
   VarArray parentspath; //!<  path on which to do a fprop to update the values of all the non-input direct parents on the fproppath (this will be called by method recomputeParents() )
@@ -114,8 +114,6 @@ protected:
  public:
   Function();
   Function(const VarArray& the_inputs, const VarArray& the_outputs);
-
-  //! DEPRECATED Please avoid using this constructor.
   Function(const VarArray& the_inputs, const VarArray& parameters_to_optimize,const VarArray& the_outputs);
   //void bprop(VarArray& parameters_to_optimize);
 

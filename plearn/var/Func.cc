@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.4 2003/07/03 23:31:41 plearner Exp $
+   * $Id: Func.cc,v 1.5 2003/07/04 18:30:14 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,11 +66,13 @@ Func::Func(const VarArray& the_inputs, const VarArray& parameters_to_optimize,co
 Func::Func(const VarArray& the_inputs, const VarArray& the_outputs)
   :PP<Function>(new Function(the_inputs, the_outputs))
 {}
+
 /*void Func::bprop(VarArray& parameters_to_optimize)
 {
   ptr->bprop(parameters_to_optimize);
 }
 */
+
 Vec Func::operator()(const Vec& input)
 { return ptr->operator()(input); }
 
@@ -109,7 +111,7 @@ Function::Function(const VarArray& the_inputs, const VarArray& the_outputs)
 }
 
 Function::Function(const VarArray& the_inputs, const VarArray& parameters_to_optimize,const VarArray& the_outputs)
-  : inputs(the_inputs), outputs(the_outputs), parameters(parameters_to_optimize)
+  : inputs(the_inputs), parameters(parameters_to_optimize), outputs(the_outputs)
 {
   build_();
 }
@@ -126,6 +128,8 @@ void Function::declareOptions(OptionList& ol)
 {
   declareOption(ol, "inputs", &Function::inputs, OptionBase::buildoption,
                 "The list of input variabes of this function");
+  declareOption(ol, "parameters", &Function::parameters, OptionBase::buildoption,
+                "The list of parameters to optimize");
   declareOption(ol, "outputs", &Function::outputs, OptionBase::buildoption,
                 "The list of output variabes of this function");
   
