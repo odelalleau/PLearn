@@ -484,5 +484,8 @@ class RunTestRoutine(Routine):
         if diffs == []:
             self.set_status( "Succeeded" )
         else:
-            vprint.new_report( self.test.get_name()+'.failed', diffs )
+            report_path = os.path.join( Test.run_results,
+                                        self.test.get_name()+'.failed' )
+            toolkit.lines_to_file( diffs, report_path )
+            ##vprint.new_report( self.test.get_name()+'.failed', diffs )
             self.set_status( "Failed" )

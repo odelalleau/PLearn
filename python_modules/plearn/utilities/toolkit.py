@@ -144,6 +144,23 @@ def is_recursively_empty(directory):
             return False
     return True
 
+def lines_to_file(lines, filepath):
+    """Print the lines in a file named I{filepath}.
+
+    @param lines: The lines to be printed in the file. Do not add end of
+    lines at the end of your lines; it will be made here.
+    @type  lines: List of strings.
+
+    @param filepath: The path to the file in which to output I{lines}. The
+    file may not exist, but the directory (if any) must.
+    @type  filepath: String.
+    """
+    output_file = open(filepath, 'w')
+    for line in lines:
+        output_file.write( line )
+    output_file.close()
+
+
 def listdirs(dirs):
     """Return the list of files in all of I{dirs}.
 

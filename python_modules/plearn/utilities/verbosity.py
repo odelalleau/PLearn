@@ -1,51 +1,8 @@
 import os, shutil, string
 import plearn.utilities.toolkit as toolkit
 
-class Reporter:
-    def __init__(self, directory=None):
-        if directory is not None:
-            self.open_reporter( directory )
-        
-    def open_reporter(self, directory):
-        if hasattr(self, 'directory'):
-            raise RuntimeError("Must call open_reporter only once.")
-
-        self.directory = os.path.abspath( directory )
-
-        ## What to do with old reports
-        if os.path.exists( self.directory ):
-            answer = None
-            while not answer in ['a', 'k', 'r']:
-                answer = raw_input(
-                    "Directory %s exists: abort (a), archive (k) or remove (r): "
-                    % self.directory
-                    )
-
-            if answer == 'a':
-                raise KeyboardInterrupt
-            elif answer == 'k':
-                toolkit.timed_version_backup( self.directory )
-            elif answer == 'r':
-                shutil.rmtree( self.directory )
-
-        ## Finally, ensure that a fresh version of the directory exists
-        os.makedirs( self.directory )
-
-    def new_report(self, report_name, lines):
-        if not hasattr(self, 'directory'):
-            raise RuntimeError("Must call open_reporter prior to use new_report.")
-
-        report_path = os.path.join(self.directory, report_name)
-        report_file = open(report_path, 'w')
-        for line in lines:
-            report_file.write( line )
-        report_file.close()
-
-            
-class VerbosityPrint( Reporter ):
-    def __init__(self, verbosity, default_priority=0, report_directory=None):
-        Reporter.__init__(self, report_directory)
-        
+class VerbosityPrint:
+    def __init__(self, verbosity, default_priority=0 ):
         self.verbosity = int(verbosity)
         self.default_priority = default_priority
 
@@ -101,7 +58,6 @@ class VerbosityPrint( Reporter ):
         self( string.join( formatted, '\n' ) )
         self( "" )
 
-                  
 class __global_vprint:
     vpr = None
     def __call__(self, msg, priority=None):
