@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.25 2004/11/17 16:15:46 tihocan Exp $
+   * $Id: MemoryVMatrix.cc,v 1.26 2004/11/26 14:49:23 tihocan Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -111,7 +111,7 @@ void MemoryVMatrix::build_()
   if (data_vm) {
     // Precompute data from data_vm;
     memory_data = data_vm->toMat();
-    copySizesFrom(data_vm);
+    setMetaInfoFrom(data_vm);
   } else {
     memory_data = data;
   }
