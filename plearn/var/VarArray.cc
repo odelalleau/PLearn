@@ -34,13 +34,13 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.cc,v 1.17 2004/11/24 18:28:44 tihocan Exp $
+   * $Id: VarArray.cc,v 1.18 2005/02/24 15:12:22 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "VarArray.h"
 #include "NaryVariable.h"
-#include <plearn/display/DisplayUtils.h>
+//#include <plearn/display/DisplayUtils.h>
 #include "VarArrayElementVariable.h"
 
 namespace PLearn {

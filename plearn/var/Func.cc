@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.20 2004/09/14 16:04:38 chrish42 Exp $
+   * $Id: Func.cc,v 1.21 2005/02/24 15:12:22 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,7 +47,7 @@
 #include "Var.h"
 #include "Var_operators.h"
 #include "TimesConstantVariable.h"
-#include <plearn/display/DisplayUtils.h> ////////// to remove
+//#include <plearn/display/DisplayUtils.h> ////////// to remove
 
 namespace PLearn {
 using namespace std;
@@ -234,9 +234,9 @@ void Function::fbprop(const Vec& in, const Vec& out, const Vec& input_gradient, 
   if (out.hasMissing())
     PLERROR("Function::fbprop: detected MISSING_VALUE in function output!");
   
-  static bool displayvargraph=false;
-  if (displayvargraph)
-    displayVarGraph(outputs,true);
+  //static bool displayvargraph=false;
+  //if (displayvargraph)
+  //  displayVarGraph(outputs,true);
 #endif
 }
 
@@ -590,12 +590,12 @@ void Function::verifySymbolicGradient(const Vec& in)
   fbprop(in,out,gradient1,output_gradient);
   cout << "Bprop computed gradient: " << gradient1 << endl; 
   //cout << "Display f proppath" << endl;
-  displayFunction(this, true, false);
+  //displayFunction(this, true, false);
   
   Func df = differentiate();
   //cout << "Display df proppath" << endl;
   Vec gradient2 = df(in);
-  displayFunction(df, true, false);
+  //displayFunction(df, true, false);
   cout << "Symbolically computed gradient: " << gradient2 << endl; 
 }
 
