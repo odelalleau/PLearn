@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openSocket.cc,v 1.1 2004/12/22 19:38:14 chrish42 Exp $ 
+   * $Id: openSocket.cc,v 1.2 2005/01/05 19:15:55 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -52,7 +52,7 @@
 namespace {
 
 /** Utility function that returns a std::string describing the last
- *  NPSR error.
+ *  NSPR error.
  *  @todo Move to a separate file if the function finds other users.
  */
 std::string getPrErrorString()
