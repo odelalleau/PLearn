@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.41 2004/05/05 20:12:09 nova77 Exp $
+   * $Id: fileutils.cc,v 1.42 2004/05/05 21:28:39 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -128,7 +128,8 @@ int chdir(const string& path)
 
   bool pathexists(const string& path)
   {
-   struct stat s;
+    struct stat s;
+	 
     int status = stat(path.c_str(),&s);
     if(status!=0)
       return false;
@@ -175,10 +176,9 @@ int chdir(const string& path)
   {
     vector<string> list;
 
-    // norman: added check
 #ifdef WIN32
 
-    // norman: Experimental version of directory listing for WIN32
+    // Experimental version of directory listing for WIN32
 
     WIN32_FIND_DATA fileData; 
     HANDLE hSearch; 
@@ -255,29 +255,31 @@ int chdir(const string& path)
     if(isdir(path))
       return true;
 
-    int pos = 0;
 #if !defined(_MINGW_) && !defined(WIN32)
     mode_t mode = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
 #endif
     string pathpart;
-    do
+    for (size_t pos = 1; pos != string::npos;)
+    {
+			// keep ++pos here!
+		  ++pos;
+			pos = path.find(slash, pos);
+      if( pos != string::npos )
+        pathpart = path.substr(0, pos);
+      else
+        pathpart = path;
+				
+      if(!isdir(pathpart))
       {
-        pos++;
-        pos = path.find(slash,pos);
-        if(pos >= 0)
-          pathpart = path.substr(0,pos);
-        else
-          pathpart = path;
-        if(!isdir(pathpart))
-          {
 #if !defined(_MINGW_) && !defined(WIN32)
-            if(mkdir(pathpart.c_str(),mode)!=0)
+        if(mkdir(pathpart.c_str(), mode)!=0)
 #else
-            if(mkdir(pathpart.c_str())!=0)
+        if(mkdir(pathpart.c_str())!=0)
 #endif
-              return false;
-          }
-      } while(pos>=0);
+          return false;
+      }
+    }
+		
     return true;
   }
 
