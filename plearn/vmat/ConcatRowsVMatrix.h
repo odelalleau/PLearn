@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.h,v 1.6 2004/04/05 23:14:13 morinf Exp $
+   * $Id: ConcatRowsVMatrix.h,v 1.7 2004/06/18 19:12:01 tihocan Exp $
    ******************************************************* */
 
 
@@ -109,9 +109,14 @@ DECLARE_OBJECT_PTR(ConcatRowsVMatrix);
 inline VMat vconcat(VMat d1, VMat d2)
 { return new ConcatRowsVMatrix(d1,d2); }
 
-inline VMat vconcat(Array<VMat> ds)
-{ return new ConcatRowsVMatrix(ds); }
-
+inline VMat vconcat(Array<VMat> ds) {
+  if (ds.size() == 1) {
+    // Only one matrix: no need to use a ConcatRowsVMatrix.
+    return ds[0];
+  } else {
+    return new ConcatRowsVMatrix(ds);
+  }
+}
 
 } // end of namespcae PLearn
 #endif
