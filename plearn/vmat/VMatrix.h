@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.3 2003/03/06 17:39:51 yoshua Exp $
+   * $Id: VMatrix.h,v 1.4 2003/03/06 22:49:44 yoshua Exp $
    ******************************************************* */
 
 
@@ -56,37 +56,16 @@
 
 #include "VMField.h"
 
+
 namespace PLearn <%
 using namespace std;
 
 class Ker;
 class VMat;
 class Func;
+class VVector;
 
-/*! ** VVec ** */
-//! A VVec represents an abstract notion of "sample" or "example"
-//! which will allow us to generalize VMatrices to handle objects
-//! that are not conveniently representable with ordinary vectors.
-class VVec : public Object
-{
-    // We leave the actual representation choice to some
-    // underlying virtual matrix:
-  public:
-    VMat mat;
-    int row_index;
-
-    // to keep compatibility with most current code,
-    // VVec's can be converted to Vec's
-    virtual Vec toVec() {
-      Vec row_vec(mat.width()); // somewhat wasteful
-      mat.getRow(row_index,row_vec);
-      return row_vec;
-    }
-    virtual void toVec(Vec row_vec) {
-      mat.getRow(row_index,row_vec);
-    }
-    int length() { return mat.width(); }
-};
+typedef PP<VVector> VVec;
 
 /*! ** VMatrix ** */
 
@@ -230,6 +209,10 @@ public:
   //!  These methods do not usually need to be overridden in subclasses
   //!  (default versions call getSubRow, which should do just fine)
   virtual void getRow(int i, Vec v) const; //!<  copies row i into v (which must have appropriate length equal to the VMat's width)
+
+ //! get virtual row
+  virtual void getVRow(int i, VVec v) const;
+
   virtual void putRow(int i, Vec v);
   virtual void fill(real value);
   virtual void getMat(int i, int j, Mat m) const; //!<  copies the submatrix starting at i,j into m (which must have appropriate length and width)
@@ -347,6 +330,7 @@ public:
 };
 
 DECLARE_OBJECT_PTR(VMatrix);
+
 
 %> // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.5 2003/02/27 09:22:12 plearner Exp $
+* $Id: VMatrix.cc,v 1.6 2003/03/06 22:49:43 yoshua Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -49,6 +49,7 @@
 #include "Func.h"
 #include "TopNI.h"
 #include "BottomNI.h"
+#include "VVec.h"
 
 //#include "VMat.h"
 //#include "TMat_maths.h"
@@ -362,6 +363,11 @@ void VMatrix::getRow(int i, Vec v) const
     PLERROR("In VMatrix::getRow(i,v) length of v and width of VMatrix differ");
 #endif
   getSubRow(i,0,v);
+}
+
+void VMatrix::getVRow(int i, VVec v) const
+{
+  PLERROR("VMatrix::getVRow not defined for this class");
 }
 
 void VMatrix::putRow(int i, Vec v)
