@@ -31,17 +31,35 @@ variable, if it exists. Otherwise, it is set to os.path.join(home, 'apstatsoft')
 @var plearn_scripts: Simply os.path.join( plearndir, 'scripts' ).
 @type plearn_scripts: String
 
+@var  skeldir: The name of the directory used to store skeletons of
+code to be managed by I{pyskeleton}. [Special directory]
+@type skeldir: String.
+
+@var skeleton_directories: Absolute paths to directories containing
+skeletons. The value of I{skeleton_directories} is parsed from the
+SKELETONS_PATH environment variable (split over ':'), if it
+exists. Otherwise, it is set to [ os.path.join(plearn_scripts, skeldir) ]. 
+@type skeleton_directories: Array of strings.
+
 @var  pymake_objs: The name of the directory used by pymake to store
-compilation results.
+compilation results. [Special directory]
 @type pymake_objs: String.
 
+@var  pymake_hidden: The name of the hidden directory used by pymake to
+store its configuration files.
+@type pymake_hidden: String.
+
 @var  cvs_directory: The name of the directory used by cvs to store its
-internal state.
+internal state. [Special directory]
 @type cvs_directory: String.
 
 @var  pytest_dir: The name of the directory used by pytest to store
-test results.
+test results. [Special directory]
 @type pytest_dir: String.
+
+@var special_directories: An array of directory names that are
+considered to be internal to specific PLearn (or related)
+applications. 
 """
 import os, string
 
@@ -66,13 +84,21 @@ plbranches             = { plearndir     : 'PLearn',
 
 plearn_scripts         = os.path.join( plearndir, 'scripts' )
 
+skeldir                = "Skeletons"
+
+skeleton_directories   = string.split( os.getenv( 'SKELETONS_PATH',
+                                                  os.path.join(plearn_scripts, skeldir) ), 
+                                       ':'
+                                       )
+
 pymake_objs            = "OBJS"
 pymake_hidden          = ".pymake"
 cvs_directory          = "CVS"
 pytest_dir             = "pytest"
 
-special_directories    = [ pymake_objs,   pymake_hidden,
-                           cvs_directory, pytest_dir    ]
+special_directories    = [ skeldir,
+                           pymake_objs,   pymake_hidden,
+                           cvs_directory, pytest_dir     ]
 
 def exempt_of_subdirectories( directories ):
     """Remove any path in list that is a subdirectory of some other directory in the list.

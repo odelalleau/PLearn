@@ -133,6 +133,23 @@ def is_recursively_empty(directory):
             return False
     return True
 
+def listdirs(dirs):
+    """Return the list of files in all of I{dirs}.
+
+    @param dirs: A list of directory paths from which to extract file
+    entries (using U{os.listdir<http://www.python.org/doc/2.3.4/lib/os-file-dir.html>})
+    
+    @type  dirs: List of strings
+
+    @return: List of files within all directories in I{dirs}.
+    @rtype:  List of strings
+    """
+    dirs_list = []
+    for dirc in dirs:
+        if os.path.exists(dirc):
+            dirs_list.extend( os.listdir(dirc) )
+    return dirs_list
+
 def plural(nb, sing='', plur='s'):
     if nb > 1:
         return plur
