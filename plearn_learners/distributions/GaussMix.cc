@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.30 2004/05/21 13:01:32 yoshua Exp $ 
+ * $Id: GaussMix.cc,v 1.31 2004/05/21 14:50:49 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -232,33 +232,33 @@ void GaussMix::computeMeansAndCovariances() {
   }
 }
 
-/////////////////////
-// computeLikehood //
-/////////////////////
-real GaussMix::computeLikehood(Vec& x, int j) {
+//////////////////////////
+// computeLogLikelihood //
+//////////////////////////
+real GaussMix::computeLogLikelihood(Vec& x, int j) {
   if (type == "spherical") {
-    real p = 1.0;
+    real p = 0.0;
     if (sigma[j] < sigma_min) {
-      return 0;
+      return -1e10;
     }
     for (int k = 0; k < D; k++) {
-      p *= gauss_density(x[k], mu(j, k), sigma[j]);
+      p += gauss_log_density(x[k], mu(j, k), sigma[j]);
 #ifdef BOUNDCHECK
       if (isnan(p)) {
-        PLWARNING("In GaussMix::computeLikehood - Density is nan");
+        PLWARNING("In GaussMix::computeLogLikelihood - Density is nan");
       }
 #endif
     }
     return p;
   } else if (type == "diagonal") {
-    real p = 1.0;
+    real p = 0.0;
     real sig;
     for (int k = 0; k < D; k++) {
       sig = diags(k,j);
       if (sig < sigma_min) {
-        return 0;
+        return -1e10;
       } else {
-        p *= gauss_density(x[k], mu(j, k), sig);
+        p += gauss_log_density(x[k], mu(j, k), sig);
       }
     }
     return p;
@@ -281,9 +281,9 @@ real GaussMix::computeLikehood(Vec& x, int j) {
       // t -= 0.5 * (1/lambda_k - 1/lambda_0) * ((x - mu)'.v_k)^2
       t -= 0.5 * (1 / max(var_min,eigenvalues(j, k)) - one_over_lambda0) * square(dot(eigenvectors[j](k), x_centered));
     }
-    return exp(t);
+    return t;
   } else {
-    PLERROR("In GaussMix::computeLikehood - Not implemented for this type of Gaussian");
+    PLERROR("In GaussMix::computeLogLikelihood - Not implemented for this type of Gaussian");
   }
   return 0;
 }
@@ -293,34 +293,34 @@ real GaussMix::computeLikehood(Vec& x, int j) {
 ///////////////////////
 void GaussMix::computePosteriors() {
   static Vec sample;
-  static Vec likehood;
+  static Vec log_likelihood;
   sample.resize(D);
-  likehood.resize(L);
-  real sum_likehood;
+  log_likelihood.resize(L);
+  real sum_likelihood;
   for (int i = 0; i < nsamples; i++) {
     train_set->getSubRow(i, 0, sample);
-    sum_likehood = 0;
-    // First we need to compute the likehood P(x_i | j).
+    // First we need to compute the likelihood P(x_i | j).
     for (int j = 0; j < L; j++) {
-      likehood[j] = computeLikehood(sample, j) * alpha[j];
+      log_likelihood[j] = computeLogLikelihood(sample, j) * alpha[j];
 #ifdef BOUNDCHECK
-      if (isnan(likehood[j])) {
-        PLWARNING("In GaussMix::computePosteriors - computeLikehood returned nan");
+      if (isnan(log_likelihood[j])) {
+        PLWARNING("In GaussMix::computePosteriors - computeLogLikelihood returned nan");
       }
 #endif
-      sum_likehood += likehood[j];
     }
+    sum_likelihood = exp(logadd(log_likelihood));
 #ifdef BOUNDCHECK
-    if (sum_likehood < epsilon) {
-      // x_i is far from each Gaussian, and thus sum_likehood is null
-      // because of numerical approximations. We find the closest
-      // Gaussian, and say P(j | x_i) = delta_{j is the closest Gaussian}
+    if (sum_likelihood < epsilon) {
+      // x_i is far from each Gaussian, and thus sum_likelihood is null
+      // because of numerical approximations. We should find the closest
+      // Gaussian if this happens, and say P(j | x_i) = delta_{j is the
+      // closest Gaussian}
       PLWARNING("In GaussMix::computePosteriors - A point has near zero density");
     }
 #endif
     for (int j = 0; j < L; j++) {
       // Compute the posterior P(j | x_i) = P(x_i | j) * alpha_i / (sum_i ")
-      posteriors(i, j) = likehood[j] / sum_likehood;
+      posteriors(i, j) = exp(log_likelihood[j]) / sum_likelihood;
     }
   }
   // Now update the sample weights.
@@ -723,18 +723,18 @@ void GaussMix::updateSampleWeights() {
   }
 }
 
-double GaussMix::log_density(const Vec& x) const
+real GaussMix::log_density(const Vec& x) const
 { 
   PLERROR("In GaussMix::log_density - Not implemented");
   return 0;
 }
 
-double GaussMix::survival_fn(const Vec& x) const
+real GaussMix::survival_fn(const Vec& x) const
 { 
    PLERROR("survival_fn not implemented for GaussMix"); return 0.0; 
 }
 
-double GaussMix::cdf(const Vec& x) const
+real GaussMix::cdf(const Vec& x) const
 { 
   PLERROR("cdf not implemented for GaussMix"); return 0.0; 
 }
