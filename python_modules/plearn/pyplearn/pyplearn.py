@@ -493,15 +493,15 @@ U{Epytext Markup Language Manual<http://epydoc.sourceforge.net/epytext.html>}
 should not take you more than 15 minutes and you will be ready to document your
 code.
 """
-__cvs_id__ = "$Id: pyplearn.py,v 1.15 2005/02/07 21:20:05 dorionc Exp $"
+__cvs_id__ = "$Id: pyplearn.py,v 1.16 2005/02/08 00:39:08 dorionc Exp $"
 
-import types
+import string, types
 import plearn.utilities.metaprog as metaprog
 
 __all__ = [ 'PyPlearnError', 'ref', 'bind', 'bindref', 'plvar', 'TMat',
             'plargs', 'plarg_defaults', 'bind_plargs',
-            '_plearn_repr', ## 'pl',            
-            'include']
+            'PLearnRepr', 'include'
+            ]
 
 class plearn_snippet:
     """Objects of this class are used to wrap the parts of the Python code
@@ -555,6 +555,94 @@ class UnknownArgumentError(PyPlearnError):
         return "Unknown pyplearn argument: '%s'." % self.arg_name
 
 
+class PLearnRepr:
+    """This class manages pretty formatting of plearn representations."""
+    indent_level   = 0
+
+    def repr(x):
+        """Returns a string that is the PLearn representation
+        of the corresponding Python object."""
+    
+        if hasattr(x, 'plearn_repr') and callable(getattr(x, 'plearn_repr')):
+            ## return _plearn_repr(x.plearn_repr())
+            return x.plearn_repr()
+    
+        elif isinstance(x, float):
+            # Don't use repr, so we don't get 0.20000000000000001 for 0.2
+            return str(x)
+        elif isinstance(x, int):
+            return str(x)
+        elif isinstance(x, str):
+            # Escape double quotes inside the string...
+            # Also replace embedded newlines by \n. Needed so we can include
+            # Python code in triple-quoted strings and the indentation isn't
+            # disturbed by pyplearn_magic_module's add_indent method. In the
+            # future, it'd be nicer to have a smarted add_indent that doesn't
+            # mess up triple-quoted strings.
+            return '"' + x.replace('"', r'\"').replace('\n', r'\n') + '"'
+        elif isinstance(x, list):
+            ## return str(len(x)) + ' [' + ', '.join([_plearn_repr(e) for e in x]) + ']'
+            return ' [' + ', '.join([PLearnRepr.repr(e) for e in x]) + ']'
+        elif isinstance(x, dict):
+            dict_items = [PLearnRepr.repr(k) + ': ' + PLearnRepr.repr(v) for k, v in x.iteritems()]
+            return '{' + ', '.join(dict_items) + '}'
+        elif isinstance(x, tuple) and len(x) == 2:
+            return  PLearnRepr.repr(x[0]) + ':' + PLearnRepr.repr(x[1])
+        elif isinstance(x, plearn_snippet):
+            return x.s
+        elif x is None:
+            return "*0;"
+        else:
+            raise TypeError( 'Does not know how to handle type %s (x = %s)'
+                             % ( type(x), str(x) )
+                             )
+    repr = staticmethod( repr )
+
+    def format( openstr, attribute_strings, closestr ):
+        separator = ( '\n%s'
+                      % string.ljust('', 4*PLearnRepr.indent_level)
+                      )
+                      
+        stringnified_attributes = ' '
+        if len(attribute_strings) > 0:
+            stringnified_attributes = "%s%s%s" % (
+                separator,
+                string.join( attribute_strings, ',%s'%separator ),
+                separator
+                )
+
+        ## Indent level goes down 1
+        PLearnRepr.indent_level -= 1
+
+        return ( "%s%s%s" % ( openstr, stringnified_attributes, closestr ) )
+    format = staticmethod( format )
+
+    def list_plearn_repr( list_of_attributes ):
+        ## Indent level goes up 1
+        PLearnRepr.indent_level += 1
+        
+        attribute_strings = [ PLearnRepr.repr(attr)
+                              for attr in list_of_attributes ]
+        
+        return PLearnRepr.format( "[ ", attribute_strings, " ]" )
+    list_plearn_repr = staticmethod( list_plearn_repr )
+        
+    def plearn_repr( classname, attribute_pairs ):
+        ## Indent level goes up 1
+        PLearnRepr.indent_level += 1
+
+        pretty    = lambda attr_name: string.ljust(attr_name, 30)
+        attribute_strings = [ '%s = %s' % ( pretty(attr),
+                                            PLearnRepr.repr(val) )
+                              for (attr, val) in attribute_pairs ]
+
+        return PLearnRepr.format( "%s("%classname,
+                                       attribute_strings,
+                                       ")"
+                                       )
+    plearn_repr = staticmethod( plearn_repr )
+
+
 _name_to_id = {}
 _id_to_binding = {}
 _last_binding_index = 0
@@ -572,7 +660,7 @@ def bind(name, x):
 
 def ref(name):
     """Makes a reference (with "*1;") to the value associated with name by a previous bind call."""
-    return plearn_snippet('*' + _plearn_repr(_name_to_id[name]) + ';')
+    return plearn_snippet('*' + PLearnRepr.repr(_name_to_id[name]) + ';')
 
 def bindref(name,x):
     """Perform a bind, and return the ref(); convenient for functional-style programming"""
@@ -595,47 +683,9 @@ def _postprocess_refs(s):
        replaces it by the correct definition (eg. *1 -> foo(blah...)."""
     for i in range(1, _last_binding_index+1):
         s = s.replace("*%d;" % i,
-                      "*%d -> %s" % (i, _plearn_repr(_id_to_binding[i])), 1)
+                      "*%d -> %s" % (i, PLearnRepr.repr(_id_to_binding[i])), 1)
     return s
     
-
-def _plearn_repr(x):
-    """Returns a string that is the PLearn representation
-    of the corresponding Python object."""
-
-    if hasattr(x, 'plearn_repr') and callable(getattr(x, 'plearn_repr')):
-        ## return _plearn_repr(x.plearn_repr())
-        return x.plearn_repr()
-
-    elif isinstance(x, float):
-        # Don't use repr, so we don't get 0.20000000000000001 for 0.2
-        return str(x)
-    elif isinstance(x, int):
-        return str(x)
-    elif isinstance(x, str):
-        # Escape double quotes inside the string...
-        # Also replace embedded newlines by \n. Needed so we can include
-        # Python code in triple-quoted strings and the indentation isn't
-        # disturbed by pyplearn_magic_module's add_indent method. In the
-        # future, it'd be nicer to have a smarted add_indent that doesn't
-        # mess up triple-quoted strings.
-        return '"' + x.replace('"', r'\"').replace('\n', r'\n') + '"'
-    elif isinstance(x, list):
-        return str(len(x)) + ' [' + ', '.join([_plearn_repr(e) for e in x]) + ']'
-    elif isinstance(x, dict):
-        dict_items = [_plearn_repr(k) + ': ' + _plearn_repr(v) for k, v in x.iteritems()]
-        return '{' + ', '.join(dict_items) + '}'
-    elif isinstance(x, tuple) and len(x) == 2:
-        return  _plearn_repr(x[0]) + ':' + _plearn_repr(x[1])
-    elif isinstance(x, plearn_snippet):
-        return x.s
-    elif x is None:
-        return "*0;"
-    else:
-        raise TypeError( 'Does not know how to handle type %s (x = %s)'
-                         % ( type(x), str(x) )
-                         )
-
 def TMat(num_rows, num_cols, mat_contents):
     """Instances of this class represent a PLearn TMat.
 
@@ -794,55 +844,3 @@ def bind_plargs(obj, field_names = None, plarg_names = None):
         provided_value = getattr(plargs, arg_name)
         cast = type(default_value)
         setattr(obj, field, cast(provided_value))
-
-## This was moved to the __init__.py file
-##         
-## class _pyplearn_magic_module:
-##     """An instance of this class (instanciated as pl) is used to provide
-##     the magic behavior whereas bits of Python code like:
-##     pl.SequentialAdvisorSelector(comparison_type='foo', etc.) become
-##     a string that can be fed to PLearn instead of a .plearn file."""
-##     indent = ' ' * 4
-    
-##     def add_indent(self, s):
-##         """Adds a level of indentation to the (potentially multi-line) strings
-##         passed as s."""
-##         s = s.strip()
-##         if not '\n' in s:
-##             # Single-line expression, no need to add any indentation
-##             return s
-
-##         lines = s.split('\n')
-##         # Add a leading indentation to all lines except the first one
-##         for i in range(1, len(lines)):
-##             lines[i] = self.indent + lines[i]
-##         return '\n'.join(lines)
-
-##     def __getattr__(self, name):
-##         if name.startswith('__'):
-##            raise AttributeError
-       
-##         def printfunc(**kwargs):
-##             s = [name, '(\n']
-
-##             num_args_printed = 0
-##             num_args = len(kwargs)
-            
-##             for key, value in kwargs.iteritems():
-##                 s.append(self.indent)
-##                 s.append(key)
-##                 s.append(' = ')
-##                 value_repr = _plearn_repr(value)
-##                 s.append(self.add_indent(value_repr))
-##                 if num_args_printed != num_args - 1:
-##                     # Add a comma after every arg except the last one.
-##                     s.append(',')
-##                 s.append('\n')
-##                 num_args_printed += 1
-##             s.append(self.indent + ')\n')
-##             return plearn_snippet(''.join(s))
-        
-##         return printfunc
-
-## pl = _pyplearn_magic_module()
-
