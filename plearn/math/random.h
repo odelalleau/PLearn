@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.h,v 1.10 2005/01/25 14:33:44 tihocan Exp $
+   * $Id: random.h,v 1.11 2005/03/11 19:15:54 tihocan Exp $
    ******************************************************* */
 
 #ifndef RANDOM_H
@@ -174,36 +174,67 @@ void shuffleRows(const TMat<T>& mat)
     }
 }
 
-//! For each column of mat, sort the elements and put in the 'ranks' matrix
+//! For each column of 'mat', sort the elements and put in the 'ranks' matrix
 //! (of the same dimensions) the rank of original elements. More precisely,
 //! Let mat(i,j) be the k-th largest element of column j, than ranks(i,j) will be k.
+//! If the boolean 'ignore_missing' is true, missing values are ignored in the ranking,
+//! and will be assigned rank -1. The returned vector is also filled with the number
+//! of non-missing values in each column.
+//! If 'ignore_missing' is false, the returned vector is empty, and there should not
+//! be missing values in the input matrices (this could lead to crash / NaN).
 template<class T>
-void computeRanks(const TMat<T>& mat, TMat<T>& ranks)
+TVec<int> computeRanks(const TMat<T>& mat, TMat<T>& ranks, bool ignore_missing = false)
 {
+  TVec<int> result;
   int width=mat.width();
   int n=mat.length();
   ranks.resize(n,width);
   TVec<Mat> sorted(width); 
-  // sort all the y's
+  // Sort all the y's.
   for (int j=0;j<width;j++)
     sorted[j].resize(n,2);
-  for (int i=0;i<n;i++)
-  {
-    for (int j=0;j<width;j++)
+  if (ignore_missing) {
+    // We do not know in advance how many non-missing values there are.
+    for (int j = 0; j < width; j++)
+      sorted[j].resize(0,2);
+    Vec val(2);
+    for (int i = 0; i < n; i++)
+      for (int j = 0; j < width; j++) {
+        val[0] = mat(i,j);
+        if (!is_missing(val[0])) {
+          val[1] = i;
+          sorted[j].appendRow(val);
+        }
+      }
+    result.resize(width);
+    for (int j = 0; j < width; j++)
+      result[j] = sorted[j].length();
+  } else {
+    for (int i=0;i<n;i++)
     {
-      sorted[j](i,0)=mat(i,j);
-      sorted[j](i,1)=i;
+      for (int j=0;j<width;j++)
+      {
+        sorted[j](i,0)=mat(i,j);
+#ifdef BOUNDCHECK
+        if (is_missing(sorted[j](i,0)))
+          PLERROR("In computeRanks - Found a missing value, but 'ignore_missing' is false");
+#endif
+        sorted[j](i,1)=i;
+      }
     }
   }
   for (int j=0;j<width;j++)
   {
-    shuffleRows(sorted[j]); // to randomly permute the order of elements which have the same value, i.e. their rank within their category
+    shuffleRows(sorted[j]); // To randomly permute the order of elements which have the same value, i.e. their rank within their category
     sortRows(sorted[j]);
   }
-  // compute the ranks
-  for (int i=0;i<n;i++)
-    for (int j=0;j<width;j++)
+  // Compute the ranks.
+  if (ignore_missing)
+    ranks.fill(-1);
+  for (int j=0;j<width;j++)
+    for (int i=0;i<sorted[j].length();i++)
       ranks(int(sorted[j](i,1)),j) = i;
+  return result;
 }
 
 } // end of namespace PLearn
