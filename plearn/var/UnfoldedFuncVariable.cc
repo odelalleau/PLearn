@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.cc,v 1.7 2004/02/25 21:38:26 tihocan Exp $
+   * $Id: UnfoldedFuncVariable.cc,v 1.8 2004/02/28 20:27:27 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,8 +63,8 @@ UnfoldedFuncVariable::UnfoldedFuncVariable()
 
 UnfoldedFuncVariable::UnfoldedFuncVariable(Var inputmatrix, Func the_f, bool the_transpose)
   :NaryVariable(nonInputParentsOfPath(the_f->inputs,the_f->outputs) & inputmatrix, 
-                transpose ? the_f->outputs[0]->length()*the_f->outputs[0]->width() : inputmatrix->length(),
-                transpose ? inputmatrix->width() : the_f->outputs[0]->length()*the_f->outputs[0]->width()),
+                the_transpose ? the_f->outputs[0]->length()*the_f->outputs[0]->width() : inputmatrix->length(),
+                the_transpose ? inputmatrix->width() : the_f->outputs[0]->length()*the_f->outputs[0]->width()),
    input_matrix(inputmatrix), 
    f(the_f),
    transpose(the_transpose)
