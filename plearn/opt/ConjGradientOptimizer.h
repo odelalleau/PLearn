@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.2 2003/04/14 19:30:12 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.3 2003/04/14 20:21:57 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -142,7 +142,8 @@ private:
       real epsilon,       // the gradient resolution (stop criterion)
       Vec g,              // storage place, first initialized as the gradient
       Vec h,              // same as g
-      Vec delta);         // storage place, size of the gradient
+      Vec delta,          // storage place, size of params.elems()
+      Vec tmp_storage);   // same as delta
 
   // The GSearch algorithm as described in
   // "Direct Gradient-Based Reinforcement Learning:
@@ -156,7 +157,8 @@ private:
       VarArray proppath,
       Vec search_direction, // current direction
       real starting_step_size,
-      real epsilon);
+      real epsilon,
+      Vec tmp_storage);
 };
 
 %> // end of namespace PLearn

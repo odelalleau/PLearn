@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.2 2003/04/14 19:30:09 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.3 2003/04/14 20:21:56 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -139,8 +139,10 @@ void ConjGradientOptimizer::computeOppositeGradient(
     Var cost,
     VarArray proppath,
     const Vec& gradient) {
-  proppath.clearGradient(); // TODO What does that do exactly ?
+  // Clear all what's left from previous computations
+  proppath.clearGradient();
   params.clearGradient();
+  // We want the opposite of the gradient, thus the -1
   cost->gradient[0] = -1;
   proppath.fbprop();
   params.copyGradientTo(gradient);
@@ -158,14 +160,16 @@ bool ConjGradientOptimizer::conjpomdp (
     real epsilon,
     Vec g,
     Vec h,
-    Vec delta) {
+    Vec delta,
+    Vec tmp_storage) {
 
   int i;
   // First perform a line search in the current search direction (h)
-  gSearch(grad, params, costs, proppath, h, starting_step_size, epsilon);
+  gSearch(grad, params, costs, proppath, h, 
+          starting_step_size, epsilon, tmp_storage);
 
+  // delta = Gradient
   (*grad)(params, costs, proppath, delta);
-//  cout << "norm(grad)" << pownorm(g) << endl;
   real norm_g = pownorm(g);
   // g <- delta - g
   for (i=0; i<g.length(); i++) {
@@ -178,15 +182,11 @@ bool ConjGradientOptimizer::conjpomdp (
   }
   if (dot(h, delta) < 0) {
     // h <- delta
-    for (i=0; i<h.length(); i++) {
-      h[i] = delta[i];
-    }
+    h << delta;
   }
   // g <- delta
-  for (i=0; i<g.length(); i++) {
-    g[i] = delta[i];
-  }
-  // We stop when the norm of the gradient is small enough
+  g << delta;
+  // We want to stop when the norm of the gradient is small enough
   return (pownorm(g) < epsilon);
 };
 
@@ -200,14 +200,14 @@ void ConjGradientOptimizer::gSearch (
     VarArray proppath,
     Vec search_direction,
     real starting_step_size,
-    real epsilon) {
+    real epsilon,
+    Vec tmp_storage) {
 
   real step = starting_step_size;
   real sp, sm, pp, pm;
-  Vec initial_values(params.nelems());
 
   // Backup the initial paremeters values
-  params.copyTo(initial_values);
+  params.copyTo(tmp_storage);
 
   params.update(step, search_direction);
   Vec delta(params.nelems());
@@ -220,9 +220,7 @@ void ConjGradientOptimizer::gSearch (
       sp = step;
       pp = prod;
       step = step / 2;
-      // TODO Find a more efficient way to do this !
-      params.copyFrom(initial_values);
-      params.update(step, search_direction);
+      params.update(-step, search_direction);
       (*grad)(params, costs, proppath, delta);
       prod = dot(delta, search_direction);
     }
@@ -234,11 +232,10 @@ void ConjGradientOptimizer::gSearch (
     while (prod > epsilon) {
       sm = step;
       pm = prod;
-      step = step * 2;
-      params.copyFrom(initial_values);
       params.update(step, search_direction);
       (*grad)(params, costs, proppath, delta);
       prod = dot(delta, search_direction);
+      step = step * 2;
     }
     sp = step;
     pp = prod;
@@ -249,7 +246,7 @@ void ConjGradientOptimizer::gSearch (
   else
     step = (sm+sp) / 2;
 
-  params.copyFrom(initial_values);
+  params.copyFrom(tmp_storage);
   params.update(step, search_direction);
 }
 
@@ -267,14 +264,13 @@ real ConjGradientOptimizer::optimize()
   Vec lastmeancost(cost->size());
   early_stop = false;
 
-  params.clearGradient(); // TODO what's the purpose ?
-
   // Initiliazation of the structures for the CONJPOMDP algorithm
   Vec g(params.nelems());
   Vec h(params.nelems());
   Vec delta(params.nelems());
+  Vec tmp_storage(params.nelems());
   computeOppositeGradient(params, cost, proppath, h); 
-  computeOppositeGradient(params, cost, proppath, g); // TODO Use a copy of h instead ?
+  g << h;
   cout << "nupdates =" << nupdates << endl;
 
   // Loop through the epochs
@@ -292,8 +288,9 @@ real ConjGradientOptimizer::optimize()
         epsilon,
         g,
         h,
-        delta);
-    early_stop = false; // TODO hack for test purpose
+        delta,
+        tmp_storage);
+//    early_stop = false; // TODO hack for test purpose
 
     // Display results TODO ugly copy/paste : to be cleaned ?
     meancost += cost->value;
@@ -308,8 +305,8 @@ real ConjGradientOptimizer::optimize()
       cout << t+1 << ' ' << meancost << endl;
       if (out)
         out << t+1 << ' ' << meancost << endl;
-     // early_stop = early_stop || measure(t+1,meancost);
-      early_stop = measure(t+1,meancost); // TODO which is the best between this and the one above ?
+      early_stop = early_stop || measure(t+1,meancost);
+     // early_stop = measure(t+1,meancost); // TODO which is the best between this and the one above ?
       early_stop_i = (t+1)/every;
       lastmeancost << meancost;
       meancost.clear();
