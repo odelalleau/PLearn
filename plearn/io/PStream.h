@@ -1,5 +1,5 @@
 // -*- C++ -*-
-
+ 
 // PStream.h
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio and University of Montreal
@@ -7,7 +7,7 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//   
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
 // 
@@ -33,8 +33,6 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
-
 #ifndef PStream_INC
 #define PStream_INC
 
@@ -57,7 +55,10 @@ namespace PLearn {
 
 using namespace std;
 
-
+// norman: mandatory for WIN32
+#ifdef WIN32
+using namespace stdext;
+#endif
 
 /*!
  * PStream:
@@ -68,7 +69,7 @@ using namespace std;
  *   - a set of mode flags that define format used for I/O. e.g.:  "raw_ascii" for
  *     standard c++ stream behaviour, "plearn_ascii"  for human-readable
  *     serialization format, etc. (inmode and outmode);
- *   - a copies map to alow smart serialization of pointers;
+ *   - a copies map to allow smart serialization of pointers;
  *   - a markable stream buffer which allows to 'seek back' to a previously set mark
  *     on any type of istream;
  *   - an 'attach' function to attach the stream to a POSIX file descriptor;
@@ -86,7 +87,8 @@ public:
   typedef ostream& (*pl_ostream_manip_compat)(ostream&);
   */
 
-#if __GNUC__ < 3
+// norman: check for win32
+#if __GNUC__ < 3 && !defined(WIN32)
   //! typedef's for compatibility w/ old libraries
   typedef int streamsize;
   typedef ios ios_base;
@@ -495,7 +497,7 @@ using std::ws;
         map<void *, unsigned int>::iterator it = out.copies_map_out.find(const_cast<T*&>(x));
         if (it == out.copies_map_out.end()) 
           {
-            int id = out.copies_map_out.size()+1;
+            int id = (int)out.copies_map_out.size()+1;
             out.put('*');
             out << id;
             out.write("->");
@@ -627,7 +629,6 @@ inline PStream& operator<<(PStream& out, const multimap<Key, Value>& m)
 template<class Key, class Value>
 inline PStream& operator>>(PStream& in, multimap<Key, Value>& m)
 { readMap(in, m); return in; }
-
 
 
 template<class Key, class Value>
@@ -780,7 +781,8 @@ void binread_(PStream& in, double* x, unsigned int n, unsigned char typecode);
 template<class SequenceType>
 void writeSequence(PStream& out, const SequenceType& seq)
 {
-  unsigned int n = seq.size();
+  // norman: added explicit cast
+  unsigned int n = (unsigned int)seq.size();
   typename SequenceType::const_iterator it = seq.begin();
   
   switch(out.outmode)
@@ -869,7 +871,8 @@ void readSequence(PStream& in, SequenceType& seq)
     {
     case PStream::raw_ascii:
       {
-        int n = seq.size();
+	    // norman: added explicit cast
+        int n = (int)seq.size();
         typename SequenceType::iterator it = seq.begin();
         while(n--)
           {
@@ -881,7 +884,7 @@ void readSequence(PStream& in, SequenceType& seq)
       break;
     case PStream::raw_binary:
       {
-        int n = seq.size();
+        int n = (int)seq.size();
         typename SequenceType::iterator it = seq.begin();
         while(n--)
           {

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MPIStream.cc,v 1.4 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: MPIStream.cc,v 1.5 2004/02/26 06:49:40 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -218,7 +218,7 @@ using namespace std;
       // cerr<< "[ " << PLMPI::rank << " Entering init]";
       rdbuf(new MPIStreambuf(the_peerrank, inbufsize));
       if(outbufsize<=1)
-#if __GNUC__ < 3
+#if __GNUC__ < 3 && !defined(WIN32)
         rdbuf()->setbuf(0,0);
 #else
         rdbuf()->pubsetbuf(0,0);
@@ -226,7 +226,7 @@ using namespace std;
       else
         {
           outbuffer = new char[outbufsize];
-#if __GNUC__ < 3
+#if __GNUC__ < 3 && !defined(WIN32)
           rdbuf()->setbuf(outbuffer,outbufsize);
 #else
           rdbuf()->pubsetbuf(outbuffer,outbufsize);

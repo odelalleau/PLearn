@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.h,v 1.7 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: GhostScript.h,v 1.8 2004/02/26 06:44:09 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -75,11 +75,18 @@ class GhostScript
   static void writeBitmapHexString8Bits(const Mat& bm, PStream& out, bool lastrowfirst=false);
   static void writeBitmapHexString24Bits(const Mat& bm, PStream& out, bool lastrowfirst=false);
 
-#if __GNUC__ < 3
-  typedef _IO_wchar_t char_type;
+// norman: win32 compiler knows ios::char_type! :)
+#if __GNUC__ > 2 && !defined(WIN32)
+  typedef ios::char_type char_type;
 #else
   typedef ios::char_type char_type;
-#endif
+#endif 
+// old:
+//#if __GNUC__ < 3
+//  typedef _IO_wchar_t char_type;
+//#else
+//  typedef ios::char_type char_type;
+//#endif
 
  public:
 

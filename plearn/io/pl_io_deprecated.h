@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io_deprecated.h,v 1.5 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: pl_io_deprecated.h,v 1.6 2004/02/26 06:55:53 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -212,15 +212,25 @@ inline void readNewline(istream& in)
   //!  generic field writing and reading
   template<class T>
   void writeField(ostream& out, const string& fieldname, const T& x)
-  { writeFieldName(out,fieldname); write(out,x); out << '\n'; }
+  { 
+// Norman: This gives problems on VSNet when T is a Array<VMFieldStat> or VMFieldStat.
+//         Because it is deprecated, well, I have decided to wipe it out! :)
+#ifndef WIN32
+	  writeFieldName(out,fieldname); write(out,x); out << '\n'; 
+#endif
+  }
 
   template<class T>
   void readField(istream& in, const string& fieldname, T& x)
   { 
+// Norman: This gives problems on VSNet when T is a Array<VMFieldStat> or VMFieldStat.
+//         Because it is deprecated, well, I have decided to wipe it out! :)
+#ifndef WIN32
   readFieldName(in,fieldname,true); 
   read(in,x); 
   if(!isspace(in.get())) 
     in.unget(); 
+#endif
   }
 
   //!  generic field BINARY writing and reading

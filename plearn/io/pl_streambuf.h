@@ -61,7 +61,7 @@ class pl_streammarker; // fwd decl.
  */
 class pl_streambuf : public streambuf, public PPointable
 {
-#if __GNUC__ < 3
+#if __GNUC__ < 3 && !defined(WIN32)
   typedef int int_type;
   typedef char char_type;
 #endif
@@ -96,7 +96,9 @@ class pl_streambuf : public streambuf, public PPointable
   virtual int_type sync();        //<! sync redefined
   virtual int_type pbackfail(int_type c= eof);  //<! pbackfail redefined
 
-  inline int curpos() const { return gptr() - inbuf; }  //<! return current position within the input buffer
+  //inline int curpos() const { return gptr() - inbuf; }  //<! return current position within the input buffer
+  // norman: explicit cast:
+  inline int curpos() const { return (int)(gptr() - inbuf); }  //<! return current position within the input buffer
 
 public:
 

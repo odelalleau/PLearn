@@ -36,7 +36,7 @@
 #ifndef pl_nullstreambuf_INC
 #define pl_nullstreambuf_INC
 
-#if __GNUC__ < 3
+#if __GNUC__ < 3 && !defined(WIN32)
 #  include <streambuf.h>
 #else
 #  include <streambuf>
@@ -54,7 +54,7 @@ using namespace std;
 class pl_nullstreambuf : public streambuf
 {
 private:
-#if __GNUC__ < 3
+#if __GNUC__ < 3 && !defined(WIN32)
   typedef int int_type;
 #endif
   static const int_type eof = EOF;

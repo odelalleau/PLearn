@@ -36,7 +36,15 @@
 
 
 #include <iostream>
+
+// norman: set win32 functions
+#ifdef WIN32
+#include <io.h>
+#define read _read
+#define write _write
+#else
 #include <unistd.h>
+#endif
 #include "pl_fdstream.h"
 
 namespace PLearn {
@@ -152,7 +160,7 @@ void pl_fdstream::init(int fd, int inbufsize, int outbufsize)
 {
   rdbuf(new pl_fdstreambuf(fd, inbufsize));
   if(outbufsize<=1)
-#if __GNUC__ < 3
+#if __GNUC__ < 3 && !defined(WIN32)
     rdbuf()->setbuf(0,0);
 #else
     rdbuf()->pubsetbuf(0,0);
@@ -160,7 +168,7 @@ void pl_fdstream::init(int fd, int inbufsize, int outbufsize)
   else
     {
       outbuffer = new char[outbufsize];
-#if __GNUC__ < 3
+#if __GNUC__ < 3 && !defined(WIN32)
       rdbuf()->setbuf(outbuffer,outbufsize);
 #else
       rdbuf()->pubsetbuf(outbuffer,outbufsize);
@@ -172,7 +180,7 @@ void pl_fdstream::attach(int fd)
 {
   rdbuf(new pl_fdstreambuf(fd, pl_dftbuflen));
   outbuffer= new char[pl_dftbuflen];
-#if __GNUC__ < 3
+#if __GNUC__ < 3 && !defined(WIN32)
   rdbuf()->setbuf(outbuffer, pl_dftbuflen);
 #else
   rdbuf()->pubsetbuf(outbuffer, pl_dftbuflen);

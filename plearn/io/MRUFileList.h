@@ -39,8 +39,8 @@
 #ifndef MRUFileQueue_H
 #define MRUFileQueue_H
 
-#include <fstream.h>
-#include <iostream.h>
+#include <fstream>
+#include <iostream>
 #include <string>
 #include <list>
 

@@ -168,7 +168,7 @@ void pl_streambuf::seekmark(const pl_streammarker& mark)
 
 pl_streambuf::int_type pl_streambuf::sync()
 { // no marking on output: sync underlying streambuf
-#if __GNUC__ < 3
+#if __GNUC__ < 3 && !defined(WIN32)
   return original_buf.sync();
 #else
   return original_buf.pubsync();

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.7 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: MatIO.h,v 1.8 2004/02/26 06:48:26 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -83,8 +83,15 @@ void loadPMat(const string& filename, TMat<double>& mat);
 //! intelligent functions that will load a file in almost all ascii formats that ever existed in this lab
 template<class T> void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames);
 template<class T> void loadAscii(const string& filename, TMat<T>& mat);
+
+// norman: added another function to solve the internal compiler error of .NET when using
+// default parameter with templates. See old declaration:
+//template<class T> void saveAscii(const string& filename, const TMat<T>& mat, 
+//                                const TVec<string>& fieldnames = TVec<string>() );
 template<class T> void saveAscii(const string& filename, const TMat<T>& mat, 
-                                 const TVec<string>& fieldnames = TVec<string>() );
+                                 const TVec<string>& fieldnames);
+template<class T> void saveAscii(const string& filename, const TMat<T>& mat);
+
 //! first number in file is length
 template<class T> void saveAscii(const string& filename, const TVec<T>& vec);
 template<class T> void loadAscii(const string& filename, TVec<T>& vec);
@@ -165,7 +172,8 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames)
     getline(in, line);
     could_be_old_amat = false;
  
-    unsigned int pos=line.find(":");
+	// norman: added explicit cast
+    unsigned int pos=(unsigned int)line.find(":");
     if(pos!=string::npos)
     {
       string sub=line.substr(0,pos);
@@ -198,7 +206,8 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames)
       in.clear();
       could_be_old_amat=false; 
     }
-    int nfields1 = split(line).size();
+	// norman: added explicit cast
+    int nfields1 = (int)split(line).size();
     getNextNonBlankLine(in,line);
     if(line=="")
     {
@@ -208,7 +217,9 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames)
       in.clear();
       could_be_old_amat=false; 
     }
-    int nfields2 = split(line).size();
+
+	// norman: added explicit cast
+	int nfields2 = (int)split(line).size();
     int guesslength = countNonBlankLinesOfFile(filename);    
     real a = -1, b = -1;
     if(could_be_old_amat && nfields1==2) // could be an old .amat with first 2 numbers being length width
@@ -366,6 +377,13 @@ void loadAscii(const string& filename, TVec<T>& vec)
       *it = MISSING_VALUE;
     }
   }
+}
+
+// norman: very stupid function to solve compiler error of VS .NET (see declaration)
+template<class T>
+void saveAscii(const string& filename, const TMat<T>& mat)
+{
+  saveAscii(filename, mat, TVec<string>());
 }
 
 template<class T> 

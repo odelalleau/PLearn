@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.h,v 1.9 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: pl_io.h,v 1.10 2004/02/26 06:51:20 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -101,7 +101,13 @@ inline void binread(istream& in, pair<A,B>& x)
   inline void binread(istream& in, unsigned short& x) { in.read((char*)&x,sizeof(unsigned short));  }
   //!  note that bool are saved as unsigned short
   inline void binwrite(ostream& out, bool x) { binwrite(out,(unsigned short)x); }
-  inline void binread(istream& in, bool& x) { unsigned short u; binread(in,u); x=u; }
+
+  // norman: usigned short to boolean?? Performance hit!!
+  //inline void binread(istream& in, bool& x) { unsigned short u; binread(in,u); x=u; }
+  inline void binread(istream& in, bool& x) { 
+	  unsigned short u; binread(in,u); 
+	  u == 0 ? x = false : x = true;
+  }
 
 // The following read/write floats (4 bytes) on disk, regardless of whether the memory-elements are float or double
   inline void binwrite(ostream& out, float x) { out.write((char*)&x,sizeof(float)); }
@@ -182,7 +188,12 @@ inline void binread(FILE* in, pair<A,B>& x)
   inline void binread(FILE* in, unsigned short& x) { fread(&x,sizeof(unsigned short),1,in);  }
   //!  note that bool are saved as unsigned short
   inline void binwrite(FILE* out, bool x) { binwrite(out,(unsigned short)x); }
-  inline void binread(FILE* in, bool& x) { unsigned short u; binread(in,u); x=u; }
+  // norman: usigned short to boolean?? At least use a cast
+  //inline void binread(FILE* in, bool& x) { unsigned short u; binread(in,u); x=u; }
+  inline void binread(FILE* in, bool& x) { 
+	  unsigned short u; binread(in,u); 
+	  u == 0 ? x = false : x = true;
+  }
 
 // The following read/write floats (4 bytes) on disk, regardless of whether the memory-elements are float or double
   inline void binwrite(FILE* out, float x) { fwrite(&x,sizeof(float),1,out); }

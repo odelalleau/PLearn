@@ -167,11 +167,20 @@ void FilesIntStream::read_current()
       { seek(0); return; }
   }
   if (fread(&current_value,sizeof(int),1,fp[current_file])!=1) {
-    int pid=getpid();
     int posit=ftell(fp[current_file]);
+
+    // norman: added check. Can be done better
+#ifdef WIN32
+    fprintf(stderr,"process could not read 1 int from %s at position %d, ftell=%d\nerrno=%d,%s",
+      file_names[current_file],next_pos_in_current_file+1,
+      posit,errno,strerror(errno));
+#else
+    int pid=getpid();
     fprintf(stderr,"process %d could not read 1 int from %s at position %d, ftell=%d\nerrno=%d,%s",
       pid,file_names[current_file],next_pos_in_current_file+1,
       posit,errno,strerror(errno));
+#endif
+
     exit(1);
   }
 #ifdef BIGENDIAN
