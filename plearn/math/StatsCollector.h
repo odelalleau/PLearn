@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.30 2004/09/22 21:47:02 chapados Exp $
+   * $Id: StatsCollector.h,v 1.31 2004/11/16 22:45:32 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -94,6 +94,17 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     //! (if 0, we will only keep track of global statistics)
     int maxnvalues; 
 
+    /**
+     * If the remove_observation mecanism is used and the removed
+     * value is equal to one of last_, min_ or max_, the default
+     * behavior is to warn the user.
+     * 
+     * If one want to disable this feature, he may set
+     * no_removal_warnings to true.
+     *
+     * Default: false (0).
+     */
+    bool no_removal_warnings;
 
     // ** Learnt options **
 
@@ -166,6 +177,12 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
 
     //! update statistics with next value val of sequence 
     void update(real val, real weight = 1.0);
+
+    /** 
+     * update statistics as if an observation of value val was removed
+     * of the observation sequence.
+     */
+    void remove_observation(real val, real weight = 1.0);
 
     //! finishes whatever computation are needed after all updates have been made
     void finalize() {}

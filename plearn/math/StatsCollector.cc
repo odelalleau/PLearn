@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.38 2004/09/22 21:47:02 chapados Exp $
+   * $Id: StatsCollector.cc,v 1.39 2004/11/16 22:45:31 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -75,7 +75,7 @@ PLEARN_IMPLEMENT_OBJECT(
   
 
 StatsCollector::StatsCollector(int the_maxnvalues)
-  : maxnvalues(the_maxnvalues),
+  : maxnvalues(the_maxnvalues), no_removal_warnings(false),
     nmissing_(0.), nnonmissing_(0.), 
     sum_(0.), sumsquare_(0.), 
     min_(MISSING_VALUE), max_(MISSING_VALUE),
@@ -111,6 +111,18 @@ void StatsCollector::declareOptions(OptionList& ol)
   declareOption(ol, "maxnvalues", &StatsCollector::maxnvalues, OptionBase::buildoption,
                 "maximum number of different values defining ranges to keep track of in counts\n"
                 "(if 0, we will only keep track of global statistics)");
+
+  declareOption( ol, "no_removal_warnings", &StatsCollector::no_removal_warnings,
+                 OptionBase::buildoption,
+                 "If the remove_observation mecanism is used and the removed\n"
+                 "value is equal to one of last_, min_ or max_, the default\n"
+                 "behavior is to warn the user.\n"
+                 "\n"
+                 "If one want to disable this feature, he may set\n"
+                 "no_removal_warnings to true.\n"
+                 "\n"
+                 "Default: false (0)." );
+
 
   // learnt options
   declareOption(ol, "nmissing_", &StatsCollector::nmissing_, OptionBase::learntoption,
@@ -208,6 +220,48 @@ void StatsCollector::update(real val, real weight)
         }
       }
     }
+  }
+}                           
+
+void StatsCollector::remove_observation(real val, real weight)
+{
+  if(is_missing(val))
+  {
+    nmissing_ -= weight;
+    assert( nmissing_ >= 0 );
+  }
+  else
+  {
+    nnonmissing_ -= weight;
+    assert( nnonmissing_ >= 0 );
+
+    if(nnonmissing_==0)                      // first value encountered
+      min_ = max_ = first_ = last_ = MISSING_VALUE;
+
+    if( !no_removal_warnings )
+    {
+      if(val == first_)
+        PLWARNING( "Removed value is equal to the first value encountered.\n"
+                   "StatsCollector::first() may not be valid anymore." );
+      if(val == last_)
+        PLWARNING( "Removed value is equal to the last value encountered.\n"
+                   "StatsCollector::last() may not be valid anymore." );
+      if(val == min_)
+        PLWARNING( "Removed value is equal to the min value encountered.\n"
+                   "StatsCollector::min() may not be valid anymore." );
+      if(val == max_)
+        PLWARNING( "Removed value is equal to the max value encountered.\n"
+                   "StatsCollector::max() may not be valid anymore." );
+    }
+
+    sum_ -= (val-first_) * weight;
+
+    double sqval = (val-first_)*(val-first_);
+    sumsquare_ -= sqval * weight;    
+    assert( sumsquare_ >= 0 );
+    
+    if(maxnvalues>0)
+      PLERROR("The remove observation mecanism is incompatible with maxnvalues.");
   }
 }                           
 

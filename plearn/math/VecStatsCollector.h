@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.22 2004/10/17 06:34:44 chapados Exp $ 
+   * $Id: VecStatsCollector.h,v 1.23 2004/11/16 22:45:32 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -58,6 +58,18 @@ public:
   //! maximum number of different values to keep track of for each element
   //! (default: 0, meaning we only keep track of global statistics)
   int maxnvalues; 
+
+  /**
+   * If the remove_observation mecanism is used and the removed
+   * value is equal to one of last_, min_ or max_, the default
+   * behavior is to warn the user.
+   * 
+   * If one want to disable this feature, he may set
+   * no_removal_warnings to true.
+   *
+   * Default: false (0).
+   */
+  bool no_removal_warnings;
 
   //! names of the fields of the update vector
   TVec<string> fieldnames;
@@ -115,6 +127,12 @@ public:
   //! The weight applies to all elements of x
   virtual void update(const Vec& x, real weight = 1.0);
 
+  /** 
+   * update statistics as if the vectorial observation x
+   * was removed of the observation sequence.
+   */
+  void remove_observation(const Vec& x, real weight = 1.0);
+  
   //! Declares names for the columns of the vector passed to update
   void setFieldNames(TVec<string> the_fieldnames)
   { fieldnames = the_fieldnames; }

@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.25 2004/10/21 20:50:08 lapalmej Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.26 2004/11/16 22:45:32 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -45,7 +45,7 @@ namespace PLearn {
 using namespace std;
 
 VecStatsCollector::VecStatsCollector() 
-  :maxnvalues(0), compute_covariance(false), epsilon(0.0)
+  :maxnvalues(0), no_removal_warnings(false), compute_covariance(false), epsilon(0.0)
   {}
 
 PLEARN_IMPLEMENT_OBJECT(VecStatsCollector, "Collects basic statistics on a vector", "VecStatsCollector allows to collect statistics on a series of vectors.\n"
@@ -64,6 +64,17 @@ void VecStatsCollector::declareOptions(OptionList& ol)
   declareOption(ol, "maxnvalues", &VecStatsCollector::maxnvalues, OptionBase::buildoption,
                 "maximum number of different values to keep track of for each element\n"
                 "(default: 0, meaning we only keep track of global statistics)");
+
+  declareOption( ol, "no_removal_warnings", &VecStatsCollector::no_removal_warnings,
+                 OptionBase::buildoption,
+                 "If the remove_observation mecanism is used and the removed\n"
+                 "value is equal to one of last_, min_ or max_, the default\n"
+                 "behavior is to warn the user.\n"
+                 "\n"
+                 "If one want to disable this feature, he may set\n"
+                 "no_removal_warnings to true.\n"
+                 "\n"
+                 "Default: false (0)." );
 
   declareOption(ol, "fieldnames", &VecStatsCollector::fieldnames, OptionBase::buildoption,
                 "Names of the fields of the vector");
@@ -130,7 +141,8 @@ void VecStatsCollector::update(const Vec& x, real weight)
       stats.resize(n);
       for(int k=0; k<n; k++)
         {
-          stats[k].maxnvalues = maxnvalues;
+          stats[k].maxnvalues          = maxnvalues;
+          stats[k].no_removal_warnings = no_removal_warnings;
           stats[k].forget();
         }
       if(compute_covariance)
@@ -164,6 +176,25 @@ void VecStatsCollector::update(const Vec& x, real weight)
     else*/ 
     externalProductScaleAcc(cov, x, x, weight);
 }
+
+void VecStatsCollector::remove_observation(const Vec& x, real weight)
+{
+  assert( stats.size() > 0 );
+
+  int n = x.size();
+
+  if(stats.size()!=n)
+    PLERROR( "In VecStatsCollector: problem, called remove_observation with vector of length %d, "
+             "while size of stats (and most likeley previously seen vector) is %d", 
+             n, stats.size() );
+
+  for(int k=0; k<n; k++)
+    stats[k].remove_observation(x[k], weight);
+  
+  if(compute_covariance)
+    PLERROR("The remove_observation mecanism does not manage the covariance computation yet.");
+}
+
 
 //! calls update on all rows of m
 void VecStatsCollector::update(const Mat& m)
