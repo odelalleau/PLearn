@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: DoubleAccessSparseMatrix_impl.h,v 1.2 2002/12/12 03:11:57 jauvinc Exp $ 
+ * $Id: DoubleAccessSparseMatrix_impl.h,v 1.3 2003/07/21 17:05:42 jauvinc Exp $ 
  ******************************************************* */
 
 /*! \file DoubleAccessSparseMatrix_impl.h */
@@ -97,25 +97,74 @@ void DoubleAccessSparseMatrix<T>::clear()
 }
 
 template <class T>
-void DoubleAccessSparseMatrix<T>::clearRow(int i)
+void DoubleAccessSparseMatrix<T>::clearRow(int i, bool force_synchro_if_double_accessible)
 {
-  if (mode == ROW_WISE || double_access)
-    rows[i].clear();
-  if (double_access)
-    PLWARNING("can only clear rows in the row-wise matrix (internal matrices are now out of sync)");
-  if (mode == COLUMN_WISE && !double_access)
-    PLERROR("cannot access rows in the column-wise matrix");
+  if (!double_access)
+  {
+    if (mode == COLUMN_WISE)
+      PLERROR("cannot access rows in the column-wise matrix");
+    else
+      rows[i].clear();
+  } else
+  {
+    if (force_synchro_if_double_accessible)
+    {
+      for (int j = 0; j < width; j++)
+      {
+        map<int, T>& col_j = cols[j];
+        if (col_j.find(i) != col_j.end())
+          col_j.erase(i);
+      }
+    } else
+    {
+      PLWARNING("can only clear rows in the row-wise matrix (internal matrices are now out of sync)");
+      rows[i].clear();
+    }
+  }
 }
 
 template <class T>
-void DoubleAccessSparseMatrix<T>::clearCol(int j)
+void DoubleAccessSparseMatrix<T>::clearCol(int j, bool force_synchro_if_double_accessible)
 {
+  if (!double_access)
+  {
+    if (mode == ROW_WISE)
+      PLERROR("cannot access columns in the row-wise matrix");
+    else if (mode == COLUMN_WISE)
+      cols[j].clear();
+  } else
+  {
+    if (force_synchro_if_double_accessible)
+    {
+      for (int i = 0; i < height; j++)
+      {
+        map<int, T>& row_i = rows[i];
+        if (row_i.find(j) != row_i.end())
+          row_i.erase(j);
+      }
+    } else
+    {
+      PLWARNING("can only clear columns in the column-wise matrix (internal matrices are now out of sync)");
+      cols[j].clear();
+    }
+  }
+}
+
+template <class T>
+void DoubleAccessSparseMatrix<T>::clearElem(int i, int j)
+{
+  if (mode == ROW_WISE || double_access)
+  {
+    map<int, T>& row_i = rows[i];
+    if (row_i.find(j) != row_i.end())
+      row_i.erase(j);
+  }
   if (mode == COLUMN_WISE || double_access)
-    cols[j].clear();
-  if (double_access)
-    PLWARNING("can only clear columns in the column-wise matrix (internal matrices are now out of sync)");
-  if (mode == ROW_WISE && !double_access)
-    PLERROR("cannot access columns in the row-wise matrix");
+  {
+    map<int, T>& col_j = cols[j];
+    if (col_j.find(i) != col_j.end())
+      col_j.erase(i);
+  }
 }
 
 template <class T>
@@ -175,7 +224,7 @@ void DoubleAccessSparseMatrix<T>::set(int i, int j, T value)
       cols[j][i] = value;
   } else
   {
-    removeElem(i, j);
+    clearElem(i, j);
   }
 }
 
@@ -184,32 +233,6 @@ void DoubleAccessSparseMatrix<T>::incr(int i, int j, T inc)
 {
   if (inc != null_elem)
     set(i, j, get(i, j) + inc);
-}
-
-template <class T>
-void DoubleAccessSparseMatrix<T>::removeElem(int i, int j)
-{
-  if (mode == ROW_WISE || double_access)
-  {
-    map<int, T>& row_i = rows[i];
-    if (row_i.find(j) != row_i.end())
-      row_i.erase(j);
-  }
-  if (mode == COLUMN_WISE || double_access)
-  {
-    map<int, T>& col_j = cols[j];
-    if (col_j.find(i) != col_j.end())
-      col_j.erase(i);
-  }
-}
-
-template <class T>
-map<int, T>& DoubleAccessSparseMatrix<T>::operator()(int k) 
-{
-  if (mode == ROW_WISE)
-    return getRow(k);
-  else
-    return getCol(k);
 }
 
 /*
@@ -281,6 +304,32 @@ map<int, T>& DoubleAccessSparseMatrix<T>::getCol(int j)
   {
     PLERROR("cannot access columns in the row-wise matrix");
     return cols[0];
+  }
+}
+
+template <class T>
+void DoubleAccessSparseMatrix<T>::addRow(map<int, T>& row)
+{
+  if (mode == COLUMN_WISE || double_access)
+  {
+    PLERROR("cannot add row in the column-wise matrix");
+  } else
+  {
+    rows.push_back(row);
+    height++;
+  }
+}
+
+template <class T>
+void DoubleAccessSparseMatrix<T>::addCol(map<int, T>& col)
+{
+  if (mode == ROW_WISE || double_access)
+  {
+    PLERROR("cannot add col in the row-wise matrix");
+  } else
+  {
+    cols.push_back(col);
+    width++;
   }
 }
 
@@ -499,8 +548,9 @@ void DoubleAccessSparseMatrix<T>::setDoubleAccessible(bool da)
         rows.clear();
     } else
     {
-      if (mode == ROW_WISE && size() > 0)
+      if (mode == ROW_WISE)
       {
+        cols.resize(width);
         for (int i = 0; i < height; i++)
         {
           map<int, T>& row_i = rows[i];
@@ -511,8 +561,9 @@ void DoubleAccessSparseMatrix<T>::setDoubleAccessible(bool da)
             set(i, j, value);
           }
         }
-      } else if (mode == COLUMN_WISE && size() > 0)
+      } else if (mode == COLUMN_WISE)
       {
+        rows.resize(height);
         for (int j = 0; j < width; j++)
         {
           map<int, T>& col_j = cols[j];
@@ -650,5 +701,3 @@ void DoubleAccessSparseMatrix<T>::read(PStream& in)
 }
 
 %> // end of namespace PLearn
-
-

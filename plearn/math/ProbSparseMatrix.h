@@ -57,9 +57,9 @@ public:
 
   bool checkJointProbIntegrity();
 
-  void normalizeCond(ProbSparseMatrix& nXY, bool clear_nXY_on_the_fly = true);
+  void normalizeCond(ProbSparseMatrix& nXY, bool clear_nXY = false);
 
-  void normalizeJoint(ProbSparseMatrix& nXY, bool clear_nXY = true);
+  void normalizeJoint(ProbSparseMatrix& nXY, bool clear_nXY = false);
 
   void normalizeCond();
 

@@ -60,8 +60,7 @@ using namespace std;
   it plays two roles, depending on the value of 'double_access'. (1) If 'double_access' is set 
   to 'false', 'mode' will determine which of both matrices is the one to work with. (2) If
   'double_access' is set to 'true', it will determine the preference of certain access-specific
-  operations. For instance, the operator '()' will return a row or a column, depending on the 
-  value of the flag. The sub-class ProbSparseMatrix will also take some actions depending on 
+  operations. The sub-class ProbSparseMatrix will for example take some actions depending on 
   its value.
   
   Note that you can define the null-element (of parametrized type T) to be anything that you
@@ -110,9 +109,11 @@ public:
   
   virtual void clear();
 
-  virtual void clearRow(int i);
+  virtual void clearRow(int i, bool force_synchro_if_double_accessible); // force_synchro is expensive!
 
-  virtual void clearCol(int j);
+  virtual void clearCol(int j, bool force_synchro_if_double_accessible); // force_synchro is expensive!
+
+  virtual void clearElem(int i, int j);
 
   virtual T get(int i, int j);
 
@@ -124,15 +125,15 @@ public:
 
   virtual void incr(int i, int j, T inc);
 
-  virtual void removeElem(int i, int j);
-
-  virtual map<int, T>& operator()(int k);
-
   //virtual void operator=(SMat<T> m);
 
   virtual map<int, T>& getRow(int i);
   
   virtual map<int, T>& getCol(int j);
+
+  virtual void addRow(map<int, T>& row);
+
+  virtual void addCol(map<int, T>& col);
 
   virtual int size();
 

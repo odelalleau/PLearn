@@ -45,14 +45,14 @@ ProbSparseMatrix::ProbSparseMatrix(int n_rows, int n_cols, string name, int mode
 void ProbSparseMatrix::incr(int i, int j, real inc, bool warning)
 {
   if (inc <= 0.0 && warning)
-    PLWARNING("incrementing value by <= 0.0");
+    PLWARNING("incrementing value by: %g", inc);
   DoubleAccessSparseMatrix<real>::incr(i, j, inc);
 }
 
 void ProbSparseMatrix::set(int i, int j, real value, bool warning)
 {
   if (value <= 0.0 && warning)
-    PLWARNING("setting value <= 0.0");
+    PLWARNING("setting value: %g", value);
   DoubleAccessSparseMatrix<real>::set(i, j, value);
 }
 
@@ -91,7 +91,7 @@ bool ProbSparseMatrix::checkJointProbIntegrity()
   return (fabs(sumOfElements() - 1.0) > 1e-4);
 }
 
-void ProbSparseMatrix::normalizeCond(ProbSparseMatrix& nXY, bool clear_nXY_on_the_fly)
+void ProbSparseMatrix::normalizeCond(ProbSparseMatrix& nXY, bool clear_nXY)
 {
   if (mode == ROW_WISE && (nXY.getMode() == ROW_WISE || nXY.isDoubleAccessible()))
   {
@@ -100,7 +100,7 @@ void ProbSparseMatrix::normalizeCond(ProbSparseMatrix& nXY, bool clear_nXY_on_th
     for (int i = 0; i < nXY_height; i++)
     {
       real sum_row_i = nXY.sumRow(i);
-      map<int, real>& row_i = nXY(i);
+      map<int, real>& row_i = nXY.getRow(i);
       for (map<int, real>::iterator it = row_i.begin(); it != row_i.end(); ++it)
       {
         int j = it->first;
@@ -109,9 +109,9 @@ void ProbSparseMatrix::normalizeCond(ProbSparseMatrix& nXY, bool clear_nXY_on_th
         if (pij > 0.0)
           set(i, j, pij);
       }
-      if (clear_nXY_on_the_fly)
-        nXY.clearRow(i);
     }
+    if (clear_nXY)
+      nXY.clear();
   } else if (mode == COLUMN_WISE && (nXY.getMode() == COLUMN_WISE || nXY.isDoubleAccessible()))
   {
     clear();
@@ -119,7 +119,7 @@ void ProbSparseMatrix::normalizeCond(ProbSparseMatrix& nXY, bool clear_nXY_on_th
     for (int j = 0; j < nXY_width; j++)
     {
       real sum_col_j = nXY.sumCol(j);
-      map<int, real>& col_j = nXY(j);
+      map<int, real>& col_j = nXY.getCol(j);
       for (map<int, real>::iterator it = col_j.begin(); it != col_j.end(); ++it)
       {
         int i = it->first;
@@ -128,15 +128,13 @@ void ProbSparseMatrix::normalizeCond(ProbSparseMatrix& nXY, bool clear_nXY_on_th
         if (pij > 0.0)
           set(i, j, pij);
       }
-      if (clear_nXY_on_the_fly)
-        nXY.clearCol(j);
     }
+    if (clear_nXY)
+      nXY.clear();
   } else
   {
-    PLERROR("pXY and nXY modes must match");
+    PLERROR("pXY and nXY accessibility modes must match");
   }
-  if (clear_nXY_on_the_fly)
-    nXY.clear();
 }
 
 void ProbSparseMatrix::normalizeCond()
@@ -183,7 +181,7 @@ void ProbSparseMatrix::normalizeJoint(ProbSparseMatrix& nXY, bool clear_nXY)
     int nXY_height = nXY.getHeight();
     for (int i = 0; i < nXY_height; i++)
     {
-      map<int, real>& row_i = nXY(i);
+      map<int, real>& row_i = nXY.getRow(i);
       for (map<int, real>::iterator it = row_i.begin(); it != row_i.end(); ++it)
       {
         int j = it->first;
@@ -198,7 +196,7 @@ void ProbSparseMatrix::normalizeJoint(ProbSparseMatrix& nXY, bool clear_nXY)
     int nXY_width = nXY.getWidth();
     for (int j = 0; j < nXY_width; j++)
     {
-      map<int, real>& col_j = nXY(j);
+      map<int, real>& col_j = nXY.getCol(j);
       for (map<int, real>::iterator it = col_j.begin(); it != col_j.end(); ++it)
       {
         int i = it->first;
