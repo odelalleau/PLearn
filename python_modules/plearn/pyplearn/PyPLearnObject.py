@@ -143,7 +143,7 @@ or private '__').
         public2                        = "public again"
         )
 """
-__cvs_id__ = "$Id: PyPLearnObject.py,v 1.12 2005/02/15 15:08:33 dorionc Exp $"
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.13 2005/02/18 22:19:06 dorionc Exp $"
 
 import inspect, string, types
 
@@ -246,8 +246,14 @@ class _manage_attributes:
         string that could be used for serialization purpose (public and
         internal members are wrote to a initialization-like syntax.)
     """
-    ##__metaclass__ = frozen_metaclass
     class __metaclass__( type ):
+        """...
+
+        This metaclass also manages the _subclasses attribute if any; all
+        subclasses created are added (name -> class object) to the
+        dictionnary. Classes whose name starts with at least one underscore
+        are neglected.
+        """        
         _frozen     = True
         __setattr__ = frozen(type.__setattr__)
 
@@ -270,10 +276,45 @@ class _manage_attributes:
                     
             cls._frozen     = True
             cls.__setattr__ = frozen(object.__setattr__)
+
+            if hasattr(cls, '_subclasses'):
+                assert isinstance( cls._subclasses, type(dict) ), type( cls._subclasses )
+                if not name.startswith('_'):
+                    cls._subclasses[name] = cls
         
         
     class Defaults:
         pass
+
+    def _allow_undefined_overrides( self ):
+        """Should overrides having no defaults be allowed.
+
+        The __init__ method accepts any keyword arguments. If a given
+        keyword is not class variable in Defaults, the default behavior is
+        to consider that keyword argument as being an extra attribute to
+        add to the instance::
+
+            class Foo( PyPLearnObject ): 
+                class Defaults:
+                    foo = "the foo attribute"
+
+            f = Foo( bar = "the bar attribute" )
+
+            print f.foo         ## prints "the foo attribute"
+            print f.bar         ## prints "the bar attribute"
+
+        To change that behavior, one may simply override this method and return False::
+
+            class FooNoBar( PyPLearnObject ): 
+                class Defaults:
+                    foo = "the foo attribute"
+
+                def __allow_undefined_overrides( self ): return False 
+
+            f = FooNoBar( bar = "the bar attribute" )
+            ## AttributeError: Trying to set undefined attributes {'bar': 'the bar attribute'} on a FooNoBar
+        """
+        return True
 
     def __init__(self, **overrides):
         ## Managing frozen behavior
@@ -281,7 +322,7 @@ class _manage_attributes:
         
         if overrides.has_key( "Defaults" ):
             self.Defaults = overrides.pop( "Defaults" )
-            assert inspect.isclass( self.Defaults )
+            ## assert inspect.isclass( self.Defaults )
 
         ## Managing the attribute ordering protocol
         self._list_of_attributes = []
@@ -311,12 +352,17 @@ class _manage_attributes:
             ## Do not use __set_attribute__ in __init__!
             self._init_attribute_protocol( attribute_name, attribute_value )
 
-        ## Overrides may still contain pairs -- attributes with no default
-        ## values.
-        for (attribute_name, attribute_value) in overrides.iteritems():
-            ## Do not use __set_attribute__ in __init__!
-            self._init_attribute_protocol( attribute_name, attribute_value )
-            
+        if self._allow_undefined_overrides():
+            ## Overrides may still contain pairs -- attributes with no default
+            ## values.
+            for (attribute_name, attribute_value) in overrides.iteritems():
+                ## Do not use __set_attribute__ in __init__!
+                self._init_attribute_protocol( attribute_name, attribute_value )
+        elif len(overrides):
+            raise AttributeError( "Trying to set undefined attributes %s on a %s"
+                                  % ( str(overrides), self.classname() )
+                                  )
+                                  
         ## Ensure that the length of ordered attributes list is
         ## either zero or equal to the number of attributes
         assert ( self._ordered_len == 0 or
@@ -351,8 +397,8 @@ class _manage_attributes:
         """
         if inspect.isroutine(attribute_value):
             raise TypeError( "Routine types are not supported as PyPLearnObject attribute "
-                             "values (for %s, value is %s)."
-                             % ( attribute_name, attribute_value )
+                             "values (In %s for %s, value is %s)."
+                             % ( self.classname(), attribute_name, attribute_value )
                              )
 
         ## See the method docstring for the class management protocol.
@@ -498,8 +544,12 @@ class PyPLearnObject( _manage_attributes ):
 
         That method should never be overriden.
         """
-        return PLearnRepr.plearn_repr( self.classname(), self.plearn_options() )
-
+        try:
+            return PLearnRepr.plearn_repr( self.classname(), self.plearn_options() )
+        except TypeError, e:            
+            raise TypeError( "Instance of %s forwarded an invalid member to plearn_repr"
+                             " [ %s ]" % ( self.classname(), str(e) )
+                             )
 
     ## Old and uncommented functionnality...
     def __lshift__(self, other):
