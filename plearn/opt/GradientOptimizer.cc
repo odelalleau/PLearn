@@ -37,14 +37,14 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.3 2003/01/29 20:52:47 plearner Exp $
+   * $Id: GradientOptimizer.cc,v 1.4 2003/04/25 18:42:50 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
+#include "ConjGradientOptimizer.h" // TODO Remove later
 #include "GradientOptimizer.h"
 #include "TMat_maths.h"
 #include "DisplayUtils.h"
-#include "SumOfVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -156,6 +156,50 @@ void GradientOptimizer::oldread(istream& in)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(GradientOptimizer);
 
+///////////////
+// optimizeN //
+///////////////
+bool GradientOptimizer::optimizeN(VecStatsCollector& stat_coll) {
+
+  // Big hack for the special case of stochastic gradient, to avoid doing an explicit update
+  // (temporarily change the gradient fields of the parameters to point to the parameters themselves,
+  // so that gradients are "accumulated" directly in the parameters, thus updating them!
+  Array<Mat> oldgradientlocations;
+  // stochastic_hack=false;
+  if(stochastic_hack)
+  {
+    int n = params.size();
+    oldgradientlocations.resize(n);
+    for(int i=0; i<n; i++)
+      oldgradientlocations[i] = params[i]->defineGradientLocation(params[i]->matValue);
+  }
+
+  // normally loop over number of epochs x training set size
+  for (; !early_stop && stage<nstages; stage++) {
+    learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
+    proppath.clearGradient();
+    cost->gradient[0] = -learning_rate;
+    proppath.fbprop();
+
+    // set params += -learning_rate * params.gradient
+    if(!stochastic_hack)
+      params.updateAndClear();
+  }
+
+  if(stochastic_hack) // restore the gradients as they previously were...
+    {
+      int n = params.size();
+      for(int i=0; i<n; i++)
+        params[i]->defineGradientLocation(oldgradientlocations[i]);
+    }
+  // TODO Call the Stats Collector
+
+  return early_stop;
+}
+
+//////////////
+// optimize //
+//////////////
 real GradientOptimizer::optimize()
 {
   ofstream out;
@@ -166,16 +210,25 @@ real GradientOptimizer::optimize()
     }
   Vec meancost(cost->size());
   Vec lastmeancost(cost->size());
+  Vec gradient(params.nelems());
   early_stop = false;
+
+  // The vector containing the learning rate for each parameter
+  Vec learning_rates(params.size());
+  Vec old_gradient(params.nelems());
+  learning_rates.fill(start_learning_rate);
+  ConjGradientOptimizer::computeGradient(this, old_gradient);
+  bool adapt = true;
 
   // Big hack for the special case of stochastic gradient, to avoid doing an explicit update
   // (temporarily change the gradient fields of the parameters to point to the parameters themselves,
   // so that gradients are "accumulated" directly in the parameters, thus updating them!
   SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
   Array<Mat> oldgradientlocations;
-  // bool stochastic_hack = false;
   bool stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
+  stochastic_hack = false;
   // stochastic_hack=false;
+  adapt = adapt && !stochastic_hack; // TODO Find a better way for this
   if(stochastic_hack)
   {
     int n = params.size();
@@ -192,9 +245,14 @@ real GradientOptimizer::optimize()
     learning_rate = start_learning_rate/(1.0+decrease_constant*t);
 
     proppath.clearGradient();
-    cost->gradient[0] = -learning_rate;
 
-      proppath.fbprop();//displayVarGraph(proppath, true, 333);
+    if (adapt)
+      cost->gradient[0] = -1.;
+    else
+      cost->gradient[0] = -learning_rate;
+
+    proppath.fbprop();//displayVarGraph(proppath, true, 333);
+
       meancost += cost->value;
       if ((every!=0) && ((t+1)%every==0))
       // normally this is done every epoch
@@ -212,8 +270,15 @@ real GradientOptimizer::optimize()
         meancost.clear();
       }
     // set params += -learning_rate * params.gradient
-    if(!stochastic_hack)
-      params.updateAndClear();
+    if(!stochastic_hack) {
+      if (adapt) {
+        params.copyGradientTo(gradient);
+        params.update(learning_rates, gradient); 
+        params.clearGradient();
+      } else {
+        params.updateAndClear();
+      }
+    }
   }
 
   if(stochastic_hack) // restore the gradients as they previously were...
@@ -349,5 +414,9 @@ real ScaledGradientOptimizer::optimize()
   return meancost[0];
 }
 
+bool ScaledGradientOptimizer::optimizeN(VecStatsCollector& stat_coll) {
+  PLERROR("In ScaledGradientOptimizer::optimizeN this function is not implemented, use optimize instead");
+  return true;
+}
 
 %> // end of namespace PLearn

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.h,v 1.5 2003/03/18 18:29:56 ducharme Exp $
+   * $Id: VarArray.h,v 1.6 2003/04/25 18:43:11 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -178,6 +178,13 @@ public:
     return true if box constraints have been hit with the update
 */
   bool update(real step_size, Vec direction);
+
+/*!     set value[i] = value[i] + step_sizes[i] * direction [i]
+    with step_sizes[i] possibly scaled down (as above)
+    this is to allow different steps for each parameter
+    return true if box constraints have been hit with the update
+*/
+  bool update(Vec step_sizes, Vec direction);
 
 /*!     Using the box constraints on the values, return
     the maximum allowable step_size in the given direction

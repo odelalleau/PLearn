@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.h,v 1.2 2003/04/11 22:00:43 tihocan Exp $
+   * $Id: GradientOptimizer.h,v 1.3 2003/04/25 18:42:50 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,6 +48,7 @@
 #define GRADIENTOPTIMIZER_INC
 
 #include "Optimizer.h"
+#include "SumOfVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -61,7 +62,6 @@ using namespace std;
       //!  Default constructor for persistence
       //GradientOptimizer () : start_learning_rate(), decrease_constant() {}
   
-    protected:
     public:
       //!  gradient descent specific parameters
       //!  (directly modifiable by the user)
@@ -70,7 +70,12 @@ using namespace std;
       // Options (also available through setOption)
       real start_learning_rate;
       real decrease_constant;
-    
+
+    private:
+      bool stochastic_hack;
+
+    public: 
+
       GradientOptimizer(real the_start_learning_rate=0.01, 
                         real the_decrease_constant=0,
                         int n_updates=1, const string& filename="", 
@@ -96,15 +101,22 @@ using namespace std;
       inherited::build();
       build_();
     }
+
   private:
-    void build_()
-    {}
+
+    void build_() {
+      early_stop = false;
+      SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
+      stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
+      params.clearGradient();
+    }
     
   public:
 
     virtual void oldwrite(ostream& out) const;
     virtual void oldread(istream& in);
     virtual real optimize();
+    virtual bool optimizeN(VecStatsCollector& stat_coll);
 
   protected:
     static void declareOptions(OptionList& ol);
@@ -196,6 +208,9 @@ DECLARE_OBJECT_PTR(GradientOptimizer);
       }
                     
       virtual real optimize();
+
+      // Not implemented
+      virtual bool optimizeN(VecStatsCollector& stat_coll);
   };
 
 

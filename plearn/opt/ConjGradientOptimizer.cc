@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.15 2003/04/25 14:27:40 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.16 2003/04/25 18:42:48 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -438,7 +438,7 @@ real ConjGradientOptimizer::fletcherSearch (real mu) {
       tau1,
       tau2,
       tau3,
-      starting_step_size,
+      current_step_size,
       mu);
   return alpha;
 }
@@ -580,7 +580,7 @@ real ConjGradientOptimizer::fletcherSearchMain (
 /////////////
 real ConjGradientOptimizer::gSearch (void (*grad)(Optimizer*, const Vec&)) {
 
-  real step = starting_step_size;
+  real step = current_step_size;
   real sp, sm, pp, pm;
 
   // Backup the initial paremeters values
@@ -753,7 +753,6 @@ real ConjGradientOptimizer::optimize()
   ofstream out;
   if (!filename.empty()) {
      out.open(filename.c_str());
-//     out << " Stochastic! " << endl;  // TODO what's the purpose ?
   }
   Vec meancost(cost->size());
   Vec lastmeancost(cost->size());
@@ -784,13 +783,12 @@ real ConjGradientOptimizer::optimize()
     last_improvement = last_cost - current_cost;
     last_cost = current_cost;
 
-    // This value of starting_step_size is suggested by Fletcher
+    // This value of current_step_size is suggested by Fletcher
     df = max (last_improvement, 10*stop_epsilon);
-    starting_step_size = 2*df / dot(search_direction, current_opp_gradient);
+    current_step_size = 2*df / dot(search_direction, current_opp_gradient);
     
     // Display results TODO ugly copy/paste from GradientOptimizer: to be cleaned ?
     meancost += cost->value;
-    every = 2000; // TODO Remove later, this is for test purpose
     if ((every!=0) && ((t+1)%every==0)) 
       // normally this is done every epoch
     { 
@@ -811,6 +809,34 @@ real ConjGradientOptimizer::optimize()
   if (early_stop)
     cout << "Early Stopping !" << endl;
   return lastmeancost[0];
+}
+
+///////////////
+// optimizeN //
+///////////////
+bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stat_coll) {
+  real df, current_cost;
+
+  for (; !early_stop && stage<nstages; stage++) {
+
+    // Make a line search along the current search direction
+    early_stop = lineSearch();
+    current_cost = cost->value[0];
+    
+    // Find the new search direction
+    early_stop = early_stop || findDirection();
+
+    last_improvement = last_cost - current_cost;
+    last_cost = current_cost;
+
+    // This value of current_step_size is suggested by Fletcher
+    df = max (last_improvement, 10*stop_epsilon);
+    current_step_size = 2*df / dot(search_direction, current_opp_gradient);
+    
+  }
+
+  // TODO Call the Stats collector
+  return early_stop;
 }
 
 //////////////////

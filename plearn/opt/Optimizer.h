@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.2 2003/01/09 14:29:33 ducharme Exp $
+   * $Id: Optimizer.h,v 1.3 2003/04/25 18:42:52 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,11 +47,12 @@
 #ifndef OPTIMIZER_INC
 #define OPTIMIZER_INC
 
-#include "Mat.h"
 #include "Func.h"
-#include "VMat.h"
+#include "Mat.h"
 #include "Measurer.h"
 #include "Object.h"
+#include "VecStatsCollector.h"
+#include "VMat.h"
 
 namespace PLearn <%
 using namespace std;
@@ -70,7 +71,10 @@ using namespace std;
       VarArray params;
       Var cost;
       VarArray proppath; //forward and/or backward
-      int nupdates;
+      int nupdates; // deprecated  TODO Remove ?
+      int nstages; //!< number of steps to reach when calling optimizeN
+      int stage;   //!< current number of steps performed
+
       bool early_stop;
       int early_stop_i;// number of epoch before early stopping
 
@@ -103,6 +107,7 @@ using namespace std;
       
       virtual void init() { build(); } // DEPRECATED : use build() instead
       virtual void build();
+
   private:
     void build_();
     
@@ -123,6 +128,17 @@ using namespace std;
       
       //!  sub-classes should define this, which is the main method
       virtual real optimize() = 0;
+
+      //!  sub-classes should define this, which is the new main method
+      virtual bool optimizeN(VecStatsCollector& stat_coll) = 0;
+      /* while (stage < nstages) {
+       *   params.update(..)
+       *   stat_coll.update(cost)
+       *   stage++
+       *   if finished return is_finished
+       * }
+       * return false
+       */
       
       //!  verify gradient with uniform random initialization of parameters
       //!  using step for the finite difference approximation of the gradient

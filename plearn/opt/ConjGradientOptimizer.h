@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.14 2003/04/25 14:27:41 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.15 2003/04/25 18:42:49 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -103,6 +103,8 @@ private:
   Vec tmp_storage;           // used for temporary storage of data
   Vec delta;                 // temporary storage of the gradient
   real last_improvement;     // cost improvement during the last iteration
+  real last_cost;            // last cost computed
+  real current_step_size;    // current step size for line search
   
 public:
 
@@ -172,30 +174,39 @@ private:
     search_direction.resize(params.nelems());
     tmp_storage.resize(params.nelems());
     delta.resize(params.nelems());
+
+    early_stop = false;
+    computeOppositeGradient(this, current_opp_gradient);
+    search_direction <<  current_opp_gradient;  // first direction = -grad;
+    last_improvement = 0.1; // may only influence the speed of first iteration
+    cost->fprop();
+    last_cost = cost->value[0];
+    current_step_size = starting_step_size;
   }
     
 public:
 
   virtual void oldwrite(ostream& out) const;
   virtual void oldread(istream& in);
-  virtual real optimize();
+  virtual real optimize(); // Deprecated, use optimizeN
+  virtual bool optimizeN(VecStatsCollector& stat_coll);
 
 protected:
   static void declareOptions(OptionList& ol);
 
 private:
 
-  // Find the new search direction for the line search algorithm
+  //! Find the new search direction for the line search algorithm
   bool findDirection();
 
-  // Search the minimum in the current search direction
-  // Return true iif no improvement was possible (and we can stop here)
+  //! Search the minimum in the current search direction
+  //! Return true iif no improvement was possible (and we can stop here)
   bool lineSearch();
 
-  // Update the search_direction by
-  // search_direction = delta + gamma * search_direction
-  // Delta is supposed to be the current opposite gradient
-  // Also update current_opp_gradient to be equal to delta
+  //! Update the search_direction by
+  //! search_direction = delta + gamma * search_direction
+  //! Delta is supposed to be the current opposite gradient
+  //! Also update current_opp_gradient to be equal to delta
   void updateSearchDirection(real gamma);
 
   //----------------------- CONJUGATE GRADIENT FORMULAS ---------------------

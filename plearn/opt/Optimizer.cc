@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.1 2002/10/25 03:21:00 plearner Exp $
+   * $Id: Optimizer.cc,v 1.2 2003/04/25 18:42:51 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -96,6 +96,9 @@ void Optimizer::declareOptions(OptionList& ol)
 
   declareOption(ol, "filename", &Optimizer::filename, OptionBase::buildoption, 
                 "    call measure <every> <nupdates> iterations saving the results in the <filename>. \n");
+
+  declareOption(ol, "n_stages", &Optimizer::nstages, OptionBase::buildoption, 
+                "    number of iterations to reach on the next ""optimizeN"" call\n");
 
   inherited::declareOptions(ol);
 }
