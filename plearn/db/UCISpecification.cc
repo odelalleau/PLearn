@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UCISpecification.cc,v 1.1 2004/07/09 13:03:42 tihocan Exp $ 
+   * $Id: UCISpecification.cc,v 1.2 2004/07/13 20:59:27 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -57,7 +57,13 @@ UCISpecification::UCISpecification()
 {
 }
 
-PLEARN_IMPLEMENT_OBJECT(UCISpecification, "ONE LINE DESCRIPTION", "MULTI LINE\nHELP");
+PLEARN_IMPLEMENT_OBJECT(UCISpecification,
+    "Describes the specifications of a UCI database.",
+    "This object specifies characteristics of a database from the UCI machine\n"
+    "learning repository, such as the input size, target size, etc...\n"
+    "It is intended to be used in a script put in the same directory as the\n"
+    "database, in order to be loaded by the getDataSet() method.\n"
+);
 
 void UCISpecification::declareOptions(OptionList& ol)
 {
