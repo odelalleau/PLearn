@@ -1,6 +1,6 @@
 
 /* *******************************************************      
-   * $Id: test_BinaryVariable_bbprop.cc,v 1.1 2002/10/14 19:28:32 dorionc Exp $
+   * $Id: test_BinaryVariable_bbprop.cc,v 1.2 2002/10/23 23:43:27 dorionc Exp $
    * AUTHORS: Kim Levy & Christian Dorion
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -11,7 +11,7 @@
 */
 
 #include "t_general.h"
-#include "Var.h" 
+#include "Var_all.h" 
 #include "Variable.h"
 #include "DisplayUtils.h" 
 

@@ -11,7 +11,7 @@
 
 #include "t_general.h" 
 #include "TMat/TMat_utils.h"
-#include "Var.h" 
+#include "Var_all.h" 
 #include "DisplayUtils.h" 
 
 using namespace PLearn;

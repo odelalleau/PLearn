@@ -582,7 +582,9 @@ def header_str(fname):
             "\n" +
             "// PLearn (A C++ Machine Learning Library)\n" +
             "// Copyright (C) 1998 Pascal Vincent\n" +
-            "// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal\n" +
+            "// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal\n" +
+            "// Copyright (C) 2001-2002 Nicolas Chapados, Ichiro Takeuchi, Jean-Sebastien Senecal\n" +
+            "// Copyright (C) 2002 Xiangdong Wang, Christian Dorion\n" +
             "\n" +
             "// Redistribution and use in source and binary forms, with or without\n" +
             "// modification, are permitted provided that the following conditions are met:\n" +
@@ -614,7 +616,7 @@ def header_str(fname):
             "\n" +
             "\n" +
             "/* *******************************************************      \n" +
-            "   * $Id: extract_classes,v 1.1 2002/10/16 21:23:27 dorionc Exp $\n" +
+            "   * $Id: extract_classes,v 1.2 2002/10/23 23:43:27 dorionc Exp $\n" +
             "   * This file is part of the PLearn library.\n" +
             "   ******************************************************* */\n" +
             "\n")

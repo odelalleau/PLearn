@@ -9,7 +9,7 @@
 #ifndef __TEST_SRV_H_
 #define __TEST_SRV_H_
 
-#include "Var.h" 
+#include "Var_all.h" 
 #include "DisplayUtils.h" 
 
 #include "t_general.h" 

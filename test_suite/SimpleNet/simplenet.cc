@@ -1,7 +1,7 @@
 // Uncommenting this will result ina namespace-reated bug
 // that I scould not explain (Pascal)
 // #include "MatIO.h"
-#include "Var.h"
+#include "Var_all.h"
 #include "NaryVariable.h"
 #include "Func.h"
 #include "GradientOptimizer.h"

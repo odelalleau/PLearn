@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.h,v 1.1 2002/09/06 21:38:09 wangxian Exp $
+   * $Id: NeuralNet.h,v 1.2 2002/10/23 23:43:26 dorionc Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -45,7 +45,7 @@
 
 #include "Learner.h"
 #include "Optimizer.h"
-#include "Var.h"
+#include "Var_all.h"
 
 namespace PLearn <%
 using namespace std;

@@ -1,4 +1,4 @@
-#include "Var.h"
+#include "Var_all.h"
 #include "NaryVariable.h"
 #include "Func.h"
 #include "GradientOptimizer.h"
