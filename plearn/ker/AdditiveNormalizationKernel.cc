@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.cc,v 1.7 2004/06/11 13:22:06 tihocan Exp $ 
+   * $Id: AdditiveNormalizationKernel.cc,v 1.8 2004/07/09 22:29:10 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -69,7 +69,7 @@ AdditiveNormalizationKernel::AdditiveNormalizationKernel
 }
 
 PLEARN_IMPLEMENT_OBJECT(AdditiveNormalizationKernel,
-    "Normalizes additively an underlying kernel.",
+    "Normalizes additively an underlying kernel with respect to a training set.",
     "From a kernel K, defines a new kernel K' such that:\n"
     "  K'(x,y) = K(x,y) - E[K(x,x_i)] - E[K(x_i,y)] + E[K(x_i,x_j)]\n"
     "where the expectation is performed on the data set.\n"
