@@ -2,9 +2,9 @@
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
-// Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
+// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
 //
+
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -34,29 +34,27 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/* *******************************************************      
-   * $Id: VVec.h,v 1.2 2003/03/09 22:06:40 yoshua Exp $
-   ******************************************************* */
+ 
+/*
+* $Id: VVector.cc,v 1.1 2003/03/09 22:10:40 yoshua Exp $
+******************************************************* */
 
-
-/*! \file PLearnLibrary/PLearnCore/VVec.h */
-
-#ifndef VVec_INC
-#define VVec_INC
-
-class VVector;
+#include "VVector.h"
 
 namespace PLearn <%
 
-/*! ** VVec ** */
-//! A VVec represents an abstract notion of "sample" or "example"
-//! which will allow us to generalize VMatrices to handle objects
-//! that are not conveniently representable with ordinary vectors.
+IMPLEMENT_NAME_AND_DEEPCOPY(VVector);
 
-typedef PP<VVector> VVec;
+Vec VVector::toVec() const {
+  Vec row_vec(mat.width()); // somewhat wasteful
+  mat->getRow(row_index,row_vec);
+  return row_vec;
+}
 
+void VVector::toVec(Vec row_vec) {
+  mat->getRow(row_index,row_vec);
+}
 
+int VVector::length() const { return mat.width(); }
 
 %> // end of namespace PLearn
-
-#endif

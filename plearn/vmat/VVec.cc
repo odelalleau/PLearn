@@ -36,21 +36,15 @@
 
  
 /*
-* $Id: VVec.cc,v 1.1 2003/03/08 22:25:56 yoshua Exp $
+* $Id: VVec.cc,v 1.2 2003/03/09 22:06:40 yoshua Exp $
 ******************************************************* */
 
 #include "VVec.h"
+#include "VVector.h"
 
 namespace PLearn <%
 
-Vec VVector::toVec() {
-  Vec row_vec(mat.width()); // somewhat wasteful
-  mat->getRow(row_index,row_vec);
-  return row_vec;
-}
-
-void VVector::toVec(Vec row_vec) {
-  mat->getRow(row_index,row_vec);
-}
+DECLARE_OBJECT_PP(VVec, VVector);
+IMPLEMENT_OBJECT_PP(VVec, VVector);
 
 %> // end of namespace PLearn

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.4 2003/03/06 22:49:44 yoshua Exp $
+   * $Id: VMatrix.h,v 1.5 2003/03/09 22:06:40 yoshua Exp $
    ******************************************************* */
 
 
@@ -56,6 +56,7 @@
 
 #include "VMField.h"
 
+#include "VVec.h"
 
 namespace PLearn <%
 using namespace std;
@@ -63,9 +64,9 @@ using namespace std;
 class Ker;
 class VMat;
 class Func;
-class VVector;
 
-typedef PP<VVector> VVec;
+//class VVector;
+//typedef PP<VVector> VVec;
 
 /*! ** VMatrix ** */
 

@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.6 2003/03/06 22:49:43 yoshua Exp $
+* $Id: VMatrix.cc,v 1.7 2003/03/09 22:06:39 yoshua Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -50,6 +50,7 @@
 #include "TopNI.h"
 #include "BottomNI.h"
 #include "VVec.h"
+#include "VVector.h"
 
 //#include "VMat.h"
 //#include "TMat_maths.h"
