@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.38 2004/04/29 13:18:37 tihocan Exp $
+   * $Id: fileutils.cc,v 1.39 2004/05/03 00:40:16 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -865,12 +865,16 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                                 syntax_ok = false;
                             }
                             if (!syntax_ok)
-                              PLERROR("$ISEQUAL syntax is: $ISEQUAL{expr1}{expr2}");
+                              PLERROR("$ISHIGHER syntax is: $ISHIGHER{expr1}{expr2}");
                             istrstream expr1_stream(expr1.c_str());
                             istrstream expr2_stream(expr2.c_str());
                             string expr1_eval = readAndMacroProcess(expr1_stream, variables);
                             string expr2_eval = readAndMacroProcess(expr2_stream, variables);
-                            if (expr1_eval > expr2_eval) {
+                            real e1, e2;
+                            if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
+                              PLERROR("In $ISHIGHER{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
+                            }
+                            if (e1 > e2) {
                               text += "1";
                             } else {
                               text += "0";
