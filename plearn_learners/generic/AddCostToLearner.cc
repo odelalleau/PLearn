@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.4 2004/03/19 19:28:14 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.5 2004/03/23 17:24:04 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -225,6 +225,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
     sub_learner->computeCostsFromOutputs(input, output, target, sub_costs);
   }
 
+  static Vec combined_output;
   if (compute_costs_on_bags) {
     // We only need to compute the costs when the whole bag has been seen,
     // otherwise we just store the outputs of each sample in the bag and fill
@@ -247,6 +248,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
     if (bag_signal & SumOverBagsVariable::TARGET_COLUMN_LAST) {
       // Reached the end of the bag: we can compute the output for the bag.
       bag_outputs.resize(bag_size, bag_outputs.width());
+      combined_output.resize(output.length());
       switch (combine_bag_outputs_method) {
         case 1: // o = 1 - (1 - o_1) * (1 - o_2) * .... * (1 - o_n)
           {
@@ -256,24 +258,28 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
               for (int i = 0; i < bag_outputs.length(); i++) {
                 prod = prod * (1 - bag_outputs(i, j));
               }
-              output[j] = 1 - prod;
+              combined_output[j] = 1 - prod;
             }
           }
           break;
         case 2: // o = max(o_1, o_2, ..., o_n)
           {
             for (int j = 0; j < bag_outputs.width(); j++) {
-              output[j] = max(bag_outputs.column(j));
+              combined_output[j] = max(bag_outputs.column(j));
             }
           }
           break;
         default:
           PLERROR("In AddCostToLearner::computeCostsFromOutputs - Unknown value for 'combine_bag_outputs_method'");
       }
+      // We re-compute the sub_learner's costs with the brand new combined bag output.
+      sub_learner->computeCostsFromOutputs(input, combined_output, target.subVec(0, target.length() - 1), sub_costs);
     } else {
       costs.fill(MISSING_VALUE);
       return;
     }
+  } else {
+    combined_output = output;
   }
 
   Vec the_target;
@@ -285,12 +291,12 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
 
   // Optional rescaling.
   if (!rescale_output) {
-    sub_learner_output << output;
+    sub_learner_output << combined_output;
   } else {
     int n = output.length();
     real scaled_output;
     for (int i = 0; i < n; i++) {
-      scaled_output = (output[i] - from_min) * fac + to_min;
+      scaled_output = (combined_output[i] - from_min) * fac + to_min;
       if (force_output_to_target_interval) {
         if (scaled_output > to_max) {
           scaled_output = to_max;
