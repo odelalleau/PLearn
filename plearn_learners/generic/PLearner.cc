@@ -39,17 +39,10 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.32 2004/05/27 15:31:43 tihocan Exp $
+   * $Id: PLearner.cc,v 1.33 2004/06/29 13:26:08 tihocan Exp $
    ******************************************************* */
 
 #include "PLearner.h"
-//#include "TmpFilenames.h"
-//#include "fileutils.h"
-//#include "stringutils.h"
-//#include "MPIStream.h"
-//#include "FileVMatrix.h"
-//#include "RemoveRowsVMatrix.h"
-//#include "PLMPI.h"
 
 namespace PLearn {
 using namespace std;
@@ -261,6 +254,9 @@ void PLearner::computeCostsOnly(const Vec& input, const Vec& target,
   computeOutputAndCosts(input, target, tmp_output, costs);
 }
 
+/////////
+// use //
+/////////
 void PLearner::use(VMat testset, VMat outputs) const
 {
   int l = testset.length();
@@ -286,6 +282,18 @@ void PLearner::use(VMat testset, VMat outputs) const
     delete pb;
 }
 
+////////////////
+// useOnTrain //
+////////////////
+void PLearner::useOnTrain(Mat& outputs) const {
+  PLWARNING("In PLearner::useOnTrain - This method has not been tested yet, remove this warning if it works fine");
+  VMat train_output(outputs);
+  use(train_set, train_output);
+}
+
+//////////
+// test //
+//////////
 void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats, 
              VMat testoutputs, VMat testcosts) const
 {

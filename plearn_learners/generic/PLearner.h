@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.21 2004/05/27 15:29:01 tihocan Exp $
+   * $Id: PLearner.h,v 1.22 2004/06/29 13:26:08 tihocan Exp $
    ******************************************************* */
 
 
@@ -288,6 +288,10 @@ public:
   //! testset is not required to contain a target part.
   //! The default version repeatedly calls computeOutput
   virtual void use(VMat testset, VMat outputs) const;
+
+  //! Compute the output on the training set of the learner, and save
+  //! the result in the provided matrix.
+  virtual void useOnTrain(Mat& outputs) const;
 
   //! Performs test on testset, updating test cost statistics,
   //! and optionally filling testoutputs and testcosts
