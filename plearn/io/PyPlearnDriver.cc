@@ -13,7 +13,7 @@
 // by a prior agreement signed with ApSTAT Technologies Inc.
 
 /* *******************************************************      
-   * $Id: PyPlearnDriver.cc,v 1.4 2005/02/08 21:35:50 tihocan Exp $ 
+   * $Id: PyPlearnDriver.cc,v 1.5 2005/02/10 01:12:06 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -121,7 +121,7 @@ string process_pyplearn_script(const string& scriptfile,
   }
   else
   {
-    PStream is = openString(script_before_preprocessing, PStream::raw_ascii, "r");
+    PStream is = openString(script_before_preprocessing, PStream::raw_ascii);
     script = readAndMacroProcess(is, vars);
   }
 

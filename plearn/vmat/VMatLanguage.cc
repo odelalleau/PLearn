@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.31 2005/02/08 21:42:03 tihocan Exp $
+   * $Id: VMatLanguage.cc,v 1.32 2005/02/10 01:12:44 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -276,7 +276,7 @@ using namespace std;
             bool unstable=true;
             while(unstable)
               {
-                PStream strm = openString(oldstr, PStream::raw_ascii, "r");
+                PStream strm = openString(oldstr, PStream::raw_ascii);
                 newstr="";
                 preprocess(strm,defines,newstr,fieldnames);
                 if(removeblanks(oldstr)==removeblanks(newstr))
@@ -369,9 +369,7 @@ using namespace std;
 
   void VMatLanguage::generateCode(const string& processed_sourcecode)
   {
-    // Need to copy the source code because the argument is 'const'.
-    string source_copy = processed_sourcecode;
-    PStream in = openString(source_copy, PStream::raw_ascii, "r");
+    PStream in = openString(processed_sourcecode, PStream::raw_ascii);
     generateCode(in);
   }
 
@@ -379,9 +377,7 @@ using namespace std;
 
   void VMatLanguage::compileString(const string & code, vector<string>& fieldnames)
   {
-    // Need to copy the code because it is 'const'.
-    string code_copy = code;
-    PStream in = openString(code_copy, PStream::raw_ascii, "r");
+    PStream in = openString(code, PStream::raw_ascii);
     compileStream(in,fieldnames);
   }
 

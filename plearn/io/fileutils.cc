@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.61 2005/02/08 21:36:31 tihocan Exp $
+   * $Id: fileutils.cc,v 1.62 2005/02/10 01:12:06 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -641,13 +641,13 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
             in.get(); // skip '{'
             in.smartReadUntilNext("}", varname, true);
             // Maybe there are macros to process to obtain the real name of the variable.
-            PStream varname_stream = openString(varname, PStream::raw_ascii, "r");
+            PStream varname_stream = openString(varname, PStream::raw_ascii);
             varname = readAndMacroProcess(varname_stream, variables);
             varname = removeblanks(varname);
             map<string, string>::iterator it = variables.find(varname);
             if(it==variables.end())
               PLERROR("Macro variable ${%s} undefined", varname.c_str());
-            PStream varin = openString(it->second, PStream::raw_ascii, "r");
+            PStream varin = openString(it->second, PStream::raw_ascii);
             text += readAndMacroProcess(varin, variables);
           }
           break;
@@ -664,7 +664,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
               syntax_ok = false;
             if (!syntax_ok)
               PLERROR("$CHAR syntax is: $CHAR{expr}");
-            PStream expr_stream = openString(expr, PStream::raw_ascii, "r");
+            PStream expr_stream = openString(expr, PStream::raw_ascii);
             char ch = (char) toint(readAndMacroProcess(expr_stream, variables));
             text += ch;
           }
@@ -712,8 +712,8 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                   }
                   if (!syntax_ok)
                     PLERROR("$DIVIDE syntax is: $DIVIDE{expr1}{expr2}");
-                  PStream expr1_stream = openString(expr1, PStream::raw_ascii, "r");
-                  PStream expr2_stream = openString(expr2, PStream::raw_ascii, "r");
+                  PStream expr1_stream = openString(expr1, PStream::raw_ascii);
+                  PStream expr2_stream = openString(expr2, PStream::raw_ascii);
                   string expr1_eval = readAndMacroProcess(expr1_stream, variables);
                   string expr2_eval = readAndMacroProcess(expr2_stream, variables);
                   real e1, e2;
@@ -746,7 +746,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                     syntax_ok = false;
                   if (!syntax_ok)
                     PLERROR("$ECHO syntax is: $ECHO{expr}");
-                  PStream expr_stream = openString(expr, PStream::raw_ascii, "r");
+                  PStream expr_stream = openString(expr, PStream::raw_ascii);
                   pout << readAndMacroProcess(expr_stream, variables) << endl;
                 }
                 break;
@@ -763,10 +763,10 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                     syntax_ok = false;
                   if (!syntax_ok)
                     PLERROR("$EVALUATE syntax is: $EVALUATE{varname}");
-                  PStream expr_stream = openString(expr, PStream::raw_ascii, "r");
+                  PStream expr_stream = openString(expr, PStream::raw_ascii);
                   string varname = readAndMacroProcess(expr_stream, variables);
                   string to_evaluate = variables[varname];
-                  PStream to_evaluate_stream = openString(to_evaluate, PStream::raw_ascii, "r");
+                  PStream to_evaluate_stream = openString(to_evaluate, PStream::raw_ascii);
                   string evaluated = readAndMacroProcess(to_evaluate_stream, variables);
                   variables[varname] = evaluated;
                 }
@@ -787,7 +787,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
               syntax_ok = false;
             if (!syntax_ok)
               PLERROR("$GETENV syntax is: $GETENV{expr}");
-            PStream expr_stream = openString(expr, PStream::raw_ascii, "r");
+            PStream expr_stream = openString(expr, PStream::raw_ascii);
             string var_name = readAndMacroProcess(expr_stream, variables);
             char* var = getenv(var_name.c_str());
             if (!var)
@@ -829,7 +829,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                   if (!syntax_ok)
                     PLERROR("$IF syntax is: $IF{cond}{expr_cond_true}{expr_cond_false}");
 
-            PStream cond_stream = openString(cond, PStream::raw_ascii, "r");
+            PStream cond_stream = openString(cond, PStream::raw_ascii);
                   string evaluate_cond = readAndMacroProcess(cond_stream, variables);
                   if (evaluate_cond == "1" ) {
                     expr_evaluated = expr_cond_true;
@@ -838,7 +838,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                   } else {
                     PLERROR("$IF condition should be 0 or 1, but is %s", evaluate_cond.c_str());
                   }
-                  PStream expr_stream = openString(expr_evaluated, PStream::raw_ascii, "r");
+                  PStream expr_stream = openString(expr_evaluated, PStream::raw_ascii);
                   text += readAndMacroProcess(expr_stream, variables);
                 }
                 break;
@@ -860,7 +860,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                           in.smartReadUntilNext("}", includefilepath, true);
                         else
                           PLERROR("$INCLUDE must be followed immediately by a { or <");
-                        PStream pathin = openString(includefilepath, PStream::raw_ascii, "r");
+                        PStream pathin = openString(includefilepath, PStream::raw_ascii);
                         includefilepath = readAndMacroProcess(pathin,variables);
                         includefilepath = removeblanks(includefilepath);
                         // TODO Read some PPath.
@@ -885,7 +885,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                           syntax_ok = false;
                         if (!syntax_ok)
                           PLERROR("$INT syntax is: $INT{expr}");
-                        PStream expr_stream = openString(expr, PStream::raw_ascii, "r");
+                        PStream expr_stream = openString(expr, PStream::raw_ascii);
                         string expr_eval = readAndMacroProcess(expr_stream, variables);
                         real e;
                         if (!pl_isnumber(expr_eval, &e)) {
@@ -916,7 +916,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                           syntax_ok = false;
                         if (!syntax_ok)
                           PLERROR("$ISDEFINED syntax is: $ISDEFINED{expr}");
-                        PStream expr_stream = openString(expr, PStream::raw_ascii, "r");
+                        PStream expr_stream = openString(expr, PStream::raw_ascii);
                         string expr_eval = readAndMacroProcess(expr_stream, variables);
                         map<string, string>::iterator it = variables.find(expr_eval);
                         if(it==variables.end()) {
@@ -947,8 +947,8 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                         }
                         if (!syntax_ok)
                           PLERROR("$ISEQUAL syntax is: $ISEQUAL{expr1}{expr2}");
-                        PStream expr1_stream = openString(expr1, PStream::raw_ascii, "r");
-                        PStream expr2_stream = openString(expr2, PStream::raw_ascii, "r");
+                        PStream expr1_stream = openString(expr1, PStream::raw_ascii);
+                        PStream expr2_stream = openString(expr2, PStream::raw_ascii);
                         string expr1_eval = readAndMacroProcess(expr1_stream, variables);
                         string expr2_eval = readAndMacroProcess(expr2_stream, variables);
                         if (expr1_eval == expr2_eval) {
@@ -978,8 +978,8 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                         }
                         if (!syntax_ok)
                           PLERROR("$ISHIGHER syntax is: $ISHIGHER{expr1}{expr2}");
-                        PStream expr1_stream = openString(expr1, PStream::raw_ascii, "r");
-                        PStream expr2_stream = openString(expr2, PStream::raw_ascii, "r");
+                        PStream expr1_stream = openString(expr1, PStream::raw_ascii);
+                        PStream expr2_stream = openString(expr2, PStream::raw_ascii);
                         string expr1_eval = readAndMacroProcess(expr1_stream, variables);
                         string expr2_eval = readAndMacroProcess(expr2_stream, variables);
                         real e1, e2;
@@ -1021,8 +1021,8 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
             }
             if (!syntax_ok)
               PLERROR("$MINUS syntax is: $MINUS{expr1}{expr2}");
-            PStream expr1_stream = openString(expr1, PStream::raw_ascii, "r");
-            PStream expr2_stream = openString(expr2, PStream::raw_ascii, "r");
+            PStream expr1_stream = openString(expr1, PStream::raw_ascii);
+            PStream expr2_stream = openString(expr2, PStream::raw_ascii);
             string expr1_eval = readAndMacroProcess(expr1_stream, variables);
             string expr2_eval = readAndMacroProcess(expr2_stream, variables);
             real e1, e2;
@@ -1054,8 +1054,8 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
             }
             if (!syntax_ok)
               PLERROR("$OR syntax is: $OR{expr1}{expr2}");
-            PStream expr1_stream = openString(expr1, PStream::raw_ascii, "r");
-            PStream expr2_stream = openString(expr2, PStream::raw_ascii, "r");
+            PStream expr1_stream = openString(expr1, PStream::raw_ascii);
+            PStream expr2_stream = openString(expr2, PStream::raw_ascii);
             string expr1_eval = readAndMacroProcess(expr1_stream, variables);
             string expr2_eval = readAndMacroProcess(expr2_stream, variables);
             real e1, e2;
@@ -1090,8 +1090,8 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
             }
             if (!syntax_ok)
               PLERROR("$PLUS syntax is: $PLUS{expr1}{expr2}");
-            PStream expr1_stream = openString(expr1, PStream::raw_ascii, "r");
-            PStream expr2_stream = openString(expr2, PStream::raw_ascii, "r");
+            PStream expr1_stream = openString(expr1, PStream::raw_ascii);
+            PStream expr2_stream = openString(expr2, PStream::raw_ascii);
             string expr1_eval = readAndMacroProcess(expr1_stream, variables);
             string expr2_eval = readAndMacroProcess(expr2_stream, variables);
             real e1, e2;
@@ -1145,21 +1145,21 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
             }
             if (!syntax_ok)
               PLERROR("$SWITCH syntax is: $SWITCH{expr}{comp1}{val1}{comp2}{val2}...{valdef}");
-            PStream expr_stream = openString(expr, PStream::raw_ascii, "r");
+            PStream expr_stream = openString(expr, PStream::raw_ascii);
             string expr_eval =  readAndMacroProcess(expr_stream, variables);
             bool not_done = true;
             for (unsigned int i = 0; i < comp.size() && not_done; i++) {
-              PStream comp_stream = openString(comp[i], PStream::raw_ascii, "r");
+              PStream comp_stream = openString(comp[i], PStream::raw_ascii);
               string comp_eval = readAndMacroProcess(comp_stream, variables);
               if (expr_eval == comp_eval) {
                 not_done = false;
-                PStream val_stream = openString(val[i], PStream::raw_ascii, "r");
+                PStream val_stream = openString(val[i], PStream::raw_ascii);
                 text += readAndMacroProcess(val_stream, variables);
               }
             }
             if (not_done) {
               // Default value needed.
-              PStream val_stream = openString(valdef, PStream::raw_ascii, "r");
+              PStream val_stream = openString(valdef, PStream::raw_ascii);
               text += readAndMacroProcess(val_stream, variables);
             }
           }
@@ -1186,8 +1186,8 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
             }
             if (!syntax_ok)
               PLERROR("$TIMES syntax is: $TIMES{expr1}{expr2}");
-            PStream expr1_stream = openString(expr1, PStream::raw_ascii, "r");
-            PStream expr2_stream = openString(expr2, PStream::raw_ascii, "r");
+            PStream expr1_stream = openString(expr1, PStream::raw_ascii);
+            PStream expr2_stream = openString(expr2, PStream::raw_ascii);
             string expr1_eval = readAndMacroProcess(expr1_stream, variables);
             string expr2_eval = readAndMacroProcess(expr2_stream, variables);
             real e1, e2;
@@ -1210,7 +1210,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
               syntax_ok = false;
             if (!syntax_ok)
               PLERROR("$UNDEFINE syntax is: $UNDEFINE{expr}");
-            PStream expr_stream = openString(expr, PStream::raw_ascii, "r");
+            PStream expr_stream = openString(expr, PStream::raw_ascii);
             string varname = readAndMacroProcess(expr_stream, variables);
             while (variables.count(varname) > 0) {
               // This loop is probably not necessary, but just in case...
