@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.6 2004/03/08 14:44:19 lheureup Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.7 2004/03/11 03:42:45 nova77 Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -230,12 +230,13 @@ void MultiInstanceVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& 
   // ### that you wish to be deepCopied rather than 
   // ### shallow-copied.
   // ### ex:
-  // deepCopyField(trainvec, copies);
+
+  deepCopyField(data_, copies);
 
   // TODO: Copy also the other features
 
   // ### Remove this line when you have fully implemented this method.
-  PLERROR("MultiInstanceVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  PLERROR("MultiInstanceVMatrix::makeDeepCopyFromShallowCopy not fully implemented yet!");
 }
 
 } // end of namespace PLearn
