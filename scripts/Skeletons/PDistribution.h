@@ -99,7 +99,7 @@ public:
   virtual void generate(Vec& x) const;
 
   // **************************
-  // **** Learner methods ****
+  // **** PLearner methods ****
   // **************************
 
   // ### Default version of inputsize returns learner->inputsize()
