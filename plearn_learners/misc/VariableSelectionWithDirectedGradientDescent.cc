@@ -164,12 +164,14 @@ void VariableSelectionWithDirectedGradientDescent::train()
     for (int i = 0; i < targetsize; i++) {
       for (row = 0; row < length; row++)
       {
+        real target = train_set(row, inputsize + i);
+        if (is_missing(target))
+          continue;
         n7_value = input_weights(i, inputsize);
         for (col = 0; col < inputsize; col++)
         {
           n7_value += input_weights(i, col) * train_set(row, col);
         }
-        real target = train_set(row, inputsize + i);
 #ifdef BOUNDCHECK
         if (target != 0 && target != 1.0)
           PLERROR("In VariableSelectionWithDirectedGradientDescent::train - The target should be 0 or 1");
@@ -304,6 +306,8 @@ void VariableSelectionWithDirectedGradientDescent::computeOutput(const Vec& inpu
 void VariableSelectionWithDirectedGradientDescent::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, 
                                    const Vec& targetv, Vec& costsv) const
 {
+  if (is_missing(outputv[0]))
+    return MISSING_VALUE;
   // Note that the "2 * target - 1" operation is only here to transform a 0/1
   // target into -1/1.
   costsv[0] = -log(1.0 / (1.0 + exp(-(2.0 * targetv[0] - 1) * outputv[0])));;
