@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExhaustiveNearestNeighbors.h,v 1.2 2004/12/21 07:13:15 chapados Exp $ 
+   * $Id: ExhaustiveNearestNeighbors.h,v 1.3 2005/01/25 17:58:36 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -91,9 +91,12 @@ protected:
   //! Internal vector for storing useless costs
   mutable Vec costs;
 
+  //! Internal vector for storing dummy data.
+  mutable Vec dummy_vec;
+
   //! Internal vector for storing computed indexes
   mutable TVec<int> indexes;
-
+  
 public:
   //#####  Public Build Options  ############################################
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExhaustiveNearestNeighbors.cc,v 1.3 2004/12/28 15:49:38 tihocan Exp $ 
+   * $Id: ExhaustiveNearestNeighbors.cc,v 1.4 2005/01/25 17:58:36 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -129,6 +129,7 @@ void ExhaustiveNearestNeighbors::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   deepCopyField(training_mat, copies);
   deepCopyField(costs,        copies);
+  deepCopyField(dummy_vec,    copies);
   deepCopyField(kernel,       copies);
   deepCopyField(indexes,      copies);
   inherited::makeDeepCopyFromShallowCopy(copies);
@@ -191,11 +192,9 @@ void ExhaustiveNearestNeighbors::computeOutput(const Vec& input, Vec& output) co
 void ExhaustiveNearestNeighbors::computeCostsFromOutputs(
   const Vec& input, const Vec& output, const Vec& target, Vec& costs) const
 {
-  // In general, this cannot be done since the output vector does not
-  // necessarily contain the input vector, which would allow computing a
-  // kernel value.  Make it an error for now.
-  PLERROR("ExhaustiveNearestNeighbors::computeCostsFromOutputs: "
-          "this function is not supported; use computeOutputAndCosts instead");
+  // Not really efficient (the output has probably already been computed).
+  dummy_vec.resize(outputsize());
+  computeOutputAndCosts(input, target, dummy_vec, costs);
 }                                
 
 
