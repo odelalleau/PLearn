@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: stats_utils.cc,v 1.9 2004/08/03 21:07:46 dorionc Exp $
+   * $Id: stats_utils.cc,v 1.10 2004/08/04 13:38:10 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -251,9 +251,6 @@ real KS_test(Vec& v1, Vec& v2, int conv)
   return ks_stat;
 }
 
-} // end of namespace PLearn
-
-
 real paired_t_test(Vec u, Vec v)
 {
   int n = u.length();
@@ -272,6 +269,8 @@ real paired_t_test(Vec u, Vec v)
 
   return (ubar - vbar) * sqrt( n*(n-1) / sumsquare(u2-v2));
 }
+
+} // end of namespace PLearn
 
 /* 
 
