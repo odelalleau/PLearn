@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.30 2004/04/20 20:44:07 tihocan Exp $
+   * $Id: PLearner.cc,v 1.31 2004/05/27 13:08:02 tihocan Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -181,7 +181,7 @@ int PLearner::inputsize() const
 int PLearner::targetsize() const 
 { 
   if(!targetsize_) 
-    PLERROR("Must specify a training set before calling PLearner::targetsize()"); 
+    PLERROR("In PLearner::targetsize - 'targetsize_' is 0, this should not happen"); 
   return targetsize_; 
 }
 
