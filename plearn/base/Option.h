@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Option.h,v 1.7 2004/10/14 21:23:27 ducharme Exp $
+   * $Id: Option.h,v 1.8 2004/12/07 20:25:28 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -93,7 +93,7 @@ public:
   { return toIndexedObjectPtr(dynamic_cast<const ObjectType*>(o)->*ptr, i); };
 
   virtual string optionHolderClassName(const Object* o) const
-  { return dynamic_cast<const ObjectType*>(o)->ObjectType::classname(); }
+  { return dynamic_cast<const ObjectType*>(o)->ObjectType::_classname_(); }
 };
 
 
