@@ -68,6 +68,12 @@ class Baseclasses:
             return self.dir_to_classes[directory]
         return self.classes_to_dir.keys()
 
+    def path(self, baseclass, ext):
+        assert ext in ['.h', '.cc']
+        return os.path.join( self.classes_to_dir[baseclass],
+                             baseclass+ext
+                             )
+        
     def __str__(self):
         lines = []
         for directory in self.directories:
@@ -81,6 +87,8 @@ class Baseclasses:
                                                           
         return string.join( lines, '\n' )
 
+    def __contains__(self, some_class):
+        return self.classes_to_dir.has_key(some_class)
     
 baseclasses = Baseclasses( plpath.skeleton_directories )
 usage = """
@@ -158,7 +166,7 @@ def generate(baseclass, userclass, ext):
     """Generates a userclass+ext file based on the baseclass+ext file to be found in the scripts/Skeleton directory"""
     year = global_year  # so that it appears in vars()
     author = global_author # so that it appears in vars()
-    skeletonpath = toolkit.get_path(plpath.skeleton_directories, baseclass+ext)
+    skeletonpath = baseclasses.path(baseclass, ext)
     filename = userclass+ext
 
     if skeletonpath is None:
