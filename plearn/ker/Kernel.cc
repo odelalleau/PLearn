@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.11 2004/01/27 14:14:59 tihocan Exp $
+   * $Id: Kernel.cc,v 1.12 2004/02/01 03:27:47 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -154,14 +154,24 @@ void Kernel::computeGramMatrix(Mat K) const
   }
 }
 
-
+///////////////////
+// setParameters //
+///////////////////
 void Kernel::setParameters(Vec paramvec)
 { PLERROR("setParameters(Vec paramvec) not implemented for this kernel"); }
 
-
+///////////////////
+// getParameters //
+///////////////////
 Vec Kernel::getParameters() const
 { return Vec(); }
 
+/////////////
+// hasData //
+/////////////
+bool Kernel::hasData() {
+  return data;
+}
 
 ///////////
 // apply //

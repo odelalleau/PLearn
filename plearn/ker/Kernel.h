@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.13 2004/01/27 14:14:59 tihocan Exp $
+   * $Id: Kernel.h,v 1.14 2004/02/01 03:27:47 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -114,6 +114,9 @@ public:
 
   inline real operator()(const Vec& x1, const Vec& x2) const
     { return evaluate(x1,x2); }
+
+  //! Return true iif there is a data matrix set for this kernel.
+  bool hasData();
 
   //!  Returns a Mat m such that m(i,j) is the index of jth closest neighbour of input i, 
   //!  according to the "distance" measures given by D(i,j)
