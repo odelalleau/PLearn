@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.15 2003/06/03 20:54:24 ducharme Exp $
+   * $Id: StatsCollector.h,v 1.16 2003/06/05 19:13:09 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -134,7 +134,7 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     real stderror() const { return sqrt(variance()/nnonmissing()); }
           
 
-    //! currently understood statnames are E (mean), V (variance), STDDEV, MIN, MAX
+    //! currently understood statnames are E (mean), V (variance), STDDEV, MIN, MAX, STDERROR
     real getStat(const string& statname) const;
 
     //! simply calls inherited::build() then build_()

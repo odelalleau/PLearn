@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: learner_utils.cc,v 1.1 2003/06/05 04:22:44 plearner Exp $ 
+   * $Id: learner_utils.cc,v 1.2 2003/06/05 19:13:15 plearner Exp $ 
    ******************************************************* */
 
 /*! \file learner_utils.cc */
@@ -97,16 +97,19 @@ Mat compute_learner_outputs_on_grid(PP<PLearner> learner, int nx, int ny, real x
   ProgressBar pb("Computing " + tostring(nx) + " x " + tostring(ny) + " learner outputs",nx*ny);
 
   real x = x0;
-  real y = y0;
   for(int i=0; i<nx; i++, x+=deltax)
-    for(int j=0; j<ny; j++, y+=deltay)
-      {
-        input[0] = x;
-        input[1] = y;
-        Vec output = results(i*nx+j);
-        learner->computeOutput(input,output);
-        pb.update(i*nx+j);
-      }
+    {
+      real y = y0;
+      for(int j=0; j<ny; j++, y+=deltay)
+        {
+          input[0] = x;
+          input[1] = y;
+          Vec output = results(i*nx+j);
+          learner->computeOutput(input,output);
+          // cerr << input << " --> " << output << endl;
+          pb.update(i*nx+j);
+        }
+    }
 
   return results;
 }

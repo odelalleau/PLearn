@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.7 2003/06/03 14:52:10 plearner Exp $
+   * $Id: PLearner.cc,v 1.8 2003/06/05 19:13:15 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -202,6 +202,8 @@ int PLearner::getTestCostIndex(const string& costname) const
   for(int i=0; i<costnames.length(); i++)
     if(costnames[i]==costname)
       return i;
+  PLERROR("In PLearner::getTestCostIndex, No test cost named %s in this learner.\n"
+          "Available test costs are: %s", costname.c_str(), tostring(costnames).c_str());
   return -1;
 }
 
@@ -211,6 +213,8 @@ int PLearner::getTrainCostIndex(const string& costname) const
   for(int i=0; i<costnames.length(); i++)
     if(costnames[i]==costname)
       return i;
+  PLERROR("In PLearner::getTrainCostIndex, No train cost named %s in this learner.\n"
+          "Available train costs are: %s", costname.c_str(), tostring(costnames).c_str());
   return -1;
 }
                                 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.14 2003/06/03 20:54:24 ducharme Exp $
+   * $Id: StatsCollector.cc,v 1.15 2003/06/05 19:13:09 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -433,7 +433,7 @@ RealMapping StatsCollector::getAllValuesMapping(TVec<int> * fcount) const
   }
 
 //! Returns the index in the vector returned by getAllStats of the stat with the given name.
-//! Currently available names are E (mean) V (variance) STDDEV MIN MAX
+//! Currently available names are E (mean) V (variance) STDDEV MIN MAX STDERROR
 //! Will call PLERROR statname is invalid
 real StatsCollector::getStat(const string& statname) const
 {
@@ -443,6 +443,8 @@ real StatsCollector::getStat(const string& statname) const
     return variance();
   else if(statname=="STDDEV")
     return stddev();
+  else if(statname=="STDERROR")
+    return stderror();
   else if(statname=="MIN")
     return min();
   else if(statname=="MAX")

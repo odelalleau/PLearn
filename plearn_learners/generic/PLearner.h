@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.7 2003/06/04 02:56:37 plearner Exp $
+   * $Id: PLearner.h,v 1.8 2003/06/05 19:13:15 plearner Exp $
    ******************************************************* */
 
 
@@ -267,10 +267,12 @@ using namespace std;
     //! You may overload this in subclasses for efficiency.
     virtual int nTrainCosts() const;
 
-    //! returns the index of the given cost in the vector of testcosts (returns -1 if not found)
+    //! returns the index of the given cost in the vector of testcosts
+    //! calls PLERROR (throws a PLearnException) if requested cost is not found.
     int getTestCostIndex(const string& costname) const;
 
-    //! returns the index of the given cost in the vector of traincosts (objectives) (returns -1 if not found)
+    //! returns the index of the given cost in the vector of traincosts (objectives)
+    //! calls PLERROR (throws a PLearnException) if requested cost is not found.
     int getTrainCostIndex(const string& costname) const;
 
     //! The run() method simply calls train() and prints the final mean train cost stats

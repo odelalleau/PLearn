@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.2 2003/06/04 21:21:20 plearner Exp $ 
+   * $Id: PDistribution.cc,v 1.3 2003/06/05 19:13:15 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -67,7 +67,7 @@ PDistribution::PDistribution()
       "but they have additional methods allowing for ex. to compute density or generate data points.\n"
       "The default implementations of the learner-type methods for computing outputs and costs work as follows:\n"
       "  - the outputs_def option allows to choose what outputs are produced. \n"
-      "  - cost is by a vector of size 1 containing only the negative log-likelihood (NNL) i.e. -log_density).\n";
+      "  - cost is by a vector of size 1 containing only the negative log-likelihood (NLL) i.e. -log_density).\n";
   }
 
   void PDistribution::build_()
@@ -90,7 +90,7 @@ void PDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 
 int PDistribution::inputsize() const
 {
-  return train_set.length();
+  return train_set->inputsize();
 }
 
 int PDistribution::targetsize() const
@@ -172,12 +172,12 @@ void PDistribution::computeCostsFromOutputs(const Vec& input, const Vec& output,
 
 TVec<string> PDistribution::getTestCostNames() const
 {
-  return TVec<string>(1,"NNL");
+  return TVec<string>(1,"NLL");
 }
 
 TVec<string> PDistribution::getTrainCostNames() const
 {
-  return TVec<string>(1,"NNL");
+  return TVec<string>(1,"NLL");
 }
 
 void PDistribution::generateN(const Mat& X) const
