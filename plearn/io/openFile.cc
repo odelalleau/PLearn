@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openFile.cc,v 1.2 2005/01/07 23:51:22 chrish42 Exp $ 
+   * $Id: openFile.cc,v 1.3 2005/01/13 01:24:13 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -62,7 +62,7 @@ using namespace std;
 #if defined(WIN32) || STREAMBUFVER == 0
     PLERROR("openFile not yet implemented for windows");
 #else    
-    cerr << "openFile(" << filepath << ", " << openmode << ")" << endl;
+//    cerr << "openFile(" << filepath << ", " << openmode << ")" << endl;
     if(openmode=="r")
       {
         int fd = open(filepath.c_str(),O_RDONLY|O_LARGEFILE);
