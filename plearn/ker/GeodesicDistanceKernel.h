@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.h,v 1.4 2004/07/15 14:25:28 tihocan Exp $ 
+   * $Id: GeodesicDistanceKernel.h,v 1.5 2004/07/19 13:25:54 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -122,12 +122,6 @@ public:
   // **************************
   // **** Kernel methods ****
   // **************************
-
-  //! Fill 'k_xi_x_sorted' with the distances from x to the training points
-  //! in the first column (with the knn first ones being the distances to
-  //! the nearest neighbors of x), and with the indices of the corresponding
-  //! neighbors in the second column.
-  void computeNearestNeighbors(const Vec& x, Mat& k_xi_x_sorted) const;
 
   //! Return the index j of the data point which satisfies:
   //!   1. j is among the knn nearest neighbors of the point x from which was

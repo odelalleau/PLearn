@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.cc,v 1.4 2004/07/15 14:26:11 tihocan Exp $ 
+   * $Id: GeodesicDistanceKernel.cc,v 1.5 2004/07/19 13:25:54 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -125,23 +125,6 @@ void GeodesicDistanceKernel::build_()
 {
 }
 
-/////////////////////////////
-// computeNearestNeighbors //
-/////////////////////////////
-void GeodesicDistanceKernel::computeNearestNeighbors(const Vec& x, Mat& k_xi_x_sorted) const {
-  static Vec k_xi_x;
-  k_xi_x.resize(n_examples);
-  k_xi_x_sorted.resize(n_examples, 2);
-  // Compute the distance from x to all training points.
-  distance_kernel->evaluate_all_i_x(x, k_xi_x);
-  // Find the knn nearest neighbors.
-  for (int i = 0; i < n_examples; i++) {
-    k_xi_x_sorted(i,0) = k_xi_x[i];
-    k_xi_x_sorted(i,1) = real(i);
-  }
-  partialSortRows(k_xi_x_sorted, knn);
-}
-
 /////////////////////////////////////
 // computeNearestGeodesicNeighbour //
 /////////////////////////////////////
@@ -173,8 +156,8 @@ real GeodesicDistanceKernel::computeShortestDistance(int i, const Mat& k_xi_x_so
 real GeodesicDistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
   static Mat k_xi_x_sorted1;
   static Mat k_xi_x_sorted2;
-  computeNearestNeighbors(x1, k_xi_x_sorted1);
-  computeNearestNeighbors(x2, k_xi_x_sorted2);
+  distance_kernel->computeNearestNeighbors(x1, k_xi_x_sorted1, knn);
+  distance_kernel->computeNearestNeighbors(x2, k_xi_x_sorted2, knn);
   real min = REAL_MAX;
   real dist;
   for (int j = 0; j < knn; j++) {
@@ -226,7 +209,7 @@ real GeodesicDistanceKernel::evaluate_i_x_from_distances(int i, const Mat& k_xi_
 real GeodesicDistanceKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) const {
   static Mat k_xi_x_sorted;
   if (first_time) {
-    computeNearestNeighbors(x, k_xi_x_sorted);
+    distance_kernel->computeNearestNeighbors(x, k_xi_x_sorted, knn);
   }
   if (pow_distance) {
     return square(computeShortestDistance(i, k_xi_x_sorted));
