@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IsomapTangentLearner.cc,v 1.4 2004/07/21 16:30:59 chrish42 Exp $ 
+   * $Id: IsomapTangentLearner.cc,v 1.5 2004/08/02 16:12:22 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -90,7 +90,7 @@ void IsomapTangentLearner::build_()
   // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
   // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
   // ### You should assume that the parent class' build_() has already been called.
-  
+   
   iso_learner.knn = knn;
   iso_learner.n_comp = n_comp;
   if (train_set)
@@ -173,23 +173,25 @@ void IsomapTangentLearner::computeOutput(const Vec& input, Vec& output) const
 //   output.resize(outputsize());
   
   Mat k_xi_x;
-  gdk->computeNearestNeighbors(input, k_xi_x);
-  
-  
+  //cout<<input<<endl;
+  // on fait un knn+1 au cas ou on elve la premiere ligne un peu plus loin
+  gdk->distance_kernel->computeNearestNeighbors(input, k_xi_x, knn+1);
+
   Mat k_xi_x_sorted;
   
-  // we assume that the trainingset contains each exemple only one time
-  if (k_xi_x(0,0) == 0)
+   // we assume that the trainingset contains each exemple only one time
+  // here we manage the case of computing tangent plane on a point of the training set
+  if (k_xi_x(0,0) < 1e-9)
     k_xi_x_sorted = k_xi_x.subMatRows(1,k_xi_x.length() - 1);
   else
     k_xi_x_sorted = k_xi_x;
-  
+  //cout<<k_xi_x.subMatRows(1,knn);
   Mat result(n_comp,inputsize());
   
   Vec dkdx(inputsize()); //dk/dx
   Vec temp(inputsize());
   Vec term2(inputsize());
-  Vec sum(inputsize());
+  Vec term1(inputsize());
   
 //   Vec tangentVector(inputsize()); // = sum_i v_ik*dk(i)/dx
   
@@ -199,33 +201,46 @@ void IsomapTangentLearner::computeOutput(const Vec& input, Vec& output) const
   Mat diK_dx(n_examples,inputsize());
   
   int i,j,nc;
-  
+  real D;
+
+  term1<<0;  
+  // real seuil = 1e-9;
+  for(j=0;j<n_examples;++j)
+    {
+      ngn = gdk->computeNearestGeodesicNeighbour(j, k_xi_x_sorted);// ngn minimise la distance geodesique entre input et j
+      trainset->getRow(ngn,temp);
+      temp << (input-temp);
+      D =  norm(temp) + gdk->geo_distances->get(j,ngn);
+      //      cout<<D<<endl;
+      // probleme resolu: il faut appeler gdk->distance_kernel->compute...
+//       cout<<" "<<D*D<<" "<<gdk->evaluate_i_x_from_distances(j,k_xi_x_sorted) <<endl;
+      //if (norm(temp) > seuil)
+        term1 += D*(temp)/norm(temp);
+    }
+  term1/=n_examples;
+
   for(i=0;i<n_examples;++i)
   {
 
       // get the nearest neighbor
       ngn = gdk->computeNearestGeodesicNeighbour(i, k_xi_x_sorted); // ngn minimise la distance geodesique entre input et i
+      
       trainset->getRow(ngn,temp);
+      //cout<<i<<"="<<ngn<<"-"<<int(k_xi_x_sorted(ngn,1))<<" ";
       temp << (input-temp); // temp = x-xN
       //       cout<<gdk->evaluate_i_x(i,input,k_xi_x_sorted);
       //       cout<<norm(temp)<<endl;
       term2<<0;
-      term2 << gdk->evaluate_i_x_from_distances(i,k_xi_x_sorted)*(temp)/norm(temp);
+      D =  norm(temp) + gdk->geo_distances->get(i,ngn);
+      //if (norm(temp) > seuil) 
+        term2 = D*(temp)/norm(temp);
 //       else
 //         term2.fill(0);
       
-      sum<<0;
 
-      for(j=0;j<n_examples;++j)
-      {
-          ngn = gdk->computeNearestGeodesicNeighbour(j, k_xi_x_sorted);// ngn minimise la distance geodesique entre input et j
-          trainset->getRow(ngn,temp);
-          temp << (input-temp);
-          sum += gdk->evaluate_i_x_from_distances(j,k_xi_x_sorted)*(temp)/norm(temp);
-      }
       //cout<<term2<<endl;
       //cout<<sum;
-      diK_dx(i) << (sum/n_examples - term2); // exactement la formule de NIPS
+      diK_dx(i) << (term1 - term2); // exactement la formule de NIPS
       //cout<<diK_dx(i);
   }
   
