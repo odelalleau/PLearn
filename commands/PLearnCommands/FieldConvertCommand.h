@@ -42,10 +42,10 @@ public:
                     
   //! The available types for a field.
   enum FieldType {
-    continuous,
-    discrete_uncorr,
-    discrete_corr,
     constant,
+    continuous,
+    discrete_corr,
+    discrete_uncorr,
     skip,
     unknown //< Default value before the decision on the field type is made.
   };
