@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: NllSemisphericalGaussianVariable.cc,v 1.2 2004/08/17 15:37:05 larocheh Exp $
+ * $Id: NllSemisphericalGaussianVariable.cc,v 1.3 2004/08/24 21:15:43 larocheh Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -63,9 +63,9 @@ namespace PLearn {
                           " not to estimate de likelihood of the Markov chain a some point, which is\n"
                           " more complex to estimate.\n");
   
-  NllSemisphericalGaussianVariable::NllSemisphericalGaussianVariable(const VarArray& the_varray, bool that_use_noise, real theepsilon) : inherited(the_varray,the_varray[4]->length(),1), 
-                                                                                  n(varray[0]->width()), use_noise(that_use_noise),epsilon(theepsilon), n_dim(varray[0]->length()),
-                                                                                  n_neighbors(varray[4]->length())
+  NllSemisphericalGaussianVariable::NllSemisphericalGaussianVariable(const VarArray& the_varray, bool that_use_noise, real theepsilon, real themin_p_x, int the_mu_n_neighbors) : inherited(the_varray,the_varray[4]->length(),1), 
+                                                                                                                                                                                  n(varray[0]->width()), use_noise(that_use_noise),epsilon(theepsilon), min_p_x(themin_p_x), n_dim(varray[0]->length()),
+                                                                                                                                                                                  n_neighbors(varray[4]->length()), mu_n_neighbors(the_mu_n_neighbors)
     {
       build_();
     }
@@ -117,6 +117,8 @@ namespace PLearn {
     if(varray[8]->length() != n || varray[8]->width() != 1) PLERROR("In NllSemisphericalGaussianVariable constructor: varray[8] is of size (%d,%d), but should be of size (%d,%d)",
                                                                               varray[8]->length(), varray[8]->width(), n, 1);
 
+    if(mu_n_neighbors < 0)
+      mu_n_neighbors = n_neighbors;
 
     F = varray[0]->matValue;
     mu = varray[1]->value;
@@ -241,28 +243,34 @@ namespace PLearn {
 
       for(int i=0; i<F.length(); i++)
         for(int j=0; j<F.width(); j++)
-          varray[0]->matGradient(i,j) += gradient[neighbor]*exp(-1.0*value[neighbor])*p_target[0]/p_neighbors[neighbor] * (1/sm[0] - 1/sn[0]) * w(neighbor,i) * zn(neighbor,j);
-      
-      // dNLL/dmu
-      if(!use_noise)
+          varray[0]->matGradient(i,j) += gradient[neighbor]*exp(-1.0*value[neighbor])*(p_target[0]+min_p_x)/(p_neighbors[neighbor]+min_p_x) * (1/sm[0] - 1/sn[0]) * w(neighbor,i) * zn(neighbor,j);
+     
+      if(neighbor < mu_n_neighbors)
       {
-        for(int i=0; i<mu.length(); i++)
-          varray[1]->gradient[i] -= gradient[neighbor]*exp(-1.0*value[neighbor])*p_target[0]/p_neighbors[neighbor] * ( 1/sm[0] * zm(neighbor,i) + 1/sn[0] * zn(neighbor,i));
-      }
-      else
-      {
-      // dNLL/dmu with noisy data
+        // dNLL/dmu
+        if(!use_noise)
+        {
+          for(int i=0; i<mu.length(); i++)
+            varray[1]->gradient[i] -= gradient[neighbor]*exp(-1.0*value[neighbor])*(p_target[0]+min_p_x)/(p_neighbors[neighbor]+min_p_x) * ( 1/sm[0] * zm(neighbor,i) + 1/sn[0] * zn(neighbor,i));
+        }
+        else
+        {
+          // dNLL/dmu with noisy data
       
-        for(int i=0; i<mu_noisy.length(); i++)
-          varray[8]->gradient[i] -= gradient[neighbor]*exp(-1.0*value[neighbor])*p_target[0]/p_neighbors[neighbor] * ( 1/sm[0] * zm_noisy(neighbor,i) + 1/sn[0] * zn_noisy(neighbor,i));
+          for(int i=0; i<mu_noisy.length(); i++)
+            varray[8]->gradient[i] -= gradient[neighbor]*exp(-1.0*value[neighbor])*(p_target[0]+min_p_x)/(p_neighbors[neighbor]+min_p_x) * ( 1/sm[0] * zm_noisy(neighbor,i) + 1/sn[0] * zn_noisy(neighbor,i));
+        }
       }
+
       // dNLL/dsm
 
-      varray[2]->gradient[0] += gradient[neighbor]*exp(-1.0*value[neighbor])*p_target[0]/p_neighbors[neighbor] * (0.5 * n_dim/sm[0] - pownorm(zm(neighbor),2)/(sm[0]*sm[0]));
+      varray[2]->gradient[0] += gradient[neighbor]*exp(-1.0*value[neighbor])*(p_target[0]+min_p_x)/(p_neighbors[neighbor]+min_p_x) * (0.5 * n_dim/sm[0] - pownorm(zm(neighbor),2)/(sm[0]*sm[0]));
       
       // dNLL/dsn
 
-      varray[3]->gradient[0] += gradient[neighbor]*exp(-1.0*value[neighbor])*p_target[0]/p_neighbors[neighbor] * (0.5 * (n-n_dim)/sn[0] - pownorm(zn(neighbor),2)/(sn[0]*sn[0]));
+      varray[3]->gradient[0] += gradient[neighbor]*exp(-1.0*value[neighbor])*(p_target[0]+min_p_x)/(p_neighbors[neighbor]+min_p_x) * (0.5 * (n-n_dim)/sn[0] - pownorm(zn(neighbor),2)/(sn[0]*sn[0]));
+      
+      
     }
 
   }
