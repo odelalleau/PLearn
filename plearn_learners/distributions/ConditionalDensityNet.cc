@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.18 2003/12/08 03:46:31 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.19 2004/01/06 13:51:17 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -457,7 +457,6 @@ ConditionalDensityNet::ConditionalDensityNet()
        */
       costs.resize(3);
       
-      /*
       costs[1] = nll;
       costs[2] = square(target-expected_value);
       if (log_likelihood_vs_squared_error_balance==1)
@@ -466,10 +465,11 @@ ConditionalDensityNet::ConditionalDensityNet()
         costs[0] = costs[2];
       else costs[0] = log_likelihood_vs_squared_error_balance*costs[1]+
              (1-log_likelihood_vs_squared_error_balance)*costs[2];
-      */
-      costs[0] = mass_cost + pos_y_cost;
-      costs[1] = mass_cost;
-      costs[2] = pos_y_cost;
+
+      // for debugging
+      //costs[0] = mass_cost + pos_y_cost;
+      //costs[1] = mass_cost;
+      //costs[2] = pos_y_cost;
 
       /*
        * weight and bias decay penalty
@@ -976,6 +976,9 @@ void ConditionalDensityNet::train()
         displayFunction(f,true);
       if (display_graph)
         displayFunction(test_costf,true);
+      static real verify_gradient = 0;
+      if (verify_gradient)
+        test_costf->verifyGradient(0,1,verify_gradient);
 
   int initial_stage = stage;
   bool early_stop=false;
@@ -984,7 +987,7 @@ void ConditionalDensityNet::train()
       optimizer->nstages = optstage_per_lstage;
       train_stats->forget();
       optimizer->early_stop = false;
-      optimizer->optimizeN(*train_stats);
+      early_stop = optimizer->optimizeN(*train_stats);
 
       if (display_graph)
         displayFunction(f,true);
