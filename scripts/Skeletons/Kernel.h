@@ -73,9 +73,9 @@ public:
   // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
   PLEARN_DECLARE_OBJECT(DERIVEDCLASS);
 
-  // **************************
+  // ************************
   // **** Kernel methods ****
-  // **************************
+  // ************************
 
   //! Compute K(x1,x2).
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
