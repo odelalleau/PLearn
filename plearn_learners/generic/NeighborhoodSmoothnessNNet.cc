@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.10 2004/02/24 21:20:46 tihocan Exp $
+   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.11 2004/02/25 17:07:53 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
@@ -61,6 +61,7 @@
 #include "NegCrossEntropySigmoidVariable.h"
 #include "NeighborhoodSmoothnessNNet.h"
 #include "OneHotSquaredLoss.h"
+#include "ProgressBar.h"
 #include "random.h"
 #include "SigmoidVariable.h"
 #include "SoftmaxVariable.h"
@@ -71,6 +72,7 @@
 #include "SumOverBagsVariable.h"
 #include "SumSquareVariable.h"
 #include "SubMatVariable.h"
+#include "SubMatTransposeVariable.h"
 #include "SubVMatrix.h"
 #include "TanhVariable.h"
 #include "TimesVariable.h"
@@ -244,10 +246,10 @@ void NeighborhoodSmoothnessNNet::build_()
 
     // init. basic vars
     int true_inputsize = inputsize(); // inputsize is now true inputsize 
-    bag_inputs = Var(inputsize() + 1, max_n_instances);
+    bag_inputs = Var(max_n_instances, inputsize() + 1);
     // The input (with pij) is the first column of the bag inputs.
-    Var input_and_pij = subMat(bag_inputs, 0, 0, bag_inputs->length(), 1);
-    input = subMat(input_and_pij, 0, 0, true_inputsize, 1);
+    Var input_and_pij = subMat(bag_inputs, 0, 0, 1, bag_inputs->width());
+    input = new SubMatTransposeVariable(input_and_pij, 0, 0, 1, true_inputsize);
     output = input;
     params.resize(0);
 
@@ -369,12 +371,12 @@ void NeighborhoodSmoothnessNNet::build_()
        */
 
       bag_size = Var(1,1);
-      bag_hidden = unfoldedFuncOf(subMat(bag_inputs, 0, 0, true_inputsize, bag_inputs.width()), f_input_to_hidden, true);
-      p_ij = subMat(bag_inputs, true_inputsize, 1, 1, bag_inputs->width() - 1);
+      bag_hidden = unfoldedFuncOf(subMat(bag_inputs, 0, 0, bag_inputs.length(), true_inputsize), f_input_to_hidden, false);
+      p_ij = subMat(bag_inputs, 1, true_inputsize, bag_inputs->length() - 1, 1);
 
       // The q_ij function.
-      Var hidden_0 = subMat(bag_hidden, 0, 0, bag_hidden->length(), 1);
-      Var store_hidden(last_hidden.length(), 1);
+      Var hidden_0 = new SubMatTransposeVariable(bag_hidden, 0, 0, 1, bag_hidden->width());
+      Var store_hidden(last_hidden.length(), last_hidden.width());
       Var hidden_0_minus_hidden = minus(hidden_0, store_hidden);
       Var k_hidden =
         exp(
@@ -387,10 +389,10 @@ void NeighborhoodSmoothnessNNet::build_()
       Var k_hidden_all =
         unfoldedFuncOf(
           subMat(
-            bag_hidden, 0, 1, bag_hidden->length(), bag_hidden->width() - 1
+            bag_hidden, 1, 0, bag_hidden->length() - 1, bag_hidden->width()
           ),
           f_hidden_to_k_hidden,
-          true
+          false
         );
       Var one_over_sum_of_k_hidden = invertElements(sum(k_hidden_all));
       Var log_q_ij = log(timesScalar(k_hidden_all, one_over_sum_of_k_hidden));
@@ -585,7 +587,7 @@ void NeighborhoodSmoothnessNNet::train()
   if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
     build();
 
-  Var totalcost = sumOverBags(train_set, invars_to_training_cost, max_n_instances, batch_size, true);
+  Var totalcost = sumOverBags(train_set, invars_to_training_cost, max_n_instances, batch_size, false);
 
   if(optimizer) {
     optimizer->setToOptimize(params, totalcost);  
