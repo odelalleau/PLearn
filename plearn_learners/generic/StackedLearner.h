@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.h,v 1.4 2003/09/23 01:27:30 yoshua Exp $
+   * $Id: StackedLearner.h,v 1.5 2003/10/02 15:19:39 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -124,6 +124,8 @@ public:
   // ************************
   // **** Object methods ****
   // ************************
+
+  void setTrainStatsCollector(PP<VecStatsCollector> statscol);
 
   //! simply calls inherited::build() then build_() 
   virtual void build();

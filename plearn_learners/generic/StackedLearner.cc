@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.4 2003/09/23 01:27:30 yoshua Exp $
+   * $Id: StackedLearner.cc,v 1.5 2003/10/02 15:19:39 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -49,7 +49,7 @@ using namespace std;
 
 StackedLearner::StackedLearner() 
 /* ### Initialise all fields to their default value here */
-  : train_base_learners(true)
+  : train_base_learners(true),  put_raw_input(false)
   {
   }
 
@@ -89,9 +89,18 @@ StackedLearner::StackedLearner()
     declareOption(ol, "train_base_learners", &StackedLearner::train_base_learners, OptionBase::buildoption,
                   "whether to train the base learners in the method train (otherwise they should be\n"
                   "initialized properly at construction / setOption time)\n");
+    declareOption(ol, "put_raw_input", &StackedLearner::put_raw_input, OptionBase::buildoption,
+                  "whether to put the raw inputs in addition of the base learners outputs, in input of the combiner (default=0)\n");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
+  }
+
+  void StackedLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
+  {
+    train_stats = statscol;
+    if (combiner)
+      combiner->setTrainStatsCollector(statscol);
   }
 
   void StackedLearner::build_()
@@ -105,6 +114,8 @@ StackedLearner::StackedLearner()
     // ### You should assume that the parent class' build_() has already been called.
     for (int i=0;i<base_learners.length();i++)
     {
+      if (!base_learners[i])
+        PLERROR("StackedLearner::build: base learners have not been created!");
       base_learners[i]->build();
       if (i>0 && base_learners[i]->outputsize()!=base_learners[i-1]->outputsize())
         PLERROR("StackedLearner: expecting base learners to have the same number of outputs!");
@@ -113,8 +124,6 @@ StackedLearner::StackedLearner()
       combiner->build();
     if (splitter)
       splitter->build();
-    if (combiner)
-      train_stats = combiner->getTrainStatsCollector();
     if (splitter && splitter->nSetsPerSplit()!=2)
       PLERROR("StackedLearner: the Splitter should produce only two sets per split, got %d",splitter->nSetsPerSplit());
     base_learners_outputs.resize(base_learners.length(),base_learners[0]->outputsize());
@@ -170,14 +179,15 @@ void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
       TVec<VMat> sets = splitter->getSplit();
       VMat lower_trainset = sets[0];
       VMat upper_trainset = sets[1];
-      if (train_base_learners)
-        for (int i=0;i<base_learners.length();i++)
-          base_learners[i]->setTrainingSet(lower_trainset);
+      for (int i=0;i<base_learners.length();i++)
+        base_learners[i]->setTrainingSet(lower_trainset);
       if (combiner)
         combiner->setTrainingSet(new PLearnerOutputVMatrix(upper_trainset, base_learners, put_raw_input));
     }
   } else
   {
+    for (int i=0;i<base_learners.length();i++)
+      base_learners[i]->setTrainingSet(training_set);
     if (combiner)
       combiner->setTrainingSet(new PLearnerOutputVMatrix(training_set, base_learners, put_raw_input));
   }
@@ -190,13 +200,27 @@ void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
 
 void StackedLearner::train()
 {
+  if (!train_stats)
+    PLERROR("StackedLearner::train: train_stats has not been set!");
   if (!splitter || splitter->nsplits()==1) // simplest case
   {
     if (train_base_learners)
       for (int i=0;i<base_learners.length();i++)
+      {
+        VecStatsCollector stats;
+        base_learners[i]->setTrainStatsCollector(&stats);
+        if (expdir!="")
+          base_learners[i]->setExperimentDirectory(expdir+"Base"+tostring(i));
         base_learners[i]->train();
+        stats.finalize(); // WE COULD OPTIONALLY SAVE THEM AS WELL!
+      }
     if (combiner)
+    {
+      combiner->setTrainStatsCollector(train_stats);
+      if (expdir!="")
+        combiner->setExperimentDirectory(expdir+"Combiner");
       combiner->train();
+    }
   } else PLERROR("StackedLearner: multi-splits case not implemented yet");
 }
 
@@ -206,6 +230,8 @@ void StackedLearner::computeOutput(const Vec& input, Vec& output) const
   for (int i=0;i<base_learners.length();i++)
   {
     Vec out_i = base_learners_outputs(i);
+    if (!base_learners[i])
+      PLERROR("StackedLearner::computeOutput: base learners have not been created!");
     base_learners[i]->computeOutput(input,out_i);
   }
   if (combiner)

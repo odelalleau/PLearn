@@ -1418,15 +1418,24 @@ PStream& PStream::operator<<(bool x)
     case raw_binary:
     case raw_ascii:
     case pretty_ascii:
-      if(x) put('1'); else put('0');
+      if(x) 
+        put('1'); 
+      else 
+        put('0');
       break;
     case plearn_ascii:
-      if(x) put('1'); else put('0');
+      if(x) 
+        put('1'); 
+      else 
+        put('0');
       put(' ');
       break;
     case plearn_binary:
       put((char)0x12);
-      if(x) put('1'); else put('0');
+      if(x) 
+        put('1'); 
+      else 
+        put('0');
       break;
     default:
       PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");

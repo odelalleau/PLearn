@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.2 2003/09/23 01:27:27 yoshua Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.3 2003/10/02 15:19:39 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -119,8 +119,9 @@ void PLearnerOutputVMatrix::build_()
     for (int i=1;i<learners->length();i++)
       if (learners[i]->outputsize()!=learners[i-1]->outputsize())
         PLERROR("PLearnerOutputVMatrix: expecting all learners to have the same number of outputs!");
-    inputsize_ = learners[0]->outputsize() + (data->width() - data->inputsize());
-    if (put_raw_input) inputsize_ += data->inputsize();
+    inputsize_ = learners[0]->outputsize();
+    if (put_raw_input) 
+      inputsize_ += data->inputsize();
     targetsize_ = data->targetsize();
     weightsize_ = data->weightsize();
     length_ = data->length();
