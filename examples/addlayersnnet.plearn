@@ -1,0 +1,88 @@
+# Trains a simple AddLayersNNet neural network.
+
+# add_layer : whether we should use an AddLayersNNet or the usual NNet (default = 1)
+
+$IF{$ISDEFINED{add_layer}}{}{$DEFINE{add_layer}{1}}
+
+PTester( 
+  # string: Path of this tester's directory in which to save all tester results.
+  # The directory will be created if it does not already exist.
+  # If this is an empty string, no directory is created and no output file is generated.
+  expdir = "expdir-addlayersnnet"  ;
+  # VMat: The dataset to use to generate splits. 
+  # (This is ignored if your splitter is an ExplicitSplitter)
+  # Data-sets are seen as matrices whose columns or fields are layed out as 
+  # follows: a number of input fields, followed by (optional) target fields, 
+  # followed by a (optional) weight field (to weigh each example).
+  # The sizes of those areas are given by the VMatrix options 
+  # inputsize targetsize, and weightsize, which are typically used by the 
+  # learner upon building
+  dataset = AutoVMatrix(specification = "letters all normalize")
+  # PP< Splitter >: The splitter to use to generate one or several train/test tuples from the dataset.
+  splitter =
+    TrainTestSplitter( 
+      # int: if set to 1, the trainset will be appended after the test set (thus each split will contain three sets)
+      append_train = 1
+      # double: the fraction of the dataset reserved to the test set
+      test_fraction = 0.5  ;
+    );
+  # TVec< string >: A list of global statistics we are interested in.
+  # These are strings of the form S1[S2[dataset.cost_name]] where:
+  #   - dataset is train or test1 or test2 ... (train being 
+  #     the first dataset in a split, test1 the second, ...) 
+  #   - cost_name is one of the training or test cost names (depending on dataset) understood 
+  #     by the underlying learner (see its getTrainCostNames and getTestCostNames methods) 
+  #   - S1 and S2 are a statistic, i.e. one of: E (expectation), V(variance), MIN, MAX, STDDEV, ... 
+  #     S2 is computed over the samples of a given dataset split. S1 is over the splits. 
+  statnames = [ "E[test1.E[NLL]]" "E[test2.E[NLL]]" ]
+  # PP< PLearner >: The learner to train/test.
+  learner =
+    $IF{${add_layer}}{
+    AddLayersNNet $CHAR{40}
+      # TVec< int >: The size of each part. '-1' can be used to specify this part's size should
+      # be such that all inputs are considered ('-1' can thus only appear once).
+      parts_size = [ -1 ]
+      # TVec< int >: Specify for each part how many hidden units we want to add.
+      add_hidden = [  10 ]
+      nhidden = 0  ;
+    }{
+      NNet $CHAR{40}
+      nhidden =  10  ;
+    }
+      # int:     number of hidden units in first hidden layer (0 means no hidden layer)
+      nhidden2 = 0
+      # int:     number of output units. This gives this learner its outputsize.
+      #     It is typically of the same dimensionality as the target for regression problems 
+      #     But for classification problems where target is just the class number, noutputs is 
+      #     usually of dimensionality number of classes (as we want to output a score or probability 
+      #     vector, one per class)
+      noutputs = 26  ;
+      # double:     global weight decay for all layers
+      weight_decay = 0  ;
+      # double:     global bias decay for all layers
+      bias_decay = 0  ;
+      # string:     what transfer function to use for ouput layer? 
+      #     one of: tanh, sigmoid, exp, softplus, softmax, log_softmax 
+      #     or interval(<minval>,<maxval>), which stands for
+      #     <minval>+(<maxval>-<minval>)*sigmoid(.).
+      #     An empty string or "none" means no output transfer function 
+      output_transfer_func = "softmax"  ;
+      cost_funcs = [ "NLL"]  ;
+      # PP< Optimizer >:     specify the optimizer to use
+      optimizer = 
+        GradientOptimizer( 
+          # double:     the initial learning rate
+          start_learning_rate = 1e-2
+          # double:     the learning rate decrease constant 
+          decrease_constant = 0  ;
+        );
+      # int:     how many samples to use to estimate the avergage gradient before updating the weights
+      #     0 is equivalent to specifying training_set->length() 
+      batch_size = 1  ;
+      nstages = 10
+      seed = 1
+    );
+  # bool: If true, the outputs of the test for split #k will be saved in Split#k/test#i_outputs.pmat
+  save_test_outputs = 1  ;
+  provide_learner_expdir = 1  ;
+);
