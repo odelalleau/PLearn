@@ -1,4 +1,4 @@
-// -*- C++ -*-4 1999/10/29 20:41:34 dugas
+// -*- C++ -*-
 
 // PLearner.h
 //
@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.27 2004/08/16 15:45:44 dorionc Exp $
+   * $Id: PLearner.h,v 1.28 2004/09/16 21:00:27 chapados Exp $
    ******************************************************* */
 
 
@@ -131,7 +131,7 @@ public:
 
   //! Declares the train_set
   //! Then calls build() and forget() if necessary
-  //! Note: You shouldn't have to overload this in subclasses, except in maybe to forward the call to an underlying learner.
+  //! Note: You shouldn't have to override this in subclasses, except in maybe to forward the call to an underlying learner.
   virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
   //! Returns the current train_set
@@ -145,7 +145,7 @@ public:
 
   //! Sets the statistics collector whose update() method will be called 
   //! during training.
-  //! Note: You shouldn't have to overload this in subclasses, except maybe to forward the call to an underlying learner.
+  //! Note: You shouldn't have to override this in subclasses, except maybe to forward the call to an underlying learner.
   virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol);
 
   //! Returns the train stats collector
@@ -167,7 +167,7 @@ public:
   //! Default returns train_set->targetsize()
   virtual int targetsize() const; 
 
-  //! SUBCLASS WRITING: overload this so that it returns 
+  //! SUBCLASS WRITING: override this so that it returns 
   //! the size of this learner's output, as a function of 
   //! its inputsize(), targetsize() and set options
   virtual int outputsize() const =0;
@@ -272,13 +272,13 @@ public:
                                        const Vec& target, Vec& costs) const =0;
                                 
   //! Default calls computeOutput and computeCostsFromOutputs
-  //! You may overload this if you have a more efficient way to 
+  //! You may override this if you have a more efficient way to 
   //! compute both output and weighted costs at the same time.
   virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                      Vec& output, Vec& costs) const;
 
   //! Default calls computeOutputAndCosts
-  //! This may be overloaded if there is a more efficient way to compute the costs
+  //! This may be overridden if there is a more efficient way to compute the costs
   //! directly, without computing the whole output vector.
   virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
 

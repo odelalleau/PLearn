@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.36 2004/07/23 20:25:14 ducharme Exp $
+   * $Id: PLearner.cc,v 1.37 2004/09/16 21:00:26 chapados Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -329,14 +329,13 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
   for(int i=0; i<l; i++)
     {
       testset.getExample(i, input, target, weight);
-
+      
+      // Always call computeOutputAndCosts, since this is better
+      // behaved with stateful learners
+      computeOutputAndCosts(input,target,output,costs);
+      
       if(testoutputs)
-        {
-          computeOutputAndCosts(input, target, output, costs);
-          testoutputs->putOrAppendRow(i,output);
-        }
-      else // no need to compute outputs
-        computeCostsOnly(input, target, costs);
+        testoutputs->putOrAppendRow(i,output);
 
       if(testcosts)
         testcosts->putOrAppendRow(i, costs);

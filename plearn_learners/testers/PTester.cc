@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.38 2004/09/14 16:04:58 chrish42 Exp $ 
+   * $Id: PTester.cc,v 1.39 2004/09/16 21:00:44 chapados Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -384,6 +384,10 @@ Vec PTester::perform(bool call_forget)
           if (testset->length()==0) {
             PLWARNING("PTester:: test set % is of length 0, costs will be set to -1",setname.c_str());
           }
+
+          // Before each test set, reset the internal state of the learner
+          learner->resetInternalState();
+          
           learner->test(testset, test_stats, test_outputs, test_costs);      
           test_stats->finalize();
           if(splitdir != "" && save_stat_collectors)
