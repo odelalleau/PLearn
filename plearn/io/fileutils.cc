@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.40 2004/05/05 19:24:08 nova77 Exp $
+   * $Id: fileutils.cc,v 1.41 2004/05/05 20:12:09 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -255,7 +255,7 @@ int chdir(const string& path)
     if(isdir(path))
       return true;
 
-    size_t pos = 0;
+    int pos = 0;
 #if !defined(_MINGW_) && !defined(WIN32)
     mode_t mode = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
 #endif
@@ -264,7 +264,7 @@ int chdir(const string& path)
       {
         pos++;
         pos = path.find(slash,pos);
-        if(pos != string::npos)
+        if(pos >= 0)
           pathpart = path.substr(0,pos);
         else
           pathpart = path;
