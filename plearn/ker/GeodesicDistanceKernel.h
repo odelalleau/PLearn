@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.h,v 1.2 2004/06/23 20:19:07 tihocan Exp $ 
+   * $Id: GeodesicDistanceKernel.h,v 1.3 2004/07/09 22:30:36 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -62,7 +62,7 @@ protected:
   // * Protected options *
   // *********************
 
-  VMat geo_distances;
+  
 
 public:
 
@@ -75,7 +75,8 @@ public:
   int knn;
   bool pow_distance;
   string shortest_algo;
-
+  VMat geo_distances;
+  
   // ****************
   // * Constructors *
   // ****************
@@ -101,17 +102,6 @@ protected:
   //! Declares this class' options.
   static void declareOptions(OptionList& ol);
 
-  //! Fill 'k_xi_x_sorted' with the distances from x to the training points
-  //! in the first column (with the knn first ones being the distances to
-  //! the nearest neighbors of x), and with the indices of the corresponding
-  //! neighbors in the second column.
-  void computeNearestNeighbors(const Vec& x, Mat& k_xi_x_sorted) const;
-
-  //! Return the shortest distance to i from a point x whose distance
-  //! to its knn nearest neighbors in the training set is given by
-  //! the matrix 'k_xi_x_sorted'.
-  real computeShortestDistance(int i, const Mat& k_xi_x_sorted) const;
-
 public:
 
   // ************************
@@ -132,6 +122,23 @@ public:
   // **************************
   // **** Kernel methods ****
   // **************************
+
+  //! Fill 'k_xi_x_sorted' with the distances from x to the training points
+  //! in the first column (with the knn first ones being the distances to
+  //! the nearest neighbors of x), and with the indices of the corresponding
+  //! neighbors in the second column.
+  void computeNearestNeighbors(const Vec& x, Mat& k_xi_x_sorted) const;
+
+  //! retourne l'indice de l'exemple du dataset qui minimise la distance geodesique
+  //! entre i et le x qui a servi à calculer  k_xi_x
+  int computeNearestGeodesicNeighbour(int i, const Mat& k_xi_x_sorted) const;
+
+  //! Return the shortest distance to i from a point x whose distance
+  //! to its knn nearest neighbors in the training set is given by
+  //! the matrix 'k_xi_x_sorted'.
+  real computeShortestDistance(int i, const Mat& k_xi_x_sorted) const;
+
+  real evaluate_i_x(int i, const Vec& x, const Mat& k_xi_x_sorted, bool powdistance=false) const; 
 
   //! Compute K(x1,x2).
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
