@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.25 2005/01/27 14:23:12 tihocan Exp $ 
+   * $Id: PDistribution.cc,v 1.26 2005/02/11 01:32:19 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -502,6 +502,8 @@ void PDistribution::setInput(const Vec& input) const {
 // setTrainingSet //
 ////////////////////
 void PDistribution::setTrainingSet(VMat training_set, bool call_forget) {
+  if(training_set->inputsize()<0)
+    training_set->defineSizes(training_set->width(),0,0);
   inherited::setTrainingSet(training_set, call_forget);
   // Update internal data according to conditional_flags.
   setConditionalFlags(conditional_flags);

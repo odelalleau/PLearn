@@ -1,0 +1,97 @@
+
+GaussianDistribution( 
+# int: number of eigenvectors to keep
+k = 1000  ;
+
+# double: Add this to diagonal of empirical covariance matrix.
+# The actual covariance matrix used will be VDV' + gamma.I 
+# where V'=eigenvectors and D=diag(eigenvalues).
+gamma = 0  ;
+
+# float: When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored
+ignore_weights_below = 0  ;
+
+# string: Defines what will be given in output. This is a string where the characters
+# have the following meaning:
+# 'l'-> log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn,
+# 'e' -> expectation, 'v' -> variance.
+# In lower case they give the value associated with a given observation.
+# In upper case, a curve is evaluated at regular intervals and produced in
+# output (as a histogram). For 'L', 'D', 'C', 'S', it is the target part that
+# varies, while for 'E' and 'V' it is the input part (for conditional distributions).
+# The number of curve points is determined by the 'n_curve_points' option.
+# Note that the upper case letters only work for SCALAR variables.
+outputs_def = "l"  ;
+
+# TVec< int >: This vector should be set for conditional distributions. It indicates what
+# each input variable corresponds to:
+#  - 0 = it is marginalized (it does not appear in the distribution Y|X)
+#  - 1 = it is an input (the X in Y|X)
+#  - 2 = it is a target (the Y in Y|X)
+# If this vector is empty, then all variables are considered targets (thus
+# it is an unconditional distribution).
+conditional_flags = TVec(0 0 *0 )
+ ;
+
+# TVec< double >: If provided, then setInput() will be called at build time with this input
+# (this defines the input part for conditional distributions).
+provide_input = TVec(0 0 *0 )
+ ;
+
+# int: The number of points for which the output is evaluated when outputs_defs
+# is upper case (produces a histogram).
+# The lower_bound and upper_bound options specify where the curve begins and ends.
+# Note that these options (upper case letters) only work for SCALAR variables.
+n_curve_points = -1  ;
+
+# double: The lower bound of scalar Y values to compute a histogram of the distribution
+# when upper case outputs_def are specified.
+lower_bound = 0  ;
+
+# double: The upper bound of scalar Y values to compute a histogram of the distribution
+# when upper case outputs_def are specified.
+upper_bound = 0  ;
+
+# PPath: Path of the directory associated with this learner, in which
+# it should save any file it wishes to create. 
+# The directory will be created if it does not already exist.
+# If expdir is the empty string (the default), then the learner 
+# should not create *any* file. Note that, anyway, most file creation and 
+# reporting are handled at the level of the PTester class rather than 
+# at the learner's. 
+expdir = "PLEARNDIR:examples/data"  ;
+
+# long: The initial seed for the random number generator used to initialize this learner's parameters
+# as typically done in the forget() method... 
+# If -1 is provided, then a 'random' seed is chosen based on time of day, insuring that
+# different experiments may yield different results.
+# With a given seed, forget() should always initialize the parameters to the same values.
+seed = -1  ;
+
+# int: The stage until which train() should train this learner and return.
+# The meaning of 'stage' is learner-dependent, but for learners whose 
+# training is incremental (such as involving incremental optimization), 
+# it is typically synonym with the number of 'epochs', i.e. the number 
+# of passages of the optimization process through the whole training set, 
+# since the last fresh initialisation.
+nstages = 1  ;
+
+# bool: should progress in learning and testing be reported in a ProgressBar.
+report_progress = 1  ;
+
+# int: Level of verbosity. If 0 should not write anything on cerr. 
+# If >0 may write some info on the steps performed along the way.
+# The level of details written should depend on this value.
+verbosity = 1  ;
+
+);
+
+****************************************************************** 
+** Subclasses of GaussianDistribution 
+** (only those that can be instantiated) 
+****************************************************************** 
+
+
+
+------------------------------------------------------------------ 
+
