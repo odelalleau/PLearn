@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.27 2003/05/21 16:22:20 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.28 2003/05/21 19:26:17 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -456,7 +456,7 @@ real ConjGradientOptimizer::fletcherSearchMain (
   // f0 = f(0), f_0 = f(alpha0), f_1 = f(alpha1)
   // g0 = g(0), g_0 = g(alpha0), g_1 = g(alaph1)
   // (for the bracketing phase)
-  real alpha2, f0, f_1, f_0, g0, g_1=0, g_0, a1=0, a2, b1=0, b2;
+  real alpha2, f0, f_1=0, f_0, g0, g_1=0, g_0, a1=0, a2, b1=0, b2;
   f0 = (*f)(0, opt);
   g0 = (*g)(0, opt);
   f_0 = f0;

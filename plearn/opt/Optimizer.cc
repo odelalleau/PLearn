@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.13 2003/05/21 13:40:14 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.14 2003/05/21 19:26:56 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,14 +52,16 @@ using namespace std;
 
 
 Optimizer::Optimizer(int n_updates, const string& file_name, int every_iterations)
-  :nupdates(n_updates), nstages(0), filename(file_name), every(every_iterations),
-  nstages_per_epoch(1)
+  :nupdates(n_updates), nstages(0), nstages_per_epoch(1), filename(file_name),
+  every(every_iterations)
 {}
+
 Optimizer::Optimizer(VarArray the_params, Var the_cost, int n_updates,
                      const string& file_name, int every_iterations)
   :params(the_params),cost(the_cost), nupdates(n_updates), 
   filename(file_name), every(every_iterations)
 {}
+
 Optimizer::Optimizer(VarArray the_params, Var the_cost, VarArray the_update_for_measure,
                      int n_updates, const string& file_name, 
                      int every_iterations)
@@ -104,7 +106,7 @@ void Optimizer::reset()
 void Optimizer::declareOptions(OptionList& ol)
 {
   declareOption(ol, "n_updates", &Optimizer::nupdates, OptionBase::buildoption, 
-                "    maximum number of parameter-updates to be performed by the optimizer\n");
+                "    Deprecated - maximum number of parameter-updates to be performed by the optimizer\n");
 
   declareOption(ol, "every_iterations", &Optimizer::every, OptionBase::buildoption, 
                 "    call measure() method every that many updates \n");
