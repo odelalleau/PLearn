@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.cc,v 1.8 2003/05/28 14:58:42 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.cc,v 1.9 2003/05/29 15:12:47 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -148,6 +148,7 @@ static Vec old_old_mean_gradient;
 static Vec memory_coeff;  // to store the various exponential average coeffs
 static Mat exp_average;   // to store the various exponential averages
 static int nb_avg = 2;    // the number of exponential averages
+// static int time_constant = 50000;
 static int time_constant = 5800;
 static Mat arithm_average;
 static Mat arithm_sum;
@@ -158,6 +159,7 @@ static Vec c1;
 static Vec c2;
 static Vec c3;
 static Mat last_grad;
+// static real alpha = 0.999986;
 static real alpha = 0.99988;
 
 ////////////
@@ -402,7 +404,7 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
 
   bool adapt = (learning_rate_adaptation != 0);
   stochastic_hack = stochastic_hack && !adapt;
-  stochastic_hack = false; // TODO Remove later
+//  stochastic_hack = false; // TODO Remove later
 
   // Big hack for the special case of stochastic gradient, to avoid doing an explicit update
   // (temporarily change the gradient fields of the parameters to point to the parameters themselves,
@@ -466,6 +468,18 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
 //        int k = (arithm_last + time_constant) % time_constant;
         for (int i=0; i<gradient.length(); i++) {
           d = gradient[i]; // * learning_rates[i];
+/*          if (i >= 340)
+            learning_rates[i] = min_learning_rate;
+          else
+            learning_rates[i] = max_learning_rate; */
+/*          if (stage > 0 && stage % (100*18000) == 0) {
+            if (learning_rates[i] != 0.005)
+              learning_rates[i] = 0.005;
+            else
+              learning_rates[i] = 0.0005;
+          } */
+//          else if (stage > 100 * 18000)
+//            learning_rates[i] = min_learning_rate / 3;
 //          sum1[i] += d;
           sum1[i] = alpha*sum1[i] + (1-alpha)*d;
           /*          for (int j=0; j<nb_avg; j++) {
@@ -504,6 +518,7 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
               // opposite average gradients
               learning_rates[i] -= learning_rates[i] * adapt_coeff2;
               //            learning_rates[i] = min_lr;
+//              learning_rates[i] = start_learning_rate;
               nb_changes++;
             } else if (c1[i] == 0 && c2[i] == 0) {
 //             } else if (nbp == 4 || nbp == 0) {
