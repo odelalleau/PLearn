@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ObjectGenerator.cc,v 1.2 2004/06/21 14:52:56 tihocan Exp $
+   * $Id: ObjectGenerator.cc,v 1.3 2004/06/22 18:27:48 ducharme Exp $
    ******************************************************* */
 
 #include "ObjectGenerator.h"
@@ -79,9 +79,10 @@ TVec< PP<Object> > ObjectGenerator::generateAllObjects()
   TVec< PP<Object> > all_objs;
 
   forget();
-  while (!lastObject())
+  while (true)
   {
     PP<Object> next_obj = generateNextObject();
+    if (next_obj.isNull()) break; // no new Object
     all_objs.append(next_obj);
   }
   generation_began = true;

@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ObjectGenerator.h,v 1.2 2004/06/21 14:52:56 tihocan Exp $
+   * $Id: ObjectGenerator.h,v 1.3 2004/06/22 18:27:48 ducharme Exp $
    ******************************************************* */
 
 #include "Object.h"
@@ -69,10 +69,6 @@ private:
 
 protected:
   static void declareOptions(OptionList& ol);
-
-  //! Is the last generated Object the last of the list ?
-  //! MUST be define by a subclass
-  virtual bool lastObject() const = 0;
 
 public:
 
