@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.h,v 1.3 2004/05/07 19:08:44 tihocan Exp $ 
+   * $Id: KernelProjection.h,v 1.4 2004/05/13 13:12:57 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -72,6 +72,9 @@ protected:
 
   //! A boolean indicating we haven't performed any output yet.
   mutable bool first_output;
+
+  mutable Vec last_input;   //!< The last input given when computing costs.
+  mutable Vec last_output;  //!< The last output computed when computing costs.
     
 public:
 
@@ -83,6 +86,7 @@ public:
   Ker kernel;
   real min_eigenvalue;
   int n_comp;
+  int n_comp_for_cost;
   bool normalize;
 
   // ****************
@@ -109,6 +113,9 @@ protected:
   static void declareOptions(OptionList& ol);
 
 public:
+
+  //! Return the eigenvalues of this learner.
+  virtual Vec getEigenvalues() {return eigenvalues;}
 
   // ************************
   // **** Object methods ****

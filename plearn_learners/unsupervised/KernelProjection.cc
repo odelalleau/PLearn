@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.7 2004/05/11 20:58:57 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.8 2004/05/13 13:12:57 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -55,6 +55,7 @@ KernelProjection::KernelProjection()
   free_extra_components(true),
   min_eigenvalue(-REAL_MAX),
   n_comp(1),
+  n_comp_for_cost(-1),
   normalize(false)
   
 {
@@ -70,6 +71,9 @@ PLEARN_IMPLEMENT_OBJECT(KernelProjection,
 ////////////////////
 void KernelProjection::declareOptions(OptionList& ol)
 {
+
+  // Build options.
+
   declareOption(ol, "kernel", &KernelProjection::kernel, OptionBase::buildoption,
       "The kernel used to compute the Gram matrix.");
 
@@ -83,8 +87,13 @@ void KernelProjection::declareOptions(OptionList& ol)
   declareOption(ol, "min_eigenvalue", &KernelProjection::min_eigenvalue, OptionBase::buildoption,
       "Any component associated with an eigenvalue <= min_eigenvalue will be discarded.");
 
+  declareOption(ol, "n_comp_for_cost", &KernelProjection::n_comp_for_cost, OptionBase::buildoption,
+      "The number of components considered when computing a cost (default = -1 means n_comp).");
+
   declareOption(ol, "free_extra_components", &KernelProjection::free_extra_components, OptionBase::buildoption,
       "If set to 1, components computed but not kept won't be available after training.");
+
+  // Learnt options.
 
   declareOption(ol, "eigenvalues", &KernelProjection::eigenvalues, OptionBase::learntoption,
       "The eigenvalues of the Gram matrix.");
@@ -121,6 +130,7 @@ void KernelProjection::build_()
     n_comp_kept = n_comp;
   }
   first_output = true;  // Safer.
+  last_input.resize(0);
 }
 
 /////////////////////////////
@@ -131,10 +141,36 @@ void KernelProjection::computeCostsFromOutputs(const Vec& input, const Vec& outp
 {
   // fs_squared_norm_reconstruction_error (see getTestCostNames).
   real k_x_x = kernel->evaluate(input, input);
-  real fs_norm = pownorm(output, 2);
-  costs.resize(1);
+  real fs_norm;
+  if (n_comp_for_cost > 0) {
+    // Only take the 'n_comp_for_cost' first components.
+    fs_norm = pownorm(output.subVec(0, n_comp_for_cost));
+  } else {
+    fs_norm = pownorm(output);
+  }
+  costs.resize(2);
+  if (last_input.length() == 0) {
+    last_input.resize(input.length());
+    last_output.resize(output.length());
+    last_input << input;
+    last_output << output;
+    costs[1] = MISSING_VALUE;
+  } else {
+    real k_x_y = kernel->evaluate(input, last_input);
+    real fs_dotp;
+    if (n_comp_for_cost > 0) {
+      // Only take the 'n_comp_for_cost' first components.
+      fs_dotp = dot(output.subVec(0, n_comp_for_cost), last_output.subVec(0, n_comp_for_cost));
+    } else {
+      fs_dotp = dot(output, last_output);
+    }
+    last_input.resize(0);
+    real diff = k_x_y - fs_dotp;
+    costs[1] = diff * diff;
+  }
   costs[0] = abs(k_x_x - fs_norm);
   if (k_x_x - fs_norm < -1e-5) {
+    // TODO Remove this later after making sure it didn't happen.
     cout << "Negative error: " << k_x_x - fs_norm << " (k_x_x = " << k_x_x << ", fs_norm = " << fs_norm << ")" << endl;
   }
 }                                
@@ -180,6 +216,7 @@ void KernelProjection::forget()
   n_comp_kept = n_comp;
   n_examples = 0;
   first_output = true;
+  last_input.resize(0);
   // Free memory.
   eigenvectors = Mat();
   eigenvalues = Vec();
@@ -194,6 +231,9 @@ TVec<string> KernelProjection::getTestCostNames() const
   // Feature space squared norm reconstruction error:
   // | K(x,x) - ||output||^2 |
   t.append("fs_squared_norm_reconstruction_error");
+  // Feature space dot product reconstruction squared error:
+  // ( K(x,y) - <output_x,output_y> )^2
+  t.append("fs_dotp_reconstruction_squared_error");
   return t;
 }
 
