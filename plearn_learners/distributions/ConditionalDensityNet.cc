@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.2 2003/11/17 01:53:22 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.3 2003/11/17 18:45:01 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -116,13 +116,6 @@ ConditionalDensityNet::ConditionalDensityNet()
   declareOption(ol, "nhidden2", &ConditionalDensityNet::nhidden2, OptionBase::buildoption, 
                 "    number of hidden units in second hidden layer (0 means no hidden layer)\n");
 
-  declareOption(ol, "noutputs", &ConditionalDensityNet::noutputs, OptionBase::buildoption, 
-                "    number of output units. This gives this learner its outputsize.\n"
-                "    It is typically of the same dimensionality as the target for regression problems \n"
-                "    But for classification problems where target is just the class number, noutputs is \n"
-                "    usually of dimensionality number of classes (as we want to output a score or probability \n"
-                "    vector, one per class");
-
   declareOption(ol, "weight_decay", &ConditionalDensityNet::weight_decay, OptionBase::buildoption, 
                 "    global weight decay for all layers\n");
 
@@ -199,6 +192,8 @@ ConditionalDensityNet::ConditionalDensityNet()
 
   if(train_set)  
     {
+      int n_output_parameters = 1+n_output_density_terms*3;
+
       // init. basic vars
       input = Var(inputsize(), "input");
       output = input;
@@ -224,48 +219,16 @@ ConditionalDensityNet::ConditionalDensityNet()
         PLERROR("ConditionalDensityNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",nhidden2);
       
       // output layer before transfer function
-      wout = Var(1+output->size(), outputsize(), "wout");
+      wout = Var(1+output->size(), n_output_parameters, "wout");
       output = affine_transform(output,wout);
       params.append(wout);
 
       // direct in-to-out layer
       if(direct_in_to_out)
         {
-          wdirect = Var(inputsize(), outputsize(), "wdirect");// Var(1+inputsize(), outputsize(), "wdirect");
+          wdirect = Var(inputsize(), n_output_parameters, "wdirect");// Var(1+inputsize(), n_output_parameters, "wdirect");
           output += transposeProduct(wdirect, input);// affine_transform(input,wdirect);
           params.append(wdirect);
-        }
-
-      Var before_transfer_func = output;
-      
-      /*
-       * output_transfer_func
-       */
-      unsigned int p=0;
-      if(output_transfer_func!="" && output_transfer_func!="none")
-        {
-          if(output_transfer_func=="tanh")
-            output = tanh(output);
-          else if(output_transfer_func=="sigmoid")
-            output = sigmoid(output);
-          else if(output_transfer_func=="softplus")
-            output = softplus(output);
-          else if(output_transfer_func=="exp")
-            output = exp(output);
-          else if(output_transfer_func=="softmax")
-            output = softmax(output);
-          else if (output_transfer_func == "log_softmax")
-            output = log_softmax(output);
-          else if ((p=output_transfer_func.find("interval"))!=string::npos)
-          {
-            unsigned int q = output_transfer_func.find(",");
-            interval_minval = atof(output_transfer_func.substr(p+1,q-(p+1)).c_str());
-            unsigned int r = output_transfer_func.find(")");
-            interval_maxval = atof(output_transfer_func.substr(q+1,r-(q+1)).c_str());
-            output = interval_minval + (interval_maxval - interval_minval)*sigmoid(output);
-          }
-          else
-            PLERROR("In ConditionalDensityNet::build_()  unknown output_transfer_func option: %s",output_transfer_func.c_str());
         }
 
       /*
@@ -277,8 +240,44 @@ ConditionalDensityNet::ConditionalDensityNet()
       if(train_set->hasWeights())
         sampleweight = Var(1, "weight");
 
-      /*
+      // output = parameters of the Y distribution
+      
+      int i=0;
+      a = output[i++];
+      b = new SubMatVariable(output,i,0,n_output_density_terms,1);
+      i+=n_output_density_terms;
+      c = new SubMatVariable(output,i,0,n_output_density_terms,1);
+      i+=n_output_density_terms;
+      mu = new SubMatVariable(output,i,0,n_output_density_terms,1);
 
+      /*
+       * output density
+       */
+      Var centers = target-mu;
+      Var centers_M = maxY-mu;
+      Var pos_a = softplus(a);
+      Var pos_b = softplus(b);
+      Var pos_c = softplus(c);
+      Var cum_numerator, density_numerator, expectation_numerator, denominator, primitive_steps;
+      if (steps_type=="sigmoid_steps")
+      {
+        Var steps = sigmoid(pos_c*centers);
+        cum_numerator = pos_a + dot(pos_b,steps);
+        inverse_denominator = 1/(pos_a + dot(pos_b,sigmoid(pos_c*centers_M)));
+        density_numerator = dot(pos_b*pos_c,steps*(1-steps));
+        primitive_steps = softplus(pos_c*centers);
+      }
+      else if (steps_type=="sloped_steps")
+      {
+        PLERROR("not implemented yet");
+      }
+      else PLERROR("ConditionalDensityNet::build, steps_type option value unknown: %s",steps_type.c_str());
+
+      cumulative = cum_numerator * inverse_denominator;
+      density = density_numerator * inverse_denominator;
+      expectation = (1 - pos_a*inverse_denominator)*maxY - dot(pos_b/pos_c,primitive_steps)*inverse_denominator;
+
+      /*
        * costfuncs
        */
       int ncosts = cost_funcs.size();  

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.2 2003/11/17 01:53:22 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.3 2003/11/17 18:45:01 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -68,7 +68,14 @@ protected:
     Var wout; // bias and weights of output layer
     Var wdirect; // bias and weights for direct in-to-out connection
 
-    Var output;
+    Var output; // output layer contains the parameters of the distribution:
+  Var a; // output parameter, scalar constant part
+  Var b; // output parameters, step height parameters
+  Var c; // output parameters, step smoothing parameters
+  Var mu; // output parameters, step location parameters
+  Var density;
+  Var cumulative;
+  Var expectation;
     VarArray costs; // all costs of interest
     VarArray penalties;
     Var training_cost; // weighted scalar costs[0] including penalties
@@ -93,7 +100,6 @@ public:
   // ### declare public option fields (such as build options) here
     int nhidden;    // number of hidden units in first hidden layer (default:0)
     int nhidden2;   // number of hidden units in second hidden layer (default:0)
-    int noutputs;   // number of output units (outputsize)
 
     real weight_decay; // default: 0
     real bias_decay;   // default: 0 
