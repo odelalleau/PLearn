@@ -1,7 +1,9 @@
 import os.path
 import sys
 from plearn.pyplearn import *
-from plearn.utilities.plpath import plearndir
+from plearn.utilities.ppath import ppath 
+
+plearndir = ppath('PLEARNDIR')
 
 plarg_defaults.data = os.path.join(plearndir, 'test_suite', 'data', 
                                    'eslt_mixture', 'data_train.amat')
