@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.17 2003/09/06 22:29:39 chapados Exp $
+   * $Id: StatsCollector.cc,v 1.18 2003/09/24 15:12:30 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -265,6 +265,9 @@ RealMapping StatsCollector::getBinMapping(double discrete_mincount,
   if(it->first<=max_)
     PLERROR("Bug in StatsCollector::getBinMapping expected last element of mapping to be FLT_MAX...");
 
+  if (mapping.size() == 0)
+    PLERROR("StatsCollector::getBinMapping: no mapping were created; probably a bug");
+  
   // make sure we include max_
   pair<RealRange, real> m = mapping.lastMapping();
 

@@ -34,13 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.12 2003/08/13 08:13:16 plearner Exp $
+   * $Id: RealMapping.cc,v 1.13 2003/09/24 15:12:09 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "RealMapping.h"
 #include "fileutils.h"
 #include <algorithm>
+#include <sstream>
 
 namespace PLearn <%
 using namespace std;
@@ -49,9 +50,13 @@ using namespace std;
 
   string RealRange::getString() const 
   {
-    char s[50];
-    sprintf(s,"%c%f %f%c",leftbracket,low,high,rightbracket);
-    return s;
+    ostringstream s;
+    s << leftbracket << low << ' ' << high << rightbracket;
+    return s.str();
+//    
+//    char s[50];
+//    sprintf(s,"%c%f %f%c",leftbracket,low,high,rightbracket);
+//    return s;
   }  
 
   bool RealRange::operator==(const RealRange& rr) const
