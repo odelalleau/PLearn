@@ -36,7 +36,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperOptimize.cc,v 1.1 2005/01/11 23:22:44 plearner Exp $ 
+   * $Id: HyperOptimize.cc,v 1.2 2005/01/19 19:34:59 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file HyperOptimize.cc */
@@ -172,7 +172,7 @@ void HyperOptimize::reportResult(int trialnum,  const Vec& results)
       TVec<string> option_fields = hlearner->option_fields;
 
       if(results.length() != cost_fields.length())
-        PLERROR("In HyperLearner::report length of results vector differs from number of cost fields");
+        PLERROR("In HyperOptimize::reportResult - Length of results vector differs from number of cost fields");
 
       // ex: _trial_ _objective_ nepochs nhidden ...     train_error
 
