@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ProjectionErrorVariable.h,v 1.6 2004/06/03 14:36:08 yoshua Exp $
+   * $Id: ProjectionErrorVariable.h,v 1.7 2004/07/09 22:20:00 monperrm Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -77,7 +77,7 @@ public:
 
   //!  Default constructor for persistence
   ProjectionErrorVariable() {}
-  ProjectionErrorVariable(Variable* input1, Variable* input2, real norm_penalization=1.0, int n=-1, bool normalize_by_neighbor_distance=true, bool use_subspace_distance=true, real epsilon=1e-6, real regularization=1e-6);
+  ProjectionErrorVariable(Variable* input1, Variable* input2, int n=-1, bool normalize_by_neighbor_distance = true, bool use_subspace_distance=false, real norm_penalization=1.0, real epsilon=1e-6, real regularization=0);
 
   PLEARN_DECLARE_OBJECT(ProjectionErrorVariable);
 
@@ -95,11 +95,13 @@ protected:
 DECLARE_OBJECT_PTR(ProjectionErrorVariable);
 
 inline Var projection_error(Var f, Var t, real norm_penalization=0, int n=-1, bool normalize_by_neighbor_distance=true,
-                            bool use_subspace_distance=true, real epsilon=1e-6, real regularization=1e-6) {
-  return new ProjectionErrorVariable(f, t, norm_penalization, n, normalize_by_neighbor_distance,
-                                     use_subspace_distance, epsilon, regularization);
-}
+                            bool use_subspace_distance=false, real epsilon=1e-6, real regularization=1e-6)
+  {
+      return new ProjectionErrorVariable(f, t, n, normalize_by_neighbor_distance,
+                                     use_subspace_distance, norm_penalization, epsilon, regularization);
+  }
 
+                            
 } // end of namespace PLearn
 
 #endif 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: ProjectionErrorVariable.cc,v 1.8 2004/06/03 14:39:10 yoshua Exp $
+ * $Id: ProjectionErrorVariable.cc,v 1.9 2004/07/09 22:20:00 monperrm Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -61,13 +61,9 @@ namespace PLearn {
                           "     min_{w,u}  || sum_i w_i f_i  -  sum_j u_j t_j ||^2.\n"
                           "In any case, if norm_penalization>0, an extra term is added:\n"
                           "    norm_penalization * sum_i (||f_i||^2 - 1)^2.\n");
-
-  ProjectionErrorVariable::ProjectionErrorVariable(Variable* input1, Variable* input2, real norm_penalization_, 
-                                                   int n_, bool normalize_by_neighbor_distance_, 
-                                                   bool use_subspace_distance_, real epsilon_, real regularization_)
-    : inherited(input1, input2, 1, 1), n(n_), use_subspace_distance(use_subspace_distance_), 
-      normalize_by_neighbor_distance(normalize_by_neighbor_distance_), norm_penalization(norm_penalization_), 
-      epsilon(epsilon_), regularization(regularization_)
+  
+    ProjectionErrorVariable::ProjectionErrorVariable(Variable* input1, Variable* input2, int n_, bool normalize_by_neighbor_distance_, bool use_subspace_distance_, real norm_penalization_, real epsilon_, real regularization_)
+    : inherited(input1, input2, 1, 1), n(n_), use_subspace_distance(use_subspace_distance_), normalize_by_neighbor_distance(normalize_by_neighbor_distance_), norm_penalization(norm_penalization_), epsilon(epsilon_), regularization(regularization)
   {
     build_();
   }
@@ -363,8 +359,6 @@ namespace PLearn {
   {
     PLERROR("Not implemented");
   }
-
-
 
 } // end of namespace PLearn
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocalNeighborsDifferencesVMatrix.cc,v 1.3 2004/07/07 17:30:48 tihocan Exp $ 
+   * $Id: LocalNeighborsDifferencesVMatrix.cc,v 1.4 2004/07/09 22:18:39 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -76,7 +76,7 @@ void LocalNeighborsDifferencesVMatrix::getNewRow(int i, const Vec& v) const
     source->getRow(neighbors(i,k),neighbor_row);
     substract(neighbor_row,ith_row, diff_k);
     // normalize result
-    diff_k /= norm(diff_k);
+    // now it's done in ProjectionErrorVariable diff_k /= norm(diff_k);
   }
 }
 
