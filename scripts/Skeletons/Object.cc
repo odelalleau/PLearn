@@ -62,7 +62,7 @@ DERIVEDCLASS::DERIVEDCLASS()
 
   void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   {
-    Object::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
     // ### Call deepCopyField on all "pointer-like" fields 
     // ### that you wish to be deepCopied rather than 
