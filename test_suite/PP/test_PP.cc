@@ -1,6 +1,6 @@
 
 /* *******************************************************      
-   * $Id: test_PP.cc,v 1.2 2002/10/11 14:19:57 dorionc Exp $
+   * $Id: test_PP.cc,v 1.3 2004/07/08 16:08:45 dorionc Exp $
    * AUTHORS: Kim Levy & Christian Dorion
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -209,7 +209,9 @@ bool Test_PP::copieConsOrdinaryPtr()
 {
   //! tests for class ChildA
   PP<ChildA> childAPP1 = new ChildA(1, "one_hundred",  100); 
-  T_ASSERT(childAPP1->usage()==1 ,"Error in call to ->usage() while testing ChildA's \ncopie constructors with ordinary ptr");
+  T_ASSERT(childAPP1->usage()==1 ,
+           "Error in call to ->usage() while testing ChildA's \n"
+           "copie constructors with ordinary ptr");
   child_a_array[1] = childAPP1;    
   size_a++;
   
