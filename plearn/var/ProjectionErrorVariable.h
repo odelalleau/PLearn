@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ProjectionErrorVariable.h,v 1.9 2004/08/09 23:49:49 yoshua Exp $
+   * $Id: ProjectionErrorVariable.h,v 1.10 2004/08/10 13:49:07 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,6 +64,7 @@ public:
   int n; // dimension of the vectors
   bool use_subspace_distance; // use subspace distance instead of distance to targets
   bool normalize_by_neighbor_distance; // normalize projection error by neighbor distance
+  bool ordered_vectors; // use greedy sequential projections to order the f_i's
   real norm_penalization; // penalize sum_i (||f_i||^2 - 1)^2
   real epsilon; // cut-off of singular values to regularize linear system solution
   real regularization; // add to the diagonal of the system matrix for regularization
