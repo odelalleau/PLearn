@@ -1,16 +1,14 @@
 #!/usr/bin/env python2.3
-__cvs_id__ = "$Id: ModeAndOptionParser.py,v 1.9 2004/12/21 16:22:39 dorionc Exp $"
+__cvs_id__ = "$Id: ModeAndOptionParser.py,v 1.10 2005/03/11 02:49:05 dorionc Exp $"
 
 import inspect, os, string, sys, types
 
-from   optparse                      import *
-from   threading                     import Thread
-import plearn.utilities.toolkit      as     toolkit
-from   plearn.utilities.FrozenObject import *
+from   optparse                        import *
+import plearn.utilities.toolkit        as     toolkit
+import plearn.utilities.metaprog       as     metaprog
+from   plearn.pyplearn.PyPLearnObject  import *
 
-__all__ = [ 'OptionGroup',
-            'ModeDefaults', 'Mode',
-            'ModeAndOptionParserDefaults', 'ModeAndOptionParser' ]
+__all__ = [ 'OptionGroup', 'Mode', 'ModeAndOptionParser' ]
 
 INDENT = 4
 LBOX = 20
@@ -23,16 +21,7 @@ def option_name(option):
     return string.replace(oname, '_', '-')
 
 
-class ModeDefaults: pass
-
-class Mode(Thread, FrozenObject):
-    def __init__( self, defaults=ModeDefaults, **overrides ):
-        self._frozen = False
-        Thread.__init__(self)
-        self.setDaemon(True)
-
-        FrozenObject.__init__(self, defaults, overrides)
-
+class Mode( PyPLearnObject ):
     def description(self):
         return toolkit.doc( self.__class__ )
 
@@ -41,8 +30,7 @@ class Mode(Thread, FrozenObject):
 
         name = string.strip(self.name, '#')
         lname = len(name)
-        left = string.ljust( string.rjust(name, lname+indent),
-                             LBOX )
+        left = string.ljust( string.rjust(name, lname+indent), LBOX )
 
         for i,line in enumerate(self.help_lines):
             if i == 0:
@@ -59,25 +47,23 @@ class Mode(Thread, FrozenObject):
     def option_groups(self, parser):
         return []
 
-    def run(self):
+    def start(self):
         raise NotImplementedError
 
-class ModeAndOptionParserDefaults:
-     usage             = None
-     option_list       = None
-     option_class      = Option
-     version           = None
-     conflict_handler  = "error"
-     description       = None
-     formatter         = None
-     add_help_option   = True
-     prog              = None
+class ModeAndOptionParser( OptionParser ):
+    class Defaults:
+         usage             = None
+         option_list       = None
+         option_class      = Option
+         version           = None
+         conflict_handler  = "error"
+         description       = None
+         formatter         = None
+         add_help_option   = True
+         prog              = None
     
-
-class ModeAndOptionParser(OptionParser):
-
-    def __init__(self, defaults=ModeAndOptionParserDefaults, **overrides):        
-        optparser_overrides = public_members(defaults)
+    def __init__(self, **overrides):
+        optparser_overrides = metaprog.public_members( self.Defaults )        
         optparser_overrides.update( overrides )        
         OptionParser.__init__( self, **overrides )
 

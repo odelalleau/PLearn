@@ -1,11 +1,13 @@
-__cvs_id__ = "$Id: programs.py,v 1.10 2005/02/15 15:08:34 dorionc Exp $"
+__cvs_id__ = "$Id: programs.py,v 1.11 2005/03/11 02:49:05 dorionc Exp $"
 
 import os, string, types
 import plearn.utilities.ppath          as     ppath
 import plearn.utilities.toolkit        as     toolkit
 
 from   plearn.utilities.verbosity      import vprint
-from   plearn.utilities.FrozenObject   import FrozenObject
+from   plearn.pyplearn.PyPLearnObject  import PyPLearnObject
+
+from   PyTestUsageError                import *
 
 ########################################
 ##  Helper Functions  ##################
@@ -48,34 +50,23 @@ def plcommand(command_name):
 ########################################
 ##  Helper Classes  ####################
 ########################################
-
-class PyTestUsageError(Exception): 
-    def __init__(self, msg):
-        self.msg = msg
-
-    def __str__(self):
-        return self.msg
-
-    def print_error(self):
-        cname  = self.__class__.__name__+':'
-        msg    = toolkit.boxed_lines( self.msg, 70 )
-        vprint.highlight( ["", cname, ""] + msg + [""], '!' )
     
-class ProgramDefaults:
-    name = None
-    __declare_members__ = [ ('name', types.StringType) ]
+class Program(PyPLearnObject):
+    class Defaults:
+        name                  = None
+        __ordered_attr__      = [ 'name' ]
 
-class Program(FrozenObject):
-    def __init__(self, defaults=ProgramDefaults, **overrides):
-        if not issubclass(defaults, ProgramDefaults):
-            raise ValueError
-        FrozenObject.__init__(self, defaults, overrides)
+        _path                 = None
+        _processing_directory = None
+        
+    def __init__(self, **overrides):
+        PyPLearnObject.__init__(self, **overrides)
+        assert self.name is not None
 
-        self.set_attribute( 'processing_directory', os.getcwd() )
-
+        self._processing_directory = os.getcwd()
         try:
             self.is_global() ## dummy call to ensure override
-            self.set_attribute('path', self.get_path())
+            self._path = self.get_path()
         except NotImplementedError:
             raise RuntimeError(
                 "Can't create a Program object: use one of GlobalProgram, "
@@ -128,34 +119,33 @@ class LocalProgram(Program):
     def is_global(self):
         return False
 
-class CompilableProgramDefaults(ProgramDefaults):
-    compiler        = 'pymake'
-    compile_options = ''
-    __declare_members__ = ( ProgramDefaults.__declare_members__ +
-                            [ ('compiler', types.StringTypes),
-                              ('compile_options', types.StringTypes) ] )
-
 class Compilable:
     ## This map will be used to ensure that there are no doubled
     ## compilation attempts.
     compilation_status = {}
-    
-    def __init__(self):
+
+    class Defaults(Program.Defaults):        
+        compiler        = 'pymake'
+        compile_options = ''
+        __ordered_attr__ = Program.Defaults.__ordered_attr__ + \
+                           ['compiler', 'compile_options']
+        
+    def __init__(self, **overides):
         raise NotImplementedError(
             "Compilable is an abstract class: use one of "
             "GlobalCompilableProgram or LocalCompilableProgram instead."
             )
 
     def compilation_succeeded(self):
-        if Compilable.compilation_status.has_key(self.path):
-            return Compilable.compilation_status[self.path]
+        if Compilable.compilation_status.has_key(self._path):
+            return Compilable.compilation_status[self._path]
 
         ## Internal call: add the status to the map
         status = None
-        if not os.path.exists( self.path ):
+        if not os.path.exists( self._path ):
             status = False
 
-        elif ( os.path.islink( self.path )
+        elif ( os.path.islink( self._path )
                and not os.path.exists( self.path_to_target() ) ):
             status = False
 
@@ -163,27 +153,27 @@ class Compilable:
             status = True
 
         assert isinstance(status, type(True))
-        Compilable.compilation_status[self.path] = status
+        Compilable.compilation_status[self._path] = status
         return status
     
     def compile(self):
-        if Compilable.compilation_status.has_key(self.path):
+        if Compilable.compilation_status.has_key(self._path):
             return
         
         directory_when_called = os.getcwd()
-        os.chdir( self.processing_directory )
+        os.chdir( self._processing_directory )
 
         if not os.path.exists( ppath.pytest_dir ):
             os.makedirs( ppath.pytest_dir )
 
         ## Remove the symbolic link
-        if os.path.islink( self.path ):
-            os.remove(self.path)
+        if os.path.islink( self._path ):
+            os.remove(self._path)
             
         log_file_name = os.path.join(ppath.pytest_dir,self.name + '.compilation_log')
         compile_cmd   = ( "%s %s %s >& %s"
                           % ( self.compiler, self.compile_options,
-                              self.path,     log_file_name         )
+                              self._path,     log_file_name         )
                           )
         
         vprint(compile_cmd, 2)
@@ -198,22 +188,23 @@ class Compilable:
         raise NotImplementedError
     
 class GlobalCompilableProgram(GlobalProgram, Compilable):
+
     def __init__(self, **overrides):
-        GlobalProgram.__init__(self, CompilableProgramDefaults, **overrides)
+        GlobalProgram.__init__(self, Defaults = Compilable.Defaults, **overrides)
 
     def get_name(self):
         return self.name+' --no-version'
 
     def path_to_target(self):
-        link_target = os.readlink( self.path )
-        to_target   = os.path.join( os.path.dirname(self.path), link_target)
+        link_target = os.readlink( self._path )
+        to_target   = os.path.join( os.path.dirname(self._path), link_target)
         return to_target
         
 class LocalCompilableProgram(LocalProgram, Compilable): 
     def __init__(self, **overrides):
-        LocalProgram.__init__(self, CompilableProgramDefaults, **overrides)
+        LocalProgram.__init__(self, Defaults = Compilable.Defaults, **overrides)
 
     def path_to_target(self):
-        link_target  = os.readlink( self.path )
-        to_target    = os.path.join( self.processing_directory, link_target)
+        link_target  = os.readlink( self._path )
+        to_target    = os.path.join( self._processing_directory, link_target)
         return to_target

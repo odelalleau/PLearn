@@ -1,16 +1,16 @@
-__cvs_id__ = "$Id: modes.py,v 1.18 2005/02/15 15:08:34 dorionc Exp $"
+__cvs_id__ = "$Id: modes.py,v 1.19 2005/03/11 02:49:05 dorionc Exp $"
 
 import copy, shutil
-import plearn.utilities.version_control    as     version_control
-import plearn.utilities.ppath              as     ppath
-import plearn.utilities.toolkit            as     toolkit
+import plearn.utilities.version_control as version_control
+import plearn.utilities.ppath           as ppath
+import plearn.utilities.toolkit         as toolkit
 
-from   programs                            import *
-from   test_and_routines                   import *
-from   ModeAndOptionParser                 import *
-from   plearn.tasks.dispatch               import *
-from   plearn.utilities.toolkit            import *
-from   plearn.utilities.verbosity          import *
+from Test                       import *
+from programs                   import *
+from test_and_routines          import *
+from ModeAndOptionParser        import *
+from plearn.utilities.toolkit   import *
+from plearn.utilities.verbosity import *
 ## from   plearn.utilities.global_variables   import *
 
 current_mode    = None
@@ -113,7 +113,7 @@ class PyTestMode(Mode):
     def procedure(self):
         raise NotImplementedError
 
-    def run(self):
+    def start(self):
         try:
             self.procedure()
         except PyTestUsageError, e: 
@@ -163,8 +163,7 @@ class PyTestMode(Mode):
 
         testing_options.add_option( '-l', '--localhost',
                                     action='store_true',
-                                    help='This flag triggers a dispatch using only the local host. '
-                                    'CURRENTLY ALWAYS TRUE!!!',
+                                    help='CURRENTLY ALWAYS TRUE!!!',
                                     default=True )
 
         testing_options.add_option( '--hosts', 
@@ -211,7 +210,7 @@ class list(PyTestMode):
         formatted_string = lambda n,d: ( "%s Disabled: %s"
                                          % (string.ljust(n, 25), string.ljust(str(d), 15))
                                          )
-        for (family, tests) in Test.families_map.iteritems():
+        for (family, tests) in Test._families_map.iteritems():
             formatted_strings = []
 
             for test in tests:
@@ -264,10 +263,10 @@ class prune( PyTestMode ):
             return
 
         
-        for (family, tests) in Test.families_map.iteritems():
+        for ( family, tests ) in Test._families_map.iteritems():
             fam_pytest_dir = os.path.join( family, "pytest" )
             
-            if os.path.exists(fam_pytest_dir):
+            if os.path.exists( fam_pytest_dir ):
                 os.chdir( family )
                 shutil.rmtree( "pytest" )
 
@@ -284,7 +283,7 @@ class vc_add( PyTestMode ):
             targets = ppath.exempt_of_subdirectories( targets )            
         self.parse_config_files()
 
-        for (family, tests) in Test.families_map.iteritems():
+        for (family, tests) in Test._families_map.iteritems():
             os.chdir( family )
 
 
@@ -292,9 +291,9 @@ class vc_add( PyTestMode ):
             try:
                 version_control.add( config_path )
                 version_control.add( ppath.pytest_dir )
-                version_control.add( Test.expected_results )
+                version_control.add( Test._expected_results )
                 for test in tests:
-                    version_control.recursive_add( test.test_results( Test.expected_results ) )
+                    version_control.recursive_add( test.test_results( Test._expected_results ) )
             except version_control.VersionControlError:
                 raise PyTestUsageError(
                     "The directory in which lies a config file must be added to version control by user.\n"
@@ -306,7 +305,7 @@ class FamilyConfigMode( PyTestMode ):
         self.initialize()
         self.parse_config_files()
 
-        for (family, tests) in Test.families_map.iteritems():
+        for (family, tests) in Test._families_map.iteritems():
             config_path  = config_file_path( family )
             if os.path.exists( config_path ):
                 toolkit.keep_a_timed_version( config_path )
@@ -317,7 +316,7 @@ class FamilyConfigMode( PyTestMode ):
 
             for test in tests:
                 self.test_hook( test ) 
-                config_text += str( test ) + '\n'
+                config_text += "\n%s\n" % str( test )
 
             config_file.write(config_text)
             config_file.close()    
@@ -349,7 +348,7 @@ class add( FamilyConfigMode ):
 
         test_name = options.test_name
         if test_name == '':
-            test_name = '<MANDATORY_TEST_NAME_%s>' % toolkit.date_time_string()
+            test_name = 'MANDATORY_TEST_NAME' 
 
         Test( name    = test_name,
               program = GlobalCompilableProgram( name = "plearn")  )        
@@ -392,17 +391,9 @@ class update( FamilyConfigMode ):
         pass
     
 class RoutineBasedMode( PyTestMode ):
-    dispatch        = None
-
     def initialize(cls):
-        RoutineBasedMode.dispatch = Dispatch(
-            localhost = options.localhost,
-            nb_hosts  = options.hosts
-            )
-
         PyTestMode.initialize()
     initialize = classmethod(initialize)
-
     
     def description(self):
         return toolkit.doc( self.routine_type() )
@@ -410,8 +401,8 @@ class RoutineBasedMode( PyTestMode ):
     def dispatch_tests(self, test_instances):
         for (test_name, test) in test_instances:
             RoutineType = self.routine_type()
-            RoutineBasedMode.dispatch.add_task( RoutineType(test) )
-        RoutineBasedMode.dispatch.run()
+            routine     = RoutineType( test = test )
+            routine.start()
 
     def help(self):
         return toolkit.short_doc( self.routine_type() )
@@ -422,20 +413,20 @@ class RoutineBasedMode( PyTestMode ):
         ## --traceback: This flag triggers routines to report the traceback of
         ## PyTestUsageError. By default, only the class's name and meesage
         ## are reported.
-        Routine.report_traceback = options.traceback
+        Routine._report_traceback = options.traceback
 
         self.parse_config_files()
 
         test_instances = None
         if options.test_name:
             test_instances = [( options.test_name,
-                                Test.instances_map[ options.test_name ]
+                                Test._instances_map[ options.test_name ]
                                 )]
 
             Test.statistics.restrict( options.test_name )
             
         else:
-            test_instances = Test.instances_map.items()
+            test_instances = Test._instances_map.items()
 
         self.dispatch_tests( test_instances )
         print_stats()

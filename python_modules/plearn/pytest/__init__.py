@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: __init__.py,v 1.15 2005/02/15 15:08:34 dorionc Exp $"
+__cvs_id__ = "$Id: __init__.py,v 1.16 2005/03/11 02:49:05 dorionc Exp $"
                             
 ### The versionning tools are now properly enabled.
 import os, sys, time
@@ -100,14 +100,12 @@ def main( pytest_version ):
     ## Program name and copyrights with version number
     dynamic_version_header(  pytest_version  )
     
-    try:
-        modes.current_mode.start()    
-        while modes.current_mode.isAlive():
-            time.sleep(0.2)
+##     try:
+    modes.current_mode.start()    
             
-    except KeyboardInterrupt, kex:
-        print "Interupted by user."
-        sys.exit()
+##     except KeyboardInterrupt, kex:
+##         print "Interupted by user."
+##         sys.exit()
     
     vprint("\nQuitting PyTest.\n", 1)
     
