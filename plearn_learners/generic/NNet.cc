@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.16 2003/10/08 18:39:11 tihocan Exp $
+   * $Id: NNet.cc,v 1.17 2003/10/09 17:08:48 chapados Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -305,8 +305,16 @@ void NNet::build_()
       test_costs = hconcat(costs);
 
       // apply penalty to cost
-      if(penalties.size() != 0)
-        training_cost = hconcat(sum(hconcat((costs[0]*sampleweight) & penalties)) & (test_costs*sampleweight));
+      if(penalties.size() != 0) {
+        // only multiply by sampleweight if there are weights
+        if (train_set->hasWeights()) {
+          training_cost = hconcat(sampleweight*sum(hconcat(costs[0] & penalties))
+                                  & (test_costs*sampleweight));
+        }
+        else {
+          training_cost = hconcat(sum(hconcat(costs[0] & penalties)) & test_costs);
+        }
+      }
       else {
         // only multiply by sampleweight if there are weights
         if(train_set->hasWeights()) {
