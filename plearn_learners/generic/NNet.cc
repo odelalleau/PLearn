@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.33 2004/01/28 14:33:23 yoshua Exp $
+   * $Id: NNet.cc,v 1.34 2004/02/12 21:06:41 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -215,6 +215,8 @@ void NNet::setTrainingSet(VMat training_set, bool call_forget)
 
   if (training_set_has_changed || call_forget)
     build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un NNet train_set = training_set;
+  if (call_forget)
+    forget();
 }
 
 void NNet::build_()
@@ -501,6 +503,7 @@ void NNet::train()
       optimizer->setToOptimize(params, totalcost);  
       optimizer->build();
     }
+  else PLERROR("RecommandationNet::train can't train without setting an optimizer first!");
 
   // number of optimiser stages corresponding to one learner stage (one epoch)
   int optstage_per_lstage = l/nsamples;
