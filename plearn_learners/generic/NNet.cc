@@ -35,23 +35,29 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.35 2004/02/17 14:52:18 tihocan Exp $
+   * $Id: NNet.cc,v 1.36 2004/02/17 21:07:02 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
 
 #include "AffineTransformVariable.h"
+#include "AffineTransformWeightPenalty.h"
 #include "BinaryClassificationLossVariable.h"
+#include "ClassificationLossVariable.h"
 #include "ConcatColumnsVariable.h"
 #include "CrossEntropyVariable.h"
 #include "ExpVariable.h"
 #include "LiftOutputVariable.h"
 #include "LogSoftmaxVariable.h"
+#include "MulticlassLossVariable.h"
 #include "NegCrossEntropySigmoidVariable.h"
 #include "OneHotSquaredLoss.h"
 #include "SigmoidVariable.h"
 #include "SoftmaxVariable.h"
 #include "SoftplusVariable.h"
+#include "SumVariable.h"
+#include "SumAbsVariable.h"
+#include "SumOfVariable.h"
 #include "SumSquareVariable.h"
 #include "TanhVariable.h"
 #include "TransposeProductVariable.h"

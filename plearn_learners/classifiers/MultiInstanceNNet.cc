@@ -35,20 +35,23 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.2 2004/02/16 20:30:45 tihocan Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.3 2004/02/17 21:07:02 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
 
 
 #include "AffineTransformVariable.h"
+#include "AffineTransformWeightPenalty.h"
 #include "BinaryClassificationLossVariable.h"
+#include "ClassificationLossVariable.h"
 #include "ConcatColumnsVariable.h"
 #include "ConcatColumnsVMatrix.h"
 #include "CrossEntropyVariable.h"
 #include "ExpVariable.h"
 #include "LiftOutputVariable.h"
 #include "LogSoftmaxVariable.h"
+#include "MulticlassLossVariable.h"
 #include "MultiInstanceNNet.h"
 #include "NegCrossEntropySigmoidVariable.h"
 #include "OneHotSquaredLoss.h"
@@ -56,6 +59,9 @@
 #include "SigmoidVariable.h"
 #include "SoftmaxVariable.h"
 #include "SoftplusVariable.h"
+#include "SumVariable.h"
+#include "SumAbsVariable.h"
+#include "SumOfVariable.h"
 #include "SumSquareVariable.h"
 #include "SubVMatrix.h"
 #include "TanhVariable.h"

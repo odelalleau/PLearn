@@ -35,28 +35,38 @@
 
 
 /* *******************************************************      
- * $Id: NeuralNet.cc,v 1.17 2004/02/17 14:52:18 tihocan Exp $
+ * $Id: NeuralNet.cc,v 1.18 2004/02/17 21:07:02 tihocan Exp $
  ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
 
 #include "AffineTransformVariable.h"
+#include "AffineTransformWeightPenalty.h"
 #include "BinaryClassificationLossVariable.h"
+#include "ClassificationLossVariable.h"
 #include "ConcatColumnsVariable.h"
 #include "CrossEntropyVariable.h"
 #include "ExpVariable.h"
+#include "IfThenElseVariable.h"
 #include "LiftOutputVariable.h"
 #include "LogSoftmaxVariable.h"
+#include "MulticlassLossVariable.h"
 #include "NegCrossEntropySigmoidVariable.h"
 #include "OneHotSquaredLoss.h"
+#include "SemiSupervisedProbClassCostVariable.h"
 #include "SigmoidVariable.h"
 #include "SoftmaxVariable.h"
 #include "SoftplusVariable.h"
+#include "SourceVariable.h"
+#include "SubMatVariable.h"
+#include "SumVariable.h"
+#include "SumOfVariable.h"
 #include "SumSquareVariable.h"
 #include "TanhVariable.h"
 #include "TransposeProductVariable.h"
 #include "Var_operators.h"
 #include "Var_utils.h"
+#include "WeightedSumSquareVariable.h"
 
 #include "NeuralNet.h"
 //#include "DisplayUtils.h"

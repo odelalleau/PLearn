@@ -33,19 +33,37 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.32 2004/02/16 21:23:57 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.33 2004/02/17 21:07:02 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
 
 /*! \file ConditionalDensityNet.cc */
 
+#include "AffineTransformVariable.h"
+#include "AffineTransformWeightPenalty.h"
 #include "ConditionalDensityNet.h"
+#include "ConcatColumnsVariable.h"
+#include "ConcatRowsVariable.h"
+#include "CutBelowThresholdVariable.h"
 #include "DisplayUtils.h"
+#include "DotProductVariable.h"
+#include "IfThenElseVariable.h"
+#include "IsAboveThresholdVariable.h"
+#include "LogVariable.h"
 //#include "DilogarithmVariable.h"
 #include "SoftSlopeVariable.h"
 #include "SoftSlopeIntegralVariable.h"
 //#include "plapack.h"
+#include "SoftplusVariable.h"
+#include "SubMatTransposeVariable.h"
+#include "SubMatVariable.h"
+#include "SumAbsVariable.h"
+#include "SumOfVariable.h"
+#include "SumSquareVariable.h"
+#include "SumVariable.h"
+#include "TanhVariable.h"
+#include "TransposeProductVariable.h"
 #include "random.h"
 
 namespace PLearn <%
