@@ -77,6 +77,17 @@ def bind(name, value):
 def pair(a, b):
     return plearn_snippet(_plearn_repr(a) + ':' + _plearn_repr(b))
 
+def pmap(*pairs):
+    s = "{"
+    n = len(p)
+    for (i, p) in enumerate(pairs):
+        if i < n-1:
+            s += _plearn_repr( s[p] ) + ","
+        else:
+            s += _plearn_repr( pairs[n-1] )
+    s += "}"
+    return plearn_snippet(s)
+            
 def TMat(x, y, mat):
     return plearn_snippet(_plearn_repr(x) + ' ' + _plearn_repr(y) + ' [' +
                           ', '.join([_plearn_repr(e) for e in mat]) +']')
