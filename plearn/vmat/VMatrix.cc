@@ -36,20 +36,20 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.43 2004/02/20 21:14:44 chrish42 Exp $
+* $Id: VMatrix.cc,v 1.44 2004/02/25 18:10:21 tihocan Exp $
 ******************************************************* */
 
-#include "VMatrix.h"
-#include "SubVMatrix.h"
-#include "FileVMatrix.h"
 #include "DiskVMatrix.h"
+#include "FileVMatrix.h"
+#include "SubVMatrix.h"
 #include "VMat_maths.h"
+#include "VMatrix.h"
 
+#include "BottomNI.h"
 #include "Kernel.h"
 #include "Func.h"
-#include "TopNI.h"
-#include "BottomNI.h"
 #include "stringutils.h"
+#include "TopNI.h"
 
 //#include "VMat.h"
 //#include "TMat_maths.h"
