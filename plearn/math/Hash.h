@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Hash.h,v 1.2 2004/02/20 21:11:46 chrish42 Exp $
+   * $Id: Hash.h,v 1.3 2004/02/26 07:11:12 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -633,7 +633,8 @@ struct Symbol
   Symbol(int symbol=0) : s(symbol) {}
   Symbol(const Symbol& b) : s(b.s) { }
   operator char*() const { return (char*)(&s); }
-  const size_t byteLength() const { return sizeof(int); }
+  // norman: removed useless const
+  size_t byteLength() const { return sizeof(int); }
   operator int() { return s; }
   bool operator==(const Symbol& o) const { return o.s==s; }
   bool operator!=(const Symbol& o) const { return o.s!=s; }
@@ -657,7 +658,8 @@ public:
   IntPair(const IntPair& b) : i0(b.i0), i1(b.i1) { }
   operator char*() const { return (char*)(&i0); }
   int size() const { return 2; }
-  const size_t byteLength() const { return 2*sizeof(int); }
+  // norman: removed useless const
+  size_t byteLength() const { return 2*sizeof(int); }
   bool operator!=(const IntPair& b) const { return (i0!=b.i0 || i1!=b.i1); }
   bool operator==(const IntPair& b) const { return (i0==b.i0 && i1==b.i1); }
   int& operator[](int i) { if (i==0) return i0; else return i1; }

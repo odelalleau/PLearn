@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: DoubleAccessSparseMatrix_impl.h,v 1.4 2004/02/20 21:11:46 chrish42 Exp $ 
+ * $Id: DoubleAccessSparseMatrix_impl.h,v 1.5 2004/02/26 07:06:55 nova77 Exp $ 
  ******************************************************* */
 
 /*! \file DoubleAccessSparseMatrix_impl.h */
@@ -84,13 +84,15 @@ void DoubleAccessSparseMatrix<T>::clear()
 {
   if (mode == ROW_WISE || double_access)
   {
-    int rs = rows.size();
+	// norman: added explicit cast
+    int rs = (int)rows.size();
     for (int i = 0; i < rs; i++)
       rows[i].clear();
   }
   if (mode == COLUMN_WISE || double_access)
   {
-    int cs = cols.size();
+	// norman: added explicit cast
+    int cs = (int)cols.size();
     for (int i = 0; i < cs; i++)
       cols[i].clear();
   }
@@ -340,11 +342,13 @@ int DoubleAccessSparseMatrix<T>::size()
   if (mode == ROW_WISE)
   {
     for (unsigned int i = 0; i < rows.size(); i++)
-      s += rows[i].size();
+	  // norman: added explicit cast
+      s += (int)rows[i].size();
   } else
   {
     for (unsigned int j = 0; j < cols.size(); j++)
-      s += cols[j].size();
+	  // norman: added explicit cast
+      s += (int)cols[j].size();
   }
   return s;
 }
