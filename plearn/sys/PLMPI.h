@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLMPI.h,v 1.8 2004/08/31 17:22:41 plearner Exp $
+   * $Id: PLMPI.h,v 1.9 2005/01/07 17:58:50 chrish42 Exp $
    * AUTHORS: Pascal Vincent 
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -58,10 +58,6 @@
 #include <iostream>
 #include <fstream>
 #include <plearn/io/PStream.h>
-
-#if STREAMBUFVER == 1
-#include <plearn/io/FdPStreamBuf.h>
-#endif
 
 namespace PLearn {
 using namespace std;
@@ -265,8 +261,8 @@ public:
   //!  (we typically use this single tag through all of PLearn)
   static int tag; //!<  Defaults to 2909
 
-  inline static void init(int* argc, char*** argv);
-  inline static void finalize();
+  static void init(int* argc, char*** argv);
+  static void finalize();
   
     // exchange blocks of data among the PLMPI::size CPUs:
     // each CPU has the block starting at position PLMPI::rank*blocksize
@@ -327,39 +323,6 @@ public:
 typedef ofstream pofstream;
 #endif
 
-
-//!  definition of PLMPI inline methods
-
-inline void PLMPI::init(int* argc, char*** argv)
-  {
-#if STREAMBUFVER == 0
-    mycout(&cout);//.rdbuf(cout.rdbuf());
-    mycerr(&cerr);//.rdbuf(cerr.rdbuf());
-    mycin(&cin);//.rdbuf(cin.rdbuf());
-#elif STREAMBUFVER == 1
-    mycin = new FdPStreamBuf(0, -1);
-    mycout = new FdPStreamBuf(-1, 1);
-    mycerr = new FdPStreamBuf(-1, 2, false, false, 0, 0, 0);
-#endif
-
-#if USING_MPI
-    MPI_Init( argc, argv );
-    MPI_Comm_size( MPI_COMM_WORLD, &size) ;
-    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-    if(rank!=0)
-      {
-        cout.rdbuf(nullout.rdbuf());
-        cin.rdbuf(nullin.rdbuf());
-      }
-#endif
-  }
-
-inline void PLMPI::finalize()
-  {
-#if USING_MPI
-    MPI_Finalize();
-#endif 
-  }
 
 
 #if USING_MPI

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLMPI.cc,v 1.4 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: PLMPI.cc,v 1.5 2005/01/07 17:58:50 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -41,6 +41,10 @@
 #include "string.h"
 #include <plearn/base/plerror.h>
 #include <stdio.h>
+
+#if STREAMBUFVER == 1
+#include <plearn/io/FdPStreamBuf.h>
+#endif
 
 namespace PLearn {
 using namespace std;
@@ -64,6 +68,38 @@ PStream PLMPI::mycerr;
 PStream PLMPI::mycin;
 
 int PLMPI::tag = 2909;
+
+void PLMPI::init(int* argc, char*** argv)
+  {
+#if STREAMBUFVER == 0
+    mycout(&cout);//.rdbuf(cout.rdbuf());
+    mycerr(&cerr);//.rdbuf(cerr.rdbuf());
+    mycin(&cin);//.rdbuf(cin.rdbuf());
+#elif STREAMBUFVER == 1
+    mycin = new FdPStreamBuf(0, -1);
+    mycout = new FdPStreamBuf(-1, 1);
+    mycerr = new FdPStreamBuf(-1, 2, false, false);
+#endif
+
+#if USING_MPI
+    MPI_Init( argc, argv );
+    MPI_Comm_size( MPI_COMM_WORLD, &size) ;
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    if(rank!=0)
+      {
+        cout.rdbuf(nullout.rdbuf());
+        cin.rdbuf(nullin.rdbuf());
+      }
+#endif
+  }
+
+void PLMPI::finalize()
+  {
+#if USING_MPI
+    MPI_Finalize();
+#endif 
+  }
+
 
 void PLMPI::exchangeBlocks(double* data, int n, int blocksize, double* buffer)
 {
