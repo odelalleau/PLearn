@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.h,v 1.10 2004/08/09 23:49:50 yoshua Exp $ 
+   * $Id: TangentLearner.h,v 1.11 2004/08/21 21:52:26 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -105,6 +105,7 @@ public:
   real norm_penalization; // penalizes sum_i (||f_i||^2-1)^2
   real svd_threshold;
   real projection_error_regularization; // term to add on linear system diagonal, to solve for subspace fitting
+  real V_slack; // 2nd argument of no_bprop(V,V_slack) used to replace outside V in slack_embedding_neural_network
 
   // ****************
   // * Constructors *

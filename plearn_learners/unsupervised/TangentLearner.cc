@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.17 2004/08/11 19:09:09 mariusmuja Exp $ 
+   * $Id: TangentLearner.cc,v 1.18 2004/08/21 21:52:26 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -48,6 +48,7 @@
 #include <plearn/var/ProductVariable.h>
 #include <plearn/var/PlusVariable.h>
 #include <plearn/var/Var_operators.h>
+#include <plearn/var/NoBpropVariable.h>
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/math/random.h>
 #include <plearn/var/SumOfVariable.h>
@@ -99,7 +100,7 @@ TangentLearner::TangentLearner()
     ordered_vectors(false), smart_initialization(0),initialization_regularization(1e-3),
     n_neighbors(5), n_dim(1), architecture_type("single_neural_network"), output_type("tangent_plane"),
     n_hidden_units(-1), batch_size(1), norm_penalization(0), svd_threshold(1e-5), 
-    projection_error_regularization(0)
+    projection_error_regularization(0), V_slack(0)
     
 {
 }
@@ -206,10 +207,17 @@ void TangentLearner::declareOptions(OptionList& ol)
 		"   linear :         prediction = b + W*x\n"
     "   embedding_neural_network: prediction[k,i] = d(e[k]/d(x[i), where e(x) is an ordinary neural\n"
     "                             network representing the embedding function (see output_type option)\n"
+    "   slack_embedding_neural_network: like embedding_neural_network but outside V is replaced by\n"
+    "                                   a call to no_bprop(V,V_slack), i.e. the gradient to it can\n"
+    "                                   reduced (0<V_slack<1) or eliminated (V_slack=1).\n"
     "   embedding_quadratic: prediction[k,i] = d(e_k/d(x_i) = A_k x + b_k, where e_k(x) is a quadratic\n"
     "                        form in x, i.e. e_k = x' A_k x + b_k' x\n"
 		"   (empty string):  specify explicitly the function with tangent_predictor option\n"
 		"where (b,W,c,V) are parameters to be optimized.\n"
+		);
+
+  declareOption(ol, "V_slack", &TangentLearner::V_slack, OptionBase::buildoption,
+		"Coefficient that multiplies gradient on outside V when architecture_type=='slack_embedding_neural_network'\n"
 		);
 
   declareOption(ol, "n_hidden_units", &TangentLearner::n_hidden_units, OptionBase::buildoption,
@@ -292,6 +300,26 @@ void TangentLearner::build_()
         b = Var(n_dim,n,"b");
         Var a = tanh(c + product(V,x));
         Var tangent_plane = diagonalized_factors_product(W,1-a*a,V);
+        tangent_predictor = Func(x, W & c & V, tangent_plane);
+        embedding = product(W,a);
+        if (output_type=="tangent_plane")
+          output_f = tangent_predictor;
+        else if (output_type=="embedding")
+          output_f = Func(x, embedding);
+        else if (output_type=="tangent_plane+embedding")
+          output_f = Func(x, tangent_plane & embedding);
+      }
+    else if (architecture_type == "slack_embedding_neural_network")
+      {
+        if (n_hidden_units <= 0)
+          PLERROR("TangentLearner::Number of hidden units should be positive, now %d\n",n_hidden_units);
+        Var x(n);
+        W = Var(n_dim,n_hidden_units,"W");
+        c = Var(n_hidden_units,1,"c");
+        V = Var(n_hidden_units,n,"V");
+        b = Var(n_dim,n,"b");
+        Var a = tanh(c + product(V,x));
+        Var tangent_plane = diagonalized_factors_product(W,1-a*a,no_bprop(V,V_slack));
         tangent_predictor = Func(x, W & c & V, tangent_plane);
         embedding = product(W,a);
         if (output_type=="tangent_plane")
