@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.cc,v 1.7 2003/02/27 09:22:12 plearner Exp $ 
+   * $Id: Experiment.cc,v 1.8 2003/05/06 15:17:44 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.cc */
@@ -163,6 +163,7 @@ void Experiment::run()
       if(save_initial_models)
         PLearn::save(learner_expdir+"/initial.psave",learner);
 
+      learner->setTestDuringTrain(testset);
       learner->train(trainset);
       if(save_models)
         PLearn::save(learner_expdir+"/final.psave",learner);
