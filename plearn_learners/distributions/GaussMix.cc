@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.21 2004/05/18 18:28:39 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.22 2004/05/18 19:40:19 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -405,11 +405,24 @@ real GaussMix::computeLikehood(Vec& x, int j) {
     }
     return p;
   } else if (type == "general") {
-    // First we project the input 'x' in the basis where the covariance is
-    // diagonal, by y = eigenvectors[j] . x
-    static Vec y;
-    y.resize(n_eigen_computed);
-    transposeProduct(y, eigenvectors[j], x);
+    // We store log(p(x | j)) in the variable t.
+    static real t;
+    static Vec x_centered; // Storing x - mu(j).
+    static real squared_norm_x_centered;
+    static real one_over_lambda0;
+    t = log_coeff[j];
+    x_centered.resize(D);
+    x_centered << x;
+    x_centered -= mu(j);
+    squared_norm_x_centered = pownorm(x_centered);
+    one_over_lambda0 = 1.0 / eigenvalues(j, n_eigen_computed - 1);
+    // t -= 0.5  * 1/lambda_0 * ||x - mu||^2
+    t -= 0.5 * one_over_lambda0 * squared_norm_x_centered;
+    for (int k = 0; k < n_eigen_computed - 1; k++) {
+      // t -= 0.5 * (1/lambda_k - 1/lambda_0) * ((x - mu)'.v_k)^2
+      t -= 0.5 * (1 / eigenvalues(j, k) - one_over_lambda0) * square(dot(eigenvectors[j](k), x_centered));
+    }
+    return exp(t);
   } else {
     PLERROR("In GaussMix::computeLikehood - Not implemented for this type of Gaussian");
   }
@@ -488,7 +501,7 @@ void GaussMix::forget()
   alpha = Vec();
   sigma = Vec();
   diags = Mat();
-  eigenvectors = Mat();
+  eigenvectors = TVec<Mat>();
   eigenvalues = Mat();
   log_coeff = Vec();
 
@@ -529,9 +542,20 @@ void GaussMix::generateFromGaussian(Vec& x, int given_gaussian) const {
     for (int k = 0; k < D; k++) {
       x[k] = gaussian_mu_sigma(mu(j, k), diags(k,j));
     }
-//    generateDiagonal(x,given_gaussian);
-  } else if(type[0]=='G') {
-//    generateGeneral(x,given_gaussian);
+  } else if (type == "general") {
+    static Vec norm;
+    static real lambda0;
+    norm.resize(n_eigen_computed - 1);
+    fill_random_normal(norm);
+    lambda0 = eigenvalues(j, n_eigen_computed - 1);
+    x.fill(0);
+    for (int k = 0; k < n_eigen_computed - 1; k++) {
+      x += sqrt(eigenvalues(j,k) - lambda0) * norm[k] * eigenvectors[j](k);
+    }
+    norm.resize(D);
+    fill_random_normal(norm);
+    x += norm * sqrt(lambda0);
+    x += mu(j);
   } else if(type[0]=='F') {
 //    generateFactor(x,given_gaussian);
   } else if (type == "unknown") {
@@ -676,12 +700,16 @@ void GaussMix::replaceGaussian(int j) {
     sigma[j] = sigma[high];
   } else if (type == "diagonal") {
     diags.column(j) << diags.column(high);
+  } else if (type == "general") {
+    eigenvalues(j) << eigenvalues(high);
+    eigenvectors[j] << eigenvectors[high];
+    log_coeff[j] = log_coeff[high];
   } else {
     PLERROR("In GaussMix::replaceGaussian - Not implemented for this type");
   }
   // Arbitrarily takes half of the weight of this Gaussian.
-  alpha[j] = alpha[high] / 2.0;
-  alpha[high] = alpha[j];
+  alpha[high] /= 2.0;
+  alpha[j] = alpha[high];
 }
 
 ////////////////////
