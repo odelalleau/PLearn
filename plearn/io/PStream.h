@@ -277,13 +277,13 @@ public:
     //    pstreambuf->rawin()->read(s,n);
     // So it's temporarily replaced by this (ugly and slow):
 
-    int c = get();
-    while(n && c!=EOF)
-      {
-        *s++ = (char) c;
-        c = get();
-        n--;
-      }
+    while (n)
+    {
+      int c = get();
+      if (c == EOF) break;
+      *s++ = (char) c;
+      n--;
+    }
     return *this; 
   }
 
