@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.h,v 1.8 2004/03/23 23:08:09 morinf Exp $ 
+   * $Id: TrainTestSplitter.h,v 1.9 2004/04/05 23:07:35 morinf Exp $ 
    ******************************************************* */
 
 /*! \file TrainTestSplitter.h */
@@ -93,9 +93,6 @@ protected:
 public:
   // simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(TrainTestSplitter);

@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.cc,v 1.9 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: TrainTestSplitter.cc,v 1.10 2004/04/05 23:07:35 morinf Exp $ 
    ******************************************************* */
 
 /*! \file TrainTestSplitter.cc */
@@ -51,7 +51,8 @@ TrainTestSplitter::TrainTestSplitter(real the_test_fraction)
   : append_train(0), test_fraction(the_test_fraction)
 {};
 
-PLEARN_IMPLEMENT_OBJECT(TrainTestSplitter, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(TrainTestSplitter, "ONE LINE DESCR",
+                        "TrainTestSplitter implements a single split of the dataset into a training-set and a test-set (the test part being the last few samples of the dataset)");
 
 void TrainTestSplitter::declareOptions(OptionList& ol)
 {
@@ -63,14 +64,6 @@ void TrainTestSplitter::declareOptions(OptionList& ol)
                 "the fraction of the dataset reserved to the test set");
 
   inherited::declareOptions(ol);
-}
-
-string TrainTestSplitter::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "TrainTestSplitter implements a single split of the dataset into a training-set and a test-set (the test part being the last few samples of the dataset)"
-    + optionHelp();
 }
 
 void TrainTestSplitter::build_()

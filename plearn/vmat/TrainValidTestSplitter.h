@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainValidTestSplitter.h,v 1.3 2004/03/23 23:08:09 morinf Exp $ 
+   * $Id: TrainValidTestSplitter.h,v 1.4 2004/04/05 23:08:03 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -110,9 +110,6 @@ protected:
 public:
   // simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SequentialSplitter.cc,v 1.5 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: SequentialSplitter.cc,v 1.6 2004/04/05 23:04:46 morinf Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
@@ -50,7 +50,8 @@ SequentialSplitter::SequentialSplitter(int train_step_, int min_train_)
     : train_step(train_step_), min_train(min_train_)
 {};
 
-PLEARN_IMPLEMENT_OBJECT(SequentialSplitter, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(SequentialSplitter, "ONE LINE DESCR",
+                        "SequentialSplitter implements several splits, TODO: Comments");
 
 void SequentialSplitter::declareOptions(OptionList& ol)
 {
@@ -59,14 +60,6 @@ void SequentialSplitter::declareOptions(OptionList& ol)
     declareOption(ol, "min_train", &SequentialSplitter::min_train, OptionBase::buildoption,
                   "TODO: Comments for min_train");
     inherited::declareOptions(ol);
-}
-
-string SequentialSplitter::help()
-{
-    // ### Provide some useful description of what the class is ...
-    return 
-        "SequentialSplitter implements several splits, TODO: Comments"
-        + optionHelp();
 }
 
 void SequentialSplitter::build_()

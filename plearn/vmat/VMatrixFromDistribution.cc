@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: VMatrixFromDistribution.cc,v 1.7 2004/04/01 20:32:23 plearner Exp $ 
+ * $Id: VMatrixFromDistribution.cc,v 1.8 2004/04/05 23:11:11 morinf Exp $ 
  ******************************************************* */
 
 /*! \file VMatrixFromDistribution.cc */
@@ -59,6 +59,7 @@ PLEARN_IMPLEMENT_OBJECT(VMatrixFromDistribution, "A VMatrix built from sampling 
                         "VMatrixFromDistribution implements a vmatrix whose data rows are drawn from a distribution\n"
                         "or that contains the density or log density sampled on a grid (depending on \"mode\".\n"
                         "The matrix is computed in memory at build time\n");
+
 
 void VMatrixFromDistribution::declareOptions(OptionList& ol)
 {
@@ -90,7 +91,6 @@ void VMatrixFromDistribution::declareOptions(OptionList& ol)
 
   inherited::declareOptions(ol);
 }
-
 
 void VMatrixFromDistribution::build_()
 {

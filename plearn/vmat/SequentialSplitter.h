@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SequentialSplitter.h,v 1.6 2004/03/23 23:08:08 morinf Exp $ 
+   * $Id: SequentialSplitter.h,v 1.7 2004/04/05 23:04:46 morinf Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.h */
@@ -92,9 +92,6 @@ protected:
 public:
     // simply calls inherited::build() then build_() 
     virtual void build();
-
-    //! Provides a help message describing this class
-    static string help();
 
     //! Declares name and deepCopy methods
     PLEARN_DECLARE_OBJECT(SequentialSplitter);
