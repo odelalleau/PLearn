@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddLayersNNet.h,v 1.3 2004/09/09 14:15:38 tihocan Exp $ 
+   * $Id: AddLayersNNet.h,v 1.4 2004/09/13 13:27:54 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -119,6 +119,10 @@ public:
   // **************************
   // **** PLearner methods ****
   // **************************
+
+  //! Return the hidden weights for a given hidden layer.
+  //! This is not a copy, so they should not be modified.
+  Mat getHiddenWeights(int layer);
 
 protected:
 

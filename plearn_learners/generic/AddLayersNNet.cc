@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddLayersNNet.cc,v 1.4 2004/09/09 19:41:08 tihocan Exp $ 
+   * $Id: AddLayersNNet.cc,v 1.5 2004/09/13 13:27:54 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -110,10 +110,13 @@ void AddLayersNNet::build()
 {
   // We ensure that weights are not filled with random numbers, in order to be
   // able to compare with a classical NNet using the same seed.
-  string backup = initialization_method;
+  string initialization_method_backup = initialization_method;
+  bool do_not_change_params_backup = do_not_change_params;
   initialization_method = "zero";
+  do_not_change_params = true;
   inherited::build();
-  initialization_method = backup;
+  initialization_method = initialization_method_backup;
+  do_not_change_params = do_not_change_params_backup;
   build_();
 }
 
@@ -219,16 +222,18 @@ void AddLayersNNet::build_()
   buildCosts(output, target, hidden_layer, before_transfer_func);
 
   // Shared values hack...
-  if((bool)paramsvalues && (paramsvalues.size() == params.nelems()))
-    params << paramsvalues;
-  else
-  {
-    paramsvalues.resize(params.nelems());
-    initializeParams();
-    if(optimizer)
-      optimizer->reset();
+  if (!do_not_change_params) {
+    if((bool)paramsvalues && (paramsvalues.size() == params.nelems()))
+      params << paramsvalues;
+    else
+    {
+      paramsvalues.resize(params.nelems());
+      initializeParams();
+      if(optimizer)
+        optimizer->reset();
+    }
+    params.makeSharedValue(paramsvalues);
   }
-  params.makeSharedValue(paramsvalues);
 
   // Build functions.
   buildFuncs(input, output, target, sampleweight);
@@ -245,6 +250,14 @@ void AddLayersNNet::buildPenalties(const Var& hidden_layer) {
       penalties.append(affine_transform_weight_penalty(hidden_weights[i], weight_decay, bias_decay, L1_penalty));
     }
   }
+}
+
+//////////////////////
+// getHiddenWeights //
+//////////////////////
+Mat AddLayersNNet::getHiddenWeights(int layer) {
+  Mat result = hidden_weights[layer]->matValue;
+  return result;
 }
 
 //////////////////////
