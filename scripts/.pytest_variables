@@ -1,0 +1,3 @@
+DISABLED = []
+BRANCHES = {'LISAPLEARNDIR': '/home/dorionc/LisaPLearn', 'PLEARNDIR': '/home/dorionc/PLearn', 'APSTATDIR': '/home/dorionc/apstatsoft'}
+BRANCHES_PL = {'LISAPLEARNDIR': 'commands/lplearn', 'PLEARNDIR': 'commands/plearn', 'APSTATDIR': 'programs/aplearn'}
