@@ -49,7 +49,9 @@ using namespace std;
 //! This is a fairly restricted list, meaning that many things can be part of a "word"
 //! in this sense (for ex: "this-is_a+single@wor'd"), this is to insure a smooth transition
 //! for the new setOption, which calls readOptionVal ... which may call read(istream&, string&)...
-static const string wordseparators(" \t\n\r)]};,:|#"); 
+static const string wordseparators    (" \t\n\r)]};,:|#"); 
+//! Same as wordseparators, but even less restricted, used in PStream::raw_ascii mode.
+static const string raw_wordseparators(" \t\n\r"); 
 
 /*
 //format fags available for PStreams
