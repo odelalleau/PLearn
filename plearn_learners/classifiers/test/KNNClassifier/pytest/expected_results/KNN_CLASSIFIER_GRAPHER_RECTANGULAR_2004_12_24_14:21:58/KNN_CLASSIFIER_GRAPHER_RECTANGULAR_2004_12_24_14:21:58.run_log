@@ -1,0 +1,11 @@
+*** Training learner on trainset of length 200 ... ***
+Final traincosts: 
+*** Computing outputs on trainset inputs... ***
+[--------------------------------------- Using learner (200) ----------------------------------------]
+[....................................................................................................]
+*** Computing outputs on 200         200          grid... ***
+[-------------------------------------- Using learner (40000) ---------------------------------------]
+[....................................................................................................]
+>>> TASK PERFORMED: 2D classification
+Creating file: knn_classifier_data=data_train.amat_kernel=Constant_sigma=1_kmin=15_kmult=0.eps
+Plotting 2D classification result
