@@ -2,12 +2,12 @@
 %%
 %%  Copyright (c) 2002 by Pascal Vincent
 %%
-%%  $Id: users_guide.tex,v 1.6 2003/02/03 22:10:06 ducharme Exp $
+%%  $Id: users_guide.tex,v 1.7 2003/02/05 21:53:25 ducharme Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
 \usepackage{ae}                 % use virtual fonts for getting good PDF
-\usepackage{isolatin1}		% support for French accents
+\usepackage{isolatin1}          % support for French accents
 
 %%%%%%%%% Definitions %%%%%%%%%%%%
 \newcommand{\PLearn}{\bf \it PLearn}
@@ -15,6 +15,8 @@
 \newcommand{\Learner}{\bf Learner} 
 \newcommand{\PPointable}{\bf PPointable} 
 
+\parskip=2mm
+\parindent=0mm
 
 \begin{document}
 
@@ -75,20 +77,27 @@ you must make sure that cvs (http://www.cvshome.org) is already installed.
 http://plearn.sourceforge.net/plearncvs.html).
 
 You then can download the PLearn library through anonymous (pserver) cvs
-using the following instructions :
+using the following instructions:
 
-\begin{itemize}
-\item cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn login
-\item press the [enter] key when asked for a password
-\item cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn co PLearn
-\end{itemize}
+%\begin{itemize}
+%\item cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn login
+%\item press the [enter] key when asked for a password
+%\item cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn co PLearn
+%\end{itemize}
+\begin{verbatim}
+  cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn login
+  cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn co PLearn
+\end{verbatim}
+and press the [enter] key when asked for a password.
 
 The PLearn library should now be installed.  If you want to use it
 (which should be the case!), a few things need to be set.  First, you
-should add the following lines to your .cshrc file :
+should add the following lines to your .cshrc file:
 
-setenv PLEARNDIR /path\_of\_plearn\_library/PLearn \\
-set path = ( \$path \$PLEARNDIR/scripts \$PLEARNDIR/commands )
+\begin{verbatim}
+  setenv PLEARNDIR /path_of_plearn_library/PLearn
+  set path = ( $path $PLEARNDIR/scripts $PLEARNDIR/commands )
+\end{verbatim}
 
 The only thing you have to check now, is if you have all the tools to
 compile the library (since there is no binaries available).  For that purpose,
@@ -96,7 +105,7 @@ you need to have g++ (or gcc) installed (available at http://gcc.gnu.org).
 We suggest that you use the newest version available, or at least 2.96 or higher.
 Also, instead of using the far-from-user-friendly Makefile, we wrote our own
 version, called pymake.  However, this has been writen using the script language
-python version 1.5.2 or higher (available at http://www.python.org).
+python (version 1.5.2 or higher, available at http://www.python.org).
 
 In a pain-in-the-neck-world, none of the above utilitaries (cvs, gcc, python)
 are on your machine and you have to do some extra work.  But for the common user,
@@ -213,7 +222,7 @@ The syntax of the filtering operations is VPL, which is a postfix language descr
 
 \subsubsection{JOIN}
 
-This section is used to perform a pseudo-join operation between a master and a slave table. At this time, a standard join operation (cartesian product) is not possible. Instead, slave rows matching a master row are used to compute statistics appended to the master row. The syntax is :
+This section is used to perform a pseudo-join operation between a master and a slave table. At this time, a standard join operation (cartesian product) is not possible. Instead, slave rows matching a master row are used to compute statistics appended to the master row. The syntax is:
 
 \begin{verbatim}
 slave_dataset
@@ -222,19 +231,19 @@ STATISTIC1(slavefield1) :newfield_name1
 STATISTIC2(slavefield2) :newfield_name2
 ...
 \end{verbatim}
-where STATISTIC is one of : {COUNT | NNONMISSING | NMISSING | SUM | SUMSQUARE | MEAN | VARIANCE | STDDEV | STDERR | MIN | MAX}. 
+where STATISTIC is one of: {COUNT | NNONMISSING | NMISSING | SUM | SUMSQUARE | MEAN | VARIANCE | STDDEV | STDERR | MIN | MAX}. 
 
 Note that you can repeat the operation multiple times in a single JOIN section.
 
 \subsubsection{PROCESSING}
-Use this section to modify or create new fields in the dataset (e.g : binning operations, onehot conversions, etc..). The processing is specified with VPL, described later.
+Use this section to modify or create new fields in the dataset (e.g: binning operations, onehot conversions, etc..). The processing is specified with VPL, described later.
 
 As soon as you declare a PROCESSING section, all fields resulting from previous operations (sources concatenation, join operations) are not included automatically in the resulting matrix (obviously, you can still refer to them), so it is empty unless you declare them manually. In the small example given above, the operations done are the replacement of the first two fields by their sum, and then the remaining fields are appended in the resulting matrix with the second line. See VPL section for more details.
 
 \subsubsection{PRECOMPUTE}
 When you need speed, use this section to create a precomputed version of you vmat. This version will be computed the first time the vmat is loaded. You specify the type of file you want the precomputed version to be saved to (dmat or pmat). See example above.
 
-The synchronization of the precomputed version is ensured through an almost-intelligent mecanism that checks the date of sources recursively. Note : we decided that include files (e.g: statistics) that are out of date issue a warning, but will not force recomputation. This could be changed. 
+The synchronization of the precomputed version is ensured through an almost-intelligent mecanism that checks the date of sources recursively. Note: we decided that include files (e.g: statistics) that are out of date issue a warning, but will not force recomputation. This could be changed. 
 
 \subsubsection{DEBUG}
 Including this section will force output of preprocessed VPL to stderr.
@@ -247,11 +256,11 @@ A VPL code snippet is always applied to the row of a VMatrix, and can only refer
 
 When you use VPL in a PROCESSING section, each field you declare must have its associated fieldname declaration. The compiler will ensure that the size of the result vector and the number of declared fieldnames match. This doesn't apply in the filtering sections since the result is always a single value. 
 
-To declare a fieldname, use a colon with the name immediately after. To batch-declare fieldnames, use eg. :myfield:1:10. This will declare fields myfield1 up to myfield10.
+To declare a fieldname, use a colon with the name immediately after. To batch-declare fieldnames, use eg.:myfield:1:10. This will declare fields myfield1 up to myfield10.
 
-There are two notations to refer to a field value  : the @ symbol followed by the fieldname, or \% followed by the field number.
+There are two notations to refer to a field value: the @ symbol followed by the fieldname, or \% followed by the field number.
 
-To batch-copy fields, use the following syntax : [field1:fieldn] (fields can be in @ or \% notation).
+To batch-copy fields, use the following syntax: [field1:fieldn] (fields can be in @ or \% notation).
 
 Here's a real-life example of a PROCESSING section:
 
@@ -260,8 +269,8 @@ Here's a real-life example of a PROCESSING section:
 @lease_indicator 88 == 1 0 ifelse :lease_indicator
 @rate_class 1 - 7 onehot :rate_class:0:6
 @collision_deductible { 2->1; 4->2; 5->3; 6->4; 7->5; 
-			[8 8]->6; MISSING->0; OTHER->0 }
-		7 onehot :collision_deductible:0:6
+[8 8]->6; MISSING->0; OTHER->0 }
+7 onehot :collision_deductible:0:6
 @roadstar_indicator 89 == 1 0 ifelse :roadstar_indicator
 <\PROCESSING>
 \end{verbatim}
@@ -269,6 +278,10 @@ Here's a real-life example of a PROCESSING section:
 \subsection{Preprogrammed datasets}
 
 \begin{itemize}
+\item 2d
+\item letters -> Letter Image Recognition data
+\item breast -> The Wisconsin Breast Cancer problem
+\item usps
 \item mnist
 \end{itemize}
 
@@ -334,7 +347,7 @@ In addition, the {\tt .metadata} directory associated with a {\tt .vmat} may con
   
 \end{verbatim}
 
-And from the plearn command....:
+And from the old\_plearn command....:
 
 \begin{verbatim}
 
@@ -399,7 +412,8 @@ Formally, that is:
 <alias> <classname> <option1=...; option2=...; ...>
 ex: knn5 KNN inputsize=210; k=5 
 
-The following files will typically be created consequently by the 'plearn' program in the corresponding <alias> directory.
+The following files will typically be created consequently by the 'plearn' program
+in the corresponding <alias> directory.
 
 - train.objective   
   Ascii file reporting the cost as it is optimized by the learner (and other possible costs)
