@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.30 2003/08/05 18:07:49 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.31 2003/08/05 19:19:32 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -783,10 +783,15 @@ real ConjGradientOptimizer::optimize()
     
     // Make a line search along the current search direction
     early_stop = lineSearch();
+    if (early_stop)
+      cout << "Early stopping triggered by the line search" << endl;
     current_cost = cost->value[0];
     
     // Find the new search direction
-    early_stop = early_stop || findDirection();
+    bool early_stop_dir = findDirection();
+    if (early_stop_dir)
+      cout << "Early stopping triggered by direction search" << endl;
+    early_stop = early_stop || early_stop_dir;
 
     last_improvement = last_cost - current_cost;
     last_cost = current_cost;
@@ -807,9 +812,12 @@ real ConjGradientOptimizer::optimize()
       cout << t+1 << ' ' << meancost << endl;
       if (out)
         out << t+1 << ' ' << meancost << endl;
-      early_stop = early_stop || measure(t+1,meancost);
+      bool early_stop_mesure = measure(t+1,meancost); 
+      if (early_stop_dir)
+        cout << "Early stopping triggered by the measurer" << endl;
+      early_stop = early_stop || early_stop_mesure;
      // early_stop = measure(t+1,meancost); // TODO find which is the best between this and the one above
-      early_stop_i = (t+1)/every;
+      // early_stop_i = (t+1)/every; TODO Remove, must be useless now
       lastmeancost << meancost;
       meancost.clear();
     }
