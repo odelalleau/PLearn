@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.11 2004/08/27 21:27:48 chrish42 Exp $ 
+   * $Id: RunCommand.cc,v 1.12 2004/09/01 22:14:15 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
@@ -86,14 +86,17 @@ void RunCommand::run(const vector<string>& args)
       // arguments: --help to print the doc string of the .pyplearn file,
       // and --dump to show the result of processing the .pyplearn file
       // instead of running it.
-      if (args[1] == "--help")
+      if (args.size() >= 2)
         {
-          do_help = true;
-          command += " --help";
-        }
-      else if (args[1] == "--dump")
-        {
-          do_dump = true;
+          if (args[1] == "--help")
+            {
+              do_help = true;
+              command += " --help";
+            }
+          else if (args[1] == "--dump")
+            {
+              do_dump = true;
+            }
         }
       
       if (!do_help)
