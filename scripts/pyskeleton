@@ -33,7 +33,8 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
-import sys, os, string
+import sys, os, string, popen2
+from time import time, localtime
 
 args = sys.argv[:]
 del args[0] # ignore program name
@@ -58,16 +59,35 @@ Currently supported base classes are: """
 baseclass = args[0]
 userclass = args[1]
 
+def fingername():
+    username = '*AUTHOR(S)*'    
+    r, w, e = popen2.popen3("sh -c 'finger `whoami`'")
+    e.readlines()
+    fing = r.readlines()
+    r.close()
+    e.close()
+    w.close()
+    fing = fing[0]
+    start = string.find(fing,'Name: ')
+    if start>0:
+        username = string.strip(fing[start+6:])
+
+    return username
+
+year = localtime(time())[0]
+
+author = '*AUTHOR(S)*'    
+try:
+    author = fingername()
+except:
+    pass
 
 header = """
-
 // -*- C++ -*-
 
 // %(filename)s
-// 
-// Copyright (C) *YEAR* *AUTHOR(S)* 
-// ...
-// Copyright (C) *YEAR* *AUTHOR(S)* 
+//
+// Copyright (C) """ + str(year) + '  ' + author + """ 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -98,7 +118,7 @@ header = """
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: pyskeleton,v 1.3 2002/09/09 22:27:48 plearner Exp $ 
+   * $Id: pyskeleton,v 1.4 2003/05/10 05:12:30 plearner Exp $ 
    ******************************************************* */
 
 /*! \\file %(filename)s */
@@ -108,6 +128,7 @@ header = """
 
 def generate(baseclass, userclass, ext):
     """Generates a userclass+ext file based on the baseclass+ext file to be found in the scripts/Skeleton directory"""
+    global year, author
     skeletonpath = os.path.join(skeldir, baseclass+ext)
     filename = userclass+ext
     if not os.path.exists(skeletonpath):
@@ -116,7 +137,7 @@ def generate(baseclass, userclass, ext):
         print filename + " already exists. Remove it first if you want to regenerate it."
     else:
         skelf = open(skeletonpath)
-        text = header%vars() + string.replace(skelf.read(), 'DERIVEDCLASS', userclass)
+        text = header%vars() + string.replace(skelf.read(), 'DERIVEDCLASS', userclass)        
         skelf.close()
         userf = open(filename, 'w')
         userf.write(text)
