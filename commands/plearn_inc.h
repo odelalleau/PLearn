@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.43 2004/12/27 00:16:42 chapados Exp $ 
+   * $Id: plearn_inc.h,v 1.44 2005/01/06 02:09:03 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -71,6 +71,7 @@
 #include "PLearnCommands/TestDependenciesCommand.h"
 #include "PLearnCommands/TestDependencyCommand.h"
 #include "PLearnCommands/VMatCommand.h"
+#include "PLearnCommands/ServerCommand.h"
 
 /**************
  * Dictionary *

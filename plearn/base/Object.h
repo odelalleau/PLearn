@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.36 2004/10/14 21:23:27 ducharme Exp $
+   * $Id: Object.h,v 1.37 2005/01/06 02:09:37 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -361,7 +361,7 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
     
     // Must be called by the call method prior to dending results. 
     inline void prepareToSendResults(PStream& out, int nres)
-    { out << nres; }
+    { out.write("R "); out << nres; }
 
   public:
 
@@ -493,8 +493,8 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
     virtual void read(istream& in);
 
     //! The call method is the standard way to allow for remote method invocation on instances of your class.    
-    /*! This should result in reading nargs input parameters from in_parameters, 
-        call the appropriate method, and send results to out_results. 
+    /*! This should result in reading nargs input parameters from io, 
+        call the appropriate method, and send results to io. 
         A "Remote-callable method" is typically associated with an actual methods of your class, 
         but it will usually differ in its "calling" conventions: its "name", 
         number or input arguments, and number and nature of output results may differ.
@@ -502,18 +502,18 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
       Here is what such a method should do:
          1) Determine from the methodname what actual method to call.
             If the given methodname is none of those supported by your call method,
-            call the parent's "call" Ex: inherited::call(methodname, nargs, in_parameters, out_results)
+            call the parent's "call" Ex: inherited::call(methodname, nargs, io)
          2) The number of arguments nargs may also influence what version of the method you want to call
-         3) read the narg arguments from in_parameters Ex: in_parameters >> age >> length >> n; 
+         3) read the narg arguments from io Ex: io >> age >> length >> n; 
          4) call the actual associated method
-         5) call prepareToSendResults(out_results, nres) where nres is the number of result parameters. 
-         6) send the nres result parameters to out_results Ex: out_results << res1 << res2 <<res3;
-         7) call out_results.flush()
+         5) call prepareToSendResults(io, nres) where nres is the number of result parameters. 
+         6) send the nres result parameters to io Ex: io << res1 << res2 <<res3;
+         7) call io.flush()
 
          If anything goes wrong during the process (bad arguments, etc...) simply call PLERROR 
          with a meaningful message.
     */
-    virtual void call(const string& methodname, int nargs, PStream& in_parameters, PStream& out_results);
+    virtual void call(const string& methodname, int nargs, PStream& io);
 
     //! Overload this for runnable objects 
     //! (default method issues a runtime error)

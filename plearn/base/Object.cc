@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.34 2004/12/22 19:38:12 chrish42 Exp $
+   * $Id: Object.cc,v 1.35 2005/01/06 02:09:37 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -329,10 +329,47 @@ void Object::read(istream& in_)
     }
 }
 
-
-void Object::call(const string& methodname, int nargs, PStream& in_parameters, PStream& out_results)
+void Object::call(const string& methodname, int nargs, PStream& io)
 {
-  PLERROR("In Object::call no method named %s supported by this object's call method.", methodname.c_str());
+  if(methodname=="changeOptions")
+    {
+      map<string,string> name_value;
+      io >> name_value;
+      changeOptions(name_value);
+      prepareToSendResults(io, 0);
+      io.flush();
+    }
+  else if(methodname=="getOption") // gets option in serialised form
+    {
+      string optionname;
+      io >> optionname;
+      prepareToSendResults(io, 1);
+      writeOptionVal(io, optionname);
+      io.flush();      
+    }
+  else if(methodname=="getOptionAsString") // gets option as a serialised string containing the serialised option
+    {
+      string optionname;
+      io >> optionname;
+      string optionval = getOption(optionname);
+      prepareToSendResults(io, 1);
+      io << optionval;
+      io.flush();      
+    }
+  else if(methodname=="getObject")
+    {
+      prepareToSendResults(io, 1);
+      io << *this;
+      io.flush();      
+    }
+  else if(methodname=="run")
+    {
+      run();
+      prepareToSendResults(io, 0);
+      io.flush();
+    }
+  else
+    PLERROR("In Object::call no method named %s supported by this object's call method.", methodname.c_str());
 }
 
 void Object::run()
@@ -383,6 +420,8 @@ Object* macroLoadObject(const string &filename)
 
 Object* readObject(PStream &in, unsigned int id)
 {
+  cerr << "Entering readObject" << endl;
+
     Object *o=0;
     in.skipBlanksAndCommentsAndSeparators();
 
@@ -413,19 +452,26 @@ Object* readObject(PStream &in, unsigned int id)
       }
     else // It must be a Classname(...) kind of definition 
       {
+        cerr << "Determined it's a Classname(...) kind of definition" << endl;
         string cl;
         in.getline(cl, '(');
         cl = removeblanks(cl);
+        cerr << "Read class: " << cl << endl;
         // It's a Classname(opt1 = ...; ...; optn = ...); --> calls newread()
         o = TypeFactory::instance().newObject(cl);
+        cerr << "Created new unbuilt object " << endl;
         if (!o)
           PLERROR("readObject() - Type \"%s\" not declared in TypeFactory map (did you do a proper DECLARE_NAME_AND_DEEPCOPY?)", cl.c_str());
 #if STREAMBUFVER == 0
+        cerr << "STREAMBUFVER 0 doing dirty seekmark trick." << endl;
         in.pl_rdbuf()->seekmark(fence);
 #else
+        cerr << "New streambuf. Doing unread." << endl;
         in.unread(cl+'(');
 #endif
+        cerr << "Calling newread" << endl;
         o->newread(in);
+        cerr << "Newread completed." << endl;
       }
        
     if (id != UINT_MAX)
@@ -471,7 +517,7 @@ PStream& operator>>(PStream& in, Object*& x)
     else
       {
         x = readObject(in);
-        in.skipBlanksAndCommentsAndSeparators();
+        // in.skipBlanksAndCommentsAndSeparators();
       }
 
     return in;
