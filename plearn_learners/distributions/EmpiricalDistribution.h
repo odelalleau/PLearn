@@ -89,7 +89,9 @@ using namespace std;
     int length;
 
     //The example to be returned by generate
-    mutable int current_sample;
+    mutable int current_sample_x;
+    mutable int current_sample_y;
+    mutable bool flip;
     
   protected:
     static void declareOptions(OptionList& ol);

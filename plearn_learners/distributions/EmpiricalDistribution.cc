@@ -54,6 +54,7 @@ void EmpiricalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 EmpiricalDistribution::EmpiricalDistribution()
   :inherited()
 {
+  seed();
 }
 
 
@@ -61,7 +62,10 @@ EmpiricalDistribution::EmpiricalDistribution(int inputsize, bool random_sample_)
   :inherited(), random_sample(random_sample_)
 {
   inputsize_ = inputsize;
-  current_sample = 0;
+  current_sample_x = 0;
+  current_sample_y = 0;
+  flip = false;
+  seed();
 }
 
 
@@ -141,16 +145,29 @@ Mat EmpiricalDistribution::variance() const
 void EmpiricalDistribution::generate(Vec& x) const
 {
   if(random_sample){
-    seed();
     x.resize(data.width());
-    x << data(uniform_multinomial_sample(data.length()));
+    x << data(uniform_multinomial_sample(length));
   }
+  //Hack for generating all the possible combinations of two
+  //examples.
   else{
-    x.resize(data.width());
-    x << data(current_sample);
-    current_sample++;
-    if(current_sample == length)
-      current_sample = 0;
+    if(!flip){
+      x.resize(data.width());
+      x << data(current_sample_x);
+      flip = true;
+    }
+    else{
+      x.resize(data.width());
+      x << data(current_sample_y);
+      current_sample_y++;
+      flip = false;
+    }
+    if(current_sample_y == length){
+      current_sample_y = 0;
+      current_sample_x++;
+    }
+    if(current_sample_x == length)
+      current_sample_x = 0;
   }
 }
 
