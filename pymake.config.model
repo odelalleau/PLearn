@@ -147,7 +147,7 @@ linkeroptions_tail = '-lm'
 # First option that appears in each group is the default, and is assumed if you don't specify any option from that group
 options_choices = [
   [ 'g++', 'g++3', 'icc', 'mpi', 'purify' ],
-  [ 'dbg', 'opt', 'optintel', 'pintel', 'gprof', 'safeopt', 'checkopt' ],
+  [ 'dbg', 'opt', 'pintel', 'gprof', 'safeopt', 'checkopt' ],
   [ 'double', 'float' ],
   [ 'throwerrors', 'exiterrors' ], 
   [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'noblas', 'veclib', 'scs'],
