@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.h,v 1.7 2004/06/25 13:03:45 tihocan Exp $
+   * $Id: RowBufferedVMatrix.h,v 1.8 2004/06/29 20:00:32 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,23 +54,30 @@ using namespace std;
 
 class RowBufferedVMatrix: public VMatrix
 {
+
+private:
+
   typedef VMatrix inherited;
 
 protected:
+
   mutable int current_row_index;
   mutable Vec current_row;
   mutable int other_row_index; //!<  used by dot
   mutable Vec other_row;
 
 public:
+
   RowBufferedVMatrix();
   RowBufferedVMatrix(int the_length, int the_width);
 
-  //!  This is the only method requiring implementation
-  virtual void getRow(int i, Vec v) const =0;
+  //! This is the only method requiring implementation.
+  virtual void getNewRow(int i, Vec& v) const = 0;
 
-  //!  These methods are implemented by buffering calls to getRow
+  //! These methods are implemented by buffering calls to getNewRow.
   virtual real get(int i, int j) const; //!<  returns element (i,j)
+  virtual void getRow(int i, Vec v) const;
+  virtual Vec& getRow(int i) const;
   virtual void getSubRow(int i, int j, Vec v) const; //!<  fills v with the subrow i laying between columns j (inclusive) and j+v.length() (exclusive)
   virtual Vec& getSubRow(int i, int j, int j_length) const;
 

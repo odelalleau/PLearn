@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.cc,v 1.6 2004/06/25 13:03:45 tihocan Exp $
+   * $Id: RowBufferedVMatrix.cc,v 1.7 2004/06/29 20:00:30 tihocan Exp $
    ******************************************************* */
 
 #include "RowBufferedVMatrix.h"
@@ -60,23 +60,50 @@ RowBufferedVMatrix::RowBufferedVMatrix()
   :current_row_index(-1), other_row_index(-1)
 {}
 
+/////////
+// get //
+/////////
 real RowBufferedVMatrix::get(int i, int j) const
 {
   if(current_row_index!=i)
     {
       current_row.resize(width_);
-      getRow(i, current_row);
+      getNewRow(i, current_row);
       current_row_index = i;
     }
   return current_row[j];
 }
 
+////////////
+// getRow //
+////////////
+void RowBufferedVMatrix::getRow(int i, Vec v) const {
+  if (current_row_index != i) {
+    current_row.resize(width_);
+    getNewRow(i, current_row);
+    current_row_index = i;
+  }
+  v.copyFrom(current_row.data(), width_);
+}
+
+Vec& RowBufferedVMatrix::getRow(int i) const {
+  if (current_row_index != i) {
+    current_row.resize(width_);
+    getNewRow(i, current_row);
+    current_row_index = i;
+  }
+  return current_row;
+}
+
+///////////////
+// getSubRow //
+///////////////
 void RowBufferedVMatrix::getSubRow(int i, int j, Vec v) const
 {
   if(current_row_index!=i)
     {
       current_row.resize(width_);
-      getRow(i,current_row);
+      getNewRow(i,current_row);
       current_row_index = i;
     }
   v.copyFrom(current_row.data()+j, v.length());
@@ -86,16 +113,16 @@ Vec& RowBufferedVMatrix::getSubRow(int i, int j, int j_length) const {
   static Vec result;
   if (current_row_index != i) {
     current_row.resize(width_);
-    getRow(i, current_row);
+    getNewRow(i, current_row);
+    current_row_index = i;
   }
-  if (j == 0 && j_length == width_) {
-    return current_row;
-  } else {
-    result = current_row.subVec(j, j_length);
-    return result;
-  }
+  result = current_row.subVec(j, j_length);
+  return result;
 }
 
+/////////
+// dot //
+/////////
 real RowBufferedVMatrix::dot(int i1, int i2, int inputsize) const
 {
   int w = width_;
@@ -108,7 +135,7 @@ real RowBufferedVMatrix::dot(int i1, int i2, int inputsize) const
         return pownorm(current_row.subVec(0,inputsize));
       if(i2!=other_row_index)
         {
-          getRow(i2,other_row);
+          getNewRow(i2,other_row);
           other_row_index = i2;
         }
     }
@@ -118,7 +145,7 @@ real RowBufferedVMatrix::dot(int i1, int i2, int inputsize) const
         return pownorm(other_row.subVec(0,inputsize));
       if(i2!=current_row_index)
         {
-          getRow(i2,current_row);
+          getNewRow(i2,current_row);
           current_row_index = i2;
         }
     }
@@ -126,18 +153,18 @@ real RowBufferedVMatrix::dot(int i1, int i2, int inputsize) const
     {
       if(i2==current_row_index)
         {
-          getRow(i1,other_row);
+          getNewRow(i1,other_row);
           other_row_index = i1;
         }
       else if(i2==other_row_index)
         {
-          getRow(i1,current_row);
+          getNewRow(i1,current_row);
           current_row_index = i1;
         }
       else // neither i1 nor i2 are cached
         {
-          getRow(i1,current_row);
-          getRow(i2,other_row);
+          getNewRow(i1,current_row);
+          getNewRow(i2,other_row);
           current_row_index = i1;
           other_row_index = i2;
         }
@@ -145,15 +172,15 @@ real RowBufferedVMatrix::dot(int i1, int i2, int inputsize) const
   return PLearn::dot(current_row.subVec(0,inputsize), other_row.subVec(0,inputsize));
 }
  
+/////////
+// dot //
+/////////
 real RowBufferedVMatrix::dot(int i, const Vec& v) const
 {
-  int w = width();
-  if(current_row.length()!=w)
-    current_row.resize(w);
-
   if(i!=current_row_index)
     {
-      getRow(i,current_row);
+      current_row.resize(width_);
+      getNewRow(i,current_row);
       i = current_row_index;
     }
   return PLearn::dot(current_row.subVec(0,v.length()),v);
