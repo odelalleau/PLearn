@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.cc,v 1.11 2004/07/07 17:30:48 tihocan Exp $
+   * $Id: ConcatColumnsVMatrix.cc,v 1.12 2004/07/22 21:33:34 tatien Exp $
    ******************************************************* */
 
 #include "ConcatColumnsVMatrix.h"
@@ -77,8 +77,8 @@ void ConcatColumnsVMatrix::build_()
   length_ = width_ = 0;
   if(array.size())
     length_ = array[0]->length();
-  else
-    PLERROR("ConcatColumnsVMatrix expects >= 1 underlying-array, got 0");
+//   else
+//     PLERROR("ConcatColumnsVMatrix expects >= 1 underlying-array, got 0");
 
   for(int i=0; i<array.size(); i++)
     {
