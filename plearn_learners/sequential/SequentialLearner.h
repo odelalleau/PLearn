@@ -48,7 +48,7 @@ using namespace std;
   
      - The last VMat received by the train(...) method is in the range [0,last_train_t-1]
      - The last VMat received by the test(....) method is in the range [0,last_test_t-1]
-     - All the VMat's in a SequentialLearner have all their informations at column t
+     - All the VMat's in a SequentialLearner have all their informations at row t
        available at time t.  Hence, for a dataset of length T, there is only T-horizon
        effective examples, with the (input, target) pairs starting at (0, horizon)
        and ending at (T-1-horizon, T-1)

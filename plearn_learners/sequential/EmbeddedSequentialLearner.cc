@@ -81,6 +81,8 @@ void EmbeddedSequentialLearner::declareOptions(OptionList& ol)
 
 void EmbeddedSequentialLearner::train()
 {
+  // TODO: this code should be moved to overrided setTrainingSet and setTrainStatsCollector (Pascal&Nicolas)
+
   int t = train_set.length();
   if (t >= last_train_t+train_step)
   {
@@ -88,6 +90,7 @@ void EmbeddedSequentialLearner::train()
     int start = (max_train_len<0) ? 0 : max(0,aligned_set.length()-max_train_len);
     int len = aligned_set.length()-start;
     TmpFilenames tmpfile;
+    // TODO: Remove the ugly, grotesque, brittle and unnecessay use of an "indexfile" (Nicolas&Pascal)
     string index_fname = tmpfile.addFilename();
     VMat aligned_set_non_missing = filter(aligned_set.subMatRows(start,len), index_fname);
     learner->setTrainingSet(aligned_set_non_missing);
@@ -95,6 +98,8 @@ void EmbeddedSequentialLearner::train()
     learner->train();
     last_train_t = t;
   }
+
+  // BUG? what about setting last_call_train_t ???
 }
  
 void EmbeddedSequentialLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
