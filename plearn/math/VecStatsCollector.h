@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.28 2005/01/25 21:59:24 chapados Exp $ 
+   * $Id: VecStatsCollector.h,v 1.29 2005/02/22 17:44:58 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -213,6 +213,10 @@ public:
 
   //! Call getStat() with the given statname on all the statscollectors
   Vec getAllStats(const string& statname) const;
+
+  //! Call getStat() with the given statname on all the statscollectors,
+  //! and put result in given Vec.  The vector is resized as necessary.
+  void getAllStats(const string& statname, Vec& result) const;
   
   //! Returns the index in the vector returned by getAllStats of the stat with the given name.
   //! Currently available names are E (mean) V (variance) STDDEV MIN MAX
