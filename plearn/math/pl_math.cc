@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.cc,v 1.4 2003/11/28 21:55:24 yoshua Exp $
+   * $Id: pl_math.cc,v 1.5 2003/12/01 23:53:45 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -157,7 +157,12 @@ real small_dilogarithm(real x)
     somme += prod;
     if (fabs(prod/somme)<1e-16) break; // tolerance
   }
-  if (i==1000) PLWARNING("dilogarithm: insufficient precision");
+  static bool warning_was_raised=false;
+  if (i==1000 && !warning_was_raised) 
+  {
+    warning_was_raised=true;
+    PLWARNING("dilogarithm: insufficient precision");
+  }
   return somme;
 }
 

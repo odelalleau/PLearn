@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.11 2003/11/30 03:04:25 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.12 2003/12/01 23:53:51 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -98,6 +98,9 @@ protected:
   Vec unconditional_cdf;
   // unconditional_cdf[i] - unconditional_cdf[i-1], for use to scale the steps of the cdf
   Var unconditional_delta_cdf; 
+
+  // coefficients that scale the pos_c, = initial_hardness/(mu[i]-mu[i-1])
+  Var initial_hardnesses;
 
   // for debugging
   Var prev_centers, prev_centers_M, scaled_prev_centers, 

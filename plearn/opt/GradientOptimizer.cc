@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.23 2003/10/19 20:02:54 yoshua Exp $
+   * $Id: GradientOptimizer.cc,v 1.24 2003/12/01 23:53:51 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -260,6 +260,12 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
       proppath.clearGradient();
       cost->gradient[0] = -learning_rate;
       proppath.fbprop(); 
+#ifdef BOUNDCHECK
+      int np = params.size();
+      for(int i=0; i<np; i++)
+        if (params[i]->value.hasMissing())
+          PLERROR("parameter updated with NaN");
+#endif
       static bool display_var_graph=false;
       if (display_var_graph)
         displayVarGraph(proppath, true, 333);

@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.cc,v 1.9 2003/10/07 15:26:30 tihocan Exp $
+   * $Id: VarArray.cc,v 1.10 2003/12/01 23:53:51 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -712,9 +712,19 @@ void VarArray::fbprop()
   if (size() > 0) {
     last()->fbprop();
 
+#ifdef BOUNDCHECK
+    if (last()->gradient.hasMissing())
+      PLERROR("VarArray::fbprop has NaN gradient");
+#endif    
     for(int i=size()-2; i>=0; i--)
       if (!array[i].isNull())
+      {
+#ifdef BOUNDCHECK
+        if (array[i]->gradient.hasMissing())
+          PLERROR("VarArray::fbprop has NaN gradient");
+#endif    
         array[i]->bprop();
+      }
   }
 }
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.14 2003/11/30 03:04:25 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.15 2003/12/01 23:53:51 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -270,8 +270,8 @@ ConditionalDensityNet::ConditionalDensityNet()
       if (nhidden==-1) 
         // special code meaning that the inputs should be ignored, only use biases
       {
-        wout = Var(1, n_output_parameters, "wout");
-        output = transpose(wout);
+        wout = Var(n_output_parameters, 1, "wout");
+        output = wout; // transpose(wout);
       }
       // output layer before transfer function
       else
@@ -284,7 +284,8 @@ ConditionalDensityNet::ConditionalDensityNet()
       // direct in-to-out layer
       if(direct_in_to_out)
         {
-          wdirect = Var(inputsize(), n_output_parameters, "wdirect");// Var(1+inputsize(), n_output_parameters, "wdirect");
+          wdirect = Var(inputsize(), n_output_parameters, "wdirect");
+          //wdirect = Var(1+inputsize(), n_output_parameters, "wdirect");
           output += transposeProduct(wdirect, input);// affine_transform(input,wdirect);
           params.append(wdirect);
         }
@@ -302,22 +303,23 @@ ConditionalDensityNet::ConditionalDensityNet()
       
       int i=0;
       a = output[i++]; a->setName("a");
-      b = new SubMatVariable(output,i,0,n_output_density_terms,1); 
+      //b = new SubMatVariable(output,0,i,1,n_output_density_terms); 
+      b = new SubMatVariable(output,i,0,n_output_density_terms,1);
       b->setName("b");
-      //b = new SubMatVariable(output,0,i,1,n_output_density_terms);
       i+=n_output_density_terms;
+      //c = new SubMatVariable(output,0,i,1,n_output_density_terms);
       c = new SubMatVariable(output,i,0,n_output_density_terms,1);
       c->setName("c");
-      //c = new SubMatVariable(output,0,i,1,n_output_density_terms);
       if (mu_is_fixed)
+        //mu = Var(1,n_output_density_terms);
         mu = Var(n_output_density_terms,1);
       else
       {
         i+=n_output_density_terms;
+        //mu = new SubMatVariable(output,0,i,1,n_output_density_terms);
         mu = new SubMatVariable(output,i,0,n_output_density_terms,1);
       }
       mu->setName("mu");
-      //mu = new SubMatVariable(output,0,i,1,n_output_density_terms);
 
       /*
        * output density
@@ -326,10 +328,18 @@ ConditionalDensityNet::ConditionalDensityNet()
       centers = target-mu; centers->setName("centers");
       centers_M = max_y-mu; centers_M->setName("centers_M");
       unconditional_cdf.resize(n_output_density_terms);
+      //unconditional_delta_cdf = Var(1,n_output_density_terms);
       unconditional_delta_cdf = Var(n_output_density_terms,1);
-      pos_a = softplus(a); pos_a->setName("pos_a");
-      pos_b = softplus(b)*unconditional_delta_cdf; pos_b->setName("pos_b");
-      pos_c = softplus(c); pos_c->setName("pos_c");
+      Var left_side = vconcat(var(0.0) & (new SubMatVariable(mu,0,0,n_output_density_terms-1,1)));
+      //Var left_side = hconcat(var(0.0) & (new SubMatVariable(mu,0,0,1,n_output_density_terms-1))); 
+      left_side->setName("left_side"); 
+      initial_hardnesses = var(initial_hardness) / (mu - left_side);
+      pos_a = softplus(a); 
+      pos_a->setName("pos_a");
+      pos_b = softplus(b)*unconditional_delta_cdf; 
+      pos_b->setName("pos_b");
+      pos_c = softplus(c)*initial_hardnesses; 
+      pos_c->setName("pos_c");
       Var scaled_centers = pos_c*centers;
       // scaled centers evaluated at target = M
       Var scaled_centers_M = pos_c*centers_M;
@@ -347,7 +357,6 @@ ConditionalDensityNet::ConditionalDensityNet()
       }
       else if (steps_type=="sloped_steps")
       {
-        Var left_side = vconcat(var(0.0) & (new SubMatVariable(mu,0,0,n_output_density_terms-1,1))); left_side->setName("left_side"); 
         steps = soft_slope(target, pos_c, left_side, mu);
         steps_M = soft_slope(max_y, pos_c, left_side, mu);
         steps_gradient = d_soft_slope(target, pos_c, left_side, mu);
@@ -701,13 +710,20 @@ void ConditionalDensityNet::initializeParams()
   Vec b_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
   Vec c_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
   Vec mu_;
+  Vec sc(n_output_density_terms);
   if (mu_is_fixed)
     mu_ = mu->value;
   else
     mu_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
   b_.fill(inverse_softplus(1.0));
-  c_.fill(inverse_softplus(initial_hardness));
   initialize_mu(mu_);
+  for (int i=0;i<n_output_density_terms;i++)
+  {
+    real prev_mu = i==0?0:mu_[i-1];
+    real delta = mu_[i]-prev_mu;
+    sc[i] = initial_hardness/delta;
+    c_[i] = inverse_softplus(1.0);
+  }
 
   real *dcdf = unconditional_delta_cdf->valuedata;
   if (dcdf[0]==0)
@@ -717,17 +733,19 @@ void ConditionalDensityNet::initializeParams()
     real s=0;
     if (steps_type=="sigmoid_steps")
       for (int i=0;i<n_output_density_terms;i++)
-        s+=dcdf[i]*(unconditional_p0*sigmoid(initial_hardness*(maxY-mu_[i]))-sigmoid(-initial_hardness*mu_[i]));
+        s+=dcdf[i]*(unconditional_p0*sigmoid(sc[i]*(maxY-mu_[i]))-sigmoid(-sc[i]*mu_[i]));
     else
       for (int i=0;i<n_output_density_terms;i++)
       {
         real prev_mu = i==0?0:mu_[i-1];
-        s+=dcdf[i]*(unconditional_p0*soft_slope(maxY,initial_hardness,prev_mu,mu_[i])-
-                    soft_slope(0,initial_hardness,prev_mu,mu_[i]));
+        real ss1 = soft_slope(maxY,sc[i],prev_mu,mu_[i]);
+        real ss2 = soft_slope(0,sc[i],prev_mu,mu_[i]);
+        s+=dcdf[i]*(unconditional_p0*ss1 - ss2);
       }
     real sa=s/(1-unconditional_p0);
     a_[0]=inverse_softplus(sa);
 
+    /*
     Mat At(n_output_density_terms,n_output_density_terms); // transpose of the linear system matrix
     Mat rhs(1,n_output_density_terms); // right hand side of the linear system
     // solve the system to find b's that make the unconditional fit the observed data
@@ -755,6 +773,7 @@ void ConditionalDensityNet::initializeParams()
         b_[i] = inverse_softplus(rhs[0][i]);
     else
       PLWARNING("ConditionalDensityNet::initializeParams() Could not invert matrix to obtain exact init. of b");
+    */
   }
 
   // Reset optimizer
@@ -823,7 +842,7 @@ void ConditionalDensityNet::train()
     if (y<=0)
       unconditional_p0 += weight;
     for (int j=0;j<n_output_density_terms;j++)
-      if (y<mu_values[j]) 
+      if (y<=mu_values[j]) 
         unconditional_cdf[j]+=weight;
     sum_w += weight;
   }
