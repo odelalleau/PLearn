@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ElementAtPositionVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: ElementAtPositionVariable.cc,v 1.5 2004/04/27 16:04:54 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,30 +49,44 @@ using namespace std;
 
 /** ElementAtPositionVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(ElementAtPositionVariable,
+                        "A variable of size length() x width(), filled with zeros except for the "
+                        "single element indexed by input2 =(i,j) or input2 = (k).",
+                        "NO HELP");
+
 ElementAtPositionVariable::ElementAtPositionVariable(Variable* input1, Variable* input2, int the_length, int the_width)
-  :BinaryVariable(input1, input2, the_length, the_width), length_(the_length), width_(the_width)
+  : inherited(input1, input2, the_length, the_width), length_(the_length), width_(the_width)
 {
-  if(!input1->isScalar())
-    PLERROR("In ElementAtPositionVariable: element must be a scalar var");
-  if(input2->nelems()>2)
-    PLERROR("In ElementAtPositionVariable: position must have 1 or 2 elements");
+    build_();
 }
 
+void
+ElementAtPositionVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(ElementAtPositionVariable, "ONE LINE DESCR", "NO HELP");
+void
+ElementAtPositionVariable::build_()
+{
+  if (input1 && !input1->isScalar())
+      PLERROR("In ElementAtPositionVariable: element must be a scalar var");
+  if (input2 && input2->nelems()>2)
+      PLERROR("In ElementAtPositionVariable: position must have 1 or 2 elements");
+}
 
+void
+ElementAtPositionVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "length_", &ElementAtPositionVariable::length_, OptionBase::buildoption, "");
+    declareOption(ol, "width_", &ElementAtPositionVariable::width_, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void ElementAtPositionVariable::recomputeSize(int& l, int& w) const
 { l=length_; w=width_; }
 
-
-
-
-
-
-
-
- 
 void ElementAtPositionVariable::fprop()
 {
   value.clear();
