@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.31 2003/08/05 19:19:32 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.32 2003/08/06 15:23:07 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -478,14 +478,15 @@ real ConjGradientOptimizer::fletcherSearchMain (
   
   // Bracketing
   while (!isBracketed) {
-    // cout << "Bracketing : alpha1 = " << alpha1 << endl << "             alpha0 = " << alpha0 << endl;
+     // cout << "Bracketing : alpha1 = " << alpha1 << endl << "             alpha0 = " << alpha0 << endl;
     if (alpha1 == mu && alpha1 == alpha2) { // NB: Personal hack... hopefully that should not happen
       cout << "Warning : alpha1 == alpha2 == mu during bracketing" << endl;
       return alpha1;
     }
     f_1 = (*f)(alpha1, opt);
     if (f_1 <= fmax) {
-      // cout << "fmax reached !" << endl;
+      cout << "fmax reached !" << endl;
+      opt->early_stop = true; //added by dorionc
       return alpha1;
     }
     if (f_1 > f0 + alpha1 * rho * g0 || f_1 > f_0) {
@@ -534,15 +535,15 @@ real ConjGradientOptimizer::fletcherSearchMain (
   //     We then use f1 = f(alpha1) and g1 = g(alpha1)
   real f1,g1;
   while (true) {
-    // cout << "Splitting : alpha1 = " << alpha1 << endl << "            a1 = " << a1 << endl << "            b1 = " << b1 << endl;
-    // cout << "Interval : [" << a1 + tau2 * (b1-a1) << " , " << b1 - tau3 * (b1-a1) << "]" << endl;
+     // cout << "Splitting : alpha1 = " << alpha1 << endl << "            a1 = " << a1 << endl << "            b1 = " << b1 << endl;
+     // cout << "Interval : [" << a1 + tau2 * (b1-a1) << " , " << b1 - tau3 * (b1-a1) << "]" << endl;
     alpha1 = findMinWithCubicInterpol(
         a1, b1,
         a1 + tau2 * (b1-a1), b1 - tau3 * (b1-a1),
         f_0, f_1, g_0, g_1);
     f1 = (*f)(alpha1, opt);
     if ((a1 - alpha1) * g_0 <= epsilon) {
-      // cout << "Early stop : a1 = " << a1 << " , alpha1 = " << alpha1 << " , g(a1) = " << g_0 << " , epsilon = " << epsilon << endl;
+       // cout << "Early stop : a1 = " << a1 << " , alpha1 = " << alpha1 << " , g(a1) = " << g_0 << " , epsilon = " << epsilon << endl;
       return a1;
     }
     g1 = (*g)(alpha1, opt);
@@ -777,12 +778,11 @@ real ConjGradientOptimizer::optimize()
 
   // Loop through the epochs
   for (int t=0; !early_stop && t<nupdates; t++) {
-
     // TODO Remove this line later
-    cout << "cost = " << cost->value[0] << " " << cost->value[1] << " " << cost->value[2] << endl;
+    //cout << "cost = " << cost->value[0] << " " << cost->value[1] << " " << cost->value[2] << endl;
     
     // Make a line search along the current search direction
-    early_stop = lineSearch();
+    early_stop = lineSearch(); 
     if (early_stop)
       cout << "Early stopping triggered by the line search" << endl;
     current_cost = cost->value[0];
@@ -809,9 +809,9 @@ real ConjGradientOptimizer::optimize()
       meancost /= real(every);
       //if (decrease_constant != 0)
       //  cout << "at t=" << t << ", learning rate = " << learning_rate << endl;
-      cout << t+1 << ' ' << meancost << endl;
+      printStep(cout, t+1, meancost);
       if (out)
-        out << t+1 << ' ' << meancost << endl;
+        printStep(out, t+1, meancost);
       bool early_stop_mesure = measure(t+1,meancost); 
       if (early_stop_dir)
         cout << "Early stopping triggered by the measurer" << endl;
@@ -853,7 +853,7 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stat_coll) {
   }
 
   meancost /= real(nstages);
-  cout << stage << " : " << meancost << endl;
+  printStep(cout, stage, meancost);  
   early_stop = early_stop || measure(stage+1,meancost);
 
   // TODO Call the Stats collector

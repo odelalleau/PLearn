@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.24 2003/05/12 16:55:48 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.25 2003/08/06 15:23:07 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -192,7 +192,9 @@ public:
 
 protected:
   static void declareOptions(OptionList& ol);
-
+  
+  virtual void printStep(ostream& ostr, int step, real mean_cost, string sep="\t")
+    { ostr << step << sep << meancost << endl; }
 private:
 
   //! Find the new search direction for the line search algorithm
