@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.55 2004/06/18 13:04:54 tihocan Exp $
+* $Id: VMatrix.cc,v 1.56 2004/06/18 16:50:43 tihocan Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -593,6 +593,9 @@ real VMatrix::getStringVal(int col,const string & str) const
   else return map_sr[col][str];
 }
 
+///////////////
+// getString //
+///////////////
 string VMatrix::getString(int row,int col) const
 {
   real val = get(row,col);
@@ -727,7 +730,6 @@ void VMatrix::loadStringMapping(int col)
   string fname = getSFIFFilename(col,".smap");
   init_map_sr();
   force_mkdir(getMetaDataDir()+"FieldInfo"+slash);
-  deleteStringMapping(col);
 
   if(!isfile(fname))
   {
@@ -738,6 +740,8 @@ void VMatrix::loadStringMapping(int col)
     return;
   }
   
+  deleteStringMapping(col);
+
   // smap file exists, open it
   PIFStream f(fname);
   if(!f)
