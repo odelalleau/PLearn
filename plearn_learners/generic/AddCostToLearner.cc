@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.1 2004/03/05 18:30:06 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.2 2004/03/10 18:21:59 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -175,7 +175,9 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
                                            const Vec& target, Vec& costs) const
 {
   int n_original_costs = sub_learner->nTestCosts();
-  sub_learner->computeCostsFromOutputs(input, output, target, costs);
+  // We give only costs.subVec to the sub_learner because it may want to resize it.
+  Vec sub_costs = costs.subVec(0, n_original_costs);
+  sub_learner->computeCostsFromOutputs(input, output, target, sub_costs);
   if (!rescale) {
     sub_learner_output << output;
     desired_target << target;
