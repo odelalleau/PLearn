@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.cc,v 1.16 2005/03/17 22:57:40 chrish42 Exp $
+   * $Id: ConcatRowsVMatrix.cc,v 1.17 2005/03/18 14:17:23 tihocan Exp $
    ******************************************************* */
 
 #include "ConcatRowsVMatrix.h"
@@ -448,8 +448,6 @@ void ConcatRowsVMatrix::putMat(int i, int j, Mat m) {
     getpositions(row + i, whichvm, rowofvm);
     to_concat[whichvm]->putSubRow(rowofvm, j, m(row));
   }
-
-  invalidateBuffer();
 }
 
 ////////////////////////
