@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.30 2004/05/28 12:39:28 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.31 2004/05/31 13:01:17 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -175,6 +175,8 @@ public:
 
   // number of terms in the output density function
   int n_output_density_terms;
+
+  real generate_precision;
 
   // the type of steps used to build the cumulative
   // allowed values are:
