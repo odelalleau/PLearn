@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.17 2004/04/05 23:10:31 morinf Exp $
+   * $Id: VMatLanguage.cc,v 1.18 2004/04/08 07:41:48 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -465,6 +465,7 @@ using namespace std;
         opcodes["mod"] = 45;
         opcodes["vecscalmul"] = 46; // x1 ... xn n alpha --> (x1*alpha) ... (xn*alpha)
         opcodes["__getfieldsrange"] = 47; // %N:%M pushes field %N up to %M. M must be >= N.
+        opcodes["select"] = 48; // v0 v1 v2 v3 ... vn-1 n i --> vi  
       }
   }
 
@@ -701,6 +702,21 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
               int N = *pptr++; 
               for (int i=M;i<=N;i++)
                 pstack.push(pfieldvalues[i]);
+              break;
+            }
+          case 48: // select:    v0 v1 v2 v3 ... vn-1 n i --> vi  
+            {
+              int i = (int)pstack.pop();
+              int n = (int)pstack.pop();
+              a = MISSING_VALUE;
+              while(--n>=0)
+                {
+                  if(n==i)
+                    a = pstack.pop();
+                  else
+                    pstack.pop();
+                }
+              pstack.push(a);
               break;
             }
           default:
