@@ -63,6 +63,8 @@ elif platform=='linux-alpha':
     compileflags = '-DSPARC -DBIGENDIAN'
 elif platform=='linux-ia64':
     compileflags = '-DLINUX -DLITTLEENDIAN'
+elif platform=='linux-x86_64':
+    compileflags = '-DLINUX -DLITTLEENDIAN'
 elif platform=='sunos5' :
     compileflags = '-DSPARC -DBIGENDIAN'
 elif platform=='irix6'  :
