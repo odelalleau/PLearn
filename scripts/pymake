@@ -89,6 +89,9 @@ dllwrap_basic_options = '--driver-name=c++ --add-stdcall-alias'
 nice_command = 'env nice -n'
 nice_value = '10'
 
+SPC=0
+verbose=3
+
 # a few useful functions
 def convertWinToLinux(path):
   """in windows, replace all directory separator \\ by / (for use in MinGW)"""
@@ -281,11 +284,21 @@ pymakeOption( name = 'opt',
               compileroptions = '-Wall -O9 -funroll-loops -finline -fomit-frame-pointer -fstrength-reduce -ffast-math -fPIC' )
 """
 
-def locateconfigfile():
-    """returns the path for the configuration file"""
-    directory = convertWinToLinux(os.getcwd())
+def locateconfigdir():
+
+    #first look in the PLEARNDIR
+    plearndir = convertWinToLinux(os.environ.get('PLEARNDIR'))
+    if plearndir:
+        fdir = join(plearndir,'.pymake')
+        fpath = join(fdir,'config')
+        if os.path.isfile(fpath):
+            return fdir
+        
+    # then look in the current dir and its parent
+    directory = convertWinToLinux(os.getcwd())        
     while os.path.isdir(directory) and os.access(directory,os.W_OK) and directory!='/':
-        fpath = join(directory,'.pymake/config')
+        fdir = join(directory,'.pymake')
+        fpath = join(fdir,'config')
         modelpath = join(directory,'pymake.config.model')
         if os.path.isfile(modelpath) and mtime(modelpath)>mtime(fpath):
             print '*****************************************************'
@@ -300,45 +313,34 @@ def locateconfigfile():
             except: pass
             shutil.copyfile(modelpath,fpath)
         if os.path.isfile(fpath):
-            return fpath
+            return fdir
         directory = abspath(join(directory,'..'))
 
     # nothing was found in current directory or its parents, let's look in the homedir 
-    fpath = join(homedir,'.pymake/config')
+    fdir = join(homedir,'.pymake')
+    fpath = join(fdir,'config')
     if not os.path.isfile(fpath):
         print '*****************************************************'
         print '* COULD NOT LOCATE ANY PYMAKE CONFIGURATION FILE.'
         print '* CREATING A DEFAULT CONFIG FILE IN ' + fpath
         print '* PLEASE ADAPT THE CONFIGURATION TO YOUR NEEDS'
-        try: os.makedirs(join(homedir,'.pymake'))
+        print '*****************************************************'
+        try: os.makedirs(fdir)
         except: pass
         f = open(fpath,'w')
         f.write(default_config_text)
         f.close()
-    return fpath
-
-def locatehostsfile():
-    """returns the path for the .pymake/<platform>.hosts file"""
-    directory = convertWinToLinux(os.getcwd())
-    while os.path.isdir(directory) and os.access(directory,os.W_OK) and directory!='/':
-        fpath = join(directory,'.pymake/' + platform + '.hosts')
-        if os.path.isfile(fpath):
-            return fpath
-        directory = abspath(join(directory,'..'))
-        # print directory
-    # nothing was found in current directory or its parents, let's look in the homedir 
-    fpath = join(homedir,'.pymake/' + platform + '.hosts')
-    if os.path.isfile(fpath):
-        return fpath
-    return ''
+    return fdir
 
 print '*** Current platform is: ' + platform
 print
 
 
-configpath = locateconfigfile()
+configdir = locateconfigdir()
+configpath = join(configdir,'config')
 print '*** Running pymake using following configuration file: ' + configpath
 execfile(configpath) 
+#execfile(configpath) 
 
 # remove duplicates from sourcedirs
 sourcedirs = unique(sourcedirs)
@@ -442,6 +444,11 @@ while i < len(args):
     i = i + 1
 #/JF
 
+if 'link' in optionargs:
+    force_link = 1;
+    optionargs.remove('link')    
+else:
+    force_link = 0;
 
 if 'clean' in optionargs:
     if len(optionargs)!=1 or len(otherargs)==0:
@@ -529,7 +536,10 @@ else:
     if SPC:
         hostspath = SPCresultfile;
     else:
-        hostspath = locatehostsfile()
+        hostspath = join(configdir,platform+'.hosts')
+        if not os.path.isfile(hostspath):
+            hostspath=''
+            
     if hostspath:
         print '*** Parallel compilation using list of hosts from file: ' + hostspath
         f = open(hostspath,'r')
@@ -538,7 +548,7 @@ else:
     else:
         list_of_hosts = ['localhost']
         print '*** No hosts file found: no parallel compilation, using localhost'
-        print '    (create a ~/.pymake/' + platform + '.hosts file to list hosts for parallel compilation.)'
+        print '    (create a '+ join(configdir,platform) + '.hosts file to list hosts for parallel compilation.)'
 
 # We could just do random.shuffle(list) but that's not in Python 1.5.2
 def shuffle(list):
@@ -1179,7 +1189,7 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
         else:
             info = file_info(cctarget)
             if info.hasmain or create_dll or create_so:
-                if not force_recompilation and info.corresponding_output_is_up_to_date() and not create_dll and not create_so:
+                if not force_link and not force_recompilation and info.corresponding_output_is_up_to_date() and not create_dll and not create_so:
                     info.make_symbolic_link(linkname) # remake the correct symbolic link
                     print 'Target',info.filebase,'is up to date.'
                 else:
@@ -1192,18 +1202,22 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
 
 def pymake(list_of_targets, linkname):
     ccfiles_to_compile = {}
-    executables_to_link = {}
+    executables_to_link = {}    
+    
     print '++++ Computing dependencies...'
     for target in list_of_targets:
         get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link, linkname)
+    
     print '++++ Compiling...'
     if platform=='win32':
         win32_parallel_compile(ccfiles_to_compile.keys())
     else:
         parallel_compile(ccfiles_to_compile.keys())
-    if executables_to_link.keys() and not create_dll:
+        
+    if force_link or (executables_to_link.keys() and not create_dll):
         print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
         sequential_link(executables_to_link.keys(),linkname)
+    
     if create_dll:
         print '++++ Creating DLL of', target
         for target in list_of_targets:
@@ -1278,7 +1292,6 @@ def sequential_link(executables_to_link, linkname):
         failures =  ccfile.failed_ccfiles_to_link()
         if failures:
             print '[ Executable target',ccfile.filebase,'not remade because of previous compilation errors. ]'
-            
             print '   Errors were while compiling files:'
             print '   '+string.join(failures,'\n   ')
         else:
