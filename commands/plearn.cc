@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.42 2004/01/17 20:01:41 yoshua Exp $
+   * $Id: plearn.cc,v 1.43 2004/01/30 18:06:10 lheureup Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -103,6 +103,7 @@
 #include "TestDependenciesCommand.h"
 #include "ReadAndWriteCommand.h"
 #include "JulianDateCommand.h"
+#include "FieldConvertCommand.h"
 
 using namespace PLearn;
 
