@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.31 2004/09/14 16:04:29 chrish42 Exp $ 
+   * $Id: plearn_inc.h,v 1.32 2004/09/14 19:57:52 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -127,8 +127,10 @@
 #include <plearn/vmat/FilterSplitter.h>
 #include <plearn/vmat/FractionSplitter.h>
 #include <plearn/vmat/KFoldSplitter.h>
+#include <plearn/vmat/NoSplitSplitter.h>
 #include <plearn/vmat/RepeatSplitter.h>
 #include <plearn/vmat/SourceVMatrixSplitter.h>
+#include <plearn/vmat/StackedSplitter.h>
 #include <plearn/vmat/TestInTrainSplitter.h>
 #include <plearn/vmat/ToBagSplitter.h>
 #include <plearn/vmat/TrainTestSplitter.h>
