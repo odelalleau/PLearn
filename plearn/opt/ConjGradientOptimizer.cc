@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.57 2004/11/24 18:23:50 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.58 2004/11/26 17:32:55 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -394,6 +394,7 @@ bool ConjGradientOptimizer::findDirection() {
       break;
     default:
       PLERROR("In ConjGradientOptimizer::findDirection - Invalid conjugate gradient formula !");
+      gamma = 0;  // To make the compiler happy.
       break;
   }
   // It is suggested to keep gamma >= 0
