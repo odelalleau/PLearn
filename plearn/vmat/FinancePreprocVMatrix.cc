@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.cc,v 1.3 2003/09/23 21:06:53 ducharme Exp $ 
+   * $Id: FinancePreprocVMatrix.cc,v 1.4 2003/10/27 21:35:21 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.cc */
@@ -111,7 +111,7 @@ void FinancePreprocVMatrix::getRow(int i, Vec v) const
         {
           int start = MAX(prices.length()-moving_average_window[l], 0);
           int len = prices.length() - start;
-          v[pos++] = mean_with_missing(prices.subVec(start,len));
+          v[pos++] = mean(prices.subVec(start,len),true);
         }
       }
     }
