@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.cc,v 1.5 2004/08/31 17:22:40 plearner Exp $ 
+   * $Id: PStreamBuf.cc,v 1.6 2004/11/24 18:21:41 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.cc */
@@ -69,8 +69,10 @@ PStreamBuf::~PStreamBuf()
 
   void PStreamBuf::setBufferCapacities(streamsize inbuf_capacity, streamsize outbuf_capacity, streamsize unget_capacity)
   {
+    /* Useless comparisons since they are unsigned integers.
     if(inbuf_capacity<0 || unget_capacity<0 || outbuf_capacity<0)
       PLERROR("In PStreamBuf::setBufferCapacities all capacities must be >=0");
+      */
 
     if(inbuf_capacity<1)
       inbuf_capacity = 1;
