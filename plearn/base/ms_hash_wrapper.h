@@ -36,19 +36,21 @@
 #ifndef ms_hash_wrapper_H
 #define ms_hash_wrapper_H
 
-#ifdef __GNUC__ // Look below after the macros for the end.
+#ifdef __GNUC__ // Look below after the macros for the end of this
 
 #if __GNUC__<3 
+
 #  include <hash_set> //to get stl_hash_fun.h ... (template<> class hash)
 #  include <hash_map> //to get stl_hash_fun.h ... (template<> class hash)
-
-#define _CUST_NAME_SPACE std;
   using namespace std;
+
 #else
+
 #  include <ext/hash_set> //to get stl_hash_fun.h ... (template<> class hash)
 #  include <ext/hash_map> //to get stl_hash_fun.h ... (template<> class hash)
   using namespace __gnu_cxx;
-#endif
+
+#endif // __GNUC__<3
 
 // Three original cases for hash specialization and declaration:
 
