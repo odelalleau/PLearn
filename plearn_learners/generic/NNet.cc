@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.46 2004/04/12 00:36:31 yoshua Exp $
+   * $Id: NNet.cc,v 1.47 2004/04/12 02:08:36 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -100,6 +100,7 @@ NNet::NNet() // DEFAULT VALUES FOR ALL OPTIONS
    input_reconstruction_penalty(0),
    direct_in_to_out(false),
    output_transfer_func(""),
+   hidden_transfer_func("tanh"),
    interval_minval(0), interval_maxval(1),
    batch_size(1)
 {}
