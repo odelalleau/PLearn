@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.h,v 1.4 2002/10/21 01:21:53 plearner Exp $
+   * $Id: general.h,v 1.5 2002/12/02 08:46:51 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -197,7 +197,7 @@ using std::max;
   typedef int (*compare_function)(const void *, const void *);
 
   template<class T>
-  void swap(T& a, T& b)
+  inline void swap(T& a, T& b)
     { 
       T tmp; 
       tmp = a;
@@ -210,12 +210,6 @@ using std::max;
 
 //!  print a number without unnecessary trailing zero's, into buffer
   void pretty_print_number(char* buffer, real number);
-
-//!  by default the copy(from,to) function does an assignment:
-  template<class T>
-    inline void copy_from_to(T& from, T& to) { from = to; }
-  template<class T>
-    inline void copy_from_to(T& from, const T& to) { from = to; }
 
 //!  Simple file info
   int   file_size(const string& filename);

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.12 2002/11/30 04:27:32 plearner Exp $
+   * $Id: plearn.cc,v 1.13 2002/12/02 08:46:48 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -82,6 +82,7 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
+  /*
   string text = loadFileAsString(argv[1]);
   
   cerr << text << endl;
@@ -90,6 +91,7 @@ int main(int argc, char** argv)
   macro_process(text, vars);
   cerr << text << endl;
   exit(0);
+  */
 
   return plearn_main(argc, argv);
 }

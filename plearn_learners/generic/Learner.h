@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.4 2002/11/22 13:06:13 yoshua Exp $
+   * $Id: Learner.h,v 1.5 2002/12/02 08:46:51 plearner Exp $
    ******************************************************* */
 
 
@@ -107,6 +107,12 @@ using namespace std;
     //! It's used as part of the model filename saved by calling save(), which measure() does if ??? incomplete ???
     int epoch_;
     
+    //! This is set to true to indicate that MPI parallelization occured at the level of this learner
+    //! possibly with data distributed across several nodes (in which case PLMPI::synchronized should be false)
+    //! (this is initially false)
+    bool distributed_;
+
+
   public:
 
     //! returns expdir+train_set->getAlias()  (if train_set is indeed defined and has an alias...)
@@ -119,6 +125,9 @@ using namespace std;
     int outputsize_; //!<  the use() method produces an output vector of size outputsize().
     int weightsize_; //<! number of weight fields in the target vec (all_targets = actual_target & weights)
 
+    //! By default, MPI parallelization done at given level prevents further parallelization
+    //! at lower levels. If true, this means "don't parallelize processing at this level" 
+    bool dont_parallelize; //<! (default: false)
 
     //!  test during train specifications
     //oassignstream testout;

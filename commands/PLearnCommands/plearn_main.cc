@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.4 2002/11/30 04:27:33 plearner Exp $
+   * $Id: plearn_main.cc,v 1.5 2002/12/02 08:46:50 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -118,14 +118,23 @@ int plearn_main(int argc, char** argv)
         }
       else // we suppose it's a filename of a .psave or .pexp file containing Objects to be run
         {
-          PIFStream in(command);
-          if(!in)
+          if(!file_exists(command))
             {
               cerr << "** ERROR: " << command << " appears to be neither a valid plearn command type, nor an existing filename" << endl;
               cerr << "Type plearn with no argument to see the help." << endl;
               exit(0);
             }
       
+          string script = loadFileAsString(command);
+          map<string, string> vars;
+
+          // initialize ${1} ... ${n} variables as the arguments that follow
+          for(int k=2; k<argc; k++)
+            vars[tostring(k-1)] = string(argv[k]);
+
+          macro_process(script, vars);
+          PIStringStream in(script);
+
           while(in)
             {
               PP<Object> o = readObject(in);

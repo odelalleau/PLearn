@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.5 2002/11/22 13:06:13 yoshua Exp $
+   * $Id: Learner.cc,v 1.6 2002/12/02 08:46:51 plearner Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -65,9 +65,9 @@ int Learner::use_file_if_bigger = 64000000L;
 bool Learner::force_saving_on_all_processes = false;
 
 Learner::Learner(int the_inputsize, int the_targetsize, int the_outputsize)
-  :train_objective_stream(0), epoch_(0), 
+  :train_objective_stream(0), epoch_(0), distributed_(false),
   inputsize_(the_inputsize), targetsize_(the_targetsize), outputsize_(the_outputsize), 
-  weightsize_(0), save_at_every_epoch(false), save_objective(true), best_step(0)
+  weightsize_(0), dont_parallelize(false), save_at_every_epoch(false), save_objective(true), best_step(0)
 {
   test_every = 1;
   minibatch_size = 1; // by default call use, not apply
@@ -131,54 +131,26 @@ string Learner::basename() const
   return expdir+train_set->getAlias();
 }
 
-/*
-string Learner::help() const
-{
-  return string(
-                "Options for Learner: \n"
-                "  - inputsize:  <integer> (0) \n"
-                "    dimensionality of input vector \n"
-                "  - outputsize: <integer> (0) \n"
-                "    dimensionality of output \n"
-                "  - targetsize: <integer> (0) \n"
-                "    dimensionality of target \n"
-                "  - earlystop_testsetnum: <int> (-1) \n"
-                "    index of test set (in test_sets) to use for early \n"
-                "    stopping (-1 means no early-stopping) \n"
-                "  - earlystop_testresultindex: <int> (0) \n"
-                "    index of statistic (as returned by test) to use\n"
-                "  - earlystop_max_degradation: <real> (0) \n"
-                "    maximum degradation in error from last best value\n"
-                "  - earlystop_min_value: <real> (-FLT_MAX)\n"
-                "    minimum error beyond which we stop\n"
-                "  - earlystop_min_improvement: <real> (0)\n"
-                "    minimum improvement in error otherwise we stop\n"
-                "  - earlystop_relative_changes: <bool> (true) \n"
-                "    are max_degradation and min_improvement relative?\n"
-                "  - earlystop_save_best: <bool> (true) \n"
-                "    if yes, then return with saved 'best' model\n"
-                "  - earlystop_max_degraded_steps: <int> (-1) \n"
-                "    ax. nb of steps beyond best found (-1 means ignore) \n"
-                "  - save_at_every_epoch: <bool> (false)\n"
-                "  - save_objective: <bool> (true)\n"
-                "    save learner at each epoch?\n")
-    + Object::help();
-}
-*/
 
 void Learner::declareOptions(OptionList& ol)
 {
   declareOption(ol, "inputsize", &Learner::inputsize_, OptionBase::buildoption, 
-                "    dimensionality of input vector \n");
+                "dimensionality of input vector \n");
 
   declareOption(ol, "outputsize", &Learner::outputsize_, OptionBase::buildoption, 
-                "    dimensionality of output \n");
+                "dimensionality of output \n");
 
   declareOption(ol, "targetsize", &Learner::targetsize_, OptionBase::buildoption, 
-                "    dimensionality of target \n");
+                "dimensionality of target \n");
 
   declareOption(ol, "weightsize", &Learner::weightsize_, OptionBase::buildoption, 
-                "    NOTE: THIS WORKS ONLY WITH NeuralNet !!! (for now -- just don't set this value for other learners.)  Number of weights within target.  The last 'weightsize' fields of the target vector will be used as cost weights.  (0 <= weightsize < targetsize) \n");
+                "Number of weights within target.  The last 'weightsize' fields of the target vector will be used as cost weights.\n"
+                "This is usually 0 (no weight) or 1 (1 weight per sample). Special loss functions may be able to give a meaning\n"
+                "to weightsize>1. Not all learners support weights.");
+
+  declareOption(ol, "dont_parallelize", &Learner::dont_parallelize, OptionBase::buildoption, 
+                "By default, MPI parallelization done at a given level prevents further parallelization\n"
+                "at levels further down. If true, this means *don't parallelize processing at this level*");
 
   declareOption(ol, "earlystop_testsetnum", &Learner::earlystop_testsetnum, OptionBase::buildoption, 
                 "    index of test set (in test_sets) to use for early \n"
@@ -230,127 +202,6 @@ void Learner::declareOptions(OptionList& ol)
 
   inherited::declareOptions(ol);
 }
-
-/*
-string Learner::getOptionsToSave() const
-{ 
-  return string("inputsize "
-                "outputsize "
-                "targetsize "
-                "expdir "
-                "use_file_if_bigger "
-                "test_every "
-                "earlystop_testsetnum "
-                "earlystop_testresultindex "
-                "earlystop_max_degradation "
-                "earlystop_min_value "
-                "earlystop_min_improvement "
-                "earlystop_relative_changes "
-                "earlystop_save_best "
-                "earlystop_max_degraded_steps "
-                "experiment_name "
-                "save_at_every_epoch "
-                "save_objective "
-                "test_costfuncs "
-                "test_statistics ")
-    + inherited::getOptionsToSave(); 
-}
-
-void Learner::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="inputsize")
-    PLearn::read(in,inputsize_);
-  else if (optionname=="outputsize")
-    PLearn::read(in,outputsize_);
-  else if (optionname=="targetsize")
-    PLearn::read(in,targetsize_);
-  else if (optionname=="experiment_name")
-    PLearn::read(in,experiment_name);
-  else if (optionname=="expdir")
-    PLearn::read(in,expdir);
-  else if (optionname=="use_file_if_bigger")
-    PLearn::read(in,use_file_if_bigger);
-  else if (optionname=="measure_cpu_time_first")
-    PLearn::read(in,measure_cpu_time_first);
-  else if (optionname=="test_every") // recently added by senecal
-    PLearn::read(in,test_every);
-  else if (optionname=="earlystop_testsetnum")
-    PLearn::read(in,earlystop_testsetnum);
-  else if (optionname=="earlystop_testresultindex")
-    PLearn::read(in,earlystop_testresultindex);
-  else if (optionname=="earlystop_max_degradation")
-    PLearn::read(in,earlystop_max_degradation);
-  else if (optionname=="earlystop_min_value")
-    PLearn::read(in,earlystop_min_value);
-  else if (optionname=="earlystop_min_improvement")
-    PLearn::read(in,earlystop_min_improvement);
-  else if (optionname=="earlystop_relative_changes")
-    PLearn::read(in,earlystop_relative_changes);
-  else if (optionname=="earlystop_save_best")
-    PLearn::read(in,earlystop_save_best);
-  else if (optionname=="earlystop_max_degraded_steps")
-    PLearn::read(in,earlystop_max_degraded_steps);
-  else if (optionname=="save_at_every_epoch")
-    PLearn::read(in,save_at_every_epoch);
-  else if (optionname=="experiment_name")
-    PLearn::read(in,experiment_name);
-  else if (optionname=="test_costfuncs")
-    PLearn::read(in,test_costfuncs);
-  else if (optionname=="test_statistics")
-    PLearn::read(in,test_statistics);
-  else
-    inherited::readOptionVal(in, optionname);  
-
-}
-
-
-
-void Learner::writeOptionVal(ostream& out, const string& optionname) const
-{
-  if (optionname=="inputsize")
-    PLearn::write(out,inputsize_);
-  else if (optionname=="outputsize")
-    PLearn::write(out,outputsize_);
-  else if (optionname=="targetsize")
-    PLearn::write(out,targetsize_);
-  else if (optionname=="experiment_name")
-    PLearn::write(out,experiment_name);
-  else if (optionname=="expdir")
-    PLearn::write(out,expdir);
-  else if (optionname=="use_file_if_bigger")
-    PLearn::write(out,use_file_if_bigger);
-  else if (optionname=="measure_cpu_time_first")
-    PLearn::write(out,measure_cpu_time_first);
-  else if (optionname=="test_every") // recently added by senecal
-    PLearn::write(out,test_every);
-  else if (optionname=="earlystop_testsetnum")
-    PLearn::write(out,earlystop_testsetnum);
-  else if (optionname=="earlystop_testresultindex")
-    PLearn::write(out,earlystop_testresultindex);
-  else if (optionname=="earlystop_max_degradation")
-    PLearn::write(out,earlystop_max_degradation);
-  else if (optionname=="earlystop_min_value")
-    PLearn::write(out,earlystop_min_value);
-  else if (optionname=="earlystop_min_improvement")
-    PLearn::write(out,earlystop_min_improvement);
-  else if (optionname=="earlystop_relative_changes")
-    PLearn::write(out,earlystop_relative_changes);
-  else if (optionname=="earlystop_save_best")
-    PLearn::write(out,earlystop_save_best);
-  else if (optionname=="earlystop_max_degraded_steps")
-    PLearn::write(out,earlystop_max_degraded_steps);
-  else if (optionname=="save_at_every_epoch")
-    PLearn::write(out,save_at_every_epoch);
-  else if (optionname=="experiment_name")
-    PLearn::write(out,experiment_name);
-  else if (optionname=="test_costfuncs")
-    PLearn::write(out,test_costfuncs);
-  else if (optionname=="test_statistics")
-    PLearn::write(out,test_statistics);
-  else
-    inherited::writeOptionVal(out, optionname);  
-}
-*/
 
 
 void Learner::setExperimentDirectory(const string& the_expdir) 
@@ -758,9 +609,9 @@ void Learner::apply(const VMat& data, VMat outputs)
 // 2) Fix parallel code to use MPIStream for more efficient buffering (and check Yoshua's problem)
 // 4) let save parameters be VMatrix (on which to call append)
 
-//! This function should work with and without MPI
-//! Only MPI process 0 will save to file and gather and compute statistics
-//! All others MPI processes will call useAndCost on different sections of the test_set
+//! This function should work with and without MPI. If parallelized at this level,
+//! only MPI process 0 will save to file and gather and compute statistics
+//! All other MPI processes will call useAndCost on different sections of the test_set
 
 Vec Learner::test(VMat test_set, const string& save_test_outputs, const string& save_test_costs)
 {
@@ -803,7 +654,7 @@ Vec Learner::test(VMat test_set, const string& save_test_outputs, const string& 
   if(!multipass) // stats can be computed in a single pass?
     test_statistics.init(ncostfuncs);
 
-  if(USING_MPI && PLMPI::synchronized && PLMPI::size>1)
+  if(USING_MPI && PLMPI::synchronized && !dont_parallelize && PLMPI::size>1)
     { // parallel implementation
       // cout << "PARALLEL-DATA TEST" << endl;
 #if USING_MPI

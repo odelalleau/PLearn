@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.cc,v 1.5 2002/10/21 01:21:53 plearner Exp $ 
+   * $Id: Experiment.cc,v 1.6 2002/12/02 08:46:51 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.cc */
@@ -57,9 +57,10 @@ Experiment::Experiment()
     declareOption(ol, "learner", &Experiment::learner, OptionBase::buildoption,
                   "The learner to train/test");
     declareOption(ol, "dataset", &Experiment::dataset, OptionBase::buildoption,
-                  "The dataset to use for training/testing (will be split according to what is specified in the testmethod)");
+                  "The dataset to use for training/testing (will be split according to what is specified in the testmethod)\n"
+                  "You may omit this only if your splitter is an ExplicitSplitter");
     declareOption(ol, "splitter", &Experiment::splitter, OptionBase::buildoption,
-                  "The splitter to use to generate one or several train/test pairs.");
+                  "The splitter to use to generate one or several train/test pairs from the dataset.");
     declareOption(ol, "save_models", &Experiment::save_models, OptionBase::buildoption,
                   "If false, the models won't be saved.");
     inherited::declareOptions(ol);
@@ -94,31 +95,35 @@ void Experiment::run()
     PLERROR("No expdir specified for Experiment.");
   if(!learner)
     PLERROR("No leaner specified for Experiment.");
-  if(!dataset)
-    PLERROR("No dataset specified for Experiment");
   if(!splitter)
     PLERROR("No splitter specified for Experiment");
 
-  if(pathexists(expdir))
-    PLERROR("Directory (or file) %s already exists. First move it out of the way.",expdir.c_str());
+  if(PLMPI::rank==0)
+    {
+      if(pathexists(expdir))
+        PLERROR("Directory (or file) %s already exists. First move it out of the way.",expdir.c_str());
 
-  if(!force_mkdir(expdir))
-    PLERROR("Could not create experiment directory %s", expdir.c_str());
+      if(!force_mkdir(expdir))
+        PLERROR("Could not create experiment directory %s", expdir.c_str());
 
-  // Save this experiment description in the expdir (buildoptions only)
-  PLearn::save(append_slash(expdir)+"experiment.plearn", *this, OptionBase::buildoption);
+      // Save this experiment description in the expdir (buildoptions only)
+      PLearn::save(append_slash(expdir)+"experiment.plearn", *this, OptionBase::buildoption);
+    }
 
   int nsplits = splitter->nsplits();
   Array<string> testresnames = learner->testResultsNames();
   int ntestcosts = testresnames.size();
   VecStatsCollector teststats;
 
-  POFStream resout(append_slash(expdir)+"results.summary");
-  resout.setMode(PStream::raw_ascii);
-  resout << "#: result_type ";
-  for(int k=0; k<ntestcosts; k++)
-    resout << testresnames[k] << "  ";
-  resout << endl;
+  if(PLMPI::rank==0)
+    {
+      POFStream resout(append_slash(expdir)+"results.summary");
+      resout.setMode(PStream::raw_ascii);
+      resout << "#: result_type ";
+      for(int k=0; k<ntestcosts; k++)
+        resout << testresnames[k] << "  ";
+      resout << endl;
+    }
 
   for(int k=0; k<nsplits; k++)
     {
@@ -132,14 +137,22 @@ void Experiment::run()
       learner->forget();
       learner->train(trainset);
       Vec testres = learner->test(testset);
-      resout << "Split_" << k << " ";
-      resout << testres << endl;
+      if(PLMPI::rank==0)
+        {
+          POFStream resout(append_slash(expdir)+"results.summary", ios::out | ios::app);
+          resout << "Split_" << k << " ";
+          resout << testres << endl;
+        }
       teststats.update(testres);
     }
 
-  resout << "STDDEV   " << teststats.getStdDev() << endl;
-  resout << "STDERROR " << teststats.getStdError() << endl;
-  resout << "MEAN     " << teststats.getMean() << endl;
+  if(PLMPI::rank==0)
+    {
+      POFStream resout(append_slash(expdir)+"results.summary", ios::out | ios::app);
+      resout << "STDDEV   " << teststats.getStdDev() << endl;
+      resout << "STDERROR " << teststats.getStdError() << endl;
+      resout << "MEAN     " << teststats.getMean() << endl;
+    }
 }
 
 %> // end of namespace PLearn

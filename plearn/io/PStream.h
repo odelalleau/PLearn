@@ -919,6 +919,17 @@ public:
 };
 
 
+// NOTE: This should ultimately be replaced by istringstream when we finally get rid of buggy gcc 2.96
+// or even better: our own version of the streambuf when we finally get rid of those annoying buggy C++ streams implementations.
+// So for now, consider this a "hack" (Pascal)
+
+class PIStringStream: public PStream
+{
+public:
+  PIStringStream(const string& s)
+    :PStream(new istrstream(s.c_str())) {}
+};
+
 %> // namespace PLearn
 
 #endif //ndef PStream_INC

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.7 2002/11/30 04:27:33 plearner Exp $
+   * $Id: Array.h,v 1.8 2002/12/02 08:46:50 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -130,12 +130,12 @@ public:
 
       //!  To allow if(v) statements
       operator bool() const
-      { return array!=0; }
+      { return array_size>0; }
       
 
       //!  To allow if(!v) statements
       bool operator!() const
-      { return array==0; }
+      { return array_size==0; }
 
 
   Array<T>* operator->()
