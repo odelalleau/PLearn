@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.6 2003/06/03 14:52:10 plearner Exp $
+   * $Id: NNet.cc,v 1.7 2003/06/26 19:47:51 ducharme Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -311,17 +311,26 @@ void NNet::build_()
 
       // Funcs
       VarArray invars;
+      VarArray outvars;
       if(input)
         invars.push_back(input);
+      if(output)
+        outvars.push_back(output);
       if(target)
+      {
         invars.push_back(target);
+        outvars.push_back(target);
+      }
       if(sampleweight)
+      {
         invars.push_back(sampleweight);
+        outvars.push_back(sampleweight);
+      }
 
       f = Func(input, output);
       costf = Func(invars, output&cost);
       costf->recomputeParents();
-      output_and_target_to_cost = Func(invars, cost); 
+      output_and_target_to_cost = Func(outvars, cost); 
       output_and_target_to_cost->recomputeParents();
 
       // The total cost
@@ -466,7 +475,7 @@ void NNet::initializeParams()
 
 void NNet::forget()
 {
-  initializeParams();
+  if (train_set) initializeParams();
   stage = 0;
 }
 
