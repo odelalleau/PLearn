@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.51 2004/07/21 20:13:26 tihocan Exp $
+   * $Id: VMatrix.h,v 1.52 2004/07/21 20:33:22 tihocan Exp $
    ******************************************************* */
 
 
@@ -64,24 +64,26 @@ class Func;
 
 class VMatrix: public Object
 {
+  
+private:
+
   typedef Object inherited;
   friend class VMat;
-
-private:
 
   mutable FILE* lockf_; //! .lock file in metadatadir
 
   //! Used in the 'find' method to store a row.
   mutable Vec get_row;
 
-protected:
-  int length_;
-  int width_;
-  time_t mtime_; // time of "last modification" of files containing the data
-
   //! Used in the default dot(i,j) method to store the i-th and j-th rows.
   mutable Vec dotrow_1;
   mutable Vec dotrow_2;
+
+protected:
+
+  int length_;
+  int width_;
+  time_t mtime_; // time of "last modification" of files containing the data
 
   // For training/testing data sets we assume each row is composed of 3 parts
   // An input part, a target part, and a weight part
@@ -110,13 +112,14 @@ protected:
   mutable TVec<map<real,string> > map_rs; 
   
 private: 
+
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
 
 public:
+
   mutable Array<VMField> fieldinfos; // don't use this directly (deprecated...) call getFieldInfos() instead
-    Array<VMFieldStat> fieldstats;
+  Array<VMFieldStat> fieldstats;
 
   VMatrix();
 
