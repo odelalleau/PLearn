@@ -46,10 +46,6 @@ void FieldConvertCommand::run(const vector<string> & args)
       PVALUE_THRESHOLD=toreal(val[1]);
     else if(val[0]=="frac_missing_to_skip")
       FRAC_MISSING_TO_SKIP=toreal(val[1]);
-    else if(val[0]=="onehot_with_correl")
-      onehot_with_correl=tobool(val[1]);
-    // TODO see what is onehot_with_correl
-    // Apparently it isn't used anyway.
     else PLERROR("unknown argument: %s ",val[0].c_str());
   }
   if(source_fn=="")
