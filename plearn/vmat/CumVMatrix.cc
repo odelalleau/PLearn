@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CumVMatrix.cc,v 1.1 2004/03/08 17:36:46 yoshua Exp $ 
+   * $Id: CumVMatrix.cc,v 1.2 2004/03/09 12:50:38 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -156,6 +156,7 @@ void CumVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 
   deepCopyField(columns_to_accumulate, copies);
   deepCopyField(accumulated_columns, copies);
+  deepCopyField(columns, copies);
 
 }
 
