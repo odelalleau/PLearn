@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RGBImage.cc,v 1.3 2004/02/26 06:45:05 nova77 Exp $
+   * $Id: RGBImage.cc,v 1.4 2004/03/04 14:58:05 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -151,7 +151,11 @@ RGBImage::loadPPM(const char* filename)
     PLERROR("In RGBImage::loadPPM unsupported format (not a P6 PPM)");
   resize(newheight, newwidth);
   RGB* data = storage->data;
-  in.read((unsigned char*)data,height_*width_*3);
+  PLWARNING("In RGBImage::loadPPM - Code has been changed to compile, but hasn't been tested (remove this warning if it works)");
+  // The following line:
+  //  in.read((unsigned char*)data,height_*width_*3);
+  // has been replaced by:
+  in.read((char*)data,height_*width_*3);
 }
 
 void 
@@ -164,7 +168,11 @@ RGBImage::savePPM(const char* filename) const
   if(!out)
     PLERROR("In RGBImage::savePPM could not open file for writing");
   out << "P6\n" << width_ << ' ' << height_ << ' ' << 255 << endl;
-  out.write((unsigned char*)data, height_*width_*3);
+  PLWARNING("In RGBImage::loadPPM - Code has been changed to compile, but hasn't been tested (remove this warning if it works)");
+  // The following line:
+  //  out.write((unsigned char*)data, height_*width_*3);
+  // has been replaced by:
+  out.write((char*)data, height_*width_*3);
   out.flush();
 }
 
