@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.h,v 1.5 2003/08/27 21:00:58 ducharme Exp $ 
+   * $Id: MountLucasIndex.h,v 1.6 2003/09/02 21:10:52 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.h */
@@ -55,20 +55,23 @@ class MountLucasIndex: public SequentialLearner
 {
   public:
     TVec<string> commodity_price_columns; // the commodity price columns in the input data
+    TVec<int> commodity_start_year; // the year we begin to trade the corresponding commodity
     string last_day_of_month_column; // the last_day_of_month column in the input data
+    string julian_day_column; // the julian day number column in the input data
     string risk_free_rate_column; // the risk free rate column in the input data
 
   protected:
     TVec<bool> is_long_position; // long or short position (for this month)
+    TVec<bool> tradable_commodity; // is this commidity tradable for this year
     Vec twelve_month_moving_average;
     Mat next_to_last_unit_asset_value;
     Vec unit_asset_value;
-    Mat monthly_rate_return; // rate return for this month
     Vec index_value; // the monthly MLM Index
     int current_month; // the current month (=0 for the first month of the train_set)
     int nb_commodities; // number of commodities included in the MLM Index
     TVec<int> commodity_price_index; // the index corresponding to commodity_price_columns
     int last_day_of_month_index; // the index corresponding to last_day_of_month_column
+    int julian_day_index; // the index corresponding to julian_day_column
     int risk_free_rate_index; // the index corresponding to risk_free_rate_column
     bool build_complete;
  
@@ -116,7 +119,7 @@ class MountLucasIndex: public SequentialLearner
     //!  into a deep copy by deep-copying all the members that need to be.
     typedef SequentialLearner inherited;
     PLEARN_DECLARE_OBJECT(MountLucasIndex);
-    //virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
 //! Declares a few other classes and functions related to this class
