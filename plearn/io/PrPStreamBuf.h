@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrPStreamBuf.h,v 1.3 2005/01/12 17:44:18 chrish42 Exp $ 
+   * $Id: PrPStreamBuf.h,v 1.4 2005/01/12 21:53:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -83,8 +83,6 @@ protected:
   virtual void write_(const char* p, streamsize n);
 
   virtual bool good() const;
-
-  virtual bool eof() const;
 };
 
 } // end of namespace PLearn
