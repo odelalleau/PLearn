@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.cc,v 1.1 2004/08/25 14:44:39 kermorvc Exp $ 
+   * $Id: DictionaryVMatrix.cc,v 1.2 2004/08/25 19:36:30 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Christopher Kermorvant
@@ -82,12 +82,13 @@ void DictionaryVMatrix::getNewRow(int i, const Vec& v) const
 //! returns value associated with a string (or MISSING_VALUE if there's no association for this string)                                         
 real DictionaryVMatrix::getStringVal(int col, const string & str) const
 {
- if(dic_type[col].first==2){
-   PLERROR("word and sense are needed to retrieve sense ID : TODO");
-   //    return dictionaries[col].getId(word+"/"+str);
- }else{
-   return dictionaries[col].getId(str);
- }
+  if(toint(dic_specification[col][0])==SENSE_ONTOLOGY){
+    PLERROR("word and sense are needed to retrieve sense ID : TODO");
+    //    return dictionaries[col].getId(word+"/"+str);
+  }else{
+    return dictionaries[col].getId(str);
+  }
+  return 1.0;//avoid compilation warning
 }
 
 //! returns element as a string, even if value doesn't map to a string, in which case tostring(value) is returned                               
@@ -117,7 +118,9 @@ void DictionaryVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "input_file", &DictionaryVMatrix::input_file, OptionBase::buildoption,
 		  "The text file from which we create the VMat");
   declareOption(ol, "dic_specification_file", &DictionaryVMatrix::dic_specification_file, OptionBase::buildoption,
-                "File with the path to all the dictionaries\n The file must contains as many lines as attributes in the VMat. Each line contains : dic_type path_to_dic\n where dic_type is 0 (file) or 1 (ontology)\n");
+                "File with the path to all the dictionaries\n The file must contains as many lines as attributes in the VMat. Each line contains : dic_specification path_to_dic\n where dic_specification is 0 (file) or 1 (ontology)\n");
+  declareOption(ol, "dic_specification", &DictionaryVMatrix::dic_specification, OptionBase::buildoption,
+                "Dictionaries specifications");
   declareOption(ol, "use_wordnet_stemmer", &DictionaryVMatrix::use_wordnet_stemmer, OptionBase::buildoption,
                 "Use WordNet stemmer to extract the word stem\n");
   declareOption(ol, "use_lower_case", &DictionaryVMatrix::use_lower_case, OptionBase::buildoption,
@@ -202,24 +205,28 @@ void DictionaryVMatrix::build_()
   //  if(output_file=="")PLERROR("DictionaryVMatrix: you must specify the option output_file\n");
   //DiskVMatrix dvm(output_file, attributes_number,false);
   row.resize(attributes_number);
-  // Read the dictionary specification file to build the dics
-  if(dic_specification_file=="") PLERROR("DictionaryVMatrix: you must specify the option dic_specification_file\n");
-  extractDicType();
-  
+  // Dictionaries
+  // Check at least one dic specification
+  if(dic_specification_file=="" && dic_specification.size()==0) PLERROR("DictionaryVMatrix: you must specify the dictionaries with either dic_specification_file or dic_specification\n");
+  // we have as many dictionaries than attributes
+  dictionaries.resize(attributes_number);
+  if(dic_specification_file!="")extractDicType();
+  if(attributes_number!=dic_specification.size())PLERROR("DictionaryVMatrix: attributes_number (%d) does not match dic_specification size (%d)\n",attributes_number,dic_specification.size());
+  buildDics();
   //  while (!input_stream.eof()){
   for(int i=0;i<input_length;i++){
     getline(input_stream, line, '\n');
     if (line == "" || line[0] == '#') continue;
     tokens = split(line);
-    if (tokens.size()!=dic_type.size())PLERROR("Bad file format in %s : %s", input_file.c_str(),line.c_str());
-    for(int j=0;j<dic_type.size();j++){
+    if (tokens.size()!=dic_specification.size())PLERROR("Bad file format in %s : %s", input_file.c_str(),line.c_str());
+    for(int j=0;j<dic_specification.size();j++){
       // special processing for word sense attribute
       // we need the word to get the sense ID, so we concatenate the word with the sense
-      if(dic_type[j].first==2){
+      if(toint(dic_specification[j][0])==SENSE_ONTOLOGY){
 	data(i,j)=dictionaries[j].getId(tokens[word_attribute_index]+"/"+tokens[j]);
       }else{
 	// in the case of word type
-	if(dic_type[j].first==1){
+	if(toint(dic_specification[j][0])==WORD_ONTOLOGY){
 	  // convert to lower case if wanted
 	  if(use_lower_case)tokens[j]= lowerstring(tokens[j]);
 	  // extract word stem if wanted
@@ -243,7 +250,7 @@ void DictionaryVMatrix::build_()
   //input_stream.close();  
   //dvm.saveAllStringMappings();
   //  string fname;
-  //for(int j=0;j<dic_type.size();j++)
+  //for(int j=0;j<dic_specification.size();j++)
   // {
       //  fname = dvm.getSFIFFilename(j,".dic");
   //  dictionaries[j].save(fname);
@@ -259,7 +266,7 @@ void DictionaryVMatrix::save(const string& filename)
   for(int i=0;i<data.length();i++){
     dvm.appendRow(data(i));
   }
-  for(int j=0;j<dic_type.size();j++){
+  for(int j=0;j<dic_specification.size();j++){
     fname = dvm.getSFIFFilename(j,".dic");
     dictionaries[j].save(fname);
   }
@@ -291,16 +298,9 @@ void  DictionaryVMatrix::extractDicType()
   ifstream file_in(dic_specification_file.c_str());
   if (!file_in) PLERROR("cannot open file %s", dic_specification_file.c_str());
   string line;
-  bool sense_attribute_flag=false;
   vector<string> tokens;
   int dic_count = 0;
-  dic_type.resize(attributes_number);
-  // by defaults, all dictionary are  DEFAULT_UPDATE
-  TVec <bool> dic_mode(attributes_number, (bool)DEFAULT_UPDATE);
-
-  // we have as many dictionaries than attributes
-  dictionaries.resize(attributes_number);
-  
+  dic_specification.resize(attributes_number);
   while (!file_in.eof()){
     line = pgetline(file_in);
     if (line == "" || line[0] == '#') continue;
@@ -308,15 +308,21 @@ void  DictionaryVMatrix::extractDicType()
     tokens = split(line);
     if(tokens.size()!=2 && tokens.size()!=3) PLERROR("Bad file format %s", dic_specification_file.c_str());
     cout<<line<<endl;
+    // resize for type , name and update_mode
+    dic_specification[dic_count].resize(DIC_SPECIFICATION_SIZE);
     // dic type
-    dic_type[dic_count].first=toint(tokens[0]);
+    dic_specification[dic_count][0]=tokens[0];
     // dic name
-    dic_type[dic_count].second= abspath(tokens[1]);
+    dic_specification[dic_count][1]= abspath(tokens[1]);
     // store dic_mode if specified
     if( tokens.size()==3) {
       tokens[2]=lowerstring(tokens[2]);
       // default is false
-      if(tokens[2]=="1" || tokens[2]=="update")dic_mode[dic_count] = true;
+      if(tokens[2]=="1" || tokens[2]=="update"){
+	dic_specification[dic_count][2]= "1";
+      }else{
+	dic_specification[dic_count][2]= "0";
+      }
     }
     // total_lines += ShellProgressBar::getWcAsciiFileLineCount(file);
     dic_count++;
@@ -324,37 +330,45 @@ void  DictionaryVMatrix::extractDicType()
   file_in.close();
   cout << "retrieved " << dic_count << " dictionary files" << endl;
   if(dic_count!=attributes_number)PLERROR("Found only %d lines in %s instead of %d", dic_count,dic_specification_file.c_str(),attributes_number);
+}
 
+void  DictionaryVMatrix::buildDics()
+{
+  bool sense_attribute_flag=false;
+  bool up_param;
   // Build dictionaries
-  for(int i=0;i<dic_type.size();i++){
+  for(int i=0;i<dic_specification.size();i++){
+    // set default update value
+    up_param = DEFAULT_UPDATE;
+    if(dic_specification[i].size()==3){up_param = tobool(dic_specification[i][2]);}
     // Ontology type
-    if(dic_type[i].first==1){
+    if(toint(dic_specification[i][0])==WORD_ONTOLOGY){
       // We have found a word attribute
       word_attribute_index=i;
       // Build ontology if needed
       if(ontology==NULL ){
-	string voc_file = dic_type[i].second + ".voc";
-	string synset_file = dic_type[i].second + ".synsets";
-	string ontology_file = dic_type[i].second + ".ontology";
-	string sense_key_file = dic_type[i].second + ".sense_key";
-	ontology = new WordNetOntology(voc_file, synset_file, ontology_file, sense_key_file, dic_mode[i], false);
+	string voc_file = dic_specification[i][1] + ".voc";
+	string synset_file = dic_specification[i][1] + ".synsets";
+	string ontology_file = dic_specification[i][1] + ".ontology";
+	string sense_key_file = dic_specification[i][1] + ".sense_key";
+	ontology = new WordNetOntology(voc_file, synset_file, ontology_file, sense_key_file,up_param, false);
       }
-      dictionaries[i]=Dictionary(ontology, dic_type[i].second,WORDNET_WORD_DICTIONARY);
+      dictionaries[i]=Dictionary(ontology, dic_specification[i][1],WORDNET_WORD_DICTIONARY);
     }
-    if(dic_type[i].first==2){
+    if(toint(dic_specification[i][0])==SENSE_ONTOLOGY){
       sense_attribute_flag=true;
       if(ontology==NULL ){
-	string voc_file = dic_type[i].second + ".voc";
-	string synset_file = dic_type[i].second + ".synsets";
-	string ontology_file = dic_type[i].second + ".ontology";
-	string sense_key_file = dic_type[i].second + ".sense_key";
-	ontology = new WordNetOntology(voc_file, synset_file, ontology_file, sense_key_file,dic_mode[i] , false);
+	string voc_file = dic_specification[i][1] + ".voc";
+	string synset_file = dic_specification[i][1] + ".synsets";
+	string ontology_file = dic_specification[i][1] + ".ontology";
+	string sense_key_file = dic_specification[i][1] + ".sense_key";
+	ontology = new WordNetOntology(voc_file, synset_file, ontology_file, sense_key_file,up_param, false);
       }
-      dictionaries[i]=Dictionary(ontology, dic_type[i].second,WORDNET_SENSE_DICTIONARY);
+      dictionaries[i]=Dictionary(ontology, dic_specification[i][1],WORDNET_SENSE_DICTIONARY);
     }
     // text file type
-    if(dic_type[i].first==0){
-      dictionaries[i]=Dictionary(dic_type[i].second,dic_mode[i]);
+    if(toint(dic_specification[i][0])==TEXT_FILE){
+      dictionaries[i]=Dictionary(dic_specification[i][1],up_param);
       dictionaries[i].build();
       //cout << dictionaries[i]<<endl;
     }

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.h,v 1.1 2004/08/25 14:44:39 kermorvc Exp $ 
+   * $Id: DictionaryVMatrix.h,v 1.2 2004/08/25 19:36:30 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Christopher Kermorvant
@@ -52,6 +52,9 @@
 #define TEXT_FILE 0
 #define WORD_ONTOLOGY 1
 #define SENSE_ONTOLOGY 2
+
+// number of attributes of dictionary specifications
+#define DIC_SPECIFICATION_SIZE 3
 
 namespace PLearn {
 using namespace std;
@@ -98,7 +101,7 @@ public:
   //! SENSE_ONTOLOGY : 2
   string dic_specification_file;
   //! The dictionary for each attribute
-  vector< pair<int,string> > dic_type;
+  TVec< TVec<string> > dic_specification;
   //! Use wordnet stemmer
   bool use_wordnet_stemmer;
   //! Transform word to lower case
@@ -124,6 +127,7 @@ private:
   // (Please implement in .cc)
   void build_();
   void extractDicType();
+  void buildDics();
 protected: 
 
   //! Declares this class' options
