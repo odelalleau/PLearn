@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.48 2004/04/08 00:33:44 plearner Exp $
+* $Id: VMatrix.cc,v 1.49 2004/04/20 20:42:45 tihocan Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -614,6 +614,18 @@ void VMatrix::setMetaDataDir(const string& the_metadatadir)
 ///////////////////
 void VMatrix::copySizesFrom(VMat m) {
   defineSizes(m->inputsize(), m->targetsize(), m->weightsize());
+}
+
+////////////////////
+// looksTheSameAs //
+////////////////////
+bool VMatrix::looksTheSameAs(VMat m) {
+  return !(
+         this->width()      != m->width()
+      || this->length()     != m->length()
+      || this->inputsize()  != m->inputsize()
+      || this->weightsize() != m->weightsize()
+      || this->targetsize() != m->targetsize() );
 }
 
 string getHost()

@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.38 2004/04/16 14:56:27 tatien Exp $
+   * $Id: VMatrix.h,v 1.39 2004/04/20 20:42:46 tihocan Exp $
    ******************************************************* */
 
 
@@ -135,6 +135,9 @@ public:
   //! Copy the values of inputsize, targetsize and weightsize from the source
   //! matrix m.
   void copySizesFrom(VMat m);
+
+  //! Return true iif it looks like the same matrix, i.e. it has same sizes, width and length.
+  bool looksTheSameAs(VMat m);
   
   inline int inputsize() const { return inputsize_; }
   inline int targetsize() const { return targetsize_; }
