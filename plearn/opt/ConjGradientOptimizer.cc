@@ -36,12 +36,12 @@
  
 
 /* *******************************************************      
-   * $Id: ConjugateGradientOptimizer.cc,v 1.1 2003/04/11 22:04:05 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.1 2003/04/14 18:50:42 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ConjugateGradient.h"
-#include "ConjugateGradientOptimizer.h"
+#include "ConjGradientOptimizer.h"
 
 namespace PLearn <%
 using namespace std;
@@ -49,7 +49,7 @@ using namespace std;
 //
 // Constructors
 //
-ConjugateGradientOptimizer::ConjugateGradientOptimizer(
+ConjGradientOptimizer::ConjGradientOptimizer(
     real the_starting_step_size, 
     real the_epsilon,
     int n_updates, const string& filename, 
@@ -58,7 +58,7 @@ ConjugateGradientOptimizer::ConjugateGradientOptimizer(
   starting_step_size(the_starting_step_size),
   epsilon(the_epsilon) {}
 
-ConjugateGradientOptimizer::ConjugateGradientOptimizer(
+ConjGradientOptimizer::ConjGradientOptimizer(
     VarArray the_params, 
     Var the_cost,
     real the_starting_step_size, 
@@ -69,7 +69,7 @@ ConjugateGradientOptimizer::ConjugateGradientOptimizer(
   starting_step_size(the_starting_step_size),
   epsilon(the_epsilon) {}
 
-ConjugateGradientOptimizer::ConjugateGradientOptimizer(
+ConjGradientOptimizer::ConjGradientOptimizer(
     VarArray the_params, 
     Var the_cost, 
     VarArray the_update_for_measure,
@@ -85,12 +85,12 @@ ConjugateGradientOptimizer::ConjugateGradientOptimizer(
 // 
 // declareOptions
 // 
-void ConjugateGradientOptimizer::declareOptions(OptionList& ol)
+void ConjGradientOptimizer::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "starting_step_size", &ConjugateGradientOptimizer::starting_step_size, OptionBase::buildoption, 
+    declareOption(ol, "starting_step_size", &ConjGradientOptimizer::starting_step_size, OptionBase::buildoption, 
                   "    the initial step size for the line search algorithm\n");
 
-    declareOption(ol, "epsilon", &ConjugateGradientOptimizer::epsilon, OptionBase::buildoption, 
+    declareOption(ol, "epsilon", &ConjGradientOptimizer::epsilon, OptionBase::buildoption, 
                   "    the gradient resolution\n");
 
     inherited::declareOptions(ol);
@@ -99,38 +99,38 @@ void ConjugateGradientOptimizer::declareOptions(OptionList& ol)
 //
 // oldwrite
 //
-void ConjugateGradientOptimizer::oldwrite(ostream& out) const
+void ConjGradientOptimizer::oldwrite(ostream& out) const
 {
-  writeHeader(out, "ConjugateGradientOptimizer", 0);
+  writeHeader(out, "ConjGradientOptimizer", 0);
   inherited::write(out);  
   writeField(out, "starting_step_size", starting_step_size);
   writeField(out, "epsilon", epsilon);
-  writeFooter(out, "ConjugateGradientOptimizer");
+  writeFooter(out, "ConjGradientOptimizer");
 }
 
 //
 // oldread
 //
-void ConjugateGradientOptimizer::oldread(istream& in)
+void ConjGradientOptimizer::oldread(istream& in)
 {
-  int ver = readHeader(in, "ConjugateGradientOptimizer");
+  int ver = readHeader(in, "ConjGradientOptimizer");
   if(ver!=0)
-    PLERROR("In ConjugateGradientOptimizer::read version number %d not supported",ver);
+    PLERROR("In ConjGradientOptimizer::read version number %d not supported",ver);
   inherited::oldread(in);
   readField(in, "starting_step_size", starting_step_size);
   readField(in, "epsilon", epsilon);
-  readFooter(in, "ConjugateGradientOptimizer");
+  readFooter(in, "ConjGradientOptimizer");
 }
 
 //
-// Name and DeepCopy
+// Implement name and deepCopy
 //
-IMPLEMENT_NAME_AND_DEEPCOPY(ConjugateGradientOptimizer);
+IMPLEMENT_NAME_AND_DEEPCOPY(ConjGradientOptimizer);
 
 //
 // optimize
 //
-real ConjugateGradientOptimizer::optimize()
+real ConjGradientOptimizer::optimize()
 {
   ofstream out;
   if (!filename.empty()) {
@@ -144,17 +144,21 @@ real ConjugateGradientOptimizer::optimize()
   params.clearGradient(); // TODO what's the purpose ?
 
   // Initiliazation of the structures for the CONJPOMDP algorithm
-  Vec g(params.sumOfLengths());
-  Vec h(params.sumOfLengths());
-  Vec delta(params.sumOfLengths());
-  computeGradient(params, cost, proppath, g);
+  Vec g(params.nelems());
+  Vec h(params.nelems());
+  Vec delta(params.nelems());
+  computeOppositeGradient(params, cost, proppath, h); 
+  computeOppositeGradient(params, cost, proppath, g); // TODO Use a copy of h instead ?
+  cout << "nupdates =" << nupdates << endl;
 
   // Loop through the epochs
   for (int t=0; !early_stop && t<nupdates; t++) {
 
     // Make one iteration through the CONJPOMDP algorithm
+    cost->fprop();
+    cout << "cost = " << cost->value[0] << " " << cost->value[1] << " " << cost->value[2] << endl;
     early_stop = ConjugateGradient::conjpomdp(
-        computeGradient, 
+        computeOppositeGradient, 
         params, 
         cost,
         proppath, 
@@ -163,9 +167,11 @@ real ConjugateGradientOptimizer::optimize()
         g,
         h,
         delta);
+    early_stop = false; // TODO hack for test purpose
 
     // Display results TODO ugly copy/paste : to be cleaned ?
     meancost += cost->value;
+    every = 2000; // TODO hack for test purpose
     if ((every!=0) && ((t+1)%every==0)) 
       // normally this is done every epoch
     { 
@@ -176,7 +182,8 @@ real ConjugateGradientOptimizer::optimize()
       cout << t+1 << ' ' << meancost << endl;
       if (out)
         out << t+1 << ' ' << meancost << endl;
-      early_stop = early_stop || measure(t+1,meancost); // TODO is it a good idea to use this ?
+     // early_stop = early_stop || measure(t+1,meancost);
+      early_stop = measure(t+1,meancost); // TODO which is the best between this and the one above ?
       early_stop_i = (t+1)/every;
       lastmeancost << meancost;
       meancost.clear();
@@ -186,20 +193,19 @@ real ConjugateGradientOptimizer::optimize()
 }
 
 //
-// computeGradient
+// computeOppositeGradient
 //
-// Given a propagation path and the parameters params,
-// compute the gradient and store it in the "gradient" Vec
-//
-void ConjugateGradientOptimizer::computeGradient(
+void ConjGradientOptimizer::computeOppositeGradient(
     VarArray params,
     Var cost,
     VarArray proppath,
     const Vec& gradient) {
   proppath.clearGradient(); // TODO What does that do exactly ?
-  cost->gradient[0] = 1; // TODO Is this the right choice ?
+  params.clearGradient();
+  cost->gradient[0] = -1;
   proppath.fbprop();
   params.copyGradientTo(gradient);
 }
 
 %> // end of namespace PLearn
+

@@ -36,13 +36,13 @@
  
 
 /* *******************************************************      
-   * $Id: ConjugateGradientOptimizer.h,v 1.1 2003/04/11 22:04:06 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.1 2003/04/14 18:50:45 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 
-#ifndef CONJUGATEGRADIENTOPTIMIZER_INC
-#define CONJUGATEGRADIENTOPTIMIZER_INC
+#ifndef CONJGRADIENTOPTIMIZER_INC
+#define CONJGRADIENTOPTIMIZER_INC
 
 #include "Optimizer.h"
 
@@ -51,14 +51,14 @@ using namespace std;
 
 
 /*
- * CLASS CONJUGATEGRADIENTOPTIMIZER
+ * CLASS ConjGradientOptimizer
  *
  * An optimizer using the conjugate gradient method.
  * Currently only implements one method, but will hopefully evolve to be able
  * to use other algorithms.
  *
  */
-class ConjugateGradientOptimizer : public Optimizer {
+class ConjGradientOptimizer : public Optimizer {
 
   typedef Optimizer inherited;
 
@@ -69,13 +69,13 @@ public:
   real epsilon;             // gradient resolution
 
   // Constructors and other usual stuff
-  ConjugateGradientOptimizer(
+  ConjGradientOptimizer(
       real the_starting_step_size=0.01, 
       real the_epsilon=0.01,
       int n_updates=1, const string& filename="", 
       int every_iterations=1);
   
-  ConjugateGradientOptimizer(
+  ConjGradientOptimizer(
       VarArray the_params, 
       Var the_cost,
       real the_starting_step_size=0.01, 
@@ -83,7 +83,7 @@ public:
       int n_updates=1, const string& filename="", 
       int every_iterations=1);
 
-  ConjugateGradientOptimizer(
+  ConjGradientOptimizer(
       VarArray the_params, 
       Var the_cost, 
       VarArray the_update_for_measure,
@@ -92,7 +92,7 @@ public:
       int n_updates=1, const string& filename="", 
       int every_iterations=1);
 
-  DECLARE_NAME_AND_DEEPCOPY(ConjugateGradientOptimizer);
+  DECLARE_NAME_AND_DEEPCOPY(ConjGradientOptimizer);
 
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies) { inherited::makeDeepCopyFromShallowCopy(copies); }
 
@@ -112,9 +112,9 @@ public:
   virtual void oldread(istream& in);
   virtual real optimize();
 
-  // Function used to compute the gradient
-  // The gradient is stored in the last parameter
-  static void computeGradient(
+  // Given a propagation path and the parameters params,
+  // compute the opposite of the gradient and store it in the "gradient" Vec.
+  static void computeOppositeGradient(
       VarArray params,
       Var cost,
       VarArray proppath,

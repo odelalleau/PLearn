@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjugateGradient.cc,v 1.1 2003/04/11 22:04:05 tihocan Exp $
+   * $Id: ConjugateGradient.cc,v 1.2 2003/04/14 18:50:45 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,25 +50,43 @@ using namespace std;
 //
 // conjpomdp
 //
-bool ConjugateGradient::conjpomdp (void (*grad)(VarArray, Var, VarArray, const Vec&),
-                          VarArray params,
-                          Var costs,
-                          VarArray proppath,
-                          real starting_step_size,
-                          real epsilon,
-                          Vec g,
-                          Vec h,
-                          Vec delta) {
+bool ConjugateGradient::conjpomdp (
+    void (*grad)(VarArray, Var, VarArray, const Vec&),
+    VarArray params,
+    Var costs,
+    VarArray proppath,
+    real starting_step_size,
+    real epsilon,
+    Vec g,
+    Vec h,
+    Vec delta) {
+
+  int i;
   // First perform a line search in the current search direction (h)
   LineSearch::gSearch(grad, params, costs, proppath, h, starting_step_size, epsilon);
 
   (*grad)(params, costs, proppath, delta);
-  real gamma = dot(delta - g, delta) / pownorm(g);
-  h = delta + gamma * h;
-  if (dot(h, delta) < 0) {
-    h = delta;
+//  cout << "norm(grad)" << pownorm(g) << endl;
+  real norm_g = pownorm(g);
+  // g <- delta - g
+  for (i=0; i<g.length(); i++) {
+    g[i] = delta[i] - g[i];
   }
-  g = delta;
+  real gamma = dot(g, delta) / norm_g;
+  // h <- delta + gamma * h
+  for (i=0; i<h.length(); i++) {
+    h[i] = delta[i] + gamma * h[i];
+  }
+  if (dot(h, delta) < 0) {
+    // h <- delta
+    for (i=0; i<h.length(); i++) {
+      h[i] = delta[i];
+    }
+  }
+  // g <- delta
+  for (i=0; i<g.length(); i++) {
+    g[i] = delta[i];
+  }
   // We stop when the norm of the gradient is small enough
   return (pownorm(g) < epsilon);
 };

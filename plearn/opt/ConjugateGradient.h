@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjugateGradient.h,v 1.1 2003/04/11 22:04:05 tihocan Exp $
+   * $Id: ConjugateGradient.h,v 1.2 2003/04/14 18:50:45 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,8 +66,6 @@ class ConjugateGradient {
     // by J.Baxter, L. Weaver, P. Bartlett.
     // This is just one single iteration of the algorithm.
     // Return true when the convergence is obtained.
-    // Note that it's been modified to compute the minimum instead of the
-    // maximum (which was comupted in the original algorithm).
     static bool conjpomdp (
         // the given grad function needs to compute the gradient
         void (*grad)(VarArray params, Var cost, VarArray proppath, const Vec& gradient),
@@ -77,8 +75,8 @@ class ConjugateGradient {
         real starting_step_size, // the initial step size for the line search
         real epsilon,       // the gradient resolution (stop criterion)
         Vec g,              // storage place, first initialized as the gradient
-        Vec h,              // storage place, size of gradient
-        Vec delta);         // same as h
+        Vec h,              // same as g
+        Vec delta);         // storage place, size of the gradient
     // TODO Would be better to have a function to initialize g
 };
 
