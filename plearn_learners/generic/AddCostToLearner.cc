@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.21 2005/01/25 14:35:22 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.22 2005/01/25 17:55:34 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -171,6 +171,13 @@ void AddCostToLearner::build_()
   int min_verb = 2;
   bool display = (verbosity >= min_verb);
   int os = learner_->outputsize();
+  if (os < 0) {
+    // The sub-learner does not know its outputsize yet: we skip the build for
+    // now, it will have to be done later.
+    if (display)
+      cout << "In AddCostToLearner::build_ - The sub-learner does not know its outputsize yet, skipping" << endl;
+    return;
+  }
   sub_learner_output.resize(os);
   desired_target.resize(os);
   if (rescale_output || rescale_target) {
