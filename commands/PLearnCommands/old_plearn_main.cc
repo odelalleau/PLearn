@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// plearnmain.cc
+// old_plearn_main.cc
 // Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux, Rejean Ducharme
 //
 // Redistribution and use in source and binary forms, with or without
@@ -33,12 +33,12 @@
 
 
 /* *******************************************************      
-   * $Id: plearnmain.cc,v 1.6 2002/10/21 05:18:59 plearner Exp $
+   * $Id: old_plearn_main.cc,v 1.1 2002/10/25 03:21:00 plearner Exp $
    ******************************************************* */
 
 
 // #include <sstream>
-#include "plearnmain.h"
+#include "old_plearn_main.h"
 
 #include "MatIO.h"
 #include "fileutils.h"
@@ -455,26 +455,6 @@ void use(const string& modelfile, const string& datasetalias)
 
 }
 
-void displayObjectHelp(ostream& out, const string& classname, bool fulloptions)
-{
-  Object* obj = TypeFactory::instance().newObject(classname);
-  if(!obj)
-    {
-      cerr << "Learner type " << classname << " unknown." << endl;
-      cerr << "Did you #include it, does it correctly define classname() (through an IMPLEMENT_NAME_AND_DEEPCOPY for ex.)  and has it indeed been linked with your program?" << endl;
-
-      exit(0);
-    }
-  else
-    {
-      if(fulloptions)
-        out << obj->optionHelp();
-      else
-        out << obj->help();
-      delete obj;
-    }
-}
-
 void usage()
 {
   cerr << "Usage: " << endl
@@ -517,7 +497,7 @@ void usage()
   exit(0);
 }
 
-int plearnmain(int argc, char** argv)
+int old_plearn_main(int argc, char** argv)
 {
   PLMPI::init(&argc, &argv);
 
@@ -597,25 +577,6 @@ int plearnmain(int argc, char** argv)
     for(unsigned int i=0;i<ali.size();i++)
       cout<<ali[i]<<endl;
   }
-  else // we suppose it's a filename of a .psave or .pexp file containing Objects to be run
-    {
-      PIFStream in(command);
-      if(!in)
-        {
-          cerr << "** ERROR: " << command << " appears to be neither a valid plearn command type, nor an existing filename" << endl;
-          cerr << "Type plearn with no argument to see the help." << endl;
-          exit(0);
-        }
-      
-      while(in)
-        {
-          PP<Object> o = readObject(in);
-          o->run();
-          in.skipBlanksAndCommentsAndSeparators();
-          // cerr << bool(in) << endl;
-          // cerr << in.peek() << endl;
-        }
-    }
 
   PLMPI::finalize();
   return 0;

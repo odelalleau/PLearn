@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.10 2002/10/21 05:18:52 plearner Exp $
+   * $Id: Object.cc,v 1.11 2002/10/25 03:21:00 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -492,6 +492,26 @@ Object* readObject(PStream &in, unsigned int id)
             in.copies_map_in[id] = o;
     }
     return o;
+}
+
+void displayObjectHelp(ostream& out, const string& classname, bool fulloptions)
+{
+  Object* obj = TypeFactory::instance().newObject(classname);
+  if(!obj)
+    {
+      cerr << "Learner type " << classname << " unknown." << endl;
+      cerr << "Did you #include it, does it correctly define classname() (through an IMPLEMENT_NAME_AND_DEEPCOPY for ex.)  and has it indeed been linked with your program?" << endl;
+
+      exit(0);
+    }
+  else
+    {
+      if(fulloptions)
+        out << obj->optionHelp();
+      else
+        out << obj->help();
+      delete obj;
+    }
 }
 
 PStream& operator<<(PStream &out, const Object * &o)

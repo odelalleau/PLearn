@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.7 2002/10/03 07:35:27 plearner Exp $
+   * $Id: Object.h,v 1.8 2002/10/25 03:21:00 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -567,6 +567,36 @@ inline void declareOption(OptionList& ol, const string& optionname, OptionType *
 
   PStream &operator>>(PStream &in, Object * &o);
   PStream &operator<<(PStream &out, const Object * &o);
+
+
+//! Will display the help message for an object of the given classname
+void displayObjectHelp(ostream& out, const string& classname, bool fulloptions=false);
+
+//! Will disply the list of all subclasses of the given BaseClass
+//! that are registered in the type factory
+template<class BaseClass>
+void displayRegisteredSubClassesOf(const string& baseclassname, ostream& out)
+{
+  out << "******************************************* " << endl;
+  out << "**  Registered subclasses of " << baseclassname << " ** " << endl;
+  out << "******************************************* " << endl;
+  const TypeMap& tmap = TypeFactory::instance().getTypeMap();
+  TypeMap::const_iterator it = tmap.begin();
+  TypeMap::const_iterator itend = tmap.end();
+  while(it!=itend)
+    {
+      // cerr << it->first << endl;
+      Object* o = (*(it->second))();
+      if(dynamic_cast<BaseClass*>(o))
+        out << it->first << endl;
+      if(o)
+        delete o;
+      ++it;
+    }
+  out << "-------------------------------------" << endl;
+}
+
+
 /*
   inline pl_istream &
   operator>>(pl_istream &in, PP<Object> &o)

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.3 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: Variable.h,v 1.4 2002/10/25 03:21:00 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -176,6 +176,10 @@ public:
   //! This corresponds to "propagating" the size from its
   //! parent's size, much as fprop propagates the values
   void sizeprop();
+
+  //! Calls sizeprop, then fprop
+  inline void sizefprop()
+  { sizeprop(); fprop(); }
 
   //! set this Variable's parents.  To use with default constructor.
   virtual void setParents(const VarArray& parents);

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.h,v 1.3 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: VarArray.h,v 1.4 2002/10/25 03:21:00 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -141,6 +141,8 @@ class VarArray: public Array<Var>
   void setDontBpropHere(bool val);
 
   void fprop();
+  void sizeprop();
+  void sizefprop();
   void bprop();
   void bbprop();
   void rfprop();

@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// plearnmain.h
+// old_plearn_main.h
 // Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux, Rejean Ducharme
 //
 // Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,11 @@
 
 
 /* *******************************************************      
-   * $Id: plearnmain.h,v 1.2 2002/10/03 07:35:28 plearner Exp $
+   * $Id: old_plearn_main.h,v 1.1 2002/10/25 03:21:00 plearner Exp $
    ******************************************************* */
+
+#ifndef old_plearn_main_INC
+#define old_plearn_main_INC
 
 #include "general.h"
 #include "TypeFactory.h"
@@ -42,36 +45,11 @@
 namespace PLearn <%
 using namespace std;
 
-template<class T>
-void displayRegisteredSubClassesOf(const string& baseclassname, ostream& out)
-{
-  out << "******************************************* " << endl;
-  out << "**  Registered subclasses of " << baseclassname << " ** " << endl;
-  out << "******************************************* " << endl;
-  const TypeMap& tmap = TypeFactory::instance().getTypeMap();
-  TypeMap::const_iterator it = tmap.begin();
-  TypeMap::const_iterator itend = tmap.end();
-  while(it!=itend)
-    {
-      // cerr << it->first << endl;
-      Object* o = (*(it->second))();
-      if(dynamic_cast<T*>(o))
-        out << it->first << endl;
-      if(o)
-        delete o;
-      ++it;
-    }
-  out << "-------------------------------------" << endl;
-}
-
 //! reads a modelalias -> object_representation map from a model.aliases file
 map<string, string> getModelAliases(const string& filename);
 vector<string> getMultipleModelAliases(const string& model);
-void displayObjectHelp(ostream& out, const string& classname, bool fulloptions=false);
-int plearnmain(int argc, char** argv);
+int old_plearn_main(int argc, char** argv);
 
 %> // end of namespace PLearn
 
-
-
-
+#endif

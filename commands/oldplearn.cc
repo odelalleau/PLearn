@@ -33,10 +33,10 @@
 
 
 /* *******************************************************      
-   * $Id: oldplearn.cc,v 1.1 2002/10/23 21:18:24 plearner Exp $
+   * $Id: oldplearn.cc,v 1.2 2002/10/25 03:20:55 plearner Exp $
    ******************************************************* */
 
-#include "plearnmain.h"
+#include "old_plearn_main.h"
 
 // Available Splitters:
 #include "TrainTestSplitter.h"

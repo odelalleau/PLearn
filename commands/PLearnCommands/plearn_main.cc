@@ -33,18 +33,32 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.1 2002/10/22 09:35:54 plearner Exp $
+   * $Id: plearn_main.cc,v 1.2 2002/10/25 03:21:00 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
 #include "PLearnCommandRegistry.h"
 #include "stringutils.h"
+#include "random.h"
+#include "PLMPI.h"
+
+// Things to get help on
+#include "getDataSet.h"
+#include "Learner.h"
+#include "Splitter.h"
+#include "VMatrix.h"
+#include "Optimizer.h"
+#include "Kernel.h"
 
 namespace PLearn <%
 using namespace std;
 
 int plearn_main(int argc, char** argv)
 {
+  PLMPI::init(&argc, &argv);
+
+  seed();
+
   string programname = argv[0];
   if(argc<=1)
     {
@@ -60,17 +74,69 @@ int plearn_main(int argc, char** argv)
             {
               cerr << "Available commands are: " << endl;
               PLearnCommandRegistry::print_command_summary(cerr);
-              cerr << "Type '" << programname << " help xxx' to get detailed help on command xxx" << endl;
+              cerr << endl;
+              cerr << "Type 'plearn help xxx' to get detailed help on command xxx \n\n" 
+                "You may also run plearn with the name of a plearn script file as argument\n"
+                "A plearn script file must contain at least one runnable PLearn object\n"
+                "Typical runnable PLearn objects are 'Experiment' and 'ComparisonExperiment'\n\n"
+                "You can type 'plearn help xxx' to get a description and the list of build options\n"
+                "for any instantiable PLearn object xxx \n\n"
+                "In addition you can get a list of all instantiable subclasses of the following \n"
+                "base classes yyy by typing 'plearn help yyy \n':"
+                "   Learner, Splitter, VMatrix, Optimizer, Kernel \n\n"
+                "Finally 'plearn help datasets' will print some help on datasets\n" << endl;
             }
           else
-            PLearnCommandRegistry::help(argv[2], cout);
+            {
+              string aboutwhat = argv[2];
+              if(PLearnCommandRegistry::is_registered(aboutwhat))
+                PLearnCommandRegistry::help(aboutwhat, cout);
+              else if(aboutwhat=="datasets")
+                cout << getDataSetHelp();
+              else if(aboutwhat=="Learner")
+                displayRegisteredSubClassesOf<Learner>("Learner", cout);
+              else if(aboutwhat=="Optimizer")
+                displayRegisteredSubClassesOf<Optimizer>("Optimizer", cout);
+              else if(aboutwhat=="Kernel")
+                displayRegisteredSubClassesOf<Kernel>("Kernel", cout);
+              else if(aboutwhat=="Splitter")
+                displayRegisteredSubClassesOf<Splitter>("Splitter", cout);
+              else if(aboutwhat=="VMatrix")
+                displayRegisteredSubClassesOf<VMatrix>("VMatrix", cout);
+              else
+                displayObjectHelp(cout, aboutwhat);
+            }
         }
-      else
+      else if(PLearnCommandRegistry::is_registered(command))
         {
           vector<string> args = stringvector(argc-1, argv+1);
           PLearnCommandRegistry::run(command, args);
         }
+      else // we suppose it's a filename of a .psave or .pexp file containing Objects to be run
+        {
+          PIFStream in(command);
+          if(!in)
+            {
+              cerr << "** ERROR: " << command << " appears to be neither a valid plearn command type, nor an existing filename" << endl;
+              cerr << "Type plearn with no argument to see the help." << endl;
+              exit(0);
+            }
+      
+          while(in)
+            {
+              PP<Object> o = readObject(in);
+              o->run();
+              in.skipBlanksAndCommentsAndSeparators();
+              // cerr << bool(in) << endl;
+              // cerr << in.peek() << endl;
+            }
+        }
+
+
     }
+
+
+  PLMPI::finalize();
   return 0;
 }
 

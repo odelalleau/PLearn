@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.cc,v 1.2 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: VarArray.cc,v 1.3 2002/10/25 03:21:00 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -642,6 +642,20 @@ void VarArray::fprop()
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->fprop();
+}
+
+void VarArray::sizeprop()
+{
+  for(int i=0; i<size(); i++)
+    if (!array[i].isNull())
+      array[i]->sizeprop();
+}
+
+void VarArray::sizefprop()
+{
+  for(int i=0; i<size(); i++)
+    if (!array[i].isNull())
+      array[i]->sizefprop();
 }
 
 void VarArray::bprop()

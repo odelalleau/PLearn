@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.6 2002/10/23 21:18:24 plearner Exp $
+   * $Id: plearn.cc,v 1.7 2002/10/25 03:20:55 plearner Exp $
    ******************************************************* */
 
 // Available Splitters:
@@ -54,6 +54,8 @@
 #include "LocallyWeightedDistribution.h"
 #include "NeuralNet.h"
 #include "GradientOptimizer.h"
+// #include "AutoStepGradientOptimizer.h"
+
 #include "ConstantModel.h"
 #include "MultiLearner.h"
 #include "LinearRegressor.h"
@@ -66,7 +68,8 @@
 #include "ParzenRegressor.h"
 #include "ManifoldParzenDensity.h"
 
-// #include "ViewCommand.h"
+#include "ViewCommand.h"
+#include "Experiment.h"
 
 #include "plearn_main.h"
 

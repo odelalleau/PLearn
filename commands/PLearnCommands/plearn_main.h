@@ -33,8 +33,11 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.h,v 1.1 2002/10/22 09:35:54 plearner Exp $
+   * $Id: plearn_main.h,v 1.2 2002/10/25 03:21:00 plearner Exp $
    ******************************************************* */
+
+#ifndef plearn_main_INC
+#define plearn_main_INC
 
 namespace PLearn <%
 using namespace std;
@@ -42,3 +45,5 @@ using namespace std;
 int plearn_main(int argc, char** argv);
 
 %> // end of namespace PLearn
+
+#endif

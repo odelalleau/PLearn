@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: GradientOptimizer.cc,v 1.2 2002/10/25 03:21:00 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -106,7 +106,6 @@ string GradientOptimizer::help() const
     "\n"
     "GradientOptimizer derives form Optimizer. \n"
     + Optimizer::help();
-<<<<<<< GradientOptimizer.cc
 }
 
 void GradientOptimizer::readOptionVal(istream& in, const string& optionname)
