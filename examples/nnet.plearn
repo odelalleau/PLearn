@@ -2,7 +2,7 @@
 
 PTester(
   # string: Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
-  expdir = "nnet";
+  expdir = "expdir-nnet";
 
   # VMat: The dataset to use for training/testing (will be split according to what is specified in the testmethod)
   dataset = AutoVMatrix(specification="UCI_pima-indians-diabetes all" inputsize = 8 targetsize = 1);
@@ -15,10 +15,10 @@ PTester(
   #     by the underlying learner (see its getTrainCostNames and getTestCostNames methods) 
   #   - S1 and S2 are a statistic, i.e. one of: E (expectation), V(variance), MIN, MAX, STDDEV, ... 
   #     S2 is computed over the samples of a given dataset split. S1 is over the splits. 
-  statnames = [ "test1" "test2" ]
+  statnames = [ ]
   # TVec< TVec< string > >: A list of lists of masks. If provided, each of the lists is used to compose the statnames_processed.
   # If not provided the statnames are those in the 'statnames' list. See the class help for an example.
-  statmask = [ [ "*.E[stable_cross_entropy]" "*.E[binary_class_error]" ] [ "E[*]" ] ]
+  statmask = [ [ "test#1-2#" ] [ "*.E[stable_cross_entropy]" "*.E[binary_class_error]" ] [ "E[*]" ] ]
   # PP< Splitter >: The splitter to use to generate one or several train/test pairs.
   splitter = TrainTestSplitter(
     test_fraction = .10
