@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.23 2004/05/26 16:11:30 tihocan Exp $ 
+   * $Id: GaussMix.h,v 1.24 2004/05/26 16:55:30 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -73,7 +73,6 @@ protected:
   int n_eigen_computed;
   int nsamples;
   Vec p_j_x;
-  Mat posteriors;
 
   // Fields below are not options.
 
@@ -85,6 +84,10 @@ protected:
   TVec<Mat> eigenvectors_y_x; //!< The eigenvectors of the covariance of Y|x.
   TVec<Mat> full_cov;         //!< The full covariance matrix.
   TVec<Mat> y_x_mat;          //!< The product K2 * K1^-1 to compute E[Y|x].
+
+  //! The posterior probabilities P(j | s_i), where j is the index of a Gaussian
+  //! and i is the index of a sample.
+  Mat posteriors;
 
   //! The initial weights of the samples s_i in the training set, copied for
   //! efficiency concerns.

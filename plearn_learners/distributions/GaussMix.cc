@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.35 2004/05/26 16:11:30 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.36 2004/05/26 16:55:30 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -166,10 +166,6 @@ void GaussMix::declareOptions(OptionList& ol)
 
   declareOption(ol, "p_j_x", &GaussMix::p_j_x, OptionBase::learntoption,
                 "The probability p(j|x), where x is the input part (is computed by exp(log_p_j_x).");
-
-  declareOption(ol, "posteriors", &GaussMix::posteriors, OptionBase::learntoption,   // TODO Remove from options (too much space on disk).
-                "The posterior probabilities P(j | s_i), where j is the index of a Gaussian,\n"
-                "and i is the index of a sample.");
 
   declareOption(ol, "sigma", &GaussMix::sigma, OptionBase::learntoption,
                 "The variance in all directions, for type == 'spherical'.\n");
