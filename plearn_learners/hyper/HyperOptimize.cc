@@ -36,7 +36,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperOptimize.cc,v 1.5 2005/03/17 14:38:42 tihocan Exp $ 
+   * $Id: HyperOptimize.cc,v 1.6 2005/03/17 16:33:55 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file HyperOptimize.cc */
@@ -290,6 +290,10 @@ Vec HyperOptimize::optimize()
   // report best result again
   reportResult(-1,best_results);
 
+  if (best_results.isEmpty())
+    // This could happen for instance if all results are NaN.
+    PLWARNING("In HyperOptimize::optimize - Could not find a best result, something "
+              "must be wrong");
   return best_results;
 }
 
