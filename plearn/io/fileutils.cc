@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.25 2004/03/03 18:13:30 yoshua Exp $
+   * $Id: fileutils.cc,v 1.26 2004/03/04 03:30:10 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -360,8 +360,12 @@ void saveStringInFile(const string& filepath, const string& text)
 
   void rm(const string& file)
   {
+#ifdef WIN32
+    DeleteFile(file.c_str());
+#else
     string command = "\\rm -rf " + file;
     system(command.c_str());
+#endif
   }
 
   void mv(const string& file)
