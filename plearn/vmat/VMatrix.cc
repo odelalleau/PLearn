@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.50 2004/05/14 02:35:33 tihocan Exp $
+* $Id: VMatrix.cc,v 1.51 2004/06/10 17:18:51 tihocan Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -579,6 +579,7 @@ string VMatrix::getValString(int col, real val) const
 { 
   if(is_missing(val))
     return "";
+  init_map_sr();
   if(map_rs[col].find(val)==map_rs[col].end())
     return "";
   else return map_rs[col][val];
