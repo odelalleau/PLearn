@@ -252,7 +252,7 @@ pymakeOption( name = 'safeopt',
 pymakeOption( name = 'checkopt',
               description = 'some variation on optimized mode',
               compileroptions = '-Wall -O3 -funroll-loops' )
-
+  
 ### Same optimization options as -opt
 pymakeOption( name = 'gprof',
               description = 'optimized mode with profiler support (-pg)',
@@ -265,14 +265,15 @@ pymakeOption( name = 'safegprof',
               linkeroptions = '-pg' )
 
 lapack_linkeroptions = '-llapack'
-
-if platform=='darwin':
-    lapack_linkeroptions = '-L/sw/lib/ -llapack'
-
 blas_linkeroptions = '-lblas -lg2c'
 
+# Jasmin : In OS X, there is a framework with blas and lapack
+#if platform=='darwin':
+#    lapack_linkeroptions = '-L/sw/lib/ -llapack'
 if platform=='darwin':
-    blas_linkeroptions = '-L/sw/lib/ -lcblas -lf77blas -latlas -lg2c'
+    blas_linkeroptions = '-framework vecLib'
+    lapack_linkeroptions = ''
+#    blas_linkeroptions = '-L/sw/lib/ -lcblas -lf77blas -latlas -lg2c'
 
 pymakeOption( name = 'noblas',
               description = 'compilation and linking without BLAS',
