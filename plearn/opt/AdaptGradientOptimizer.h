@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.h,v 1.6 2003/10/07 15:18:34 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.h,v 1.7 2003/10/07 16:38:00 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,6 +48,7 @@
 #ifndef AdaptGradientOptimizer_INC
 #define AdaptGradientOptimizer_INC
 
+// TODO: check all includes are needed
 #include "Optimizer.h"
 #include "NeuralNet.h"
 #include "SumOfVariable.h"
@@ -68,6 +69,7 @@ using namespace std;
       typedef Optimizer inherited;
       
     public:
+
       //!  gradient descent specific parameters
       //!  (directly modifiable by the user)
       real learning_rate; // current learning rate
@@ -80,6 +82,7 @@ using namespace std;
       //! 0  : none
       //! 1  : basic
       //! 2  : ALAP1
+      //! 3  : variance
       int learning_rate_adaptation;
       real adapt_coeff1;  //!< a coefficient for learning rate adaptation
       real adapt_coeff2;  //!< a coefficient for learning rate adaptation
@@ -90,14 +93,16 @@ using namespace std;
       NeuralNet neural_lr;
 
     private:
+
       bool stochastic_hack; // true when we're computing a stochastic gradient
       Vec learning_rates;   // used to store the individual learning rates
       Vec gradient;         // used to store the gradient
       Vec tmp_storage;      // used to store various stuff
-      // used to store the previous learning rates evolution
+      // used to store the previous weights evolution, it can be used to
+      // see how many times a weight has increased / decreased consecutively
       Vec old_evol;
-      Array<Mat> oldgradientlocations; // used for the stochastic hack
-      int cost_stage; // the last stage when cost was computed
+      Array<Mat> oldgradientlocations; // used for the stochastic hack // TODO: still used ?
+      int cost_stage; // the last stage when cost was computed // TODO: still used ?
 
     public: 
 
@@ -173,11 +178,6 @@ using namespace std;
   protected:
 
     static void declareOptions(OptionList& ol);
-
-  public:
-
-    // Crap stuff, to be removed later
-    real bidlr(real minlr);
 
   };
 
