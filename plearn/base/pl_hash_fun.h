@@ -39,6 +39,7 @@
 #  include <hash_set> //to get stl_hash_fun.h ... (template<> class hash)
 #else
 #  include <ext/hash_set> //to get stl_hash_fun.h ... (template<> class hash)
+using namespace __gnu_cxx;
 #endif
 #include <string>
 
@@ -83,28 +84,38 @@ using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////
 
+#if __GNUC__ < 3
 namespace std <%
+#else
+namespace __gnu_cxx <%
+#endif
+using std::string;
 
 
 //hash functions for strings
+template<>
 struct hash<string>
 {
-  size_t operator()(const string& __s) const { return __stl_hash_string(__s.c_str()); }
+  size_t operator()(const string& __s) const { return hash<const char*>()(__s.c_str()); }
 };
 
+template<>
 struct hash<const string>
 {
-  size_t operator()(const string& __s) const { return __stl_hash_string(__s.c_str()); }
+  size_t operator()(const string& __s) const { return hash<const char*>()(__s.c_str()); }
+  //size_t operator()(const string& __s) const { return __stl_hash_string(__s.c_str()); }
 };
 
 
 //for doubles 
+template<>
 struct hash<double>
 {
   size_t operator()(double x) const { return PLearn::hashval(x); }
 };
 
 //for floats 
+template<>
 struct hash<float>
 {
   size_t operator()(float x) const { return PLearn::hashval(x); }

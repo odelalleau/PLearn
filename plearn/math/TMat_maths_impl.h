@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.5 2002/10/18 21:03:04 ducharme Exp $
+   * $Id: TMat_maths_impl.h,v 1.6 2002/10/23 21:23:00 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -5026,7 +5026,11 @@ template<class T>
 %> // end of namespace PLearn
  
 
+#if __GNUC__ < 3
 namespace std <%
+#else
+namespace __gnu_cxx <%
+#endif
 
 template<class T>
 struct hash<PLearn::TVec<T> >
