@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.18 2004/05/05 13:53:01 tihocan Exp $
+* $Id: VMat_maths.cc,v 1.19 2004/05/19 13:06:32 tihocan Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -423,6 +423,10 @@ void computeInputMeanAndVariance(VMat d, Vec& meanvec, Vec& var)
   {
     real mu=meanvec[i]-offset[i];
     var[i]-=mu*mu;
+    if (var[i] < 0) {
+      // This can happen because of numerical imprecisions.
+      var[i] = 0;
+    }
   }
 }
 
