@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.14 2003/05/05 13:00:29 tihocan Exp $
+   * $Id: GradientOptimizer.cc,v 1.15 2003/05/06 15:16:46 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -217,7 +217,8 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
       oldgradientlocations[i] = params[i]->defineGradientLocation(params[i]->matValue);
   }
 
-  meancost.clear();
+  meancost.clear(); // TODO Move to build_ ?
+  
   int stage_max = stage + nstages; // the stage to reach
 
   for (; !early_stop && stage<stage_max; stage++) {
@@ -239,6 +240,7 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
       cost->gradient[0] = -learning_rate;
 
     proppath.fbprop();
+
     meancost += cost->value;
     
     // Move along the chosen direction
@@ -268,6 +270,7 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
   }
 
   meancost /= real(nstages);
+
   cout << stage << " : " << meancost << endl;
   early_stop = measure(stage+1,meancost);
 
