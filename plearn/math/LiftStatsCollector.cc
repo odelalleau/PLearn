@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.11 2004/03/09 16:39:02 tihocan Exp $
+ * $Id: LiftStatsCollector.cc,v 1.12 2004/04/14 16:30:15 plearner Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -52,12 +52,12 @@ using namespace std;
 ////////////////////////
 LiftStatsCollector::LiftStatsCollector() 
   : inherited(),
+  count_fin(0),
   is_finalized(false),
   nstored(0),
   nsamples(0),
   npos(0),
   output_column_index(0),
-  count_fin(0),
   lift_fraction(0.1),
   opposite_lift(0),
   output_column(""),

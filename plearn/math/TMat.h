@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.34 2004/03/09 16:42:19 tihocan Exp $
+   * $Id: TMat.h,v 1.35 2004/04/14 16:30:15 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -938,6 +938,118 @@ TMatRowsIterator<T> operator+(typename TMatRowsIterator<T>::difference_type n,
   return r += n;
 }
 
+/*
+
+//! Model of the Random Access Iterator concept for iterating through the
+//! ROWS of a TMat.  The basic idea is that operator* returns the current
+//! row as an Array
+
+template <class T>
+class TMatRowsAsArraysIterator
+{
+public:
+  //! Some useful typedefs
+  typedef random_access_iterator_tag iterator_category;
+  typedef Array<T>                    value_type;
+  typedef ptrdiff_t                  difference_type;
+  typedef Array<T>*                   pointer;
+  typedef Array<T>&                   reference;
+  
+private:
+  TMat<T> mat;
+  int i;         //!< current row 
+
+public:
+  TMatRowsAsArraysIterator()
+    : i(-1) {}
+
+  TMatRowsAsArraysIterator(TMat<T> m, int which_row = 0)
+    : mat(m), i(which_row) {}
+
+  // Implement trivial iterator functions
+  bool operator==(const TMatRowsAsArraysIterator& other) const 
+  {
+    return i == other.i && mat == other.mat;
+  }
+
+  reference operator*() {
+    return Array<T>(mat(i));
+  }
+
+  // cannot define operator-> here since we cannot return a pointer to a
+  // temporary (e.g. stack-based) vector and expect this to work properly...
+  
+  // Implement forward iterator functions
+  TMatRowsAsArraysIterator& operator++() {
+    ++i;
+    return *this;
+  }
+
+  TMatRowsAsArraysIterator operator++(int) {
+    TMatRowsAsArraysIterator r(*this);
+    ++i;
+    return r;
+  }
+
+  // Implement bidirectional iterator functions
+  TMatRowsAsArraysIterator& operator--() {
+    --i;
+    return *this;
+  }
+
+  TMatRowsAsArraysIterator operator--(int) {
+    TMatRowsAsArraysIterator r(*this);
+    --i;
+    return r;
+  }
+
+  // Implement random access iterator functions
+  TMatRowsAsArraysIterator& operator+=(difference_type n) {
+    i += n;
+    return *this;
+  }
+
+  TMatRowsAsArraysIterator operator+(difference_type n) {
+    TMatRowsAsArraysIterator r(*this);
+    r += n;
+    return r;
+  }
+  
+  TMatRowsAsArraysIterator& operator-=(difference_type n) {
+    i -= n;
+    return *this;
+  }
+
+  TMatRowsAsArraysIterator operator-(difference_type n) {
+    TMatRowsAsArraysIterator r(*this);
+    r -= n;
+    return r;
+  }
+
+  difference_type operator-(const TMatRowsAsArraysIterator& y) {
+    return i - y.i;
+  }
+  
+  reference operator[](difference_type n) {
+    return Array<T>(mat(i));
+  }
+
+  bool operator<(const TMatRowsAsArraysIterator& y) {
+    return i < y.i;
+  }
+};
+
+template <class T>
+TMatRowsAsArraysIterator<T> operator+(typename TMatRowsAsArraysIterator<T>::difference_type n,
+                              const TMatRowsAsArraysIterator<T>& y)
+{
+  TMatRowsAsArraysIterator<T> r(y);
+  return r += n;
+}
+
+*/
+
+
 
 //! Model of the Random Access Iterator concept for iterating through a
 //! single column of a TMat, one row at a time.  The basic idea is that
@@ -1079,7 +1191,8 @@ public:
   typedef T* rowelements_iterator; // iterator over elements of a
                                    // particular row
   typedef TMatRowsIterator<T> rows_iterator;
-  typedef TMatColRowsIterator<T> colrows_iterator;
+  //  typedef TMatRowsAsArraysIterator<T> rows_as_arrays_iterator;
+  //  typedef TMatColRowsIterator<T> colrows_iterator;
 
   TMat<T>()
     :offset_(0), mod_(0), length_(0), width_(0)
@@ -1158,6 +1271,18 @@ public:
   TMatRowsIterator<T> rows_end() {
     return TMatRowsIterator<T>(data()+length_*mod_, width_, mod_);
   }
+
+  //! Return an iterator over all rows of the matrix.  No const version for
+  //! now
+  /*
+  TMatRowsAsArraysIterator<T> rows_as_arrays_begin() {
+    return TMatRowsAsArraysIterator<T>(*this, 0);
+  }
+
+  TMatRowsAsArraysIterator<T> rows_as_arrays_end() {
+    return TMatRowsAsArraysIterator<T>(*this, length_);
+  }
+  */
 
   //! Return an iterator over a single column of the matrix. No const
   //! version for now.  In other words, this iterator views a single column
@@ -2254,6 +2379,20 @@ PStream & operator>>(PStream &in, TMat<T> &m)
   m.read(in);
   return in;
 }
+
+inline string join(const TVec<string>& s, const string& separator)
+{
+  string result;
+  for(int i=0; i<s.size(); i++)
+  {
+    result += s[i];
+    if(i<s.size()-1)
+      result += separator;
+  }
+  return result;
+}
+
+
 
 /*^*************************************^*/
 

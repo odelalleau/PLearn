@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.18 2004/03/19 15:42:12 yoshua Exp $
+   * $Id: Array.h,v 1.19 2004/04/14 16:30:13 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -102,6 +102,10 @@ class Array: public TVec<T>
         for(int i=0; i<length_; i++)
           array[i] = other[i];
       }
+
+    Array<T>(const TVec<T>& other)
+      : TVec<T>(other)
+      {}
 
     Array<T>(const vector<T> &other)
       : TVec<T>(other.size())

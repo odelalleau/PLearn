@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.33 2004/03/20 03:00:56 tihocan Exp $
+   * $Id: StatsCollector.cc,v 1.34 2004/04/14 16:30:15 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -379,7 +379,7 @@ RealMapping StatsCollector::getAllValuesMapping(TVec<bool>* to_be_included,
     if (to_be_included) {
       to_include = (*to_be_included)[i];
     }
-    int count_in_range = it->second.n;
+    real count_in_range = it->second.n;
     if (tolerance > 0) {
       for (; itup != counts.end(); itup++) {
         if (itup->first - epsilon <= up_val) {
