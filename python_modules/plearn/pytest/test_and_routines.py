@@ -16,7 +16,7 @@ from   IntelligentDiff                import *
 
 import plearn.utilities.versionning   as     versionning
 versionning.project_module( "PyTest", __name__,
-                            "$Id: test_and_routines.py,v 1.13 2004/12/15 13:51:08 dorionc Exp $"
+                            "$Id: test_and_routines.py,v 1.14 2004/12/20 17:04:42 dorionc Exp $"
                             )
 
 __all__ = [
@@ -279,13 +279,13 @@ class Test(FrozenObject):
         os.makedirs( results )
         return backup
 
-    def formatted_decription(self):
+    def formatted_description(self):
         fdesc = [ "In %s"%self.test_directory, "" ]
         
         if string.lstrip(self.description, ' \n') != "":
             fdesc.extend( toolkit.boxed_lines(self.description, 50, indent='    ')+[""] )
 
-        return string.join(['      '+line for line in fdesc], '\n')
+        return string.join(["    "+line for line in fdesc], '\n')
 
     def get_name(self):
         return self.name
@@ -408,10 +408,9 @@ class Routine(Task):
 
     ## Overrides run and succeeded
     def run(self):
-        tname            = self.test.get_name()
-        routine_and_name = "%s %s" % ( self.classname(), tname ) 
-        self.format_n_print("LAUCHED %s" % routine_and_name)
-        self.format_n_print(self.test.formatted_decription(), ' ', ' ')
+        self.format_n_print("LAUCHED %s" % self.classname())
+        self.format_n_print("%s" % self.test.get_name())
+        vprint(self.test.formatted_description(), 1)
         
         try:
             if self.test.is_disabled():
@@ -438,11 +437,8 @@ class Routine(Task):
 
     def signal_completion(self):
         tname            = self.test.get_name()
-        routine_and_name = "%s %s" % ( self.classname(), tname ) 
-
-        self.format_n_print( "FINISHED %s -- %s" %
-                             ( routine_and_name, str(self.status) )
-                             )
+        self.format_n_print( "FINISHED %s" % self.classname() )
+        self.format_n_print( "%s -- %s" % (tname, str(self.status)) )
         self.format_n_print( Test.current_stats() )
         vprint("\n", 1)
 

@@ -202,6 +202,15 @@ def no_none( orig ):
             nonone.append(elem)
     return nonone
 
+def parse_indent(s):
+    indent = ""
+    for ch in s:
+        if ch == ' ':
+            indent += ' '
+        else:
+            break
+    return indent
+    
 def plural(nb, sing='', plur='s'):
     if nb > 1:
         return plur
@@ -265,6 +274,10 @@ class default_roperators(object):
     __metaclass__ = default_roperators_metaclass
                 
 if __name__ == "__main__":
+
+    ### TBMoved in formatting.py
+    ###raw_input( len(parse_indent('   allo')) )
+
     class lop( default_roperators ):
         def test(cls):
             t = cls()
@@ -294,62 +307,3 @@ if __name__ == "__main__":
 
     lop.test()
 
-##     class other_super:
-##         def __getattr__(self, k):
-##             def p(key):
-##                 print key
-##             return p
-
-##     class lop_first( default_roperators, other_super ):
-##         def test(cls):
-##             t = cls()
-##             print t + 10 
-##             print
-##             print 10 + t
-##             print
-##             try:
-##                 t << 10
-##                 print "SHOULD NOT WORK!!!"
-##             except Exception:
-##                 print "Failed as expected."
-
-##         test = classmethod(test)
-
-##         def __init__(self, val=0):
-##             self.val = val
-
-##         def __str__(self):
-##             return "lop_first(%d)"%self.val
-
-##         def __add__(self, val):
-##             print val
-##             return lop_first( self.val + val )
-
-##     lop_first.test()
-
-##     class lop_second( other_super, default_roperators ):
-##         def test(cls):
-##             t = cls()
-##             print t + 10 
-##             print
-##             print 10 + t
-##             print
-##             try:
-##                 t << 10
-##                 print "SHOULD NOT WORK!!!"
-##             except Exception:
-##                 print "Failed as expected."
-
-##         test = classmethod(test)
-
-##         def __init__(self, val=0):
-##             self.val = val
-
-##         def __str__(self):
-##             return "lop_second(%d)"%self.val
-
-##         def __add__(self, val):
-##             print val
-##             return lop_second( self.val + val )
-
-##     lop_second.test()
