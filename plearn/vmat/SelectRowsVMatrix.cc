@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.14 2004/06/10 16:11:50 tihocan Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.15 2004/06/18 16:45:23 tihocan Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
@@ -90,7 +90,7 @@ string SelectRowsVMatrix::getValString(int col, real val) const
 { return source->getValString(col,val); }
 
 string SelectRowsVMatrix::getString(int row, int col) const
-{ return source->getString(row,col); }
+{ return source->getString(indices[row], col); }
 
 const map<string,real>& SelectRowsVMatrix::getStringToRealMapping(int col) const
 { return source->getStringToRealMapping(col);}
