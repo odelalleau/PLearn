@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.17 2004/09/27 20:19:31 plearner Exp $ 
+   * $Id: PCA.cc,v 1.18 2004/10/26 21:35:11 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
@@ -51,7 +51,8 @@ PCA::PCA()
 : algo("classical"),
   ncomponents(2),
   sigmasq(0),
-  normalize(true)
+  normalize(false),
+  normalize_warning(true)
 {
 }
 
@@ -84,6 +85,10 @@ void PCA::declareOptions(OptionList& ol)
       " - 'em_orth'   : a variant of 'em', where orthogonal components are directly computed"
       );
   
+  // TODO Option added October 26th, 2004. Should be removed in a few months.
+  declareOption(ol, "normalize_warning", &PCA::normalize_warning, OptionBase::buildoption, 
+      "(Temp. option). If true, display a warning about the 'normalize' option.");
+  
   // saved options
   declareOption(ol, "mu", &PCA::mu, OptionBase::learntoption,
                 "The (weighted) mean of the samples");
@@ -110,6 +115,9 @@ void PCA::build()
 ////////////
 void PCA::build_()
 {
+  if (normalize_warning)
+    PLWARNING("In PCA - The default value for option 'normalize' is now 0 instead of 1. Make sure you did not rely on this default value,"
+        "and set the 'normalize_warning' option to 0 to remove this warning");
 }
 
 /////////////////////////////

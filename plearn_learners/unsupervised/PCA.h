@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.h,v 1.9 2004/09/14 16:04:59 chrish42 Exp $ 
+   * $Id: PCA.h,v 1.10 2004/10/26 21:35:13 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PCA.h */
@@ -62,6 +62,7 @@ public:
   int ncomponents;  //! The number of principal components to keep (that's also the outputsize)
   real sigmasq;     //! This gets added to the diagonal of the covariance matrix prior to eigen-decomposition
   bool normalize;   //! If true, we divide by sqrt(eigenval) after projecting on the eigenvec.
+  bool normalize_warning;
   
   // Saved options
   Vec mu; //! The (weighted) mean of the samples 
