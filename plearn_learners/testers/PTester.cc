@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.18 2003/11/25 03:45:57 yoshua Exp $ 
+   * $Id: PTester.cc,v 1.19 2003/11/27 14:57:32 lheureup Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -325,10 +325,11 @@ Vec PTester::perform(bool call_forget)
           VMat test_costs;
           force_mkdir(splitdir);
           if(splitdir != "" && save_test_outputs)
+//test_outputs = new AsciiVMatrix(splitdir+setname+"_outputs.amat",outputsize);
             test_outputs = new FileVMatrix(splitdir+setname+"_outputs.pmat",0,outputsize);
           if(splitdir != "" && save_test_costs)
             test_costs = new FileVMatrix(splitdir+setname+"_costs.pmat",0,testcostsize);
-
+      
           test_stats->forget();
           learner->test(testset, test_stats, test_outputs, test_costs);      
           test_stats->finalize();

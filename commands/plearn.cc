@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.39 2003/11/04 21:00:26 ducharme Exp $
+   * $Id: plearn.cc,v 1.40 2003/11/27 14:57:31 lheureup Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -49,6 +49,7 @@
 #include "IndexedVMatrix.h"
 #include "BatchVMatrix.h"
 #include "RegularGridVMatrix.h"
+#include "/u/delallea/LisaPLearn/UserExp/delallea/not-in-cvs/TextFilesVMatrix.h"
 
 // All Available Learners: 
 // #include "KNN.h"
