@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.24 2004/08/03 19:01:32 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.25 2004/08/22 18:09:07 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -171,6 +171,7 @@
 #include <plearn/vmat/TransposeVMatrix.h>
 #include <plearn/vmat/VMatrixFromDistribution.h>
 #include <plearn_learners/language/TextSenseSequenceVMatrix.h>
+#include <plearn/vmat/SelectAttributsSequenceVMatrix.h>
 
 #endif
 
