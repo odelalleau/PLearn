@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: pl_log.h,v 1.1 2004/10/27 04:29:34 chapados Exp $ 
+   * $Id: pl_log.h,v 1.2 2004/12/01 01:51:03 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -60,6 +60,14 @@ namespace PLearn {
 #define PL_LOG_VERBOSITY 1000
 #endif
 
+enum VerbosityLevels {
+  VLEVEL_MAND     = 0,    // Mandatory
+  VLEVEL_IMP      = 1,    // Important
+  VLEVEL_NORMAL   = 5,    // Normal
+  VLEVEL_DBG      = 10,   // Debug Info
+  VLEVEL_EXTREME  = 20    // Extreme Verbosity
+}; 
+  
 class PL_Log
 {
 public:
@@ -107,7 +115,13 @@ protected:
 
 //! MAIN INTERFACE to the logging system
 #define PL_LOG(v) if (v <= PL_LOG_VERBOSITY) PL_Log::instance().logger(v)
-
+#define MAND_LOG      PL_LOG(VLEVEL_MAND)
+#define IMP_LOG       PL_LOG(VLEVEL_IMP) 
+#define NORMAL_LOG    PL_LOG(VLEVEL_NORMAL)
+#define DBG_LOG       PL_LOG(VLEVEL_DBG)   
+#define EXTREME_LOG   PL_LOG(VLEVEL_EXTREME)
+  
+  
 //! Manipulator that displays a separator with the Logger count
 PStream& plsep(PStream&);
 
