@@ -131,7 +131,9 @@ void SequentialValidation::declareOptions(OptionList& ol)
   declareOption(
     ol, "init_train_size", &SequentialValidation::init_train_size,
     OptionBase::buildoption,
-    "Size of the first training set. \n");
+    "Size of the first training set.  Before starting the train/test cycle,\n"
+    "the method setTestStartTime() is called on the learner with init_train_size\n"
+    "as argument.");
 
   declareOption(
     ol, "last_test_time", &SequentialValidation::last_test_time,
@@ -308,8 +310,15 @@ void SequentialValidation::run()
     }
   }
 
-  // Ensure correct build and reset internal state
+  // Ensure correct build of learner and reset internal state.  We call
+  // setTestStartTime TWICE, because some learners need it before build,
+  // and because other learners, such as SequentialSelector-types, will not
+  // have finished to construct the complete structure of sub-learners
+  // until AFTER build, and we want the setTestStartTime() message to
+  // propagate to everybody.
+  learner->setTestStartTime(init_train_size);
   learner->build();
+  learner->setTestStartTime(init_train_size);
   learner->resetInternalState();
   
   VMat test_outputs;

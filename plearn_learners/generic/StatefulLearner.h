@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StatefulLearner.h,v 1.6 2004/09/14 16:04:56 chrish42 Exp $ 
+   * $Id: StatefulLearner.h,v 1.7 2005/02/01 16:23:23 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Réjean Ducharme
@@ -60,8 +60,9 @@ protected:
   //! this counter upon processing computeOutputAndCosts.
   mutable int current_test_t;
 
-public:
-  //! "Suggested" time-step at which testing should start
+private:
+  //! "Suggested" time-step at which testing should start;
+  //! this should be read and set using the accessors below
   int test_start_time;
   
 public:
@@ -139,6 +140,13 @@ public:
   //! Set the dataset of an AssetManager (if any) to this testset
   //! Default: do nothing!
   virtual void setTestSet(VMat testset);
+
+  //! Set the suggested test_start_time; virtual so that derived classes
+  //! may override to call the method of sublearners
+  virtual void setTestStartTime(int t);
+
+  //! Return the current test_start_time
+  int getTestStartTime() const { return test_start_time; }
 };
 
 // Declares a few other classes and functions related to this class.

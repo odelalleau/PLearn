@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StatefulLearner.cc,v 1.6 2004/09/14 16:04:56 chrish42 Exp $ 
+   * $Id: StatefulLearner.cc,v 1.7 2005/02/01 16:23:22 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Réjean Ducharme
@@ -125,6 +125,13 @@ void StatefulLearner::setTestSet(VMat testset)
 {}
 
 bool StatefulLearner::isStatefulLearner() const
-{ return true; }
+{
+  return true;
+}
+
+void StatefulLearner::setTestStartTime(int t)
+{
+  test_start_time = t;
+}
 
 } // end of namespace PLearn
