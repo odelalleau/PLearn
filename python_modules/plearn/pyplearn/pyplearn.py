@@ -460,7 +460,11 @@ U{Epytext Markup Language Manual<http://epydoc.sourceforge.net/epytext.html>}
 should not take you more than 15 minutes and you will be ready to document your
 code.
 """
-__all__ = ['ref', 'bind', 'plvar', 'TMat', 'plargs', 'plarg_defaults', 'pl', 'include']
+import types
+
+__all__ = [ 'ref', 'bind', 'plvar', 'TMat',
+            'plargs', 'plarg_defaults', 'bind_plargs',
+            'pl', 'include']
 
 class plearn_snippet:
     """Objects of this class are used to wrap the parts of the Python code
