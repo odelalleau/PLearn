@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.cc,v 1.16 2004/02/20 21:11:48 chrish42 Exp $
+   * $Id: AdaptGradientOptimizer.cc,v 1.17 2004/04/21 14:47:48 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -128,7 +128,7 @@ void AdaptGradientOptimizer::declareOptions(OptionList& ol)
 
     declareOption(ol, "decrease_constant", &AdaptGradientOptimizer::decrease_constant, OptionBase::buildoption, 
                   "    the learning rate decrease constant : each update of the weights is scaled by the\n\
-         coefficient 1/(1 + stage * decrease_constant\n");
+         coefficient 1/(1 + stage * decrease_constant)\n");
 
     declareOption(ol, "learning_rate_adaptation", &AdaptGradientOptimizer::learning_rate_adaptation, OptionBase::buildoption, 
                   "    the way the learning rates evolve :\n\
@@ -152,7 +152,10 @@ void AdaptGradientOptimizer::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
-PLEARN_IMPLEMENT_OBJECT(AdaptGradientOptimizer, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(AdaptGradientOptimizer,
+    "An optimizer that performs gradient descent with learning rate adaptation.",
+    ""
+);
 
 ////////////
 // build_ //
