@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: PLearnCommandRegistry.h,v 1.5 2004/02/20 21:11:40 chrish42 Exp $
+   * $Id: PLearnCommandRegistry.h,v 1.6 2004/11/25 23:00:22 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,8 +48,14 @@
 namespace PLearn {
 using namespace std;
 
+// Forward-declare
+class HTMLHelpCommand;
+  
 class PLearnCommandRegistry
 {
+  // Minor help for the HTML helper here...
+  friend class HTMLHelpCommand;
+
 protected:
   typedef map<string, PLearnCommand*> command_map;
 
