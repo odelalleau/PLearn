@@ -106,8 +106,8 @@ void SequentialModelSelector::train()
   cout << "SequentialModelSelector.last_train_t = " << last_train_t << endl;
 #endif
 
-  string s1 = "seq_model/predictions_train_t=" + tostring(last_train_t);
-  string s2 = "seq_model/errors_train_t=" + tostring(last_train_t);
+  string s1 = append_slash(expdir) + "predictions_train_t=" + tostring(last_train_t); //"seq_model/predictions_train_t=" + tostring(last_train_t);
+  string s2 = append_slash(expdir) + "errors_train_t=" + tostring(last_train_t);
   saveAsciiWithoutSize(s1, predictions);
   saveAsciiWithoutSize(s2, errors);
 
@@ -150,8 +150,8 @@ void SequentialModelSelector::test(VMat test_set, PP<VecStatsCollector> test_sta
   cout << "SequentialModelSelector.last_test_t = " << last_test_t << endl;
 #endif
 
-  string s1 = "seq_model/predictions_test_t=" + tostring(last_test_t);
-  string s2 = "seq_model/errors_test_t=" + tostring(last_test_t);
+  string s1 = append_slash(expdir) + "predictions_test_t=" + tostring(last_test_t);
+  string s2 = append_slash(expdir) + "errors_test_t=" + tostring(last_test_t);
   saveAsciiWithoutSize(s1, predictions);
   saveAsciiWithoutSize(s2, errors);
 }
