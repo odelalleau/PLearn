@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RemapLastColumnVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: RemapLastColumnVMatrix.cc,v 1.4 2004/04/05 23:01:57 morinf Exp $
    ******************************************************* */
 
 #include "RemapLastColumnVMatrix.h"
@@ -45,6 +45,8 @@ using namespace std;
 
 
 /** RemapLastColumnVMatrix **/
+
+PLEARN_IMPLEMENT_OBJECT(RemapLastColumnVMatrix, "ONE LINE DESC", "NO HELP");
 
 RemapLastColumnVMatrix::RemapLastColumnVMatrix()
     : if_equals_val(0), then_val(0), else_val(0)
@@ -62,6 +64,29 @@ RemapLastColumnVMatrix::RemapLastColumnVMatrix(VMat the_underlying_distr, real i
     underlying_distr(the_underlying_distr), if_equals_val(if_equals_value),
     then_val(then_value), else_val(else_value)
 {
+}
+
+void
+RemapLastColumnVMatrix::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+RemapLastColumnVMatrix::build_()
+{
+}
+
+void
+RemapLastColumnVMatrix::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "underlying_distr", &RemapLastColumnVMatrix::underlying_distr, OptionBase::buildoption, "");
+    declareOption(ol, "mapping", &RemapLastColumnVMatrix::mapping, OptionBase::buildoption, "");
+    declareOption(ol, "if_equals_val", &RemapLastColumnVMatrix::if_equals_val, OptionBase::buildoption, "");
+    declareOption(ol, "then_val", &RemapLastColumnVMatrix::then_val, OptionBase::buildoption, "");
+    declareOption(ol, "else_val", &RemapLastColumnVMatrix::else_val, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
 }
 
 void RemapLastColumnVMatrix::getRow(int i, Vec samplevec) const

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RemapLastColumnVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: RemapLastColumnVMatrix.h,v 1.4 2004/04/05 23:01:57 morinf Exp $
    ******************************************************* */
 
 
@@ -83,6 +83,11 @@ class RemapLastColumnVMatrix: public RowBufferedVMatrix
     //!  Warning: VMFields are NOT YET handled by this constructor
     RemapLastColumnVMatrix(VMat the_underlying_distr, real if_equals_value, real then_value=+1, real else_value=-1);    
 
+    PLEARN_DECLARE_OBJECT(RemapLastColumnVMatrix);
+    static void declareOptions(OptionList &ol);
+
+    virtual void build();
+
     virtual void getRow(int i, Vec samplevec) const;
     virtual void reset_dimensions() 
     { 
@@ -90,6 +95,8 @@ class RemapLastColumnVMatrix: public RowBufferedVMatrix
       width_=underlying_distr->width(); 
       length_=underlying_distr->length(); 
     }
+private:
+    void build_();
 };
 
 inline VMat remapLastColumn(VMat d, Mat mapping)
@@ -98,6 +105,7 @@ inline VMat remapLastColumn(VMat d, Mat mapping)
 inline VMat remapLastColumn(VMat d, real if_equals_value, real then_value=1.0, real else_value=-1.0)
 { return new RemapLastColumnVMatrix(d, if_equals_value, then_value, else_value); }
 
+DECLARE_OBJECT_PTR(RemapLastColumnVMatrix);
 
 } // end of namespcae PLearn
 #endif

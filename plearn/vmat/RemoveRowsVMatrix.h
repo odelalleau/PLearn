@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RemoveRowsVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: RemoveRowsVMatrix.h,v 1.4 2004/04/05 23:02:40 morinf Exp $
    ******************************************************* */
 
 
@@ -70,15 +70,12 @@ class RemoveRowsVMatrix: public VMatrix
     RemoveRowsVMatrix() {}; //!<  default constructor (for automatic deserialization)
 
     //! Copy the original fieldinfos upon construction
-    RemoveRowsVMatrix(VMat the_distr, Vec the_indices=Vec() )
-      : inherited(the_distr->length()-the_indices.length(), the_distr->width()),
-        distr(the_distr), indices(the_indices.copy())
-    {
-      fieldinfos = the_distr->fieldinfos;
-      
-      if(indices)
-        sortElements(indices);
-    }
+    RemoveRowsVMatrix(VMat the_distr, Vec the_indices=Vec() );
+
+    PLEARN_DECLARE_OBJECT(RemoveRowsVMatrix);
+    static void declareOptions(OptionList &ol);
+
+    virtual void build();
 
     //!  the given rownum of the underlying distr will also be excluded
     void remove(int rownum)
@@ -97,6 +94,9 @@ class RemoveRowsVMatrix: public VMatrix
   virtual void getSubRow(int i, int j, Vec v) const;
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
+
+private:
+    void build_();
 };
 
 inline VMat removeRows(VMat d, Vec rownums)
@@ -104,6 +104,8 @@ inline VMat removeRows(VMat d, Vec rownums)
 
 inline VMat removeRow(VMat d, int rownum)
 { return new RemoveRowsVMatrix(d,Vec(1,rownum)); }
+
+DECLARE_OBJECT_PTR(RemoveRowsVMatrix);
 
 } // end of namespcae PLearn
 #endif

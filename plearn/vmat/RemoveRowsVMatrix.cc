@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RemoveRowsVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: RemoveRowsVMatrix.cc,v 1.3 2004/04/05 23:02:40 morinf Exp $
    ******************************************************* */
 
 #include "RemoveRowsVMatrix.h"
@@ -44,6 +44,39 @@ namespace PLearn {
 using namespace std;
 
 /** RemoveRowsVMatrix **/
+
+PLEARN_IMPLEMENT_OBJECT(RemoveRowsVMatrix, "ONE LINE DESC", "NO HELP");
+
+RemoveRowsVMatrix::RemoveRowsVMatrix(VMat the_distr, Vec the_indices)
+  : inherited(the_distr->length()-the_indices.length(), the_distr->width()),
+    distr(the_distr), indices(the_indices.copy())
+{
+    build();
+}
+
+void
+RemoveRowsVMatrix::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+RemoveRowsVMatrix::build_()
+{
+    if (distr)
+        fieldinfos = distr->fieldinfos;
+    if (indices)
+        sortElements(indices);
+}
+
+void
+RemoveRowsVMatrix::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "distr", &RemoveRowsVMatrix::distr, OptionBase::buildoption, "");
+    declareOption(ol, "indices", &RemoveRowsVMatrix::indices, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 int RemoveRowsVMatrix::getrownum(int i) const
 {
