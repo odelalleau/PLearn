@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MovingAverageVMatrix.cc,v 1.3 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: MovingAverageVMatrix.cc,v 1.4 2005/02/04 17:42:58 plearner Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -42,6 +42,7 @@
 
 
 #include "MovingAverageVMatrix.h"
+#include <plearn/base/tostring.h>
 
 namespace PLearn {
 using namespace std;

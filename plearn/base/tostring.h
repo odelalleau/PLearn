@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: tostring.h,v 1.1 2005/01/20 20:07:30 dorionc Exp $ 
+   * $Id: tostring.h,v 1.2 2005/02/04 17:42:04 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -47,6 +47,7 @@
 #include <map>
 #include <string>
 #include <plearn/io/PStream.h>
+#include <plearn/io/openString.h>
 
 namespace PLearn {
 using namespace std;
@@ -63,6 +64,16 @@ inline string tostring(const char* s) { return string(s); }
 string tostring(const double& x);
 
 string tostring(const float& x);
+
+
+  template<class T> string tostring2(const T& x, 
+                                     PStream::mode_t io_formatting = PStream::raw_ascii)
+  {
+    string s;
+    PStream out = openString(s, io_formatting, "w");
+    out << x << flush;
+    return s;
+  }
   
 /*! ******************
     * Implementation *
