@@ -39,8 +39,6 @@
 #define SEQUENTIAL_MODEL_SELECTOR
 
 #include "SequentialLearner.h"
-#include "ApFinancialAdvisor.h"
-#include "OracleObjectGenerator.h"
 
 namespace PLearn {
 using namespace std;
@@ -48,14 +46,13 @@ using namespace std;
 /*!
 */
 
-class SequentialModelSelector: public ApFinancialAdvisor
+class SequentialModelSelector: public SequentialLearner
 {
 private:
   // *********************
   // * private members   *
   // *********************
-
-  typedef ApFinancialAdvisor inherited;
+  typedef SequentialLearner inherited;
 
   //! This does the actual building
   void build_();
@@ -65,10 +62,6 @@ private:
 protected:
 
   // *********************
-  // * protected options *
-  // *********************
-  
-  // *********************
   // * protected members *
   // *********************
   
@@ -76,15 +69,6 @@ protected:
   TMat<int> common_cost_indices;
   TVec<int> best_model; // best model selected at time t
   Vec sequence_costs;  // the costs of each model on the training set
-
-  //! List of all the generated models (if any).
-  TVec< PP<ApFinancialAdvisor> > generated_models;
-
-  //! List of all models (generated and/or from the list).
-  TVec< PP<ApFinancialAdvisor> > all_models;
-
-  //! How many models do we have
-  int nb_models;
 
   /*! 
     If true, the model selector will report as costs the paired T tests on common_cost_indices[0] for
@@ -115,11 +99,7 @@ public:
   bool stepwise_save;
 
   //! List of all the models.
-  TVec< PP<ApFinancialAdvisor> > models;  
-
-  //! We can, in addition or instead of a list of models,
-  //! use a model generator
-  PP<OracleObjectGenerator> model_generator;
+  TVec< PP<SequentialLearner> > models;  
 
   //! If the user desires to provide a name for each model instead of model_i
   mutable TVec< string > model_names;
