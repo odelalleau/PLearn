@@ -128,7 +128,11 @@ void SequentialValidation::declareOptions(OptionList& ol)
   declareOption(ol, "save_test_costs", &SequentialValidation::save_test_costs,
     OptionBase::buildoption, "If true, the costs of the tests will be saved in test_costs.pmat \n");
 
-  declareOption(ol, "save_stat_collectors", &SequentialValidation::save_stat_collectors, OptionBase::buildoption, "If true, stat collectors of each data sets (train/test) will be saved for each split. \n");
+  declareOption(ol, "save_stat_collectors", &SequentialValidation::save_stat_collectors,
+    OptionBase::buildoption, "If true, stat collectors of each data sets (train/test) will be saved for each split. \n");
+
+  declareOption(ol, "provide_learner_expdir", &SequentialValidation::provide_learner_expdir,
+    OptionBase::buildoption, "If true, learning results from the learner will be saved. \n");
 
   declareOption(ol, "matlab_subdir", &SequentialValidation::matlab_subdir, OptionBase::buildoption,
                 "If not empty, the learner matlabSave method will be called with that matlab_subdir at the end of the experiment.\n"
@@ -210,9 +214,10 @@ void SequentialValidation::run()
     split_stats_vm->saveFieldInfos();
   }
 
-  // the learner horizon
+  // some learner parameters
   int horizon = learner->horizon;
   learner->init_train_size = init_train_size;
+  learner->build();
   
   VMat test_outputs;
   VMat test_costs;
