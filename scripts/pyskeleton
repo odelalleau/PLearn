@@ -49,11 +49,13 @@ plearndir = os.environ.get('PLEARNDIR', os.path.join(homedir,'PLearn'))
 
 class Baseclasses:
     def __init__(self, directories):
-        self.directories    = directories
         self.dir_to_classes = {}
         self.classes_to_dir = {}
 
-        for directory in self.directories:
+        for directory in directories:
+            if not os.path.exists(directory):
+                continue
+
             self.dir_to_classes[ directory ] = []
 
             dirlist = os.listdir(directory)            
@@ -76,7 +78,7 @@ class Baseclasses:
         
     def __str__(self):
         lines = []
-        for directory in self.directories:
+        for directory in self.dir_to_classes.iterkeys():
             lines.append( "- From %s\n" % directory )
 
             classes = self.classes(directory)
