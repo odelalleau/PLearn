@@ -1,6 +1,6 @@
 #include "DERIVEDCLASS.h"
 
-namespace PLearn <%%
+namespace PLearn <%
 using namespace std;
 
 DERIVEDCLASS::DERIVEDCLASS() 
@@ -104,4 +104,4 @@ DERIVEDCLASS::DERIVEDCLASS()
     PLERROR("DERIVEDCLASS::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
   }
 
-%%> // end of namespace PLearn
+%> // end of namespace PLearn

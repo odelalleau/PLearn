@@ -186,7 +186,7 @@ public:
   // This implementation does not seem to work: commented out [Pascal]
   // inline operator bool() { return (!pin || *pin) && (!pout || *pout) && (pin || pout); }
   // This is a temporary fix [Pascal]
-  inline operator bool() { return peek()!=-1; }
+  inline operator bool() { return pin && peek()!=-1; }
   
 
   inline istream& rawin() { return *pin; }   //<! access to underlying istream
@@ -199,19 +199,28 @@ public:
   inline int get() { return pin->get(); }
   inline PStream& get(char& c) { pin->get(c); return *this; }
 
-  // inline int peek() { return pin->peek(); }
+  //   inline int peek() { return pin->peek(); }
   // The previous implementation does not seem to work, so we use this [Pascal]:
-  inline int peek() { int c = pin->get(); pin->unget(); return c; }
+  
+  inline int peek() 
+  { 
+    int c = pin->get(); 
+    pin->unget(); 
+    return c; 
+  }
+  
 
   inline PStream& putback(char c) { pin->putback(c); return *this; }
   inline PStream& unget() { pin->unget(); return *this; }
   inline PStream& read(char* s, streamsize n) 
   { 
     // The following line does not Work!!!! [Pascal]
-    // pin->read(s,n);
+    //    pin->read(s,n);
     // So it's temporarily replaced by this (ugly and slow):
+    
     for(streamsize i=0; i<n; i++)
       s[i] = (char) get();
+    
     return *this; 
   }
   inline PStream& put(char c) { pout->put(c); return *this; }

@@ -105,9 +105,22 @@ int main()
   mycout.outmode = PStream::pretty_ascii;
   mycout << "**** AFTER RELOADING: ****" << endl;
   PIFStream in("essai.out");
+  //  pl_streammarker(in.pl_rdbuf());
+
+  //  in.inmode= PStream::raw_ascii;
+  while(in)
+    {
+      string s;
+      in >> s;
+      cout << s << endl;
+    }
+
+
+  /*
   Mat m1;
   in >> m1;
   mycout << "m1=" << m1 << endl;
+
   Mat m2;
   in >> m2;
   mycout << "m2=" << m2 << endl;
@@ -125,6 +138,6 @@ int main()
   Mat m5;
   in >> m5;
   mycout << "m5 = " << m5 << endl;
-
+  */
   return 0;
 }

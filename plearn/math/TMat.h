@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.5 2002/10/21 03:12:17 plearner Exp $
+   * $Id: TMat.h,v 1.6 2002/10/21 21:42:08 zouave Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1115,13 +1115,16 @@ public:
                 char word[6];
                 // !!!! BUG: For some reason, this hangs!!!
                 // in.read(word,5);
+		 
                 for(int i=0; i<5; i++)
                   in.get(word[i]);
+		 
                 word[5]='\0';
                 if(strcmp(word,"TMat(")!=0)
                   PLERROR("In operator>>(PStream&, TMat&) '%s' not a proper header for a TMat!",word);
                 // v.storage = 0;
-                in >> length_ >> width_ >> mod_ >> offset_ >> storage;
+                in >> length_ >> width_ >> mod_ >> offset_;
+		in >> storage;
                 in.skipBlanksAndCommentsAndSeparators();
                 int c = in.get(); // skip ')'
                 if(c!=')')
