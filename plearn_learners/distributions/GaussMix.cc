@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.44 2004/11/24 18:39:54 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.45 2005/01/19 22:28:48 larocheh Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -701,13 +701,27 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(eigenvectors,copies);
   deepCopyField(diags,copies);
   deepCopyField(log_coeff,copies);
+  deepCopyField(log_p_j_x,copies);
+  deepCopyField(log_p_x_j_alphaj,copies);
+  deepCopyField(mu_y_x,copies);
+  deepCopyField(p_j_x,copies);
+
+  deepCopyField(cov_x,copies);
+  deepCopyField(cov_y_x,copies);
+  deepCopyField(eigenvalues_x,copies);
+  deepCopyField(eigenvalues_y_x,copies);
+  deepCopyField(eigenvectors_x,copies);
+  deepCopyField(eigenvectors_y_x,copies);
+  deepCopyField(full_cov,copies);
+  deepCopyField(y_x_mat,copies);
+
   deepCopyField(posteriors,copies);
   deepCopyField(initial_weights,copies);
   deepCopyField(updated_weights,copies);
   deepCopyField(alpha,copies);
   deepCopyField(mu,copies);
   deepCopyField(sigma,copies);
-  PLERROR("In GaussMix::makeDeepCopyFromShallowCopy - Need to complete the implementation");
+  //PLERROR("In GaussMix::makeDeepCopyFromShallowCopy - Need to complete the implementation");
 }
 
 /////////////////////
