@@ -155,7 +155,7 @@ void ManifoldParzen2::train()
   type = "general";
   L = l;
   D = ncomponents;
-  resizeStuff();
+  resizeStuffBeforeTraining();
 //  setMixtureTypeGeneral(l, ncomponents, w); // TODO Remove this line when it works.
 
   // storage for neighbors
@@ -201,7 +201,9 @@ void ManifoldParzen2::train()
 
     alpha[i] = 1.0 / l;
     n_eigen = eigvals.length() - 1;
-    resizeStuff();
+    GaussMix::build();
+    resizeStuffFromOptions();
+    resizeStuffBeforeTraining();
     mu(i) << center;
     eigenvalues(i) << eigvals;
     eigenvalues(i, n_eigen_computed - 1) = lambda0;
