@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.23 2003/08/19 19:55:21 chapados Exp $
+   * $Id: TMat.h,v 1.24 2003/08/28 22:01:40 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -629,7 +629,7 @@ class TVec
       }
 
       //!  return a vector with 1's when (*this)[i]==value for all i, 0 otherwise
-      TVec<bool> operator==(const T& value)
+      TVec<bool> operator==(const T& value) const
       {
         TVec<bool> r(length(), false);
         //elementsEqualTo(*this,value,r);
@@ -642,15 +642,6 @@ class TVec
 
       //!  return true if (*this)[i]==value[i] for all i, 0 otherwise
       bool operator==(const TVec<T>& value) const
-      {
-        if (value.length()!=length()) return false;
-        T* x=data();
-        T* y=value.data();
-        for (int i=0;i<length();i++)
-          if (x[i]!=y[i]) return false;
-        return true;
-      }
-      bool operator==(TVec<T>& value) const
       {
         if (value.length()!=length()) return false;
         T* x=data();
