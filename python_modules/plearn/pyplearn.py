@@ -61,6 +61,9 @@ def _plearn_repr(x):
     elif isinstance(x, dict):
         dict_items = [_plearn_repr(k) + ': ' + _plearn_repr(v) for k, v in x.iteritems()]
         return '{' + ', '.join(dict_items) + '}'
+    elif isinstance(x, tuple) and len(x) == 2:
+        print x
+        return '(' + _plearn_repr(x[0]) + ':' + _plearn_repr(x[1]) + ')'
     elif isinstance(x, plearn_snippet):
         return x.s
     elif isinstance(x, plearn_ref):
@@ -73,9 +76,6 @@ def ref(name):
 
 def bind(name, value):
     plearn_ref.bind(name, value)
-
-def pair(a, b):
-    return plearn_snippet(_plearn_repr(a) + ':' + _plearn_repr(b))
 
 def TMat(x, y, mat):
     return plearn_snippet(_plearn_repr(x) + ' ' + _plearn_repr(y) + ' [' +
