@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.h,v 1.7 2004/02/17 14:52:47 tihocan Exp $
+   * $Id: StackedLearner.h,v 1.8 2004/02/19 21:54:53 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio, Olivier Delalleau
@@ -96,10 +96,15 @@ public:
   //! initialized at construction / setOption time)
   bool train_base_learners;
 
+  //! If set to 1, the output of the base learners on the combiner training set
+  //! will be precomputed in memory before training the combiner.
+  bool precompute_base_learners_output;
+  
   //! optionally put the raw input as additional input of the combiner
   bool put_raw_input;
 
   //! optionally put the costs of all the learners as additional inputs of the combiner
+  //! (NB: this option actually isn't implemented yet)
   bool put_costs;
 
   // ****************

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.9 2003/11/29 18:02:51 tihocan Exp $
+   * $Id: StackedLearner.cc,v 1.10 2004/02/19 21:54:53 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -51,7 +51,9 @@ StackedLearner::StackedLearner()
 /* ### Initialise all fields to their default value here */
   :
   base_train_splitter(0),
-  train_base_learners(true),  put_raw_input(false)
+  train_base_learners(true),
+  precompute_base_learners_output(false),
+  put_raw_input(false)
   {
   }
 
@@ -79,10 +81,12 @@ StackedLearner::StackedLearner()
     declareOption(ol, "base_learners", &StackedLearner::base_learners, OptionBase::buildoption,
                   "A set of 1st level base learners that are independently trained (here or elsewhere)\n"
                   "and whose outputs will serve as inputs to the combiner (2nd level learner)");
+
     declareOption(ol, "combiner", &StackedLearner::combiner, OptionBase::buildoption,
                   "A learner that is trained (possibly on a data set different from the one used to train\n"
                   "the base_learners) using the outputs of the base_learners as inputs. If it is not\n"
                   "provided, then the StackedLearner simply AVERAGES the outputs of the base_learners\n");
+    
     declareOption(ol, "splitter", &StackedLearner::splitter, OptionBase::buildoption,
                   "A Splitter used to select which data subset(s) goes to training the base_learners\n"
                   "and which data subset(s) goes to training the combiner. If not provided then the\n"
@@ -98,6 +102,13 @@ StackedLearner::StackedLearner()
     declareOption(ol, "train_base_learners", &StackedLearner::train_base_learners, OptionBase::buildoption,
                   "whether to train the base learners in the method train (otherwise they should be\n"
                   "initialized properly at construction / setOption time)\n");
+
+    declareOption(ol, "precompute_base_learners_output", &StackedLearner::precompute_base_learners_output, OptionBase::buildoption,
+                  "If set to 1, the output of the base learners on the combiner training set\n"
+                  "will be precomputed in memory before training the combiner (this may speed\n"
+                  "up significantly the combiner training process).");
+
+    
     declareOption(ol, "put_raw_input", &StackedLearner::put_raw_input, OptionBase::buildoption,
                   "whether to put the raw inputs in addition of the base learners outputs, in input of the combiner (default=0)\n");
 
@@ -235,6 +246,12 @@ void StackedLearner::train()
       }
     if (combiner)
     {
+      if (precompute_base_learners_output) {
+        // First precompute the train set of the combiner in memory.
+        VMat precomputed_trainset = combiner->getTrainingSet();
+        precomputed_trainset.precompute();
+        combiner->setTrainingSet(precomputed_trainset);
+      }
       combiner->setTrainStatsCollector(train_stats);
       if (expdir!="")
         combiner->setExperimentDirectory(expdir+"Combiner");
