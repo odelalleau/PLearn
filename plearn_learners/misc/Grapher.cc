@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Grapher.cc,v 1.2 2003/10/29 16:55:49 plearner Exp $ 
+   * $Id: Grapher.cc,v 1.3 2003/11/01 02:16:57 chapados Exp $ 
    ******************************************************* */
 
 /*! \file Grapher.cc */
@@ -493,65 +493,75 @@ void Grapher::computeAutoGridrange()
 
 
 Grapher::Grapher() 
-  :basename("dxplot"), radius(-0.01), bw(false)
+  :basename("dxplot"), task(""), class1_threshold(0.5),
+   radius(-0.01), bw(false)
   {
   }
 
-  PLEARN_IMPLEMENT_OBJECT(Grapher, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(Grapher, "ONE LINE DESCR", "NO HELP");
 
-  void Grapher::declareOptions(OptionList& ol)
-  {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
+void Grapher::declareOptions(OptionList& ol)
+{
+  // ### Declare all of this object's options here
+  // ### For the "flags" of each option, you should typically specify  
+  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+  // ### OptionBase::tuningoption. Another possible flag to be combined with
+  // ### is OptionBase::nosave
 
-    declareOption(ol, "basename", &Grapher::basename, OptionBase::buildoption,
-                  "Base name of the .dx data file to generate. Running this class will generate\n"
-                  "files basename_dset.dx containing targets and outputs for the given dataset positions\n"
-                  "and basename_outputs.dx containing outputs computed at grid positions\n");
-    declareOption(ol, "learner", &Grapher::learner, OptionBase::buildoption,
-                  "The learner to train/test");
-    declareOption(ol, "trainset", &Grapher::trainset, OptionBase::buildoption,
-                  "The training set to train the learner on\n");
-    declareOption(ol, "gridrange", &Grapher::gridrange, OptionBase::buildoption,
-                  "A vector of low:high pairs with as many dimensions as the input space\n"
-                  "ex for 2D: [ -10:10 -3:4 ] \n"
-                  "If empty, it will be automatically inferred from the range of the\n"
-                  "trainset inputs (with an extra 10%)");
-    declareOption(ol, "griddim", &Grapher::griddim, OptionBase::buildoption,
-                  "A vector of integers giving the number of sample coordinates\n"
-                  "for each dimension of the grid. Ex for 2D: [ 100 100 ]\n");
-    declareOption(ol, "radius", &Grapher::radius, OptionBase::buildoption,
-                  "The radius of the discs around data points.\n"
-                  "(If negative, it's considered to be expressed as a percentage of the x range)\n");
-    declareOption(ol, "bw", &Grapher::bw, OptionBase::buildoption,
-                   "Set this to true if you want to generate black and white eps");
-    declareOption(ol, "save_learner_as", &Grapher::save_learner_as, OptionBase::buildoption,
-                   "(Optionally) save trained learner in this file (.psave)");
+  declareOption(ol, "basename", &Grapher::basename, OptionBase::buildoption,
+                "Base name of the .dx data file to generate. Running this class will generate\n"
+                "files basename_dset.dx containing targets and outputs for the given dataset positions\n"
+                "and basename_outputs.dx containing outputs computed at grid positions\n");
+  declareOption(ol, "task", &Grapher::task, OptionBase::buildoption,
+                "Desired plotting task. Can be \"1D regression\",\n"
+                "\"2D clustering\", \"2D density\", \"2D classification\",\n"
+                "\"2D regression\"");
+  declareOption(ol, "class1_threshold", &Grapher::class1_threshold, OptionBase::buildoption,
+                "In the case of 1 output 2D classification, the output threshold to\n"
+                "have class=1 (below the threshold, the class = 0).  The default\n"
+                "is 0.5, which appropriate for sigmoidal-output learners, but use 0\n"
+                "if the learner outputs -1/1, such as for SVM's");
+  declareOption(ol, "learner", &Grapher::learner, OptionBase::buildoption,
+                "The learner to train/test");
+  declareOption(ol, "trainset", &Grapher::trainset, OptionBase::buildoption,
+                "The training set to train the learner on\n");
+  declareOption(ol, "gridrange", &Grapher::gridrange, OptionBase::buildoption,
+                "A vector of low:high pairs with as many dimensions as the input space\n"
+                "ex for 2D: [ -10:10 -3:4 ] \n"
+                "If empty, it will be automatically inferred from the range of the\n"
+                "trainset inputs (with an extra 10%)");
+  declareOption(ol, "griddim", &Grapher::griddim, OptionBase::buildoption,
+                "A vector of integers giving the number of sample coordinates\n"
+                "for each dimension of the grid. Ex for 2D: [ 100 100 ]\n");
+  declareOption(ol, "radius", &Grapher::radius, OptionBase::buildoption,
+                "The radius of the discs around data points.\n"
+                "(If negative, it's considered to be expressed as a percentage of the x range)\n");
+  declareOption(ol, "bw", &Grapher::bw, OptionBase::buildoption,
+                "Set this to true if you want to generate black and white eps");
+  declareOption(ol, "save_learner_as", &Grapher::save_learner_as, OptionBase::buildoption,
+                "(Optionally) save trained learner in this file (.psave)");
 
-    // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
-  }
+  // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
 
-  string Grapher::help()
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "Grapher implements a ...\n";
-  }
+string Grapher::help()
+{
+  // ### Provide some useful description of what the class is ...
+  return 
+    "Grapher implements a ...\n";
+}
 
-  void Grapher::build_()
-  {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
-  }
+void Grapher::build_()
+{
+  // ### This method should do the real building of the object,
+  // ### according to set 'options', in *any* situation. 
+  // ### Typical situations include:
+  // ###  - Initial building of an object from a few user-specified options
+  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+  // ### You should assume that the parent class' build_() has already been called.
+}
 
 real color(int colornum, real lightness)
 {
@@ -722,6 +732,36 @@ void Grapher::run()
   Mat trainoutputs(l, learner->outputsize());
   learner->use(trainset, trainoutputs);
 
+  // Try to determine the task if not specified
+  if (task == "") {
+    if(trainset->inputsize()==1 &&
+       trainset->targetsize()==1 && learner->outputsize()==1)
+      task = "1D regression";
+    else if(trainset->inputsize()==2)
+    {
+      switch(trainset->targetsize())
+      {
+      case 0:  // density estimation or clustering
+        if(learner->outputsize()>1)
+          task = "2D clustering";
+        else
+          task = "2D density";
+        break;
+      case 1: // classif or regression
+        if(learner->outputsize()>1)
+          task = "2D classification";
+        else
+          task = "2D regression";
+        break;
+      default:
+        PLERROR("Tasks with targetsize > 1 (multi-regression) not supported");
+      }
+    }
+    else
+      PLERROR("Task wih inputsize=%d, targetsize=%d, outputsize=%d not supported", 
+              trainset->inputsize(), trainset->targetsize(), learner->outputsize());
+  }
+    
   // Now compute outputs on grid
   if(gridrange.isEmpty())
     computeAutoGridrange();
@@ -730,34 +770,16 @@ void Grapher::run()
   Mat gridoutputs(gridinputs->length(),learner->outputsize());
   learner->use(gridinputs, gridoutputs);
 
-  string task = "";
-
-  if(trainset->inputsize()==1 && trainset->targetsize()==1 && learner->outputsize()==1)
-    task = "1D regression";
-  else if(trainset->inputsize()==2)
-    {
-      switch(trainset->targetsize())
-        {
-        case 0:  // density estimation or clustering
-          if(learner->outputsize()>1)
-            task = "2D clustering";
-          else
-            task = "2D density";
-          break;
-        case 1: // classif or regression
-          if(learner->outputsize()>1)
-            task = "2D classification";
-          else
-            task = "2D regression";
-          break;
-        default:
-          PLERROR("Tasks with targetsize > 1 (multi-regression) not supported");
-        }
+  if (task == "2D classification" && learner->outputsize() == 1) {
+    // Transform a one-class output into a two-class one...
+    Mat newgridoutputs(gridinputs->length(), 2);
+    for (int i=0; i<gridinputs->length(); ++i) {
+      newgridoutputs(i,0) = gridoutputs(i,0) <= class1_threshold;
+      newgridoutputs(i,1) = gridoutputs(i,0) > class1_threshold;
     }
-  else
-    PLERROR("Task wih inputsize=%d, targetsize=%d, outputsize=%d not supported", 
-            trainset->inputsize(), trainset->targetsize(), learner->outputsize());
-            
+    gridoutputs = newgridoutputs;
+  }
+
   cerr << ">>> TASK PERFORMED: " << task << endl;
 
   string epsfname = basename+".eps";

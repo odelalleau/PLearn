@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Grapher.h,v 1.1 2003/08/13 08:13:47 plearner Exp $ 
+   * $Id: Grapher.h,v 1.2 2003/11/01 02:16:57 chapados Exp $ 
    ******************************************************* */
 
 /*! \file Grapher.h */
@@ -66,6 +66,8 @@ public:
   // ************************
 
   string basename;
+  string task;
+  real class1_threshold;
   PP<PLearner> learner;
   VMat trainset;
   TVec<int> griddim;
