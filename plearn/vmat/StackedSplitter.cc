@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedSplitter.cc,v 1.2 2004/09/15 13:45:44 tihocan Exp $ 
+   * $Id: StackedSplitter.cc,v 1.3 2004/09/22 15:35:46 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -185,6 +185,8 @@ int StackedSplitter::nsplits() const
 ////////////////
 void StackedSplitter::setDataSet(VMat the_dataset) {
   initial_splitter->setDataSet(the_dataset);
+  // Reset 'last_k_init' since the dataset has changed.
+  last_k_init = -1;
 }
 
 } // end of namespace PLearn
