@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.6 2003/04/15 21:44:08 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.7 2003/04/22 20:55:17 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,16 +62,57 @@ class ConjGradientOptimizer : public Optimizer {
 
   typedef Optimizer inherited;
 
+  // The various line search algorithms available
+/*  enum LineSearchType {
+    FletcherSearch,
+    GSearch
+  };
+
+  // The various formulas available to find the new search direction
+  enum FindNewDirectionType {
+    CONJPOMDP,
+    FletcherReeves,
+    HestenesStiefel,
+    PolakRibiere
+  };*/ // TODO Use the enums types : but must work with the .plearn parser !
+
 public:
 
-  // Options (also available through setOption)
+  // General options (also available through setOption)
+  int line_search_algo; // the line search algorithm used
+  int find_new_direction_formula; // the formula used
+
+  // GSearch specific options
   real starting_step_size;  // initial step for line search
   real epsilon;             // gradient resolution
+
+  // FletcherSearch specific options
+  real sigma; // in the constraint : abs(f'(m)) < -sigma.f'(0)
+  real rho;   // in the constraint : f(m) < f(0) + m.rho.f'(0)
+  real fmax;  // we stop if we reach cost <= fmax (usually fmax = 0)
+  real stop_epsilon; // we stop when (a-alpha).f'(a) < stop_epsilon (Fletcher)
+  real tau1, tau2, tau3; // bracketing parameters
+
+private:
+
+  // Internal data
+  Vec search_direction;  // current search direction for the line search
+  real last_improvement; // cost improvement during the last iteration
+  Vec tmp_storage;       // used for temporary storage of data
+  
+public:
 
   // Constructors and other usual stuff
   ConjGradientOptimizer(
       real the_starting_step_size=0.01, 
       real the_epsilon=0.01,
+      real the_sigma=0.01,
+      real the_rho=0.005,
+      real the_fmax=0,
+      real the_stop_epsilon=0.0001,
+      real the_tau1=9,
+      real the_tau2=0.1,
+      real the_tau3=0.5,
       int n_updates=1, const string& filename="", 
       int every_iterations=1);
   
@@ -80,6 +121,13 @@ public:
       Var the_cost,
       real the_starting_step_size=0.01, 
       real the_epsilon=0.01,
+      real the_sigma=0.01,
+      real the_rho=0.005,
+      real the_fmax=0,
+      real the_stop_epsilon=0.0001,
+      real the_tau1=9,
+      real the_tau2=0.1,
+      real the_tau3=0.5,
       int n_updates=1, const string& filename="", 
       int every_iterations=1);
 
@@ -89,6 +137,13 @@ public:
       VarArray the_update_for_measure,
       real the_starting_step_size=0.01, 
       real the_epsilon=0.01,
+      real the_sigma=0.01,
+      real the_rho=0.005,
+      real the_fmax=0,
+      real the_stop_epsilon=0.0001,
+      real the_tau1=9,
+      real the_tau2=0.1,
+      real the_tau3=0.5,
       int n_updates=1, const string& filename="", 
       int every_iterations=1);
 
@@ -127,17 +182,16 @@ private:
       real starting_step_size,
       real epsilon,
       Vec g,
-      Vec h,
       Vec delta,
       Vec tmp_storage);
 
-  // Search the minimum in the given direction "search_direction"
-  void lineSearch(
+  // Search the minimum in the current search direction
+  // Return the value of the minimum found
+  real lineSearch(
       void (*grad)(VarArray, Var, VarArray, const Vec&),
       VarArray params,
       Var costs,
       VarArray proppath,
-      Vec search_direction,
       real starting_step_size,
       real epsilon,
       Vec tmp_storage);
@@ -213,21 +267,26 @@ private:
 
   // The line search algorithm described in
   // "Practical Methods of Optimization, 2nd Ed", by Fletcher (1987)
+  // (this function actually just calls fletcherSearchMain)
   real fletcherSearch (
-      real (*f)(real),
-      real (*g)(real),
-      real sigma,
-      real rho,
-      real fmax,
-      real tau1 = 9,
-      real tau2 = 0.1,
-      real tau3 = 0.5,
       real alpha1 = FLT_MAX,
       real mu = FLT_MAX);
+
   
   //--------------------------- UTILITY FUNCTIONS ----------------------------
   
 public:   // TODO For test purpose... remove later
+
+
+  // Return cost->value() after an update of params with step size alpha
+  // in the current search direction
+  // ie : f(x) = cost(params + x*search_direction) in x = alpha
+  static real computeCostValue(real alpha, ConjGradientOptimizer* opt);
+
+  // Return the derivative of the function
+  // f(x) = cost(params + x*search_direction)
+  // in x = alpha
+  static real computeDerivative(real alpha, ConjGradientOptimizer* opt);
 
   // Given a propagation path from params to costs,
   // return the derivative of the function :
@@ -256,17 +315,56 @@ public:   // TODO For test purpose... remove later
       VarArray proppath,
       const Vec& gradient);
 
-  // Finds the minimum of the cubic a.x^3 + b.x^2 + c.x
+  // Put in a, b, c, d the coefficients of the cubic interpolation
+  // given values of f and g=df/dx in 2 points (0 and 1)
+  static void cubicInterpol(
+      real f0, real f1, real g0, real g1,
+      real& a, real& b, real& c, real& d);
+
+
+  // Find the minimum of the cubic interpolation of function f, with g=df/dx,
+  // in the interval [mini, maxi], given values at points p1 and p2
+  static real findMinWithCubicInterpol (
+      real (*f)(real, ConjGradientOptimizer* opt),
+      real (*g)(real, ConjGradientOptimizer* opt),
+      ConjGradientOptimizer* opt,
+      real p1,
+      real p2,
+      real mini,
+      real maxi);
+
+  // The main function for Fletcher's line search algorithm
+  static real fletcherSearchMain (
+      real (*f)(real, ConjGradientOptimizer* opt),
+      real (*g)(real, ConjGradientOptimizer* opt),
+      ConjGradientOptimizer* opt,
+      real sigma,
+      real rho,
+      real fmax,
+      real epsilon,
+      real tau1 = 9,
+      real tau2 = 0.1,
+      real tau3 = 0.5,
+      real alpha1 = FLT_MAX, // if FLT_MAX, then let the algo find a value
+      real mu = FLT_MAX);    // same remark as alpha1
+  
+  // Find the minimum of the cubic a.x^3 + b.x^2 + c.x
   // in the range [mini, maxi]
   static real minCubic(
       real a, real b, real c,
       real mini = -FLT_MAX, real maxi = FLT_MAX);
 
-  // Finds the minimum of the function a.x^2 + b.x
+  // Find the minimum of the function a.x^2 + b.x
   // in the range [mini, maxi]
   static real minQuadratic(
       real a, real b,
       real mini = -FLT_MAX, real maxi = FLT_MAX);
+
+  // Put in a, b, c the coefficients of the quadratic interpolation
+  // given values of f in 2 points (0 and 1) and g=df/dx in 0
+  static void quadraticInterpol(
+      real f0, real f1, real g0,
+      real& a, real& b, real& c);
 
 };
 

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.6 2003/04/15 21:44:08 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.7 2003/04/22 20:55:16 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,22 +52,42 @@ using namespace std;
 ConjGradientOptimizer::ConjGradientOptimizer(
     real the_starting_step_size, 
     real the_epsilon,
+    real the_sigma,
+    real the_rho,
+    real the_fmax,
+    real the_stop_epsilon,
+    real the_tau1,
+    real the_tau2,
+    real the_tau3,
     int n_updates, const string& filename, 
     int every_iterations)
   :inherited(n_updates, filename, every_iterations),
   starting_step_size(the_starting_step_size),
-  epsilon(the_epsilon) {}
+  epsilon(the_epsilon),
+  sigma(the_sigma), rho(the_rho), fmax(the_fmax),
+  stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
+  tau3(the_tau3) {}
 
 ConjGradientOptimizer::ConjGradientOptimizer(
     VarArray the_params, 
     Var the_cost,
     real the_starting_step_size, 
     real the_epsilon,
+    real the_sigma,
+    real the_rho,
+    real the_fmax,
+    real the_stop_epsilon,
+    real the_tau1,
+    real the_tau2,
+    real the_tau3,
     int n_updates, const string& filename, 
     int every_iterations)
   :inherited(the_params, the_cost, n_updates, filename, every_iterations),
   starting_step_size(the_starting_step_size),
-  epsilon(the_epsilon) {}
+  epsilon(the_epsilon),
+  sigma(the_sigma), rho(the_rho), fmax(the_fmax),
+  stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
+  tau3(the_tau3) {}
 
 ConjGradientOptimizer::ConjGradientOptimizer(
     VarArray the_params, 
@@ -75,12 +95,22 @@ ConjGradientOptimizer::ConjGradientOptimizer(
     VarArray the_update_for_measure,
     real the_starting_step_size, 
     real the_epsilon,
+    real the_sigma,
+    real the_rho,
+    real the_fmax,
+    real the_stop_epsilon,
+    real the_tau1,
+    real the_tau2,
+    real the_tau3,
     int n_updates, const string& filename, 
     int every_iterations)
   :inherited(the_params, the_cost, the_update_for_measure,
              n_updates, filename, every_iterations),
   starting_step_size(the_starting_step_size),
-  epsilon(the_epsilon) {}
+  epsilon(the_epsilon),
+  sigma(the_sigma), rho(the_rho), fmax(the_fmax),
+  stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
+  tau3(the_tau3) {}
   
 // 
 // declareOptions
@@ -92,6 +122,33 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
 
     declareOption(ol, "epsilon", &ConjGradientOptimizer::epsilon, OptionBase::buildoption, 
                   "    the gradient resolution\n");
+
+    declareOption(ol, "line_search_algo", &ConjGradientOptimizer::line_search_algo, OptionBase::buildoption, 
+                  "    the line search algorithm\n");
+
+    declareOption(ol, "find_new_direction_formula", &ConjGradientOptimizer::find_new_direction_formula, OptionBase::buildoption, 
+                  "    the formula to find the new search direction\n");
+
+    declareOption(ol, "sigma", &ConjGradientOptimizer::sigma, OptionBase::buildoption, 
+                  "    sigma\n");
+
+    declareOption(ol, "rho", &ConjGradientOptimizer::rho, OptionBase::buildoption, 
+                  "    rho\n");
+
+    declareOption(ol, "fmax", &ConjGradientOptimizer::fmax, OptionBase::buildoption, 
+                  "    the value we will stop at if we manage to reach it\n");
+
+    declareOption(ol, "stop_epsilon", &ConjGradientOptimizer::stop_epsilon, OptionBase::buildoption, 
+                  "    the epsilon parameter to stop when we can't make any more progress\n");
+
+    declareOption(ol, "tau1", &ConjGradientOptimizer::tau1, OptionBase::buildoption, 
+                  "    tau1\n");
+
+    declareOption(ol, "tau2", &ConjGradientOptimizer::tau2, OptionBase::buildoption, 
+                  "    tau2\n");
+
+    declareOption(ol, "tau3", &ConjGradientOptimizer::tau3, OptionBase::buildoption, 
+                  "    tau3\n");
 
     inherited::declareOptions(ol);
 }
@@ -105,6 +162,15 @@ void ConjGradientOptimizer::oldwrite(ostream& out) const
   inherited::write(out);  
   writeField(out, "starting_step_size", starting_step_size);
   writeField(out, "epsilon", epsilon);
+  writeField(out, "line_search_algo", line_search_algo);
+  writeField(out, "find_new_direction_formula", find_new_direction_formula);
+  writeField(out, "sigma", sigma);
+  writeField(out, "rho", rho);
+  writeField(out, "fmax", fmax);
+  writeField(out, "stop_epsilon", stop_epsilon);
+  writeField(out, "tau1", tau1);
+  writeField(out, "tau2", tau2);
+  writeField(out, "tau3", tau3);
   writeFooter(out, "ConjGradientOptimizer");
 }
 
@@ -119,6 +185,15 @@ void ConjGradientOptimizer::oldread(istream& in)
   inherited::oldread(in);
   readField(in, "starting_step_size", starting_step_size);
   readField(in, "epsilon", epsilon);
+  readField(in, "line_search_algo", line_search_algo);
+  readField(in, "find_new_direction_formula", find_new_direction_formula);
+  readField(in, "sigma", sigma);
+  readField(in, "rho", rho);
+  readField(in, "fmax", fmax);
+  readField(in, "stop_epsilon", stop_epsilon);
+  readField(in, "tau1", tau1);
+  readField(in, "tau2", tau2);
+  readField(in, "tau3", tau3);
   readFooter(in, "ConjGradientOptimizer");
 }
 
@@ -143,6 +218,34 @@ real ConjGradientOptimizer::computeComposedGrad(
     Vec delta) {
   (*grad)(params, costs, proppath, delta);
   return dot(delta, direction);
+}
+
+//////////////////////
+// computeCostValue //
+//////////////////////
+real ConjGradientOptimizer::computeCostValue(
+    real alpha,
+    ConjGradientOptimizer* opt) {
+  opt->params.copyTo(opt->tmp_storage);
+  opt->params.update(alpha, opt->search_direction);
+  opt->proppath.fprop();
+  real c = opt->cost->value[0];
+  opt->params.copyFrom(opt->tmp_storage);
+  return c;
+}
+
+///////////////////////
+// computeDerivative //
+///////////////////////
+real ConjGradientOptimizer::computeDerivative(
+    real alpha,
+    ConjGradientOptimizer* opt) {
+  opt->params.copyTo(opt->tmp_storage);
+  opt->params.update(alpha, opt->search_direction);
+  Vec gradient(opt->params.nelems());
+  computeGradient(opt->params, opt->cost, opt->proppath, gradient);
+  opt->params.copyFrom(opt->tmp_storage);
+  return dot(opt->search_direction, gradient);
 }
 
 /////////////////////
@@ -215,6 +318,18 @@ bool ConjGradientOptimizer::conjpomdp (
 };
 
 ///////////////////
+// cubicInterpol //
+///////////////////
+void ConjGradientOptimizer::cubicInterpol(
+    real f0, real f1, real g0, real g1,
+    real& a, real& b, real& c, real& d) {
+  d = f0;
+  c = g0;
+  b = 3*(f1-f0) - 2*g0 - g1;
+  a = g0 + g1 - 2*(f1 - f0);
+}
+
+///////////////////
 // findDirection //
 ///////////////////
 bool ConjGradientOptimizer::findDirection(
@@ -225,21 +340,75 @@ bool ConjGradientOptimizer::findDirection(
     real starting_step_size,
     real epsilon,
     Vec g,
-    Vec h,
     Vec delta,
     Vec tmp_storage) {
   bool isFinished = false;
-  switch (isFinished) {
-    case true:
+  switch (find_new_direction_formula) {
+    case 0:
       isFinished = conjpomdp(grad, params, costs, proppath,
-                             epsilon, g, h, delta);
+                             epsilon, g, search_direction, delta);
       break;
-    case false:
+    case 1:
       fletcherReeves(grad, params, costs, proppath,
-                                  g, h, delta);
+                     g, search_direction, delta);
+      break;
+    case 2:
+      hestenesStiefel(grad, params, costs, proppath,
+                      g, search_direction, delta);
+      break;
+    case 3:
+      polakRibiere(grad, params, costs, proppath,
+                   g, search_direction, delta);
       break;
   }
   return isFinished;
+}
+
+//////////////////////////////
+// findMinWithCubicInterpol //
+//////////////////////////////
+real ConjGradientOptimizer::findMinWithCubicInterpol (
+    real (*f)(real, ConjGradientOptimizer* opt),
+    real (*g)(real, ConjGradientOptimizer* opt),
+    ConjGradientOptimizer* opt,
+    real p1,
+    real p2,
+    real mini,
+    real maxi) {
+  // We prefer p2 > p1 and maxi > mini
+  if (p2 < p1) {
+    real tmp = p2;
+    p2 = p1;
+    p1 = tmp;
+  }
+  if (maxi < mini) {
+    real tmp = maxi;
+    maxi = mini;
+    mini = tmp;
+  }
+  // cout << "Finding min : p1 = " << p1 << " , p2 = " << p2 << " , mini = " << mini << " , maxi = " << maxi << endl;
+  real f0 = (*f)(p1, opt);
+  real f1 = (*f)(p2, opt);
+  // The derivatives must be multiplied by (p2-p1), because we write :
+  // x = p1 + z*(p2-p1)
+  // with z in [0,1]  =>  df/dz = (p2-p1)*df/dx
+  real g0 = (*g)(p1, opt) * (p2-p1);
+  real g1 = (*g)(p2, opt) * (p2-p1);
+  real a, b, c, d;
+  // Store the interpolation coefficients in a,b,c,d
+  cubicInterpol(f0, f1, g0, g1, a, b, c, d);
+  // cout << "Interpol : a=" << a << " , b=" << b << " , c=" << c << " , d=" << d << endl;
+  real mini_transformed = mini;
+  real maxi_transformed = maxi;
+  if (mini != -FLT_MAX)
+    mini_transformed = (mini - p1) / (p2 - p1);
+  if (maxi != FLT_MAX)
+    maxi_transformed = (maxi - p1) / (p2 - p1);
+  real xmin = minCubic(a, b, c, mini_transformed, maxi_transformed);
+  if (xmin == -FLT_MAX || xmin == FLT_MAX)
+    return xmin;
+  // cout << "min is : xmin = " << p1 + xmin*(p2-p1) << endl;
+  return p1 + xmin*(p2-p1);
 }
 
 ////////////////////
@@ -267,11 +436,34 @@ void ConjGradientOptimizer::fletcherReeves (
 // fletcherSearch //
 ////////////////////
 real ConjGradientOptimizer::fletcherSearch (
-    real (*f)(real),
-    real (*g)(real),
+    real alpha1,
+    real mu) {
+  return fletcherSearchMain (
+      computeCostValue,
+      computeDerivative,
+      this,
+      sigma,
+      rho,
+      fmax,
+      stop_epsilon,
+      tau1,
+      tau2,
+      tau3,
+      alpha1,
+      mu);
+}
+
+////////////////////////
+// fletcherSearchMain //
+////////////////////////
+real ConjGradientOptimizer::fletcherSearchMain (
+    real (*f)(real, ConjGradientOptimizer* opt),
+    real (*g)(real, ConjGradientOptimizer* opt),
+    ConjGradientOptimizer* opt,
     real sigma,
     real rho,
     real fmax,
+    real epsilon,
     real tau1,
     real tau2,
     real tau3,
@@ -280,28 +472,41 @@ real ConjGradientOptimizer::fletcherSearch (
   
   // Initialization
   if (mu == FLT_MAX)
-    mu = (fmax - (*f)(0)) / (rho * (*g)(0));
+    mu = (fmax - (*f)(0, opt)) / (rho * (*g)(0, opt));
   if (alpha1 == FLT_MAX)
-    alpha1 = mu;
+    alpha1 = mu / 100; // My own heuristic
   real alpha0 = 0;
   real alpha2, f0, f1, g0, a1, a2, b1, b2;
-  f0 = (*f)(0);
-  g0 = (*g)(0);
+  f0 = (*f)(0, opt);
+  g0 = (*g)(0, opt);
+  if (g0 >= 0) {
+    cout << "Warning : df/dx(0) >= 0 !" << endl;
+    return 0;
+  }
   bool isBracketed = false;
   
   // Bracketing
   while (!isBracketed) {
-    f1 = (*f)(alpha1);
+    // cout << "Bracketing : alpha1 = " << alpha1 << endl << "             alpha0 = " << alpha0 << endl;
+    if (alpha1 == mu && alpha1 == alpha2) { // NB: Personal hack... hopefully that should not happen
+      cout << "Warning : alpha1 == alpha2 == mu during bracketing" << endl;
+      return alpha1;
+    }
+    f1 = (*f)(alpha1, opt);
     if (f1 <= fmax)
       return alpha1;
-    if (f1 > f0 + alpha1 * g0 || f1 > (*f)(alpha0)) {
+    if (f1 > f0 + alpha1 * rho * g0 || f1 > (*f)(alpha0, opt)) {
+      // NB: in Fletcher's book, there is a typo in the test above
       a1 = alpha0;
       b1 = alpha1;
       isBracketed = true;
+      // cout << "Bracketing done : f1 = " << f1 << " , alpha1 = " << alpha1 << " , f0 = " << f0 << " , g0 = " << g0 << endl;
     } else {
-      if (abs((*g)(alpha1)) < -sigma * g0)
+      if (abs((*g)(alpha1, opt)) < -sigma * g0) {
+        // cout << "Low gradient : g=" << abs((*g)(alpha1, opt)) << " < " << (-sigma * g0) << endl;
         return alpha1;
-      if ((*g)(alpha1) >= 0) {
+      }
+      if ((*g)(alpha1, opt) >= 0) {
         a1 = alpha1;
         b1 = alpha0;
         isBracketed = true;
@@ -309,28 +514,39 @@ real ConjGradientOptimizer::fletcherSearch (
         if (mu <= 2*alpha1 - alpha0)
           alpha2 = mu;
         else
-          // alpha2 = findMinWithInterpol(2*alpha1 - alpha0, min(mu, alpha1 + tau1 * (alpha1 - alpha0))); // TODO Remove comment when ready
-          alpha2 = 0; // TODO Remove !
+          alpha2 = findMinWithCubicInterpol(
+              f, g, opt, 
+              alpha1, alpha0,
+              2*alpha1 - alpha0, min(mu, alpha1 + tau1 * (alpha1 - alpha0)));
       }
     }
-    alpha0 = alpha1;
-    alpha1 = alpha2;
+      alpha0 = alpha1;
+      alpha1 = alpha2;
   }
 
   // Splitting
   while (true) {
-    // alpha1 = findMinWithInterpol(a1 + tau2 * (b1-a1), b1 - tau3 * (b1-a1)); // TODO Remove comment when ready
-    f1 = (*f)(alpha1);
-    if ((a1 - alpha1) * (*g)(a1) <= epsilon)
+    // cout << "Splitting : alpha1 = " << alpha1 << endl << "            a1 = " << a1 << endl << "            b1 = " << b1 << endl;
+    // cout << "Interval : [" << a1 + tau2 * (b1-a1) << " , " << b1 - tau3 * (b1-a1) << "]" << endl;
+    alpha1 = findMinWithCubicInterpol(
+        f, g, opt,
+        a1, b1,
+        a1 + tau2 * (b1-a1), b1 - tau3 * (b1-a1));
+    f1 = (*f)(alpha1, opt);
+    if ((a1 - alpha1) * (*g)(a1, opt) <= epsilon) {
+      // cout << "Early stop : a1 = " << a1 << " , alpha1 = " << alpha1 << " , g(a1) = " << (*g)(a1,opt) << " , epsilon = " << epsilon << endl;
       return a1;
-    if (f1 > f0 + rho * alpha1 * g0 || f1 >= (*f)(a1)) {
+    }
+    if (f1 > f0 + rho * alpha1 * g0 || f1 >= (*f)(a1, opt)) {
      a2 = a1;
      b2 = alpha1;
     } else {
-      if (abs((*g)(alpha1)) <= -sigma * g0)
+      if (abs((*g)(alpha1, opt)) <= -sigma * g0) {
+        // cout << "Found what we were looking for : g(alpha1)=" << abs((*g)(alpha1, opt)) << " < " << -sigma * g0 << " with g0 = " << g0 << endl;
         return alpha1;
+      }
       a2 = alpha1;
-      if ((b1 - a1) * (*g)(alpha1) >= 0)
+      if ((b1 - a1) * (*g)(alpha1, opt) >= 0)
         b2 = a1;
       else
         b2 = b1;
@@ -339,7 +555,7 @@ real ConjGradientOptimizer::fletcherSearch (
     b1 = b2;
   }
 }
-  
+
 /////////////
 // gSearch //
 /////////////
@@ -428,17 +644,29 @@ void ConjGradientOptimizer::hestenesStiefel (
 ////////////////
 // lineSearch //
 ////////////////
-void ConjGradientOptimizer::lineSearch(
+real ConjGradientOptimizer::lineSearch(
     void (*grad)(VarArray, Var, VarArray, const Vec&),
     VarArray params,
     Var costs,
     VarArray proppath,
-    Vec search_direction,
     real starting_step_size,
     real epsilon,
     Vec tmp_storage) {
-  gSearch(grad, params, costs, proppath, search_direction,
+  real alpha = 0;
+  real df = 0;
+  switch (line_search_algo) {
+    case 0:
+      // The value of alpha1 below is suggested by Fletcher
+      df = max (last_improvement, 10*stop_epsilon);
+      alpha = fletcherSearch(-2*df / computeDerivative(0, this)); // TODO Get the derivative from somewhere ?
+      params.update(alpha, search_direction);
+      break;
+    case 1:
+      gSearch(grad, params, costs, proppath, search_direction,
           starting_step_size, epsilon, tmp_storage);
+      break;
+  }
+  return cost->value[0];
 }
 
 //////////////
@@ -446,7 +674,7 @@ void ConjGradientOptimizer::lineSearch(
 //////////////
 real ConjGradientOptimizer::minCubic(real a, real b, real c,
     real mini, real maxi) {
-  if (a == 0)
+  if (a == 0 || (b != 0 && abs(a/b) < 0.0001)) // heuristic value for a == 0
     return minQuadratic(b, c, mini, maxi);
   // f' = 3a.x^2 + 2b.x + c
   real aa = 3*a;
@@ -461,7 +689,7 @@ real ConjGradientOptimizer::minCubic(real a, real b, real c,
     d = sqrt(d);
     real p2 = (-bb + d) / (2*aa);
     if (a > 0) {
-      if (p2 < mini || mini == FLT_MIN)
+      if (p2 < mini || mini == -FLT_MAX)
         return mini;
       if (p2 > maxi) { // the minimum is beyond the range
         if (a*mini*mini*mini + b*mini*mini + c*mini > 
@@ -499,7 +727,7 @@ real ConjGradientOptimizer::minCubic(real a, real b, real c,
 //////////////////
 real ConjGradientOptimizer::minQuadratic(real a, real b,
     real mini, real maxi) {
-  if (a ==  0) {
+  if (a == 0 || (b != 0 && abs(a/b) < 0.0001)) { // heuristic for a == 0
     if (b > 0)
       return mini;
     else
@@ -539,22 +767,26 @@ real ConjGradientOptimizer::optimize()
   early_stop = false;
 
   // Initiliazation of the structures
+  search_direction.resize(params.nelems());
   Vec g(params.nelems());
-  Vec h(params.nelems());
   Vec delta(params.nelems());
-  Vec tmp_storage(params.nelems());
-  computeOppositeGradient(params, cost, proppath, h); 
-  g << h;
+  tmp_storage.resize(params.nelems());
+  computeOppositeGradient(params, cost, proppath, search_direction); 
+  g << search_direction;
+  last_improvement = 0.1; // my own heuristic
+  real last_cost, current_cost;
+  cost->fprop();
+  last_cost = cost->value[0]; // TODO document a bit all this initilization, and make it depend on the kind of algo used
 
   // Loop through the epochs
   for (int t=0; !early_stop && t<nupdates; t++) {
 
-    cost->fprop(); // TODO Remove those 2 lines
+    cost->fprop(); // TODO Remove those 2 lines later
     cout << "cost = " << cost->value[0] << " " << cost->value[1] << " " << cost->value[2] << endl;
     
     // Make a line search along the current search direction (h)
-    lineSearch(computeOppositeGradient, params, cost, proppath, h, 
-               starting_step_size, epsilon, tmp_storage);
+    current_cost = lineSearch(computeOppositeGradient, params, cost, proppath,
+                              starting_step_size, epsilon, tmp_storage);
     
     // Find the new search direction
     early_stop = findDirection(
@@ -565,13 +797,15 @@ real ConjGradientOptimizer::optimize()
         starting_step_size, 
         epsilon,
         g,
-        h,
         delta,
         tmp_storage);
 
+    last_improvement = last_cost - current_cost;
+    last_cost = current_cost;
+    
     // Display results TODO ugly copy/paste : to be cleaned ?
     meancost += cost->value;
-    every = 2000; // TODO hack for test purpose
+    every = 2000; // TODO Remove later, this is for test purpose
     if ((every!=0) && ((t+1)%every==0)) 
       // normally this is done every epoch
     { 
@@ -583,7 +817,7 @@ real ConjGradientOptimizer::optimize()
       if (out)
         out << t+1 << ' ' << meancost << endl;
       early_stop = early_stop || measure(t+1,meancost);
-     // early_stop = measure(t+1,meancost); // TODO which is the best between this and the one above ?
+     // early_stop = measure(t+1,meancost); // TODO find which is the best between this and the one above
       early_stop_i = (t+1)/every;
       lastmeancost << meancost;
       meancost.clear();
@@ -616,6 +850,17 @@ void ConjGradientOptimizer::polakRibiere (
     h[i] = delta[i] + gamma * h[i];
   }
   g << delta;
+}
+
+///////////////////////
+// quadraticInterpol //
+///////////////////////
+void ConjGradientOptimizer::quadraticInterpol(
+    real f0, real f1, real g0,
+    real& a, real& b, real& c) {
+  c = f0;
+  b = g0;
+  a = f1 - f0 - g0;
 }
 
 %> // end of namespace PLearn
