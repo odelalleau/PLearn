@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.12 2003/08/13 08:13:16 plearner Exp $
+   * $Id: RealMapping.h,v 1.13 2003/10/29 16:55:49 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -133,9 +133,15 @@ class RealRange
   inline ostream& operator<<(ostream& out, const RealRange& range) { range.print(out); return out; } 
   inline void read(istream& in, RealRange& range) { range.read(in); }
 
+PStream& operator<<(PStream& out, const RealRange& x);
+PStream& operator>>(PStream& in, RealRange &x);
+
 
   class RealMapping: public Object
   {
+  protected: 
+    static void declareOptions(OptionList& ol);
+
   public:
     typedef pair<RealRange, real> single_mapping_t;
     typedef TVec< single_mapping_t > ordered_mapping_t;

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.14 2003/09/23 01:27:30 yoshua Exp $
+   * $Id: PLearner.h,v 1.15 2003/10/29 16:55:49 plearner Exp $
    ******************************************************* */
 
 
@@ -62,6 +62,9 @@ using namespace std;
 */
   class PLearner: public Object
   {
+  private:
+    mutable int n_train_costs_;
+    mutable int n_test_costs_;
 
   public:
 
@@ -119,7 +122,7 @@ using namespace std;
 
     //! Declares the train_set
     //! Then calls build() and forget() if necessary
-    //! Note: You shouldn't have to overload this in subclasses, except in exotic cases)
+    //! Note: You shouldn't have to overload this in subclasses, except in maybe to forward the call to an underlying learner.
     virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
     //! Returns the current train_set
@@ -127,8 +130,8 @@ using namespace std;
 
     //! Sets the statistics collector whose update() method will be called 
     //! during training.
-    void setTrainStatsCollector(PP<VecStatsCollector> statscol)
-    { train_stats = statscol; }
+    //! Note: You shouldn't have to overload this in subclasses, except maybe to forward the call to an underlying learner.
+    virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol);
 
     //! Returns the train stats collector
     inline PP<VecStatsCollector> getTrainStatsCollector()
@@ -155,9 +158,6 @@ using namespace std;
     virtual int outputsize() const =0;
 
   public:
-
-    //! Provides a help message describing this class
-    static string help();
 
     //!  **** SUBCLASS WRITING: ****
     //! This method should be redefined in subclasses, to just call inherited::build() and then build_()
@@ -287,12 +287,12 @@ using namespace std;
     //! for which it updates the VecStatsCollector train_stats
     virtual TVec<string> getTrainCostNames() const =0;
 
-    //! Default version returns getTestCostNames().size()
-    //! You may overload this in subclasses for efficiency.
+    //! Caches getTestCostNames().size() in an internal variable
+    //! the first time it is called, and then returns the content of this variable.
     virtual int nTestCosts() const;
 
-    //! Default version returns getTrainCostNames().size()
-    //! You may overload this in subclasses for efficiency.
+    //! Caches getTrainCostNames().size() in an internal variable
+    //! the first time it is called, and then returns the content of this variable.
     virtual int nTrainCosts() const;
 
     //! returns the index of the given cost in the vector of testcosts

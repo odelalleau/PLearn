@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// PrecomputedVMatrix.h
+// FilteredVMatrix.h
 //
 // Copyright (C) 2003 Pascal Vincent 
 // 
@@ -33,26 +33,32 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.h,v 1.2 2003/10/29 16:55:49 plearner Exp $ 
+   * $Id: FilteredVMatrix.h,v 1.1 2003/10/29 16:55:49 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
 
-/*! \file PrecomputedVMatrix.h */
+/*! \file FilteredVMatrix.h */
 
 
-#ifndef PrecomputedVMatrix_INC
-#define PrecomputedVMatrix_INC
+#ifndef FilteredVMatrix_INC
+#define FilteredVMatrix_INC
 
 #include "SourceVMatrix.h"
+#include "VMatLanguage.h"
 
 namespace PLearn <%
 using namespace std;
 
-class PrecomputedVMatrix: public SourceVMatrix
+class FilteredVMatrix: public SourceVMatrix
 {
 protected:
-  VMat precomp_source; // The precomputed source, as a DiskVMatrix
+  VMatLanguage program;
+  IntVecFile indexes;  // indexes[i] is the
+
+  //! Generates the index file if it does not already exist.
+  //! If it exists and is up to date, simply opens it.
+  void openIndex();
 
 public:
 
@@ -62,7 +68,7 @@ public:
   // * public build options *
   // ************************
 
-  string precomp_type;
+  string prg;  // program string in VPL language
 
   // ****************
   // * Constructors *
@@ -70,7 +76,13 @@ public:
 
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
-  PrecomputedVMatrix();
+  FilteredVMatrix();
+
+  FilteredVMatrix(VMat the_source, const string& program_string)
+    :SourceVMatrix(the_source),prg(program_string)
+  { build_(); }
+
+  virtual void setMetaDataDir(const string& the_metadatadir);
 
   // ******************
   // * Object methods *
@@ -80,8 +92,6 @@ private:
   //! This does the actual building. 
   // (Please implement in .cc)
   void build_();
-  
-  void usePrecomputed();
 
 protected: 
   //! Declares this class' options
@@ -89,9 +99,6 @@ protected:
   static void declareOptions(OptionList& ol);
 
 public:
-
-  virtual void setMetaDataDir(const string& the_metadatadir);
-
   //!  This is the only method requiring implementation
   virtual void getRow(int i, Vec v) const;
 
@@ -102,7 +109,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(PrecomputedVMatrix);
+  PLEARN_DECLARE_OBJECT(FilteredVMatrix);
 
 };
 

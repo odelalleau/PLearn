@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.11 2003/10/28 21:02:50 chapados Exp $ 
+   * $Id: PTester.cc,v 1.12 2003/10/29 16:55:49 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -215,15 +215,23 @@ Vec PTester::perform(bool call_forget)
   // Stats collectors for individual sets of a split:
   TVec< PP<VecStatsCollector> > stcol(nsets);
   for(int setnum=0; setnum<nsets; setnum++)
-    if (template_stats_collector)
     {
-      CopiesMap copies;
-      stcol[setnum] = template_stats_collector->deepCopy(copies);
-      stcol[setnum]->build();
-      stcol[setnum]->forget();
+      if (template_stats_collector)
+        {
+          CopiesMap copies;
+          stcol[setnum] = template_stats_collector->deepCopy(copies);
+          stcol[setnum]->build();
+          stcol[setnum]->forget();      
+        }
+      else
+        stcol[setnum] = new VecStatsCollector();
+
+      if(setnum==0)
+        stcol[setnum]->setFieldNames(traincostnames);
+      else
+        stcol[setnum]->setFieldNames(testcostnames);
     }
-    else
-      stcol[setnum] = new VecStatsCollector();
+
   PP<VecStatsCollector> train_stats = stcol[0];
   learner->setTrainStatsCollector(train_stats);
 
@@ -242,7 +250,7 @@ Vec PTester::perform(bool call_forget)
   // Stat specs
   TVec<StatSpec> statspecs(nstats);
   for(int k=0; k<nstats; k++)
-    statspecs[k].init(statnames[k],learner);
+    statspecs[k].init(statnames[k]);
   
   // int traincostsize = traincostnames.size();
   int testcostsize = testcostnames.size();
@@ -262,7 +270,7 @@ Vec PTester::perform(bool call_forget)
       split_stats_vm = new FileVMatrix(expdir+"split_stats.pmat", 0, 1+nstats);
       split_stats_vm->declareField(0,"splitnum");
       for(int k=0; k<nstats; k++)
-        split_stats_vm->declareField(k+1,statspecs[k].intStatName());
+        split_stats_vm->declareField(k+1,statspecs[k].setname + "." + statspecs[k].intstatname);
       split_stats_vm->saveFieldInfos();
     }
 
@@ -316,13 +324,6 @@ Vec PTester::perform(bool call_forget)
             test_costs = new FileVMatrix(splitdir+setname+"_costs.pmat",0,testcostsize);
 
           test_stats->forget();
-
-// ?????          
-//           Vec r(testset->width());
-//           testset->getRow(0,r);
-//           testset->getRow(1,r);
-// ?????
-
           learner->test(testset, test_stats, test_outputs, test_costs);      
           test_stats->finalize();
           if(splitdir != "" && save_stat_collectors)
@@ -338,7 +339,7 @@ Vec PTester::perform(bool call_forget)
           if (sp.setnum>=stcol.length())
             PLERROR("PTester::perform, trying to access a test set (test%d) beyond the last one (test%d)",
                     sp.setnum, stcol.length()-1);
-          splitres[k+1] = stcol[sp.setnum]->getStats(sp.costindex).getStat(sp.intstat);
+          splitres[k+1] = stcol[sp.setnum]->getStat(sp.intstatname);
         }
 
       if(split_stats_vm)
@@ -361,15 +362,12 @@ Vec PTester::perform(bool call_forget)
   return global_result;
 }
 
-void StatSpec::init(const string& statname, PP<PLearner> learner)
+void StatSpec::init(const string& statname)
   {
     parseStatname(statname);
-    if(setnum==0)
-      costindex = learner->getTrainCostIndex(costname);
-    else
-      costindex = learner->getTestCostIndex(costname);
   }
 
+/* Old parseStatname
 void StatSpec::parseStatname(const string& statname)
 {
   string name1=removeallblanks(statname);
@@ -416,5 +414,50 @@ void StatSpec::parseStatname(const string& statname)
   else
     PLERROR("In parse_statname: parse error for %s",statname.c_str());
 }
+*/
+
+void StatSpec::parseStatname(const string& statname)
+{
+  PIStringStream in(removeblanks(statname));
+  if(in.smartReadUntilNext("[", extstat)==EOF)
+    PLERROR("No opening bracket found in statname %s", statname.c_str());
+  string token;
+  int nextsep = in.smartReadUntilNext(".[",token);
+  if(nextsep==EOF)
+    PLERROR("Expected dataset.xxxSTATxxx after the opening bracket. Got %s", token.c_str());
+  else if(nextsep=='[') // Old format (for backward compatibility) ex: E[E[train.mse]]
+    {
+      intstatname = token;
+      if(in.smartReadUntilNext(".",setname)==EOF)
+        PLERROR("Error while parsing statname: expected a dot");
+      string costname;
+      if(in.smartReadUntilNext("]",costname)==EOF)
+        PLERROR("Error while parsing statname: expected a closing bracket");
+      intstatname = intstatname+"["+costname+"]";
+    }
+  else // We've read an opening bracket. That's the new format E[train.E[mse]]
+    {
+      setname = token;
+      if(in.smartReadUntilNext("]",intstatname)==EOF)
+        PLERROR("Error while parsing statname: expected a closing bracket");
+    }
+    
+  if(setname=="train")
+    setnum = 0;
+  else if(setname=="test")
+    setnum = 1;
+  else if(setname.substr(0,4)=="test")
+    {
+      setnum = toint(setname.substr(4));
+      if(setnum==0)
+        PLERROR("In parseStatname: use the name train instead of test0.\n"
+                "The first set of a split is the training set. The following are test sets named test1 test2 ..."); 
+      if(setnum<=0)
+        PLERROR("In parseStatname: parse error for %s",statname.c_str());        
+    }
+  else
+    PLERROR("In parseStatname: parse error for %s",statname.c_str());
+}
+
 
 %> // end of namespace PLearn

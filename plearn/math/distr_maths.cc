@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: distr_maths.cc,v 1.1 2002/10/22 08:46:07 plearner Exp $
+   * $Id: distr_maths.cc,v 1.2 2003/10/29 16:55:49 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,7 +50,7 @@ namespace PLearn <%
 using namespace std;
 
 real logOfCompactGaussian(const Vec& x, const Vec& mu, 
-                          const Vec& eigenvalues, const Mat& eigenvectors, real gamma)
+                          const Vec& eigenvalues, const Mat& eigenvectors, real gamma, bool add_gamma_to_eigenval)
 {
   // cerr << "logOfCompact: mu = " << mu << endl;
 
@@ -77,7 +77,9 @@ real logOfCompactGaussian(const Vec& x, const Vec& mu,
   for(i=0; i<kk; i++)
     {
       double lambda_i = eigenvalues[i];
-      if(lambda_i==0) // we've reached a 0 eigenvalue, stop computation here.
+      if(add_gamma_to_eigenval)
+        lambda_i += gamma;
+      if(lambda_i<=0) // we've reached a 0 eigenvalue, stop computation here.
         break;
       log_det += log(lambda_i);
       q += (1./lambda_i - inv_gamma)*square(dot(eigenvectors(i),x_minus_mu));

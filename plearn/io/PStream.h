@@ -316,13 +316,14 @@ public:
   //! skips all occurences of any of the given characters
   void skipAll(const char* chars_to_skip);
 
-  //! Reads characters from stream, until we meet one of the closing symbols at the current "level".
+  //! Reads characters from stream, until we meet one of the stopping symbols at the current "level".
   //! i.e. any opening parenthesis, bracket, brace or quote will open a next level and we'll 
   //! be back to the current level only *after* we meet the corresponding closing parenthesis, 
   //! bracket, brace or quote.
-  //! All characters read, except the closingsymbol, will be *appended* to characters_read 
-  //! The closingsymbol is read and returned, but not appended to characters_read.
-  int smartReadUntilNext(const string& closingsymbols, string& characters_read);
+  //! All characters read, except the stoppingsymbol, will be *appended* to characters_read 
+  //! The stoppingsymbol is read and returned, but not appended to characters_read.
+  //! Comments starting with # until the end of line are skipped (as if they were not part of the stream)
+  int smartReadUntilNext(const string& stoppingsymbols, string& characters_read);
 
   // operator>>'s for base types
   PStream& operator>>(bool &x);

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat_maths.h,v 1.6 2003/09/20 20:33:35 yoshua Exp $
+   * $Id: VMat_maths.h,v 1.7 2003/10/29 16:55:49 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,6 +56,7 @@
 namespace PLearn <%
 using namespace std;
 
+class VecStatsCollector;
 
 #define MEAN_ROW 0
 #define STDDEV_ROW 1
@@ -84,6 +85,9 @@ Mat computeBasicStats(VMat m);
 
 //! Retirns the unconditional statistics of each field
 TVec<StatsCollector> computeStats(VMat m, int maxnvalues);
+
+void computeStats(VMat m, VecStatsCollector& st);
+
 
 //! returns the cooccurence statistics conditioned on the given field
 PP<ConditionalStatsCollector> computeConditionalStats(VMat m, int condfield, TVec<RealMapping> ranges);

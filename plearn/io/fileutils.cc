@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.13 2003/10/07 21:55:00 plearner Exp $
+   * $Id: fileutils.cc,v 1.14 2003/10/29 16:55:49 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -53,6 +53,7 @@
 #include "fileutils.h"
 #include "stringutils.h"
 #include "plerror.h"
+#include "PStream.h"
 
 namespace PLearn <%
 using namespace std;
@@ -193,7 +194,6 @@ void force_mkdir_for_file(const string& filepath)
   if(!force_mkdir(dirpath))
     PLERROR("force_mkdir(%s) failed",dirpath.c_str());
 }
-
 
   // Forces removal of directory and all its content
   // Return value indicates success (true) or failure (false)
@@ -372,39 +372,12 @@ int countNonBlankLinesOfFile(const string& filename)
   return count;  
 }
 
-int smartReadUntilNext(istream& in, string closingsymbols, string& characters_read)
+int smartReadUntilNext(istream& in, string stoppingsymbols, string& characters_read)
 {
-  int c;
-  while( (c=in.get()) != EOF)
-    {
-      if(closingsymbols.find(c)!=string::npos)
-        return c;
-      if(characters_read.length() == characters_read.capacity())
-	characters_read.reserve(characters_read.length()*2); //don't realloc&copy every time a char is appended...
-      characters_read+= static_cast<char>(c);
-      switch(c)
-        {
-        case '(':
-          smartReadUntilNext(in, ")", characters_read);
-          characters_read+= ')';          
-          break;
-        case '[':
-          smartReadUntilNext(in, "]", characters_read);
-          characters_read+= ']';          
-          break;
-        case '{':
-          smartReadUntilNext(in, "}", characters_read);
-          characters_read+= '}';          
-          break;
-        case '"':
-          smartReadUntilNext(in, "\"", characters_read);
-          characters_read+= '"';          
-          break;          
-        }
-    }
-  return c;
+  PStream pin(&in);
+  return pin.smartReadUntilNext(stoppingsymbols, characters_read);
 }
-
+  
 //!  Makes use of mkstemp(...) to create a new file.
 string newFilename(const string directory, const string prefix, bool is_directory)
 {

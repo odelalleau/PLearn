@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.7 2003/10/07 21:55:00 plearner Exp $
+   * $Id: fileutils.h,v 1.8 2003/10/29 16:55:49 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -144,13 +144,8 @@ void readWhileMatches(istream& in, const string& s);
   //! #-style comments are considered blank
   int countNonBlankLinesOfFile(const string& filename);
 
-  //! Reads characters from stream, until we meet one of the closing symbols at the current "level".
-  //! i.e. any opening parenthesis, bracket, brace or quote will open a next level and we'll 
-  //! be back to the current level only *after* we meet the corresponding closing parenthesis, 
-  //! bracket, brace or quote.
-  //! All characters read, except the closingsymbol, will be *appended* to characters_read 
-  //! The closingsymbol is read and returned, but not appended to characters_read.
-  int smartReadUntilNext(istream& in, string closingsymbols, string& characters_read);
+//! same as PStream's method smartReadUntilNext, but for istream
+int smartReadUntilNext(istream& in, string stoppingsymbols, string& characters_read);
   
   //! peeks the first char after removal of blanks
   inline char peekAfterSkipBlanks(istream& in) { while(isspace(in.get())); in.unget();return in.peek(); }

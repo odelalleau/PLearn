@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.21 2003/10/22 14:17:22 tihocan Exp $
+   * $Id: NNet.cc,v 1.22 2003/10/29 16:55:49 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -484,7 +484,7 @@ void NNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv,
 
 void NNet::initializeParams()
 {
-  if (seed_>0)
+  if (seed_>=0)
     manual_seed(seed_);
   else
     PLearn::seed();

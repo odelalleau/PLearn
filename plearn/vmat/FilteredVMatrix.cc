@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// ProcessingVMatrix.cc
+// FilteredVMatrix.cc
 //
 // Copyright (C) 2003 Pascal Vincent 
 // 
@@ -33,70 +33,93 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ProcessingVMatrix.cc,v 1.2 2003/10/29 16:55:49 plearner Exp $ 
+   * $Id: FilteredVMatrix.cc,v 1.1 2003/10/29 16:55:49 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
 
-/*! \file ProcessingVMatrix.cc */
+/*! \file FilteredVMatrix.cc */
 
 
-#include "ProcessingVMatrix.h"
+#include "FilteredVMatrix.h"
 
 namespace PLearn <%
 using namespace std;
 
 
-ProcessingVMatrix::ProcessingVMatrix()
+FilteredVMatrix::FilteredVMatrix()
   :inherited()
-  /* ### Initialise all fields to their default value */
 {
-  // ...
-
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
 }
 
-PLEARN_IMPLEMENT_OBJECT(ProcessingVMatrix, "ONE LINE DESCRIPTION", "MULTI-LINE \nHELP");
+PLEARN_IMPLEMENT_OBJECT(FilteredVMatrix, "A filtered view of its source vmatrix", 
+                        "The filter is an exression in VPL language.\n"
+                        "The filtered indexes are saved in the metadata directory.");
 
-void ProcessingVMatrix::getRow(int i, Vec v) const
+
+
+void FilteredVMatrix::openIndex()
 {
-  program.run(i,v);
+  string idxfname = getMetaDataDir()+"filtered.idx";
+
+  if(file_exists(idxfname) && mtime(idxfname)>source->getMtime())
+    indexes.open(idxfname);
+  else  // let's (re)create the index
+    {
+      rm(idxfname);       // force remove it
+      int l = source.length();
+      Vec result(1);
+      indexes.open(idxfname,true);
+      for(int i=0; i<l; i++)
+        {
+          program.run(i,result);
+          if(result[0]!=0)
+            indexes.append(i);
+        }
+      indexes.close();
+      indexes.open(idxfname);
+    }
+
+  length_ = indexes.length();
 }
 
-void ProcessingVMatrix::declareOptions(OptionList& ol)
+void FilteredVMatrix::setMetaDataDir(const string& the_metadatadir)
 {
-  declareOption(ol, "prg", &ProcessingVMatrix::prg, OptionBase::buildoption,
-                "The VPL code to be applied to each row of the vmat");
+  inherited::setMetaDataDir(the_metadatadir);
+  openIndex();
+}
+
+void FilteredVMatrix::getRow(int i, Vec v) const
+{
+  source->getRow(indexes[i],v);
+}
+
+void FilteredVMatrix::declareOptions(OptionList& ol)
+{
+  declareOption(ol, "prg", &FilteredVMatrix::prg, OptionBase::buildoption,
+                "The VPL code that should produce a single scalar, indicating whether \n"
+                "we should keep the line (if the produced scalar is non zero) or throw it away (if it's zero)");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
 
-void ProcessingVMatrix::build_()
+void FilteredVMatrix::build_()
 {
   vector<string> fieldnames;
   program.setSource(source);
   program.compileString(prg,fieldnames); 
-  int nfields = fieldnames.size();
-  width_ = nfields;
-
-  fieldinfos.resize(nfields);
-  for(int j=0; j<nfields; j++)
-    fieldinfos[j] = VMField(fieldnames[j]);
-
   setMetaInfoFromSource();
-  sourcevec.resize(source->width());
 }
 
 // ### Nothing to add here, simply calls build_
-void ProcessingVMatrix::build()
+void FilteredVMatrix::build()
 {
   inherited::build();
   build_();
 }
 
-void ProcessingVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void FilteredVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

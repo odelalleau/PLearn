@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Grapher.cc,v 1.1 2003/08/13 08:13:47 plearner Exp $ 
+   * $Id: Grapher.cc,v 1.2 2003/10/29 16:55:49 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Grapher.cc */
@@ -621,7 +621,7 @@ void Grapher::plot_1D_regression(string basename, VMat trainset,
   saveAscii(basename+"_curve.amat", curve);
   Gnuplot gp;
   gp << "plot '" << basename+"_points.amat" << "' with points, '" 
-     << basename + "_curve.amat" << "' with lines'" << endl;
+     << basename + "_curve.amat" << "' with lines" << endl;
 
   pgetline(cin);
 }
@@ -769,7 +769,9 @@ void Grapher::run()
   if(task=="2D classification" || task=="2D clustering")
     plot_2D_classification(epsfname, trainset, griddim, gridrange, gridoutputs, radius, bw);
   else if(task=="1D regression")
-    plot_1D_regression(epsfname, trainset, griddim, gridrange, gridoutputs, trainoutputs, bw);
+    plot_1D_regression(basename, trainset, griddim, gridrange, gridoutputs, trainoutputs, bw);
+  //  else if(task=="2D regression")
+  //  plot_2D-regression(basename, 
   /*
   else if(task=="2D density")
     plot_2D_density(gridoutputs);

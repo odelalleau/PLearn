@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.9 2003/09/09 18:05:19 plearner Exp $
+   * $Id: getDataSet.cc,v 1.10 2003/10/29 16:55:49 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -127,7 +127,17 @@ VMat getDataSet(const string& datasetstring, const string& alias)
           if(ext==".pmat")
             vm = new FileVMatrix(datasetstring);
           else if(ext==".vmat")
-            vm = new VVMatrix(datasetstring);
+            {
+              string code = readFileAndMacroProcess(datasetstring);
+              if(removeblanks(code)[0]=='<') // old xml-like format 
+                vm = new VVMatrix(datasetstring);
+              else
+                {
+                  vm = dynamic_cast<VMatrix*>(newObject(code));
+                  if(vm.isNull())
+                    PLERROR("Object described in %s is not a VMatrix subclass",datasetstring.c_str());
+                } 
+            }
           else if(ext==".amat")
             vm = loadAsciiAsVMat(datasetstring);
           else if(ext==".strtable")
@@ -136,8 +146,8 @@ VMat getDataSet(const string& datasetstring, const string& alias)
             vm = new AutoSDBVMatrix(remove_extension(datasetstring));            
           else if(ext==".mat")
               vm=loadAsciiAsVMat(datasetstring);
-          else // Suppose it's a file containing a PLearn serialized subclass of VMatrix
-            PLearn::load(datasetstring, vm);
+          else 
+            PLERROR("Unknown extension for vmatrix: %s", ext.c_str());
           vm->setMetaDataDir(extract_directory(datasetstring) + extract_filename(datasetstring) + ".metadata");
         }
       else // it's a directory

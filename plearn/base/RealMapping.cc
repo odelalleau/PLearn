@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.13 2003/09/24 15:12:09 chapados Exp $
+   * $Id: RealMapping.cc,v 1.14 2003/10/29 16:55:49 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -42,11 +42,35 @@
 #include "fileutils.h"
 #include <algorithm>
 #include <sstream>
+#include "PStream.h"
 
 namespace PLearn <%
 using namespace std;
 
-  PLEARN_IMPLEMENT_OBJECT(RealMapping, "ONE LINE DESCR", "NO HELP");
+
+PLEARN_IMPLEMENT_OBJECT(RealMapping, "ONE LINE DESCR", "NO HELP");
+
+PStream& operator<<(PStream& out, const RealRange& x) 
+{ 
+  out.put(x.leftbracket);
+  out << x.low << x.high;
+  out.put(x.rightbracket);
+  return out;
+}
+
+PStream& operator>>(PStream& in, RealRange &x) 
+{ 
+  in.skipBlanksAndCommentsAndSeparators();
+  x.leftbracket = in.get();
+  in.skipBlanksAndComments();
+  in >> x.low;
+  in.skipBlanksAndComments();
+  in >> x.high;
+  in.skipBlanksAndComments();
+  x.rightbracket = in.get();
+  x.checkbrackets();
+  return in;
+}
 
   string RealRange::getString() const 
   {
@@ -90,6 +114,15 @@ using namespace std;
         max = it->second;
     return max;
   }    
+
+void RealMapping::declareOptions(OptionList& ol) 
+{
+  declareOption(ol, "mapping", &RealMapping::mapping, OptionBase::buildoption,
+                "The mapping");
+
+  // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
 
   void RealMapping::buildOrderedMapping()
   { 

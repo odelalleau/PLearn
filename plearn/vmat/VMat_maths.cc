@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.9 2003/10/15 18:08:51 yoshua Exp $
+* $Id: VMat_maths.cc,v 1.10 2003/10/29 16:55:49 plearner Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -51,7 +51,7 @@
 #include "fileutils.h"
 #include "PLMPI.h"
 #include <vector>
-
+#include "VecStatsCollector.h"
 
 namespace PLearn <%
 using namespace std;
@@ -171,6 +171,22 @@ Mat computeBasicStats(VMat m)
     stddevpos_row[j] = sqrt(stddevpos_row[j]/npositive_row[j] - square(meanpos_row[j]));
   }
   return stats;
+}
+
+void computeStats(VMat m, VecStatsCollector& st)
+{
+  st.forget();
+  st.setFieldNames(m->fieldNames());
+  Vec v(m.width());
+  int l = m.length();
+  ProgressBar pbar(cerr, "computing statistics", l);
+  for(int i=0; i<l; i++)
+    {
+      pbar(i);
+      m->getRow(i,v);
+      st.update(v);
+    }
+  st.finalize();
 }
 
 TVec<StatsCollector> computeStats(VMat m, int maxnvalues)

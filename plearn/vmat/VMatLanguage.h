@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.7 2003/10/08 23:01:57 plearner Exp $
+   * $Id: VMatLanguage.h,v 1.8 2003/10/29 16:55:49 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,6 +63,7 @@ using namespace std;
     TVec<int> program; 
     TVec<RealMapping> mappings;
     mutable Vec pstack;
+    mutable Vec myvec;
 
     // maps opcodes strings to opcodes numbers
     static map<string, int> opcodes;
@@ -85,6 +86,12 @@ public:
     typedef Object inherited;
     PLEARN_DECLARE_OBJECT(VMatLanguage);
 
+    //! Executes the program on the srcvec, copy resulting stack to result
+    //! rowindex is only there for instruction 'rowindex' that pushes it on the stack
+    void run(const Vec& srcvec, const Vec& result, int rowindex=-1) const;
+
+    //! Gets the row with the given rowindex from the vmsource VMat
+    //! and applies program to it.
     void run(int rowindex, const Vec& result) const;
 
     inline void setSource(VMat the_source) 

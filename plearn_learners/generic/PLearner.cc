@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.21 2003/10/22 18:18:49 yoshua Exp $
+   * $Id: PLearner.cc,v 1.22 2003/10/29 16:55:49 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -56,10 +56,12 @@ using namespace std;
 
 PLearner::PLearner()
   :
-   seed_(-1), 
-   stage(0), nstages(1),
-   report_progress(true),
-   verbosity(1)
+  n_train_costs_(-1),
+  n_test_costs_(-1),
+  seed_(-1), 
+  stage(0), nstages(1),
+  report_progress(true),
+  verbosity(1)
 {}
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PLearner, "ONE LINE DESCR", "NO HELP");
@@ -68,11 +70,6 @@ void PLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   Object::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(train_set, copies);
   deepCopyField(train_stats, copies);
-}
-
-string PLearner::help()
-{
-  return "The base class for learning algorithms, which should be the main 'products' of PLearn.\n";
 }
 
 void PLearner::declareOptions(OptionList& ol)
@@ -148,6 +145,10 @@ void PLearner::setTrainingSet(VMat training_set, bool call_forget)
     forget();
 }
 
+void PLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
+{ train_stats = statscol; }
+
+
 //! Returns train_set->inputsize()
 int PLearner::inputsize() const
 { 
@@ -185,10 +186,18 @@ PLearner::~PLearner()
 }
 
 int PLearner::nTestCosts() const 
-{ return getTestCostNames().size(); }
+{ 
+  if(n_test_costs_<0)
+    n_test_costs_ = getTestCostNames().size(); 
+  return n_test_costs_;
+}
 
 int PLearner::nTrainCosts() const 
-{ return getTrainCostNames().size(); }
+{ 
+  if(n_train_costs_<0)
+    n_train_costs_ = getTrainCostNames().size();
+  return n_train_costs_; 
+}
 
 int PLearner::getTestCostIndex(const string& costname) const
 {

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.2 2003/10/07 20:49:26 tihocan Exp $ 
+   * $Id: RunCommand.cc,v 1.3 2003/10/29 16:55:48 plearner Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
@@ -68,6 +68,8 @@ void RunCommand::run(const vector<string>& args)
   //  pout << vars << endl;
       
   string script = readFileAndMacroProcess(scriptfile, vars);
+  // cerr << script << endl;
+
   PIStringStream in(script);
 
   while(in)

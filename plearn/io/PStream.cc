@@ -180,40 +180,40 @@ streamsize PStream::readUntil(char* buf, streamsize n, const char* stop_chars)
     return nread;
   }
 
-  //! Reads characters from stream, until we meet one of the closing symbols at the current "level".
-  //! i.e. any opening parenthesis, bracket, brace or quote will open a next level and we'll 
-  //! be back to the current level only *after* we meet the corresponding closing parenthesis, 
-  //! bracket, brace or quote.
-  //! All characters read, except the closingsymbol, will be *appended* to characters_read 
-  //! The closingsymbol is read and returned, but not appended to characters_read.
-int PStream::smartReadUntilNext(const string& closingsymbols, string& characters_read)
+int PStream::smartReadUntilNext(const string& stoppingsymbols, string& characters_read)
 {
   int c;
   while( (c=get()) != EOF)
     {
-      if(closingsymbols.find(c)!=string::npos)
-        return c;
-      if(characters_read.length() == characters_read.capacity())
-        characters_read.reserve(characters_read.length()*2); //don't realloc&copy every time a char is appended...
-      characters_read+= static_cast<char>(c);
-      switch(c)
+      if(stoppingsymbols.find(c)!=string::npos)
+        break;
+      else if(c=='#')  // skip until end of line
+        skipRestOfLine();
+      else
         {
-        case '(':
-          smartReadUntilNext(")", characters_read);
-          characters_read+= ')';          
-          break;
-        case '[':
-          smartReadUntilNext("]", characters_read);
-          characters_read+= ']';          
-          break;
-        case '{':
-          smartReadUntilNext("}", characters_read);
-          characters_read+= '}';          
-          break;
-        case '"':
-          smartReadUntilNext("\"", characters_read);
-          characters_read+= '"';          
-          break;          
+          if(characters_read.length() == characters_read.capacity())
+            characters_read.reserve(characters_read.length()*2); //don't realloc&copy every time a char is appended...
+          characters_read+= static_cast<char>(c);
+          
+          switch(c)
+            {
+            case '(':
+              smartReadUntilNext(")", characters_read);
+              characters_read+= ')';          
+              break;
+            case '[':
+              smartReadUntilNext("]", characters_read);
+              characters_read+= ']';          
+              break;
+            case '{':
+              smartReadUntilNext("}", characters_read);
+              characters_read+= '}';          
+              break;
+            case '"':
+              smartReadUntilNext("\"", characters_read);
+              characters_read+= '"';          
+              break;          
+            }
         }
     }
   return c;

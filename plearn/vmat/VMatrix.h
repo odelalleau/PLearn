@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.25 2003/10/16 00:27:48 plearner Exp $
+   * $Id: VMatrix.h,v 1.26 2003/10/29 16:55:49 plearner Exp $
    ******************************************************* */
 
 
@@ -66,6 +66,9 @@ class Func;
 class VMatrix: public Object
 {
   friend class VMat;
+
+private:
+  mutable FILE* lockf_; //! .lock file in metadatadir
 
 protected:
   int length_;
@@ -102,7 +105,6 @@ private:
   //! This does the actual building. 
   // (Please implement in .cc)
   void build_();
-
 
 public:
   mutable Array<VMField> fieldinfos; // don't use this directly (deprecated...) call getFieldInfos() instead
@@ -269,6 +271,18 @@ public:
 
   //! Throws a PLERROR if no metadatadir was set.
   string getMetaDataDir() const; 
+
+  //! Locks the metadata directory by creating a .lock file inside it.
+  //! If such a file already exists, it is interpreted as being locked by some other process:
+  //! this process will print to cerr that it is waiting for a lock on that directory,
+  //! and will block and wait until the existing .lock is removed before recreating its own.
+  //! Throws a PLearnError if called and metadatadir is not set, or lock is already held by this object 
+  //! (i.e. this->lockMetaDataDir has already been called previously and no unlockMetaDataDir() was called).
+  void lockMetaDataDir() const;
+
+  //! Removes the .lock file inside the metadatadir.
+  //! It will throw a PLearnError if this object did not hold the lock.
+  void unlockMetaDataDir() const;
 
   //! returns the 'alias' for this dataset. The alias is a short name that 
   //! can be used as part of a filename containing results related to this VMat.

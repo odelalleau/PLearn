@@ -49,7 +49,7 @@ class InputPoints:
     def getRealCoords(self, sx,sy):
         """Returns x,y coordinates to put in mat, given sx,sy canvas coordinates expressed in pixels"""
         x = self.xlow + sx*(self.xhigh-self.xlow)/self.canvaswidth
-        y = self.ylow + sy*(self.yhigh-self.ylow)/self.canvaswidth
+        y = self.yhigh - sy*(self.yhigh-self.ylow)/self.canvaswidth
         return x,y
         
     def __init__(self, master, filepath):

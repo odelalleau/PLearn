@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// PrecomputedVMatrix.h
+// RowsSubVMatrix.cc
 //
 // Copyright (C) 2003 Pascal Vincent 
 // 
@@ -33,78 +33,65 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.h,v 1.2 2003/10/29 16:55:49 plearner Exp $ 
+   * $Id: RowsSubVMatrix.cc,v 1.1 2003/10/29 16:55:49 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
 
-/*! \file PrecomputedVMatrix.h */
+/*! \file RowsSubVMatrix.cc */
 
 
-#ifndef PrecomputedVMatrix_INC
-#define PrecomputedVMatrix_INC
-
-#include "SourceVMatrix.h"
+#include "RowsSubVMatrix.h"
 
 namespace PLearn <%
 using namespace std;
 
-class PrecomputedVMatrix: public SourceVMatrix
+
+RowsSubVMatrix::RowsSubVMatrix()
+  :startrow(0)
+{}
+
+RowsSubVMatrix::RowsSubVMatrix(VMat the_source, int the_startrow, int the_length)
+  :SourceVMatrix(the_source), startrow(the_startrow)
+{ 
+  length_ = the_length;
+  build_(); 
+}
+
+
+PLEARN_IMPLEMENT_OBJECT(RowsSubVMatrix, "ONE LINE DESCRIPTION", "MULTI-LINE \nHELP");
+
+void RowsSubVMatrix::getRow(int i, Vec v) const
 {
-protected:
-  VMat precomp_source; // The precomputed source, as a DiskVMatrix
+  source->getRow(startrow+i,v);
+}
 
-public:
+void RowsSubVMatrix::declareOptions(OptionList& ol)
+{
+  declareOption(ol, "startrow", &RowsSubVMatrix::startrow, OptionBase::buildoption,
+                "The row where this submatrix starts in the source.\n"
+                "You should also explicitly specify the length option.\n");
 
-  typedef SourceVMatrix inherited;
+  // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
 
-  // ************************
-  // * public build options *
-  // ************************
+void RowsSubVMatrix::build_()
+{
+  setMetaInfoFromSource();
+}
 
-  string precomp_type;
+// ### Nothing to add here, simply calls build_
+void RowsSubVMatrix::build()
+{
+  inherited::build();
+  build_();
+}
 
-  // ****************
-  // * Constructors *
-  // ****************
-
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  PrecomputedVMatrix();
-
-  // ******************
-  // * Object methods *
-  // ******************
-
-private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
-  
-  void usePrecomputed();
-
-protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
-
-public:
-
-  virtual void setMetaDataDir(const string& the_metadatadir);
-
-  //!  This is the only method requiring implementation
-  virtual void getRow(int i, Vec v) const;
-
-  // simply calls inherited::build() then build_() 
-  virtual void build();
-
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(PrecomputedVMatrix);
-
-};
+void RowsSubVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+}
 
 %> // end of namespace PLearn
-#endif
+

@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// PrecomputedVMatrix.h
+// RowsSubVMatrix.h
 //
 // Copyright (C) 2003 Pascal Vincent 
 // 
@@ -33,27 +33,24 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.h,v 1.2 2003/10/29 16:55:49 plearner Exp $ 
+   * $Id: RowsSubVMatrix.h,v 1.1 2003/10/29 16:55:49 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
 
-/*! \file PrecomputedVMatrix.h */
+/*! \file RowsSubVMatrix.h */
 
 
-#ifndef PrecomputedVMatrix_INC
-#define PrecomputedVMatrix_INC
+#ifndef RowsSubVMatrix_INC
+#define RowsSubVMatrix_INC
 
 #include "SourceVMatrix.h"
 
 namespace PLearn <%
 using namespace std;
 
-class PrecomputedVMatrix: public SourceVMatrix
+class RowsSubVMatrix: public SourceVMatrix
 {
-protected:
-  VMat precomp_source; // The precomputed source, as a DiskVMatrix
-
 public:
 
   typedef SourceVMatrix inherited;
@@ -62,7 +59,7 @@ public:
   // * public build options *
   // ************************
 
-  string precomp_type;
+  int startrow;
 
   // ****************
   // * Constructors *
@@ -70,7 +67,9 @@ public:
 
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
-  PrecomputedVMatrix();
+  RowsSubVMatrix();
+
+  RowsSubVMatrix(VMat the_source, int the_startrow, int the_length);
 
   // ******************
   // * Object methods *
@@ -80,8 +79,6 @@ private:
   //! This does the actual building. 
   // (Please implement in .cc)
   void build_();
-  
-  void usePrecomputed();
 
 protected: 
   //! Declares this class' options
@@ -89,9 +86,6 @@ protected:
   static void declareOptions(OptionList& ol);
 
 public:
-
-  virtual void setMetaDataDir(const string& the_metadatadir);
-
   //!  This is the only method requiring implementation
   virtual void getRow(int i, Vec v) const;
 
@@ -102,7 +96,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(PrecomputedVMatrix);
+  PLEARN_DECLARE_OBJECT(RowsSubVMatrix);
 
 };
 

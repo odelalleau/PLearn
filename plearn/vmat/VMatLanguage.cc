@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.12 2003/10/08 23:01:57 plearner Exp $
+   * $Id: VMatLanguage.cc,v 1.13 2003/10/29 16:55:49 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -448,16 +448,15 @@ using namespace std;
       }
   }
 
-  void VMatLanguage::run(int rowindex, const Vec& result) const
+void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
   {
     real a,b,c;
-    
+    if(srcvec.length()!=vmsource.width())
+      PLERROR("In VMatLanguage::run, srcvec should have length %d, not %d.",vmsource.width(),srcvec.length());
     pstack.resize(0);
     TVec<int>::iterator pptr = program.begin();
     TVec<int>::iterator pptrend = program.end();
-    Vec myvec(vmsource.width());
-    vmsource->getRow(rowindex,myvec);
-    real* pfieldvalues = myvec.data();
+    real* pfieldvalues = srcvec.data();
     while(pptr!=pptrend)
       {
         int op = *pptr++;
@@ -698,6 +697,13 @@ using namespace std;
     pstack >> result;
 
   };
+
+void VMatLanguage::run(int rowindex, const Vec& result) const
+{
+  myvec.resize(vmsource.width());
+  vmsource->getRow(rowindex,myvec);
+  run(myvec, result, rowindex);
+}
   
   void  PreprocessingVMatrix::getRow(int i, Vec v) const
   {

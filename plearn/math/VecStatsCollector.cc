@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.13 2003/10/20 20:11:26 plearner Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.14 2003/10/29 16:55:49 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -88,21 +88,17 @@ double VecStatsCollector::getStat(const string& statspec)
   in.smartReadUntilNext("[", statname);
   string fieldname;
   in.smartReadUntilNext("]", fieldname);
-  int fieldnum = getFieldNum(fieldname);
+  int fieldnum = getFieldNum(fieldname);  
+  if(fieldnum<0)
+    PLERROR("In VecStatsCollector::getStat invalid fieldname: %s",fieldname.c_str());
   return getStats(fieldnum).getStat(statname);
 }
 
 int VecStatsCollector::getFieldNum(const string& fieldname_or_num) const
 { 
-  int num = -1;
-  try 
-    {
-      num = toint(fieldname_or_num);
-    }
-  catch(const PLearnError& ple)
-    {
-      num = fieldnames.find(fieldname_or_num); 
-    }
+  int num = fieldnames.find(fieldname_or_num); 
+  if(num<0) // not found
+    num = toint(fieldname_or_num); // suppose it's an integer
   return num;
 }
 

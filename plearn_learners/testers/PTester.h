@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.5 2003/10/18 22:46:03 yoshua Exp $ 
+   * $Id: PTester.h,v 1.6 2003/10/29 16:55:49 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -142,21 +142,19 @@ class StatSpec
 {
 public:
   string extstat;  //! "external" stat, to be computed over splits
-  string intstat;  //! "internal" stat to be computed over examples the given a train or test set of a split
   string setname;  //! "train" or "test1" or "test2" ...
   int setnum;      //! data set on which to compute stat: 0 :train, 1: test1, ...
-  string costname; //! the name of the cost we are interested in.
-  int costindex; // index of cost in vector of train costs (if setnum==0) or test costs (if setnum==1) computed by the learner.
 
-  StatSpec() : setnum(-1), costindex(-1) {}
+  //! "internal" stat to be computed over examples the given a train or test set of a split. Ex.: "E[costname]"
+  //! This string will at some point be used to call the VecStatsCollector's getStat(...) method.
+  string intstatname;  
 
-  void init(const string& statname, PP<PLearner> learner);
+  StatSpec() : setnum(-1) {}
 
-  string intStatName()
-  { return intstat + "[" + setname + "." + costname + "]"; }
+  void init(const string& statname);
 
   string statName()
-  { return extstat + "[" + intStatName() + "]"; }
+   { return extstat + "[" + setname + "." + intstatname + "]"; }
 
 private:
 

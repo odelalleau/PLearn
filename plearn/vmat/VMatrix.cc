@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.30 2003/10/16 00:27:48 plearner Exp $
+* $Id: VMatrix.cc,v 1.31 2003/10/29 16:55:49 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -73,13 +73,13 @@ using namespace std;
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(VMatrix, "ONE LINE DESCR", "NO HELP");
 
 VMatrix::VMatrix()
-  :length_(-1), width_(-1), mtime_(0), 
+  : lockf_(0), length_(-1), width_(-1), mtime_(0), 
    inputsize_(-1), targetsize_(-1), weightsize_(-1),
    writable(false)
 {}
 
 VMatrix::VMatrix(int the_length, int the_width)
-  :length_(the_length), width_(the_width), mtime_(0), 
+  : lockf_(0), length_(the_length), width_(the_width), mtime_(0), 
    inputsize_(-1), targetsize_(-1), weightsize_(-1),
    writable(false),
    map_sr(TVec<map<string,real> >(the_width)),
@@ -178,8 +178,7 @@ int VMatrix::fieldIndex(const string& fieldname) const
 void VMatrix::build_()
 {
   if(metadatadir!="")
-    force_mkdir(metadatadir);
-  metadatadir = abspath(metadatadir);
+    setMetaDataDir(metadatadir); // make sure we perform all necessary operations 
 }
 
 void VMatrix::build()
@@ -570,6 +569,62 @@ void VMatrix::setMetaDataDir(const string& the_metadatadir)
   metadatadir = abspath(metadatadir);
 }
 
+string getHost()
+{
+  return "TODO";
+}
+
+int getPid()
+{
+  return -999;
+}
+
+string getUser()
+{
+  return "TODO";
+}
+
+void VMatrix::lockMetaDataDir() const
+{
+  if(!hasMetaDataDir())
+    PLERROR("In VMatrix::lockMetaDataDir(): metadatadir was not set");
+  if(lockf_!=0) // already locked by this object!
+    PLERROR("VMatrix::lockMetaDataDir() called while already locked by this object.");
+  if(!pathexists(metadatadir))
+    force_mkdir(metadatadir);
+  string lockfile = append_slash(metadatadir)+".lock";  
+  lockf_ = fopen(lockfile.c_str(),"w");  
+  if(lockf_==0) //! locked by somebody else
+    {
+      string bywho;
+      try{ bywho = loadFileAsString(lockfile); }
+      catch(...) { bywho = "UNKNOWN (could not read .lock file)"; }
+
+      cerr << "! Waiting for .lock on directory " << metadatadir 
+           << " created by " << bywho << endl;
+    }
+  do
+    { 
+      // try again after a second
+      sleep(1);
+      lockf_ = fopen(lockfile.c_str(),"w");        
+    }   while(lockf_==0);
+  
+  fprintf(lockf_, "host %s, pid %d, user %s", getHost().c_str(), getPid(), getUser().c_str());
+  fflush(lockf_);   // Don't close it: to keep the lock!
+
+}
+
+void VMatrix::unlockMetaDataDir() const
+{
+  if(lockf_==0)
+    PLERROR("In VMatrix::unlockMetaDataDir() was called while no lock is held by this object");
+  fclose(lockf_);
+  string lockfile = append_slash(metadatadir)+".lock";  
+  rm(lockfile);
+  lockf_ = 0;
+}
+
 string VMatrix::getMetaDataDir() const
 { 
   //  if(!hasMetaDataDir())
@@ -590,6 +645,8 @@ void VMatrix::loadAllStringMappings()
 // loads the appropriate string map file for column 'col'
 void VMatrix::loadStringMapping(int col)
 {
+  if(!hasMetaDataDir())
+    return;
   string fname = getSFIFFilename(col,".smap");
   init_map_sr();
   force_mkdir(getMetaDataDir()+"FieldInfo/");

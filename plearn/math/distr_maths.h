@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: distr_maths.h,v 1.1 2002/10/22 08:46:07 plearner Exp $
+   * $Id: distr_maths.h,v 1.2 2003/10/29 16:55:49 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -60,8 +60,10 @@ real logPFittedGaussian(const Vec& x, const Mat& X, real lambda);
 //! gamma is the "variance" used for all other directions.
 //! Eigenvalues need not be in decreasing order, but as soon as we meet a 0 eigenvalue,
 //! this and all subsequent ones are considered to be equal to gamma.
+//! In addition if add_gamma_to_eigenval is true, the used eigenvalues will be eigenvalues+gamma.
 real logOfCompactGaussian(const Vec& x, const Vec& mu, 
-                          const Vec& eigenvalues, const Mat& eigenvectors, real gamma=1e-6);
+                          const Vec& eigenvalues, const Mat& eigenvectors, 
+                          real gamma=1e-6, bool add_gamma_to_eigenval=false);
 
 
 %> // end of namespace PLearn
