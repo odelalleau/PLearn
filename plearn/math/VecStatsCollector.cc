@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.1 2002/09/26 05:06:53 plearner Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.2 2003/03/19 23:04:00 jkeable Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -102,11 +102,26 @@ void VecStatsCollector::update(const Vec& x)
   if(stats.size()!=n)
     PLERROR("In VecStatsCollector: problem, called update with vector of length %d, while size of stats (and most likeley previously seen vector) is %d", n, stats.size());
 
-  for(int k=0; k<n; k++)
-    stats[k].update(x[k]);
+  // this speeds things up a bit
+  //bool has_missing=false;
 
-  if(compute_covariance)
-    externalProductAcc(cov, x, x);
+  for(int k=0; k<n; k++)
+  {
+    stats[k].update(x[k]);
+/*    if(is_missing(x[k]))
+      x[k]=0;//has_missing=true;*/
+  }
+       
+/*  if(compute_covariance)
+    if(has_missing)
+    {
+      for(int i=0;i<n;i++)
+        for(int j=0;j<n;j++)
+          if(!is_missing(x[i]) && !is_missing(x[j]))
+            cov(i,j)+=x[i]*x[j];
+    }
+    else*/ 
+  externalProductAcc(cov, x, x);
 }
 
 void VecStatsCollector::forget()
@@ -158,16 +173,19 @@ Vec VecStatsCollector::getStdError() const
 //! returns centered covariance matrix (mean subtracted)
 Mat VecStatsCollector::getCovariance() const
 {
-  int l = stats[0].n();
   Vec meanvec = getMean();
-  Mat covarmat = cov/real(l);
+  Mat covarmat = cov / real(stats[0].n());
   externalProductScaleAcc(covarmat,meanvec,meanvec,real(-1.));
   return covarmat;
 }
   
 //! returns correlation matrix
 Mat VecStatsCollector::getCorrelation() const
-{ return getCovariance()/getVariance(); }
+{  
+  Mat norm(cov.width(),cov.width());
+  externalProduct(norm,getStdDev(),getStdDev());
+  return getCovariance()/norm;
+}
 
 void VecStatsCollector::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {

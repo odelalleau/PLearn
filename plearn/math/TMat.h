@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.10 2003/03/18 18:29:56 ducharme Exp $
+   * $Id: TMat.h,v 1.11 2003/03/19 23:02:35 jkeable Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -546,10 +546,8 @@ class TVec
 
     inline void pop_back()
     {
-#ifdef BOUNDCHECK
       if(length_ <= 0)
         PLERROR("In TVec::pop_back already empty!");
-#endif
       length_ -= 1; 
     } 
 
@@ -750,7 +748,6 @@ class TVec
 
 // Youhoooo!!! Beaucoup de sueur pour pouvoir ecrire cette ligne... ;p (Pascal)
   typedef TVec<real> Vec;
-
 
 // **************
 // **** TMat ****

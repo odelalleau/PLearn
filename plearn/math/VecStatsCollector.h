@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.1 2002/09/26 05:06:53 plearner Exp $ 
+   * $Id: VecStatsCollector.h,v 1.2 2003/03/19 23:04:00 jkeable Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -65,7 +65,6 @@ public:
   // * "learnt" options *
   TVec<StatsCollector> stats; // the stats for each element
   Mat cov; // the uncentered covariance matrix (mean not subtracted: X'.X)
-
 
   // ****************
   // * Constructors *

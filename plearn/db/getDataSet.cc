@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.2 2002/11/28 05:05:22 jkeable Exp $
+   * $Id: getDataSet.cc,v 1.3 2003/03/19 23:06:16 jkeable Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -177,7 +177,8 @@ VMat getDataSet(const string& datasetstring, const string& alias)
       PLERROR("In getDataSet specification of predefined dataset: expecting second word to be 'train' or 'test' or 'all' not %s ...",dsetspec[1].c_str());
     vm->setMetaDataDir("/u/lisa/db/metadata/" + datasetstring);
   }
-
+  
+  vm->loadAllStringMappings();
   vm->setAlias(alias);
   vm->unduplicateFieldNames();
   return vm;

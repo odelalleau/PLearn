@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AutoSDBVMatrix.cc,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: AutoSDBVMatrix.cc,v 1.2 2003/03/19 23:06:15 jkeable Exp $
    * AUTHOR: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -67,6 +67,12 @@ AutoSDBVMatrix::AutoSDBVMatrix(const string& dbname)
 
   width_= sdb_.width();
   length_ = sdb_.length();
+
+  // resize the string mappings (TODO/WARNING : two string maping systems coexist (not so peacfully), next 2 line are from the newer system but
+  // transition is uncompleted
+  map_sr = TVec<map<string,real> >(width_);
+  map_rs = TVec<map<real,string> >(width_);
+
   int i=0;
   for(it=sc.begin(); it!=itend; ++it)
     {

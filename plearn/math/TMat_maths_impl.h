@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.9 2003/03/03 15:16:00 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.10 2003/03/19 23:03:19 jkeable Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -5118,6 +5118,12 @@ template<class T>
 inline TMat<T> operator/(const TMat<T>& m, const TVec<T>& v)
 { TMat<T> res = m.copy(); res/=v; return res; }
 
+//!  elementwise division of every row by v
+template<class T>
+inline TMat<T> operator/(const TMat<T>& m1, const TMat<T>& m2)
+{ TMat<T> res = m1.copy(); res/=m2; return res; }
+
+ 
 template<class T>
 inline void choleskySolve(const TMat<T>& L, TVec<T> b, TVec<T> x) //!<  So that y be optional
 { TVec<T> y; choleskySolve(L,b,x,y); }

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: AutoSDBVMatrix.h,v 1.3 2002/10/03 07:35:27 plearner Exp $
+   * $Id: AutoSDBVMatrix.h,v 1.4 2003/03/19 23:06:15 jkeable Exp $
    * AUTHOR: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -51,11 +51,7 @@
 #include "SimpleDB.h"
 #include "VMat.h"
 #include "RowBufferedVMatrix.h"
-#if __GNUC__ < 3
-#  include <hash_map>
-#else
-#  include <ext/hash_map>
-#endif
+#include <map>
 
 namespace PLearn <%
 using namespace std;
@@ -76,13 +72,15 @@ public:
   StringFieldMapping(string filename_, real dft_val_= MISSING_VALUE)
     :dft_val(dft_val_), mapping()
   {
-    ifstream f(filename_.c_str());
+    /*ifstream*/ PIFStream f(filename_.c_str());
     while(f)
       {
 	string s;
-	PLearn::read(f, s);
-	real val;	    
-	PLearn::read(f, val);
+    f >> s;
+	//PLearn::read(f, s);
+	real val;
+    f >> val;
+	//PLearn::read(f, val);
 	if(f) mapping[s]= val;
       }
   }
