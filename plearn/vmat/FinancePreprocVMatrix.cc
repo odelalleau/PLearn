@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.cc,v 1.5 2004/02/17 15:55:06 dorionc Exp $ 
+   * $Id: FinancePreprocVMatrix.cc,v 1.6 2004/02/19 16:57:35 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.cc */
@@ -54,7 +54,8 @@ FinancePreprocVMatrix::FinancePreprocVMatrix(VMat vm, TVec<string> the_asset_nam
     bool add_tradable_info, bool add_last_day, bool add_moving_average_stats,
     bool add_roll_over_info, int threshold, TVec<string> the_price_tags,
     TVec<int> moving_average_window_length,
-    string the_volume_tag, string the_date_tag, string the_expiration_tag)
+    string the_volume_tag, string the_date_tag, string the_expiration_tag,
+    int the_last_day_cutoff)
   :inherited(vm->length(), vm->width()+(add_tradable_info?the_asset_names.size():0) + (add_last_day?1:0) + (add_moving_average_stats?the_asset_names.size()*the_price_tags.size()*moving_average_window_length.size():0)+(add_roll_over_info?the_asset_names.size():0)),
    underlying(vm), asset_name(the_asset_names),
    add_tradable(add_tradable_info), add_last_day_of_month(add_last_day),
@@ -63,8 +64,8 @@ FinancePreprocVMatrix::FinancePreprocVMatrix(VMat vm, TVec<string> the_asset_nam
    min_volume_threshold(threshold), prices_tag(the_price_tags),
    moving_average_window(moving_average_window_length),
    volume_tag(the_volume_tag), date_tag(the_date_tag),
-   expiration_tag(the_expiration_tag), rollover_date(asset_name.size()),
-   row_buffer(vm->width())
+   expiration_tag(the_expiration_tag), last_day_cutoff(the_last_day_cutoff),
+   rollover_date(asset_name.size()), row_buffer(vm->width())
 {
   build();
 }
@@ -161,6 +162,9 @@ void FinancePreprocVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "expiration_tag", &FinancePreprocVMatrix::expiration_tag, OptionBase::buildoption,
                 "The fieldInfo name of the expiration-date column.");
 
+  declareOption(ol, "last_day_cutoff", &FinancePreprocVMatrix::last_day_cutoff, OptionBase::buildoption,
+                "Cutoff for the add_last_day_of_month flag (default=0).");
+
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
@@ -246,19 +250,19 @@ void FinancePreprocVMatrix::build_()
   {
     int date_col = underlying->fieldIndex(date_tag);
     int julian_day = int(underlying->get(0,date_col));
-    PDate first_day(julian_day);
-    int previous_month = first_day.month;
+    PDate first_date(julian_day-last_day_cutoff);
+    int previous_month = first_date.month;
     for (int i=1; i<underlying.length(); i++)
     {
       julian_day = int(underlying->get(i,date_col));
-      PDate today(julian_day);
+      PDate today(julian_day-last_day_cutoff);
       int this_month = today.month;
       if (this_month != previous_month) last_day_of_month_index.append(i-1);
       previous_month = this_month;
     }
     // we set the last day as a last tradable day of month (by default)
-    if (last_day_of_month_index.lastElement() != underlying.length()-1)
-      last_day_of_month_index.append(underlying.length()-1);
+    //if (last_day_of_month_index.lastElement() != underlying.length()-1)
+    //  last_day_of_month_index.append(underlying.length()-1);
   }
 
   if (add_moving_average)

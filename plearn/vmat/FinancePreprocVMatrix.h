@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.h,v 1.3 2003/09/23 21:06:53 ducharme Exp $ 
+   * $Id: FinancePreprocVMatrix.h,v 1.4 2004/02/19 16:57:35 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.h */
@@ -63,6 +63,7 @@ public:
   string volume_tag; //! "volume" by default
   string date_tag; //! "Date" by default.  Only used if add_last_day_of_month==true
   string expiration_tag; //! "expiration-date" by default.  Only used if add_rollover_info==true
+  int last_day_cutoff; //! 0 by default (last day of month).  Set last_day=15 to simulate last_day_of_month as the 15 of each month
 
 protected:
 
@@ -92,7 +93,7 @@ public:
       int threshold=20, TVec<string> the_price_tags=TVec<string>(),
       TVec<int> moving_average_window_length=TVec<int>(),
       string the_volume_tag="volume:level", string the_date_tag="Date",
-      string the_expiration_tag="expiration-date");
+      string the_expiration_tag="expiration-date", int the_last_day_cutoff=0);
 
   // ******************
   // * Object methods *
