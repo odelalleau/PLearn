@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.66 2005/02/15 19:52:25 ducharme Exp $
+   * $Id: fileutils.cc,v 1.67 2005/02/16 16:14:45 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -416,22 +416,38 @@ void skipBlanksAndComments(PStream& in)
 /////////////////////////
 void getNextNonBlankLine(PStream& in, string& line)
 {
-  for(;;)
-  {
+  while (in) {
     in.getline(line);
-    if(in.eof())
-    {
-      line="";
+    size_t l = line.size();
+    bool ok = false;
+    size_t i = 0;
+    while (i < l) {
+      char& c = line[i];
+      if (!isspace(c)) {
+        if (c == '#') {
+          if (!ok)
+            // The first non-blank character is a comment.
+            break;
+          else {
+            // We get rid of the comments.
+            line.resize(i);
+            return;
+          }
+        } else {
+          // We got a non-blank, non-comment character.
+          ok = true;
+          i++;
+        }
+      } else
+        // Read a blank character.
+        i++;
+    }
+    if (ok)
+      // We read a non-blank line with no comment.
       return;
-    }
-    int l = (int)line.length();
-    for(int i=0; i<l; i++)
-    {
-      char c = line[i];
-      if(!isspace(c) && c!='#')
-        return;            
-    }
   }
+  // Could not find a non-blank line.
+  line = "";
 }
 
 //////////////////////////////

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.20 2005/02/15 16:11:35 chrish42 Exp $
+   * $Id: fileutils.h,v 1.21 2005/02/16 16:14:45 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -133,7 +133,7 @@ using namespace std;
   void skipBlanksAndComments(PStream& in);
 
   //! Fills 'line' with the next non blank line (#-style comments are
-  //! considered blank).
+  //! considered blank, and automatically stripped out of 'line').
   void getNextNonBlankLine(PStream& in, string& line);
 
   //! Will return the number of non-blank lines of file.
