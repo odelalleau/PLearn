@@ -33,7 +33,7 @@
 
 import string, re, time, os, os.path, sys
 
-print "pytransform 1.0 [ (c) 2002, Pascal Vincent [GPL]. Report problems to vincentp@iro.umontreal.ca ]"
+print "pytransform 1.0 [ (c) 2002, Pascal Vincent. This is free software distributed under a BSD type license. Report problems to vincentp@iro.umontreal.ca ]"
 
 #########################
 # initialisation 

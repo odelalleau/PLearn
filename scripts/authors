@@ -1,0 +1,118 @@
+#!/usr/bin/env python
+
+# authors
+# Copyright (c) 2002 Pascal Vincent
+
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+import string, os, os.path, sys
+
+def yearof(datestring):
+    """returns the year part of a string of the form YYYY/MM/DD"""
+    return datestring[0:4]
+
+authornames = {
+    'vincentp;': 'Pascal Vincent',
+    'bengioy;': 'Yoshua Bengio',
+    'ducharme;': 'Rejean Ducharme',
+    'chapados;': 'Nicolas Chapados',
+    'dugas;': 'Charles Dugas',
+    'jkeable;': 'Julien Keable',
+    'morinf;': 'Frederic Morin',
+    'senecal;': 'Jean-Sebastien Senecal',
+    'jauvinc;': 'Christian Jauvin',
+    'wangxian;': 'wangxian',
+    'ghosn;': 'Joumana Ghosn',
+    'pierautf;': 'Francis Pieraut',
+    'saintmlx;': 'Xavier Saint-Mleux',
+    }
+
+def nameof(login):
+    """Returns the name associated with a login"""
+    if not authornames.has_key(login):
+        return login
+    else:
+        return authornames[login]
+
+def uniq(l):
+    """returns a list containing elements of the original list only once, in the same order they appeared in the original list"""
+    seen = {}
+    rl = []    # the result list
+    for item in l:
+            count = seen.get(item, 0)
+            if count == 0:
+                        rl.append(item)
+                        seen[item] = count + 1
+    return rl
+
+                        
+# positions in logtable:
+DATE = 1
+LOGIN = 4
+ADDED = 8
+REMOVED = 9
+
+def authors(srcfilename):
+    """Takes the name of a file under cvs, and returns an authors, year list"""
+    dirname, fname = os.path.split(srcfilename)
+    if dirname:
+        os.chdir(dirname)
+    cvslog = os.popen('cvs log ' + fname).readlines()
+    logtable = [ string.split(s) for s in cvslog if string.find(s, ' author: ')>=0 ]
+    logtable.reverse()   # oldest contributions first
+    # add some fake lines for first author
+    logtable[0].append('+10000')
+    logtable[0].append('-0')
+    # filter out contributions with less than 4 lines added, and keep only year and author info
+    logtable = [ [nameof(e[LOGIN]),yearof(e[DATE])] for e in logtable if int(e[ADDED])>=4 ]
+    # get unique list of names
+    names = uniq([ e[0] for e in logtable])
+    # now build the resulting copyright list
+    copyrights = []
+    for name in names:
+        years = uniq([ e[1] for e in logtable if e[0]==name ])
+        copyrights.append('Copyright (c) ' + string.join(years, ',') + ' ' + name)
+
+    return copyrights
+
+#########################
+# Main Program
+#########################
+
+args = sys.argv[:]
+if len(args)<2:
+    print """
+authors 1.0 [ (c) 2002, Pascal Vincent. This is free software distributed under a BSD type license. Report problems to vincentp@iro.umontreal.ca ]
+Usage: authors <sourcefile>
+Will do a cvs log on the specified sourcefile, and extract copyright information from it
+"""
+    sys.exit()
+
+print string.join(authors(args[1]),'\n')
+
