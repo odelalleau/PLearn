@@ -129,6 +129,8 @@ void SmoothedProbSparseMatrix::normalizeCondBackoff(ProbSparseMatrix& nXY, real 
       real sum_row_i = nXY.sumRow(i);
       // Store normalization sum
       normalizationSum[i] =  sum_row_i;
+      // if there is no count in this column : uniform distribution
+      if (normalizationSum[i]==0)normalizationSum[j]=nXY_width;
       backoffNormalization[i]= 1.0;
       map<int, real>& row_i = nXY.getRow(i);
       
@@ -162,6 +164,8 @@ void SmoothedProbSparseMatrix::normalizeCondBackoff(ProbSparseMatrix& nXY, real 
       real sum_col_j = nXY.sumCol(j);
       // Store normalization sum
       normalizationSum[j] =  sum_col_j;
+      // if there is no count in this column : uniform distribution
+      if (normalizationSum[j]==0)normalizationSum[j]=nXY_height;
       backoffNormalization[j]= 1.0;
       map<int, real>&  col_j = nXY.getCol(j);
       for (map<int, real>::iterator it = col_j.begin(); it != col_j.end(); ++it){
@@ -199,7 +203,11 @@ real SmoothedProbSparseMatrix::get(int i, int j)
     map<int, real>& row_i = rows[i];
     map<int, real>::iterator it = row_i.find(j);
     if (it == row_i.end()){
+      // if no data in this column : uniform distribution
+      if (discountedMass[i]==0)return 1/normalizationSum[i];
+      // Laplace smoothing
       if(smoothingMethod==1)return 1/normalizationSum[i];
+      // Backoff smoothing
       if(smoothingMethod==2)return discountedMass[i]*backoffDist[j]/(normalizationSum[i]* backoffNormalization[i]);
       // Non-shadowing backoff
       if(smoothingMethod==3)return discountedMass[i]*backoffDist[j]/(normalizationSum[i]);
@@ -212,7 +220,11 @@ real SmoothedProbSparseMatrix::get(int i, int j)
     map<int, real>& col_j = cols[j];
     map<int, real>::iterator it = col_j.find(i);
     if (it == col_j.end()){
+      // if no data in this column : uniform distribution
+      if (discountedMass[j]==0)return 1/normalizationSum[j];
+      // Laplace smoothing
       if(smoothingMethod==1)return 1/normalizationSum[j];
+      // Backoff smoothing
       if(smoothingMethod==2)return discountedMass[j]*backoffDist[i]/(normalizationSum[j]*backoffNormalization[j]);
       // Non-shadowing backoff
       if(smoothingMethod==3)return discountedMass[j]*backoffDist[i]/(normalizationSum[j]);
