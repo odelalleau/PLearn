@@ -18,15 +18,17 @@ class BasicStats:
         
         if self.nb_of_tests == 0:
             return ("No %s runned!" % self.test_type)
-        
-        mystr = ( '+++ %s success: %d / %d\n'
-                  '    Failure%s: %s\n'
-                  % (self.test_type, 
-                     self.succeeded, self.nb_of_tests,
+
+        reported_total = self.nb_of_tests - self.skipped
+        mystr = ( "+++ %s: \n"
+                  "    - Success%s: %d / %d\n"
+                  "    - Failure%s: %s\n"
+                  % (self.test_type, plural(self.succeeded, plur='es'),
+                     self.succeeded, reported_total,
                      plural(nfailed), str(self.failed))
                   )
         if self.skipped > 0:
-            mystr = '%s    Skipped: %d\n' % (mystr, self.skipped)
+            mystr = '%s    - Skipped: %d\n' % (mystr, self.skipped)
 
         return mystr
         

@@ -1,4 +1,4 @@
-import inspect, types
+import inspect, string, types
 
 ##########################################
 ### Helper functions 
@@ -59,22 +59,64 @@ class FrozenObject:
         @type  overrides: Dictionnary
         """
         self._frozen = False
-
-        self._defaults = defaults        
+        
+        self.__members    = []
+        self.__str_spacer = ' '
+        self._defaults    = defaults
+        members_list      = inspect.getmembers(defaults)
+        declared_members   = []
+        
         if defaults is not None:
-            defaults_dict = dict( [(x,y) for (x,y) in inspect.getmembers(defaults)
-                                   if not(x[0:2] == "__" and x[-2:]=="__")        ] )
-            self.__dict__.update( defaults_dict )
-
+            defaults_dict = {}
+            for (x,y) in members_list:
+                if not(x[0:2] == "__" and x[-2:]=="__"):
+                    self.__dict__[x] = y
+                elif x == '__declare_members__':
+                    declared_members = y
+        
         if overrides is not None:
             self.__dict__.update( overrides )
 
+        for (att, typ) in declared_members:
+            self.__members.append(att)
+            if typ is not None:
+                self.type_check(att, typ)
+        
         self._frozen = True
 
     __setattr__=frozen(object.__setattr__)
     class __metaclass__(type):
         __setattr__=frozen(type.__setattr__)
 
+    def __str__(self):
+        members = [ ]
+        
+        for member in self.classmembers():
+            value = getattr(self, member)            
+            if isinstance(value, types.StringType):
+                members.append( '%s = "%s"' % (member,value) )
+            else:
+                members.append( '%s = %s' % (member,value) )
+
+        sp = self.__str_spacer
+        indent = ''
+        if sp == '\n':
+            indent = '    '
+
+        return ( "%s%s(%s%s%s%s)"
+                 % ( sp, self.classname(),
+                     sp, indent,
+                     string.join(members, ',%s%s'%(sp, indent)),
+                     sp
+                     )
+                 )
+    
+    def __repr__(self):
+        return str(self)
+
+    def set_str_spacer(self, sp):
+        self.__str_spacer = sp
+    
     def classname(self):
         """Simple shortcut method to get the classname of an instance object.
 
@@ -82,14 +124,17 @@ class FrozenObject:
         """
         return self.__class__.__name__
 
+    def classmembers(self):
+        return self.__members
+
     def set_attribute(self, key, value):
         self._frozen = False
         setattr(self, key, value)
         self._frozen = True
 
-    def mandatory_override(self, attribute_name):
-        if getattr(self, attribute_name) is None:
-            raise MandatoryOverrideError(self, attribute_name)
+##     def mandatory_override(self, attribute_name):
+##         if getattr(self, attribute_name) is None:
+##             raise MandatoryOverrideError(self, attribute_name)
 
     def type_check(self, attribute_name, expected_type):
         att = getattr(self, attribute_name)

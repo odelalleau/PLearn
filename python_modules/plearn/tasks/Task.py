@@ -1,7 +1,8 @@
 import os, sys, shutil, string, traceback
-from toolkit                    import WithOptions
-from threading                  import Thread     
-from plearn.utilities.verbosity import vprint
+
+from threading                      import *
+from plearn.utilities.verbosity     import *
+from plearn.utilities.FrozenObject  import *
 
 def task_name_from_int(number):
     name = ''
@@ -14,163 +15,113 @@ def task_name_from_int(number):
     name += str( int(number) )
     return name
 
-class Task(Thread, WithOptions):
-    ## The are options (and there default values) that can
-    ##  be modified through the set_option() mechanism. These
-    ##  options become (somehow 'protected') class attributes.
-    OPTIONS =  { 'log_file':None,
-                 'override_dispatch_cmd':None,
-                 'parent_name':None,
-                 'results_directory':None,
-                 'run_in_results_directory':False,
-                 'signal_completion':True,
-                 'quote_cmd_line':False
-                 }
-    
-    def __init__(self, dispatch, task_id, cmd_line, options=OPTIONS):
-        """The constructor.
+class TaskDefaults:
+    """Defaults field values for a task instance.
 
-        The task_id will be helpfull to track tasks. Note that it can be set by
-        set_id() method if it is not here, but once it is set, it can't be changed.
+    Both must be None or both must be set...
 
-        The cmd_line is the exact command line to invoke to get the task done.
-        Note that it can be set by set_cmd_line() method if it is not here, but once it
-        is set, it can't be changed.
+    @cvar task_name: If it is let to None, the task_name will be
+    generated for the Task.counter value at the task instanciation.
 
-        If provided, the results directory will be created at the beggining of the run.
-        No other considerations are currently given to it.
+    @cvar require_shared_ressources: 
+    """
+    task_name                   = None
+    require_shared_ressources   = None
+    release_shared_ressources   = None
+    signal_completion           = (lambda task: None)
+
+class Task(Thread, FrozenObject):    
+    """A specific type of thread.
+
+    @cvar counter: Counting the tasks instanciated. If no name is
+    provided to the constructor, it will be used to generate the
+    task's name.
+    """
+    counter = 0
+        
+    def __init__( self, defaults = TaskDefaults, **overrides ):
+        """Builds a task thread.
+
+        @param defaults: A class whose class variables are the default
+        values for this object's fields. The default value is L{TaskDefaults}.
+
+        @type  defaults: Class
+
+        Any keyword argument (other than defaults) will be set as a
+        field of this created instance. B{Remember} that the task
+        instance will be passed to the I{body_of_main} callable object.
         """
+        ## This hack is necessary to allow the Thread constructor to
+        ## set some members. It will be set back True by FrozenObject.
+        self._frozen = False
         Thread.__init__(self)
-        WithOptions.__init__(self, options)
+        self.setDaemon(True)
+        FrozenObject.__init__(self, defaults, overrides)
 
-        self.dispatch = dispatch
+        Task.counter += 1
+        self.set_attribute('task_id', Task.counter)
+        if self.task_name is None:
+            self.task_name = task_name_from_int(counter)
+        self.setName( self.task_name )
+
+        ## Both must be None or both must be set
+        if self.require_shared_ressources is not None:
+            assert self.release_shared_ressources is not None
+        if self.release_shared_ressources is not None:
+            assert self.require_shared_ressources is not None
+
+    def body_of_task(self):
+        raise NotImplementedError
+    
+    def preprocessing(self):
+        pass
+
+    def postprocessing(self):
+        pass
+    
+    def run(self):
+        try:
+            self.run_body()
+        except:
+            self.signal_completion(self)
+            raise
         
-        self._id = task_id
-        self._cmd_line = cmd_line
-
-        ## The name is a 4 digit string representation of the id
-        self.setName(task_name_from_int(task_id))
-
-        # If the task fails, this flag must be triggered
-        self.failed          = False
-
-    ###############################################
-    ## Private methods
-    ###############################################
-
-    ###############################################
-    ## Protected Methods
-    ###############################################
-
-    def _do_not_run(self):
-        return False
-
-    def _do_run(self):
-        if self._do_not_run():
-            self.dispatch.acquire_shared_files_access(self)
-            return
-        
-        ## The directory is not created before to avoid
-        ## massive creation of directories at the start
-        ## the dispatching.
-        if ( self._results_directory is not None
-             and not os.path.exists(self._results_directory) ):
-            os.makedirs(self._results_directory) 
+    def run_body(self):
+        self.preprocessing()
+        if self.require_shared_ressources is not None:
+            self.require_shared_ressources()
+            self.shared_ressources_preprocessing()
+            self.release_shared_ressources()
 
         ## Making and changing directory to the experiment directory            
         vprint('[ LAUNCHED %s %s ]' % (self.classname(),self.getName()), 1)
 
-        real_cmd = self._process_command_line()
-
-        self._launch(real_cmd)
-            
-        ## For a proper management of last_experiment_finished        
-        self._local_postprocessing()
-        self.dispatch.acquire_shared_files_access(self)
-        self._postprocessing()
-
-        vprint('[ FINISHED %s %s ]' % (self.classname(),self.getName()), 1)
-
-    def _launch(self, real_cmd):
-##         if self._log_file is None:
-##             self._log_file = 'log_file_%s.txt' % self.getName()        
-##         final_cmd = string.join([ cluster_command,
-##                                   real_cmd,
-##                                   '>&', self._log_file ])
-
-        assert(self.dispatch, "The dispatch field of this Task object was not properly set.")
-
-        if self._override_dispatch_cmd is not None:
-            final_cmd = string.join([ self._override_dispatch_cmd, real_cmd ])
-        else:
-            final_cmd = string.join([ self.dispatch.dispatch_command(), real_cmd ])
-
-        vprint('%s\n'%final_cmd, 1)
-        os.system( final_cmd )
-
-    def _local_postprocessing(self):
-        pass
-    
-    def _failed(self):
-        pass
-    
-    def _postprocessing(self):
-        pass
-    
-    def _process_command_line(self):
-        cmd = ''
-        if self._run_in_results_directory:
-            if self._results_directory is None:
-                raise Exception("You must provide a results directory to the %s\n"
-                                "if you want to set the 'run_in_results_directory' option\n"
-                                "true." % self.classname())
-            cmd += 'cd %s; ' % self._results_directory
-
-        cmd += self._cmd_line #+ ' >& ' + self._log_file
-        if self._log_file is not None:
-            cmd += ' >& ' + self._log_file
-            #self._log_file = 'log_file_%s.txt' % self.getName()        
-
+        self.body_of_task()
+        if not hasattr(self, 'success'):
+            raise RuntimeError( "The body of a task must at least call the task's "
+                                "succeeded method." )
         
-        if self._quote_cmd_line:
-            cmd = "'%s'" % cmd
-            
-        return cmd
+        self.postprocessing()
+        if self.release_shared_ressources:
+            self.require_shared_ressources()
+            self.shared_ressources_postprocessing()
+            self.release_shared_ressources()
 
-    def _succeeded(self):
-        pass
-    
-    ###############################################
-    ## Public Methods
-    ###############################################
+        success_str = 'Success'
+        if not self.success:
+            success_str = 'Failure'
 
-    def run(self):
-        exception = None
-        try:
-            self._do_run()
-            if self.failed:
-                self._failed()
-            else:
-                self._succeeded()
+        vprint( '[ FINISHED %s %s -- %s ]'
+                % ( self.classname(), self.getName(),
+                    success_str
+                    ), 1)
+        self.signal_completion(self)
 
-        except Exception, ex:
-            if True:
-                #if False:
-                exception = ex
-            else:
-                msg = 'Exception in Task %s:\n %s' % (self.getName(), str(ex))
-                header = string.replace(string.center('', len(msg)+4), ' ', '*')
-                vprint('%s\n* %s *\n%s' % (header,msg,header), 0)
-                try:
-                    self._failed()
-                except Exception, ex2:
-                    ## Using print in case the exception pops from vprint
-                    print 'In %s._failed:'%self.classname(), ex2                
+    def shared_ressources_preprocessing(self):
+        raise NotImplementedError
 
-        if self.get_option('signal_completion'):
-            self.dispatch.set_last_finished_task( self.getName() )
-            self.dispatch.one_task_is_finished.set()    
-            if exception is not None:
-                #raise exception
-                traceback.print_exc(file=sys.stdout)
+    def shared_ressources_postprocessing(self):
+        raise NotImplementedError
 
+    def succeeded(self, success):
+        self.set_attribute('success', success)

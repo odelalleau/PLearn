@@ -1,8 +1,9 @@
 """Utility for managing global variables in a multi-modules program.
 
 The L{globalvars} variable is an instance of an empty class. It simply
-allows one to declare global variables in the main module and use
-these afterwards in other modules. The following would print 'bar'::
+allows one to encapsulate global variables in a clear scope. It also
+allows declaring global variables in the main module and using these
+afterwards in other modules. For instance, the following would print 'bar'::
 
     ## main.py
     from plearn.utilities.global_variables import globalvars
@@ -19,12 +20,12 @@ these afterwards in other modules. The following would print 'bar'::
         print globalvars.foo
     ## end of other_module.py
 
-B{Note}: The use of the L{globalvars} instance allows one to create a
+B{Note}: This use of the L{globalvars} instance allows one to create a
 large program and split it in different modules while using the same
-global variables. Still, L{globalvars} B{is nothing more than a
-clean hack} since clean modularization should be such that all modules
-define the variable they need, letting a main module link the
-components altogether...  
+global variables. Still, using L{globalvars} this way B{is nothing
+more than a clean hack} since clean modularization should be such that
+all modules define the variable they need, letting a main module link
+the components altogether...
 """
 
 class __global_variables:

@@ -1,10 +1,10 @@
 #!/usr/bin/env python2.3
 
 import os, sys, types, string
+import plearn.utilities.toolkit   as     toolkit
 
-from toolkit import *
-from optparse import *
-from Mode import *
+from   optparse                   import *
+from   Mode                       import *
 
 INDENT = 4
 LBOX = 20
@@ -334,7 +334,7 @@ class ModeSelector:
         return "".join(result)
 
     def long_help(self, indent):
-        lhelp = ( "Help for %s %s mode.\n%s\n\n"
+        lhelp = ( "%s %s mode: %s\n\n"
                   % (self.parser.get_prog_name(), string.strip(self.selected_mode_name, '#'),
                      self.selected_mode.description) )
         lhelp += self.parser.format_option_help()

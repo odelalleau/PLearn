@@ -1,17 +1,29 @@
 
-import copy
-from toolkit import *
-from pickle import *
+import copy, os, string
+import plearn.utilities.toolkit    as toolkit
 
-def tmp_vprint(s):
-    print s
+from   pickle                      import *
+from   plearn.utilities.verbosity  import *
+
+__all__ = [
+    ## Variables
+    'forbidden_flag',
+
+    ## Functions
+    'path_resolve_dir',
+    'path_resolve_file',
+
+    ## Classes
+    'IntelligentDiff'
+    ]
 
 forbidden_flag = "$#&*forbidden_directories*&#$"
 def path_resolve_dir(resolve_dico , dirname, dirlist):
     forbidden_directories = []
     if resolve_dico.has_key(forbidden_flag):
         forbidden_directories = resolve_dico[forbidden_flag]
-    remove_forbidden_dirs(dirlist, forbidden_directories)
+
+    toolkit.exempt_list_of( dirlist, forbidden_directories )
 
     for fname in dirlist:
         fname = os.path.join(dirname, fname)
@@ -19,7 +31,7 @@ def path_resolve_dir(resolve_dico , dirname, dirlist):
                         
 def path_resolve_file(fname, resolve_dico):
     if os.path.isfile(fname):
-        fcontent = command_output("cat %s"%fname)
+        fcontent = file(fname).readlines()
 
         to_resolve = resolve_dico.keys()
         resolve_sort = lambda r, s: len(r)-len(s)
@@ -38,11 +50,8 @@ class IntelligentDiff:
 
     PREPROCESSING = {'.psave':path_resolve_file}
 
-    def __init__(self, bench, other,
-                 forbidden_directories =[], 
-                 vprint                = tmp_vprint   ):
+    def __init__(self, bench, other, forbidden_directories =[]):
         self.__diffs = []
-        self.vprint = vprint
         self.forbidden = forbidden_directories
 
         self.diff(bench, other)
@@ -71,7 +80,7 @@ class IntelligentDiff:
 
     def __links(self, bench, other):
         if os.path.islink(other):
-            self.vprint("%s is link: diff will be skipped."%other)
+            vprint("%s is link: diff will be skipped."%other)
             return True
         elif os.path.islink(bench):
             self.__diffs.append( "%s is a link while %s is not."
@@ -113,20 +122,10 @@ class IntelligentDiff:
         other_dir = os.path.dirname(other)
         
         ## self.preprocess(other, bench_dir, other_dir)
-        some_diff = command_output('diff %s %s' % (bench, other))
+        some_diff = toolkit.command_output('diff %s %s' % (bench, other))
         if some_diff:
             self.__diffs.append( "\n+++ While comparing %s and %s:\n\t%s\n"
                                % (bench, other, string.join(some_diff, "\t"))    )
 
     def get_differences(self):
         return copy.deepcopy(self.__diffs)
-    
-##     def preprocess(self, fname, bench, other):
-##         keys = self.PREPROCESSING.keys()
-##         for key in keys:
-##             if string.find(fname, key) != -1:
-##                 preproc = self.PREPROCESSING[key]
-##                 preproc(fname, {other:bench})                
-##                 return
-
-

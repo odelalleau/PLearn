@@ -45,7 +45,11 @@ class __global_vprint:
 
 vprint = __global_vprint()
 
+def set_verbosity(level):
+    set_vprint( VerbosityPrint(level) )
+
 def set_vprint(vpr):
     if not isinstance(vpr, VerbosityPrint):
         raise TypeError
     __global_vprint.vpr = vpr
+

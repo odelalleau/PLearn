@@ -39,6 +39,9 @@ compilation results.
 internal state.
 @type cvs_directory: String.
 
+@var  pytest_dir: The name of the directory used by pytest to store
+test results.
+@type pytest_dir: String.
 """
 import os, string
 
@@ -59,7 +62,7 @@ plearn_scripts         = os.path.join( plearndir, 'scripts' )
 
 pymake_objs            = "OBJS"
 cvs_directory          = "CVS"
-
+pytest_dir             = "pytest"
 
 def user_independant_path(directory):
     """

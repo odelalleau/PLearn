@@ -1,49 +1,51 @@
-from threading import Thread
-from toolkit import *
+import string, types
+from   threading                     import Thread
+import plearn.utilities.toolkit      as     toolkit
+from   plearn.utilities.FrozenObject import FrozenObject
 
-class Mode(Thread, WithOptions):
-    # The list of instance attributes that may be set through
-    # keyword args to the constructor.
-##     ATTRS = [ 'expected_targets',
-##               'max_targets',
-##               'min_targets',
-##               'option_groups',
-##               'help' ]
-    OPTIONS = { 'description':None,
-                'expected_targets':[],
-                'max_targets':None,
-                'min_targets':None,
-                'option_groups':[],
-                'help':None          }
+LBOX = 20
 
+class ModeDefaults:
+    parser           = None
+    name             = None
+    mode_procedure   = None
+
+    __declare_members__ = [ ( 'parser',          None),
+                            ( 'name',            types.StringType),
+                            ( 'mode_procedure',  types.FunctionType)
+                            ]
+    
+    description      = None
+    expected_targets = []
+    max_targets      = None
+    min_targets      = None
+    option_groups    = []
+    help             = ''
+    help_lines       = None
+    
+
+class Mode(Thread, FrozenObject):
     DEFAULT = "#DEFAULT#"
 
-    def __init__( self, *args, **attrs ):
+    def __init__( self, *args, **overrides ):
+        self._frozen = False
         Thread.__init__(self)
         self.setDaemon(True)
         
-        WithOptions.__init__(self, self.OPTIONS, WithOptions.PUBLIC)
-
         if len(args) == 0:
-            return
+            raise NotImplementedError
         
-        self.parser = args[0]
-        self.name = args[1]
-
         if not callable(args[2]):
             raise ValueError("The procedure argument of the new mode is not callable.\n"
                              "Value: %s" % str(args[2]))
-        self.mode_procedure = args[2]
+        overrides.update( { 'parser'         : args[0],
+                            'name'           : args[1],
+                            'mode_procedure' : args[2]
+                            }
+                          )
+        FrozenObject.__init__(self, ModeDefaults, overrides)
 
-##         for attr in self.ATTRS:
-##             if attrs.has_key(attr):
-##                 setattr(self, attr, attrs[attr])
-##                 del attrs[attr]
-##             else:
-##                 setattr(self, attr, None)
-        self.set_options(attrs)
-
-        self.__split_help_lines()
+        self.help_lines = string.split(self.help, '\n')            
 
     def __call__(self, targets, options):
         self.check_targets(targets)
@@ -56,13 +58,7 @@ class Mode(Thread, WithOptions):
         return str(self)
 
     def __str__(self):
-        return string.join(["Mode",self.name])
-    
-    def __split_help_lines(self):
-        if self.help is None or self.help == '':
-            self.help_lines = ['']
-        else:
-            self.help_lines = string.split(self.help, '\n')
+        return string.join(["Mode",self.name])    
 
     def add_option_group(self, *args, **kwargs):
         # XXX lots of overlap with OptionContainer.add_option()
