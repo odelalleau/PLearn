@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.23 2003/10/27 05:14:34 dorionc Exp $ 
+   * $Id: FuturesTrader.cc,v 1.24 2003/10/27 18:44:27 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -265,11 +265,11 @@ TVec<string> FuturesTrader::getTrainCostNames() const
   cost_names.append("absolute_return");
   cost_names.append("log_return");
   cost_names.append("turnover");
-  cost_names.append("tbill_log_return"); // model(log_Rt) - TBILL(log_Rt)
+  cost_names.append("tbill_log_return"); // TBILL(log_Rt)
   cost_names.append("relative_tbill_log_return"); // model(log_Rt) - TBILL(log_Rt)
   if (sp500.size() > 0)
   {
-    cost_names.append("sp500_log_return");
+    cost_names.append("sp500_log_return"); // SP500(log_Rt)
     cost_names.append("relative_sp500_log_return"); // model(log_Rt) - SP500(log_Rt)
   }
 
