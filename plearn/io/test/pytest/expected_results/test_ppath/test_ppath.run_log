@@ -81,6 +81,29 @@ PPath('file:/foo/bar').removeProtocol()                     /foo/bar
 PPath('/foo/bar').removeProtocol()                          /foo/bar
 
 
+#####  PPath comparisons  #################################################
+
+PPath('foo') == 'foo/'                                      True
+
+!(PPath('foo') != 'foo/')                                   True
+
+PPath('') == '                                              True
+
+!(PPath('') != '')                                          True
+
+PPath('/foo/bar') == 'file:/foo/bar'                        True
+
+!(PPath('/foo/bar') != 'file:/foo/bar')                     True
+
+PPath('ftp:/foo/bar') == 'ftp:/foo/bar/'                    True
+
+!(PPath('ftp:/foo/bar') != 'ftp:/foo/bar/')                 True
+
+PPath('/foo') != 'ftp:/foo'                                 True
+
+PPath('file:/foo') != 'http:/foo'                           True
+
+
 #####  Canonical paths  ###################################################
 
 ./foo                                                       foo

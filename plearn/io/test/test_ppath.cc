@@ -124,6 +124,7 @@ void someAsserts()
 {
   MAND_LOG << plhead("Asserts") << endl;
 
+  ////////////////////////////////////////////////////////////
   MAND_LOG << plhead("The special dirnames . and ..") << endl;  
 
   ASSERT( "PPath('./foo/bar') == 'foo/bar'",
@@ -141,6 +142,7 @@ void someAsserts()
   PRINT_TEST("PPath('././foo/bar') / PPath('../bar/../../foo/./bar') == 'foo/bar'", "")
   ASSERT( "", PPath("././foo/bar") / PPath("../bar/../../foo/./bar") == "foo/bar" );
 
+  ////////////////////////////////////////////////////////////
   MAND_LOG << plhead("Operators") << endl;
     
   ASSERT( "PPath('') == ''", PPath("") == "" );
@@ -154,6 +156,7 @@ void someAsserts()
   ASSERT( "PPath('foo/bar/') / 'file.cc' == 'foo/bar/file.cc'",
            PPath("foo/bar/") / "file.cc" == "foo/bar/file.cc" );  
 
+  ////////////////////////////////////////////////////////////
   MAND_LOG << plhead("Methods up and dirname") << endl;  
 
   PRINT_TEST( "PPath('/').up()", PPath("/").up() );   // PLERROR
@@ -180,6 +183,7 @@ void someAsserts()
   ASSERT( "PPath('foo/bar/hi.cc').dirname() == 'foo/bar'",
            PPath("foo/bar/hi.cc").dirname() == "foo/bar" );
 
+  ////////////////////////////////////////////////////////////
   MAND_LOG << plhead("Methods extension and no_extension") << endl;  
 
   ASSERT( "PPath('foo/bar/hi.cc').extension() == 'cc'",
@@ -209,6 +213,7 @@ void someAsserts()
   ASSERT( "PPath('foo/bar.d/hi.').no_extension() == 'foo/bar.d/hi.'",
            PPath("foo/bar.d/hi.").no_extension() == "foo/bar.d/hi." );
 
+  ////////////////////////////////////////////////////////////
   MAND_LOG << plhead("Methods addProtocol() and removeProtocol()") << endl;  
 
   PRINT_TEST( "PPath('/foo/bar').addProtocol()",
@@ -222,6 +227,40 @@ void someAsserts()
 
   PRINT_TEST( "PPath('/foo/bar').removeProtocol()",
                PPath("/foo/bar").removeProtocol().canonical() );
+
+  ////////////////////////////////////////////////////////////
+  MAND_LOG << plhead("PPath comparisons") << endl;  
+
+  ASSERT( "PPath('foo') == 'foo/'",
+           PPath("foo") == "foo/" );
+
+  ASSERT( "!(PPath('foo') != 'foo/')",
+           !(PPath("foo") != "foo/") );
+
+  ASSERT( "PPath('') == '",
+           PPath("") == "" );
+
+  ASSERT( "!(PPath('') != '')",
+           !(PPath("") != "") );
+
+  ASSERT( "PPath('/foo/bar') == 'file:/foo/bar'",
+           PPath("/foo/bar") == "file:/foo/bar" );
+
+  ASSERT( "!(PPath('/foo/bar') != 'file:/foo/bar')",
+           !(PPath("/foo/bar") != "file:/foo/bar") );
+
+  ASSERT( "PPath('ftp:/foo/bar') == 'ftp:/foo/bar/'",
+           PPath("ftp:/foo/bar") == "ftp:/foo/bar/" );
+
+  ASSERT( "!(PPath('ftp:/foo/bar') != 'ftp:/foo/bar/')",
+           !(PPath("ftp:/foo/bar") != "ftp:/foo/bar/") );
+
+  ASSERT( "PPath('/foo') != 'ftp:/foo'",
+           PPath("/foo") != "ftp:/foo" );
+
+  ASSERT( "PPath('file:/foo') != 'http:/foo'",
+           PPath("file:/foo") != "htpp:/foo") ;
+
 }
 
 void canonical()
