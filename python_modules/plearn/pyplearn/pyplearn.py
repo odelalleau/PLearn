@@ -268,7 +268,40 @@ X{Tutorial on pyplearn scripts}
             return pl.SomeRunnableObject( dataset  = ref("dataset"),
                                           internal = SomeObject( dataset = ref("dataset") ) )
         ## end of command_line.pyplearn
-        
+
+    The plargs arguments given on the command line are interpreted
+    as strings, so if you want to pass an integers (int) or a
+    floating-point values (float), you will have to cast them using
+    python's synthax. So instead of::
+
+        ## command_line.plearn
+        SomeRunnableObject( dataset  = *1 -> AutoVMatrix( specification = ${ON_CMD_LINE};
+                                                          inputsize     = ${INPUT_SIZE};
+                                                          targetsize    = 1              );
+                            internal = SomeObject( dataset = *1; );
+                            );
+        ## end of command_line.plearn
+
+    you will have::
+
+        ## command_line.pyplearn
+        from plearn.pyplearn import *
+
+        bind( "dataset",
+              pl.AutoVMatrix( specification = plargs.ON_CMD_LINE,
+                              inputsize     = int( plargs.INPUT_SIZE ),
+                              targetsize    = 1                       ) )
+    
+        def main():
+            return pl.SomeRunnableObject( dataset  = ref("dataset"),
+                                          internal = SomeObject( dataset = ref("dataset") ) )
+        ## end of command_line.pyplearn
+
+    which you can launch with::
+
+        prompt %> plearn command_line.pyplearn ON_CMD_LINE="somefile.pmat" INPUT_SIZE=10
+
+
     Note that one can use plarg_defaults to set default values for any
     expected plearn agument (plargs), e.g.::
     
