@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.14 2004/10/06 05:43:30 chapados Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.15 2004/10/06 05:59:15 chapados Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -52,13 +52,22 @@ PLEARN_IMPLEMENT_OBJECT(
   "calls to an underlying learner. It is typically used as\n"
   "baseclass for learners that are built on top of another learner");
 
-EmbeddedLearner::EmbeddedLearner()
+EmbeddedLearner::EmbeddedLearner(string expdir_append_)
+  : learner_(0),
+    expdir_append(expdir_append_)
 { }
 
 void EmbeddedLearner::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "learner", &EmbeddedLearner::learner_, OptionBase::buildoption,
+  declareOption(ol, "learner", &EmbeddedLearner::learner_,
+                OptionBase::buildoption,
                 "The embedded learner");
+
+  declareOption(ol, "expdir_append", &EmbeddedLearner::expdir_append,
+                OptionBase::buildoption,
+                "A string which should be appended to the expdir for the inner learner;"
+                "default = \"\".");
+  
   inherited::declareOptions(ol);
 }
 
@@ -75,7 +84,41 @@ void EmbeddedLearner::build()
   inherited::build();
   build_();
 }
-   
+
+void EmbeddedLearner::setTrainingSet(VMat training_set, bool call_forget)
+{
+  assert( learner_ );
+  inherited::setTrainingSet(training_set, call_forget);
+  learner_->setTrainingSet(training_set, call_forget);
+}
+
+void EmbeddedLearner::setValidationSet(VMat validset)
+{
+  assert( learner_ );
+  inherited::setValidationSet(validset);
+  learner_->setValidationSet(validset);
+}
+
+void EmbeddedLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
+{
+  assert( learner_ );
+  inherited::setTrainStatsCollector(statscol);
+  learner_->setTrainStatsCollector(statscol);
+}
+
+void EmbeddedLearner::setExperimentDirectory(const string& the_expdir)
+{
+  assert( learner_ );
+  inherited::setExperimentDirectory(the_expdir);
+  if (the_expdir != "") {
+    string sub_expdir =
+      append_slash(append_slash(the_expdir) + expdir_append);
+    learner_->setExperimentDirectory(sub_expdir);
+  }
+  else
+    learner_->setExperimentDirectory("");
+}
+
 int EmbeddedLearner::inputsize() const
 {
   assert( learner_ );

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.12 2004/10/06 05:43:30 chapados Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.13 2004/10/06 05:59:15 chapados Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
@@ -54,9 +54,11 @@ class EmbeddedLearner: public PLearner
 
 public:
 
-  // build option
+  //! Inner learner which is embedded into the current learner
   PP<PLearner> learner_;
 
+  //! A string which should be appended to the expdir for the inner learner
+  string expdir_append;
 
   // ****************
   // * Constructors *
@@ -64,7 +66,7 @@ public:
 
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
-  EmbeddedLearner();
+  EmbeddedLearner(string expdir_append = "");
 
   // ******************
   // * Object methods *
@@ -92,6 +94,18 @@ public:
   // *******************
   // * PLearner methods *
   // *******************
+
+  //! Forwarded to inner learner
+  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+
+  //! Forwarded to inner learner
+  virtual void setValidationSet(VMat validset);
+
+  //! Forwarded to inner learner
+  virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol);
+
+  //! Forwarded to inner learner; takes into account expdir_append
+  virtual void setExperimentDirectory(const string& the_expdir);
 
   //! Forwarded to inner learner
   virtual int inputsize() const;
