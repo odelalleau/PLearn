@@ -116,14 +116,6 @@ Vec EmpiricalDistribution::expectation() const
   Vec mean(inputsize_);
   computeMean(data, mean);
   return mean;
-/*
-  Vec mean(inputsize_);
-  mean.fill(0);
-  for(int i = 0; i<data.length(); i++){
-    mean = mean + data(i);
-  }
-  return mean / data.length();
-*/
 }
 
 Mat EmpiricalDistribution::variance() const
@@ -133,26 +125,6 @@ Mat EmpiricalDistribution::variance() const
   Mat covar(inputsize_,inputsize_);
   computeMeanAndCovar(data, mean, covar);
   return covar;
-  /*
-  Vec mean(inputsize_);
-  mean = expectation();
-  Mat covariance(inputsize_,inputsize_);
-  covariance.fill(0);
-  for(int k = 0; k<data.length(); k++){
-    Vec row = data(k);
-    for(int i = 0; i<data.width(); i++){
-      for(int j = 0; j<data.width(); j++){
-        covariance(i,j) += row[i]*row[j]; 
-      }
-    }
-  }
-  for(int i = 0; i<data.width(); i++){
-    for(int j = 0; j<data.width(); j++){
-      covariance(i,j) -= data.length()*mean[i]*mean[j];
-    }
-  }
-  return covariance / (double) data.length();
-  */
 }
 
 
