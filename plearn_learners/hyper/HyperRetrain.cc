@@ -35,7 +35,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperRetrain.cc,v 1.2 2005/01/20 21:26:32 larocheh Exp $ 
+   * $Id: HyperRetrain.cc,v 1.3 2005/02/21 15:26:59 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file HyperRetrain.cc */
@@ -124,7 +124,7 @@ Vec HyperRetrain::optimize()
 
 TVec<string> HyperRetrain::getResultNames() const
 {
-  return hlearner->tester->statnames;
+  return hlearner->tester->getStatNames();
 }
 
 
