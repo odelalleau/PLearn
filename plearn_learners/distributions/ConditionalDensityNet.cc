@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.20 2004/01/10 19:06:01 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.21 2004/01/15 22:56:50 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -968,7 +968,8 @@ void ConditionalDensityNet::train()
 
   initializeParams();
   test_costf->recomputeParents();
-  // debugging
+
+      // debugging
       static bool display_graph = false;
       if (display_graph) f->fprop(input->value,outputs->value);
       //displayVarGraph(outputs,true);
@@ -977,8 +978,6 @@ void ConditionalDensityNet::train()
       if (display_graph)
         displayFunction(test_costf,true);
       static real verify_gradient = 0;
-      if (verify_gradient)
-        test_costf->verifyGradient(0,1,verify_gradient);
 
   int initial_stage = stage;
   bool early_stop=false;
@@ -989,7 +988,9 @@ void ConditionalDensityNet::train()
       optimizer->early_stop = false;
       early_stop = optimizer->optimizeN(*train_stats);
 
-      if (verify_gradient)
+      //if (verify_gradient)
+      //  training_cost->verifyGradient(verify_gradient);
+      if (stage==nstages-1 && verify_gradient)
         optimizer->verifyGradient(verify_gradient);
       if (display_graph)
         displayFunction(f,true);
