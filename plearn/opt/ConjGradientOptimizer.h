@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.29 2003/10/14 19:18:17 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.30 2003/10/15 20:10:06 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -89,6 +89,9 @@ public:
   real stop_epsilon; // we stop when (a-alpha).f'(a) < stop_epsilon (Fletcher)
   real tau1, tau2, tau3; // bracketing parameters
 
+  Vec meancost;              // used to store the cost, for display purpose
+  // TODO should be private, but used by some people, so public for now...
+
 private:
 
   // Internal data
@@ -99,7 +102,6 @@ private:
   real last_improvement;     // cost improvement during the last iteration
   real last_cost;            // last cost computed
   real current_step_size;    // current step size for line search
-  Vec meancost;              // used to store the cost, for display purpose
   
 public:
 
