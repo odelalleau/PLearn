@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.58 2005/01/27 21:39:30 chrish42 Exp $
+   * $Id: fileutils.cc,v 1.59 2005/02/01 21:15:21 ducharme Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -177,10 +177,18 @@ using namespace std;
       list.push_back(dirent->name);
       dirent = PR_ReadDir(d, PR_SKIP_BOTH);
     }
-    PR_CloseDir(d);
-    
-    if (PR_GetError() != PR_NO_MORE_FILES_ERROR)
+
+    PRErrorCode e = PR_GetError();
+    if (e != PR_NO_MORE_FILES_ERROR
+#if 1 // Workaround for NSPR bug
+        && e != PR_FILE_NOT_FOUND_ERROR
+#endif
+       )
       PLERROR("In lsdir: error while listing directory: %s.",
+              getPrErrorString().c_str());
+
+    if (PR_CloseDir(d) != PR_SUCCESS)
+      PLERROR("In lsdir: error while closing directory: %s.",
               getPrErrorString().c_str());
 
     return list;
