@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.cc,v 1.6 2004/02/28 15:55:37 yoshua Exp $ 
+   * $Id: KNNVMatrix.cc,v 1.7 2004/02/28 18:13:04 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -43,6 +43,7 @@
 #include "DistanceKernel.h"
 #include "KNNVMatrix.h"
 #include "SelectRowsVMatrix.h"
+#include "SubVMatrix.h"
 
 namespace PLearn {
 using namespace std;
@@ -51,7 +52,8 @@ using namespace std;
 // KNNVMatrix //
 ////////////////
 KNNVMatrix::KNNVMatrix() 
-: knn(6)
+: knn(6),
+  report_progress(1)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(KNNVMatrix, 
@@ -80,6 +82,9 @@ void KNNVMatrix::declareOptions(OptionList& ol)
 
   declareOption(ol, "kernel_pij", &KNNVMatrix::kernel_pij, OptionBase::buildoption,
       "An optional kernel used to compute the pij weights (see help).");
+
+  declareOption(ol, "report_progress", &KNNVMatrix::report_progress, OptionBase::buildoption,
+      "TODO comment");
 
 // Kinda useless to declare it as an option if we recompute it in build().
 // TODO See how to be more efficient.
@@ -156,8 +161,43 @@ void KNNVMatrix::build_() {
               }
             }
           } else {
-            // What the hell is this ?
-            PLWARNING("In KNNVMatrix::build_ - Don't know what to do with k_nn_mat, will recompute the nearest neighbours");
+            // Maybe it's a SubVMatrix of the matrix whose nearest neighbours have been computed.
+            PP<SubVMatrix> smat = dynamic_cast<SubVMatrix*>((VMatrix*) source);
+            if (    !smat.isNull()
+                &&  smat->parent->length() == k_nn_mat->length()
+                &&  smat->width() == smat->parent->width()) {
+              // Bingo !
+              // Safety warning just in case it is not what we want.
+              PLWARNING("In KNNVMatrix::build_ - Will consider the given k_nn_mat has been computed on source's parent VMat");
+              recompute_nn = false;
+              nn.resize(n, knn);
+              Vec store_nn(k_nn_mat->width());
+              for (int i = 0; i < n; i++) {
+                nn(i,0) = i;  // The nearest neighbour is always itself.
+                k_nn_mat->getRow(i + smat->istart, store_nn);
+                int k = 1;
+                for (int j = 1; j < knn; j++) {
+                  bool ok = false;
+                  while (!ok && k < store_nn.length()) {
+                    int q = int(store_nn[k]) - smat->istart;
+                    if (q >= 0 && q < smat->length()) {
+                      // The k-th nearest neighbour in smat->parent is in smat.
+                      ok = true;
+                      nn(i,j) = q - smat->istart;
+                    }
+                    k++;
+                  }
+                  if (k == store_nn.length()) {
+                    // We didn't find the j-th nearest neighbour.
+                    PLERROR("In KNNVMatrix::build_ - Not enough neighbours in the SubVMatrix");
+                  }
+
+                }
+              }
+            } else {
+              // What the hell is this ?
+              PLWARNING("In KNNVMatrix::build_ - Don't know what to do with k_nn_mat, will recompute the nearest neighbours");
+            }
           }
         }
       }
@@ -172,8 +212,10 @@ void KNNVMatrix::build_() {
       }
       // Compute the pairwise distances.
       DistanceKernel dk(2);
-      //dk.report_progress = true; // does not compile...
-      dk.build();
+      if (report_progress) {
+        dk.report_progress = true;
+        dk.build();
+      }
       dk.setDataForKernelMatrix(source);
       Mat distances(n,n);
       dk.computeGramMatrix(distances);
@@ -199,6 +241,7 @@ void KNNVMatrix::build_() {
 
     // Compute the p_ij if needed.
     if (kernel_pij) {
+      // TODO REPORT PROGRESS IF NEEDED.
       inputsize_++;
       width_++;
       kernel_pij->setDataForKernelMatrix(source);
