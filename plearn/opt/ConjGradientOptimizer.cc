@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.36 2003/10/05 16:59:42 yoshua Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.37 2003/10/06 00:44:39 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -827,6 +827,7 @@ real ConjGradientOptimizer::optimize()
   }
   return lastmeancost[0];
 }
+
 
 ///////////////
 // optimizeN //

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.18 2003/08/13 08:13:17 plearner Exp $
+   * $Id: Optimizer.cc,v 1.19 2003/10/06 00:44:39 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,6 +46,10 @@
 #include "Optimizer.h"
 #include "TMat_maths.h"
 // #include "DisplayUtils.h"
+//#define DEBUGCG
+#ifdef DEBUGCG
+#include "GhostScript.h"
+#endif
 
 namespace PLearn <%
 using namespace std;
@@ -386,6 +390,10 @@ void Optimizer::computeGradient(
   opt->params.copyGradientTo(gradient);
 }
 
+#ifdef DEBUGCG
+extern GhostScript* gs;
+#endif
+
 /////////////////////////////
 // computeOppositeGradient //
 /////////////////////////////
@@ -399,6 +407,11 @@ void Optimizer::computeOppositeGradient(
   opt->cost->gradient[0] = -1;
   opt->proppath.fbprop();
   opt->params.copyGradientTo(gradient);
+#ifdef DEBUGCG
+  gs->setcolor("blue");
+  gs->drawCircle(opt->params[0]->value[0],opt->params[0]->value[1],0.02);
+#endif
+
 }
   
 %> // end of namespace PLearn
