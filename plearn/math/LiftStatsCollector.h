@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.h,v 1.11 2004/09/14 16:04:36 chrish42 Exp $
+ * $Id: LiftStatsCollector.h,v 1.12 2004/11/17 14:30:41 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -127,6 +127,9 @@ public:
   //! In addition to the regular VecStatsCollector statistics, we
   //! understand specific lift statistics (see the .cc).
   virtual double getStat(const string& statspec);
+
+  //! Overridden because it is not supported in this VecStatsCollector.
+  virtual void remove_observation(const Vec& x, real weight = 1.0);
 
 protected:
 
