@@ -297,3 +297,40 @@ class WithOptions:
         for opt in options.keys():
             self.set_option(opt, options[opt], option_type)
 
+class hasDefaults:
+    """A generic way to manage classes that have default field values.
+
+    The 'defaults_class' argument in the constructor must be a class having
+    class fields for every desired default value. If the 'subclass_options'
+    contains 'defaults', it is assumed to be an instance of a class redefining
+    default values for this class. If the 'subclass_options' does not contain
+    'defaults', an instance of 'defaults_class' is used.
+    """
+    def __init__(self, defaults_class, subclass_overrides):
+        self.__defaults = None
+        if subclass_overrides.has_key( 'defaults' ):
+            self.__defaults = subclass_overrides['defaults']
+            del subclass_overrides['defaults']
+        else:
+            self.__defaults = defaults_class()
+
+        ### checks if the fields are valid and
+        ### override them
+        self.override_defaults(subclass_overrides)
+
+    def __getattr__(self, key):
+        try:
+            return getattr(self.__defaults, key)
+        except AttributeError, e:
+            raise AttributeError( "Class %s has no field %s and %s"%(self.__class__, key, str(e)) )
+
+    def override_default(self, field_name, override):
+        if not hasattr(self.__defaults, field_name):
+            raise AttributeError( "Attempt to set an invalid option: %s" % field_name )
+        setattr(self, field_name, override)
+
+    def override_defaults(self, overrides):
+        for (field_name, override) in overrides.iteritems():
+            self.override_default(field_name, override)
+
+        
