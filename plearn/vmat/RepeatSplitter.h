@@ -33,13 +33,10 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RepeatSplitter.h,v 1.1 2003/11/27 16:35:08 tihocan Exp $ 
+   * $Id: RepeatSplitter.h,v 1.2 2003/11/27 20:12:48 tihocan Exp $ 
    ******************************************************* */
 
-// Authors: Olivier Delalleau
-
 /*! \file RepeatSplitter.h */
-
 
 #ifndef RepeatSplitter_INC
 #define RepeatSplitter_INC
@@ -60,7 +57,13 @@ protected:
   // *********************
 
   // ### declare protected option fields (such as learnt parameters) here
-  // ...
+  
+  //! A matrix where the i-th row is the vector of the indices of the i-th
+  //! shuffled matrix (used only when shuffle = 1).
+  TMat<int> indices;
+
+  //! Used to know if we need to reshuffle the matrix.
+  int last_n;
     
 public:
 
@@ -70,6 +73,7 @@ public:
 
   // ### declare public option fields (such as build options) here
   int n;
+  int shuffle;
   PP<Splitter> to_repeat;
 
   // ****************
@@ -84,6 +88,9 @@ public:
   // ******************
   // * Object methods *
   // ******************
+
+  //! Sets the dataset on which the splits are to be based
+  virtual void setDataSet(VMat the_dataset);
 
 private: 
   //! This does the actual building. 
