@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.17 2004/03/25 21:40:31 plearner Exp $
+   * $Id: FileVMatrix.cc,v 1.18 2004/04/28 14:33:05 tihocan Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -251,7 +251,11 @@ void FileVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   // TODO Copy correctly the field FILE* f.
 //  deepCopyField(f, copies);
 
-  PLERROR("FileVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  // Not an error because we may want to do some deep-copying sometimes.
+  PLWARNING("FileVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+
+  f = 0;   // Because we will open again the file (f should not be shared).
+  build(); // To open the file.
 }
 
 //////////////////
