@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.15 2004/10/21 18:40:17 chapados Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.16 2004/10/21 22:07:25 chapados Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
@@ -139,17 +139,17 @@ public:
                                    real probability,
                                    TVec< pair<real,real> >& intervals) const;
   
-  //! NOT forwarded by default
+  // NOT forwarded by default
   // virtual void computeCostsOnly(const Vec& input, const Vec& target,
   //                               Vec& costs) const;
 
-  //! NOT forwarded by default
+  // NOT forwarded by default
   // virtual void use(VMat testset, VMat outputs) const;
 
-  //! NOT forwarded by default
+  // NOT forwarded by default
   // virtual void useOnTrain(Mat& outputs) const;  
   
-  //! NOT forwarded by default
+  // NOT forwarded by default
   // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
   //                   VMat testoutputs=0, VMat testcosts=0) const;
 
