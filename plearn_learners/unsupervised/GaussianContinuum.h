@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuum.h,v 1.7 2004/09/18 17:03:16 larocheh Exp $
+   * $Id: GaussianContinuum.h,v 1.8 2005/01/26 18:06:12 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -48,6 +48,7 @@
 #include <plearn/var/Func.h>
 #include <plearn/opt/Optimizer.h>
 #include <plearn_learners/distributions/PDistribution.h>
+#include <plearn/ker/DistanceKernel.h>
 
 namespace PLearn {
 using namespace std;
@@ -77,11 +78,14 @@ protected:
 
   PP<PDistribution> dist;
 
+  VMat valid_set;
+
   // Random walk fields
   Array<VMat> ith_step_generated_set;
 
   // p(x) computation fields
   VMat train_and_generated_set;
+  VMat reference_set;
   TMat<int> train_nearest_neighbors;
   TMat<int> validation_nearest_neighbors;
   TVec< Mat > Bs, Fs;
@@ -91,8 +95,13 @@ protected:
 
   Mat Ut_svd, V_svd;  // for SVD computation
   Vec S_svd;      // idem
-  Vec z, zm, zn, x_minus_neighbor, w;
-  Vec t_row, neighbor_row;
+  mutable Vec z, zm, zn, x_minus_neighbor, w;
+  mutable Vec t_row, neighbor_row;
+  mutable TVec<int> t_nn;
+  mutable Vec t_dist;
+  mutable Mat distances;
+
+  mutable DistanceKernel dk;
 
   real best_validation_cost;
 
@@ -121,6 +130,7 @@ public:
   int n_random_walk_step;
   int n_random_walk_per_point;
   bool save_image_mat;
+  bool walk_on_noise;
   VMat image_points_vmat;
   Mat image_points_mat;
   Mat image_prob_mat;
@@ -142,6 +152,7 @@ public:
   int n_dim; // number of reduced dimensions (number of tangent vectors to compute)
   int compute_cost_every_n_epochs;
   string variances_transfer_function; // "square", "exp" or "softplus"
+  real validation_prop;
   PP<Optimizer> optimizer; // to estimate the function that predicts local tangent vectors given the input
   Var embedding;
   Func output_f;
@@ -159,7 +170,6 @@ public:
 
   real norm_penalization; // penalizes sum_i (||f_i||^2-1)^2
   real svd_threshold;
-  real projection_error_regularization; // term to add on linear system diagonal, to solve for subspace fitting
 
   // ****************
   // * Constructors *
@@ -184,6 +194,10 @@ private:
   void compute_train_and_validation_costs();
 
   void make_random_walk();
+  
+  void update_reference_set_parameters();
+
+  void knn(const VMat& vm, const Vec& x, const int& k, TVec<int>& neighbors, bool sortk) const; 
 
   void get_image_matrix(VMat points, VMat image_points_vmat, int begin, string file_path, int n_near_neigh);
 
