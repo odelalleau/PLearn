@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.8 2002/11/14 22:13:00 jauvinc Exp $
+   * $Id: WordNetOntology.h,v 1.9 2002/11/26 20:58:16 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -251,7 +251,6 @@ public:
   bool isInWordNet(int word_id);
   bool hasSenseInWordNet(string word, int wn_pos_type);
   bool isTopLevelCategory(int ss_id);
-
   bool containsWord(string word) { return (words_id.find(word) != words_id.end()); }
   bool containsWordId(int id) { return (words.find(id) != words.end()); }
 
@@ -276,8 +275,6 @@ public:
   // integrity verifications
   void detectWordsWithoutOntology();
   void lookForSpecialTags();
-
-private:
 
   void extract(string voc_file, int wn_pos_type);
   void extractWord(string original_word, int wn_pos_type, bool trim_word, bool stem_word, bool remove_underscores);

@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.7 2002/11/14 22:12:59 jauvinc Exp $
+   * $Id: WordNetOntology.cc,v 1.8 2002/11/26 20:58:16 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -436,8 +436,8 @@ void WordNetOntology::extractWord(string original_word, int wn_pos_type, bool tr
 
 bool WordNetOntology::extractSenses(string original_word, string processed_word, int wn_pos_type)
 {
-  char* cword = const_cast<char*>(processed_word.c_str());
-  //char* cword = cstr(processed_word);
+  //char* cword = const_cast<char*>(processed_word.c_str());
+  char* cword = cstr(processed_word);
   SynsetPtr ssp = NULL;
   
   switch (wn_pos_type)
@@ -704,7 +704,8 @@ int WordNetOntology::getWordSenseIdForSenseKey(string lemma, string lexsn)
 
   //cout << sense_key << endl;
 
-  char* csense_key = const_cast<char*>(sense_key.c_str());
+  //char* csense_key = const_cast<char*>(sense_key.c_str());
+  char* csense_key = cstr(sense_key);
   SynsetPtr ssp = GetSynsetForSense(csense_key);
   if (ssp != NULL)
   {
@@ -2347,7 +2348,8 @@ bool isLegalPunct(char c)
 
 string stemWord(string& word)
 {
-  char* input_word = const_cast<char*>(word.c_str());
+  //char* input_word = const_cast<char*>(word.c_str());
+  char* input_word = cstr(word);
   char* lemma = morphword(input_word, NOUN);
   if (lemma == NULL)
   {
@@ -2373,7 +2375,8 @@ string stemWord(string& word)
 
 string stemWord(string& word, int wn_pos)
 {
-  char* input_word = const_cast<char*>(word.c_str());
+  //char* input_word = const_cast<char*>(word.c_str());
+  char* input_word = cstr(word);
   char* lemma = morphword(input_word, wn_pos);
   if (lemma == NULL)
     return word;
