@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: WordNetDictionary.cc,v 1.1 2004/09/09 22:30:50 larocheh Exp $ 
+   * $Id: WordNetDictionary.cc,v 1.2 2004/09/13 20:24:14 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -83,6 +83,7 @@ PLEARN_IMPLEMENT_OBJECT(WordNetDictionary,
 void WordNetDictionary::declareOptions(OptionList& ol)
 {
   declareOption(ol, "ontology_file_name", &WordNetDictionary::ontology_file_name, OptionBase::buildoption, "path to the ontology");
+  declareOption(ol, "stem_mode", &WordNetDictionary::stem_mode, OptionBase::buildoption, "indication that words should be stemmed");
   inherited::declareOptions(ol);
 }
 
