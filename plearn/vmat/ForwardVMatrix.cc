@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: ForwardVMatrix.cc,v 1.15 2004/11/24 18:33:52 tihocan Exp $
+ * $Id: ForwardVMatrix.cc,v 1.16 2005/01/24 14:29:03 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -154,9 +154,12 @@ void ForwardVMatrix::savePMAT(const string& pmatfile) const
 { vm->savePMAT(pmatfile); }
 void ForwardVMatrix::saveDMAT(const string& dmatdir) const
 { vm->saveDMAT(dmatdir); }
-void ForwardVMatrix::saveAMAT(const string& amatfile, bool verbose, bool no_header) const
-{ vm->saveAMAT(amatfile, verbose, no_header); }
 
+//////////////
+// saveAMAT //
+//////////////
+void ForwardVMatrix::saveAMAT(const string& amatfile, bool verbose, bool no_header, bool save_strings) const
+{ vm->saveAMAT(amatfile, verbose, no_header, save_strings); }
   
 real ForwardVMatrix::get(int i, int j) const
 { return vm->get(i, j); }

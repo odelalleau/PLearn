@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: ForwardVMatrix.h,v 1.11 2004/11/24 18:33:52 tihocan Exp $
+   * $Id: ForwardVMatrix.h,v 1.12 2005/01/24 14:29:03 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -96,8 +96,8 @@ public:
 
   virtual void savePMAT(const string& pmatfile) const;
   virtual void saveDMAT(const string& dmatdir) const;
-  virtual void saveAMAT(const string& amatfile, bool verbose=true, bool no_header = false) const;
-
+  virtual void saveAMAT(const string& amatfile, bool verbose = true,
+                        bool no_header = false, bool save_strings = false) const;
 
   //!  This method must be implemented in all subclasses
   virtual real get(int i, int j) const; //!<  returns element (i,j)
