@@ -34,37 +34,47 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/* *******************************************************      
-   * $Id: TresholdVMatrix.cc,v 1.1 2002/12/02 22:11:07 zouave Exp $
-   ******************************************************* */
+#ifndef ThresholdVMatrix_INC
+#define ThresholdVMatrix_INC
 
-#include "TresholdVMatrix.h"
+#include "RowBufferedVMatrix.h"
+#include "VMat.h"
 
 namespace PLearn <%
 using namespace std;
-
-
-/** TresholdVMatrix **/
-
-TresholdVMatrix::TresholdVMatrix(VMat the_underlying_distr, real treshold_, real the_cold_value, real the_hot_value)
-  :RowBufferedVMatrix(the_underlying_distr->length(), the_underlying_distr->width()),
-   underlying_distr(the_underlying_distr), treshold(treshold_), cold_value(the_cold_value), hot_value(the_hot_value)
-{}
-
-void TresholdVMatrix::getRow(int i, Vec v) const
+ 
+/* A bit like OneHotVMatrix with a threshold level
+ * instead.  The last column will become cold_value
+ * if it was <= threshold, or hot_value if it was
+ * > threshold.
+ * N.B. the gt_threshold boolean value can be set
+ * to true so that we get hot_value when 
+ * val > threshold, or false for val >= threshold.
+ */
+class ThresholdVMatrix: public RowBufferedVMatrix
 {
-#ifdef BOUNDCHECK
-  if(i<0 || i>=length())
-    PLERROR("In TresholdVMatrix::getRow OUT OF BOUNDS");
-  if(v.length()!=width())
-    PLERROR("In TresholdVMatrix::getRow v.length() must be equal to the VMat's width");
-#endif
-  underlying_distr->getRow(i,v);
-  int p= v.size()-1;
-  if(gt_treshold && v[p] <= treshold || !gt_treshold && v[p] < treshold)
-    v[p]= cold_value;
-  else
-    v[p]= hot_value;
-}
+ protected:
+  VMat underlying_distr;
+  real threshold;
+  real cold_value;
+  real hot_value;
+  bool gt_threshold;
+
+ public:
+  ThresholdVMatrix(VMat the_underlying_distr, real threshold_, real the_cold_value=0.0, real the_hot_value=1.0,
+		  bool gt_threshold_= true);
+  virtual void getRow(int i, Vec v) const;
+  virtual void reset_dimensions() 
+    { 
+      underlying_distr->reset_dimensions(); 
+      width_=underlying_distr->width(); 
+      length_=underlying_distr->length(); 
+    }
+};
+
+inline VMat thresholdVMat(VMat d, real threshold, real cold_value=0.0, real hot_value=1.0,
+			 bool gt_threshold= true)
+{ return new ThresholdVMatrix(d, threshold, cold_value, hot_value, gt_threshold); }
 
 %> // end of namespcae PLearn
+#endif

@@ -34,47 +34,35 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
-#ifndef TresholdVMatrix_INC
-#define TresholdVMatrix_INC
-
-#include "RowBufferedVMatrix.h"
-#include "VMat.h"
+#include "ThresholdVMatrix.h"
 
 namespace PLearn <%
 using namespace std;
- 
-/* A bit like OneHotVMatrix with a treshold level
- * instead.  The last column will become cold_value
- * if it was <= treshold, or hot_value if it was
- * > treshold.
- * N.B. the gt_treshold boolean value can be set
- * to true so that we get hot_value when 
- * val > treshold, or false for val >= treshold.
- */
-class TresholdVMatrix: public RowBufferedVMatrix
+
+
+/** ThresholdVMatrix **/
+
+ThresholdVMatrix::ThresholdVMatrix(VMat the_underlying_distr, real threshold_, real the_cold_value, real the_hot_value,
+				 bool gt_threshold_)
+  :RowBufferedVMatrix(the_underlying_distr->length(), the_underlying_distr->width()),
+   underlying_distr(the_underlying_distr), threshold(threshold_), cold_value(the_cold_value), hot_value(the_hot_value),
+   gt_threshold(gt_threshold_)
+{}
+
+void ThresholdVMatrix::getRow(int i, Vec v) const
 {
- protected:
-  VMat underlying_distr;
-  real treshold;
-  real cold_value;
-  real hot_value;
-  bool gt_treshold;
-
- public:
-  TresholdVMatrix(VMat the_underlying_distr, real treshold_, real the_cold_value=0.0, real the_hot_value=1.0,
-		  bool gt_treshold_= true);
-  virtual void getRow(int i, Vec v) const;
-  virtual void reset_dimensions() 
-    { 
-      underlying_distr->reset_dimensions(); 
-      width_=underlying_distr->width(); 
-      length_=underlying_distr->length(); 
-    }
-};
-
-inline VMat tresholdVMat(VMat d, real treshold, real cold_value=0.0, real hot_value=1.0
-			 bool gt_treshold= true)
-{ return new TresholdVMatrix(d, treshold, cold_value, hot_value, gt_treshold); }
+#ifdef BOUNDCHECK
+  if(i<0 || i>=length())
+    PLERROR("In ThresholdVMatrix::getRow OUT OF BOUNDS");
+  if(v.length()!=width())
+    PLERROR("In ThresholdVMatrix::getRow v.length() must be equal to the VMat's width");
+#endif
+  underlying_distr->getRow(i,v);
+  int p= v.size()-1;
+  if(gt_threshold && v[p] <= threshold || !gt_threshold && v[p] < threshold)
+    v[p]= cold_value;
+  else
+    v[p]= hot_value;
+}
 
 %> // end of namespcae PLearn
-#endif
