@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelPCA.cc,v 1.3 2004/05/14 02:15:10 tihocan Exp $ 
+   * $Id: KernelPCA.cc,v 1.4 2004/05/17 13:12:24 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -50,7 +50,9 @@ using namespace std;
 // KernelPCA //
 //////////////////
 KernelPCA::KernelPCA() 
-: remove_bias(false)
+: kernel_is_distance(false),
+  remove_bias(false),
+  remove_bias_in_evaluate(false)
 {
   // Usually, one will want only positive eigenvalues.
   min_eigenvalue = 0;
@@ -68,9 +70,17 @@ PLEARN_IMPLEMENT_OBJECT(KernelPCA,
 ////////////////////
 void KernelPCA::declareOptions(OptionList& ol)
 {
+  declareOption(ol, "kernel_is_distance", &KernelPCA::kernel_is_distance, OptionBase::buildoption,
+      "If set to 1, then the kernel will be considered as a squared distance instead of\n"
+      "a dot product (i.e. the double-centering formula will be applied).");
+
   declareOption(ol, "remove_bias", &KernelPCA::remove_bias, OptionBase::buildoption,
       "If set to 1, the (additively) normalized kernel will not take into account terms\n"
       "of the form K(x_i,x_i), in order to remove bias induced by those terms.");
+
+  declareOption(ol, "remove_bias_in_evaluate", &KernelPCA::remove_bias_in_evaluate, OptionBase::buildoption,
+      "If set to 1, the (additively) normalized kernel will not take into account terms\n"
+      "of the form K(x_i,x_i), but only when evaluated on test points.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -108,7 +118,8 @@ void KernelPCA::build_()
   if (kpca_kernel &&
       (!kernel ||
        (dynamic_cast<AdditiveNormalizationKernel*>((Kernel*) kernel))->source_kernel != kpca_kernel)) {
-    this->kernel = new AdditiveNormalizationKernel(kpca_kernel, remove_bias);
+    this->kernel = new AdditiveNormalizationKernel
+      (kpca_kernel, remove_bias, remove_bias_in_evaluate, kernel_is_distance);
   }
 }
 
