@@ -43,9 +43,9 @@
 #ifndef pl_streambuf_INC
 #define pl_streambuf_INC
 
-#include <iosfwd>
+//#include <iosfwd>
 #include <iostream>
-#include "plerror.h"
+//#include "plerror.h"
 #include "PP.h"
 
 namespace PLearn {

@@ -40,8 +40,8 @@
 #define MRUFileQueue_H
 
 #include <fstream>
-#include <iostream>
-#include <string>
+//#include <iostream>
+//#include <string>
 #include <list>
 
 namespace PLearn{

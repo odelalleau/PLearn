@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.10 2004/02/26 03:56:19 nova77 Exp $
+   * $Id: fileutils.h,v 1.11 2004/03/04 15:08:04 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -51,10 +51,11 @@
 #ifndef fileutils_INC
 #define fileutils_INC
 
-#include <vector>
-#include <string>
 #include <fstream>
-#include "general.h"
+#include <map>
+#include <string>
+#include <vector>
+//#include "general.h"
 
 // norman: set win32 functions
 #ifdef WIN32

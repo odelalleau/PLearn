@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TmpFilenames.h,v 1.3 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: TmpFilenames.h,v 1.4 2004/03/04 15:08:04 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,9 +48,9 @@
 #ifndef TmpFilenames_INC
 #define TmpFilenames_INC
 
-#include "general.h"
+//#include "general.h"
 #include "TVec.h"
-#include "stringutils.h"
+//#include "stringutils.h"
 #include "PP.h"
 
 namespace PLearn {

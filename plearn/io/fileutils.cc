@@ -37,14 +37,14 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.27 2004/03/04 04:28:21 nova77 Exp $
+   * $Id: fileutils.cc,v 1.28 2004/03/04 15:08:04 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include <time.h>
 #include <sys/stat.h>
-#include <sys/types.h>
+//#include <sys/types.h>
 #if !defined(_MSC_VER) && !defined(_MINGW_)
 #include <sys/wait.h>
 #endif
@@ -66,7 +66,7 @@
 
 #endif // WIN32
 
-#include <sstream>
+//#include <sstream>
 #include <strstream>
 
 #include "fileutils.h"
