@@ -219,6 +219,8 @@ real gauss_log_density_stddev(real x, real mu, real sigma)
 
 real p_value(real mu, real vn)
 {
+  if (is_missing(mu) || is_missing(vn))
+    return MISSING_VALUE;
   return 1 - gauss_01_cum(fabs(mu/sqrt(vn)));
 }
 
