@@ -37,7 +37,7 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryClassificationLossVariable.cc,v 1.3 2004/04/27 15:58:16 morinf Exp $
+   * $Id: BinaryClassificationLossVariable.cc,v 1.4 2004/10/07 17:49:02 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,11 +48,24 @@ using namespace std;
 /** BinaryClassificationLossVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(BinaryClassificationLossVariable,
-                        "For one-dimensional output: class is 0 if output < 0.5, and 1 if >= 0.5.",
-                        "NO HELP");
+    "For one-dimensional output.",
+    "Class is 'class_1' if output < 'threshold', and 'class_2' if >= 'threshold'. \n"
+    );
+
+////////////////////
+// declareOptions //
+////////////////////
+void BinaryClassificationLossVariable::declareOptions(OptionList& ol) {
+  declareOption(ol, "threshold", &BinaryClassificationLossVariable::threshold, OptionBase::buildoption,
+      "The threshold under which the class is 'class_1', and above which the class is 'class_2'.");
+  inherited::declareOptions(ol);
+}
 
 BinaryClassificationLossVariable::BinaryClassificationLossVariable(Variable* netout, Variable* classnum)
-  : inherited(netout,classnum,1,1)
+: inherited(netout,classnum,1,1),
+  class_1(0),
+  class_2(1),
+  threshold(0.5)
 {
     build_();
 }
@@ -80,10 +93,10 @@ void BinaryClassificationLossVariable::fprop()
 {
   int classnum = int(input2->valuedata[0]);
   int outputclass;
-  if (input1->valuedata[0] <= 0.5) {
-    outputclass = 0;
+  if (input1->valuedata[0] < threshold) {
+    outputclass = class_1;
   } else {
-    outputclass = 1;
+    outputclass = class_2;
   }
   
   valuedata[0] = (outputclass == classnum ?0 :1);
