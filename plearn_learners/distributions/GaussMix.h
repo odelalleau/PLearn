@@ -1,12 +1,8 @@
-
-
 // -*- C++ -*-
 
 // GaussMix.h
 // 
-// Copyright (C) *YEAR* *AUTHOR(S)* 
-// ...
-// Copyright (C) *YEAR* *AUTHOR(S)* 
+// Copyright (C) 2004 Université de Montréal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -37,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.11 2004/05/06 13:07:11 yoshua Exp $ 
+   * $Id: GaussMix.h,v 1.12 2004/05/17 20:58:20 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -125,34 +121,33 @@ then the factor analyzer model holds.
 
 class GaussMix: public PDistribution
 {
+
+private:
+
+  typedef PDistribution inherited;
+
 protected:
+
   // *********************
   // * protected options *
   // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
-    
-public:
-
-  typedef PDistribution inherited;
-
-  // ************************
-  // * public build options *
-  // ************************
-
-
-  //! length == L. the coefficients of the mixture
   Vec alpha;
-  
-  //! a length==L vector of sigmas (** or lambda0)
+  TVec<Mat> covariance;
+  int D;
+  Mat mu;  
+  int nsamples;
+  Mat posteriors;
+  //! a length==L vector of sigmas (** or lambda0) // TODO Remove
   Vec sigma;
+
+  // Fields below are not options.
+  // TODO See which should be build options, and if they are all needed.
 
   //! a LxD matrix of diagonals (type == 'diagonal' -> the diagonal of the covar matrix. type == 'factor' -> noise on each dimension of feature space)
   Mat diags;
 
-  //! a LxD matrix. Rows[l] is the center of the gaussians l
-  Mat mu;  
+  bool global_lambda0;
 
   //! a sum_Ks x D matrix in which *rows* are components (only used for general and factor gaussians)
   //! V[ V_idx[l] ] up to V[ V_idx[l] + Ks[l] ] are the rows of V describing the l-th gaussian
@@ -164,11 +159,6 @@ public:
   // a length=sum_Ks vector (only used for general gaussians) lambda[ V_idx[l] ] up to lambda[ V_idx[l] + Ks[l] ] are eigenvalus of the l-th gaussian
   Vec lambda;
 
-  //! how many gaussians the mixture contains
-  int L;
-
-  //! the feature space dimension
-  int D;
 
   // used if type=="General". Number of components and lambda0 used to perform EM training.
   int n_principal_components;
@@ -176,21 +166,73 @@ public:
 
   real relativ_change_stop_value;
 
+  //! length == L. the log of the constant part in the p(x) equation : log(1/sqrt(2*pi^D * Det(C)))
+  Vec log_coef;
+
+  //! precomputed (I+V(t)DV)^-1. Used for factor gaussians. 
+  //! stored as a vector which is the flattened view of all L 'Ks[i] x Ks[i]' matrices. 
+  Vec inv_ivtdv;
+
+  //! A length==L vector. inv_ivtdv_idx[l] is the index at which starts the flattened Ks[l] x Ks[l] matrix for the l-th gaussian in inv_ivtdv
+  TVec<int> inv_ivtdv_idx; 
+  
+  //! the average number of dimensions of the gaussians (used to preallocate memory, so addGaussians calls are faster)
+  int avg_K;
+
+  //! a length==L vector. K[l] is the number of dimensions for the l-th gaussian 
+  //! only used for general and factor mixtures
+  TVec<int> Ks;
+
+  // a work vector
+  Vec tmpvec,tmpvec2;
+
+public:
+
+  // ************************
+  // * public build options *
+  // ************************
+
+  int kmeans_iterations;
+  int L;
+  string type;
+
   // ****************
   // * Constructors *
   // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
+  //! Default constructor.
   GaussMix();
 
   // ******************
   // * Object methods *
   // ******************
 
-  // can be one of : 
-  // Unknown, Spherical, Diagonal, General, Factor
-  string type;
+protected:
+
+  //! Given the posteriors, fill the centers and covariance of each Gaussian.
+  virtual void computeMeansAndCovariances();
+
+  //! Compute P(x | j), where j < L is the index of a component of the mixture.
+  virtual real computePrior(Vec& x, int j);
+
+  //! Compute the posteriors P(j | x_i) for each sample point and each Gaussian.
+  virtual void computePosteriors();
+
+  //! Compute the weight of each mixture (the coefficient alpha).
+  virtual void computeWeights();
+
+  //! Generate a sample x from the given Gaussian. If 'given_gaussian' is equal
+  //! to -1, then a random Gaussian will be chosen according to the weights alpha.
+  virtual void generateFromGaussian(Vec& x, int given_gaussian) const;
+
+public:
+
+  //! Overridden.
+  virtual void generate(Vec& x) const;
+
+public:
+
+  // TODO See which ones are really used !
 
   // this function computes inv_ivtdv = (I + V(t) * psi^-1 * V) ^ -1 and logcoef
   void precomputeFAStuff(Mat V, Vec diag, real &log_coef, Vec inv_ivtdv);
@@ -236,14 +278,12 @@ public:
 
   // if the argument given_gaussian is provided then a sample from
   // the specified gaussian is generated, otherwise from the mixture
-  virtual void generate(Vec& x, int given_gaussian=-1) const;
   void generateSpherical(Vec &x, int given_gaussian=-1) const;
   void generateDiagonal(Vec &x, int given_gaussian=-1) const;
   void generateGeneral(Vec &x, int given_gaussian=-1) const;
   void generateFactor(Vec &x, int given_gaussian=-1) const;
 
   virtual void resetGenerator(long g_seed) const;
-
 
   void EMFactorAnalyser(VMat samples, real relativ_change_stop_value = 0.005);
 
@@ -252,42 +292,22 @@ public:
   void EM(VMat samples, real relativ_change_stop_value = 0.005);
 
 private: 
+
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
 
   // resizes arrays with respect to the dimensions given to setMixtureType
   void initArrays();
 
 protected: 
+
   //! Declares this class' options
-  //! (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
   void kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clust, int maxit=9999);
 
-  //! length == L. the log of the constant part in the p(x) equation : log(1/sqrt(2*pi^D * Det(C)))
-  Vec log_coef;
-
-
-  //! precomputed (I+V(t)DV)^-1. Used for factor gaussians. 
-  //! stored as a vector which is the flattened view of all L 'Ks[i] x Ks[i]' matrices. 
-  Vec inv_ivtdv;
-
-  //! A length==L vector. inv_ivtdv_idx[l] is the index at which starts the flattened Ks[l] x Ks[l] matrix for the l-th gaussian in inv_ivtdv
-  TVec<int> inv_ivtdv_idx; 
-  
-  //! the average number of dimensions of the gaussians (used to preallocate memory, so addGaussians calls are faster)
-  int avg_K;
-
-  //! a length==L vector. K[l] is the number of dimensions for the l-th gaussian 
-  //! only used for general and factor mixtures
-  TVec<int> Ks;
-
-  // a work vector
-  Vec tmpvec,tmpvec2;
-
 public:
+
   //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
   //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
   virtual void forget();

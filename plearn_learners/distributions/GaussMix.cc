@@ -3,6 +3,7 @@
 // GaussMix.cc
 // 
 // Copyright (C) 2003 Julien Keable
+// Copyright (C) 2004 Université de Montréal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,29 +34,38 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.17 2004/05/17 14:17:17 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.18 2004/05/17 20:58:19 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
-#include "GaussMix.h"
-#include "random.h"
-#include "plapack.h"
-#include "VMat_maths.h"
 #include "ConcatColumnsVMatrix.h"
+#include "GaussMix.h"
+#include "pl_erf.h"   //!< For gauss_density().
+#include "plapack.h"
+#include "random.h"
+#include "SubVMatrix.h"
+#include "VMat_maths.h"
 
 namespace PLearn {
 using namespace std;
 
+//////////////
+// GaussMix //
+//////////////
 GaussMix::GaussMix() 
 : PDistribution(),
-  global_lambda0(false)
+  global_lambda0(false),   // TODO Declare as option.
+  kmeans_iterations(3),
+  L(1),
+  type("unknown")
 {
-  forget();
+//  forget(); TODO Call forget ?
+  nstages = 10;
 }
 
 
 PLEARN_IMPLEMENT_OBJECT(GaussMix, "Gaussian Mixture, either set non-parametrically or trained by EM", 
-                        "GaussMix implements a mixture of gaussians, for which \n"
+                        "GaussMix implements a mixture of gaussians, for which\n"
                         "L : number of gaussians\n"
                         "D : number of dimensions in the feature space\n"
                         "2 parameters are common to all 4 types :\n"
@@ -65,46 +75,66 @@ PLEARN_IMPLEMENT_OBJECT(GaussMix, "Gaussian Mixture, either set non-parametrical
                         "Spherical : gaussians have covar matrix = diag(sigma). parameter used : sigma.\n"
                         "Diagonal : gaussians have covar matrix = diag(sigma_i). parameters used : diags.\n"
                         "General : gaussians have an unconstrained covariance matrix. User provides the K<=D greatest eigenvalues\n"
-                        "          (thru parameter lambda) and their corresponding eigenvectors (thru matrix V)\n"
-                        "          of the covariance matrix. For the remaining D-K eigenvectors, a user-given eigenvalue (thru sigma) is assumed\n"
-                        "Factor : as in the general case, the gaussians are defined with K<=D vectors (thru KxD matrix 'V'), but these need not be orthogonal/orthonormal.\n"
-                        "         The covariance matrix used will be V(t)V + psi with psi a D-vector (thru parameter diags).\n");
+                        "          (through parameter lambda) and their corresponding eigenvectors (through matrix V)\n"
+                        "          of the covariance matrix. For the remaining D-K eigenvectors, a user-given eigenvalue (through sigma) is assumed\n"
+                        "Factor : as in the general case, the gaussians are defined with K<=D vectors (through KxD matrix 'V'), but these need not be orthogonal/orthonormal.\n"
+                        "         The covariance matrix used will be V(t)V + psi with psi a D-vector (through parameter diags).\n");
 
-
+////////////////////
+// declareOptions //
+////////////////////
 void GaussMix::declareOptions(OptionList& ol)
 {
-  declareOption(ol,"D", &GaussMix::D, OptionBase::buildoption,
-                "number of dimensions in feature space. (a.k.a inputsize).");
-    
+
+  // Build options.
+
   declareOption(ol,"L", &GaussMix::L, OptionBase::buildoption,
-                "number of gaussians in mixture.");
+                "Number of gaussians in the mixture.");
   
   declareOption(ol,"type", &GaussMix::type, OptionBase::buildoption,
-                "A string :  Unknown, Spherical, Diagonal, General, Factor\n"
+                "A string :  'unknown', 'spherical', 'diagonal', 'general', 'factor',\n"
                 "This is the type of Covariance matrix for each Gaussian.\n"
-                "   - Unknown: ? \n"
-                "   - Spherical: Sigma = sigma * I = spherical covariance matrix.\n"
-                "   - Diagonal: Sigma = diagonal covariance matrix\n"
-                "   - General: ? \n"
-                "   - Factor: represented by Ks[i] principal components\n"
-                );
+                "   - unknown   : ? \n"
+                "   - spherical : spherical covariance matrix sigma * I\n"
+                "   - diagonal  : diagonal covariance matrix\n"
+                "   - general   : ? \n"
+                "   - factor    : represented by Ks[i] principal components\n");
+                // TODO Finish this help.
 
-  declareOption(ol, "alpha", &GaussMix::alpha, OptionBase::buildoption,
-                "Coefficients of each gaussian. (E.g: 1/number_of_gaussians)\n"
-                "They sum to 1 and are positive and can be interpreted as prior P(gaussian i)\n"
-                );
+  declareOption(ol,"kmeans_iterations", &GaussMix::kmeans_iterations, OptionBase::buildoption,
+                "The maximum number of iterations performed in the initial K-means algorithm.");
+  
+  // Learnt options.
 
-  declareOption(ol, "mu", &GaussMix::mu, OptionBase::buildoption,
-                "These are the centers of each Gaussian, stored as a LxD matrix\n"
-                "with the centers of the vertical concatenation of all the K[i] x D matrix,\n"
-                "(each contains the K[i] vectors of gaussian i.) ");
+  declareOption(ol, "alpha", &GaussMix::alpha, OptionBase::learntoption,
+                "Coefficients of each gaussian.\n"
+                "They sum to 1 and are positive: they can be interpreted as prior P(gaussian i).\n");
 
-  declareOption(ol, "sigma", &GaussMix::sigma, OptionBase::buildoption,
+  declareOption(ol, "covariance", &GaussMix::covariance, OptionBase::learntoption,
+                "The covariance matrix of each Gaussian.");
+
+  declareOption(ol,"D", &GaussMix::D, OptionBase::learntoption,
+                "Number of dimensions in input space.");
+    
+  declareOption(ol, "mu", &GaussMix::mu, OptionBase::learntoption,
+                "These are the centers of each Gaussian, stored in rows.");
+
+  declareOption(ol, "nsamples", &GaussMix::nsamples, OptionBase::learntoption,
+                "The number of samples in the training set.");
+
+  declareOption(ol, "posteriors", &GaussMix::posteriors, OptionBase::learntoption,
+                "The posterior probabilities P(j | x_i), where j is the index of a Gaussian,\n"
+                "and i is the index of a sample.");
+
+  declareOption(ol, "sigma", &GaussMix::sigma, OptionBase::learntoption,
                 "This is one way to represent the covariance or part of it, depending on type:\n"
                 " - Spherical : the sigma for each spherical gaussian, in all directions\n"
                 " - Diagonal : not used"\
                 "General : for the l-th gaussian, the eigenvalue (a.k.a lambda0) used for all D-Ks[l] dimensions");
+  //TODO Redo the help on sigma.
 
+  // TODO What to do with these options.
+  
   declareOption(ol, "diags", &GaussMix::diags, OptionBase::buildoption,
                 "diagonal : a L x D matrix where row 'l' is the diagonal of the covariance matrix of gaussian l\n"\
                 "factor : a L x D matrix where row 'l' is psi (the output noise) ** note that after calling build(), the rows of diags are inverted (diags(i,j)=1/diags(i,j)");
@@ -120,12 +150,290 @@ void GaussMix::declareOptions(OptionList& ol)
   declareOption(ol, "V_idx", &GaussMix::V_idx, OptionBase::buildoption,
                 "Used for general and factore gaussians : A vector of size L. V_idx[l] is the row index of the first vector of gaussian 'l' in the matrix 'V' (also used to index vector 'lambda')");
 
-   
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
 
+///////////
+// build //
+///////////
+void GaussMix::build()
+{
+  inherited::build();
+  build_();
+}
+
+////////////
+// build_ //
+////////////
+void GaussMix::build_()
+{
+
+  // TODO Below is old stuff.
+
+  /*
+  
+  if(type=="Unknown")
+    return;
+
+  if(alpha.length()!=L)
+    PLERROR("You provided %i mixture coefficients. need %i",alpha.length(),L);
+  if(mu.length()!=L)
+    PLERROR("You provided %i rows in matrix mu. need %i",mu.length(),L);
+
+  int sum_Ks_square=0;
+  if(type=="General" || type=="Factor")
+  { */
+    /* There are two possible cases here :
+       
+       1 : the mixture has been set by loading from a file (or setOptions), the Ks array is not valid yet, and we must build it. In that case, we can use 
+       V.length() to know how much total vectors we have.
+
+       2 : the mixture was set with SetGaussianXXX, Ks is already set and V.length() is probably larger (because we overallocate for speed concerns)
+       than total number of vectors 
+
+       If Ks[0] = 0, we assume case 1.
+    */
+       
+/*
+    int sum_Ks=0;
+    Ks.resize(L);
+        
+    if(Ks[0]==0)
+    {
+      int l;
+      for(l=0;l<L-1;l++)
+      {
+        sum_Ks+=Ks[l]=V_idx[l+1]-V_idx[l];
+        sum_Ks_square += Ks[l]*Ks[l];
+      }
+      sum_Ks+=Ks[l]=V.length()-V_idx[L-1];
+      sum_Ks_square += Ks[l]*Ks[l];
+    }
+    else
+      for(int l=0;l<L;l++)
+      {
+        sum_Ks+=Ks[l];
+        sum_Ks_square += Ks[l]*Ks[l];
+      }
+
+    if(sigma.size()==0)
+    {
+      sigma.resize(L);
+      sigma.fill(0.0);
+    }
+
+    V.resize(sum_Ks,D);
+    lambda.resize(sum_Ks);
+  }
+
+  log_coef.resize(L);
+  mu.resize(L,D);
+  tmpvec.resize(D);
+  tmpvec2.resize(D);
+
+  if(type=="Spherical")
+    for(int l=0;l<L;l++)
+      log_coef[l]=log(1/sqrt(pow(2*3.14159,D) * pow(sigma[l],D)));
+
+  else if(type=="Diagonal")
+    for(int l=0;l<L;l++)
+      log_coef[l]=log(1/sqrt(pow(2*3.14159,D) * product(diags(l))));
+
+  else if(type=="General")
+    for(int l=0;l<L;l++)
+    {
+      // compute determinant
+      double log_det = log(product(lambda.subVec(V_idx[l],Ks[l])));
+      
+      if(D-Ks[l]>0)
+      {
+        if(sigma[l]==0)
+          PLERROR("lambda_0 for gaussian #%i is 0!",l);
+        log_det+=log(sigma[l]*(D-Ks[l]));
+      }
+      log_coef[l] = -0.5*( D*log(2*3.141549) + log_det );
+    }
+  
+  else if(type=="Factor")
+  {
+    inv_ivtdv.resize(sum_Ks_square);
+    inv_ivtdv_idx.resize(L);
+
+    for(int l=0;l<L;l++)
+    {
+      // diags will contain the diagonal of psi^-1
+      diags(l)<<inverted(diags(l));
+      if(l>0)
+        inv_ivtdv_idx[l]=inv_ivtdv_idx[l-1]+Ks[l]*Ks[l];
+      int K=Ks[l];
+      if(l>0)
+        inv_ivtdv_idx[l] = inv_ivtdv_idx[l-1] + K*K;
+      precomputeFAStuff(V.subMatRows(V_idx[l],Ks[l]), diags(l), log_coef[l], inv_ivtdv.subVec(inv_ivtdv_idx[l], K*K));
+    }
+    
+  } */
+}
+
+////////////////////////////////
+// computeMeansAndCovariances //
+////////////////////////////////
+void GaussMix::computeMeansAndCovariances() {
+  VMat weighted_train_set;
+  for (int j = 0; j < L; j++) {
+    // Build the weighted dataset.
+    VMat weights(posteriors.column(j));
+    weighted_train_set = new ConcatColumnsVMatrix(
+        new SubVMatrix(train_set, 0, 0, nsamples, D), weights);
+    weighted_train_set->defineSizes(D, 0, 1);
+/*
+  // mu_j <- (sum_i x_i P(j | x_i)) / (sum_i P(j | x_i))
+  static Vec sample;
+  static Vec normalization;
+  static real t;
+  sample.resize(D);
+  normalization.resize(L);
+  mu.fill(0);
+  normalization.fill(0);
+  for (int i = 0; i < nsamples; i++) {
+    train_set->getSubRow(i, 0, sample);
+    for (int j = 0; j < L; j++) {
+      t = posteriors(i,j);
+      mu(j) += sample * t;
+      normalization[j] += t;
+    }
+  }
+  for (int j = 0; j < L; j++) {
+    mu(j) /= normalization[j];
+  } */ // TODO Get rid of this.
+    if (type == "spherical") {
+      Vec variance(D);
+      Vec center = mu(j);
+      computeInputMeanAndVariance(weighted_train_set, center, variance);
+      sigma[j] = sqrt(mean(variance));   // TODO See if harmonic mean is needed ?
+    } else {
+      PLERROR("In GaussMix::computeCovariances - Not implemented for this type of Gaussian");
+    }
+    // TODO Implement them all.
+  }
+}
+
+//////////////////
+// computePrior //
+//////////////////
+real GaussMix::computePrior(Vec& x, int j) {
+  if (type == "spherical") {
+    real p = 1.0;
+    for (int k = 0; k < D; k++) {
+      p *= gauss_density(x[k], mu(j, k), sigma[j]);
+    }
+    return p;
+  } else {
+    PLERROR("In GaussMix::computePrior - Not implemented for this type of Gaussian");
+  }
+  return 0;
+}
+
+///////////////////////
+// computePosteriors //
+///////////////////////
+void GaussMix::computePosteriors() {
+  static Vec sample;
+  static Vec prior;
+  sample.resize(D);
+  prior.resize(L);
+  real sum_prior;
+  for (int i = 0; i < nsamples; i++) {
+    train_set->getSubRow(i, 0, sample);
+    sum_prior = 0;
+    // First we need to compute the prior P(x_i | j).
+    for (int j = 0; j < L; j++) {
+      prior[j] = computePrior(sample, j) * alpha[j];
+      sum_prior += prior[j];
+    }
+    for (int j = 0; j < L; j++) {
+      // Compute the posterior P(j | x_i) = P(x_i | j) * alpha_i / (sum_i ")
+      posteriors(i, j) = prior[j] / sum_prior;
+    }
+  }
+}
+
+////////////////////
+// computeWeights //
+////////////////////
+void GaussMix::computeWeights() {
+  alpha.fill(0);
+  for (int i = 0; i < nsamples; i++) {
+    for (int j = 0; j < L; j++) {
+      alpha[j] += posteriors(i,j);
+    }
+  }
+  alpha /= real(nsamples);
+}
+
+////////////
+// forget //
+////////////
+void GaussMix::forget()
+{
+  stage = 0;
+  // Free memory.
+  mu = Mat();
+  posteriors = Mat();
+  alpha = Vec();
+  sigma = Vec();
+
+  // Below is old stuff. See what to do with this !
+  /*
+  type="Unknown";
+  L=D=0;
+  avg_K=0;
+  n_principal_components = 0;
+  EM_lambda0 = 0;
+
+  initArrays(); */
+}
+
+//////////////
+// generate //
+//////////////
+void GaussMix::generate(Vec& x) const
+{
+  generateFromGaussian(x, -1);
+}
+
+//////////////////////////
+// generateFromGaussian //
+//////////////////////////
+void GaussMix::generateFromGaussian(Vec& x, int given_gaussian) const {
+  int l;    // The index of the Gaussian to use.
+  if (given_gaussian < 0)
+    l = multinomial_sample(alpha);
+  else
+    l = given_gaussian % alpha.length();
+  x.resize(D);
+  if (type == "spherical") {
+    for (int k = 0; k < D; k++) {
+      x[k] = gaussian_mu_sigma(mu(l, k), sigma[l]);
+    }
+  } else if(type[0]=='D') {
+//    generateDiagonal(x,given_gaussian);
+  } else if(type[0]=='G') {
+//    generateGeneral(x,given_gaussian);
+  } else if(type[0]=='F') {
+//    generateFactor(x,given_gaussian);
+  } else if (type == "unknown") {
+    PLERROR("In GaussMix::generate - You didn't specify the mixture type");
+  } else {
+    PLERROR("In GaussMix::generate - Unknown mixture type");
+  }
+}
+
+////////////
+// kmeans //
+////////////
 void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clust, int maxit)
+// TODO Put it into the PLearner framework.
 {
   int nsamples = samples.length();
   Mat newclust(nclust,samples->inputsize());
@@ -198,6 +506,247 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
   }
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void GaussMix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  PLERROR("GaussMix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+}
+
+////////////////////
+// resetGenerator //
+////////////////////
+void GaussMix::resetGenerator(long g_seed) const
+{ 
+  manual_seed(g_seed);  
+}
+
+///////////
+// train //
+///////////
+void GaussMix::train()
+{
+  // TODO Actually, we should compute the posteriors because saving them
+  // could take too much room.
+  // Check we actually need to train.
+  if (stage >= nstages) {
+    PLWARNING("In GaussMix::train - The learner is already trained");
+    return;
+  }
+
+  // Check there is a training set.
+  if (!train_set) {
+    PLERROR("In GaussMix::train - No training set specified");
+  }
+
+  // Make sure everything is the right size.
+  nsamples = train_set->length();
+  D = train_set->inputsize(); // TODO Check this is the right thing.
+  mu.resize(L,D);
+  posteriors.resize(nsamples, L);
+  alpha.resize(L);
+  nsamples = train_set->length();
+  if (type == "unknown") {
+  } else if (type == "diagonal") {
+  } else if (type == "factor") {
+  } else if (type == "general") {
+  } else if (type == "spherical") {
+    sigma.resize(L);
+  } else {
+    PLERROR("In GaussMix::train - Unknown value for the 'type' option");
+  }
+
+  if (stage == 0) {
+    // Perform K-means to initialize the centers of the mixture.
+    TVec<int> clust_idx;  // Store the cluster index for each sample.
+    kmeans(train_set, L, clust_idx, mu, kmeans_iterations);
+    posteriors.fill(0);
+    for (int i = 0; i < nsamples; i++) {
+      // Initially, P(j | x_i) = 0 if x_i is not in the j-th cluster,
+      // and 1 otherwise.
+      posteriors(i, clust_idx[i]) = 1;
+    }
+    computeWeights();
+    computeMeansAndCovariances();
+  }
+
+  Vec sample(D);
+  while (stage < nstages) {
+    computePosteriors();
+    computeWeights();
+    computeMeansAndCovariances();
+    stage++;
+  }
+
+  // Was: void GaussMix::EM(VMat samples, real relativ_change_stop_value)
+  /*
+
+
+     faire K-means
+
+     initialiser selon les resultats et selon le type
+
+     boucle sur les stages (comme dans autres Learners)
+        
+        boucle sur les donnees
+          pour calculer les posterieurs
+
+        boucle sur les composantes
+          faire updateWSamples selon le type
+
+
+  */
+
+  /*
+  VMat samples = train_set;
+  real relativ_change_stop_value=MISSING_VALUE; // what? should be a field;
+  if(type=="Factor")
+  {
+    EMFactorAnalyser(samples,relativ_change_stop_value);
+    return;
+  }
+
+  bool samples_have_weights = samples->weightsize()>0;
+
+  int nsamples=samples.length();
+  Vec wvec(nsamples);
+  TVec<int> clust_idx(nsamples);
+  Vec input(samples->inputsize());
+  Vec target(samples->targetsize());
+  real weight;
+
+  Mat mu;
+  Vec alphas(L);
+  Mat weights(nsamples, L);
+
+  kmeans(samples, L, clust_idx, mu, 2); // do 2 kmeans iterations, should be enough
+
+  setMixtureTypeGeneral(L,2,D);
+
+  real sum=0;
+
+  // alpha[l] <- relative frequency of cluster j
+  for(int i=0;i<nsamples;i++)
+  {
+    samples->getExample(i,input,target,weight);
+    alphas[clust_idx[i]]+=weight;
+    sum+=weight;
+  }
+
+  cout<<PLearn::sum(alphas)<<" "<<sum<<endl;
+  // normalize alphas;
+  alphas/=sum;
+
+
+  // weights are initialized with 1 for the kmeans' cluster they're in, otherwise 0
+  for(int i=0;i<nsamples;i++)
+  {
+    samples->getExample(i,input,target,weight);
+    for(int j=0;j<L;j++)
+      weights(i,j) = (clust_idx[i] == j? weight * 1.0 : 0.0);
+  }
+  
+  for(int i=0;i<L;i++)
+  {
+    VMat weighted_samples(ConcatColumnsVMatrix(samples->inputsize()==samples->width()?samples:
+                                               samples.subMatColumns(0,samples->inputsize()), 
+                                               weights.column(i)));
+    weighted_samples->defineSizes(samples->inputsize(),0,1);
+    setGaussianGeneralWSamples(i, alphas[i],EM_lambda0,n_principal_components,weighted_samples);
+  }
+
+  // build();
+  itn count=0; // what?
+  while(count--)
+  {
+    cout<<"count:"<<count<<" nll:"<<NLL(samples)<<endl;//<<"mus:"<<endl<<mu<<endl<<"alphas:"<<endl<<alpha<<endl;
+    // update alphas
+    sum=0;
+    if(samples_have_weights)
+    {
+      sum=0;
+      for(int i=0; i<L; i++)
+      {
+        samples->getColumn(samples.width()-1,wvec);
+        for(int j=0;j<nsamples;j++)
+          wvec[j] *= weights(j,i);
+        sum+=alphas[i] = mean(wvec);
+      }
+      alphas/=sum;
+    }
+    else
+      for(int i=0; i<L; i++)
+        sum+=alphas[i] = mean(weights.column(i));
+    cout<<alphas<<endl;
+    // update weights
+    for(int i=0; i<nsamples; i++)
+    {
+      samples->getExample(i,input,target,weight);
+      Vec Pxn_alpha(L);
+      sum=0;
+      for(int j=0;j<L;j++)
+      {
+        sum+=Pxn_alpha[j] =  exp(logDensityGeneral(input, j)); // * alpha[j]
+//        cout<<i<<" "<<j<<" "<<weights(i,j)<<" "<<exp(logDensityGeneral(samples(i), j))<<endl;
+      }
+      for(int j=0;j<L;j++)
+        {
+          if(sum)
+            weights(i,j) = Pxn_alpha[j] / sum;
+          else
+            weights(i,j) = 0;
+//          cout<<i<<" "<<j<<" "<<weights(i,j)<<endl;
+        }
+    }
+    
+    for(int i=0;i<L;i++)
+    {
+      if(samples_have_weights)
+      {
+        samples->getColumn(samples.width()-1,wvec);
+        for(int j=0;j<nsamples;j++)
+          wvec[j] *= weights(j,i);
+        VMat weighted_samples(ConcatColumnsVMatrix(samples.subMatColumns(0,samples->inputsize()), wvec.toMat(nsamples,1)));
+        weighted_samples->defineSizes(samples->inputsize(),0,1);
+        setGaussianGeneralWSamples(i, alphas[i],EM_lambda0,n_principal_components,weighted_samples);
+      }
+      else
+      {
+        VMat weighted_samples(ConcatColumnsVMatrix(samples, weights.column(i)));
+        weighted_samples->defineSizes(samples.width(),0,1);
+        setGaussianGeneralWSamples(i, alphas[i],EM_lambda0,n_principal_components,weighted_samples);
+      }
+    }
+    
+    build();
+    
+   Vec mu1(2);
+   for(int y=0;y<50;y++)
+     for(int z=0;z<50;z++)
+//       for(int y=0;y<50;y++)
+       {
+         //  generate(mu1);
+         mu1[0]=(float)y*(3.0/5.0);
+         mu1[1]=(float)z*(3.0/5.0);
+//         mu1[2]=(float)z/5-5;
+         
+       den(y*50+z+(count)*2500,0)=mu1[0];
+       den(y*50+z+(count)*2500,1)=mu1[1];
+
+       den(y*50+z+(count)*2500,2)=density(mu1);
+       den(y*50+z+(count)*2500,3)=count;
+       }
+  }
+  VMat out(den);
+  out->savePMAT("out.pmat");
+*/
+}
+
+/*********************** METHODS BELOW ARE OLD (USELESS ?) STUFF **************************/
+
+/*
 void GaussMix::setMixtureTypeSpherical(int _L, int _D)
 {
   L=_L;
@@ -373,6 +922,7 @@ void GaussMix::setGaussianGeneralWSamples(int l, real _alpha, real _sigma, int n
     setGaussianGeneral(l, _alpha, wmeans, eig_values.subVec(0,ncomponents), eig_vectors.subMatRows(0,ncomponents), eig_values[ncomponents] );
   }
 }
+*/
 
 /*
   Use EM to fit a factor analyser on a group of (possibly) weighted samples.
@@ -409,6 +959,7 @@ void GaussMix::setGaussianGeneralWSamples(int l, real _alpha, real _sigma, int n
   (presumably because of this Gaussian is part of a mixture, and
   the weights are its posteriors).
 */
+/*
 void GaussMix::setGaussianFactorWSamples(int l, real _alpha, VMat samples)
 {
   //bool samples_have_weights = samples->weightsize()>0;
@@ -517,110 +1068,6 @@ void GaussMix::precomputeFAStuff(Mat V, Vec diag, real &log_coef, Vec inv_ivtdv)
 }
 
 
-void GaussMix::build_()
-{
-  if(type=="Unknown")
-    return;
-
-  if(alpha.length()!=L)
-    PLERROR("You provided %i mixture coefficients. need %i",alpha.length(),L);
-  if(mu.length()!=L)
-    PLERROR("You provided %i rows in matrix mu. need %i",mu.length(),L);
-
-  int sum_Ks_square=0;
-  if(type=="General" || type=="Factor")
-  {
-    /* There are two possible cases here :
-       
-       1 : the mixture has been set by loading from a file (or setOptions), the Ks array is not valid yet, and we must build it. In that case, we can use 
-       V.length() to know how much total vectors we have.
-
-       2 : the mixture was set with SetGaussianXXX, Ks is already set and V.length() is probably larger (because we overallocate for speed concerns)
-       than total number of vectors 
-
-       If Ks[0] = 0, we assume case 1.
-    */
-       
-
-    int sum_Ks=0;
-    Ks.resize(L);
-        
-    if(Ks[0]==0)
-    {
-      int l;
-      for(l=0;l<L-1;l++)
-      {
-        sum_Ks+=Ks[l]=V_idx[l+1]-V_idx[l];
-        sum_Ks_square += Ks[l]*Ks[l];
-      }
-      sum_Ks+=Ks[l]=V.length()-V_idx[L-1];
-      sum_Ks_square += Ks[l]*Ks[l];
-    }
-    else
-      for(int l=0;l<L;l++)
-      {
-        sum_Ks+=Ks[l];
-        sum_Ks_square += Ks[l]*Ks[l];
-      }
-
-    if(sigma.size()==0)
-    {
-      sigma.resize(L);
-      sigma.fill(0.0);
-    }
-
-    V.resize(sum_Ks,D);
-    lambda.resize(sum_Ks);
-  }
-
-  log_coef.resize(L);
-  mu.resize(L,D);
-  tmpvec.resize(D);
-  tmpvec2.resize(D);
-
-  if(type=="Spherical")
-    for(int l=0;l<L;l++)
-      log_coef[l]=log(1/sqrt(pow(2*3.14159,D) * pow(sigma[l],D)));
-
-  else if(type=="Diagonal")
-    for(int l=0;l<L;l++)
-      log_coef[l]=log(1/sqrt(pow(2*3.14159,D) * product(diags(l))));
-
-  else if(type=="General")
-    for(int l=0;l<L;l++)
-    {
-      // compute determinant
-      double log_det = log(product(lambda.subVec(V_idx[l],Ks[l])));
-      
-      if(D-Ks[l]>0)
-      {
-        if(sigma[l]==0)
-          PLERROR("lambda_0 for gaussian #%i is 0!",l);
-        log_det+=log(sigma[l]*(D-Ks[l]));
-      }
-      log_coef[l] = -0.5*( D*log(2*3.141549) + log_det );
-    }
-  
-  else if(type=="Factor")
-  {
-    inv_ivtdv.resize(sum_Ks_square);
-    inv_ivtdv_idx.resize(L);
-
-    for(int l=0;l<L;l++)
-    {
-      // diags will contain the diagonal of psi^-1
-      diags(l)<<inverted(diags(l));
-      if(l>0)
-        inv_ivtdv_idx[l]=inv_ivtdv_idx[l-1]+Ks[l]*Ks[l];
-      int K=Ks[l];
-      if(l>0)
-        inv_ivtdv_idx[l] = inv_ivtdv_idx[l-1] + K*K;
-      precomputeFAStuff(V.subMatRows(V_idx[l],Ks[l]), diags(l), log_coef[l], inv_ivtdv.subVec(inv_ivtdv_idx[l], K*K));
-    }
-    
-  }
-}
-
 void GaussMix::initArrays()
 {
   alpha.resize(L);
@@ -660,8 +1107,10 @@ void GaussMix::initArrays()
 
 }
 
+
 void GaussMix::EMFactorAnalyser(VMat samples, real relativ_change_stop_value)
 {
+*/
 /*
   // start by initializing the factor loading matrices and psi
   
@@ -704,206 +1153,12 @@ Lh=randn(D*M,K)*sqrt(scale/K);
   XX=zeros(D*M,D);
   s=zeros(M,1);
   const=(2*pi)^(-D/2);
+
+}
+
 */
 
-}
-
-//void GaussMix::EM(VMat samples, real relativ_change_stop_value)
-void GaussMix::train()
-{
-  /*
-
-
-     faire K-means
-
-     initialiser selon les resultats et selon le type
-
-     boucle sur les stages (comme dans autres Learners)
-        
-        boucle sur les donnees
-          pour calculer les posterieurs
-
-        boucle sur les composantes
-          faire updateWSamples selon le type
-
-
-  */
-
-  /*
-  VMat samples = train_set;
-  real relativ_change_stop_value=MISSING_VALUE; // what? should be a field;
-  if(type=="Factor")
-  {
-    EMFactorAnalyser(samples,relativ_change_stop_value);
-    return;
-  }
-
-  bool samples_have_weights = samples->weightsize()>0;
-
-  int nsamples=samples.length();
-  Vec wvec(nsamples);
-  TVec<int> clust_idx(nsamples);
-  Vec input(samples->inputsize());
-  Vec target(samples->targetsize());
-  real weight;
-
-  Mat mu;
-  Vec alphas(L);
-  Mat weights(nsamples, L);
-
-  kmeans(samples, L, clust_idx, mu, 2); // do 2 kmeans iterations, should be enough
-
-  setMixtureTypeGeneral(L,2,D);
-
-  real sum=0;
-
-  // alpha[l] <- relative frequency of cluster j
-  for(int i=0;i<nsamples;i++)
-  {
-    samples->getExample(i,input,target,weight);
-    alphas[clust_idx[i]]+=weight;
-    sum+=weight;
-  }
-
-  cout<<PLearn::sum(alphas)<<" "<<sum<<endl;
-  // normalize alphas;
-  alphas/=sum;
-
-
-  // weights are initialized with 1 for the kmeans' cluster they're in, otherwise 0
-  for(int i=0;i<nsamples;i++)
-  {
-    samples->getExample(i,input,target,weight);
-    for(int j=0;j<L;j++)
-      weights(i,j) = (clust_idx[i] == j? weight * 1.0 : 0.0);
-  }
-  
-  for(int i=0;i<L;i++)
-  {
-    VMat weighted_samples(ConcatColumnsVMatrix(samples->inputsize()==samples->width()?samples:
-                                               samples.subMatColumns(0,samples->inputsize()), 
-                                               weights.column(i)));
-    weighted_samples->defineSizes(samples->inputsize(),0,1);
-    setGaussianGeneralWSamples(i, alphas[i],EM_lambda0,n_principal_components,weighted_samples);
-  }
-
-  // build();
-  itn count=0; // what?
-  while(count--)
-  {
-    cout<<"count:"<<count<<" nll:"<<NLL(samples)<<endl;//<<"mus:"<<endl<<mu<<endl<<"alphas:"<<endl<<alpha<<endl;
-    // update alphas
-    sum=0;
-    if(samples_have_weights)
-    {
-      sum=0;
-      for(int i=0; i<L; i++)
-      {
-        samples->getColumn(samples.width()-1,wvec);
-        for(int j=0;j<nsamples;j++)
-          wvec[j] *= weights(j,i);
-        sum+=alphas[i] = mean(wvec);
-      }
-      alphas/=sum;
-    }
-    else
-      for(int i=0; i<L; i++)
-        sum+=alphas[i] = mean(weights.column(i));
-    cout<<alphas<<endl;
-    // update weights
-    for(int i=0; i<nsamples; i++)
-    {
-      samples->getExample(i,input,target,weight);
-      Vec Pxn_alpha(L);
-      sum=0;
-      for(int j=0;j<L;j++)
-      {
-        sum+=Pxn_alpha[j] =  exp(logDensityGeneral(input, j)); // * alpha[j]
-//        cout<<i<<" "<<j<<" "<<weights(i,j)<<" "<<exp(logDensityGeneral(samples(i), j))<<endl;
-      }
-      for(int j=0;j<L;j++)
-        {
-          if(sum)
-            weights(i,j) = Pxn_alpha[j] / sum;
-          else
-            weights(i,j) = 0;
-//          cout<<i<<" "<<j<<" "<<weights(i,j)<<endl;
-        }
-    }
-    
-    for(int i=0;i<L;i++)
-    {
-      if(samples_have_weights)
-      {
-        samples->getColumn(samples.width()-1,wvec);
-        for(int j=0;j<nsamples;j++)
-          wvec[j] *= weights(j,i);
-        VMat weighted_samples(ConcatColumnsVMatrix(samples.subMatColumns(0,samples->inputsize()), wvec.toMat(nsamples,1)));
-        weighted_samples->defineSizes(samples->inputsize(),0,1);
-        setGaussianGeneralWSamples(i, alphas[i],EM_lambda0,n_principal_components,weighted_samples);
-      }
-      else
-      {
-        VMat weighted_samples(ConcatColumnsVMatrix(samples, weights.column(i)));
-        weighted_samples->defineSizes(samples.width(),0,1);
-        setGaussianGeneralWSamples(i, alphas[i],EM_lambda0,n_principal_components,weighted_samples);
-      }
-    }
-    
-    build();
-    
-   Vec mu1(2);
-   for(int y=0;y<50;y++)
-     for(int z=0;z<50;z++)
-//       for(int y=0;y<50;y++)
-       {
-         //  generate(mu1);
-         mu1[0]=(float)y*(3.0/5.0);
-         mu1[1]=(float)z*(3.0/5.0);
-//         mu1[2]=(float)z/5-5;
-         
-       den(y*50+z+(count)*2500,0)=mu1[0];
-       den(y*50+z+(count)*2500,1)=mu1[1];
-
-       den(y*50+z+(count)*2500,2)=density(mu1);
-       den(y*50+z+(count)*2500,3)=count;
-       }
-  }
-  VMat out(den);
-  out->savePMAT("out.pmat");
-*/
-}
-
-
-// ### Nothing to add here, simply calls build_
-void GaussMix::build()
-{
-  inherited::build();
-  build_();
-}
-
-void GaussMix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
-{
-  PLearner::makeDeepCopyFromShallowCopy(copies);
-  PLERROR("GaussMix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-}
-
-void GaussMix::generate(Vec& x, int given_gaussian) const
-{
-  if(type[0]=='S')
-    generateSpherical(x,given_gaussian);
-  else if(type[0]=='D')
-    generateDiagonal(x,given_gaussian);
-  else if(type[0]=='G')
-    generateGeneral(x,given_gaussian);
-  else if(type[0]=='F')
-    generateFactor(x,given_gaussian);
-  else if(type=="Unknown")
-    PLERROR("You forgot to specify mixture type (Spherical, Diagonal, General, Factor).");
-  else PLERROR("unknown mixtrure type");
-  return;
-}
-
+/*
 void GaussMix::generateSpherical(Vec &x, int given_gaussian) const
 {
   int l=0;
@@ -1005,8 +1260,11 @@ void GaussMix::generateFactor(Vec &x, int given_gaussian) const
   x += mu(l);
 }
 
+*/
+
 double GaussMix::log_density(const Vec& x) const
 { 
+  /*
   if(type[0]=='S')
     return logDensitySpherical(x);
   else if(type[0]=='D')
@@ -1018,9 +1276,11 @@ double GaussMix::log_density(const Vec& x) const
   else if(type=="Unknown")
     PLERROR("You forgot to specify mixture type (Spherical, Diagonal, General, Factor).");
   else PLERROR("unknown mixtrure type");
+  */
   return 0.0;
 }
 
+/*
 double GaussMix::logDensitySpherical(const Vec& x, int num) const
 {
   Vec x_minus_mu(x.length()), tmp(x.length());
@@ -1223,6 +1483,7 @@ double GaussMix::logDensityFactor(const Vec& x, int num) const
   }
   return logadd(logs);
 }
+*/
 
 double GaussMix::survival_fn(const Vec& x) const
 { 
@@ -1244,25 +1505,10 @@ Mat GaussMix::variance() const
   PLERROR("variance not implemented for GaussMix"); return Mat(); 
 }
 
-void GaussMix::forget()
-{
-  type="Unknown";
-  L=D=0;
-  avg_K=0;
-  n_principal_components = 0;
-  EM_lambda0 = 0;
-
-  initArrays();
-}
-
-
-void GaussMix::resetGenerator(long g_seed) const
-{ 
-  manual_seed(g_seed);  
-}
 
 // for now, this function does not take sample weights into account
 
+/*
 real GaussMix::NLL(VMat dataset)
 {
   real nll=0;
@@ -1276,6 +1522,7 @@ real GaussMix::NLL(VMat dataset)
   }
   return -nll;
 }
+*/
 
 } // end of namespace PLearn
 
