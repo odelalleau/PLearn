@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RegularGridVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: RegularGridVMatrix.cc,v 1.3 2004/04/05 23:01:30 morinf Exp $ 
    ******************************************************* */
 
 /*! \file RegularGridVMatrix.cc */
@@ -59,7 +59,8 @@ RegularGridVMatrix::RegularGridVMatrix(TVec<int> the_dimensions, TVec< pair<real
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(RegularGridVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(RegularGridVMatrix, "ONE LINE DESCR", 
+                        "RegularGridVMatrix represents the list of coordinates along a regularly spaced grid.");
 
 void RegularGridVMatrix::getRow(int i, Vec v) const
 {
@@ -100,17 +101,10 @@ void RegularGridVMatrix::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-string RegularGridVMatrix::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "RegularGridVMatrix represents the list of coordinates along a regularly spaced grid.";
-}
-
 void RegularGridVMatrix::build_()
 {
-  length_ = product(dimensions);
   width_ = dimensions.length();
+  length_ = (width_ ? product(dimensions) : 0);
   if(inputsize_<0)
     {
       inputsize_ = width_;
