@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLS.cc,v 1.4 2004/03/05 20:07:28 tihocan Exp $ 
+   * $Id: PLS.cc,v 1.5 2004/03/10 14:50:55 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -202,10 +202,15 @@ void PLS::computeOutput(const Vec& input, Vec& output) const
     target_start = this->k;
   }
   if (output_the_target) {
-    Vec target = output.subVec(target_start, this->m);
-    transposeProduct(target, B, input_copy);
-    target *= stddev_target;
-    target += mean_target;
+    if (this->m > 0) {
+      Vec target = output.subVec(target_start, this->m);
+      transposeProduct(target, B, input_copy);
+      target *= stddev_target;
+      target += mean_target;
+    } else {
+      // This is just a safety check, since it should never happen.
+      PLWARNING("In PLS::computeOutput - You ask to output the target but the target size is <= 0");
+    }
   }
 }    
 
@@ -287,7 +292,9 @@ int PLS::outputsize() const
   if (output_the_score) {
     os += this->k;
   }
-  if (output_the_target) {
+  if (output_the_target && m >= 0) {
+    // If m < 0, this means we don't know yet the target size, thus we
+    // shouldn't report it here.
     os += this->m;
   }
   return os;
