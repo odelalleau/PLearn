@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.2 2003/04/25 18:42:51 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.3 2003/04/28 17:07:35 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -191,5 +191,19 @@ void Optimizer::verifyGradient(real step)
 
 Optimizer::~Optimizer()
 {}
+
+/////////////////////
+// computeGradient //
+/////////////////////
+void Optimizer::computeGradient(
+    Optimizer* opt,
+    const Vec& gradient) {
+  // Clear all what's left from previous computations
+  opt->proppath.clearGradient();
+  opt->params.clearGradient();
+  opt->cost->gradient[0] = 1;
+  opt->proppath.fbprop();
+  opt->params.copyGradientTo(gradient);
+}
 
 %> // end of namespace PLearn

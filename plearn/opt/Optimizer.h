@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.3 2003/04/25 18:42:52 tihocan Exp $
+   * $Id: Optimizer.h,v 1.4 2003/04/28 17:07:36 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -156,6 +156,16 @@ using namespace std;
   protected:
     static void declareOptions(OptionList& ol);
 
+  public:
+
+    //--------------------------- UTILITY FUNCTIONS ----------------------------
+
+    // Given an optimizer, compute the gradient of the cost function and
+    // store it in the "gradient" Vec
+    static void computeGradient(
+        Optimizer* opt,
+        const Vec& gradient);
+      
   };
 
 DECLARE_OBJECT_PTR(Optimizer);
