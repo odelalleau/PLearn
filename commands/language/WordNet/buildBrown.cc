@@ -1,4 +1,5 @@
 #include "WordNetOntology.h"
+#include "TypesNumeriques.h"
 
 using namespace PLearn;
 
@@ -8,8 +9,8 @@ int convertPOS2WNO(string pos);
 
 int main(int argc, char** argv)
 {
-  if (argc != 6)
-    PLERROR("usage : n_files voc synsets ontology out (argc = %d)", argc);
+  if (argc != 8)
+    PLERROR("usage : n_files voc synsets ontology in.text out.ttext out.bttext (argc = %d)", argc);
   WordNetOntology ontology;
   set<string> pos_types;
   set<string> ignored_pos_types;
@@ -21,15 +22,21 @@ int main(int argc, char** argv)
   string ontology_file = tostring(argv[4]);
   int total_lines = extractFiles(files, n_files);
   ifstream input_if;
-  ShellProgressBar progress(0, total_lines - 1, "building", 50);
+  ShellProgressBar progress(0, total_lines - 1, "building tagged corpus", 50);
   progress.draw();
   int n = 0;
-  ofstream output_of(argv[5]);
+  string in_text_file = tostring(argv[5]);
+  ifstream in_text(argv[5]);
+  ofstream out_ttext(argv[6]);
+  ofstream out_bttext(argv[7]);
   int n_unknown_errors = 0;
   int n_human_ambig_errors = 0;
   int n_tagged_words = 0;
   int n_non_tagged_words = 0;
 
+  ////////////////////////////////////
+  //////////// T A G G E D ///////////
+  ////////////////////////////////////
   for (unsigned int i = 0; i < files.size(); i++)
   {
     input_if.open(files[i].c_str());
@@ -100,19 +107,11 @@ int main(int argc, char** argv)
 
       //tagged_word = (pos != "" && wnsn != -1 && done);
       tagged_word = (pos != "" && lemma != "" && lexsn != "" && done);
-
+      bool human_ambig = ((wnsn_str.find(';', 0) != string::npos) && (lexsn.find(';', 0) != string::npos)); 
       actual_word = lowerstring(actual_word);
 
-      //cout << actual_word << endl;
+      cout << actual_word << endl;
 
-      if (!ontology.containsWord(actual_word))
-      {
-        ontology.extractWord(actual_word, ALL_WN_TYPE, true, true, false);
-      }
-
-      bool human_ambig = ((wnsn_str.find(';', 0) != string::npos) && (lexsn.find(';', 0) != string::npos)); 
-
-      word_id = ontology.getWordId(actual_word);
       if (tagged_word && !human_ambig)
       {
         //wno_wnsn = ontology.getWordSenseIdForWnsn(actual_word, convertPOS2WNO(pos), wnsn);
@@ -122,18 +121,24 @@ int main(int argc, char** argv)
         {
           wno_wnsn = -1;
           n_unknown_errors++;
-/*
-          PLWARNING("WNO_ERROR catched");
-          cout << "lemma = " << lemma << endl;
-          cout << "word = " << word << endl;
-          cout << "wnsn = " << wnsn << endl;
-          cout << "wnsn_str = " << wnsn_str << endl;
-          cout << "actual_word = " << actual_word << endl;
-          cout << "lexsn = " << lexsn << endl;
-          cout << "line = " << line << endl;
-*/
+          if (looksNumeric(actual_word.c_str()))
+            actual_word = NUMERIC_TAG;
+          if (!ontology.containsWord(actual_word))
+            ontology.extractWord(actual_word, ALL_WN_TYPE, true, true, false);
+          word_id = ontology.getWordId(actual_word);          
+//            PLWARNING("WNO_ERROR catched");
+//            cout << "lemma = " << lemma << endl;
+//            cout << "word = " << word << endl;
+//            cout << "wnsn = " << wnsn << endl;
+//            cout << "wnsn_str = " << wnsn_str << endl;
+//            cout << "actual_word = " << actual_word << endl;
+//            cout << "lexsn = " << lexsn << endl;
+//            cout << "line = " << line << endl;
         } else
         {
+          if (!ontology.containsWord(actual_word))
+            ontology.extractWord(actual_word, ALL_WN_TYPE, true, true, false);
+          word_id = ontology.getWordId(actual_word);          
 #ifdef CHECK
           Set senses = ontology.getWordSenses(word_id);
           if (!senses.contains(wno_wnsn))
@@ -142,42 +147,67 @@ int main(int argc, char** argv)
         }
       } else
       {
-//         Set senses = ontology.getWordSenses(word_id);
-//         cout << ontology.getWord(word_id) << " : " << senses << endl;
         wno_wnsn = -1;
+        if (looksNumeric(actual_word.c_str()))
+          actual_word = NUMERIC_TAG;
+        if (!ontology.containsWord(actual_word))
+          ontology.extractWord(actual_word, ALL_WN_TYPE, true, true, false);
+        word_id = ontology.getWordId(actual_word);          
         if (human_ambig)
           n_human_ambig_errors++;
       }
 
       if (tagged_word)
-      {
         ignored_pos_types.insert(pos);
-      } else 
-      {
+      else 
         pos_types.insert(pos);
-      }
 
       if (wnsn == -1) n_non_tagged_words++;
       else n_tagged_words++;
 
-      //output_of << word_id << " " << wno_wnsn << endl;
-      output_of << ontology.getWord(word_id) << " " << wno_wnsn << endl;
+      out_ttext << ontology.getWord(word_id) << " " << word_id << " " << wno_wnsn << endl;
+      binwrite(out_bttext, word_id);
+      binwrite(out_bttext, wno_wnsn);
     
     }
-    
-    input_if.close();
-  
+    input_if.close();  
   }
-
   progress.done();
 
-  ontology.save(voc_file);
-  ontology.save(synset_file, ontology_file);
+  ////////////////////////////////////
+  //////// N O N - T A G G E D ///////
+  ////////////////////////////////////
+  int n_non_tagged_lines = ShellProgressBar::getWcAsciiFileLineCount(in_text_file);
+  progress.set(0, n_non_tagged_lines - 1, "building non-tagged corpus");
+  progress.draw();
+  n = 0;
+  string word;
+  while (!in_text.eof())
+  {
+    getline(in_text, word, '\n');
+    if (line == "") continue;
+    progress.update(n++);
+    n_non_tagged_words++;
+    if (!ontology.containsWord(word))
+      ontology.extractWord(word, ALL_WN_TYPE, true, true, false);
+    int word_id = ontology.getWordId(word);
+    out_ttext << ontology.getWord(word_id) << " " << word_id << " " << -1 << endl;
+    binwrite(out_bttext, word_id);
+    binwrite(out_bttext, -1);
+  }
+  progress.done();
+
+  out_ttext.close();
+  out_bttext.close();
 
   cout << n_unknown_errors << " unknown errors" << endl;
   cout << n_human_ambig_errors << " human ambiguity errors" << endl;
   cout << n_tagged_words << " tagged words" << endl;
   cout << n_non_tagged_words << " non-tagged words" << endl;
+
+  cout << "saving " << voc_file << ", " << synset_file << ", " << ontology_file << "..." << endl;
+  ontology.save(voc_file);
+  ontology.save(synset_file, ontology_file);
 
   return 0;
 }
