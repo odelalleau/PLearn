@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.h,v 1.7 2004/05/11 20:53:48 tihocan Exp $
+   * $Id: GaussianKernel.h,v 1.8 2004/06/16 18:25:04 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,7 +69,6 @@ protected:
   real minus_one_over_sigmasquare;  //!< -1 / sigma^2
   real sigmasquare_over_two;        //!<  sigma^2 / 2
 
-  //! Learnt options below.
   Vec squarednorms; //!<  squarednorms of the rows of the data VMat (data is a member of Kernel)
 	 
  public:
