@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubMatTransposeVariable.cc,v 1.6 2004/04/27 16:03:35 morinf Exp $
+   * $Id: SubMatTransposeVariable.cc,v 1.7 2004/05/26 20:14:38 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,20 +53,23 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(SubMatTransposeVariable, "ONE LINE DESCR", "NO HELP");
 
 SubMatTransposeVariable::SubMatTransposeVariable(Variable* v, int i, int j, int the_length, int the_width)
-  : inherited(v, the_width, the_length), startk(i*v->length()+j), length_(the_length), width_(the_width)
+: inherited(v, the_width, the_length),
+  startk(i*v->length()+j),
+  length_(the_length),
+  width_(the_width),
+  i_(i),
+  j_(j)
 {
     build_();
 }
 
-void
-SubMatTransposeVariable::build()
+void SubMatTransposeVariable::build()
 {
     inherited::build();
     build_();
 }
 
-void
-SubMatTransposeVariable::build_()
+void SubMatTransposeVariable::build_()
 {
     if (input) {
         // input is v from constructor
