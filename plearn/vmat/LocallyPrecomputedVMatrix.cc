@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyPrecomputedVMatrix.cc,v 1.2 2004/11/18 14:56:21 tihocan Exp $ 
+   * $Id: LocallyPrecomputedVMatrix.cc,v 1.3 2004/11/18 17:34:05 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -97,6 +97,7 @@ void LocallyPrecomputedVMatrix::build()
 void LocallyPrecomputedVMatrix::build_()
 {
   if (metadatadir == "") {
+    force_mkdir(local_dir);
     metadatadir = newFilename(local_dir, "locally_precomputed_", true);
     inherited::build();
     precomp_source->setOption("remove_when_done", tostring(remove_when_done));
