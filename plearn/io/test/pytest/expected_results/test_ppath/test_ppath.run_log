@@ -54,7 +54,7 @@ PPath('foo/bar/hi.cc').dirname() == 'foo/bar'               True
 PPath('./foo//bar\toto')
   DOS: == 'foo/bar/toto'      POSIX: Rejected               True
 
-isabs()
+isAbsPath()
   DOS: r:/dorionc             POSIX: /home/dorionc          True
 
 absolute('/home/dorionc') == ...

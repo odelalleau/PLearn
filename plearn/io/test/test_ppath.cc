@@ -102,11 +102,11 @@ void absolute_path()
 
   PPath absolute( absolute_str );
 
-  split_behavior( "isabs()",                  
+  split_behavior( "isAbsPath()",                  
                   "r:/dorionc",
                   "/home/dorionc" );
   
-  MAND_LOG << boolstr( absolute.isabs() ) << endl << endl;
+  MAND_LOG << boolstr( absolute.isAbsPath() ) << endl << endl;
 
   split_behavior( "absolute('" + absolute_str + "') == ...",                  
                   "r:/dorionc", "/home/dorionc" );
