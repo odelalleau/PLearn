@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.23 2004/04/21 17:23:37 tihocan Exp $
+   * $Id: Kernel.cc,v 1.24 2004/05/07 19:06:16 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,7 +55,9 @@ Kernel::~Kernel() {}
 // Kernel //
 ////////////
 Kernel::Kernel(bool is__symmetric)
-: is_symmetric(is__symmetric),
+: data_inputsize(-1),
+  n_examples(-1),
+  is_symmetric(is__symmetric),
   report_progress(0)
 {}
 
@@ -64,8 +66,11 @@ Kernel::Kernel(bool is__symmetric)
 ////////////////////
 void Kernel::declareOptions(OptionList &ol)
 {
+
+  // Build options.
+
   declareOption(ol, "is_symmetric", &Kernel::is_symmetric, OptionBase::buildoption,
-                "TODO: Give some comments");
+                "Whether this kernel is symmetric or not.");
   
   declareOption(ol, "report_progress", &Kernel::report_progress, OptionBase::buildoption,
                 "If set to 1, a progress bar will be displayed when computing the Gram matrix,\n"
@@ -73,6 +78,14 @@ void Kernel::declareOptions(OptionList &ol)
   
   declareOption(ol, "specify_dataset", &Kernel::specify_dataset, OptionBase::buildoption,
                 "If set, then setDataForKernelMatrix will be called with this dataset at build time");
+
+  // Learnt options.
+  
+  declareOption(ol, "data_inputsize", &Kernel::data_inputsize, OptionBase::learntoption,
+                "The inputsize of 'data' (if -1, is set to data.width()).");
+  
+  declareOption(ol, "n_examples", &Kernel::n_examples, OptionBase::learntoption,
+                "The number of examples in 'data'.");
   
   inherited::declareOptions(ol);
 }
@@ -116,8 +129,10 @@ void Kernel::setDataForKernelMatrix(VMat the_data)
       // Default value when no inputsize is specified.
       data_inputsize = data->width();
     }
+    n_examples = data->length();
   } else {
     data_inputsize = 0;
+    n_examples = 0;
   }
 }
 

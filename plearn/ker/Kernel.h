@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.25 2004/04/21 17:23:38 tihocan Exp $
+   * $Id: Kernel.h,v 1.26 2004/05/07 19:06:16 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -61,7 +61,8 @@ private:
 protected:
 
   VMat data; //!<  data for kernel matrix, which will be used for calls to evaluate_i_j and the like
-  int data_inputsize;   //< The inputsize of data (if -1, is set to data.width()).
+  int data_inputsize;
+  int n_examples;
 
   static void declareOptions(OptionList& ol);
 
@@ -98,8 +99,15 @@ public:
   */
   virtual void addDataForKernelMatrix(const Vec& newRow);
 
+
+  //! Return data_inputsize.
+  virtual int dataInputsize() {
+    return data_inputsize;
+  }
+
+  //! Return n_examples.
   virtual int nExamples()
-    { return data.length(); }
+    { return n_examples; }
 
   //!  returns evaluate(data(i),data(j))
   virtual real evaluate_i_j(int i, int j) const; 
@@ -164,9 +172,10 @@ public:
   virtual ~Kernel();
 
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
 private:
 
-  virtual void build_();
+  void build_();
 
 };
 DECLARE_OBJECT_PTR(Kernel);
