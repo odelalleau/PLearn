@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.cc,v 1.6 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: ConcatRowsVMatrix.cc,v 1.7 2004/07/09 18:18:18 tihocan Exp $
    ******************************************************* */
 
 #include "ConcatRowsVMatrix.h"
@@ -165,5 +165,15 @@ real ConcatRowsVMatrix::dot(int i, const Vec& v) const
   return array[whichvm]->dot(rowofvm,v);
 }
 
+////////////
+// putMat //
+////////////
+void ConcatRowsVMatrix::putMat(int i, int j, Mat m) {
+  int whichvm, rowofvm;
+  for (int row = 0; row < length(); row++) {
+    getpositions(row + i, whichvm, rowofvm);
+    array[whichvm]->putSubRow(rowofvm, j, m(row));
+  }
+}
 
 } // end of namespcae PLearn
