@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.cc,v 1.8 2004/06/10 16:11:13 tihocan Exp $ 
+   * $Id: SourceVMatrix.cc,v 1.9 2004/06/11 19:09:36 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -57,7 +57,10 @@ SourceVMatrix::SourceVMatrix()
   // build_();
 }
 
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(SourceVMatrix, "Super-class for VMatrices that point to another one (the source vmatrix)", "");
+PLEARN_IMPLEMENT_OBJECT(SourceVMatrix,
+    "Super-class for VMatrices that point to another one (the source vmatrix)",
+    ""
+);
 
 void SourceVMatrix::setMetaDataDir(const string& the_metadatadir)
 {

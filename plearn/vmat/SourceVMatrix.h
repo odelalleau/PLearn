@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.h,v 1.6 2004/06/10 16:11:13 tihocan Exp $ 
+   * $Id: SourceVMatrix.h,v 1.7 2004/06/11 19:09:36 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -41,7 +41,7 @@
 /*! \file SourceVMatrix.h */
 
 /*
-SourceVmatrix is an abstract base class for vmatrices that are defined as a function of 
+SourceVmatrix is a base class for vmatrices that are defined as a function of 
 another vmatrix (the "source").
 
 It has a source buildoption to specify said source.
@@ -60,6 +60,9 @@ using namespace std;
 
 class SourceVMatrix: public RowBufferedVMatrix
 {
+
+private:
+
   typedef RowBufferedVMatrix inherited;
 
 protected:
@@ -135,9 +138,11 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  PLEARN_DECLARE_ABSTRACT_OBJECT(SourceVMatrix);
+  PLEARN_DECLARE_OBJECT(SourceVMatrix);
 
 };
+
+DECLARE_OBJECT_PTR(SourceVMatrix);
 
 } // end of namespace PLearn
 #endif
