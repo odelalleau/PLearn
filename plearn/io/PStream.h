@@ -131,6 +131,9 @@ protected:
   //! ptrs. to the original buffers;  used to 'reset' the underlying
   //! streams to a valid state when the PStream is destroyed.
   streambuf* original_bufin, * original_bufout;
+
+private:
+  static char tmpbuf[100];
   
 public:
   //! If true, then Mat and Vec will be serialized with their elements in place,
@@ -184,12 +187,38 @@ public:
   inline PStream& operator=(const PStream& pios)  { return operator()(pios); }
 
 
+  void writeAsciiNum(char x);
+  void writeAsciiNum(unsigned char x);
+  void writeAsciiNum(signed char x);
+  void writeAsciiNum(short x);
+  void writeAsciiNum(unsigned short x);
+  void writeAsciiNum(int x);
+  void writeAsciiNum(unsigned int x);
+  void writeAsciiNum(long x);
+  void writeAsciiNum(unsigned long x);
+  void writeAsciiNum(float x);
+  void writeAsciiNum(double x);
+
+  void readAsciiNum(char &x);
+  void readAsciiNum(unsigned char &x);
+  void readAsciiNum(signed char &x);
+  void readAsciiNum(short &x);
+  void readAsciiNum(unsigned short &x);
+  void readAsciiNum(int &x);
+  void readAsciiNum(unsigned int &x);
+  void readAsciiNum(long &x);
+  void readAsciiNum(unsigned long &x);
+  void readAsciiNum(float &x);
+  void readAsciiNum(double &x);
+
   //! op bool: true if the stream is in a valid state (e.g. "while(stm) stm >> x;")
   // This implementation does not seem to work: commented out [Pascal]
   // inline operator bool() { return (!pin || *pin) && (!pout || *pout) && (pin || pout); }
   // This is a temporary fix [Pascal]
-  inline operator bool() { return pin && peek()!=-1; }
-  
+  inline operator bool() { return pin && peek()!=EOF; }
+
+  inline bool eof() const { return pin->eof(); }
+  inline bool good() const { return pin->good() && pout->good(); }
 
   inline istream& rawin() { return *pin; }   //<! access to underlying istream
   inline ostream& rawout() { return *pout; } //<! access to underlying ostream
@@ -228,8 +257,10 @@ public:
     
     return *this; 
   }
-  inline PStream& put(char c) { pout->put(c); return *this; }
   inline PStream& write(const char* s, streamsize n) { pout->write(s,n); return *this; }
+  inline PStream& put(char c) { pout->put(c); return *this; }
+  inline PStream& put(unsigned char c) { write(reinterpret_cast<char *>(&c), sizeof(c)); return *this; }
+  inline PStream& put(int x) { return put((char)x); }
   inline PStream& flush() { pout->flush(); return *this; }
   /******/
 
@@ -400,15 +431,18 @@ protected:
         if (it == out.copies_map_out.end()) 
           {
             int id = out.copies_map_out.size()+1;
-            out.rawout() << '*' << id << "->";
+            //out.rawout() << '*' << id << "->";
+            out << '*' << id << "->";
             out.copies_map_out[const_cast<T*&>(x)] = id;
             out << *x;
           }
         else 
-          out.rawout() << '*' << it->second << ' ';
+          //out.rawout() << '*' << it->second << ' ';
+          out << '*' << it->second << ' ';
       }
     else
-      out.rawout() << "*0 ";
+      //out.rawout() << "*0 ";
+      out << "*0 ";
     return out;
   }
 
@@ -731,12 +765,12 @@ void writeSequence(PStream& out, const SequenceType& seq)
         unsigned char typecode;
         if(byte_order()==LITTLE_ENDIAN_ORDER)
           {
-            out.put(0x12); // 1D little-endian 
+            out.put((char)0x12); // 1D little-endian 
             typecode = TypeTraits<typename SequenceType::value_type>::little_endian_typecode();
           }
         else
           {
-            out.put(0x13); // 1D big-endian
+            out.put((char)0x13); // 1D big-endian
             typecode = TypeTraits<typename SequenceType::value_type>::big_endian_typecode();
           }
 
