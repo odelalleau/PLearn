@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.cc,v 1.3 2002/09/17 01:27:33 zouave Exp $
+   * $Id: Gnuplot.cc,v 1.4 2002/09/20 23:36:39 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -220,6 +220,24 @@ void Gnuplot::plot(const Mat& m1, const string& opt1, const Mat& m2, const strin
   tognuplot << "'" << tmpfilenames[2] << "' " << opt3 << ", ";
   tognuplot << "'" << tmpfilenames[3] << "' " << opt4 << ", ";
   tognuplot << "'" << tmpfilenames[4] << "' " << opt5 << endl;
+}
+
+void Gnuplot::plot(const Mat& m1, const string& opt1, const Mat& m2, const string& opt2, const Mat& m3, 
+                   const string& opt3, const Mat& m4, const string& opt4, const Mat& m5, const string& opt5,
+                   const Mat& m6, const string& opt6)
+{
+  saveGnuplot(tmpfilenames[0].c_str(), m1);
+  saveGnuplot(tmpfilenames[1].c_str(), m2);
+  saveGnuplot(tmpfilenames[2].c_str(), m3);
+  saveGnuplot(tmpfilenames[3].c_str(), m4);
+  saveGnuplot(tmpfilenames[4].c_str(), m5);
+  saveGnuplot(tmpfilenames[5].c_str(), m6);
+  tognuplot << "plot '" << tmpfilenames[0] << "' " << opt1 << ", ";
+  tognuplot << "'" << tmpfilenames[1] << "' " << opt2 << ", ";
+  tognuplot << "'" << tmpfilenames[2] << "' " << opt3 << ", ";
+  tognuplot << "'" << tmpfilenames[3] << "' " << opt4 << ", ";
+  tognuplot << "'" << tmpfilenames[4] << "' " << opt5 << ", ";
+  tognuplot << "'" << tmpfilenames[5] << "' " << opt6 << endl;
 }
 
 void Gnuplot::multiplot(vector<Mat *> &ms, vector<string> &opts)
