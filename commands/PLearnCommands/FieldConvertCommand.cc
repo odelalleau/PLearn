@@ -5,6 +5,7 @@
 //#include "VVMatrix.h"
 //#include <fstream.h>
 //#include "ProgressBar.h"
+//#include "pl_erf.h"       //!< For gauss_01_quantile.
 #include "random.h"
 #include "stringutils.h"
 #include "VMat.h"
@@ -22,12 +23,13 @@ PLearnCommandRegistry FieldConvertCommand::reg_(new FieldConvertCommand);
 void FieldConvertCommand::run(const vector<string> & args)
 {
   // set default values
-  UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS = 0.3f;
-  PVALUE_THRESHOLD = 0.025f;
-  FRAC_MISSING_TO_SKIP = 1.0f;
-  FRAC_ENOUGH = 0.005f;
+  UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS = 0.3;
+  PVALUE_THRESHOLD = 0.025;
+  FRAC_MISSING_TO_SKIP = 1.0;
+  FRAC_ENOUGH = 0.005;
   target = -1;
   report_fn="FieldConvertReport.txt";
+  precompute = "none";
     
   for(int i=0;i<(signed)args.size();i++)
   {
@@ -52,6 +54,8 @@ void FieldConvertCommand::run(const vector<string> & args)
       FRAC_MISSING_TO_SKIP=toreal(val[1]);
     else if(val[0]=="frac_enough")
       FRAC_ENOUGH=toreal(val[1]);
+    else if(val[0]=="precompute")
+      precompute = val[1];
     else PLERROR("unknown argument: %s ",val[0].c_str());
   }
   if(source_fn=="")
@@ -109,6 +113,8 @@ void FieldConvertCommand::run(const vector<string> & args)
 
   // Minimun number of representants of a class to be considered significant.
   int n_enough = (int) (FRAC_ENOUGH * vm->length());
+
+  ProgressBar* pb = new ProgressBar("Analyzing fields", vm->width());
 
   // Process each field.
   for(int i=0;i<vm->width();i++)
@@ -258,11 +264,11 @@ void FieldConvertCommand::run(const vector<string> & args)
       // If we're still not sure (that is to say, type==unknown && message=="").
       if(type==unknown && message=="")
         // is data 'uncorrelated + discrete + sparse'? Yes : Flag 
-        if((float)(sc[i].max()-sc[i].min()+1) > (float)(count)*2 ) {
+        if((real)(sc[i].max()-sc[i].min()+1) > (real)(count)*2 ) {
           type=continuous;
           // cout << "Uncorrelated + discrete + sparse: " << i << " (max = " << sc[i].max() << ", min = " << sc[i].min() << ", count = " << count << ")" << endl;
         }
-        else if((float)(sc[i].max()-sc[i].min()+1) != (float)(count) )
+        else if((real)(sc[i].max()-sc[i].min()+1) != (real)(count) )
           message = "(edit force.txt): Data is made of a semi-sparse (density<50%) distribution of integers (uncorrelated with target). max: "+tostring(sc[i].max())+" min:"+tostring(sc[i].min())+" count:"+tostring(count);
         else {
           // data is discrete, not sparse, and not correlated to target,
@@ -271,6 +277,183 @@ void FieldConvertCommand::run(const vector<string> & args)
           // cout << "Discrete uncorrelated: " << i << endl;
         }
     }
+
+    // The code commented below is a failed attempt to try and solve
+    // the problem of weird distributions.
+/*    // TO-DO We should also detect when this is mainly outliers.
+    // Check the normal assumption is not violated.
+    real epsilon_max = 1e6;
+    real epsilon_min = 1e-2;
+    real epsilon = epsilon_min;
+    real max = sc[i].max();
+    real min = sc[i].min();
+    real mu = sc[i].mean();
+    int nsamp = (int) sc[i].nnonmissing();
+    real sigma = sc[i].stddev();
+    real confidence = 0.05;
+    real alpha = gauss_01_quantile(pow((1 - confidence), 1 / real(nsamp)));
+    bool max_is_high = true;
+    bool min_is_low = true;
+    Vec col(0);
+    Vec previous_col(0);
+    int countlog = 0;
+    bool take_opposite = false;
+    real previous_min = 0, previous_max = 0, previous_sigma = 0, previous_mu = 0;
+    int countlogmax = 50;
+    Vec store_min(countlogmax);
+    Vec store_epsilon(countlogmax);
+    Vec store_sigma(countlogmax);
+    // NB: if count == 2, then this is a binary field, and we shouldn't perform
+    // this normal assumption analysis.
+    while (count > 2 && (max_is_high || min_is_low)) {
+      max_is_high = false;
+      min_is_low = false;
+      if ( (max - mu) / sigma > alpha ) {
+        // Max is too high.
+//        cout << "Max is too high for index " << i << endl;
+        max_is_high = true;
+      }
+      if ( (min - mu) / sigma < -alpha ) {
+        // Min is too low.
+//        cout << "Min is too low for index " << i << endl;
+        min_is_low = true;
+      }
+      if (abs(sigma) < 1e-3) {
+        cout << "Low sigma, giving up!" << endl;
+        max_is_high = false;
+        min_is_low = false;
+        countlog = 0;
+        take_opposite = false;
+        max = sc[i].max();
+        min = sc[i].min();
+        mu = sc[i].mean();
+        sigma = sc[i].stddev();
+      }
+      if (max_is_high || min_is_low) {
+        // Damnit! But how many samples are fucked up?
+        int n = vm->length();
+        if (col.length() == 0) {
+          // Not initialized yet.
+          col.resize(vm->length());
+          previous_col.resize(vm->length());
+          vm->getColumn(i,col);
+          previous_col << col;
+          countlog++; // We will make at least one log.
+          previous_min = min;
+          previous_max = max;
+          previous_sigma = sigma;
+          previous_mu = mu;
+        }
+        real t;
+        int nb_high = 0;
+        int nb_low = 0;
+        for (int k = 0; k < n; k++) {
+          t = col[k];
+          if (!is_missing(t)) {
+            if ( (t - mu) / sigma > alpha) {
+              nb_high++;
+            } else if ( (t - mu) / sigma < -alpha ) {
+              nb_low++;
+            }
+          }
+        }
+        if (nb_high > 0) {
+//          cout << "There are " << nb_high << " samples above +alpha = " << alpha << endl;
+        }
+        if (nb_low > 0) {
+//          cout << "There are " << nb_low << " samples below -alpha = " << -alpha << endl;
+        }
+        // Compute the log and see if it fixes it.
+        if (max_is_high && min_is_low) {
+          // TODO Find out a solution.
+//          cout << "Bleh, both max and min are fucked up, dunno what to do with field " << i << endl;
+          max_is_high = false;
+          min_is_low = false;
+          // (also, be careful as countlog > 0 at this time)
+        } else {
+          if (min_is_low) {
+            // First we take the opposite.
+            for (int k = 0; k < n; k++) {
+              col[k] = -col[k];
+              previous_col[k] = -previous_col[k];
+            }
+            mu = -mu;
+            max = -min;
+            min = -max;
+            if (take_opposite || countlog > 1) {
+              // We should take the opposite only on the first step.
+              PLERROR("Taking the opposite in later steps, something must be wrong!");
+            }
+            take_opposite = true;
+          }
+          // We compute the log and the new stats.
+          epsilon *= 10;
+          if (epsilon > epsilon_max) {
+            // We tried all available values on epsilon, time to take
+            // the log again.
+            previous_col << col;
+            epsilon = epsilon_min;
+            countlog++;
+            if (countlog > countlogmax) {
+              PLERROR("Too many logs taken");
+            }
+            previous_min = min;
+            previous_max = max;
+            previous_sigma = sigma;
+            previous_mu = mu;
+          } else {
+            // Epsilon was too low, we try again from fresh with the higher
+            // epsilon.
+            col << previous_col;
+            min = previous_min;
+            max = previous_max;
+            sigma = previous_sigma;
+            mu = previous_mu;
+          }
+          store_min[countlog - 1] = min;
+          store_sigma[countlog - 1] = sigma;
+          store_epsilon[countlog - 1] = epsilon;
+          real t;
+          real old_min = min;
+          real sumsq = 0;
+          max = -REAL_MAX;
+          min = REAL_MAX;
+          mu = 0;
+          for (int k = 0; k < n; k++) {
+            t = col[k];
+            if (!is_missing(t)) {
+//              t = log(1 + (t - old_min) + epsilon);
+              t = log(1 + (t - old_min) / sigma + epsilon);
+              col[k] = t;
+              mu += t;
+              sumsq += t*t;
+              if (t > max) {
+                max = t;
+              } else if (t < min) {
+                min = t;
+              }
+            }
+          }
+          real sum = mu;
+          mu /= real(nsamp);
+          sigma = sqrt(sumsq / real(nsamp - 1) + real(nsamp) / real(nsamp - 1) * mu * mu - 2 * mu / real(nsamp - 1) * sum);
+          real sigma_c = sqrt(variance(col, mean(col, true)));
+          if (abs(sigma - sigma_c) > 1e-3 && sc[i].nmissing() == 0) {
+            cout << "Sigma   = " << sigma << endl;
+            cout << "Sigma_c = " << sigma_c << endl;
+          } else {
+            cout << "OK, sigma and sigma_c seem to correspond" << endl;
+          }
+          
+          if (isnan(sigma)) {
+            PLERROR("Sigma = nan");
+          }
+        }
+      }
+    }
+    if (countlog > 0) {
+//      cout << "Countlog for index " << i << ": " << countlog << endl;
+    }*/
 
     // now find out which actions to perform according to type 
 
@@ -304,7 +487,9 @@ void FieldConvertCommand::run(const vector<string> & args)
     
     if(action&NORMALIZE)
     {
-      // if there are Nans, add a test
+
+      out << "@" << vm->fieldName(i) << " ";
+      // Replace Nans by either the most frequent value or the mean.
       if(sc[i].nmissing()>0)
       {
         // find out 'mode' of the distribution, if any
@@ -324,9 +509,27 @@ void FieldConvertCommand::run(const vector<string> & args)
           // cout << i << ": maxi >= 10, and missingval = " << missingval << endl;
         }
         
-        out<<"@"<<vm->fieldName(i)<<" isnan "<<missingval<<" @"<<vm->fieldName(i)<<" ifelse "<<sc[i].mean()<<" - "<<sc[i].stddev()<<" / :"<<vm->fieldName(i)<<"\n";      
+//        out<<"@"<<vm->fieldName(i)<<" isnan "<<missingval<<" @"<<vm->fieldName(i)<<" ifelse "<<sc[i].mean()<<" - "<<sc[i].stddev()<<" / :"<<vm->fieldName(i)<<"\n";      
+        out << "isnan " << missingval << " @" << vm->fieldName(i) << " ifelse ";
       }
-      else out<<"@"<<vm->fieldName(i)<<" "<<sc[i].mean()<<" - "<<sc[i].stddev()<<" / :"<<vm->fieldName(i)<<"\n";      
+
+      /*
+      // Apply log transformations if necessary.
+      if (take_opposite) {
+        // First take the opposite.
+        out << "0 exch - ";
+      }
+      for (int c = 0; c < countlog; c++) {
+        // Compute log(1 + (x - min) / sigma + epsilon).
+        out << store_min[c] << " - " << store_sigma[c] << " / ";
+        out << "1 + " << store_epsilon[c] << " + log ";
+      } */
+
+      // And apply normalization.
+      real mu = sc[i].mean();
+      real sigma = sc[i].stddev();
+      out << mu << " - " << sigma << " / :" << vm->fieldName(i)<<"\n";
+      
     }
 
     int n_discarded = 0;
@@ -363,16 +566,31 @@ void FieldConvertCommand::run(const vector<string> & args)
 
     report<<tostring(i)+" ("+vm->fieldName(i)+") [c="<<count<<" nm="<<sc[i].nnonmissing()<<"] ";
     if(action==0)report<<"~~user intervention required :"<<message;
-    if(action&NORMALIZE)report<<"NORMALIZE ";
+    if(action&NORMALIZE) {
+      report << "NORMALIZE ";
+/*      if (countlog > 0) {
+        report << "(after " << countlog << " log) ";
+      }*/
+    }
     if(action&ONEHOT)report<<"ONEHOT("<<count<<") - discarded: " << n_discarded << " ";
     if(type==discrete_corr)report<<"correl: "<<correlation<<" 2tail-student:"<<student<<" ";
     if(action&MISSING_BIT)report<<"MISSING_BIT ";
     if(action&SKIP)report<<"SKIP ";
     report<<endl;
 
+    pb->update(i);
    
   }
-  out<<"[@resp]\n</PROCESSING>\n"<<endl;
+
+  delete pb;
+
+  // Add the target.
+  out << "%" << target << " :target\n</PROCESSING>\n"<<endl;
+
+  // Possibly add the <PRECOMPUTE> tag.
+  if (precompute != "none") {
+    out << "<PRECOMPUTE>" << endl << precompute << endl << "</PRECOMPUTE>" << endl;
+  }
 
 }
 
