@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.13 2004/01/17 20:01:46 yoshua Exp $
+   * $Id: Func.cc,v 1.14 2004/02/18 22:43:24 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -236,6 +236,22 @@ void Function::fbprop(const Vec& in, const Vec& out, const Vec& input_gradient, 
   static bool displayvargraph=false;
   if (displayvargraph)
     displayVarGraph(outputs,true);
+#endif
+}
+
+void Function::fbprop(const Array<Vec>& in, const Array<Vec>& out, const Array<Vec>& input_gradient, const Array<Vec>& output_gradient)
+{
+  inputs << in;
+  inputs.clearGradient();
+  fproppath.clearGradient();
+  outputs.copyGradientFrom(output_gradient);
+  fproppath.fbprop();
+  outputs >> out;
+  inputs.copyGradientTo(input_gradient);
+
+#ifdef BOUNDCHECK
+  if (out.hasMissing())
+    PLERROR("Function::fbprop: detected MISSING_VALUE in function output!");
 #endif
 }
 

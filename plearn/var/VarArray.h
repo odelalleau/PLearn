@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.h,v 1.9 2003/10/07 15:26:30 tihocan Exp $
+   * $Id: VarArray.h,v 1.10 2004/02/18 22:43:25 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -105,8 +105,10 @@ public:
   void copyTo(const Vec& datavec) const;
   void accumulateTo(const Vec& datavec) const;
   void copyGradientFrom(const Vec& datavec);
+  void copyGradientFrom(const Array<Vec>& datavec);
   void accumulateGradientFrom(const Vec& datavec);
   void copyGradientTo(const Vec& datavec);
+  void copyGradientTo(const Array<Vec>& datavec);
   void accumulateGradientTo(const Vec& datavec);
 
   //!  UNSAFE: x must point to at least n floats!

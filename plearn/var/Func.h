@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.h,v 1.7 2004/01/07 22:18:43 ducharme Exp $
+   * $Id: Func.h,v 1.8 2004/02/18 22:43:24 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -149,6 +149,8 @@ public:
       costs in parallel, but backpropagating only through the first
 */
   void fbprop(const Vec& in, const Vec& out, const Vec& input_gradient, const Vec& output_gradient);
+  void fbprop(const Array<Vec>& in, const Array<Vec>& out, 
+              const Array<Vec>& input_gradient, const Array<Vec>& output_gradient);
 
   //!  given input, compute output, gradient (=doutput/dinput) and hessian (=d^2output/dinput^2)
   void fbbprop(const Vec& in, const Vec& out, const Vec& gradient, const Mat& hessian);

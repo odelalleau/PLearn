@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedSumOfVariable.cc,v 1.2 2004/02/16 16:25:40 yoshua Exp $
+   * $Id: UnfoldedSumOfVariable.cc,v 1.3 2004/02/18 22:43:24 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,18 +51,18 @@ using namespace std;
 
 /** UnfoldedSumOfVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(UnfoldedSumOfVariable, "Variable that sums the value of a Func evaluated on each row of a VMat\n", 
+PLEARN_IMPLEMENT_OBJECT(UnfoldedSumOfVariable, "Variable that sums the value of a Func evaluated on each row of a matrix.\n", 
                         "However, unlike the SumOfVariable, it does so by unfolding the Func (up to given maximum number\n"
                         "of times 'max_bag_size'), and it allows that number to be variable. Each of the unfolded Func\n"
-                        "is applied on a different row of the input VMat. The number of rows to sum is specified on the\n"
-                        "fly by the target: all the rows in a bag except the last one have missing values in their\n"
-                        "target sub-field.");
+                        "is applied on a different row of the input matrix. The number of rows to sum is specified on the\n"
+                        "fly by another input, the bag_size.\n");
 
-UnfoldedSumOfVariable::UnfoldedSumOfVariable(VMat the_distr, Func the_f, int max_bagsize)
-  :NaryVariable(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
+UnfoldedSumOfVariable::UnfoldedSumOfVariable(Var inputmatrix, Var bagsize, Func the_f, int max_bagsize)
+  :NaryVariable(nonInputParentsOfPath(the_f->inputs,the_f->outputs) & inputmatrix & bagsize, 
                 the_f->outputs[0]->length(), 
                 the_f->outputs[0]->width()),
-   distr(the_distr), f(the_f), max_bag_size(max_bagsize), curpos(0), bag_size(0)
+   input_matrix(inputmatrix), bag_size(bagsize),
+   f(the_f), max_bag_size(max_bagsize)
 {
   build();
 }
@@ -75,11 +75,6 @@ void UnfoldedSumOfVariable::build()
 
 void UnfoldedSumOfVariable::build_()
 {
-  input_value.resize(distr->width());
-  input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
-  target = input_value.subVec(distr->inputsize(),distr->targetsize());
-  input_values.resize(max_bag_size,distr->inputsize()+distr->targetsize()+distr->weightsize());
-  output_values.resize(max_bag_size,f->outputs[0]->size());
   if(f->outputs.size()!=1)
     PLERROR("In UnfoldedSumOfVariable: function must have a single variable output (maybe you can vconcat the vars into a single one prior to calling sumOf, if this is really what you want)");
   f->inputs.setDontBpropHere(true);
@@ -89,7 +84,7 @@ void UnfoldedSumOfVariable::build_()
   for (int i=0;i<max_bag_size;i++)
   {
     inputs[i].resize(f->inputs.size());
-    outputs[i] = f(inputs[i]);
+    outputs[i] = f(inputs[i])[0];
     f_paths[i] = propagationPath(inputs[i],outputs[i]);
   }
 }
@@ -99,12 +94,15 @@ void UnfoldedSumOfVariable::declareOptions(OptionList& ol)
   declareOption(ol, "f", &UnfoldedSumOfVariable::f, OptionBase::buildoption, 
                 "    Func that is replicated for each element of the 'bag' taken from the VMat.");
 
-  declareOption(ol, "distr", &UnfoldedSumOfVariable::distr, OptionBase::buildoption, 
-                "    VMatrix that contains the data, with multiple consecutive rows forming one bag.\n"
+  declareOption(ol, "input_matrix", &UnfoldedSumOfVariable::input_matrix, OptionBase::buildoption, 
+                "    Var that contains the data, with multiple consecutive rows forming one bag.\n"
                 "    The last row of a bag has a non-missing target value.\n");
 
+  declareOption(ol, "bag_size", &UnfoldedSumOfVariable::bag_size, OptionBase::buildoption, 
+                "    Var that gives the size of the bag (number of rows of input_matrix to consider).\n");
+
   declareOption(ol, "max_bag_size", &UnfoldedSumOfVariable::max_bag_size, OptionBase::buildoption, 
-                "    maximum number of examples in a bag (more than that in distr will trigger a run-time error).\n");
+                "    maximum number of examples in a bag (more than that in input_matrix will trigger a run-time error).\n");
 
   inherited::declareOptions(ol);
 }
@@ -116,7 +114,8 @@ void UnfoldedSumOfVariable::recomputeSize(int& l, int& w) const
 void UnfoldedSumOfVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   NaryVariable::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(distr, copies);
+  deepCopyField(input_matrix, copies);
+  deepCopyField(bag_size, copies);
   deepCopyField(f, copies);
   deepCopyField(inputs, copies);
   deepCopyField(outputs, copies);
@@ -127,46 +126,39 @@ void UnfoldedSumOfVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>&
 void UnfoldedSumOfVariable::fprop()
 {
   value.clear();
-  bool not_reached_end_of_bag=true;
-  
-  for (bag_size=0;not_reached_end_of_bag;bag_size++)
+  int bagsize = (int)bag_size->valuedata[0];
+  if (bagsize>=max_bag_size)
+    PLERROR("UnfoldedSumOfVariable: bag size=%d > expected max. bag size(%d)",
+            bagsize,max_bag_size);
+  for (int i=0;i<bagsize;i++)
     {
-      if (bag_size>=max_bag_size)
-        PLERROR("UnfoldedSumOfVariable: bag size=%d > expected max. bag size(%d)",
-                bag_size,max_bag_size);
-      input_value = input_values(bag_size);
-      distr->getRow(curpos, input_value);
-      input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
-      not_reached_end_of_bag = target.hasMissing();
-      Vec output_value = output_values(bag_size);
-      inputs[bag_size] << input_value;
-      f_paths[bag_size].fprop();
-      outputs[bag_size] >> output_value;
-      value += output_value;
-      if(++curpos == distr->length())
-        curpos = 0;
+      inputs[i] << input_matrix->matValue(i);
+      f_paths[i].fprop();
+      value += outputs[i]->value;
     }
 }
 
 
 void UnfoldedSumOfVariable::bprop()
 { 
-  for (int i=0;i<bag_size;i++)
+  int bagsize = (int)bag_size->valuedata[0];
+  for (int i=0;i<bagsize;i++)
     {
-      f_paths[bag_size].clearGradient();
-      outputs[bag_size].copyGradientFrom(gradient);
-      f_paths[bag_size].bprop();
+      f_paths[i].clearGradient();
+      outputs[i]->gradient << gradient;
+      f_paths[i].bprop();
     }
 }
 
 
 void UnfoldedSumOfVariable::printInfo(bool print_gradient)
 {
-  cout << info() << value;
-  for (int i=0;i<bag_size;i++)
+  for (int i=0;i<max_bag_size;i++)
     f_paths[i].printInfo(print_gradient);
-  cout << info() << " : " << getName() << "(bag_size=" << bag_size << ", ";
-  for(int i=0; i<bag_size; i++) cout << (void*)outputs[i] << " ";
+  cout << info() << " : " << getName() << "[" << (void*)this << "]" 
+       << "(input_matrix=" << (void*)input_matrix << ", bag_size=" 
+       << (void*)bag_size << ", ";
+  for(int i=0; i<max_bag_size; i++) cout << (void*)outputs[i] << " ";
   cout << ") = " << value;
   if (print_gradient) cout << " gradient=" << gradient;
   cout << endl; 

@@ -36,12 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedSumOfVariable.h,v 1.4 2004/02/18 22:43:24 yoshua Exp $
+   * $Id: SumOverBagsVariable.h,v 1.1 2004/02/18 22:43:24 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#ifndef UnfoldedSumOfVariable_INC
-#define UnfoldedSumOfVariable_INC
+#ifndef SumOverBagsVariable_INC
+#define SumOverBagsVariable_INC
 
 #include "NaryVariable.h"
 
@@ -49,44 +49,58 @@ namespace PLearn <%
 using namespace std;
 
 
-class UnfoldedSumOfVariable: public NaryVariable
+class SumOverBagsVariable: public NaryVariable
 {
-protected:
+  protected:
     //!  protected default constructor for persistence
-  UnfoldedSumOfVariable() : max_bag_size(0) {}
+    SumOverBagsVariable() : vmat(), f(), max_bag_size(-1), n_samples(1), curpos() {}
 
-public:
+  public:
+
+  typedef NaryVariable inherited;
+
   //protected:
-  Var input_matrix;
-  Var bag_size;
-  Func f;
-  int max_bag_size;
+    VMat vmat;
+    Func f;
+    int max_bag_size;
+    int n_samples;
 
-  TVec<VarArray> inputs; // all the input Var's
-  TVec<Var> outputs; // and the corresponding output Var's, 
-  TVec<VarArray> f_paths; // the duplicates of f prop. path for each input/output pair: inputs[i]->outputs[i]
+    int curpos; //!<  current pos in VMat 
+    // To avoid allocation/deallocations in fprop/bprop
+  Vec output_value;
+  Mat input_and_target_values;
+  Vec input_and_target_values_vec;
+  Mat input_values;
+  Mat target_values;
+  Mat weight_values;
+  Vec unused_gradients;
+  int bag_size;
 
-public:
-  //! Sum_{i=0 to bag_size} f(i-th row of input_matrix)
-  UnfoldedSumOfVariable(Var inputmatrix, Var bagsize, Func the_f, int maxbagsize);
+  public:
+    //!  Sum_{consecutive inputs \in vmat until one has non-missing end_of_bag field} f(inputs)
+    //! the end_of_bag field is at column end_of_bag_column in each row of the VMat.
+    SumOverBagsVariable(VMat the_vmat, Func the_f, int maxbagsize, int nsamples);
     
-  PLEARN_DECLARE_OBJECT(UnfoldedSumOfVariable);
-  virtual void build();
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-  virtual void fprop();
-  virtual void bprop();
+    PLEARN_DECLARE_OBJECT(SumOverBagsVariable);
+    virtual void build();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    virtual void fprop();
+    virtual void bprop();
+    virtual void fbprop();
+    virtual void fpropOneBag(bool do_bprop=false);
     
-  void printInfo(bool print_gradient);
+    void printInfo(bool print_gradient);
 
-  static void declareOptions(OptionList& ol);
+    static void declareOptions(OptionList& ol);
 
-private:
-  void build_();
+  private:
+    void build_();
 };
 
-inline Var unfoldedSumOf(Var input_matrix, Var bag_size, Func f, int max_bag_size)
-{ return new UnfoldedSumOfVariable(input_matrix,bag_size,f,max_bag_size); }
+//!  sumOf
+inline Var sumOverBags(VMat vmat, Func f, int max_bag_size, int nsamples)
+{ return new SumOverBagsVariable(vmat,f,max_bag_size,nsamples); }
 
 %> // end of namespace PLearn
 

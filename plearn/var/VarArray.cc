@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.cc,v 1.10 2003/12/01 23:53:51 yoshua Exp $
+   * $Id: VarArray.cc,v 1.11 2004/02/18 22:43:24 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -282,6 +282,46 @@ void VarArray::accumulateTo(real* data, int n) const
 void VarArray::copyGradientFrom(const Vec& datavec)
 {
   copyGradientFrom(datavec.data(),datavec.length());
+}
+
+void VarArray::copyGradientFrom(const Array<Vec>& datavec)
+{
+  iterator array = this->data();
+  for(int i=0; i<size(); i++)
+    {
+      Var& v = array[i];
+      real* data = datavec[i].data();
+      int n = datavec[i].length();
+      if (!v.isNull())
+      {
+        real* value = v->gradientdata;
+        int vlength = v->nelems();
+        if(vlength!=n)
+          PLERROR("IN VarArray::copyGradientFrom length of -th Var in the array differs from length of %d-th argument",i,i);
+        for(int j=0; j<vlength; j++)
+          value[j] = *data++;
+      }
+    }
+}
+
+void VarArray::copyGradientTo(const Array<Vec>& datavec)
+{
+  iterator array = this->data();
+  for(int i=0; i<size(); i++)
+    {
+      Var& v = array[i];
+      real* data = datavec[i].data();
+      int n = datavec[i].length();
+      if (!v.isNull())
+      {
+        real* value = v->gradientdata;
+        int vlength = v->nelems();
+        if(vlength!=n)
+          PLERROR("IN VarArray::copyGradientFrom length of -th Var in the array differs from length of %d-th argument",i,i);
+        for(int j=0; j<vlength; j++)
+          *data++ = value[j];
+      }
+    }
 }
 
 void VarArray::accumulateGradientFrom(const Vec& datavec)
