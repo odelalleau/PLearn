@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.10 2004/02/12 22:15:09 ducharme Exp $
+   * $Id: FileVMatrix.cc,v 1.11 2004/02/13 21:50:31 ducharme Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -191,7 +191,7 @@ void FileVMatrix::build_()
     header[DATAFILE_HEADERLENGTH-1] = '\n';
 
     // write the header to the file
-    fwrite(header,DATAFILE_HEADERLENGTH,1,f);
+    fwrite(header,1,DATAFILE_HEADERLENGTH,f);
 
     if(length_ > 0 && width_ > 0) //ensure we can allocate enough space... if len>0, to ensure
     {             // that the header ends with a '\n'.
@@ -351,7 +351,7 @@ void FileVMatrix::appendRow(Vec v)
   //header[DATAFILE_HEADERLENGTH-1] = '\0';
   // write the header to the file
   fseek(f,0,SEEK_SET);
-  fwrite(header,DATAFILE_HEADERLENGTH,1,f);
+  fwrite(header,1,DATAFILE_HEADERLENGTH,f);
 }
 
 void FileVMatrix::flush()
