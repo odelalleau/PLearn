@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NGramDistribution.cc,v 1.2 2004/10/12 18:25:20 larocheh Exp $ 
+   * $Id: NGramDistribution.cc,v 1.3 2004/10/13 18:59:24 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -97,6 +97,7 @@ void NGramDistribution::declareOptions(OptionList& ol)
                 "no_smoothing\n"
                 "add-delta\n"                
                 "jelinek-mercer\n"
+                "witten-bell\n"
                 "kneser-ney\n"
     );
   declareOption(ol, "lambda_estimation", &NGramDistribution::lambda_estimation, OptionBase::buildoption,
@@ -247,7 +248,6 @@ real NGramDistribution::density(const Vec& y) const
   {
     freq = tree->freq(ngram);
     normalization = tree->normalization(ngram);
-    ngram_length--;
     if(normalization[ngram_length-1] == 0)
       return 1.0/voc_size;
     return ((real)freq[ngram_length-1])/normalization[ngram_length-1];
@@ -283,12 +283,31 @@ real NGramDistribution::density(const Vec& y) const
     TVec<int> n_freq = tree->n_freq(ngram);
     real ret = 0;
     real factor = 1;
-    for(int j=ngram_length-1; j>=0; j++)
+    for(int j=ngram_length-1; j>=0; j--)
     { 
       if(normalization[j] != 0)
       {
         ret += factor * ((real)(freq[j] > discount_constant ? freq[j] - discount_constant : 0))/ normalization[j];
-        factor = ((real)discount_constant)/normalization[j] * n_freq[j-1];
+        factor = factor * ((real)discount_constant)/normalization[j] * n_freq[j];
+      }
+    }
+    ret += factor *1.0/voc_size;
+    
+    return ret;
+  }
+  else if(smoothing == "witten-bell")
+  {
+    freq = tree->freq(ngram);
+    normalization = tree->normalization(ngram);
+    TVec<int> n_freq = tree->n_freq(ngram);
+    real ret = 0;
+    real factor = 1;
+    for(int j=ngram_length-1; j>=0; j--)
+    { 
+      if(normalization[j] != 0)
+      {
+        ret += factor * ((real)(freq[j] > discount_constant ? freq[j] - discount_constant : 0))/ normalization[j];
+        factor = factor * ((real)discount_constant)/normalization[j] * n_freq[j];
       }
     }
     ret += factor *1.0/voc_size;
@@ -424,7 +443,7 @@ void NGramDistribution::train()
     contexts_train->getRow(i,row);
     getNGrams(row,int_row);
     tree->add(int_row);
-    
+    /*
     // Kneser-ney statistics N_+1(**) and N_+1(*w_i)
     if(int_row.length() >= 2)
     {
@@ -445,7 +464,7 @@ void NGramDistribution::train()
           n_1_plus_star_word[int_row[int_row.length()-2]] = n_1_plus_star_word[int_row[int_row.length()-2]] + 1;
       } 
     }
-    
+    */
     pb->update(i+1);
   }
 

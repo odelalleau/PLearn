@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NGramTree.cc,v 1.2 2004/10/12 18:25:20 larocheh Exp $ 
+   * $Id: NGramTree.cc,v 1.3 2004/10/13 18:59:24 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -165,17 +165,18 @@ TVec<int> NGramTree::n_freq(TVec<int> sequence)
   if(sequence.length()==0)
     return ret;
 
-  ret.resize(sequence.length()-1);
+  ret.resize(sequence.length());
   ret.fill(0);
 
   PP<SymbolNode> it = root;
   int n=0;
+  ret[n++] = it->n_freq();
   for(int i=sequence.length()-2; i>=0; i--)
   {
-    ret[n++] = it->n_freq();
     it = it->child(sequence[i]);
     if(!it)
       return ret;
+    ret[n++] = it->n_freq();
   }
   return ret;
 }

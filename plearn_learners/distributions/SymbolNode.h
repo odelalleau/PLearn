@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SymbolNode.h,v 1.2 2004/10/12 18:25:20 larocheh Exp $ 
+   * $Id: SymbolNode.h,v 1.3 2004/10/13 18:59:24 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -66,8 +66,8 @@ protected:
   int frequence;
 
   //! Children and their frequences
-  hash_map<int,PP<SymbolNode> > children;
-  hash_map<int,int> frequencies;
+  map<int,PP<SymbolNode> > children;
+  map<int,int> frequencies;
 
 public:
 
