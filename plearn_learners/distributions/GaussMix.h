@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: GaussMix.h,v 1.6 2004/02/06 01:03:44 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -235,7 +235,7 @@ public:
   virtual void generate(Vec& x) const;
   void generateSpherical(Vec &x) const;
   void generateDiagonal(Vec &x) const;
-  void generateGeneral(Vec &x) const;
+  void generateGeneral(Vec &x, int given_gaussian=-1) const;
   void generateFactor(Vec &x) const;
 
   virtual void resetGenerator(long g_seed) const;

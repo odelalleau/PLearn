@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.9 2004/01/28 22:42:52 ouimema Exp $ 
+ * $Id: GaussMix.cc,v 1.10 2004/02/06 01:03:44 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -930,9 +930,9 @@ void GaussMix::generateDiagonal(Vec &x) const
   x += mu(l);
 }
 
-void GaussMix::generateGeneral(Vec &x) const
+void GaussMix::generateGeneral(Vec &x, int given_gaussian) const
 {
-  int l = multinomial_sample(alpha);
+  int l = given_gaussian>=0?given_gaussian:multinomial_sample(alpha);
   x=0;
   
   // the covariance matrix of the general gaussian type can be expressed as :
