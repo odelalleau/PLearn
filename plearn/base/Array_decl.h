@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array_decl.h,v 1.7 2004/10/14 21:23:27 ducharme Exp $
+   * $Id: Array_decl.h,v 1.8 2004/10/25 05:57:48 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -151,85 +151,6 @@ class Array: public TVec<T>
         array[i] = other[i];
     }
 
-  //! Makes this array a shared view of the given TVec
-  void view(const TVec<T>& other)
-  {
-    TVec<T>::operator=(other);
-  }
-
-    bool operator==(const Array<T>& other) const
-    {
-#ifdef BOUNDCHECK
-      if (this->size()!=other.size())
-        PLERROR("Array::operator== works on same-size arguments");
-#endif
-      iterator array = data();
-      for(int i=0; i<length_; i++)
-        if (array[i] != other[i]) return false;
-      return true;
-    }
-
-    bool operator<(const Array<T>& other) const
-    {
-#ifdef BOUNDCHECK
-      if (this->size()!=other.size())
-        PLERROR("Array::operator< works on same-size arguments");
-#endif
-      iterator array = data();
-      for(int i=0; i<length_; i++)
-      {
-        if (array[i] < other[i]) return true;
-        else if (array[i] > other[i]) return false;
-      }
-      return false; // if == then not <
-    }
-
-    bool operator<=(const Array<T>& other) const
-    {
-#ifdef BOUNDCHECK
-      if (this->size()!=other.size())
-        PLERROR("Array::operator< works on same-size arguments");
-#endif
-      iterator array = data();
-      for(int i=0; i<length_; i++)
-      {
-        if (array[i] < other[i]) return true;
-        else if (array[i] > other[i]) return false;
-      }
-      return true; // if == then <=
-    }
-
-
-    bool operator>(const Array<T>& other) const
-    {
-#ifdef BOUNDCHECK
-      if (this->size()!=other.size())
-        PLERROR("Array::operator< works on same-size arguments");
-#endif
-      iterator array = data();
-      for(int i=0; i<length_; i++)
-      {
-        if (array[i] > other[i]) return true;
-        else if (array[i] < other[i]) return false;
-      }
-      return false; // if == then not >
-    }
-
-    bool operator>=(const Array<T>& other) const
-    {
-#ifdef BOUNDCHECK
-      if (this->size()!=other.size())
-        PLERROR("Array::operator< works on same-size arguments");
-#endif
-      iterator array = data();
-      for(int i=0; i<length_; i++)
-      {
-        if (array[i] > other[i]) return true;
-        else if (array[i] < other[i]) return false;
-      }
-      return true; // if == then >=
-    }
-
     void operator=(const vector<T> &other)
     {
       resize(other.size());
@@ -237,6 +158,87 @@ class Array: public TVec<T>
       for(int i = 0; i < length_; ++i)
         array[i] = other[i];
     }
+
+  //! Makes this array a shared view of the given TVec
+  void view(const TVec<T>& other)
+  {
+    TVec<T>::operator=(other);
+  }
+
+// EXPERIMENTALLY: PUT THOSE IN COMMENTS AND USE VERSION INHERITED FROM TVEC
+// 
+//     bool operator==(const Array<T>& other) const
+//     {
+// #ifdef BOUNDCHECK
+//       if (this->size()!=other.size())
+//         PLERROR("Array::operator== works on same-size arguments");
+// #endif
+//       iterator array = data();
+//       for(int i=0; i<length_; i++)
+//         if (array[i] != other[i]) return false;
+//       return true;
+//     }
+// 
+//     bool operator<(const Array<T>& other) const
+//     {
+// #ifdef BOUNDCHECK
+//       if (this->size()!=other.size())
+//         PLERROR("Array::operator< works on same-size arguments");
+// #endif
+//       iterator array = data();
+//       for(int i=0; i<length_; i++)
+//       {
+//         if (array[i] < other[i]) return true;
+//         else if (array[i] > other[i]) return false;
+//       }
+//       return false; // if == then not <
+//     }
+// 
+//     bool operator<=(const Array<T>& other) const
+//     {
+// #ifdef BOUNDCHECK
+//       if (this->size()!=other.size())
+//         PLERROR("Array::operator< works on same-size arguments");
+// #endif
+//       iterator array = data();
+//       for(int i=0; i<length_; i++)
+//       {
+//         if (array[i] < other[i]) return true;
+//         else if (array[i] > other[i]) return false;
+//       }
+//       return true; // if == then <=
+//     }
+// 
+// 
+//     bool operator>(const Array<T>& other) const
+//     {
+// #ifdef BOUNDCHECK
+//       if (this->size()!=other.size())
+//         PLERROR("Array::operator< works on same-size arguments");
+// #endif
+//       iterator array = data();
+//       for(int i=0; i<length_; i++)
+//       {
+//         if (array[i] > other[i]) return true;
+//         else if (array[i] < other[i]) return false;
+//       }
+//       return false; // if == then not >
+//     }
+// 
+//     bool operator>=(const Array<T>& other) const
+//     {
+// #ifdef BOUNDCHECK
+//       if (this->size()!=other.size())
+//         PLERROR("Array::operator< works on same-size arguments");
+// #endif
+//       iterator array = data();
+//       for(int i=0; i<length_; i++)
+//       {
+//         if (array[i] > other[i]) return true;
+//         else if (array[i] < other[i]) return false;
+//       }
+//       return true; // if == then >=
+//     }
 
     void print(ostream& out) const
     {
