@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PlusVariable.h,v 1.3 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: PlusVariable.h,v 1.4 2004/02/23 14:30:41 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,7 +69,6 @@ public:
   virtual void bbprop();
   virtual void symbolicBprop();
 };
-
 
 } // end of namespace PLearn
 
