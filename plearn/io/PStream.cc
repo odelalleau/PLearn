@@ -156,7 +156,7 @@ void PStream::skipBlanksAndCommentsAndSeparators()
     { 
       if(c=='#')
         skipRestOfLine();     
-      else if(c!=' ' && c!='\t' && c!='\n' && c!='\r' && c!=';' && c!=',' && c!=':')
+      else if(c!=' ' && c!='\t' && c!='\n' && c!='\r' && c!=';' && c!=',')
         break;
       c = get();
     }

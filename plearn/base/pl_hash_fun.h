@@ -37,8 +37,10 @@
 
 #if __GNUC__<3 
 #  include <hash_set> //to get stl_hash_fun.h ... (template<> class hash)
+#  include <hash_map> //to get stl_hash_fun.h ... (template<> class hash)
 #else
 #  include <ext/hash_set> //to get stl_hash_fun.h ... (template<> class hash)
+#  include <ext/hash_map> //to get stl_hash_fun.h ... (template<> class hash)
 using namespace __gnu_cxx;
 #endif
 #include <string>
@@ -121,7 +123,7 @@ struct hash<float>
   size_t operator()(float x) const { return PLearn::hashval(x); }
 };
 
-%> // end of namespace std
+%> // end of namespace
 
 
 #endif // pl_hash_fun_H

@@ -40,8 +40,10 @@
 
 #include <iosfwd>
 #include <map>
+#include <set>
 #include <bitset>
 #include <strstream>
+#include "pl_hash_fun.h"
 #include "PP.h"
 #include "pl_streambuf.h"
 #include "pl_fdstream.h"
@@ -247,7 +249,7 @@ public:
   //! skips any blanks (space, tab, newline) and comments starting with #
   void skipBlanksAndComments();
 
-  //! skips any blanks, # comments, and separators (',' and ';' and ':')
+  //! skips any blanks, # comments, and separators (',' and ';')
   void skipBlanksAndCommentsAndSeparators();
 
   // operator>>'s for base types
@@ -290,41 +292,6 @@ public:
   PStream& operator<<(unsigned short x);
   PStream& operator<<(bool x);
  
-  /*****
-   * op>> & op<< for pairs and maps
-   */
-
-  template <typename S, typename T> 
-  inline PStream& operator>>(pair<S, T> &x) { return *this >> x.first >> x.second; }
-  
-  template <typename S, typename T> 
-  inline PStream& operator>>(map<S, T> &x)
-  {
-    int l;
-    pair<S, T> p;
-    *this >> l;
-    x.clear();
-    for (int i = 0; i < l; ++i) 
-      {
-        *this >> p;
-        x.insert(p);
-      }
-    return *this;
-  }
-
-  template<class A,class B>
-  inline PStream& operator<<(const pair<A,B>& x) 
-  { return *this << x.first << x.second; }
-
-  template<class K, class V>
-  inline PStream& operator<<(const map<K,V>& x) 
-  {
-    *this << x.size();
-    for(typename map<K,V>::const_iterator i= x.begin(); i != x.end(); ++i) 
-      *this << *i;
-    return *this;
-  }
-
   /*****
    * op>> & op<< for generic pointers
    */
@@ -463,6 +430,122 @@ protected:
   //! initInBuf: called by ctors. to ensure that pin's buffer is markable
   void initInBuf();
 };
+
+
+
+// Serialization of pairs
+
+
+template<class A,class B>
+inline PStream& operator<<(PStream& out, const pair<A,B>& x) 
+{ 
+  out.put('[');
+  out << x.first;
+  out.put(',');
+  out << x.second;
+  out.write(']');
+  return out;
+}
+
+template <typename S, typename T> 
+inline PStream& operator>>(PStream& in, pair<S, T> &x) 
+{ 
+  int c;
+  in.skipBlanksAndCommentsAndSeparators();
+  c = i.get();
+  if(c!='[')
+    PLERROR("In operator>>(PStream& in, pair<S, T> &x) expected '[' but read %c", c);
+  in >> x.first;
+  in.skipBlanksAndCommentsAndSeparators();
+  in >> x.second;
+  in.skipBlanksAndCommentsAndSeparators();
+  c = i.get();
+  if(c!=']')
+    PLERROR("In operator>>(PStream& in, pair<S, T> &x) expected ']' but read %c", c);
+  return in;
+}
+  
+
+
+// Serialization of map types
+
+template<class MapT>
+void writeMap(PStream& out, const MapT& m)
+{  
+  typename MapT::const_iterator it = m.begin();
+  typename MapT::const_iterator itend = m.end();
+
+  out.put('{');
+  while(it!=itend)
+    {
+      out << it->first;
+      out.write(": ");
+      out << it->second;
+      out.write(", ");
+      ++it;
+    }
+  out.put('}');    
+}
+
+template<class MapT>
+void readMap(PStream& in, MapT& m)
+{
+  m.clear();
+  in.skipBlanksAndCommentsAndSeparators();
+  int c = in.get();
+  if(c!='{')
+    PLERROR("In readMap(Pstream& in, MapT& m) expected '{' but read %c",c);
+  in.skipBlanksAndCommentsAndSeparators();
+  while(c!='}')
+    {
+      pair<typename MapT::key_type, typename MapT::mapped_type> val;
+      in >> val.first;
+      in.skipBlanksAndCommentsAndSeparators();
+      c = in.get();
+      if(c!=':')
+        PLERROR("In readMap(Pstream& in, MapT& m) separator between key and value must be ':', but I read a '%c'",c);
+      in.skipBlanksAndCommentsAndSeparators();
+      in >> val.second;
+      m.insert(val);
+      in.skipBlanksAndCommentsAndSeparators();
+      c = in.peek(); // do we have a '}' ?
+    }
+  in.get(); // eat the '}'  
+}
+
+template<class Key, class Value>
+inline PStream& operator<<(PStream& out, const map<Key, Value>& m)
+{ writeMap(out, m); return out; }
+
+template<class Key, class Value>
+inline PStream& operator>>(PStream& in, map<Key, Value>& m)
+{ readMap(in, m); return in; }
+
+template<class Key, class Value>
+inline PStream& operator<<(PStream& out, const multimap<Key, Value>& m)
+{ writeMap(out, m); return out; }
+
+template<class Key, class Value>
+inline PStream& operator>>(PStream& in, multimap<Key, Value>& m)
+{ readMap(in, m); return in; }
+
+
+
+template<class Key, class Value>
+inline PStream& operator<<(PStream& out, const hash_map<Key, Value>& m)
+{ writeMap(out, m); return out; }
+
+template<class Key, class Value>
+inline PStream& operator>>(PStream& in, hash_map<Key, Value>& m)
+{ readMap(in, m); return in; }
+
+template<class Key, class Value>
+inline PStream& operator<<(PStream& out, const hash_multimap<Key, Value>& m)
+{ writeMap(out, m); return out; }
+
+template<class Key, class Value>
+inline PStream& operator>>(PStream& in, hash_multimap<Key, Value>& m)
+{ readMap(in, m); return in; }
 
 
 /** Serialization of sequences **/

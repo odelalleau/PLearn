@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Var_utils.h,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: Var_utils.h,v 1.2 2002/10/25 22:06:07 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -451,9 +451,9 @@ inline Var softmax(Var input, Var index)
 
 inline Var matrixIndex(Var mat, Var index)
 {
-  if(index->size()==mat->width())
-     return new ColumnIndexVariable(mat,index);
-  else PLERROR("matrixIndex: index->size() should be equal to mat->width()");
+  if(index->size()!=mat->width())
+    PLERROR("matrixIndex: index->size() should be equal to mat->width()");
+  return new ColumnIndexVariable(mat,index);  
 }
 
 inline Var neg_log_pi(Var p, Var index)
