@@ -1,0 +1,696 @@
+#!/usr/bin/env python2.2
+from appStart import *
+#from popen2 import *
+import os, time, re
+
+# alias renew 'rm -f /u/lisa/dorionc/PLearn/scripts/UNV/*; cp /u/lisa/dorionc/PLearn/scripts/UnaryVariable.* /u/lisa/dorionc/PLearn/scripts/UNV'
+# alias redo 'renew; extract_classes -overwrite UnaryVariable.h UnaryVariable.cc'
+
+declaration = "class "
+remains_sufix = "_REMAINS"
+output_dir = ""
+htarget = ""
+cctarget = ""
+includes = []
+class_names = []
+runing_mode = ""
+BIG = 1000000000
+
+
+class DefinedClass:
+    def __init__(self, cdef, cline):
+        self.cdef = cdef
+        self.cline = cline
+        
+
+    def __str__(self):
+        return str(self.cdef)
+
+    def __repr__(self):
+        return str(self.cdef)
+
+    def create_file(self):
+        class_line = self.cdef[self.cline]
+        begin = string.find(class_line, declaration) + len(declaration)
+
+        end = len(class_line) 
+        for sub in [" ", "\n", ":"]:
+            _end = string.find(class_line, sub, begin)
+            if _end != -1 and _end < end:
+                end = _end #finds the first of [" ", "\n", ":"]
+
+        ## Class Names must be kept
+        class_name = class_line[begin:end]
+        class_names.append( class_name )
+        ##
+        
+        file = create_file_top(class_name, ".h", self.include_fct)
+
+        for line in self.cdef:
+            file.write(line)
+        
+        close_file_bottom(file, ".h")
+
+    def include_fct(self, class_name, file):
+        (bid, tclass) = os.path.split(htarget)
+        tclass = tclass[:-2]
+        if class_name != tclass:
+            file.write('#include "' + htarget + '"\n\n')
+            return
+        for include in includes:
+            file.write(include)
+        file.write("\n")
+## END OF DefinedClass
+
+class DefinedFunction:
+    def __init__(self, fdef):
+        self.fdef = fdef
+        #self.fline = fline
+
+    def __str__(self):
+        return str(self.fdef)
+
+    def __repr__(self):
+        return str(self.fdef)
+
+    def write_to(self, file):
+        for line in self.fdef:
+            file.write(line)
+
+
+class Loop:
+    def __init__(self, max_iterations = 1000000000):
+        self.index = 0
+        self.max_iterations = max_iterations
+        
+    def __str__(self):
+        return str( self.infos() )
+
+    def __repr__(self):
+        return str( self.infos() )
+
+    def infos(self):
+        return { "index":self.index }
+
+    def iterate(self):
+        it = iter(self.run_loop, self.stop_value())
+        i = 0
+        while i < self.max_iterations:
+            try:  
+                it.next()
+            except StopIteration:
+                break
+
+        if i == self.max_iterations:
+            raise StopIteration( "Loop.iterate stopped because it reached " +
+                                 int2string(max_iterations) +
+                                 ". Possible infinite loop!" )
+    
+    def run_loop(self):
+        raise RuntimeError("Must be implemented by the derived class!")
+
+    def stop_value(self):
+        raise RuntimeError("Must be implemented by the derived class!")
+
+class ParseLoop(Loop):
+    def __init__(self, fcontent):
+        Loop.__init__(self)
+
+        self.fcontent = fcontent
+        self.mlc_preprocessing()
+        
+        self.class_fct = {}
+        self.precomment = BIG
+
+        # Undefined before first loop
+        self.line = undefined
+        self.comment_start = undefined
+
+        self.current_class = undefined
+        self.current_class_functions = undefined
+        
+        # Remains
+        self.remains = Remains( self.fcontent )
+
+    def append_fct(self, param):
+        raise RuntimeError("Must be implemented by the derived class!")
+
+    def ccfct(self):
+        self.current_class_functions = []
+        if self.current_class in self.class_fct.keys():
+            self.current_class_functions = self.class_fct[self.current_class]
+
+    def check_comment_start(self, the_line = undefined):
+        """Gestion of comments"""
+        if the_line == undefined:
+            pcneeded = true
+            the_line = self.line
+        else:
+            pcneeded = false
+            
+        the_comment_start = string.find(the_line, "//")
+        if the_comment_start == -1:
+            the_comment_start = len(the_line)
+
+        if pcneeded:
+            if self.index < self.precomment:
+                self.precomment = self.index
+            self.comment_start = the_comment_start
+        else:
+            return the_comment_start
+
+    def check_comment_end(self, begin, end_of):
+        while (end_of+1 < len(self.fcontent) and
+               string.find(self.fcontent[end_of+1], "//") != -1):
+            end_of += 1 # To keep comments at the end of the class
+            
+        if self.precomment == BIG:
+            self.precomment = begin #when there are no pre-comments, start with declaration
+                
+        return end_of
+
+    def check_multiline_comments(self, the_line=undefined, cs=undefined):
+        if the_line == undefined:
+            the_line = self.line
+        if cs == undefined:
+            cs = self.comment_start
+            
+        mlc = string.find(the_line, "/*", 0, cs)
+
+        # I didnt check behavior under those circumstances
+        if not mlc in [0, -1]:
+            cont = raw_input("Multiline comments behavior is unsure! mlc:" + int2string(mlc) +
+                             ", " + the_line + " ('kill' or else)")
+            if cont == 'kill':
+                sys.exit()
+
+        if mlc==0:
+            if self.index < self.precomment:
+                self.precomment = self.index
+            self.index += 1
+            return true
+        return false
+        
+
+    def mlc_preprocessing(self):
+        processed = [] 
+        i = 0
+        while i < len(self.fcontent):
+            line_i = self.fcontent[i]
+            cs = string.find(line_i, "//")
+            if cs == -1: cs = len(line_i) 
+            mlc_start = string.find(line_i, "/*", 0, cs)
+
+            if mlc_start == -1:
+                processed.append(line_i)
+                i += 1
+                continue
+
+            #ELSE
+            processed.append(line_i[:mlc_start])
+            the_mlc = ''
+            line_i = line_i[mlc_start:]
+            while i < len(self.fcontent):
+                mlc_end = string.find(line_i, "*/") + 2
+
+                if mlc_end != 1:
+                    the_mlc += line_i[:mlc_end]
+                    processed.append(the_mlc)
+                    self.fcontent[i] = line_i[mlc_end:]
+                    break
+
+                #ELSE
+                the_mlc += line_i
+                i += 1
+                line_i = self.fcontent[i]
+                
+            if i == len(self.fcontent):
+                print("End of file before end of: \n" + the_mlc)
+                sys.exit()
+
+        self.fcontent = processed
+
+    def end_of_fct(self, ln):
+        ln = self.check_comment_end(self.index, ln)
+
+        self.append_fct( self.fcontent[self.precomment:ln+1] )
+
+        # Continuing after the fct
+        self.remains.to_cut(self.precomment, ln+1)
+        self.index = ln+1
+
+        # Preparing for a new loop
+        DEBUG(self.class_fct)
+        self.precomment = BIG
+
+    def infos(self):
+        infos = Loop.infos(self)
+        infos.update( {"len(fcontent)":len(self.fcontent),
+                       "line":self.line,
+                       "comment_start":self.comment_start,
+                       "precomment":self.precomment
+                       } )
+        return infos
+
+    def is_include(self):
+        is_include = string.find(self.line, "#include", 0, self.comment_start)
+        if is_include != -1:
+            includes.append(self.line)
+            self.remains.to_cut( self.index )
+            self.index += 1
+            self.precomment = BIG
+            return true
+        return false
+
+    def get_remains(self):
+        return self.remains.stripe()
+
+    def return_value(self):
+        return ( len(self.fcontent) - self.index )
+
+    def stop_value(self):
+        return 0
+
+    def wrap_definition(self):
+        ln = self.index # + 1 : ERROR => void Bla::bla() {} !!!
+        ln_line = ""
+        cs = -1
+        opened = false
+        nopened = 0
+        while ln < len(self.fcontent):
+            ln_line = self.fcontent[ln]
+            DEBUG(ln_line, false)
+                
+            cs = self.check_comment_start(ln_line)
+            nopened += len( re.findall("\{", ln_line[:cs]) )
+            opened = (nopened > 0)
+            DEBUG(nopened, false)
+            
+            nopened -= len( re.findall("\}", ln_line[:cs]) )
+            DEBUG(nopened, false)
+            
+            if opened and nopened <= 0:
+                break
+            ln+=1
+
+        if nopened != 0:
+            print("Internal 'nopened' Error Caused by: " + ln_line)
+            sys.exit()
+
+        # End of function management
+        self.end_of_fct(ln) 
+
+class HLoop(ParseLoop):
+    def __init__(self, fcontent):
+        ParseLoop.__init__(self, fcontent)
+        self.defined_classes = []
+
+    def append_fct(self, param):
+        self.defined_classes.append( DefinedClass(param, self.index - self.precomment) )
+                                                  
+    def is_class(self):
+        is_class = string.find(self.line, declaration, 0, self.comment_start)
+        DEBUG("is_class: " + int2string(is_class), stop=false)
+        if is_class == -1:
+            self.index += 1
+            return false
+        return true
+
+    def is_forward(self):
+        ptvirg = string.find(self.line, ";", 0, self.comment_start)
+        bracket = string.find(self.line, "{", 0, self.comment_start)
+        is_forward = ((ptvirg != -1) and (bracket == -1))
+        DEBUG("is_forward: " + int2string(is_forward), stop=false)#, is_forward != -1)
+        if is_forward:  # 'class ...;' is assumed to be a forwarding declaration
+            self.index += 1
+            return true
+        return false
+
+    def run_loop(self):
+        self.line = self.fcontent[self.index]
+        
+        self.check_comment_start()
+        if self.check_multiline_comments():
+            return self.return_value()
+
+        if self.is_include():
+            return self.return_value()
+
+        # if self.entering_body(): # doubtfull: depends on the position of 'namespace PLearn' 
+        #     return self.return_value()
+
+        if not self.is_class():
+            return self.return_value()
+
+        if self.is_forward():
+            return self.return_value()
+
+        self.wrap_definition()
+
+
+class CCLoop(ParseLoop):
+    def __init__(self, fcontent):
+        ParseLoop.__init__(self, fcontent)
+        self.body_started = false
+
+    def append_fct(self, param):
+        self.current_class_functions.append( DefinedFunction( param ) )
+        self.class_fct[self.current_class] = self.current_class_functions
+
+    def check_class(self):
+        if not self.current_class in class_names:
+            print("Internal 'current_class' Error Caused by: " + self.line)
+            sys.exit()
+
+    def entering_body(self):
+        if self.body_started:
+            return false
+
+        if string.find( self.line, 'namespace PLearn' ) != -1:
+            self.body_started = true
+
+        # Body is not entered; no need to parse the content
+        self.index += 1
+        if self.index > len(self.fcontent) - 10:
+            DEBUG("Body Not Started! Lines to go: " +
+                  int2string(len(self.fcontent) - self.index),
+                  false)
+        self.precomment = BIG
+        return true
+
+    def is_macro(self):
+        """Highly Empirical !!!"""
+        paren = string.find(self.line, "(", 0, self.comment_start)
+        macro = re.findall("\s*[A-Z0-9_]+", self.line[:paren]) 
+        if len(macro) == 1:
+            paren2 = string.find(self.line, ")", paren, self.comment_start)
+            args = re.findall("\s*\w+\s*", self.line[paren+1:paren2]) # ajouter ',' ?
+
+            # Restricts to one macro per line
+            if len(args) == 1 and args[0] in class_names:
+                self.current_class = args[0]
+                self.ccfct()
+
+                self.end_of_fct(self.index)
+                return true
+
+        # Not a macro
+        return false
+    
+    def run_loop(self):
+        self.line = self.fcontent[self.index] 
+
+        self.check_comment_start()
+        if self.check_multiline_comments():
+            return self.return_value()
+
+        if self.is_include():
+            return self.return_value()
+
+        if self.entering_body(): # doubtfull: depends on the position of 'namespace PLearn' 
+            return self.return_value()
+
+        if self.is_macro():
+            return self.return_value()
+
+        # Try to find a member fct
+        ss = string.find(self.line, "::", 0, self.comment_start)
+        if ss == -1:
+            self.index +=1
+            # Not an include, nor a macro, nor a member fct:
+            if self.precomment == BIG and self.body_started: # Precomment not initialized
+                self.precomment = self.index
+            return self.return_value()
+
+        bc = string.rfind(self.line, " ", 0, ss)
+        if bc == -1:
+            bc = 0
+        else:
+            bc+=1
+
+        self.current_class = self.line[bc:ss]
+        self.check_class()
+        # if we get here: member fct found!
+        self.ccfct()
+
+        # We know we are not IN a function cause we process
+        # by finding a fct a removing it all in a bloc
+        self.wrap_definition()
+        
+        return self.return_value()
+
+class Remains:
+    def __init__(self, array):
+        self.array = elem_copy( array )
+        self.cuts = []
+
+    def __str__(self):
+        return str( self.array )
+
+    def __repr__(self):
+        return str( self.array )
+
+    def to_cut(self, beg, end=-1):
+        if end == -1:
+            end = beg + 1
+        empty_str = []
+        for i in range(beg, end):
+            empty_str.append('')
+        self.array[beg:end] = empty_str
+
+    def stripe(self):
+        striped = []
+        for line in self.array:
+            if line != '':
+                striped.append( line )
+        self.array = striped
+        return self.array
+        
+
+def back_read(fname):
+    ## Backup and read
+    os.system( string.join(["cp", fname, "Old_"+fname]) )
+    file = open(fname, "r")
+    fcontent = file.readlines()
+    file.close()
+    return fcontent
+
+
+def cc_includes(c_name, file):
+    """For now all includes are putted in every file"""
+    file.write('#include "' + c_name + '.h"\n\n')
+
+    file.write('// From Old ' + cctarget + ': all includes are putted in every file.\n')
+    file.write('// To be revised manually \n') 
+    for include in includes:
+        file.write(include)
+    file.write("//////////////////////////\n")
+
+def cc_mode():
+    """Needs the class_names array. For now, it means that the
+    h file and the cc file must be processed at the same time"""
+
+    runing_mode = "cc_mode"
+
+    global includes
+    includes = []
+    
+    fcontent = back_read(cctarget)
+    stripe_header(fcontent)
+
+    # Loop management
+    CCL = CCLoop(fcontent)
+    CCL.iterate()
+
+    for key in CCL.class_fct.keys():
+        create_cc_file(key, CCL.class_fct[key]) 
+
+    remains_fname = cctarget[:-3] + remains_sufix + ".cc"
+    remains_file = open(remains_fname, "w")
+    remains_file.write(header_str(remains_fname)+"\n\n")
+    for line in CCL.get_remains():
+        remains_file.write(line)
+    remains_file.close()
+# END OF cc_mode
+
+def close_file_bottom(file, type):
+    file.write("\n\n%> // end of namespace PLearn\n\n")
+    if type == ".h":
+        file.write("#endif ")
+    file.close()
+
+def create_cc_file(class_name, def_fct_array):
+    file = create_file_top(class_name, ".cc", cc_includes)
+    for fct in def_fct_array:
+        fct.write_to(file)
+        file.write("\n")
+    close_file_bottom(file, ".cc")
+
+def create_file_top(class_name, type, include_fct):
+    fname = os.path.join(output_dir, class_name+type)
+    if (not "overwrite" in selected_options and
+        os.path.exists(fname)):
+        cont = raw_input("\nFile " + fname + " exists! Overwrite (y or else)? ")
+        if cont != "y":
+            return
+            
+    file = open(fname, "w")
+    file.write(header_str(class_name+type))
+    if type == ".h":
+        file.write("#ifndef " + class_name + "_INC\n")
+        file.write("#define " + class_name + "_INC\n\n")
+
+    include_fct(class_name, file)
+    file.write("namespace PLearn <%\n")
+    file.write("using namespace std;\n\n")
+
+    return file
+
+def elem_copy( a ):
+    b = []
+    for elem in a:
+        b.append( elem )
+    return b
+
+def h_mode():
+    runing_mode = "h_mode"
+    
+    global includes
+    includes = []
+    
+    fcontent = back_read(htarget)
+    content_length = stripe_header(fcontent)
+
+    HL = HLoop(fcontent)
+    HL.iterate()
+    
+    for defined in HL.defined_classes:
+        defined.create_file()
+
+    remains_fname = htarget[:-2] + remains_sufix + ".h"
+    remains_file = open(remains_fname, "w")
+    remains_file.write(header_str(remains_fname)+"\n\n")
+    for line in HL.get_remains():
+        remains_file.write(line)
+    remains_file.close()
+    
+
+
+def header_str(fname):
+    (head, tail) = os.path.split( fname )
+    return ("// -*- C++ -*-\n" +
+            "\n" +
+            "// PLearn (A C++ Machine Learning Library)\n" +
+            "// Copyright (C) 1998 Pascal Vincent\n" +
+            "// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal\n" +
+            "\n" +
+            "// Redistribution and use in source and binary forms, with or without\n" +
+            "// modification, are permitted provided that the following conditions are met:\n" +
+            "// \n" +
+            "//  1. Redistributions of source code must retain the above copyright\n" +
+            "//     notice, this list of conditions and the following disclaimer.\n" +
+            "// \n" +
+            "//  2. Redistributions in binary form must reproduce the above copyright\n" +
+            "//     notice, this list of conditions and the following disclaimer in the\n" +
+            "//     documentation and/or other materials provided with the distribution.\n" +
+            "// \n" +
+            "//  3. The name of the authors may not be used to endorse or promote\n" +
+            "//     products derived from this software without specific prior written\n" +
+            "//     permission.\n" +
+            "// \n" +
+            "// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR\n" +
+            "// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES\n" +
+            "// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN\n" +
+            "// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\n" +
+            "// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED\n" +
+            "// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n" +
+            "// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF\n" +
+            "// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING\n" +
+            "// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\n" +
+            "// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n" +
+            "// \n" +
+            "// This file is part of the PLearn library. For more information on the PLearn\n" +
+            "// library, go to the PLearn Web site at www.plearn.org\n" +
+            "\n" +
+            "\n" +
+            "/* *******************************************************      \n" +
+            "   * $Id: extract_classes,v 1.1 2002/10/16 21:23:27 dorionc Exp $\n" +
+            "   * This file is part of the PLearn library.\n" +
+            "   ******************************************************* */\n" +
+            "\n")
+
+def seek_tags(line, tags=['#ifndef', '#define', '#include', 'namespace']):
+    #print("MLC not supported in seek_tags")
+    end = -1
+    comment_start = string.find(line, "//")
+    if comment_start == -1:
+        comment_start = len(line)
+            
+    for tag in tags:
+        end = string.find(line, tag, 0, comment_start)
+        if end != -1:
+            break
+
+    return end
+
+def stripe_header(fcontent):
+    """Gets rid of the header"""
+    content_length = len(fcontent)
+    hln = 0
+    while hln < content_length:
+        if seek_tags( fcontent[hln] ) != -1:
+            break
+        hln += 1
+        
+    del fcontent[:hln]
+    return len(fcontent)
+    
+
+def usage():
+    print("Usage: extract_classes <htarget> <cctarget> [-option]{0, n}")
+    print("\twhere option must be in " + str(option_value.keys))
+    usage= r"""
+    The htarget is assumed to be needed in the generated '.h' files (i.e. #include "target.h").
+    If there are non member functions in the file, these are 
+    """
+    #pas fini
+
+########################################################
+###  Main Program
+
+appStart({"overwrite":undefined},
+         usage, min_targets_len=2, max_targets_len=2)
+
+output_dir = os.getcwd()
+for target in targets:
+    if not os.path.exists(target):
+        print("Targets must be a valid file paths; " + target + " is not.")
+        sys.exit()
+        
+    if string.find(target, ".h") == len(target)-2:
+        htarget = target
+    elif string.find(target, ".cc") == len(target)-3:
+        cctarget = target
+
+(hdir_path, htarget) = os.path.split(htarget)
+(ccdir_path, cctarget) = os.path.split(cctarget)
+if cctarget[:-3] != htarget[:-2]:
+    print("Must process corresponding h & cc files!")
+
+
+# Processing hfile first
+if hdir_path != "":
+    os.chdir(hdir_path)
+
+print("+++ Running under 'h' mode. Output files will be placed in " + output_dir)
+print(htarget)
+h_mode()
+
+# Processing ccfile
+if ccdir_path != "":
+    os.chdir(ccdir_path)
+print("+++ Running under 'cc' mode. Output files will be placed in " + output_dir)
+print(cctarget)
+cc_mode()
+        
+
