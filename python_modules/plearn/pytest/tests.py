@@ -598,7 +598,7 @@ class ResultsTest(Test):
         if os.path.exists(self.new_results):
             self.bak = self.new_results + ".BAK"
             os.system("cp -R " + self.new_results + " " + self.bak)
-            keep_only(self.new_results, globalvars.cvs_directory)
+            plpath.keep_only(self.new_results, globalvars.cvs_directory)
         else:
             os.makedirs(self.new_results)
 

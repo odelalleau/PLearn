@@ -62,7 +62,7 @@ def keep_only(dir, to_keep, hook=None):
                 keep_only(fpath, to_keep, hook)
             else:
                 os.remove(fpath)
-                if iscallable(hook):
+                if callable(hook):
                     hook(fpath)
 
 def splitprev(dir):
