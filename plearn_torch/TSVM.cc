@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TSVM.cc,v 1.2 2005/02/23 16:37:37 tihocan Exp $ 
+   * $Id: TSVM.cc,v 1.3 2005/02/23 18:01:50 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -141,6 +141,7 @@ void TSVM::updateFromPLearn(Torch::Object* ptr) {
   }
   if (options["kernel"])                  svm->kernel                   = kernel->kernel;
   if (options["data"])                    svm->data                     = data ? data->dataset : 0;
+  if (options["b"])                       svm->b                        = b;
   if (options["support_vectors"])         svm->support_vectors          = support_vectors ? support_vectors.data()
                                                                                           : 0;
   if (options["support_vectors"])         svm->n_support_vectors        = support_vectors.length();
@@ -172,6 +173,8 @@ void TSVM::updateFromTorch() {
       PLERROR("In TSVM::updateFromTorch - Could not find a TObject associated with the new dataset");
     data = (TDataSet*) it->second;
   }
+  if (options["b"])
+    b = svm->b;
   if (data)
     data->updateFromTorch(); // TODO Necessary ?
   support_vectors.resize(svm->n_support_vectors);
