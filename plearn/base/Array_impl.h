@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array_impl.h,v 1.2 2004/05/14 17:49:10 chrish42 Exp $
+   * $Id: Array_impl.h,v 1.3 2004/08/03 19:29:43 tatien Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -216,6 +216,18 @@ inline TMat<T> hconcat(const TMat<T>& m1, const TMat<T>& m2) { return hconcat(Ar
 //!  This will allow a convenient way of building arrays of Matrices by writing ex: m1&m2&m3
 template<class T>
 inline Array< TMat<T> > operator&(const TMat<T>& m1, const TMat<T>& m2) { return Array< TMat<T> >(m1,m2); } 
+
+// Deep copying
+template<class T>
+void Array<T>::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  // Shallow copy of an array, contrarily to TVec, already makes a shallow copy of the elements, so we
+  // don't want to call deepCopyField(storage, copies) as TVec does, but simply deepCopyField()
+  // of each of the storage's elements.
+  if (storage.isNotNull())
+    for (int i = 0; i < storage->size(); i++)
+        deepCopyField(storage->data[i], copies);
+}
 
 
 } // end of namespace PLearn
