@@ -6,7 +6,7 @@ using namespace std;
 
 DERIVEDCLASS::DERIVEDCLASS()
   :inherited()
-  /* ### Initialise all fields to their default value */
+  /* ### Initialize all fields to their default value */
 {
   // ...
 
