@@ -42,7 +42,6 @@
 #include <map>
 #include <set>
 #include <bitset>
-#include <strstream>
 #include <sstream>
 #include "pl_hash_fun.h"
 #include "PP.h"
@@ -987,7 +986,7 @@ inline void read(istream& in_, T& o)
 template<class T> 
 inline void read(const string& stringval, T& x)
 {
-  istrstream in_(stringval.c_str());
+  istringstream in_(stringval);
   PStream in(&in_);
   in >> x;
 }
@@ -1111,7 +1110,6 @@ class PIStringStream: public PStream
 public:
   PIStringStream(const string& s)
     :PStream(new istringstream(s)) {}
-  //    :PStream(new istrstream(s.c_str())) {}
 };
 
 

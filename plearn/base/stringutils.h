@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.15 2003/08/26 18:45:44 plearner Exp $
+   * $Id: stringutils.h,v 1.16 2003/12/05 18:18:06 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -55,8 +55,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
-//!  to be replaced ultimately by the use of sstream, but including it currently produces a thousand warnings... [Pascal]
-#include <strstream.h>
+#include <sstream>
 // #include "TMat.h"
 
 namespace PLearn <%
@@ -258,12 +257,11 @@ vector<string> remove(const vector<string> &v, string element);
     
   template<class T> string tostring(const T& x)
     {
-      /* It would be nice to some day be able to use just this... when #include <sstream> works properly... 
       ostringstream out;
       out << x;
       return out.str();
-      */
 
+      /* Old strstream code
       ostrstream out;
       out << setprecision(8) << x;
       char* buf = out.str();
@@ -271,6 +269,7 @@ vector<string> remove(const vector<string> &v, string element);
       string s(buf,n);
       out.freeze(false); // return ownership to the stream, so that it may free it...
       return s;
+      */
     }
 
 

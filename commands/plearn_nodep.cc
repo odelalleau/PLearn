@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_nodep.cc,v 1.1 2003/08/13 08:13:15 plearner Exp $
+   * $Id: plearn_nodep.cc,v 1.2 2003/12/05 18:18:06 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -56,13 +56,9 @@
 //#include "Mixture2.h"
 #include "ClassifierFromDensity.h"
 //#include "RegressorFromDensity.h"
-#include "Distribution.h"
-#include "GaussianDistribution.h"
-#include "LocallyWeightedDistribution.h"
-#include "NeuralNet.h"
 #include "NNet.h"
 #include "GradientOptimizer.h"
-#include "AdaptGradientOptimizer.h"
+//#include "AdaptGradientOptimizer.h"
 #include "ConjGradientOptimizer.h"
 // #include "AutoStepGradientOptimizer.h"
 
@@ -84,19 +80,12 @@
 #include "NNet.h"
 #include "Grapher.h"
 
-#include "HyperLearner.h"
-#include "HyperOptimize.h"
-#include "OptionsOracle.h"
-#include "ExplicitListOracle.h"
-#include "EarlyStoppingOracle.h"
-
 // SequentialLearner
 #include "SequentialLearner.h"
 #include "MovingAverage.h"
 #include "EmbeddedSequentialLearner.h"
 #include "SequentialModelSelector.h"
 #include "SequentialValidation.h"
-#include "MountLucasIndex.h"
 
 // Commands
 #include "HelpCommand.h"

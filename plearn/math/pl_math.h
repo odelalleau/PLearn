@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.11 2003/12/01 23:53:45 yoshua Exp $
+   * $Id: pl_math.h,v 1.12 2003/12/05 18:18:06 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -106,7 +106,7 @@ extern _plearn_nan_type plearn_nan;
 #define LOG_INIT -FLT_MAX
 #define MINUS_LOG_THRESHOLD -18.42
 
-#if !(!defined(_MSC_VER) && !defined(_MINGW_))
+#if defined(_MSC_VER) || defined(_MINGW_)
 //!  drand48 does not exist in NT... because ANSI
 //!  declared it obsolete in 1990 or so
 #define drand48() ( rand()/ (double)(RAND_MAX+1) )
@@ -115,6 +115,10 @@ extern _plearn_nan_type plearn_nan;
 #define rint(a) (int)(a+(real)0.5)
 #define isnan(x) _isnan(x)
 #define finite(x) _finite(x)
+#endif
+
+#if defined(DARWIN)
+#define isnan(x) __isnan(x)
 #endif
 
   template<class T>
