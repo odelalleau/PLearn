@@ -34,6 +34,7 @@
 
 
 #include "Object.h"
+#include "stringutils.h"    //!< For addprefix.
 #include "TypeFactory.h"
 
 namespace PLearn {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OptionBase.h,v 1.4 2004/02/20 21:11:42 chrish42 Exp $
+   * $Id: OptionBase.h,v 1.5 2004/03/04 15:02:59 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,8 +46,10 @@
 #ifndef OptionBase_INC
 #define OptionBase_INC
 
-#include "PP.h"
 #include "pl_io.h"
+#include "PP.h"
+#include "PStream.h"        //!< For PStream.
+#include "PStream_util.h"   //!< For OBflag_t.
 #include <vector>
 
 namespace PLearn {
