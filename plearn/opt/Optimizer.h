@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.9 2003/05/12 16:54:51 tihocan Exp $
+   * $Id: Optimizer.h,v 1.10 2003/05/13 15:15:18 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -91,8 +91,8 @@ using namespace std;
       int nstages_per_epoch;
       
     private:
-      Vec mean_grad;  //!< used to store the mean gradient for statistics
-      Vec same_sign;  //!< number of consecutive updates in same direction
+      Vec temp_grad;  //!< used to store temp stuff for gradient stats
+/*      Vec same_sign;  //!< number of consecutive updates in same direction */
 
     protected:
 

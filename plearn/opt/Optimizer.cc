@@ -37,10 +37,11 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.8 2003/05/12 20:50:52 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.9 2003/05/13 15:15:18 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
+#include "AsciiVMatrix.h" // TODO Same as below ?
 #include "fileutils.h"  // TODO Remove when no more gradient stats ?
 #include "Optimizer.h"
 #include "TMat_maths.h"
@@ -87,9 +88,9 @@ void Optimizer::build_()
   path_from_all_sources_to_direct_parents.fprop();
   int n = params.nelems();
   if (n > 0) {
-    mean_grad.resize(params.nelems());
-    same_sign.resize(params.nelems());
-    same_sign.clear();
+    temp_grad.resize(params.nelems());
+/*    same_sign.resize(params.nelems());
+    same_sign.clear();*/
   }
   stage = 0;
   if (nstages_per_epoch <= 0) { // probably not correctly initialized by the learner
@@ -229,142 +230,94 @@ void Optimizer::computeRepartition(
   }
 }
 
-real max_grad = 0;
-real min_grad = 0;
-
 //////////////////////////
 // collectGradientStats //
 //////////////////////////
 void Optimizer::collectGradientStats(Vec gradient) {
-  /*static VecStatsCollector grad;
-  static VecStatsCollector grad_abs;
+  static VecStatsCollector grad;
   static VecStatsCollector abs_grad;
-  static VMat gradm;
+  static VecStatsCollector sign_grad;
+  static VecStatsCollector change_sign_grad;
+  static VMat grad_mean;
+  static VMat abs_grad_mean;
+  static VMat grad_var;
+  static VMat abs_grad_var;
+  static VMat sign_grad_mean;
+  static VMat sign_grad_var;
+  static VMat sign_mean_grad;
+  static VMat tmp_mat;
+  static VMat change_sign_grad_mean;
+  static bool first_time = true;
+
+  // Store gradient
   grad.update(gradient);
 
-  if (gradm) {
-    gradm = new AsciiVMatrix("gradm.amat", params.nelems());
+  // Store abs(gradient)
+  for (int i=0; i<gradient.length(); i++) {
+    temp_grad[i] = abs(gradient[i]);
   }
-*/  
+  abs_grad.update(temp_grad);
+  
+  // Store sign(gradient)
+  for (int i=0; i<gradient.length(); i++) {
+    if (gradient[i] > 0) {
+      temp_grad[i] = 1;
+    } else {
+      temp_grad[i] = -1;
+    }
+  }
+  sign_grad.update(temp_grad);
 
-  mean_grad += gradient;
   if ((stage+1) % nstages_per_epoch == 0) {
     // One epoch has just been completed
- /*   gradm.appendRow(grad.mean()); */
-    
-    string filename = "gradstats.data";
-    ofstream* gradstats = new ofstream(filename.c_str(),ios::out|ios::app);
-    ostream& out = *gradstats;
-    filename = "graddistrib.data";
-    ofstream* gradstatsd = new ofstream(filename.c_str(),ios::out|ios::app);
-    ostream& outd = *gradstatsd;
+    if (first_time) {
+      // This means it is the first epoch
+      first_time = false;
+      grad_mean = new AsciiVMatrix("grad_mean.amat", params.nelems());
+      grad_var = new AsciiVMatrix("grad_var.amat", params.nelems());
+      abs_grad_mean = new AsciiVMatrix("abs_grad_mean.amat", params.nelems());
+      abs_grad_var = new AsciiVMatrix("abs_grad_var.amat", params.nelems());
+      sign_grad_mean = new AsciiVMatrix("sign_grad_mean.amat", params.nelems());
+      sign_grad_var = new AsciiVMatrix("sign_grad_var.amat", params.nelems());
+      sign_mean_grad = new AsciiVMatrix("sign_mean_grad.amat", params.nelems());
+      change_sign_grad_mean = new AsciiVMatrix("change_sign_grad_mean.amat", params.nelems());
+    }
 
-    if(out.bad())
-      PLERROR("In Optimizer::collectGradientStats could not open file %s for appending",filename.c_str());
-#if __GNUC__ < 3
-    if(out.tellp() == 0)
-#else
-    if(out.tellp() == streampos(0))
-#endif
-      out << "#: Epoch  Mean_Means  Var_Means  Std_Means  N_outliers" << endl;
+    temp_grad << grad.getMean();
+
+    grad_mean->appendRow(temp_grad); 
+    grad_var->appendRow(grad.getVariance());
+    abs_grad_mean->appendRow(abs_grad.getMean());
+    abs_grad_var->appendRow(abs_grad.getVariance());
+    sign_grad_mean->appendRow(sign_grad.getMean());
+    sign_grad_var->appendRow(sign_grad.getVariance());
     
-    mean_grad /= nstages_per_epoch;
-    for (int i=0; i<mean_grad.length(); i++) {
-      if (mean_grad[i] * same_sign[i] > 0) {
-        // two consecutive updates in the same direction
-        if (mean_grad[i] < 0) {
-          same_sign[i]--;
-        } else {
-          same_sign[i]++;
-        }
+    // Store sign(mean(grad))
+    for (int i=0; i<gradient.length(); i++) {
+      if (temp_grad[i] > 0) {
+        temp_grad[i] = 1;
+      } else
+        temp_grad[i] = -1;
+    }
+    sign_mean_grad->appendRow(temp_grad);
+    
+    // Compare two consecutive updates
+    tmp_mat = sign_mean_grad.row(sign_mean_grad.length()-2);
+    for (int i=0; i<gradient.length(); i++) {
+      if (tmp_mat(0,i) == temp_grad[i]) {
+        // Same direction
+        temp_grad[i] = 0;
       } else {
-        // two consecutive updates in different directions
-        if (mean_grad[i] > 0) {
-          same_sign[i] = +1;
-        } else {
-          same_sign[i] = -1;
-        }
+        // Opposite direction
+        temp_grad[i] = 1;
       }
     }
-    real m = mean(mean_grad);
-    real v = variance(mean_grad, m);
-    if (max_grad == min_grad) {
-      // this means it is the first epoch
-      max_grad = sqrt(v)/2;
-      min_grad = -max_grad;
-      outd << "  " << min_grad << "  " << max_grad << endl;
-    }
-    int n = 20;
-    Vec distrib(n);
-    Vec mean_abs_grad(mean_grad.length());
-    for (int i=0; i<mean_grad.length(); i++) {
-      mean_abs_grad[i] = abs(mean_grad[i]);
-    }
-    int noutliers;
-    computeRepartition(mean_grad, n, min_grad, max_grad, distrib, noutliers);
-    out << "  " <<
-           (stage + 1) / nstages_per_epoch << "  " <<
-           m << "  " <<
-           v << "  " <<
-           sqrt(v) << "  " <<
-           noutliers << " ";
-    outd << "  ";
-//            (stage + 1) / nstages_per_epoch << "  ";
-    for (int i=0; i<n; i++) {
-      outd << distrib[i] << "  ";
-    }
-    out << endl;
-    outd << endl;
-    computeRepartition(mean_abs_grad, n, 0, max_grad, distrib, noutliers);
-    for (int i=0; i<n; i++) {
-      outd << distrib[i] << "  ";
-    }
-    outd << endl;
-    for (int i=0; i<mean_grad.length(); i++) {
-      outd << abs(same_sign[i]) << "  ";
-    }
-    outd << endl;
+    change_sign_grad.update(temp_grad);
+    change_sign_grad_mean->appendRow(change_sign_grad.getMean());
 
-    // Distribution of the number of consecutive iterations
-    outd << "  ";
-    int nepochs = (stage+1) / nstages_per_epoch;
-    Vec consec_distrib(nepochs+1);
-    Vec consec_distrib_grads(nepochs+1);
-    consec_distrib.clear();
-    consec_distrib_grads.clear();
-    for (int i=0; i<same_sign.length(); i++) {
-      int ind = int(abs(same_sign[i]));
-      consec_distrib[ind]++;
-      consec_distrib_grads[ind] += abs(mean_grad[i]);
-    }
-    for (int i=1; i<=nepochs; i++) {
-      consec_distrib[i] += consec_distrib[i-1];
-      outd << consec_distrib[i] << " ";
-    }
-    outd << endl << " ";
-    int smooth = 10;
-    Vec consec_grad_distrib(nepochs+1);
-    consec_grad_distrib.clear();
-    for (int i=1; i<=nepochs; i++) {
-      int nb = 0;
-      for (int j=i-smooth; j<=i+smooth; j++) {
-        if (j>=1 && j<=nepochs) {
-          nb += int(consec_distrib[j]);
-          consec_grad_distrib[i] += consec_distrib_grads[j];
-        }
-      }
-      if (nb > 0) {
-        consec_grad_distrib[i] /= real(nb);
-      }
-      outd << consec_grad_distrib[i] * 1000000<< " ";
-    }
-    outd << endl;
-
-    mean_grad.clear();
-    gradstats->close();
-    gradstatsd->close();
-    free(gradstats);
-    free(gradstatsd);
+    grad.forget();
+    abs_grad.forget();
+    sign_grad.forget();
   }
 }
 
