@@ -68,8 +68,9 @@ public:
   void normalizeCondBackoff(ProbSparseMatrix& nXY, real disc, Vec& bDist,bool clear_nXY,bool shadow);
   string getClassName() const { return "SmoothedProbSparseMatrix"; }
   real get(int i,int j);
-  void write(PStream& out);
+  void write(PStream& out) const;
   void read(PStream& in);
+
 };
 
 // WARNING : do not use this object, it is in developement. CK-11/2003

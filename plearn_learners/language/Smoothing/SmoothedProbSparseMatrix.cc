@@ -278,7 +278,7 @@ bool SmoothedProbSparseMatrix::checkCondProbIntegrity()
   real sum = 0.0;
   real backsum;
   int null_size;
-  if (normalizationSum.size()==0)return true;
+  if (normalizationSum.size()==0)return false;
   //cout << " CheckCondIntegrity : mode " <<smoothingMethod; 
   if (mode == ROW_WISE){
     for (int i = 0; i < height; i++){
@@ -331,7 +331,7 @@ bool SmoothedProbSparseMatrix::checkCondProbIntegrity()
   }
 }
 
-void  SmoothedProbSparseMatrix::write(PStream& out)
+void  SmoothedProbSparseMatrix::write(PStream& out) const
 {
   ProbSparseMatrix::write(out);
   string class_name = getClassName();
