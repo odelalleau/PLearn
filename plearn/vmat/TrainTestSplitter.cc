@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.cc,v 1.3 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: TrainTestSplitter.cc,v 1.4 2003/05/20 15:42:12 plearner Exp $ 
    ******************************************************* */
 
 /*! \file TrainTestSplitter.cc */
@@ -89,6 +89,7 @@ Array<VMat> TrainTestSplitter::getSplit(int k)
     PLERROR("TrainTestSplitter::getSplit() - k cannot be greater than 0");
   
   Array<VMat> split_(2);
+  
   int l = dataset->length();
   int test_length = int(test_fraction*l);
   int train_length = l - test_length;

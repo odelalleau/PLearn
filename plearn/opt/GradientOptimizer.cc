@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.17 2003/05/07 05:39:17 plearner Exp $
+   * $Id: GradientOptimizer.cc,v 1.18 2003/05/20 15:42:12 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -226,9 +226,54 @@ real GradientOptimizer::optimize()
   return lastmeancost[0];
 }
 
-bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
-    PLERROR("In GradientOptimizer::optimizeN Not Implemented");
-    return false;
+bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) 
+{
+  Vec meancost(cost->size());
+  Vec lastmeancost(cost->size());
+  early_stop = false;
+
+
+  // Big hack for the special case of stochastic gradient, to avoid doing an explicit update
+  // (temporarily change the gradient fields of the parameters to point to the parameters themselves,
+  // so that gradients are "accumulated" directly in the parameters, thus updating them!
+  SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
+  Array<Mat> oldgradientlocations;
+  // bool stochastic_hack = false;
+  bool stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
+  // stochastic_hack=false;
+  if(stochastic_hack)
+    {
+      int n = params.size();
+      oldgradientlocations.resize(n);
+      for(int i=0; i<n; i++)
+        oldgradientlocations[i] = params[i]->defineGradientLocation(params[i]->matValue);
+    }
+  else
+    params.clearGradient();
+
+  while (stage < nstages) 
+    {
+      learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
+      proppath.clearGradient();
+      cost->gradient[0] = -learning_rate;
+      proppath.fbprop(); //displayVarGraph(proppath, true, 333);
+
+      // set params += -learning_rate * params.gradient
+      if(!stochastic_hack)
+        params.updateAndClear();
+
+      stats_coll.update(cost->value);
+      ++stage;
+    }
+
+  if(stochastic_hack) // restore the gradients as they previously were...
+    {
+      int n = params.size();
+      for(int i=0; i<n; i++)
+        params[i]->defineGradientLocation(oldgradientlocations[i]);
+    }
+
+  return false;
 }
 
 real ScaledGradientOptimizer::optimize()

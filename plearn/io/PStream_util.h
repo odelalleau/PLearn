@@ -49,7 +49,7 @@ using namespace std;
 //! This is a fairly restricted list, meaning that many things can be part of a "word"
 //! in this sense (for ex: "this-is_a+single@wor'd"), this is to insure a smooth transition
 //! for the new setOption, which calls readOptionVal ... which may call read(istream&, string&)...
-static const string wordseparators(" \t\n\r)]};,|#"); 
+static const string wordseparators(" \t\n\r)]};,:|#"); 
 
 //!the following typedef should be equivalent to OptionBase::flag_t
 typedef unsigned int OBflag_t;

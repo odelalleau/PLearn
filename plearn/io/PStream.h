@@ -233,6 +233,9 @@ public:
   inline PStream& getline(string& line, char delimitor='\n')
   { std::getline(*pin, line, delimitor); return *this; }
 
+  inline string getline()
+  { string s; getline(s); return s; }
+
   //   inline int peek() { return pin->peek(); }
   // The previous implementation does not seem to work, so we use this [Pascal]:
   
@@ -251,12 +254,28 @@ public:
     // The following line does not Work!!!! [Pascal]
     //    pin->read(s,n);
     // So it's temporarily replaced by this (ugly and slow):
-    
-    for(streamsize i=0; i<n; i++)
-      s[i] = (char) get();
-    
+
+    int c = get();
+    while(n && c!=EOF)
+      {
+        *s++ = (char) c;
+        c = get();
+        n--;
+      }
     return *this; 
   }
+
+  //! Reads characters into buf until n characters have been read, or end-of-file has been reached, 
+  //! or the next character in the stream is the stop_char.
+  //! Returns the total number of characters put into buf.
+  //! The stopping character met is not extracted from the stream.
+  streamsize readUntil(char* buf, streamsize n, char stop_char);
+
+  //! Reads characters into buf until n characters have been read, or end-of-file has been reached, 
+  //! or the next character in the stream is one of the stop_chars (null terminated string)
+  //! Returns the total number of characters put into buf.
+  //! The stopping character met is not extracted from the stream.
+  streamsize readUntil(char* buf, streamsize n, const char* stop_chars);
 
   inline PStream& write(const char* s, streamsize n) { pout->write(s,n); return *this; }
   inline PStream& put(char c) { pout->put(c); return *this; }
@@ -286,6 +305,17 @@ public:
 
   //! skips any blanks, # comments, and separators (',' and ';')
   void skipBlanksAndCommentsAndSeparators();
+
+  //! skips all occurences of any of the given characters
+  void skipAll(const char* chars_to_skip);
+
+  //! Reads characters from stream, until we meet one of the closing symbols at the current "level".
+  //! i.e. any opening parenthesis, bracket, brace or quote will open a next level and we'll 
+  //! be back to the current level only *after* we meet the corresponding closing parenthesis, 
+  //! bracket, brace or quote.
+  //! All characters read, except the closingsymbol, will be *appended* to characters_read 
+  //! The closingsymbol is read and returned, but not appended to characters_read.
+  int smartReadUntilNext(const string& closingsymbols, string& characters_read);
 
   // operator>>'s for base types
   PStream& operator>>(bool &x);

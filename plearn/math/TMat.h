@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.13 2003/05/14 21:15:31 jkeable Exp $
+   * $Id: TMat.h,v 1.14 2003/05/20 15:42:12 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -85,12 +85,6 @@ class TVec
       PP< Storage<T> > storage; /*!<  where the data is really kept  */
 
   public:
-    //! A few static vectors for convenience. Other functions and classes can use these, as temporaries
-    //! (after doing a proper resize) so that they don't have to allocate/deallocate their own.
-    static TVec<T> tmpvec1;
-    static TVec<T> tmpvec2;
-    static TVec<T> tmpvec3;
-    static TVec<T> tmpvec4;
 
     typedef T value_type;
     typedef int size_type;
@@ -845,13 +839,6 @@ public:
   int ncols() const { return width_; }
 
 public:
-
-    //! A few static matrices for convenience. Other functions and classes can use these, as temporaries
-    //! (after doing a proper resize) so that they don't have to allocate/deallocate their own.
-    static TMat<T> tmpmat1;
-    static TMat<T> tmpmat2;
-    static TMat<T> tmpmat3;
-    static TMat<T> tmpmat4;
 
   typedef T value_type;
   typedef int size_type;
@@ -2006,18 +1993,6 @@ template<class T>
 inline void deepRead(istream& in, DeepReadMap& old2new, TMat<T>& m)
 { m.deepRead(in, old2new); }
 
-
-// static instances for convenience
-
-template<class T> TVec<T> TVec<T>::tmpvec1;
-template<class T> TVec<T> TVec<T>::tmpvec2;
-template<class T> TVec<T> TVec<T>::tmpvec3;
-template<class T> TVec<T> TVec<T>::tmpvec4;
-
-template<class T> TMat<T> TMat<T>::tmpmat1;
-template<class T> TMat<T> TMat<T>::tmpmat2;
-template<class T> TMat<T> TMat<T>::tmpmat3;
-template<class T> TMat<T> TMat<T>::tmpmat4;
 
 // Type traits (especially type "names" for displaying optionHelp() )
 

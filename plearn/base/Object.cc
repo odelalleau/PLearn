@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.15 2003/05/13 05:55:32 plearner Exp $
+   * $Id: Object.cc,v 1.16 2003/05/20 15:42:12 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -97,7 +97,11 @@ void Object::build()
 string Object::info() const { return classname(); }
 
 void Object::print(ostream& out) const
-{ out << "{" << info() << "}"; }
+{ 
+  PStream pout(&out);
+  pout << *this << endl;
+  //out << '{' << info() << "} ";
+}
 
 
 void Object::readOptionVal(PStream &in, const string &optionname)
@@ -215,7 +219,8 @@ void Object::newread(PStream &in)
             classname().c_str(), cl.c_str());
 
   in.skipBlanksAndComments();
-  if (in.get() != ')') 
+  int c = in.get();
+  if (c != ')') 
     {
       in.unget();
       for (;;) 

@@ -119,10 +119,101 @@ void PStream::initInBuf()
       }
   }
 
+streamsize PStream::readUntil(char* buf, streamsize n, char stop_char)
+  {
+    streamsize nread = 0;
+
+    while(nread<n)
+      {        
+        int c = get();
+        if(c==EOF)
+          break;
+        if((char)c == stop_char)
+          {
+            unget();
+            break;
+          }
+        *buf++ = (char)c;
+        ++nread;
+      }
+
+    return nread;
+  }
+
+streamsize PStream::readUntil(char* buf, streamsize n, const char* stop_chars)
+  {
+    streamsize nread = 0;
+
+    while(nread<n)
+      {        
+        int c = get();
+        if(c==EOF)
+          break;
+        if(index(stop_chars, c))
+          {
+            unget();
+            break;
+          }
+        *buf++ = (char)c;
+        ++nread;
+      }
+
+    return nread;
+  }
+
+  //! Reads characters from stream, until we meet one of the closing symbols at the current "level".
+  //! i.e. any opening parenthesis, bracket, brace or quote will open a next level and we'll 
+  //! be back to the current level only *after* we meet the corresponding closing parenthesis, 
+  //! bracket, brace or quote.
+  //! All characters read, except the closingsymbol, will be *appended* to characters_read 
+  //! The closingsymbol is read and returned, but not appended to characters_read.
+int PStream::smartReadUntilNext(const string& closingsymbols, string& characters_read)
+{
+  int c;
+  while( (c=get()) != EOF)
+    {
+      if(closingsymbols.find(c)!=string::npos)
+        return c;
+      if(characters_read.length() == characters_read.capacity())
+        characters_read.reserve(characters_read.length()*2); //don't realloc&copy every time a char is appended...
+      characters_read+= static_cast<char>(c);
+      switch(c)
+        {
+        case '(':
+          smartReadUntilNext(")", characters_read);
+          characters_read+= ')';          
+          break;
+        case '[':
+          smartReadUntilNext("]", characters_read);
+          characters_read+= ']';          
+          break;
+        case '{':
+          smartReadUntilNext("}", characters_read);
+          characters_read+= '}';          
+          break;
+        case '"':
+          smartReadUntilNext("\"", characters_read);
+          characters_read+= '"';          
+          break;          
+        }
+    }
+  return c;
+}
+
+//! skips all occurences of any of the given characters
+void PStream::skipAll(const char* chars_to_skip)
+{
+  int c = get();
+  while(c!=EOF && index(chars_to_skip, c))
+    c = get();
+  if(c!=EOF)
+    unget();
+}
+
 // reads everything until '\n' (also consumes the '\n')
 void PStream::skipRestOfLine()
 {
-  int c=get();
+  int c = get();
   while(c!='\n' && c!=EOF)
     c=get();
 }

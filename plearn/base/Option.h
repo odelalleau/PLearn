@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Option.h,v 1.1 2003/05/07 05:39:16 plearner Exp $
+   * $Id: Option.h,v 1.2 2003/05/20 15:42:12 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -72,7 +72,7 @@ public:
   virtual void read_and_discard(PStream& in) const
   { 
     string dummy;
-    smartReadUntilNext(in.rawin(), ";)", dummy);
+    in.smartReadUntilNext(";)", dummy);
     in.unget();
     //OptionType op; //dummy object that will be destroyed after read
     //in >> op; //read dummy object

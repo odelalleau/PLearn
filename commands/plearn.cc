@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.22 2003/05/15 17:10:16 tihocan Exp $
+   * $Id: plearn.cc,v 1.23 2003/05/20 15:42:11 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -51,6 +51,7 @@
 #include "PExperiment.h"
 #include "NNet.h"
 #include "HyperLearner.h"
+#include "TryAll.h"
 
 // All Available Learners: 
 // #include "KNN.h"
@@ -92,6 +93,12 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
+  PIStringStream in("il etait une fois dans l'ouest");
+  string w;
+  in >> w;
+  cerr << "Word: " << w << endl;
+  w.clear();
+  cerr << "Word: " << w << endl;
   return plearn_main(argc, argv);
 }
 

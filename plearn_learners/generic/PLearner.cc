@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.3 2003/05/05 21:18:14 plearner Exp $
+   * $Id: PLearner.cc,v 1.4 2003/05/20 15:42:13 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -234,9 +234,14 @@ void parse_statname(const string& statname, string& extstat, string& intstat, in
   string dset = set_cost.first;
   if(dset=="train")
     setnum = 0;
+  else if(dset=="test")
+    setnum = 1;
   else if(dset.substr(0,4)=="test")
     {
       setnum = toint(dset.substr(4));
+      if(setnum==0)
+        PLERROR("In parse_statname: use the name train instead of test0.\n"
+                "The first set of a split is the training set. The following are test sets named test1 test2 ..."); 
       if(setnum<=0)
         PLERROR("In parse_statname: parse error for %s",statname.c_str());        
     }
@@ -248,6 +253,7 @@ void parse_statname(const string& statname, string& extstat, string& intstat, in
 
 Vec trainTestLearner(PP<PLearner> learner, const VMat &dataset, PP<Splitter> splitter, TVec<string> statnames)
 {
+  splitter->setDataSet(dataset);
   int nsp = splitter->nsplits(); 
   int nst = statnames.length();
   Vec results(nst);

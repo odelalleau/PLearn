@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: Popen.cc,v 1.3 2002/09/17 01:27:34 zouave Exp $
+   * $Id: Popen.cc,v 1.4 2003/05/20 15:42:12 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -173,7 +173,7 @@ vector<string> execute(const string& command)
     vector<string> result;
     while(p.in)
     {
-      string line = pgetline(p.in.rawin());
+      string line = p.in.getline();
       //cout << line << endl;
       result.push_back(line);
     }

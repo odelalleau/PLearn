@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.cc,v 1.2 2002/10/22 08:46:07 plearner Exp $
+   * $Id: GaussianDistribution.cc,v 1.3 2003/05/20 15:42:12 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -145,7 +145,7 @@ void GaussianDistribution::train(VMat training_set)
       static Mat covarmat;
 
       if(weightsize()==0)
-        computeMeanAndCovar(training_set, mu, covarmat, vlog.rawout());
+        computeMeanAndCovar(training_set, mu, covarmat);
       else if(weightsize()==1)
         computeWeightedMeanAndCovar(training_set, mu, covarmat, ignore_weights_below);
       else

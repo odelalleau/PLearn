@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.h,v 1.1 2003/05/16 23:08:22 plearner Exp $ 
+   * $Id: PStreamBuf.h,v 1.2 2003/05/20 15:42:12 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.h */
@@ -106,14 +106,19 @@ protected:
 
   //! reads up to n characters into p
   //! You should overload this call in subclasses. 
-  //! It must return the number of characters successfully read. 
-  //! This is a blocking read method.
-  //! The returned number of characters read may be less than 
-  //! n *only if* EOF or an error was encountered.
-  //! 
+  /*!
+    On success, the number of bytes  read  is  returned  (zero
+    indicates  end of file).
+    It is not an  error  if  this  number  is
+    smaller  than the number of bytes requested; this may hap­
+    pen for example because fewer bytes are actually available
+    right  now (maybe because we were close to end-of-file, or
+    because we are reading from a pipe, or from  a  terminal).
+    If an error occurs, an exception should be thrown.
+  */
   virtual streamsize read_(char* p, streamsize n) =0;
 
-  virtual streamsize nonBlockingRead_(char* p, streamsize n) =0;
+  // virtual streamsize nonBlockingRead_(char* p, streamsize n) =0;
 
   //! Input seek. Default version issues a PLERROR
   virtual streampos seekg_(streampos pos) =0;
