@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.cc,v 1.4 2003/11/05 22:09:27 ducharme Exp $
+   * $Id: random.cc,v 1.5 2003/11/18 16:51:26 tihocan Exp $
    ******************************************************* */
 
 extern "C" {
@@ -97,7 +97,9 @@ real incomplete_beta_continued_fraction(real z, real x, real y)
   real x_plus_1 = x+1;
   real x_plus_y = x+y;
   real denom = -z*x_plus_y/x_plus_1+1;
-  if (fabs(denom)<1e-35) denom=1e-35;
+  if (fabs(denom)<1e-35) {
+    denom=1e-35;
+  }
   real rat1=1/denom;
   real rat2=1.0;
   real frac=rat1;
@@ -106,26 +108,35 @@ real incomplete_beta_continued_fraction(real z, real x, real y)
     real f=z*k*(y-k)/((x+2*k)*(x_minus_1+2*k));
     rat2 = f/rat2 + 1;
     rat1 = rat1*f+1;
-    if (fabs(rat1)<1e-35) rat1=1e-35;
-    if (fabs(rat2)<1e-35) rat2=1e-35;
+    if (fabs(rat1)<1e-35) {
+      rat1=1e-35;
+    }
+    if (fabs(rat2)<1e-35) {
+      rat2=1e-35;
+    }
     rat1=1/rat1;
     frac *= rat1*rat2;
 
-    f=-z*(x+k)*(x_plus_y+k)/((x_plus_y+2*k)*(x+2*k));
+    f=-z*(x+k)*(x_plus_y+k)/((x_plus_1+2*k)*(x+2*k));
     rat2 = f/rat2+ 1;
     rat1 = rat1*f+1;
-    if (fabs(rat1)<1e-35) rat1=1e-35;
-    if (fabs(rat2)<1e-35) rat2=1e-35;
+    if (fabs(rat1)<1e-35) {
+      rat1=1e-35;
+    }
+    if (fabs(rat2)<1e-35) {
+      rat2=1e-35;
+    }
     rat1=1/rat1;
 
     real delta = rat1*rat2;
     frac *= delta;
     // stopping criterion
-    if (fabs(1-delta) < 2e-7) 
+    if (fabs(1-delta) < 2e-7) {
       return frac;
+    }
   }
-  // if that happens, increase the number of k iterations or increase
-  // the stopping criterion tolerance
+  // If that happens, increase the number of k iterations or increase
+  // the stopping criterion tolerance.
   PLWARNING("incomplete_beta_continued_fraction: insufficient precision!"); 
   return frac;
 }
@@ -137,8 +148,9 @@ real incomplete_beta(real z, real x, real y)
   if (z>1 || z<0) PLERROR("incomplete_beta(z,x,y): z =%f must be in [0,1]",z);
   real coeff = 0;
   if (z>0 && z<1) coeff = exp(x*log(z)+y*log(1.-z)-log_beta(x,y));
-  if (z*(x+y+2)<x+1)
+  if (z*(x+y+2)<x+1) {
     return coeff*incomplete_beta_continued_fraction(z,x,y)/x;
+  }
   return 1-coeff*incomplete_beta_continued_fraction(1-z,y,x)/y;
 }
 
@@ -147,6 +159,12 @@ real student_t_cdf(real t, int nb_degrees_of_freedom)
 {
   real p_t = 0.5*incomplete_beta(nb_degrees_of_freedom/(nb_degrees_of_freedom+t*t),0.5*nb_degrees_of_freedom,0.5);
   //real p_t = 0.5*incbet(0.5*nb_degrees_of_freedom,0.5,nb_degrees_of_freedom/(nb_degrees_of_freedom+t*t));
+#ifdef BOUNDCHECK
+  if (p_t < 0) {
+    PLERROR("Bug in incomplete_beta : returned a negative p_t !\n- p_t = %f\n- degrees of freedom = %d\n- t = %f",
+        p_t, nb_degrees_of_freedom, t);
+  }
+#endif
   if (t>0)
     return 1.0 - p_t;
   else
