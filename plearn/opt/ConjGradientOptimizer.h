@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.9 2003/04/23 16:31:34 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.10 2003/04/23 18:00:21 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -80,9 +80,9 @@ public:
   // General options (also available through setOption)
   int line_search_algo; // the line search algorithm used
   int find_new_direction_formula; // the formula used
+  real starting_step_size;  // initial step for line search
 
   // GSearch specific options
-  real starting_step_size;  // initial step for line search
   real epsilon;             // gradient resolution
 
   // FletcherSearch specific options

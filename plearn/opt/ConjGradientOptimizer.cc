@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.10 2003/04/23 16:31:33 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.11 2003/04/23 18:00:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -396,9 +396,6 @@ void ConjGradientOptimizer::fletcherReeves (
 // fletcherSearch //
 ////////////////////
 void ConjGradientOptimizer::fletcherSearch (real mu) {
-  real df = max (last_improvement, 10*stop_epsilon);
-  // This value of alpha1 is suggested by Fletcher
-  real alpha1 = 2*df / dot(search_direction, current_opp_gradient);
   real alpha = fletcherSearchMain (
       computeCostValue,
       computeDerivative,
@@ -410,7 +407,7 @@ void ConjGradientOptimizer::fletcherSearch (real mu) {
       tau1,
       tau2,
       tau3,
-      alpha1,
+      starting_step_size,
       mu);
   params.update(alpha, search_direction);
 }
@@ -736,6 +733,7 @@ real ConjGradientOptimizer::optimize()
   real last_cost, current_cost;
   cost->fprop();
   last_cost = cost->value[0];
+  real df;
 
   // Loop through the epochs
   for (int t=0; !early_stop && t<nupdates; t++) {
@@ -751,6 +749,10 @@ real ConjGradientOptimizer::optimize()
 
     last_improvement = last_cost - current_cost;
     last_cost = current_cost;
+
+    // This value of starting_step_size is suggested by Fletcher
+    df = max (last_improvement, 10*stop_epsilon);
+    starting_step_size = 2*df / dot(search_direction, current_opp_gradient);
     
     // Display results TODO ugly copy/paste from GradientOptimizer: to be cleaned ?
     meancost += cost->value;
@@ -772,6 +774,8 @@ real ConjGradientOptimizer::optimize()
       meancost.clear();
     }
   }
+  if (early_stop)
+    cout << "Early Stopping !" << endl;
   return lastmeancost[0];
 }
 
