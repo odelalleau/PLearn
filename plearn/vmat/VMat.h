@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.12 2003/06/12 20:44:59 ducharme Exp $
+   * $Id: VMat.h,v 1.13 2004/01/26 14:12:09 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -73,6 +73,7 @@ public:
   real operator()(int i, int j) const { return ptr->get(i,j); }
   VVec operator()(int i) const { return VVec(*this, i); }
   Vec getColumn(int i) const { Vec v(ptr->length()); ptr->getColumn(i,v); return v; }
+  Vec getSubRow(int i, int s) const { Vec v(s); ptr->getSubRow(i, 0, v); return v; }
 
   VMat subMat(int i, int j, int l, int w) const { return ptr->subMat(i,j,l,w); }
   VMat subMatRows(int i, int l) const;
