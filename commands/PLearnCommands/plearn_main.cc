@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.18 2004/12/01 15:23:04 dorionc Exp $
+   * $Id: plearn_main.cc,v 1.19 2004/12/01 16:46:00 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -61,13 +61,18 @@ static bool is_command( string& possible_command )
   return false;
 }
 
-static void output_version( int major_version, int minor_version, int fixlevel )
+static void output_version(int major_version, int minor_version, int fixlevel )
 {
+  if(major_version == -1)
+    return;
   cerr << prgname()
-       << " "      << major_version
-       << "."      << minor_version
-       << "."      << fixlevel
-       << "  ("    << __DATE__ << " "
+       << " "      << major_version;
+  if (minor_version >= 0) {
+    cerr << "."      << minor_version;
+    if (fixlevel >= 0)
+      cerr << "."      << fixlevel;
+  }
+  cerr << "  ("    << __DATE__ << " "
        << __TIME__ << ")"      << endl;
 }
 
@@ -84,7 +89,7 @@ static string global_options( vector<string>& command_line,
   // (verbosity_pos == -1)!!!
   int verbosity_pos                = findpos( command_line, "--verbosity"  );
   int verbosity_value_pos          = -1; // ... 
-  VerbosityLevel verbosity_value   = VLEVEL_NORMAL;
+  VerbosityLevels verbosity_value   = VLEVEL_NORMAL;
 
   if ( verbosity_pos != -1 )
   {
@@ -92,7 +97,9 @@ static string global_options( vector<string>& command_line,
     verbosity_value_pos = verbosity_pos+1;
     if ( verbosity_value_pos < argc )
       verbosity_value =
-        PL_Log::vlevel_from_string( command_line[verbosity_value_pos] );
+        VLEVEL_NORMAL;
+        // Uncomment this when it compiles.
+        // PL_Log::vlevel_from_string( command_line[verbosity_value_pos] );
     else
       PLERROR("Option --verbosity must be followed by a VerbosityLevel name "
               "or by an integer value.");

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.h,v 1.8 2004/12/01 01:28:16 dorionc Exp $
+   * $Id: plearn_main.h,v 1.9 2004/12/01 16:46:00 tihocan Exp $
    ******************************************************* */
 
 //#include <string>
@@ -44,7 +44,7 @@
 namespace PLearn {
 
 int plearn_main( int argc, char** argv, 
-                 int major_version, int minor_version, int fixlevel );
+                 int major_version = -1, int minor_version = -1, int fixlevel = -1);
 
 } // end of namespace PLearn
 
