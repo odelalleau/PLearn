@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Grapher.cc,v 1.5 2004/02/29 16:44:06 nova77 Exp $ 
+   * $Id: Grapher.cc,v 1.6 2004/04/03 20:30:48 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Grapher.cc */
@@ -640,6 +640,7 @@ void Grapher::plot_2D_classification(string epsfname, VMat trainset,
                                      TVec<int> griddim, TVec< pair<real,real> > gridrange,
                                      VMat gridoutputs, real radius, bool bw)
 {
+  cerr << "Plotting 2D classification result" << endl;
   if(griddim.size()!=2 || gridrange.size()!=2)
     PLERROR("In Grapher::plot_2D_classification griddim and gridrange must be of size 2");
   int nx = griddim[0];
@@ -665,12 +666,15 @@ void Grapher::plot_2D_classification(string epsfname, VMat trainset,
       {
         gridoutputs->getRow((ny-i-1)+ny*j,output);
         int winner = argmax(output);
+        // cout << i << " " << j << " " << output << endl;
         // real winnerval = output[winner];
         if(bw) // grayscale
           image(i,j) = (winner==0 ?0.7 :0.3);
         else // color
           image(i,j) = color(winner,0.7);
       }
+
+  // cout << "IMAGE:" << endl << image << endl;
   
   if(bw)
     gs.displayGray(image, x, y, w, h);
@@ -691,6 +695,13 @@ void Grapher::plot_2D_classification(string epsfname, VMat trainset,
             gs.setgray(target[0]==0 ?0 :1);
           else
             gs.setcolor(color(int(target[0]),0.2));
+        }
+      else
+        {
+          if(bw)
+            gs.setgray(target[0]==0 ?0 :1);
+          else
+            gs.setcolor(color(argmax(target),0.2));
         }
       gs.fillCircle(input[0],input[1],radius);
     }
