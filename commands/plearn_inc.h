@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.40 2004/11/23 21:22:02 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.41 2004/12/03 14:11:26 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -62,6 +62,7 @@
 #include "PLearnCommands/AutoRunCommand.h"
 #include "PLearnCommands/FieldConvertCommand.h"
 #include "PLearnCommands/HelpCommand.h"
+#include "PLearnCommands/HTMLHelpCommand.h"
 #include "PLearnCommands/JulianDateCommand.h"
 #include "PLearnCommands/KolmogorovSmirnovCommand.h"
 #include "PLearnCommands/LearnerCommand.h"
