@@ -103,7 +103,7 @@ sub process_list(@)
                 my @flist = lsdir($fname);
                 
                 @flist = grep { -d $_ or /Makefile|makefile|
-                                    \.c$|\.cc$|\.cpp$|\.CC$|\.h$
+                                    \.c$|\.cc$|\.cpp$|\.CC$|\.h$|\.hpp$
                                    |\.txt$|^readme|^Readme|^README/x } @flist;
                 process_list(@flist); 
             }
