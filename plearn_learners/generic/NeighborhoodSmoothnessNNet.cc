@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.12 2004/02/25 21:39:09 tihocan Exp $
+   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.13 2004/02/28 20:28:51 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
@@ -372,7 +372,7 @@ void NeighborhoodSmoothnessNNet::build_()
        */
 
       bag_size = Var(1,1);
-      bag_hidden = unfoldedFuncOf(subMat(bag_inputs, 0, 0, bag_inputs.length(), true_inputsize), f_input_to_hidden, false);
+      bag_hidden = unfoldedFunc(subMat(bag_inputs, 0, 0, bag_inputs.length(), true_inputsize), f_input_to_hidden, false);
       p_ij = subMat(bag_inputs, 1, true_inputsize, bag_inputs->length() - 1, 1);
 
       // The q_ij function.
@@ -388,7 +388,7 @@ void NeighborhoodSmoothnessNNet::build_()
         );
       Func f_hidden_to_k_hidden(store_hidden, k_hidden);
       Var k_hidden_all =
-        unfoldedFuncOf(
+        unfoldedFunc(
           subMat(
             bag_hidden, 1, 0, bag_hidden->length() - 1, bag_hidden->width()
           ),
@@ -595,7 +595,7 @@ void NeighborhoodSmoothnessNNet::train()
     int l = train_set->length();
     ProgressBar* pb = 0;
     if(report_progress)
-      pb = new ProgressBar("Counting nb bags in train_set for NeighborhoodSmoothnessNNet ", l);
+      pb = new ProgressBar("Counting nb bags in train_set for NeighborhoodSmoothnessNNet", l);
     Vec row(train_set->width());
     int tag_column = train_set->inputsize() + train_set->targetsize() - 1;
     for (int i=0;i<l;i++) {
@@ -764,7 +764,14 @@ void NeighborhoodSmoothnessNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(w2, copies);
   deepCopyField(wout, copies);
   deepCopyField(wdirect, copies);
+  deepCopyField(last_hidden, copies);
   deepCopyField(output, copies);
+  deepCopyField(bag_size, copies);
+  deepCopyField(bag_inputs, copies);
+  deepCopyField(bag_output, copies);
+  deepCopyField(bag_hidden, copies);
+  deepCopyField(invars_to_training_cost, copies);
+
   deepCopyField(costs, copies);
   deepCopyField(penalties, copies);
   deepCopyField(training_cost, copies);
@@ -772,11 +779,17 @@ void NeighborhoodSmoothnessNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(invars, copies);
   deepCopyField(params, copies);
   deepCopyField(paramsvalues, copies);
+
+  deepCopyField(p_ij, copies);
+
   deepCopyField(f, copies);
+  deepCopyField(f_input_to_hidden, copies);
   deepCopyField(test_costf, copies);
   deepCopyField(output_and_target_to_cost, copies);
+  
+  deepCopyField(cost_funcs, copies);
+
   deepCopyField(optimizer, copies);
-  PLERROR("In NeighborhoodSmoothnessNNet::makeDeepCopyFromShallowCopy - Not fully implemented yet");
 }
 
 } // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.cc,v 1.7 2004/02/28 18:13:04 tihocan Exp $ 
+   * $Id: KNNVMatrix.cc,v 1.8 2004/02/28 20:27:58 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -275,8 +275,12 @@ void KNNVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   // ### ex:
   // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-    PLERROR("KNNVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(nn, copies);
+  deepCopyField(pij, copies);
+  deepCopyField(k_nn_mat, copies);
+  deepCopyField(kernel_pij, copies);
+
+  // PLERROR("KNNVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 //////////////////////
