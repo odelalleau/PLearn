@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.7 2003/09/09 18:05:19 plearner Exp $
+   * $Id: VVMatrix.cc,v 1.8 2003/09/17 02:34:12 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -122,13 +122,14 @@ vector<vector<string> > VVMatrix::extractSourceMatrix(const string & str,const s
 time_t VVMatrix::getDateOfVMat(const string& filename)
 {
   string in=readFileAndMacroProcess(filename);
-  unsigned int idx_source = in.find("<SOURCES>")+9;
+  unsigned int idx_source = in.find("<SOURCES>");
   unsigned int cidx_source;
 
   time_t latest = getDateOfCode(filename),tmp;
 
   if(idx_source!=string::npos)
     {
+      idx_source += strlen("<SOURCES>");     // skip beyond
       cidx_source=in.find("</SOURCES>");
       if(cidx_source==string::npos)
         PLERROR("Cannot find closing tag </SOURCES>. File is %s",filename.c_str());
