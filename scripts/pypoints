@@ -1,0 +1,153 @@
+#!/usr/bin/env python
+
+# pypoints
+# Copyright (C) 2003 Pascal Vincent
+#
+#  Redistribution and use in source and binary forms, with or without/u/bengioy/PLearn/scripts/pymake
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+from Tkinter import *
+import tkFileDialog
+
+class InputPoints:
+
+    colors = [ "Red", "Green", "Blue", "Yellow", "Magenta", "Cyan" ]
+    radius = 4
+
+    def __init__(self, master, filepath):
+        self.filepath = filepath
+        master.title(filepath)
+        # make it non resizable
+        master.resizable(0,0)
+        master.bind("<Key>", self.keypressed)
+
+        ##################
+        # The leftbar
+
+        self.currentval = IntVar()
+        self.currentval.set(0)
+
+        leftbar = Frame(master, relief=SUNKEN)
+        leftbar.grid(row=1, column=0)
+
+        Button(leftbar, text="save", width=6, command=self.pressedSave).grid(row=0, column=0, columnspan=2)
+        Button(leftbar, text="clear", width=6, command=self.pressedClear).grid(row=1, column=0, columnspan=2)
+        
+
+
+        Label(leftbar, text="Class").grid(row=2, column=0, sticky=W)
+        Label(leftbar, text="Count").grid(row=2, column=1, sticky=W)
+
+        ncols = len(self.colors)
+        self.counts = []
+        for k in range(0,ncols):
+            Radiobutton(leftbar, bg=self.colors[k], activebackground=self.colors[k], text=str(k), variable=self.currentval, value=k).grid(row=3+k, column=0)
+            count_k = IntVar()
+            count_k.set(0)
+            Label(leftbar, textvariable=count_k).grid(row=3+k, column=1)
+            self.counts.append(count_k)
+            
+        #############
+        ## The canvas
+
+        canvas = Canvas(master, width=500, height=500, background="White")
+        canvas.grid(row=1,column=1)
+        canvas.bind("<Button-1>", self.leftclick)
+        canvas.bind("<Button-3>", self.rightclick)
+        self.canvas = canvas
+        
+        ###########
+
+    def pressedClear(self):
+        print "pressed Clear"
+        for i in self.canvas.find_all():
+            self.canvas.delete(i)
+        for c in self.counts:
+            c.set(0)
+        
+    def pressedSave(self):
+        print "pressed Save"
+        self.save()
+
+    def leftclick(self,event):
+        canvas = event.widget
+        x = canvas.canvasx(event.x)
+        y = canvas.canvasx(event.y)
+        r = self.radius
+        v = self.currentval.get()
+        print 'clicked at: ',x,y
+        print canvas.find_closest(x, y)
+        canvas.create_oval(x-r,y-r,x+r,y+r, fill=self.colors[v], outline="", tags=str(v))
+        # increment count
+        self.counts[v].set(self.counts[v].get()+1)
+
+    def rightclick(self,event):
+        canvas = event.widget
+        x = canvas.canvasx(event.x)
+        y = canvas.canvasx(event.y)
+        r = 10
+        print 'clicked at: ',x,y
+        closest = canvas.find_closest(x, y)[0]
+        print 'Deleting closest: ', closest
+
+        c = int(canvas.gettags(closest)[0])
+        self.counts[c].set(self.counts[c].get()-1)
+        
+#         tags = canvas.gettags(closest)
+
+#         # decrement count
+#         for v in range(0,len(self.counts)):
+#             if str(v) in tags:
+#                 self.counts[v].set(self.counts[v].get()-1)
+#                 break
+        canvas.delete(closest)
+        
+    def keypressed(self,event):
+        print 'Pressed: ',event.char        
+        val = int(event.char)
+        if val>=0 and val<len(self.colors):
+            self.currentval.set(val)
+
+    def save(self):
+        #if self.filepath=="":
+        #    self.filepath=tkFileDialog.asksaveasfilename()
+
+        canvas = self.canvas
+
+        for p in canvas.find_all():
+            co = canvas.coords(p)
+            x = co[0]+self.radius
+            y = co[1]+self.radius
+            c = int(canvas.gettags(p)[0])
+            print x,y,c
+        
+filepath=""
+root = Tk()
+app = InputPoints(root,filepath)
+root.mainloop()
+
