@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.29 2003/10/08 23:01:57 plearner Exp $
+* $Id: VMatrix.cc,v 1.30 2003/10/16 00:27:48 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -155,6 +155,15 @@ void VMatrix::unduplicateFieldNames()
         for(unsigned int j=0;j<v.size();j++)
           fieldinfos[v[j]].name+="."+tostring(j);
       }
+}
+
+TVec<string> VMatrix::fieldNames() const
+{
+  int d = width();
+  TVec<string> names(d);
+  for(int i=0; i<d; i++)
+    names[i] = fieldName(i);
+  return names;
 }
 
 int VMatrix::fieldIndex(const string& fieldname) const

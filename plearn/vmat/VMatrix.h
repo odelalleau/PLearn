@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.24 2003/10/08 23:01:57 plearner Exp $
+   * $Id: VMatrix.h,v 1.25 2003/10/16 00:27:48 plearner Exp $
    ******************************************************* */
 
 
@@ -159,6 +159,7 @@ public:
   void declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype=VMField::UnknownType);
   int fieldIndex(const string& fieldname) const; //!<  returns -1 if name not found
   string fieldName(int fieldindex) const { return getFieldInfos(fieldindex).name; } 
+  TVec<string> fieldNames() const; // Returns the vector of field names
   void unduplicateFieldNames(); // add a numeric suffix to duplic. fieldNames (eg: field.1 field.2 etc..)
 
   VMField::FieldType fieldType(int fieldindex) const { return getFieldInfos(fieldindex).fieldtype; } 

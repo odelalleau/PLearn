@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.11 2003/09/17 14:56:29 dorionc Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.12 2003/10/16 00:27:48 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -209,12 +209,12 @@ Vec VecStatsCollector::getStdError() const
 //! returns centered covariance matrix (mean subtracted)
 Mat VecStatsCollector::getCovariance() const
 {
-  real N = real(stats[0].n());
+  double invN = 1./stats[0].n();
   Vec meanvec = getMean();
   Mat covariance(cov.length(), cov.width());
   for(int i=0; i<cov.length(); i++)
     for(int j=0; j<cov.width(); j++)
-      covariance(i, j) = (cov(i, j) - N*meanvec[i]*meanvec[j])/(N-1);
+      covariance(i, j) = invN*cov(i, j) - meanvec[i]*meanvec[j];
   return covariance;
 }
 
