@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.h,v 1.2 2005/01/18 04:50:56 yoshua Exp $ 
+   * $Id: DeepNNet.h,v 1.3 2005/01/19 02:01:15 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -68,9 +68,10 @@ protected:
   TVec<Vec> biases; // at [l][i] bias of neuron i of layer l
 
   // temporary 
-  TVec<Vec> activations; // at [l] output of non-linearity of layer l, including the input AND the output layer
-  TVec<Mat> gradients; // at [l] gradients on all existing and potential connections
-  TVec<Mat> avg_gradients_norm; // at [l] average of norm of gradients on all existing and potential connections
+  mutable TVec<Vec> activations; // at [l] output of non-linearity of layer l, including the input AND the output layer
+  TVec<Vec> activations_gradients; // gradients of the above (for hidden and output layers, NOT the input layer)
+  TVec<Mat> avg_weight_gradients; // at [l] average of norm of gradients on all existing and potential connections
+  real learning_rate;
     
 public:
 
@@ -88,9 +89,10 @@ public:
   real learning_rate_decay;
   string output_cost; // implies a non-linearity for outputs: "mse" -> linear, "nll" -> softmax
   bool add_connections; // if true, instanciate potential connections with greater
-  // absolute gradient than the existing connections with the smallest absolute gradient
+  // average gradient than the existing connections with the smallest average gradient
   bool remove_connections; // remove the weaker existing connections (smaller absolute value)
   real initial_sparsity; // initial fraction of weights that are 0
+  int connections_adaptation_frequency; // after how many examples do we try to adapt connections? 0=train set size.
 
   // ****************
   // * Constructors *
@@ -189,6 +191,11 @@ public:
   // virtual void resetInternalState();
   // virtual bool isStatefulLearner() const;
 
+  // propagate activations from activations[0] to activations[n_layers]
+  void fprop() const;
+
+  // initialize with random connectivity and random weights and 0 biases
+  void initializeParams();
 };
 
 // Declares a few other classes and functions related to this class.
