@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.17 2004/02/29 16:44:06 nova77 Exp $
+   * $Id: Learner.cc,v 1.18 2004/05/13 20:23:45 nova77 Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -103,7 +103,7 @@ void Learner::outputResultLineToFile(const string & fname, const Vec& results,bo
 #if __GNUC__ < 3
   ofstream teststream(fname.c_str(),ios::out|(append?ios::app:0));
 #else
-  ofstream teststream(fname.c_str(),ios_base::out|(append?ios_base::app:static_cast<_Ios_Openmode>(0)));
+  ofstream teststream(fname.c_str(),ios_base::out|(append?ios_base::app:static_cast<ios::openmode>(0)));
 #endif
   // norman: added WIN32 check
 #if __GNUC__ < 3 && !defined(WIN32)
