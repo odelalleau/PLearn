@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.6 2005/01/27 20:25:40 ducharme Exp $ 
+   * $Id: PPath.cc,v 1.7 2005/01/27 20:40:25 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -579,7 +579,8 @@ PPath PPath::operator/(const PPath& other) const
 
 PPath& PPath::operator/=(const PPath& other)
 {
-  if ( !endsWith  (c_str(),       _slash_char)  &&
+  if ( strcmp(c_str(), "") != 0                &&
+       !endsWith  (c_str(),       _slash_char) &&
        !startsWith(other.c_str(), _slash_char)  )
     string::operator+=(_slash);
   string::operator+=(other);
