@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.48 2003/11/21 16:28:47 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.49 2004/02/10 16:20:03 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -959,7 +959,7 @@ real ConjGradientOptimizer::optimize()
 
     // This value of current_step_size is suggested by Fletcher
     df = max (last_improvement, 10*stop_epsilon);
-    current_step_size = min(1.0, 2*df / dot(search_direction, current_opp_gradient));
+    current_step_size = min(1.0, 2.0 * df / dot(search_direction, current_opp_gradient));
     
     // Display results TODO ugly copy/paste from GradientOptimizer: to be cleaned ?
     if (compute_cost) {
@@ -1036,7 +1036,7 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
 
     // This value of current_step_size is suggested by Fletcher
     df = max (last_improvement, 10*stop_epsilon);
-    current_step_size = min(1.0, 2*df / dot(search_direction, current_opp_gradient));
+    current_step_size = min(1.0, 2.0*df / dot(search_direction, current_opp_gradient));
     
   }
 

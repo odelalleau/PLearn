@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.5 2003/12/16 14:54:23 plearner Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.6 2004/02/10 16:22:59 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
@@ -197,7 +197,7 @@ void ClassifierFromDensity::computeOutput(const Vec& input, Vec& output) const
   // cerr << "unnormalized logprob: " << output << endl;
   // cerr << "log of sumprob: " << log_of_sumprob << endl;
       
-  output -= log_of_sumprob; // divide by the sum
+  output -= real(log_of_sumprob); // divide by the sum
       
   // make it probabilities rather than log probabilities...
   exp(output, output);

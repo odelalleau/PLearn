@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConstantRegressor.cc,v 1.5 2003/11/04 14:42:24 chapados Exp $ 
+   * $Id: ConstantRegressor.cc,v 1.6 2004/02/10 16:23:32 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file ConstantRegressor.cc */
@@ -141,7 +141,7 @@ void ConstantRegressor::train()
     train_set->getExample(i, input, target, weight);
     multiplyAdd(sum_of_weighted_targets,target,weight,sum_of_weighted_targets);
     sum_of_weights += weight;
-    multiply(sum_of_weighted_targets,1.0/sum_of_weights,constant_output);
+    multiply(sum_of_weighted_targets,real(1.0/sum_of_weights),constant_output);
     train_costs[0] =
       weight*powdistance(constant_output,target);
     train_stats->update(train_costs);

@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.13 2004/01/13 22:38:52 yoshua Exp $
+* $Id: VMat_maths.cc,v 1.14 2004/02/10 16:22:23 tihocan Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -350,7 +350,7 @@ void computeInputMean(VMat d, Vec& meanvec)
   real weight;
   int l = d->length();
   int n = d->inputsize();
-  double weightsum = 0;
+  real weightsum = 0;
   meanvec.resize(n);  
   meanvec.clear();
   for(int i=0; i<l; i++)
@@ -369,7 +369,7 @@ void computeInputMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat)
   real weight;
   int l = d->length();
   int n = d->inputsize();
-  double weightsum = 0;
+  real weightsum = 0;
   meanvec.resize(n);  
   meanvec.clear();
   covarmat.resize(n,n);
@@ -393,7 +393,7 @@ void computeInputMeanAndVariance(VMat d, Vec& meanvec, Vec& var)
   real weight;
   int l = d->length();
   int n = d->inputsize();
-  double weightsum = 0;
+  real weightsum = 0;
   meanvec.resize(n);  
   meanvec.clear();
   var.resize(n);
@@ -424,7 +424,7 @@ void computeWeightedMeanAndCovar(Vec weights, VMat d, Vec& meanvec, Mat& covarma
   covarmat.clear();
   Vec samplevec(w);
   Vec diffvec(w);
-  double weight_sum = 0;
+  real weight_sum = 0;
   for(int i=0; i<l; i++)
     {
       d->getRow(i,samplevec);
@@ -439,7 +439,7 @@ void computeWeightedMeanAndCovar(Vec weights, VMat d, Vec& meanvec, Mat& covarma
 //! Last column of d is supposed to contain the weight for each sample
 //! Samples with a weight less or equal to threshold will be ignored
 //! (returns the sum of all weights actually used)
-double computeWeightedMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, double threshold)
+real computeWeightedMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, real threshold)
 { 
   static Vec samplevec;
   static Vec diffvec;
@@ -450,7 +450,7 @@ double computeWeightedMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, double t
   Vec input = samplevec.subVec(0,w);
   real& weight = samplevec[w];
 
-  double weightsum = 0;
+  real weightsum = 0;
 
   // Compute weighted mean
   meanvec.resize(w);

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat_maths.h,v 1.10 2004/01/13 22:38:52 yoshua Exp $
+   * $Id: VMat_maths.h,v 1.11 2004/02/10 16:22:23 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -113,7 +113,7 @@ void computeRange(VMat d, Vec& minvec, Vec& maxvec);
 //! Last column of d is supposed to contain the weight for each sample
 //! Samples with a weight less or equal to threshold will be ignored
 //! (returns the sum of all the weights actually used)
-double computeWeightedMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, double threshold=0);
+real computeWeightedMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, real threshold=0);
 
 /*!   Computes conditional mean and variance of each target, conditoned on the
   values of categorical integer input feature.  The basic_stats matrix may

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: plapack.cc,v 1.6 2003/01/29 20:52:36 plearner Exp $
+   * $Id: plapack.cc,v 1.7 2004/02/10 16:28:08 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -470,8 +470,8 @@ void affineNormalization(Mat data, Mat W, Vec bias, real regularizer)
   int nev=0;
   eigen_SymmMat(covar,evalues,W,nev,true,d,true,true);
   for (int i=0;i<d;i++)
-    W(i) *= 1.0 / sqrt(evalues[i]);
-  mu *= -1.0; // bias = -mu
+    W(i) *= real(1.0 / sqrt(evalues[i]));
+  mu *= - real(1.0); // bias = -mu
 }
 
 
