@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.h,v 1.11 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: VarArray.h,v 1.12 2004/05/04 19:59:56 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,7 +52,6 @@
 
 namespace PLearn {
 using namespace std;
-
 
 class VarArray: public Array<Var>
 {
@@ -81,14 +80,10 @@ public:
     return operator[](0);
   }
 
-  VarArray& operator&=(const Var& v) { PLearn::operator&=(*this,v); return *this;}
-  VarArray& operator&=(const VarArray& va) { PLearn::operator&=(*this,va); return *this; }
-  VarArray operator&(const Var& v) const { return PLearn::operator&(*this,v); }
-  VarArray operator&(const VarArray& va) const { return PLearn::operator&(*this,va); }
-  //VarArray& operator&=(const Var& v) { Array<Var>::operator&=(v); return *this;}
-  //VarArray& operator&=(const VarArray& va) { Array<Var>::operator&=(va); return *this; }
-  //VarArray operator&(const Var& v) const { return Array<Var>::operator&(v); }
-  //VarArray operator&(const VarArray& va) const { return Array<Var>::operator&(va); }
+  VarArray& operator&=(const Var& v);
+  VarArray& operator&=(const VarArray& va);
+  VarArray operator&(const Var& v) const;
+  VarArray operator&(const VarArray& va) const;
 
   int nelems() const;
   int sumOfLengths() const;
@@ -307,6 +302,13 @@ inline VarArray operator&(Var v1, Var v2)
  
  inline PStream &operator<<(PStream &out, const VarArray &o)
    { out << static_cast<const Array<Var> &>(o); return out; };
+
+
+ VarArray& VarArray::operator&=(const Var& v) { PLearn::operator&=(*this,v); return *this;}
+ VarArray& VarArray::operator&=(const VarArray& va) { PLearn::operator&=(*this,va); return *this; }
+ VarArray VarArray::operator&(const Var& v) const { return PLearn::operator&(*this,v); }
+ VarArray VarArray::operator&(const VarArray& va) const { return PLearn::operator&(*this,va); }
+
  
 } // end of namespace PLearn
 

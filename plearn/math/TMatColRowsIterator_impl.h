@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMatColRowsIterator_impl.h,v 1.1 2004/04/17 00:44:55 plearner Exp $
+   * $Id: TMatColRowsIterator_impl.h,v 1.2 2004/05/04 19:59:44 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,10 +48,10 @@
 #ifndef TMatColRowsIterator_impl_INC
 #define TMatColRowsIterator_impl_INC
 
+#include "TMatColRowsIterator_decl.h"
+
 namespace PLearn {
 using namespace std;
-
-#include "TMatColRowsIterator_impl.h"
 
 template <class T>
 TMatColRowsIterator<T>
