@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.2 2004/06/21 14:50:10 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.3 2004/06/23 16:49:24 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -72,6 +72,7 @@
 #include "AdditiveNormalizationKernel.h"
 #include "DotProductKernel.h"
 #include "GaussianKernel.h"
+#include "GeodesicDistanceKernel.h"
 #include "NegOutputCostFunction.h"
 
 /*************
@@ -98,6 +99,7 @@
 // EmbeddedLearner
 #include "SelectInputSubsetLearner.h"
 // KernelProjection
+#include "Isomap.h"
 #include "KernelPCA.h"
 #include "SpectralClustering.h"
 // PDistribution
