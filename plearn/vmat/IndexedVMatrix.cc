@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: IndexedVMatrix.cc,v 1.1 2003/05/13 20:02:57 tihocan Exp $
+   * $Id: IndexedVMatrix.cc,v 1.2 2003/05/15 14:00:30 tihocan Exp $
    ******************************************************* */
 
 #include "IndexedVMatrix.h"
@@ -55,7 +55,7 @@ string IndexedVMatrix::help()
 {
   // ### Provide some useful description of what the class is ...
   return 
-    "    VMat class that sees a matrix as a collection of triplets (row, column, value)\n \
+    "    VMat class that sees a matrix as a collection of triplets (row, column, value)\n\
     Thus it is a N x 3 matrix, with N = the number of elements in the original matrix.\n"
       + optionHelp();
 }
