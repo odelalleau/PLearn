@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Var_all.h,v 1.2 2003/10/10 17:18:56 yoshua Exp $
+   * $Id: Var_all.h,v 1.3 2004/06/17 15:26:48 monperrm Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,6 +45,7 @@
 
 #include "Var.h"
 #include "Variable.h"
+#include "Var_operators.h"
 #include "SourceVariable.h"
 #include "UnaryVariable.h"
 #include "BinaryVariable.h"
