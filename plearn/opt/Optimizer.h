@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.18 2004/02/20 21:11:48 chrish42 Exp $
+   * $Id: Optimizer.h,v 1.19 2004/03/09 18:30:35 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -83,6 +83,7 @@ using namespace std;
 
       //oassignstream vlog;
       PStream vlog;
+      // TODO Looks like this PStream is never used!
       
     private:
       Vec temp_grad;  //!< used to store temp stuff for gradient stats
