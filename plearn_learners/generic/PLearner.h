@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.28 2004/09/16 21:00:27 chapados Exp $
+   * $Id: PLearner.h,v 1.29 2004/10/21 18:22:23 chapados Exp $
    ******************************************************* */
 
 
@@ -282,7 +282,21 @@ public:
   //! directly, without computing the whole output vector.
   virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
 
-
+  //! Compute a confidence intervals for the output, given the input and
+  //! the pre-computed output (resulting from computeOutput or similar).
+  //! The probability level of the confidence interval must be specified.
+  //! (e.g. 0.95).  Result is stored in a TVec of pairs low:high for each
+  //! output variable (this is a "box" interval; it does not account for
+  //! correlations among the output variables).  If the interval can be
+  //! computed, the function returns TRUE; otherwise (i.e. interval
+  //! computation is not available), it returns FALSE.  The default
+  //! implementation in PLearner is to return FALSE (with missing values
+  //! in the returned intervals).
+  virtual
+  bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
+                                   real probability,
+                                   TVec< pair<real,real> >& intervals) const;
+  
   //! Computes outputs for the input part of testset.
   //! testset is not required to contain a target part.
   //! The default version repeatedly calls computeOutput

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.40 2004/10/17 06:36:30 chapados Exp $
+   * $Id: PLearner.cc,v 1.41 2004/10/21 18:22:23 chapados Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -259,6 +259,16 @@ void PLearner::computeCostsOnly(const Vec& input, const Vec& target,
 {
   tmp_output.resize(outputsize());
   computeOutputAndCosts(input, target, tmp_output, costs);
+}
+
+bool PLearner::computeConfidenceFromOutput(
+  const Vec&, const Vec& output, real,
+  TVec< pair<real,real> >& intervals) const
+{
+  // Default version does not know how to compute confidence intervals
+  intervals.resize(output.size());
+  intervals.fill(std::make_pair(MISSING_VALUE,MISSING_VALUE));  
+  return false;
 }
 
 /////////
