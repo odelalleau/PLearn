@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.18 2004/03/11 14:13:53 lheureup Exp $
+   * $Id: getDataSet.cc,v 1.19 2004/03/12 23:32:02 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -138,7 +138,7 @@ VMat getDataSet(const string& datasetstring, const string& alias)
                 PLERROR("Object described in %s is not a VMatrix subclass",datasetstring.c_str());
             } 
           }
-          else if(ext==".amat")
+          else if(ext==".amat") {
             // TODO only check the extension is .bin.amat ?
             if (datasetstring.find(".bin.", 0, 5) != string::npos){
               Mat tempMat;
@@ -147,14 +147,15 @@ VMat getDataSet(const string& datasetstring, const string& alias)
             } else {
               vm = loadAsciiAsVMat(datasetstring);
             }
-            else if(ext==".strtable")
-              vm = new StrTableVMatrix(StringTable(datasetstring));
-            else if(ext==".sdb")
-              vm = new AutoSDBVMatrix(remove_extension(datasetstring));            
-            else if(ext==".mat")
-              vm=loadAsciiAsVMat(datasetstring);
-            else 
-              PLERROR("Unknown extension for vmatrix: %s", ext.c_str());
+          }
+          else if(ext==".strtable")
+            vm = new StrTableVMatrix(StringTable(datasetstring));
+          else if(ext==".sdb")
+            vm = new AutoSDBVMatrix(remove_extension(datasetstring));            
+          else if(ext==".mat")
+            vm=loadAsciiAsVMat(datasetstring);
+          else 
+            PLERROR("Unknown extension for vmatrix: %s", ext.c_str());
           vm->setMetaDataDir(extract_directory(datasetstring) + extract_filename(datasetstring) + ".metadata");
         }
       else // it's a directory
