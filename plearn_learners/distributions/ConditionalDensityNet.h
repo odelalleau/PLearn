@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.27 2004/05/26 21:21:55 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.28 2004/05/26 21:24:10 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -297,9 +297,7 @@ public:
   //! You may remove this method if your distribution does not implement it
   virtual void train();
 
-  /*
   virtual void computeOutput(const Vec& input, Vec& output) const;
-  */
 
   virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                      Vec& output, Vec& costs) const;
