@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.12 2003/12/05 18:18:06 plearner Exp $
+   * $Id: pl_math.h,v 1.13 2003/12/08 03:46:31 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -292,9 +292,9 @@ inline real ultrafasttanh(const real& x)
 //!  numerically stable computation of log(1+exp(x))
   inline real softplus(real x)
     { 
-      if(x<-30.)
+      if(x<=-30.)
         return 0.0;
-      else if(x>30.)
+      else if(x>=30.)
         return x;
       else
         return log1p(exp(x));
@@ -306,8 +306,10 @@ inline real inverse_softplus(real y)
 {
   if (y<0) 
     return MISSING_VALUE;
-  if (y>30)
+  if (y>=30)
     return y;
+  if (y==0)
+    return -30;
   return log(exp(y)-1);
 }
 
@@ -378,14 +380,11 @@ inline real softplus_primitive(real x) {
   return -dilogarithm(-exp(x));
 }
 
+real hard_slope_integral(real left=0, real right=1, real a=0, real b=1);
+
+
 // integral of the soft_slope function between a and b
-inline real soft_slope_integral(real smoothness=1, real left=0, real right=1, real a=0, real b=1)
-{
-  return 
-    (b - a) + (softplus_primitive(-smoothness*(b-right)) - softplus_primitive(-smoothness*(b-left))
-               -softplus_primitive(-smoothness*(a-right)) + softplus_primitive(-smoothness*(a-left)))/
-    (smoothness*smoothness*(right-left));
-}
+real soft_slope_integral(real smoothness=1, real left=0, real right=1, real a=0, real b=1);
 
 %> // end of namespace PLearn
 

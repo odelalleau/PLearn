@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DilogarithmVariable.h,v 1.1 2003/11/27 13:31:28 yoshua Exp $
+   * $Id: DilogarithmVariable.h,v 1.2 2003/12/08 03:46:31 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -75,16 +75,6 @@ inline Var dilogarithm(Var v)
 
 inline Var softplus_primitive(Var v)
 { return -dilogarithm(-exp(v)); }
-
-inline Var soft_slope_integral(Var smoothness, Var left, Var right, real a=0, real b=1)
-{
-  return var(b - a) + 
-    (softplus_primitive(-smoothness*(b-right)) 
-     - softplus_primitive(-smoothness*(b-left))
-     - softplus_primitive(-smoothness*(a-right))
-     + softplus_primitive(-smoothness*(a-left)))/
-    (smoothness*smoothness*(right-left));
-}
 
 %> // end of namespace PLearn
 

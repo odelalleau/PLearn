@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LogVariable.cc,v 1.4 2003/08/13 08:13:17 plearner Exp $
+   * $Id: LogVariable.cc,v 1.5 2003/12/08 03:46:31 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -88,7 +88,8 @@ void LogVariable::fprop()
 void LogVariable::bprop()
 {
   for(int i=0; i<nelems(); i++)
-    input->gradientdata[i] += gradientdata[i]/input->valuedata[i];
+    if (input->valuedata[i]>0)
+      input->gradientdata[i] += gradientdata[i]/input->valuedata[i];
 }
 
 

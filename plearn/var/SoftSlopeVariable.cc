@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeVariable.cc,v 1.3 2003/11/30 05:34:29 yoshua Exp $
+   * $Id: SoftSlopeVariable.cc,v 1.4 2003/12/08 03:46:31 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -135,6 +135,7 @@ void SoftSlopeVariable::bprop()
   real* dright = varray[3]->gradientdata;
   for(int i=0; i<n; i++,x+=m1,smoothness+=m2,left+=m3,right+=m4,dx+=m1,dsmoothness+=m2,dleft+=m3,dright+=m4)
   {
+    if (*smoothness == 0) continue;
     real inv_smoothness = 1.0 / *smoothness;
     real t1 = sigmoid(- *smoothness*(*x-*left));
     real t2 = sigmoid(- *smoothness*(*x-*right));

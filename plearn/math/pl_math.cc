@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.cc,v 1.5 2003/12/01 23:53:45 yoshua Exp $
+   * $Id: pl_math.cc,v 1.6 2003/12/08 03:46:31 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -200,12 +200,53 @@ real positive_dilogarithm(real x)
 
 real dilogarithm(real x)
 {
+  if (is_missing(x))
+  {
+#ifdef BOUNDCHECK
+    PLWARNING("Dilogarithm taking NaN as input");
+#endif
+    return MISSING_VALUE;
+  }
   if (x<0)
     return -positive_dilogarithm(-x) + 0.5*positive_dilogarithm(x*x);
   else 
     if (x==0) return 0;
   else
     return positive_dilogarithm(x);
+}
+
+real hard_slope_integral(real l, real r, real a, real b)
+{
+  if (b<l) return 0;
+  if (b<r)
+  {
+    if (a<l) 
+      return 0.5*(b-l)*(b-l)/(r-l);
+    else // a>=l
+      return 0.5*((b-l)*(b-l)-(a-l)*(a-l))/(r-l);
+  }
+  else // b>=r
+  {
+    if (a<l)
+      return 0.5*(r-l)+(b-r);
+    else if (a<r) // l<a<r
+      return 0.5*((r-l) - (a-l)*(a-l)/(r-l)) + (b-r);
+    else // a>r
+      return b-a;
+  }
+}
+
+real soft_slope_integral(real smoothness, real left, real right, real a, real b)
+{
+  if (smoothness==0)
+    return 0.5*(b-a);
+  if (smoothness<100)
+    return 
+      (b - a) + (softplus_primitive(-smoothness*(b-right)) - softplus_primitive(-smoothness*(b-left))
+                 -softplus_primitive(-smoothness*(a-right)) + softplus_primitive(-smoothness*(a-left)))/
+      (smoothness*smoothness*(right-left));
+  // else do the integral of the hard slope function
+  return hard_slope_integral(left,right,a,b);
 }
 
 %> // end of namespace PLearn

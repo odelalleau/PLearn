@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IsAboveThresholdVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
+   * $Id: IsAboveThresholdVariable.cc,v 1.4 2003/12/08 03:46:31 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,9 +49,9 @@ using namespace std;
 /** IsAboveThresholdVariable **/
 
 IsAboveThresholdVariable::
-IsAboveThresholdVariable(Variable* input, real the_threshold, real the_truevalue, real the_falsevalue)
+IsAboveThresholdVariable(Variable* input, real the_threshold, real the_truevalue, real the_falsevalue, bool the_strict)
   :UnaryVariable(input, input->length(), input->width()),
-   threshold(the_threshold), truevalue(the_truevalue), falsevalue(the_falsevalue)
+   threshold(the_threshold), truevalue(the_truevalue), falsevalue(the_falsevalue), strict(the_strict)
 {}
 
 
@@ -61,20 +61,20 @@ void IsAboveThresholdVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-
-
-
-
-
-
-
 void IsAboveThresholdVariable::fprop()
 {
-  for(int i=0; i<input->nelems(); i++)
-    if(input->valuedata[i]>=threshold)
-      valuedata[i] = truevalue;
-    else
-      valuedata[i] = falsevalue;
+  if (strict)
+    for(int i=0; i<input->nelems(); i++)
+      if(input->valuedata[i]>threshold)
+        valuedata[i] = truevalue;
+      else
+        valuedata[i] = falsevalue;
+  else
+    for(int i=0; i<input->nelems(); i++)
+      if(input->valuedata[i]>=threshold)
+        valuedata[i] = truevalue;
+      else
+        valuedata[i] = falsevalue;
 }
 
 

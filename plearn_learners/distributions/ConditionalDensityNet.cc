@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.17 2003/12/05 12:44:27 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.18 2003/12/08 03:46:31 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -46,6 +46,7 @@
 #include "DisplayUtils.h"
 #include "DilogarithmVariable.h"
 #include "SoftSlopeVariable.h"
+#include "SoftSlopeIntegralVariable.h"
 #include "plapack.h"
 
 namespace PLearn <%
@@ -72,7 +73,7 @@ ConditionalDensityNet::ConditionalDensityNet()
    log_likelihood_vs_squared_error_balance(1),
    n_output_density_terms(0),
    steps_type("sloped_steps"),
-   centers_initialization("uniform"),
+   centers_initialization("data"),
    curve_positions("uniform"),
    scale(5.0),
    unconditional_p0(0.01),
@@ -200,6 +201,7 @@ ConditionalDensityNet::ConditionalDensityNet()
   declareOption(ol, "centers_initialization", &ConditionalDensityNet::centers_initialization, 
                 OptionBase::buildoption, 
                 "    How to initialize the step centers (mu_i). Allowed values are:\n"
+                "      - data: from the data at regular quantiles, with last one at maxY (default)\n"
                 "      - uniform: at regular intervals in [0,maxY]\n"
                 "      - log-scale: as the exponential of values at regular intervals in log-scale, using formula:\n"
                 "          i-th position = (exp(scale*(i+1-n_output_density_terms)/n_output_density_terms)-exp(-scale))/(1-exp(-scale))\n");
@@ -390,7 +392,9 @@ ConditionalDensityNet::ConditionalDensityNet()
         lhopital = ifThenElse(isAboveThreshold(pos_c,1e-20),steps_integral,delta_steps); 
         expected_value = (pos_a-(1-pos_a)*inverse_denominator*dot(pos_b,steps_0))*max_y + 
           (1-pos_a)*dot(pos_b,lhopital)*inverse_denominator;
-        nll = -log(ifThenElse(isAboveThreshold(target,0.0),density*(1-pos_a),pos_a));
+        mass_cost = -log(ifThenElse(isAboveThreshold(target,0.0,1,0,true),(1-pos_a),pos_a)); 
+        pos_y_cost = ifThenElse(isAboveThreshold(target,0.0,1,0,true),-log(density),var(0.0)); 
+        nll = -log(ifThenElse(isAboveThreshold(target,0.0,1,0,true),density*(1-pos_a),pos_a));
       }
       else
       {
@@ -424,7 +428,7 @@ ConditionalDensityNet::ConditionalDensityNet()
         // apply l'hopital rule if pos_c --> 0 to avoid blow-up (N.B. lim_{pos_c->0} pos_b/pos_c*steps_integral = pos_b*delta_steps)
         lhopital = ifThenElse(isAboveThreshold(pos_c,1e-20),steps_integral,delta_steps); 
         expected_value = pos_a*inverse_denominator*max_y + dot(pos_b,lhopital)*inverse_denominator;
-        nll = -log(ifThenElse(isAboveThreshold(target,0.0),density,cumulative));
+        nll = -log(ifThenElse(isAboveThreshold(target,0.0,1,0,true),density,cumulative));
       }
       max_y->setName("maxY");
       left_side->setName("left_side"); 
@@ -453,6 +457,7 @@ ConditionalDensityNet::ConditionalDensityNet()
        */
       costs.resize(3);
       
+      /*
       costs[1] = nll;
       costs[2] = square(target-expected_value);
       if (log_likelihood_vs_squared_error_balance==1)
@@ -461,6 +466,10 @@ ConditionalDensityNet::ConditionalDensityNet()
         costs[0] = costs[2];
       else costs[0] = log_likelihood_vs_squared_error_balance*costs[1]+
              (1-log_likelihood_vs_squared_error_balance)*costs[2];
+      */
+      costs[0] = mass_cost + pos_y_cost;
+      costs[1] = mass_cost;
+      costs[2] = pos_y_cost;
 
       /*
        * weight and bias decay penalty
@@ -510,7 +519,8 @@ ConditionalDensityNet::ConditionalDensityNet()
       output->setName("output");
       
       // Shared values hack...
-      if(paramsvalues && (paramsvalues.size() == params.nelems()))
+      bool use_paramsvalues=paramsvalues && (paramsvalues.size() == params.nelems());
+      if(use_paramsvalues)
       {
         params << paramsvalues;
         initialize_mu(mu->value);
@@ -591,12 +601,14 @@ ConditionalDensityNet::ConditionalDensityNet()
         test_costf = Func(testinvars, params&mu, outputs&test_costs);
       else
         test_costf = Func(testinvars, params, outputs&test_costs);
-      test_costf->recomputeParents();
+
+      if (use_paramsvalues)
+        test_costf->recomputeParents();
       // The total training cost
       int l = train_set->length();
       int nsamples = batch_size>0 ? batch_size : l;
       Func paramf = Func(invars, training_cost); // parameterized function to optimize
-      Var totalcost = meanOf(train_set, paramf, nsamples);
+      totalcost = meanOf(train_set, paramf, nsamples);
       if(optimizer)
         {
           optimizer->setToOptimize(params, totalcost);  
@@ -781,14 +793,16 @@ void ConditionalDensityNet::initializeParams()
   {
     real prev_mu = i==0?0:mu_[i-1];
     real delta = mu_[i]-prev_mu;
-    sc[i] = initial_hardness/delta;
+    sc[i] = delta>0?initial_hardness/delta:-50;
     c_[i] = inverse_softplus(1.0);
   }
 
   real *dcdf = unconditional_delta_cdf->valuedata;
-  if (dcdf[0]==0)
-    a_[0]=inverse_softplus(unconditional_p0);
-  else 
+  if (separate_mass_point)
+    a_[0] = unconditional_p0>0?inverse_sigmoid(unconditional_p0):-50;
+  else if (dcdf[0]==0)
+    a_[0]=unconditional_p0>0?inverse_softplus(unconditional_p0):-50;
+  else
   {
     real s=0;
     if (steps_type=="sigmoid_steps")
@@ -803,7 +817,7 @@ void ConditionalDensityNet::initializeParams()
         s+=dcdf[i]*(unconditional_p0*ss1 - ss2);
       }
     real sa=s/(1-unconditional_p0);
-    a_[0]=inverse_softplus(sa);
+    a_[0]=sa>0?inverse_softplus(sa):-50;
 
     /*
     Mat At(n_output_density_terms,n_output_density_terms); // transpose of the linear system matrix
@@ -854,8 +868,9 @@ void ConditionalDensityNet::initialize_mu(Vec& mu_)
     real denom = 1.0/(1-exp(-scale));
     for (int i=0;i<n_output_density_terms;i++)
       mu_[i]=(exp(scale*(i+1-n_output_density_terms)/n_output_density_terms)-exp(-scale))*denom;
-  } else PLERROR("ConditionalDensityNet::initialize_mu: unknown value %s for centers_initialization option",
-                 centers_initialization.c_str());
+  } else if (centers_initialization!="data")
+    PLERROR("ConditionalDensityNet::initialize_mu: unknown value %s for centers_initialization option",
+            centers_initialization.c_str());
 }
 
 //! Remove this method, if your distribution does not implement it
@@ -879,6 +894,8 @@ void ConditionalDensityNet::train()
   if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
     build();
 
+
+
   // number of samples seen by optimizer before each optimizer update
   int nsamples = batch_size>0 ? batch_size : l;
 
@@ -891,31 +908,69 @@ void ConditionalDensityNet::train()
 
   // estimate the unconditional cdf
   static real weight;
+  
   Vec mu_values = mu->value;
   unconditional_cdf.clear();
   real sum_w=0;
   unconditional_p0 = 0;
+  static StatsCollector sc;
+  bool init_mu_from_data=centers_initialization=="data";
+  if (init_mu_from_data)
+  {
+    sc.maxnvalues = min(l,100*n_output_density_terms);
+    sc.build();
+    sc.forget();
+  }
   for (int i=0;i<l;i++)
   {
     train_set->getExample(i,input->value,target->value,weight);
     real y = target->valuedata[0];
     if (y<=0)
       unconditional_p0 += weight;
-    for (int j=0;j<n_output_density_terms;j++)
-      if (y<=mu_values[j]) 
-        unconditional_cdf[j]+=weight;
+    if (init_mu_from_data)
+      sc.update(y,weight);
+    else
+      for (int j=0;j<n_output_density_terms;j++)
+        if (y<=mu_values[j]) 
+          unconditional_cdf[j] += weight;
     sum_w += weight;
   }
-  unconditional_cdf *= 1.0/sum_w;
+  static Mat cdf;
   unconditional_p0 *= 1.0/sum_w;
+  if (init_mu_from_data)
+  {
+    cdf = sc.cdf();
+    int k=3;
+    
+    for (int j=0;j<n_output_density_terms;j++)
+      {
+        real target_fraction = unconditional_p0+(1-unconditional_p0)*(j+1.0)/n_output_density_terms;
+        for (;k<cdf.length() && cdf(k,1)<target_fraction;k++);
+        if (j==n_output_density_terms-1)
+          {
+            mu_values[j]=maxY;
+            unconditional_cdf[j]=1.0;
+          }
+        else
+          {
+            mu_values[j]=cdf(k,0);
+            unconditional_cdf[j]=cdf(k,1);
+          }
+      }
+  }
+  else
+    for (int j=0;j<n_output_density_terms;j++)
+      unconditional_cdf[j] *= 1.0/sum_w;
+
   unconditional_delta_cdf->valuedata[0]=unconditional_cdf[0]-unconditional_p0;
   for (int i=1;i<n_output_density_terms;i++)
     unconditional_delta_cdf->valuedata[i]=unconditional_cdf[i]-unconditional_cdf[i-1];
-  
+
   initializeParams();
+  test_costf->recomputeParents();
   // debugging
-  f->fprop(input->value,outputs->value);
       static bool display_graph = false;
+      if (display_graph) f->fprop(input->value,outputs->value);
       //displayVarGraph(outputs,true);
       if (display_graph)
         displayFunction(f,true);

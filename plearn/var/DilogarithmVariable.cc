@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DilogarithmVariable.cc,v 1.1 2003/11/27 13:31:28 yoshua Exp $
+   * $Id: DilogarithmVariable.cc,v 1.2 2003/12/08 03:46:31 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -67,7 +67,13 @@ void DilogarithmVariable::recomputeSize(int& l, int& w) const
 void DilogarithmVariable::fprop()
 {
   for(int i=0; i<nelems(); i++)
+  {
     valuedata[i] = dilogarithm(input->valuedata[i]);
+#ifdef BOUNDCHECK
+    if (is_missing(valuedata[i]))
+        PLWARNING("dilogarithm returned NaN");
+#endif
+  }
 }
 
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IsAboveThresholdVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: IsAboveThresholdVariable.h,v 1.3 2003/12/08 03:46:31 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,6 +50,8 @@ using namespace std;
 
   
 //!  Does elementwise newx_i = (x_i>=threshold ?truevalue :falsevalue);
+//        OR          newx_i = (x_i>threshold ?truevalue :falsevalue);
+// according to the 'strict' field.
 class IsAboveThresholdVariable: public UnaryVariable
 {
 protected:
@@ -60,7 +62,8 @@ protected:
 protected:
   real threshold, truevalue, falsevalue;
 public:
-  IsAboveThresholdVariable(Variable* input, real the_threshold, real the_truevalue, real the_falsevalue);
+  bool strict;
+  IsAboveThresholdVariable(Variable* input, real the_threshold, real the_truevalue, real the_falsevalue, bool strict=false);
   PLEARN_DECLARE_OBJECT(IsAboveThresholdVariable);
   virtual void recomputeSize(int& l, int& w) const;
   

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Var_utils.h,v 1.6 2003/10/10 17:18:56 yoshua Exp $
+   * $Id: Var_utils.h,v 1.7 2003/12/08 03:46:31 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -381,8 +381,8 @@ inline Var positive(Var v)
 inline Var negative(Var v)
 { return cutAboveThreshold(v,0.0); }
 
-inline Var isAboveThreshold(Var v, real threshold=0, real truevalue=1, real falsevalue=0)
-{ return new IsAboveThresholdVariable(v,threshold,truevalue,falsevalue); }
+inline Var isAboveThreshold(Var v, real threshold=0, real truevalue=1, real falsevalue=0, bool strict=false)
+{ return new IsAboveThresholdVariable(v,threshold,truevalue,falsevalue,strict); }
 
 inline Var operator>=(Var v, real threshold)
 { return new IsAboveThresholdVariable(v, threshold, 1, 0); }
