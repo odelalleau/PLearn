@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.16 2004/05/06 13:07:10 yoshua Exp $ 
+ * $Id: GaussMix.cc,v 1.17 2004/05/17 14:17:17 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -47,7 +47,8 @@ namespace PLearn {
 using namespace std;
 
 GaussMix::GaussMix() 
-  :PDistribution()
+: PDistribution(),
+  global_lambda0(false)
 {
   forget();
 }
@@ -334,8 +335,8 @@ void GaussMix::setGaussianSphericalWSamples(int l, real _alpha, VMat samples)
 {
   Vec wmeans(D);
   Vec wvar(D);
-  computeInputMeanAndVariance(samples, wmeans,wvar);
-  setGaussianSpherical(l, _alpha, wmeans, harmonic_mean(wvar));
+  computeInputMeanAndVariance(samples, wmeans, wvar);
+  setGaussianSpherical(l, _alpha, wmeans, mean(wvar));
 }
 
 void GaussMix::setGaussianDiagonalWSamples(int l, real _alpha, VMat samples)
@@ -361,8 +362,16 @@ void GaussMix::setGaussianGeneralWSamples(int l, real _alpha, real _sigma, int n
   Vec eig_values(ncomponents);
 
   computeInputMeanAndCovar(samples, wmeans,wcovar);
-  eigenVecOfSymmMat(wcovar, ncomponents,  eig_values, eig_vectors); 
-  setGaussianGeneral(l, _alpha, wmeans, eig_values, eig_vectors, _sigma );
+  if (global_lambda0)
+  {
+    eigenVecOfSymmMat(wcovar, ncomponents,  eig_values, eig_vectors); 
+    setGaussianGeneral(l, _alpha, wmeans, eig_values, eig_vectors, _sigma );
+  }
+  else
+  {
+    eigenVecOfSymmMat(wcovar, ncomponents+1,  eig_values, eig_vectors); 
+    setGaussianGeneral(l, _alpha, wmeans, eig_values.subVec(0,ncomponents), eig_vectors.subMatRows(0,ncomponents), eig_values[ncomponents] );
+  }
 }
 
 /*
@@ -702,6 +711,24 @@ Lh=randn(D*M,K)*sqrt(scale/K);
 //void GaussMix::EM(VMat samples, real relativ_change_stop_value)
 void GaussMix::train()
 {
+  /*
+
+
+     faire K-means
+
+     initialiser selon les resultats et selon le type
+
+     boucle sur les stages (comme dans autres Learners)
+        
+        boucle sur les donnees
+          pour calculer les posterieurs
+
+        boucle sur les composantes
+          faire updateWSamples selon le type
+
+
+  */
+
   /*
   VMat samples = train_set;
   real relativ_change_stop_value=MISSING_VALUE; // what? should be a field;
