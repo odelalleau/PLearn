@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.h,v 1.12 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: RowBufferedVMatrix.h,v 1.13 2005/03/17 22:57:40 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,6 +69,10 @@ protected:
   //! This is the only method requiring implementation in subclasses.
   virtual void getNewRow(int i, const Vec& v) const = 0;
 
+  //! This method must be called when you modify the VMatrix: mark the buffer as invalid
+  //! so the next call to one of the get* methods will not attempt to use it.
+  virtual void invalidateBuffer() const;
+  
 public:
 
   RowBufferedVMatrix();

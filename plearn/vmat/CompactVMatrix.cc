@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.cc,v 1.12 2004/09/14 16:04:38 chrish42 Exp $
+   * $Id: CompactVMatrix.cc,v 1.13 2005/03/17 22:57:40 chrish42 Exp $
    ******************************************************* */
 
 #include "CompactVMatrix.h"
@@ -526,6 +526,8 @@ void CompactVMatrix::encodeAndPutRow(int i, Vec v)
   unsigned short* fixed_point_numbers = (unsigned short*)&encoded_row[fixedpoint_offset];
   for (int j=0;j<n_fixedpoint;j++,c++)
     fixed_point_numbers[j]=(unsigned short)((vp[perm[c]]-fixedpoint_min[j])/delta[j]);
+
+  invalidateBuffer();
 }
 
 void CompactVMatrix::putRow(int i, Vec v)
@@ -601,6 +603,8 @@ void CompactVMatrix::putSubRow(int i, int j, Vec v)
   for (int k=0;k<n_fixedpoint;k++,c++)
     if (c>=j)
       fixed_point_numbers[k]=(unsigned short)((vp[c-j]-fixedpoint_min[k])/delta[k]);
+
+  invalidateBuffer();
 }
 
 void CompactVMatrix::perturb(int i, Vec v, real noise_level, int n_last)

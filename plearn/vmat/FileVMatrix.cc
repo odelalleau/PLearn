@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.30 2005/02/24 14:09:14 tihocan Exp $
+   * $Id: FileVMatrix.cc,v 1.31 2005/03/17 22:57:40 chrish42 Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -324,7 +324,6 @@ FileVMatrix::~FileVMatrix()
   saveFieldInfos();
   if(f) {
     fclose(f); 
-    // TODO Shouldn't we also delete f ?
   }
   if (track_ref)
     count_refs[filename_]--;
@@ -332,6 +331,7 @@ FileVMatrix::~FileVMatrix()
   if (remove_when_done && filename_ != "")
     if (!track_ref || count_refs[filename_] == 0) {
       rm(filename_);
+      force_rmdir(getMetaDataDir());
     }
 }
 
@@ -366,7 +366,9 @@ void FileVMatrix::putSubRow(int i, int j, Vec v)
   {
     fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
     fwrite_double(f, v.data(), v.length(), file_is_bigendian);
-  }  
+  }
+
+  invalidateBuffer();
 }
 
 /////////
@@ -384,6 +386,8 @@ void FileVMatrix::put(int i, int j, real value)
     fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
     fwrite_double(f,double(value),file_is_bigendian);
   }
+
+  invalidateBuffer();
 }
 
 ///////////////

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.cc,v 1.12 2004/11/10 16:24:39 tihocan Exp $
+   * $Id: RowBufferedVMatrix.cc,v 1.13 2005/03/17 22:57:40 chrish42 Exp $
    ******************************************************* */
 
 #include "RowBufferedVMatrix.h"
@@ -60,9 +60,14 @@ RowBufferedVMatrix::RowBufferedVMatrix()
   :current_row_index(-1), other_row_index(-1)
 {}
 
-/////////
-// get //
-/////////
+
+void RowBufferedVMatrix::invalidateBuffer() const
+{
+  current_row_index = -1;
+  other_row_index = -1;
+}
+
+
 real RowBufferedVMatrix::get(int i, int j) const
 {
   if(current_row_index!=i)
@@ -74,9 +79,7 @@ real RowBufferedVMatrix::get(int i, int j) const
   return current_row[j];
 }
 
-////////////
-// getRow //
-////////////
+
 void RowBufferedVMatrix::getRow(int i, Vec v) const {
   if (current_row_index != i) {
     current_row.resize(width_);
@@ -86,9 +89,7 @@ void RowBufferedVMatrix::getRow(int i, Vec v) const {
   v.copyFrom(current_row.data(), width_);
 }
 
-///////////////
-// getSubRow //
-///////////////
+
 void RowBufferedVMatrix::getSubRow(int i, int j, Vec v) const
 {
   if(current_row_index!=i)
@@ -100,9 +101,7 @@ void RowBufferedVMatrix::getSubRow(int i, int j, Vec v) const
   v.copyFrom(current_row.data()+j, v.length());
 }
 
-/////////
-// dot //
-/////////
+
 real RowBufferedVMatrix::dot(int i1, int i2, int inputsize) const
 {
   int w = width_;
