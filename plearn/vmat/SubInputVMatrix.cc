@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SubInputVMatrix.cc,v 1.1 2004/02/26 03:31:55 tihocan Exp $ 
+   * $Id: SubInputVMatrix.cc,v 1.2 2004/06/08 15:34:42 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -126,15 +126,6 @@ void SubInputVMatrix::getRow(int i, Vec v) const
 void SubInputVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("SubInputVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 } // end of namespace PLearn
