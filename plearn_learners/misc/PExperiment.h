@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.h,v 1.4 2003/06/03 14:52:11 plearner Exp $ 
+   * $Id: PExperiment.h,v 1.5 2003/06/30 15:13:52 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -51,7 +51,7 @@ using namespace std;
 class PTester: public Object
 {    
 public:
-
+  bool save_initial_experiment;
   typedef Object inherited;
 
   // ************************
@@ -66,7 +66,7 @@ public:
   PP<Splitter> splitter;
   TVec<string> statnames;
   bool report_stats;
-  bool save_initial_experiment;
+
   bool save_stat_collectors;
   bool save_learners;
   bool save_initial_learners;

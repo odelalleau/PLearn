@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.3 2002/10/03 07:35:27 plearner Exp $
+   * $Id: Kernel.cc,v 1.4 2003/06/30 15:13:52 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -67,6 +67,25 @@ using namespace std;
     else
       return evaluate(x,data(i));
   }
+
+void Kernel::computeGramMatrix(Mat K) const
+{
+  if (!data) PLERROR("Kernel::computeGramMatrix should be called only after setDataForKernelMatrix");
+  int l=data->length();
+  int m=K.mod();
+  for (int i=0;i<l;i++)
+  {
+    real* Ki = K[i];
+    real* Kji_ = &K[0][i];
+    for (int j=0;j<=i;j++,Kji_+=m)
+    {
+      real Kij = evaluate_i_j(i,j);
+      Ki[j]=Kij;
+      if (j<i)
+        *Kji_ =Kij;
+    }
+  }
+}
     
 void Kernel::setParameters(Vec paramvec)
 { PLERROR("setParameters(Vec paramvec) not implemented for this kernel"); }

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.5 2002/10/25 23:16:08 plearner Exp $
+   * $Id: Kernel.h,v 1.6 2003/06/30 15:13:52 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -93,6 +93,9 @@ public:
   //!  returns evaluate(x,data(i)) [default version calls evaluate_i_x if
   //!  kernel is_symmetric]
   virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; 
+
+  //! call evaluate_i_j to fill each of the entries (i,j) of symmetric matrix K
+  virtual void computeGramMatrix(Mat K) const;
 
   //!  ** Subclasses may overload these methods ** 
   //!  They provide a generic way to set and retrieve kernel parameters

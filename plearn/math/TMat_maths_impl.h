@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.11 2003/06/05 04:22:43 plearner Exp $
+   * $Id: TMat_maths_impl.h,v 1.12 2003/06/30 15:13:52 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1852,7 +1852,7 @@ inline void operator+=(const TVec<T>& vec1, const TVec<T>& vec2)
       }
     }
 
-    //!  TVec[i] += x[i]*y[i];
+    //!  vec[i] += x[i]*y[i];
   template<class T>
     void multiplyAcc(const TVec<T>& vec, const TVec<T>& x, const TVec<T>& y)
     {
@@ -2478,7 +2478,7 @@ void externalProductScaleAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T
   }
 }
 
-// mat[i][j] = alpha * m[i][j] + gamma * v1[i] * v2[j] 
+// mat[i][j] = alpha * mat[i][j] + gamma * v1[i] * v2[j] 
 template<class T>
 void externalProductScaleAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T>& v2, T gamma, T alpha)
 {

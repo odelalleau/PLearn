@@ -44,7 +44,7 @@ using namespace std;
 #define EPS 3.0e-7
 #define FPMIN 1.0e-30
 #define Pi 3.141592653589793
-
+#define Log2Pi 1.837877066409
 
 static double pl_gammln_cof[7]={ 1.000000000190015     ,
 				 76.18009172947146     ,
@@ -190,6 +190,17 @@ real gauss_01_quantile(real q) {
 real gauss_01_density(real x)
 {
   return exp(-0.5*x*x)/sqrt(2*Pi);
+}
+
+real gauss_01_log_density(real x)
+{
+  return -0.5*x*x - 0.5*Log2Pi;
+}
+
+real gauss_log_density(real x, real mu, real var)
+{
+  real dx=x-mu;
+  return -0.5*(dx*dx/var + Log2Pi + log(var));
 }
 
 real p_value(real mu, real vn)
