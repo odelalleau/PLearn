@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.19 2003/10/03 17:18:29 jkeable Exp $
+   * $Id: StatsCollector.cc,v 1.20 2003/10/10 21:10:08 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -484,7 +484,7 @@ real StatsCollector::getStat(const string& statname) const
   
   map<string,STATFUN>::iterator fun = statistics.find(statname);
   if (fun == statistics.end())
-    PLERROR("In StatsCollector::getIndexInAllStats, invalid statname %s",
+    PLERROR("In StatsCollector::getStat, invalid statname %s",
             statname.c_str());
   else
     return (this->*(fun->second))();

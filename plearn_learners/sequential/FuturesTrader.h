@@ -3,7 +3,7 @@
 
 // FuturesTrader.h
 //
-// Copyright (C) 2003  Christian Dorion 
+// Copyright (C) 2003  Christian Dorion, Rejean Ducharme
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.h,v 1.9 2003/10/07 15:45:17 dorionc Exp $ 
+   * $Id: FuturesTrader.h,v 1.10 2003/10/10 21:10:17 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.h */

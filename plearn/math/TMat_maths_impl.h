@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.23 2003/10/10 17:18:53 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.24 2003/10/10 21:10:08 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -220,12 +220,15 @@ inline void multiply(const TVec<T>& source1, T source2, TVec<T>& destination)
 //------- These were previously in Vec_maths
 
 template<class T>
-T sum(const TVec<T>& vec)
+T sum(const TVec<T>& vec, bool ignore_missing=false)
 {
   double res = 0.0;
   T* v = vec.data();
   for(int i=0; i<vec.length(); i++)
-    res += v[i];
+  {
+    if (!is_missing(v[i])) res += v[i];
+    else if (!ignore_missing) return MISSING_VALUE;
+  }
   return T(res);
 }
 
@@ -3408,13 +3411,18 @@ void addToMat(const TMat<T>& mat, T scalar, bool ignored)
 // -------------- taken and adapted from Mat_maths.cc ------------------
 
 template<class T>
-T sum(const TMat<T>& mat)
+T sum(const TMat<T>& mat, bool ignore_missing=false)
 {
   double res = 0.0;
   T* m_i = mat.data();
   for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+  {
     for(int j=0; j<mat.width(); j++)
-      res += m_i[j];
+    {
+      if (!is_missing(m_i[j])) res += m_i[j];
+      else if (!ignore_missing) return MISSING_VALUE;
+    }
+  }
   return T(res);
 }
 

@@ -3,7 +3,7 @@
 
 // FuturesTrader.cc
 //
-// Copyright (C) 2003  Christian Dorion 
+// Copyright (C) 2003  Christian Dorion, Rejean Ducharme
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.15 2003/10/08 21:07:21 ducharme Exp $ 
+   * $Id: FuturesTrader.cc,v 1.16 2003/10/10 21:10:17 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -113,12 +113,19 @@ void FuturesTrader::trader_test( int t, VMat testset,
   
   real previous_value_t = 0;
   real relative_sum = 0;
+  real daily_risk_free_return = exp(log(1.0+risk_free(t-horizon))/252.0) - 1.0;
+  if (is_missing(daily_risk_free_return))
+  {
+    PLWARNING("daily_risk_free_return is MISSING VALUE");
+    daily_risk_free_return = 0;
+  }
   for(int k=0; k < nb_assets; k++)
   { 
     real w_kt = weight(k, t);
 
     // Marking the market: initializing the current margin to the ancient one
-    margin(k, t) = margin(k, t-1);
+    // PLUS the risk free rate return
+    margin(k, t) = margin(k, t-1) * (1.0 + daily_risk_free_return);
 
     // Relative return computation
     if (w_kt != 0.0)
@@ -162,9 +169,10 @@ void FuturesTrader::trader_test( int t, VMat testset,
     }
   }
   
-  real daily_risk_free_return = exp(log(1.0+risk_free(t-horizon))/252.0) - 1.0;
   absolute_return_t += previous_value_t * daily_risk_free_return;
   relative_return_t =  daily_risk_free_return + relative_sum/previous_value_t;
+
+  cout << "\t Turnover per year:\t\t" << sum(transaction_costs,true)/(sum(margin_cash,true)/12.0) << endl;
 }
 
 void FuturesTrader::check_margin(int k, int t) const

@@ -2,7 +2,7 @@
 
 // Trader.cc
 //
-// Copyright (C) 2003 Christian Dorion 
+// Copyright (C) 2003 Christian Dorion, Rejean Ducharme
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.11 2003/10/08 21:07:21 ducharme Exp $ 
+ * $Id: Trader.cc,v 1.12 2003/10/10 21:10:17 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -345,6 +345,7 @@ void Trader::train()
   {
     portfolios.subMatRows(0, last_call_train_t+1) << advisor->predictions.subMatRows(0, last_call_train_t+1);
   }
+/*
   else
   {
     // The portfolios matrix reflects the real positions took on the market by the trader
@@ -357,6 +358,7 @@ void Trader::train()
     int copy_length = last_call_train_t - (last_test_t-horizon);
     portfolios.subMatRows((last_test_t-horizon)+1, copy_length) << advisor->predictions.subMatRows((last_test_t-horizon)+1, copy_length);
   }
+*/
 }
 
 void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
@@ -432,8 +434,6 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
   real stddev_absolute_Rt = internal_stats.stats[rt].stddev();
   real average_relative_Rt = internal_stats.stats[log_rel_rt].mean();
   real stddev_relative_Rt = internal_stats.stats[log_rel_rt].stddev();
-  real average_sp500 = internal_stats.stats[log_sp].mean();
-  real stddev_sp500 = internal_stats.stats[log_sp].stddev();
 
   cout << "***** ***** *****" << endl
 #if defined(VERBOSE) || defined(VERBOSE_TEST)
@@ -442,17 +442,22 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
 #endif
        //<< "\t Average Absolute Return:\t" << average_absolute_Rt << endl
        //<< "\t Empirical Variance:\t" << variance_absolute_Rt << endl
+/*
        << "\t Average Annual Return:\t" << exp(252.0*average_relative_Rt) << endl
-       << "\t Sharpe Ratio of monthly log-returns:\t\t" << average_relative_Rt/stddev_relative_Rt << endl
+       << "\t Sharpe Ratio of monthly log-returns:\t" << average_relative_Rt/stddev_relative_Rt << endl
        << "\t Sharpe Ratio:\t\t" << average_absolute_Rt/stddev_absolute_Rt << endl;
+
   if(sp500 != "")
   {
+    real average_sp500 = internal_stats.stats[log_sp].mean();
+    real stddev_sp500 = internal_stats.stats[log_sp].stddev();
     cout << "\t Average S&P500 Annual Return:\t" << exp(252.0*average_sp500) << endl
-         << "\t Sharpe Ratio of S&P500 monthly log-returns:\t\t" << average_sp500/stddev_sp500 << endl
+         << "\t Sharpe Ratio of S&P500 monthly log-returns:\t" << average_sp500/stddev_sp500 << endl
          << "\t Correlation with S&P500:\t"  << internal_stats.getCorrelation()(log_rel_rt, log_sp) << endl;
   }
   cout <<  "***** ***** *****" << endl;
-  
+*/
+
   // Keeping track of the call
   last_test_t = advisor->get_last_test_t();
   if(last_test_t != testset.length()-1)

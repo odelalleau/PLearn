@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.18 2003/09/23 13:12:59 yoshua Exp $
+   * $Id: PLearner.cc,v 1.19 2003/10/10 21:10:17 ducharme Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -230,7 +230,7 @@ void PLearner::use(VMat testset, VMat outputs) const
   real weight;
   Vec output(outputsize());
 
-  ProgressBar* pb;
+  ProgressBar* pb = NULL;
   if(report_progress)
     pb = new ProgressBar("Using learner",l);
 
@@ -264,7 +264,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
   if(test_stats)
     test_stats->forget();
 
-  ProgressBar* pb;
+  ProgressBar* pb = NULL;
   if(report_progress)
     pb = new ProgressBar("Testing learner",l);
 

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.15 2003/10/01 21:31:43 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.16 2003/10/10 21:10:17 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -240,6 +240,9 @@ void MountLucasIndex::test(VMat testset, PP<VecStatsCollector> test_stats,
 
   real r = s/ns;
   real v = s2/ns - r*r;
+/*
+  cout << "Moyenne  de log(1+r) = " << r << endl;
+  cout << "Variance de log(1+r) = " << v << endl << endl;
   cout << "Average annual return (composed monthly) = " << exp(r*12) << endl;
   cout << "Sharpe Ratio of monthly log-returns = " << r/sqrt(v) << endl << endl;
 
@@ -252,6 +255,7 @@ void MountLucasIndex::test(VMat testset, PP<VecStatsCollector> test_stats,
   real vp = sp2/ns - rp*rp;
   cout << "Average S&P500 annual return (composed monthly) = " << exp(rp*12) << endl;
   cout << "Sharpe Ratio of S&P500 monthly log-returns = " << rp/sqrt(vp) << endl << endl;
+*/
 }
 
 void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, VMat testcosts) const

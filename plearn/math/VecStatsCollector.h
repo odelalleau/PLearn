@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.10 2003/09/06 22:29:39 chapados Exp $ 
+   * $Id: VecStatsCollector.h,v 1.11 2003/10/10 21:10:08 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -40,7 +40,6 @@
 #define VecStatsCollector_INC
 
 #include "Object.h"
-#include "TMat.h"
 #include "StatsCollector.h"
 
 namespace PLearn <%

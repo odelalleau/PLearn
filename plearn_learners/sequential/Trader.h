@@ -2,7 +2,7 @@
 
 // Trader.h
 //
-// Copyright (C) 2003 Christian Dorion 
+// Copyright (C) 2003 Christian Dorion, Rejean Ducharme
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.h,v 1.6 2003/10/07 15:45:17 dorionc Exp $ 
+ * $Id: Trader.h,v 1.7 2003/10/10 21:10:17 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -243,7 +243,7 @@ public:
     { return train_set(t, assets_tradable_indices[k]); }
   
   /*!  
-    Returns [weight(k, t) - weight(k, t+1)] (if < rebalancing_threshold) 
+    Returns [weight(k, t+1) - weight(k, t)] (if < rebalancing_threshold) 
     or 0, otherwise.
 
     Also calls stop_loss
