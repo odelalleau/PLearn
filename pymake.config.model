@@ -46,9 +46,9 @@ verbose = 3;
 # or switch SPC=1 to always perform SPC
 SPC = 0;
 SPClistfile = plearndir+'/scripts/.machines_lisa'
-SPCresultfile = plearndir+'/.pymake/linux-i386.hosts'
+SPCresultfile = plearndir+'/.pymake/SPC.hosts'
 # depends of your files architecture
-#SPCresultfile = os.environ['HOME']+'/.pymake/linux-i386.hosts'
+#SPCresultfile = os.environ['HOME']+'/.pymake/SPC.hosts'
 
 
 # List of directories in which to look for .h includes and corresponding .cc files to compile and link with your program

@@ -467,6 +467,7 @@ if 'force' in optionargs:
     optionargs.remove('force')
 
 if 'spc' in optionargs or SPC:
+    SPC = 1
     print '*** Running pymake using Smart Parallel Compilation'
     os.system('pyfreemachines '+SPClistfile+' '+SPCresultfile)
     optionargs.remove('spc')
@@ -525,7 +526,10 @@ list_of_hosts = []
 if local_compilation:
     list_of_hosts = ['localhost']
 else:
-    hostspath = locatehostsfile()
+    if SPC:
+        hostspath = SPCresultfile;
+    else:
+        hostspath = locatehostsfile()
     if hostspath:
         print '*** Parallel compilation using list of hosts from file: ' + hostspath
         f = open(hostspath,'r')
