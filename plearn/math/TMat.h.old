@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.35 2004/04/14 16:30:15 plearner Exp $
+   * $Id: TMat.h.old,v 1.1 2004/04/17 00:44:55 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -863,6 +863,9 @@ public:
     return ptr == other.ptr && width == other.width && mod == other.mod;
   }
 
+  bool operator!=(const TMatRowsIterator& y)
+  { return !operator==(y); }
+
   value_type operator*() {
     return TVec<T>(width, ptr);
   }
@@ -928,6 +931,7 @@ public:
   bool operator<(const TMatRowsIterator& y) {
     return ptr < y.ptr;
   }
+
 };
 
 template <class T>
@@ -939,6 +943,8 @@ TMatRowsIterator<T> operator+(typename TMatRowsIterator<T>::difference_type n,
 }
 
 /*
+
+template<class T> class Array<T>;
 
 //! Model of the Random Access Iterator concept for iterating through the
 //! ROWS of a TMat.  The basic idea is that operator* returns the current
@@ -958,6 +964,7 @@ public:
 private:
   TMat<T> mat;
   int i;         //!< current row 
+  Array<T> v;
 
 public:
   TMatRowsAsArraysIterator()
@@ -972,8 +979,15 @@ public:
     return i == other.i && mat == other.mat;
   }
 
-  reference operator*() {
-    return Array<T>(mat(i));
+  bool operator!=(const TMatRowsAsArraysIterator& other) const 
+  {
+    return !operator==(other);
+  }
+
+  reference operator*() 
+  {
+  v.view(mat(i));
+  return v;
   }
 
   // cannot define operator-> here since we cannot return a pointer to a
@@ -1046,6 +1060,20 @@ TMatRowsAsArraysIterator<T> operator+(typename TMatRowsAsArraysIterator<T>::diff
   TMatRowsAsArraysIterator<T> r(y);
   return r += n;
 }
+
+// inserer def de TVec
+
+retourner un TMatRowsAsArrayIterator
+
+// inserer def de Array
+
+template<class T>
+  TMatRowsAsArraysIterator<T>::reference TMatRowsAsArraysIterator<T>::operator*() {
+    return Array<T>(mat(i));
+  }
+
+
+// def de TVec::begin_rows_as
 
 */
 

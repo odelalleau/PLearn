@@ -37,28 +37,31 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths.h,v 1.3 2004/04/17 00:44:55 plearner Exp $
+   * $Id: TMatRowsAsArraysIterator_impl.h,v 1.1 2004/04/17 00:44:55 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnCore/TMat_maths.h */
 
-#ifndef TMat_maths_INC
-#define TMat_maths_INC
+/*! \file PLearnLibrary/PLearnCore/TMat.h */
 
-#include "TMat.h"
-#include "TMat_maths_impl.h"
-#include "TMat_maths_specialisation.h"
+#ifndef TMatRowsAsArraysIterator_impl_INC
+#define TMatRowsAsArraysIterator_impl_INC
 
+#include "TMatRowsAsArraysIterator_decl.h"
+
+namespace PLearn {
+using namespace std;
+
+template <class T>
+TMatRowsAsArraysIterator<T> operator+(typename TMatRowsAsArraysIterator<T>::difference_type n,
+                              const TMatRowsAsArraysIterator<T>& y)
+{
+  TMatRowsAsArraysIterator<T> r(y);
+  return r += n;
+}
+
+
+
+} // end of namespace PLearn
 #endif
-
-
-
-
-
-
-
-
-
-

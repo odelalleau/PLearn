@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_impl.h,v 1.5 2004/02/20 21:11:46 chrish42 Exp $
+   * $Id: TMat_impl.h,v 1.6 2004/04/17 00:44:55 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -46,6 +46,12 @@
 
 #ifndef TMAT_IMPL_H
 #define TMAT_IMPL_H
+
+#include "TMat_decl.h"
+#include "TMatElementIterator_impl.h"
+#include "TMatRowsIterator_impl.h"
+#include "TMatRowsAsArraysIterator_impl.h"
+#include "TMatColRowsIterator_impl.h"
 
 namespace PLearn {
 using namespace std;
@@ -377,6 +383,51 @@ TMat<T> TMat<T>::deepCopy(map<const void*, void*>& copies) const
   return deep_copy;
 }
 
+// Iterateurs
+
+template<class T>
+TMatElementIterator<T> TMat<T>::begin() const
+  { return TMatElementIterator<T>(data(), width_, mod_); }
+
+template<class T>
+TMatElementIterator<T> TMat<T>::end() const
+  { return TMatElementIterator<T>(data()+length_*mod_, width_, mod_); }
+
+
+template<class T>
+TMatRowsIterator<T> TMat<T>::rows_begin() {
+    return TMatRowsIterator<T>(data(), width_, mod_);
+  }
+
+template<class T>
+TMatRowsIterator<T> TMat<T>::rows_end() {
+    return TMatRowsIterator<T>(data()+length_*mod_, width_, mod_);
+  }
+
+
+template<class T>
+TMatRowsAsArraysIterator<T> TMat<T>::rows_as_arrays_begin() {
+  return TMatRowsAsArraysIterator<T>(data(), width_, mod_);
+}
+
+template<class T>
+TMatRowsAsArraysIterator<T> TMat<T>::rows_as_arrays_end() {
+  return TMatRowsAsArraysIterator<T>(data()+length_*mod_, width_, mod_);
+}
+
+template<class T>
+TMatColRowsIterator<T> TMat<T>::col_begin(int column) {
+  return TMatColRowsIterator<T>(data() + column, mod_);
+}
+
+template<class T>
+TMatColRowsIterator<T> TMat<T>::col_end(int column) {
+  return TMatColRowsIterator<T>(data()+length_*mod_+column, mod_);
+}
+
+
+
+
 
 // *****************************
 // **** Fonctions pour TMat ****
@@ -555,6 +606,266 @@ TMat<T> diagonalmatrix(const TVec<T>& v)
     m(i,i) = v[i];
   return m;
 }
+
+
+
+// *****************************
+// **** Fonctions pour TMat ****
+// *****************************
+
+template <class T> inline TMat<T> deepCopy(const TMat<T> source)
+{
+  CopiesMap copies; //!< create empty map
+  return deepCopy(source, copies);
+}
+
+template <class T> inline TMat<T>
+deepCopy(const TMat<T> source, CopiesMap copies)
+{ return source.deepCopy(copies); }
+
+template <class T>
+inline void deepCopyField(TMat<T>& field, CopiesMap& copies)
+{
+  field.makeDeepCopyFromShallowCopy(copies);
+}
+
+template<class T>
+void clear(const TMat<T>& x)
+{ 
+  if(x.isCompact())
+  {
+    typename TMat<T>::compact_iterator it = x.compact_begin();
+    typename TMat<T>::compact_iterator itend = x.compact_end();
+    for(; it!=itend; ++it)
+      clear(*it);
+  }
+  else
+  {
+    typename TMat<T>::iterator it = x.begin();
+    typename TMat<T>::iterator itend = x.end();
+    for(; it!=itend; ++it)
+      clear(*it);
+  }
+}
+
+template<class T>
+void swap( TMat<T>& a, TMat<T>& b)
+{ swap_ranges(a.begin(), a.end(), b.begin()); }
+
+//! copy TMat << TMat 
+template<class T>
+inline void operator<<(const TMat<T>& m1, const TMat<T>& m2)
+{
+#ifdef BOUNDCHECK
+  if(m1.size()!=m2.size())
+    PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements\n"
+            "m1: (%d, %d) && m2: (%d, %d)", m1.length(), m1.width(), m2.length(), m2.width());
+#endif
+  copy(m2.begin(), m2.end(), m1.begin());
+}
+  
+//! copy TMat << TMat  (different types)
+template<class T, class U>
+void operator<<(const TMat<T>& m1, const TMat<U>& m2)
+{
+#ifdef BOUNDCHECK
+  if(m1.size()!=m2.size())
+    PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements");
+#endif
+  copy_cast(m2.begin(), m2.end(), m1.begin());
+}
+
+//! copy TMat << Tvec 
+template<class T>
+inline void operator<<(const TMat<T>& m1, const TVec<T>& m2)
+{
+#ifdef BOUNDCHECK
+  if(m1.size()!=m2.size())
+    PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements;\t m1.size()= %d;\t m2.size= %d", m1.size(), m2.size());
+#endif
+  copy(m2.begin(), m2.end(), m1.begin());
+}
+
+//! copy TMat << Tvec  (different types)
+template<class T, class U>
+inline void operator<<(const TMat<T>& m1, const TVec<U>& m2)
+{
+#ifdef BOUNDCHECK
+  if(m1.size()!=m2.size())
+    PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements");
+#endif
+  copy_cast(m2.begin(), m2.end(), m1.begin());
+}
+
+//! copy TVec << TMat
+template<class T>
+inline void operator<<(const TVec<T>& m1, const TMat<T>& m2)
+{
+#ifdef BOUNDCHECK
+  if(m1.size()!=m2.size())
+    PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements");
+#endif
+  copy(m2.begin(), m2.end(), m1.begin());
+}
+
+//! copy TVec << TMat  (different types)
+template<class T, class U>
+inline void operator<<(const TVec<T>& m1, const TMat<U>& m2)
+{
+#ifdef BOUNDCHECK
+  if(m1.size()!=m2.size())
+    PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements");
+#endif
+  copy_cast(m2.begin(), m2.end(), m1.begin());
+}
+
+//! copy TMat >> TMat
+template<class T, class U>
+inline void operator>>(const TMat<T>& m1, const TMat<U>& m2)
+{ m2 << m1; }
+
+//! copy TVec >> TMat
+template<class T, class U>
+inline void operator>>(const TVec<T>& m1, const TMat<U>& m2)
+{ m2 << m1; }
+
+//! copy TMat >> Tvec
+template<class T, class U>
+inline void operator>>(const TMat<T>& m1, const TVec<U>& m2)
+{ m2 << m1; }
+
+
+
+//! printing a TMat
+template <class T>
+inline ostream& operator<<(ostream& out, const TMat<T>& m)
+{ 
+  m.print(out);
+  return out;
+}
+
+//! inputing a TMat
+
+template <class T>
+inline istream& operator>>(istream& in, const TMat<T>& m)
+{ 
+  m.input(in);
+  return in;
+}
+
+//!  returns a view of this vector as a single row matrix
+template <class T>
+inline TMat<T> rowmatrix(const TVec<T>& v)
+{ return v.toMat(1,v.length()); }
+
+//!  returns a view of this vector as a single column matrix
+template <class T>
+inline TMat<T> columnmatrix(const TVec<T>& v)
+{ return v.toMat(v.length(),1); }
+
+// select the rows of the source as specified by the
+// vector of indices (between 0 and source.length()-1), copied into
+// the destination matrix (which must have the same length()
+// as the indices vector).
+template <class T, class I>
+void selectRows(const TMat<T>& source, const TVec<I>& row_indices, TMat<T>& destination);
+
+// select the colums of the source as specified by the
+// vector of indices (between 0 and source.length()-1), copied into
+// the destination matrix (which must have the same width()
+// as the indices vector).
+template <class T, class I>
+void selectColumns(const TMat<T>& source, const TVec<I>& column_indices, TMat<T>& destination);
+
+// select a submatrix of specified rows and colums of the source with
+// two vectors of indices. The elements that are both in the specified rows
+// and columns are copied into the destination matrix (which must have the 
+// same length() as the row_indices vector, and the same width() as the length()
+// of the col_indices vector).
+template <class T>
+void select(const TMat<T>& source, const TVec<T>& row_indices, const TVec<T>& column_indices, TMat<T>& destination);
+
+/*
+//!  Vertical concatenation (all Mats must have the same width())
+template<class T>
+TMat<T> vconcat(const Array< TMat<T> >& ar);
+
+template<class T>
+inline TMat<T> vconcat(const TMat<T>& m1, const TMat<T>& m2) { return vconcat(Array< TMat<T> >(m1,m2)); }
+
+//!  Horizontal concatenation (all Mats must have the same length())
+template<class T>
+TMat<T> hconcat(const Array< TMat<T> >& ar);
+
+template<class T>
+inline TMat<T> hconcat(const TMat<T>& m1, const TMat<T>& m2) { return hconcat(Array< TMat<T> >(m1,m2)); }
+
+//!  This will allow a convenient way of building arrays of Matrices by writing ex: m1&m2&m3
+template<class T>
+inline Array< TMat<T> > operator&(const TMat<T>& m1, const TMat<T>& m2) { return Array< TMat<T> >(m1,m2); } 
+*/
+
+//! returns a new mat which is m with the given row removed
+//! if the row to remove is the first or the last one, 
+//! then a submatrix (a view) of m will be returned (for efficiency)
+//! otherwise, it is a fresh copy with the row removed. 
+template<class T>
+TMat<T> removeRow(const TMat<T>& m, int rownum);
+
+//! returns a new mat which is m with the given column removed
+//! if the column to remove is the first or the last one, 
+//! then a submatrix (a view) of m will be returned (for efficiency)
+//! otherwise, it is a fresh copy with the column removed. 
+template<class T>
+TMat<T> removeColumn(const TMat<T>& m, int colnum);
+
+
+template<class T>
+TMat<T> diagonalmatrix(const TVec<T>& v);
+
+// old .pmat format
+template<class T>
+void savePMat(const string& filename, const TMat<T>& mat)
+{ PLERROR("savePMat only implemented for float and double"); }
+
+template<class T>
+void loadPMat(const string& filename, TMat<float>& mat)
+{ PLERROR("loadPMat only implemented for float and double"); }
+
+//!  Read and Write from C++ stream:
+//!  write saves length() and width(), and read resizes accordingly
+
+//!  Read and Write from C++ stream:
+//!  write saves length and read resizes accordingly
+//! (the raw modes don't write any size information)
+
+template <class T> inline PStream &
+operator<<(PStream &out, const TMat<T> &m)
+{ 
+  m.write(out); 
+  return out;
+}
+
+template <class T> 
+PStream & operator>>(PStream &in, TMat<T> &m)
+{
+  m.read(in);
+  return in;
+}
+
+inline string join(const TVec<string>& s, const string& separator)
+{
+  string result;
+  for(int i=0; i<s.size(); i++)
+  {
+    result += s[i];
+    if(i<s.size()-1)
+      result += separator;
+  }
+  return result;
+}
+
+
 
 
 } // end of namespace PLearn

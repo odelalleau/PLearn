@@ -37,28 +37,79 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths.h,v 1.3 2004/04/17 00:44:55 plearner Exp $
+   * $Id: TMatElementIterator_decl.h,v 1.1 2004/04/17 00:44:55 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnCore/TMat_maths.h */
 
-#ifndef TMat_maths_INC
-#define TMat_maths_INC
+/*! \file PLearnLibrary/PLearnCore/TMat.h */
 
-#include "TMat.h"
-#include "TMat_maths_impl.h"
-#include "TMat_maths_specialisation.h"
+#ifndef TMatTMatElementIterator_decl_INC
+#define TMatTMatElementIterator_decl_INC
+
+namespace PLearn {
+using namespace std;
+
+template<class T>
+class TMatElementIterator
+{
+private:
+  int width;
+  int mod_minus_width;
+  T* ptr; // current element pointer
+  T* rowend; // after-last element of current row
+
+public:
+
+  typedef forward_iterator_tag iterator_category;
+  typedef T value_type;
+  typedef int size_type;
+  typedef ptrdiff_t difference_type;
+  typedef T* pointer;
+  typedef T& reference;
+
+  inline TMatElementIterator(T* begin, int width, int mod)
+    :width(width), mod_minus_width(mod-width), ptr(begin), rowend(begin+width)
+  {}
+
+  inline TMatElementIterator<T>& operator++()
+  { 
+    ++ptr;
+    if(ptr==rowend)
+    {
+      ptr += mod_minus_width;
+      rowend = ptr+width; 
+    }
+    return *this;
+  }
+
+  inline TMatElementIterator<T> operator++(int)
+  { 
+    TMatElementIterator<T> prev(*this);
+    ++ptr;
+    if(ptr==rowend)
+    {
+      ptr += mod_minus_width;
+      rowend = ptr+width; 
+    }
+    return prev;
+  }
+
+  inline T* operator->() const
+  { return ptr; }
+  
+  inline T& operator*() const
+  { return *ptr; }
+
+  inline bool operator==(const TMatElementIterator& other)
+  { return ptr==other.ptr; }
+
+  inline bool operator!=(const TMatElementIterator& other)
+  { return ptr!=other.ptr; }
+
+};
+
+} // end of namespace PLearn
 
 #endif
-
-
-
-
-
-
-
-
-
-
