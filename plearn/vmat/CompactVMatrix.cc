@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.cc,v 1.3 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: CompactVMatrix.cc,v 1.4 2004/02/27 21:12:25 nova77 Exp $
    ******************************************************* */
 
 #include "CompactVMatrix.h"
@@ -52,6 +52,9 @@ union short_and_twobytes
 };
 
 /** CompactVMatrix **/
+
+// norman: added static "inizialization"
+unsigned char CompactVMatrix::n_bits_in_byte[256];
 
 void CompactVMatrix::set_n_bits_in_byte()
 {
