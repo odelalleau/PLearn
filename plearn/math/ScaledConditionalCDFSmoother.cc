@@ -37,12 +37,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ScaledConditionalCDFSmoother.cc,v 1.1 2002/12/02 22:11:00 zouave Exp $ 
+   * $Id: ScaledConditionalCDFSmoother.cc,v 1.2 2003/01/10 17:09:02 zouave Exp $ 
    ******************************************************* */
 
 /*! \file ScaledConditionalCDFSmoother.cc */
 
 #include "ScaledConditionalCDFSmoother.h"
+//#include "HistogramDistribution.h" //to get static fns. to calc survival <--> density  // already inc. from ConditionalCDFSmoother
 
 namespace PLearn <%
 using namespace std;
@@ -129,40 +130,149 @@ ScaledConditionalCDFSmoother::ScaledConditionalCDFSmoother(PP<HistogramDistribut
 real ScaledConditionalCDFSmoother::smooth(const Vec& source_function, Vec& smoothed_function, 
 		      Vec bin_positions, Vec dest_bin_positions) const
 {
-  //assume source_function is a density fn.
+  // put in 'survival_fn' the multiplicatively adjusted unconditional_survival_fn
+  // such that the estimatedS values at yvalues match. In each segment
+  // between prev_y and next_y. The adjustment ratio varies linearly from
+  // estimatedS[prev_y]/unconditionalS[prev_y] to estimatedS[next_y]/unconditionalS[next_y]):
+  //  prev_ratio = estimatedS[prev_y]/unconditionalS[prev_y]
+  //  next_ratio = estimatedS[next_y]/unconditionalS[next_y]
+  //  adjustment = prev_ratio + (y-prev_y)*next_ratio/(next_y-prev_y)
+  //  s(y) = unconditional_s(y)*adjustment
+
+  //assume source_function is a survival fn.
   if(bin_positions.size() != source_function.size()+1)
     PLERROR("in ScaledConditionalCDFSmoother::smooth  you need to supply bin_positions");
   if(dest_bin_positions.size() == 0)
     PLERROR("in ScaledConditionalCDFSmoother::smooth  you need to supply dest_bin_positions");
   smoothed_function.resize(dest_bin_positions.size()-1);
+ 
 
   int j= 0;
+  for(int i= 0; i < source_function.size(); ++i)
+    {
+      Vec v0(1), v1(1);//prev_y, next_y
+      v0[0]= bin_positions[i];
+      v1[0]= bin_positions[i+1];
+      
+      real prev_ratio=  source_function[i]/prior_cdf->survival_fn(v0);
+      real next_ratio;
+      if(i == source_function.size()-1)
+	next_ratio= 0.0;
+      else
+	next_ratio=  source_function[i+1]/prior_cdf->survival_fn(v1);
+      
+      cout  << source_function[i] << '\t'  << prev_ratio  << '\t' << next_ratio << '\t' << v0[0] << '\t' << v1[0] << endl;
 
+      while(j < smoothed_function.size() && dest_bin_positions[j+1] <= bin_positions[i+1])
+	{
+	  Vec v(1);
+	  v[0]= dest_bin_positions[j];
+	  smoothed_function[j]= prior_cdf->survival_fn(v) * (prev_ratio + (v[0]-v0[0])*next_ratio/(v1[0]-v0[0]));
+	  cout  << '\t' << v[0] << '\t' << prior_cdf->survival_fn(v) << '\t' << smoothed_function[j] << endl;
+	  ++j;
+	}
+    }
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  /*
+  //assume source_function is a survival fn.
+  if(bin_positions.size() != source_function.size()+1)
+    PLERROR("in ScaledConditionalCDFSmoother::smooth  you need to supply bin_positions");
+  if(dest_bin_positions.size() == 0)
+    PLERROR("in ScaledConditionalCDFSmoother::smooth  you need to supply dest_bin_positions");
+  smoothed_function.resize(dest_bin_positions.size()-1);
+  Vec f0(dest_bin_positions.size()-1); //new density
+
+
+  int j= 0;
+  real factor= 1.0;
   for(int i= 0; i < source_function.size(); ++i)
     {
       Vec v0(1), v1(1);
       v0[0]= bin_positions[i];
       v1[0]= bin_positions[i+1];
       real prior_prob= prior_cdf->survival_fn(v0) - prior_cdf->survival_fn(v1);
-      real factor;
-
-      if(0 < prior_prob)
-	factor= source_function[i] / prior_prob;
+      real prob;
+      if(i < source_function.size()-1)
+	prob= (source_function[i]-source_function[i+1]);
       else
-	factor= 1;
+	prob= source_function[i];
 
-      cout << v0[0] << '-' << v1[0] << ":\t" << source_function[i] << '/' <<  prior_prob << '=' << factor << endl;
+      if(0 < prior_prob && prob != 0.0)
+	factor= prob / prior_prob;
+      // else: use prev. factor
+
+      //dummy-temp  
+      cout << v0[0] << '-' << v1[0] << ":\t" << prob << '/' <<  prior_prob << '=' << factor << endl;
+
 
       while(j < smoothed_function.size() && dest_bin_positions[j+1] <= bin_positions[i+1])
 	{
 	  Vec v(1);
 	  v[0]= (dest_bin_positions[j]+dest_bin_positions[j+1])/2;
-	  smoothed_function[j]= factor * prior_cdf->density(v);
+	  //	  smoothed_function[j]= factor * prior_cdf->survival_fn(v);
+	  f0[j]= factor * prior_cdf->density(v);
+	  //dummy-temp  
+	  cout << '\t' << smoothed_function[j] << "= " <<  factor  << " * " << prior_cdf->survival_fn(v) << endl;
+
 	  ++j;
 	}
     }
+  
+
+  HistogramDistribution::calc_survival_from_density(f0, smoothed_function, dest_bin_positions);
+
+  */
+
+  /*
+  int j= 0;
+  real factor= 1.0;
+  for(int i= 0; i < source_function.size(); ++i)
+    {
+      Vec v0(1), v1(1);
+      v0[0]= bin_positions[i];
+      v1[0]= bin_positions[i+1];
+      real prior_prob= prior_cdf->survival_fn(v0) - prior_cdf->survival_fn(v1);
+      real prob;
+      if(i < source_function.size()-1)
+	prob= (source_function[i]-source_function[i+1]);
+      else
+	prob= source_function[i];
+
+      if(0 < prior_prob && prob != 0.0)
+	factor= prob / prior_prob;
+      // else: use prev. factor
+
+      //dummy-temp  
+      cout << v0[0] << '-' << v1[0] << ":\t" << prob << '/' <<  prior_prob << '=' << factor << endl;
 
 
+      while(j < smoothed_function.size() && dest_bin_positions[j+1] <= bin_positions[i+1])
+	{
+	  Vec v(1);
+	  v[0]= (dest_bin_positions[j]+dest_bin_positions[j+1])/2;
+	  smoothed_function[j]= factor * prior_cdf->survival_fn(v);
+	  //dummy-temp  
+	  cout << '\t' << smoothed_function[j] << "= " <<  factor  << " * " << prior_cdf->survival_fn(v) << endl;
+
+	  ++j;
+	}
+    }
+  */
+
+  return 0.0; //dummy - FIXME - xsm
 }
 
 %> // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LimitedGaussianSmoother.cc,v 1.5 2002/12/02 22:10:58 zouave Exp $ 
+   * $Id: LimitedGaussianSmoother.cc,v 1.6 2003/01/10 17:09:01 zouave Exp $ 
    ******************************************************* */
 
 /*! \file LimitedGaussianSmoother.cc */
@@ -162,6 +162,8 @@ real LimitedGaussianSmoother::smooth(const Vec& source_function, Vec& smoothed_f
 				   ) 
 	    * source_function[j] / sum_weights;
     }
+
+  return 0.0; //dummy - FIXME - xsm
 
 
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.cc,v 1.6 2002/12/02 22:11:08 zouave Exp $ 
+   * $Id: HistogramDistribution.cc,v 1.7 2003/01/10 17:09:06 zouave Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.cc */
@@ -117,6 +117,7 @@ HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_,
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
+
   }
 
   // ### Nothing to add here, simply calls build_
@@ -311,6 +312,8 @@ int HistogramDistribution::find_bin(real x) const
 
 void HistogramDistribution::calc_density_from_survival()
 {
+  calc_density_from_survival(survival_values, bin_density, bin_positions);
+  /*
   int n= bin_positions.length()-1;
   bin_density.resize(n);
   real sum= 0.0;
@@ -322,10 +325,14 @@ void HistogramDistribution::calc_density_from_survival()
 	sum+= (bin_density[i]= (survival_values[i] - survival_values[i+1]) / (bin_positions[i+1]-bin_positions[i]));
     else
       bin_density[i]= 0.0;
+  */
 }
+
 
 void HistogramDistribution::calc_survival_from_density()
 {
+  calc_survival_from_density(bin_density, survival_values, bin_positions);
+  /*
   int n= bin_positions.length()-1;
   survival_values.resize(n);
   real prec= 0.0;
@@ -333,6 +340,34 @@ void HistogramDistribution::calc_survival_from_density()
     prec= survival_values[i]= bin_density[i]*(bin_positions[i+1]-bin_positions[i]) + prec;
   for(int i= 0; i < n; ++i)
     survival_values[i]/= prec;
+  */
 }
+
+void HistogramDistribution::calc_density_from_survival(const Vec& survival, Vec& density_, const Vec& positions)
+{
+  int n= positions.length()-1;
+  density_.resize(n);
+  real sum= 0.0;
+  for(int i= 0; i < n; ++i)
+    if(positions[i+1] != positions[i])
+      if(i == n-1)
+	sum+= (density_[i]= survival[i] / (positions[i+1]-positions[i]));
+      else
+	sum+= (density_[i]= (survival[i] - survival[i+1]) / (positions[i+1]-positions[i]));
+    else
+      density_[i]= 0.0;
+}
+
+void HistogramDistribution::calc_survival_from_density(const Vec& density_, Vec& survival, const Vec& positions)
+{
+  int n= positions.length()-1;
+  survival.resize(n);
+  real prec= 0.0;
+  for(int i= n-1; i >= 0; --i)
+    prec= survival[i]= density_[i]*(positions[i+1]-positions[i]) + prec;
+  for(int i= 0; i < n; ++i)
+    survival[i]/= prec;
+}
+
 
 %> // end of namespace PLearn

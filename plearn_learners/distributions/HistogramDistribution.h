@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.h,v 1.6 2002/12/02 22:11:09 zouave Exp $ 
+   * $Id: HistogramDistribution.h,v 1.7 2003/01/10 17:09:07 zouave Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.h */
@@ -168,6 +168,12 @@ public:
   void calc_density_from_survival();
   //! calculate survival_values from bin_density
   void calc_survival_from_density();
+
+
+  //! calculate density from survival - static, on 2 Vecs
+  static void calc_density_from_survival(const Vec& survival, Vec& density_, const Vec& positions);
+  //! calculate survival from density - static, on 2 Vecs
+  static void calc_survival_from_density(const Vec& density_, Vec& survival, const Vec& positions);
 
   
 };
