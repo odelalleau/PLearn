@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.cc,v 1.10 2004/07/21 16:30:55 chrish42 Exp $ 
+   * $Id: FilteredVMatrix.cc,v 1.11 2004/08/05 13:51:09 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -62,8 +62,9 @@ FilteredVMatrix::FilteredVMatrix(VMat the_source, const string& program_string, 
 }
 
 PLEARN_IMPLEMENT_OBJECT(FilteredVMatrix, "A filtered view of its source vmatrix", 
-                        "The filter is an exression in VPL language.\n"
-                        "The filtered indexes are saved in the metadata directory.");
+    "The filter is an exression in VPL language.\n"
+    "The filtered indexes are saved in the metadata directory, that NEEDS to\n"
+    "be provided.\n" );
 
 
 
@@ -106,6 +107,8 @@ void FilteredVMatrix::setMetaDataDir(const string& the_metadatadir)
 
 void FilteredVMatrix::getNewRow(int i, const Vec& v) const
 {
+  if (indexes.length() == -1)
+    PLERROR("In FilteredVMatrix::getNewRow - The filtered indexes are not set, make sure you provided a metadatadir");
   source->getRow(indexes[i],v);
 }
 
