@@ -48,11 +48,11 @@
 #include <typeinfo>
 //#include <algorithm>
 
-// norman: added check for WIN32
+#include <assert.h>
+
 #ifndef WIN32
 #include <unistd.h>			     //!<  for lseek, read, write, close
 #else
-#include <assert.h>
 #include <io.h>
 #endif
 
