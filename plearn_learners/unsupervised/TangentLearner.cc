@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.7 2004/06/03 15:33:41 yoshua Exp $ 
+   * $Id: TangentLearner.cc,v 1.8 2004/07/08 15:57:27 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -59,9 +59,9 @@ using namespace std;
 
 TangentLearner::TangentLearner() 
 /* ### Initialize all fields to their default value here */
-  : training_targets("local_neighbors"), use_subspace_distance(true), normalize_by_neighbor_distance(true),
+  : training_targets("local_neighbors"), use_subspace_distance(false), normalize_by_neighbor_distance(true),
     n_neighbors(5), n_dim(1), architecture_type("single_neural_network"), n_hidden_units(-1),
-    batch_size(1), norm_penalization(0), svd_threshold(1e-3), projection_error_regularization(1e-4)
+    batch_size(1), norm_penalization(0), svd_threshold(1e-5), projection_error_regularization(0)
 {
 }
 
@@ -292,7 +292,7 @@ void TangentLearner::train()
   int optstage_per_lstage = l/nsamples;
 
   ProgressBar* pb = 0;
-  if(report_progress)
+  if(verbosity>0)
     pb = new ProgressBar("Training TangentLearner from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
   int initial_stage = stage;
