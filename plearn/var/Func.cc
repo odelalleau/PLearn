@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.8 2003/11/07 06:18:46 chapados Exp $
+   * $Id: Func.cc,v 1.9 2003/11/25 03:45:57 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -139,15 +139,24 @@ void Function::declareOptions(OptionList& ol)
 
 void Function::build_()
 {
-  inputsize = inputs.nelems();
-  outputsize = outputs.nelems(); 
-  fproppath = propagationPath(inputs, outputs);
-  bproppath = propagationPath(inputs, outputs);
-  parentspath = propagationPathToParentsOfPath(inputs, outputs);
-
   if(parameters.isEmpty())
     parameters = nonInputSources(inputs, outputs);
   
+  inputsize = inputs.nelems();
+  outputsize = outputs.nelems(); 
+  
+  fproppath = propagationPath(inputs, outputs);
+  if (fproppath.length()==0) // to handle the weird case in which there is no path from inputs to outputs
+    // but outputs still depends on parameters and we want to represent that dependency 
+  {
+    fproppath = propagationPath(inputs & parameters, outputs);
+    bproppath = propagationPath(inputs & parameters, outputs);
+  }
+  else
+    bproppath = propagationPath(inputs, outputs);
+
+  parentspath = propagationPathToParentsOfPath(inputs, outputs);
+
   //parameters_to_optimize.printNames();
   //cout<<"**************Func::printInfo(inputs, outputs);"<<endl;
   //printInfo(inputs, outputs);

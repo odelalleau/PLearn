@@ -43,6 +43,7 @@
 #include <set>
 #include <bitset>
 #include <strstream>
+#include <sstream>
 #include "pl_hash_fun.h"
 #include "PP.h"
 #include "pl_streambuf.h"
@@ -901,13 +902,15 @@ void readSequence(PStream& in, SequenceType& seq)
             in.get(); // skip '['
             in.skipBlanksAndCommentsAndSeparators();
             seq.resize(0);
-            while(in.peek()!=']')
+            while(in.peek()!=']' && in.peek()!=EOF && !in.eof())
               {
                 typename SequenceType::value_type x;
                 in >> x;
                 seq.push_back(x);
                 in.skipBlanksAndCommentsAndSeparators();
               }
+            if (in.peek()==EOF || in.eof())
+              PLERROR("Reading stream, unmatched left bracket [, missing ]");
             in.get(); // skip ']'
           }
         else if(isdigit(c))
@@ -1107,7 +1110,8 @@ class PIStringStream: public PStream
 {
 public:
   PIStringStream(const string& s)
-    :PStream(new istrstream(s.c_str())) {}
+    :PStream(new istringstream(s)) {}
+  //    :PStream(new istrstream(s.c_str())) {}
 };
 
 
