@@ -1,28 +1,59 @@
 # -*-python-*-
 
-p_vmat = Class('PLearn::VMat', 'plearn/vmat/VMat.h')
+
+# Exclude begin, end. etc. temporarily until we figure out
+# how to map them to Python iterators
+
+exclude_list = [ 'begin', 'end', 'top', 'firstElement', 'lastElement',
+                 'front', 'back', 'first', 'last', 'data',
+                 '_static_initializer_',
+                 # Exclude these because they are deprecated.
+                 'load', 'save', 'read', 'write', 'oldread',
+                 # Exclude these for now because they trigger
+                 # a bug in Pyste.
+                 'makeDeepCopyFromShallowCopy', 'deepCopy',
+                 # Exclude this for now, because otherwise
+                 # we get a Python exception when importing pylearn.
+                 '_static_initializer_'
+                 ]
+
 # We exclude the operator<< and operator>> because wrapping them using
 # Boost.Python triggers a compiler bug.
-exclude(p_vmat.operator['<<'])
-exclude(p_vmat.operator['>>'])
+exclude_operators = [ '<<', '>>' ]
+
+def exclude_stuff(c, preserve_list=[]):
+    for x in exclude_list:
+        if x not in preserve_list and hasattr(c, x):
+            exclude(getattr(c, x))
+            
+    if hasattr(c, 'operator'):
+        for xop in exclude_operators:
+            if xop not in preserve_list:
+                exclude(c.operator[xop])
+
+policy_mapping = { 'deepCopy': return_value_policy(manage_new_object),
+                   'getOptionList': return_internal_reference(),
+                   '_getOptionList_': return_internal_reference(),
+                   '_new_instance_for_typemap_': return_value_policy(manage_new_object),
+                   'getFieldInfos': return_internal_reference(),
+                   'getStats': return_internal_reference()
+                   }
+
+def set_our_policy(c):
+    for attr, pol in policy_mapping.iteritems():
+        set_policy(getattr(c, attr), pol)
+
+
+# PLearn base classes...
 
 Class('PLearn::PPointable', 'plearn/base/PP.h')
+
 p_object = Class('PLearn::Object', 'plearn/base/Object.h')
+exclude_stuff(p_object, 'deepCopy')
+set_our_policy(p_object)
 
-set_policy(p_object.deepCopy, return_value_policy(manage_new_object))
-set_policy(p_object.getOptionList, return_internal_reference())
-set_policy(p_object._getOptionList_, return_internal_reference())
-set_policy(p_object._new_instance_for_typemap_, return_value_policy(manage_new_object))
 
-exclude(p_object.operator['<<'])
-exclude(p_object.operator['>>'])
-
-# Remove deprecated methods
-exclude(p_object.load)
-exclude(p_object.save)
-exclude(p_object.read)
-exclude(p_object.write)
-exclude(p_object.oldread)
+# Useful global functions
 
 set_policy(Function('PLearn::newObject', 'plearn/base/Object.h'), return_value_policy(manage_new_object))
 set_policy(Function('PLearn::macroLoadObject', 'plearn/base/Object.h'), return_value_policy(manage_new_object))
@@ -31,43 +62,32 @@ set_policy(Function('PLearn::loadObject', 'plearn/base/Object.h'), return_value_
 Function('PLearn::getDataSetHelp', 'plearn/db/getDataSet.h')
 Function('PLearn::getDataSet', 'plearn/db/getDataSet.h')
 
-# TVec...
+
+# Vector and matrix classes.
 
 p_tvec = Template('PLearn::TVec', 'plearn/math/TVec.h')
-exclude(p_tvec.operator['<<'])
+exclude_stuff(p_tvec)
 exclude(p_tvec.operator['char*'])
-# Also exclude these temporarily until we figure out
-# how to map them to Python iterators
-exclude(p_tvec.begin)
-exclude(p_tvec.end)
-exclude(p_tvec.top)
-exclude(p_tvec.firstElement)
-exclude(p_tvec.lastElement)
-exclude(p_tvec.front)
-exclude(p_tvec.back)
-exclude(p_tvec.first)
-exclude(p_tvec.last)
-exclude(p_tvec.data)
+p_tvec('double', 'TVec_double')
+p_tvec('float', 'TVec_float')
 
-p_tvec('double')
-p_tvec('float')
+p_vmat = Class('PLearn::VMat', 'plearn/vmat/VMat.h')
+exclude_stuff(p_vmat)
+
+# VMatrix.h only includes forward declarations for PLearn::Ker
+# and PLearn::Func, but that isn't enough to get
+# the Pyste-generated wrapper to compile. Disabled for now.
+#p_vmatrix = Class('PLearn::VMatrix', 'plearn/vmat/VMatrix.h')
+#exclude_stuff(p_vmatrix)
+#set_our_policy(p_vmatrix)
+
 
 # Learners...
 
 p_plearner = Class('PLearn::PLearner', 'plearn_learners/generic/PLearner.h')
+exclude_stuff(p_plearner)
+set_our_policy(p_plearner)
 
-set_policy(p_plearner.deepCopy, return_value_policy(manage_new_object))
-set_policy(p_plearner.getOptionList, return_internal_reference())
-set_policy(p_plearner._getOptionList_, return_internal_reference())
-set_policy(p_plearner._new_instance_for_typemap_, return_value_policy(manage_new_object))
-exclude(p_plearner.operator['<<'])
-exclude(p_plearner.operator['>>'])
-
-p_constantregressor = Class('PLearn::ConstantRegressor',
-                            'plearn_learners/regressors/ConstantRegressor.h')
-set_policy(p_constantregressor.deepCopy, return_value_policy(manage_new_object))
-set_policy(p_constantregressor.getOptionList, return_internal_reference())
-set_policy(p_constantregressor._getOptionList_, return_internal_reference())
-set_policy(p_constantregressor._new_instance_for_typemap_, return_value_policy(manage_new_object))
-exclude(p_constantregressor.operator['<<'])
-exclude(p_constantregressor.operator['>>'])
+p_constantregressor = Class('PLearn::ConstantRegressor', 'plearn_learners/regressors/ConstantRegressor.h')
+exclude_stuff(p_constantregressor)
+set_our_policy(p_constantregressor)
