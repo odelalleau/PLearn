@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilterSplitter.cc,v 1.5 2004/09/21 13:12:16 tihocan Exp $ 
+   * $Id: FilterSplitter.cc,v 1.6 2004/11/03 16:10:03 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pierre-Jean L Heureux
@@ -48,16 +48,14 @@ namespace PLearn {
 using namespace std;
 
 FilterSplitter::FilterSplitter() 
-  :Splitter()
-  /* ### Initialize all fields to their default value */
+: report_progress(false)
 {
-  // ...
-
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
 }
 
-PLEARN_IMPLEMENT_OBJECT(FilterSplitter, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(FilterSplitter,
+    "Each set of this Splitter is a FilteredVMatrix of the dataset.",
+    ""
+);
 
 void FilterSplitter::declareOptions(OptionList& ol)
 {
@@ -71,7 +69,9 @@ void FilterSplitter::declareOptions(OptionList& ol)
 		"array of strings: The VPL code for each set that should produce a single scalar\n"
 		", indicating whether we should keep the line (if the produced scalar is non zero)\n"
 		"or throw it away (if it's zero)");
-  // ...
+
+  declareOption(ol, "report_progress", &FilterSplitter::report_progress, OptionBase::buildoption,
+      "Whether to report or not the progress in filtering.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -122,7 +122,7 @@ TVec<VMat> FilterSplitter::getSplit(int k)
   // ### Build and return the kth split
   TVec<VMat> splitsets;
   for (int i=0; i<filters.length(); i++) {
-    splitsets.append(new FilteredVMatrix(dataset, filters[i], newFilename("/tmp", "filtered_vmatrix_temp_dir_", true)));
+    splitsets.append(new FilteredVMatrix(dataset, filters[i], newFilename("/tmp", "filtered_vmatrix_temp_dir_", true), report_progress));
   }
   return splitsets;
 }

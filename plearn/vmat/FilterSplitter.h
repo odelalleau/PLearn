@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilterSplitter.h,v 1.2 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: FilterSplitter.h,v 1.3 2004/11/03 16:10:03 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pierre-Jean L Heureux
@@ -70,7 +70,7 @@ public:
   //! The string that you would normally put inside the filter
   TVec<string> filters;
 
-  
+  bool report_progress;
 
   // ****************
   // * Constructors *
