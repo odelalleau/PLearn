@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.52 2004/11/24 18:09:42 tihocan Exp $
+   * $Id: fileutils.cc,v 1.53 2004/12/10 17:14:51 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -829,8 +829,11 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                 if (!syntax_ok)
                   PLERROR("$GETENV syntax is: $GETENV{expr}");
                 istrstream expr_stream(expr.c_str());
-                string var = getenv(readAndMacroProcess(expr_stream, variables).c_str());
-                text += var;
+                string var_name = readAndMacroProcess(expr_stream, variables);
+                char* var = getenv(var_name.c_str());
+                if (!var)
+                  PLERROR("In readAndMacroProcess - The environment variable %s is not defined", var_name.c_str());
+                text += string(var);
               }
               break;
 
