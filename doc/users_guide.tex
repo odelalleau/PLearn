@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 2002 by Pascal Vincent
 %%
-%%  $Id: users_guide.tex,v 1.7 2003/02/05 21:53:25 ducharme Exp $
+%%  $Id: users_guide.tex,v 1.8 2003/02/06 21:37:06 ducharme Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
@@ -79,11 +79,7 @@ http://plearn.sourceforge.net/plearncvs.html).
 You then can download the PLearn library through anonymous (pserver) cvs
 using the following instructions:
 
-%\begin{itemize}
-%\item cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn login
-%\item press the [enter] key when asked for a password
-%\item cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn co PLearn
-%\end{itemize}
+\topsep=0mm
 \begin{verbatim}
   cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn login
   cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn co PLearn
@@ -177,9 +173,7 @@ Calling \verb!vmat gendef datasetname 10 20! will first generate a stats.def fil
 Use \verb!vmat genvmat datasetname (binned\{num\} | onehot\{num\} | normalized)! to generate automatically a vmat that will do the same operation on all fields.
 
 Here's an example of a .vmat file:
-
 \begin{verbatim}
-
 <SOURCES>
 /u/Gaston/some_source.amat /u/Gaston/some_source3.sdb
 </SOURCES>
@@ -208,7 +202,6 @@ MEAN(claim) :claim.mean
 </POSTFILTER>
 
 <PRECOMPUTE> dmat </PRECOMPUTE>
-
 \end{verbatim}
 
 \subsubsection{SOURCES}
@@ -308,7 +301,6 @@ In addition, the {\tt .metadata} directory associated with a {\tt .vmat} may con
 \section{Directory and file structure for experiments}
 
 \begin{verbatim}
-
 /home/exp/<project>/<task>/
   - dataset.aliases
   - model.aliases
@@ -344,13 +336,11 @@ In addition, the {\tt .metadata} directory associated with a {\tt .vmat} may con
   <trainalias>.sv_<svparams>_<i>.epoch<epoch>.psave
   <trainalias>.sv_<svparams>_<i>.epoch<epoch>.<testalias>.outputs
   <trainalias>.sv_<svparams>_<i>.epoch<epoch>.<testalias>.costs
-  
 \end{verbatim}
 
 And from the old\_plearn command....:
 
 \begin{verbatim}
-
 The 'plearn' program is designed to strongly encourage the following
 directory and file structure for carrying experiments.  Suppose we have a
 root "experiment" directory, EXP, that is to contain all the results of all
@@ -432,10 +422,53 @@ learning) and able to save and test intermediate models, the # stands for
 the 'epoch' number of the model saved (starting at 0).  It will also
 correspond to the data-row number in train.objective and
 <datasetalias>.results
-
-
 \end{verbatim}
 
+\subsection{The new plearn program}
+
+After having compiled the plearn.cc program (located at \$PLEARNDIR/command/plearn.cc)
+using the homemade makefile-like command \verb!pymake! (type \verb!pymake! to see all
+the compilation options), type \verb!plearn help! to have a summary of its options.
+
+To run \verb!plearn!, you need a script file containing all the parameters of your
+experiment.  That script file MUST contain an \verb!Experiment! object (type
+\verb!plearn help Experiment! for more details).
+
+This is an example of what such a script file looks like (training a simple NeuralNet
+on the Letter dataset):
+
+\begin{verbatim}
+Experiment(
+  expdir = "mlp";
+  dataset = AutoVMatrix(specification="letters all normalize");
+  splitter = TrainTestSplitter(test_fraction=.10);
+  save_models = 1;
+
+  learner = NeuralNet(
+    inputsize = 16;
+    outputsize = 26;  # 26 letters
+    targetsize = 1;
+    nhidden = 100;
+    weight_decay = 0;
+    output_transfer_func = "softmax";
+    cost_funcs = [ "NLL", "class_error" ];
+
+    optimizer = GradientOptimizer(
+      start_learning_rate = 0.01;
+      decrease_constant = 0;
+    )
+
+    batch_size = 1;
+    nepochs = 100;
+    save_at_every_epoch = 0;
+    test_costfuncs = 0 [  ];
+    test_every = 1;
+    minibatch_size = 1;
+  )
+)
+\end{verbatim}
+
+Every \verb!Experiment! object must contain ...
 
 \chapter{File formats}
 
@@ -475,13 +508,11 @@ will be written explicitly. This corresponds to true, deep serialization.
 Ex:
 
 \begin{verbatim}
-
 TVec( 4 0 
 *1->Storage(4 [ 1.2 3.5 2.8 5.2 ]) )
 
 TMat( 3 2 2 0 
 *2->Storage(6 [ 0.1 0.2 0.3 0.4 0.5 0.6 ] ) )
-
 \end{verbatim}
 
 For TVec, we have {\em length offset} followed by the storage pointer.
@@ -572,12 +603,6 @@ completely ignored (skipped), so you may format the data as you wish.
 2D Sequences are used exclusively for TMats.
 Notice that it's also possible to make a 1D sequence of 1D sequences, but that's different from a 2D sequence.
 
-
-
-
-%\begin{itemize}
-%\end{itemize}
-
 \subsection{Binary PLearn format for a sequence}
 \label{binary_sequence}
 
@@ -586,7 +611,7 @@ and two-dimensional sequences which have a length and a width.
 
 The following table gives the corresponding header-byte:
 
-\begin{tabular}{|lll|}
+\begin{tabular}{|lll|} \hline
 Type of sequence & byte-order    & Header byte \\ \hline
 one-dimensional  & little-endian & 0x12        \\ 
 one-dimensional  & big-endian    & 0x13        \\ 
@@ -612,8 +637,7 @@ row-major mode for 2D).  Notice that a sequence of a base type, may be
 saved as a {\em generic} sequence (with the {\em element-type} byte {\tt 0xFF})
 
 
-
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l|l|} \hline
 Type of sequence         & Header byte & Followed by \\ \hline
 Generic on little-endian & 0x12        & size as 4-byte little-endian int, \\
                          &             & then binary serialization of the elements \\ \hline

@@ -58,7 +58,7 @@ NeuralNet(
                       # double: the learning rate decrease constant
                       decrease_constant = 0  ;
 
-                      );
+                      )
 
           # int: how many samples to use to estimate the avergage gradient before updating the weights
           # 0 is equivalent to specifying training_set->length() 

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.6 2003/01/29 04:26:58 plearner Exp $
+   * $Id: plearn_main.cc,v 1.7 2003/02/06 21:36:45 ducharme Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -90,7 +90,7 @@ int plearn_main(int argc, char** argv)
                 "You can type 'plearn help xxx' to get a description and the list of build options\n"
                 "for any instantiable PLearn object xxx \n\n"
                 "In addition you can get a list of all instantiable subclasses of the following \n"
-                "base classes yyy by typing 'plearn help yyy \n':"
+                "base classes yyy by typing 'plearn help yyy':\n"
                 "   Learner, Splitter, VMatrix, Optimizer, Kernel, Variable \n\n"
                 "Finally 'plearn help datasets' will print some help on datasets\n" << endl;
             }
