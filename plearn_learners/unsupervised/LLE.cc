@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLE.cc,v 1.3 2004/07/20 13:06:57 tihocan Exp $ 
+   * $Id: LLE.cc,v 1.4 2004/07/20 22:00:07 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -50,8 +50,9 @@ using namespace std;
 // LLE //
 /////////
 LLE::LLE() 
-: knn(5),
-  reconstruct_coeff(1e6),
+: classical_induction(true),
+  knn(5),
+  reconstruct_coeff(-1),
   regularizer(1e-6)
 {
   lle_kernel = new LLEKernel();
@@ -74,6 +75,10 @@ void LLE::declareOptions(OptionList& ol)
   declareOption(ol, "knn", &LLE::knn, OptionBase::buildoption,
       "The number of nearest neighbors considered.");
 
+  declareOption(ol, "classical_induction", &LLE::classical_induction, OptionBase::buildoption,
+      "If set to 1, then the out-of-sample extension of LLE will be the classical\n"
+      "one, corresponding to an infinite 'reconstruct_coeff' (whose value is ignored).");
+
   declareOption(ol, "reconstruct_coeff", &LLE::reconstruct_coeff, OptionBase::buildoption,
       "The weight of K' in the weighted sum of K' and K'' (see LLEKernel).");
 
@@ -93,7 +98,7 @@ void LLE::declareOptions(OptionList& ol)
       "Will be set at build time.");
 
   redeclareOption(ol, "normalize", &LLE::normalize, OptionBase::nosave,
-      "Will be set at construction time.");
+      "Will be set at construction and build time.");
 
   redeclareOption(ol, "ignore_n_first", &LLE::ignore_n_first, OptionBase::nosave,
       "Will be set to 1 at construction time.");
@@ -114,9 +119,15 @@ void LLE::build()
 ////////////
 void LLE::build_()
 {
+  if (classical_induction) {
+    lle_kernel->reconstruct_coeff = -1;
+    normalize = 2;
+  } else {
+    lle_kernel->reconstruct_coeff = this->reconstruct_coeff;
+    normalize = 1;
+  }
   lle_kernel->knn = this->knn;
   lle_kernel->regularizer = this->regularizer;
-  lle_kernel->reconstruct_coeff = this->reconstruct_coeff;
   lle_kernel->report_progress = this->report_progress;
   lle_kernel->build();
   this->kernel = (Kernel*) lle_kernel;

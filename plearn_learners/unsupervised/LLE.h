@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLE.h,v 1.2 2004/07/19 13:37:40 tihocan Exp $ 
+   * $Id: LLE.h,v 1.3 2004/07/20 22:00:07 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -71,6 +71,7 @@ public:
   // * public build options *
   // ************************
 
+  bool classical_induction;
   int knn;
   real reconstruct_coeff;
   real regularizer;
