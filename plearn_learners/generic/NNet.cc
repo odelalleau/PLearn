@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.29 2003/11/24 20:43:04 tihocan Exp $
+   * $Id: NNet.cc,v 1.30 2003/11/27 14:47:24 lheureup Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -140,7 +140,10 @@ void NNet::declareOptions(OptionList& ol)
                 "      mse_onehot (for classification)\n"
                 "      NLL (negative log likelihood -log(p[c]) for classification) \n"
                 "      class_error (classification error) \n"
-                "      stable_cross_entropy (for binary classification)\n"
+                "      multiclass_error\n"
+                "      cross_entropy (for binary classification)\n"
+                "      stable_cross_entropy (more accurate backprop and possible regularization, for binary classification)\n"
+                "      lift_output (not a real cost function, just the output for lift computation)\n"
                 "    The first function of the list will be used as \n"
                 "    the objective function to optimize \n"
                 "    (possibly with an added weight decay penalty) \n");
