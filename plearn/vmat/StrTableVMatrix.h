@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StrTableVMatrix.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: StrTableVMatrix.h,v 1.2 2002/08/09 01:54:40 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,7 +65,7 @@ public:
   virtual string getValString(int col, real val) const;
   
   //! returns element as a string, even if its a number
-  string getString(int row,int col) const;
+  virtual string getString(int row,int col) const;
 };
 
 %> // end of namespace PLearn

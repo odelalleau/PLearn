@@ -35,12 +35,10 @@
 
 
  
-
-/* *******************************************************      
-   * $Id: VMat.cc,v 1.2 2002/07/31 01:41:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
-
+/*
+* $Id: VMat.cc,v 1.3 2002/08/09 01:54:40 jkeable Exp $
+* This file is part of the PLearn library.
+******************************************************* */
 #include "VMat.h"
 #include "TMat_maths.h"
 #include "Array.h"
@@ -1195,6 +1193,11 @@ string VMatrix::getValString(int col, real val) const
 real VMatrix::getStringVal(int col,const string & str) const
 {
   return MISSING_VALUE;
+}
+
+string VMatrix::getString(int row,int col) const
+{
+  return tostring(get(row,col));
 }
 
 void VMatrix::setMetaDataDir(const string& the_metadatadir) 

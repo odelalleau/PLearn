@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.3 2002/08/08 22:54:39 morinf Exp $
+   * $Id: VMat.h,v 1.4 2002/08/09 01:54:40 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -220,6 +220,9 @@ public:
   
   //! return value associated with a string. Default returns NaN
   virtual real getStringVal(int col, const string & str) const;
+
+  //! returns element as a string, even if its a number (which is always the case unless class is StrTableVMatrix
+  virtual string getString(int row,int col) const;
 
     virtual void computeStats(); 
     bool hasStats() const { return fieldstats.size()>0; }
