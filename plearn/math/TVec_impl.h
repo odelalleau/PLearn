@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TVec_impl.h,v 1.2 2004/05/14 17:49:13 chrish42 Exp $
+   * $Id: TVec_impl.h,v 1.3 2004/05/31 13:41:22 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -58,15 +58,34 @@ using namespace std;
 // *****************************
 // **** Fonctions pour TVec ****
 // *****************************
+
+// Deep copying
+template<class T>
+void TVec<T>::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  deepCopyField(storage, copies);
+}
+
+template<class T>
+TVec<T> TVec<T>::deepCopy(map<const void*, void*>& copies) const
+{
+  // First do a shallow copy
+  TVec<T> deep_copy = *this;
+  // Transform the shallow copy into a deep copy
+  deep_copy.makeDeepCopyFromShallowCopy(copies);
+  // return the completed deep_copy
+  return deep_copy;
+}
+
 template <class T>
-inline TVec<T> deepCopy(const TVec<T> source)
+inline TVec<T> deepCopy(const TVec<T>& source)
 { 
   CopiesMap copies; //!<  create empty map
   return deepCopy(source, copies);
 }
 
 template <class T>
-inline TVec<T> deepCopy(const TVec<T> source, CopiesMap copies)
+inline TVec<T> deepCopy(const TVec<T>& source, CopiesMap& copies)
 { 
   return source.deepCopy(copies);
 }

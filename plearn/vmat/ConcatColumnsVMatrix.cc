@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.cc,v 1.8 2004/05/21 20:16:08 tihocan Exp $
+   * $Id: ConcatColumnsVMatrix.cc,v 1.9 2004/05/31 13:41:30 chapados Exp $
    ******************************************************* */
 
 #include "ConcatColumnsVMatrix.h"
@@ -50,12 +50,12 @@ PLEARN_IMPLEMENT_OBJECT(ConcatColumnsVMatrix, "ONE LINE DESCR", "NO HELP");
 ConcatColumnsVMatrix::ConcatColumnsVMatrix(Array<VMat> the_array)
 : array(the_array),
   no_duplicate_fieldnames(false)
-{ if (array.size()) build_(); };
+{ if (array.size()) build_(); }
 
 ConcatColumnsVMatrix::ConcatColumnsVMatrix(VMat d1, VMat d2)
 : array(d1, d2),
   no_duplicate_fieldnames(false)
-{ build_(); };
+{ build_(); }
 
 
 void ConcatColumnsVMatrix::declareOptions(OptionList &ol)

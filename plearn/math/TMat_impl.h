@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_impl.h,v 1.7 2004/05/14 17:49:13 chrish42 Exp $
+   * $Id: TMat_impl.h,v 1.8 2004/05/31 13:41:22 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -99,24 +99,6 @@ TMat<T> TVec<T>::toMat(int newlength, int newwidth) const
   return tm;
 }
 
-
-// Deep copying
-template<class T>
-void TVec<T>::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
-{
-  deepCopyField(storage, copies);
-}
-
-template<class T>
-TVec<T> TVec<T>::deepCopy(map<const void*, void*>& copies) const
-{
-  // First do a shallow copy
-  TVec<T> deep_copy = *this;
-  // Transform the shallow copy into a deep copy
-  deep_copy.makeDeepCopyFromShallowCopy(copies);
-  // return the completed deep_copy
-  return deep_copy;
-}
 
 template <class T>
 void TVec<T>::input(istream& in) const
