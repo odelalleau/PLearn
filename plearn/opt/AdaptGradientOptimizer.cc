@@ -38,15 +38,12 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.cc,v 1.13 2003/10/07 20:50:29 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.cc,v 1.14 2003/10/08 18:29:43 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-// TODO: check all includes are needed
 #include "AdaptGradientOptimizer.h"
-#include "AsciiVMatrix.h" // TODO Remove later
-#include "TMat_maths.h"
-#include "DisplayUtils.h"
+#include "SumOfVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -130,11 +127,24 @@ void AdaptGradientOptimizer::declareOptions(OptionList& ol)
                   "    a coefficient for learning rate adaptation, use may depend on the kind of adaptation\n");
 
     declareOption(ol, "decrease_constant", &AdaptGradientOptimizer::decrease_constant, OptionBase::buildoption, 
-                  "    the learning rate decrease constant \n");
-    // TODO: be more explicit here
+                  "    the learning rate decrease constant : each update of the weights is scaled by the\n\
+         coefficient 1/(1 + stage * decrease_constant\n");
 
     declareOption(ol, "learning_rate_adaptation", &AdaptGradientOptimizer::learning_rate_adaptation, OptionBase::buildoption, 
-                  "    the way the learning rates evolve\n");
+                  "    the way the learning rates evolve :\n\
+          - 0  : no adaptation\n\
+          - 1  : basic adaptation :\n\
+                   if the gradient of the weight i has the same sign for two consecutive epochs\n\
+                     then lr(i) = lr(i) + lr(i) * adapt_coeff1\n\
+                     else lr(i) = lr(i) - lr(i) * adapt_coeff2\n\
+          - 2  : ALAP1 formula. See code (not really tested)\n\
+          - 3  : variance-dependent learning rate :\n\
+                   let avg(i) be the exponential average of the variance of the gradient of the weight i\n\
+                   over the past epochs, where the coefficient for the exponential average is adapt_coeff1\n\
+                   (adapt_coeff1 = 0 means no average)\n\
+                   if avg(i) is low (ie < average of all avg(j))\n\
+                     then lr(i) = max_learning_rate\n\
+                     else lr(i) = min_learning_rate\n");
 
     declareOption(ol, "adapt_every", &AdaptGradientOptimizer::adapt_every, OptionBase::buildoption, 
                   "    the learning rate adaptation will occur after adapt_every updates of the weights (0 means after each epoch)\n");
@@ -144,20 +154,12 @@ void AdaptGradientOptimizer::declareOptions(OptionList& ol)
 
 PLEARN_IMPLEMENT_OBJECT(AdaptGradientOptimizer, "ONE LINE DESCR", "NO HELP");
 
-// TODO: remove them all
-static Vec store_cost;
-static Vec store_var_grad;
-static Vec store_grad;
-static Vec store_quad_grad;
-static int count_updates = 0;
-
 ////////////
 // build_ //
 ////////////
 void AdaptGradientOptimizer::build_(){
   early_stop = false;
-  cost_stage = 0;
-  count_updates = 0; // TODO remove later
+  count_updates = 0;
   learning_rate = start_learning_rate;
   SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
   stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
@@ -168,13 +170,13 @@ void AdaptGradientOptimizer::build_(){
     store_var_grad.clear();
     store_grad.resize(n);
     store_quad_grad.resize(n);
-    store_grad.clear(); // TODO see if we keep those ones
+    store_grad.clear();
     store_quad_grad.clear();
     learning_rates.resize(n);
     gradient.resize(n);
     tmp_storage.resize(n);
-    old_evol.resize(n); // TODO I think we do keep this one
-    oldgradientlocations.resize(params.size()); // TODO same here
+    old_evol.resize(n);
+    oldgradientlocations.resize(params.size());
     meancost.resize(cost->size());
     meancost.clear();
     learning_rates.fill(start_learning_rate);
@@ -191,7 +193,6 @@ void AdaptGradientOptimizer::build_(){
         Optimizer::computeOppositeGradient(this, tmp_storage);
         break;
       case 3:
-        // TODO See what we do here
         break;
       default:
         break;
@@ -223,17 +224,12 @@ void AdaptGradientOptimizer::adaptLearningRateALAP1(
 // adaptLearningRateBasic //
 ////////////////////////////
 void AdaptGradientOptimizer::adaptLearningRateBasic(
-    Vec learning_rates,
     Vec old_params,
     Vec old_evol) {
-// TODO Remove later
   Var* array = params->data();
   int j = 0;
   int k;
   real u; // used to store old_evol[j]
-  real min_lr = min_learning_rate; // / (1 + stage * decrease_constant);
-  real max_lr = max_learning_rate; // / (1 + stage * decrease_constant);
-  // TODO make sure this is the right thing to do
   for (int i=0; i<params.size(); i++) {
     k = j;
     for (; j<k+array[i]->nelems(); j++) {
@@ -266,10 +262,10 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
         learning_rates[j] -= learning_rates[j] * adapt_coeff2;
       }
      
-      if (learning_rates[j] < min_lr) {
-          learning_rates[j] = min_lr;
-      } else if (learning_rates[j] > max_lr) {
-        learning_rates[j] = max_lr;
+      if (learning_rates[j] < min_learning_rate) {
+          learning_rates[j] = min_learning_rate;
+      } else if (learning_rates[j] > max_learning_rate) {
+        learning_rates[j] = max_learning_rate;
       }
     }
   }
@@ -282,7 +278,7 @@ void AdaptGradientOptimizer::adaptLearningRateVariance() {
   real moy_var = 0;
   real exp_avg_coeff = 0;
   if (stage > 1) {
-    exp_avg_coeff = adapt_coeff1; // TODO document this feature
+    exp_avg_coeff = adapt_coeff1;
   }
   for (int j=0; j<params.nelems(); j++) {
     // Compute variance
@@ -309,17 +305,6 @@ void AdaptGradientOptimizer::adaptLearningRateVariance() {
   }
 }
 
-/////////////////
-// computeCost //
-/////////////////
-void AdaptGradientOptimizer::computeCost() {
-  meancost /= real(stage - cost_stage);
-  cout << stage << " : " << meancost << endl;
-  early_stop = measure(stage,meancost);
-  meancost.clear();
-  cost_stage = stage;
-}
-
 //////////////
 // optimize //
 //////////////
@@ -336,10 +321,8 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
 
   bool adapt = (learning_rate_adaptation != 0);
   stochastic_hack = stochastic_hack && !adapt;
-  stochastic_hack = false; // TODO Remove later
   if (adapt_every == 0) {
     adapt_every = nstages;  // the number of steps to complete an epoch
-    // TODO check this is true
   }
 
   // Big hack for the special case of stochastic gradient, to avoid doing an explicit update
@@ -356,13 +339,11 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
   for (; !early_stop && stage<stage_max; stage++) {
 
     // Take into account the learning rate decrease
-    // TODO Incorporate it into other learning rate adaptation kinds ?
+    // This is actually done during the update step, except when there is no
+    // learning rate adaptation
     switch (learning_rate_adaptation) {
       case 0:
         learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
-        break;
-      case 3:
-        // TODO fill ?
         break;
       default:
         break;
@@ -375,19 +356,14 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
       cost->gradient[0] = -learning_rate;
 
     proppath.fbprop();
-
     meancost += cost->value;
-
-    // TODO Put back in the switch below when no more gradient stats
-    // are collected ?
-    params.copyGradientTo(gradient);
 
     // Actions to take after each step, depending on the
     // adaptation method used :
     // - moving along the chosen direction
     // - adapting the learning rate
     // - storing some data
-    real coeff = 1/(1.0 + stage * decrease_constant); // TODO cleaner solution ?
+    real coeff = 1/(1.0 + stage * decrease_constant); // the scaling cofficient
     switch (learning_rate_adaptation) {
       case 0:
         if (!stochastic_hack) {
@@ -395,13 +371,13 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
         }
         break;
       case 1:
-        // params.copyGradientTo(gradient);
-        // TODO Not efficient, write a faster update ?
+        params.copyGradientTo(gradient);
+        // TODO Not really efficient, write a faster update ?
         params.update(learning_rates, gradient, coeff); 
         params.clearGradient();
         break;
       case 2:
-        // params.copyGradientTo(gradient);
+        params.copyGradientTo(gradient);
         adaptLearningRateALAP1(tmp_storage, gradient);
         params.update(learning_rate, gradient);
         tmp_storage << gradient;
@@ -410,11 +386,12 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
       case 3:
         // storing sum and sum-of-squares of the gradient in order to compute
         // the variance later
+        params.copyGradientTo(gradient);
         for (int i=0; i<params.nelems(); i++) {
           store_grad[i] += gradient[i];
           store_quad_grad[i] += gradient[i] * gradient[i];
-          count_updates++;
         }
+        count_updates++;
         params.update(learning_rates, gradient, coeff);
         params.clearGradient();
         break;
@@ -428,11 +405,11 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
         case 0:
           break;
         case 1:
-          adaptLearningRateBasic(learning_rates, tmp_storage, old_evol);
+          adaptLearningRateBasic(tmp_storage, old_evol);
           params.copyTo(tmp_storage);
           break;
         case 2:
-          // TODO really nothing ?
+          // Nothing, the adaptation is after each example
           break;
         case 3:
           adaptLearningRateVariance();

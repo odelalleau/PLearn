@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.h,v 1.8 2003/10/07 20:50:29 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.h,v 1.9 2003/10/08 18:29:43 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,10 +48,7 @@
 #ifndef AdaptGradientOptimizer_INC
 #define AdaptGradientOptimizer_INC
 
-// TODO: check all includes are needed
 #include "Optimizer.h"
-#include "NeuralNet.h"
-#include "SumOfVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -90,8 +87,6 @@ using namespace std;
       int mini_batch;
       int adapt_every;    //!< after how many updates we adapt learning rate
 
-      NeuralNet neural_lr;
-
     private:
 
       bool stochastic_hack; // true when we're computing a stochastic gradient
@@ -101,8 +96,11 @@ using namespace std;
       // used to store the previous weights evolution, it can be used to
       // see how many times a weight has increased / decreased consecutively
       Vec old_evol;
-      Array<Mat> oldgradientlocations; // used for the stochastic hack // TODO: still used ?
-      int cost_stage; // the last stage when cost was computed // TODO: still used ?
+      Array<Mat> oldgradientlocations; // used for the stochastic hack
+      Vec store_var_grad;     // used to store the gradient variance
+      Vec store_grad;         // used to store the gradient
+      Vec store_quad_grad;    // used to store the gradient^2
+      int count_updates;      // used to count how many examples we went through
 
     public: 
 
@@ -156,21 +154,18 @@ using namespace std;
     virtual real optimize();
     virtual bool optimizeN(VecStatsCollector& stats_coll);
 
-    void computeCost();
-
   private:
 
     // Basic learning rate adaptation
     // If grad(i) > 0 : lr(i) = lr(i) + lr(i) * adapt_coeff1
     // else           : lr(i) = lr(i) - lr(i) * adapt_coeff2
     void adaptLearningRateBasic(
-        Vec learning_rates, // TODO remove this since it's a class member
         Vec old_params,
         Vec new_evol);
 
     // ALAP1 formula learning rate adaptation
     // lr = lr + adapt_coeff1 * dot(grad(k-1), grad(k))
-    // TODO Test it
+    // NB: has not been tested
     void adaptLearningRateALAP1(
         Vec old_gradient,
         Vec new_gradient);
