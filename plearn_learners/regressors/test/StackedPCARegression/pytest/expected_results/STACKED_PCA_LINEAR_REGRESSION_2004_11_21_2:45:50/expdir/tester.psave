@@ -1,7 +1,7 @@
 PTester(
-expdir = "PYTEST__STACKED_PCA_LINEAR_REGRESSION_2004_11_21_2_45_50__RESULTS:expdir" ;
+expdir = "PYTEST__STACKED_PCA_LINEAR_REGRESSION_2004_11_21_2_45_50__RESULTS:expdir/" ;
 dataset = *1 ->AutoVMatrix(
-specification = "PYTEST__STACKED_PCA_LINEAR_REGRESSION_2004_11_21_2_45_50__RESULTS:data.amat" ;
+specification = "data.amat" ;
 load_in_memory = 0 ;
 writable = 0 ;
 length = 200 ;
