@@ -8,19 +8,15 @@ from plearn.pyplearn.PyPLearnObject  import PyPLearnObject
 
 class Cluster(PyPLearnObject):
     class Defaults:            
-        expdir_pattern           = "expdir_.*"
         command_format           = 'cluster --execute "%s" --force --wait --duree=120h'
         max_nmachines            = 15
         sleep_time               = 90
         logdir_path              = "LOGS"
-        wait_for_expdir_creation = True
+        provide_expdirs          = True
         popen_instances          = list
 
     def dispatch( self, program_call, arguments_oracle ):
         ## if not isinstance(arguments_oracle, ArgumentsOracle): raise TypeError
-
-        if self.wait_for_expdir_creation:
-            Xperiment.log_generated_expdirs( enabled = True ) 
 
         ## Frees all tasks if a keyboard interrupt is caught
         try:
@@ -28,20 +24,14 @@ class Cluster(PyPLearnObject):
             ## formatted string representing the program arguments.
             for arguments in arguments_oracle:
 
+                if self.provide_expdirs: 
+                    arguments = "%s expdir=%s" % ( arguments, Xperiment.generate_expdir() )
+                    time.sleep( 1 ) ## Making sure the next expdir will be
+                                    ## generated at another 'time', i.e. on
+                                    ## another second                
+                                           
                 ## Using the arguments to build the cluster command and launch the process.
                 self.dispatch_task( program_call, arguments )
-
-                ## This hack is a turnaround to the cluster command bug of
-                ## possibly returning before the task is actually launched
-                if self.wait_for_expdir_creation:
-                    Xperiment.wait_for_expdir_creation( 2, lambda : sys.stderr.write(".") )
-                    current_count = count_expdirs( self.expdir_pattern )
-                    while current_count == expdir_count:
-                        sys.stderr.write(".")
-                        time.sleep(2)
-                        current_count = count_expdirs( self.expdir_pattern )
-                    print
-                    expdir_count = current_count
 
                 message = "Using %d machines or more; waiting ." % self.max_nmachines
                 while ( machines_used_by_user() >= self.max_nmachines ):
@@ -61,7 +51,7 @@ class Cluster(PyPLearnObject):
 
         except KeyboardInterrupt:
             sys.stderr.write("\nInterrupted by user.\n")
-            cluster_free()
+            self.free( )
 
         if self.wait_for_expdir_creation:
             Xperiment.log_generated_expdirs( enabled = False )
@@ -83,11 +73,25 @@ class Cluster(PyPLearnObject):
         self.popen_instances.append( Popen4(cluster_cmd) )        
         print cluster_cmd
 
+    def free( self ):
+        try:
+            cluster_free() ## The following currently doesn't work for
+                           ## lisa's cluster: cluster_free is a patch
+            
+            for task in self.popen_instances:
+                try:
+                    os.kill( task.pid, signal.SIGTERM )
+                except OSError:
+                    pass
+            sys.stderr.write("\nDone.\n")
+        except KeyboardInterrupt:
+            sys.stderr.write( "\nCan not interrupt Cluster.free() please wait...\n" )
+            self.free( )
+
     def join_prog_and_arguments( self, program_call, arguments ):
         return " ".join([ program_call, arguments ])
 
-        
-                        
+
 def cluster_command( raw_command, logdir_path = None, format = Cluster.Defaults.command_format ):
     processed_cmd = raw_command
 
@@ -106,12 +110,6 @@ def cluster_command( raw_command, logdir_path = None, format = Cluster.Defaults.
     ## Enclosing the command in a cluster call
     cluster_cmd = format % processed_cmd
     return cluster_cmd
-
-def count_expdirs( expdir_pattern = Cluster.Defaults.expdir_pattern ):
-    xpdirs = [ exp for exp in os.listdir( os.getcwd() )
-               if re.search( expdir_pattern, exp ) is not None
-               ]
-    return len(xpdirs)
 
 def cluster_free( ):
     cl = command_output( 'cluster --list | grep %s | grep -v cpu'
@@ -158,8 +156,7 @@ if __name__ == '__main__':
     cporacle.arguments_joining_token = "_"    
 
     cluster = Cluster( command_format = "%s",
-                       logdir_path    = "LOGS_MKDIR",
-                       expdir_pattern = "first=.*"  )    
+                       logdir_path    = "LOGS_MKDIR" )    
     cluster.dispatch( "mkdir", cporacle )
     print "## End of mkdir dispatch"
 
