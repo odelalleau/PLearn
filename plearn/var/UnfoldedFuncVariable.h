@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.h,v 1.3 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: UnfoldedFuncVariable.h,v 1.4 2004/02/22 17:44:35 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,7 +65,7 @@ public:
   TVec<VarArray> f_paths; // the duplicates of f prop. path for each input/output pair: inputs[i]->outputs[i]
 
 public:
-  //! Sum_{i=0 to n_unfold} f(i-th row of input_matrix)
+  //! concatenate_{i=0 to n_unfold} f(i-th row of input_matrix)
   UnfoldedFuncVariable(Var inputmatrix, Func the_f);
     
   PLEARN_DECLARE_OBJECT(UnfoldedFuncVariable);
