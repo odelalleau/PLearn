@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.h,v 1.1 2004/03/16 02:25:34 yoshua Exp $
+   * $Id: DatedJoinVMatrix.h,v 1.2 2004/03/16 14:22:27 yoshua Exp $
    ******************************************************* */
 
 // Authors: *Yoshua Bengio*
@@ -61,7 +61,7 @@ protected:
   // * protected options *
   // *********************
 
-  Vec master_key;
+  Vec slave_row;
   Vec slave_key;
   Maptype mp; // maps a key to a list of row indices in the slave
 
@@ -85,9 +85,6 @@ public:
   string master_date_interval_start_field_name;
   string master_date_interval_end_field_name;
   
-  // ### declare public option fields (such as build options) here
-  // ...
-
   // ****************
   // * Constructors *
   // ****************

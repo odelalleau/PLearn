@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.cc,v 1.1 2004/03/16 02:25:34 yoshua Exp $
+   * $Id: DatedJoinVMatrix.cc,v 1.2 2004/03/16 14:22:27 yoshua Exp $
    ******************************************************* */
 
 // Authors: *Yoshua Bengio*
@@ -48,7 +48,8 @@ using namespace std;
 
 
 DatedJoinVMatrix::DatedJoinVMatrix()
-  :inherited()
+  :inherited(),slave_date_field_index(-1),master_date_interval_start_field_index(-1),
+   master_date_interval_end_field_index(-1)
 {
 }
 
@@ -67,7 +68,9 @@ PLEARN_IMPLEMENT_OBJECT(DatedJoinVMatrix,
 
 void DatedJoinVMatrix::getRow(int i, Vec v) const
 {
-  // ...
+  if (!master || !slave || slave_key_indices.length()==0) // etc...
+    PLERROR("DatedJoinVMatrix: object was not build properly!")
+
 }
 
 void DatedJoinVMatrix::declareOptions(OptionList& ol)
@@ -168,11 +171,73 @@ void DatedJoinVMatrix::build_()
   if (master && slave) // we can't really build if we don't have them
   {
     // convert field names into indices
+    // * get master key indices
     if (master_key_names.length()>0)
     {
       master_key_indices.resize(master_key_names.length());
       for (int i=0;i<master_key_names.length();i++)
-        master_key_indices[i] = master->
+        master_key_indices[i] = master->getFieldIndex(master_key_names[i]);
+    } 
+    else if (master_key_indices.length()==0)
+    {
+      if (slave_key_names.length()>0)
+      {
+        master_key_indices.resize(slave_key_names.length());
+        for (int i=0;i<slave_key_names.length();i++)
+          master_key_indices[i] = master->getFieldIndex(slave_key_names[i]);
+      }
+      else PLERROR("DatedJoinVMatrix: No key names were provided and no master_key_indices were provided!");
+    }
+    // * get slave key indices
+    if (slave_key_names.length()>0)
+    {
+      slave_key_indices.resize(slave_key_names.length());
+      for (int i=0;i<slave_key_names.length();i++)
+        slave_key_indices[i] = slave->getFieldIndex(slave_key_names[i]);
+    } 
+    else if (slave_key_indices.length()==0)
+    {
+      if (master_key_names.length()>0)
+      {
+        slave_key_indices.resize(master_key_names.length());
+        for (int i=0;i<slave_key_names.length();i++)
+          slave_key_indices[i] = slave->getFieldIndex(master_key_names[i]);
+      }
+      else PLERROR("DatedJoinVMatrix: No key names were provided and no slave_key_indices were provided!");
+    }
+    // * get slave field indices
+    if (slave_field_names.length()>0)
+    {
+      slave_field_indices.resize(slave_field_names.length());
+      for (int i=0;i<slave_field_names.length();i++)
+        slave_field_indices[i] = slave->getFieldIndex(slave_field_names[i]);
+    } 
+    else PLERROR("DatedJoinVMatrix: No slave_field_names were provided and no slave_field_indices were provided!");
+    // * get slave date field index
+    if (slave_date_field_name!="")
+      slave_date_field_index = slave->getFieldIndex(slave_date_field_name);
+    else if (slave_date_field_index<0)
+      PLERROR("DatedJoinVMatrix: No slave_date_field_name was provided and no slave_date_field_index was provided!");
+    // * get master date interval start field index
+    if (master_date_interval_start_field_name!="")
+      master_date_interval_start_field_index = slave->getFieldIndex(master_date_interval_start_field_name);
+    else if (master_date_interval_start_field_index<0)
+      PLERROR("DatedJoinVMatrix: No master_date_interval_start_field_name was provided and no master_date_interval_start_field_index was provided!");
+    // * get master date interval end field index
+    if (master_date_interval_end_field_name!="")
+      master_date_interval_end_field_index = slave->getFieldIndex(master_date_interval_end_field_name);
+    else if (master_date_interval_end_field_index<0)
+      PLERROR("DatedJoinVMatrix: No master_date_interval_end_field_name was provided and no master_date_interval_end_field_index was provided!");
+
+    // INDEX THE SLAVE
+    slave_key.resize(slave_key_indices.length());
+    slave_row.resize(slave.width());
+    for (int i=0;i<slave.length();i++)
+    {
+      slave->getRow(i,slave_row);
+      for (int j=0;j<slave_key_indices.size();j++)
+        slave_key[j] = slave_row[slave_key_indices[j]];
+      mp.insert(make_pair(slave_key,i));
     }
   }
 }
@@ -188,14 +253,16 @@ void DatedJoinVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copi
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("DatedJoinVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(slave_row, copies);
+  deepCopyField(slave_key, copies);
+  deepCopyField(master, copies);
+  deepCopyField(slave, copies);
+  deepCopyField(master_key_indices, copies);
+  deepCopyField(slave_key_indices, copies);
+  deepCopyField(master_key_names, copies);
+  deepCopyField(slave_key_names, copies);
+  deepCopyField(slave_field_indices, copies);
+  deepCopyField(slave_field_names, copies);
 }
 
 } // end of namespace PLearn
