@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: IntVecFile.cc,v 1.2 2003/09/10 00:09:09 chapados Exp $
+   * $Id: IntVecFile.cc,v 1.3 2003/09/15 23:45:18 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -186,8 +186,12 @@ void IntVecFile::getVersionAndSize()
   // Assume new-world file format
   endianness_ = char(fgetc(f));
   if (endianness_ != LITTLE_ENDIAN_ORDER &&
-      endianness_ != BIG_ENDIAN_ORDER &&
-      fgetc(f) != 0x00 && fgetc(f) != 0x00)
+      endianness_ != BIG_ENDIAN_ORDER)
+    PLERROR("IntVecFile::getVersionAndSize: "
+            "File format error in file %s Only supported endianness is 'L' or 'B'\n"
+            "Read %c", filename.c_str(),endianness_);
+
+  if(fgetc(f) != 0x00 || fgetc(f) != 0x00)
     PLERROR("IntVecFile::getVersionAndSize: "
             "File format error in file %s", filename.c_str());
 
