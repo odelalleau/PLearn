@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IsomapTangentLearner.cc,v 1.2 2004/07/15 14:26:55 tihocan Exp $ 
+   * $Id: IsomapTangentLearner.cc,v 1.3 2004/07/16 15:24:32 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -72,6 +72,8 @@ void IsomapTangentLearner::declareOptions(OptionList& ol)
   
    declareOption(ol, "knn", &IsomapTangentLearner::knn, OptionBase::buildoption,
                  "Number of nearest neighbor taken into account");
+   declareOption(ol, "n_comp", &IsomapTangentLearner::n_comp, OptionBase::buildoption,
+                 "Number of Components");
    declareOption(ol, "iso_learner", &IsomapTangentLearner::iso_learner, OptionBase::learntoption,
                  "The Isomap Learner");
   
