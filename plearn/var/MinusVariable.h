@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MinusVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
+   * $Id: MinusVariable.h,v 1.4 2004/02/20 17:08:08 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -67,6 +67,10 @@ public:
   virtual void bbprop();
   virtual void symbolicBprop();
 };
+
+inline Var minus(Var v, Var w) {
+      return new MinusVariable(v, w);
+}
 
 %> // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: TimesScalarVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: TimesScalarVariable.h,v 1.3 2004/02/20 17:08:09 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,7 +68,12 @@ public:
   virtual void bprop();
   virtual void symbolicBprop();
   virtual void rfprop();
+
 };
+
+inline Var timesScalar(Var v, Var scalar) {
+  return new TimesScalarVariable(v, scalar);
+}
 
 
 %> // end of namespace PLearn

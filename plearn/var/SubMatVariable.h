@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubMatVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: SubMatVariable.h,v 1.3 2004/02/20 17:08:09 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -75,6 +75,9 @@ public:
   virtual void rfprop();
 };
 
+inline Var subMat(Var v, int i, int j, int l, int w) {
+    return new SubMatVariable(v, i, j, l, w);
+}
 
 %> // end of namespace PLearn
 
