@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.10 2004/08/27 14:59:44 chrish42 Exp $ 
+   * $Id: RunCommand.cc,v 1.11 2004/08/27 21:27:48 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
@@ -64,8 +64,12 @@ void RunCommand::run(const vector<string>& args)
   for (unsigned int i=1; i<args.size(); i++)
     {
       string option = args[i];
-      pair<string,string> name_val = split_on_first(option, "=");
-      vars[name_val.first] = name_val.second;
+      // Skip --foo command-lines options.
+      if (option.size() < 2 || option.substr(0, 2) != "--")
+        {
+          pair<string,string> name_val = split_on_first(option, "=");
+          vars[name_val.first] = name_val.second;
+        }
     }
   PStream pout(&cout);
   //  pout << vars << endl;
@@ -74,13 +78,53 @@ void RunCommand::run(const vector<string>& args)
   string script;
   if (extension == ".pyplearn")
     {
+      bool do_help = false;
+      bool do_dump = false;
       string command = "pyplearn_driver.py '" + scriptfile + '\'';
-      for (i = 1; i < args.size(); i++)
-	{
-	  command += " '";
-	  command += args[i];
-	  command += '\'';
-	}
+
+      // For pyplearn files, we support the following command-line
+      // arguments: --help to print the doc string of the .pyplearn file,
+      // and --dump to show the result of processing the .pyplearn file
+      // instead of running it.
+      if (args[1] == "--help")
+        {
+          do_help = true;
+          command += " --help";
+        }
+      else if (args[1] == "--dump")
+        {
+          do_dump = true;
+        }
+      
+      if (!do_help)
+        {
+          // Supply the PLearn command-line arguments to the pylearn driver
+          // script.
+          for (unsigned int i = 1; i < args.size(); i++)
+            {
+              string option = args[i];
+              // Skip --foo command-lines options.
+              if (option.size() < 2 || option.substr(0, 2) != "--")
+                {
+                  command += " '" + args[i] + '\'';
+                }
+            }
+
+          // Add the standard PLearn variables (DATE, DATETIME, etc.) to the
+          // list of variables used when runing the PLearn preprocessor on the
+          // output of the .pyplearn file to handle $DATE, etc.
+          // in PLearn strings.
+          addFileAndDateVariables(scriptfile, vars);
+
+          // Also add these variables (DATE, etc.) to the pyplearn driver
+          // script so they show up as pyplearn arguments too.
+          for (map<string, string>::const_iterator it = vars.begin();
+               it != vars.end(); ++it)
+            {
+              command += " '" + it->first + '=' + it->second + '\'';
+            }
+          
+        }
 
       Popen popen(command);      
       string script_before_preprocessing;
@@ -91,9 +135,16 @@ void RunCommand::run(const vector<string>& args)
 	  script_before_preprocessing += c;
 	}
 
-      istringstream is(script_before_preprocessing);
-      addFileAndDateVariables(scriptfile, vars);
-      script = readAndMacroProcess(is, vars);
+      if (do_help || do_dump)
+        {
+          cout << script_before_preprocessing;
+          return;
+        }
+      else
+        {
+          istringstream is(script_before_preprocessing);
+          script = readAndMacroProcess(is, vars);
+        }
     }
   else
     {
