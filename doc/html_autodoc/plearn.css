@@ -77,7 +77,7 @@ html>#wrapper	   { width: 800px }
                        border-width: 0px 0px 1px 1px; border-color: #809FFF }
 .generaltable tr.odd              { background-color: #b6c5f2; }
 
-p { padding-right: 15px; padding-left: 15px }
+/* p { padding-right: 15px; padding-left: 15px } */
 
 /* h1  { color: #ccf; background-color: #335; margin: 0; padding: 10px; display:block; } */
 h2  { padding: 0.5em 0px 0; border-bottom: 1px dashed #809FFF; margin: 0 }
