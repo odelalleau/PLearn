@@ -5,7 +5,7 @@ using namespace std;
 
 DERIVEDCLASS::DERIVEDCLASS() 
   :Splitter()
-  /* ### Initialise all fields to their default value */
+  /* ### Initialize all fields to their default value */
 {
   // ...
 
@@ -30,14 +30,6 @@ void DERIVEDCLASS::declareOptions(OptionList& ol)
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
-}
-
-string DERIVEDCLASS::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "DERIVEDCLASS implements a ..."
-    + optionHelp();
 }
 
 void DERIVEDCLASS::build_()
