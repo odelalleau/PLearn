@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.18 2005/02/08 21:36:52 tihocan Exp $
+   * $Id: fileutils.h,v 1.19 2005/02/12 17:13:27 chapados Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -143,21 +143,39 @@ using namespace std;
   int countNonBlankLinesOfFile(const PPath& filename);
 
   //! Peeks the first char after removal of blanks.
-  inline char peekAfterSkipBlanks(PStream& in) {
-    char c;
-    while(isspace(c = in.get()));
-    in.putback(c);
+  inline int peekAfterSkipBlanks(PStream& in) {
+    int c;
+    do {
+      c = in.get();
+    } while (c != EOF && isspace(c));
+    if (c != EOF)
+      in.putback(c);
     return c;
+//  OLD BUGGY VERSION:
+//    char c;
+//    while(isspace(c = in.get()));
+//    in.putback(c);
+//    return c;
   }
 
   //! Peeks the first char after removal of blanks and comments.
-  inline char peekAfterSkipBlanksAndComments(PStream& in) { skipBlanksAndComments(in); return in.peek(); }
+  inline int peekAfterSkipBlanksAndComments(PStream& in)
+  { skipBlanksAndComments(in); return in.peek(); }
 
   //! Gets the first char after removal of blanks.
-  inline char getAfterSkipBlanks(PStream& in) { char c; while(isspace(c = in.get())); return c; }
+  inline int getAfterSkipBlanks(PStream& in) {
+    int c;
+    do {
+      c = in.get();
+    } while (c != EOF && isspace(c));
+    return c;
+// OLD BUGGY VERSION:
+//    char c; while(isspace(c = in.get())); return c;
+  }
 
   //! Gets the first char after removal of blanks and comments.
-  inline char getAfterSkipBlanksAndComments(PStream& in) { skipBlanksAndComments(in); return in.get(); }
+  inline int getAfterSkipBlanksAndComments(PStream& in)
+  { skipBlanksAndComments(in); return in.get(); }
 
   //! Returns a temporary file (or directory) name suitable
   //! for a unique (one time) use. If provided, 'prefix' will

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.62 2005/02/10 01:12:06 tihocan Exp $
+   * $Id: fileutils.cc,v 1.63 2005/02/12 17:13:26 chapados Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -397,7 +397,8 @@ void skipBlanksAndComments(PStream& in)
     }
     c = in.get();
   }
-  in.putback(c);
+  if (c != EOF)
+    in.putback(c);
 }
 
 /////////////////////////
