@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.39 2004/05/26 18:38:44 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.40 2004/05/26 21:23:26 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -70,137 +70,134 @@ namespace PLearn {
 using namespace std;
 
 ConditionalDensityNet::ConditionalDensityNet() 
-/* ### Initialise all fields to their default value here */
-  :
-   nhidden(0),
-   nhidden2(0),
-   weight_decay(0),
-   bias_decay(1e-6),
-   layer1_weight_decay(0),
-   layer1_bias_decay(0),
-   layer2_weight_decay(0),
-   layer2_bias_decay(0),
-   output_layer_weight_decay(0),
-   output_layer_bias_decay(0),
-   direct_in_to_out_weight_decay(0),
-   L1_penalty(false),
-   direct_in_to_out(false),
-   batch_size(1),
-   maxY(1), // if Y is normalized to be in interval [0,1], that would be OK
-   thresholdY(0.1),
-   log_likelihood_vs_squared_error_balance(1),
-   separate_mass_point(1),
-   n_output_density_terms(0),
-   steps_type("sloped_steps"),
-   centers_initialization("data"),
-   curve_positions("uniform"),
-   scale(5.0),
-   unconditional_p0(0.01),
-   mu_is_fixed(true),
-   initial_hardness(1)
-  {
-  }
+: nhidden(0),
+  nhidden2(0),
+  weight_decay(0),
+  bias_decay(1e-6),
+  layer1_weight_decay(0),
+  layer1_bias_decay(0),
+  layer2_weight_decay(0),
+  layer2_bias_decay(0),
+  output_layer_weight_decay(0),
+  output_layer_bias_decay(0),
+  direct_in_to_out_weight_decay(0),
+  L1_penalty(false),
+  direct_in_to_out(false),
+  batch_size(1),
+  maxY(1), // if Y is normalized to be in interval [0,1], that would be OK
+  thresholdY(0.1),
+  log_likelihood_vs_squared_error_balance(1),
+  separate_mass_point(1),
+  n_output_density_terms(0),
+  steps_type("sloped_steps"),
+  centers_initialization("data"),
+  curve_positions("uniform"),
+  scale(5.0),
+  unconditional_p0(0.01),
+  mu_is_fixed(true),
+  initial_hardness(1)
+{}
 
-  PLEARN_IMPLEMENT_OBJECT(ConditionalDensityNet, "Neural Network that Implements a Positive Random Variable Conditional Density", 
-                          "The input vector is used to compute parameters of an output density or output\n"
-                          "cumulative distribution as well as output expected value. The ASSUMPTIONS\n"
-                          "on the generating distribution P(Y|X) are the following:\n"
-                          "  * Y is a single real value\n"
-                          "  * 0 <= Y <= maxY, with maxY a known finite value\n"
-                          "  * the density has a mass point at Y=0\n"
-                          "  * the density is continuous for Y>0\n"
-                          "The form of the conditional cumulative of Y is the following (separate_mass_points=false):\n"
-                          "   P(Y<=y|theta) = (1/Z) (s(a) + sum_i u_i s(b_i) g(y,theta,i))\n"
-                          "or for separate_mass_point=true:\n"
-                          "   P(Y<=y|theta) = sigmoid(a) + (1-sigmoid(a))(sum_i u_i s(b_i) (g(y,theta,i)-g(0,theta,i))/Z\n"
-                          "where s(z)=log(1+exp(z)) is the softplus function, and g is a monotonic function\n"
-                          "in y whose first derivative and indefinite integral are known analytically.\n"
-                          "The u_i are fixed from the unconditional distribution, such that s(b_i)=1 gives\n"
-                          "approximately the right unconditional cumulative function (for infinite hardness):\n"
-                          "  u_i = P(mu_{i-1}<Y<=mu_i) [unconditional].\n"
-                          "The parameters theta of Y's distribution are (a,b_1,b_2,...,c_1,c_2,...,mu_1,mu_2,...),\n"
-                          "which are obtained as the unconstrained outputs (no output transfer function) of a neural network.\n"
-                          "The normalization constant Z is computed analytically easily: (separate_mass_point=false)\n"
-                          "   Z = s(a) + sum_i u_i s(b_i) g(y,theta,i)\n"
-                          "or for separate_mass_point=true:\n"
-                          "   Z = sum_i s(b_i) (g(y,theta,i)-g(0,theta,i))\n"
-                          "The current implementation considers two choices for g:\n"
-                          "  - sigmoid_steps: g(y,theta,i) = sigmoid(h*s(c_i)*(y-mu_i)/(mu_{i+1}-mu_i))\n"
-                          "  - sloped_steps: g(y,theta,i) = 1 + s(s(c_i)*(mu_i-y))-s(s(c_i)*(mu_{i+1}-y))/(s(c_i)*(mu_{i+1}-mu_i))\n"
-                          "where h is the 'initial_hardness' option.\n"
-                          "The density is analytically obtained using the derivative g' of g and\n"
-                          "expected value is analytically obtained using the primitive G of g.\n"
-                          "For the mass point at the origin,\n"
-                          "   P(Y=0|theta) = P(Y<=0|theta).\n"
-                          "(which is simply sigmoid(a) if separate_mass_point).\n"
-                          "For positive values of Y: (separate_mass_point=false)\n"
-                          "   p(y|theta) = (1/Z) sum_i s(b_i) g'(y,theta,i).\n"
-                          "or for separate_mass_point=true:\n"
-                          "   p(y|theta) = (1-sigmoid(a)) (1/Z) sum_i s(b_i) g'(y,theta,i).\n"
-                          "And the expected value of Y is obtained using the primitive: (separate_mass_point=false)\n"
-                          "   E[Y|theta] = (1/Z)*s(a)*M + sum_i u_i s(b_i)(G(M,theta,i)-G(0,theta,i)))\n"
-                          "or for separate_mass_point=true:\n"
-                          "   E[Y|theta] = M - ((sigmoid(a)-(1-sigmoid(a)*(1/Z)*sum_i u_i s(b_i)g(0,theta,i))*M + (1-sigmoid(a))*(1/Z)*sum_i u_i s(b_i)(G(M,theta,i)-G(0,theta,0)))\n"
-                          "Training the model can be done by maximum likelihood (minimizing the log of the\n"
-                          "density) or by minimizing the average of squared error (y-E[Y|theta])^2\n"
-                          "or a combination of the two (with the max_likelihood_vs_squared_error_balance option).\n"
-                          "The step 'centers' mu_i are initialized according to some rule, in the interval [0,maxY]:\n"
-                          " - uniform: at regular intervals in [0,maxY]\n"
-                          " - log-scale: as the exponential of values at regular intervals in [0,log(1+maxY)], minus 1.\n"
-                          "The c_i and b_i are initialized to inverse_softplus(1), and a using the empirical unconditional P(Y=0).\n"
-                          "For the output curve options (outputs_def='L',D','C', or 'S'), the lower_bound and upper_bound\n"
-                          "options of PDistribution are automatically set to 0 and maxY respectively.\n"
-                          );
+PLEARN_IMPLEMENT_OBJECT(ConditionalDensityNet, "Neural Network that Implements a Positive Random Variable Conditional Density", 
+    "The input vector is used to compute parameters of an output density or output\n"
+    "cumulative distribution as well as output expected value. The ASSUMPTIONS\n"
+    "on the generating distribution P(Y|X) are the following:\n"
+    "  * Y is a single real value\n"
+    "  * 0 <= Y <= maxY, with maxY a known finite value\n"
+    "  * the density has a mass point at Y=0\n"
+    "  * the density is continuous for Y>0\n"
+    "The form of the conditional cumulative of Y is the following (separate_mass_points=false):\n"
+    "   P(Y<=y|theta) = (1/Z) (s(a) + sum_i u_i s(b_i) g(y,theta,i))\n"
+    "or for separate_mass_point=true:\n"
+    "   P(Y<=y|theta) = sigmoid(a) + (1-sigmoid(a))(sum_i u_i s(b_i) (g(y,theta,i)-g(0,theta,i))/Z\n"
+    "where s(z)=log(1+exp(z)) is the softplus function, and g is a monotonic function\n"
+    "in y whose first derivative and indefinite integral are known analytically.\n"
+    "The u_i are fixed from the unconditional distribution, such that s(b_i)=1 gives\n"
+    "approximately the right unconditional cumulative function (for infinite hardness):\n"
+    "  u_i = P(mu_{i-1}<Y<=mu_i) [unconditional].\n"
+    "The parameters theta of Y's distribution are (a,b_1,b_2,...,c_1,c_2,...,mu_1,mu_2,...),\n"
+    "which are obtained as the unconstrained outputs (no output transfer function) of a neural network.\n"
+    "The normalization constant Z is computed analytically easily: (separate_mass_point=false)\n"
+    "   Z = s(a) + sum_i u_i s(b_i) g(y,theta,i)\n"
+    "or for separate_mass_point=true:\n"
+    "   Z = sum_i s(b_i) (g(y,theta,i)-g(0,theta,i))\n"
+    "The current implementation considers two choices for g:\n"
+    "  - sigmoid_steps: g(y,theta,i) = sigmoid(h*s(c_i)*(y-mu_i)/(mu_{i+1}-mu_i))\n"
+    "  - sloped_steps: g(y,theta,i) = 1 + s(s(c_i)*(mu_i-y))-s(s(c_i)*(mu_{i+1}-y))/(s(c_i)*(mu_{i+1}-mu_i))\n"
+    "where h is the 'initial_hardness' option.\n"
+    "The density is analytically obtained using the derivative g' of g and\n"
+    "expected value is analytically obtained using the primitive G of g.\n"
+    "For the mass point at the origin,\n"
+    "   P(Y=0|theta) = P(Y<=0|theta).\n"
+    "(which is simply sigmoid(a) if separate_mass_point).\n"
+    "For positive values of Y: (separate_mass_point=false)\n"
+    "   p(y|theta) = (1/Z) sum_i s(b_i) g'(y,theta,i).\n"
+    "or for separate_mass_point=true:\n"
+    "   p(y|theta) = (1-sigmoid(a)) (1/Z) sum_i s(b_i) g'(y,theta,i).\n"
+    "And the expected value of Y is obtained using the primitive: (separate_mass_point=false)\n"
+    "   E[Y|theta] = (1/Z)*s(a)*M + sum_i u_i s(b_i)(G(M,theta,i)-G(0,theta,i)))\n"
+    "or for separate_mass_point=true:\n"
+    "   E[Y|theta] = M - ((sigmoid(a)-(1-sigmoid(a)*(1/Z)*sum_i u_i s(b_i)g(0,theta,i))*M + (1-sigmoid(a))*(1/Z)*sum_i u_i s(b_i)(G(M,theta,i)-G(0,theta,0)))\n"
+    "Training the model can be done by maximum likelihood (minimizing the log of the\n"
+    "density) or by minimizing the average of squared error (y-E[Y|theta])^2\n"
+    "or a combination of the two (with the max_likelihood_vs_squared_error_balance option).\n"
+    "The step 'centers' mu_i are initialized according to some rule, in the interval [0,maxY]:\n"
+    " - uniform: at regular intervals in [0,maxY]\n"
+    " - log-scale: as the exponential of values at regular intervals in [0,log(1+maxY)], minus 1.\n"
+    "The c_i and b_i are initialized to inverse_softplus(1), and a using the empirical unconditional P(Y=0).\n"
+    "For the output curve options (outputs_def='L',D','C', or 'S'), the lower_bound and upper_bound\n"
+    "options of PDistribution are automatically set to 0 and maxY respectively.\n"
+    );
 
-  void ConditionalDensityNet::declareOptions(OptionList& ol)
-  {
+void ConditionalDensityNet::declareOptions(OptionList& ol)
+{
   declareOption(ol, "nhidden", &ConditionalDensityNet::nhidden, OptionBase::buildoption, 
-                "    number of hidden units in first hidden layer (0 means no hidden layer)\n");
+      "    number of hidden units in first hidden layer (0 means no hidden layer)\n");
 
   declareOption(ol, "nhidden2", &ConditionalDensityNet::nhidden2, OptionBase::buildoption, 
-                "    number of hidden units in second hidden layer (0 means no hidden layer)\n");
+      "    number of hidden units in second hidden layer (0 means no hidden layer)\n");
 
   declareOption(ol, "weight_decay", &ConditionalDensityNet::weight_decay, OptionBase::buildoption, 
-                "    global weight decay for all layers\n");
+      "    global weight decay for all layers\n");
 
   declareOption(ol, "bias_decay", &ConditionalDensityNet::bias_decay, OptionBase::buildoption, 
-                "    global bias decay for all layers\n");
+      "    global bias decay for all layers\n");
 
   declareOption(ol, "layer1_weight_decay", &ConditionalDensityNet::layer1_weight_decay, OptionBase::buildoption, 
-                "    Additional weight decay for the first hidden layer.  Is added to weight_decay.\n");
+      "    Additional weight decay for the first hidden layer.  Is added to weight_decay.\n");
   declareOption(ol, "layer1_bias_decay", &ConditionalDensityNet::layer1_bias_decay, OptionBase::buildoption, 
-                "    Additional bias decay for the first hidden layer.  Is added to bias_decay.\n");
+      "    Additional bias decay for the first hidden layer.  Is added to bias_decay.\n");
 
   declareOption(ol, "layer2_weight_decay", &ConditionalDensityNet::layer2_weight_decay, OptionBase::buildoption, 
-                "    Additional weight decay for the second hidden layer.  Is added to weight_decay.\n");
+      "    Additional weight decay for the second hidden layer.  Is added to weight_decay.\n");
 
   declareOption(ol, "layer2_bias_decay", &ConditionalDensityNet::layer2_bias_decay, OptionBase::buildoption, 
-                "    Additional bias decay for the second hidden layer.  Is added to bias_decay.\n");
+      "    Additional bias decay for the second hidden layer.  Is added to bias_decay.\n");
 
   declareOption(ol, "output_layer_weight_decay", &ConditionalDensityNet::output_layer_weight_decay, OptionBase::buildoption, 
-                "    Additional weight decay for the output layer.  Is added to 'weight_decay'.\n");
+      "    Additional weight decay for the output layer.  Is added to 'weight_decay'.\n");
 
   declareOption(ol, "output_layer_bias_decay", &ConditionalDensityNet::output_layer_bias_decay, OptionBase::buildoption, 
-                "    Additional bias decay for the output layer.  Is added to 'bias_decay'.\n");
+      "    Additional bias decay for the output layer.  Is added to 'bias_decay'.\n");
 
   declareOption(ol, "direct_in_to_out_weight_decay", &ConditionalDensityNet::direct_in_to_out_weight_decay, OptionBase::buildoption, 
-                "    Additional weight decay for the direct in-to-out layer.  Is added to 'weight_decay'.\n");
+      "    Additional weight decay for the direct in-to-out layer.  Is added to 'weight_decay'.\n");
 
   declareOption(ol, "L1_penalty", &ConditionalDensityNet::L1_penalty, OptionBase::buildoption, 
-                "    should we use L1 penalty instead of the default L2 penalty on the weights? (default=0)\n");
+      "    should we use L1 penalty instead of the default L2 penalty on the weights? (default=0)\n");
 
   declareOption(ol, "direct_in_to_out", &ConditionalDensityNet::direct_in_to_out, OptionBase::buildoption, 
-                "    should we include direct input to output connections? (default=0)\n");
+      "    should we include direct input to output connections? (default=0)\n");
 
   declareOption(ol, "optimizer", &ConditionalDensityNet::optimizer, OptionBase::buildoption, 
-                "    specify the optimizer to use\n");
+      "    specify the optimizer to use\n");
 
   declareOption(ol, "batch_size", &ConditionalDensityNet::batch_size, OptionBase::buildoption, 
-                "    how many samples to use to estimate the avergage gradient before updating the weights\n"
-                "    0 is equivalent to specifying training_set->length(); default=1 (stochastic gradient)\n");
+      "    how many samples to use to estimate the avergage gradient before updating the weights\n"
+      "    0 is equivalent to specifying training_set->length(); default=1 (stochastic gradient)\n");
 
   declareOption(ol, "maxY", &ConditionalDensityNet::maxY, OptionBase::buildoption, 
-                "    maximum allowed value for Y. Default = 1.0 (data normalized in [0,1]\n");
+      "    maximum allowed value for Y. Default = 1.0 (data normalized in [0,1]\n");
 
   declareOption(ol, "thresholdY", &ConditionalDensityNet::thresholdY, OptionBase::buildoption, 
                 "    threshold value of Y for which we might want to compute P(Y>thresholdY), with outputs_def='t'\n");
@@ -712,12 +709,12 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
   return cost_funcs;
 }
 
-  // ### Nothing to add here, simply calls build_
-  void ConditionalDensityNet::build()
-  {
-    inherited::build();
-    build_();
-  }
+// ### Nothing to add here, simply calls build_
+void ConditionalDensityNet::build()
+{
+  inherited::build();
+  build_();
+}
 
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
