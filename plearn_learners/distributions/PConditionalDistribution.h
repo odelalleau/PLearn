@@ -77,7 +77,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Set the input part before using the inherited methods
-  virtual void setInput(const Vec& input);
+  virtual void setInput(const Vec& input) const;
 
   virtual void computeOutput(const Vec& input, Vec& output) const;
 

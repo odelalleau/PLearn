@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.4 2003/11/18 14:12:42 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.5 2003/11/19 02:43:08 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -193,7 +193,7 @@ public:
   // **************************
 
   //! Set the input part before using the inherited methods
-  virtual void setInput(const Vec& input);
+  virtual void setInput(const Vec& input) const;
 
   // **************************
   // **** PDistribution methods ****

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.5 2003/11/18 14:12:42 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.6 2003/11/19 02:43:08 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -64,7 +64,7 @@ ConditionalDensityNet::ConditionalDensityNet()
    L1_penalty(false),
    direct_in_to_out(false),
    batch_size(1),
-   maxY(0), // must be provided
+   maxY(1), // if Y is normalized to be in interval [0,1], that would be OK
    log_likelihood_vs_squared_error_balance(1),
    n_output_density_terms(0),
    steps_type("sloped_steps"),
@@ -143,24 +143,24 @@ ConditionalDensityNet::ConditionalDensityNet()
                 "    Additional weight decay for the direct in-to-out layer.  Is added to 'weight_decay'.\n");
 
   declareOption(ol, "L1_penalty", &ConditionalDensityNet::L1_penalty, OptionBase::buildoption, 
-                "    should we use L1 penalty instead of the default L2 penalty on the weights?\n");
+                "    should we use L1 penalty instead of the default L2 penalty on the weights? (default=0)\n");
 
   declareOption(ol, "direct_in_to_out", &ConditionalDensityNet::direct_in_to_out, OptionBase::buildoption, 
-                "    should we include direct input to output connections?\n");
+                "    should we include direct input to output connections? (default=0)\n");
 
   declareOption(ol, "optimizer", &ConditionalDensityNet::optimizer, OptionBase::buildoption, 
                 "    specify the optimizer to use\n");
 
   declareOption(ol, "batch_size", &ConditionalDensityNet::batch_size, OptionBase::buildoption, 
                 "    how many samples to use to estimate the avergage gradient before updating the weights\n"
-                "    0 is equivalent to specifying training_set->length() \n");
+                "    0 is equivalent to specifying training_set->length(); default=1 (stochastic gradient)\n");
 
   declareOption(ol, "maxY", &ConditionalDensityNet::maxY, OptionBase::buildoption, 
-                "    maximum allowed value for Y.\n");
+                "    maximum allowed value for Y. Default = 1.0 (data normalized in [0,1]\n");
 
   declareOption(ol, "log_likelihood_vs_squared_error_balance", &ConditionalDensityNet::log_likelihood_vs_squared_error_balance, 
                 OptionBase::buildoption, 
-                "    Relative weight given to negative log-likelihood (1- this weight given squared error).\n");
+                "    Relative weight given to negative log-likelihood (1- this weight given squared error). Default=1\n");
 
   declareOption(ol, "n_output_density_terms", &ConditionalDensityNet::n_output_density_terms, 
                 OptionBase::buildoption, 
@@ -171,13 +171,13 @@ ConditionalDensityNet::ConditionalDensityNet()
                 "    The type of steps used to build the cumulative distribution.\n"
                 "    Allowed values are:\n"
                 "      - sigmoid_steps: g(y,theta,i) = sigmoid(s(c_i)*(y-mu_i))\n"
-                "      - sloped_steps: g(y,theta,i) = s(s(c_i)*(mu_i-y))-s(s(c_i)*(mu_i-y))\n.\n");
+                "      - sloped_steps: g(y,theta,i) = s(s(c_i)*(mu_i-y))-s(s(c_i)*(mu_i-y))\nDefault=sloped_steps\n");
 
   declareOption(ol, "centers_initialization", &ConditionalDensityNet::centers_initialization, 
                 OptionBase::buildoption, 
                 "    How to initialize the step centers (mu_i). Allowed values are:\n"
                 "      - uniform: at regular intervals in [0,maxY]\n"
-                "      - log-scale: as the exponential of values at regular intervals in [0,log(1+maxY)], minus 1\n");
+                "      - log-scale: as the exponential of values at regular intervals in [0,log(1+maxY)], minus 1\nDefault=uniform\n");
 
   declareOption(ol, "paramsvalues", &ConditionalDensityNet::paramsvalues, OptionBase::learntoption, 
                 "    The learned neural network parameter vector\n");
@@ -418,8 +418,8 @@ TVec<string> ConditionalDensityNet::getTrainCostNames() const
     TVec<string> cost_funcs(4);
     cost_funcs[0]="training_criterion+penalty";
     cost_funcs[1]="training_criterion";
-    cost_funcs[2]="neg_log_likelihood";
-    cost_funcs[3]="squared_error";
+    cost_funcs[2]="NLL";
+    cost_funcs[3]="mse";
     return cost_funcs;
   }
   else return getTestCostNames();
@@ -429,8 +429,8 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
 { 
   TVec<string> cost_funcs(3);
   cost_funcs[0]="training_criterion";
-  cost_funcs[1]="neg_log_likelihood";
-  cost_funcs[2]="squared_error";
+  cost_funcs[1]="NLL";
+  cost_funcs[2]="mse";
   return cost_funcs;
 }
 
@@ -466,7 +466,7 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
   }
 
 
-void ConditionalDensityNet::setInput(const Vec& in)
+void ConditionalDensityNet::setInput(const Vec& in) const
 {
   input->value << in;
 }
@@ -543,15 +543,15 @@ void ConditionalDensityNet::initializeParams()
         fill_random_normal(wdirect->value, 0, 0.01*delta);
         wdirect->matValue(0).clear();
       }
-      delta = 1./nhidden;
+      delta = 0.1/nhidden;
       w1->matValue(0).clear();
     }
   if(nhidden2>0)
     {
       //fill_random_uniform(w2->value, -delta, +delta);
       //delta = 1./sqrt(nhidden2);
+      delta = 0.1/nhidden2;
       fill_random_normal(w2->value, 0, delta);
-      delta = 1./nhidden2;
       w2->matValue(0).clear();
     }
   //fill_random_uniform(wout->value, -delta, +delta);

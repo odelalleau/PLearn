@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.15 2003/10/31 20:50:35 plearner Exp $
+   * $Id: fileutils.cc,v 1.16 2003/11/19 02:43:05 yoshua Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -66,7 +66,12 @@ string getcwd()
 }
 
 int chdir(const string& path) 
-{ return ::chdir(path.c_str()); }
+{ 
+  int status = ::chdir(path.c_str()); 
+  if (status!=0)
+    PLERROR("Could not chdir to %s\n",path.c_str());
+  return status;
+}
 
   string abspath(const string& path)
   {    

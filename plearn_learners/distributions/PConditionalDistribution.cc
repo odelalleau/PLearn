@@ -42,7 +42,7 @@ namespace PLearn <%
 using namespace std;
 
 PConditionalDistribution::PConditionalDistribution() 
-  :inherited()
+  :PDistribution()
 {
    
 }
@@ -64,7 +64,7 @@ void PConditionalDistribution::makeDeepCopyFromShallowCopy(map<const void*, void
 }
 
 
-void PConditionalDistribution::setInput(const Vec& input)
+void PConditionalDistribution::setInput(const Vec& input) const
 { PLERROR("setInput must be implemented for this PConditionalDistribution"); }
 
 

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.13 2003/06/30 17:32:30 plearner Exp $
+   * $Id: plapack.h,v 1.14 2003/11/19 02:43:08 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -195,6 +195,7 @@ template<class num_t>
 void eigenVecOfSymmMat(TMat<num_t>& m, int k, TVec<num_t>& eigen_values, TMat<num_t>& eigen_vectors)
 {
   eigen_vectors.resize(k,m.width());
+  eigen_values.resize(k);
   // FASTER
   if(k>= m.width())
     lapackEIGEN(m, eigen_values, eigen_vectors, 'A',num_t(0),num_t(0));
