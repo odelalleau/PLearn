@@ -263,15 +263,15 @@ pymakeOption( name = 'dbg',
 if usingIntelCompiler:
     pymakeOption( name = 'opt',
                   description = 'optimized for intel compiler',
-                  compileroptions = '-Wall -O3' )
+                  compileroptions = '-Wall -O3 -DNDEBUG' )
 else:
     pymakeOption( name = 'opt',
                   description = 'optimized mode',
-                  compileroptions = '-Wall -O3');
+                  compileroptions = '-Wall -O3 -DNDEBUG');
 
 pymakeOption( name = 'pintel',
               description = 'parallelized for intel compiler',
-              compileroptions = '-O3 -parallel');
+              compileroptions = '-O3 -parallel -DNDEBUG');
 
 pymakeOption( name = 'safeopt',
               description = 'safe optimized mode (includes bound checking)',
@@ -284,7 +284,7 @@ pymakeOption( name = 'checkopt',
 ### Same optimization options as -opt
 pymakeOption( name = 'gprof',
               description = 'optimized mode with profiler support (-pg)',
-              compileroptions = '-Wall -O3 -pg',
+              compileroptions = '-Wall -O3 -pg -DNDEBUG',
               linkeroptions = '-pg' )
 
 pymakeOption( name = 'safegprof',

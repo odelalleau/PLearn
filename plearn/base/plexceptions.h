@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: plexceptions.h,v 1.6 2004/10/14 21:23:27 ducharme Exp $
+   * $Id: plexceptions.h,v 1.7 2005/01/15 01:04:09 plearner Exp $
    * AUTHOR: Frederic Morin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -49,6 +49,7 @@
 #define pexceptions_INC
 
 #include <string>
+#include <assert.h>
 
 namespace PLearn {
 using std::string;
