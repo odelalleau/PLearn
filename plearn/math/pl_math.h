@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.6 2003/09/26 00:57:10 yoshua Exp $
+   * $Id: pl_math.h,v 1.7 2003/11/19 15:13:40 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -297,6 +297,16 @@ inline real ultrafasttanh(const real& x)
       //!  return 0.5*x + LOG_2 - log(1./cosh(0.5*x)); 
     }
 
+//! inverse of softplus function
+inline real inverse_softplus(real y)
+{
+  if (y<0) 
+    return MISSING_VALUE;
+  if (y>30)
+    return y;
+  return log(exp(y)-1);
+}
+  
 //!  Return M choose N, i.e., M! / ( N! (M-N)! )
   inline int n_choose(int M,int N)
     {
