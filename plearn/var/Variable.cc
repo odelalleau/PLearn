@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.16 2004/05/26 17:59:27 nova77 Exp $
+   * $Id: Variable.cc,v 1.17 2004/05/31 15:48:53 monperrm Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,7 +62,7 @@ namespace PLearn {
 using namespace std;
 
 // To be able to use varDeepCopyField.
-extern void varDeepCopyField(Var& field, CopiesMap& copies);
+// extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
 /** Var **/
 

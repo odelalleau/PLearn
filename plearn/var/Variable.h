@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.13 2004/05/26 17:59:27 nova77 Exp $
+   * $Id: Variable.h,v 1.14 2004/05/31 15:48:53 monperrm Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -418,6 +418,8 @@ inline void Variable::updateAndClear()
     valuedata[i] += gradientdata[i];
   gradient.clear();
 }
+
+void varDeepCopyField(Var& field, CopiesMap& copies);
 
 } // end of namespace PLearn
 
