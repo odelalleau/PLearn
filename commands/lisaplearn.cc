@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.4 2004/03/08 17:37:01 yoshua Exp $
+   * $Id: lisaplearn.cc,v 1.5 2004/03/09 15:57:20 lheureup Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -104,7 +104,7 @@
 #include "ConstantRegressor.h"
 #include "MultiInstanceNNet.h"
 #include "MultiInstanceVMatrix.h"
-#include "LiftStatsCollector.h"
+
 
 // Distributions
 #include "SpiralDistribution.h"
