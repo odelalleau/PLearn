@@ -70,7 +70,7 @@ private:
   int col;
   Vec sample_input;
   Vec sample_target;
-  double sample_weight;
+  real sample_weight;
   Vec sample_output;
   Vec sample_cost;  
   double train_criterion;
