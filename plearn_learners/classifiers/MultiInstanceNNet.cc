@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.5 2004/02/19 15:25:49 yoshua Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.6 2004/02/19 16:54:08 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -350,7 +350,7 @@ void MultiInstanceNNet::build_()
 
       inputs_and_targets_to_costs->recomputeParents();
 
-      /*  VarArray outvars;
+      /*  VarArray outvars; DO WE NEED THIS?
   VarArray testinvars;
   testinvars.push_back(input);
   outvars.push_back(output);
