@@ -31,7 +31,7 @@ class Cluster(PyPLearnObject):
 
             print "Launching: %s\n--" % raw_command
             os.system( "%s &" % cluster_cmd )
-            print cluster
+            print cluster_cmd
 
             ## This hack is a turnaround to the cluster command bug of
             ## possibly returning before the task is actually launched
