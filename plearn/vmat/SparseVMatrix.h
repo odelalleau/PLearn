@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SparseVMatrix.h,v 1.7 2004/11/24 18:34:09 tihocan Exp $
+   * $Id: SparseVMatrix.h,v 1.8 2005/02/01 14:43:11 tihocan Exp $
    ******************************************************* */
 
 
@@ -106,7 +106,7 @@ public:
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
 
-  virtual void save(const string& filename) const
+  virtual void save(const PPath& filename) const
   { Object::save(filename); } //!<  calls write
     //virtual void write(ostream& out) const;
     //virtual void oldread(istream& in);
