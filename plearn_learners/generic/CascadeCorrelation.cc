@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CascadeCorrelation.cc,v 1.1 2004/11/12 20:10:53 larocheh Exp $
+   * $Id: CascadeCorrelation.cc,v 1.2 2004/11/15 14:58:07 larocheh Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/CascadeCorrelation.h */
@@ -773,31 +773,33 @@ void CascadeCorrelation::train()
   VarArray candidate_penalty(0);
   Var cascade_correlation_cost;
 
-  if(verbosity>3)
-    cout << "Initial input to output weigths optimization" << endl;
-  while(opt_iter < n_opt_iterations)
+  if(stage == 0)
   {
-    optimizer->nstages = optstage_per_lstage;
-    train_stats->forget();
-    optimizer->early_stop = false;
-    optimizer->optimizeN(*train_stats);
-    train_stats->finalize();
     if(verbosity>3)
-      cout << "Epoch " << opt_iter << " train objective: " << train_stats->getMean() << endl;
-    if(train_stats->getMean()[0] == 0 || (last_cost_value - train_stats->getMean()[0])/abs(train_stats->getMean()[0]) < early_stop_threshold)
+      cout << "Initial input to output weigths optimization" << endl;
+    while(opt_iter < n_opt_iterations)
     {
-      cout << "Early stop " << opt_iter << " with train objective: " << train_stats->getMean() << endl;
-      last_cost_value = REAL_MAX;
-      break;
+      optimizer->nstages = optstage_per_lstage;
+      train_stats->forget();
+      optimizer->early_stop = false;
+      optimizer->optimizeN(*train_stats);
+      train_stats->finalize();
+      if(verbosity>3)
+        cout << "Epoch " << opt_iter << " train objective: " << train_stats->getMean() << endl;
+      if(train_stats->getMean()[0] == 0 || (last_cost_value - train_stats->getMean()[0])/abs(train_stats->getMean()[0]) < early_stop_threshold)
+      {
+        cout << "Early stop " << opt_iter << " with train objective: " << train_stats->getMean() << endl;
+        last_cost_value = REAL_MAX;
+        break;
+      }
+      else
+      {
+        last_cost_value = train_stats->getMean()[0];
+      }
+      opt_iter++;
     }
-    else
-    {
-      last_cost_value = train_stats->getMean()[0];
-    }
-    opt_iter++;
+    optimizer->reset();
   }
-  optimizer->reset();
-
   ProgressBar* pb = 0;
   if(report_progress)
     pb = new ProgressBar("Training " + classname() + " from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
