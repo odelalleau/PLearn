@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.17 2004/03/17 21:18:05 yoshua Exp $
+   * $Id: Array.h,v 1.18 2004/03/19 15:42:12 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -152,6 +152,67 @@ class Array: public TVec<T>
       for(int i=0; i<length_; i++)
         if (array[i] != other[i]) return false;
       return true;
+    }
+
+    bool operator<(const Array<T>& other) const
+    {
+#ifdef BOUNDCHECK
+      if (size()!=other.size())
+        PLERROR("Array::operator< works on same-size arguments");
+#endif
+      iterator array = data();
+      for(int i=0; i<length_; i++)
+      {
+        if (array[i] < other[i]) return true;
+        else if (array[i] > other[i]) return false;
+      }
+      return false; // if == then not <
+    }
+
+    bool operator<=(const Array<T>& other) const
+    {
+#ifdef BOUNDCHECK
+      if (size()!=other.size())
+        PLERROR("Array::operator< works on same-size arguments");
+#endif
+      iterator array = data();
+      for(int i=0; i<length_; i++)
+      {
+        if (array[i] < other[i]) return true;
+        else if (array[i] > other[i]) return false;
+      }
+      return true; // if == then <=
+    }
+
+
+    bool operator>(const Array<T>& other) const
+    {
+#ifdef BOUNDCHECK
+      if (size()!=other.size())
+        PLERROR("Array::operator< works on same-size arguments");
+#endif
+      iterator array = data();
+      for(int i=0; i<length_; i++)
+      {
+        if (array[i] > other[i]) return true;
+        else if (array[i] < other[i]) return false;
+      }
+      return false; // if == then not >
+    }
+
+    bool operator>=(const Array<T>& other) const
+    {
+#ifdef BOUNDCHECK
+      if (size()!=other.size())
+        PLERROR("Array::operator< works on same-size arguments");
+#endif
+      iterator array = data();
+      for(int i=0; i<length_; i++)
+      {
+        if (array[i] > other[i]) return true;
+        else if (array[i] < other[i]) return false;
+      }
+      return true; // if == then >=
     }
 
     void operator=(const vector<T> &other)
@@ -405,12 +466,30 @@ public:
 };
 
 template <class T> 
-struct phash_Array {
+struct hash_Array {
   size_t operator()(const Array<T>& a) const
   {
     return hashbytes((char*)a.data(),a.size()*sizeof(T));
   }
 };
+
+template <class T>
+class Array2ArrayMap : public PPointable
+{
+public:
+  multimap<Array<T>,Array<T> > map;
+};
+
+/*template <class T> 
+struct hash_to_multimapArray {
+  size_t operator()(const PP<multimap<Array<T>,Array<T> > > m) const
+  {
+    if (a)
+      return hashbytes((char*)a->data(),a->size()*sizeof(T));
+    return 0;
+  }
+};
+*/
 
 } // end of namespace PLearn
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.cc,v 1.4 2004/03/18 21:59:24 tihocan Exp $
+   * $Id: DatedJoinVMatrix.cc,v 1.5 2004/03/19 15:42:12 yoshua Exp $
    ******************************************************* */
 
 // Authors: *Yoshua Bengio*
@@ -63,7 +63,7 @@ PLEARN_IMPLEMENT_OBJECT(DatedJoinVMatrix,
                         "vmatrix, in a row of the slave vmatrix that 'matches'. Matching is\n"
                         "obtained using shared 'key fields'. In addition, a date field\n"
                         "in the master is forced to belong to a date interval in the slave,\n"
-                        "as follows: slave_date_start <= master_date < slave_date_end.\n"
+                        "as follows: slave_date_start < master_date <= slave_date_end.\n"
                         "If no match is found then the slave columns are left with missing values.\n"
                         "If more than one slave row match, then the one with the earliest\n"
                         "slave_date_start is used (and a warning is optionally issued)\n"
@@ -106,7 +106,7 @@ void DatedJoinVMatrix::getRow(int i, Vec v) const
       {
         PDate slave_date_interval_start = float_to_date(slave_row[slave_date_interval_start_field_index]);
         PDate slave_date_interval_end = float_to_date(slave_row[slave_date_interval_end_field_index]);
-        if (master_date>=slave_date_interval_start && master_date<slave_date_interval_end)
+        if (master_date>slave_date_interval_start && master_date<=slave_date_interval_end)
         {
           if (n_matches==0 || slave_date_interval_start < earliest_match)
           {
