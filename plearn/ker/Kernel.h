@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.11 2004/01/21 14:16:04 tihocan Exp $
+   * $Id: Kernel.h,v 1.12 2004/01/26 14:10:32 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,7 +55,8 @@ class Kernel: public Object
 		typedef Object inherited;
 		
 protected:
-  VMat data; //!<  data for kernel matrix, which will be used for calls to evaluate_i_j and the like 
+  VMat data; //!<  data for kernel matrix, which will be used for calls to evaluate_i_j and the like
+  int data_inputsize;   //< The inputsize of data (if -1, is set to data.width()).
 
   static void declareOptions(OptionList& ol);
 public:

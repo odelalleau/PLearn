@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.9 2004/01/21 14:18:16 tihocan Exp $
+   * $Id: Kernel.cc,v 1.10 2004/01/26 14:10:32 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -74,21 +74,33 @@ void Kernel::declareOptions(OptionList &ol)
 }
 
 
+////////////////////////////
+// setDataForKernelMatrix //
+////////////////////////////
 void Kernel::setDataForKernelMatrix(VMat the_data)
 { 
   if(data.isNotNull() && is_sequential && the_data.length() < data.length())
     PLERROR("The Kernel::is_sequential flag was set to true but the new data\n"
             "matrix is shorter (%d) than the previous one (%d)", the_data.length(), data.length());
   data = the_data; 
+  if (data) {
+    data_inputsize = data->inputsize();
+    if (data_inputsize == -1) {
+      // Default value when no inputsize is specified.
+      data_inputsize = data->width();
+    }
+  } else {
+    data_inputsize = 0;
+  }
 }
 
 
 real Kernel::evaluate_i_j(int i, int j) const
-{ return evaluate(data(i),data(j)); }
+{ return evaluate(data.getSubRow(i,data_inputsize),data.getSubRow(j,data_inputsize)); }
 
 
 real Kernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const 
-{ return evaluate(data(i),x); }
+{ return evaluate(data.getSubRow(i,data_inputsize),x); }
 
 
 real Kernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
@@ -96,7 +108,7 @@ real Kernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
   if(is_symmetric)
     return evaluate_i_x(i,x,squared_norm_of_x);
   else
-    return evaluate(x,data(i));
+    return evaluate(x,data.getSubRow(i,data_inputsize));
 }
 
 
