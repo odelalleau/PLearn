@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Isomap.cc,v 1.2 2004/06/23 20:20:46 tihocan Exp $ 
+   * $Id: Isomap.cc,v 1.3 2004/07/06 21:17:32 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -92,10 +92,10 @@ void Isomap::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 
   // Modify some options from KernelPCA so as to hide them.
-  redeclareOption(ol, "kernel_is_distance", &KernelPCA::kernel_is_distance, OptionBase::nosave,
+  redeclareOption(ol, "kernel_is_distance", &Isomap::kernel_is_distance, OptionBase::nosave,
       "In ISOMAP, the kernel is always a distance");
 
-  redeclareOption(ol, "kernel", &KernelPCA::kpca_kernel, OptionBase::learntoption,
+  redeclareOption(ol, "kernel", &Isomap::kpca_kernel, OptionBase::learntoption,
       "The underlying KPCA kernel is now obtained from 'distance_kernel'.");
 
 }
