@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.42 2004/05/05 21:28:39 nova77 Exp $
+   * $Id: fileutils.cc,v 1.43 2004/05/26 20:26:52 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -685,20 +685,63 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
               }
               break;
 
-            case 'D': // it's a DEFINE{ varname }{ ... }
+            case 'D':
               {
-                string varname; // name of a variable
-                string vardef; // definition of a variable
-                readWhileMatches(in, "DEFINE{");
-                getline(in,varname, '}');
-                varname = removeblanks(varname);
-                skipBlanksAndComments(in);
-                if(in.get()!='{')
-                  PLERROR("Bad syntax in .plearn DEFINE macro: correct syntax is $DEFINE{name}{definition}");
-                smartReadUntilNext(in, "}", vardef, true);
-                variables[varname] = vardef;
+                int next = in.get();
+                next = in.peek();   // Next character.
+                switch(next) {
+
+                  case 'E':   // it's a DEFINE{ varname }{ ... }
+                    {
+                      string varname; // name of a variable
+                      string vardef; // definition of a variable
+                      readWhileMatches(in, "EFINE{");
+                      getline(in,varname, '}');
+                      varname = removeblanks(varname);
+                      skipBlanksAndComments(in);
+                      if(in.get()!='{')
+                        PLERROR("Bad syntax in .plearn DEFINE macro: correct syntax is $DEFINE{name}{definition}");
+                      smartReadUntilNext(in, "}", vardef, true);
+                      variables[varname] = vardef;
+                    }
+                    break;
+
+                  case 'I': // it's a DIVIDE{expr1}{expr2}
+                    {
+                      string expr1, expr2;
+                      readWhileMatches(in, "IVIDE");
+                      bool syntax_ok = true;
+                      int c = in.get();
+                      if (syntax_ok) {
+                        if(c == '{')
+                          smartReadUntilNext(in, "}", expr1, true);
+                        else
+                          syntax_ok = false;
+                      }
+                      if (syntax_ok) {
+                        c = in.get();
+                        if(c == '{')
+                          smartReadUntilNext(in, "}", expr2, true);
+                        else
+                          syntax_ok = false;
+                      }
+                      if (!syntax_ok)
+                        PLERROR("$DIVIDE syntax is: $DIVIDE{expr1}{expr2}");
+                      istrstream expr1_stream(expr1.c_str());
+                      istrstream expr2_stream(expr2.c_str());
+                      string expr1_eval = readAndMacroProcess(expr1_stream, variables);
+                      string expr2_eval = readAndMacroProcess(expr2_stream, variables);
+                      real e1, e2;
+                      if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
+                        PLERROR("In $DIVIDE{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
+                      }
+                      text += tostring(e1 / e2);
+                    }
+                    break;
+
+                }
+                break;
               }
-              break;
 
             case 'E': // it's an ECHO{expression}
               {
@@ -1090,7 +1133,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
 
             default:
               PLERROR("In readAndMacroProcess: only supported macro commands are \n"
-                      "${varname}, $CHAR, $DEFINE, $ECHO, $IF, $INCLUDE, $ISDEFINED, $ISEQUAL, $ISHIGHER, $MINUS, $PLUS, $OR, $SWITCH, $TIMES."
+                      "${varname}, $CHAR, $DEFINE, $DIVIDE, $ECHO, $IF, $INCLUDE, $ISDEFINED, $ISEQUAL, $ISHIGHER, $MINUS, $PLUS, $OR, $SWITCH, $TIMES."
                       "But I read $%c !!",c);
             }
         }
