@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.14 2003/11/19 02:43:08 yoshua Exp $
+   * $Id: plapack.h,v 1.15 2004/01/15 15:36:18 ouimema Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -70,6 +70,12 @@ inline void lapack_Xsyevr_(char* JOBZ, char* RANGE, char* UPLO, int* N, float* A
 inline void lapack_Xsyevr_(char* JOBZ, char* RANGE, char* UPLO, int* N, double* A, int* LDA, double* VL, double* VU, int* IL, int* IU, double* ABSTOL, int* M, double* W, double* Z, int* LDZ, int* ISUPPZ, double* WORK, int* LWORK, int* IWORK, int* LIWORK, int* INFO)
 { dsyevr_(JOBZ, RANGE, UPLO, N, A, LDA, VL, VU, IL, IU, ABSTOL, M, W, Z, LDZ, ISUPPZ, WORK, LWORK, IWORK, LIWORK, INFO);}
 
+inline void lapack_Xsygvx_(int* ITYPE, char* JOBZ, char* RANGE, char* UPLO, int* N, double* A, int* LDA, double* B, int* LDB, double* VL, double* VU, int* IL, int* IU, double* ABSTOL, int* M, double* W, double* Z, int* LDZ, double* WORK, int* LWORK, int* IWORK, int* IFAIL, int* INFO)
+{ dsygvx_(ITYPE, JOBZ, RANGE, UPLO, N, A, LDA, B, LDB, VL, VU, IL, IU, ABSTOL, M, W, Z, LDZ, WORK, LWORK, IWORK, IFAIL, INFO); }
+
+inline void lapack_Xsygvx_(int* ITYPE, char* JOBZ, char* RANGE, char* UPLO, int* N, float* A, int* LDA, float* B, int* LDB, float* VL, float* VU, int* IL, int* IU, float* ABSTOL, int* M, float* W, float* Z, int* LDZ, float* WORK, int* LWORK, int* IWORK, int* IFAIL, int* INFO)
+{ ssygvx_(ITYPE, JOBZ, RANGE, UPLO, N, A, LDA, B, LDB, VL, VU, IL, IU, ABSTOL, M, W, Z, LDZ, WORK, LWORK, IWORK, IFAIL, INFO); }
+
 
 //!  Computes the eigenvalues and eigenvectors of a symmetric (NxN) matrix A.
 //!  BEWARE: The content of A is destroyed by the call.
@@ -101,7 +107,7 @@ void lapackEIGEN(const TMat<num_t>& A, TVec<num_t>& eigenvals, TMat<num_t>& eige
 #endif
 
   char JOBZ = eigenvecs.isEmpty() ?'N' :'V';
-  char UPLO = 'U';
+  char UPLO = 'U';  
   int N = A.length();
   int LDA = A.mod();
 
@@ -183,6 +189,127 @@ void lapackEIGEN(const TMat<num_t>& A, TVec<num_t>& eigenvals, TMat<num_t>& eige
     eigenvecs.resize(M, N);
 }
 
+//!  Computes the eigenvalues and eigenvectors of a real generalized 
+//!  symmetric-definite eigenproblem, of the form
+//!  A*x=(lambda)*B*x,  A*Bx=(lambda)*x, or B*A*x=(lambda)*x
+//!  A and B are assumed to be symmetric and B is also positive definite.
+//!  BEWARE: The content of A and B is destroyed by the call.
+//!  NOTE: you may wish to use the simpler call generalizedEigenVecOfSymmMat
+/*! 
+  Meaning of ITYPE
+  Specifies the problem type to be solved:
+      = 1:  A*x = (lambda)*B*x
+      = 2:  A*B*x = (lambda)*x
+      = 3:  B*A*x = (lambda)*x
+
+  Meaning of RANGE: 
+     'A': all eigenvalues will be found.
+     'V': all eigenvalues in the half-open interval (low,high] will be found. 
+     'I': will find eigenvals with indexes int(low) to int(high) included (smallest eigenval having index 0)
+
+  ABSTOL is the tolerance (see lapack doc for call dsygvx_ )
+
+  If you do not wish to compute eigenvectors, provide a null (empty) 'eigenvecs'.
+
+  Upon return, eigenvals will contain the M eigenvalues found 
+  in increasing order (it will be resized to M).
+  And eigenvecs (unless initially null) will be resized to an MxN matrix 
+  containing the corresponding M eigenvectors in its *rows*.
+*/
+
+// (will work for float and double)
+template<class num_t>
+void lapackGeneralizedEIGEN(const TMat<num_t>& A, const TMat<num_t>& B, int ITYPE, TVec<num_t>& eigenvals, TMat<num_t>& eigenvecs, char RANGE='A', num_t low=0, num_t high=0, num_t ABSTOL=0)
+{
+
+#ifdef BOUNDCHECK
+  if(A.length()!=A.width())
+    PLERROR("In lapackGeneralizedEIGEN length and width of A differ, it should be symmetric!");
+#endif
+
+  char JOBZ = eigenvecs.isEmpty() ?'N' :'V';
+  char UPLO = 'U';  
+  int N = A.length();//The order of the matrix pencil (A,B)
+  int LDA = A.mod();
+  int LDB = B.mod();
+
+  int IL=0, IU=0;
+  num_t VL=0, VU=0;
+
+  eigenvals.resize(N);
+  int M; // The number of eigenvalues returned
+
+  switch(RANGE)
+    {
+    case 'A':
+      if(JOBZ=='V')
+        eigenvecs.resize(N, N);
+      break;
+    case 'I': 
+      IL = int(low)+1; // +1 because fortran indexes start at 1
+      IU = int(high)+1;
+      if(JOBZ=='V')
+        eigenvecs.resize(IU-IL+1, N);
+      break;
+    case 'V':
+      VL = low;
+      VU = high;
+      if(JOBZ=='V')
+        eigenvecs.resize(N, N);
+      break;
+    default:
+      PLERROR("In lapackGeneralizedEIGEN: invalid RANGE character: %c",RANGE);
+    }
+  
+  num_t* Z = 0;
+  int LDZ = 1;
+  if(eigenvecs)
+    {
+      Z = eigenvecs.data();
+      LDZ = eigenvecs.mod();
+    }
+
+  // temporary work vectors
+  static TVec<num_t> WORK;
+  static TVec<int> IWORK;
+  static TVec<int> IFAIL;
+
+  WORK.resize(1);
+  IWORK.resize(5*N);
+  IFAIL.resize(N);
+
+  int LWORK = -1;
+  int INFO;
+
+
+  // first call to find optimal work size
+  //  cerr << '(';
+  lapack_Xsygvx_( &ITYPE, &JOBZ, &RANGE, &UPLO, &N, A.data(), &LDA, B.data(), &LDB,  &VL,  &VU,
+           &IL,  &IU,  &ABSTOL,  &M,  eigenvals.data(), Z, &LDZ, 
+           WORK.data(), &LWORK, IWORK.data(), IFAIL.data(), &INFO );
+  // cerr << ')';
+
+  if(INFO!=0)
+    PLERROR("In lapackGeneralizedEIGEN, problem in first call to sgesdd_ to get optimal work size, returned INFO = %d",INFO); 
+  
+  // make sure we have enough space
+  LWORK = (int) WORK[0]; // optimal size
+  WORK.resize(LWORK);
+
+  // second call to do the computation
+  // cerr << '{';
+  lapack_Xsygvx_( &ITYPE, &JOBZ, &RANGE, &UPLO, &N, A.data(), &LDA, B.data(), &LDB,  &VL,  &VU,
+           &IL,  &IU,  &ABSTOL,  &M,  eigenvals.data(), Z, &LDZ, 
+           WORK.data(), &LWORK, IWORK.data(), IFAIL.data(), &INFO );
+  // cerr << '}';
+
+  if(INFO!=0)
+    PLERROR("In lapackGeneralizedEIGEN, problem when calling sgesdd_ to perform computation, returned INFO = %d",INFO); 
+
+  eigenvals.resize(M);
+  if(JOBZ=='V')
+    eigenvecs.resize(M, N);
+}
 
 //! Computes up to k largest eigen_values and corresponding eigen_vectors of symmetric matrix m. 
 //! Parameters eigen_values and eigen_vectors are resized accordingly and filled by the call.
@@ -201,6 +328,37 @@ void eigenVecOfSymmMat(TMat<num_t>& m, int k, TVec<num_t>& eigen_values, TMat<nu
     lapackEIGEN(m, eigen_values, eigen_vectors, 'A',num_t(0),num_t(0));
   else
     lapackEIGEN(m, eigen_values, eigen_vectors, 'I', num_t(m.width()-k), num_t(m.width()-1));
+
+  // put largest (rather than smallest) first!
+  eigen_values.swap();
+  eigen_vectors.swapUpsideDown();
+}
+
+//! Computes up to k largest eigen_values and corresponding eigen_vectors of a real 
+//! generalized symmetric-definite eigenproblem, of the form 
+//! m1*x=(lambda)*m2*x (itype = 1),
+//! m1*m2*x=(lambda)*x (itype = 2) or 
+//! m2*m1*x=(lambda)*x (itype = 3) 
+//! m1 and m2 are assumed to be symmetric and m2 is also positive definite. 
+//! Parameters eigen_values and eigen_vectors are resized accordingly and filled by the call.
+//! The eigenvalues are returned in decreasing order (largest first).
+//! The corresponding eigenvectors are in the *ROWS* of eigen_vectors
+//! WARNING: m1 and m2 are destroyed during the operation.
+
+// (will work for float and double)
+template<class num_t>
+void generalizedEigenVecOfSymmMat(TMat<num_t>& m1, TMat<num_t>& m2, int itype, int k, TVec<num_t>& eigen_values, TMat<num_t>& eigen_vectors)
+{
+  if(m1.length() != m2.length() || m1.width() != m2.width())
+    PLERROR("In generalizedEigenVecOfSymmMat, m1 and m2 must have the same size"); 
+
+  eigen_vectors.resize(k,m1.width());
+  eigen_values.resize(k);
+  // FASTER
+  if(k>= m1.width())
+    lapackGeneralizedEIGEN(m1, m2, itype, eigen_values, eigen_vectors, 'A',num_t(0),num_t(0));
+  else
+    lapackGeneralizedEIGEN(m1, m2, itype, eigen_values, eigen_vectors, 'I', num_t(m1.width()-k), num_t(m1.width()-1));
 
   // put largest (rather than smallest) first!
   eigen_values.swap();

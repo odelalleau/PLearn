@@ -73,6 +73,9 @@ extern "C" {
                int* IL, int* IU, double* ABSTOL, int* M, double* W, 
                double* Z, int* LDZ, int* ISUPPZ, double* WORK, 
                int* LWORK, int* IWORK, int* LIWORK, int* INFO);
+  
+  void ssygvx_(int* ITYPE, char* JOBZ, char* RANGE, char* UPLO, int* N, float* A, int* LDA, float* B, int* LDB, float* VL, float* VU, int* IL, int* IU, float* ABSTOL, int* M, float* W, float* Z, int* LDZ, float* WORK, int* LWORK, int* IWORK, int* IFAIL, int* INFO);
+  void dsygvx_(int* ITYPE, char* JOBZ, char* RANGE, char* UPLO, int* N, double* A, int* LDA, double* B, int* LDB, double* VL, double* VU, int* IL, int* IU, double* ABSTOL, int* M, double* W, double* Z, int* LDZ, double* WORK, int* LWORK, int* IWORK, int* IFAIL, int* INFO);
 
 }
 
