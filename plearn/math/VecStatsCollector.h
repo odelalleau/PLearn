@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.9 2003/08/13 08:13:17 plearner Exp $ 
+   * $Id: VecStatsCollector.h,v 1.10 2003/09/06 22:29:39 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -98,10 +98,15 @@ public:
   void forget();
 
   //! updates the statistics when seeing x
-  void update(const Vec& x);
+  //! The weight applies to all elements of x
+  void update(const Vec& x, real weight = 1.0);
   
-  //! calls update on all rows of m
+  //! calls update on all rows of m; weight assumed to be 1.0 for all roes
   void update(const Mat& m);
+
+  //! calls update on all rows of m;
+  //! vector of weights given, weighting each row
+  void update(const Mat& m, const Vec& weights);
 
   //! finishes whatever computation are needed after all updates have been made
   void finalize();

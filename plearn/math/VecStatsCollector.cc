@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.9 2003/08/13 08:13:17 plearner Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.10 2003/09/06 22:29:39 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -81,7 +81,7 @@ string VecStatsCollector::help()
       + optionHelp();
 }
 
-void VecStatsCollector::update(const Vec& x)
+void VecStatsCollector::update(const Vec& x, real weight)
 {
   int n = x.size();
   if(stats.size()==0)
@@ -107,7 +107,7 @@ void VecStatsCollector::update(const Vec& x)
 
   for(int k=0; k<n; k++)
   {
-    stats[k].update(x[k]);
+    stats[k].update(x[k], weight);
 /*    if(is_missing(x[k]))
       x[k]=0;//has_missing=true;*/
   }
@@ -121,7 +121,7 @@ void VecStatsCollector::update(const Vec& x)
             cov(i,j)+=x[i]*x[j];
     }
     else*/ 
-    externalProductAcc(cov, x, x);
+    externalProductScaleAcc(cov, x, x, weight);
 }
 
 //! calls update on all rows of m
@@ -130,6 +130,18 @@ void VecStatsCollector::update(const Mat& m)
   int l = m.length();
   for(int i=0; i<l; i++)
     update(m(i));
+}
+
+//! calls update on all rows of m, with given weight vector
+void VecStatsCollector::update(const Mat& m, const Vec& weights)
+{
+  if (m.length() != weights.size())
+    PLERROR("VecStatsCollector::update: matrix height (%d) "
+            "is incompatible with weights length (%d)", m.length(),
+            weights.size());
+  int l = m.length();
+  for(int i=0; i<l; i++)
+    update(m(i), weights[i]);
 }
 
 void VecStatsCollector::build_()
@@ -202,7 +214,7 @@ Mat VecStatsCollector::getCovariance() const
   externalProductScaleAcc(covarmat,meanvec,meanvec,real(-1.));
   return covarmat;
 }
-  
+
 //! returns correlation matrix
 Mat VecStatsCollector::getCorrelation() const
 {  

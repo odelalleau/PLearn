@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.16 2003/08/13 08:13:17 plearner Exp $
+   * $Id: StatsCollector.cc,v 1.17 2003/09/06 22:29:39 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,9 +49,10 @@ using namespace std;
 
   StatsCollector::StatsCollector(int the_maxnvalues)
     : maxnvalues(the_maxnvalues),
-      nmissing_(0), nnonmissing_(0), 
+      nmissing_(0.), nnonmissing_(0.), 
       sum_(0.), sumsquare_(0.), 
-      min_(MISSING_VALUE), max_(MISSING_VALUE)    
+      min_(MISSING_VALUE), max_(MISSING_VALUE),
+      first_(MISSING_VALUE), last_(MISSING_VALUE)
   {
     if(maxnvalues>0)
       counts[FLT_MAX] = StatsCollectorCounts();
@@ -98,6 +99,10 @@ void StatsCollector::declareOptions(OptionList& ol)
                 "the min");
   declareOption(ol, "max_", &StatsCollector::max_, OptionBase::learntoption,
                 "the max");
+  declareOption(ol, "first_", &StatsCollector::first_, OptionBase::learntoption,
+                "first encountered observation");
+  declareOption(ol, "last_", &StatsCollector::last_, OptionBase::learntoption,
+                "last encountered observation");
   declareOption(ol, "counts", &StatsCollector::counts, OptionBase::learntoption,
                 "will contain up to maxnvalues values and associated Counts\n"
                 "as well as a last element which maps FLT_MAX, so that we don't miss anything\n"
@@ -132,324 +137,350 @@ string StatsCollector::help()
 
 void StatsCollector::forget()
 {
-    nmissing_ = 0;
-    nnonmissing_ = 0;
+    nmissing_ = 0.;
+    nnonmissing_ = 0.;
     sum_ = 0.;
     sumsquare_ = 0.;
     min_ = MISSING_VALUE;
     max_ = MISSING_VALUE;
+    first_ = last_ = MISSING_VALUE;
 }
 
-void StatsCollector::update(real val)
-
+void StatsCollector::update(real val, real weight)
+{
+  if(is_missing(val))
+    nmissing_ += weight;
+  else
   {
-    if(is_missing(val))
-      nmissing_++;
-    else
-      {
-        sum_ += val;
-        sumsquare_ += val*val;
-        if(nnonmissing_==0) // first value encountered
-          min_ = max_ = val;
-        else if(val<min_)
-          min_ = val;
-        else if(val>max_)
-          max_ = val;
-        nnonmissing_++;
+    sum_ += val * weight;
+    sumsquare_ += val*val * weight;
+    last_ = val;
+    if(nnonmissing_==0)                      // first value encountered
+      min_ = max_ = first_ = last_ = val;
+    else if(val<min_)
+      min_ = val;
+    else if(val>max_)
+      max_ = val;
+    nnonmissing_ += weight;
         
-        if(maxnvalues>0)  // also remembering statistics inside values ranges
-          {
-            map<real,StatsCollectorCounts>::iterator it;        
-            if(int(counts.size())<=maxnvalues) // Still remembering new unseen values
-              {
-                it = counts.find(val);
-                if(it==counts.end())
-                  counts[val].id=counts.size()-1;
-                counts[val].n++;
-              }
-            else // We've filled up counts already
-              {
-                it = counts.lower_bound(val);
-                if(it->first==val) // found the exact value
-                  it->second.n++;
-                else // found the value just above val (possibly FLT_MAX)
-                  {
-                    it->second.nbelow++;
-                    it->second.sum += val;
-                    it->second.sumsquare += val*val;
-                  }
-              }
-          }
+    if(maxnvalues>0)  // also remembering statistics inside values ranges
+    {
+      map<real,StatsCollectorCounts>::iterator it;        
+      if(int(counts.size())<=maxnvalues) // Still remembering new unseen values
+      {
+        it = counts.find(val);
+        if(it==counts.end())
+          counts[val].id=counts.size()-1;
+        counts[val].n += weight;
       }
-  }                           
+      else // We've filled up counts already
+      {
+        it = counts.lower_bound(val);
+        if(it->first==val) // found the exact value
+          it->second.n += weight;
+        else // found the value just above val (possibly FLT_MAX)
+        {
+          it->second.nbelow += weight;
+          it->second.sum += val * weight;
+          it->second.sumsquare += val*val * weight;
+        }
+      }
+    }
+  }
+}                           
 
-  RealMapping StatsCollector::getBinMapping(int discrete_mincount, int continuous_mincount, real tolerance, TVec<int> * fcount) const
+RealMapping StatsCollector::getBinMapping(double discrete_mincount,
+                                          double continuous_mincount,
+                                          real tolerance,
+                                          TVec<double> * fcount) const
+{
+  real mapto=0.;
+  RealMapping mapping;
+  mapping.setMappingForOther(-1);
+  map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
+  int nleft = counts.size()-1; // loop on all but last
+
+  if(fcount)
   {
-    real mapto=0.;
-    RealMapping mapping;
-    mapping.setMappingForOther(-1);
-    map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
-    int nleft = counts.size()-1; // loop on all but last
-
-    if(fcount)
-    {
-      (*fcount) = TVec<int>();
-      // ouch, assume discrete_mincount == continuous_mincount
-      fcount->resize(0,2*nnonmissing_ / discrete_mincount);
-      fcount->append(nmissing_);
-      fcount->append(0);
-    }
-
-    int count = 0,count2=0;
-    real low = min_;
-    real high = min_;
-    bool low_has_been_appended = false;
-    ProgressBar pb("Computing PseudoQ Mapping...",counts.size()-1);
-
-    while(nleft--)
-      {
-        high = it->first;
-        pb(counts.size()-1-nleft);
-        count += it->second.nbelow;
-        count2 += it->second.nbelow;
-        // cerr << "it->first:"<<it->first<<" nbelow:"<<it->second.nbelow<<" n:"<<it->second.n<<endl;
-        if(count>=continuous_mincount)
-          {
-            // append continuous range
-            mapping.addMapping(RealRange(low_has_been_appended?']':'[',low, high, '['), mapto++);
-            if(fcount)
-              fcount->append(count);
-            low = high;
-            low_has_been_appended = false;
-            count = 0;
-
-          }
-
-        if(it->second.n >= discrete_mincount)
-          {
-            if(count>0) // then append the previous continuous range
-              {
-                mapping.addMapping(RealRange(low_has_been_appended?']':'[',low, high, '['), mapto++);
-                if(fcount)
-                  fcount->append(count);
-                count = 0;
-              }
-            // append discrete point
-            mapping.addMapping(RealRange('[',high,high,']'), mapto++);
-            if(fcount)
-              fcount->append(it->second.n + count);
-            count2+=it->second.n;
-            count=0;
-            low = high;
-            low_has_been_appended = true;
-          }
-        else
-        {
-            count2+=it->second.n;      
-            count += it->second.n;
-        }
-        ++it;
-      }
-
-    if(it->first<=max_)
-      PLERROR("Bug in StatsCollector::getBinMapping expected last element of mapping to be FLT_MAX...");
-
-    // make sure we include max_
-    pair<RealRange, real> m = mapping.lastMapping();
-
-    // cnt is the number of elements that would be in the last bin
-    int cnt = nnonmissing_ - count2 + count;
-    
-    // If the bin we're about to add is short of less then tolerance*100% of continuous_mincount elements, 
-    // OR if the last we added is a discrete point AND the max is not already in the last range, we append it 
-    if(m.first.high<max_)
-    {
-      if( ((real)cnt/(real)continuous_mincount)>(1.-tolerance) || (m.first.low == m.first.high))
-      {
-        // don't join last bin with last-but-one bin
-        mapping.addMapping(RealRange(m.first.leftbracket,m.first.high,max_,']'), mapto++);
-        if(fcount)
-          fcount->append(cnt);
-      }
-      else
-      {
-        // otherwise, we can join it with the previous
-        mapping.removeMapping(m.first);
-        mapping.addMapping(RealRange(m.first.leftbracket, m.first.low, max_, ']'), m.second);
-        if(fcount)
-        {
-          int v =  fcount->back();
-          fcount->pop_back();
-          fcount->append(v+cnt);
-        }
-      }   
-    }
-    return mapping;
+    (*fcount) = TVec<double>();
+    // ouch, assume discrete_mincount == continuous_mincount
+    fcount->resize(0, int(2.*nnonmissing_ / discrete_mincount));
+    fcount->append(nmissing_);
+    fcount->append(0);
   }
 
+  double count = 0, count2 = 0;
+  real low = min_;
+  real high = min_;
+  bool low_has_been_appended = false;
+  ProgressBar pb("Computing PseudoQ Mapping...",counts.size()-1);
 
-RealMapping StatsCollector::getAllValuesMapping(TVec<int> * fcount) const
+  while(nleft--)
   {
-    RealMapping mapping;
-    int i=0;
-    if(fcount)
+    high = it->first;
+    pb(counts.size()-1-nleft);
+    count += it->second.nbelow;
+    count2 += it->second.nbelow;
+    // cerr << "it->first:"<<it->first<<" nbelow:"<<it->second.nbelow<<" n:"<<it->second.n<<endl;
+    if(count>=continuous_mincount)
     {
-      (*fcount) = TVec<int>();
-      fcount->resize(0,counts.size()+2);
-      fcount->append(nmissing_);
-      fcount->append(0);
+      // append continuous range
+      mapping.addMapping(
+        RealRange(low_has_been_appended?']':'[',low, high, '['),
+        mapto++);
+      if(fcount)
+        fcount->append(count);
+      low = high;
+      low_has_been_appended = false;
+      count = 0;
+
     }
 
-    int count=0;
-    
-    for(map<real,StatsCollectorCounts>::const_iterator it = counts.begin();it!=counts.end();++it,++i)
+    if(it->second.n >= discrete_mincount)
     {
-      if(it->first!=FLT_MAX)
-        mapping.addMapping(RealRange('[',it->first,it->first,']'),i);
+      if(count>0) // then append the previous continuous range
+      {
+        mapping.addMapping(RealRange(low_has_been_appended?']':'[',low, high, '['), mapto++);
+        if(fcount)
+          fcount->append(count);
+        count = 0;
+      }
+      // append discrete point
+      mapping.addMapping(RealRange('[',high,high,']'), mapto++);
+      if(fcount)
+        fcount->append(it->second.n + count);
+      count2+=it->second.n;
+      count=0;
+      low = high;
+      low_has_been_appended = true;
+    }
+    else
+    {
+      count2+=it->second.n;      
+      count += it->second.n;
+    }
+    ++it;
+  }
+
+  if(it->first<=max_)
+    PLERROR("Bug in StatsCollector::getBinMapping expected last element of mapping to be FLT_MAX...");
+
+  // make sure we include max_
+  pair<RealRange, real> m = mapping.lastMapping();
+
+  // cnt is the number of elements that would be in the last bin
+  double cnt = nnonmissing_ - count2 + count;
+    
+  // If the bin we're about to add is short of less then tolerance*100% of continuous_mincount elements, 
+  // OR if the last we added is a discrete point AND the max is not already in the last range, we append it 
+  if(m.first.high<max_)
+  {
+    if( ((real)cnt/(real)continuous_mincount)>(1.-tolerance) ||
+        (m.first.low == m.first.high))
+    {
+      // don't join last bin with last-but-one bin
+      mapping.addMapping(RealRange(m.first.leftbracket,m.first.high,max_,']'),
+                         mapto++);
+      if(fcount)
+        fcount->append(cnt);
+    }
+    else
+    {
+      // otherwise, we can join it with the previous
+      mapping.removeMapping(m.first);
+      mapping.addMapping(RealRange(m.first.leftbracket, m.first.low, max_, ']'),
+                         m.second);
       if(fcount)
       {
-        count+=it->second.n;       
-        fcount->append(it->second.n);
+        double v = fcount->back();
+        fcount->pop_back();
+        fcount->append(v+cnt);
       }
-    }
-    if(fcount)
-      (*fcount)[1] = nnonmissing_ - count;
-    return mapping;
-  }    
+    }   
+  }
+  return mapping;
+}
 
-  Mat StatsCollector::cdf(bool normalized) const
+
+RealMapping StatsCollector::getAllValuesMapping(TVec<double> * fcount) const
+{
+  RealMapping mapping;
+  int i=0;
+  if(fcount)
   {
-    int l = 2*counts.size();
-
-    Mat xy(l+1,2);
-    int i=0;
-    int currentcount = 0;
-    xy(i,0) = min_;
-    xy(i++,1) = 0;    
-    map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
-    map<real,StatsCollectorCounts>::const_iterator itend = counts.end();    
-    for(; it!=itend; ++it)
-      {
-        real val = it->first;
-        if(val>max_)
-          val = max_;
-
-        currentcount += it->second.nbelow;
-        xy(i,0) = val;
-        xy(i++,1) = currentcount;
-
-        currentcount += it->second.n;
-        xy(i,0) = val;
-        xy(i++,1) = currentcount;        
-      }
-    if(normalized)
-      xy.column(1) /= real(nnonmissing_);
-
-    return xy;
+    (*fcount) = TVec<double>();
+    fcount->resize(0,counts.size()+2);
+    fcount->append(nmissing_);
+    fcount->append(0);
   }
 
-  void StatsCollector::print(ostream& out) const
+  double count=0;
+    
+  for(map<real,StatsCollectorCounts>::const_iterator it = counts.begin() ;
+      it!=counts.end(); ++it, ++i)
   {
-    out << "# samples: " << n() << "\n";
-    out << "# missing: " << nmissing() << "\n";
-    out << "mean: " << mean() << "\n";
-    out << "stddev: " << stddev() << "\n";
-    out << "stderr: " << stderror() << "\n";
-    out << "min: " << min() << "\n";
-    out << "max: " << max() << "\n\n";
-    out << "counts size: " << counts.size() << "\n";
-    /*
+    if(it->first!=FLT_MAX)
+      mapping.addMapping(RealRange('[',it->first,it->first,']'),i);
+    if(fcount)
+    {
+      count += it->second.n;       
+      fcount->append(it->second.n);
+    }
+  }
+  if(fcount)
+    (*fcount)[1] = nnonmissing_ - count;
+  return mapping;
+}
+
+Mat StatsCollector::cdf(bool normalized) const
+{
+  int l = 2*counts.size();
+
+  Mat xy(l+1,2);
+  int i=0;
+  double currentcount = 0;
+  xy(i,0) = min_;
+  xy(i++,1) = 0;    
+  map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
+  map<real,StatsCollectorCounts>::const_iterator itend = counts.end();    
+  for(; it!=itend; ++it)
+  {
+    real val = it->first;
+    if(val>max_)
+      val = max_;
+
+    currentcount += it->second.nbelow;
+    xy(i,0) = val;
+    xy(i++,1) = currentcount;
+
+    currentcount += it->second.n;
+    xy(i,0) = val;
+    xy(i++,1) = currentcount;        
+  }
+  if(normalized)
+    xy.column(1) /= real(nnonmissing_);
+
+  return xy;
+}
+
+void StatsCollector::print(ostream& out) const
+{
+  out << "# samples: " << n() << "\n";
+  out << "# missing: " << nmissing() << "\n";
+  out << "mean: " << mean() << "\n";
+  out << "stddev: " << stddev() << "\n";
+  out << "stderr: " << stderror() << "\n";
+  out << "min: " << min() << "\n";
+  out << "max: " << max() << "\n\n";
+  out << "first: " << first_obs() << "\n";
+  out << "last:  " << last_obs()  << "\n\n";
+  out << "counts size: " << counts.size() << "\n";
+  /*
     map<real,Counts>::const_iterator it = counts.begin();
     map<real,Counts>::const_iterator itend = counts.end();
     for(; it!=itend; ++it)
     {
-      out << "value: " << it->first 
-          << "  #equal:" << it->second.n
-          << "  #less:" << it->second.nbelow
-          << "  avg_of_less:" << it->second.sum/it->second.nbelow << endl;
+    out << "value: " << it->first 
+    << "  #equal:" << it->second.n
+    << "  #less:" << it->second.nbelow
+    << "  avg_of_less:" << it->second.sum/it->second.nbelow << endl;
     }
-    */
-  }
+  */
+}
 
-  void StatsCollector::oldwrite(ostream& out) const
+void StatsCollector::oldwrite(ostream& out) const
+{
+  writeHeader(out,"StatsCollector",0);
+  writeField(out, "nmissing_", nmissing_);    
+  writeField(out, "nnonmissing_", nnonmissing_);    
+  writeField(out, "sum_", sum_);
+  writeField(out, "sumsquare_", sumsquare_);
+  writeField(out, "min_", min_);
+  writeField(out, "max_", max_);
+  writeField(out, "maxnvalues", maxnvalues);
+
+  writeFieldName(out, "counts");
+  PLearn::write(out, (int)counts.size());
+  writeNewline(out);
+  map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
+  map<real,StatsCollectorCounts>::const_iterator itend = counts.end();
+  for(; it!=itend; ++it)
   {
-    writeHeader(out,"StatsCollector",0);
-    writeField(out, "nmissing_", nmissing_);    
-    writeField(out, "nnonmissing_", nnonmissing_);    
-    writeField(out, "sum_", sum_);
-    writeField(out, "sumsquare_", sumsquare_);
-    writeField(out, "min_", min_);
-    writeField(out, "max_", max_);
-    writeField(out, "maxnvalues", maxnvalues);
-
-    writeFieldName(out, "counts");
-    PLearn::write(out, (int)counts.size());
+    PLearn::write(out, it->first);
+    PLearn::write(out, it->second.n);
+    PLearn::write(out, it->second.nbelow);
+    PLearn::write(out, it->second.sum);
+    PLearn::write(out, it->second.sumsquare);
     writeNewline(out);
-    map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
-    map<real,StatsCollectorCounts>::const_iterator itend = counts.end();
-    for(; it!=itend; ++it)
-    {
-      PLearn::write(out, it->first);
-      PLearn::write(out, it->second.n);
-      PLearn::write(out, it->second.nbelow);
-      PLearn::write(out, it->second.sum);
-      PLearn::write(out, it->second.sumsquare);
-      writeNewline(out);
-    }
-    writeFooter(out,"StatsCollector");
   }
+  writeFooter(out,"StatsCollector");
+}
 
-  void StatsCollector::oldread(istream& in)
+void StatsCollector::oldread(istream& in)
+{
+  int version = readHeader(in,"StatsCollector");
+  if(version!=0)
+    PLERROR("In StatsCollector::oldead don't know how to read this version");
+  readField(in, "nmissing_", nmissing_);    
+  readField(in, "nnonmissing_", nnonmissing_);    
+  readField(in, "sum_", sum_);
+  readField(in, "sumsquare_", sumsquare_);
+  readField(in, "min_", min_);
+  readField(in, "max_", max_);
+  readField(in, "maxnvalues", maxnvalues);
+
+  readFieldName(in, "counts", true);
+  counts.clear();
+  int ncounts;
+  PLearn::read(in, ncounts);
+  readNewline(in);
+  for(int i=0; i<ncounts; i++)
   {
-    int version = readHeader(in,"StatsCollector");
-    if(version!=0)
-      PLERROR("In StatsCollector::oldead don't know how to read this version");
-    readField(in, "nmissing_", nmissing_);    
-    readField(in, "nnonmissing_", nnonmissing_);    
-    readField(in, "sum_", sum_);
-    readField(in, "sumsquare_", sumsquare_);
-    readField(in, "min_", min_);
-    readField(in, "max_", max_);
-    readField(in, "maxnvalues", maxnvalues);
-
-    readFieldName(in, "counts", true);
-    counts.clear();
-    int ncounts;
-    PLearn::read(in, ncounts);
+    real value;
+    StatsCollectorCounts c;
+    PLearn::read(in, value);
+    PLearn::read(in, c.n);
+    PLearn::read(in, c.nbelow);
+    PLearn::read(in, c.sum);
+    PLearn::read(in, c.sumsquare);
     readNewline(in);
-    for(int i=0; i<ncounts; i++)
-    {
-      real value;
-      StatsCollectorCounts c;
-      PLearn::read(in, value);
-      PLearn::read(in, c.n);
-      PLearn::read(in, c.nbelow);
-      PLearn::read(in, c.sum);
-      PLearn::read(in, c.sumsquare);
-      readNewline(in);
-      counts[value] = c;
-    }
-    readFooter(in,"StatsCollector");
+    counts[value] = c;
   }
+  readFooter(in,"StatsCollector");
+}
+
 
 //! Returns the index in the vector returned by getAllStats of the stat with the given name.
 //! Currently available names are E (mean) V (variance) STDDEV MIN MAX STDERROR
 //! Will call PLERROR statname is invalid
 real StatsCollector::getStat(const string& statname) const
 {
-  if(statname=="E")
-    return mean();
-  else if(statname=="V")
-    return variance();
-  else if(statname=="STDDEV")
-    return stddev();
-  else if(statname=="STDERROR")
-    return stderror();
-  else if(statname=="MIN")
-    return min();
-  else if(statname=="MAX")
-    return max();
-  PLERROR("In StatsCollector::getIndexInAllStats, invalid statname %s",statname.c_str());
+  typedef real (StatsCollector::*STATFUN)() const;
+  static bool init = false;
+  static map<string,STATFUN> statistics;
+  if (!init) {
+    statistics["E"]           = &StatsCollector::mean;
+    statistics["V"]           = &StatsCollector::variance;
+    statistics["STDDEV"]      = &StatsCollector::stddev;
+    statistics["STDERROR"]    = &StatsCollector::stderror;
+    statistics["MIN"]         = &StatsCollector::min;
+    statistics["MAX"]         = &StatsCollector::max;
+    statistics["SUM"]         = &StatsCollector::sum;
+    statistics["SUMSQ"]       = &StatsCollector::sumsquare;
+    statistics["FIRST"]       = &StatsCollector::first_obs;
+    statistics["LAST"]        = &StatsCollector::last_obs;
+    statistics["N"]           = &StatsCollector::n;
+    statistics["NMISSING"]    = &StatsCollector::nmissing;
+    statistics["NNONMISSING"] = &StatsCollector::nnonmissing;
+    init = true;
+  }
+  
+  map<string,STATFUN>::iterator fun = statistics.find(statname);
+  if (fun == statistics.end())
+    PLERROR("In StatsCollector::getIndexInAllStats, invalid statname %s",
+            statname.c_str());
+  else
+    return (this->*(fun->second))();
   return 0;
 }
 
@@ -457,84 +488,84 @@ real StatsCollector::getStat(const string& statname) const
   // *** ConditionalStatsCollector ***
   // *********************************
 
-  PLEARN_IMPLEMENT_OBJECT(ConditionalStatsCollector, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(ConditionalStatsCollector, "ONE LINE DESCR", "NO HELP");
 
-  ConditionalStatsCollector::ConditionalStatsCollector()
-    :condvar(0) {}
+ConditionalStatsCollector::ConditionalStatsCollector()
+  :condvar(0) {}
 
-  void ConditionalStatsCollector::setBinMappingsAndCondvar(const TVec<RealMapping>& the_ranges, int the_condvar) 
-  { 
-    ranges = the_ranges;
-    condvar = the_condvar;
-    int nvars = ranges.length();
-    counts.resize(nvars);
-    sums.resize(nvars);
-    sumsquares.resize(nvars);
-    int nranges_condvar = ranges[condvar].length();
-    for(int k=0; k<nvars; k++)
-      {        
-        int nranges_k = ranges[k].length();
-        counts[k].resize(nranges_k+1, nranges_condvar+1);
-        sums[k].resize(nranges_k, nranges_condvar);
-        sumsquares[k].resize(nranges_k, nranges_condvar);
-      }
+void ConditionalStatsCollector::setBinMappingsAndCondvar(const TVec<RealMapping>& the_ranges, int the_condvar) 
+{ 
+  ranges = the_ranges;
+  condvar = the_condvar;
+  int nvars = ranges.length();
+  counts.resize(nvars);
+  sums.resize(nvars);
+  sumsquares.resize(nvars);
+  int nranges_condvar = ranges[condvar].length();
+  for(int k=0; k<nvars; k++)
+  {        
+    int nranges_k = ranges[k].length();
+    counts[k].resize(nranges_k+1, nranges_condvar+1);
+    sums[k].resize(nranges_k, nranges_condvar);
+    sumsquares[k].resize(nranges_k, nranges_condvar);
   }
+}
 
-  int ConditionalStatsCollector::findrange(int varindex, real val) const
-  {
-    RealMapping& r = ranges[varindex];
-    if(is_missing(val))
-      return r.length();
-    else
-      return (int) r.map(val);
-  }
+int ConditionalStatsCollector::findrange(int varindex, real val) const
+{
+  RealMapping& r = ranges[varindex];
+  if(is_missing(val))
+    return r.length();
+  else
+    return (int) r.map(val);
+}
   
-  void ConditionalStatsCollector::update(const Vec& v)
+void ConditionalStatsCollector::update(const Vec& v)
+{
+  int nvars = ranges.length();
+  if(v.length()!=nvars)
+    PLERROR("IN ConditionalStatsCollectos::update length of update vector and nvars differ!");
+  int j = findrange(condvar, v[condvar]);
+  if(j==-1)
+    PLWARNING("In ConditionalStatsCollector::update value of conditioning var in none of the ranges");
+  for(int k=0; k<nvars; k++)
   {
-    int nvars = ranges.length();
-    if(v.length()!=nvars)
-      PLERROR("IN ConditionalStatsCollectos::update length of update vector and nvars differ!");
-    int j = findrange(condvar, v[condvar]);
-    if(j==-1)
-      PLWARNING("In ConditionalStatsCollector::update value of conditioning var in none of the ranges");
-    for(int k=0; k<nvars; k++)
-      {
-        real val = v[k];
-        int i = findrange(k, val);
-        if(i==-1)
-          PLWARNING("In ConditionalStatsCollector::update value of variable #%d in none of the ranges",k);
-        counts[k](i,j)++;
-        if(!is_missing(val))
-          {
-            sums[k](i,j) += val;
-            sumsquares[k](i,j) += val;
-          }
-      }
+    real val = v[k];
+    int i = findrange(k, val);
+    if(i==-1)
+      PLWARNING("In ConditionalStatsCollector::update value of variable #%d in none of the ranges",k);
+    counts[k](i,j)++;
+    if(!is_missing(val))
+    {
+      sums[k](i,j) += val;
+      sumsquares[k](i,j) += val;
+    }
   }
+}
 
-  void ConditionalStatsCollector::write(ostream& out) const
-  {
-    writeHeader(out,"ConditionalStatsCollector",0);
-    writeField(out, "condvar", condvar);    
-    writeField(out, "ranges", ranges);    
-    writeField(out, "counts", counts);
-    writeField(out, "sums", sums);
-    writeField(out, "sumsquares", sumsquares);
-    writeFooter(out,"ConditionalStatsCollector");
-  }
+void ConditionalStatsCollector::write(ostream& out) const
+{
+  writeHeader(out,"ConditionalStatsCollector",0);
+  writeField(out, "condvar", condvar);    
+  writeField(out, "ranges", ranges);    
+  writeField(out, "counts", counts);
+  writeField(out, "sums", sums);
+  writeField(out, "sumsquares", sumsquares);
+  writeFooter(out,"ConditionalStatsCollector");
+}
 
-  void ConditionalStatsCollector::oldread(istream& in)
-  {
-    int version = readHeader(in,"ConditionalStatsCollector");
-    if(version!=0)
-      PLERROR("In ConditionalStatsCollector::oldead don't know how to read this version");
-    readField(in, "condvar", condvar);    
-    readField(in, "ranges", ranges);    
-    readField(in, "counts", counts);
-    readField(in, "sums", sums);
-    readField(in, "sumsquares", sumsquares);
-    readFooter(in,"ConditionalStatsCollector");
-  }
+void ConditionalStatsCollector::oldread(istream& in)
+{
+  int version = readHeader(in,"ConditionalStatsCollector");
+  if(version!=0)
+    PLERROR("In ConditionalStatsCollector::oldead don't know how to read this version");
+  readField(in, "condvar", condvar);    
+  readField(in, "ranges", ranges);    
+  readField(in, "counts", counts);
+  readField(in, "sums", sums);
+  readField(in, "sumsquares", sumsquares);
+  readFooter(in,"ConditionalStatsCollector");
+}
 
 TVec<RealMapping> computeRanges(TVec<StatsCollector> stats, int discrete_mincount, int continuous_mincount)
 {

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.17 2003/08/13 08:13:17 plearner Exp $
+   * $Id: StatsCollector.h,v 1.18 2003/09/06 22:29:39 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,8 +51,8 @@ using namespace std;
 class StatsCollectorCounts
 {
 public:
-  int n; //!<  counts the number of occurences of the corresponding value
-  int nbelow; //!<  counts the number of occurences of values below this counter's value but above the previous one
+  double n; //!<  counts the number of occurences of the corresponding value
+  double nbelow; //!<  counts the number of occurences of values below this counter's value but above the previous one
   double sum; //!<  sum of the values below this counter's but above the previous one
   double sumsquare; //!<  sum of squares of the values below this counter's but above the previous one
   int id; //!< a unique int identifier corresponding to this value (ids will span from 0 to # of known values) also, take a look at StatsCollector::sortIds()
@@ -97,12 +97,14 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
 
     // ** Learnt options **
 
-    int nmissing_;  //!<  number of missing values
-    int nnonmissing_; //!<  number of non missing value 
-    double sum_; //!<  sum of all values
-    double sumsquare_; //!<  sum of square of all values
-    real min_; //!< the min
-    real max_; //!< the max
+    double nmissing_;      //!< (weighted) number of missing values
+    double nnonmissing_;   //!< (weighted) number of non missing value 
+    double sum_;           //!< sum of all values
+    double sumsquare_;     //!< sum of square of all values
+    real min_;             //!< the min
+    real max_;             //!< the max
+    real first_;           //!< first encountered nonmissing observation
+    real last_;            //!< last encountered nonmissing observation
 
     //! will contain up to maxnvalues values and associated Counts
     //! as well as a last element which maps FLT_MAX, so that we don't miss anything
@@ -122,9 +124,9 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
 
     StatsCollector(int the_maxnvalues=0);
       
-    int n() const { return nmissing_ + nnonmissing_; } //!< number of samples seen with update (length of VMat for ex.)
-    int nmissing() const { return nmissing_; }
-    int nnonmissing() const { return nnonmissing_; }
+    real n() const { return nmissing_ + nnonmissing_; } //!< number of samples seen with update (length of VMat for ex.)
+    real nmissing() const { return nmissing_; }
+    real nnonmissing() const { return nnonmissing_; }
     real sum() const { return real(sum_); }
     real sumsquare() const { return real(sumsquare_); }
     real min() const { return min_; }
@@ -133,9 +135,18 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
     real stddev() const { return sqrt(variance()); }
     real stderror() const { return sqrt(variance()/nnonmissing()); }
+    real first_obs() const { return first_; }
+    real last_obs() const { return last_; }
           
 
-    //! currently understood statnames are E (mean), V (variance), STDDEV, MIN, MAX, STDERROR
+    //! currently understood statnames are :
+    //!   - E (mean)
+    //!   - V (variance)
+    //!   - STDDEV, STDERROR
+    //!   - MIN, MAX
+    //!   - SUM, SUMSQ
+    //!   - FIRST, LAST
+    //!   - N, NMISSING, NNONMISING
     real getStat(const string& statname) const;
 
     //! simply calls inherited::build() then build_()
@@ -145,7 +156,7 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     void forget();
 
     //! update statistics with next value val of sequence 
-    void update(real val);
+    void update(real val, real weight = 1.0);
 
     //! finishes whatever computation are needed after all updates have been made
     void finalize() {}
@@ -161,14 +172,19 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     //! *** NOT TESTED YET
     void sortIds();
 
-    //! returns a mapping that maps values to a bin number (from 0 to mapping.length()-1)
+    //! returns a mapping that maps values to a bin number
+    //! (from 0 to mapping.length()-1)
     //! The mapping will leave missing values as MISSING_VALUE
     //! And values outside the [min, max] range will be mapped to -1
-    //! Tolerance is used to test wheter we join the two last bins or not. If last be is short of more then tolerance*100%
+    //! Tolerance is used to test wheter we join the two last bins or not.
+    //! If last be is short of more then tolerance*100%
     //! of continuous_mincount elements, we join it with the previous bin.
-    RealMapping getBinMapping(int discrete_mincount, int continuous_mincount, real tolerance=.1, TVec<int>* fcount=NULL) const;
+    RealMapping getBinMapping(double discrete_mincount,
+                              double continuous_mincount,
+                              real tolerance=.1,
+                              TVec<double>* fcount=0) const;
 
-    RealMapping getAllValuesMapping(TVec<int> * fcount=NULL) const;
+    RealMapping getAllValuesMapping(TVec<double>* fcount=0) const;
 
     virtual void oldwrite(ostream& out) const;
     virtual void oldread(istream& in);
@@ -180,8 +196,9 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
 
   DECLARE_OBJECT_PTR(StatsCollector);
 
-  //!  this class holds counts of co-occurences of variables within specific ranges
-  class ConditionalStatsCollector: public Object
+  //!  this class holds counts of co-occurences of variables within
+  //!  specific ranges
+  class ConditionalStatsCollector : public Object
   {
   protected:
 
