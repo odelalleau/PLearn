@@ -34,6 +34,8 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
+use File::Glob ':globally';
+
 # returns a full path to the given file (which may be expressed relative to the current directory)
 # if the file refers to a directory, an ending '/' will be appended to the name if it wasn't already there
 sub fullpath($)
@@ -110,10 +112,10 @@ sub process_list(@)
             if (-d $fname)
             { 
                 my @flist = lsdir($fname);
-
-                @flist = grep { -d $_ or /Makefile|makefile|
-                               \.c$|\.cc$|\.cpp$|\.CC$|\.h$
-                                   |\.txt$|^readme|^Readme|^README/x } @flist;
+                $commande = "find " . $fname . " -type f -a \\\( -name '" . join( "' -o -name '", @globlist ) . "' \\\) ";
+                # print ">>>>>  ", $commande;
+                @flist = `$commande`;
+                # print join("\n",@flist);
                 process_list(@flist); 
             }
             else
@@ -128,13 +130,15 @@ sub process_list(@)
 # Main program #
 ################
 
+@default_globlist = ("*.cc", "*.h", "*.c", "*.cpp", "*.CC", "*.txt", "Makefile", "makefile", "Readme", "README");
+
 $nargs = $#ARGV+1;
 if($nargs<3)
 {
 print 
 "
-Normal usage: search-replace 'search_word' 'replace_word' <list of files and directories>
-Expert usage: search-replace -e 'search_regexp' 'replace_expression' <list of files and directories>
+Normal usage: search-replace 'search_word' 'replace_word' <list of files and directories> [ -- patterns for admissible files  ] 
+Expert usage: search-replace -e 'search_regexp' 'replace_expression' <list of files and directories> [ -- patterns for admissible files  ]  
 
 Will perform the specified search-replace operation on every file in the
 list and recursively in directories.  (only certain kinds of files are
@@ -146,7 +150,12 @@ characters. Any other character delimits a word boundary). Make sure not to
 use any special character in 'search_word' (unless you really know what you
 are doing...)
 
-The expert command uses perl extended regexp... Make sure you know what you are doing!
+You may optionally specify patterns of admissible files after the list of directories, with shell wildcards
+The default (if you don't specify -- ) is the following:
+'" . join("' '",@default_globlist) . "'
+
+The expert command is triggered by the -e argument and uses perl extended regexp... 
+Make sure you know what you are doing!
 
 If you regret your move command undo-search-replace allows you to revert to
 the version preceeding the changes.  (it has unlimited levels of undo, as
@@ -169,21 +178,34 @@ mkdir $undodir,0777;
 $undofilenum = 0;
 
 $option = shift;
+
 if ($option eq "-e")
 {
     $search = shift;
     $replace = shift;
-    print "REPLACING REGEXP: $search \nWITH: $replace \nIN: ".join(" ",@ARGV)."\n";    
     $command = '$tbuf =~ s['.$search.']['.$replace.']sgx';
 }
 else # no option was specified
 {
     $search = $option;
     $replace = shift;
-    print "REPLACING WORD: $search \nWITH: $replace \nIN: ".join(" ",@ARGV)."\n";
     $command = '$tbuf =~ s[\b'.$search.'\b]['.$replace.']sgx';
 }
 
+# search for --
+$pos = 0;
+foreach $a ( @ARGV )
+{
+    last if ($a eq "--");
+    $pos++;
+}
+
+@globlist = splice(@ARGV,$pos,scalar(@ARGV)-$pos);
+shift @globlist;
+
+@globlist = @default_globlist unless @globlist;
+
+print "REPLACING: $search \nWITH: $replace \nIN: ".join(" ",@ARGV)."\nAND IN SUB DIRECTORIES FOR FILES MATCHING: \n".join(" ",@globlist)."\n";    
 print "ARE YOU REALLY SURE? [yes|no] ";
 $answer = <STDIN>;
 exit if $answer !~ /yes|Yes|YES/;
