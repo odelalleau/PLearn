@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: plapack.cc,v 1.4 2002/12/06 19:06:32 yoshua Exp $
+   * $Id: plapack.cc,v 1.5 2003/01/29 03:14:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -226,9 +226,11 @@ void eigenVecOfSymmMat(Mat& m, int k, Vec& eigen_values, Mat& eigen_vectors)
   else
     lapackEIGEN(m, eigen_values, eigen_vectors, 'I', m.width()-k, m.width()-1);
 
+  // put largest (rather than smallest) first!
   eigen_values.swap();
   eigen_vectors.swapUpsideDown();
 }
+
 
 void lapackEIGEN(const TMat<double>& A, TVec<double>& eigenvals, TMat<double>& eigenvecs, char RANGE, double low, double high, double ABSTOL)
 {
@@ -280,21 +282,23 @@ void lapackEIGEN(const TMat<double>& A, TVec<double>& eigenvals, TMat<double>& e
     }
 
   // temporary work vectors
-  static TVec<int> ISUPPZ;
   static TVec<double> WORK;
   static TVec<int> IWORK;
+  static TVec<int> IFAIL;
 
-  ISUPPZ.resize(2*N);
   WORK.resize(1);
-  IWORK.resize(1);
+  IWORK.resize(5*N);
+  IFAIL.resize(N);
 
   int LWORK = -1;
-  int LIWORK = -1;
   int INFO;
+
 
   // first call to find optimal work size
   //  cerr << '(';
-  dsyevr_( &JOBZ,  &RANGE,  &UPLO,  &N,  A.data(),  &LDA,  &VL, &VU, &IL, &IU, &ABSTOL, &M, eigenvals.data(), Z, &LDZ, ISUPPZ.data(), WORK.data(), &LWORK, IWORK.data(), &LIWORK, &INFO );
+  dsyevx_( &JOBZ, &RANGE, &UPLO, &N, A.data(), &LDA,  &VL,  &VU,
+           &IL,  &IU,  &ABSTOL,  &M,  eigenvals.data(), Z, &LDZ, 
+           WORK.data(), &LWORK, IWORK.data(), IFAIL.data(), &INFO );
   // cerr << ')';
 
   if(INFO!=0)
@@ -303,12 +307,12 @@ void lapackEIGEN(const TMat<double>& A, TVec<double>& eigenvals, TMat<double>& e
   // make sure we have enough space
   LWORK = (int) WORK[0]; // optimal size
   WORK.resize(LWORK);
-  LIWORK = IWORK[0]; // optimal size
-  IWORK.resize(LIWORK);
 
   // second call to do the computation
   // cerr << '{';
-  dsyevr_( &JOBZ,  &RANGE,  &UPLO,  &N,  A.data(),  &LDA,  &VL, &VU, &IL, &IU, &ABSTOL, &M, eigenvals.data(), Z, &LDZ, ISUPPZ.data(), WORK.data(), &LWORK, IWORK.data(), &LIWORK, &INFO );
+  dsyevx_( &JOBZ, &RANGE, &UPLO, &N, A.data(), &LDA,  &VL,  &VU,
+           &IL,  &IU,  &ABSTOL,  &M,  eigenvals.data(), Z, &LDZ, 
+           WORK.data(), &LWORK, IWORK.data(), IFAIL.data(), &INFO );
   // cerr << '}';
 
   if(INFO!=0)

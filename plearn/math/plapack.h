@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.6 2002/12/22 23:00:25 yoshua Exp $
+   * $Id: plapack.h,v 1.7 2003/01/29 03:14:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -77,8 +77,8 @@ int eigen_SymmMat_decreasing(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalue
                   bool compute_all, int nb_eigen, bool compute_vectors = true,
                   bool largest_evalues=true);
 
-//! DOCUMENTATION BUG? THIS FUNCTION CALLS DSYEVR which works on TRIDIAGONAL MATRICES!
-//! Computes up to k eigen_values and corresponding eigen_vectors of symmetric matrix m. 
+
+//! Computes up to k largest eigen_values and corresponding eigen_vectors of symmetric matrix m. 
 //! Parameters eigen_values and eigen_vectors are resized accordingly and filled by the call.
 //! The eigenvalues are returned in decreasing order (largest first).
 //! The corresponding eigenvectors are in the *ROWS* of eigen_vectors
@@ -86,7 +86,6 @@ int eigen_SymmMat_decreasing(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalue
 void eigenVecOfSymmMat(Mat& m, int k, Vec& eigen_values, Mat& eigen_vectors);
 
 
-//! DOCUMENTATION BUG? THIS FUNCTION CALLS DSYEVR which works on TRIDIAGONAL MATRICES!
 //!   Computes the eigenvalues and eigenvectors of a symmetric (NxN) matrix A.
 //!   BEWARE: The content of A is destroyed by the call.
 /*!   ATTENTION: uses TVec<double>::tmpvec1,2 don't use them in caller
@@ -96,7 +95,7 @@ void eigenVecOfSymmMat(Mat& m, int k, Vec& eigen_values, Mat& eigen_vectors);
      'V': all eigenvalues in the half-open interval (low,high] will be found. 
      'I': will find eigenvals with indexes int(low) to int(high) included (smallest eigenval having index 0)
 
-  ABSTOL is the tolerance (see lapack doc for call dsyevr_ )
+  ABSTOL is the tolerance (see lapack doc for call dsyevx_ )
 
   If you do not wish to compute eigenvectors, provide a null (empty) 'eigenvecs'.
 
