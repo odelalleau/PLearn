@@ -3,11 +3,13 @@
 VMat de train contient toujours les donnees dans l'intervalle [0,t).
 
 CONVENTIONS: 
- - la VMat passee par train a un SequentialLearner contient TOUTES LES DONNEES jusqu'au temps t (exclus)
- - la VMat passee par test a un SequentialLearner contient des donnees commencant a t (depuis le dernier appel a train())
+ - la VMat passee par train a un SequentialLearner contient TOUTES LES DONNEES
+   jusqu'au temps t-1 (inclus)
+ - la VMat passee par test a un SequentialLearner contient des donnees
+   commencant a t-1 inclus (depuis le dernier appel a train())
  - les VMat passees a un SequentialLearner ont toutes les informations a la colonne t disponibles au temps t
-   (donc pour un dataset de longueur T, il n'y a que T-horizon exemples effectifs, commencant la 
-   paire (entree a 0, target a horizon) et finissant a la paire (entree a T-horizon-1, target a T-1).
+   (donc pour un dataset de longueur T, il n'y a que T-horizon exemples effectifs, commencant a la 
+   paire (entree a 0, target a horizon) et finissant a la paire (entree a T-1-horizon, target a T-1).
 
 SequentialLearner sous-classe virtuelle de Learner
 
@@ -16,7 +18,7 @@ int max_train_len; // max nb of (input,target) pairs actually used for training
 int last_train_t; // last value of train_set.length() for which training was actually done
 int last_call_train_t; // value of train_set.length() for last call to train()
 int train_step; // how often we have to re-train a model, value of 1 = after every time step.
-int horizon; // by how much to offset the target columns wrt the input columns (default = 1), using a TemporalHorizonVMat
+int horizon; // by how much to offset the target columns wrt the input columns (default = 1)
 
 // these two fields are used by other classes such as SequentialModelSelector and SequentialValidation
 // and they are filled when the method test is called 
@@ -37,7 +39,7 @@ Mat errors; // each element indexed by (time_index, cost_index), there are (max_
 
 EmbeddedSequentialLearner sous-classe non-virtuelle de SequentialLearner
  contient un Learner
- forward tous les messages de Learner (sauf train(), faire comme ci-haut) au learner sous-jacent
+ forward tous les messages de Learner (sauf train() et test()) au learner sous-jacent
  if t>max_train_len, then send training data [t-max_train_len,t) to underlying learner.
  The data sets are transformed by embedding in a TemporalHorizonVMat.
  Optionally could filter out the rows with missing data.
@@ -54,10 +56,10 @@ EmbeddedSequentialLearner sous-classe non-virtuelle de SequentialLearner
      last_train_t = t
    last_call_train_t = t
 
- la methode test: // should receive data starting at t-1, of length 1+horizon
+ la methode test: // should receive data starting at t-1, of length at least 1+horizon
    for (t=last_call_train_t-1;t<last_call_train_t-1+test_set.size();t++)
-      input = test_set[t].subVec(0,inputsize_);
-      target = test_set[t+horizon].subVec(inputsize_,targetsize_);
+      input = test_set[t-last_call_train_t+1].subVec(0,inputsize_);
+      target = test_set[t-last_call_train_t+1+horizon].subVec(inputsize_,targetsize_);
       if (input not missing and target not missing)
         learner.useAndCost(input,target,predictions(t),errors(t+horizon));
 
@@ -77,9 +79,9 @@ SequentialModelSelector sous-classe non-virtuelle de SequentialLearner
  la methode train:
    // last usable (input,target) pair is (t-1-horizon,t-1)
    // we will use it as a test pair and we will train up to (t-1-2*horizon,t-1-horizon) pair
-   for (t=last_call_train_t+1;t<=train.length();t++)
+   for (t=init_train_size+1;t<=train.length();t++)  // POURQUOI LE +1 ???
      sub_train = train_set.subMatRows(0,t-horizon); // last training pair is (t-1-2*horizon,t-1-horizon)
-     sub_test = train_set.subMatRows(t-1-horizon,1+horizon) // this is the (t-1-horizon,t-1) (input,target) pair
+     sub_test  = train_set.subMatRows(t-1-horizon,1+horizon) // this is the (t-1-horizon,t-1) (input,target) pair
      for each underlying model
        model.train(sub_train)
        model.test(sub_test) // last cost computed goes at t-1, last prediction at t-1-horizon
@@ -105,6 +107,7 @@ SequentialValidation sous-classe de Object (similaire a Experiment)
  PP<SequentialLearner> model; // contient un SequentialLearner qui sera teste
  appelle train/test sur des intervalles successifs
  int init_train_size; // size of first training set
+ VMat train_set;  // the training set
 
  la methode run:
    for (t=init_train_size;t<=train.length();t++)
