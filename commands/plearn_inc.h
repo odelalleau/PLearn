@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.5 2004/06/28 21:10:24 lapalmej Exp $ 
+   * $Id: plearn_inc.h,v 1.6 2004/06/29 19:48:09 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -138,6 +138,7 @@
 #include "CumVMatrix.h"
 #include "FilteredVMatrix.h"
 #include "IndexedVMatrix.h"
+#include "KNNVMatrix.h"
 #include "LocalNeighborsDifferencesVMatrix.h"
 #include "MultiInstanceVMatrix.h"
 #include "PrecomputedVMatrix.h"
