@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.h,v 1.2 2004/02/16 20:30:45 tihocan Exp $
+   * $Id: MultiInstanceNNet.h,v 1.3 2004/02/17 22:54:44 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/MultiInstanceNNet.h */
@@ -62,9 +62,9 @@ using namespace std;
     Var wdirect; // bias and weights for direct in-to-out connection
 
     Var output;
-    VarArray costs; // all costs of interest
+    VarArray costs; // (negative log-likelihood, classification error) for the bag
     VarArray penalties;
-    Var training_cost; // weighted scalar costs[0] including penalties
+    Var training_cost; // weighted cost + penalties
     Var test_costs; // hconcat(costs)
     VarArray invars;
     VarArray params;  // all arameter input vars
@@ -77,7 +77,7 @@ using namespace std;
     mutable Func output_and_target_to_cost; // output & target -> cost
 
   public:
-
+    
     typedef PLearner inherited;
 
     // Build options inherited from learner:
@@ -103,13 +103,7 @@ using namespace std;
 
     bool L1_penalty; // default: false
     bool direct_in_to_out; // should we include direct input to output connecitons? default: false
-    string output_transfer_func; // tanh, sigmoid, softplus, softmax  (default: "" means no transfer function)
     real interval_minval, interval_maxval; // if output_transfer_func = interval(minval,maxval), these are the interval bounds
-
-    //! a list of cost functions to use in the form "[ cf1; cf2; cf3; ... ]"
-    // where the cost functions can be one of mse, mse_onehot, NLL,
-    // class_error or multiclass_error (no default)
-    Array<string> cost_funcs;  
 
     // Build options related to the optimization:
     PP<Optimizer> optimizer; // the optimizer to use (no default)

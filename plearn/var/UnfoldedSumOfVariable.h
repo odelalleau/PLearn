@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedSumOfVariable.h,v 1.2 2004/02/16 16:25:40 yoshua Exp $
+   * $Id: UnfoldedSumOfVariable.h,v 1.3 2004/02/17 22:54:36 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -94,20 +94,8 @@ class UnfoldedSumOfVariable: public NaryVariable
 };
 
 //!  sumOf
-inline Var unfoldedSumOf(VMat distr, Func f, int nsamples)
-{ return new UnfoldedSumOfVariable(distr,f,nsamples); }
-
-//!  deprecated old version do not use!
-inline Var unfoldedSumOf(Var output, const VarArray& inputs, VMat distr, int nsamples, VarArray parameters=VarArray())
-{ return unfoldedSumOf(distr,Func(inputs,output),nsamples); }
-
-//!  meanOf
-inline Var unfoldedMeanOf(VMat distr, Func f, int nsamples)
-{ return new UnfoldedSumOfVariable(distr,f/nsamples,nsamples); }
-
-//!  deprecated old version do not use!
-inline Var unfoldedMeanOf(Var output, const VarArray& inputs, VMat distr, int nsamples, VarArray parameters=VarArray())
-{ return unfoldedMeanOf(distr, Func(inputs,output), nsamples); }
+inline Var unfoldedSumOf(VMat distr, Func f, int max_bag_size)
+{ return new UnfoldedSumOfVariable(distr,f,max_bag_size); }
 
 %> // end of namespace PLearn
 

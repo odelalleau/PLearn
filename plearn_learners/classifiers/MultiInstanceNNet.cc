@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.3 2004/02/17 21:07:02 tihocan Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.4 2004/02/17 22:54:43 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -53,16 +53,12 @@
 #include "LogSoftmaxVariable.h"
 #include "MulticlassLossVariable.h"
 #include "MultiInstanceNNet.h"
-#include "NegCrossEntropySigmoidVariable.h"
-#include "OneHotSquaredLoss.h"
+#include "UnfoldedSumOfVariable.h"
 #include "random.h"
 #include "SigmoidVariable.h"
-#include "SoftmaxVariable.h"
-#include "SoftplusVariable.h"
 #include "SumVariable.h"
 #include "SumAbsVariable.h"
 #include "SumOfVariable.h"
-#include "SumSquareVariable.h"
 #include "SubVMatrix.h"
 #include "TanhVariable.h"
 #include "TransposeProductVariable.h"
@@ -108,10 +104,8 @@ MultiInstanceNNet::MultiInstanceNNet() // DEFAULT VALUES FOR ALL OPTIONS
    output_layer_weight_decay(0),
    output_layer_bias_decay(0),
    direct_in_to_out_weight_decay(0),
-   classification_regularizer(0),
    L1_penalty(false),
    direct_in_to_out(false),
-   output_transfer_func(""),
    interval_minval(0), interval_maxval(1),
    batch_size(1)
 {}
@@ -170,38 +164,12 @@ void MultiInstanceNNet::declareOptions(OptionList& ol)
   declareOption(ol, "direct_in_to_out", &MultiInstanceNNet::direct_in_to_out, OptionBase::buildoption, 
                 "    should we include direct input to output connections?\n");
 
-  declareOption(ol, "output_transfer_func", &MultiInstanceNNet::output_transfer_func, OptionBase::buildoption, 
-                "    what transfer function to use for ouput layer? \n"
-                "    one of: tanh, sigmoid, exp, softplus, softmax \n"
-                "    or interval(<minval>,<maxval>), which stands for\n"
-                "    <minval>+(<maxval>-<minval>)*sigmoid(.).\n"
-                "    An empty string or \"none\" means no output transfer function \n");
-
-  declareOption(ol, "cost_funcs", &MultiInstanceNNet::cost_funcs, OptionBase::buildoption, 
-                "    a list of cost functions to use\n"
-                "    in the form \"[ cf1; cf2; cf3; ... ]\" where each function is one of: \n"
-                "      mse (for regression)\n"
-                "      mse_onehot (for classification)\n"
-                "      NLL (negative log likelihood -log(p[c]) for classification) \n"
-                "      class_error (classification error) \n"
-                "      binary_class_error (classification error for a 0-1 binary classifier)\n"
-                "      multiclass_error\n"
-                "      cross_entropy (for binary classification)\n"
-                "      stable_cross_entropy (more accurate backprop and possible regularization, for binary classification)\n"
-                "      lift_output (not a real cost function, just the output for lift computation)\n"
-                "    The first function of the list will be used as \n"
-                "    the objective function to optimize \n"
-                "    (possibly with an added weight decay penalty) \n");
-  
-  declareOption(ol, "classification_regularizer", &MultiInstanceNNet::classification_regularizer, OptionBase::buildoption, 
-                "    used only in the stable_cross_entropy cost function, to fight overfitting (0<=r<1)\n");
-
   declareOption(ol, "optimizer", &MultiInstanceNNet::optimizer, OptionBase::buildoption, 
                 "    specify the optimizer to use\n");
 
   declareOption(ol, "batch_size", &MultiInstanceNNet::batch_size, OptionBase::buildoption, 
                 "    how many samples to use to estimate the avergage gradient before updating the weights\n"
-                "    0 is equivalent to specifying training_set->length() \n");
+                "    0 is equivalent to specifying training_set->n_non_missing_rows() \n");
 
   declareOption(ol, "paramsvalues", &MultiInstanceNNet::paramsvalues, OptionBase::learntoption, 
                 "    The learned parameter vector\n");
@@ -231,30 +199,11 @@ void MultiInstanceNNet::setTrainingSet(VMat training_set, bool call_forget)
     weightsize_ = train_set->weightsize();
   }
 
-  // THE CODE BELOW SHOULD BE REMOVED: THIS NOT THE PLACE
-  // TO MASSAGE THE DATA SET, IT SHOULD BE DONE WHEN
-  // CONSTRUCTING THE VMAT SENT TO THE LEARNER, NOT
-  // IN THE LEARNER. Yoshua. N.B. ALSO REMOVE THE OPTION IN VMATRIX.
-  // IF THIS IS DONE THEN THE DEFAULT setTrainingSet CAN
-  // BE USED INSTEAD OF REDEFINING IN MultiInstanceNNet.
-
-  // Reduce the train_set to the used data.
-  if (train_set->target_is_last) {
-    int useless_size = training_set.width() - targetsize() - inputsize();
-    if (useless_size > 0) {
-      int is = inputsize();
-      int ts = targetsize();
-      int ws = train_set->weightsize();
-      VMat train_input = new SubVMatrix(train_set, 0, 0, train_set.length(), inputsize());
-      VMat train_target = new SubVMatrix(train_set, 0, train_set.width() - targetsize(), train_set.length(), targetsize());
-      train_set = new ConcatColumnsVMatrix(train_input, train_target);
-      train_set->defineSizes(is, ts, ws);
-      train_set->build();
-    }
-  }
-
   if (training_set_has_changed || call_forget)
+  {
     build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un MultiInstanceNNet train_set = training_set;
+    if (call_forget) forget();
+  }
 }
 
 void MultiInstanceNNet::build_()
@@ -308,36 +257,10 @@ void MultiInstanceNNet::build_()
         }
 
       Var before_transfer_func = output;
-      
-      /*
-       * output_transfer_func
-       */
-      unsigned int p=0;
-      if(output_transfer_func!="" && output_transfer_func!="none")
-        {
-          if(output_transfer_func=="tanh")
-            output = tanh(output);
-          else if(output_transfer_func=="sigmoid")
-            output = sigmoid(output);
-          else if(output_transfer_func=="softplus")
-            output = softplus(output);
-          else if(output_transfer_func=="exp")
-            output = exp(output);
-          else if(output_transfer_func=="softmax")
-            output = softmax(output);
-          else if (output_transfer_func == "log_softmax")
-            output = log_softmax(output);
-          else if ((p=output_transfer_func.find("interval"))!=string::npos)
-          {
-            unsigned int q = output_transfer_func.find(",");
-            interval_minval = atof(output_transfer_func.substr(p+1,q-(p+1)).c_str());
-            unsigned int r = output_transfer_func.find(")");
-            interval_maxval = atof(output_transfer_func.substr(q+1,r-(q+1)).c_str());
-            output = interval_minval + (interval_maxval - interval_minval)*sigmoid(output);
-          }
-          else
-            PLERROR("In MultiInstanceNNet::build_()  unknown output_transfer_func option: %s",output_transfer_func.c_str());
-        }
+   
+      // the output transfer function is FIXED: it must be a sigmoid (0/1 probabilistic classification)
+
+      output = sigmoid(output);
 
       /*
        * target and weights
@@ -351,71 +274,6 @@ void MultiInstanceNNet::build_()
           PLERROR("MultiInstanceNNet: expected weightsize to be 1 or 0 (or unspecified = -1, meaning 0), got %d",weightsize_);
         sampleweight = Var(1, "weight");
       }
-      /*
-
-       * costfuncs
-       */
-      int ncosts = cost_funcs.size();  
-      if(ncosts<=0)
-        PLERROR("In MultiInstanceNNet::build_()  Empty cost_funcs : must at least specify the cost function to optimize!");
-      costs.resize(ncosts);
-      
-      for(int k=0; k<ncosts; k++)
-        {
-          // create costfuncs and apply individual weights if weightpart > 1
-          if(cost_funcs[k]=="mse")
-            costs[k]= sumsquare(output-target);
-          else if(cost_funcs[k]=="mse_onehot")
-            costs[k] = onehot_squared_loss(output, target);
-          else if(cost_funcs[k]=="NLL") 
-            {
-              if (output->size() == 1) {
-                // Assume sigmoid output here!
-                costs[k] = cross_entropy(output, target);
-              } else {
-                if (output_transfer_func == "log_softmax")
-                  costs[k] = -output[target];
-                else
-                  costs[k] = neg_log_pi(output, target);
-              }
-            } 
-          else if(cost_funcs[k]=="class_error")
-            costs[k] = classification_loss(output, target);
-          else if(cost_funcs[k]=="binary_class_error")
-            costs[k] = binary_classification_loss(output, target);
-          else if(cost_funcs[k]=="multiclass_error")
-            costs[k] = multiclass_loss(output, target);
-          else if(cost_funcs[k]=="cross_entropy")
-            costs[k] = cross_entropy(output, target);
-          else if (cost_funcs[k]=="stable_cross_entropy") {
-            Var c = stable_cross_entropy(before_transfer_func, target);
-            costs[k] = c;
-            if (classification_regularizer) {
-              // There is a regularizer to add to the cost function.
-              dynamic_cast<NegCrossEntropySigmoidVariable*>((Variable*) c)->
-                setRegularizer(classification_regularizer);
-            }
-          }
-          else if (cost_funcs[k]=="lift_output")
-            costs[k] = lift_output(output, target);
-          else  // Assume we got a Variable name and its options
-            {
-              costs[k]= dynamic_cast<Variable*>(newObject(cost_funcs[k]));
-              if(costs[k].isNull())
-                PLERROR("In MultiInstanceNNet::build_()  unknown cost_func option: %s",cost_funcs[k].c_str());
-              costs[k]->setParents(output & target);
-              costs[k]->build();
-            }
-          
-          // take into account the sampleweight
-          //if(sampleweight)
-          //  costs[k]= costs[k] * sampleweight; // NO, because this is taken into account (more properly) in stats->update
-        }
-      
-
-      /*
-       * weight and bias decay penalty
-       */
 
       // create penalties
       penalties.resize(0);  // prevents penalties from being added twice by consecutive builds
@@ -434,33 +292,6 @@ void MultiInstanceNNet::build_()
           penalties.append(sumsquare(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
       }
 
-      test_costs = hconcat(costs);
-
-      // Apply penalty to cost.
-      // If there is no penalty, we still add costs[0] as the first cost, in
-      // order to keep the same number of costs as if there was a penalty.
-      if(penalties.size() != 0) {
-        if (weightsize_>0)
-        // only multiply by sampleweight if there are weights
-          training_cost = hconcat(sampleweight*sum(hconcat(costs[0] & penalties))
-                                  & (test_costs*sampleweight));
-        else {
-          training_cost = hconcat(sum(hconcat(costs[0] & penalties)) & test_costs);
-        }
-      } 
-      else {
-        if(weightsize_>0) {
-        // only multiply by sampleweight if there are weights
-          training_cost = hconcat(costs[0]*sampleweight & test_costs*sampleweight);
-        } else {
-          training_cost = hconcat(costs[0] & test_costs);
-        }
-      }
-      
-      training_cost->setName("training_cost");
-      test_costs->setName("test_costs");
-      output->setName("output");
-      
       // Shared values hack...
       if(paramsvalues && (paramsvalues.size() == params.nelems()))
         params << paramsvalues;
@@ -471,33 +302,9 @@ void MultiInstanceNNet::build_()
         }
       params.makeSharedValue(paramsvalues);
 
-      // Funcs
-      invars.resize(0);
-      VarArray outvars;
-      VarArray testinvars;
-      if(input)
-      {
-        invars.push_back(input);
-        testinvars.push_back(input);
-      }
-      if(output)
-        outvars.push_back(output);
-      if(target)
-      {
-        invars.push_back(target);
-        testinvars.push_back(target);
-        outvars.push_back(target);
-      }
-      if(sampleweight)
-      {
-        invars.push_back(sampleweight);
-      }
+      output->setName("output");
 
       f = Func(input, output);
-      test_costf = Func(testinvars, output&test_costs);
-      test_costf->recomputeParents();
-      output_and_target_to_cost = Func(outvars, test_costs); 
-      output_and_target_to_cost->recomputeParents();
     }
 }
 
@@ -527,10 +334,75 @@ void MultiInstanceNNet::train()
   if(!train_stats)
     PLERROR("In MultiInstanceNNet::train, you did not setTrainStatsCollector");
 
-  int l = train_set->length();  
+  int l = train_set->n_non_missing_rows();  
 
   if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
     build();
+
+  // *********** finish the build, which requires the train_set (in the unfolded sum) ***********
+
+#if 0
+  IN CONSTRUCTION: DESIGN HAS TO BE RE-DONE
+
+  costs.resize(2); // (negative log-likelihood, classification error) for the bag
+
+  // N.B. unfoldedSumOf sums over a set of rows of the train_set that constitute a bag 
+  bag_prob = 1 - exp(unfoldedSumOf(train_set,f,max_bag_size));
+  costs[0] = cross_entropy(bag_prob,target);
+  costs[1] = binary_classification_loss(bag_prob,target);
+
+  test_costs = hconcat(costs);
+
+  // Apply penalty to cost.
+  // If there is no penalty, we still add costs[0] as the first cost, in
+  // order to keep the same number of costs as if there was a penalty.
+  if(penalties.size() != 0) {
+    if (weightsize_>0)
+      // only multiply by sampleweight if there are weights
+      training_cost = hconcat(sampleweight*sum(hconcat(costs[0] & penalties))
+                              & (test_costs*sampleweight));
+    else {
+      training_cost = hconcat(sum(hconcat(costs[0] & penalties)) & test_costs);
+    }
+  } 
+  else {
+    if(weightsize_>0) {
+      // only multiply by sampleweight if there are weights
+      training_cost = hconcat(costs[0]*sampleweight & test_costs*sampleweight);
+    } else {
+      training_cost = hconcat(costs[0] & test_costs);
+    }
+  }
+      
+  training_cost->setName("training_cost");
+  test_costs->setName("test_costs");
+      
+  // Funcs
+  invars.resize(0);
+  VarArray outvars;
+  VarArray testinvars;
+  if(input)
+    {
+      invars.push_back(input);
+      testinvars.push_back(input);
+    }
+  if(output)
+    outvars.push_back(output);
+  if(target)
+    {
+      invars.push_back(target);
+      testinvars.push_back(target);
+      outvars.push_back(target);
+    }
+  if(sampleweight)
+    {
+      invars.push_back(sampleweight);
+    }
+  
+  test_costf = Func(testinvars, output&test_costs);
+  test_costf->recomputeParents();
+  output_and_target_to_cost = Func(outvars, test_costs); 
+  output_and_target_to_cost->recomputeParents();
 
   // number of samples seen by optimizer before each optimizer update
   int nsamples = batch_size>0 ? batch_size : l;
@@ -541,6 +413,7 @@ void MultiInstanceNNet::train()
       optimizer->setToOptimize(params, totalcost);  
       optimizer->build();
     }
+#endif
 
   // number of optimiser stages corresponding to one learner stage (one epoch)
   int optstage_per_lstage = l/nsamples;
