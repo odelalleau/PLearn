@@ -1,8 +1,10 @@
 // -*- C++ -*-
 
-// plearn.cc
-// Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux, Rejean Ducharme
+// PLearn (A C++ Machine Learning Library)
+// Copyright (C) 1998 Pascal Vincent
+// Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
 //
+
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -32,48 +34,68 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
+ 
+
 /* *******************************************************      
-   * $Id: oldplearn.cc,v 1.4 2002/11/22 19:40:18 ducharme Exp $
+   * $Id: Measurer.h,v 1.1 2002/11/22 19:40:18 ducharme Exp $
+   * AUTHORS: Pascal Vincent & Yoshua Bengio
+   * This file is part of the PLearn library.
    ******************************************************* */
 
-#include "old_plearn_main.h"
 
-// Available Splitters:
-#include "TrainTestSplitter.h"
-#include "KFoldSplitter.h"
+/*! \file PLearnLibrary/PLearnCore/Measurer.h */
 
-// Available VMats:
-#include "AutoVMatrix.h"
+#ifndef MEASURER_INC
+#define MEASURER_INC
 
-// All Available Learners: 
-// #include "KNN.h"
-//#include "Classification1HiddenNN.h"
-//#include "Mixture2.h"
-//#include "ClassifierFromDensity.h"
-//#include "RegressorFromDensity.h"
-#include "Distribution.h"
-#include "GaussianDistribution.h"
-#include "LocallyWeightedDistribution.h"
-#include "NeuralNet.h"
-#include "GradientOptimizer.h"
-//#include "ConstantModel.h"
-//#include "MultiLearner.h"
-//#include "LinearRegressor.h"
+#include "TMat.h"
 
-//#include "EnsembleLearner.h"
+namespace PLearn <%
+using namespace std;
 
-//#include "SVM.h"
 
-//#include "ParzenDensity.h"
-//#include "ParzenRegressor.h"
-//#include "ManifoldParzenDensity.h"
-
-// #include "ViewCommand.h"
-
-using namespace PLearn;
-
-int main(int argc, char** argv)
+class Measurer
 {
-  return old_plearn_main(argc, argv);
-}
+public:
+/*!     This method is called at iteration t of a training
+    algorithm, and it can monitor the cost values given
+    the costs vector. The returned value indicates whether
+    training should be stopped (by default shoudl be false).
+*/
+  virtual bool measure(int t, const Vec& costs) { return false; }
+
+  //!  this method is kept temporarily during the transition to
+  //!  the above "measure" standard from the old one below
+  virtual void measure(int t)
+    {
+      Vec c;
+      measure(t,c);
+    }
+  virtual ~Measurer();
+};
+
+typedef bool (*MeasurerCallbackFunction)(int t, const Vec& costs);
+
+class CallbackMeasurer: public Measurer
+{
+public:
+  MeasurerCallbackFunction callback;
+  
+  CallbackMeasurer(MeasurerCallbackFunction the_callback)
+    :callback(the_callback) 
+    {}
+
+/*!     This method is called at iteration t of a training
+    algorithm, and it can monitor the cost values given
+    the costs vector. The returned value indicates whether
+    training should be stopped (by default should be false).
+*/
+  virtual bool measure(int t, const Vec& costs);
+
+};
+
+%> // end of namespace PLearn
+
+#endif
+
 

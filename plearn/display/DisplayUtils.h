@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: DisplayUtils.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: DisplayUtils.h,v 1.2 2002/11/22 19:40:18 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,7 +48,6 @@
 #ifndef DISPLAYUTILS_INC
 #define DISPLAYUTILS_INC
 
-#include "PLearn.h"
 #include "GhostScript.h"
 #include "Mat.h"
 #include "Gnuplot.h"

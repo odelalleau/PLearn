@@ -1,8 +1,10 @@
 // -*- C++ -*-
 
-// plearn.cc
-// Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux, Rejean Ducharme
+// PLearn (A C++ Machine Learning Library)
+// Copyright (C) 1998 Pascal Vincent
+// Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
 //
+
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -32,48 +34,30 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
+ 
+
 /* *******************************************************      
-   * $Id: oldplearn.cc,v 1.4 2002/11/22 19:40:18 ducharme Exp $
+   * $Id: Measurer.cc,v 1.1 2002/11/22 19:40:18 ducharme Exp $
+   * AUTHORS: Pascal Vincent & Yoshua Bengio
+   * This file is part of the PLearn library.
    ******************************************************* */
 
-#include "old_plearn_main.h"
+#include "Measurer.h"
 
-// Available Splitters:
-#include "TrainTestSplitter.h"
-#include "KFoldSplitter.h"
+namespace PLearn <%
+using namespace std;
 
-// Available VMats:
-#include "AutoVMatrix.h"
+Measurer::~Measurer() 
+{}
 
-// All Available Learners: 
-// #include "KNN.h"
-//#include "Classification1HiddenNN.h"
-//#include "Mixture2.h"
-//#include "ClassifierFromDensity.h"
-//#include "RegressorFromDensity.h"
-#include "Distribution.h"
-#include "GaussianDistribution.h"
-#include "LocallyWeightedDistribution.h"
-#include "NeuralNet.h"
-#include "GradientOptimizer.h"
-//#include "ConstantModel.h"
-//#include "MultiLearner.h"
-//#include "LinearRegressor.h"
-
-//#include "EnsembleLearner.h"
-
-//#include "SVM.h"
-
-//#include "ParzenDensity.h"
-//#include "ParzenRegressor.h"
-//#include "ManifoldParzenDensity.h"
-
-// #include "ViewCommand.h"
-
-using namespace PLearn;
-
-int main(int argc, char** argv)
-{
-  return old_plearn_main(argc, argv);
+bool CallbackMeasurer::measure(int t, const Vec& costs)
+{ 
+  return callback(t,costs); 
 }
+
+
+%> // end of namespace PLearn
+
+
+
 
