@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.16 2004/03/28 02:52:47 yoshua Exp $
+   * $Id: VMatLanguage.cc,v 1.17 2004/04/05 23:10:31 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -77,6 +77,28 @@ using namespace std;
   }
 
   map<string, int> VMatLanguage::opcodes;
+
+  PLEARN_IMPLEMENT_OBJECT(VMatLanguage, "ONE LINE DESCR", "NO HELP");
+    
+  void
+  VMatLanguage::build()
+  {
+      inherited::build();
+      build_();
+  }
+
+  void
+  VMatLanguage::build_()
+  {
+      build_opcodes_map();
+  }
+
+  void
+  VMatLanguage::declareOptions(OptionList &ol)
+  {
+      declareOption(ol, "vmsource", &VMatLanguage::vmsource, OptionBase::buildoption, "");
+      inherited::declareOptions(ol);
+  }
 
   // this function (that really should be sliced to to smaller pieces someday) takes raw VPL code and 
   // returns the preprocessed sourcecode along with the defines and the fieldnames it generated
@@ -389,8 +411,6 @@ using namespace std;
       }
     generateCode(processed_sourcecode);
   }
-
-  PLEARN_IMPLEMENT_OBJECT(VMatLanguage, "ONE LINE DESCR", "NO HELP");
 
   //! builds the map if it does not already exist
   void VMatLanguage::build_opcodes_map()
@@ -714,5 +734,42 @@ void VMatLanguage::run(int rowindex, const Vec& result) const
   }
 
 PLEARN_IMPLEMENT_OBJECT(PreprocessingVMatrix, "ONE LINE DESCR", "NO HELP");
+
+PreprocessingVMatrix::PreprocessingVMatrix(VMat the_source, const string& program_string)
+  : source(the_source), program(the_source)
+{
+  program.compileString(program_string,fieldnames);
+  build();
+}
+
+void
+PreprocessingVMatrix::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+PreprocessingVMatrix::build_()
+{
+    if (source) {
+        fieldinfos.resize((int)fieldnames.size());
+        for(unsigned int j=0; j<fieldnames.size(); j++)
+            fieldinfos[j] = VMField(fieldnames[j]);
+
+        sourcevec.resize(source->width());
+        width_ = (int)fieldnames.size();
+        length_ = source.length();
+    }
+}
+
+void
+PreprocessingVMatrix::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "source", &PreprocessingVMatrix::source, OptionBase::buildoption, "");
+    declareOption(ol, "program", &PreprocessingVMatrix::program, OptionBase::buildoption, "");
+    declareOption(ol, "fieldnames", &PreprocessingVMatrix::fieldnames, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 } // end of namespace PLearn

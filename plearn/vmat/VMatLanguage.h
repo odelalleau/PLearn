@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.11 2004/03/23 23:08:09 morinf Exp $
+   * $Id: VMatLanguage.h,v 1.12 2004/04/05 23:10:31 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -82,10 +82,14 @@ using namespace std;
                            vector<string>& fieldnames);
     
 public:
-    VMatLanguage():vmsource(Mat()) { build_opcodes_map(); }
-    VMatLanguage(VMat vmsrc):vmsource(vmsrc) { build_opcodes_map(); }
-    PLEARN_DECLARE_OBJECT(VMatLanguage);
+    VMatLanguage():vmsource(Mat()) { build_(); }
+    VMatLanguage(VMat vmsrc):vmsource(vmsrc) { build_(); }
 
+    PLEARN_DECLARE_OBJECT(VMatLanguage);
+    static void declareOptions(OptionList &ol);
+
+    virtual void build();
+      
     //! Executes the program on the srcvec, copy resulting stack to result
     //! rowindex is only there for instruction 'rowindex' that pushes it on the stack
     void run(const Vec& srcvec, const Vec& result, int rowindex=-1) const;
@@ -115,7 +119,11 @@ public:
 
     // set this to true when debugging. Will dump the preprocessed code when you call compilexxxx
     static bool output_preproc;
+  private:
+      void build_();
   };
+
+DECLARE_OBJECT_PTR(VMatLanguage);
 
 /*
   PreprocessingVMatrix : a VMatLanguage derivated product, a la sauce VMat.
@@ -124,36 +132,29 @@ public:
 
   class PreprocessingVMatrix: public RowBufferedVMatrix
   {
-    PLEARN_DECLARE_OBJECT(PreprocessingVMatrix);
+    typedef RowBufferedVMatrix inherited;
 
   protected:
     VMat source;
     VMatLanguage program;
     Vec sourcevec;
-    vector<string> fieldnames;
-    
+    vector<string> fieldnames;    
 
   public:
     PreprocessingVMatrix(){}
-    PreprocessingVMatrix(VMat the_source, const string& program_string)
-      :source(the_source),program(the_source)
-    {
-      program.compileString(program_string,fieldnames);
-  
-      fieldinfos.resize((int)fieldnames.size());
-      for(unsigned int j=0; j<fieldnames.size(); j++)
-        fieldinfos[j] = VMField(fieldnames[j]);
+    PreprocessingVMatrix(VMat the_source, const string& program_string);
 
-      sourcevec.resize(source->width());
-      width_ = (int)fieldnames.size();
-      length_ = source.length();
-      
-    }
+    PLEARN_DECLARE_OBJECT(PreprocessingVMatrix);
+    static void declareOptions(OptionList &ol);
+
+    virtual void build();
 
     virtual void getRow(int i, Vec v) const;
-
+  protected:
+      void build_();
   };
 
+  DECLARE_OBJECT_PTR(PreprocessingVMatrix);
 
   time_t getDateOfCode(const string& codefile);
 
