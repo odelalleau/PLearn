@@ -51,6 +51,7 @@ os.path.join(plearndir,'plearn_learners/language'),
 os.path.join(plearndir,'plearn_learners/language/WordNet'),
 os.path.join(plearndir,'plearn_learners/regressors'),
 os.path.join(plearndir,'plearn_learners_experimental'),
+os.path.join(plearndir,'commands/PLearnCommands'),
 
 os.path.join(lisaplearndir,'PLearnLibrary/PLearnCore'),
 os.path.join(lisaplearndir,'PLearnLibrary/PLearnAlgo'),
