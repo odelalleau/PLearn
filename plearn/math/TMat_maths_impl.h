@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.8 2003/03/03 02:48:48 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.9 2003/03/03 15:16:00 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -721,6 +721,25 @@ void compute_tanh(const TVec<T>& src, const TVec<T>& dest)
   int n = src.length();
   for(int i=0; i<n; i++)
     *pd++ = tanh(*ps++);
+}
+
+template<class T>
+void bprop_tanh(const TVec<T>& tanh_x, const TVec<T>& d_tanh_x, TVec<T>& d_x)
+{
+#ifdef BOUNDCHECK
+  if(tanh_x.length()!=d_tanh_x.length())
+    PLERROR("In bprop_tanh, src and dest vectors must have the same length");
+#endif
+  int n = tanh_x.length();
+  if (n != d_x.length()) d_x.resize(n);
+  T* y = tanh_x.data();
+  T* dy = d_tanh_x.data();
+  T* dx = d_x.data();
+  for(int i=0; i<n; i++)
+  {
+    real yi = *y++;
+    *dx++ = *dy++ * (1 - yi*yi);
+  }
 }
 
 template<class T>
@@ -1957,38 +1976,38 @@ void productAcc(const TVec<T>& vec, const TMat<T>& m, const TVec<T>& v)
   }
 }
 
-//! vec[i] = sum_i m[j,i] * v[j]
-//! Equivalently: rowvec(vec) = rowvec(v) . m
-//! Equivalently: columnvec(vec) = transpose(m).columnvec(v)
+//! result[i] = sum_j m[j,i] * v[j]
+//! Equivalently: rowvec(result) = rowvec(v) . m
+//! Equivalently: columnvec(result) = transpose(m).columnvec(v)
 template <class T>
-void transposeProduct(const TVec<T>& vec, const TMat<T>& m, const TVec<T>& v)
+void transposeProduct(const TVec<T>& result, const TMat<T>& m, const TVec<T>& v)
 {
   int l=m.length();
-  if (l!=v.length() || m.width()!=vec.length())
+  if (l!=v.length() || m.width()!=result.length())
     PLERROR("TVec::transposeProduct(TMat,TVec), incompatible arguments %dx%d' times %d -> %d",
-        m.length(),m.width(), v.length(),vec.length());
-  T *rp = vec.data();
+        m.length(),m.width(), v.length(),result.length());
+  T *rp = result.data();
   T *vp = v.data();
-  vec.clear();
+  result.clear();
   for (int j=0;j<l;j++)
   {
     const T* mj = m[j];
     T vj = vp[j];
-    for (int i=0;i<vec.length();i++)
+    for (int i=0;i<result.length();i++)
       rp[i] += mj[i] * vj;
   }
 }
 
 //!  result[i] += sum_j m[j,i] * v[j]
 template <class T>
-void transposeProductAcc(const TVec<T>& vec, const TMat<T>& m, const TVec<T>& v)
+void transposeProductAcc(const TVec<T>& result, const TMat<T>& m, const TVec<T>& v)
 {
   int l=m.length();
   int w=m.width();
-  if (l!=v.length() || w!=vec.length())
+  if (l!=v.length() || w!=result.length())
     PLERROR("TVec::transposeProductAcc(TMat,TVec), incompatible arguments %dx%d' times %d -> %d",
-        m.length(),m.width(), v.length(),vec.length());
-  T* vecdata = vec.data();
+        m.length(),m.width(), v.length(),result.length());
+  T* vecdata = result.data();
   T* vp = v.data();
   T* mp = m.data();
   int deltam = m.mod()-m.width();
@@ -2024,8 +2043,53 @@ void transposeProductAcc(const TVec<T>& vec, const TMat<T>& m, const TVec<T>& v)
   }
 }
 
+//!  result[i] += alpha * sum_j m[j,i] * v[j]
 template <class T>
-void compressedTransposeProductAcc(const TVec<T>& vec, const TMat<T>& m, char* comprbufvec)
+void transposeProductAcc(const TVec<T>& result, const TMat<T>& m, const TVec<T>& v, T alpha)
+{
+  int l=m.length();
+  int w=m.width();
+  if (l!=v.length() || w!=result.length())
+    PLERROR("TVec::transposeProductAcc(TMat,TVec), incompatible arguments %dx%d' times %d -> %d",
+        m.length(),m.width(), v.length(),result.length());
+  T* vecdata = result.data();
+  T* vp = v.data();
+  T* mp = m.data();
+  int deltam = m.mod()-m.width();
+  for (int j=0;j<l;j++)
+  {
+    T vj = *vp++;
+    
+    /*
+    T* rp = vecdata;
+    for (int i=0;i<w;i++)
+      *rp++ += vj * *mp++;
+    mp += deltam;
+    */
+    
+    if(vj!=0)
+      {
+        if(vj==1)
+          {
+            T* rp = vecdata;
+            for (int i=0;i<w;i++)
+              *rp++ += alpha * *mp++;
+            mp += deltam;
+          }
+        else
+          {
+            T* rp = vecdata;
+            for (int i=0;i<w;i++)
+              *rp++ += alpha * vj * *mp++;
+            mp += deltam;
+          }
+      }
+    else mp += w + deltam;
+  }
+}
+
+template <class T>
+void compressedTransposeProductAcc(const TVec<T>& result, const TMat<T>& m, char* comprbufvec)
 {
   cout<<"using kasjdlkadja"<<endl;
   union { double d; char c[8]; } uni;
@@ -2045,7 +2109,7 @@ void compressedTransposeProductAcc(const TVec<T>& vec, const TMat<T>& m, char* c
           if(mode==1)
             {         
               --l; 
-              vec+=m(idx++); // !!!!!!
+              result+=m(idx++); // !!!!!!
               cout<<"1 ";
             }
         }
@@ -2054,7 +2118,7 @@ void compressedTransposeProductAcc(const TVec<T>& vec, const TMat<T>& m, char* c
           while(n--)
             {
               cout<<double(*comprbufvec)<<" "<<endl;
-                vec+= m(idx++) * double(*comprbufvec++); // !!!!!!
+                result+= m(idx++) * double(*comprbufvec++); // !!!!!!
 
               --l;
             }
@@ -2066,7 +2130,7 @@ void compressedTransposeProductAcc(const TVec<T>& vec, const TMat<T>& m, char* c
               memcpy(uni.c,comprbufvec,sizeof(double));
               cout<<double(uni.d)<<" "<<endl;
               comprbufvec+=8;
-              vec+= m(idx++) * uni.d; // !!!!!!!
+              result+= m(idx++) * uni.d; // !!!!!!!
               --l;
             }
         }
@@ -2350,8 +2414,7 @@ void externalProduct(const TMat<T>& mat, const TVec<T>& v1, const TVec<T>& v2)
   }
 }
 
-// result[i][j] += v1[i] * v2[j]
-
+// mat[i][j] += v1[i] * v2[j]
 template<class T>
 void externalProductAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T>& v2)
 {
@@ -2391,8 +2454,7 @@ void externalProductAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T>& v2
     }
 }
 
-// result[i][j] += gamma * v1[i] * v2[j]
-
+// mat[i][j] += gamma * v1[i] * v2[j]
 template<class T>
 void externalProductScaleAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T>& v2, T gamma)
 {
@@ -2409,6 +2471,26 @@ void externalProductScaleAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T
     T v1i = v_1[i];
     for (int j=0;j<mat.width();j++)
       mi[j] += gamma * v1i * v_2[j];
+  }
+}
+
+// mat[i][j] = alpha * m[i][j] + gamma * v1[i] * v2[j] 
+template<class T>
+void externalProductScaleAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T>& v2, T gamma, T alpha)
+{
+#ifdef BOUNDCHECK
+  if (v1.length()!=mat.length() || mat.width()!=v2.length())
+    PLERROR("externalProductScaleAcc(Vec,Vec), incompatible arguments %dx%d= %d times %d",
+        mat.length(),mat.width(),v1.length(), v2.length());
+#endif
+  const T* v_1=v1.data();
+  const T* v_2=v2.data();
+  for (int i=0;i<mat.length();i++)
+  {
+    T* mi = mat[i];
+    T v1i = v_1[i];
+    for (int j=0;j<mat.width();j++)
+      mi[j] = alpha*mi[j] + gamma * v1i * v_2[j];
   }
 }
 
