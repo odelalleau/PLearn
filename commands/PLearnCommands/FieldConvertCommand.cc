@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.36 2004/09/28 19:32:31 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.37 2004/10/04 20:57:58 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -239,7 +239,7 @@ void FieldConvertCommand::run(const vector<string> & args)
     vector<string> leftpart = split(vec[0],"-");
     if (leftpart.size() == 1 && leftpart[0].substr(leftpart[0].size() - 1) == "+") {
       // Syntax: field+="processing" (number of inputs added)
-      int field_index = vm->fieldIndex(leftpart[0].substr(0, leftpart[0].size() - 1));
+      int field_index = vm->getFieldIndex(leftpart[0].substr(0, leftpart[0].size() - 1));
       if (field_index == -1)
         PLERROR("In FieldConvertCommand - A field was not found in the source VMatrix");
       if (additional_proc[field_index] != "")
@@ -260,16 +260,16 @@ void FieldConvertCommand::run(const vector<string> & args)
       if(leftpart.size()>1)
       {
         // we have a range
-        int a = vm->fieldIndex(leftpart[0]);
-        int b = vm->fieldIndex(leftpart[1]);
+        int a = vm->getFieldIndex(leftpart[0]);
+        int b = vm->getFieldIndex(leftpart[1]);
         for(int j=a;j<=b;j++)
           force[j]=rpart;
       }
       else 
       {
-        if(vm->fieldIndex(vec[0])==-1)
+        if(vm->getFieldIndex(vec[0])==-1)
           cout<<"field : "<<vec[0]<<" doesn't exist in matrix"<<endl;
-        force[vm->fieldIndex(vec[0])] = rpart;
+        force[vm->getFieldIndex(vec[0])] = rpart;
       }
     }
   }
