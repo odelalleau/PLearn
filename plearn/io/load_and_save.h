@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: load_and_save.h,v 1.3 2005/01/26 16:32:26 dorionc Exp $ 
+   * $Id: load_and_save.h,v 1.4 2005/02/02 21:21:43 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -60,10 +60,10 @@ template <class T>
 inline void load(const PPath& filepath, T &x)
 {
 #if STREAMBUFVER == 1
-  PStream in = openFile(filepath,PStream::plearn_ascii,"r");
+  PStream in = openFile( filepath, PStream::plearn_ascii, "r" );
   in >> x;
 #else
-    ifstream in_(filepath.c_str());
+    ifstream in_( filepath.absolute().c_str() );
     if (!in_)
         PLERROR("Could not open file \"%s\" for reading", filepath.c_str());
     PStream in(&in_);
@@ -77,12 +77,12 @@ inline void save(const PPath& filepath, const T& x, PStream::mode_t io_formattin
 { 
   force_mkdir_for_file(filepath);
 #if STREAMBUF == 1
-  PStream out = openFile(filepath,"w",io_formatting);
+  PStream out = openFile( filepath, io_formatting, "w" );
   out << x;
 #else
-  ofstream out_(filepath.c_str()); 
+  ofstream out_( filepath.absolute().c_str() ); 
   if(!out_)
-    PLERROR("Could not open file %s for writing",filepath.c_str());  
+    PLERROR( "Could not open file %s for writing", filepath.c_str() );  
   PStream out(&out_);
   out.setMode(io_formatting);
   out << x;
