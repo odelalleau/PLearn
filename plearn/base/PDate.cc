@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDate.cc,v 1.9 2004/07/21 16:30:50 chrish42 Exp $
+   * $Id: PDate.cc,v 1.10 2004/08/04 13:17:35 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -111,6 +111,8 @@ PDate::PDate(string date)
       else
         PLERROR("Invalid month string: %s",mo.c_str());
     }
+
+  // Format "20020917"
   else if (date.size() == 8 && pl_isnumber(date))
     {
       year = toint(date.substr(0,4));
