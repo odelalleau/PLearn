@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.37 2003/10/06 00:44:39 yoshua Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.38 2003/10/08 19:29:06 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -179,7 +179,8 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
 
     declareOption(ol, "fmax", &ConjGradientOptimizer::fmax, OptionBase::buildoption, 
                   "    Fletcher's line search specific option : good enough minimum.\n \
-           If it finds a point n such that f(n) < fmax, then the line search returns n as minimum\n");
+           If it finds a point n such that f(n) < fmax, then the line search returns n as minimum\n\
+           As a consequence, DO NOT USE 0 (the default value) if f can be negative\n");
 
     declareOption(ol, "stop_epsilon", &ConjGradientOptimizer::stop_epsilon, OptionBase::buildoption, 
                   "    Fletcher's line search specific option : stopping criterium.\n \
