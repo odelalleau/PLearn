@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.3 2002/08/05 14:59:00 wangxian Exp $
+   * $Id: pl_math.h,v 1.4 2002/08/07 01:50:13 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -100,7 +100,6 @@ extern _plearn_nan_type plearn_nan;
 #define LOG_2 0.693147180559945
 #define LOG_INIT -FLT_MAX
 #define MINUS_LOG_THRESHOLD -18.42
-
 
 #if !(!defined(_MSC_VER) && !defined(_MINGW_))
 //!  drand48 does not exist in NT... because ANSI

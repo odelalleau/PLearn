@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: plstreams.h,v 1.2 2002/07/31 01:41:35 morinf Exp $
+   * $Id: plstreams.h,v 1.3 2002/08/07 01:49:49 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,6 +54,7 @@
 #include <fstream>
 #include <map>
 #include <bitset>
+#include <strstream.h>
 #include "plerror.h"
 
 namespace PLearn <%
@@ -193,6 +194,12 @@ extern pl_stream_initiate initiate;
 //
 
 template <class T> inline pl_istream &
+operator>>(pl_istream &in, T &x)
+{
+    return in;
+}
+
+template <class T> inline pl_istream &
 operator>>(pl_istream &in, T * &x)
 {
     if (in.peek() == '*') {
@@ -202,8 +209,18 @@ operator>>(pl_istream &in, T * &x)
         if (in.peek() == '-') {
             in.get(); // Eat '-'
             in.get(); // Eat '>'
-            x = new T();
-            in >> *x;
+            in >> ws;
+            if (in.peek() == '<') { // Not for the heartfainted
+                static char *null_string = "<null>";
+                for (int i = 0; i < 6; ++i)
+                    if (in.get() != null_string[i])
+                        PLERROR("Bad input");
+                x = 0;
+            } else {
+                if (!x)
+                    x = new T();
+                in >> *x;
+            }
             in.map_[id] = x;
         } else {
             // Find it in map and return ptr;
@@ -230,7 +247,10 @@ operator<<(pl_ostream &out, const T * &x)
         int id = out.map_.size();
         out << raw << '*' << id << "->";
         out.map_[const_cast<T * &>(x)] = id;
-        out << *x;
+        if (x)
+            out << *x;
+        else
+            out << raw << "<null>";
     } else {
         out << raw << '*' << it->second << ' ';
     }
@@ -326,6 +346,14 @@ read(istream &in_, T &o, OBflag_t flags = dft_option_flag)
 {
     pl_istream in = in_;
     in >> user_flags(flags) >> o;
+}
+
+template <class T> inline void
+read(const string &stringval, T &x)
+{
+    istrstream in_(stringval.c_str());
+    pl_istream in(in_);
+    in >> x;
 }
 
 %> // end of namespace PLearn

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.2 2002/08/05 23:00:15 jkeable Exp $
+   * $Id: fileutils.cc,v 1.3 2002/08/07 01:49:49 morinf Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -362,6 +362,10 @@ int smartReadUntilNext(istream& in, string closingsymbols, string& characters_re
 //!  Makes use of mkstemp(...) to create a new file.
 string newFilename(const string directory, const string prefix, bool is_directory)
 {
+#ifdef _MINGW_
+    PLERROR("This call is not yet implemented for this platform");
+    return "";
+#else
   string tmpdirname = remove_trailing_slash(directory);
   int length = tmpdirname.length()+1+prefix.length()+6+1;
   char* tmpfilename = new char[length];
@@ -380,6 +384,7 @@ string newFilename(const string directory, const string prefix, bool is_director
   if(!tmpfilename)
     PLERROR("In newFile : could not make a new temporary filename");
   return tmpfilename;
+#endif
 }
 
 string makeFileNameValid(const string& path)
