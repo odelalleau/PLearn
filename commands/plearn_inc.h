@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.53 2005/02/04 15:07:22 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.54 2005/03/24 22:26:29 dumitruerhan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -247,5 +247,6 @@
 #include <plearn/vmat/ThresholdVMatrix.h>
 #include <plearn/vmat/TransposeVMatrix.h>
 #include <plearn/vmat/VMatrixFromDistribution.h>
+#include <plearn/vmat/ViewSplitterVMatrix.h>
 #endif
 
