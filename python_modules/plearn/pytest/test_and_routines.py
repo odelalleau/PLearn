@@ -16,7 +16,7 @@ from   IntelligentDiff                import *
 
 import plearn.utilities.versionning   as     versionning
 versionning.project_module( "PyTest", __name__,
-                            "$Id: test_and_routines.py,v 1.14 2004/12/20 17:04:42 dorionc Exp $"
+                            "$Id: test_and_routines.py,v 1.15 2004/12/20 21:04:57 dorionc Exp $"
                             )
 
 __all__ = [
@@ -55,90 +55,22 @@ class DuplicateName( PyTestUsageError ):
             % ( test1.get_path(), test2.get_path() )
             )        
 
-class Resources:
-    md5_mappings    = {}
-    name_resolution = {}
-
-    def memorize(cls, abspath, fname):
-        if not cls.name_resolution.has_key(abspath):
-            cls.name_resolution[abspath] = "$RESOURCES{%s}"%fname        
-    memorize = classmethod(memorize)                                
-
-    def single_link(cls, path_to, resource, target_dir, must_exist=True):
-        ## Paths to the resource and target files
-        resource_path = resource
-        target_path   = target_dir
-
-        ## Abolute versions
-        if not os.path.isabs( resource_path ):
-            resource_path = os.path.join( path_to, resource )
-            target_path = os.path.join( path_to, target_dir, resource )
-            assert not os.path.exists( target_path ), target_path
-        
-        ## Linking
-        if os.path.exists( resource_path ):
-            link_cmd = "ln -s %s %s" % ( resource_path, target_path )
-            vprint( "Linking resource: %s." % link_cmd, 3 )
-            os.system( link_cmd )
-
-        elif must_exist:
-            raise PyTestUsageError(
-                "In %s: %s used as a resource but path doesn't exist."
-                % ( os.getcwd(), resource )
-                )
-
-        ## Mapping both to the same variable
-        cls.memorize( resource_path, resource )                
-        cls.memorize( target_path, resource )                
-
-        return (resource_path, target_path)        
-
-    single_link = classmethod(single_link)
-    
-    ## Class methods
-    def link_resources(cls, path_to, resources, target_dir): 
-        for resource in resources:
-            cls.single_link( path_to, resource, target_dir )
-                        
-            if toolkit.isvmat( resource ):
-                cls.single_link( path_to, resource+'.metadata',
-                                  target_dir,  False  )
-                
-    link_resources = classmethod(link_resources)
-
-    def md5sum(cls, path_to_ressource):
-        if md5_mappings.has_keys(path_to_ressource):
-            return md5_mappings[path_to_ressource]
-        
-        md5 = toolkit.command_output( 'md5sum %s'
-                                      % path_to_ressource)
-        md5_mappings[path_to_ressource] = md5
-        return md5
-    md5sum = classmethod(md5sum)
-
-    def unlink_resources(cls, target_dir):
-        dirlist = os.listdir( target_dir )
-        for f in dirlist:
-            path = os.path.join( target_dir, f )
-            if os.path.islink( path ):
-                vprint( "Removing link: %s." % path, 3 ) 
-                os.remove( path )
-    unlink_resources = classmethod(unlink_resources)
-        
 class TestDefaults:
-    name            = None
-    description     = ''
-    program         = None
-    arguments       = ''
-    resources      = []
-    disabled        = False
+    name              = None
+    description       = ''
+    program           = None
+    arguments         = ''
+    resources         = []
+    disabled          = False
+    comparable_psaves = []
 
-    __declare_members__ = [ ('name',            types.StringType),
-                            ('description',     types.StringType),
-                            ('program',         Program),
-                            ('arguments',       types.StringType),
-                            ('resources',      types.ListType),
-                            ('disabled',        types.BooleanType)
+    __declare_members__ = [ ('name',              types.StringType),
+                            ('description',       types.StringType),
+                            ('program',           Program),
+                            ('arguments',         types.StringType),
+                            ('resources',         types.ListType),
+                            ('disabled',          types.BooleanType),
+                            ('comparable_psaves', types.ListType)
                             ]
 
 class Test(FrozenObject):
@@ -208,10 +140,9 @@ class Test(FrozenObject):
                 
         self.set_str_spacer( '\n' )
 
-        if overrides.has_key('ressources'):
-            self.set_attribute('__ressources', None)
-            self.resources = overrides['ressources']
-
+        if len(self.comparable_psaves) > 0:
+            assert isinstance(self.program, GlobalCompilableProgram)
+            
     def sanity_check(self):
         if self.name == '':
             raise PyTestUsageError(                
@@ -231,13 +162,6 @@ class Test(FrozenObject):
                 "%s\n Test.name should contain none of the following chars: "
                 "' ', '-', '/', '<', '>'."
                 % self.get_path()
-                )
-
-        if hasattr(self, '__ressources'):
-            raise PyTestUsageError(
-                "The use of Test.ressources is deprecated! Test.resources must "
-                "be used instead. Use the PyTest 'update' mode the correct your "
-                "PyTest config file."
                 )
             
     def compilation_succeeded(self):
@@ -286,7 +210,7 @@ class Test(FrozenObject):
             fdesc.extend( toolkit.boxed_lines(self.description, 50, indent='    ')+[""] )
 
         return string.join(["    "+line for line in fdesc], '\n')
-
+        
     def get_name(self):
         return self.name
     
@@ -299,31 +223,31 @@ class Test(FrozenObject):
     def is_disabled(self):
         return self.disabled
     
-    def link_resources(self, test_results):
-        resources = []
-        resources.extend( self.resources )
-        resources.append( self.program.path )
+##     def link_resources(self, test_results):
+##         resources = []
+##         resources.extend( self.resources )
+##         resources.append( self.program.path )
 
-        def single_link(resource):
-            link_cmd = "ln -s %s %s" % ( resource, test_results )
-            vprint( "Linking resource: %s." % link_cmd, 3 )
-            os.system( link_cmd )
+##         def single_link(resource):
+##             link_cmd = "ln -s %s %s" % ( resource, test_results )
+##             vprint( "Linking resource: %s." % link_cmd, 3 )
+##             os.system( link_cmd )
             
-        for resource in resources:
-            if not os.path.isabs( resource ):
-                resource = os.path.join( self.test_directory, resource ) 
-            if not os.path.exists( resource ):
-                raise PyTestUsageError(
-                    "The %s test uses %s as a resource but path doesn't exist."
-                    % ( self.name, resource )
-                    )
+##         for resource in resources:
+##             if not os.path.isabs( resource ):
+##                 resource = os.path.join( self.test_directory, resource ) 
+##             if not os.path.exists( resource ):
+##                 raise PyTestUsageError(
+##                     "The %s test uses %s as a resource but path doesn't exist."
+##                     % ( self.name, resource )
+##                     )
 
-            single_link( resource )
+##             single_link( resource )
 
-            if toolkit.isvmat( resource ):
-                meta = resource+'.metadata'
-                if os.path.exists( meta ):
-                    single_link( meta )
+##             if toolkit.isvmat( resource ):
+##                 meta = resource+'.metadata'
+##                 if os.path.exists( meta ):
+##                     single_link( meta )
 
     def test_results(self, results):
         if results not in [Test.expected_results, Test.run_results]:
@@ -363,13 +287,13 @@ class Test(FrozenObject):
         Resources.unlink_resources( test_results )
         os.putenv("PLEARN_DATE_TIME", "YES")
 
-    def unlink_resources(self, test_results):
-        dirlist = os.listdir( test_results )
-        for f in dirlist:
-            path = os.path.join( test_results, f )
-            if os.path.islink( path ):
-                vprint( "Removing link: %s." % path, 3 ) 
-                os.remove( path )
+##     def unlink_resources(self, test_results):
+##         dirlist = os.listdir( test_results )
+##         for f in dirlist:
+##             path = os.path.join( test_results, f )
+##             if os.path.islink( path ):
+##                 vprint( "Removing link: %s." % path, 3 ) 
+##                 os.remove( path )
 
 class RoutineDefaults(TaskDefaults):
     test                  = None
@@ -533,7 +457,8 @@ class RunTestRoutine(Routine):
         mappings.update( Resources.name_resolution )
         plpath.process_with_mappings( Test.run_results, mappings )
 
-        idiff  =  IntelligentDiff()
+        idiff  =  IntelligentDiff( self.test.program.name, 
+                                   self.test.comparable_psaves )                
         diffs  =  idiff.diff( self.expected_results, self.run_results )
         if diffs == []:
             self.set_status( "Succeeded" )
