@@ -1,4 +1,10 @@
-"""Contains the PLearnObject class from which to derive python objects that emulate PLearn ones."""
+"""Contains the PLearnObject class from which to derive python objects that emulate PLearn ones.
+
+X{Tutorial: using PLearnObject}
+===============================
+
+
+"""
 import inspect
 
 ##########################################
@@ -26,11 +32,11 @@ class PLearnObject:
     plearn_options(), an easy way to retreive all attributes to be forwarded
     to the plearn snippet through the 'pl' object (see plearn_repr()).
 
-    IMPORTANT: Subclasses of PLearnObject MUST declare any internal
-    member, i.e. *any member that SHOULD NOT be considered by plearn_options*,
+    B{IMPORTANT}: Subclasses of PLearnObject MUST declare any internal
+    member, i.e. B{any member that SHOULD NOT be considered by plearn_options},
     with a name that starts with at least one underscore '_'.
 
-    NOTE that ALL INTERNAL VARIABLES must be set throught the
+    B{NOTE} that B{ALL INTERNAL VARIABLES} must be set throught the
     _set_attribute() method, the default values class or by the
     'override' dictionnary argument passed to the PLearnObject ctor.
     Indeed, out of this method, the PLearnObject are frozen to avoid
@@ -41,7 +47,20 @@ class PLearnObject:
     def __init__(self, defaults=None, overrides=None):
         """Sets, if any, the default field values provided through 'defaults'
 
-        defaults <- Class
+        Typically, subclasses' constructor looks like::
+            class Subclass( PLearnObject ):
+                def __init__(self, arg1, arg2, defaults=SubclassDefaults, **overrides):
+                    PLearnObject.__init__(self, defaults, overrides)
+                    self._set_attribute('option1', arg1)
+                    self._set_attribute('option2', arg2)
+                    
+        @param defaults: A class whose class variables are the default
+        values for this object's fields.
+        @type  defaults: Class
+
+        @param overrides: A dictionnary containing the keyword
+        arguments passed to to subclass constructor.
+        @type  overrides: Dictionnary
         """
         self._frozen = False
 
@@ -65,17 +84,20 @@ class PLearnObject:
         self._frozen = True
         
     def plearn_options(self):
-        """Return a dictionnary of all members of this instance that are considered to be plearn options.
+        """Returns a dictionnary of all members of this instance that are considered to be plearn options.
 
-        IMPORTANT: Subclasses of PLearnObject MUST declare any
-        internal member, i.e. *any member that SHOULD NOT be
-        considered by plearn_options()*, with a name that starts with at least
-        one underscore '_'.
+        B{IMPORTANT}: Subclasses of PLearnObject MUST declare any
+        internal member, i.e. B{any member that SHOULD NOT be
+        considered by plearn_options()}, with a name that starts with
+        at least one underscore '_'.
 
         Indeed, this method returns a dictionnary containing all and
         only the members whose names do not start with an
         underscore. Note, however, that no given order may be assumed
         in the members dictionnary returned.
+
+        @return: Dictionnary of all members of this instance that are
+        considered to be plearn options.
         """
         return dict( [ (x,y) for (x,y) in inspect.getmembers(self)
                        if ( x[0] != "_"
@@ -86,9 +108,9 @@ class PLearnObject:
         """Any object overloading this method will be recognized by the pyplearn_driver
 
         NOTE THAT in most cases, given the plearn_options() method just above,
-        the proper and easy way to implement this method is
-
+        the proper and easy way to implement this method is::
+        
             return pl.NameOfTheCorespondingPLearnObject( **self.plearn_options() )
         """
-        raise NotImplemented("PLearnObject.plearn_repr must be overloaded. (type(self): %s)"
+        raise NotImplemented("PLearnObject.plearn_repr must be overrided. (type(self): %s)"
                              % type(self))
