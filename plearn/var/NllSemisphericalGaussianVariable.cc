@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: NllSemisphericalGaussianVariable.cc,v 1.3 2004/08/24 21:15:43 larocheh Exp $
+ * $Id: NllSemisphericalGaussianVariable.cc,v 1.4 2004/09/18 17:03:53 larocheh Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -234,7 +234,7 @@ namespace PLearn {
 
   void NllSemisphericalGaussianVariable::bprop()
   {
-    
+    if(n_neighbors < mu_n_neighbors) mu_n_neighbors = n_neighbors;
 
     for(int neighbor=0; neighbor<n_neighbors; neighbor++)
     {
@@ -251,14 +251,14 @@ namespace PLearn {
         if(!use_noise)
         {
           for(int i=0; i<mu.length(); i++)
-            varray[1]->gradient[i] -= gradient[neighbor]*exp(-1.0*value[neighbor])*(p_target[0]+min_p_x)/(p_neighbors[neighbor]+min_p_x) * ( 1/sm[0] * zm(neighbor,i) + 1/sn[0] * zn(neighbor,i));
+            varray[1]->gradient[i] -= ((real)n_neighbors)/(mu_n_neighbors)*gradient[neighbor]*exp(-1.0*value[neighbor])*(p_target[0]+min_p_x)/(p_neighbors[neighbor]+min_p_x) * ( 1/sm[0] * zm(neighbor,i) + 1/sn[0] * zn(neighbor,i));
         }
         else
         {
           // dNLL/dmu with noisy data
       
           for(int i=0; i<mu_noisy.length(); i++)
-            varray[8]->gradient[i] -= gradient[neighbor]*exp(-1.0*value[neighbor])*(p_target[0]+min_p_x)/(p_neighbors[neighbor]+min_p_x) * ( 1/sm[0] * zm_noisy(neighbor,i) + 1/sn[0] * zn_noisy(neighbor,i));
+            varray[8]->gradient[i] -= ((real)n_neighbors)/(mu_n_neighbors)*gradient[neighbor]*exp(-1.0*value[neighbor])*(p_target[0]+min_p_x)/(p_neighbors[neighbor]+min_p_x) * ( 1/sm[0] * zm_noisy(neighbor,i) + 1/sn[0] * zn_noisy(neighbor,i));
         }
       }
 

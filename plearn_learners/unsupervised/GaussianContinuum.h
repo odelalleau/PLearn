@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuum.h,v 1.6 2004/09/14 16:04:58 chrish42 Exp $
+   * $Id: GaussianContinuum.h,v 1.7 2004/09/18 17:03:16 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -111,6 +111,7 @@ public:
 
   // ### declare public option fields (such as build options) here
 
+  real weight_mu_and_tangent;
   bool include_current_point;
   real random_walk_step_prop;
   bool use_noise;
@@ -185,6 +186,8 @@ private:
   void make_random_walk();
 
   void get_image_matrix(VMat points, VMat image_points_vmat, int begin, string file_path, int n_near_neigh);
+
+  real get_nll(VMat points, VMat image_points_vmat, int begin, int n_near_neigh);
 
 protected: 
   

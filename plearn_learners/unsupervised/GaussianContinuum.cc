@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuum.cc,v 1.6 2004/09/14 16:04:58 chrish42 Exp $
+   * $Id: GaussianContinuum.cc,v 1.7 2004/09/18 17:03:16 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -70,6 +70,8 @@
 #include <plearn/var/TransposeVariable.h>
 #include <plearn/var/Var_utils.h>
 #include <plearn/var/ConcatRowsVariable.h>
+#include <plearn/var/RowSumVariable.h>
+#include <plearn/var/NoBpropVariable.h>
 
 namespace PLearn {
 using namespace std;
@@ -108,7 +110,7 @@ Mat smartInitialization(VMat v, int n, real c, real regularization)
 
 GaussianContinuum::GaussianContinuum() 
 /* ### Initialize all fields to their default value here */
-  : include_current_point(false), random_walk_step_prop(1),use_noise(false),use_noise_direction(false), noise(-1), noise_type("uniform"), n_random_walk_step(0), n_random_walk_per_point(0),save_image_mat(false),min_sigma(0), min_diff(0), min_p_x(0),print_parameters(false),sm_bigger_than_sn(false),use_best_model(false), n_neighbors(5), n_neighbors_density(5), mu_n_neighbors(2), n_dim(1), compute_cost_every_n_epochs(5), architecture_type("single_neural_network"), output_type("tangent_plane"),
+  : weight_mu_and_tangent(0), include_current_point(false), random_walk_step_prop(1),use_noise(false),use_noise_direction(false), noise(-1), noise_type("uniform"), n_random_walk_step(0), n_random_walk_per_point(0),save_image_mat(false),min_sigma(0), min_diff(0), min_p_x(0),print_parameters(false),sm_bigger_than_sn(false),use_best_model(false), n_neighbors(5), n_neighbors_density(5), mu_n_neighbors(2), n_dim(1), compute_cost_every_n_epochs(5), architecture_type("single_neural_network"), output_type("tangent_plane"),
     n_hidden_units(-1), batch_size(1), norm_penalization(0), svd_threshold(1e-5), 
     projection_error_regularization(0)
     
@@ -378,6 +380,10 @@ void GaussianContinuum::declareOptions(OptionList& ol)
   // ### OptionBase::tuningoption. Another possible flag to be combined with
   // ### is OptionBase::nosave
 
+  declareOption(ol, "weight_mu_and_tangent", &GaussianContinuum::weight_mu_and_tangent, OptionBase::buildoption,
+		"Weight of the cost on the scalar product between the manifold directions and mu.\n"
+		);
+
   declareOption(ol, "include_current_point", &GaussianContinuum::include_current_point, OptionBase::buildoption,
 		"Indication that the current point should be included in the nearest neighbors.\n"
 		);
@@ -637,6 +643,7 @@ void GaussianContinuum::build_()
             noise_var = noise_var - product(f_k,noise_var)* transpose(f_k)/pownorm(f_k,2);
           }
         }
+        noise_var = no_bprop(noise_var);
         noise_var->setName(noise_type);
       }
       else
@@ -730,7 +737,14 @@ void GaussianContinuum::build_()
     Var knn = new SourceVariable(1,1);
     knn->setName("knn");
     knn->value[0] = n_neighbors + (include_current_point ? 1 : 0);
-    sum_nll = new ColumnSumVariable(nll) / knn;
+
+    if(weight_mu_and_tangent != 0)
+    {
+      sum_nll = new ColumnSumVariable(nll) / knn + weight_mu_and_tangent * ((Var) new RowSumVariable(square(product(no_bprop(tangent_plane),mu_noisy))));
+    }
+    else
+      sum_nll = new ColumnSumVariable(nll) / knn;
+
     cost_of_one_example = Func(x & tangent_targets & target_index & neighbor_indexes, predictor->parameters, sum_nll);
     noisy_data = Func(x,x + noise_var);    // Func to verify what's the noisy data like (doesn't work so far, this problem will be investigated)
     //verify_gradient_func = Func(predictor->inputs & tangent_targets & target_index & neighbor_indexes, predictor->parameters & mu_noisy, sum_nll);  
@@ -979,6 +993,48 @@ void GaussianContinuum::make_random_walk()
   }
 }
 
+
+real GaussianContinuum::get_nll(VMat points, VMat image_points_vmat, int begin, int n_near_neigh)
+{
+  VMat reference_set = new SubVMatrix(points,begin,0,points.length()-begin,n);
+  Mat image(points_per_dim,points_per_dim); image.clear();
+  image_nearest_neighbors.resize(points_per_dim*points_per_dim,n_near_neigh);
+  // Finding nearest neighbors
+
+  for(int t=0; t<image_points_vmat.length(); t++)
+  {
+    image_points_vmat->getRow(t,t_row);
+    TVec<int> nn = image_nearest_neighbors(t);
+    computeNearestNeighbors(reference_set, t_row, nn);
+  }
+
+  real nll = 0;
+
+  for(int t=0; t<image_points_vmat.length(); t++)
+  {
+    
+    image_points_vmat->getRow(t,t_row);
+    real this_p_x = 0;
+    // fetching nearest neighbors for density estimation
+    for(int neighbor=0; neighbor<n_near_neigh; neighbor++)
+    {
+      points->getRow(begin+image_nearest_neighbors(t,neighbor), neighbor_row);
+      substract(t_row,neighbor_row,x_minus_neighbor);
+      substract(x_minus_neighbor,mus(begin+image_nearest_neighbors(t,neighbor)),z);
+      product(w, Bs[begin+image_nearest_neighbors(t,neighbor)], z);
+      transposeProduct(zm, Fs[begin+image_nearest_neighbors(t,neighbor)], w);
+      substract(z,zm,zn);
+      this_p_x += exp(-0.5*(pownorm(zm,2)/sms[begin+image_nearest_neighbors(t,neighbor)] + pownorm(zn,2)/sns[begin+image_nearest_neighbors(t,neighbor)] 
+                            + n_dim*log(sms[begin+image_nearest_neighbors(t,neighbor)]) + (n-n_dim)*log(sns[begin+image_nearest_neighbors(t,neighbor)])) - n/2.0 * Log2Pi);
+    }
+    
+    this_p_x /= reference_set.length();
+    nll -= log(this_p_x);
+  }
+
+  return nll/image_points_vmat.length();
+}
+
 void GaussianContinuum::get_image_matrix(VMat points, VMat image_points_vmat, int begin, string file_path, int n_near_neigh)
 {
   VMat reference_set = new SubVMatrix(points,begin,0,points.length()-begin,n);
@@ -1020,6 +1076,8 @@ void GaussianContinuum::get_image_matrix(VMat points, VMat image_points_vmat, in
   PLearn::save(file_path,image);
   
 }
+
+
 
 void GaussianContinuum::compute_train_and_validation_costs()
 {
@@ -1268,7 +1326,9 @@ void GaussianContinuum::train()
         pb->update(stage-initial_stage);
       
       if(stage != 0 && stage%compute_cost_every_n_epochs == 0)
+      {
         compute_train_and_validation_costs();
+      }
     }
   if(verbosity>1)
     cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
@@ -1278,6 +1338,9 @@ void GaussianContinuum::train()
   
   if(use_best_model)
     PLearn::load("temp_learner.psave",*this);
+
+  cout << "best train: " << get_nll(train_set,train_set,0,n_neighbors_density) << endl;
+  cout << "best validation: " << get_nll(train_set,validation_set,0,n_neighbors_density) << endl;
 
   int n_test_gen_points = 3;
   int n_test_gen_generated = 30;
@@ -1353,6 +1416,9 @@ void GaussianContinuum::train()
 
         get_image_matrix(train_and_generated_set, image_points_vmat, i*train_set.length()*n_random_walk_per_point+train_set.length(),path,n_neighbors_density*n_random_walk_per_point);
       }
+
+      cout << "NLL random walk on train: " << get_nll(train_and_generated_set,train_set,(n_random_walk_step-1)*train_set.length()*n_random_walk_per_point+train_set.length(),n_neighbors_density*n_random_walk_per_point) << endl;
+      cout << "NLL random walk on validation: " << get_nll(train_and_generated_set,validation_set,(n_random_walk_step-1)*train_set.length()*n_random_walk_per_point+train_set.length(),n_neighbors_density*n_random_walk_per_point) << endl;
     }
   }
 
