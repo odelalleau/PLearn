@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.3 2003/04/06 23:22:38 plearner Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.4 2003/04/09 19:43:43 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -112,8 +112,8 @@ void VecStatsCollector::update(const Vec& x)
       x[k]=0;//has_missing=true;*/
   }
        
-/*  if(compute_covariance)
-    if(has_missing)
+  if(compute_covariance)
+/*    if(has_missing)
     {
       for(int i=0;i<n;i++)
         for(int j=0;j<n;j++)

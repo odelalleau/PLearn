@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.3 2003/03/19 23:06:16 jkeable Exp $
+   * $Id: getDataSet.cc,v 1.4 2003/04/09 19:43:41 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -166,7 +166,6 @@ VMat getDataSet(const string& datasetstring, const string& alias)
     int inputsize, nclasses;
     VMat trainset, testset;
     loadClassificationDataset(datasetname, inputsize, nclasses, trainset, testset, normalizeinputs);
-
     if(dsetspec[1]=="train")
       vm = trainset;
     else if(dsetspec[1]=="test")
@@ -178,7 +177,7 @@ VMat getDataSet(const string& datasetstring, const string& alias)
     vm->setMetaDataDir("/u/lisa/db/metadata/" + datasetstring);
   }
   
-  vm->loadAllStringMappings();
+  //vm->loadAllStringMappings(); // let's comment this until bug fixed by Julien
   vm->setAlias(alias);
   vm->unduplicateFieldNames();
   return vm;

@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.11 2003/04/06 23:22:39 plearner Exp $
+* $Id: VMatrix.cc,v 1.12 2003/04/09 19:43:44 tihocan Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -347,6 +347,7 @@ bool VMatrix::isSMapFNameDirect(int col)
 //! adds a string<->real mapping
 void VMatrix::addStringMapping(int col, string str, real val)
 {
+  init_map_sr();
   map_sr[col][str]=val;
   map_rs[col][val]=str;
 }
@@ -354,6 +355,7 @@ void VMatrix::addStringMapping(int col, string str, real val)
 //! removes a string mapping
 void VMatrix::removeStringMapping(int col, string str)
 {
+  init_map_sr();
   map<string,real>::iterator sriterator;
 // check if the mapping ractually exists
   if((sriterator = map_sr[col].find(str)) == map_sr[col].end())
@@ -366,6 +368,7 @@ void VMatrix::removeStringMapping(int col, string str)
 //! overwrite the string<->real mapping with this one (and build the reverse mapping)
 void VMatrix::setStringMapping(int col, const map<string,real> & zemap)
 {
+  init_map_sr();
   map_sr[col]=zemap;
   map_rs[col].clear();
   for(map<string,real>::iterator it = map_sr[col].begin();it!=map_sr[col].end();++it)
@@ -375,6 +378,7 @@ void VMatrix::setStringMapping(int col, const map<string,real> & zemap)
 //! deletes all string mapping for column i
 void VMatrix::deleteStringMapping(int col)
 {
+  init_map_sr();
   if(col>=map_sr.size() ||
      col>=map_rs.size())
     PLERROR("deleteStringMapping : out of bounds for col=%i in string mapping array (size=%i).\n Current VMatrix\nclass"\
@@ -393,7 +397,7 @@ string VMatrix::getValString(int col, real val) const
 
 real VMatrix::getStringVal(int col,const string & str) const
 {
-  if(map_sr[col].find(str)==map_sr[col].end())
+  if(map_sr.length()==0 || map_sr[col].find(str)==map_sr[col].end())
     return MISSING_VALUE;
   else return map_sr[col][str];
 }
@@ -427,6 +431,7 @@ void VMatrix::loadAllStringMappings()
 // loads the appropriate string map file for column 'col'
 void VMatrix::loadStringMapping(int col)
 {
+  init_map_sr();
   string fname = getSMapFName(col);
   force_mkdir(getMetaDataDir()+"FieldInfo/");
   deleteStringMapping(col);

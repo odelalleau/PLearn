@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.9 2003/04/06 23:22:39 plearner Exp $
+   * $Id: VMatrix.h,v 1.10 2003/04/09 19:43:44 tihocan Exp $
    ******************************************************* */
 
 
@@ -116,6 +116,8 @@ public:
       {}
 
   static void declareOptions(OptionList & ol);
+
+  void init_map_sr() { if (map_sr.length()==0) { map_sr.resize(width()); map_rs.resize(width()); } }
 
   // Sample parts sizes
   inline void defineSizes(int inputsize, int targetsize, int weightsize)
