@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectAttributsSequenceVMatrix.h,v 1.1 2004/08/22 17:51:31 larocheh Exp $ 
+   * $Id: SelectAttributsSequenceVMatrix.h,v 1.2 2004/08/22 18:06:17 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -48,7 +48,7 @@
 #include <plearn/vmat/VMat.h>
 #include <plearn/math/pl_math.h>
 #include <plearn/base/ProgressBar.h>
-#include <hash_map>
+//#include <hash_map>
 
 namespace PLearn {
 using namespace std;
