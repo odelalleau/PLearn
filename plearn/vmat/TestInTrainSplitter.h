@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestInTrainSplitter.h,v 1.1 2004/06/04 16:08:21 tihocan Exp $ 
+   * $Id: TestInTrainSplitter.h,v 1.2 2004/06/08 13:08:10 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -70,6 +70,10 @@ protected:
   //! This is because we need it the number of points in the train and test
   //! parts in the nsplits() method.
   mutable TVec<VMat> first_source_split;
+
+  //! The number of samples in the test set that would be left if we
+  //! didn't make sure they were all added once.
+  mutable int n_left;
 
   //! The number of splits to make for each split given by the source_splitter.
   mutable int n_splits_per_source_split;

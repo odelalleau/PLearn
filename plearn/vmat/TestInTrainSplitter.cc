@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestInTrainSplitter.cc,v 1.1 2004/06/04 16:08:21 tihocan Exp $ 
+   * $Id: TestInTrainSplitter.cc,v 1.2 2004/06/08 13:08:10 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -122,11 +122,21 @@ int TestInTrainSplitter::nsplits() const
     getFirstSplit(); // This is just to initialize n_train and n_test.
   }
   n_to_add = int(n_train * percentage_added + 0.5);
-  n_splits_per_source_split = n_test / n_to_add;
+  if (n_to_add == 0) {
+    // Do NOT add points in the train set.
+    n_splits_per_source_split = 1;
+    n_left = 0;
+  } else {
+    n_splits_per_source_split = n_test / n_to_add;
+    n_left = n_test % n_to_add;
+  }
   if (n_splits_per_source_split == 0) {
     PLERROR("In TestInTrainSplitter::nsplits - Asked to add more test samples than available");
   }
-  return n_splits_per_source_split * source_splitter->nsplits();
+  if (n_left > 0)
+    n_splits_per_source_split++;
+  int n_total = n_splits_per_source_split * source_splitter->nsplits();
+  return n_total;
 }
 
 ///////////////////
@@ -168,9 +178,24 @@ TVec<VMat> TestInTrainSplitter::getSplit(int k)
     PLERROR("In TestInTrainSplitter::getSplit - The train / test sizes have changed!");
   }
   TVec<VMat> result(source_split.length());
-  VMat added_to_train = new SubVMatrix(test_set, i_test_start, 0, n_to_add, test_set->width());
-  result[0] = vconcat(train_set, added_to_train);
-  result[1] = added_to_train;
+  if (n_to_add == 0) {
+    // Do not change the split.
+    result[0] = train_set;
+    result[1] = test_set;
+  } else if (n_left == 0 || n_test_part != n_splits_per_source_split - 1) {
+    // Easy case: we add the same subset in train that the one for test.
+    VMat added_to_train = new SubVMatrix(test_set, i_test_start, 0, n_to_add, test_set->width());
+    result[0] = vconcat(train_set, added_to_train);
+    result[1] = added_to_train;
+  } else {
+    // We also take the beginning of the test to fill added_to_train,
+    // so that we add the correct number of points in the training set.
+    VMat new_test = new SubVMatrix(test_set, i_test_start, 0, n_left, test_set->width());
+    result[1] = new_test;
+    VMat compl_for_train = new SubVMatrix(test_set, 0, 0, n_to_add - n_left, test_set->width());
+    VMat added_to_train = vconcat(new_test, compl_for_train);
+    result[0] = vconcat(train_set, added_to_train);
+  }
   for (int i = 2; i < result.length(); i++) {
     result[i] = source_split[i];
   }
