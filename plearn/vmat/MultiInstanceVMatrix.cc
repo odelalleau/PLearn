@@ -33,20 +33,21 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.17 2005/02/03 16:22:26 crompb Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.18 2005/02/08 21:40:08 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
 
 /*! \file MultiInstanceVMatrix.cc */
 
+#include "MultiInstanceVMatrix.h"
 #include <map>
 #include <algorithm>
 #include <iterator>
-#include "MultiInstanceVMatrix.h"
 #include <plearn/var/SumOverBagsVariable.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/io/fileutils.h>
+#include <plearn/io/openFile.h>
 
 namespace PLearn {
 using namespace std;
@@ -120,12 +121,10 @@ void MultiInstanceVMatrix::build_()
   // To be used in the end.. it is about 5 secs slower in debug
   //int nRows = countNonBlankLinesOfFile(filename_);
 
-  ifstream inFile(filename_.absolute().c_str());
+  PStream inFile = openFile(filename_, PStream::raw_ascii, "r");
 //    PStream inFile = openFile(filename_, PStream::raw_ascii, "r");
-  if(!inFile)
-    PLERROR("In MultiInstanceVMatrix could not open file %s for reading", filename_.absolute().c_str());
 
-  inFile.seekg(0);
+  // inFile.seekg(0); TODO See if it still works without this.
   skipBlanksAndComments(inFile);
 
   string lastName = "";
@@ -144,9 +143,9 @@ void MultiInstanceVMatrix::build_()
 
  // Check the number of columns
   for (i = 0; i < header_lines_to_skip; i++) {
-    getline(inFile, aLine, '\n');
+    inFile.getline(aLine, '\n');
   }
-  getline(inFile, aLine, '\n');
+  inFile.getline(aLine, '\n');
   vector<string> entries = split(aLine);
   int nFields = (int)entries.size();
   if (inputsize_>=0)
@@ -161,20 +160,25 @@ void MultiInstanceVMatrix::build_()
 
   int lastColumn = inputsize_ + source_targetsize; 
 
-  inFile.seekg(0);
+  inFile = openFile(filename_, PStream::raw_ascii, "r");
+  // inFile.seekg(0); // TODO See if it still works without this.
   skipBlanksAndComments(inFile);
   for (i = 0; i < header_lines_to_skip; i++) {
-    getline(inFile, aLine, '\n');
+    inFile.getline(aLine, '\n');
   }
   skipBlanksAndComments(inFile);
 
+  int nRows = inFile.count('\n');
+  /* TODO Make sure it works like the old code:
   int nRows = count(istreambuf_iterator<char>(inFile),
                     istreambuf_iterator<char>(), '\n');
+                    */
 
-  inFile.seekg(0);
+  inFile = openFile(filename_, PStream::raw_ascii, "r");
+  // inFile.seekg(0); // TODO See if it still works without this.
   skipBlanksAndComments(inFile);
   for (i = 0; i < header_lines_to_skip; i++) {
-    getline(inFile, aLine, '\n');
+    inFile.getline(aLine, '\n');
   }
   skipBlanksAndComments(inFile);
 
@@ -239,7 +243,6 @@ void MultiInstanceVMatrix::build_()
   //test.close();
 
   this->setMtime(mtime(filename_));
-  inFile.close();
 }
 
 // ### Nothing to add here, simply calls build_
