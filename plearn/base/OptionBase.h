@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OptionBase.h,v 1.5 2004/03/04 15:02:59 tihocan Exp $
+   * $Id: OptionBase.h,v 1.6 2004/05/07 19:03:47 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -121,7 +121,7 @@ public:
   inline const string& description() const { return description_; }
   inline flag_t flags() const { return flags_; }
 
-  //! change the string representation of the default value
+  //! Change the string representation of the default value.
   inline void setDefaultVal(const string& newdefaultval)
   { defaultval_ = newdefaultval; }
 };
