@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussianProcessRegressor.h,v 1.2 2003/07/04 01:37:24 yoshua Exp $ 
+ * $Id: GaussianProcessRegressor.h,v 1.3 2003/07/04 21:28:23 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussianProcessRegressor.h */
@@ -76,7 +76,7 @@
  
 
 /* *******************************************************      
- * $Id: GaussianProcessRegressor.h,v 1.2 2003/07/04 01:37:24 yoshua Exp $
+ * $Id: GaussianProcessRegressor.h,v 1.3 2003/07/04 21:28:23 yoshua Exp $
  ******************************************************* */
 
 
@@ -85,7 +85,7 @@
 #ifndef GaussianProcessRegressor_INC
 #define GaussianProcessRegressor_INC
 
-#include "PLearner.h"
+#include "PConditionalDistribution.h"
 #include "Kernel.h"
 
 namespace PLearn <%
@@ -94,13 +94,11 @@ using namespace std;
 /*! Simple Gaussian Process Regression.
   Should inherit from ConditionalDistribution (but currently Distribution inherits from the old Learner class!)
 */
-class GaussianProcessRegressor: public PLearner
+class GaussianProcessRegressor: public PConditionalDistribution
 {
 
   public:
 
-    typedef PLearner inherited;
-    
     // Build options
 
     PP<Kernel> kernel; // kernel = prior covariance on functions
@@ -120,12 +118,6 @@ class GaussianProcessRegressor: public PLearner
 
     // temporary fields that don't need to be saved = NON-OPTIONS
 
-    // A DISTRIBUTION FIELD, TO REMOVE EVENTUALLY
-    // WHEN THIS BECOMES A SUBCLASS OF DISTRIBUTION
-    //! A string where the characters have the following meaning:
-    //! 'l'->log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn, 'e' -> expectation, 'v' -> variance
-    string use_returns_what;
-
     Mat alpha; // each row has the coefficients of K(x,x_j) in regression for i-th output
     mutable Vec Kxxi; // has K(x,x_i) for current input x
     mutable real Kxx; // has K(x,x)  for current input x
@@ -139,6 +131,9 @@ class GaussianProcessRegressor: public PLearner
 
     GaussianProcessRegressor();
     virtual ~GaussianProcessRegressor();
+
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
     //! Provides a help message describing this class
     static string help();
@@ -229,7 +224,7 @@ class GaussianProcessRegressor: public PLearner
     real QFormInverse(real sigma2, Vec u) const;
 
   public:
-    PLEARN_DECLARE_OBJECT_METHODS(GaussianProcessRegressor, "GaussianProcessRegressor", PLearner);
+    PLEARN_DECLARE_OBJECT_METHODS(GaussianProcessRegressor, "GaussianProcessRegressor", PConditionalDistribution);
 
 };
 

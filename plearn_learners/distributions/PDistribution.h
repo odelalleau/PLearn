@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.2 2003/06/04 21:21:20 plearner Exp $ 
+   * $Id: PDistribution.h,v 1.3 2003/07/04 21:28:23 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.h */
@@ -58,6 +58,7 @@ public:
 
   //! A string where the characters have the following meaning:
   //! 'l'->log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn
+  //! (subclasses may define more uses, such as: 'e' -> expectation, 'v' -> variance)
   string outputs_def;
 
   // ****************

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.3 2003/06/05 19:13:15 plearner Exp $ 
+   * $Id: PDistribution.cc,v 1.4 2003/07/04 21:28:23 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -53,10 +53,12 @@ PDistribution::PDistribution()
   {
     declareOption(ol, "outputs_def", &PDistribution::outputs_def, OptionBase::buildoption,
                   "A string where the characters have the following meaning: \n"
-                  "'l'-> log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn");
+                  "'l'-> log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn,\n"
+                  "and for conditional distributions: 'e' -> expectation, 'v' -> variance\n"
+      );
   
     // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
+    parentclass::declareOptions(ol);
   }
 
   string PDistribution::help()
@@ -77,14 +79,14 @@ PDistribution::PDistribution()
   // ### Nothing to add here, simply calls build_
   void PDistribution::build()
   {
-    inherited::build();
+    parentclass::build();
     build_();
   }
 
 
 void PDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+  parentclass::makeDeepCopyFromShallowCopy(copies);
 }
 
 

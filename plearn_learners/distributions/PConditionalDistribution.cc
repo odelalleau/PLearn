@@ -2,7 +2,7 @@
 
 // -*- C++ -*-
 
-// ConditionalDistribution.cc
+// PConditionalDistribution.cc
 // 
 // Copyright (C) *YEAR* *AUTHOR(S)* 
 // ...
@@ -36,22 +36,20 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-#include "ConditionalDistribution.h"
+#include "PConditionalDistribution.h"
 
 namespace PLearn <%
 using namespace std;
 
-ConditionalDistribution::ConditionalDistribution() 
-  :inherited()
+PConditionalDistribution::PConditionalDistribution() 
+  :parentclass()
 {
    
 }
 
+PLEARN_IMPLEMENT_OBJECT_METHODS(PConditionalDistribution, "PConditionalDistribution", PDistribution);
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ConditionalDistribution);
-
-
-string ConditionalDistribution::help()
+string PConditionalDistribution::help()
 {
   // ### Provide some useful description of what the class is ...
   return 
@@ -60,33 +58,38 @@ string ConditionalDistribution::help()
 }
 
 
-void ConditionalDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+void PConditionalDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+  parentclass::makeDeepCopyFromShallowCopy(copies);
 }
 
 
-void ConditionalDistribution::setInput(const Vec& input)
-{ PLERROR("setInput must be implemented for this ConditionalDistribution"); }
+void PConditionalDistribution::setInput(const Vec& input)
+{ PLERROR("setInput must be implemented for this PConditionalDistribution"); }
 
 
-void ConditionalDistribution::use(const Vec& input, Vec& output)
+void PConditionalDistribution::use(const Vec& input, Vec& output)
 {
   Vec x = input.subVec(0,input_part_size);
-  Vec y = input.subVec(input_part_size,input.length()-input_part_size);
+  int d=input.length()-input_part_size;
+  Vec y = input.subVec(input_part_size,d);
   setInput(x);
-  if (use_returns_what=="l")
+  if (outputs_def=="l")
     output[0]=log_density(y);
-  else if (use_returns_what=="d")
+  else if (outputs_def=="d")
     output[0]=density(y);
-  else if (use_returns_what=="c")
+  else if (outputs_def=="c")
     output[0]=cdf(y);
-  else if (use_returns_what=="s")
+  else if (outputs_def=="s")
     output[0]=survival_fn(y);
-  else if (use_returns_what=="e")
-    output << expectation();
-  else if (use_returns_what=="v")
-    output << variance().toVec();
+  else if (outputs_def=="e")
+    expectation(output);
+  else if (outputs_def=="v")
+  {
+    Mat covmat = output.toMat(d,d);
+    variance(covmat);
+  }
+  else PLERROR("PConditionalDistribution: unknown setting of outputs_def = %s",outputs_def.c_str());
 }
 
 %> // end of namespace PLearn

@@ -2,7 +2,7 @@
 
 // -*- C++ -*-
 
-// ConditionalDistribution.cc
+// PConditionalDistribution.h
 // 
 // Copyright (C) *YEAR* *AUTHOR(S)* 
 // ...
@@ -36,57 +36,56 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-#include "ConditionalDistribution.h"
+
+#ifndef PConditionalDistribution_INC
+#define PConditionalDistribution_INC
+
+#include "Learner.h"
+#include "PDistribution.h"
 
 namespace PLearn <%
 using namespace std;
 
-ConditionalDistribution::ConditionalDistribution() 
-  :inherited()
+class PConditionalDistribution: public PDistribution
 {
-   
-}
+protected:
+  // *********************
+  // * protected options *
+  // *********************
 
+  // ### declare protected option fields (such as learnt parameters) here
+  // ...
+    
+public:
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ConditionalDistribution);
+    // the part of the PLearner's inputsize() that corresponds to the size
+    // of the conditioning variable. It should be < inputsize().
+  int input_part_size;
 
+  // ****************
+  // * Constructors *
+  // ****************
 
-string ConditionalDistribution::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "You must call setInput to set the condition before using the distribution"
-    + optionHelp();
-}
+  // Default constructor, make sure the implementation in the .cc
+  // initializes all fields to reasonable default values.
+  PConditionalDistribution();
 
+  //! Provides a help message describing this class
+  static string help();
 
-void ConditionalDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
-{
-  inherited::makeDeepCopyFromShallowCopy(copies);
-}
+  //! Transforms a shallow copy into a deep copy
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
+  //! Set the input part before using the inherited methods
+  virtual void setInput(const Vec& input);
 
-void ConditionalDistribution::setInput(const Vec& input)
-{ PLERROR("setInput must be implemented for this ConditionalDistribution"); }
+  virtual void use(const Vec& input, Vec& output);
 
+  // Declares a few other classes and functions related to this class
+  PLEARN_DECLARE_OBJECT_METHODS(PConditionalDistribution, "PConditionalDistribution", PDistribution);
+};
 
-void ConditionalDistribution::use(const Vec& input, Vec& output)
-{
-  Vec x = input.subVec(0,input_part_size);
-  Vec y = input.subVec(input_part_size,input.length()-input_part_size);
-  setInput(x);
-  if (use_returns_what=="l")
-    output[0]=log_density(y);
-  else if (use_returns_what=="d")
-    output[0]=density(y);
-  else if (use_returns_what=="c")
-    output[0]=cdf(y);
-  else if (use_returns_what=="s")
-    output[0]=survival_fn(y);
-  else if (use_returns_what=="e")
-    output << expectation();
-  else if (use_returns_what=="v")
-    output << variance().toVec();
-}
-
+  
 %> // end of namespace PLearn
+
+#endif

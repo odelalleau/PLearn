@@ -72,7 +72,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianProcessRegressor.cc,v 1.2 2003/07/04 01:37:24 yoshua Exp $
+   * $Id: GaussianProcessRegressor.cc,v 1.3 2003/07/04 21:28:23 yoshua Exp $
    ******************************************************* */
 
 #include "GaussianProcessRegressor.h"
@@ -83,11 +83,30 @@ namespace PLearn <%
 using namespace std;
 
 GaussianProcessRegressor::GaussianProcessRegressor() : 
-  PLearner(), Gram_matrix_normalization("none"), 
-  max_nb_evectors(-1), use_returns_what("e")
+  parentclass(), Gram_matrix_normalization("none"), 
+  max_nb_evectors(-1)
 {}
 
 PLEARN_IMPLEMENT_OBJECT_METHODS(GaussianProcessRegressor, "GaussianProcessRegressor", PLearner);
+
+void GaussianProcessRegressor::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  parentclass::makeDeepCopyFromShallowCopy(copies);
+
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+  deepCopyField(kernel, copies);
+  deepCopyField(noise_sd, copies);
+  deepCopyField(alpha, copies);
+  deepCopyField(Kxxi, copies);
+  deepCopyField(Kxx, copies);
+  deepCopyField(K, copies);
+  deepCopyField(eigenvectors, copies);
+  deepCopyField(eigenvalues, copies);
+  deepCopyField(meanK, copies);
+}
 
 string GaussianProcessRegressor::help()
 {
@@ -155,7 +174,7 @@ void GaussianProcessRegressor::declareOptions(OptionList& ol)
                 "     K_{ij} <-- K_{ij}/sqrt(mean_i(K_ij) mean_j(K_ij))\n");
 
 
-  inherited::declareOptions(ol);
+  parentclass::declareOptions(ol);
 }
 
 void GaussianProcessRegressor::build_()
@@ -180,9 +199,9 @@ void GaussianProcessRegressor::build_()
 int GaussianProcessRegressor::outputsize() const
 { 
   int output_size=0;
-  if (use_returns_what.find("e") != string::npos)
+  if (outputs_def.find("e") != string::npos)
     output_size+=n_outputs;
-  if (use_returns_what.find("v") != string::npos)
+  if (outputs_def.find("v") != string::npos)
     // we only compute a diagonal output variance
     output_size+=n_outputs;
   return output_size;
@@ -190,7 +209,7 @@ int GaussianProcessRegressor::outputsize() const
 
 void GaussianProcessRegressor::build()
 {
-  inherited::build();
+  parentclass::build();
   build_();
 }
 
@@ -300,12 +319,12 @@ void GaussianProcessRegressor::computeOutput(const Vec& input, Vec& output) cons
 {
   setInput_const(input);
   int i0=0;
-  if (use_returns_what.find("e") != string::npos)
+  if (outputs_def.find("e") != string::npos)
   {
     expectation(output.subVec(i0,n_outputs));
     i0+=n_outputs;
   }
-  if (use_returns_what.find("v") != string::npos)
+  if (outputs_def.find("v") != string::npos)
   {
     variance(output.subVec(i0,n_outputs));
     i0+=n_outputs;
@@ -318,14 +337,14 @@ void GaussianProcessRegressor::computeCostsFromOutputs(const Vec& input, const V
   Vec mu;
   static Vec var;
   int i0=0;
-  if (use_returns_what.find("e")!=string::npos)
+  if (outputs_def.find("e")!=string::npos)
   {
     mu = output.subVec(i0,n_outputs);
     i0+=n_outputs;
   }
   else
     mu = expectation();
-  if (use_returns_what.find("v")!=string::npos)
+  if (outputs_def.find("v")!=string::npos)
   {
     var = output.subVec(i0,n_outputs);
     i0+=n_outputs;

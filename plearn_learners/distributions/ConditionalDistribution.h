@@ -60,6 +60,9 @@ public:
 
   typedef Distribution inherited;
 
+    // the part of the PLearner's inputsize() that corresponds to the size
+    // of the conditioning variable. It should be < inputsize().
+  int input_part_size;
 
   // ****************
   // * Constructors *
@@ -80,6 +83,8 @@ public:
 
   //! Set the input part before using the inherited methods
   virtual void setInput(const Vec& input);
+
+  virtual void use(const Vec& input, Vec& output);
 };
 
 // Declares a few other classes and functions related to this class
