@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.13 2003/11/28 21:55:26 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.14 2003/11/30 03:04:25 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -46,6 +46,7 @@
 #include "DisplayUtils.h"
 #include "DilogarithmVariable.h"
 #include "SoftSlopeVariable.h"
+#include "plapack.h"
 
 namespace PLearn <%
 using namespace std;
@@ -72,6 +73,8 @@ ConditionalDensityNet::ConditionalDensityNet()
    n_output_density_terms(0),
    steps_type("sloped_steps"),
    centers_initialization("uniform"),
+   curve_positions("uniform"),
+   scale(5.0),
    unconditional_p0(0.01),
    mu_is_fixed(true),
    initial_hardness(1)
@@ -185,7 +188,17 @@ ConditionalDensityNet::ConditionalDensityNet()
                 OptionBase::buildoption, 
                 "    How to initialize the step centers (mu_i). Allowed values are:\n"
                 "      - uniform: at regular intervals in [0,maxY]\n"
-                "      - log-scale: as the exponential of values at regular intervals in [0,log(1+maxY)], minus 1\nDefault=uniform\n");
+                "      - log-scale: as the exponential of values at regular intervals in log-scale, using formula:\n"
+                "          i-th position = (exp(scale*(i+1-n_output_density_terms)/n_output_density_terms)-exp(-scale))/(1-exp(-scale))\n");
+  declareOption(ol, "curve_positions", &ConditionalDensityNet::curve_positions,
+                OptionBase::buildoption, 
+                "    How to choose the y-values for the probability curve (upper case output_def):\n"
+                "      - uniform: at regular intervals in [0,maxY]\n"
+                "      - log-scale: as the exponential of values at regular intervals in log-scale, using formula:\n"
+                "          i-th position = (exp(scale*(i+1-n_output_density_terms)/n_output_density_terms)-exp(-scale))/(1-exp(-scale))\n");
+  declareOption(ol, "scale", &ConditionalDensityNet::scale,
+                OptionBase::buildoption, 
+                "    scale used in the log-scale formula for centers_initialization and curve_positions");
 
   declareOption(ol, "unconditional_p0", &ConditionalDensityNet::unconditional_p0, OptionBase::buildoption, 
                 "    approximate unconditional probability of Y=0 (mass point), used\n"
@@ -207,8 +220,11 @@ ConditionalDensityNet::ConditionalDensityNet()
   declareOption(ol, "unconditional_delta_cdf", &ConditionalDensityNet::unconditional_delta_cdf, OptionBase::learntoption, 
                 "    Variations of the cdf from one step center to the next.\n");
 
-  declareOption(ol, "mu", &ConditionalDensityNet::unconditional_delta_cdf, OptionBase::learntoption, 
+  declareOption(ol, "mu", &ConditionalDensityNet::mu, OptionBase::learntoption, 
                 "    Step centers.\n");
+
+  declareOption(ol, "y_values", &ConditionalDensityNet::y_values, OptionBase::learntoption, 
+                "    Values of Y at which the cumulative (or density or survival) curves are computed if required.\n");
 
     inherited::declareOptions(ol);
   }
@@ -223,6 +239,9 @@ ConditionalDensityNet::ConditionalDensityNet()
       lower_bound = 0;
       upper_bound = maxY;
       int n_output_parameters = mu_is_fixed?(1+n_output_density_terms*2):(1+n_output_density_terms*3);
+
+      if (n_curve_points<0)
+        n_curve_points = n_output_density_terms+1;
 
       // init. basic vars
       input = Var(inputsize(), "input");
@@ -470,13 +489,25 @@ ConditionalDensityNet::ConditionalDensityNet()
           Func prob_f(target&output,outputs_def[i]=='S'?(var(1.0)-cumulative):
                       (outputs_def[i]=='C'?cumulative:
                        (outputs_def[i]=='D'?density:log(density))));
-          VarArray y_values(n_curve_points);
-          real delta = maxY/(n_curve_points-1);
-          for (int i=0;i<n_curve_points;i++)
+          y_values.resize(n_curve_points);
+          if (curve_positions=="uniform")
           {
-            y_values[i] = var(i*delta);
-            y_values[i]->setName("y"+tostring(i));
-            outputs_array &= prob_f(y_values[i] & output);
+            real delta = maxY/(n_curve_points-1);
+            for (int i=0;i<n_curve_points;i++)
+            {
+              y_values[i] = var(i*delta);
+              y_values[i]->setName("y"+tostring(i));
+              outputs_array &= prob_f(y_values[i] & output);
+            }
+          } else // log-scale
+          {
+            real denom = 1.0/(1-exp(-scale));
+            for (int i=0;i<n_curve_points;i++)
+            {
+              y_values[i] = var((exp(scale*(i-n_output_density_terms)/n_output_density_terms)-exp(-scale))*denom);
+              y_values[i]->setName("y"+tostring(i));
+              outputs_array &= prob_f(y_values[i] & output);
+            }    
           }
         } else PLERROR("ConditionalDensityNet::build: can't handle outputs_def with option value = %c",outputs_def[i]);
       }
@@ -569,6 +600,7 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
   deepCopyField(unconditional_delta_cdf, copies);
   deepCopyField(unconditional_cdf, copies);
   deepCopyField(mu, copies);
+  deepCopyField(y_values,copies);
   inherited::makeDeepCopyFromShallowCopy(copies);
   }
 
@@ -673,10 +705,57 @@ void ConditionalDensityNet::initializeParams()
     mu_ = mu->value;
   else
     mu_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
-  a_[0]=inverse_softplus(unconditional_p0);
   b_.fill(inverse_softplus(1.0));
   c_.fill(inverse_softplus(initial_hardness));
   initialize_mu(mu_);
+
+  real *dcdf = unconditional_delta_cdf->valuedata;
+  if (dcdf[0]==0)
+    a_[0]=inverse_softplus(unconditional_p0);
+  else 
+  {
+    real s=0;
+    if (steps_type=="sigmoid_steps")
+      for (int i=0;i<n_output_density_terms;i++)
+        s+=dcdf[i]*(unconditional_p0*sigmoid(initial_hardness*(maxY-mu_[i]))-sigmoid(-initial_hardness*mu_[i]));
+    else
+      for (int i=0;i<n_output_density_terms;i++)
+      {
+        real prev_mu = i==0?0:mu_[i-1];
+        s+=dcdf[i]*(unconditional_p0*soft_slope(maxY,initial_hardness,prev_mu,mu_[i])-
+                    soft_slope(0,initial_hardness,prev_mu,mu_[i]));
+      }
+    real sa=s/(1-unconditional_p0);
+    a_[0]=inverse_softplus(sa);
+
+    Mat At(n_output_density_terms,n_output_density_terms); // transpose of the linear system matrix
+    Mat rhs(1,n_output_density_terms); // right hand side of the linear system
+    // solve the system to find b's that make the unconditional fit the observed data
+    //  sum_j sb_j dcdf_j (cdf_j step_j(maxY) - step_j(mu_i)) = sa (1 - cdf_i)
+    //
+    for (int i=0;i<n_output_density_terms;i++)
+    {
+      real* Ati = At[i];
+      real prev_mu = i==0?0:mu_[i-1];
+      for (int j=0;j<n_output_density_terms;j++)
+      {
+        if (steps_type=="sigmoid_steps")
+          Ati[j] = dcdf[i]*(unconditional_cdf[j]*sigmoid(initial_hardness*(maxY-mu_[i]))-
+                           sigmoid(initial_hardness*(mu_[j]-mu_[i])));
+        else
+          Ati[j] = dcdf[i]*(unconditional_cdf[j]*soft_slope(maxY,initial_hardness,prev_mu,mu_[i])-
+                            soft_slope(mu_[j],initial_hardness,prev_mu,mu_[i]));
+      }
+      rhs[0][i] = sa*(1-unconditional_cdf[i]);
+    }
+    TVec<int> pivots(n_output_density_terms);
+    int status = lapackSolveLinearSystem(At,rhs,pivots);
+    if (status==0)
+      for (int i=0;i<n_output_density_terms;i++)
+        b_[i] = inverse_softplus(rhs[0][i]);
+    else
+      PLWARNING("ConditionalDensityNet::initializeParams() Could not invert matrix to obtain exact init. of b");
+  }
 
   // Reset optimizer
   if(optimizer)
@@ -693,10 +772,9 @@ void ConditionalDensityNet::initialize_mu(Vec& mu_)
       mu_[i]=center;
   } else if (centers_initialization=="log-scale")
   {
-    real delta=log(1+maxY)/(n_output_density_terms+1);
-    real center=delta;
-    for (int i=0;i<n_output_density_terms;i++,center+=delta)
-      mu_[i]=exp(center)-1;
+    real denom = 1.0/(1-exp(-scale));
+    for (int i=0;i<n_output_density_terms;i++)
+      mu_[i]=(exp(scale*(i+1-n_output_density_terms)/n_output_density_terms)-exp(-scale))*denom;
   } else PLERROR("ConditionalDensityNet::initialize_mu: unknown value %s for centers_initialization option",
                  centers_initialization.c_str());
 }
@@ -757,7 +835,7 @@ void ConditionalDensityNet::train()
   
   initializeParams();
   // debugging
-      f->fprop(input->value,outputs->value);
+  f->fprop(input->value,outputs->value);
       static bool display_graph = false;
       //displayVarGraph(outputs,true);
       if (display_graph)
@@ -773,6 +851,12 @@ void ConditionalDensityNet::train()
       train_stats->forget();
       optimizer->early_stop = false;
       optimizer->optimizeN(*train_stats);
+
+      if (display_graph)
+        displayFunction(f,true);
+      if (display_graph)
+        displayFunction(test_costf,true);
+
       train_stats->finalize();
       if(verbosity>2)
         cerr << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;

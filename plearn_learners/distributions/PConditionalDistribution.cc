@@ -42,7 +42,7 @@ namespace PLearn <%
 using namespace std;
 
 PConditionalDistribution::PConditionalDistribution() 
-  :PDistribution()
+  :PDistribution(), input_part_size(-1)
 {
    
 }

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.6 2003/11/19 15:07:08 yoshua Exp $ 
+   * $Id: PDistribution.cc,v 1.7 2003/11/30 03:04:25 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -44,7 +44,7 @@ namespace PLearn <%
 using namespace std;
 
 PDistribution::PDistribution() 
-  :outputs_def("l")
+  :outputs_def("l"), n_curve_points(-1)
 {}
 
   PLEARN_IMPLEMENT_OBJECT(PDistribution, 

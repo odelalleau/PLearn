@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.10 2003/11/28 21:55:26 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.11 2003/11/30 03:04:25 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -82,6 +82,7 @@ protected:
   Vec target_dependent_outputs;
     VarArray costs; // all costs of interest
     VarArray penalties;
+  VarArray y_values; // values at which output probability curve is sampled
     Var training_cost; // weighted scalar costs[0] including penalties
     Var test_costs; // hconcat(costs)
 
@@ -156,10 +157,13 @@ public:
   //  - sloped_steps: g(y,theta,i) = s(s(c_i)*(mu_i-y))-s(s(c_i)*(mu_i-y))\n"
   string steps_type;
 
-  // how to initialize the mu_i:
+  // how to initialize the mu_i and how to select the curve points:
   //   - uniform: at regular intervals in [0,maxY]
-  //   - log-scale: as the exponential of values at regular intervals in [0,log(1+maxY)], minus 1
+  //   - log-scale: as the exponential of values at regular intervals in log scale, using the formula:
+  //       i-th position = (exp(scale*(i+1-n_output_density_terms)/n_output_density_terms)-exp(-scale))/(1-exp(-scale))
   string centers_initialization;
+  string curve_positions;
+  real scale;
 
   // approximate unconditional probability of Y=0 (mass point), used
   // to initialize the parameters
