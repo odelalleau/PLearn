@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuumDistribution.h,v 1.1 2005/01/27 14:17:38 tihocan Exp $
+   * $Id: GaussianContinuumDistribution.h,v 1.2 2005/03/07 16:42:27 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -80,8 +80,6 @@ protected:
 
   PP<PDistribution> dist;
 
-  VMat valid_set;
-
   // Random walk fields
   Array<VMat> ith_step_generated_set;
 
@@ -89,7 +87,6 @@ protected:
   VMat train_and_generated_set;
   VMat reference_set;
   TMat<int> train_nearest_neighbors;
-  TMat<int> validation_nearest_neighbors;
   TVec< Mat > Bs, Fs;
   Mat mus;
   Vec sms;
@@ -102,6 +99,7 @@ protected:
   mutable TVec<int> t_nn;
   mutable Vec t_dist;
   mutable Mat distances;
+  mutable Vec log_gauss;
 
   mutable DistanceKernel dk;
 
@@ -133,27 +131,16 @@ public:
   int n_random_walk_per_point;
   bool save_image_mat;
   bool walk_on_noise;
-  VMat image_points_vmat;
-  Mat image_points_mat;
-  Mat image_prob_mat;
-  TMat<int> image_nearest_neighbors;
-  real upper_y;
-  real lower_y;
-  real upper_x;
-  real lower_x;
-  int points_per_dim;
   real min_sigma;
   real min_diff;
   real min_p_x;
-  bool print_parameters;
   bool sm_bigger_than_sn;
   int n_neighbors; // number of neighbors used for gradient descent
   int n_neighbors_density; // number of neighbors for the p(x) density estimation
   int mu_n_neighbors; // number of neighbors to learn the mus
   int n_dim; // number of reduced dimensions (number of tangent vectors to compute)
-  int compute_cost_every_n_epochs;
+  int update_parameters_every_n_epochs;
   string variances_transfer_function; // "square", "exp" or "softplus"
-  real validation_prop;
   PP<Optimizer> optimizer; // to estimate the function that predicts local tangent vectors given the input
   Var embedding;
   Func output_f;
@@ -200,18 +187,11 @@ private:
 
   void knn(const VMat& vm, const Vec& x, const int& k, TVec<int>& neighbors, bool sortk) const; 
 
-  void get_image_matrix(VMat points, VMat image_points_vmat, int begin, string file_path, int n_near_neigh);
-
-  real get_nll(VMat points, VMat image_points_vmat, int begin, int n_near_neigh);
-
 protected: 
   
   //! Declares this class' options.
   // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
-
-  //! This is the old computeOutput method.
-  virtual real computeDensity(const Vec& input) const;
 
   //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
   //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
@@ -241,6 +221,9 @@ public:
 
   //! Return log of probability density log(p(y)).
   virtual real log_density(const Vec& x) const;
+
+  //! Return log density of ith point in reference_set
+  real log_density(int i);
 
   //! The role of the train method is to bring the learner up to stage==nstages,
   //! updating the train_stats collector with training costs measured on-line in the process.

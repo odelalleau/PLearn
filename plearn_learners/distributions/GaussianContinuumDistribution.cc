@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuumDistribution.cc,v 1.2 2005/02/07 14:57:38 tihocan Exp $
+   * $Id: GaussianContinuumDistribution.cc,v 1.3 2005/03/07 16:42:26 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -83,43 +83,11 @@
 namespace PLearn {
 using namespace std;
 
-// les neurones de la couche cachée correspondent à des hyperplans
-// la smartInitialization consiste a initialiser ces hyperplans passant
-// des points du train_set pris aleatoirement
-// comme ca, on est sur de bien quadriller l'espace des points.
-// le c correspond a une sorte de contre weight decay
-// plus c est grand plus on aura des poids grand et plus on a des neurones tranchés dans l'espace
-Mat smartInitialization(VMat v, int n, real c, real regularization)
-{
-  int l = v->length();
-  int w = v->width();
-  
-  Mat result(n,w);
-  Mat temp(w,w);
-  Vec b(w);
-  b<<c;
-  
-  int i,j;
-
-  for (i=0;i<n;++i)
-  {
-    temp.clear();
-    for (j=0;j<w;++j)
-    {
-      v->getRow(uniform_multinomial_sample(l),temp(j));
-    }
-    // regularization pour eviter 1/ quand on a tire deux fois le meme indice  2/ quand les points sont trops proches
-    regularizeMatrix(temp,regularization);
-    result(i) << solveLinearSystem(temp, b);
-  }
-  return result;
-}
 
 GaussianContinuumDistribution::GaussianContinuumDistribution() 
 /* ### Initialize all fields to their default value here */
-  : weight_mu_and_tangent(0), include_current_point(false), random_walk_step_prop(1), use_noise(false),use_noise_direction(false), noise(-1), noise_type("uniform"), n_random_walk_step(0), n_random_walk_per_point(0),save_image_mat(false),walk_on_noise(true),min_sigma(0.00001), min_diff(0.01), min_p_x(0.001),print_parameters(false),sm_bigger_than_sn(true), n_neighbors(5), n_neighbors_density(-1), mu_n_neighbors(2), n_dim(1), compute_cost_every_n_epochs(5), variances_transfer_function("softplus"), validation_prop(0), architecture_type("single_neural_network"),
+  : weight_mu_and_tangent(0), include_current_point(false), random_walk_step_prop(1), use_noise(false),use_noise_direction(false), noise(-1), noise_type("uniform"), n_random_walk_step(0), n_random_walk_per_point(0),walk_on_noise(true),min_sigma(0.00001), min_diff(0.01), min_p_x(0.001),sm_bigger_than_sn(true), n_neighbors(5), n_neighbors_density(-1), mu_n_neighbors(2), n_dim(1), update_parameters_every_n_epochs(5), variances_transfer_function("softplus"), architecture_type("single_neural_network"),
     n_hidden_units(-1), batch_size(1), norm_penalization(0), svd_threshold(1e-5)
-    
 {
 }
 
@@ -410,8 +378,8 @@ void GaussianContinuumDistribution::declareOptions(OptionList& ol)
 		"Number of tangent vectors to predict.\n"
 		);
 
-  declareOption(ol, "compute_cost_every_n_epochs", &GaussianContinuumDistribution::compute_cost_every_n_epochs, OptionBase::buildoption,
-		"Frequency of the computation of the cost on the training and validation set. \n"
+  declareOption(ol, "update_parameters_every_n_epochs", &GaussianContinuumDistribution::update_parameters_every_n_epochs, OptionBase::buildoption,
+		"Frequency of the update of the stored parameters of the reference set. \n"
 		);
 
   declareOption(ol, "optimizer", &GaussianContinuumDistribution::optimizer, OptionBase::buildoption,
@@ -455,41 +423,17 @@ void GaussianContinuumDistribution::declareOptions(OptionList& ol)
 		"Threshold to accept singular values of F in solving for linear combination weights on tangent subspace.\n"
 		);
 
-  declareOption(ol, "print_parameters", &GaussianContinuumDistribution::print_parameters, OptionBase::buildoption,
-		"Indication that the parameters should be printed for the training set points.\n"
-		);
 
    declareOption(ol, "sm_bigger_than_sn", &GaussianContinuumDistribution::sm_bigger_than_sn, OptionBase::buildoption,
 		"Indication that sm should always be bigger than sn.\n"
 		);
 
-  declareOption(ol, "save_image_mat", &GaussianContinuumDistribution::save_image_mat, OptionBase::buildoption,
-		"Indication that a matrix corresponding to the probabilities of the points on a 2d grid should be created.\n"
-                );
 
   declareOption(ol, "walk_on_noise", &GaussianContinuumDistribution::walk_on_noise, OptionBase::buildoption,
 		"Indication that the random walk should also consider the noise variation.\n"
                 );
 
-  declareOption(ol, "upper_y", &GaussianContinuumDistribution::upper_y, OptionBase::buildoption,
-		"Upper bound on the y (second) coordinate.\n"
-                );
-  
-  declareOption(ol, "upper_x", &GaussianContinuumDistribution::upper_x, OptionBase::buildoption,
-		"Lower bound on the x (first) coordinate.\n"
-                );
 
-  declareOption(ol, "lower_y", &GaussianContinuumDistribution::lower_y, OptionBase::buildoption,
-		"Lower bound on the y (second) coordinate.\n"
-                );
-  
-  declareOption(ol, "lower_x", &GaussianContinuumDistribution::lower_x, OptionBase::buildoption,
-		"Lower bound on the x (first) coordinate.\n"
-                );
-
-  declareOption(ol, "points_per_dim", &GaussianContinuumDistribution::points_per_dim, OptionBase::buildoption,
-		"Number of points per dimension on the grid.\n"
-                );
 
   declareOption(ol, "parameters", &GaussianContinuumDistribution::parameters, OptionBase::learntoption,
 		"Parameters of the tangent_predictor function.\n"
@@ -536,7 +480,7 @@ void GaussianContinuumDistribution::declareOptions(OptionList& ol)
                 );
 
   declareOption(ol, "noise", &GaussianContinuumDistribution::noise, OptionBase::buildoption,
-		"Noise parameter for the training data.\n"
+		"Noise parameter for the training data. For uniform noise, this gives the half the length \n" "of the uniform window (centered around the origin), and for gaussian noise, this gives the variance of the noise in all directions.\n"
                 );
 
   declareOption(ol, "noise_type", &GaussianContinuumDistribution::noise_type, OptionBase::buildoption,
@@ -555,9 +499,6 @@ void GaussianContinuumDistribution::declareOptions(OptionList& ol)
 		"Proportion or confidence of the random walk steps.\n"
                 );
 
-  declareOption(ol, "validation_prop", &GaussianContinuumDistribution::validation_prop, OptionBase::buildoption,
-		"Proportion of points for validation set (if uncorrect value, validtion_set == train_set).\n"
-                );
   
   declareOption(ol, "reference_set", &GaussianContinuumDistribution::reference_set, OptionBase::learntoption,
 		"Reference points for density computation.\n"
@@ -584,32 +525,7 @@ void GaussianContinuumDistribution::build_()
       if (n_hidden_units <= 0)
         PLERROR("GaussianContinuumDistribution::Number of hidden units should be positive, now %d\n",n_hidden_units);
 
-      if(validation_prop <= 0 || validation_prop >= 1) valid_set = train_set;
-      else
-      {
-        // Making FractionSplitter
-        PP<FractionSplitter> fsplit = new FractionSplitter();
-        TMat<pair<real,real> > splits(1,2); 
-        splits(0,0).first = 0; splits(0,0).second = 1-validation_prop;
-        splits(0,1).first = 1-validation_prop; splits(0,1).second = 1;
-        fsplit->splits = splits;
-        fsplit->build();
       
-        // Making RepeatSplitter
-        PP<RepeatSplitter> rsplit = new RepeatSplitter();
-        rsplit->n = 1;
-        rsplit->shuffle = true;
-        rsplit->seed = 123456;
-        rsplit->to_repeat = fsplit;
-        rsplit->setDataSet(train_set);
-        rsplit->build();
-
-        TVec<VMat> vmat_splits = rsplit->getSplit();
-        train_set = vmat_splits[0];
-        valid_set = vmat_splits[1];
-      
-      }
-
       x = Var(n);
       c = Var(n_hidden_units,1,"c ");
       V = Var(n_hidden_units,n,"V ");               
@@ -750,26 +666,7 @@ void GaussianContinuumDistribution::build_()
         predictor = Func(x, W & c & V & muV & smV & smb & snV & snb, tangent_plane & mu & sm & sn);
       if(architecture_type == "single_neural_network")
         predictor = Func(x, b & W & c & V & muV & smV & smb & snV & snb, tangent_plane & mu & sm & sn);
-      /*
-      if (output_type=="tangent_plane")
-        output_f = Func(x, tangent_plane);
-      else if (output_type=="embedding")
-      {
-        if(architecture_type == "single_neural_network")
-          PLERROR("Cannot obtain embedding with single_neural_network architecture");
-        output_f = Func(x, embedding);
-      }
-      else if (output_type=="tangent_plane+embedding")
-      {
-        if(architecture_type == "single_neural_network")
-          PLERROR("Cannot obtain embedding with single_neural_network architecture");
-        output_f = Func(x, tangent_plane & embedding);
-      }
-      else if(output_type == "tangent_plane_variance_normalized")
-        output_f = Func(x,tangent_plane & sm);
-      else if(output_type == "semispherical_gaussian_parameters")
-        output_f = Func(x,tangent_plane & mu & sm & sn);
-      */
+
       output_f_all = Func(x,tangent_plane & mu & sm & sn);
     }
     
@@ -828,10 +725,7 @@ void GaussianContinuumDistribution::build_()
 
     if(n_neighbors_density > train_set.length() || n_neighbors_density < 0) n_neighbors_density = train_set.length();
 
-    best_validation_cost = REAL_MAX;
-
     train_nearest_neighbors.resize(train_set.length(), n_neighbors_density-1);
-    validation_nearest_neighbors.resize(valid_set.length(), n_neighbors_density);
 
     t_row.resize(n);
     Ut_svd.resize(n,n);
@@ -893,6 +787,13 @@ void GaussianContinuumDistribution::update_reference_set_parameters()
       }
     }
     
+  }
+
+  for(int t=0; t<train_set.length(); t++)
+  {
+    train_set->getRow(t,t_row);
+    p_x->value[t] = density(t_row);
+    //p_x->value[t] = exp(log_density(t));
   }
 
 }
@@ -1098,98 +999,12 @@ void GaussianContinuumDistribution::make_random_walk()
   */
 }
 
-
-real GaussianContinuumDistribution::get_nll(VMat points, VMat image_points_vmat, int begin, int n_near_neigh)
-{
-  VMat reference_set = new SubVMatrix(points,begin,0,points.length()-begin,n);
-  //Mat image(points_per_dim,points_per_dim); image.clear();
-  image_nearest_neighbors.resize(image_points_vmat.length(),n_near_neigh);
-  // Finding nearest neighbors
-
-  for(int t=0; t<image_points_vmat.length(); t++)
-  {
-    image_points_vmat->getRow(t,t_row);
-    TVec<int> nn = image_nearest_neighbors(t);
-    computeNearestNeighbors(reference_set, t_row, nn);
-  }
-
-  real nll = 0;
-
-  for(int t=0; t<image_points_vmat.length(); t++)
-  {
-    
-    image_points_vmat->getRow(t,t_row);
-    real this_p_x = 0;
-    // fetching nearest neighbors for density estimation
-    for(int neighbor=0; neighbor<n_near_neigh; neighbor++)
-    {
-      points->getRow(begin+image_nearest_neighbors(t,neighbor), neighbor_row);
-      substract(t_row,neighbor_row,x_minus_neighbor);
-      substract(x_minus_neighbor,mus(begin+image_nearest_neighbors(t,neighbor)),z);
-      product(w, Bs[begin+image_nearest_neighbors(t,neighbor)], z);
-      transposeProduct(zm, Fs[begin+image_nearest_neighbors(t,neighbor)], w);
-      substract(z,zm,zn);
-      this_p_x += exp(-0.5*(pownorm(zm,2)/sms[begin+image_nearest_neighbors(t,neighbor)] + pownorm(zn,2)/sns[begin+image_nearest_neighbors(t,neighbor)] 
-                            + n_dim*log(sms[begin+image_nearest_neighbors(t,neighbor)]) + (n-n_dim)*log(sns[begin+image_nearest_neighbors(t,neighbor)])) - n/2.0 * Log2Pi);
-    }
-    
-    this_p_x /= reference_set.length();
-    nll -= log(this_p_x);
-  }
-
-  return nll/image_points_vmat.length();
-}
-
-void GaussianContinuumDistribution::get_image_matrix(VMat points, VMat image_points_vmat, int begin, string file_path, int n_near_neigh)
-{
-  VMat reference_set = new SubVMatrix(points,begin,0,points.length()-begin,n);
-  cout << "Creating image matrix: " << file_path << endl;
-  Mat image(points_per_dim,points_per_dim); image.clear();
-  image_nearest_neighbors.resize(points_per_dim*points_per_dim,n_near_neigh);
-  // Finding nearest neighbors
-
-  for(int t=0; t<image_points_vmat.length(); t++)
-  {
-    image_points_vmat->getRow(t,t_row);
-    TVec<int> nn = image_nearest_neighbors(t);
-    computeNearestNeighbors(reference_set, t_row, nn);
-  }
-
-  for(int t=0; t<image_points_vmat.length(); t++)
-  {
-    
-    image_points_vmat->getRow(t,t_row);
-    real this_p_x = 0;
-    // fetching nearest neighbors for density estimation
-    for(int neighbor=0; neighbor<n_near_neigh; neighbor++)
-    {
-      points->getRow(begin+image_nearest_neighbors(t,neighbor), neighbor_row);
-      substract(t_row,neighbor_row,x_minus_neighbor);
-      substract(x_minus_neighbor,mus(begin+image_nearest_neighbors(t,neighbor)),z);
-      product(w, Bs[begin+image_nearest_neighbors(t,neighbor)], z);
-      transposeProduct(zm, Fs[begin+image_nearest_neighbors(t,neighbor)], w);
-      substract(z,zm,zn);
-      this_p_x += exp(-0.5*(pownorm(zm,2)/sms[begin+image_nearest_neighbors(t,neighbor)] + pownorm(zn,2)/sns[begin+image_nearest_neighbors(t,neighbor)] 
-                            + n_dim*log(sms[begin+image_nearest_neighbors(t,neighbor)]) + (n-n_dim)*log(sns[begin+image_nearest_neighbors(t,neighbor)])) - n/2.0 * Log2Pi);
-    }
-    
-    this_p_x /= reference_set.length();
-    int y_coord = t/points_per_dim;
-    int x_coord = t%points_per_dim;
-    image(points_per_dim - y_coord - 1,x_coord) = this_p_x;
-  }
-  PLearn::save(file_path,image);
-  
-}
-
-
-
 void GaussianContinuumDistribution::compute_train_and_validation_costs()
 {
   update_reference_set_parameters();
 
   // estimate p(x) for the training set
-
+  /*
   real nll_train = 0;
 
   for(int t=0; t<train_set.length(); t++)
@@ -1212,11 +1027,6 @@ void GaussianContinuumDistribution::compute_train_and_validation_costs()
     p_x->value[t] /= train_set.length();
     nll_train -= log(p_x->value[t]);
 
-    if(print_parameters)
-    {
-      output_f_all(t_row);
-      cout << "data point = " << x->value << " parameters = " << tangent_plane->value << " " << mu->value << " " << sm->value << " " << sn->value << " p(x) = " << p_x->value[t] << endl;
-    }
   }
 
   nll_train /= train_set.length();
@@ -1252,7 +1062,7 @@ void GaussianContinuumDistribution::compute_train_and_validation_costs()
   nll_validation /= valid_set.length();
 
   if(verbosity > 2) cout << "NLL validation = " << nll_validation << endl;
-
+  */
 }
 
 // ### Nothing to add here, simply calls build_
@@ -1301,7 +1111,7 @@ void GaussianContinuumDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copie
   deepCopyField(dist, copies);
   deepCopyField(ith_step_generated_set, copies);
   deepCopyField(train_nearest_neighbors, copies);
-  deepCopyField(validation_nearest_neighbors, copies);
+
   deepCopyField(Bs, copies);
   deepCopyField(Fs, copies);
   deepCopyField(mus, copies);
@@ -1330,24 +1140,6 @@ void GaussianContinuumDistribution::forget()
     
 void GaussianContinuumDistribution::train()
 {
-  // Creation of points for matlab image matrices
-
-  if(save_image_mat)
-  {
-    if(n != 2) PLERROR("In GaussianContinuumDistribution::train(): Image matrix creation is only implemented for 2d problems");
-    
-    real step_x = (upper_x-lower_x)/(points_per_dim-1);
-    real step_y = (upper_y-lower_y)/(points_per_dim-1);
-    image_points_mat.resize(points_per_dim*points_per_dim,n);
-    for(int i=0; i<points_per_dim; i++)
-      for(int j=0; j<points_per_dim; j++)
-      {
-        image_points_mat(i*points_per_dim + j,0) = lower_x + j*step_x;
-        image_points_mat(i*points_per_dim + j,1) = lower_y + i*step_y;
-      }
-
-    image_points_vmat = VMat(image_points_mat);
-  }
 
   // find nearest neighbors...
 
@@ -1360,15 +1152,6 @@ void GaussianContinuumDistribution::train()
     computeNearestNeighbors(train_set, t_row, nn, t);
   }
   
-  // ... on the validation set
-  
-  for(int t=0; t<valid_set.length(); t++)
-  {
-    valid_set->getRow(t,t_row);
-    TVec<int> nn = validation_nearest_neighbors(t);
-    computeNearestNeighbors(train_set, t_row, nn);
-  }
-
   VMat train_set_with_targets;
   VMat targets_vmat;
   if (!cost_of_one_example)
@@ -1415,7 +1198,7 @@ void GaussianContinuumDistribution::train()
       if(pb)
         pb->update(stage-initial_stage);
       
-      if(stage != 0 && stage%compute_cost_every_n_epochs == 0)
+      if(stage != 0 && stage%update_parameters_every_n_epochs == 0)
       {
         compute_train_and_validation_costs();
       }
@@ -1428,114 +1211,11 @@ void GaussianContinuumDistribution::train()
   
   update_reference_set_parameters();
 
-  cout << "best train: " << get_nll(train_set,train_set,0,n_neighbors_density) << endl;
-  cout << "best validation: " << get_nll(train_set,valid_set,0,n_neighbors_density) << endl;
-
-  // test computeOutput and Costs
-
-  real nll_train = 0;
-  Vec costs(1);
-  Vec target;
-  for(int i=0; i<train_set.length(); i++)
-  {
-    train_set->getRow(i,t_row);
-    computeCostsOnly(t_row,target,costs);
-    nll_train += costs[0];
-  }
-  nll_train /= train_set.length();
-  cout << "nll_train: " << nll_train << endl;
-  
-  /*
-  int n_test_gen_points = 3;
-  int n_test_gen_generated = 30;
-  Mat noisy_data_set(n_test_gen_points*n_test_gen_generated,n);
-  
-  for(int k=0; k<n_test_gen_points; k++)
-  {
-    for(int t=0; t<n_test_gen_generated; t++)
-    {
-      valid_set->getRow(k,t_row);
-      Vec noisy_point = noisy_data_set(k*n_test_gen_generated+t);
-      noisy_point << noisy_data(t_row);
-    }
-    PLearn::save("noisy_data.psave",noisy_data_set);
-  }
-  */
-  
-  if(n==2 && save_image_mat)
-  {
-    Mat test_set(valid_set.length(),valid_set.width());
-    Mat m_dir(valid_set.length(),n);
-    Mat n_dir(valid_set.length(),n);
-    for(int t=0; t<valid_set.length(); t++)
-    {
-      valid_set->getRow(t,t_row);
-      test_set(t) << t_row;
-      output_f_all(t_row);
-      Vec noise_direction = n_dir(t);
-      noise_direction[0] = tangent_plane->value[1];
-      noise_direction[1] = -1*tangent_plane->value[0];
-      Vec manifold_direction = m_dir(t);
-      manifold_direction << tangent_plane->value;
-      noise_direction *= sqrt(sn->value[0])/norm(noise_direction,2);
-      manifold_direction *= sqrt(sm->value[0])/norm(manifold_direction,2);
-    }
-    PLearn::save("test_set.psave",test_set);
-    PLearn::save("m_dir.psave",m_dir);
-    PLearn::save("n_dir.psave",n_dir);
-  }
-  
-
   if(n_random_walk_step > 0)
   {
     make_random_walk();
     update_reference_set_parameters();
   }
-  
-  if(save_image_mat)
-  {
-    cout << "Creating image matrix" << endl;
-    get_image_matrix(train_set, image_points_vmat, 0,"image.psave", n_neighbors_density);
-
-    image_prob_mat.resize(points_per_dim,points_per_dim);
-    Mat image_points(points_per_dim*points_per_dim,2);
-    Mat image_mu_vectors(points_per_dim*points_per_dim,2);
-    //Mat image_sigma_vectors(points_per_dim*points_per_dim,2);
-    for(int t=0; t<image_points_vmat.length(); t++)
-    {
-      image_points_vmat->getRow(t,t_row);
-     
-      output_f_all(t_row);
-
-      image_points(t,0) = t_row[0];
-      image_points(t,1) = t_row[1];
-      
-      image_mu_vectors(t) << mu->value;
-    }
-    PLearn::save("image_points.psave",image_points);
-    PLearn::save("image_mu_vectors.psave",image_mu_vectors);
-
-    if(n_random_walk_step > 0)
-    {
-      string path = "image_rw_" + tostring(0) + ".psave";
-
-      get_image_matrix(reference_set, image_points_vmat, 0, path, n_neighbors_density*n_random_walk_per_point);
-      
-      for(int i=0; i<n_random_walk_step; i++)
-      {
-        if(i == n_random_walk_step - 1)
-          path = "image_rw_last.psave";
-        else
-          path = "image_rw_" + tostring(i+1) + ".psave";
-
-        get_image_matrix(reference_set, image_points_vmat, i*train_set.length()*n_random_walk_per_point+train_set.length(),path,n_neighbors_density*n_random_walk_per_point);
-      }
-
-      cout << "NLL random walk on train: " << get_nll(reference_set,train_set,(n_random_walk_step-1)*train_set.length()*n_random_walk_per_point+train_set.length(),n_neighbors_density*n_random_walk_per_point) << endl;
-      cout << "NLL random walk on validation: " << get_nll(reference_set,valid_set,(n_random_walk_step-1)*train_set.length()*n_random_walk_per_point+train_set.length(),n_neighbors_density*n_random_walk_per_point) << endl;
-    }
-  }
-
 }
 
 //////////////////////
@@ -1590,20 +1270,13 @@ void GaussianContinuumDistribution::initializeParams()
 // log_density //
 /////////////////
 real GaussianContinuumDistribution::log_density(const Vec& x) const {
-  return log(computeDensity(x));
-}
-
-////////////////////
-// computeDensity //
-////////////////////
-real GaussianContinuumDistribution::computeDensity(const Vec& input) const
-{
-  // compute density
-  real ret = 0;
+  // compute log-density
 
   // fetching nearest neighbors for density estimation
-  knn(reference_set,input,n_neighbors_density,t_nn,bool(0));
-  t_row << input;
+  knn(reference_set,x,n_neighbors_density,t_nn,bool(0));
+  t_row << x;
+  log_gauss.resize(t_nn.length());
+  real log_ref_set = log((real)reference_set.length());
   for(int neighbor=0; neighbor<t_nn.length(); neighbor++)
   {
     reference_set->getRow(t_nn[neighbor],neighbor_row);
@@ -1612,35 +1285,41 @@ real GaussianContinuumDistribution::computeDensity(const Vec& input) const
     product(w, Bs[t_nn[neighbor]], z);
     transposeProduct(zm, Fs[t_nn[neighbor]], w);
     substract(z,zm,zn);
-    ret += exp(-0.5*(pownorm(zm,2)/sms[t_nn[neighbor]] + pownorm(zn,2)/sns[t_nn[neighbor]] 
-                               + n_dim*log(sms[t_nn[neighbor]]) + (n-n_dim)*log(sns[t_nn[neighbor]])) - n/2.0 * Log2Pi);
+    log_gauss[neighbor] = -0.5*(pownorm(zm,2)/sms[t_nn[neighbor]] + pownorm(zn,2)/sns[t_nn[neighbor]] 
+                                + n_dim*log(sms[t_nn[neighbor]]) + (n-n_dim)*log(sns[t_nn[neighbor]])) - n/2.0 * Log2Pi - log_ref_set;
   }
-  ret /= reference_set.length();
-  return ret;
-  /*
-  if(output_type == "tangent_plane_variance_normalized")
+  
+  return logadd(log_gauss);
+}
+
+real GaussianContinuumDistribution::log_density(int i) {
+  // compute log-density
+
+  // fetching nearest neighbors for density estimation
+  //knn(reference_set,x,n_neighbors_density,t_nn,bool(0));
+  //t_row << x;
+  reference_set->getRow(i,t_row);
+  int bla = 0;
+  log_gauss.resize(reference_set.length()-1);
+  real log_ref_set = log((real)reference_set.length());
+  for(int neighbor=0; neighbor<reference_set.length(); neighbor++)
   {
-    int nout = outputsize()+1;
-    Vec temp_output(nout);
-    temp_output << output_f(input);
-    Mat F = temp_output.subVec(0,temp_output.length()-1).toMat(n_dim,n);
-    if(n_dim*n != temp_output.length()-1) PLERROR("WHAT!!!");
-    for(int i=0; i<F.length(); i++)
+    if(neighbor == i) 
     {
-      real norm = pownorm(F(i),1);
-      F(i) *= sqrt(temp_output[temp_output.length()-1])/norm;
+      bla = 1;
+      continue;
     }
-    
-    output.resize(temp_output.length()-1);
-    output << temp_output.subVec(0,temp_output.length()-1);
+    reference_set->getRow(neighbor,neighbor_row);
+    substract(t_row,neighbor_row,x_minus_neighbor);
+    substract(x_minus_neighbor,mus(neighbor),z);
+    product(w, Bs[neighbor], z);
+    transposeProduct(zm, Fs[neighbor], w);
+    substract(z,zm,zn);
+    log_gauss[neighbor-bla] = -0.5*(pownorm(zm,2)/sms[neighbor] + pownorm(zn,2)/sns[neighbor] 
+                                + n_dim*log(sms[neighbor]) + (n-n_dim)*log(sns[neighbor])) - n/2.0 * Log2Pi - log_ref_set;
   }
-  else
-  {
-    int nout = outputsize();
-    output.resize(nout);
-    output << output_f(input);
-  }
-  */
-}    
+  
+  return logadd(log_gauss);
+}
 
 } // end of namespace PLearn
