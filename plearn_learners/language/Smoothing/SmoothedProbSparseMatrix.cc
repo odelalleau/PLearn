@@ -38,6 +38,12 @@
 
 namespace PLearn {
 
+SmoothedProbSparseMatrix::SmoothedProbSparseMatrix(int n_rows, int n_cols, string name, int mode, bool double_access)
+  :ProbSparseMatrix(n_rows, n_cols, name, mode, double_access)
+{
+  smoothingMethod = 0;
+}
+
 // Normalize with Laplace smoothing : 
 // Warning : resulting matrices are _NOT_ normalized as such !!!
 // if P(x|y)=0 in the matrix, it must be set to 

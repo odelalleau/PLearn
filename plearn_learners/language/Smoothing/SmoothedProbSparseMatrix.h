@@ -46,10 +46,12 @@ class SmoothedProbSparseMatrix : public ProbSparseMatrix
 {
 protected:
   // Smoothing Method :
+  // 0 : no smoothing!
   // 1 : laplace
   // 2 : discount - backoff
   // 3 :  discount - backoff non shadowing
-  int smoothingMethod =0;  
+  int smoothingMethod;
+
   // Precomputed nomalization sum;
   Vec normalizationSum;
   // Backoff distribution
@@ -60,13 +62,11 @@ protected:
 public:
 
   bool checkCondProbIntegrity();
-
+  SmoothedProbSparseMatrix(int n_rows = 0, int n_cols = 0, string name = "pXY", int mode = ROW_WISE, bool double_access = false);
   void normalizeCondLaplace(ProbSparseMatrix& nXY, bool clear_nXY = false);
   void normalizeCondBackoff(ProbSparseMatrix& nXY, real disc, Vec& bDist,bool clear_nXY,bool shadow);
-
-
   real get(int i,int j);
- 
+
 };
 
 // WARNING : do not use this object, it is in developement. CK-11/2003
