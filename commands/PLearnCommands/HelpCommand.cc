@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HelpCommand.cc,v 1.5 2003/10/08 23:27:04 plearner Exp $ 
+   * $Id: HelpCommand.cc,v 1.6 2003/11/27 21:02:57 chapados Exp $ 
    ******************************************************* */
 
 /*! \file HelpCommand.cc */
@@ -87,6 +87,11 @@ void HelpCommand::helpScripts()
     "FILENAME = foo.plearn \n"
     "FILEBASE = foo \n"
     "FILEEXT  = .plearn \n"
+    "\n"
+    "The additional variables are also available:\n"
+    "DATE     = Date in YYYYMMDD format\n"
+    "TIME     = Time in HHMMSS format\n"
+    "DATETIME = Date and time in YYYYMMDD:HHMMSS format\n"
        << endl;
 }
 

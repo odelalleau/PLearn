@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.9 2003/09/17 15:27:30 yoshua Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.10 2003/11/27 21:02:57 chapados Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -96,6 +96,11 @@ int EmbeddedLearner::outputsize() const
 void EmbeddedLearner::train()
 { learner_->train(); }
 
+void EmbeddedLearner::test(VMat testset, PP<VecStatsCollector> test_stats, 
+                           VMat testoutputs, VMat testcosts) const
+{
+  learner_->test(testset, test_stats, testoutputs, testcosts);
+}
 
 void EmbeddedLearner::computeOutput(const Vec& input, Vec& output) const
 { 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TmpFilenames.cc,v 1.2 2003/03/18 18:29:56 ducharme Exp $
+   * $Id: TmpFilenames.cc,v 1.3 2003/11/27 21:02:57 chapados Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -76,7 +76,7 @@ string TmpFilenames::addFilename(const string directory, const string prefix)
 char* TmpFilenames::newFile(const string directory, const string prefix)
 {
   PLERROR("TmpFilenames::newFile : DEPRECATED method.  Use addFilename instead.");
-  char* dummy; return dummy;  // for return compatibility
+  char* dummy = 0; return dummy;  // for return compatibility
 }
 
 

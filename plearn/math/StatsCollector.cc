@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.24 2003/11/20 19:10:30 tihocan Exp $
+   * $Id: StatsCollector.cc,v 1.25 2003/11/27 21:02:57 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,8 +54,7 @@ using namespace std;
       min_(MISSING_VALUE), max_(MISSING_VALUE),
       first_(MISSING_VALUE), last_(MISSING_VALUE)
   {
-    if(maxnvalues>0)
-      counts[FLT_MAX] = StatsCollectorCounts();
+    build_();
   }
 
 int sortIdComparator(const void* i1, const void* i2)
@@ -146,6 +145,8 @@ void StatsCollector::forget()
     min_ = MISSING_VALUE;
     max_ = MISSING_VALUE;
     first_ = last_ = MISSING_VALUE;
+    counts.clear();
+    build_();
 }
 
 void StatsCollector::update(real val, real weight)
@@ -331,7 +332,7 @@ RealMapping StatsCollector::getAllValuesMapping(TVec<bool>* to_be_included,
   double count=0;
     
   for(map<real,StatsCollectorCounts>::const_iterator it = counts.begin() ;
-      i < counts.size() - 1; ++it)
+      unsigned(i) < counts.size() - 1; ++it)
   {
     if (!to_be_included) {
       mapping.addMapping(RealRange('[',it->first,it->first,']'),i);

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: ProgressBar.h,v 1.1 2003/05/26 04:12:42 plearner Exp $
+   * $Id: ProgressBar.h,v 1.2 2003/11/27 21:02:57 chapados Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -53,6 +53,7 @@
 
 #include <string>
 #include <iostream>
+#include "PP.h"
 #include "PStream.h"
 
 
@@ -61,16 +62,19 @@ using namespace std;
   
 class ProgressBar;
 
-// base class for pb plugins
-class ProgressBarPlugin
+//! Base class for pb plugins
+class ProgressBarPlugin : public PPointable
 {
 public:
-  ProgressBarPlugin(){}
+  ProgressBarPlugin() {}
+  virtual ~ProgressBarPlugin() {}
   virtual void addProgressBar(ProgressBar * pb){};
   virtual void killProgressBar(ProgressBar * pb){};
   virtual void update(ProgressBar * pb, int newpos){};
 };
 
+
+//! Simple plugin for displaying text progress bar
 class TextProgressBarPlugin : public ProgressBarPlugin
 {
   PStream out;
@@ -80,19 +84,28 @@ public:
 
   TextProgressBarPlugin(ostream& _out);
   TextProgressBarPlugin(PStream& _out);
-  
-  virtual ~TextProgressBarPlugin(){}
-
 };
 
-// This class will help you display progress of a calculation
-// 
-// Each progressBar you create is connected to the same ProgressBarPlugin object.
-// By default, a  TextProgressBarPlugin that dumps the text in stderr is created and used.
-// 
-// FAQ: 
-// Q #1 : How do I reuse the same progress bar?
-// A #1 : simply call progress_bar(i) again with 'i' from 0..maxpos (The text progress bar plugin will display a new progress bar)
+
+//! Simpler plugin that doesn't display a progress bar at all.  Useful to
+//! disable progress bars for operations that are known to be short.
+//! Use it as follows:
+//!   PP<ProgressBarPlugin> OldPlugin = ProgressBar::getCurrentPlugin();
+//!   ProgressBar::setPlugin(new NullProgressBarPlugin);
+//!   ... short operations that might otherwise have plugins here ...
+//!   ProgressBar::setPlugin(OldPlugin);
+struct NullProgressBarPlugin : public ProgressBarPlugin
+{ /* all inherited methods are fine... :-) */ };
+
+
+//! This class will help you display progress of a calculation
+//! 
+//! Each progressBar you create is connected to the same ProgressBarPlugin object.
+//! By default, a  TextProgressBarPlugin that dumps the text in stderr is created and used.
+//! 
+//! FAQ: 
+//! Q #1 : How do I reuse the same progress bar?
+//! A #1 : simply call progress_bar(i) again with 'i' from 0..maxpos (The text progress bar plugin will display a new progress bar)
 class ProgressBar
 {
 public:
@@ -113,7 +126,8 @@ public:
   void update(int newpos){plugin->update(this,newpos);}
 
   // this function assumes plugin is always a valid object (it is created statically in the .cc)
-  static void setPlugin(ProgressBarPlugin * _plugin){delete plugin;plugin=_plugin;}
+  static void setPlugin(PP<ProgressBarPlugin> plugin_) { plugin = plugin_; }
+  static PP<ProgressBarPlugin> getCurrentPlugin() { return plugin; }
 
   // Completes and removes the progressBar 
   void close();
@@ -122,14 +136,10 @@ public:
   ~ProgressBar();
 private:
   bool closed;
-  static ProgressBarPlugin * plugin;
+  static PP<ProgressBarPlugin> plugin;
 };
 
 
 %> // end of namespace PLearn
 
 #endif
-
-
-
-

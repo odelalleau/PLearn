@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: ProgressBar.cc,v 1.2 2003/08/13 08:13:16 plearner Exp $
+   * $Id: ProgressBar.cc,v 1.3 2003/11/27 21:02:57 chapados Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -56,7 +56,7 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////
 // Please, put me in my own file !!
 
-ProgressBarPlugin * ProgressBar::plugin = new TextProgressBarPlugin(cerr);
+PP<ProgressBarPlugin> ProgressBar::plugin = new TextProgressBarPlugin(cerr);
 
 ProgressBar::ProgressBar(string _title, int the_maxpos)
   :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)

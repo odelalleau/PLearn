@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.7 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.8 2003/11/27 21:02:57 chapados Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
@@ -104,21 +104,26 @@ public:
 
   virtual void forget();
 
-    virtual void train();
+  virtual void train();
 
-    virtual void computeOutput(const Vec& input, Vec& output) const;
+  //! Override the test method to forward to embedded learner's
+  //! test method
+  virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
+                    VMat testoutputs=0, VMat testcosts=0) const;
 
-    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                         const Vec& target, Vec& costs) const;
-                                
-    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-                                       Vec& output, Vec& costs) const;
+  virtual void computeOutput(const Vec& input, Vec& output) const;
 
-    virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
-      
-    virtual TVec<string> getTestCostNames() const;
+  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                       const Vec& target, Vec& costs) const;
+                              
+  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                     Vec& output, Vec& costs) const;
 
-    virtual TVec<string> getTrainCostNames() const;
+  virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
+    
+  virtual TVec<string> getTestCostNames() const;
+
+  virtual TVec<string> getTrainCostNames() const;
 };
 
 // Declares a few other classes and functions related to this class

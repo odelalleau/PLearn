@@ -37,11 +37,12 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.16 2003/11/19 02:43:05 yoshua Exp $
+   * $Id: fileutils.cc,v 1.17 2003/11/27 21:02:57 chapados Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
+#include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #if !defined(_MSC_VER) && !defined(_MINGW_)
@@ -470,13 +471,16 @@ string makeExplicitPath(const string& filename)
 
 string readFileAndMacroProcess(const string& filepath, map<string, string>& variables)
 {
-  // store previous filepath definitions
-  string old_filepath = variables["FILEPATH"];
-  string old_dirpath = variables["DIRPATH"];
-  string old_filename = variables["FILENAME"];
-  string old_filebase = variables["FILEBASE"];
-  string old_fileext = variables["FILEEXT"];
-
+  // Save old variables (to allow recursive calls)
+  const char* OldVariables[] = {
+    "FILEPATH", "DIRPATH", "FILENAME", "FILEBASE", "FILEEXT", "DATE", "TIME", "DATETIME"
+  };
+  const int num_old = sizeof(OldVariables) / sizeof(OldVariables[0]);
+  map<string,string> old_vars;
+  for (int i=0; i<num_old; ++i)
+    old_vars[OldVariables[i]] = variables[OldVariables[i]];
+  
+  // Define new local variables
   string fpath = abspath(filepath);
   variables["FILEPATH"] = fpath;
   variables["DIRPATH"] = remove_trailing_slash(extract_directory(fpath));
@@ -484,17 +488,27 @@ string readFileAndMacroProcess(const string& filepath, map<string, string>& vari
   variables["FILEBASE"] = remove_extension(extract_filename(fpath));
   variables["FILEEXT"] = extract_extension(fpath);
 
+  // Compute DATE, TIME, and DATETIME variables
+  time_t curtime = time(NULL);
+  struct tm *broken_down_time = localtime(&curtime);
+  const int SIZE = 100;
+  char time_buffer[SIZE];
+  strftime(time_buffer,SIZE,"%Y%m%d:%H%M%S",broken_down_time);
+  variables["DATETIME"] = time_buffer;
+  strftime(time_buffer,SIZE,"%Y%m%d",broken_down_time);
+  variables["DATE"] = time_buffer;
+  strftime(time_buffer,SIZE,"%H%M%S",broken_down_time);
+  variables["TIME"] = time_buffer;
+
+  // Perform actual parsing and macro processing...
   ifstream in(fpath.c_str());
   if(!in)
     PLERROR("In readFileAndMacroProcess, could not open file %s for reading", fpath.c_str());
   string text = readAndMacroProcess(in, variables);
 
-  // restore previous filepath definitions
-  variables["FILEPATH"] = old_filepath;
-  variables["DIRPATH"] = old_dirpath;
-  variables["FILENAME"] = old_filename;
-  variables["FILEBASE"] = old_filebase;
-  variables["FILEEXT"] = old_fileext;
+  // Restore previous variables
+  for (int i=0; i<num_old; ++i)
+    variables[OldVariables[i]] = old_vars[OldVariables[i]];
 
   return text;
 }
