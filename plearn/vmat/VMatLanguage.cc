@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.7 2003/05/23 21:40:39 genji256 Exp $
+   * $Id: VMatLanguage.cc,v 1.8 2003/08/13 01:25:42 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -310,10 +310,22 @@ using namespace std;
               }
             else if (token[0]=='%')
               {
-                program.append(opcodes["__getfieldval"]);
-                int val=toint(token.substr(1));
-                program.append(val);
-              }            
+                vector<string> parts=split(token,":");
+                if (parts.size()==1) // expecting e.g. %10 for column 10
+                  {
+                    program.append(opcodes["__getfieldval"]);
+                    int val=toint(token.substr(1));
+                    program.append(val);
+                  }
+                else if (parts.size()==2) // expecting e.g. %10-%20 for columns 10 to 20 inclusive
+                  {
+                    program.append(opcodes["__getfieldsrange"]);
+                    int a=toint(parts[0].substr(1));
+                    int b=toint(parts[1].substr(1));
+                    program.append(a);
+                    program.append(b);
+                  }
+              }
             else
               {
                 pos=opcodes.find(token);
@@ -427,6 +439,8 @@ using namespace std;
         opcodes["sqrt"] = 43; 
         opcodes["^"] = 44; 
         opcodes["mod"] = 45;
+        opcodes["vecscalmul"] = 46; // x1 ... xn n alpha --> (x1*alpha) ... (xn*alpha)
+        opcodes["__getfieldsrange"] = 47; // %N:%M pushes field %N up to %M. M must be >= N.
       }
   }
 
@@ -646,7 +660,23 @@ using namespace std;
             b= pstack.pop();
             pstack.push((int)b % (int)a);
             break;
-
+          case 46: // vecscalmul
+            {
+              a = pstack.pop(); // n
+              b = pstack.pop(); // alpha
+              int start = pstack.length()-a;
+              for (int i=0;i<a;i++)
+                pstack[start+i] *= b;
+              break;
+            }
+          case 47: // __getfieldsrange         %M:%N       pushes fields %N to %M inclusively on the stack
+            {
+              int M = *pptr++; 
+              int N = *pptr++; 
+              for (int i=M;i<=N;i++)
+                pstack.push(pfieldvalues[i]);
+              break;
+            }
           default:
             PLERROR("BUG IN PreproInterpretor::run while running program: invalid opcode: %d", op);
           }

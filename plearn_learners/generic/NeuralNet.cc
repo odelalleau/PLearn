@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
- * $Id: NeuralNet.cc,v 1.13 2003/08/08 20:45:54 yoshua Exp $
+ * $Id: NeuralNet.cc,v 1.14 2003/08/13 01:25:42 yoshua Exp $
  ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -71,6 +71,7 @@ NeuralNet::NeuralNet()
    iseed(-1),
    semisupervised_flatten_factor(1),
    batch_size(1),
+   saveparams(""),
    nepochs(10000)
 {}
 
@@ -164,6 +165,10 @@ void NeuralNet::declareOptions(OptionList& ol)
   declareOption(ol, "paramsvalues", &NeuralNet::paramsvalues, OptionBase::learntoption, 
                 "    The learned parameter vector (in which order?)\n");
 
+  declareOption(ol, "saveparams", &NeuralNet::saveparams, OptionBase::learntoption, 
+                "    This string, if not empty, indicates where in the expdir directory\n"
+                "    to save the final paramsvalues\n");
+  
   declareOption(ol, "normalization", &NeuralNet::normalization, OptionBase::buildoption,
                 "    The normalization to be applied to the data\n");
   inherited::declareOptions(ol);
@@ -359,6 +364,8 @@ void NeuralNet::build_()
   if(paramsvalues && (paramsvalues.size() == params.nelems()))
     {
       params << paramsvalues;
+      initial_paramsvalues.resize(paramsvalues.length());
+      initial_paramsvalues << paramsvalues;
     }
   else
     {
@@ -402,6 +409,8 @@ void NeuralNet::train(VMat training_set)
   costf->recomputeParents();
   // cerr << "totalcost->value = " << totalcost->value << endl;
   setTrainCost(totalcost->value);
+  if (saveparams!="")
+    PLearn::save(expdir+saveparams,paramsvalues);
 }
 
 
@@ -465,7 +474,10 @@ void NeuralNet::computeCost(const Vec& inputvec, const Vec& targetvec, const Vec
 
 void NeuralNet::forget()
 {
-  initializeParams();
+  if(initial_paramsvalues)
+    params << initial_paramsvalues;
+  else
+    initializeParams();
   inherited::forget();
 }
 

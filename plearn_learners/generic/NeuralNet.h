@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.h,v 1.4 2003/08/08 20:45:54 yoshua Exp $
+   * $Id: NeuralNet.h,v 1.5 2003/08/13 01:25:42 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -69,6 +69,7 @@ using namespace std;
     VarArray params;  // all arameter input vars
 
     Vec paramsvalues; // values of all parameters
+    Vec initial_paramsvalues;
 
   public:
     Func f; // input -> output
@@ -116,6 +117,8 @@ using namespace std;
                     // 0 means the whole training set (default: 1)
 
     int nepochs;   // how many times the optimizer gets to see the training set (default: 10000).
+
+    string saveparams; // where to optionally save params after training
 
     Array<Vec> normalization;
   private:

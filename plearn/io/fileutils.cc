@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.10 2003/05/26 04:12:42 plearner Exp $
+   * $Id: fileutils.cc,v 1.11 2003/08/13 01:25:38 yoshua Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -49,6 +49,7 @@
 #endif
 #include <dirent.h>
 #include <unistd.h>
+#include <sstream>
 #include "fileutils.h"
 #include "stringutils.h"
 #include "plerror.h"
@@ -529,8 +530,10 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
         case 'I': // it's an INCLUDE{filepath}
           {
             string includefile; // path of the file in a $INCLUDE{...} directive
-            readWhileMatches(in, "INCLUDE{");
-            getline(in,includefile,'}');
+            readWhileMatches(in, "INCLUDE<");
+            getline(in,includefile,'>');
+            istringstream includefilestream(includefile);
+            includefile = readAndMacroProcess(includefilestream,variables);
             includefile = removeblanks(includefile);
             string dirname = extract_directory(includefile);
             string filename = extract_filename(includefile);
