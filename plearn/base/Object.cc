@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.9 2002/10/21 03:12:17 plearner Exp $
+   * $Id: Object.cc,v 1.10 2002/10/21 05:18:52 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -442,7 +442,7 @@ Object* loadObject(const string &filename)
 Object* readObject(PStream &in, unsigned int id)
 {
     Object *o;
-    in >> ws;
+    in.skipBlanksAndCommentsAndSeparators();
 
     //pl_streambuf* buf = dynamic_cast<pl_streambuf*>(in.rdbuf());
     pl_streammarker fence(in.pl_rdbuf());

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PP.h,v 1.2 2002/09/17 01:27:33 zouave Exp $
+   * $Id: PP.h,v 1.3 2002/10/21 05:18:52 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -222,6 +222,12 @@ class TypeTraits< PP<T> >
 public:
   static string name()
   { return string("PP< ") + TypeTraits<T>::name()+" >"; }
+
+  static inline unsigned char little_endian_typecode()
+  { return 0xFF; }
+
+  static inline unsigned char big_endian_typecode()
+  { return 0xFF; }
 };
 
 

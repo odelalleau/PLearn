@@ -183,7 +183,11 @@ public:
 
 
   //! op bool: true if the stream is in a valid state (e.g. "while(stm) stm >> x;")
-  inline operator bool() { return (!pin || *pin) && (!pout || *pout) && (pin || pout); }
+  // This implementation does not seem to work: commented out [Pascal]
+  // inline operator bool() { return (!pin || *pin) && (!pout || *pout) && (pin || pout); }
+  // This is a temporary fix [Pascal]
+  inline operator bool() { return peek()!=-1; }
+  
 
   inline istream& rawin() { return *pin; }   //<! access to underlying istream
   inline ostream& rawout() { return *pout; } //<! access to underlying ostream
@@ -790,6 +794,17 @@ inline void read(const string& stringval, T& x)
   PStream in(&in_);
   in >> x;
 }
+
+
+// STL containers:
+
+template <class T> inline PStream &
+operator>>(PStream &in, vector<T> &v)
+{ readSequence(in, v); return in; }
+
+template <class T> inline PStream &
+operator<<(PStream &out, const vector<T> &v)
+{ writeSequence(out, v); return out; }
 
 
 // **** Useful PStream classes... ****

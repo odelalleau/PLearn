@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.cc,v 1.3 2002/09/11 07:05:45 morinf Exp $
+   * $Id: NeuralNet.cc,v 1.4 2002/10/21 05:18:59 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -338,13 +338,7 @@ void NeuralNet::build_()
 
 Array<string> NeuralNet::costNames() const
 {
-  if(weight_decay==0 && bias_decay==0 && layer1_weight_decay==0 && layer1_bias_decay==0 &&
-     layer2_weight_decay==0 && layer2_bias_decay==0 && 
-     output_layer_weight_decay==0 && output_layer_bias_decay==0 &&
-     direct_in_to_out_weight_decay==0)
-    return cost_funcs;
-  else
-    return (cost_funcs[0]+"+penalty") & cost_funcs;
+  return (cost_funcs[0]+"+penalty") & cost_funcs;
 }
 
 int NeuralNet::costsize() const 

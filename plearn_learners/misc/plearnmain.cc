@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearnmain.cc,v 1.5 2002/10/21 01:21:53 plearner Exp $
+   * $Id: plearnmain.cc,v 1.6 2002/10/21 05:18:59 plearner Exp $
    ******************************************************* */
 
 
@@ -612,6 +612,8 @@ int plearnmain(int argc, char** argv)
           PP<Object> o = readObject(in);
           o->run();
           in.skipBlanksAndCommentsAndSeparators();
+          // cerr << bool(in) << endl;
+          // cerr << in.peek() << endl;
         }
     }
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.5 2002/09/18 23:38:53 jkeable Exp $
+   * $Id: Array.h,v 1.6 2002/10/21 05:18:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -71,6 +71,16 @@ protected:
   int array_capacity;
 
 public:
+      typedef T value_type;
+      typedef int size_type;
+      typedef T* iterator;
+      
+      inline T* begin() const
+      { return array; }
+
+      inline T* end() const
+      { return array+array_size; }
+
   void increaseCapacity(int increase = 10)
   {
     T* newarray = new T[array_capacity+increase];
@@ -298,20 +308,12 @@ public:
         out << array[i] << endl;
     }
 
+      // DEPRECATED! Call PStream& << arr instead (This is for backward compatibility only)
     void write(ostream &out_) const
     {
         PStream out(&out_);
-        newwrite(out);
+        out << *this;
     }
-
-    void newwrite(PStream& out) const
-    {
-        out << raw << size() << " [ ";
-        for(int i=0; i<array_size; i++)
-            out << array[i];
-        out << raw << " ]\n";
-    }
-
 
       /*
        * NOTE: FIX_ME
@@ -321,66 +323,12 @@ public:
        * This can be a major problem w/ 'asignstreams'...
        *                            - xsm
        */
+
+      // DEPRECATED! Call PStream& >> arr instead (This is for backward compatibility only)
     void read(istream &in_)
     {
         PStream in(&in_);
-        newread(in);
-    }
-
-    void newread(PStream &in)
-    {  
-      T val;
-      skipBlanksAndComments(in.rawin());
-      int c = in.peek();
-      if(c=='[') // format is "[val1; val2; va3; ...]"
-        {
-          in.get(); // skip '['
-          resize(0);
-          skipBlanksAndComments(in.rawin());
-          c = in.peek();
-          if(c!=']')
-            {
-              while(in)
-                {
-                  in >> val;
-                  if(!in)
-                    PLERROR("In Array::read with format [ v1; v2; v3 ] problem while reading value");
-                  push_back(val);
-                  skipBlanksAndComments(in.rawin());
-                  c = in.get();
-                  if(c==']')
-                    break;
-                  else if(c!=';')
-                    PLERROR("In Array::read with format [ v1; v2; v3 ] bad character read where semicolumn expected: %c",c);
-                }
-            }
-          if(!in)
-            PLERROR("Problem in Array:read stream in bad state");
-        }
-      else if(isdigit(c)) // format is "size val1 val2 val3 ..." or "size[ val1 val2 val3 ... ]"
-      {
-          int size;
-          in >> size;
-          resize(size);
-          skipBlanksAndComments(in.rawin());
-          c = in.get();
-          if(c!='[')
-            in.unget();
-          for(int i=0; i<size; i++)
-              in >> array[i];
-          if(c=='[')
-            {
-              skipBlanksAndComments(in.rawin());
-              if((c=in.get())!=']')
-                PLERROR("In Array::read(istream&) wrong array format, read %c when expecting a ']' ",c);                 
-            }
-      }
-      else
-        PLERROR("In Array::read(istream&) wrong array format, read %c when expecting a '[' or a digit",c); 
-      
-      // skip next blank
-      if(!isspace(in.get()))
-         in.unget();
+        in >> *this;
     }
 
     void deepWrite(ostream& out, DeepWriteSet& already_saved) const
@@ -417,79 +365,14 @@ public:
 
 };
 
-/* I think these are not needed anymore...
-template <class T>
-  void write(ostream& out, const Array<T>& a) { a.write(out); }
-
-template <class T>
-  void read(istream& in, Array<T>& a) { a.read(in); }
-*/
-/*
-template <class T> inline pl_istream &
-operator>>(pl_istream &in, Array<T> &a)
-{ a.newread(in); return in; }
-
-template <class T> inline pl_ostream &
-operator<<(pl_ostream &out, const Array<T> &a)
-{ a.newwrite(out); return out; };
-
-template <class T> inline pl_istream &
-operator>>(pl_istream &in, vector<T> &v)
-{
-    // Easy way
-    Array<T> a;
-    a.newread(in);
-    v.clear();
-    v.reserve(a.size());
-    for (int i= 0; i < a.size(); ++i) {
-        v.push_back(a[i]);
-    }
-    return in;
-}
-
-template <class T> inline PStream &
-operator<<(PStream &out, const vector<T> &v)
-{
-    // Easy way
-    Array<T> a = v;
-    a.newwrite(out);
-    return out;
-}
-*/
-
 
 template <class T> inline PStream &
 operator>>(PStream &in, Array<T> &a)
-{ a.newread(in); return in; }
+{ readSequence(in, a); return in; }
 
 template <class T> inline PStream &
 operator<<(PStream &out, const Array<T> &a)
-{ a.newwrite(out); return out; };
-
-template <class T> inline PStream &
-operator>>(PStream &in, vector<T> &v)
-{
-    // Easy way
-    Array<T> a;
-    a.newread(in);
-    v.clear();
-    v.reserve(a.size());
-    for (int i= 0; i < a.size(); ++i) {
-        v.push_back(a[i]);
-    }
-    return in;
-}
-
-template <class T> inline PStream &
-operator<<(PStream &out, const vector<T> &v)
-{
-    // Easy way
-    Array<T> a = v;
-    a.newwrite(out);
-    return out;
-}
-
-
+{ writeSequence(out, a); return out; };
 
 template <class T>
   void deepWrite(ostream& out, DeepWriteSet& already_saved, const Array<T>& a)
@@ -534,26 +417,14 @@ class TypeTraits< Array<T> >
 public:
   static inline string name()
   { return string("Array< ") + TypeTraits<T>::name()+" >"; }
-};
-/*
-template<class T>
-inline void write(ostream& out, const vector<T>& v) {
-    // Easy way
-    Array<T> array = v;
-    array.write(out);
-}
 
-template<class T>
-inline void read(istream& in, vector<T>& v) {
-    // Easy way
-    Array<T> array;
-    array.read(in);
-    v.clear();
-    v.reserve(array.size());
-    for (int i = 0; i < array.size(); ++i)
-        v.push_back(array[i]);
-}
-*/
+  static inline unsigned char little_endian_typecode()
+  { return 0xFF; }
+
+  static inline unsigned char big_endian_typecode()
+  { return 0xFF; }
+
+};
 
 %> // end of namespace PLearn
 
