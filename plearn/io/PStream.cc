@@ -350,8 +350,24 @@ PStream& PStream::operator>>(int &x)
       break;
     case PStream::plearn_ascii:
     case PStream::plearn_binary:
-      rawin() >> x >> ws;
-      break;
+    {
+      skipBlanksAndCommentsAndSeparators();
+      int c = get();
+      if(c==0x07 || c==0x08)
+      {
+        read(reinterpret_cast<char*>(&x),sizeof(int));
+        if( (c==0x07 && byte_order()==BIG_ENDIAN_ORDER) 
+            || (c==0x08 && byte_order()==LITTLE_ENDIAN_ORDER) )
+          endianswap(&x);
+      }
+      else
+      {
+        // assume it's ascii
+        unget();
+        rawin() >> x;
+      }
+    }
+    break;
     default:
       PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
       break;
@@ -544,8 +560,15 @@ PStream& PStream::operator<<(int x)
       break;
     case PStream::plearn_ascii:
     case PStream::pretty_ascii:
-    case PStream::plearn_binary:
       rawout() << x << ' ';
+      break;
+    case PStream::plearn_binary:
+#ifdef BIGENDIAN
+      put(0x08);
+#else
+      put(0x07);
+#endif
+      write((char*)&x,sizeof(int));
       break;
     default:
       PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
