@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.h,v 1.5 2004/04/05 22:47:39 morinf Exp $
+   * $Id: BootstrapVMatrix.h,v 1.6 2004/04/20 14:01:07 tihocan Exp $
    ******************************************************* */
 
 
@@ -55,13 +55,14 @@ public:
 
   //! Public build options
   real frac;
+  bool shuffle;
 
 public:
 
   BootstrapVMatrix();
   
   //! Construct a boostrap of another VMatrix.
-  BootstrapVMatrix(VMat m, real frac);
+  BootstrapVMatrix(VMat m, real frac, bool shuffle = false);
 
   PLEARN_DECLARE_OBJECT(BootstrapVMatrix);
 

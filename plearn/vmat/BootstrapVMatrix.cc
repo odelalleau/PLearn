@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.cc,v 1.5 2004/04/17 00:47:02 plearner Exp $
+   * $Id: BootstrapVMatrix.cc,v 1.6 2004/04/20 14:01:07 tihocan Exp $
    ******************************************************* */
 
 #include "BootstrapVMatrix.h"
@@ -49,28 +49,37 @@ PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
     "A VMatrix that sees a bootstrap subset of its parent VMatrix.\n"
     "This is not a real bootstrap since a sample can only appear once."
     , 
-    "The only option to specify is \"distr\"(and possibly \"frac\")."
+    "The only option to specify is \"distr\"(and possibly \"frac\" and \"shuffle\")."
+    // TODO Hide the useless options.
 );
 
 //////////////////////
 // BootstrapVMatrix //
 //////////////////////
 BootstrapVMatrix::BootstrapVMatrix()
-  : frac(0.6667)
-{
-}
+  : frac(0.6667),
+    shuffle(false)
+{}
 
-BootstrapVMatrix::BootstrapVMatrix(VMat m, real frac)
+BootstrapVMatrix::BootstrapVMatrix(VMat m, real frac, bool shuffle)
 {
   this->frac = frac;
   this->distr = m;
+  this->shuffle = shuffle;
   build();
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void BootstrapVMatrix::declareOptions(OptionList &ol)
 {
+    declareOption(ol, "shuffle", &BootstrapVMatrix::shuffle, OptionBase::buildoption,
+        "If set to 1, the indices will be shuffled instead of being sorted.");
+
     declareOption(ol, "frac", &BootstrapVMatrix::frac, OptionBase::buildoption,
-        "    The fraction of elements we keep (default = 0.6667)");
+        "The fraction of elements we keep (default = 0.6667).");
+
     inherited::declareOptions(ol);
 }
 
@@ -92,7 +101,9 @@ void BootstrapVMatrix::build_()
     indices = TVec<int>(0, distr.length()-1, 1); // Range-vector
     shuffleElements(indices);
     indices = indices.subVec(0,int(frac * distr.length()));
-    sortElements(indices);
+    if (!shuffle) {
+      sortElements(indices);
+    }
     // Because we changed the indices, a rebuild may be needed.
     inherited::build();
   }
