@@ -4,7 +4,7 @@ from threading                      import *
 from plearn.utilities.verbosity     import *
 from plearn.utilities.FrozenObject  import *
 
-__all__ = [ 'Task', 'TaskDefaults', 'task_name_from_int' ]
+__all__ = [ 'TaskStatus', 'Task', 'TaskDefaults', 'task_name_from_int' ]
 
 def task_name_from_int(number):
     name = ''
@@ -16,6 +16,28 @@ def task_name_from_int(number):
         name = '0'
     name += str( int(number) )
     return name
+
+class TaskStatus:
+    completion_types = ["Succeeded", "Failed", "Skipped"]
+    status_types = ["New", "Ongoing"]+completion_types
+
+    def __init__(self, status="New"):
+        self.set_status(status)
+
+    def set_status(self, status):
+        if not status in self.status_types:
+            raise ValueError(status)
+        self.status = status
+
+    def is_completed(self):
+        return self.status in self.completion_types
+
+    def __str__(self):
+        return self.status
+
+    def __repr__(self):
+        return str(self)
+    
 
 class TaskDefaults:
     """Defaults field values for a task instance.
@@ -30,7 +52,8 @@ class TaskDefaults:
     task_name                   = None
     require_shared_ressources   = None
     release_shared_ressources   = None
-    signal_completion           = (lambda task: None)
+    completion_hook             = None
+    status                      = TaskStatus()
 
 class Task(Thread, FrozenObject):    
     """A specific type of thread.
@@ -74,18 +97,18 @@ class Task(Thread, FrozenObject):
 
     def body_of_task(self):
         raise NotImplementedError
-    
+
     def preprocessing(self):
         pass
 
     def postprocessing(self):
         pass
     
-    def run(self):
+    def run(self):        
         try:
             self.run_body()
         except:
-            self.signal_completion(self)
+            self.signal_completion()
             raise
         
     def run_body(self):
@@ -95,13 +118,9 @@ class Task(Thread, FrozenObject):
             self.shared_ressources_preprocessing()
             self.release_shared_ressources()
 
-        ## Making and changing directory to the experiment directory            
-        vprint('[ LAUNCHED %s %s ]' % (self.classname(),self.getName()), 1)
-
         self.body_of_task()
-        if not hasattr(self, 'success'):
-            raise RuntimeError( "The body of a task must at least call the task's "
-                                "succeeded method." )
+        if not self.status.is_completed():
+            raise RuntimeError("Completion status must be signaled within the body_of_task().")
         
         self.postprocessing()
         if self.release_shared_ressources:
@@ -109,21 +128,21 @@ class Task(Thread, FrozenObject):
             self.shared_ressources_postprocessing()
             self.release_shared_ressources()
 
-        success_str = 'Success'
-        if not self.success:
-            success_str = 'Failure'
+        self.signal_completion()
 
-        vprint( '[ FINISHED %s %s -- %s ]'
-                % ( self.classname(), self.getName(),
-                    success_str
-                    ), 1)
-        self.signal_completion(self)
+    def set_completion_hook(self, hook):
+        self.completion_hook = hook
 
+    def set_status(self, status):
+        self.status.set_status(status)
+        
     def shared_ressources_preprocessing(self):
         raise NotImplementedError
 
     def shared_ressources_postprocessing(self):
         raise NotImplementedError
 
-    def succeeded(self, success):
-        self.set_attribute('success', success)
+    def signal_completion(self):
+        if self.completion_hook is not None:
+            self.completion_hook( self )
+    

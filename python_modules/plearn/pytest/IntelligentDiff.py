@@ -36,7 +36,7 @@ class IntelligentDiff:
 
     def are_links(self, bench, other):
         if os.path.islink(other):
-            vprint("%s is link: diff will be skipped."%other)
+            vprint("%s is link: diff will be skipped."%other, 2)
         elif os.path.islink(bench):
             self.differences.append(
                 "%s is a link while %s is not." % (bench, other) )
@@ -67,7 +67,7 @@ class IntelligentDiff:
     
     def diff(self, bench, other):
         if self.are_links(bench, other):
-            vprint("%s is a link: diff will be skipped."%other)
+            vprint("%s is a link: diff will be skipped."%other, 2)
         elif self.are_directories(bench, other):
             self.diff_directories(bench, other)
         elif self.are_files(bench, other):
@@ -96,5 +96,5 @@ class IntelligentDiff:
         ## self.preprocess(other, bench_dir, other_dir)
         some_diff = toolkit.command_output('diff -u %s %s' % (bench, other))
         if some_diff:
-            self.differences.append( "\n+++ While comparing %s and %s:\n\t%s\n"
-                               % (bench, other, string.join(some_diff, "\t"))    )
+            self.differences.extend( some_diff )
+            self.differences.append( "" )

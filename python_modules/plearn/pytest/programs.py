@@ -5,12 +5,17 @@ import plearn.utilities.toolkit        as     toolkit
 from   plearn.utilities.verbosity      import vprint
 from   plearn.utilities.FrozenObject   import FrozenObject
 
-class PyTestUsageError(Exception):  
+class PyTestUsageError(Exception): 
     def __init__(self, msg):
         self.msg = msg
 
     def __str__(self):
         return self.msg
+
+    def print_error(self):
+        cname  = self.__class__.__name__+':'
+        msg    = toolkit.boxed_lines( self.msg, 70 )
+        vprint.highlight( ["", cname, ""] + msg + [""], '!' )
     
 class ProgramDefaults:
     name = None
@@ -131,7 +136,7 @@ class Compilable:
                               self.path,     log_file_name         )
                           )
         
-        vprint(compile_cmd, 1)
+        vprint(compile_cmd, 2)
         os.system(compile_cmd)
         
         os.chdir( directory_when_called )

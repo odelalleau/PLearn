@@ -1,5 +1,5 @@
 
-import os, shutil, string
+import os, string
 
 import plearn.utilities.cvs           as     cvs
 import plearn.utilities.toolkit       as     toolkit
@@ -16,7 +16,7 @@ from   IntelligentDiff                import *
 
 __all__ = [
     ## Functions
-    'config_file_path',
+    'config_file_path', 'print_stats', 
 
     ## Exceptions
     'PyTestUsageError',
@@ -40,12 +40,8 @@ def config_file_path( directory = None ):
         return 'pytest.config'
     return os.path.join( os.path.abspath(directory), 'pytest.config' )
 
-## def disable_file_name(directory, test_name=''):
-##     if test_name == '':
-##         test_name = 'pytest'
-
-##     test = os.path.join(directory, test_name)
-##     return ( test, test+'.disabled' )
+def print_stats():
+    Test.statistics.print_stats()
 
 class DuplicateName( PyTestUsageError ):
     def __init__(self, test1, test2):
@@ -59,7 +55,7 @@ class Resources:
 
     def link_resource(cls, path_to_resource, target):
         link_cmd = "ln -s %s %s" % ( path_to_resource, target )
-        vprint( "Linking resource: %s." % link_cmd, 2 )
+        vprint( "Linking resource: %s." % link_cmd, 3 )
         os.system( link_cmd )
     link_resource = classmethod(link_resource)
     
@@ -154,6 +150,10 @@ class Test(FrozenObject):
     statistics = BasicStats("Test statistics")
     expected_results = os.path.join(plpath.pytest_dir, "expected_results")
     run_results = os.path.join(plpath.pytest_dir, "run_results")
+
+    def current_stats(cls):
+        return cls.statistics.current_stats()
+    current_stats = classmethod(current_stats)
     
     def __init__(self, defaults=TestDefaults, **overrides):
         FrozenObject.__init__(self, defaults, overrides)        
@@ -162,7 +162,7 @@ class Test(FrozenObject):
         if Test.instances_map.has_key( self.name ):
             raise DuplicateName( Test.instances_map[self.name], self )
         else:
-            Test.statistics.new_test()
+            Test.statistics.new_test( self.test_directory, self.name )
             Test.instances_map[self.name] = self
             if Test.families_map.has_key( self.test_directory ):
                 Test.families_map[self.test_directory].append(self)
@@ -236,13 +236,19 @@ class Test(FrozenObject):
                 os.system( "cvs remove -Rf %s" % results )
                 cvs.commit( '.',
                             'Removal of %s for new results creation.'
-                            % results )
-                
-            backup = "%s.%s" % (results, toolkit.date_time_string())
-            os.system( "mv %s %s" % (results, backup) )
+                            % results )                
+            backup = toolkit.timed_version_backup( results )
+
         os.makedirs( results )
         return backup
 
+    def formatted_decription(self):
+        return ( "Test name:   %s.\nDescription:\n    %s"
+                 % (self.name, self.description), 1)        
+
+    def get_name(self):
+        return self.name
+    
     def get_path(self):
         return os.path.join(
             self.test_directory,
@@ -250,11 +256,6 @@ class Test(FrozenObject):
             )
 
     def is_disabled(self):
-##         disabled_ext         = '.disabled'
-##         disabling_directory  = os.path.join(self.test_directory, 'pytest'+disabled_ext) 
-##         disabling_test       = os.path.join(self.test_directory, self.name+disabled_ext) 
-##         return ( os.path.exists(disabling_directory) or
-##                  os.path.exists(disabling_test)       )
         return self.disabled
     
     def link_resources(self, test_results):
@@ -264,7 +265,7 @@ class Test(FrozenObject):
 
         def single_link(resource):
             link_cmd = "ln -s %s %s" % ( resource, test_results )
-            vprint( "Linking resource: %s." % link_cmd, 2 )
+            vprint( "Linking resource: %s." % link_cmd, 3 )
             os.system( link_cmd )
             
         for resource in resources:
@@ -300,27 +301,18 @@ class Test(FrozenObject):
 
         test_results  = self.test_results( results )
         backup        = self.ensure_results_directory( test_results )
-        if backup is not None:
-            vprint("Previous results saved in %s" % backup )
 
         self.link_resources( test_results )
         run_command   = ( "./%s %s >& %s"
                           % ( self.program.get_name(), self.arguments, self.name+'.run_log' )
                           )
-        
-        vprint("Test name:   %s.\nDescription:\n    %s" % (self.name, self.description), 1)        
-        vprint(run_command, 1)
+        vprint(run_command, 2)
 
         cwd = os.getcwd()
         os.chdir( test_results )
         os.system(run_command)
         os.chdir( cwd )
         
-##         ## Forwarding the removal of the old results: if any operation
-##         ## should cause the crash of PyTest, the old results would
-##         ## still be available in the backup directory.
-##         if backup is not None:
-##             shutil.rmtree( backup )
         self.unlink_resources( test_results )
         os.putenv("PLEARN_DATE_TIME", "YES")
 
@@ -329,7 +321,7 @@ class Test(FrozenObject):
         for f in dirlist:
             path = os.path.join( test_results, f )
             if os.path.islink( path ):
-                vprint( "Removing link: %s." % path, 2 ) 
+                vprint( "Removing link: %s." % path, 3 ) 
                 os.remove( path )
 
 class RoutineDefaults(TaskDefaults):
@@ -352,46 +344,68 @@ class Routine(Task):
         if not isinstance(self.test.program, Compilable):
             return True
 
-        vprint("\nCompilation:", 1)
-        vprint("------------", 1)
+        vprint("\nCompilation:", 2)
+        vprint("------------", 2)
         
         self.test.compile()
         if not self.test.compilation_succeeded():
-            vprint("Compilation failed.", 1)
-            self.succeeded(False)
+            vprint("Compilation failed.", 2)
+            self.set_status("Failed")
             return False
-        vprint("Compilation succeedded.", 1)
+        vprint("Compilation succeedded.", 2)
         return True
+
+    def format_n_print(self, msg):
+        formatted = toolkit.centered_square( msg, 70 )
+        vprint(formatted, 1)
 
     ## Overrides run and succeeded
     def run(self):
+        tname            = self.test.get_name()
+        routine_and_name = "%s %s" % ( self.classname(), tname ) 
+        self.format_n_print("LAUCHED %s" % routine_and_name)
+
         try:
             if self.test.is_disabled():
-                vprint("Test %s is disabled." % self.test.name, 1)
-                Test.statistics.skip()
-                self.signal_completion(self)
+                vprint("Test %s is disabled." % self.test.name, 2)
+                self.set_status("Skipped")
+                self.signal_completion()
             else:
                 os.chdir( self.test.test_directory )
-                Task.run(self)
+                self.run_body()
+
         except PyTestUsageError, e: 
-            Test.statistics.skip()
             if Routine.report_traceback:
                 raise
             else:
-                vprint( "%s: %s." % (e.__class__.__name__,e) )
-            
-    def succeeded(self, success):
-        Task.succeeded(self, success)
-        if success:
-            Test.statistics.success()
-        else:
-            Test.statistics.failure( self.test.get_path() )
+                e.print_error()
+            self.set_status("Skipped")            
+            self.signal_completion()
+
+    def set_status(self, status):
+        Task.set_status(self, status)
+
+        if status in TaskStatus.completion_types:
+            Test.statistics.set_status( self.test.get_name(), status )
+
+    def signal_completion(self):
+        tname            = self.test.get_name()
+        routine_and_name = "%s %s" % ( self.classname(), tname ) 
+
+        self.format_n_print( "FINISHED %s -- %s" %
+                             ( routine_and_name, str(self.status) )
+                             )
+        self.format_n_print( Test.current_stats() )
+        vprint("\n", 1)
+
+        Task.signal_completion(self)
+        
 
 class CompilationRoutine(Routine):
     """Launches the compilation of target tests' compilable files."""    
     def body_of_task(self):
         if self.compile_program():
-            self.succeeded( True )
+            self.set_status( "Succeeded" )
             
 class ResultsCreationRoutine(Routine):
     """Generates the expected results target tests.
@@ -409,11 +423,11 @@ class ResultsCreationRoutine(Routine):
     def body_of_task(self):
         compilation_succeeded = self.compile_program()
         if not compilation_succeeded:
-            vprint("Results creation bails out.", 1)
+            vprint("Results creation bails out.", 2)
             return
             
-        vprint("\nResults creation:", 1)
-        vprint("-----------------", 1)
+        vprint("\nResults creation:", 2)
+        vprint("-----------------", 2)
         
         self.test.run( Test.expected_results )
 
@@ -421,8 +435,8 @@ class ResultsCreationRoutine(Routine):
         mappings.update( plpath.env_mappings )
         plpath.process_with_mappings( Test.expected_results, mappings )
         
-        vprint("", 1)
-        self.succeeded( True )
+        vprint("", 2)
+        self.set_status( "Succeeded" )
 
 class RunTestRoutine(Routine):        
     """Compares current results to expected ones.
@@ -453,11 +467,11 @@ class RunTestRoutine(Routine):
     def body_of_task(self):
         compilation_succeeded = self.compile_program()
         if not compilation_succeeded:
-            vprint("Running bails out.", 1)
+            vprint("Running bails out.", 2)
             return
         
-        vprint("\nRunning the test:", 1)
-        vprint("-----------------", 1)
+        vprint("\nRunning the test:", 2)
+        vprint("-----------------", 2)
         
         self.test.run( Test.run_results )
 
@@ -468,7 +482,7 @@ class RunTestRoutine(Routine):
         idiff  =  IntelligentDiff()
         diffs  =  idiff.diff( self.expected_results, self.run_results )
         if diffs == []:
-            self.succeeded( True )
-        else:            
-            map(lambda err: vprint(err, 1), diffs)
-            self.succeeded( False )
+            self.set_status( "Succeeded" )
+        else:
+            vprint.new_report( self.test.get_name()+'.failed', diffs )
+            self.set_status( "Failed" )

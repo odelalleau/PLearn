@@ -46,18 +46,19 @@ class Dispatch(FrozenObject):
         nb_hosts      = self.nb_hosts
         if self.localhost:
             nb_hosts  = 1
-        else:
-            vprint( "%d tasks to run on at most %d hosts."
-                    % (nb_task,nb_hosts), 1)
+##         else:
+##             vprint( "%d tasks to run on at most %d hosts."
+##                     % (nb_task,nb_hosts), 1)
 
-        print_status = ( lambda :
-                         vprint("-- %d tasks done.    %d to go.    %d running. --\n"
-                                %(task_done,nb_task-task_done,len(current_task)), 1)
-                         )
+        print_status = ( lambda : None )
+##         print_status = ( lambda :
+##                          vprint("-- %d tasks done.    %d to go.    %d running. --\n"
+##                                 %(task_done,nb_task-task_done,len(current_task)), 1)
+##                          )
 
         while launched_task < nb_task:
             task = tasks_to_run[launched_task]
-            task.signal_completion = self.task_completion
+            task.set_completion_hook( self.task_completion )
             
             if hostnum < nb_hosts:
                 hostnum       += 1

@@ -243,7 +243,7 @@ class PLTask(AbsPathTask):
         
     def hasItMadeTheTop(self, top):
         sorted_vmat = command_output("plearn vmat cat " + self.sort_file)
-        vprint("sorted_vmat:\n%s\n\n\n"%str(sorted_vmat), 2)
+        vprint("sorted_vmat:\n%s\n\n\n"%str(sorted_vmat), 3)
         
         index = 0
         key = self.defines_dico.values()

@@ -37,16 +37,13 @@ def add_supported_modes( parser ):
         mode_instance = eval( "%s()" % mode )
         parser.add_mode( mode_instance )
 
-def print_stats():
-    vprint("\n%s" % str(Test.statistics), 0)    
-
 class PyTestMode(Mode):
 
     ## Static method
-    def build_tests(none, directory, dirlist):
+    def build_tests(ignored_directories, directory, dirlist):
         if ignore.is_ignored(directory, dirlist):
             toolkit.exempt_list_of( dirlist, copy.copy(dirlist) )
-            vprint( "Directory %s and subdirectories ignored.\n" % directory ) 
+            ignored_directories.append( directory )
             return
 
         toolkit.exempt_list_of( dirlist, plpath.special_directories )    
@@ -87,11 +84,17 @@ class PyTestMode(Mode):
     initialize = classmethod(initialize)
 
     def parse_config_files(cls):
+        ignored_directories = []
         for target in targets:
             if hasattr(options, 'recursive') and options.recursive:
-                os.path.walk(target, cls.build_tests, None)
+                os.path.walk(target, cls.build_tests, ignored_directories)
             else:
-                cls.build_tests(None, target, os.listdir(target))
+                cls.build_tests(ignored_directories, target, os.listdir(target))
+        if len(ignored_directories) > 0:
+            ignored = [ "The following directories (and their subdirectories) were ignored", "" ]
+            ignored.extend( [ '    '+ign for ign in ignored_directories ] )
+            vprint.highlight( ignored, highlighter='x' ) 
+
     parse_config_files = classmethod(parse_config_files)
 
            
@@ -342,8 +345,8 @@ class add( FamilyConfigMode ):
     """
     
     ## Static method
-    def build_tests(none, directory, dirlist):
-        PyTestMode.build_tests(none, directory, dirlist)
+    def build_tests(ignored_directories, directory, dirlist):
+        PyTestMode.build_tests(ignored_directories, directory, dirlist)
 
         test_name = options.test_name
         if test_name == '':

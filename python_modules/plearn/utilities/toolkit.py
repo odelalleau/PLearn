@@ -13,6 +13,32 @@ try:
 except ImportError:
     pass
 
+def boxed_lines(s, box_width, indent=''):
+    if len(s) <= box_width:
+        return [s]
+
+    words = string.split(s)
+    return boxed_lines_from_words(words, box_width, indent)
+
+def boxed_lines_from_words(words, box_width, indent=''):
+    box_width = box_width+len(indent)
+
+    boxed_lines = []
+    boxed = None
+    for i, word in enumerate(words):
+        if boxed is None:
+            boxed = "%s%s" % (indent, word)
+        elif len(boxed) < box_width-len(word):
+            boxed = "%s %s" % (boxed, word)
+        else:
+            boxed_lines.append( boxed ) 
+            boxed = "%s%s" % (indent, word)
+
+    if boxed is not None and boxed != "":
+        boxed_lines.append( boxed ) 
+            
+    return boxed_lines
+
 def boxed_string(s, box_width, indent=''):
     if len(s) <= box_width:
         return s
@@ -21,34 +47,12 @@ def boxed_string(s, box_width, indent=''):
     return boxed_string_from_words(words, box_width, indent)
 
 def boxed_string_from_words(words, box_width, indent=''):
-    box_width = box_width+len(indent)
+    return string.join(boxed_lines_from_words(words, box_width, indent), '\n')    
 
-    boxed = None
-    for i, word in enumerate(words):
-        if boxed is None:
-            boxed = "%s%s" % (indent, word)
-        elif len(boxed) < box_width-len(word):
-            boxed = "%s %s" % (boxed, word)
-        else:
-            end   = boxed_string_from_words(words[i:], box_width, indent) 
-            boxed = "%s\n%s" % (boxed, end)
-            break
-        
-    return boxed
+def centered_square(s, width):
+    width -= 4
+    return "[ " + string.center(s, width) + " ]" 
 
-## def boxed_string(s, box_width):
-##     if len(s) > box_width:
-##         words = string.split(s)
-##         s = ''
-##         for word in words:
-##             if len(s) == 0:
-##                 s = word
-##             elif len(s) < box_width-len(word):
-##                 s = "%s %s" % (s, word)
-##             else:
-##                 s = "%s\n%s" % (s, word)
-##     return s
-    
 def command_output(command):
     process = popen2.Popen4( command )
     process.wait()
@@ -191,6 +195,10 @@ def quote_if(s):
 def short_doc(obj):
     return doc(obj, True)
 
+def timed_version_backup( path ):
+    backup = "%s.%s" % ( path, date_time_string() )
+    os.system( 'mv %s %s' % ( path, backup ) ) 
+    return backup
 
 def left_from_right(get):
     def get_attr(self, rop_name):
