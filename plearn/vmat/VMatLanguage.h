@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.17 2004/11/24 18:38:19 tihocan Exp $
+   * $Id: VMatLanguage.h,v 1.18 2005/02/08 21:55:42 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -78,12 +78,12 @@ using namespace std;
 
     // generates bytecode from a preprocessed text sourcecode
     void generateCode(const string& processed_sourcecode);
-    void generateCode(istream& processed_sourcecode);
+    void generateCode(PStream& processed_sourcecode);
 
     // this function takes raw VPL code and returns the preprocessed sourcecode 
     // along with the defines and the fieldnames it generated
-    void preprocess(istream& in, map<string, string>& defines, string& processed_sourcecode,
-                           vector<string>& fieldnames);
+    void preprocess(PStream& in, map<string, string>& defines, string& processed_sourcecode,
+                    vector<string>& fieldnames);
     
 public:
     VMatLanguage():vmsource(Mat()) { build_(); }
@@ -112,12 +112,12 @@ public:
     // from the outside, use the next 3 high-level functions
     /////////////////////////////////////////////////////////
 
-    //! takes a string, filename, or istream and generate the bytecode from it
+    //! takes a string, filename, or PStream and generate the bytecode from it
     //! On exit, fieldnames will contain fieldnames of the resulting matrix
     //! The source vmat must be set before compiling a VPL program. 
-    void compileStream(istream &in, vector<string>& fieldnames);
+    void compileStream(PStream &in, vector<string>& fieldnames);
     void compileString(const string & code, vector<string>& fieldnames);
-    void compileFile(const string & filename, vector<string>& fieldnames);
+    void compileFile(const PPath& filename, vector<string>& fieldnames);
     
     int pstackSize() const {return pstack.size();}
 
