@@ -89,9 +89,10 @@ void MovingAverage::train()
   int start = MAX(window_length-1, last_train_t);
   if (report_progress)
     pb = new ProgressBar("Training MovingAverage learner", train_set.length()-start);
-  train_stats->forget();
+  //train_stats->forget();
   for (int t=start; t<train_set.length(); t++)
   {
+    cout << "MovingAverage::train -- t = " << t << endl;
     all_targets = train_set.subMat(t-window_length+1, target_pos, window_length, targetsize());
     columnMean(all_targets,output);
     predictions(t) << output;
@@ -109,6 +110,7 @@ void MovingAverage::train()
     if (pb) pb->update(t-start);
   }
   last_train_t = train_set.length();
+  cout << "MovingAverage.last_train_t = " << last_train_t << endl;
 
   train_stats->finalize();
 
@@ -131,9 +133,10 @@ void MovingAverage::test(VMat testset, PP<VecStatsCollector> test_stats,
   int target_pos = inputsize();
   if (report_progress)
     pb = new ProgressBar("Testing MovingAverage learner", testset.length()-start);
-  test_stats->forget();
+  //test_stats->forget();
   for (int t=start; t<testset.length(); t++)
   {
+    cout << "MovingAverage::test -- t = " << t << endl;
     all_targets = testset.subMat(t-window_length+1, target_pos, window_length, targetsize()).toMat();
     columnMean(all_targets,output);
     predictions(t) << output;
@@ -153,6 +156,7 @@ void MovingAverage::test(VMat testset, PP<VecStatsCollector> test_stats,
     if (pb) pb->update(t-start);
   }
   last_test_t = testset.length();
+  cout << "MovingAverage.last_test_t = " << last_test_t << endl;
 
   test_stats->finalize();
 

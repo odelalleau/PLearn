@@ -90,8 +90,8 @@ void SequentialLearner::declareOptions(OptionList& ol)
 
 void SequentialLearner::forget()
 {
-  predictions.fill(MISSING_VALUE);
-  errors.fill(MISSING_VALUE);
+  if (predictions) predictions.fill(MISSING_VALUE);
+  if (errors) errors.fill(MISSING_VALUE);
   last_train_t = -1;
   last_test_t = -1;
 }

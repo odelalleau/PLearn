@@ -171,6 +171,7 @@ void SequentialValidation::run()
 
   for (int t=init_train_size; t<=dataset.length()-horizon; t++)
   {
+    cout << "SequentialValidation::run() -- sub_train.length = " << t << " et sub_test.length = " << t+horizon << endl;
     VMat sub_train = dataset.subMatRows(0,t); // excludes t, last training pair is (t-1-horizon,t-1)
     //sub_train->defineSizes(dataset->inputsize(), dataset->targetsize(), dataset->weightsize());
     VMat sub_test = dataset.subMatRows(0, t+horizon);
