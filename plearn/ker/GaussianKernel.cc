@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.9 2004/06/16 18:25:35 tihocan Exp $
+   * $Id: GaussianKernel.cc,v 1.10 2004/07/20 15:22:08 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -133,6 +133,14 @@ void GaussianKernel::addDataForKernelMatrix(const Vec& newRow)
 /////////////////////////////////////////
 inline real GaussianKernel::evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const
 {
+  if (sqnorm_of_diff < 0) {
+    // This could happen (especiallly in -opt) because of approximations, when
+    // it should actually be 0.
+    if (sqnorm_of_diff < -1e-10)
+      // This should not happen.
+      PLERROR("In GaussianKernel::evaluateFromSquaredNormOfDifference - The given 'sqnorm_of_diff' is (significantly) negative");
+    sqnorm_of_diff = 0;
+  }
   if (scale_by_sigma) {
     return exp(sqnorm_of_diff*minus_one_over_sigmasquare) * sigmasquare_over_two;
   } else {
