@@ -55,8 +55,7 @@ protected:
   //!  If you change one of these, you must retrain
   int nneighbors; //!<  how many neighbors should we consider
   int ncomponents; //!<  how many components do we want to remember from the PCA
-  int inputsize; //!< the number of input 
-
+  
   bool use_last_eigenval;
   double global_lambda0;
 public:
@@ -89,7 +88,6 @@ private:
   // (Please implement in .cc)
   void build_();
 
-
 public:
   // simply calls inherited::build() then build_() 
   virtual void build();
@@ -109,7 +107,7 @@ public:
 
   //! trains the model
   // NOTE : the function assumes that the training_set has only input columns ! (width = dimension of feature space)
-  virtual void train(VMat training_set); 
+  virtual void train(); 
 
 };
 

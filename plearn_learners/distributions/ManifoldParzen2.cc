@@ -77,7 +77,7 @@ string ManifoldParzen2::help()
 
 void ManifoldParzen2::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  Learner::makeDeepCopyFromShallowCopy(copies);
+  PLearner::makeDeepCopyFromShallowCopy(copies);
 
   // ### Call deepCopyField on all "pointer-like" fields 
   // ### that you wish to be deepCopied rather than 
@@ -140,14 +140,13 @@ void computeLocalPrincipalComponents(Mat& dataset, int which_pattern, Mat& delta
   computePrincipalComponents(delta_neighbors, eig_values, eig_vectors);
 }
 
-void ManifoldParzen2::train(VMat training_set)
+void ManifoldParzen2::train()
 {
-  Mat trainset = Mat(training_set); // convert it to Mat for efficiency
-  int l = trainset.length();
-  int w = trainset.width();
+  Mat trainset(train_set);
+  int l = train_set.length();
+  int w = train_set.width();
   
   setMixtureTypeGeneral(l, ncomponents, w);
-  build();
 
   // storage for neighbors
   Mat delta_neighbors(nneighbors, w);
@@ -160,9 +159,16 @@ void ManifoldParzen2::train(VMat training_set)
       
     // center is sample
     mu(i) << trainset(i);
-    
+
     computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs);
-      
+
+//    cout<<delta_neighbors<<endl;
+    
+    real d=0;
+    for(int k=0;k<delta_neighbors.length();k++)
+      d+=dist(delta_neighbors(k),Vec(D,0.0),2);
+    d/=delta_neighbors.length();
+
     // find out eigenvalue (a.k.a lambda0) that will be used for all D-K directions
     real lambda0;
     if(use_last_eigenval)
@@ -170,18 +176,19 @@ void ManifoldParzen2::train(VMat training_set)
       // take last (smallest) eigenvalue as a variance in the non-principal directions
       // (but if it is 0 because of linear dependencies in the data, take the
       // last, i.e. smallest, non-zero eigenvalue).
-      int last=ncomponents-1;
-      real lambda0 = eigvals[last];
+      int last=ncomponents;
+      lambda0 = eigvals[last];
       while (lambda0==0 && last>0)
         lambda0 = eigvals[--last];
       // the sigma-square for all remaining dimensions
-//      if (lambda0 == 0)
-      //       PLERROR("All principal components have zero variance!?");
+      if (lambda0 == 0)
+        PLERROR("All (%i) principal components have zero variance!?",eigvals.length());
     }
     else lambda0 = global_lambda0;
 
-    setGaussian(i, 1.0/l, trainset(i), eigvals, components_eigenvecs, lambda0);
+    setGaussian(i, 1.0/l, trainset(i), eigvals.subVec(0,eigvals.length()-1), components_eigenvecs.subMatRows(0,eigvals.length()-1), lambda0);
     }
+  build();
 }
 
 %> // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.4 2003/06/16 15:05:55 jkeable Exp $ 
+ * $Id: GaussMix.cc,v 1.5 2003/06/17 02:10:01 jkeable Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -101,8 +101,8 @@ void GaussMix::declareOptions(OptionList& ol)
   declareOption(ol, "diags", &GaussMix::diags, OptionBase::buildoption,
                 "Only used in Diagonal : a L x D matrix where row 'l' is the diagonal of the covariance matrix of gaussian l");
 
-  declareOption(ol, "lambda", &GaussMix::inv_lambda_minus_lambda0, OptionBase::buildoption,
-                "The concatenation of all vectors of length K[l] containing the lambdas of the l-th gaussian.");
+  declareOption(ol, "lambda", &GaussMix::lambda, OptionBase::buildoption,
+                "The concatenation of all vectors of length K[l] containing the eigenvectors of the l-th gaussian.");
 
   declareOption(ol, "V", &GaussMix::V, OptionBase::buildoption,
                 "The vertical concatenation of all the K[i] x D matrix, (each contains the K[i] vectors that define of gaussian i.) ");
@@ -218,7 +218,7 @@ void GaussMix::setGaussian(int l, real _alpha, Vec _mu, Vec _lambda, Mat eigenve
     {
       int newl = MAX(V_idx[l] + Ks[l], (int)ceil((double)V.length()*1.5));
       V.resize(V_idx[l] + Ks[l],V.width(), newl);
-      inv_lambda_minus_lambda0.resize(newl);
+      lambda.resize(newl);
     }
   }
   else 
@@ -228,7 +228,7 @@ void GaussMix::setGaussian(int l, real _alpha, Vec _mu, Vec _lambda, Mat eigenve
               "define a gaussian must not change between calls. ");
   }
 
-  inv_lambda_minus_lambda0.subVec(V_idx[l],Ks[l])<<_lambda;
+  lambda.subVec(V_idx[l],Ks[l])<<_lambda;
   V.subMatRows(V_idx[l],Ks[l])<<eigenvecs;
 
 }
@@ -296,7 +296,7 @@ void GaussMix::build_()
   log_coef.resize(L);
   mu.resize(L,D);
   V.resize(sum_Ks,D);
-  inv_lambda_minus_lambda0.resize(sum_Ks);
+  lambda.resize(sum_Ks);
 
   if(type=="Spherical")
     for(int l=0;l<L;l++)
@@ -309,15 +309,16 @@ void GaussMix::build_()
   else if(type=="General")
     for(int l=0;l<L;l++)
     {
-      Vec _lambda = inv_lambda_minus_lambda0.subVec(V_idx[l],Ks[l]);
-      for(int i=0;i<Ks[l];i++)
-        _lambda[i] = 1.0/MAX(0,_lambda[i] - sigma[l]);
-  
       // compute determinant
-      double log_det = sum_of_log(_lambda);
-    
-      if(D - _lambda.size() > 0)
-        log_det+= log(sigma[l])*(D-_lambda.size());
+      double log_det = log(product(lambda.subVec(V_idx[l],Ks[l])));
+      
+      if(D-Ks[l]>0)
+      {
+        if(sigma[l]==0)
+          PLERROR("lambda_0 for gaussian #%i is 0!",l);
+        log_det+=log(sigma[l]*(D-Ks[l]));
+      }
+
     
       log_coef[l] = -0.5*( D*log(2*3.141549) + log_det );
     }
@@ -394,14 +395,14 @@ void GaussMix::initArrays()
     Ks.fill(0);
     V_idx.resize(L);
     V.resize(L*avg_K,D);
-    inv_lambda_minus_lambda0.resize(L*avg_K,D);
+    lambda.resize(L*avg_K,D);
   }
   else
   {
     Ks.resize(0);
     V_idx.resize(0);
     V.resize(0,0);
-    inv_lambda_minus_lambda0.resize(0,0);
+    lambda.resize(0,0);
   }
     
   if(type=="Factor")
@@ -490,7 +491,7 @@ void GaussMix::generateGeneral(Vec &x) const
   x=0;
   
   // the covariance matrix of the general gaussian type can be expressed as :
-  // C = sum{i=1,K} [ lamda_i Vi Vi(t) ] + sum{i=K+1,D} [ lamda_0 Vi Vi(t) ]
+  // C = sum{i=1,K} [ lambda_i Vi Vi(t) ] + sum{i=K+1,D} [ lamda_0 Vi Vi(t) ]
   // Where Vi is the i-th eigenvector
   // this can also be reformulated as : 
   // C2 = sum{i=1,K} [ (lamda_i-lambda_0) Vi Vi(t) ] + diag(lambda_0) * I 
@@ -498,24 +499,21 @@ void GaussMix::generateGeneral(Vec &x) const
   // since C2 and C are diagonalizable and share the same eigenvectors/values, they are equal.
   // thus, to sample from a gaussian with covar. matrix C , we add two samples from a gaussian with covar. A and a one with covar. B
 
-  // to sample from a gaussian with covar matrix A ( == diag(lambda) ),
-  // we use x = diag(lambda) * V * z, with z sampled from N(0,1) 
-  
   Vec norm(Ks[l]);
   fill_random_normal(norm);
 
   for(int i=0;i<Ks[l];i++)
   {
     Vec vi = V(V_idx[l]+i);
-    real val = 1/sqrt(inv_lambda_minus_lambda0[V_idx[l]+i]) * norm[i];
+    real val = sqrt(lambda[V_idx[l]+i] - sigma[l]) * norm[i];
     for(int j=0;j<D;j++)
       x[j]+= vi[j] * val;
   }
-
+  if(D-Ks[l]==0)return;
   // now add sample from N( 0,diag(lambda0) )
   norm.resize(D);
   fill_random_normal(norm);
-  x += norm*sigma[l]; // in this case, vector sigma stocks lambda0s 
+  x += norm*sigma[l]; // sigma[l] has lambda_0[l]
   x += mu(l);
 }
 
@@ -603,8 +601,8 @@ double GaussMix::logDensityDiagonal(const Vec& x, int num) const
   return logadd(logs);
 }
 
-// return log(p(x)) =  logadd {1..l} ( log(alpha[l]) + log_coeff[l] + q[l] )
-// with q[l] = -0.5 * (x-mu[l])'C-1(x-mu[l])
+// return log(p(x)) =  logadd {1..l} ( log(alpha[l]) + log_coeff[l] - 0.5 + q[l] )
+// with q[l] = -0.5 * (x-mu[l])' V'.inv(D).V (x-mu[l]) = (V'(x-mu))'.inv(D).(V'(x-mu))
 //     The expression q = (V'(x-mu))'.inv(D).(V'(x-mu)) can be understood as:
 //        a) projecting vector x-mu on the orthonormal basis V, 
 //           i.e. obtaining a transformed x that we shall call y:  y = V'(x-mu)
@@ -646,42 +644,38 @@ double GaussMix::logDensityGeneral(const Vec& x, int num) const
   int idx=0;
   for(int l=begin;l<=end;l++)
   {
-//  cout<<"gaussian ="<<l<<endl;
-
     bool galette = Ks[l]<D;
-    x_minus_mu = x-mu(l);
-
-/// cout<<" x-mu:"<<x_minus_mu<<endl;
-    
     logs[idx]=log(alpha[l]);
-
-//  cout<<"logcoef :"<<log_coef[l]<<endl;
-    
     logs[idx]+= log_coef[l];
+    x_minus_mu << x-mu(l);
+
     // compute q
     Mat subV = V.subMatRows(V_idx[l],Ks[l]);
 
-    real* ptr_inv_lambda_minus_lambda0 = inv_lambda_minus_lambda0.data() + V_idx[l];
+    real* ptr_lambda = lambda.data() + V_idx[l];
 
     if(galette)
     {
       real* px = x.data();
       real* pmu = mu(l).data();
-      real* pxmu = x_minus_mu.data();
       
       real sqnorm_xmu = 0;
       for(int i=0; i<D; i++)
       {
         real val = *px++ - *pmu++;
         sqnorm_xmu += val * val;
-        *pxmu++ = val;
       }
       
       logs[idx] -= 0.5/sigma[l] * sqnorm_xmu;
+      for(int i=0; i<Ks[l]; i++)
+        logs[idx] -= 0.5* (1.0 / *ptr_lambda++ - 1.0 / sigma[l]) *square(dot(subV(i),x_minus_mu));
+
     }
+    else
+      for(int i=0; i<Ks[l]; i++)
+        logs[idx] -= 0.5* (1.0 / *ptr_lambda++) *square(dot(subV(i),x_minus_mu));
+
     
-    for(int i=0; i<Ks[l]; i++)
-      logs[idx] -= 0.5*(*ptr_inv_lambda_minus_lambda0++) *square(dot(subV(i),x_minus_mu));
     idx++;
   }
   return logadd(logs);

@@ -37,27 +37,42 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.2 2003/06/02 23:41:19 jkeable Exp $ 
+   * $Id: GaussMix.h,v 1.3 2003/06/17 02:10:01 jkeable Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
 #ifndef GaussMix_INC
 #define GaussMix_INC
 
-#include "Distribution.h"
+#include "PDistribution.h"
 
 namespace PLearn <%
 using namespace std;
 
 /*
 
-This distribution implements a mixture of multivariate normal gaussians.
-We'll have L gaussians in R^D (D dimensions)
+This distribution implements a mixture of L multivariate normal gaussians in D dimensions
 
-You have 4 choices of possible parametrization. Note that all gaussians of 
+there are 3 ways to construct a GaussMix :
+1: 
+   setMixtureType(...)
+   setGaussian(1,....)
+   setGaussian(2,....)
+   ...
+   build();
+
+2:
+   setOption : alpha, mu, V, lambda 
+   (e.g : mixtureType="General"; D=2;L=3;alpha = 3 [.33 .33 .33]; lambda = 6 [.2 .4 .2 .2 .2 .2]; mu = 3 2 [1 1 2 2 3 3]; V = 6 2  [1 0 0 1 1 0 0 1 1 0 0 1];  V_idx= 3 [0 2 4])
+   build();
+
+3: load a serialized object:
+   PLearn::load(filename, GaussMixObject)
+
+For the gaussians, you have 4 possible parametrizations (a.k.a types). Note that all gaussians of 
 the mixture must be of the same type.
 
-2 parameters are common to gaussians all 4 types :
+2 parameters are common to all 4 types :
 
 alpha : the ponderation factor of that gaussian
 mu : its center
@@ -67,36 +82,39 @@ then, accordingly to the chosen type, you will set :
 ** spherical
 real sigma : gaussians will have a diagonal covariance matrix = sigma * I
 
-** elliptic
+** diagonal
 Vec diag : gaussians will have a diagonal covariance matrix DIAG(diag)
 
 ** general
 
-for the general case, the user provides the K<=D biggest eigenvalues and their corresponding eigenvectors
-(eigenvalues can be interpreted as the stddev on each axis (eigenvectors) of the gaussian). The remaining
-D-K eigenvectors, the complement of the basis formed by the K eigenvectors, if any, are assumed to have a constant
-eigenvalue of lambda0
+for the general case, the user provides K<=D orthonormal vectors defining the principal axis of the gaussian,
+and their corresponding values (lambdas). The remaining unspecified D-K vectors, the complement of the orthogonal basis 
+formed by the K vectors, if any, are assumed to have a constant value of lambda0
 
 Mat eigenvecs : a K x D orthonormal matrix in which the *rows* are the eigenvectors
-Vec lambda : the K eigenvalues
-real lambda0 : the eigenvalue that replaces the D-K eigenvalues 
+Vec lambda : the K factors of the vectors
+real lambda0 : the factor for the D-K vector
 
 ** factor  ( ie. used to build a mixture of factor analyser )
 
 -----> NOT TESTED YET
 
+vecs : KxD matrix
+
 suppose a variable x can be expressed as :
 
-x = Vz + mu + e, with
+x = Vz + mu + psi, with
 
 V, a DxK matrix
 z, a K vector
 mu, a D vector
-e, a D vector
+psi, a D vector
 
 and 
 
-E(z) = 0, V(z) = I, E(e)=0, C(e_i, e_j)=0, C(z, e)=0. Then the factor analyzer model holds. 
+E(z) = 0, V(z) = I, E(psi)=0, C(psi_i, psi_j)=0, C(z, psi)=0,
+
+then the factor analyzer model holds. 
 If we have z and e multinormally distributed, we have :
 
 p(z_k) = N(zk; 0,1)
@@ -108,7 +126,7 @@ p(x_n | z) = N(x_n; sum
 */
 
 
-class GaussMix: public Distribution
+class GaussMix: public PDistribution
 {
 protected:
   // *********************
@@ -120,14 +138,41 @@ protected:
     
 public:
 
-  typedef Distribution inherited;
+  typedef PDistribution inherited;
 
   // ************************
   // * public build options *
   // ************************
 
-  // ### declare public option fields (such as build options) here
-  // ...
+
+  //! length == L. the coefficients of the mixture
+  Vec alpha;
+  
+  //! a length==L vector of sigmas (** or lambda0)
+  Vec sigma;
+
+  //! a LxD matrix of diagonals (used if type is 'diagonal')
+  Mat diags;
+
+  //! a LxD matrix. Rows[l] is the center of the gaussians l
+  Mat mu;  
+
+  //! a sum_Ks x D matrix in which *rows* are components (only used for general and factor gaussians)
+  Mat V;
+
+  //! V_idx is a vector of length L
+  //! V[ V_idx[l] ] up to V[ V_idx[l] + Ks[l] ] are rows of V describing the l-th gaussian
+  TVec<int> V_idx;
+
+  // a length=sum_Ks vector (only used for general gaussians)
+  // **NOTE: it contains lambdas until build() is called, after, element 'i' contains ;
+  Vec lambda;
+
+  //! how much gaussians the mixture contains
+  int L;
+
+  //! the feature space dimension
+  int D;
 
   // ****************
   // * Constructors *
@@ -137,21 +182,20 @@ public:
   // initializes all fields to reasonable default values.
   GaussMix();
 
-
   // ******************
   // * Object methods *
   // ******************
 
-  enum MixTypes {Spherical, Elliptic, General, Factor};
-
-  MixTypes type;
+  // can be one of : 
+  // Unknown, Spherical, Diagonal, General, Factor
+  string type;
 
   //! set the type to spherical
   //! L : number of gaussians in mixture
   //! D : number of dimensions in feature space
   void setMixtureTypeSherical(int L, int D);
 
-  void setMixtureTypeElliptic(int L, int D);
+  void setMixtureTypeDiagonal(int L, int D);
 
   //! for 'general' and 'factor' mixtures :
   //! avg_K : the average number of dimensions of the gaussians (used to preallocate memory, so addGaussians calls are faster)
@@ -162,7 +206,7 @@ public:
 
   // spherical
   void setGaussian(int l, real alpha, Vec mu, real sigma);
-  // elliptic
+  // diagonal
   void setGaussian(int l, real alpha, Vec mu, Vec diag);
 
   //! for general and factor : number of eigen vectors must not change if your updating a previoulsy set gaussian.
@@ -171,18 +215,21 @@ public:
   // factor
   void setGaussian(int l, real alpha, Vec mu, Mat vecs, Vec diag );
 
-  void printInfo();
-
   virtual void generate(Vec& x) const;
   void generateSpherical(Vec &x) const;
-  void generateElliptic(Vec &x) const;
+  void generateDiagonal(Vec &x) const;
   void generateGeneral(Vec &x) const;
   void generateFactor(Vec &x) const;
+
+  virtual void resetGenerator(long g_seed) const;
 
 private: 
   //! This does the actual building. 
   // (Please implement in .cc)
   void build_();
+
+  // resizes arrays with respect to the dimensions given to setMixtureType
+  void initArrays();
 
 protected: 
   //! Declares this class' options
@@ -199,15 +246,6 @@ protected:
   //! A length==L vector. ivtdv_idx[l] is the index at which starts the flattened Ks[l] x Ks[l] matrix for the l-th gaussian in ivtdv
   TVec<int> ivtdv_idx; 
   
-  //! length == L. the coefficients of the mixture
-  Vec alpha;
-  
-  //! a length==L vector of sigmas (** or lambda0)
-  Vec sigma;
-
-  //! a LxD matrix of diagonals (used if type is 'elliptic')
-  Mat diags;
-
   //! the average number of dimensions of the gaussians (used to preallocate memory, so addGaussians calls are faster)
   int avg_K;
 
@@ -215,29 +253,14 @@ protected:
   //! only used for general and factor mixtures
   TVec<int> Ks;
 
-  //! the sum of the Ks elements
-  int sum_Ks;
-
-  //! a LxD matrix. Rows[l] is the center of the gaussians l
-  Mat mu;  
-
-  //! a sum_Ks x D matrix in which *rows* are components (only used for general and factor gaussians)
-  Mat V;
-
-  //! V_idx is a vector of length L
-  //! V[ V_idx[l] ] up to V[ V_idx[l] + Ks[l] ] are rows of V describing the l-th gaussian
-  TVec<int> V_idx;
-
-  // a length=sum_Ks vector (only used for general gaussians)
-  Vec inv_lambda_minus_lambda0;
-
-  //! how much gaussians the mixture contains
-  int L;
-
-  //! the feature space dimension
-  int D;
-
 public:
+  //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
+  //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
+  virtual void forget();
+
+
+  virtual int inputsize() const {return D;}
+  
   // simply calls inherited::build() then build_() 
   virtual void build();
 
@@ -257,9 +280,6 @@ public:
   //! trains the model
   virtual void train(VMat training_set); 
 
-  //! computes the ouptu of a trained model
-  virtual void use(const Vec& input, Vec& output);
-
   // ************************
   // * Distribution methods *
   // ************************
@@ -269,7 +289,7 @@ public:
 
   // set num to 'i' if you want to get density as if mixture contained only i-th gaussian (with a coefficient of 1)
   double logDensitySpherical(const Vec& x, int num=-1) const;
-  double logDensityElliptic(const Vec& x, int num=-1) const;
+  double logDensityDiagonal(const Vec& x, int num=-1) const;
   double logDensityGeneral(const Vec& x, int num=-1) const;
   double logDensityFactor(const Vec& x, int num=-1) const;
 
