@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.7 2003/04/22 20:55:16 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.8 2003/04/23 14:51:47 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -206,20 +206,6 @@ IMPLEMENT_NAME_AND_DEEPCOPY(ConjGradientOptimizer);
  * MAIN METHODS AND FUNCTIONS *
  ******************************/
 
-/////////////////////////
-// computeComposedGrad //
-/////////////////////////
-real ConjGradientOptimizer::computeComposedGrad(
-    void (*grad)(VarArray, Var, VarArray, const Vec&),
-    VarArray params,
-    Var costs,
-    VarArray proppath,
-    Vec direction,
-    Vec delta) {
-  (*grad)(params, costs, proppath, delta);
-  return dot(delta, direction);
-}
-
 //////////////////////
 // computeCostValue //
 //////////////////////
@@ -243,7 +229,7 @@ real ConjGradientOptimizer::computeDerivative(
   opt->params.copyTo(opt->tmp_storage);
   opt->params.update(alpha, opt->search_direction);
   Vec gradient(opt->params.nelems());
-  computeGradient(opt->params, opt->cost, opt->proppath, gradient);
+  computeGradient(opt, gradient);
   opt->params.copyFrom(opt->tmp_storage);
   return dot(opt->search_direction, gradient);
 }
@@ -252,69 +238,58 @@ real ConjGradientOptimizer::computeDerivative(
 // computeGradient //
 /////////////////////
 void ConjGradientOptimizer::computeGradient(
-    VarArray params,
-    Var cost,
-    VarArray proppath,
+    Optimizer* opt,
     const Vec& gradient) {
   // Clear all what's left from previous computations
-  proppath.clearGradient();
-  params.clearGradient();
-  cost->gradient[0] = 1;
-  proppath.fbprop();
-  params.copyGradientTo(gradient);
+  opt->proppath.clearGradient();
+  opt->params.clearGradient();
+  opt->cost->gradient[0] = 1;
+  opt->proppath.fbprop();
+  opt->params.copyGradientTo(gradient);
 }
   
 /////////////////////////////
 // computeOppositeGradient //
 /////////////////////////////
 void ConjGradientOptimizer::computeOppositeGradient(
-    VarArray params,
-    Var cost,
-    VarArray proppath,
+    Optimizer* opt,
     const Vec& gradient) {
   // Clear all what's left from previous computations
-  proppath.clearGradient();
-  params.clearGradient();
+  opt->proppath.clearGradient();
+  opt->params.clearGradient();
   // We want the opposite of the gradient, thus the -1
-  cost->gradient[0] = -1;
-  proppath.fbprop();
-  params.copyGradientTo(gradient);
+  opt->cost->gradient[0] = -1;
+  opt->proppath.fbprop();
+  opt->params.copyGradientTo(gradient);
 }
   
 ///////////////
 // conjpomdp //
 ///////////////
 bool ConjGradientOptimizer::conjpomdp (
-    void (*grad)(VarArray, Var, VarArray, const Vec&),
-    VarArray params,
-    Var costs,
-    VarArray proppath,
-    real epsilon,
-    Vec g,
-    Vec h,
-    Vec delta) {
-
+    void (*grad)(Optimizer*, const Vec& gradient),
+    ConjGradientOptimizer* opt) {
   int i;
   // delta = Gradient
-  (*grad)(params, costs, proppath, delta);
-  real norm_g = pownorm(g);
-  // g <- delta - g
-  for (i=0; i<g.length(); i++) {
-    g[i] = delta[i] - g[i];
+  (*grad)(opt, opt->delta);
+  real norm_g = pownorm(opt->current_opp_gradient);
+  // g <- delta - g (g = current_opp_gradient)
+  for (i=0; i<opt->current_opp_gradient.length(); i++) {
+    opt->current_opp_gradient[i] = opt->delta[i]-opt->current_opp_gradient[i];
   }
-  real gamma = dot(g, delta) / norm_g;
-  // h <- delta + gamma * h
-  for (i=0; i<h.length(); i++) {
-    h[i] = delta[i] + gamma * h[i];
+  real gamma = dot(opt->current_opp_gradient, opt->delta) / norm_g;
+  // h <- delta + gamma * h (h = search_direction)
+  for (i=0; i<opt->search_direction.length(); i++) {
+    opt->search_direction[i] = opt->delta[i] + gamma * opt->search_direction[i];
   }
-  if (dot(h, delta) < 0) {
+  if (dot(opt->search_direction, opt->delta) < 0) {
     // h <- delta
-    h << delta;
+    opt->search_direction << opt->delta;
   }
   // g <- delta
-  g << delta;
+  opt->current_opp_gradient << opt->delta;
   // We want to stop when the norm of the gradient is small enough
-  return (pownorm(g) < epsilon);
+  return (pownorm(opt->current_opp_gradient) < opt->epsilon);
 };
 
 ///////////////////
@@ -332,33 +307,20 @@ void ConjGradientOptimizer::cubicInterpol(
 ///////////////////
 // findDirection //
 ///////////////////
-bool ConjGradientOptimizer::findDirection(
-    void (*grad)(VarArray, Var, VarArray, const Vec&),
-    VarArray params,
-    Var costs,
-    VarArray proppath,
-    real starting_step_size,
-    real epsilon,
-    Vec g,
-    Vec delta,
-    Vec tmp_storage) {
+bool ConjGradientOptimizer::findDirection() {
   bool isFinished = false;
   switch (find_new_direction_formula) {
     case 0:
-      isFinished = conjpomdp(grad, params, costs, proppath,
-                             epsilon, g, search_direction, delta);
+      isFinished = conjpomdp(computeOppositeGradient, this);
       break;
     case 1:
-      fletcherReeves(grad, params, costs, proppath,
-                     g, search_direction, delta);
+      fletcherReeves(computeOppositeGradient, this);
       break;
     case 2:
-      hestenesStiefel(grad, params, costs, proppath,
-                      g, search_direction, delta);
+      hestenesStiefel(computeOppositeGradient, this);
       break;
     case 3:
-      polakRibiere(grad, params, costs, proppath,
-                   g, search_direction, delta);
+      polakRibiere(computeOppositeGradient, this);
       break;
   }
   return isFinished;
@@ -415,30 +377,27 @@ real ConjGradientOptimizer::findMinWithCubicInterpol (
 // fletcherReeves //
 ////////////////////
 void ConjGradientOptimizer::fletcherReeves (
-    void (*grad)(VarArray, Var, VarArray, const Vec&),
-    VarArray params,
-    Var costs,
-    VarArray proppath,
-    Vec g,
-    Vec h,
-    Vec delta) {
-
-  // delta = Gradient
-  (*grad)(params, costs, proppath, delta);
-  real gamma = pownorm(delta) / pownorm(g);
-  for (int i=0; i<h.length(); i++) {
-    h[i] = delta[i] + gamma * h[i];
+    void (*grad)(Optimizer*, const Vec&),
+    ConjGradientOptimizer* opt) {
+  // delta = opposite gradient
+  (*grad)(opt, opt->delta);
+  real gamma = pownorm(opt->delta) / pownorm(opt->current_opp_gradient);
+  for (int i=0; i<opt->search_direction.length(); i++) {
+    opt->search_direction[i] = 
+      opt->delta[i] + gamma * opt->search_direction[i];
   }
-  g << delta;
+  opt->current_opp_gradient << opt->delta;
 }
 
 ////////////////////
 // fletcherSearch //
 ////////////////////
-real ConjGradientOptimizer::fletcherSearch (
-    real alpha1,
-    real mu) {
-  return fletcherSearchMain (
+void ConjGradientOptimizer::fletcherSearch (real mu) {
+  // The value of alpha1 below is suggested by Fletcher
+  real df = max (last_improvement, 10*stop_epsilon);
+  real alpha1 = -2*df / computeDerivative(0, this);
+  // TODO Get the derivative from somewhere ?
+  real alpha = fletcherSearchMain (
       computeCostValue,
       computeDerivative,
       this,
@@ -451,6 +410,7 @@ real ConjGradientOptimizer::fletcherSearch (
       tau3,
       alpha1,
       mu);
+  params.update(alpha, search_direction);
 }
 
 ////////////////////////
@@ -470,6 +430,7 @@ real ConjGradientOptimizer::fletcherSearchMain (
     real alpha1,
     real mu) {
   
+  // TODO Optimize this function so that it doesn't compute twice the same things
   // Initialization
   if (mu == FLT_MAX)
     mu = (fmax - (*f)(0, opt)) / (rho * (*g)(0, opt));
@@ -559,15 +520,7 @@ real ConjGradientOptimizer::fletcherSearchMain (
 /////////////
 // gSearch //
 /////////////
-void ConjGradientOptimizer::gSearch (
-    void (*grad)(VarArray, Var, VarArray, const Vec&),
-    VarArray params,
-    Var costs,
-    VarArray proppath,
-    Vec search_direction,
-    real starting_step_size,
-    real epsilon,
-    Vec tmp_storage) {
+void ConjGradientOptimizer::gSearch (void (*grad)(Optimizer*, const Vec&)) {
 
   real step = starting_step_size;
   real sp, sm, pp, pm;
@@ -576,8 +529,7 @@ void ConjGradientOptimizer::gSearch (
   params.copyTo(tmp_storage);
 
   params.update(step, search_direction);
-  Vec delta(params.nelems());
-  (*grad)(params, costs, proppath, delta);
+  (*grad)(this, delta);
   real prod = dot(delta, search_direction);
 
   if (prod < 0) {
@@ -587,7 +539,7 @@ void ConjGradientOptimizer::gSearch (
       pp = prod;
       step = step / 2;
       params.update(-step, search_direction);
-      (*grad)(params, costs, proppath, delta);
+      (*grad)(this, delta);
       prod = dot(delta, search_direction);
     }
     sm = step;
@@ -599,7 +551,7 @@ void ConjGradientOptimizer::gSearch (
       sm = step;
       pm = prod;
       params.update(step, search_direction);
-      (*grad)(params, costs, proppath, delta);
+      (*grad)(this, delta);
       prod = dot(delta, search_direction);
       step = step * 2;
     }
@@ -620,50 +572,31 @@ void ConjGradientOptimizer::gSearch (
 // hestenesStiefel //
 /////////////////////
 void ConjGradientOptimizer::hestenesStiefel (
-    void (*grad)(VarArray, Var, VarArray, const Vec&),
-    VarArray params,
-    Var costs,
-    VarArray proppath,
-    Vec g,
-    Vec h,
-    Vec delta) {
-
+    void (*grad)(Optimizer*, const Vec&),
+    ConjGradientOptimizer* opt) {
   int i;
-  // delta = Gradient
-  (*grad)(params, costs, proppath, delta);
-  for (i=0; i<g.length(); i++) {
-    g[i] = delta[i] - g[i];
+  // delta = opposite gradient
+  (*grad)(opt, opt->delta);
+  for (i=0; i<opt->current_opp_gradient.length(); i++) {
+    opt->current_opp_gradient[i] = opt->delta[i] - opt->current_opp_gradient[i];
   }
-  real gamma = dot(delta, g) / dot(h, g);
-  for (i=0; i<h.length(); i++) {
-    h[i] = delta[i] + gamma * h[i];
+  real gamma = dot(opt->delta, opt->current_opp_gradient) / dot(opt->search_direction, opt->current_opp_gradient);
+  for (i=0; i<opt->search_direction.length(); i++) {
+    opt->search_direction[i] = opt->delta[i] + gamma * opt->search_direction[i];
   }
-  g << delta;
+  opt->current_opp_gradient << opt->delta;
 }
 
 ////////////////
 // lineSearch //
 ////////////////
-real ConjGradientOptimizer::lineSearch(
-    void (*grad)(VarArray, Var, VarArray, const Vec&),
-    VarArray params,
-    Var costs,
-    VarArray proppath,
-    real starting_step_size,
-    real epsilon,
-    Vec tmp_storage) {
-  real alpha = 0;
-  real df = 0;
+real ConjGradientOptimizer::lineSearch() {
   switch (line_search_algo) {
     case 0:
-      // The value of alpha1 below is suggested by Fletcher
-      df = max (last_improvement, 10*stop_epsilon);
-      alpha = fletcherSearch(-2*df / computeDerivative(0, this)); // TODO Get the derivative from somewhere ?
-      params.update(alpha, search_direction);
+      fletcherSearch();
       break;
     case 1:
-      gSearch(grad, params, costs, proppath, search_direction,
-          starting_step_size, epsilon, tmp_storage);
+      gSearch(computeOppositeGradient);
       break;
   }
   return cost->value[0];
@@ -672,7 +605,8 @@ real ConjGradientOptimizer::lineSearch(
 //////////////
 // minCubic //
 //////////////
-real ConjGradientOptimizer::minCubic(real a, real b, real c,
+real ConjGradientOptimizer::minCubic(
+    real a, real b, real c,
     real mini, real maxi) {
   if (a == 0 || (b != 0 && abs(a/b) < 0.0001)) // heuristic value for a == 0
     return minQuadratic(b, c, mini, maxi);
@@ -725,7 +659,8 @@ real ConjGradientOptimizer::minCubic(real a, real b, real c,
 //////////////////
 // minQuadratic //
 //////////////////
-real ConjGradientOptimizer::minQuadratic(real a, real b,
+real ConjGradientOptimizer::minQuadratic(
+    real a, real b,
     real mini, real maxi) {
   if (a == 0 || (b != 0 && abs(a/b) < 0.0001)) { // heuristic for a == 0
     if (b > 0)
@@ -767,43 +702,29 @@ real ConjGradientOptimizer::optimize()
   early_stop = false;
 
   // Initiliazation of the structures
-  search_direction.resize(params.nelems());
-  Vec g(params.nelems());
-  Vec delta(params.nelems());
-  tmp_storage.resize(params.nelems());
-  computeOppositeGradient(params, cost, proppath, search_direction); 
-  g << search_direction;
-  last_improvement = 0.1; // my own heuristic
+  computeOppositeGradient(this, current_opp_gradient);
+  search_direction <<  current_opp_gradient;  // first direction = -grad;
+  last_improvement = 0.1; // why not ?
   real last_cost, current_cost;
   cost->fprop();
-  last_cost = cost->value[0]; // TODO document a bit all this initilization, and make it depend on the kind of algo used
+  last_cost = cost->value[0];
 
   // Loop through the epochs
   for (int t=0; !early_stop && t<nupdates; t++) {
 
-    cost->fprop(); // TODO Remove those 2 lines later
+    // TODO Remove this line later
     cout << "cost = " << cost->value[0] << " " << cost->value[1] << " " << cost->value[2] << endl;
     
-    // Make a line search along the current search direction (h)
-    current_cost = lineSearch(computeOppositeGradient, params, cost, proppath,
-                              starting_step_size, epsilon, tmp_storage);
+    // Make a line search along the current search direction
+    current_cost = lineSearch();
     
     // Find the new search direction
-    early_stop = findDirection(
-        computeOppositeGradient, 
-        params, 
-        cost,
-        proppath, 
-        starting_step_size, 
-        epsilon,
-        g,
-        delta,
-        tmp_storage);
+    early_stop = findDirection();
 
     last_improvement = last_cost - current_cost;
     last_cost = current_cost;
     
-    // Display results TODO ugly copy/paste : to be cleaned ?
+    // Display results TODO ugly copy/paste from GradientOptimizer: to be cleaned ?
     meancost += cost->value;
     every = 2000; // TODO Remove later, this is for test purpose
     if ((every!=0) && ((t+1)%every==0)) 
@@ -830,26 +751,20 @@ real ConjGradientOptimizer::optimize()
 // polakRibiere //
 //////////////////
 void ConjGradientOptimizer::polakRibiere (
-    void (*grad)(VarArray, Var, VarArray, const Vec&),
-    VarArray params,
-    Var costs,
-    VarArray proppath,
-    Vec g,
-    Vec h,
-    Vec delta) {
-
+    void (*grad)(Optimizer*, const Vec&),
+    ConjGradientOptimizer* opt) {
   int i;
   // delta = Gradient
-  (*grad)(params, costs, proppath, delta);
-  real normg = pownorm(g);
-  for (i=0; i<h.length(); i++) {
-    g[i] = delta[i] - g[i];
+  (*grad)(opt, opt->delta);
+  real normg = pownorm(opt->current_opp_gradient);
+  for (i=0; i<opt->current_opp_gradient.length(); i++) {
+    opt->current_opp_gradient[i] = opt->delta[i] - opt->current_opp_gradient[i];
   }
-  real gamma = dot(g,delta) / normg;
-  for (int i=0; i<h.length(); i++) {
-    h[i] = delta[i] + gamma * h[i];
+  real gamma = dot(opt->current_opp_gradient,opt->delta) / normg;
+  for (int i=0; i<opt->search_direction.length(); i++) {
+    opt->search_direction[i] = opt->delta[i] + gamma * opt->search_direction[i];
   }
-  g << delta;
+  opt->current_opp_gradient << opt->delta;
 }
 
 ///////////////////////

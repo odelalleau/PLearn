@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.7 2003/04/22 20:55:17 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.8 2003/04/23 14:51:47 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,8 +54,7 @@ using namespace std;
  * CLASS CONJGRADIENTOPTIMIZER
  *
  * An optimizer using the conjugate gradient method.
- * Currently only implements one method, but will hopefully evolve to be able
- * to use other algorithms.
+ * It can be configured to use various algorithms.
  *
  */
 class ConjGradientOptimizer : public Optimizer {
@@ -96,9 +95,11 @@ public:
 private:
 
   // Internal data
-  Vec search_direction;  // current search direction for the line search
-  real last_improvement; // cost improvement during the last iteration
-  Vec tmp_storage;       // used for temporary storage of data
+  Vec current_opp_gradient;  // current opposite gradient value
+  Vec search_direction;      // current search direction for the line search
+  Vec tmp_storage;           // used for temporary storage of data
+  Vec delta;                 // temporary storage of the gradient
+  real last_improvement;     // cost improvement during the last iteration
   
 public:
 
@@ -159,7 +160,13 @@ public:
 
 private:
 
-  void build_() {}
+  void build_() {
+    // Make sure the internal datas have the right size
+    current_opp_gradient.resize(params.nelems());
+    search_direction.resize(params.nelems());
+    tmp_storage.resize(params.nelems());
+    delta.resize(params.nelems());
+  }
     
 public:
 
@@ -173,104 +180,66 @@ protected:
 private:
 
   // Find the new search direction for the line search algorithm
-  // and store it in h
-  bool findDirection(
-      void (*grad)(VarArray, Var, VarArray, const Vec&),
-      VarArray params,
-      Var costs,
-      VarArray proppath,
-      real starting_step_size,
-      real epsilon,
-      Vec g,
-      Vec delta,
-      Vec tmp_storage);
+  bool findDirection();
 
   // Search the minimum in the current search direction
   // Return the value of the minimum found
-  real lineSearch(
-      void (*grad)(VarArray, Var, VarArray, const Vec&),
-      VarArray params,
-      Var costs,
-      VarArray proppath,
-      real starting_step_size,
-      real epsilon,
-      Vec tmp_storage);
+  real lineSearch();
 
   //----------------------- CONJUGATE GRADIENT FORMULAS ---------------------
+  //
+  // A Conjugate Gradient formula finds the new search direction, given
+  // the current gradient, the previous one, and the current search direction.
+  // It updates "search_direction" and "current_opp_gradient".
 
   // The CONJPOMDP algorithm as described in
   // "Direct Gradient-Based Reinforcement Learning:
   // II. Gradient Ascent Algorithms and Experiments"
   // by J.Baxter, L. Weaver, P. Bartlett.
-  // This is just one single iteration of the algorithm.
-  // Return true when the convergence is obtained.
+  // This is just one single iteration of the algorithm
+  // Return true when the convergence is obtained
   static bool conjpomdp (
-      // the given grad function needs to compute the gradient
-      void (*grad)(VarArray params, Var cost, VarArray proppath, const Vec& gradient),
-      VarArray params,    // the current parameters of the model
-      Var costs,          // the cost to optimize
-      VarArray proppath,  // the propagation path from params to costs
-      real epsilon,       // the gradient resolution
-      Vec g,              // the gradient
-      Vec h,              // the current search direction
-      Vec delta);         // storage place, size of params.elems()
+      // The given grad function needs to compute the gradient
+      // (or the opposite of the gradient if we need the minimum, as the
+      // algorithm tries to find the maximum)
+      void (*grad)(Optimizer*, const Vec& gradient),
+      ConjGradientOptimizer* opt);
 
   // The Fletcher-Reeves formula used to find the new direction
   // h(n) = -g(n) + norm2(g(n)) / norm2(g(n-1)) * h(n-1)
   static void fletcherReeves (
-      void (*grad)(VarArray, Var, VarArray, const Vec&),
-      VarArray params,
-      Var costs,
-      VarArray proppath,
-      Vec g,
-      Vec h,
-      Vec delta);
+      void (*grad)(Optimizer*, const Vec&),
+      ConjGradientOptimizer* opt);
 
   // The Hestenes-Stiefel formula used to find the new direction
   // h(n) = -g(n) + dot(g(n), g(n)-g(n-1)) / dot(h(n-1), g(n)-g(n-1)) * h(n-1)
   static void hestenesStiefel (
-      void (*grad)(VarArray, Var, VarArray, const Vec&),
-      VarArray params,
-      Var costs,
-      VarArray proppath,
-      Vec g,
-      Vec h,
-      Vec delta);
+      void (*grad)(Optimizer*, const Vec&),
+      ConjGradientOptimizer* opt);
 
   // The Polak-Ribiere formula used to find the new direction
   // h(n) = -g(n) + dot(g(n), g(n)-g(n-1)) / norm2(g(n-1)) * h(n-1)
   static void polakRibiere (
-      void (*grad)(VarArray, Var, VarArray, const Vec&),
-      VarArray params,
-      Var costs,
-      VarArray proppath,
-      Vec g,
-      Vec h,
-      Vec delta);
+      void (*grad)(Optimizer*, const Vec&),
+      ConjGradientOptimizer* opt);
 
   //------------------------- LINE SEARCH ALGORITHMS -------------------------
+  //
+  // A line search algorithm moves "params" to the value minimizing "cost",
+  // when moving in the direction "search_direction".
+  // It must not update "current_opp_gradient" (that is done in the Conjugate
+  // Gradient formulas).
 
   // The GSearch algorithm as described in
   // "Direct Gradient-Based Reinforcement Learning:
   // II. Gradient Ascent Algorithms and Experiments"
   // by J.Baxter, L. Weaver, P. Bartlett.
-  // See conjpomdp for more explainations on the parameters.
-  static void gSearch (
-      void (*grad)(VarArray, Var, VarArray, const Vec&),
-      VarArray params,
-      Var costs,
-      VarArray proppath,
-      Vec search_direction, // current direction
-      real starting_step_size,
-      real epsilon,
-      Vec tmp_storage);
+  void gSearch (void (*grad)(Optimizer*, const Vec&));
 
   // The line search algorithm described in
   // "Practical Methods of Optimization, 2nd Ed", by Fletcher (1987)
   // (this function actually just calls fletcherSearchMain)
-  real fletcherSearch (
-      real alpha1 = FLT_MAX,
-      real mu = FLT_MAX);
+  void fletcherSearch (real mu = FLT_MAX);
 
   
   //--------------------------- UTILITY FUNCTIONS ----------------------------
@@ -288,31 +257,16 @@ public:   // TODO For test purpose... remove later
   // in x = alpha
   static real computeDerivative(real alpha, ConjGradientOptimizer* opt);
 
-  // Given a propagation path from params to costs,
-  // return the derivative of the function :
-  // f(a) = costs(params + a*direction)
-  static real computeComposedGrad(
-      void (*grad)(VarArray, Var, VarArray, const Vec&),
-      VarArray params,
-      Var costs,
-      VarArray proppath,
-      Vec direction,
-      Vec delta);
-
-  // Given a propagation path from params to costs,
-  // compute the gradient and store it in the "gradient" Vec
+  // Given an optimizer, compute the gradient of the cost function and
+  // store it in the "gradient" Vec
   static void computeGradient(
-      VarArray params,
-      Var cost,
-      VarArray proppath,
+      Optimizer* opt,
       const Vec& gradient);
 
-  // Given a propagation path from params to costs,
-  // compute the opposite of the gradient and store it in the "gradient" Vec
+  // Given an optimizer, compute the opposite of the gradient of the cost
+  // function and store it in the "gradient" Vec
   static void computeOppositeGradient(
-      VarArray params,
-      Var cost,
-      VarArray proppath,
+      Optimizer* opt,
       const Vec& gradient);
 
   // Put in a, b, c, d the coefficients of the cubic interpolation
@@ -334,6 +288,8 @@ public:   // TODO For test purpose... remove later
       real maxi);
 
   // The main function for Fletcher's line search algorithm
+  // We keep all the parameters, so that it can be used separately
+  // (without a real ConjGradientOptimizer object)
   static real fletcherSearchMain (
       real (*f)(real, ConjGradientOptimizer* opt),
       real (*g)(real, ConjGradientOptimizer* opt),
