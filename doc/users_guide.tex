@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 2002 by Pascal Vincent
 %%
-%%  $Id: users_guide.tex,v 1.3 2002/10/21 03:12:14 plearner Exp $
+%%  $Id: users_guide.tex,v 1.4 2003/01/31 19:34:13 ducharme Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
@@ -397,9 +397,9 @@ a non-printable ascii character.
 \subsection{TVec and TMat}
 
 TVec and TMat will be serialized differently depending on the {\em
-implicit_storage} flag of the PStream they are being written to.
+implicit\_storage} flag of the PStream they are being written to.
 
-If {\em implicit_storage} is set, then serialisation won't write the actual
+If {\em implicit\_storage} is set, then serialisation won't write the actual
 whole structure of the TVec or TMat, but will only save the size information
 and elements as a 1D or 2D {\em sequence} (see \ref{ascii_sequence} and
 \ref{binary_sequence}), ex:
@@ -414,7 +414,7 @@ and elements as a 1D or 2D {\em sequence} (see \ref{ascii_sequence} and
 ]
 \end{verbatim}
 
-If {\em implicit_storage} is false, then the complete structure of the
+If {\em implicit\_storage} is false, then the complete structure of the
 TVec or TMat with the pointer to its storage (possibly shared with others)
 will be written explicitly. This corresponds to true, deep serialization.
 
@@ -453,7 +453,7 @@ current architectures.
 
 \begin{table}[h]
 \caption{ Binary-header codes for base types }
-\label{tab:base-types} }
+\label{tab:base-types}
 \begin{tabular}{|llcl|} \hline 
 Base type      & Byte order    & Header byte & Number of bytes to follow \\ \hline 
 bool           & -             & 0x12        & 1 \\
@@ -491,7 +491,7 @@ and two-dimensional sequences which have a length and a width.
 
 Ascii-serialized one-dimensional sequences will have the following format:
 
-{\em length} \verb{[ ... ... ... ]}
+{\em length} \verb{[ ... ... ... ]{
 
 with the elements of the sequence separated by a single space.
 
@@ -521,8 +521,8 @@ Notice that it's also possible to make a 1D sequence of 1D sequences, but that's
 
 
 
-\begin{itemize}
-\end{itemize}
+%\begin{itemize}
+%\end{itemize}
 
 \subsection{Binary plearn format for a sequence}
 \label{binary_sequence}
