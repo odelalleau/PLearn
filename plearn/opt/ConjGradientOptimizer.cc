@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.42 2003/10/15 20:13:35 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.43 2003/10/15 20:39:06 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,13 +63,13 @@ ConjGradientOptimizer::ConjGradientOptimizer(
     int n_updates, const string& filename, 
     int every_iterations)
   :inherited(n_updates, filename, every_iterations),
-  line_search_algo(2),
+  line_search_algo(1),
   find_new_direction_formula(1),
   starting_step_size(the_starting_step_size), restart_coeff(the_restart_coeff),
   epsilon(the_epsilon),
   sigma(the_sigma), rho(the_rho), fmax(the_fmax),
   stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
-  tau3(the_tau3)  {}
+  tau3(the_tau3), max_steps(5), initial_step(0.01), low_enough(0.000001)  {}
 
 ConjGradientOptimizer::ConjGradientOptimizer(
     VarArray the_params, 
@@ -138,7 +138,7 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
            If no restart is wanted, any high value (e.g. 100) will prevent it.\n");
 
     declareOption(ol, "line_search_algo", &ConjGradientOptimizer::line_search_algo, OptionBase::buildoption, 
-                 "    The kind of line search algorithm used. Two methods are implemented :\n \
+                 "    The kind of line search algorithm used :\n \
         1) The line search algorithm described in :\n \
            ""Practical Methods of Optimization, 2nd Ed""\n \
            by Fletcher (1987).\n \
@@ -149,7 +149,7 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
         2) The GSearch algorithm, described in :\n \
            ""Direct Gradient-Based Reinforcement Learning: II. Gradient Ascent Algorithms and Experiments""\n \
            by J.Baxter, L. Weaver, P. Bartlett (1999).\n \
-        The value of this option (either 1 or 2) indicates the method used.\n");
+        3) A Newton line search algorithm for quadratic costs only.\n");
 
     declareOption(ol, "find_new_direction_formula", &ConjGradientOptimizer::find_new_direction_formula, OptionBase::buildoption, 
                   "    The kind of formula used in step 2 of the conjugate gradient algorithm to find the\n \
@@ -180,7 +180,7 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
     declareOption(ol, "fmax", &ConjGradientOptimizer::fmax, OptionBase::buildoption, 
                   "    Fletcher's line search specific option : good enough minimum.\n \
            If it finds a point n such that f(n) < fmax, then the line search returns n as minimum\n\
-           As a consequence, DO NOT USE 0 (the default value) if f can be negative\n");
+           As a consequence, DO NOT USE 0 if f can be negative\n");
 
     declareOption(ol, "stop_epsilon", &ConjGradientOptimizer::stop_epsilon, OptionBase::buildoption, 
                   "    Fletcher's line search specific option : stopping criterium.\n \
@@ -205,6 +205,20 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
            This option controls how fast is decreasing the right side of the bracketing\n \
            interval in the second phase of the line search algorithm.\n \
            Fletcher reports good empirical results with tau3 = 0.5\n");
+
+    declareOption(ol, "max_steps", &ConjGradientOptimizer::max_steps, OptionBase::buildoption, 
+                  "    Newton line search specific option : maximum number of steps at each iteration.\n \
+        This option defines how many steps will be performed to find the minimum, if no\n \
+        value < low_enough is found for the gradient (this can happen if the cost isn't\n \
+        perfectly quadratic).\n");
+
+    declareOption(ol, "initial_step", &ConjGradientOptimizer::initial_step, OptionBase::buildoption, 
+                  "    Newton line search specific option : value of the first step.\n \
+           This options controls the size of the first step made in the search direction.\n");
+
+    declareOption(ol, "low_enough", &ConjGradientOptimizer::initial_step, OptionBase::buildoption, 
+                  "    Newton line search specific option : stopping criterion for the gradient.\n \
+           We say the minimum has been found if we have abs(gradient) < low_enough.\n");
 
     inherited::declareOptions(ol);
 }
@@ -716,7 +730,7 @@ bool ConjGradientOptimizer::lineSearch() {
       step = gSearch(computeOppositeGradient);
       break;
     case 3:
-      step = newtonSearch(5, 0.01, 1e-6);
+      step = newtonSearch(max_steps, initial_step, low_enough);
       break;
     default:
       cout << "Warning ! Invalid conjugate gradient line search algorithm !" << endl;

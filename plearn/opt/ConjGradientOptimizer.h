@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.30 2003/10/15 20:10:06 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.31 2003/10/15 20:39:06 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -67,6 +67,7 @@ public:
   //! The line search algorithm used
   //! 1  : Fletcher line search
   //! 2  : GSearch
+  //! 3  : Newton line search
   int line_search_algo;
   //! The formula used to find the new search direction
   //! 1  : ConjPOMPD
@@ -89,8 +90,14 @@ public:
   real stop_epsilon; // we stop when (a-alpha).f'(a) < stop_epsilon (Fletcher)
   real tau1, tau2, tau3; // bracketing parameters
 
+  // NewtonSearch specific options (see the options description)
+  int max_steps;
+  real initial_step;
+  real low_enough;
+
+protected:
+  
   Vec meancost;              // used to store the cost, for display purpose
-  // TODO should be private, but used by some people, so public for now...
 
 private:
 
@@ -112,7 +119,7 @@ public:
       real the_epsilon=0.01,
       real the_sigma=0.01,
       real the_rho=0.005,
-      real the_fmax=0,
+      real the_fmax=-1e8,
       real the_stop_epsilon=0.0001,
       real the_tau1=9,
       real the_tau2=0.1,
@@ -273,7 +280,7 @@ private:
   real fletcherSearch(real mu = FLT_MAX);
 
   // To be used in the cost is quadratic in the search direction : the minimum
-  // will then be found much faster.
+  // will then be found much faster (hopefully)
   real newtonSearch(
     int max_steps,
     real initial_step,
