@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.27 2003/12/05 18:57:07 tihocan Exp $
+   * $Id: VMatrix.h,v 1.28 2003/12/05 22:13:46 plearner Exp $
    ******************************************************* */
 
 
@@ -161,7 +161,16 @@ public:
   Array<VMField>& getFieldInfos() const;
   VMField& getFieldInfos(int fieldindex) const { return getFieldInfos()[fieldindex]; }
   void declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype=VMField::UnknownType);
-  int fieldIndex(const string& fieldname) const; //!<  returns -1 if name not found
+
+  //!< returns the column index corresponding to a fieldname
+  //!<  or -1 if the name was not found
+  int fieldIndex(const string& fieldname) const;
+
+  //!< This first calls fieldIndex to try and get the index corresponding to the given string
+  //|< If this fails, the given string is assumed to hold the numerical index, and its
+  //!< conversion to int will be returned (or a PLEARNERROR issued if this fails).
+  int getFieldIndex(const string& fieldname_or_num) const;
+
   string fieldName(int fieldindex) const { return getFieldInfos(fieldindex).name; } 
   TVec<string> fieldNames() const; // Returns the vector of field names
   void unduplicateFieldNames(); // add a numeric suffix to duplic. fieldNames (eg: field.1 field.2 etc..)

@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.34 2003/12/05 18:57:07 tihocan Exp $
+* $Id: VMatrix.cc,v 1.35 2003/12/05 22:13:45 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -49,6 +49,7 @@
 #include "Func.h"
 #include "TopNI.h"
 #include "BottomNI.h"
+#include "stringutils.h"
 
 //#include "VMat.h"
 //#include "TMat_maths.h"
@@ -182,6 +183,14 @@ int VMatrix::fieldIndex(const string& fieldname) const
     if(infos[i].name==fieldname)
       return i;
   return -1;
+}
+
+int VMatrix::getFieldIndex(const string& fieldname_or_num) const
+{
+  int i = fieldIndex(fieldname_or_num);
+  if(i==-1)
+    i = toint(fieldname_or_num);
+  return i;
 }
 
 void VMatrix::build_()
@@ -407,7 +416,8 @@ void VMatrix::setSFIFFilename(string fieldname, string ext, string filepath)
     rm(normalfname+".lnk");
     return;
   }
-  
+
+  force_mkdir_for_file(normalfname);
   ofstream o((normalfname+".lnk").c_str());
   o<<filepath<<endl;
 }

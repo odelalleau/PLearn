@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: distr_maths.cc,v 1.2 2003/10/29 16:55:49 plearner Exp $
+   * $Id: distr_maths.cc,v 1.3 2003/12/05 22:13:43 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,6 +48,121 @@
 
 namespace PLearn <%
 using namespace std;
+
+
+
+ /*
+    // *****************************
+    // * Using eigen decomposition *
+    // *****************************
+
+    X the input matrix
+    Let C be the covariance of X:  C = (X-mu)'.(X-mu)
+
+    The eigendecomposition: 
+    C = VDV'    where the *columns* of V are the orthonormal eigenvectors and D is a diagonal matrix with the eigenvalues lambda_1 ... lambda_d 
+
+    det(C) = det(D) = product of the eigenvalues
+    log(det(C)) = \sum_{i=1}^d [ log(lambda_i) ]
+
+    inv(C) = V.inv(D).V'    (where inv(D) is a diagonal with the inverse of each eigenvalue)
+
+    For a gaussian where C is the covariance matrix, mu is the mean (column vector), and x is a column vector, we have
+    gaussian(x; mu,C) = 1/sqrt((2PI)^d * det(C)) exp( -0.5 (x-mu)'.inv(C).(x-mu) )
+                      = 1/sqrt((2PI)^d * det(D)) exp( -0.5 (V'(x-mu))'.inv(D).(V'(x-mu)) )
+                      = exp [ -0.5( d*log(2PI) + log(det(D)) )  -0.5(V'(x-mu))'.inv(D).(V'(x-mu)) ] 
+                               \_______________  ____________/       \____________  ____________/
+                                               \/                                 \/
+                                             logcoef                              q
+
+    The expression q = (V'(x-mu))'.inv(D).(V'(x-mu)) can be understood as:
+       a) projecting vector x-mu on the orthonormal basis V, 
+          i.e. obtaining a transformed x that we shall call y:  y = V'(x-mu)
+          (y corresponds to x, expressed in the coordinate system V)
+          y_i = V'_i.(x-mu)
+
+       b) computing the squared norm of y , after first rescaling each coordinate by a factor 1/sqrt(lambda_i)
+          (i.e. differences in the directions with large lambda_i are given less importance)
+          Giving  q = sum_i[ 1/lambda_i  y_i^2]
+
+    If we only keep the first k eigenvalues, and replace the following d-k ones by the same value gamma
+    i.e.  lambda_k+1 = ... = lambda_d = gamma
+    
+    Then q can be expressed as:
+      q = \sum_{i=1}^k [ 1/lambda_i y_i^2 ]   +   1/gamma \sum_{i=k+1}^d [ y_i^2 ]
+
+    But, as y is just x expressed in another orthonormal basis, we have |y|^2 = |x-mu|^2
+    ( proof: |y|^2 = |V'(x-mu)|^2 = (V'(x-mu))'.(V'(x-mu)) = (x-mu)'.V.V'.(x-mu) = (x-mu)'(x-mu) = |x-mu|^2 )
+    
+    Thus, we know  \sum_{i=1}^d [ y_i^2 ] = |x-mu|^2
+    Thus \sum_{i=k+1}^d [ y_i^2 ] = |x-mu|^2 - \sum_{i=1}^k [ y_i^2 ]
+
+    Consequently: 
+      q = \sum_{i=1}^k [ 1/lambda_i y_i^2 ]   +  1/gamma ( |x-mu|^2 - \sum_{i=1}^k [ y_i^2 ] )
+
+      q = \sum_{i=1}^k [ (1/lambda_i - 1/gamma) y_i^2 ]  +  1/gamma  |x-mu|^2
+
+      q = \sum_{i=1}^k [ (1/lambda_i - 1/gamma) (V'_i.(x-mu))^2 ]  +  1/gamma  |x-mu|^2
+
+      This gives the efficient algorithm implemented below
+
+   --------------------------------------------------------------------------------------
+
+   Other possibility: direct computation:
+   
+   Let's note X~ = X-mu
+
+   We have already seen that
+    For a gaussian where C is the covariance matrix, mu is the mean (column vector), and x is a column vector, we have
+    gaussian(x; mu,C) = 1/sqrt((2PI)^d * det(C)) exp( -0.5 (x-mu)'.inv(C).(x-mu) )
+                      = 1/sqrt((2PI)^d * det(D)) exp( -0.5 (V'(x-mu))'.inv(D).(V'(x-mu)) )
+                      = exp [ -0.5( d*log(2PI) + log(det(D)) )  -0.5 (x-mu)'.inv(C).(x-mu) ] 
+                               \_______________  ____________/       \_________  ________/
+                                               \/                              \/
+                                             logcoef                           q
+    Let z = inv(C).(x-mu)
+    ==> z is the solution of C.z = x-mu
+    And then we have q = (x-mu)'.z
+
+    So computing q is simply a matter of solving this linear equation in z,
+    and then computing q.
+
+    From my old paper we had to solve for alpha in the old notation: 
+      " (V'V + lambda.I) alpha = V' (x-N~) "
+    Which in our current notation corresponds to:
+       (C + lambda.I) alpha = X~' x~
+     If we drop the + lambda.I for now:
+        alpha = inv(C) X~' x~
+     and the "hyperplane distance" is then given by
+       hd = sqnorm(x~ - X~.alpha)
+          = sqnorm(x~ - X~.inv(C).X~'.x~)
+          = sqnorm(x~ - X~.inv(X~'X)
+
+
+  */
+
+
+
+//! Computes and returns log( Normal(x; mu,C) )
+//! where mu is the normal's mean and C its covariance matrix.
+/*! For numerical stability, you may consider adding some lambda to the diagonal of C
+
+    Normal(x; mu,C) = 1/sqrt((2PI)^d * det(C)) exp( -0.5 (x-mu)'.inv(C).(x-mu) )
+                    = exp [ -0.5( d*log(2PI) + log(det(D)) )  -0.5 (x-mu)'.inv(C).(x-mu) ] 
+                            \_______________  ____________/       \_________  ________/
+                                            \/                              \/
+                                          logcoef                           q
+
+    Let z = inv(C).(x-mu)
+    ==> z is the solution of C.z = x-mu
+    And then we have q = (x-mu)'.z
+
+    So computing q is simply a matter of solving this linear equation in z,
+    and then computing q.
+
+    
+*/
+
 
 real logOfCompactGaussian(const Vec& x, const Vec& mu, 
                           const Vec& eigenvalues, const Mat& eigenvectors, real gamma, bool add_gamma_to_eigenval)

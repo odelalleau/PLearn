@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.9 2003/11/04 18:34:32 plearner Exp $
+   * $Id: vmatmain.cc,v 1.10 2003/12/05 22:13:45 plearner Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -511,28 +511,42 @@ void viewVMat(const VMat& vm)
         case '/':  // search for value
           {
             echo();
-            mvprintw(LINES-1,0,"Search for value                                                                             ");
-            move(LINES-1, 18);
+            mvprintw(LINES-1,0,"Search for value or string                                                                             ");
+            move(LINES-1, 28);
             char l[10];
             getnstr(l, 10);
+            string searchme = removeblanks(l);
             real searchval = vm(curi,curj);
-            if(l!="")
-              searchval = toreal(l);
-                
+            if(searchme!="")
+              { 
+                searchval = vm->getStringVal(curj, searchme);
+                if(is_missing(searchval))
+                  {
+                    searchval = toreal(searchme);
+                    if(is_missing(searchval))
+                      PLERROR("Search item is neither a string with a valid mapping, nor convertible to a real");
+                  }
+              }
+            
             Vec cached;
             if(cached_columns.find(curj)!=cached_columns.end())
               cached = cached_columns[curj];
             else
               {
-                Vec cached(vm->length());
+                mvprintw(LINES-1,0,"Building cache...                                                                            ");
+                refresh();
+                cached.resize(vm->length());
                 vm->getColumn(curj,cached);                
                 cached_columns[curj] = cached;
               }
 
+            mvprintw(LINES-1,0,"Searching for value %f ...                                                                            ",searchval);
+            refresh();
+            ++curi; // start searching from next row
             while(curi<vm->length() && cached[curi]!=searchval)
               ++curi;
             if(curi>=vm->length())
-              curi = vm->length()-1;
+              curi = 0;
             ni = transposed ? (COLS-leftcolwidth)/valwidth : LINES-4;
             starti = max(0,curi-ni/2);
           }
