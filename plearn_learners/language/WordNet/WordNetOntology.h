@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.17 2003/07/21 17:00:00 jauvinc Exp $
+   * $Id: WordNetOntology.h,v 1.18 2003/08/18 21:39:57 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -119,7 +119,7 @@ bool isLegalPunct(char c);
 char* cstr(string& s);
 void removeDelimiters(string& s, char delim, char replace);
 bool startsWith(string& base, string s);
-void replaceChars(string& str, char char_to_replace, char replacing_char);
+void replaceChars(string& str, string char_to_replace, string replacing_char);
 
 // ontology DAG node
 

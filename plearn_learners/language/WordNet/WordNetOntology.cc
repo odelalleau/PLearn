@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.23 2003/07/21 19:18:18 jauvinc Exp $
+   * $Id: WordNetOntology.cc,v 1.24 2003/08/18 21:39:57 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -2700,13 +2700,12 @@ bool startsWith(string& base, string s)
   return true;
 }
 
-void replaceChars(string& str, char char_to_replace, char replacing_char)
+void replaceChars(string& str, string char_to_replace, string replacing_char)
 {
   unsigned int pos = str.find(char_to_replace, 0);
   while (pos != string::npos)
   {
-    //str.replace(pos, 1, replacing_char);
-    str.replace(pos, 1, &replacing_char);
+    str.replace(pos, 1, replacing_char);
     pos = str.find(char_to_replace, pos + 1);
   }
 }
