@@ -40,14 +40,12 @@
 #include <set>
 #include <sstream>
 #include <fstream>
-#include <plearn/base/pl_hash_fun.h>
-#include "PStream_util.h"
-#include <plearn/base/plerror.h>
 #include <plearn/base/byte_order.h>
-#include "fileutils.h"
+#include <plearn/base/pl_hash_fun.h>
+#include <plearn/base/plerror.h>
+#include "PStream_util.h"
 #include "PStreamBuf.h"
 #include "StdPStreamBuf.h"
-
 
 namespace PLearn {
 
@@ -333,7 +331,7 @@ public:
   }
 
 #if STREAMBUFVER == 1 
-  // we don<t define unget. Use putback(c) instead.
+  // We do not define unget. Use putback(c) instead.
 #else
   inline PStream& unget() { ptr->rawin()->unget(); return *this; }
 #endif
@@ -494,6 +492,9 @@ public:
   //! Comments starting with # until the end of line may be skipped (as if they were not part of the stream)
   int smartReadUntilNext(const string& stoppingsymbols, string& characters_read,
                          bool ignore_brackets=false, bool skip_comments=true);
+
+  //! Count the number of occurrences of a character in the stream.
+  int count(char c);
 
   // operator>>'s for base types
   PStream& operator>>(bool &x);

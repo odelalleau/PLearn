@@ -334,6 +334,20 @@ void PStream::skipBlanksAndCommentsAndSeparators()
     putback(c);
 }
 
+///////////
+// count //
+///////////
+int PStream::count(char c) {
+  char ch = get();
+  int counter = 0;
+  while (ch != EOF) {
+    if (ch == c)
+      counter++;
+    ch = get();
+  }
+  return counter;
+}
+
 void PStream::writeAsciiHexNum(unsigned char x)
 {
   int d = x>>4;
