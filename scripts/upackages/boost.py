@@ -1,4 +1,5 @@
 from upackages import *
+import sys
 
 def description():
     return 'The Boost C++ library.'
@@ -26,7 +27,7 @@ def get_dependencies(version):
     that can be used to build this package."""
     return [ ('bjam',['3.1.3','3.1.4','3.1.7','3.1.9','3.1.10']) ]
 
-def install(version, builddir, prefixdir):
+def install(version, prefixdir):
     """Downloads and builds the package in the current directory
     Then installs it in the given prefixdir.
     On unix a 'prefixdir' is a directory that has the same organisation

@@ -122,7 +122,7 @@ def download_from_sourceforge(project, filename):
     This will offer a choice of sourceforge mirrors."""
 
     global sourceforge_mirror
-    if sourceforge_mirror not in globals():
+    if 'sourceforge_mirror' not in globals():
         mirror_list = [
             ('ovh','(FR)'),
             ('voxel','(US)'),
