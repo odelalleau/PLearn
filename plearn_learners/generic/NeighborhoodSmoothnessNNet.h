@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.h,v 1.1 2004/02/20 15:22:23 yoshua Exp $
+   * $Id: NeighborhoodSmoothnessNNet.h,v 1.2 2004/02/20 17:09:29 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/NeighborhoodSmoothnessNNet.h */
@@ -43,6 +43,7 @@
 #ifndef NeighborhoodSmoothnessNNet_INC
 #define NeighborhoodSmoothnessNNet_INC
 
+#include "Kernel.h"
 #include "PLearner.h"
 #include "Optimizer.h"
 //#include "Var_all.h"
@@ -65,6 +66,7 @@ using namespace std;
     Var bag_size; // filled up by SumOverBagsVariable
     Var bag_inputs; // filled up by SumOverBagsVariable
     Var bag_output; // P(y=1|bag_inputs)
+    Var bag_hidden; // The hidden layers of all inputs in a bag.
     mutable int test_bag_size; // BECAUSE OF UGLY HACK IN computOutputAndCost (look at it, it's worth it!)
     Func inputs_and_targets_to_costs; // (bag inputs and targets) -> cost
 
@@ -77,8 +79,11 @@ using namespace std;
 
     Vec paramsvalues; // values of all parameters
 
+    Mat p_ij;   // The precomputed p_ij.
+
   public:
     mutable Func f; // input -> output
+    Func f_input_to_hidden; // input -> hidden
     mutable Func test_costf; // input & target -> output & test_costs
     mutable Func output_and_target_to_cost; // output & target -> cost
 
@@ -95,6 +100,9 @@ using namespace std;
     int nhidden;    // number of hidden units in first hidden layer (default:0)
     int nhidden2;   // number of hidden units in second hidden layer (default:0)
     int noutputs;   // number of output units (outputsize)
+
+    Ker kernel_input;
+    real sigma_hidden;
 
     real weight_decay; // default: 0
     real bias_decay;   // default: 0 

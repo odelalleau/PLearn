@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.1 2004/02/20 15:22:22 yoshua Exp $
+   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.2 2004/02/20 17:09:29 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
@@ -45,26 +45,37 @@
 #include "AffineTransformWeightPenalty.h"
 #include "BinaryClassificationLossVariable.h"
 #include "ClassificationLossVariable.h"
+#include "ColumnSumVariable.h"
 #include "ConcatColumnsVariable.h"
 #include "ConcatColumnsVMatrix.h"
 #include "CrossEntropyVariable.h"
+#include "DotProductVariable.h"
 #include "ExpVariable.h"
+#include "InvertElementsVariable.h"
 #include "LogVariable.h"
 #include "LiftOutputVariable.h"
 #include "LogSoftmaxVariable.h"
+#include "MinusVariable.h"
 #include "MulticlassLossVariable.h"
+#include "NegCrossEntropySigmoidVariable.h"
 #include "NeighborhoodSmoothnessNNet.h"
-#include "UnfoldedSumOfVariable.h"
-#include "SumOverBagsVariable.h"
-#include "SumSquareVariable.h"
+#include "OneHotSquaredLoss.h"
 #include "random.h"
 #include "SigmoidVariable.h"
+#include "SoftmaxVariable.h"
+#include "SoftplusVariable.h"
 #include "SumVariable.h"
 #include "SumAbsVariable.h"
 #include "SumOfVariable.h"
+#include "SumOverBagsVariable.h"
+#include "SumSquareVariable.h"
+#include "SubMatVariable.h"
 #include "SubVMatrix.h"
 #include "TanhVariable.h"
+#include "TimesScalarVariable.h"
 #include "TransposeProductVariable.h"
+#include "UnfoldedFuncVariable.h"
+#include "UnfoldedSumOfVariable.h"
 #include "Var_operators.h"
 #include "Var_utils.h"
 
@@ -81,10 +92,12 @@ PLEARN_IMPLEMENT_OBJECT(NeighborhoodSmoothnessNNet,
 
 NeighborhoodSmoothnessNNet::NeighborhoodSmoothnessNNet() // DEFAULT VALUES FOR ALL OPTIONS
   :
-  max_n_instances(1),
+   test_bag_size(0),
+   max_n_instances(1),
    nhidden(0),
    nhidden2(0),
    noutputs(0),
+   sigma_hidden(0.1),
    weight_decay(0),
    bias_decay(0),
    layer1_weight_decay(0),
@@ -98,7 +111,6 @@ NeighborhoodSmoothnessNNet::NeighborhoodSmoothnessNNet() // DEFAULT VALUES FOR A
    direct_in_to_out(false),
    output_transfer_func(""),
    interval_minval(0), interval_maxval(1),
-   test_bag_size(0),
    batch_size(1)
 {}
 
@@ -116,6 +128,13 @@ void NeighborhoodSmoothnessNNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "nhidden2", &NeighborhoodSmoothnessNNet::nhidden2, OptionBase::buildoption, 
                 "    number of hidden units in second hidden layer (0 means no hidden layer)\n");
+
+  declareOption(ol, "kernel_input", &NeighborhoodSmoothnessNNet::kernel_input, OptionBase::buildoption, 
+                "    The kernel used to compute the similarity between inputs.");
+
+  declareOption(ol, "sigma_hidden", &NeighborhoodSmoothnessNNet::sigma_hidden, OptionBase::buildoption, 
+                "    The bandwidth of the Gaussian kernel used to compute the similarity\n"
+                "    between hidden layers.");
 
   declareOption(ol, "noutputs", &NeighborhoodSmoothnessNNet::noutputs, OptionBase::buildoption, 
                 "    number of output units. This gives this learner its outputsize.\n"
@@ -156,14 +175,14 @@ void NeighborhoodSmoothnessNNet::declareOptions(OptionList& ol)
   declareOption(ol, "direct_in_to_out", &NeighborhoodSmoothnessNNet::direct_in_to_out, OptionBase::buildoption, 
                 "    should we include direct input to output connections?\n");
 
-  declareOption(ol, "output_transfer_func", &NNet::output_transfer_func, OptionBase::buildoption, 
+  declareOption(ol, "output_transfer_func", &NeighborhoodSmoothnessNNet::output_transfer_func, OptionBase::buildoption, 
                 "    what transfer function to use for ouput layer? \n"
                 "    one of: tanh, sigmoid, exp, softplus, softmax \n"
                 "    or interval(<minval>,<maxval>), which stands for\n"
                 "    <minval>+(<maxval>-<minval>)*sigmoid(.).\n"
                 "    An empty string or \"none\" means no output transfer function \n");
 
-  declareOption(ol, "cost_funcs", &NNet::cost_funcs, OptionBase::buildoption, 
+  declareOption(ol, "cost_funcs", &NeighborhoodSmoothnessNNet::cost_funcs, OptionBase::buildoption, 
                 "    a list of cost functions to use\n"
                 "    in the form \"[ cf1; cf2; cf3; ... ]\" where each function is one of: \n"
                 "      mse (for regression)\n"
@@ -179,7 +198,7 @@ void NeighborhoodSmoothnessNNet::declareOptions(OptionList& ol)
                 "    the objective function to optimize \n"
                 "    (possibly with an added weight decay penalty) \n");
   
-  declareOption(ol, "classification_regularizer", &NNet::classification_regularizer, OptionBase::buildoption, 
+  declareOption(ol, "classification_regularizer", &NeighborhoodSmoothnessNNet::classification_regularizer, OptionBase::buildoption, 
                 "    used only in the stable_cross_entropy cost function, to fight overfitting (0<=r<1)\n");
 
   declareOption(ol, "optimizer", &NeighborhoodSmoothnessNNet::optimizer, OptionBase::buildoption, 
@@ -234,8 +253,34 @@ void NeighborhoodSmoothnessNNet::build_()
   // It's the only one who knows the inputsize and targetsize anyway...
 
   if(inputsize_>=0 && targetsize_>=0 && weightsize_>=0)
-    {
+  {
 
+    if (train_set) {
+      // Precompute the p_ij.
+      if (verbosity >= 2) {
+        cout << "Computing the p_ij... " << flush;
+      }
+      kernel_input->setDataForKernelMatrix(train_set);
+      int knn = max_n_instances;
+      int n = train_set->length() / knn;
+      p_ij.resize(n, knn-1);
+      for (int i = 0; i < n; i++) {
+        real sum = 0;
+        real k_ij;
+        for (int j = 1; j < knn; j++) {
+          // We omit the first nearest neighbour, which is the point itself.
+          int i_th_point = i * knn;
+          int j_th_nn = i_th_point + j;
+          k_ij = kernel_input->evaluate_i_j(i_th_point, j_th_nn);
+          p_ij(i,j-1) = k_ij;
+          sum += k_ij;
+        }
+        p_ij.row(i) /= sum;
+      }
+      if (verbosity >= 2) {
+        cout << "DONE" << endl;
+      }
+    }
       
       // init. basic vars
       input = Var(inputsize(), "input");
@@ -357,9 +402,30 @@ void NeighborhoodSmoothnessNNet::build_()
 
       bag_inputs = Var(max_n_instances,inputsize());
       bag_size = Var(1,1);
-      bag_hidden = unfoldedFuncVariable(bag_inputs,f_input_to_hidden);
+      bag_hidden = unfoldedFuncOf(bag_inputs,f_input_to_hidden);
 
-      
+      // The q_ij function.
+      Var hidden_0 = subMat(bag_hidden, 0, 0, 1, bag_hidden->width());
+      Var store_hidden(1, last_hidden.width());
+      Var hidden_0_minus_hidden = minus(hidden_0, store_hidden);
+      Var k_hidden =
+        exp(
+          timesScalar(
+            dot(hidden_0_minus_hidden, hidden_0_minus_hidden),
+            var(- 1 / (sigma_hidden * sigma_hidden))
+          )
+        );
+      Func f_hidden_to_k_hidden(store_hidden, k_hidden);
+      Var k_hidden_all =
+        unfoldedFuncOf(
+          subMat(
+            bag_hidden, 1, 0, bag_hidden->length() - 1, bag_hidden->width()
+          ),
+          f_hidden_to_k_hidden
+        );
+      Var one_over_sum_of_k_hidden = invertElements(columnSum(k_hidden_all));
+      Var q_ij = timesScalar(k_hidden_all, one_over_sum_of_k_hidden);
+      Func f_q_ij(bag_hidden, q_ij);
 
       /*
        * costfuncs
@@ -464,7 +530,7 @@ void NeighborhoodSmoothnessNNet::build_()
   output_and_target_to_cost = Func(outvars, test_costs); 
   output_and_target_to_cost->recomputeParents();
       */
-    }
+  }
 }
 
 int NeighborhoodSmoothnessNNet::outputsize() const
@@ -587,7 +653,7 @@ void NeighborhoodSmoothnessNNet::computeOutputAndCosts(const Vec& inputv, const 
     target->value << targetv;
     if (weightsize_>0) sampleweight->valuedata[0]=1; // the test weights are known and used higher up
     inputs_and_targets_to_costs->fproppath.fprop();
-    costsv << costs->value;
+//    costsv << costs>value; // COMMENTED OUT BECAUSE OF COMPILATION ERROR TODO FIX
     test_bag_size=0;  // this is where it gets really ugly... (we don't have an explicit synchronization signal for the beginning of each block)
   }
 }
