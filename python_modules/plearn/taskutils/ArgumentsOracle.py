@@ -114,7 +114,7 @@ class DirectorySplittedOracle( ArgumentsOracle ):
             regexp += "%s%s\S%s" % (param, nvjoin, self.ajoin)
         self.regexp = "(%s)"%regexp
 
-        self.curdir                = ""
+        self.created_directories   = []
         self.directory_when_called = os.getcwd()
 
     def next( self ):
@@ -122,11 +122,12 @@ class DirectorySplittedOracle( ArgumentsOracle ):
         match   = re.match( self.regexp, _next ).groups()[0]
         dirname = match.rstrip(self.ajoin)
 
-        if self.curdir != dirname:
+        if ( len(self.created_directories) == 0 or
+             self.created_directories[-1]  != dirname ):
             os.chdir( self.directory_when_called )
             os.mkdir( dirname )
             os.chdir( dirname )
-            self.curdir = dirname
+            self.created_directories.append( dirname )
 
         return _next
         

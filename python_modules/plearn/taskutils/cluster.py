@@ -40,38 +40,14 @@ class Cluster(PyPLearnObject):
                     time.sleep(2)
                     current_count = count_expdirs( self.expdir_pattern )
 
-    ##     experiment_directories = []
-    ##     for rav in risk_aversion:
-    ##         dirname    = dirname_format  % str(rav)
-    ##         vsystem( "mkdir %s" % dirname )
-    ##         vsystem( "(cd %s; ln -s ../pca_inputs.pmat; ln -s ../pca_inputs.pmat.metadata)"%dirname )
+                    
+            while ( machines_used_by_user() >= self.max_nmachines ):
+                time.sleep( self.sleep_time )
+            print
 
-    ##         ## Proper call to apdispatch (will be replaced by CLUSTER)
-    ##         dispatch_command  = 'apdispatch finlearn ../kernel_based_model.pyplearn '
-    ##         dispatch_command += '"master_ncomps=%s" '         % str(master_ncomps)
-    ##         dispatch_command += '"gaussian_kernel_sigma=%s" ' % str(gaussian_kernel_sigma)
-    ##         dispatch_command += '"risk_aversion=%s" '         % str(rav)
-    ##         dispatch_command += ( '"weight_decay={{%s}}" '
-    ##                               % ",".join([ str(wd) for wd in weight_decay])
-    ##                               )
-
-    ##         vsystem( '(cd %s; %s)' % ( dirname, dispatch_command ) )
-
-    ##         while ( machines_used_by_user() >= max_nmachines ):
-    ##             time.sleep( sleep_time )
-    ##         experiment_directories.append( dirname )
-    ##         print
-
-    ##     ### Wait for all experiments completion
-    ##     while ( machines_used_by_user() > 0 ):
-    ##         time.sleep( sleep_time )
-
-    ##     for directory in experiment_directories:
-    ##         vsystem( '(cd %s; %s)' % (directory, cluster(report_command)) )
-
-    ##     ### Wait for all reports completion
-    ##     while ( machines_used_by_user() > 0 ):
-    ##         time.sleep( sleep_time / 4 )
+        ### Wait for all experiments completion
+        while ( machines_used_by_user() > 0 ):
+            time.sleep( self.sleep_time )
 
     def join_prog_and_arguments( self, program_call, arguments ):
         return " ".join([ program_call, arguments ])
