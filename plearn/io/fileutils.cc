@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.72 2005/03/07 20:43:03 chrish42 Exp $
+   * $Id: fileutils.cc,v 1.73 2005/03/31 21:10:51 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -303,9 +303,10 @@ long filesize(const PPath& filename)
 //////////////////////
 string loadFileAsString(const PPath& filepath)
 {
-  string result;
   PStream in = openFile(filepath, PStream::raw_ascii, "r");
   long n = filesize(filepath);
+
+  string result;
   in.read(result, n);
   return result;
 }
