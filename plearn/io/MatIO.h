@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.12 2004/03/24 20:18:44 dorionc Exp $
+   * $Id: MatIO.h,v 1.13 2004/04/06 20:55:31 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -212,9 +212,10 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames)
 
   if(width != -1 && width != fieldnames.length())
   {
-    PLWARNING("In loadAscii:  Number of fieldnames (%d) and width (%d) mismatch in file %s.  "
-              "Replacing fieldnames by 'Field-0', 'Field-1', ...", 
-              fieldnames.length(), width, filename.c_str());
+    if (fieldnames.length() != 0)
+      PLWARNING("In loadAscii:  Number of fieldnames (%d) and width (%d) mismatch in file %s.  "
+          "Replacing fieldnames by 'Field-0', 'Field-1', ...", 
+          fieldnames.length(), width, filename.c_str());
     fieldnames.resize(width);
     for(int i= 0; i < width; ++i)
       fieldnames[i]= string("Field-") + tostring(i);
