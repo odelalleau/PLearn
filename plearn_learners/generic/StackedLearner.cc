@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.19 2004/09/28 02:00:29 lamblin Exp $
+   * $Id: StackedLearner.cc,v 1.20 2004/09/28 20:01:33 lamblin Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -51,6 +51,7 @@ using namespace std;
 StackedLearner::StackedLearner() 
 /* ### Initialise all fields to their default value here */
   :
+  default_operation("mean"),
   base_train_splitter(0),
   train_base_learners(true),
   normalize_base_learners_output(false),
@@ -304,7 +305,9 @@ void StackedLearner::computeOutput(const Vec& input, Vec& output) const
     combiner->computeOutput(base_learners_outputs.toVec(),output);
   else // just performs default_operation on the outputs
   {
-    if( default_operation == "min" )
+    if( default_operation == "mean" )
+      columnMean(base_learners_outputs, output);
+    else if( default_operation == "min" )
       columnMin(base_learners_outputs, output);
     else if( default_operation == "max" )
       columnMax(base_learners_outputs, output);
@@ -318,8 +321,8 @@ void StackedLearner::computeOutput(const Vec& input, Vec& output) const
       columnMean(base_learners_outputs, mean);
       columnVariance(base_learners_outputs, output, mean);
     }
-    else // if( default_operation == "mean" )
-      columnMean(base_learners_outputs,output);
+    else
+      PLERROR("StackedLearner::computeOutput: unsupported default_operation");
   }
 }
 
