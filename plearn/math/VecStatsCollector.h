@@ -32,13 +32,17 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.27 2004/12/15 01:51:41 chapados Exp $ 
+   * $Id: VecStatsCollector.h,v 1.28 2005/01/25 21:59:24 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
 #ifndef VecStatsCollector_INC
 #define VecStatsCollector_INC
 
+// From C++ stdlib
+#include <map>
+
+// From PLearn
 #include <plearn/base/Object.h>
 #include "StatsCollector.h"
 
@@ -49,6 +53,15 @@ class VecStatsCollector: public Object
 {    
 private:
   typedef Object inherited;
+
+protected:
+  //! Map from fieldnames to fieldnumbers, to really speed up getFieldNum
+  //! which can be a speed bottleneck in some experiments
+  map<string,int> fieldnames_num;
+  
+  //! Names of the fields of the update vector;
+  //! now protected: use setFieldNames to set them!
+  TVec<string> fieldnames;
 
 public:
   // ************************
@@ -70,9 +83,6 @@ public:
    * Default: false (0).
    */
   bool no_removal_warnings;
-
-  //! names of the fields of the update vector
-  TVec<string> fieldnames;
 
   //! Should we compute and keep X'.X ?  (default false)
   bool compute_covariance;
@@ -134,8 +144,7 @@ public:
   virtual void remove_observation(const Vec& x, real weight = 1.0);
   
   //! Declares names for the columns of the vector passed to update
-  void setFieldNames(TVec<string> the_fieldnames)
-  { fieldnames = the_fieldnames; }
+  void setFieldNames(TVec<string> the_fieldnames);
   
   //! Returns the declared names
   TVec<string> getFieldNames() const

@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.29 2004/12/16 00:28:57 chapados Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.30 2005/01/25 21:59:20 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -117,19 +117,25 @@ double VecStatsCollector::getStat(const string& statspec)
   return getStats(fieldnum).getStat(statname);
 }
 
+void VecStatsCollector::setFieldNames(TVec<string> the_fieldnames)
+{
+  fieldnames = the_fieldnames.copy();
+  fieldnames_num.clear();
+  for (int i=0, n=fieldnames.size() ; i<n ; ++i)
+    fieldnames_num[fieldnames[i]] = i;
+}
+
 int VecStatsCollector::getFieldNum(const string& fieldname_or_num) const
-{ 
-  int num = fieldnames.find(fieldname_or_num); 
-  if(num<0) {
-    // not found
-    if (pl_isnumber(fieldname_or_num)) {
-      num = toint(fieldname_or_num);
-    } else {
-      // Unknown field.
-      num = -1;
-    }
+{
+  map<string,int>::const_iterator it = fieldnames_num.find(fieldname_or_num);
+  if (it == fieldnames_num.end()) {          // not found
+    if (pl_isnumber(fieldname_or_num))
+      return toint(fieldname_or_num);
+    else
+      return -1;                             // unknown field
   }
-  return num;
+  else
+    return it->second;
 }
 
 
@@ -330,6 +336,7 @@ void VecStatsCollector::append(const VecStatsCollector& vsc,
     for (int i=0 ; i<n ; ++i)
       fieldnames.append(fieldname_prefix + vsc.fieldnames[i]);
   }
+  setFieldNames(fieldnames);                 // update map
 
   // Take care of covariance matrix
   if (compute_covariance) {
