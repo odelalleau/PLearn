@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: TVec_decl.h,v 1.19 2004/10/22 15:56:02 ducharme Exp $
+ * $Id: TVec_decl.h,v 1.20 2005/02/23 01:40:27 tihocan Exp $
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -388,6 +388,7 @@ public:
       if(n != length())
         PLERROR("IN TVec::copyFrom(T* x, int n)\nVecs do not have the same length()");
 #endif
+      if (n == 0) return; // Nothing to copy.
       T* v1 = data(); //!<  get data start
       for(int i=0; i<n; i++)
         v1[i] = x[i];
