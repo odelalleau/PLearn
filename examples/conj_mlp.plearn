@@ -1,6 +1,6 @@
 #!plearn
 
-Experiment( 
+PTester( 
 # string: Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
 expdir = "conj_mlp";
 
@@ -10,26 +10,19 @@ dataset = AutoVMatrix(specification="letters all normalize");
 # PP< Splitter >: The splitter to use to generate one or several train/test pairs.
 splitter = TrainTestSplitter(test_fraction=.10) ;
 
-# bool: If false, the models won't be saved.
-save_models = 1  ;
-
 # PP< Learner >: The learner to train/test
 learner = 
-NeuralNet( 
-          # int: dimensionality of input vector 
-          inputsize = 16;
+NNet( 
+
+          verbosity = 3;
 
           # int: dimensionality of output 
           # (for classification the output is typically a vector of class scores
           # so this is the number of classes)
-          outputsize = 26;  # 26 letters
-
-          # int: dimensionality of target 
-          # (here target is simply the class number between 0 and 9)
-          targetsize = 1;
+          noutputs = 26;  # 26 letters
 
           # int: number of hidden units in first hidden layer (0 means no hidden layer)
-          nhidden = 10;
+          nhidden = 20;
 
           # double: global weight decay for all layers
           weight_decay = 0;
@@ -55,7 +48,7 @@ NeuralNet(
                       starting_step_size = 1  ;
                       epsilon = 0.00001  ;
                       line_search_algo = 1  ;
-                      find_new_direction_formula = 0  ;
+                      find_new_direction_formula = 1  ;
                       sigma = 0.05  ;
                       rho = 0.01  ;
                       fmax = 0  ;
@@ -70,47 +63,10 @@ NeuralNet(
           batch_size = 0;
 
           # int: how many times the optimizer gets to see the whole training set.
-          nepochs = 30;
+          nstages = 30;
 
-          # int:     index of test set (in test_sets) to use for early 
-          #     stopping (-1 means no early-stopping) 
-          earlystop_testsetnum = -1  ;
-
-          # int:     index of statistic (as returned by test) to use
-          earlystop_testresultindex = 0  ;
-          
-          # double:     maximum degradation in error from last best value
-          earlystop_max_degradation = 0  ;
-          
-          # double:     minimum error beyond which we stop
-          earlystop_min_value = -3.4028234663852886e+38  ;
-          
-          # double:     minimum improvement in error otherwise we stop
-          earlystop_min_improvement = 0  ;
-          
-          # bool:     are max_degradation and min_improvement relative?
-          earlystop_relative_changes = 1  ;
-          
-          # bool:     if yes, then return with saved 'best' model
-          earlystop_save_best = 1  ;
-          
-          # int:     ax. nb of steps beyond best found (-1 means ignore) 
-          earlystop_max_degraded_steps = -1  ;
-          
-          # bool:     save learner at each epoch?
-          save_at_every_epoch = 0  ;
-          
           # string:    The directory in which to save results 
           expdir = ""  ;
-
-          # Array< Ker >:    The cost functions used by the default useAndCost method 
-          test_costfuncs = 0 [  ];
-
-          # int: ????
-          test_every = 1  ;
-
-          # int: size of blocks over which to perform tests, calling 'apply' if >1, otherwise caling 'use'
-          minibatch_size = 1  ;
 
           )
 )
