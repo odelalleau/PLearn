@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
-* $Id: OptimizeOptionOracle.h,v 1.1 2005/01/12 14:30:47 tihocan Exp $
+* $Id: OptimizeOptionOracle.h,v 1.2 2005/01/12 14:43:29 tihocan Exp $
 ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -43,7 +43,7 @@
 #ifndef OptimizeOptionOracle_INC
 #define OptimizeOptionOracle_INC
 
-#include <apstatlib/hyper/OptionsOracle.h>
+#include <plearn_learners/hyper/OptionsOracle.h>
 
 namespace PLearn {
 using namespace std;

@@ -36,7 +36,7 @@
 // Authors: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: TxtmatCommand.h,v 1.1 2005/01/11 23:43:40 plearner Exp $ 
+   * $Id: TxtmatCommand.h,v 1.2 2005/01/12 14:41:53 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file TxtmatCommand.h */
@@ -45,8 +45,7 @@
 
 #include <commands/PLearnCommands/PLearnCommand.h>
 #include <commands/PLearnCommands/PLearnCommandRegistry.h>
-#include <apstatlib/vmat/TextFilesVMatrix.h>
-
+#include <plearn/vmat/TextFilesVMatrix.h>
 
 namespace PLearn {
 using namespace std;
