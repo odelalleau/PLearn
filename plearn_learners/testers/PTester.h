@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.2 2003/08/13 08:13:47 plearner Exp $ 
+   * $Id: PTester.h,v 1.3 2003/09/10 18:50:54 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -75,6 +75,7 @@ public:
   bool save_test_outputs;
   bool save_test_costs;
   bool provide_learner_expdir;
+  bool train;
 
   // ****************
   // * Constructors *
@@ -101,9 +102,6 @@ protected:
 public:
   // simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(PTester);

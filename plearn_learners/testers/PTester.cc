@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.4 2003/09/10 00:09:13 chapados Exp $ 
+   * $Id: PTester.cc,v 1.5 2003/09/10 18:50:54 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -81,7 +81,14 @@ PTester::PTester()
     provide_learner_expdir(false)
 {}
 
-  PLEARN_IMPLEMENT_OBJECT(PTester, "ONE LINE DESCR", "NO HELP");
+  PLEARN_IMPLEMENT_OBJECT(PTester, "Manages a learning experiment, with training and estimation of generalization error.", 
+      "The PTester class allows you to describe a typical learning experiment that you wish to perform, \n"
+      "as a training/testing of a learning algorithm on a particular dataset.\n"
+      "The splitter is used to obtain one or several (such as for k-fold) splits of the dataset \n"
+      "and training/testing is performed on each split. \n"
+      "Requested statistics are computed, and all requested results are written in an appropriate \n"
+      "file inside the specified experiment directory. \n");
+
 
   void PTester::declareOptions(OptionList& ol)
   {
@@ -133,18 +140,10 @@ PTester::PTester()
                   "If true, the costs of the test for split #k will be saved in Split#k/test#i_costs.pmat");
     declareOption(ol, "provide_learner_expdir", &PTester::provide_learner_expdir, OptionBase::buildoption,
                   "If true, each learner to be trained will have its experiment directory set to Split#k/LearnerExpdir/");
+    declareOption(ol, "train", &PTester::train, OptionBase::buildoption,
+                  "If true, the learners are trained, otherwise only tested (in that case it is advised\n"
+                  "to load an already trained learner in the 'learner' field");
     inherited::declareOptions(ol);
-  }
-
-  string PTester::help()
-  {
-    return 
-      "The PTester class allows you to describe a typical learning experiment that you wish to perform, \n"
-      "as a training/testing of a learning algorithm on a particular dataset.\n"
-      "The splitter is used to obtain one or several (such as for k-fold) splits of the dataset \n"
-      "and training/testing is performed on each split. \n"
-      "Requested statistics are computed, and all requested results are written in an appropriate \n"
-      "file inside the specified experiment directory. \n";
   }
 
 void PTester::build_()
@@ -257,25 +256,29 @@ Vec PTester::perform(bool call_forget)
       if(splitdir!="" && save_data_sets)
         PLearn::save(splitdir+"training_set.psave",trainset);
 
-      if(splitdir!="" && provide_learner_expdir)
+      if(splitdir!="" && train && provide_learner_expdir)
         learner->setExperimentDirectory(splitdir+"LearnerExpdir/");
 
-      learner->setTrainingSet(trainset, call_forget);
+      learner->setTrainingSet(trainset, call_forget && train);
 
-      if(splitdir!="" && save_initial_learners)
-        PLearn::save(splitdir+"initial_learner.psave",learner);
-      
       int outputsize = learner->outputsize();
 
-      train_stats->forget();
-      learner->train();
-      train_stats->finalize();
-      if(splitdir != "" && save_stat_collectors)
-        PLearn::save(splitdir+"train_stats.psave",train_stats);
-//      if (splitdir == "")
-//        PLERROR("PTester::perform : probleme...");
-      if(splitdir != "" && save_learners)
-        PLearn::save(splitdir+"final_learner.psave",learner);
+
+      if (train)
+        {
+          if(splitdir!="" && save_initial_learners)
+            PLearn::save(splitdir+"initial_learner.psave",learner);
+      
+          train_stats->forget();
+          learner->train();
+          train_stats->finalize();
+          if(splitdir != "" && save_stat_collectors)
+            PLearn::save(splitdir+"train_stats.psave",train_stats);
+          if(splitdir != "" && save_learners)
+            PLearn::save(splitdir+"final_learner.psave",learner);
+        }
+      else
+        learner->build();
 
       for(int setnum=1; setnum<dsets.length(); setnum++)
         {

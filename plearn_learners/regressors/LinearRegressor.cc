@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.1 2003/08/26 23:24:13 chapados Exp $
+   * $Id: LinearRegressor.cc,v 1.2 2003/09/10 18:50:51 yoshua Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
@@ -190,6 +190,11 @@ void LinearRegressor::computeOutput(const Vec& actual_input, Vec& output) const
   // Compute the output from the input
   int nout = outputsize();
   output.resize(nout);
+  if (input.length()==0) 
+  {
+    extendedinput.resize(1+inputsize());
+    input = extendedinput.subVec(1,inputsize());
+  }
   input << actual_input;
   transposeProduct(output,weights,extendedinput);
 }    
