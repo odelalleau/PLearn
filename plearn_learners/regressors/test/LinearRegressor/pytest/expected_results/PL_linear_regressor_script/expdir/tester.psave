@@ -31,7 +31,7 @@ AIC = nan ;
 BIC = nan ;
 resid_variance = TVec(0 0 *0 )
 ;
-expdir = "PYTEST__PL_linear_regressor_script__RESULTS:" ;
+expdir = "" ;
 seed = -1 ;
 stage = 0 ;
 n_examples = -1 ;

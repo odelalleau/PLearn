@@ -36,7 +36,7 @@ eigenvals = TVec(0 0 *0 )
 eigenvecs = 0  0  [ 
 ]
 ;
-expdir = "PYTEST__STACKED_PCA_LINEAR_REGRESSION_2004_11_21_2_45_50__RESULTS:" ;
+expdir = "" ;
 seed = -1 ;
 stage = 0 ;
 n_examples = -1 ;
@@ -57,7 +57,7 @@ AIC = nan ;
 BIC = nan ;
 resid_variance = TVec(0 0 *0 )
 ;
-expdir = "PYTEST__STACKED_PCA_LINEAR_REGRESSION_2004_11_21_2_45_50__RESULTS:" ;
+expdir = "" ;
 seed = -1 ;
 stage = 0 ;
 n_examples = -1 ;
@@ -75,7 +75,7 @@ train_base_learners = 1 ;
 normalize_base_learners_output = 0 ;
 precompute_base_learners_output = 1 ;
 put_raw_input = 0 ;
-expdir = "PYTEST__STACKED_PCA_LINEAR_REGRESSION_2004_11_21_2_45_50__RESULTS:" ;
+expdir = "" ;
 seed = -1 ;
 stage = 0 ;
 n_examples = -1 ;

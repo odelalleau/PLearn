@@ -31,7 +31,7 @@ AIC = nan ;
 BIC = nan ;
 resid_variance = TVec(0 0 *0 )
 ;
-expdir = "PYTEST__LINEAR_REGRESSION_BADLY_BEHAVED_2004_11_21_2_45_50__RESULTS:" ;
+expdir = "" ;
 seed = -1 ;
 stage = 0 ;
 n_examples = -1 ;

@@ -25,7 +25,7 @@ learner = *3 ->ConstantRegressor(
 weight_decay = 0 ;
 constant_output = TVec(0 0 *0 )
 ;
-expdir = "PYTEST__PL_constant_regressor_script__RESULTS:" ;
+expdir = "" ;
 seed = -1 ;
 stage = 0 ;
 n_examples = -1 ;
