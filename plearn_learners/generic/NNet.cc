@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.17 2003/10/09 17:08:48 chapados Exp $
+   * $Id: NNet.cc,v 1.18 2003/10/10 14:09:14 chapados Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -124,7 +124,7 @@ void NNet::declareOptions(OptionList& ol)
                 "    one of: tanh, sigmoid, exp, softplus, softmax \n"
                 "    or interval(<minval>,<maxval>), which stands for\n"
                 "    <minval>+(<maxval>-<minval>)*sigmoid(.).\n"
-                "    An empty string means no output transfer function \n");
+                "    An empty string or \"none\" means no output transfer function \n");
 
   declareOption(ol, "cost_funcs", &NNet::cost_funcs, OptionBase::buildoption, 
                 "    a list of cost functions to use\n"
@@ -209,7 +209,7 @@ void NNet::build_()
        * output_transfer_func
        */
       unsigned int p=0;
-      if(output_transfer_func!="")
+      if(output_transfer_func!="" && output_transfer_func!="none")
         {
           if(output_transfer_func=="tanh")
             output = tanh(output);
