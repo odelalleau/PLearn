@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectAttributsSequenceVMatrix.cc,v 1.6 2004/10/06 21:12:26 larocheh Exp $ 
+   * $Id: SelectAttributsSequenceVMatrix.cc,v 1.7 2004/10/08 17:52:08 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -52,6 +52,17 @@ SelectAttributsSequenceVMatrix::SelectAttributsSequenceVMatrix()
    put_only_target_output(false), use_last_context(true)
   /* ### Initialise all fields to their default value */
 {
+}
+
+SelectAttributsSequenceVMatrix::SelectAttributsSequenceVMatrix(VMat s, int l_context,int r_context)
+  :inherited(),conditions_offset(0), conditions_for_exclusion(1), full_context(true),
+   use_last_context(true)
+  /* ### Initialise all fields to their default value */
+{
+  source = s;
+  n_left_context= l_context;
+  n_right_context = r_context;
+  build();
 }
   
   PLEARN_IMPLEMENT_OBJECT(SelectAttributsSequenceVMatrix,
@@ -124,7 +135,7 @@ void SelectAttributsSequenceVMatrix::getNewRow(int i, const Vec& v) const
       {
         int position = current_context_pos[p];
         element = current_row_i.subVec(n_attributs*position,n_attributs);
-        if(position != current_target_pos || !is_true(ignored_context,element))
+        if(!is_true(ignored_context,element))
         {
           to_add = true;
         }
@@ -181,7 +192,7 @@ void SelectAttributsSequenceVMatrix::getNewRow(int i, const Vec& v) const
       {
         int position = current_context_pos[p];
         element = current_row_i.subVec(n_attributs*position,n_attributs);
-        if(position != current_target_pos || !is_true(ignored_context,element))
+        if(!is_true(ignored_context,element))
         {
           to_add = true;
         }
@@ -338,7 +349,8 @@ void SelectAttributsSequenceVMatrix::build_()
 {
   
   if(!source) PLERROR("In SelectAttributSequenceVMatrix::build_() : no source defined");
-
+  
+  //  defineSizes(source->inputsize(),source->targetsize(),source->weightsize()); pas bon car ecrase declare options
   n_attributs = source->width();
   row.resize(n_attributs);
   element.resize(n_attributs);
@@ -406,6 +418,7 @@ void SelectAttributsSequenceVMatrix::build_()
 
   inputsize_ = max_context_length * source->inputsize();
   targetsize_ = max_context_length * source->targetsize();
+  weightsize_ = source->weightsize();
 
   if(inputsize_+targetsize_ != width_) PLERROR("In SelectAttributsSequenceVMatrix:build_() : inputsize_ + targetsize_ != width_");
 
