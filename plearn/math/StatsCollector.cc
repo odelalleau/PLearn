@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.26 2003/12/15 14:05:27 plearner Exp $
+   * $Id: StatsCollector.cc,v 1.27 2004/01/07 22:24:25 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -323,8 +323,12 @@ RealMapping StatsCollector::getAllValuesMapping(TVec<double> * fcount) const
 }
 
 RealMapping StatsCollector::getAllValuesMapping(TVec<bool>* to_be_included,
-                                                TVec<double>* fcount) const {
+                                                TVec<double>* fcount, bool ignore_other) const {
   RealMapping mapping;
+  if (ignore_other) {
+    mapping.keep_other_as_is = false;
+    mapping.other_mapsto = -1;
+  }
   int i = 0;
   int k = 0;
   if(fcount)
