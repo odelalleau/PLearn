@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.18 2004/03/04 15:37:32 nova77 Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.19 2004/03/04 18:22:23 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -512,6 +512,7 @@ void MultiInstanceNNet::computeCostsFromOutputs(const Vec& inputv, const Vec& ou
     costsv.fill(MISSING_VALUE);
   else // end of bag, we have a target and we can compute a cost
   {
+    instance_logP0.resize(test_bag_size);
     real bag_P0 = safeexp(sum(instance_logP0));
     int classe = int(targetv[0]);
     int predicted_classe = (bag_P0>0.5)?0:1;
