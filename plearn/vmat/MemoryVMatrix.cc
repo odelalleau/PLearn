@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.13 2004/06/22 18:46:38 tatien Exp $
+   * $Id: MemoryVMatrix.cc,v 1.14 2004/06/22 19:15:10 tatien Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -154,13 +154,20 @@ void MemoryVMatrix::getMat(int i, int j, Mat m) const
 { m << data.subMat(i,j,m.length(),m.width()); }
 
 void MemoryVMatrix::putSubRow(int i, int j, Vec v)
-{ data.subMat(i,j,1,v.length()) << v; }
+{
+#ifdef BOUNDCHECK
+  if (j+v.length()>width())
+    PLERROR("MemoryVMatrix::putSubRow(int i, int j, Vec v) OUT OF BOUNDS. "
+            "j=%d, v.length()=%d, width()=%d", j, v.length(), width());
+#endif
+  v.copyTo(data[i]+j);
+}
 
 void MemoryVMatrix::fill(real value)
 { data.fill(value); }
 
 void MemoryVMatrix::putRow(int i, Vec v)
-{ data(i) << v; }
+{ v.copyTo(data[i]); }
 
 void MemoryVMatrix::putMat(int i, int j, Mat m)
 { data.subMat(i,j,m.length(),m.width()) << m; }
