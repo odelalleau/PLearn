@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.52 2004/07/21 20:33:22 tihocan Exp $
+   * $Id: VMatrix.h,v 1.53 2004/08/25 21:43:40 kermorvc Exp $
    ******************************************************* */
 
 
@@ -287,6 +287,9 @@ public:
 
   //! returns element as a string, even if value doesn't map to a string, in which case tostring(value) is returned
   virtual string getString(int row, int col) const;
+
+  //! Return the dimension of the column col, -1 if continuous   
+  virtual int getDimension(int col) const;
 
   ////////////////////////
   

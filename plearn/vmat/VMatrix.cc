@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.68 2004/08/09 16:23:13 tihocan Exp $
+* $Id: VMatrix.cc,v 1.69 2004/08/25 21:43:40 kermorvc Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -653,13 +653,19 @@ void VMatrix::setMetaDataDir(const string& the_metadatadir)
   metadatadir = abspath(metadatadir);
 }
 
+//! Return the dimension of the column col, -1 if continuous 
+int VMatrix::getDimension(int col) const
+{
+  return -1;
+}  
+
 ///////////////////
 // copySizesFrom //
 ///////////////////
 void VMatrix::copySizesFrom(VMat m) {
   defineSizes(m->inputsize(), m->targetsize(), m->weightsize());
 }
-
+ 
 ////////////////////
 // looksTheSameAs //
 ////////////////////
