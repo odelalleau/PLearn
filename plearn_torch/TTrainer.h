@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TTrainer.h,v 1.1 2005/02/23 01:31:19 tihocan Exp $ 
+   * $Id: TTrainer.h,v 1.2 2005/02/23 21:55:03 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -114,7 +114,9 @@ public:
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   //! Train the machine.
-  void train(PP<TDataSet> data_);
+  //! This method will need to be overridden in subclasses that need to
+  //! update something else than 'machine' after training.
+  virtual void train(PP<TDataSet> data);
 
   //! Update the underlying Torch object from this object's options.
   virtual void updateFromPLearn(Torch::Object* ptr);
