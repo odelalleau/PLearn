@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.56 2004/04/16 21:43:55 nova77 Exp $
+   * $Id: plearn.cc,v 1.57 2004/04/20 20:40:07 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -53,6 +53,8 @@
 #include "VMatrixFromDistribution.h"
 #include "PrecomputedVMatrix.h"
 
+// Available Kernels:
+#include "AdditiveNormalizationKernel.h"
 
 // All Available Learners: 
 // #include "KNN.h"
