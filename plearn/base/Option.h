@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Option.h,v 1.3 2004/02/20 21:11:42 chrish42 Exp $
+   * $Id: Option.h,v 1.4 2004/05/07 19:03:31 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -123,6 +123,31 @@ inline void declareOption(OptionList& ol, const string& optionname, OptionType *
 { ol.push_back(new Option<ObjectType, OptionType *, const OptionType *>(optionname, member_ptr, flags, TypeTraits<OptionType *>::name(), 
                                                                         defaultval, description)); }
       
+//! Allows one to redeclare an option differently
+//! (e.g. in a subclass, after calling inherited::declareOptions).
+template<class ObjectType, class OptionType>
+inline void redeclareOption(OptionList& ol,                      //!< the list to which this option should be appended 
+                            const string& optionname,            //!< the name of this option
+                            OptionType ObjectType::* member_ptr, //!< &YourClass::your_field
+                            OptionBase::flag_t flags,            //! see the flags in OptionBase
+                            const string& description,           //!< a description of the option
+                            const string & defaultval="")        //!< the default value for this option, as set by the default constructor
+{
+  bool found = false;
+  for (OptionList::iterator it = ol.begin(); !found && it != ol.end(); it++) {
+    if ((*it)->optionname() == optionname) {
+      // We found the option to redeclare.
+      found = true;
+      (*it) = new Option<ObjectType, OptionType, const OptionType>
+        (optionname, member_ptr, flags, TypeTraits<OptionType>::name(), defaultval, description);
+    }
+  }
+  if (!found) {
+    // We tried to redeclare an option that wasn't declared previously.
+    PLERROR("In Option::redeclareOption - The option you are trying to redeclare has not been declared yet.");
+  }
+}
+
 
 } // end of namespace PLearn
 
