@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.21 2004/04/22 13:05:50 tihocan Exp $
+   * $Id: lisaplearn.cc,v 1.22 2004/04/22 20:57:07 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -66,6 +66,7 @@
 #include "ExplicitListOracle.h"
 #include "HyperLearner.h"
 #include "HyperOptimize.h"
+#include "HyperRetrain.h"
 
 // All Available Learners: 
 // #include "KNN.h"
