@@ -2,9 +2,9 @@
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
+
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
 //
-
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: BinaryVariable.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: BinaryVariable.h,v 1.2 2002/08/06 21:05:43 wangxian Exp $
    * PRIMARY AUTHOR: Pascal Vincent
    * CONTRIBUTORS: Yoshua Bengio
    * This file is part of the PLearn library.
@@ -47,9 +47,7 @@
 #define BinaryVariable_INC
 
 #include "VarArray.h"
-//#include "TMat_maths.h"
-#include "Mat.h"
-#include "TMat_maths_specialisation.h"
+#include "TMat_maths.h"
 
 namespace PLearn <%
 using namespace std;

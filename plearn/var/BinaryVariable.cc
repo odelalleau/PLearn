@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: BinaryVariable.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: BinaryVariable.cc,v 1.2 2002/08/06 21:05:43 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -2125,7 +2125,7 @@ void AffineTransformVariable::symbolicBprop()
 IMPLEMENT_NAME_AND_DEEPCOPY(MatrixAffineTransformVariable);
 void MatrixAffineTransformVariable::fprop()
   {
-    Mat lintransform = input2->matValue.subMatRows(1,input2->length()-1);
+      Mat lintransform = input2->matValue.subMatRows(1,input2->length()-1);
     // matValue << input2->matValue.firstRow();
     for (int i = 0; i < length(); i++)
         for (int j = 0; j < width(); j++)
