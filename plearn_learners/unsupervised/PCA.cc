@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.8 2004/03/30 19:35:23 tihocan Exp $ 
+   * $Id: PCA.cc,v 1.9 2004/03/30 19:35:59 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
@@ -130,6 +130,8 @@ void PCA::train()
       if (pb)
         pb->update(2);
       stage = 1;
+      if (pb)
+        delete pb;
     }
 }
 
