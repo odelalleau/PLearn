@@ -1,0 +1,34 @@
+import os.path
+from plearn.pyplearn import *
+
+plarg_defaults.data    = "data.amat"
+
+expdir = "linear_regressor_data=%s" % plargs.data
+dataset = pl.AutoVMatrix(
+    specification = plargs.data,
+    inputsize = 4,
+    targetsize = 2,
+    weightsize = 0
+    )
+
+learner = pl.LinearRegressor()
+
+splitter = pl.FractionSplitter(
+    splits = TMat(1,2, [ (0,0.75) , (0.75,1) ])
+    )
+
+tester = pl.PTester(
+    expdir = expdir,
+    dataset = dataset,
+    splitter = splitter,
+    learner = learner,
+    statnames = ['E[train.E[mse]]', 'E[train.E[aic]]', 'E[train.E[bic]]', 'E[train.E[mabic]]',
+                 'E[test.E[mse]]',  'E[test.E[aic]]',  'E[test.E[bic]]',  'E[test.E[mabic]]'],
+    provide_learner_expdir = 1,
+    save_test_costs = 1,
+    save_test_outputs = 1,
+    save_test_confidence = 1
+    )
+
+def main():
+    return tester
