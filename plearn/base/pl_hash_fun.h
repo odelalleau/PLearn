@@ -35,30 +35,23 @@
 #ifndef pl_hash_fun_H
 #define pl_hash_fun_H
 
-#if __GNUC__<3 
-#  include <hash_set> //to get stl_hash_fun.h ... (template<> class hash)
-#  include <hash_map> //to get stl_hash_fun.h ... (template<> class hash)
-#else
-#  include <ext/hash_set> //to get stl_hash_fun.h ... (template<> class hash)
-#  include <ext/hash_map> //to get stl_hash_fun.h ... (template<> class hash)
-using namespace __gnu_cxx;
-#endif
+#include "ms_hash_wrapper.h"
 #include <string>
 
 namespace PLearn {
+
 using namespace std;
 
-
-  extern const unsigned int PL_HASH_NOMBRES_MAGIQUES[256];
+extern const unsigned int PL_HASH_NOMBRES_MAGIQUES[256];
 
   //!  **************** Hash tables support *************************
 
-/*!     basic hashing function that can be used in defining the
+/*! basic hashing function that can be used in defining the
     hashing functions for objects or any type. This one
     mixes the bits in the byte_length bytes starting at byte_start, 
     and returns an integer between 0 and MAXINT
 */
-  unsigned int hashbytes(const char* byte_start, int byte_length);
+  size_t hashbytes(const char* byte_start, size_t byte_length);
 
 /*!     hashing function which must be redefined for classes that
     can be used as keys:
@@ -74,56 +67,54 @@ using namespace std;
     It is defined here for some built-in types:
     
 */
-  inline unsigned int hashval(const char* strng)
-    { return hashbytes(strng,strlen(strng)); }
+  inline size_t hashval(const char* strng)
+  { return hashbytes(strng, strlen(strng)); }
 
   //!  default which will work in many cases but not all
   template <class T>
-    inline unsigned int hashval(const T& x) { return hashbytes((char*)&x,sizeof(T)); }
+    inline size_t hashval(const T& x) { return hashbytes((char*)&x,sizeof(T)); }
 
 } // end of namespace PLearn
 
 
 ///////////////////////////////////////////////////////////////////////////
 
-#if __GNUC__==3 && __GNUC_MINOR__>0
-namespace __gnu_cxx {
-#else
-namespace std {
-#endif
 using std::string;
 
+// norman: Old code kept for the moment..
 
+SET_HASH_WITH_INHERITANCE(string, const char*, __s, __s.c_str())
 //hash functions for strings
-template<>
-struct hash<string>
-{
-  size_t operator()(const string& __s) const { return hash<const char*>()(__s.c_str()); }
-};
+//template<>
+//struct hash<string>
+//{
+//	size_t operator()(const string& __s) const { return hash<const char*>()(__s.c_str()); }
+//};
 
-template<>
-struct hash<const string>
-{
-  size_t operator()(const string& __s) const { return hash<const char*>()(__s.c_str()); }
-  //size_t operator()(const string& __s) const { return __stl_hash_string(__s.c_str()); }
-};
+// This has been deactivated because it is useless (and .NET doesn't like it):
+//SET_HASH_WITH_INHERITANCE(const std::string, const char*, __s, __s.c_str())
+//template<>
+//struct hash<const string>
+//{
+//  size_t operator()(const string& __s) const { return hash<const char*>()(__s.c_str()); }
+//  //size_t operator()(const string& __s) const { return __stl_hash_string(__s.c_str()); }
+//};
 
 
 //for doubles 
-template<>
-struct hash<double>
-{
-  size_t operator()(double x) const { return PLearn::hashval(x); }
-};
+SET_HASH_WITH_FUNCTION(double, x, PLearn::hashval(x))
+//template<>
+//struct hash<double>
+//{
+//  size_t operator()(double x) const { return PLearn::hashval(x); }
+//};
 
 //for floats 
-template<>
-struct hash<float>
-{
-  size_t operator()(float x) const { return PLearn::hashval(x); }
-};
-
-} // end of namespace
-
+SET_HASH_WITH_FUNCTION(float, x, PLearn::hashval(x))
+//template<>
+//struct hash<float>
+//{
+//  size_t operator()(float x) const { return PLearn::hashval(x); }
+//};
 
 #endif // pl_hash_fun_H

@@ -201,22 +201,23 @@ inline bool operator>=(const TinyVector<T,N,TTrait>& x,
   turn, to determine what is and is not an element of a TinyVector.
 */
     
-template <class T> struct TinyVectorTrait {};
-template <> struct TinyVectorTrait<unsigned char> {
+template <typename T> class TinyVectorTrait {};
+
+template <> class TinyVectorTrait<unsigned char> {
 public:
-  static const unsigned char Missing;
+  static const unsigned char Missing = UCHAR_MAX; // norman: initialize here
 };
-template <> struct TinyVectorTrait<char> {
+template <> class TinyVectorTrait<char> {
 public:
-  static const unsigned char Missing;
+  static const unsigned char Missing = UCHAR_MAX; // norman: initialize here
 };
-template <> struct TinyVectorTrait<unsigned int> {
+template <> class TinyVectorTrait<unsigned int> {
 public:
-  static const unsigned int Missing;
+  static const unsigned int Missing = UINT_MAX; // norman: initialize here
 };
-template <> struct TinyVectorTrait<int> {
+template <> class TinyVectorTrait<int> {
 public:
-  static const int Missing;
+  static const int Missing = INT_MAX; // norman: initialize here
 };
 
   

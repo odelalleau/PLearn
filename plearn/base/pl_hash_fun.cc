@@ -39,7 +39,7 @@ namespace PLearn {
 using namespace std;
 
 
-const unsigned int PL_HASH_NOMBRES_MAGIQUES[256]= // un gros tas de nombres magiques 
+const size_t PL_HASH_NOMBRES_MAGIQUES[256]= // un gros tas de nombres magiques 
 {
   0x00000000,0x09823b6e,0x130476dc,0x1a864db2,0x2608edb8,0x2f8ad6d6,0x350c9b64,0x3c8ea00a,
   0x4c11db70,0x4593e01e,0x5f15adac,0x569796c2,0x6a1936c8,0x639b0da6,0x791d4014,0x709f7b7a,
@@ -74,10 +74,11 @@ const unsigned int PL_HASH_NOMBRES_MAGIQUES[256]= // un gros tas de nombres magi
   0x357917aa,0x3cfb2cc4,0x267d6176,0x2fff5a18,0x1371fa12,0x1af3c17c,0x00758cce,0x09f7b7a0,
   0x7968ccda,0x70eaf7b4,0x6a6cba06,0x63ee8168,0x5f602162,0x56e21a0c,0x4c6457be,0x45e66cd0
 };
-unsigned int hashbytes(const char* byte_start, int byte_length)
+
+size_t hashbytes(const char* byte_start, size_t byte_length)
 {
   unsigned int HKey=0u;
-  for (int i=0;i<byte_length;i++)
+  for (size_t i=0; i<byte_length; i++)
   {
     unsigned char t = (HKey >> 24);
     HKey = (HKey << 8) + byte_start[i];

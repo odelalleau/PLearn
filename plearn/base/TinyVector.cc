@@ -36,10 +36,11 @@
 namespace PLearn {
 using namespace std;
 
-
-
 //#####  Implement Character Traits  ##########################################
 
+// norman: These implementations are useless once have been directly inserted in the 
+//         specialization declarations.
+/*
 template <> 
 const unsigned char TinyVectorTrait<unsigned char>::Missing = UCHAR_MAX;
   
@@ -51,6 +52,7 @@ const unsigned int TinyVectorTrait<unsigned int>::Missing = UINT_MAX;
 
 template <> 
 const int TinyVectorTrait<int>::Missing = INT_MAX;
-
+*/
 
 } // end of namespace PLearn
+

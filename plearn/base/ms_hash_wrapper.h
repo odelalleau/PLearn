@@ -43,12 +43,14 @@
 #  include <hash_set> //to get stl_hash_fun.h ... (template<> class hash)
 #  include <hash_map> //to get stl_hash_fun.h ... (template<> class hash)
   using namespace std;
+#define __NMSPACE__ std
 
 #else
 
 #  include <ext/hash_set> //to get stl_hash_fun.h ... (template<> class hash)
 #  include <ext/hash_map> //to get stl_hash_fun.h ... (template<> class hash)
   using namespace __gnu_cxx;
+#define __NMSPACE__ __gnu_cxx
 
 #endif // __GNUC__<3
 
@@ -98,15 +100,17 @@
 //     { 
 //        return (size_t)(PLearn::hashval(val));
 //     } 
-#define SET_HASH_WITH_FUNCTION(type, paramName, hashFunc)						\
-	template<>																	\
-	struct hash< type >															\
-	{																			\
-		size_t operator()(type& paramName) const								\
-		{																		\
-			return (size_t)(hashFunc);											\
-		}																		\
-	};										
+#define SET_HASH_WITH_FUNCTION(type, paramName, hashFunc)           \
+  namespace __NMSPACE__ {                                           \
+	  template<>                                                      \
+	  struct hash< type >                                             \
+	  {                                                               \
+		  size_t operator()(type paramName) const                       \
+		  {                                                             \
+			  return (size_t)(hashFunc);                                  \
+		  }                                                             \
+	  };                                                              \
+  }
 
 // Example: 
 //     SET_HASH_WITH_INHERITANCE(std::string, const char*, val, val.c_str())
@@ -116,14 +120,16 @@
 //     return hash<const char*>()val.c_str()); 
 //   } 
 #define SET_HASH_WITH_INHERITANCE(type, originalType, paramName, hashFunc)		\
-	template<>																	\
-	struct hash< type >															\
-	{																			\
-		size_t operator()(type& paramName) const								\
-		{																		\
-			return hash< originalType >()(hashFunc);							\
-		}																		\
-	};										
+  namespace __NMSPACE__ {                                                     \
+	  template<>                                                                \
+	  struct hash< type >                                                       \
+	  {                                                                         \
+		  size_t operator()(type paramName) const                                 \
+      {                                                                       \
+			  return hash< originalType >()(hashFunc);                              \
+		  }                                                                       \
+	  };                                                                        \
+  }
 
 
 // WARNING: paramName should be included in hashFunc!	
@@ -139,15 +145,17 @@
 //      }	
 //   }
 // See below: size_t operator()(const type& paramName) const 
-#define SET_HASH_FUNCTION(type, templateClass, paramName, hashFunc)				\
-	template<class templateClass >												\
-	struct hash< type >															\
-	{																			\
-		size_t operator()(type& paramName) const							\
-		{																		\
-			return hash< templateClass >()(hashFunc);							\
-		}																		\
-	};	
+#define SET_HASH_FUNCTION(type, templateClass, paramName, hashFunc)  \
+  namespace __NMSPACE__ {                                            \
+	  template<class templateClass >                                   \
+	  struct hash< type >                                              \
+	  {                                                                \
+		  size_t operator()(type paramName) const                        \
+		  {                                                              \
+			  return hash< templateClass >()(hashFunc);                    \
+		  }                                                              \
+	  };                                                               \
+  }
 #endif // __GNUC__
 
 //////////////////////////////////////////////////////////////////////////////
