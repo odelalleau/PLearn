@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_basic_stats.cc,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
+   * $Id: VMat_basic_stats.cc,v 1.2 2005/03/11 19:20:28 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -635,9 +635,9 @@ void correlations(const VMat& x, const VMat& y, Mat& r, Mat& pvalues)
   r.clear();
   Mat sxy(wx,wy);
   Vec sx2(wx);
-  Vec sy2(wx);
+  Vec sy2(wy);
   Vec sx(wx);
-  Vec sy(wx);
+  Vec sy(wy);
   Vec xt(wx);
   Vec yt(wy);
   for (int t=0;t<n;t++)
