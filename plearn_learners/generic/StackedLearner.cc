@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.14 2004/03/01 20:39:10 tihocan Exp $
+   * $Id: StackedLearner.cc,v 1.15 2004/04/19 13:07:02 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -214,6 +214,8 @@ void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
       }
       if (combiner)
         combiner->setTrainingSet(new PLearnerOutputVMatrix(upper_trainset, base_learners, put_raw_input),call_forget);
+    } else {
+      PLERROR("In StackedLearner::setTrainingSet - The splitter provided should only return one split");
     }
   } else
   {
