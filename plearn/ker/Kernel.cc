@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.24 2004/05/07 19:06:16 tihocan Exp $
+   * $Id: Kernel.cc,v 1.25 2004/05/17 14:48:06 ouimema Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -388,9 +388,47 @@ real Kernel::test(VMat d, real threshold, real sameness_below_threshold, real sa
   return real(nerrors)/d->length();
 }
 
+
+//////////////////////////////////////////////
+// computeKNNeighbourMatrixFromDistanceMatrix //
+//////////////////////////////////////////////
+Mat Kernel::computeKNNeighbourMatrixFromDistanceMatrix(const Mat& D, int knn, bool insure_self_first_neighbour, bool report_progress)
+{
+  // TODO Make it possible to only compute the k nearest neighbours.
+  int npoints = D.length();
+  Mat neighbours(npoints, npoints);  
+  Mat tmpsort(npoints,2);
+
+  ProgressBar* pb = 0;
+  if (report_progress) {
+    pb = new ProgressBar("Computing neighbour matrix", npoints);
+  }
+  
+    //for(int i=0; i<2; i++)
+  for(int i=0; i<npoints; i++)
+    {
+      for(int j=0; j<npoints; j++)
+        {
+          tmpsort(j,0) = D(i,j);
+          tmpsort(j,1) = j;
+        }
+      if(insure_self_first_neighbour)
+        tmpsort(i,0) = -FLT_MAX;
+
+      partialSortRows(tmpsort, knn);
+      neighbours(i) << tmpsort.column(1);
+      if (pb)
+        pb->update(i);
+    }
+  if (pb)
+    delete pb;
+  return neighbours;
+}
+
 //////////////////////////////////////////////
 // computeNeighbourMatrixFromDistanceMatrix //
 //////////////////////////////////////////////
+//  You should use computeKNNeighbourMatrixFromDistanceMatrix instead.
 Mat Kernel::computeNeighbourMatrixFromDistanceMatrix(const Mat& D, bool insure_self_first_neighbour, bool report_progress)
 {
   // TODO Make it possible to only compute the k nearest neighbours.
@@ -582,7 +620,7 @@ Mat findClosestPairsOfDifferentClass(int k, VMat data, Ker dist)
       }
     }
   }
-  sortRows(result, 2);
+  sortRows(result, 2);//use partialSortRows instead
   return result;
 }
 

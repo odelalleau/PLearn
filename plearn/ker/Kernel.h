@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.26 2004/05/07 19:06:16 tihocan Exp $
+   * $Id: Kernel.h,v 1.27 2004/05/17 14:46:50 ouimema Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -160,7 +160,13 @@ public:
   inline VMat getData() {return this->data;}
 
   //!  Returns a Mat m such that m(i,j) is the index of jth closest neighbour of input i, 
+  //!  according to the "distance" measures given by D(i,j).
+  //!  Only knn neighbours are computed.
+  static Mat computeKNNeighbourMatrixFromDistanceMatrix(const Mat& D, int knn, bool insure_self_first_neighbour=true, bool report_progress = false);
+
+  //!  Returns a Mat m such that m(i,j) is the index of jth closest neighbour of input i, 
   //!  according to the "distance" measures given by D(i,j)
+  //!  You should use computeKNNeighbourMatrixFromDistanceMatrix instead.
   static Mat computeNeighbourMatrixFromDistanceMatrix(const Mat& D, bool insure_self_first_neighbour=true, bool report_progress = false);
 
   Mat estimateHistograms(VMat d, real sameness_threshold, real minval, real maxval, int nbins) const;
