@@ -65,14 +65,14 @@ class Resources:
     link_resource = classmethod(link_resource)
     
     ## Class methods
-    def link_resources(cls, location, target, resources): 
+    def link_resources(cls, path_to, resources, target): 
         for resource in resources:
             if not os.path.isabs( resource ):
-                resource = os.path.join( self.test_directory, resource ) 
+                resource = os.path.join( path_to, resource ) 
             if not os.path.exists( resource ):
                 raise PyTestUsageError(
-                    "The %s test uses %s as a resource but path doesn't exist."
-                    % ( self.name, resource )
+                    "In %s: %s used as a resource but path doesn't exist."
+                    % ( os.getcwd(), resource )
                     )
 
             cls.link_resource( resource )
@@ -83,6 +83,16 @@ class Resources:
                     cls.link_resource( meta )       
     link_resources = classmethod(link_resources)
 
+    def md5sum(cls, path_to_ressource):
+        if md5_mappings.has_keys(path_to_ressource):
+            return md5_mappings[path_to_ressource]
+        
+        md5 = toolkit.command_output( 'md5sum %s'
+                                      % path_to_ressource)
+        md5_mappings[path_to_ressource] = md5
+        return md5
+    md5sum = classmethod(md5sum)
+        
 class TestDefaults:
     name            = None
     description     = ''
