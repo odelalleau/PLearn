@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: BinaryVariable.cc,v 1.2 2002/08/06 21:05:43 wangxian Exp $
+   * $Id: BinaryVariable.cc,v 1.3 2002/09/05 19:32:43 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -340,12 +340,21 @@ void VarElementVariable::fprop()
   if(input2->isScalar()) // scalar position index k
     {
       int k = int(input2->valuedata[0]);
+#ifdef BOUNDCHECK
+      if (k >= input1->length())
+          PLERROR("VarElementVariable::fprop() - k = %d is out of range (size is %d)", k, input1->length());
+#endif
       valuedata[0] = input1->valuedata[k];
     }
   else // (i,j) position index
     {
       int i = int(input2->valuedata[0]);
       int j = int(input2->valuedata[1]);
+#ifdef BOUNDCHECK
+      if ((i * input1->width() + j) >= input1->width() * input1->length())
+          PLERROR("VarElementVariable::fprop() - (%d, %d) out of range"
+                  "(size is %d)", i, j, input1->length() * input1->width());
+#endif
       valuedata[0] = input1->valuedata[i*input1->width()+j];
     }
 }

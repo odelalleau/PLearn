@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: Func.cc,v 1.2 2002/09/05 19:32:43 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -219,7 +219,7 @@ void Function::fbprop(const Vec& in, const Vec& out, const Vec& input_gradient, 
   fproppath.fbprop();
   outputs >> out;
   inputs.copyGradientTo(input_gradient);
-  // displayVarGraph(outputs,true);
+  //displayVarGraph(outputs,true);
 }
 
 void Function::fbbprop(const Vec& in, const Vec& output, const Vec& gradient, const Mat& hessian)

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Var.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: Var.h,v 1.2 2002/09/05 19:32:43 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -445,6 +445,13 @@ inline Var softmax(Var v)
   return new SoftmaxVariable(v);
 }
 
+// Double special box!
+inline Var log_softmax(Var v)
+{
+    // Returns a variable equivalent to -log(softmax(v))
+    return new LogSoftmaxVariable(v);
+}
+
 /*!   a soft version of the ordinary max(x1,x2) mathematical operation
   where the hardness parameter controls how close to an actual max(x1,x2)
   we are (i.e. as hardness --> infty we quickly get max(x1,x2), but
@@ -460,7 +467,7 @@ inline Var softmax(Var input, Var index)
 { 
   if (input->isVec())
     return new SoftmaxLossVariable(input, index);
-    else return new MatrixSoftmaxVariable(input, index);
+  else return new MatrixSoftmaxVariable(input, index);
 }
 
 inline Var neg_log_pi(Var p, Var index)

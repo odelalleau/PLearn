@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryVariable.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: UnaryVariable.h,v 1.2 2002/09/05 19:32:43 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -1082,6 +1082,20 @@ public:
   virtual void rfprop();
 };
 
+class LogSoftmaxVariable: public UnaryVariable
+{
+protected:
+    typedef UnaryVariable inherited;
+    //! Default constructor for pestilence
+    LogSoftmaxVariable() {};
+public:
+    LogSoftmaxVariable(Variable *input);
+    DECLARE_NAME_AND_DEEPCOPY(LogSoftmaxVariable);
+    virtual void fprop();
+    virtual void bprop();
+    virtual void bbprop();
+    virtual void symbolicBprop();
+}; // class LogSoftmaxVariable
 
 class LogGammaVariable: public UnaryVariable
 {

@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: UnaryVariable.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: UnaryVariable.cc,v 1.2 2002/09/05 19:32:43 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -2022,7 +2022,7 @@ void LogVariable::fprop()
       //PLWARNING("LogVariable::fprop qqchose va pas");
       cout << "inputdata[i]= " << input->valuedata[i] << endl;
       cout << "valuedata[i]= " << valuedata[i] << endl;
-      //displayVarGraph(this, true, 250);
+      displayVarGraph(this, true, 250);
       PLERROR("LogVariable::fprop qqchose va pas");
     }
 #endif
@@ -2659,6 +2659,46 @@ void SoftmaxVariable::rfprop()
     }*/
   }
 }
+
+/** LogSoftmaxVariable **/
+
+IMPLEMENT_NAME_AND_DEEPCOPY(LogSoftmaxVariable);
+
+
+LogSoftmaxVariable::LogSoftmaxVariable(Variable* input) 
+    : UnaryVariable(input, input->length(), input->width())
+{
+}
+
+void
+LogSoftmaxVariable::fprop()
+{
+    log_softmax(input->value, value);
+}
+
+void
+LogSoftmaxVariable::bprop()
+{
+    for (int i = 0; i < input->nelems(); ++i) {
+        real sum = 0.;
+        for (int k = 0; k < nelems(); ++k)
+            sum += gradientdata[k];
+        input->gradientdata[i] += gradientdata[i] - sum * safeexp(valuedata[i]);
+    }
+}
+
+void
+LogSoftmaxVariable::bbprop()
+{
+    PLERROR("LogSofmaxVariable::bbprop() not implemented");
+}
+
+void
+LogSoftmaxVariable::symbolicBprop()
+{
+    PLERROR("LogSofmaxVariable::symbolicBprop() not implemented");
+}
+
 
 void AffineTransformWeightPenalty::fprop()
 {
