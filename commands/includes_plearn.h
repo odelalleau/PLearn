@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: includes_plearn.h,v 1.1 2004/06/10 13:14:10 tihocan Exp $ 
+   * $Id: includes_plearn.h,v 1.2 2004/06/10 20:07:26 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -99,6 +99,7 @@
 #include "SelectInputSubsetLearner.h"
 // KernelProjection
 #include "KernelPCA.h"
+#include "SpectralClustering.h"
 // PDistribution
 #include "ConditionalDensityNet.h"
 #include "GaussianDistribution.h"
