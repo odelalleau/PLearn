@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SoftHistogramBinner.cc,v 1.1 2004/10/29 21:22:30 tihocan Exp $ 
+   * $Id: SoftHistogramBinner.cc,v 1.2 2004/11/04 14:55:46 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -128,13 +128,14 @@ TVec< TVec<int> > SoftHistogramBinner::getBins(const Vec& v) const {
   if (n == 0)
     PLERROR("In SoftHistogramBinner::getBins - You can't ask for empty bins");
   // Sort the data to make things easier.
-  Vec w(v.length());
-  w << v;
-  sortRows(columnmatrix(w));
+  Mat w(v.length(), 2);
+  w.column(0) << v;
+  w.column(1) << TVec<int>(0, w.length() - 1, 1);
+  sortRows(w);
   // Construct bins.
   TVec< TVec<int> > bins(n_bins);
-  real min = w[0];
-  real max = w[w.length() - 1];
+  real min = w(0,0);
+  real max = w(w.length() - 1, 0);
   real bin_width = (max - min) / real(n_bins);
   for (int i = 0; i < n_bins; i++) {
     real bin_left = min + i * bin_width;
@@ -143,12 +144,12 @@ TVec< TVec<int> > SoftHistogramBinner::getBins(const Vec& v) const {
     // Find data point closest to bin_mid.
     int k = 0;
     int min;
-    while (bin_mid > w[k]) k++;
-    if (w[k] - bin_mid > bin_mid - w[k-1])
+    while (bin_mid > w(k,0)) k++;
+    if (w(k,0) - bin_mid > bin_mid - w(k-1,0))
       min = k -1;
     else
       min = k;
-    bins[i].append(min);
+    bins[i].append(w(min, 1));
     // Expand to get n samples in the bin.
     int count = 1;
     int right = min;
@@ -159,7 +160,7 @@ TVec< TVec<int> > SoftHistogramBinner::getBins(const Vec& v) const {
         // We can get more data on our right.
         if (left - 1 >= 0) {
           // We can get more data on our left.
-          if (w[right + 1] - bin_mid < bin_mid - w[left - 1]) {
+          if (w(right + 1,0) - bin_mid < bin_mid - w(left - 1,0)) {
             // Next point to add is on our right.
             right++;
             to_add = right;
@@ -178,7 +179,7 @@ TVec< TVec<int> > SoftHistogramBinner::getBins(const Vec& v) const {
         left--;
         to_add = left;
       }
-      bins[i].append(to_add);
+      bins[i].append(w(to_add, 1));
       count++;
     }
   }
