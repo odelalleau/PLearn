@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.36 2003/08/26 20:30:13 plearner Exp $
+   * $Id: plearn.cc,v 1.37 2003/09/09 20:19:58 ducharme Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -100,6 +100,7 @@
 #include "VMatCommand.h"
 #include "KolmogorovSmirnovCommand.h"
 #include "ReadAndWriteCommand.h"
+#include "JulianDateCommand.h"
 
 using namespace PLearn;
 
