@@ -326,7 +326,7 @@ public:
   //! All characters read, except the stoppingsymbol, will be *appended* to characters_read 
   //! The stoppingsymbol is read and returned, but not appended to characters_read.
   //! Comments starting with # until the end of line are skipped (as if they were not part of the stream)
-  int smartReadUntilNext(const string& stoppingsymbols, string& characters_read);
+  int smartReadUntilNext(const string& stoppingsymbols, string& characters_read, bool ignore_brackets=false);
 
   // operator>>'s for base types
   PStream& operator>>(bool &x);

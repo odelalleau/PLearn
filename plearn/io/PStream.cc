@@ -186,7 +186,7 @@ streamsize PStream::readUntil(char* buf, streamsize n, const char* stop_chars)
     return nread;
   }
 
-int PStream::smartReadUntilNext(const string& stoppingsymbols, string& characters_read)
+int PStream::smartReadUntilNext(const string& stoppingsymbols, string& characters_read, bool ignore_brackets)
 {
   int c;
   while( (c=get()) != EOF)
@@ -204,19 +204,22 @@ int PStream::smartReadUntilNext(const string& stoppingsymbols, string& character
           switch(c)
             {
             case '(':
-              smartReadUntilNext(")", characters_read);
+              smartReadUntilNext(")", characters_read, ignore_brackets);
               characters_read+= ')';          
               break;
             case '[':
-              smartReadUntilNext("]", characters_read);
-              characters_read+= ']';          
+              if(!ignore_brackets)
+                {
+                  smartReadUntilNext("]", characters_read, ignore_brackets);
+                  characters_read+= ']';          
+                }
               break;
             case '{':
-              smartReadUntilNext("}", characters_read);
+              smartReadUntilNext("}", characters_read, ignore_brackets);
               characters_read+= '}';          
               break;
             case '"':
-              smartReadUntilNext("\"", characters_read);
+              smartReadUntilNext("\"", characters_read, ignore_brackets);
               characters_read+= '"';          
               break;          
             }

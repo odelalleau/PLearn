@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.13 2004/03/12 14:05:53 tihocan Exp $
+   * $Id: fileutils.h,v 1.14 2004/04/23 14:14:17 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -152,7 +152,7 @@ void force_mkdir_for_file(const string& filepath);
   int countNonBlankLinesOfFile(const string& filename);
 
   //! same as PStream's method smartReadUntilNext, but for istream
-  int smartReadUntilNext(istream& in, string stoppingsymbols, string& characters_read);
+  int smartReadUntilNext(istream& in, string stoppingsymbols, string& characters_read, bool ignore_brackets=false);
   
   //! peeks the first char after removal of blanks
   inline char peekAfterSkipBlanks(istream& in) { while(isspace(in.get())); in.unget();return in.peek(); }

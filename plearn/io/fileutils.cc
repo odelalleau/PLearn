@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.36 2004/03/30 16:46:26 tihocan Exp $
+   * $Id: fileutils.cc,v 1.37 2004/04/23 14:14:17 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -486,10 +486,10 @@ int countNonBlankLinesOfFile(const string& filename)
   return count;  
 }
 
-int smartReadUntilNext(istream& in, string stoppingsymbols, string& characters_read)
+int smartReadUntilNext(istream& in, string stoppingsymbols, string& characters_read, bool ignore_brackets)
 {
   PStream pin(&in);
-  return pin.smartReadUntilNext(stoppingsymbols, characters_read);
+  return pin.smartReadUntilNext(stoppingsymbols, characters_read, ignore_brackets);
 }
   
 //!  Makes use of mkstemp(...) to create a new file.
@@ -672,7 +672,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                 bool syntax_ok = true;
                 int c = in.get();
                 if(c == '{')
-                  smartReadUntilNext(in, "}", expr);
+                  smartReadUntilNext(in, "}", expr, true);
                 else
                   syntax_ok = false;
                 if (!syntax_ok)
@@ -693,7 +693,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                 skipBlanksAndComments(in);
                 if(in.get()!='{')
                   PLERROR("Bad syntax in .plearn DEFINE macro: correct syntax is $DEFINE{name}{definition}");
-                smartReadUntilNext(in, "}", vardef);
+                smartReadUntilNext(in, "}", vardef, true);
                 variables[varname] = vardef;
               }
               break;
@@ -705,7 +705,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                 bool syntax_ok = true;
                 int c = in.get();
                 if(c == '{')
-                  smartReadUntilNext(in, "}", expr);
+                  smartReadUntilNext(in, "}", expr, true);
                 else
                   syntax_ok = false;
                 if (!syntax_ok)
@@ -728,20 +728,20 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                       bool syntax_ok = true;
                       int c = in.get();
                       if(c == '{')
-                        smartReadUntilNext(in, "}", cond);
+                        smartReadUntilNext(in, "}", cond, true);
                       else
                         syntax_ok = false;
                       if (syntax_ok) {
                         c = in.get();
                         if(c == '{')
-                          smartReadUntilNext(in, "}", expr_cond_true);
+                          smartReadUntilNext(in, "}", expr_cond_true, true);
                         else
                           syntax_ok = false;
                       }
                       if (syntax_ok) {
                         c = in.get();
                         if(c == '{')
-                          smartReadUntilNext(in, "}", expr_cond_false);
+                          smartReadUntilNext(in, "}", expr_cond_false, true);
                         else
                           syntax_ok = false;
                       }
@@ -768,9 +768,9 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                       readWhileMatches(in, "NCLUDE");
                       int c = in.get();
                       if(c=='<')
-                        smartReadUntilNext(in, ">", includefilepath);
+                        smartReadUntilNext(in, ">", includefilepath, true);
                       else if(c=='{')
-                        smartReadUntilNext(in, "}", includefilepath);
+                        smartReadUntilNext(in, "}", includefilepath, true);
                       else
                         PLERROR("$INCLUDE must be followed immediately by a { or <");
                       istringstream pathin(includefilepath);
@@ -799,7 +799,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                             bool syntax_ok = true;
                             int c = in.get();
                             if(c == '{')
-                              smartReadUntilNext(in, "}", expr);
+                              smartReadUntilNext(in, "}", expr, true);
                             else
                               syntax_ok = false;
                             if (!syntax_ok)
@@ -823,13 +823,13 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                             bool syntax_ok = true;
                             int c = in.get();
                             if(c == '{')
-                              smartReadUntilNext(in, "}", expr1);
+                              smartReadUntilNext(in, "}", expr1, true);
                             else
                               syntax_ok = false;
                             if (syntax_ok) {
                               c = in.get();
                               if(c == '{')
-                                smartReadUntilNext(in, "}", expr2);
+                                smartReadUntilNext(in, "}", expr2, true);
                               else
                                 syntax_ok = false;
                             }
@@ -861,14 +861,14 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                 int c = in.get();
                 if (syntax_ok) {
                   if(c == '{')
-                    smartReadUntilNext(in, "}", expr1);
+                    smartReadUntilNext(in, "}", expr1,true);
                   else
                     syntax_ok = false;
                 }
                 if (syntax_ok) {
                   c = in.get();
                   if(c == '{')
-                    smartReadUntilNext(in, "}", expr2);
+                    smartReadUntilNext(in, "}", expr2,true);
                   else
                     syntax_ok = false;
                 }
@@ -894,14 +894,14 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                 int c = in.get();
                 if (syntax_ok) {
                   if(c == '{')
-                    smartReadUntilNext(in, "}", expr1);
+                    smartReadUntilNext(in, "}", expr1,true);
                   else
                     syntax_ok = false;
                 }
                 if (syntax_ok) {
                   c = in.get();
                   if(c == '{')
-                    smartReadUntilNext(in, "}", expr2);
+                    smartReadUntilNext(in, "}", expr2,true);
                   else
                     syntax_ok = false;
                 }
@@ -930,14 +930,14 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                 int c = in.get();
                 if (syntax_ok) {
                   if(c == '{')
-                    smartReadUntilNext(in, "}", expr1);
+                    smartReadUntilNext(in, "}", expr1,true);
                   else
                     syntax_ok = false;
                 }
                 if (syntax_ok) {
                   c = in.get();
                   if(c == '{')
-                    smartReadUntilNext(in, "}", expr2);
+                    smartReadUntilNext(in, "}", expr2,true);
                   else
                     syntax_ok = false;
                 }
@@ -966,7 +966,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                 int c = in.get();
                 if (syntax_ok) {
                   if(c == '{')
-                    smartReadUntilNext(in, "}", expr);
+                    smartReadUntilNext(in, "}", expr, true);
                   else
                     syntax_ok = false;
                 }
@@ -976,14 +976,14 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                   c = getAfterSkipBlanksAndComments(in);
                   string tmp_comp, tmp_val;
                   if(c == '{')
-                    smartReadUntilNext(in, "}", tmp_comp);
+                    smartReadUntilNext(in, "}", tmp_comp, true);
                   else
                     syntax_ok = false;
                   if (syntax_ok) {
                     c = peekAfterSkipBlanksAndComments(in);
                     if(c == '{') {
                       c = getAfterSkipBlanksAndComments(in);
-                      smartReadUntilNext(in, "}", tmp_val);
+                      smartReadUntilNext(in, "}", tmp_val, true);
                     }
                     else {
                       // We must have read 'valdef' just before.
@@ -1026,14 +1026,14 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                 int c = in.get();
                 if (syntax_ok) {
                   if(c == '{')
-                    smartReadUntilNext(in, "}", expr1);
+                    smartReadUntilNext(in, "}", expr1, true);
                   else
                     syntax_ok = false;
                 }
                 if (syntax_ok) {
                   c = in.get();
                   if(c == '{')
-                    smartReadUntilNext(in, "}", expr2);
+                    smartReadUntilNext(in, "}", expr2, true);
                   else
                     syntax_ok = false;
                 }
