@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.57 2004/07/13 21:00:56 tihocan Exp $
+   * $Id: TMat_maths_impl.h,v 1.58 2004/07/19 11:20:23 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -2416,7 +2416,296 @@ void compressedTransposeProductAcc(const TVec<T>& result, const TMat<T>& m, char
     PLERROR("In compressed_dot_product : l is not 0 at exit of function, wrong data?");
 }
 
+//! return the matrix with elements (i,j) = sum_k U_{ik} d_k V_{kj}
+template<class T>
+void diagonalizedFactorsProduct(TMat<T>& result, const TMat<T>& U, const TVec<T> d, const TMat<T> V, bool accumulate=false)
+{
+#ifdef BOUNDCHECK
+  if (result.length()!=U.length() || result.width()!=V.width() || U.width()!=d.length() || V.length()!=d.length())
+    PLERROR("diagonalizedFactorsProduct: incompatible arguments: (%dx%d)*(%d)*(%dx%d) --> (%dx%d)",
+            U.length(),U.width(),d.length(),V.length(),V.width(),result.length(),result.width());
+#endif
+  int n1=U.length();
+  int n2=U.width();
+  int n3=V.width();
+  T *r_ij = result.data();
+  for (int i=0;i<n1;i++)
+    {
+      T *u_i = U[i];
+      for (int j=0;j<n3;j++,r_ij++)
+        {
+          T* d_k = d.data();
+          T res=0;
+          for (int k=0;k<n2;k++,d_k++)
+            res += *d_k * u_i[k] * V(k,j);
+          if (accumulate)
+            *r_ij += res;
+          else
+            *r_ij = res;
+        }
+    }
+}
 
+//! GIVEN that res(i,j) = sum_k U_{ik} d_k V_{kj}, and given dC/dres, U,d and V, accumulate
+//! gradients on dC/dU, dC/dd and dC/dV:
+//! dC/dU[i,k] += sum_j dC/dres[i,j] d_k V[k,j]
+//! dC/dd[k] += sum_{ij} dC/dres[i,j] U[i,k] V[k,j]
+//! dC/dV[k,j] += d_k * sum_i U[i,k] dC/dres[i,j] 
+template<class T>
+void diagonalizedFactorsProductBprop(const TMat<T>& dCdresult, const TMat<T>& U, const TVec<T> d, 
+                                     const TMat<T> V, TMat<T>& dCdU, TVec<T>& dCdd, TMat<T>& dCdV)
+{
+#ifdef BOUNDCHECK
+  if (dCdU.length()!=U.length() || dCdU.width()!=U.width() || dCdd.length()!=d.length() 
+      || dCdV.length()!=V.length() || dCdV.width()!=V.width() || 
+      U.width()!=d.length() || V.length()!=d.length())
+    PLERROR("diagonalizedFactorsProductBprop: incompatible arguments");
+#endif
+  int n1=U.length();
+  int n2=U.width();
+  int n3=V.width();
+  T *dCdr_ij = dCdresult.data();
+  for (int i=0;i<n1;i++)
+    {
+      T *u_i = U[i];
+      T *dCdu_i = dCdU[i];
+      for (int j=0;j<n3;j++,dCdr_ij++)
+        {
+          T dcdr = *dCdr_ij;
+          T* d_k = d.data();
+          T* dCdd_k = dCdd.data();
+          for (int k=0;k<n2;k++,d_k++,dCdd_k++)
+            {
+              T dk = *d_k;
+              T u_ik = u_i[k];
+              T v_kj = V(k,j);
+              dCdu_i[k] += dcdr * dk * v_kj;
+              *dCdd_k += dcdr * u_ik * v_kj;
+              dCdV(k,j) += dk * u_ik * dcdr;
+            }
+        }
+    }
+}
+
+//! return the matrix with elements (i,j) = sum_k U_{ik} d_k V_{jk}
+template<class T>
+void diagonalizedFactorsProductTranspose(TMat<T>& result, const TMat<T>& U, const TVec<T> d, const TMat<T> V, bool accumulate=false)
+{
+#ifdef BOUNDCHECK
+  if (result.length()!=U.length() || result.width()!=V.length() || U.width()!=d.length() || V.width()!=d.length())
+    PLERROR("diagonalizedFactorsProductTranspose: incompatible arguments: (%dx%d)*(%d)*(%dx%d)' --> (%dx%d)",
+            U.length(),U.width(),d.length(),V.length(),V.width(),result.length(),result.width());
+#endif
+  int n1=U.length();
+  int n2=U.width();
+  int n3=V.length();
+  T *r_ij = result.data();
+  for (int i=0;i<n1;i++)
+    {
+      T *u_i = U[i];
+      for (int j=0;j<n3;j++,r_ij++)
+        {
+          T* d_k = d.data();
+          T* v_j = V[j];
+          T res=0;
+          for (int k=0;k<n2;k++,d_k++)
+            res += *d_k * u_i[k] * v_j[k];
+          if (accumulate)
+            *r_ij += res;
+          else
+            *r_ij = res;
+        }
+    }
+}
+
+// SINCE res[i,j] = sum_k U[i,k] d[k] V[j,k] ==>
+// gradients on dC/dU, dC/dd and dC/dV:
+// dC/dU[i,k] = sum_j dC/dres[i,j] d_k V[j,k]
+// dC/dd[k] = sum_{ij} dC/dres[i,j] U[i,k] V[j,k]
+// dC/dV[j,k] = sum_i dC/dres[i,j] d_k U[i,k]
+template<class T>
+void diagonalizedFactorsProductTransposeBprop(const TMat<T>& dCdresult, const TMat<T>& U, 
+                                              const TVec<T> d, const TMat<T> V, TMat<T>& dCdU, 
+                                              TVec<T>& dCdd, TMat<T>& dCdV)
+{
+#ifdef BOUNDCHECK
+  if (dCdU.length()!=U.length() || dCdU.width()!=U.width() || dCdd.length()!=d.length() 
+      || dCdV.length()!=V.length() || dCdV.width()!=V.width() || 
+      U.width()!=d.length() || V.width()!=d.length())
+    PLERROR("diagonalizedFactorsProductTransposeBprop: incompatible arguments");
+#endif
+  int n1=U.length();
+  int n2=U.width();
+  int n3=V.length();
+  T *dCdr_ij = dCdresult.data();
+  for (int i=0;i<n1;i++)
+    {
+      T *u_i = U[i];
+      T *dCdu_i = dCdU[i];
+      for (int j=0;j<n3;j++,dCdr_ij++)
+        {
+          T* d_k = d.data();
+          T* dCdd_k = dCdd.data();
+          T* v_j = V[j];
+          T* dCdv_j = dCdV[j];
+          for (int k=0;k<n2;k++,d_k++,dCdd_k++)
+          {
+            T dcdr = *dCdr_ij;
+            T dk = *d_k;
+            T v_jk = v_j[k];
+            T u_ik = u_i[k];
+            dCdu_i[k] += dcdr * dk * v_jk;
+            *dCdd_k += dcdr * u_ik * v_jk;
+            dCdv_j[k] += dcdr * dk * u_ik;
+          }
+        }
+    }
+}
+
+//! return the matrix with elements (i,j) = sum_k U_{ki} d_k V_{kj}
+template<class T>
+void diagonalizedFactorsTransposeProduct(TMat<T>& result, const TMat<T>& U, const TVec<T> d, const TMat<T> V, bool accumulate=false)
+{
+#ifdef BOUNDCHECK
+  if (result.length()!=U.width() || result.width()!=V.width() || U.length()!=d.length() || V.length()!=d.length())
+    PLERROR("diagonalizedFactorsTransposeProduct: incompatible arguments: (%dx%d)'*(%d)*(%dx%d) --> (%dx%d)",
+            U.length(),U.width(),d.length(),V.length(),V.width(),result.length(),result.width());
+#endif
+  int n1=U.width();
+  int n2=U.length();
+  int n3=V.width();
+  if (!accumulate)
+    result.clear();
+  T* d_k = d.data();
+  for (int k=0;k<n2;k++,d_k++)
+    {
+      T *u_k = U[k];
+      T *v_k = V[k];
+      T *r_ij = result.data();
+      for (int i=0;i<n1;i++)
+      {
+        T u_ki = u_k[i];
+        for (int j=0;j<n3;j++,r_ij++)
+          *r_ij += *d_k * u_ki * v_k[j];
+      }
+    }
+}
+
+// SINCE res[i,j] = sum_k U[k,i] d[k] V[k,j] ==>
+// gradients on dC/dU, dC/dd and dC/dV:
+// dC/dU[k,i] = d_k * sum_j dC/dres[i,j] V[k,j]
+// dC/dd[k] = sum_{ij} dC/dres[i,j] U[k,i] V[k,j]
+// dC/dV[k,j] = d_k sum_i dC/dres[i,j] U[k,i]
+template<class T>
+void diagonalizedFactorsTransposeProductBprop(const TMat<T>& dCdresult, const TMat<T>& U, 
+                                              const TVec<T> d, const TMat<T> V, TMat<T>& dCdU, 
+                                              TVec<T>& dCdd, TMat<T>& dCdV)
+{
+#ifdef BOUNDCHECK
+  if (dCdU.length()!=U.length() || dCdU.width()!=U.width() || dCdd.length()!=d.length() 
+      || dCdV.length()!=V.length() || dCdV.width()!=V.width() || 
+      U.length()!=d.length() || V.length()!=d.length())
+    PLERROR("diagonalizedFactorsTransposeProductBprop: incompatible arguments");
+#endif
+  int n1=U.width();
+  int n2=U.length();
+  int n3=V.width();
+  T* d_k = d.data();
+  T* dCdd_k = dCdd.data();
+  for (int k=0;k<n2;k++,d_k++,dCdd_k++)
+    {
+      T dk = *d_k;
+      T *u_k = U[k];
+      T *dCdu_k = dCdU[k];
+      T *v_k = V[k];
+      T *dCdv_k = dCdV[k];
+      T *dCdr_ij = dCdresult.data();
+      for (int i=0;i<n1;i++)
+      {
+        T u_ki = u_k[i];
+        T& dCdu_ki = dCdu_k[i];
+        for (int j=0;j<n3;j++,dCdr_ij++)
+        {
+          T dcdr = *dCdr_ij;
+          T v_kj = v_k[j];
+          dCdu_ki +=  dcdr * dk * v_kj;
+          *dCdd_k += dcdr * u_ki * v_kj;
+          dCdv_k[j] += dcdr * dk * u_ki;
+        }
+      }
+    }
+}
+
+//! return the matrix with elements (i,j) = sum_k U_{ki} d_k V_{jk}
+template<class T>
+void diagonalizedFactorsTransposeProductTranspose(TMat<T>& result, const TMat<T>& U, const TVec<T> d, const TMat<T> V, bool accumulate=false)
+{
+#ifdef BOUNDCHECK
+  if (result.length()!=U.width() || result.width()!=V.length() || U.length()!=d.length() || V.width()!=d.length())
+    PLERROR("diagonalizedFactorsTransposeProductTranspose: incompatible arguments: (%dx%d)'*(%d)*(%dx%d)' --> (%dx%d)",
+            U.length(),U.width(),d.length(),V.length(),V.width(),result.length(),result.width());
+#endif
+  int n1=U.width();
+  int n2=U.length();
+  int n3=V.length();
+  if (!accumulate)
+    result.clear();
+  T* d_k = d.data();
+  for (int k=0;k<n2;k++,d_k++)
+    {
+      T *u_k = U[k];
+      T *r_ij = result.data();
+      for (int i=0;i<n1;i++)
+      {
+        T u_ki = u_k[i];
+        for (int j=0;j<n3;j++,r_ij++)
+          *r_ij += *d_k * u_ki * V(j,k);
+      }
+    }
+}
+
+// SINCE res[i,j] = sum_k U[k,i] d[k] V[j,k] ==>
+// gradients on dC/dU, dC/dd and dC/dV:
+// dC/dU[k,i] = d_k * sum_j dC/dres[i,j] V[j,k]
+// dC/dd[k] = sum_{ij} dC/dres[i,j] U[k,i] V[j,k]
+// dC/dV[j,k] = d_k * sum_i dC/dres[i,j] U[k,i]
+template<class T>
+void diagonalizedFactorsTransposeProductTransposeBprop(const TMat<T>& dCdresult, const TMat<T>& U, 
+                                                       const TVec<T> d, const TMat<T> V, TMat<T>& dCdU, 
+                                                       TVec<T>& dCdd, TMat<T>& dCdV)
+{
+#ifdef BOUNDCHECK
+  if (dCdU.length()!=U.length() || dCdU.width()!=U.width() || dCdd.length()!=d.length() 
+      || dCdV.length()!=V.length() || dCdV.width()!=V.width() || 
+      U.length()!=d.length() || V.width()!=d.length())
+    PLERROR("diagonalizedFactorsTransposeProductTransposeBprop: incompatible arguments");
+#endif
+  int n1=U.width();
+  int n2=U.length();
+  int n3=V.length();
+  T* d_k = d.data();
+  T* dCdd_k = dCdd.data();
+  for (int k=0;k<n2;k++,d_k++,dCdd_k++)
+    {
+      T dk = *d_k;
+      T *u_k = U[k];
+      T *dCdu_k = dCdU[k];
+      T *dCdr_ij = dCdresult.data();
+      for (int i=0;i<n1;i++)
+      {
+        T u_ki = u_k[i];
+        T& dCdu_ki = dCdu_k[i];
+        for (int j=0;j<n3;j++,dCdr_ij++)
+        {
+          T dcdr = *dCdr_ij;
+          T v_jk = V(j,k);
+          dCdu_ki += dcdr * dk * v_jk;
+          *dCdd_k += dcdr * u_ki * v_jk;
+          dCdV(j,k) += dcdr * dk * u_ki;
+        }
+      }
+    }
+}
 
 // ---------- these were previously methods of TMat ---------------
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PlusVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
+   * $Id: PlusVariable.cc,v 1.7 2004/07/19 11:20:24 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,8 +68,8 @@ void
 PlusVariable::build_()
 {
     if (input1 && input2) {
-        if(input1->length() != input2->length() || input1->width() != input2->width())
-            PLERROR("In PlusVariable: input1 and input2 must have exactly the same size");
+      if(input1->size() != input2->size())
+        PLERROR("In PlusVariable: input1 and input2 must have exactly the same size");
     }
 }
 

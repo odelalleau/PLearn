@@ -2,7 +2,7 @@
 
 // TangentLearner.cc
 //
-// Copyright (C) 2004 Martin Monperrus 
+// Copyright (C) 2004 Martin Monperrus & Yoshua Bengio
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.9 2004/07/09 22:26:03 monperrm Exp $ 
+   * $Id: TangentLearner.cc,v 1.10 2004/07/19 11:20:24 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -46,11 +46,13 @@
 //#include "LocalPCAVMatrix.h"
 #include "LocalNeighborsDifferencesVMatrix.h"
 #include "ProductVariable.h"
+#include "PlusVariable.h"
 #include "Var_operators.h"
 #include "ConcatColumnsVMatrix.h"
 #include "random.h"
 #include "SumOfVariable.h"
 #include "TanhVariable.h"
+#include "DiagonalizedFactorsProductVariable.h"
 #include "random.h"
 #include "plapack.h"
 //#include "TMat_maths_impl.h"
@@ -95,8 +97,10 @@ TangentLearner::TangentLearner()
 /* ### Initialize all fields to their default value here */
   : training_targets("local_neighbors"), use_subspace_distance(false), normalize_by_neighbor_distance(true),
     smart_initialization(0),initialization_regularization(1e-3),
-    n_neighbors(5), n_dim(1), architecture_type("single_neural_network"), n_hidden_units(-1),
-    batch_size(1), norm_penalization(0), svd_threshold(1e-5), projection_error_regularization(0)
+    n_neighbors(5), n_dim(1), architecture_type("single_neural_network"), output_type("tangent_plane"),
+    n_hidden_units(-1), batch_size(1), norm_penalization(0), svd_threshold(1e-5), 
+    projection_error_regularization(0)
+    
 {
 }
 
@@ -105,18 +109,29 @@ PLEARN_IMPLEMENT_OBJECT(TangentLearner, "Learns local tangent plane of the manif
 			"The manifold is represented by a function which predicts a basis for the\n"
 			"tangent planes at each point x, given x in R^n. Let f_i(x) be the predicted i-th tangent\n"
 			"vector (in R^n). Then we will optimize the parameters that define the d functions f_i by\n"
-      "to push the f_i so that they span the local tangent directions. Three criteria are\n"
+      "pushing the f_i so that they span the local tangent directions. Three criteria are\n"
       "possible, according to the 'training_targets' option:\n"
 			" * If use_subspace_distance,\n"
       "      criterion = min_{w,u}  || sum_i w_i f_i  -  sum_j u_j t(x,j) ||^2\n"
       "      under the constraint that ||w||=1.\n"
       "   else\n"
-			"      criterion = sum_x sum_j min_w ||t(x,j) - sum_i w_i f_i(x)||^2\n"
-			"   where the first sum is over training examples and w is a free d-vector, and\n"
-			"   t(x,j) estimates local tangent directions based on near neighbors. t(x,j)\n"
+			"      criterion = sum_x sum_j min_w ||t(x,j) - sum_i w_i f_i(x)||^2 / ||t(x,j)||^2\n"
+			"   where the first sum is over training examples and w is a free d-vector,\n"
+			"   t(x,j) estimates local tangent directions based on near neighbors, and the denominator\n"
+      "   ||t(x,j)||^2 is optional (normalize_by_neighbor_distance). t(x,j)\n"
       "   is defined according to the training_targets option:\n"
 			"    'local_evectors' : local principal components (based on n_neighbors of x)\n"
 			"    'local_neighbors': difference between x and its n_neighbors.\n"
+      "Different architectures are possible for the f_i(x) (architecture_type option):\n"
+      "   - multi_neural_network: one neural net per basis function\n"
+      "   - single_neural_network: single neural network with matrix output (one row per basis vector)\n"
+      "   - linear: F_{ij}(x) = sum_k A_{ijk} x_k\n"
+      "   - embedding_neural_network: the embedding function e_k(x) (for k-th dimension)\n"
+      "        is an ordinary neural network, and F_{ki}(x) = d(e_k(x))/d(x_i). This allows to\n"
+      "        output the embedding, instead of, or as well as, the tangent plane (output_type option).\n"
+      "   - embedding_quadratic: the embedding function e_k(x) (for k-th dimension)\n"
+      "        is a 2nd order polynomial of x, and F_{ki}(x) = d(e_k(x))/d(x_i). This allows to\n"
+      "        output the embedding, instead of, or as well as, the tangent plane (output_type option).\n"
 			);
 
 void TangentLearner::declareOptions(OptionList& ol)
@@ -169,14 +184,26 @@ void TangentLearner::declareOptions(OptionList& ol)
 		"   single_neural_network : prediction = b + W*tanh(c + V*x), where W has n_hidden_units columns\n"
 		"                          where the resulting vector is viewed as a n_dim by n matrix\n"
 		"   linear :         prediction = b + W*x\n"
+    "   embedding_neural_network: prediction[k,i] = d(e[k]/d(x[i), where e(x) is an ordinary neural\n"
+    "                             network representing the embedding function (see output_type option)\n"
+    "   embedding_quadratic: prediction[k,i] = d(e_k/d(x_i) = A_k x + b_k, where e_k(x) is a quadratic\n"
+    "                        form in x, i.e. e_k = x' A_k x + b_k' x\n"
 		"   (empty string):  specify explicitly the function with tangent_predictor option\n"
 		"where (b,W,c,V) are parameters to be optimized.\n"
 		);
 
   declareOption(ol, "n_hidden_units", &TangentLearner::n_hidden_units, OptionBase::buildoption,
-		"Number of hidden units (if architecture == 'neural_network')\n"
+		"Number of hidden units (if architecture_type is some kidn of neural network)\n"
 		);
 
+  declareOption(ol, "output_type", &TangentLearner::output_type, OptionBase::buildoption,
+		"Default value (the only one considered if architecture_type != embedding_*) is\n"
+    "   tangent_plane: output the predicted tangent plane.\n"
+    "   embedding: output the embedding vector (only if architecture_type == embedding_*).\n"
+    "   tangent_plane+embedding: output both (in this order).\n"
+		);
+
+ 
   declareOption(ol, "batch_size", &TangentLearner::batch_size, OptionBase::buildoption, 
                 "    how many samples to use to estimate the average gradient before updating the weights\n"
                 "    0 is equivalent to specifying training_set->length() \n");
@@ -231,6 +258,41 @@ void TangentLearner::build_()
         b = Var(n_dim*n,1,"b");
         W = Var(n_dim*n,n,"W");
         tangent_predictor = Func(x, b & W, b + product(W,x));
+      }
+    else if (architecture_type == "embedding_neural_network")
+      {
+        if (n_hidden_units <= 0)
+          PLERROR("TangentLearner::Number of hidden units should be positive, now %d\n",n_hidden_units);
+        Var x(n);
+        W = Var(n_dim,n_hidden_units,"W");
+        c = Var(n_hidden_units,1,"c");
+        V = Var(n_hidden_units,n,"V");
+        Var a = tanh(c + product(V,x));
+        Var tangent_plane = diagonalized_factors_product(W,1-a*a,V); 
+        tangent_predictor = Func(x, W & c & V, tangent_plane);
+        embedding = product(W,a);
+        if (output_type=="tangent_plane")
+          output_f = tangent_predictor;
+        else if (output_type=="embedding")
+          output_f = Func(x, embedding);
+        else if (output_type=="tangent_plane+embedding")
+          output_f = Func(x, tangent_plane & embedding);
+      }
+    else if (architecture_type == "embedding_quadratic")
+      {
+        Var x(n);
+        b = Var(n_dim,n,"b");
+        W = Var(n_dim*n,n,"W");
+        Var Wx = product(W,x);
+        Var tangent_plane = Wx + b;
+        tangent_predictor = Func(x, W & b, tangent_plane);
+        embedding = product(new PlusVariable(b,Wx),x);
+        if (output_type=="tangent_plane")
+          output_f = tangent_predictor;
+        else if (output_type=="embedding")
+          output_f = Func(x, embedding);
+        else if (output_type=="tangent_plane+embedding")
+          output_f = Func(x, tangent_plane & embedding);
       }
     else if (architecture_type != "")
       PLERROR("TangentLearner::build, unknown architecture_type option %s (should be 'neural_network', 'linear', or empty string '')\n",
@@ -287,7 +349,7 @@ void TangentLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies
 
 int TangentLearner::outputsize() const
 {
-  return n_dim*inputsize();
+  return output_f->outputsize;
 }
 
 void TangentLearner::forget()
@@ -390,6 +452,20 @@ void TangentLearner::initializeParams()
     b->matValue.clear();
     fill_random_uniform(W->matValue, -delta, delta);
   }
+  else if (architecture_type=="embedding_neural_network")
+  {
+    real delta = 1.0 / sqrt(real(inputsize()));
+    fill_random_uniform(V->value, -delta, delta);
+    delta = 1.0 / real(n_hidden_units);
+    fill_random_uniform(W->matValue, -delta, delta);
+    c->value.clear();
+  }
+  else if (architecture_type=="embedding_quadratic")
+  {
+    real delta = 1.0 / sqrt(real(inputsize()));
+    fill_random_uniform(W->matValue, -delta, delta);
+    b->value.clear();
+  }
   else PLERROR("other types not handled yet!");
   // Reset optimizer
   if(optimizer)
@@ -401,7 +477,7 @@ void TangentLearner::computeOutput(const Vec& input, Vec& output) const
 {
   int nout = outputsize();
   output.resize(nout);
-  output << tangent_predictor(input);
+  output << output_f(input);
 }    
 
 void TangentLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: ProjectionErrorVariable.cc,v 1.9 2004/07/09 22:20:00 monperrm Exp $
+ * $Id: ProjectionErrorVariable.cc,v 1.10 2004/07/19 11:20:24 yoshua Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -170,7 +170,7 @@ namespace PLearn {
     //  Let F' = U S V' the SVD of F'. Then
     //    w_j = (F F')^{-1} F t_j = (V S U' U S V')^{-1} F t_j = V S^{-2} V' F t_j.
     //  Note that we can pre-compute
-    //    B = V S^{-2} V' F 
+    //    B = V S^{-2} V' F = V S^{-1} U'
     //  and
     //    w_j = B t_j is our solution.
     // ENDIF
@@ -250,25 +250,22 @@ namespace PLearn {
         F_copy << F;
         // N.B. this is the SVD of F'
         lapackSVD(F_copy, Ut, S, V);
-        VVt.clear();
+        B.clear();
         for (int k=0;k<S.length();k++)
           {
             real s_k = S[k];
             if (s_k>epsilon) // ignore the components that have too small singular value (more robust solution)
               { 
                 s_k += regularization;
-                real coef = 1/(s_k*s_k);
+                real coef = 1/s_k;
                 for (int i=0;i<n_dim;i++)
                   {
-                    real* VVti = VVt[i];
-                    for (int j=0;j<n_dim;j++)
-                      VVti[j] += V(i,k)*V(j,k)*coef;
+                    real* Bi = B[i];
+                    for (int j=0;j<n;j++)
+                      Bi[j] += V(i,k)*Ut(k,j)*coef;
                   }
-                //Vec Vk = V(k);
-                //externalProductScaleAcc(VVt, Vk, Vk, 1.0 / (s_k * s_k));
               }
           }
-        product(B,VVt,F);
         //  now we have B, we can compute the w's and the cost
         for(int j=0; j<T;j++)
           {

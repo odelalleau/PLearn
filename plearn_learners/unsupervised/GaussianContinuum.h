@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// TangentLearner.h
+// GaussianContinuum.h
 //
-// Copyright (C) 2004 Martin Monperrus & Yoshua Bengio
+// Copyright (C) 2004 Yoshua Bengio & Martin Monperrus
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,16 +33,16 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.h,v 1.8 2004/07/19 11:20:24 yoshua Exp $ 
+   * $Id: GaussianContinuum.h,v 1.1 2004/07/19 11:21:57 yoshua Exp $
    ******************************************************* */
 
-// Authors: Martin Monperrus & Yoshua Bengio
+// Authors: Yoshua Bengio & Martin Monperrus
 
-/*! \file TangentLearner.h */
+/*! \file GaussianContinuum.h */
 
 
-#ifndef TangentLearner_INC
-#define TangentLearner_INC
+#ifndef GaussianContinuum_INC
+#define GaussianContinuum_INC
 
 #include "PLearner.h"
 #include "Func.h"
@@ -51,7 +51,7 @@
 namespace PLearn {
 using namespace std;
 
-class TangentLearner: public PLearner
+class GaussianContinuum: public PLearner
 {
 
 private:
@@ -80,14 +80,9 @@ public:
 
   // ### declare public option fields (such as build options) here
 
-  string training_targets; // "local_evectors", "local_neighbors"
-  bool use_subspace_distance;
-  bool normalize_by_neighbor_distance;
-  real smart_initialization;
-  real initialization_regularization;
   int n_neighbors; // number of neighbors used in local_pca or number of neighbors to predict
   int n_dim; // number of reduced dimensions (number of tangent vectors to compute)
-
+  string variances_transfer_function; "square", "exp" or "softplus"
   PP<Optimizer> optimizer; // to estimate the function that predicts local tangent vectors given the input
   Var embedding;
   Func output_f;
@@ -112,7 +107,7 @@ public:
   //! Default constructor.
   // (Make sure the implementation in the .cc
   // initializes all fields to reasonable default values)
-  TangentLearner();
+  GaussianContinuum();
 
 
   // ********************
@@ -146,7 +141,7 @@ public:
   // Declares other standard object methods.
   // If your class is not instantiatable (it has pure virtual methods)
   // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
-  PLEARN_DECLARE_OBJECT(TangentLearner);
+  PLEARN_DECLARE_OBJECT(GaussianContinuum);
 
 
   // **************************
@@ -201,7 +196,7 @@ public:
 };
 
 // Declares a few other classes and functions related to this class.
-DECLARE_OBJECT_PTR(TangentLearner);
+DECLARE_OBJECT_PTR(GaussianContinuum);
   
 } // end of namespace PLearn
 
