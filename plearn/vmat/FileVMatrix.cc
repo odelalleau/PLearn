@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.6 2003/05/26 04:12:43 plearner Exp $
+   * $Id: FileVMatrix.cc,v 1.7 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -47,7 +47,7 @@ using namespace std;
 
 /** FileVMatrix **/
 
-IMPLEMENT_NAME_AND_DEEPCOPY(FileVMatrix);
+PLEARN_IMPLEMENT_OBJECT(FileVMatrix, "ONE LINE DESCR", "NO HELP");
 
 FileVMatrix::FileVMatrix()
   :filename_(""), f(0) 

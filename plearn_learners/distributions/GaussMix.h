@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.4 2003/07/24 18:33:51 jkeable Exp $ 
+   * $Id: GaussMix.h,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -300,7 +300,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(GaussMix);
+  PLEARN_DECLARE_OBJECT(GaussMix);
 
   // *******************
   // * Learner methods *

@@ -13,7 +13,7 @@ DERIVEDCLASS::DERIVEDCLASS()
   // build_();
 }
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", Splitter);
+PLEARN_IMPLEMENT_OBJECT(DERIVEDCLASS, "ONE LINE DESCR", "NO HELP");
 
 void DERIVEDCLASS::declareOptions(OptionList& ol)
 {
@@ -29,7 +29,7 @@ void DERIVEDCLASS::declareOptions(OptionList& ol)
   // ...
 
   // Now call the parent class' declareOptions
-  parentclass::declareOptions(ol);
+  inherited::declareOptions(ol);
 }
 
 string DERIVEDCLASS::help()
@@ -54,7 +54,7 @@ void DERIVEDCLASS::build_()
 // ### Nothing to add here, simply calls build_
 void DERIVEDCLASS::build()
 {
-  parentclass::build();
+  inherited::build();
   build_();
 }
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NaryVariable.h,v 1.5 2002/10/25 23:16:08 plearner Exp $
+   * $Id: NaryVariable.h,v 1.6 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,11 +66,11 @@ public: // Temporarily public for GradientOptimizer hack (speed contest, Pascal)
 
 public:
   NaryVariable(const VarArray& the_varray, int thelength, int thewidth=1);
-  DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(NaryVariable);
+  PLEARN_DECLARE_ABSTRACT_OBJECT(NaryVariable);
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
-  virtual void deepRead(istream& in, DeepReadMap& old2new);
-  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
+  
+  
 
   virtual bool markPath();
   virtual void buildPath(VarArray& proppath);

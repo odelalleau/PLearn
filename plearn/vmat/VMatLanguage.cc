@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.8 2003/08/13 01:25:42 yoshua Exp $
+   * $Id: VMatLanguage.cc,v 1.9 2003/08/13 08:13:46 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -386,7 +386,7 @@ using namespace std;
     generateCode(processed_sourcecode);
   }
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(VMatLanguage);
+  PLEARN_IMPLEMENT_OBJECT(VMatLanguage, "ONE LINE DESCR", "NO HELP");
 
   //! builds the map if it does not already exist
   void VMatLanguage::build_opcodes_map()
@@ -664,7 +664,7 @@ using namespace std;
             {
               a = pstack.pop(); // n
               b = pstack.pop(); // alpha
-              int start = pstack.length()-a;
+              int start = int(pstack.length()-a);
               for (int i=0;i<a;i++)
                 pstack[start+i] *= b;
               break;
@@ -694,6 +694,6 @@ using namespace std;
     program.run(i,v);
   }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(PreprocessingVMatrix);
+PLEARN_IMPLEMENT_OBJECT(PreprocessingVMatrix, "ONE LINE DESCR", "NO HELP");
 
 %> // end of namespace PLearn

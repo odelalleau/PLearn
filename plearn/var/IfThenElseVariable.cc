@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IfThenElseVariable.cc,v 1.2 2003/01/08 21:32:25 ducharme Exp $
+   * $Id: IfThenElseVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,7 +59,7 @@ IfThenElseVariable::IfThenElseVariable(Var IfVar, Var ThenVar, Var ElseVar)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(IfThenElseVariable);
+PLEARN_IMPLEMENT_OBJECT(IfThenElseVariable, "ONE LINE DESCR", "NO HELP");
 
 void IfThenElseVariable::recomputeSize(int& l, int& w) const
 { l=varray[1]->length(); w=varray[1]->width(); }

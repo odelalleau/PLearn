@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ColumnSumVariable.cc,v 1.2 2003/01/08 21:32:14 ducharme Exp $
+   * $Id: ColumnSumVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,26 +52,16 @@ ColumnSumVariable::ColumnSumVariable(Variable* input)
   :UnaryVariable(input, 1, input->width()) {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ColumnSumVariable);
+PLEARN_IMPLEMENT_OBJECT(ColumnSumVariable, "ONE LINE DESCR", "NO HELP");
 
 void ColumnSumVariable::recomputeSize(int& l, int& w) const
 { l=1; w=input->width(); }
 
 
-void ColumnSumVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "ColumnSumVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "ColumnSumVariable");
-}
 
 
-void ColumnSumVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "ColumnSumVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "ColumnSumVariable");
-}
+
+
 
 
 void ColumnSumVariable::fprop()

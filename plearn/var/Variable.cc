@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.5 2003/07/24 15:03:36 larocheh Exp $
+   * $Id: Variable.cc,v 1.6 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -155,13 +155,6 @@ void Var::operator=(const Mat& m)
   else
     PLERROR("Var::operator= called on null Var");
 }
-
-void deepRead(istream& in, DeepReadMap& old2new, Var& v)
-{ Object* v_ptr; deepRead(in, old2new, v_ptr); v = (Variable*)v_ptr; }
-
-void deepWrite(ostream& out, DeepWriteSet& already_saved, const Var& v)
-{ deepWrite(out, already_saved, (Object*)v); }
-
 
 int Variable::nvars = 0;
 
@@ -284,7 +277,7 @@ void Variable::print(ostream& out) const
       out << cn << endl;
 }
 
-IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(Variable);
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Variable, "ONE LINE DESCR", "NO HELP");
 
 void Variable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
@@ -345,32 +338,9 @@ void Variable::oldread(istream& in)
 void Variable::write(ostream& out)
 { PLearn::write(out, value); }; //value.write(out); }
 
-void Variable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "Variable");
-  PLearn::deepRead(in, old2new, marked);
-  PLearn::deepRead(in, old2new, varname);
-  PLearn::deepRead(in, old2new, matValue);
-  PLearn::deepRead(in, old2new, matGradient);
-  PLearn::deepRead(in, old2new, matRValue);
-  readFooter(in, "Variable");
 
-  value = matValue.toVec();
-  gradient = matGradient.toVec();
-  valuedata = value.data();
-  gradientdata = gradient.data();
-}
 
-void Variable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "Variable");
-  PLearn::deepWrite(out, already_saved, marked);
-  PLearn::deepWrite(out, already_saved, varname);
-  PLearn::deepWrite(out, already_saved, matValue);
-  PLearn::deepWrite(out, already_saved, matGradient);
-  PLearn::deepWrite(out, already_saved, matRValue);
-  writeFooter(out, "Variable");
-}
+
 
 Var Variable::subVec(int start, int len, bool transpose)
 {

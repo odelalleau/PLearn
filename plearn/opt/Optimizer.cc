@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.17 2003/06/30 15:15:59 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.18 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -168,7 +168,7 @@ void Optimizer::setVMatOption(const string& optionname, VMat value)
 }
 
 
-IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(Optimizer);
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Optimizer, "ONE LINE DESCR", "NO HELP");
 
 void Optimizer::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {

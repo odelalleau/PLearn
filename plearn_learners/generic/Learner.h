@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.11 2003/05/22 20:45:20 ducharme Exp $
+   * $Id: Learner.h,v 1.12 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 
@@ -230,7 +230,7 @@ using namespace std;
 
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-    DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(Learner);
+    PLEARN_DECLARE_ABSTRACT_OBJECT(Learner);
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   private:

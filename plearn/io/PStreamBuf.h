@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.h,v 1.2 2003/05/20 15:42:12 plearner Exp $ 
+   * $Id: PStreamBuf.h,v 1.3 2003/08/13 08:13:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.h */
@@ -297,7 +297,7 @@ inline streamsize read(char* p, streamsize n)
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS(PStreamBuf, "PStreamBuf", Object);
+  PLEARN_DECLARE_ABSTRACT_OBJECT(PStreamBuf);
 
 };
 

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: VMatrixFromDistribution.cc,v 1.4 2003/07/25 21:40:15 lheureup Exp $ 
+ * $Id: VMatrixFromDistribution.cc,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
  ******************************************************* */
 
 /*! \file VMatrixFromDistribution.cc */
@@ -55,7 +55,7 @@ VMatrixFromDistribution::VMatrixFromDistribution()
   // build_();
 }
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(VMatrixFromDistribution, "VMatrixFromDistribution", VMatrix);
+PLEARN_IMPLEMENT_OBJECT(VMatrixFromDistribution, "ONE LINE DESCR", "NO HELP");
 
 void VMatrixFromDistribution::declareOptions(OptionList& ol)
 {

@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.h,v 1.4 2003/06/03 14:52:10 plearner Exp $ 
+   * $Id: TrainTestSplitter.h,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file TrainTestSplitter.h */
@@ -97,7 +97,7 @@ public:
   static string help();
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(TrainTestSplitter);
+  PLEARN_DECLARE_OBJECT(TrainTestSplitter);
 
 
   // ********************************

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: TemporalHorizonVMatrix.h,v 1.1 2003/07/02 16:55:57 ducharme Exp $
+   * $Id: TemporalHorizonVMatrix.h,v 1.2 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 
@@ -68,7 +68,7 @@ public:
 
   TemporalHorizonVMatrix(VMat the_distr, int the_horizon, int target_size);
 
-  DECLARE_NAME_AND_DEEPCOPY(TemporalHorizonVMatrix);
+  PLEARN_DECLARE_OBJECT(TemporalHorizonVMatrix);
 
   static void declareOptions(OptionList &ol);
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateColumnVariable.cc,v 1.2 2003/01/08 21:32:19 ducharme Exp $
+   * $Id: DuplicateColumnVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,28 +57,16 @@ DuplicateColumnVariable::DuplicateColumnVariable(Variable* input, int thewidth)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(DuplicateColumnVariable);
+PLEARN_IMPLEMENT_OBJECT(DuplicateColumnVariable, "ONE LINE DESCR", "NO HELP");
 
 void DuplicateColumnVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=width_; }
 
 
-void DuplicateColumnVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "DuplicateColumnVariable");
-  inherited::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, n_duplicates);
-  readFooter(in, "DuplicateColumnVariable");
-}
 
 
-void DuplicateColumnVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "DuplicateColumnVariable");
-  inherited::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, n_duplicates);
-  writeFooter(out, "DuplicateColumnVariable");
-}
+
+
 
 
 void DuplicateColumnVariable::fprop()

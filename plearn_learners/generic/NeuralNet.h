@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.h,v 1.5 2003/08/13 01:25:42 yoshua Exp $
+   * $Id: NeuralNet.h,v 1.6 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -128,7 +128,7 @@ using namespace std;
 
     NeuralNet();
     virtual ~NeuralNet();
-    DECLARE_NAME_AND_DEEPCOPY(NeuralNet);
+    PLEARN_DECLARE_OBJECT(NeuralNet);
 
     // Learner methods
     static string help();

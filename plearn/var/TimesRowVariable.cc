@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: TimesRowVariable.cc,v 1.2 2003/01/08 21:33:07 ducharme Exp $
+   * $Id: TimesRowVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,27 +59,17 @@ TimesRowVariable::TimesRowVariable(Variable* input1, Variable* input2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(TimesRowVariable);
+PLEARN_IMPLEMENT_OBJECT(TimesRowVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void TimesRowVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input1->width(); }
 
 
-void TimesRowVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "TimesRowVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "TimesRowVariable");
-}
 
 
-void TimesRowVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "TimesRowVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "TimesRowVariable");
-}
+
+
 
 
 void TimesRowVariable::fprop()

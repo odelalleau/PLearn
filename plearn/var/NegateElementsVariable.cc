@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NegateElementsVariable.cc,v 1.2 2003/01/08 21:32:53 ducharme Exp $
+   * $Id: NegateElementsVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,26 +53,16 @@ NegateElementsVariable::NegateElementsVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(NegateElementsVariable);
+PLEARN_IMPLEMENT_OBJECT(NegateElementsVariable, "ONE LINE DESCR", "NO HELP");
 
 void NegateElementsVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void NegateElementsVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "NegateElementsVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "NegateElementsVariable");
-}
 
 
-void NegateElementsVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "NegateElementsVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "NegateElementsVariable");
-}
+
+
 
 
 void NegateElementsVariable::fprop()

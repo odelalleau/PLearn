@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExpVariable.cc,v 1.2 2003/01/08 21:32:23 ducharme Exp $
+   * $Id: ExpVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,26 +53,16 @@ ExpVariable::ExpVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ExpVariable);
+PLEARN_IMPLEMENT_OBJECT(ExpVariable, "ONE LINE DESCR", "NO HELP");
 
 void ExpVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void ExpVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "ExpVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "ExpVariable");
-}
 
 
-void ExpVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "ExpVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "ExpVariable");
-}
+
+
 
 
 void ExpVariable::fprop()

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AbsVariable.cc,v 1.2 2003/01/08 21:31:58 ducharme Exp $
+   * $Id: AbsVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,26 +54,16 @@ AbsVariable::AbsVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(AbsVariable);
+PLEARN_IMPLEMENT_OBJECT(AbsVariable, "ONE LINE DESCR", "NO HELP");
 
 void AbsVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void AbsVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "AbsVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "AbsVariable");
-}
 
 
-void AbsVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "AbsVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "AbsVariable");
-}
+
+
 
 
 void AbsVariable::fprop()

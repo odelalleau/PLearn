@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SemiSupervisedProbClassCostVariable.h,v 1.1 2003/08/13 01:25:42 yoshua Exp $
+   * $Id: SemiSupervisedProbClassCostVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -104,7 +104,7 @@ protected:
 
 public:
   SemiSupervisedProbClassCostVariable(Var prob_, Var target_, Var prior_, real flattenfactor=1.0);
-  DECLARE_NAME_AND_DEEPCOPY(SemiSupervisedProbClassCostVariable);
+  PLEARN_DECLARE_OBJECT(SemiSupervisedProbClassCostVariable);
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.20 2003/08/08 20:45:54 yoshua Exp $
+   * $Id: Object.cc,v 1.21 2003/08/13 08:13:16 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -54,7 +54,7 @@ using namespace std;
 Object::Object()
 {}
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(Object, "Object", Object);   
+PLEARN_IMPLEMENT_OBJECT(Object, "ONE LINE DESCR", "NO HELP");   
 
 // by default, do nothing...
 void Object::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
@@ -67,7 +67,6 @@ void Object::setOption(const string& optionname, const string& value)
 {
     istrstream in_(value.c_str());
     PStream in(&in_);
-    in >> option_flags(dft_option_flag | OptionBase::nosave);
     readOptionVal(in, optionname);
 }
 
@@ -80,7 +79,6 @@ string Object::getOption(const string &optionname) const
 { 
   ostrstream out_;
   PStream out(&out_);
-  out << option_flags(dft_option_flag | OptionBase::nosave);
   writeOptionVal(out, optionname);
   char* buf = out_.str();
   int n = out_.pcount();
@@ -213,7 +211,7 @@ Object::writeOptionVal(PStream &out, const string &optionname) const
 }
 
 
-string Object::getOptionsToSave(OBflag_t option_flags) const
+string Object::getOptionsToSave() const
 {
   string res = "";
   OptionList& options = getOptionList();
@@ -221,7 +219,7 @@ string Object::getOptionsToSave(OBflag_t option_flags) const
   for( OptionList::iterator it = options.begin(); it!=options.end(); ++it )
     {
       OptionBase::flag_t flags = (*it)->flags();
-      if(!(flags & OptionBase::nosave) && (flags & option_flags))
+      if(!(flags & OptionBase::nosave))
         res += (*it)->optionname() + " ";
     }
   return res;
@@ -271,7 +269,7 @@ void Object::newread(PStream &in)
 
 void Object::newwrite(PStream &out) const
 {
-  vector<string> optnames = split(getOptionsToSave(out.option_flags_out));
+  vector<string> optnames = split(getOptionsToSave());
   out.write(classname());
   out.write("(\n");
   for (unsigned int i = 0; i < optnames.size(); ++i) 
@@ -316,12 +314,6 @@ void Object::run()
 void Object::oldread(istream& in)
 { PLERROR("oldread method not implemented for this object"); }
 
-void Object::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{ PLERROR("DEPRECATED deepWrite method not implemented for this object. You should no longer call it anyway. It's DEPRECATED!"); }
-
-void Object::deepRead(istream& in, DeepReadMap& old2new)
-{ PLERROR("DEPRECATED deepRead method not implemented for this object. You should no longer call it anyway. It's DEPRECATED!"); }
-
 void Object::save(const string& filename) const
 { PLearn::save(filename, *this); }
 
@@ -331,27 +323,6 @@ void Object::load(const string& filename)
 Object::~Object()
 {}
 
-Object* deepReadObject(istream& in, DeepReadMap& old2new)
-{
-  pl_streambuf* buffer = dynamic_cast<pl_streambuf*>(in.rdbuf());
-  pl_streammarker fence(buffer);
-  while(in && in.get()!='<') ;
-  string str_type_name;
-  char tmpchar;
-  while ((tmpchar = in.get()) !='>')
-    str_type_name += tmpchar;
-  if (str_type_name=="null") return 0;
-  unsigned int p=str_type_name.find(":");
-  if (p!=string::npos)
-    str_type_name = str_type_name.substr(0,p);
-  Object* res = TypeFactory::instance().newObject(str_type_name);
-  if (!res)
-    PLERROR("Type %s not declared in TypeFactory map (did you do a proper DECLARE_NAME_AND_DEEPCOPY ?)", str_type_name.c_str());
-  buffer->seekmark(fence);
-  res->deepRead(in, old2new);
-
-  return res;
-}
 
 Object* loadObject(const string &filename)
 {
@@ -508,7 +479,8 @@ extern "C"
   void printobj(PLearn::Object* p)
   {
     PLearn::PStream perr(&std::cerr);
-    perr << *p << std::endl;
+    perr << *p;
+    perr.endl();
   }
 }
 

@@ -99,7 +99,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(ManifoldParzen2);
+  PLEARN_DECLARE_OBJECT(ManifoldParzen2);
 
   // *******************
   // * Learner methods *

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.h,v 1.3 2003/08/05 21:41:46 chapados Exp $ 
+   * $Id: JulianizeVMatrix.h,v 1.4 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.h */
@@ -130,7 +130,7 @@ public:
   //!  Implement the base class abstract member function
   virtual void getRow(int i, Vec v) const;
 
-  // simply calls parentclass::build() then build_() 
+  // simply calls inherited::build() then build_() 
   virtual void build();
 
   //! Provides a help message describing this class
@@ -140,7 +140,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT_METHODS(JulianizeVMatrix, "JulianizeVMatrix", RowBufferedVMatrix);
+  PLEARN_DECLARE_OBJECT(JulianizeVMatrix);
 
 protected:
   // Return the new number of columns

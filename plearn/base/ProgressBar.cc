@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: ProgressBar.cc,v 1.1 2003/05/26 04:12:42 plearner Exp $
+   * $Id: ProgressBar.cc,v 1.2 2003/08/13 08:13:16 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -138,7 +138,10 @@ void TextProgressBarPlugin::update(ProgressBar * pb,int newpos)
         out.flush();
         pb->currentpos = newpos;
         if(pb->currentpos==pb->maxpos)
-          out << "]" << endl;
+          {
+            out << "]";
+            out << endl;
+          }
 #if USING_MPI
       }
 #endif

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.h,v 1.1 2003/07/04 18:48:59 plearner Exp $ 
+   * $Id: StackedLearner.h,v 1.2 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file StackedLearner.h */
@@ -85,7 +85,7 @@ public:
   // **** Object methods ****
   // ************************
 
-  //! simply calls parentclass::build() then build_() 
+  //! simply calls inherited::build() then build_() 
   virtual void build();
 
   //! Provides a help message describing this class
@@ -97,7 +97,7 @@ public:
   // Declares other standard object methods
   //  If your class is not instantiatable (it has pure virtual methods)
   // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
-  PLEARN_DECLARE_OBJECT_METHODS(StackedLearner, "StackedLearner", PLearner);
+  PLEARN_DECLARE_OBJECT(StackedLearner);
 
 
   // **************************

@@ -35,7 +35,7 @@
 
  
 /*
-* $Id: VVec.cc,v 1.5 2003/04/06 23:22:39 plearner Exp $
+* $Id: VVec.cc,v 1.6 2003/08/13 08:13:46 plearner Exp $
 ******************************************************* */
 
 
@@ -49,6 +49,6 @@ VVec::VVec(const Vec& v)
    row_index(0), col_index(0), length_(v.length())
 {}
 
-IMPLEMENT_NAME_AND_DEEPCOPY(VVec);
+PLEARN_IMPLEMENT_OBJECT(VVec, "ONE LINE DESCR", "NO HELP");
 
 %> // end of namespace PLearn

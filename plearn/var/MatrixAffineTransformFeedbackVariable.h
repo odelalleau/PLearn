@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixAffineTransformFeedbackVariable.h,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: MatrixAffineTransformFeedbackVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,7 +65,7 @@ public:
   MatrixAffineTransformFeedbackVariable(Variable* g, Variable* input):
     BinaryVariable(g, input, g->length()+1, input->length())
   {}
-  DECLARE_NAME_AND_DEEPCOPY(MatrixAffineTransformFeedbackVariable);
+  PLEARN_DECLARE_OBJECT(MatrixAffineTransformFeedbackVariable);
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop() {};

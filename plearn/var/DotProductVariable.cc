@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DotProductVariable.cc,v 1.2 2003/01/08 21:32:19 ducharme Exp $
+   * $Id: DotProductVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,27 +59,17 @@ DotProductVariable::DotProductVariable(Variable* input1, Variable* input2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(DotProductVariable);
+PLEARN_IMPLEMENT_OBJECT(DotProductVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void DotProductVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
 
 
-void DotProductVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "DotProductVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "DotProductVariable");
-}
 
 
-void DotProductVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "DotProductVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "DotProductVariable");
-}
+
+
 
 
 void DotProductVariable::fprop()

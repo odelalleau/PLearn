@@ -50,7 +50,7 @@ ConditionalGaussianDistribution::ConditionalGaussianDistribution()
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ConditionalGaussianDistribution);
+PLEARN_IMPLEMENT_OBJECT(ConditionalGaussianDistribution, "ONE LINE DESCR", "NO HELP");
 
 void ConditionalGaussianDistribution::declareOptions(OptionList& ol)
 {

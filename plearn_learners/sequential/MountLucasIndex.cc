@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.4 2003/08/06 21:00:26 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.5 2003/08/13 08:13:47 plearner Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -45,7 +45,7 @@ namespace PLearn <%
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(MountLucasIndex, "MountLucasIndex", SequentialLearner);
+PLEARN_IMPLEMENT_OBJECT(MountLucasIndex, "ONE LINE DESCR", "NO HELP");
 
 MountLucasIndex::MountLucasIndex()
   : current_month(0), julian_day_column("julian_day"), build_complete(false)
@@ -54,7 +54,7 @@ MountLucasIndex::MountLucasIndex()
 
 void MountLucasIndex::build()
 {
-  parentclass::build();
+  inherited::build();
   build_();
 }
 
@@ -87,7 +87,7 @@ void MountLucasIndex::build_()
 
 void MountLucasIndex::forget()
 {
-  parentclass::forget();
+  inherited::forget();
 
   is_long_position.fill(true);
   twelve_month_moving_average.fill(MISSING_VALUE);
@@ -107,7 +107,7 @@ void MountLucasIndex::declareOptions(OptionList& ol)
   declareOption(ol, "commodity_price_columns", &MountLucasIndex::commodity_price_columns,
     OptionBase::buildoption, "The commodity price columns (in the input data) \n");
 
-  parentclass::declareOptions(ol);
+  inherited::declareOptions(ol);
 }
 
 void MountLucasIndex::train()
@@ -246,7 +246,7 @@ int lastJulianDayOfMonth(int julian_day)
 /*
 void MountLucasIndex::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  parentclass::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
 
   // ### Remove this line when you have fully implemented this method.
   PLERROR("MountLucasIndex::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");

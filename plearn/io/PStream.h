@@ -78,10 +78,13 @@ class PStream : public PPointable
 {
 public:
   //! typedef's for PStream manipulators
+  //! DEPRECATED
+  /*
   typedef PStream& (*pl_pstream_manip)(PStream&);
   typedef istream& (*pl_istream_manip_compat)(istream&);
   typedef ostream& (*pl_ostream_manip_compat)(ostream&);
-  
+  */
+
 #if __GNUC__ < 3
   //! typedef's for compatibility w/ old libraries
   typedef int streamsize;
@@ -117,6 +120,7 @@ protected:
   istream* pin;  //<! underlying input stream
   ostream* pout; //<! underlying output stream
   bool own_pin, own_pout; //<! true if {pin|pout} was created internally
+
 public:  
   OBflag_t option_flags_in;   //<! option flags for input
   mode_t inmode;              //<! mode for input formatting
@@ -211,6 +215,9 @@ public:
   void readAsciiNum(float &x);
   void readAsciiNum(double &x);
 
+  //! Writes the corresponding 2 hex digits (ex: 0A )
+  void writeAsciiHexNum(unsigned char x);
+
   //! op bool: true if the stream is in a valid state (e.g. "while(stm) stm >> x;")
   // This implementation does not seem to work: commented out [Pascal]
   // inline operator bool() { return (!pin || *pin) && (!pout || *pout) && (pin || pout); }
@@ -280,6 +287,7 @@ public:
   inline PStream& put(unsigned char c) { write(reinterpret_cast<char *>(&c), sizeof(c)); return *this; }
   inline PStream& put(int x) { return put((char)x); }
   inline PStream& flush() { pout->flush(); return *this; }
+  inline PStream& endl() { pout->put('\n'); pout->flush(); return *this; }
   /******/
 
   // These are convenient method for writing raw strings (whatever the outmode):
@@ -355,9 +363,18 @@ public:
   PStream& operator<<(unsigned short x);
   PStream& operator<<(bool x);
  
+  //! returns the markable input buffer
+  //! DEPRECATED: TO BE REMOVED SOON, DO NOT USE!
+  inline pl_streambuf* pl_rdbuf() { return the_inbuf; }
+
+  
+  //! ALL FOLLOWING OLD METHODS THAT EXPOSED std::stream INTERNALS OR FORWARDED CALLS TO THEM 
+  //! ARE NO LONGER SUPPORTED, AS PSTREAMS SOON WON'T BE BUILT ON TOP OF std::stream ANY MORE.
+
   /*****
-   * operator<<'s and operator>>'s to set flags, etc.
+   * DEPRECATED  operator<<'s and operator>>'s to set flags, etc.
    */
+  /*
   inline PStream& operator>>(pl_stream_clear_flags& flags_) { option_flags_in= 0; return *this; }
   inline PStream& operator<<(const pl_stream_clear_flags& flags_) { option_flags_out= 0; return *this; }
   inline PStream& operator>>(pl_stream_option_flags& flags_) { option_flags_in= flags_.flags; return *this; }
@@ -368,19 +385,19 @@ public:
   inline PStream& operator<<(const pl_pstream_manip func) { return (*func)(*this); }
   inline PStream& operator>>(pl_istream_manip_compat func) { (*func)(*pin); return *this; }
   inline PStream& operator<<(const pl_ostream_manip_compat func) { (*func)(*pout); return *this; }
-
-  //! returns the markable input buffer
-  inline pl_streambuf* pl_rdbuf() { return the_inbuf; }
+  */
 
   /******
    * The folowing methods are 'forwarded' from ios;  Two versions of each method
    * are provided so that input and output behaviour may be different.
    */
+  /* DEPRECATED
   inline ios_base::fmtflags flags_in() const { return pin->flags(); }
   inline ios_base::fmtflags flags_out() const { return pout->flags(); }
   inline ios_base::fmtflags flags_in(ios_base::fmtflags ff) { return pin->flags(ff); }
   inline ios_base::fmtflags flags_out(ios_base::fmtflags ff) { return pout->flags(ff); }
-  /*NOTE: setf_{in|out} also exist in 'PLearn::pl_flags' version... see below */
+  // NOTE: setf_{in|out} also exist in 'PLearn::pl_flags' version... see below 
+
   inline ios_base::fmtflags setf_in(ios_base::fmtflags ff) { return pin->setf(ff); }
   inline ios_base::fmtflags setf_out(ios_base::fmtflags ff) { return pout->setf(ff); }
   inline ios_base::fmtflags setf_in(ios_base::fmtflags ff, ios_base::fmtflags mask)
@@ -397,7 +414,7 @@ public:
   inline streamsize width_out() const { return pout->width(); }
   inline streamsize width_in(streamsize w) { return pin->width(w); }
   inline streamsize width_out(streamsize w) { return pout->width(w); }
-  /******/
+  */
 
 protected:
   //! initInBuf: called by ctors. to ensure that pin's buffer is markable
@@ -405,6 +422,34 @@ protected:
 };
 
 
+// Simulation of <<flush <<endl and >>ws ...
+
+class PStream_flush_ {};
+extern PStream_flush_ flush; // the only instance!
+
+inline PStream& operator<<(PStream& out, PStream_flush_ x)
+{ out.flush(); return out; }
+
+inline ostream& operator<<(ostream& out, PStream_flush_ x)
+{ return out << std::flush; }
+
+class PStream_endl_ {};
+extern PStream_endl_ endl; // the only instance!
+
+inline PStream& operator<<(PStream& out, PStream_endl_ x)
+{ out.endl(); return out; }
+
+inline ostream& operator<<(ostream& out, PStream_endl_ x)
+{ return out << std::endl; }
+
+class PStream_ws_ {};
+extern PStream_ws_ ws; // the only instance!
+
+inline PStream& operator>>(PStream& in, PStream_ws_ x)
+{ in.skipBlanksAndComments(); return in; }
+
+inline istream& operator>>(istream& in, PStream_ws_ x)
+{ return in >> std::ws; }
 
   /*****
    * op>> & op<< for generic pointers
@@ -531,37 +576,6 @@ inline PStream& operator>>(PStream& in, pair<S, T> &x)
   in >> x.second;
   return in;
 }
-
-/*
-template<class A,class B>
-inline PStream& operator<<(PStream& out, const pair<A,B>& x) 
-{ 
-  out.put('[');
-  out << x.first;
-  out.put(',');
-  out << x.second;
-  out.write(']');
-  return out;
-}
-
-template <typename S, typename T> 
-inline PStream& operator>>(PStream& in, pair<S, T> &x) 
-{ 
-  int c;
-  in.skipBlanksAndCommentsAndSeparators();
-  c = in.get();
-  if(c!='[')
-    PLERROR("In operator>>(PStream& in, pair<S, T> &x) expected '[' but read %c", c);
-  in >> x.first;
-  in.skipBlanksAndCommentsAndSeparators();
-  in >> x.second;
-  in.skipBlanksAndCommentsAndSeparators();
-  c = in.get();
-  if(c!=']')
-    PLERROR("In operator>>(PStream& in, pair<S, T> &x) expected ']' but read %c", c);
-  return in;
-}
-*/
 
 
 // Serialization of map types
@@ -960,20 +974,20 @@ void readSequence(PStream& in, SequenceType& seq)
 
 // Default behavior for write() and read() is
 // to call corresponding operator<<() or operator>>()
-// on pl_{o|i}stream.
+// on PStream.
 
 template<class T> 
-inline void write(ostream& out_, const T& o, OBflag_t the_flags= dft_option_flag)
+inline void write(ostream& out_, const T& o)
 {
   PStream out(&out_);
-  out << option_flags(the_flags) << o;
+  out << o;
 }
 
 template<class T> 
-inline void read(istream& in_, T& o, OBflag_t the_flags= dft_option_flag)
+inline void read(istream& in_, T& o)
 {
   PStream in(&in_);
-  in >> option_flags(the_flags) >> o;
+  in >> o;
 }
 
 template<class T> 
@@ -1050,19 +1064,18 @@ operator<<(PStream &out, const set<T> &v)
 // ****************************************
 
 template <class T> 
-inline void load(const string &filepath, T &x, OBflag_t flags = dft_option_flag)
+inline void load(const string &filepath, T &x)
 {
     ifstream in_(filepath.c_str());
     if (!in_)
         PLERROR("Could not open file \"%s\" for reading", filepath.c_str());
     PStream in(&in_);
-    in.option_flags_in = flags;
     in >> x;
 }
 
 //! If necessary, missing directories along the filepath will be created
 template<class T> 
-inline void save(const string& filepath, const T& x, OBflag_t flags = dft_option_flag)
+inline void save(const string& filepath, const T& x)
 { 
   force_mkdir_for_file(filepath);
 
@@ -1071,7 +1084,6 @@ inline void save(const string& filepath, const T& x, OBflag_t flags = dft_option
     PLERROR("Could not open file %s for writing",filepath.c_str());
   
   PStream out(&out_);
-  out << option_flags(flags);
   out << x;
 }
 

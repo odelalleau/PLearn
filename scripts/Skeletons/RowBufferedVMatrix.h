@@ -50,17 +50,14 @@ public:
   //!  This is the only method requiring implementation
   virtual void getRow(int i, Vec v) const;
 
-  // simply calls parentclass::build() then build_() 
+  // simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", RowBufferedVMatrix);
+  PLEARN_DECLARE_OBJECT(DERIVEDCLASS);
 
 };
 

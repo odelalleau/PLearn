@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVariable.cc,v 1.2 2003/01/08 21:32:16 ducharme Exp $
+   * $Id: ConcatRowsVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -60,26 +60,16 @@ ConcatRowsVariable::ConcatRowsVariable(const VarArray& vararray)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ConcatRowsVariable);
+PLEARN_IMPLEMENT_OBJECT(ConcatRowsVariable, "ONE LINE DESCR", "NO HELP");
 
 void ConcatRowsVariable::recomputeSize(int& l, int& w) const
 { l=varray.sumOfLengths(); w=varray.maxWidth(); }
 
 
-void ConcatRowsVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "ConcatRowsVariable");
-  NaryVariable::deepRead(in, old2new);
-  readFooter(in, "ConcatRowsVariable");
-}
 
 
-void ConcatRowsVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "ConcatRowsVariable");
-  NaryVariable::deepWrite(out, already_saved);
-  writeFooter(out, "ConcatRowsVariable");
-}
+
+
 
 
 void ConcatRowsVariable::fprop()

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MinusVariable.cc,v 1.2 2003/01/08 21:32:50 ducharme Exp $
+   * $Id: MinusVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,27 +57,17 @@ MinusVariable::MinusVariable(Variable* input1, Variable* input2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(MinusVariable);
+PLEARN_IMPLEMENT_OBJECT(MinusVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void MinusVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input1->width(); }
 
 
-void MinusVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "MinusVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "MinusVariable");
-}
 
 
-void MinusVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "MinusVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "MinusVariable");
-}
+
+
 
 
 void MinusVariable::fprop()

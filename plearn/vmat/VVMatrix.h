@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.h,v 1.2 2003/03/19 23:15:34 jkeable Exp $
+   * $Id: VVMatrix.h,v 1.3 2003/08/13 08:13:46 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,12 +47,11 @@ using namespace std;
 //! this class is a wrapper for a .vmat VMatrix.
 class VVMatrix: public VMatrix
 {
-  typedef VMatrix inherited;
-  
 protected:
-  string the_filename;
   string code;
   VMat the_mat;
+
+  static void declareOptions(OptionList& ol);
 
   //! loads a .vmat file and return the VMat object built from it
   // returns the precomputed version if it can
@@ -76,6 +75,13 @@ protected:
   static void generateFilterIndexFile(VMat source, const string & code, const string& ivfname);
   
 public:
+  // public build options
+  string the_filename;
+
+public:
+  typedef VMatrix inherited;
+  PLEARN_DECLARE_OBJECT(VVMatrix);
+
   virtual void build();
   void build_();
   
@@ -112,8 +118,6 @@ public:
 
   virtual real get(int i, int j) const {return the_mat->get(i,j);}
   virtual void getSubRow(int i, int j, Vec v) const {the_mat->getSubRow(i,j,v);}
-  static void declareOptions(OptionList & ol);
-  DECLARE_NAME_AND_DEEPCOPY(VVMatrix);
 };
 
 DECLARE_OBJECT_PTR(VVMatrix);

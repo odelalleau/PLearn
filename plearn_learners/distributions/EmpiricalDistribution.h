@@ -53,7 +53,7 @@ using namespace std;
     
     EmpiricalDistribution(int inputsize, bool random_sample_ = true);
 
-    DECLARE_NAME_AND_DEEPCOPY(EmpiricalDistribution);
+    PLEARN_DECLARE_OBJECT(EmpiricalDistribution);
     void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void train(VMat training_set);

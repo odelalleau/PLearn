@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExplicitSplitter.h,v 1.3 2003/06/03 14:52:09 plearner Exp $ 
+   * $Id: ExplicitSplitter.h,v 1.4 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ExplicitSplitter.h */
@@ -96,7 +96,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(ExplicitSplitter);
+  PLEARN_DECLARE_OBJECT(ExplicitSplitter);
 
 
   // ********************************

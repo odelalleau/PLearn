@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.1 2003/07/04 18:30:15 plearner Exp $ 
+   * $Id: PCA.cc,v 1.2 2003/08/13 08:13:47 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
@@ -53,7 +53,7 @@ PCA::PCA()
 {
 }
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(PCA, "PCA", PLearner);
+PLEARN_IMPLEMENT_OBJECT(PCA, "ONE LINE DESCR", "NO HELP");
 
 void PCA::declareOptions(OptionList& ol)
 {
@@ -75,7 +75,7 @@ void PCA::declareOptions(OptionList& ol)
                 "A ncomponents x inputsize matrix containing the principal eigenvectors");
   
   // Now call the parent class' declareOptions
-  parentclass::declareOptions(ol);
+  inherited::declareOptions(ol);
 }
 
   string PCA::help()
@@ -91,14 +91,14 @@ void PCA::declareOptions(OptionList& ol)
   // ### Nothing to add here, simply calls build_
   void PCA::build()
   {
-    parentclass::build();
+    inherited::build();
     build_();
   }
 
 
   void PCA::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   {
-    parentclass::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(eigenvals, copies);
     deepCopyField(eigenvecs, copies);
   }

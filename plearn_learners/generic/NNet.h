@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.5 2003/08/03 20:32:38 yoshua Exp $
+   * $Id: NNet.h,v 1.6 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -119,7 +119,7 @@ using namespace std;
 
     NNet();
     virtual ~NNet();
-    DECLARE_NAME_AND_DEEPCOPY(NNet);
+    PLEARN_DECLARE_OBJECT(NNet);
 
     // PLearner methods
     /*

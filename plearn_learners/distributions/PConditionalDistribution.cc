@@ -42,12 +42,12 @@ namespace PLearn <%
 using namespace std;
 
 PConditionalDistribution::PConditionalDistribution() 
-  :parentclass()
+  :inherited()
 {
    
 }
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(PConditionalDistribution, "PConditionalDistribution", PDistribution);
+PLEARN_IMPLEMENT_OBJECT(PConditionalDistribution, "ONE LINE DESCR", "NO HELP");
 
 string PConditionalDistribution::help()
 {
@@ -60,7 +60,7 @@ string PConditionalDistribution::help()
 
 void PConditionalDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  parentclass::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.16 2003/06/05 19:13:09 plearner Exp $
+   * $Id: StatsCollector.h,v 1.17 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -80,8 +80,9 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
 */
   class StatsCollector: public Object
   {
-    public:
-      DECLARE_NAME_AND_DEEPCOPY(StatsCollector);
+  public:
+    typedef Object inherited;
+    PLEARN_DECLARE_OBJECT(StatsCollector);
       
   public:
 
@@ -211,7 +212,7 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     //! (unlike counts, these do not have an extra row and column for misisng value)
     TVec< TMat<double> > sumsquares;
 
-    DECLARE_NAME_AND_DEEPCOPY(ConditionalStatsCollector);
+    PLEARN_DECLARE_OBJECT(ConditionalStatsCollector);
 
     ConditionalStatsCollector();
 

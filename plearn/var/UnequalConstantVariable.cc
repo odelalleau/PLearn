@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnequalConstantVariable.cc,v 1.2 2003/01/08 21:33:09 ducharme Exp $
+   * $Id: UnequalConstantVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,28 +57,16 @@ UnequalConstantVariable::UnequalConstantVariable(Variable* input1, real c_)
 {}
 
   
-IMPLEMENT_NAME_AND_DEEPCOPY(UnequalConstantVariable);
+PLEARN_IMPLEMENT_OBJECT(UnequalConstantVariable, "ONE LINE DESCR", "NO HELP");
 
 void UnequalConstantVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void UnequalConstantVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "UnequalConstantVariable");
-  inherited::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, c);
-  readFooter(in, "UnequalConstantVariable");
-}
 
 
-void UnequalConstantVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "UnequalConstantVariable");
-  inherited::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, c);
-  writeFooter(out, "UnequalConstantVariable");
-}
+
+
 
 
 

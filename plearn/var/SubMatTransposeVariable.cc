@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubMatTransposeVariable.cc,v 1.2 2003/01/08 21:33:02 ducharme Exp $
+   * $Id: SubMatTransposeVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,29 +57,17 @@ SubMatTransposeVariable::SubMatTransposeVariable(Variable* v, int i, int j, int 
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SubMatTransposeVariable);
+PLEARN_IMPLEMENT_OBJECT(SubMatTransposeVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void SubMatTransposeVariable::recomputeSize(int& l, int& w) const
 { l=width_; w=length_; }
 
 
-void SubMatTransposeVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "SubMatTransposeVariable");
-  inherited::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, startk);
-  readFooter(in, "SubMatTransposeVariable");
-}
 
 
-void SubMatTransposeVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "SubMatTransposeVariable");
-  inherited::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, startk);
-  writeFooter(out, "SubMatTransposeVariable");
-}
+
+
 
 
 void SubMatTransposeVariable::fprop()

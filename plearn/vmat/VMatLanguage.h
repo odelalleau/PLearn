@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.5 2003/05/14 21:15:32 jkeable Exp $
+   * $Id: VMatLanguage.h,v 1.6 2003/08/13 08:13:46 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -82,7 +82,8 @@ using namespace std;
 public:
     VMatLanguage():vmsource(Mat()) { build_opcodes_map(); }
     VMatLanguage(VMat vmsrc):vmsource(vmsrc) { build_opcodes_map(); }
-    DECLARE_NAME_AND_DEEPCOPY(VMatLanguage);
+    typedef Object inherited;
+    PLEARN_DECLARE_OBJECT(VMatLanguage);
 
     void run(int rowindex, const Vec& result) const;
 
@@ -108,7 +109,7 @@ public:
 
   class PreprocessingVMatrix: public RowBufferedVMatrix
   {
-    DECLARE_NAME_AND_DEEPCOPY(PreprocessingVMatrix);
+    PLEARN_DECLARE_OBJECT(PreprocessingVMatrix);
 
   protected:
     VMat source;

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.cc,v 1.3 2003/01/31 17:32:24 yoshua Exp $
+   * $Id: GhostScript.cc,v 1.4 2003/08/13 08:13:16 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -111,10 +111,6 @@ using namespace std;
 
   void GhostScript::writeBitmapHexString1Bit(const Mat& bm, PStream& out, bool lastrowfirst)
   {
-    GhostScript::ioflag_type oldflags = out.flags_out();
-    out.unsetf_out(ios::dec);
-    out.setf_out(ios::hex);
-    GhostScript::char_type oldfill = out.fill_out('0');
     unsigned char bitmask = 128;
     unsigned char value = 0;
     for(int i=0; i<bm.length(); i++)
@@ -127,52 +123,34 @@ using namespace std;
             bitmask = bitmask>>1;
             if(bitmask==0)
               {
-                out.width_out(2);
-                out << (unsigned int)value << " ";
+                out.writeAsciiHexNum((unsigned char)value);
+                out.put(' ');
                 bitmask = 128;
                 value = 0;
               }
           }
         if(bitmask!=128)
           {
-            out.width_out(2);
-            out << (unsigned int)value;
+            out.writeAsciiHexNum((unsigned char)value);
             bitmask = 128;
             value = 0;
           }
       }
-    out.flags_out(oldflags);
-    out.fill_out(oldfill);
   }
 
   void GhostScript::writeBitmapHexString8Bits(const Mat& bm, PStream& out, bool lastrowfirst)
   {
-    GhostScript::ioflag_type oldflags = out.flags_out();
-    out.unsetf_out(ios::dec);
-    out.setf_out(ios::hex);
-    char_type oldfill = out.fill_out('0');
     for(int i=0; i<bm.length(); i++)
       {
         const real* bm_i = lastrowfirst ?bm.rowdata(bm.length()-1-i) :bm.rowdata(i);
         for( int j=0; j<bm.width(); j++)
-          {
-            out.width_out(2);
-            unsigned int value = (unsigned int)(bm_i[j]*255.99);
-            out << value;
-          }
+          out.writeAsciiHexNum((unsigned char)(bm_i[j]*255.99));
         out << "\n";
       }
-    out.flags_out(oldflags);
-    out.fill_out(oldfill);
   }
   
   void GhostScript::writeBitmapHexString24Bits(const Mat& bm, PStream& out, bool lastrowfirst)
   {
-    GhostScript::ioflag_type oldflags = out.flags_out();
-    out.unsetf_out(ios::dec);
-    out.setf_out(ios::hex);
-    char_type oldfill = out.fill_out('0');
-
     for(int i=0; i<bm.length(); i++)
       {
         const real* bm_i = lastrowfirst ?bm.rowdata(bm.length()-1-i) :bm.rowdata(i);
@@ -180,18 +158,12 @@ using namespace std;
           {
             real r,g,b; // values between 0 and 255
             real2rgb(bm_i[j],r,g,b);
-            out.width_out(2);
-            out << (unsigned int)(r*255.99);
-            out.width_out(2);
-            out << (unsigned int)(g*255.99);
-            out.width_out(2);
-            out << (unsigned int)(b*255.99);
+            out.writeAsciiHexNum((unsigned char)(r*255.99));
+            out.writeAsciiHexNum((unsigned char)(g*255.99));
+            out.writeAsciiHexNum((unsigned char)(b*255.99));
           }
         out << "\n";
       }
-
-    out.flags_out(oldflags);
-    out.fill_out(oldfill);
   }
   
   void GhostScript::displayBlack(const Mat& bm, real x, real y, real w, real h, bool painton1)

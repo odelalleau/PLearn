@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IsAboveThresholdVariable.cc,v 1.2 2003/01/08 21:32:29 ducharme Exp $
+   * $Id: IsAboveThresholdVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,32 +55,16 @@ IsAboveThresholdVariable(Variable* input, real the_threshold, real the_truevalue
 {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(IsAboveThresholdVariable);
+PLEARN_IMPLEMENT_OBJECT(IsAboveThresholdVariable, "ONE LINE DESCR", "NO HELP");
 
 void IsAboveThresholdVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void IsAboveThresholdVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "IsAboveThresholdVariable");
-  inherited::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, threshold);
-  PLearn::deepRead(in, old2new, truevalue);
-  PLearn::deepRead(in, old2new, falsevalue);
-  readFooter(in, "IsAboveThresholdVariable");
-}
 
 
-void IsAboveThresholdVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "IsAboveThresholdVariable");
-  inherited::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, threshold);
-  PLearn::deepWrite(out, already_saved, truevalue);
-  PLearn::deepWrite(out, already_saved, falsevalue);
-  writeFooter(out, "IsAboveThresholdVariable");
-}
+
+
 
 
 

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.h,v 1.7 2003/04/25 21:00:23 tihocan Exp $
+   * $Id: VarArray.h,v 1.8 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -73,9 +73,6 @@ public:
   VarArray(Variable* v1, Variable* v2);
 
   void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-
-  void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
-  void deepRead(istream& in, DeepReadMap& old2new);
 
   operator Var()
   { 
@@ -236,12 +233,6 @@ inline void deepCopyField(VarArray& field, CopiesMap& copies)
 {
   field.makeDeepCopyFromShallowCopy(copies);
 }
-
-inline void deepWrite(ostream& out, DeepWriteSet& already_saved, const VarArray& v)
-{ v.deepWrite(out, already_saved); }
- 
-inline void deepRead(istream& in, DeepReadMap& old2new, VarArray& v)
-{ v.deepRead(in, old2new); }
 
 inline void operator<<(VarArray& ar, const Vec& datavec)
 { ar.copyFrom(datavec); }

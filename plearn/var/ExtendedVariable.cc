@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVariable.cc,v 1.2 2003/01/08 21:32:24 ducharme Exp $
+   * $Id: ExtendedVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,36 +64,16 @@ ExtendedVariable::ExtendedVariable(Variable* input, int the_top_extent,
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ExtendedVariable);
+PLEARN_IMPLEMENT_OBJECT(ExtendedVariable, "ONE LINE DESCR", "NO HELP");
 
 void ExtendedVariable::recomputeSize(int& l, int& w) const
 { l=input->length()+top_extent+bottom_extent; w=input->width()+left_extent+right_extent; }
 
 
-void ExtendedVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "ExtendedVariable");
-  inherited::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, top_extent);
-  PLearn::deepRead(in, old2new, bottom_extent);
-  PLearn::deepRead(in, old2new, left_extent);
-  PLearn::deepRead(in, old2new, right_extent);
-  PLearn::deepRead(in, old2new, fill_value);
-  readFooter(in, "ExtendedVariable");
-}
 
 
-void ExtendedVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "ExtendedVariable");
-  inherited::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, top_extent);
-  PLearn::deepWrite(out, already_saved, bottom_extent);
-  PLearn::deepWrite(out, already_saved, left_extent);
-  PLearn::deepWrite(out, already_saved, right_extent);
-  PLearn::deepWrite(out, already_saved, fill_value);
-  writeFooter(out, "ExtendedVariable");
-}
+
+
 
 
 void ExtendedVariable::fprop()

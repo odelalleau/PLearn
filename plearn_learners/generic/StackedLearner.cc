@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.1 2003/07/04 18:48:59 plearner Exp $ 
+   * $Id: StackedLearner.cc,v 1.2 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file StackedLearner.cc */
@@ -52,7 +52,7 @@ StackedLearner::StackedLearner()
     // build_();
   }
 
-  PLEARN_IMPLEMENT_OBJECT_METHODS(StackedLearner, "StackedLearner", PLearner);
+  PLEARN_IMPLEMENT_OBJECT(StackedLearner, "ONE LINE DESCR", "NO HELP");
 
   void StackedLearner::declareOptions(OptionList& ol)
   {
@@ -68,7 +68,7 @@ StackedLearner::StackedLearner()
     // ...
 
     // Now call the parent class' declareOptions
-    parentclass::declareOptions(ol);
+    inherited::declareOptions(ol);
   }
 
   string StackedLearner::help()
@@ -92,14 +92,14 @@ StackedLearner::StackedLearner()
   // ### Nothing to add here, simply calls build_
   void StackedLearner::build()
   {
-    parentclass::build();
+    inherited::build();
     build_();
   }
 
 
   void StackedLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   {
-    parentclass::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
     // ### Call deepCopyField on all "pointer-like" fields 
     // ### that you wish to be deepCopied rather than 

@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StrTableVMatrix.cc,v 1.2 2003/03/19 23:15:25 jkeable Exp $
+   * $Id: StrTableVMatrix.cc,v 1.3 2003/08/13 08:13:46 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -108,6 +108,6 @@ StrTableVMatrix::StrTableVMatrix(const StringTable & st):MemoryVMatrix(Mat(st.le
   
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(StrTableVMatrix);
+PLEARN_IMPLEMENT_OBJECT(StrTableVMatrix, "ONE LINE DESCR", "NO HELP");
 
 %> // end of namespace PLearn

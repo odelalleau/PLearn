@@ -79,7 +79,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(ConditionalDistribution);
+  PLEARN_DECLARE_OBJECT(ConditionalDistribution);
 
   //! Set the input part before using the inherited methods
   virtual void setInput(const Vec& input);

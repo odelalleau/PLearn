@@ -48,7 +48,7 @@ ConditionalDistribution::ConditionalDistribution()
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ConditionalDistribution);
+PLEARN_IMPLEMENT_OBJECT(ConditionalDistribution, "ONE LINE DESCR", "NO HELP");
 
 
 string ConditionalDistribution::help()

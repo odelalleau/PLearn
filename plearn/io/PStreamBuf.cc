@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.cc,v 1.1 2003/05/16 23:08:22 plearner Exp $ 
+   * $Id: PStreamBuf.cc,v 1.2 2003/08/13 08:13:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.cc */
@@ -65,7 +65,7 @@ PStreamBuf::~PStreamBuf()
 }
 
 
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT_METHODS(PStreamBuf, "PStreamBuf", Object);
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PStreamBuf, "ONE LINE DESCR", "NO HELP");
 
   void PStreamBuf::declareOptions(OptionList& ol)
   {

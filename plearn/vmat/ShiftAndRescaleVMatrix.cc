@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.cc,v 1.2 2003/08/08 20:45:54 yoshua Exp $
+   * $Id: ShiftAndRescaleVMatrix.cc,v 1.3 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 #include "ShiftAndRescaleVMatrix.h"
@@ -46,7 +46,7 @@ using namespace std;
 
 /** ShiftAndRescaleVMatrix **/
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ShiftAndRescaleVMatrix);
+PLEARN_IMPLEMENT_OBJECT(ShiftAndRescaleVMatrix, "ONE LINE DESCR", "NO HELP");
 
 ShiftAndRescaleVMatrix::
 ShiftAndRescaleVMatrix(VMat underlying_vm, Vec the_shift, Vec the_scale)

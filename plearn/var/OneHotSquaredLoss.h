@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotSquaredLoss.h,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: OneHotSquaredLoss.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,7 +66,7 @@ protected:
 
 public:
   OneHotSquaredLoss(Variable* netout, Variable* classnum, real coldval=0., real hotval=1.);
-  DECLARE_NAME_AND_DEEPCOPY(OneHotSquaredLoss);
+  PLEARN_DECLARE_OBJECT(OneHotSquaredLoss);
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();

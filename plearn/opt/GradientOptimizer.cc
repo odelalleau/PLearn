@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.21 2003/08/08 20:45:54 yoshua Exp $
+   * $Id: GradientOptimizer.cc,v 1.22 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -154,7 +154,7 @@ void GradientOptimizer::oldread(istream& in)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(GradientOptimizer);
+PLEARN_IMPLEMENT_OBJECT(GradientOptimizer, "ONE LINE DESCR", "NO HELP");
 
 static bool displayvg=false;
 

@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.cc,v 1.9 2003/05/29 15:12:47 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.cc,v 1.10 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -140,7 +140,7 @@ void AdaptGradientOptimizer::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(AdaptGradientOptimizer);
+PLEARN_IMPLEMENT_OBJECT(AdaptGradientOptimizer, "ONE LINE DESCR", "NO HELP");
 
 static Vec old_meancost;
 static Vec old_mean_gradient;

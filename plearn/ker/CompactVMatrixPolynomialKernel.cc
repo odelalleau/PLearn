@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: CompactVMatrixPolynomialKernel.cc,v 1.1 2002/10/03 07:35:27 plearner Exp $
+   * $Id: CompactVMatrixPolynomialKernel.cc,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,7 @@
 namespace PLearn <%
 using namespace std;
 
-IMPLEMENT_NAME_AND_DEEPCOPY(CompactVMatrixPolynomialKernel);
+PLEARN_IMPLEMENT_OBJECT(CompactVMatrixPolynomialKernel, "ONE LINE DESCR", "NO HELP");
 real CompactVMatrixPolynomialKernel::evaluate(const Vec& x1, const Vec& x2) const
 { // return ipow(beta*dot(x1,x2)+1.0, n);
   real dot_product=0;

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddTradableColumnVMatrix.cc,v 1.2 2003/08/12 19:17:32 ducharme Exp $ 
+   * $Id: AddTradableColumnVMatrix.cc,v 1.3 2003/08/13 08:13:45 plearner Exp $ 
    ******************************************************* */
 
 /*! \file AddTradableColumnVMatrix.cc */
@@ -46,12 +46,12 @@ using namespace std;
 
 
 AddTradableColumnVMatrix::AddTradableColumnVMatrix()
-  : parentclass()
+  : inherited()
 {}
 
 AddTradableColumnVMatrix::AddTradableColumnVMatrix(VMat vm, int nb_assets,
     bool add_last_day, int threshold, string the_volume_tag, string the_date_tag)
-  :parentclass(vm->length(), vm->width()+nb_assets+(add_last_day?1:0)),
+  :inherited(vm->length(), vm->width()+nb_assets+(add_last_day?1:0)),
    underlying(vm), min_volume_threshold(threshold),
    add_last_day_of_month(add_last_day), volume_tag(the_volume_tag),
    date_tag(the_date_tag), name_col(nb_assets), row_buffer(vm->width())
@@ -59,7 +59,7 @@ AddTradableColumnVMatrix::AddTradableColumnVMatrix(VMat vm, int nb_assets,
   build();
 }
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(AddTradableColumnVMatrix, "AddTradableColumnVMatrix", RowBufferedVMatrix);
+PLEARN_IMPLEMENT_OBJECT(AddTradableColumnVMatrix, "ONE LINE DESCR", "NO HELP");
 
 void AddTradableColumnVMatrix::getRow(int i, Vec v) const
 {
@@ -119,7 +119,7 @@ void AddTradableColumnVMatrix::declareOptions(OptionList& ol)
                 "The fieldInfo name of the date column.");
 
   // Now call the parent class' declareOptions
-  parentclass::declareOptions(ol);
+  inherited::declareOptions(ol);
 }
 
 string AddTradableColumnVMatrix::help()
@@ -198,13 +198,13 @@ void AddTradableColumnVMatrix::build_()
 // ### Nothing to add here, simply calls build_
 void AddTradableColumnVMatrix::build()
 {
-  parentclass::build();
+  inherited::build();
   build_();
 }
 
 void AddTradableColumnVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  parentclass::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
 
   // ### Call deepCopyField on all "pointer-like" fields 
   // ### that you wish to be deepCopied rather than 

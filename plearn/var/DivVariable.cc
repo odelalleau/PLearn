@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DivVariable.cc,v 1.2 2003/01/08 21:32:18 ducharme Exp $
+   * $Id: DivVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,27 +57,17 @@ DivVariable::DivVariable(Variable* input1, Variable* input2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(DivVariable);
+PLEARN_IMPLEMENT_OBJECT(DivVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void DivVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input1->width(); }
 
 
-void DivVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "DivVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "DivVariable");
-}
 
 
-void DivVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "DivVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "DivVariable");
-}
+
+
 
 
 void DivVariable::fprop()

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: InvertElementsVariable.cc,v 1.2 2003/01/08 21:32:28 ducharme Exp $
+   * $Id: InvertElementsVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,26 +53,16 @@ InvertElementsVariable::InvertElementsVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(InvertElementsVariable);
+PLEARN_IMPLEMENT_OBJECT(InvertElementsVariable, "ONE LINE DESCR", "NO HELP");
 
 void InvertElementsVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void InvertElementsVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "InvertElementsVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "InvertElementsVariable");
-}
 
 
-void InvertElementsVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "InvertElementsVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "InvertElementsVariable");
-}
+
+
 
 
 void InvertElementsVariable::fprop()

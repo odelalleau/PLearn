@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.10 2003/05/07 05:39:16 plearner Exp $
+   * $Id: plearn_main.cc,v 1.11 2003/08/13 08:13:16 plearner Exp $
    ******************************************************* */
 
 #include "general.h"
@@ -43,6 +43,7 @@
 #include "random.h"
 #include "PLMPI.h"
 #include "Object.h"
+#include "RunCommand.h"
 
 namespace PLearn <%
 using namespace std;
@@ -71,39 +72,13 @@ int plearn_main(int argc, char** argv)
           vector<string> args = stringvector(argc-2, argv+2);
           PLearnCommandRegistry::run(command, args);
         }
-      else // we suppose it's a filename of a .psave or .pexp file containing Objects to be run
+      else if(file_exists(command))
         {
-          if(!file_exists(command))
-            {
-              cerr << "** ERROR: " << command << " appears to be neither a valid plearn command type, nor an existing filename" << endl;
-              cerr << "Type plearn with no argument to see the help." << endl;
-              exit(0);
-            }
-
-          map<string, string> vars;
-          // populate vars with the arguments passed on the command line
-          for(int i=2; i<argc; i++)
-            {
-              string option = argv[i];
-              pair<string,string> name_val = split_on_first(option, "=");
-              vars[name_val.first] = name_val.second;
-            }
-          PStream pout(&cout);
-          pout << vars << endl;
-      
-          string script = readFileAndMacroProcess(command, vars);
-          PIStringStream in(script);
-
-          while(in)
-            {
-              PP<Object> o = readObject(in);
-              o->run();
-              in.skipBlanksAndCommentsAndSeparators();
-              // cerr << bool(in) << endl;
-              // cerr << in.peek() << endl;
-            }
+          vector<string> args = stringvector(argc-1, argv+1);
+          PLearnCommandRegistry::run("run", args);
         }
-
+      else
+        PLERROR("%s appears to neither be a known PLearn command, nor an existing .plearn script",command.c_str());
     }
 
 

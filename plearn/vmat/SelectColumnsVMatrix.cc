@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.cc,v 1.2 2003/05/15 16:10:49 tihocan Exp $
+   * $Id: SelectColumnsVMatrix.cc,v 1.3 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 #include "SelectColumnsVMatrix.h"
@@ -46,7 +46,7 @@ using namespace std;
 
 /** SelectColumnsVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(SelectColumnsVMatrix, "SelectColumnsVMatrix", VMatrix);
+PLEARN_IMPLEMENT_OBJECT(SelectColumnsVMatrix, "ONE LINE DESCR", "NO HELP");
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_distr, TVec<int> the_indices)
   : VMatrix(the_distr->length(), the_indices.length()),

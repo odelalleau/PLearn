@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: ForwardVMatrix.cc,v 1.5 2003/06/03 14:52:09 plearner Exp $
+ * $Id: ForwardVMatrix.cc,v 1.6 2003/08/13 08:13:46 plearner Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -50,7 +50,7 @@
 namespace PLearn <%
 using namespace std;
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ForwardVMatrix);
+PLEARN_IMPLEMENT_OBJECT(ForwardVMatrix, "ONE LINE DESCR", "NO HELP");
 
 ForwardVMatrix::ForwardVMatrix()
 {}

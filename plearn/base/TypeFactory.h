@@ -52,44 +52,37 @@ class Object;
 //!  default-initialized Object
 typedef Object* (*NEW_OBJECT)();
 typedef OptionList& (*GETOPTIONLIST_METHOD)();
-typedef string (*HELP_METHOD)();
 typedef bool (*ISA_METHOD)(Object* o);
 
 class TypeMapEntry
 {
 public:
+  string type_name;
   string parent_class; // name of parent class
   NEW_OBJECT constructor;
   GETOPTIONLIST_METHOD getoptionlist_method;
-  HELP_METHOD help_method;
   ISA_METHOD isa_method;
+  string one_line_descr;
+  string multi_line_help;
   
-  TypeMapEntry(const string& the_parent_class="", 
+  TypeMapEntry(const string& the_type_name, 
+               const string& the_parent_class="", 
                NEW_OBJECT the_constructor=0, 
                GETOPTIONLIST_METHOD the_getoptionlist_method=0,
-               HELP_METHOD the_help_method=0,
-               ISA_METHOD the_isa_method=0)
-    :parent_class(the_parent_class),
+               ISA_METHOD the_isa_method=0,
+               const string& the_one_line_descr = "",
+               const string& the_multi_line_help = "")
+    :type_name(the_type_name),
+     parent_class(the_parent_class),
      constructor(the_constructor), 
      getoptionlist_method(the_getoptionlist_method),
-     help_method(the_help_method),
-     isa_method(the_isa_method)
+     isa_method(the_isa_method),
+     one_line_descr(the_one_line_descr),
+     multi_line_help(the_multi_line_help)
   {}
 };
 
 typedef map<string,TypeMapEntry> TypeMap;
-
-//##########################  CLASS  TYPEREGISTRAR  ###########################
-/*!   
-   This object, upon construction, registers a name and a construction
-   function with the static type factory
-*/
-
-class TypeRegistrar
-{
-public:
-  TypeRegistrar(const string& type_name, const TypeMapEntry& entry);
-};
 
 
 //###########################  CLASS  TYPEFACTORY  ############################
@@ -104,7 +97,16 @@ public:
   // Default constructor, destructor, etc.
 
   //!  Register a type
-  void registerType(const string& type_name, const TypeMapEntry& entry);
+  static void register_type(const string& type_name, 
+                            const string& parent_class, 
+                            NEW_OBJECT constructor, 
+                            GETOPTIONLIST_METHOD getoptionlist_method,
+                            ISA_METHOD isa_method,
+                            const string& one_line_descr,
+                            const string& multi_line_help);  
+
+  //!  Register a type
+  void registerType(const TypeMapEntry& entry);
 
   //!  Unregister a type
   void unregisterType(string type_name);
@@ -115,9 +117,6 @@ public:
   //!  Construct a new default-constructed object given its type name
   //!  Calls PLERROR (throws an exception) if type_name is not registered
   Object* newObject(string type_name) const;
-
-  //! Returns help for registered object
-  string help(string type_name) const;
 
   //! Tells if the given object is a virtual base class (with pure virtual methods)
   //! (This simply checks if it was declared with a constructor or not)

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.15 2003/06/05 19:13:09 plearner Exp $
+   * $Id: StatsCollector.cc,v 1.16 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 namespace PLearn <%
 using namespace std;
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(StatsCollector);
+  PLEARN_IMPLEMENT_OBJECT(StatsCollector, "ONE LINE DESCR", "NO HELP");
 
   StatsCollector::StatsCollector(int the_maxnvalues)
     : maxnvalues(the_maxnvalues),
@@ -403,7 +403,7 @@ RealMapping StatsCollector::getAllValuesMapping(TVec<int> * fcount) const
   {
     int version = readHeader(in,"StatsCollector");
     if(version!=0)
-      PLERROR("In StatsCollector::deepRead don't know how to read this version");
+      PLERROR("In StatsCollector::oldead don't know how to read this version");
     readField(in, "nmissing_", nmissing_);    
     readField(in, "nnonmissing_", nnonmissing_);    
     readField(in, "sum_", sum_);
@@ -457,7 +457,7 @@ real StatsCollector::getStat(const string& statname) const
   // *** ConditionalStatsCollector ***
   // *********************************
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(ConditionalStatsCollector);
+  PLEARN_IMPLEMENT_OBJECT(ConditionalStatsCollector, "ONE LINE DESCR", "NO HELP");
 
   ConditionalStatsCollector::ConditionalStatsCollector()
     :condvar(0) {}
@@ -527,7 +527,7 @@ real StatsCollector::getStat(const string& statname) const
   {
     int version = readHeader(in,"ConditionalStatsCollector");
     if(version!=0)
-      PLERROR("In ConditionalStatsCollector::deepRead don't know how to read this version");
+      PLERROR("In ConditionalStatsCollector::oldead don't know how to read this version");
     readField(in, "condvar", condvar);    
     readField(in, "ranges", ranges);    
     readField(in, "counts", counts);

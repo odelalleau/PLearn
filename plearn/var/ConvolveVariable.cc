@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConvolveVariable.cc,v 1.2 2003/01/08 21:32:16 ducharme Exp $
+   * $Id: ConvolveVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,26 +55,16 @@ ConvolveVariable::ConvolveVariable(Variable* input, Variable* mask)
 {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ConvolveVariable);
+PLEARN_IMPLEMENT_OBJECT(ConvolveVariable, "ONE LINE DESCR", "NO HELP");
 
 void ConvolveVariable::recomputeSize(int& l, int& w) const
 { l=input1->length()-input2->length()+1; w=input1->width()-input2->width()+1; }
 
 
-void ConvolveVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "ConvolveVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "ConvolveVariable");
-}
 
 
-void ConvolveVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "ConvolveVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "ConvolveVariable");
-}
+
+
 
 
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.4 2003/06/12 20:44:56 ducharme Exp $
+   * $Id: SubVMatrix.cc,v 1.5 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -46,7 +46,7 @@ using namespace std;
 
 /** SubVMatrix **/
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SubVMatrix);
+PLEARN_IMPLEMENT_OBJECT(SubVMatrix, "ONE LINE DESCR", "NO HELP");
 
 SubVMatrix::SubVMatrix()
   :istart(0), 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryVariable.h,v 1.7 2002/10/25 23:16:08 plearner Exp $
+   * $Id: BinaryVariable.h,v 1.8 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,12 +64,12 @@ protected:
 
 public:
   BinaryVariable(Variable* v1, Variable* v2, int thelength, int thewidth);
-  DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(BinaryVariable);
+  PLEARN_DECLARE_ABSTRACT_OBJECT(BinaryVariable);
 
   virtual void setParents(const VarArray& parents);
 
-  virtual void deepRead(istream& in, DeepReadMap& old2new);
-  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
+  
+  
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual bool markPath();
   virtual void buildPath(VarArray& proppath);

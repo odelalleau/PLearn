@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixAffineTransformVariable.h,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: MatrixAffineTransformVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,7 +65,7 @@ public:
   MatrixAffineTransformVariable(Variable* mat, Variable* transformation):
     BinaryVariable(mat, transformation, transformation->width(), mat->width())
   {}
-  DECLARE_NAME_AND_DEEPCOPY(MatrixAffineTransformVariable);
+  PLEARN_DECLARE_OBJECT(MatrixAffineTransformVariable);
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();

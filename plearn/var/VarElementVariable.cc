@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VarElementVariable.cc,v 1.2 2003/01/08 21:33:11 ducharme Exp $
+   * $Id: VarElementVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,27 +57,17 @@ VarElementVariable::VarElementVariable(Variable* input1, Variable* input2)
 }
 
   
-IMPLEMENT_NAME_AND_DEEPCOPY(VarElementVariable);
+PLEARN_IMPLEMENT_OBJECT(VarElementVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void VarElementVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
 
 
-void VarElementVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "VarElementVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "VarElementVariable");
-}
 
 
-void VarElementVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "VarElementVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "VarElementVariable");
-}
+
+
 
 
 void VarElementVariable::fprop()

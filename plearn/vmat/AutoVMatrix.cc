@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: AutoVMatrix.cc,v 1.2 2003/05/07 05:39:18 plearner Exp $
+ * $Id: AutoVMatrix.cc,v 1.3 2003/08/13 08:13:45 plearner Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -47,7 +47,7 @@
 namespace PLearn <%
 using namespace std;
 
-IMPLEMENT_NAME_AND_DEEPCOPY(AutoVMatrix);
+PLEARN_IMPLEMENT_OBJECT(AutoVMatrix, "ONE LINE DESCR", "NO HELP");
 
 AutoVMatrix::AutoVMatrix(const string& the_specification)
   :specification(the_specification)

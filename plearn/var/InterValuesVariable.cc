@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: InterValuesVariable.cc,v 1.2 2003/01/08 21:32:27 ducharme Exp $
+   * $Id: InterValuesVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,26 +59,16 @@ InterValuesVariable::InterValuesVariable(Variable* values)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(InterValuesVariable);
+PLEARN_IMPLEMENT_OBJECT(InterValuesVariable, "ONE LINE DESCR", "NO HELP");
 
 void InterValuesVariable::recomputeSize(int& l, int& w) const
 { l=input->length()-1; w=1; }
 
 
-void InterValuesVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "InterValuesVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "InterValuesVariable");
-}
 
 
-void InterValuesVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "InterValuesVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "InterValuesVariable");
-}
+
+
 
 
 

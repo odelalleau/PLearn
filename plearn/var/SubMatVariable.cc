@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubMatVariable.cc,v 1.2 2003/01/08 21:33:02 ducharme Exp $
+   * $Id: SubMatVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,29 +57,17 @@ SubMatVariable::SubMatVariable(Variable* v, int i, int j, int the_length, int th
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SubMatVariable);
+PLEARN_IMPLEMENT_OBJECT(SubMatVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void SubMatVariable::recomputeSize(int& l, int& w) const
 { l=length_; w=width_; }
 
 
-void SubMatVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "SubMatVariable");
-  inherited::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, startk);
-  readFooter(in, "SubMatVariable");
-}
 
 
-void SubMatVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "SubMatVariable");
-  inherited::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, startk);
-  writeFooter(out, "SubMatVariable");
-}
+
+
 
 
 

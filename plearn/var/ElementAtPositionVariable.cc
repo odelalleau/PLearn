@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ElementAtPositionVariable.cc,v 1.2 2003/01/08 21:32:21 ducharme Exp $
+   * $Id: ElementAtPositionVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,27 +59,17 @@ ElementAtPositionVariable::ElementAtPositionVariable(Variable* input1, Variable*
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ElementAtPositionVariable);
+PLEARN_IMPLEMENT_OBJECT(ElementAtPositionVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void ElementAtPositionVariable::recomputeSize(int& l, int& w) const
 { l=length_; w=width_; }
 
 
-void ElementAtPositionVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "ElementAtPositionVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "ElementAtPositionVariable");
-}
 
 
-void ElementAtPositionVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "ElementAtPositionVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "ElementAtPositionVariable");
-}
+
+
 
 
  

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.21 2003/08/04 21:38:39 chapados Exp $
+   * $Id: TMat.h,v 1.22 2003/08/13 08:13:17 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -296,25 +296,6 @@ class TVec
     void save(const string& filename) const { savePVec(filename, *this); }
     void load(const string& filename) { loadPVec(filename, *this); }
     
-      
-      void deepRead(istream& in, DeepReadMap& old2new)
-      {
-        readHeader(in, "TVec");
-        PLearn::deepRead(in, old2new, length_);
-        PLearn::deepRead(in, old2new, offset_);
-        PLearn::deepRead(in, old2new, storage);
-        readFooter(in, "TVec");
-      }
-
-      void deepWrite(ostream& out, DeepWriteSet& already_saved) const
-      {
-        writeHeader(out, "TVec");
-        PLearn::deepWrite(out, already_saved, length_);
-        PLearn::deepWrite(out, already_saved, offset_);
-        PLearn::deepWrite(out, already_saved, storage);
-        writeFooter(out, "TVec");
-      }
-           
       //!  Returns a sub-TVector
       TVec<T> subVec(int newstart, int newlength) const
       {
@@ -1470,28 +1451,6 @@ public:
     void save(const string& filename) const { savePMat(filename, *this); }
     void load(const string& filename) { loadPMat(filename, *this); }
     
-  void deepRead(istream& in, DeepReadMap& old2new)
-  {
-    readHeader(in, "TMat");
-    PLearn::deepRead(in, old2new, offset_);
-    PLearn::deepRead(in, old2new, mod_);
-    PLearn::deepRead(in, old2new, length_);
-    PLearn::deepRead(in, old2new, width_);
-    PLearn::deepRead(in, old2new, storage);
-    readFooter(in, "TMat");
-  }
-
-  void deepWrite(ostream& out, DeepWriteSet& already_saved) const
-  {
-    writeHeader(out, "TMat");
-    PLearn::deepWrite(out, already_saved, offset_);
-    PLearn::deepWrite(out, already_saved, mod_);
-    PLearn::deepWrite(out, already_saved, length_);
-    PLearn::deepWrite(out, already_saved, width_);
-    PLearn::deepWrite(out, already_saved, storage);
-    writeFooter(out, "TMat");
-  }
-
   //!  Returns a TMat that is a column of the matrix
   inline TMat<T> column(int colnum) const
   { return subMatColumns(colnum, 1); }
@@ -1915,14 +1874,6 @@ void binread_double(istream& in, TVec<T>& v)
 
 
 template<class T>
-inline void deepWrite(ostream& out, DeepWriteSet& already_saved, const TVec<T>& v) 
-{ v.deepWrite(out, already_saved); }
-
-template<class T>
-inline void deepRead(istream& in, DeepReadMap& old2new, TVec<T>& v)
-{ v.deepRead(in, old2new); }
-  
-template<class T>
 inline ostream& operator<<(ostream& out, const TVec<T>& v)
 { 
   v.print(out);
@@ -2247,13 +2198,6 @@ void binread_double(istream& in, TMat<T>& m)
 }
 */
 
-template<class T>
-inline void deepWrite(ostream& out, DeepWriteSet& already_saved, const TMat<T>& m) 
-{ m.deepWrite(out, already_saved); }
-
-template<class T>
-inline void deepRead(istream& in, DeepReadMap& old2new, TMat<T>& m)
-{ m.deepRead(in, old2new); }
 
 
 // Type traits (especially type "names" for displaying optionHelp() )

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformWeightPenalty.h,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: AffineTransformWeightPenalty.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -61,7 +61,7 @@ class AffineTransformWeightPenalty: public UnaryVariable
     real bias_decay_;
 
   public:
-    DECLARE_NAME_AND_DEEPCOPY(AffineTransformWeightPenalty);
+    PLEARN_DECLARE_OBJECT(AffineTransformWeightPenalty);
     AffineTransformWeightPenalty(Variable* affinetransform, real weight_decay, real bias_decay=0.) 
       :UnaryVariable(affinetransform, 1,1),weight_decay_(weight_decay),bias_decay_(bias_decay)
     {}

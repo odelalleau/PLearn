@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.h,v 1.2 2003/06/03 20:54:33 ducharme Exp $
+   * $Id: MemoryVMatrix.h,v 1.3 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 
@@ -90,7 +90,7 @@ public:
   //! simply calls inherited::build() then build_()
   virtual void build();
 
-  DECLARE_NAME_AND_DEEPCOPY(MemoryVMatrix);
+  PLEARN_DECLARE_OBJECT(MemoryVMatrix);
   void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 };
 

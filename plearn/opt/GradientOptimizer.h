@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.h,v 1.12 2003/05/06 20:25:17 tihocan Exp $
+   * $Id: GradientOptimizer.h,v 1.13 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -88,7 +88,7 @@ using namespace std;
                         int every_iterations=1);
 
       
-    DECLARE_NAME_AND_DEEPCOPY(GradientOptimizer);
+    PLEARN_DECLARE_OBJECT(GradientOptimizer);
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies) { inherited::makeDeepCopyFromShallowCopy(copies); }
 
     virtual void build()

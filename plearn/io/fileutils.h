@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.5 2003/05/26 04:12:42 plearner Exp $
+   * $Id: fileutils.h,v 1.6 2003/08/13 08:13:17 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -110,13 +110,6 @@ void force_mkdir_for_file(const string& filepath);
   //! Returns the length of a file, measured in bytes.
   long filesize(const string& filename);
 
-  //! Returns the whole content of the file as a string
-  string loadFileAsString(const string& filepath);
-
-//! Writes the raw string into the given file
-//! Intermediate directories in filepath are created if necessary
-void saveStringInFile(const string& filepath, const string& text);
-
   //! calls system with cp -R to recursively copy source to destination
   void cp(const string& srcpath, const string& destpath);
 
@@ -171,6 +164,13 @@ void readWhileMatches(istream& in, const string& s);
 //! returns "./"+filename if filename is relative to current dir
   string makeExplicitPath(const string& filename);
 
+//! Returns the whole content of the file as a string
+string loadFileAsString(const string& filepath);
+
+//! Writes the raw string into the given file
+//! Intermediate directories in filepath are created if necessary
+void saveStringInFile(const string& filepath, const string& text);
+
 //! Will return the text, macro processed, with each instance of ${varname} in the text that corresponds to a key in the given map 
 //! replaced by its associated value. 
 //! Also every $DEFINE{varname=... } in the text will add a new varname entry in the map.  (The DEFINE macro will be discarded)
@@ -179,6 +179,12 @@ string readAndMacroProcess(istream& in, map<string, string>& variables);
 
 //! Same as readAndMacroProcess, but takes a filename instead of an istream
 string readFileAndMacroProcess(const string& fname, map<string, string>& variables);
+
+inline string readFileAndMacroProcess(const string& fname)
+{
+  map<string, string> variables;
+  return readFileAndMacroProcess(fname, variables);
+}
 
 %> // end of namespace PLearn
 

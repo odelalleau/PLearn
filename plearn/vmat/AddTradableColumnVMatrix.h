@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddTradableColumnVMatrix.h,v 1.2 2003/08/12 19:17:32 ducharme Exp $ 
+   * $Id: AddTradableColumnVMatrix.h,v 1.3 2003/08/13 08:13:45 plearner Exp $ 
    ******************************************************* */
 
 /*! \file AddTradableColumnVMatrix.h */
@@ -99,7 +99,7 @@ public:
   virtual void getRow(int i, Vec v) const;
   virtual real get(int i, int j) const;
 
-  // simply calls parentclass::build() then build_() 
+  // simply calls inherited::build() then build_() 
   virtual void build();
 
   //! Provides a help message describing this class
@@ -109,7 +109,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT_METHODS(AddTradableColumnVMatrix, "AddTradableColumnVMatrix", RowBufferedVMatrix);
+  PLEARN_DECLARE_OBJECT(AddTradableColumnVMatrix);
 
 };
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IsMissingVariable.h,v 1.1 2003/08/08 20:45:54 yoshua Exp $
+   * $Id: IsMissingVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,10 +63,8 @@ public:
 
 public:
   IsMissingVariable(Variable* input1, bool parallel=0);
-  DECLARE_NAME_AND_DEEPCOPY(IsMissingVariable);
+  PLEARN_DECLARE_OBJECT(IsMissingVariable);
   virtual void recomputeSize(int& l, int& w) const;
-  virtual void deepRead(istream& in, DeepReadMap& old2new);
-  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVariable.cc,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: ConcatColumnsVariable.cc,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,26 +58,16 @@ ConcatColumnsVariable::ConcatColumnsVariable(const VarArray& vararray)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ConcatColumnsVariable);
+PLEARN_IMPLEMENT_OBJECT(ConcatColumnsVariable, "ONE LINE DESCR", "NO HELP");
 
 void ConcatColumnsVariable::recomputeSize(int& l, int& w) const
 { l=varray.maxLength(); w=varray.sumOfWidths(); }
 
 
-void ConcatColumnsVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "ConcatColumnsVariable");
-  NaryVariable::deepRead(in, old2new);
-  readFooter(in, "ConcatColumnsVariable");
-}
 
 
-void ConcatColumnsVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "ConcatColumnsVariable");
-  NaryVariable::deepWrite(out, already_saved);
-  writeFooter(out, "ConcatColumnsVariable");
-}
+
+
 
 
 void ConcatColumnsVariable::fprop()

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MulticlassLossVariable.cc,v 1.2 2003/01/08 21:32:51 ducharme Exp $
+   * $Id: MulticlassLossVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,7 @@ using namespace std;
 
 /** MulticlassLossVariable **/
 
-IMPLEMENT_NAME_AND_DEEPCOPY(MulticlassLossVariable);
+PLEARN_IMPLEMENT_OBJECT(MulticlassLossVariable, "ONE LINE DESCR", "NO HELP");
 
 MulticlassLossVariable::MulticlassLossVariable(Variable* netout, Variable* target)
   :BinaryVariable(netout,target,1,1)

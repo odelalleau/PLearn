@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ArgminOfVariable.h,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: ArgminOfVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -74,7 +74,7 @@ public:
                    Variable* the_expression,
                    Variable* the_values_of_v,
                    const VarArray& the_inputs);
-  DECLARE_NAME_AND_DEEPCOPY(ArgminOfVariable);
+  PLEARN_DECLARE_OBJECT(ArgminOfVariable);
   virtual void recomputeSize(int& l, int& w) const;
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual void fprop();

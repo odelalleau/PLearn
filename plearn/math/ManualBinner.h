@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ManualBinner.h,v 1.4 2003/05/07 05:39:17 plearner Exp $ 
+   * $Id: ManualBinner.h,v 1.5 2003/08/13 08:13:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ManualBinner.h */
@@ -101,7 +101,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(ManualBinner);
+  PLEARN_DECLARE_OBJECT(ManualBinner);
 
   // ******************
   // * Binner methods *

@@ -72,7 +72,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianProcessRegressor.cc,v 1.5 2003/08/08 20:45:54 yoshua Exp $
+   * $Id: GaussianProcessRegressor.cc,v 1.6 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 #include "GaussianProcessRegressor.h"
@@ -83,15 +83,15 @@ namespace PLearn <%
 using namespace std;
 
 GaussianProcessRegressor::GaussianProcessRegressor() : 
-  parentclass(), Gram_matrix_normalization("none"), 
+  inherited(), Gram_matrix_normalization("none"), 
   max_nb_evectors(-1)
 {}
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(GaussianProcessRegressor, "GaussianProcessRegressor", PLearner);
+PLEARN_IMPLEMENT_OBJECT(GaussianProcessRegressor, "ONE LINE DESCR", "NO HELP");
 
 void GaussianProcessRegressor::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  parentclass::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
 
     // ### Call deepCopyField on all "pointer-like" fields 
     // ### that you wish to be deepCopied rather than 
@@ -174,7 +174,7 @@ void GaussianProcessRegressor::declareOptions(OptionList& ol)
                 "     K_{ij} <-- K_{ij}/sqrt(mean_i(K_ij) mean_j(K_ij))\n");
 
 
-  parentclass::declareOptions(ol);
+  inherited::declareOptions(ol);
 }
 
 void GaussianProcessRegressor::build_()
@@ -209,7 +209,7 @@ int GaussianProcessRegressor::outputsize() const
 
 void GaussianProcessRegressor::build()
 {
-  parentclass::build();
+  inherited::build();
   build_();
 }
 

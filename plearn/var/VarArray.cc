@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.cc,v 1.6 2003/04/25 21:00:21 tihocan Exp $
+   * $Id: VarArray.cc,v 1.7 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -102,26 +102,9 @@ void VarArray::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
     deepCopyField((*this)[i], copies);
 }
 
-void VarArray::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "VarArray");
-  PLearn::deepWrite(out, already_saved, size());
-  out << "\n";
-  for(int i=0; i<size(); i++)
-    PLearn::deepWrite(out, already_saved, (*this)[i]);
-  writeFooter(out, "VarArray");
-}
 
-void VarArray::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "VarArray");
-  int len;
-  PLearn::deepRead(in, old2new, len);
-  resize(len);
-  for(int i=0; i<size(); i++)
-    PLearn::deepRead(in, old2new, (*this)[i]);
-  readFooter(in, "VarArray");
-}
+
+
 
 void VarArray::copyFrom(const Vec& datavec)
 {

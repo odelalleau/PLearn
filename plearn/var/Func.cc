@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.5 2003/07/04 18:30:14 plearner Exp $
+   * $Id: Func.cc,v 1.6 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -122,7 +122,7 @@ Function::Function(const VarArray& the_inputs, const VarArray& parameters_to_opt
 }
 */
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(Function, "Function", Object);
+PLEARN_IMPLEMENT_OBJECT(Function, "Implements a function defined as a var graph", "NO HELP");
 
 void Function::declareOptions(OptionList& ol)
 {
@@ -134,13 +134,7 @@ void Function::declareOptions(OptionList& ol)
                 "The list of output variabes of this function");
   
   // Now call the parent class' declareOptions
-  parentclass::declareOptions(ol);
-}
-
-string Function::help()
-{
-  return 
-    "Function implements a function as a var graph\n";
+  inherited::declareOptions(ol);
 }
 
 void Function::build_()
@@ -176,7 +170,7 @@ void Function::build_()
 
 void Function::build()
 {
-  parentclass::build();
+  inherited::build();
   build_();
 }
 

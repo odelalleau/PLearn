@@ -53,7 +53,7 @@ class DERIVEDCLASS: public SequentialLearner
 
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-    PLEARN_DECLARE_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", SequentialLearner);
+    PLEARN_DECLARE_OBJECT(DERIVEDCLASS);
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 

@@ -89,7 +89,7 @@ class SequentialLearner: public PLearner
     //! Constructor
     SequentialLearner();
 
-    //! simply calls parentclass::build() then build_()
+    //! simply calls inherited::build() then build_()
     virtual void build();
 
     //! Default behaviour: return train_set->targetsize()
@@ -130,7 +130,7 @@ class SequentialLearner: public PLearner
 
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-    PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS(SequentialLearner, "SequentialLearner", PLearner);
+    PLEARN_DECLARE_ABSTRACT_OBJECT(SequentialLearner);
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 

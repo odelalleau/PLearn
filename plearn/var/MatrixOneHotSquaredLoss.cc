@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixOneHotSquaredLoss.cc,v 1.2 2003/01/08 21:32:42 ducharme Exp $
+   * $Id: MatrixOneHotSquaredLoss.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,7 @@ using namespace std;
 
 /** MatrixOneHotSquaredLoss **/
 
-IMPLEMENT_NAME_AND_DEEPCOPY(MatrixOneHotSquaredLoss);
+PLEARN_IMPLEMENT_OBJECT(MatrixOneHotSquaredLoss, "ONE LINE DESCR", "NO HELP");
 
 MatrixOneHotSquaredLoss::MatrixOneHotSquaredLoss(Variable* input1, Variable* input2, real coldval, real hotval)
     :BinaryVariable(input1,input2,input2->length(),input2->width()), coldval_(coldval), hotval_(hotval)
@@ -62,20 +62,10 @@ void MatrixOneHotSquaredLoss::recomputeSize(int& l, int& w) const
 { l=input2->length(), w=input2->width(); }
 
 
-void MatrixOneHotSquaredLoss::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "MatrixOneHotSquaredLoss");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "MatrixOneHotSquaredLoss");
-}
 
 
-void MatrixOneHotSquaredLoss::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "MatrixOneHotSquaredLoss");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "MatrixOneHotSquaredLoss");
-}
+
+
 
   
 void MatrixOneHotSquaredLoss::fprop()

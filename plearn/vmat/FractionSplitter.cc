@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FractionSplitter.cc,v 1.2 2003/06/03 14:52:09 plearner Exp $ 
+   * $Id: FractionSplitter.cc,v 1.3 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file FractionSplitter.cc */
@@ -54,7 +54,7 @@ FractionSplitter::FractionSplitter()
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(FractionSplitter);
+PLEARN_IMPLEMENT_OBJECT(FractionSplitter, "ONE LINE DESCR", "NO HELP");
 
 void FractionSplitter::declareOptions(OptionList& ol)
 {

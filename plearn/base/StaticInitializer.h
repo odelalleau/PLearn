@@ -1,8 +1,10 @@
+
 // -*- C++ -*-
 
-// vmat.cc
-// Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux, Rejean Ducharme
+// StaticInitializer.h
 //
+// Copyright (C) 2003  Pascal Vincent 
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -32,29 +34,34 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmat.cc,v 1.4 2003/05/22 16:25:26 tihocan Exp $
+   * $Id: StaticInitializer.h,v 1.1 2003/08/13 08:13:16 plearner Exp $ 
    ******************************************************* */
 
-#include "vmatmain.h"
+/*! \file StaticInitializer.h */
+#ifndef StaticInitializer_INC
+#define StaticInitializer_INC
 
-// include all relevant vmatrices
-#include "VMat.h"
-#include "VMatLanguage.h"
-#include "VVMatrix.h"
-#include "AutoVMatrix.h"
-#include "BatchVMatrix.h"
 
-using namespace PLearn;
+namespace PLearn <%
+using namespace std;
 
-int main(int argc, char** argv)
-{ 
-  try {
-    return vmatmain(argc,argv); 
-  } // end of try
-  catch(const PLearnError& e)
-    {
-      cerr << "FATAL ERROR: " << e.message() << endl;
-    }
-  return 0;
-}
-  
+typedef void (*VOIDFUNC)();
+
+//! A StaticInitializer is typically declared as a static member of a class,
+//! and given a parameter that is a static initialization function for said class.
+//! This will ensure that said function will be called upon program start.
+//! In Objects, this mechanism is defined automatically by the 
+//! PLEARN_DECLARE_OBJECT_METHODS macro and used to automatically 
+//! call TypeFactory::register_type
+
+class StaticInitializer
+{
+public:
+  // Simply calls the given initialize function upon construction
+  StaticInitializer(VOIDFUNC initialize);
+};
+
+
+%> // end of namespace PLearn
+
+#endif

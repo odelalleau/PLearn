@@ -4,7 +4,7 @@ namespace PLearn <%
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", SequentialLearner);
+PLEARN_IMPLEMENT_OBJECT(DERIVEDCLASS, "ONE LINE DESCR", "NO HELP");
 
 DERIVEDCLASS::DERIVEDCLASS()
   : // ...
@@ -17,7 +17,7 @@ DERIVEDCLASS::DERIVEDCLASS()
 
 void DERIVEDCLASS::build()
 {
-  parentclass::build();
+  inherited::build();
   build_();
 }
 
@@ -28,12 +28,12 @@ void DERIVEDCLASS::build_()
 
 void DERIVEDCLASS::forget()
 {
-  parentclass::forget();
+  inherited::forget();
 }
 
 void DERIVEDCLASS::declareOptions(OptionList& ol)
 {
-  parentclass::declareOptions(ol);
+  inherited::declareOptions(ol);
 }
 
 void DERIVEDCLASS::train()
@@ -62,7 +62,7 @@ void DERIVEDCLASS::computeCostsFromOutputs(const Vec& input,
 
 void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  parentclass::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
 
   // ### Remove this line when you have fully implemented this method.
   PLERROR("DERIVEDCLASS::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");

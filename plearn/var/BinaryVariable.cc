@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryVariable.cc,v 1.10 2003/01/08 21:32:03 ducharme Exp $
+   * $Id: BinaryVariable.cc,v 1.11 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,7 +56,7 @@ BinaryVariable::BinaryVariable(Variable* v1, Variable* v2, int thelength,int the
 }
 
 
-IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(BinaryVariable);
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(BinaryVariable, "ONE LINE DESCR", "NO HELP");
 
 void BinaryVariable::declareOptions(OptionList& ol)
 {
@@ -83,24 +83,10 @@ void BinaryVariable::setParents(const VarArray& parents)
 }
 
 
-void BinaryVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "BinaryVariable");
-  Variable::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, input1);
-  PLearn::deepRead(in, old2new, input2);
-  readFooter(in, "BinaryVariable");
-}
 
 
-void BinaryVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "BinaryVariable");
-  Variable::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, input1);
-  PLearn::deepWrite(out, already_saved, input2);
-  writeFooter(out, "BinaryVariable");
-}
+
+
 
 
 void BinaryVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BatchVMatrix.h,v 1.1 2003/05/21 19:31:52 tihocan Exp $
+   * $Id: BatchVMatrix.h,v 1.2 2003/08/13 08:13:45 plearner Exp $
    ******************************************************* */
 
 
@@ -67,7 +67,7 @@ public:
 
   BatchVMatrix() {}
 
-  PLEARN_DECLARE_OBJECT_METHODS(BatchVMatrix, "BatchVMatrix", VMatrix);
+  PLEARN_DECLARE_OBJECT(BatchVMatrix);
 
   static void declareOptions(OptionList& ol);
     

@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ScaledConditionalCDFSmoother.cc,v 1.3 2003/05/07 05:39:17 plearner Exp $ 
+   * $Id: ScaledConditionalCDFSmoother.cc,v 1.4 2003/08/13 08:13:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ScaledConditionalCDFSmoother.cc */
@@ -62,7 +62,7 @@ ScaledConditionalCDFSmoother::ScaledConditionalCDFSmoother(PP<HistogramDistribut
   :ConditionalCDFSmoother(prior_cdf)
 {}  
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(ScaledConditionalCDFSmoother);
+  PLEARN_IMPLEMENT_OBJECT(ScaledConditionalCDFSmoother, "ONE LINE DESCR", "NO HELP");
 
   void ScaledConditionalCDFSmoother::declareOptions(OptionList& ol)
   {

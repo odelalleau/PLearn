@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.h,v 1.1 2003/06/06 05:23:52 plearner Exp $ 
+   * $Id: ClassifierFromDensity.h,v 1.2 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.h */
@@ -101,7 +101,7 @@ public:
   // Declares other standard object methods
   //  If your class is not instantiatable (it has pure virtual methods)
   // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
-  PLEARN_DECLARE_OBJECT_METHODS(ClassifierFromDensity, "ClassifierFromDensity", PLearner);
+  PLEARN_DECLARE_OBJECT(ClassifierFromDensity);
 
 
   // **************************

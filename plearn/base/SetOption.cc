@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SetOption.cc,v 1.2 2003/05/07 05:39:16 plearner Exp $ 
+   * $Id: SetOption.cc,v 1.3 2003/08/13 08:13:16 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SetOption.cc */
@@ -47,7 +47,7 @@ SetOption::SetOption()
   {}
 
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(SetOption);
+  PLEARN_IMPLEMENT_OBJECT(SetOption, "ONE LINE DESCR", "NO HELP");
 
   void SetOption::declareOptions(OptionList& ol)
   {

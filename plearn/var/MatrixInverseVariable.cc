@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixInverseVariable.cc,v 1.2 2003/01/08 21:32:41 ducharme Exp $
+   * $Id: MatrixInverseVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,26 +53,16 @@ MatrixInverseVariable::MatrixInverseVariable(Variable* input)
 {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(MatrixInverseVariable);
+PLEARN_IMPLEMENT_OBJECT(MatrixInverseVariable, "ONE LINE DESCR", "NO HELP");
 
 void MatrixInverseVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void MatrixInverseVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "MatrixInverseVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "MatrixInverseVariable");
-}
 
 
-void MatrixInverseVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "MatrixInverseVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "MatrixInverseVariable");
-}
+
+
 
 
 void MatrixInverseVariable::fprop()

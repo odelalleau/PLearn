@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: ForwardVMatrix.h,v 1.3 2003/03/19 23:15:23 jkeable Exp $
+   * $Id: ForwardVMatrix.h,v 1.4 2003/08/13 08:13:46 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,7 +59,7 @@ protected:
 
 public:
 
-  DECLARE_NAME_AND_DEEPCOPY(ForwardVMatrix);
+  PLEARN_DECLARE_OBJECT(ForwardVMatrix);
 
   ForwardVMatrix();
 

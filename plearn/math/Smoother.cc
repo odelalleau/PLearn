@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Smoother.cc,v 1.2 2003/05/07 05:39:17 plearner Exp $ 
+   * $Id: Smoother.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Smoother.cc */
@@ -53,7 +53,7 @@ Smoother::Smoother()
   }
 
 
-  IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(Smoother);
+  PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Smoother, "ONE LINE DESCR", "NO HELP");
 
   void Smoother::declareOptions(OptionList& ol)
   {

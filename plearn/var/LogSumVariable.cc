@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LogSumVariable.cc,v 1.2 2003/01/08 21:32:34 ducharme Exp $
+   * $Id: LogSumVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,28 +54,16 @@ LogSumVariable::LogSumVariable(Variable* input)
   :UnaryVariable(input,1,1),input_softmax(input->nelems()) {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(LogSumVariable);
+PLEARN_IMPLEMENT_OBJECT(LogSumVariable, "ONE LINE DESCR", "NO HELP");
 
 void LogSumVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
 
 
-void LogSumVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "LogSumVariable");
-  inherited::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, input_softmax);
-  readFooter(in, "LogSumVariable");
-}
 
 
-void LogSumVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "LogSumVariable");
-  inherited::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, input_softmax);
-  writeFooter(out, "LogSumVariable");
-}
+
+
 
 
 void LogSumVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)

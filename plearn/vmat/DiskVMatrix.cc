@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.5 2003/07/24 00:48:52 ducharme Exp $
+   * $Id: DiskVMatrix.cc,v 1.6 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -70,7 +70,7 @@ void DiskVMatrix::readRow(istream& in, const Vec& v)
 
 void DiskVMatrix::build()
 {
-  parentclass::build();
+  inherited::build();
   build_();
 }
 
@@ -156,7 +156,7 @@ void DiskVMatrix::build_()
 void DiskVMatrix::declareOptions(OptionList &ol)
 {
   declareOption(ol, "dirname", &DiskVMatrix::dirname, OptionBase::buildoption, "Directory name of the.dmat");
-  parentclass::declareOptions(ol);
+  inherited::declareOptions(ol);
 }
 
 void DiskVMatrix::getRow(int i, Vec v) const
@@ -243,7 +243,7 @@ DiskVMatrix::~DiskVMatrix()
   saveFieldInfos();
 }
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(DiskVMatrix, "DiskVMatrix", RowBufferedVMatrix);
+PLEARN_IMPLEMENT_OBJECT(DiskVMatrix, "ONE LINE DESCR", "NO HELP");
 
 
 %> // end of namespcae PLearn

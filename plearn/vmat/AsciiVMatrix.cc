@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.cc,v 1.7 2003/05/21 22:51:02 plearner Exp $ 
+   * $Id: AsciiVMatrix.cc,v 1.8 2003/08/13 08:13:45 plearner Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
@@ -43,7 +43,7 @@ namespace PLearn <%
 using namespace std;
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(AsciiVMatrix);
+PLEARN_IMPLEMENT_OBJECT(AsciiVMatrix, "ONE LINE DESCR", "NO HELP");
 
 AsciiVMatrix::AsciiVMatrix()
   :file(0), readwritemode(false), newfile(false),

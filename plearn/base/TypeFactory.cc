@@ -39,21 +39,30 @@
 namespace PLearn <%
 using namespace std;
 
-
-
-//#####  TypeRegistrar  #######################################################
-
-TypeRegistrar::TypeRegistrar(const string& type_name, const TypeMapEntry& entry)
-{
-  TypeFactory::instance().registerType(type_name, entry);
-}
-
-
 //#####  TypeFactory  #########################################################
 
-void TypeFactory::registerType(const string& type_name, const TypeMapEntry& entry)
+void TypeFactory::register_type(const string& type_name, 
+                            const string& parent_class, 
+                            NEW_OBJECT constructor, 
+                            GETOPTIONLIST_METHOD getoptionlist_method,
+                            ISA_METHOD isa_method,
+                            const string& one_line_descr,
+                            const string& multi_line_help)
 {
-  type_map_[type_name] = entry;
+  TypeMapEntry entry(type_name, 
+                     parent_class, 
+                     constructor, 
+                     getoptionlist_method,
+                     isa_method,
+                     one_line_descr,
+                     multi_line_help);
+
+  instance().registerType(entry);
+}
+
+void TypeFactory::registerType(const TypeMapEntry& entry)
+{
+  type_map_.insert( pair<string,TypeMapEntry>(entry.type_name, entry) );
   //cout << "register type " << type_name << endl;
 }
 
@@ -77,19 +86,11 @@ Object* TypeFactory::newObject(string type_name) const
   return (*it->second.constructor)();
 }
 
-string TypeFactory::help(string type_name) const
-{
-  TypeMap::const_iterator it = type_map_.find(type_name);
-  if (it == type_map_.end())
-    PLERROR("In TypeFactory::help(\"%s\"): %s not registered in type map.", type_name.c_str(), type_name.c_str());
-  return (*it->second.help_method)();
-}
-
 bool TypeFactory::isAbstract(string type_name) const
 {
   TypeMap::const_iterator it = type_map_.find(type_name);
   if (it == type_map_.end())
-    PLERROR("In TypeFactory::help(\"%s\"): %s not registered in type map.", type_name.c_str(), type_name.c_str());
+    PLERROR("In TypeFactory: %s not registered in type map.", type_name.c_str(), type_name.c_str());
   return it->second.constructor == 0;
 }
 
@@ -119,7 +120,8 @@ void displayObjectHelp(ostream& out, const string& classname)
       << "****************************************************************** \n" << endl;
 
   // Display basic help
-  out << (*entry.help_method)() << endl << endl;
+  out << entry.one_line_descr << endl << endl;
+  out << entry.multi_line_help << endl << endl;
 
   if(entry.constructor) // it's an instantiable class
     obj = (*entry.constructor)();

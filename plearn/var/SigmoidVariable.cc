@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SigmoidVariable.cc,v 1.2 2003/01/08 21:32:59 ducharme Exp $
+   * $Id: SigmoidVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,26 +53,16 @@ SigmoidVariable::SigmoidVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SigmoidVariable);
+PLEARN_IMPLEMENT_OBJECT(SigmoidVariable, "ONE LINE DESCR", "NO HELP");
 
 void SigmoidVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void SigmoidVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "SigmoidVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "SigmoidVariable");
-}
 
 
-void SigmoidVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "SigmoidVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "SigmoidVariable");
-}
+
+
 
 
 void SigmoidVariable::fprop()

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixSumOfVariable.cc,v 1.2 2003/01/08 21:32:45 ducharme Exp $
+   * $Id: MatrixSumOfVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,7 +66,7 @@ MatrixSumOfVariable::MatrixSumOfVariable(VMat the_distr, Func the_f, int the_nsa
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(MatrixSumOfVariable);
+PLEARN_IMPLEMENT_OBJECT(MatrixSumOfVariable, "ONE LINE DESCR", "NO HELP");
 
 void MatrixSumOfVariable::recomputeSize(int& l, int& w) const
 { l=f->outputs[0]->length(); w=f->outputs[0]->width(); }

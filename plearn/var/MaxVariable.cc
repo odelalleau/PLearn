@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MaxVariable.cc,v 1.2 2003/01/08 21:32:45 ducharme Exp $
+   * $Id: MaxVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,26 +53,16 @@ MaxVariable::MaxVariable(Variable* input)
   :UnaryVariable(input, 1, 1) {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(MaxVariable);
+PLEARN_IMPLEMENT_OBJECT(MaxVariable, "ONE LINE DESCR", "NO HELP");
 
 void MaxVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
 
 
-void MaxVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "MaxVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "MaxVariable");
-}
 
 
-void MaxVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "MaxVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "MaxVariable");
-}
+
+
 
 
 void MaxVariable::fprop()

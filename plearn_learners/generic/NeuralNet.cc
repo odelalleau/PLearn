@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
- * $Id: NeuralNet.cc,v 1.14 2003/08/13 01:25:42 yoshua Exp $
+ * $Id: NeuralNet.cc,v 1.15 2003/08/13 08:13:46 plearner Exp $
  ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -52,7 +52,7 @@ namespace PLearn <%
 using namespace std;
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(NeuralNet);
+PLEARN_IMPLEMENT_OBJECT(NeuralNet, "ONE LINE DESCR", "NO HELP");
 
 NeuralNet::NeuralNet()
   :nhidden(0),

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IsMissingVariable.cc,v 1.1 2003/08/08 20:45:54 yoshua Exp $
+   * $Id: IsMissingVariable.cc,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,27 +57,10 @@ IsMissingVariable::IsMissingVariable(Variable* input1, bool parall)
 {}
 
   
-IMPLEMENT_NAME_AND_DEEPCOPY(IsMissingVariable);
+PLEARN_IMPLEMENT_OBJECT(IsMissingVariable, "ONE LINE DESCR", "NO HELP");
 
 void IsMissingVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=parallel?input->width():1; }
-
-
-void IsMissingVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "IsMissingVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "IsMissingVariable");
-}
-
-
-void IsMissingVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "IsMissingVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "IsMissingVariable");
-}
-
 
 
 void IsMissingVariable::fprop()

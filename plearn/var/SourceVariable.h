@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: SourceVariable.h,v 1.2 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: SourceVariable.h,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -67,9 +67,9 @@ public:
   virtual bool markPath();
   virtual void buildPath(VarArray& proppath);
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-  DECLARE_NAME_AND_DEEPCOPY(SourceVariable);
-  virtual void deepRead(istream& in, DeepReadMap& old2new);
-  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
+  PLEARN_DECLARE_OBJECT(SourceVariable);
+  
+  
   virtual void fprop();
   virtual void bprop();
   virtual void bbprop();

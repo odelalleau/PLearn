@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformVariable.h,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: AffineTransformVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -70,7 +70,7 @@ public:
     if(!vec->isVec())
       PLERROR("In AffineTransformVariable: expecting a vector Var (row or column) as first argument");
   }
-  DECLARE_NAME_AND_DEEPCOPY(AffineTransformVariable);
+  PLEARN_DECLARE_OBJECT(AffineTransformVariable);
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();

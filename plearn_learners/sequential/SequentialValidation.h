@@ -79,7 +79,7 @@ class SequentialValidation: public Object
     //! Default constructor
     SequentialValidation();
 
-    //! Simply calls parentclass::build() then build_()
+    //! Simply calls inherited::build() then build_()
     virtual void build();
 
     //! Provides a help message describing this class
@@ -90,7 +90,8 @@ class SequentialValidation: public Object
     
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-    PLEARN_DECLARE_OBJECT_METHODS(SequentialValidation, "SequentialValidation", Object);
+    typedef Object inherited;
+    PLEARN_DECLARE_OBJECT(SequentialValidation);
 };
 
 //! Declares a few other classes and functions related to this class

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixSoftmaxLossVariable.cc,v 1.2 2003/01/08 21:32:44 ducharme Exp $
+   * $Id: MatrixSoftmaxLossVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,7 +47,7 @@ using namespace std;
 
 
 /** MatrixSoftmaxLossVariable **/
-IMPLEMENT_NAME_AND_DEEPCOPY(MatrixSoftmaxLossVariable);
+PLEARN_IMPLEMENT_OBJECT(MatrixSoftmaxLossVariable, "ONE LINE DESCR", "NO HELP");
 
 MatrixSoftmaxLossVariable::MatrixSoftmaxLossVariable(Variable* input1, Variable* input2) 
 :BinaryVariable(input1, input2, input2->length(), input2->width())
@@ -61,20 +61,10 @@ void MatrixSoftmaxLossVariable::recomputeSize(int& l, int& w) const
 { l=input2->length(); w=input2->width(); }
 
 
-void MatrixSoftmaxLossVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "MatrixSoftmaxLossVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "MatrixSoftmaxLossVariable");
-}
 
 
-void MatrixSoftmaxLossVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "MatrixSoftmaxLossVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "MatrixSoftmaxLossVariable");
-}
+
+
 
 
 void MatrixSoftmaxLossVariable::fprop()

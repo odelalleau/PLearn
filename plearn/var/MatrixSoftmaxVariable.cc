@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixSoftmaxVariable.cc,v 1.2 2003/01/08 21:32:44 ducharme Exp $
+   * $Id: MatrixSoftmaxVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,26 +52,16 @@ MatrixSoftmaxVariable::MatrixSoftmaxVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(MatrixSoftmaxVariable);
+PLEARN_IMPLEMENT_OBJECT(MatrixSoftmaxVariable, "ONE LINE DESCR", "NO HELP");
 
 void MatrixSoftmaxVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void MatrixSoftmaxVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "MatrixSoftmaxVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "MatrixSoftmaxVariable");
-}
 
 
-void MatrixSoftmaxVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "MatrixSoftmaxVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "MatrixSoftmaxVariable");
-}
+
+
 
 
 void MatrixSoftmaxVariable::fprop()

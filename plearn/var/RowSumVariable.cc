@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: RowSumVariable.cc,v 1.2 2003/01/08 21:32:59 ducharme Exp $
+   * $Id: RowSumVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,26 +52,16 @@ RowSumVariable::RowSumVariable(Variable* input)
   :UnaryVariable(input, input->length(), 1) {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(RowSumVariable);
+PLEARN_IMPLEMENT_OBJECT(RowSumVariable, "ONE LINE DESCR", "NO HELP");
 
 void RowSumVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=1; }
 
 
-void RowSumVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "RowSumVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "RowSumVariable");
-}
 
 
-void RowSumVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "RowSumVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "RowSumVariable");
-}
+
+
 
 
 void RowSumVariable::fprop()

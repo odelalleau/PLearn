@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateRowVariable.cc,v 1.2 2003/01/08 21:32:19 ducharme Exp $
+   * $Id: DuplicateRowVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,28 +57,16 @@ DuplicateRowVariable::DuplicateRowVariable(Variable* input, int thelength)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(DuplicateRowVariable);
+PLEARN_IMPLEMENT_OBJECT(DuplicateRowVariable, "ONE LINE DESCR", "NO HELP");
 
 void DuplicateRowVariable::recomputeSize(int& l, int& w) const
 { l=length_; w=input->width(); }
 
 
-void DuplicateRowVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "DuplicateRowVariable");
-  inherited::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, n_duplicates);
-  readFooter(in, "DuplicateRowVariable");
-}
 
 
-void DuplicateRowVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "DuplicateRowVariable");
-  inherited::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, n_duplicates);
-  writeFooter(out, "DuplicateRowVariable");
-}
+
+
 
 
 void DuplicateRowVariable::fprop()

@@ -33,7 +33,7 @@
 
 import string, re, time, os, os.path, sys
 
-print "pytransform 1.0 [ (c) 2002, Pascal Vincent. This is free software distributed under a BSD type license. Report problems to vincentp@iro.umontreal.ca ]"
+print "pytransform 1.1 [ (c) 2002-2003 Pascal Vincent. This is free software distributed under a BSD type license. Report problems to vincentp@iro.umontreal.ca ]"
 
 #########################
 # initialisation 
@@ -50,20 +50,22 @@ undofilenum = 0
 def findStringEnd(text, start):
     """given a start at the opening quote, this will return one beyond the corresponding closing quote"""
     pos = start+1
-    while 1:
-        pos = string.find(text, '"', pos)
-        if text[pos-1] != '\\':
-            return pos+1
-        pos = pos+1
+    while text[pos]!='"':
+        if text[pos]=='\\':
+            pos = pos+2
+        else:
+            pos = pos+1
+    return pos+1
                
 def findCharConstEnd(text, start):
     """given a start at the opening quote of a char constant (ex: '\n'), this will return one beyond the corresponding closing quote"""
     pos = start+1
-    while 1:
-        pos = string.find(text, "'", pos)
-        if text[pos-1] != '\\':
-            return pos+1
-        pos = pos+1
+    while text[pos]!="'":
+        if text[pos]=='\\':
+            pos = pos+2
+        else:
+            pos = pos+1
+    return pos+1
 
 def findLineEnd(text, start):
     """returns 1 beyond the end of line. Or position of end of file if no line end is found."""
@@ -87,26 +89,32 @@ def hideCommentsAndStrings(text):
     string in the list of comments or strings respectively.
     Returns (transformed_text, commentlist, stringlist)"""
 
+    # print "Entering hideComments"
+
     commentlist = []
     stringlist = []
     result = [] # list of strings to join to form the result
     exp = re.compile(r'//|/\*|"|\'')
     startpos = 0
     while 1:
+        # print 'searching at pos: ', startpos
         m = exp.search(text, startpos)
         if not m: break
         partstart = m.start()
+        # print text[partstart:partstart+2]
         result.append(text[startpos:partstart])
         if text[partstart]=='"':
             partend = findStringEnd(text,partstart)
             result.append('"'+str(len(stringlist))+'"')
             stringlist.append(text[partstart:partend])
             startpos = partend
+            # print 'STRING: ', text[partstart:partend]
         elif text[partstart]=="'":
             partend = findCharConstEnd(text,partstart)
             result.append('"'+str(len(stringlist))+'"')
             stringlist.append(text[partstart:partend])
             startpos = partend
+            # print 'CHAR: ', text[partstart:partend]
         elif text[partstart:partstart+2]=='//':
             partend=findCPPCommentEnd(text,partstart)
             result.append('/*'+str(len(commentlist))+'*/')
@@ -132,11 +140,21 @@ def restoreCommentsAndStrings(text, commentlist, stringlist):
         result.append(text[startpos:partstart])
         if text[partstart]=='"':
             partend = findStringEnd(text,partstart)
-            result.append(stringlist[int(text[partstart+1:partend-1])])
+            try:
+                strnum = int(text[partstart+1:partend-1])
+                result.append(stringlist[strnum])
+            except ValueError:
+                # print "Restoring as is: ", text[partstart:partend]
+                result.append(text[partstart:partend])
             startpos = partend
         elif text[partstart:partstart+2]=='/*':
             partend = findCCommentEnd(text,partstart)
-            result.append(commentlist[int(text[partstart+2:partend-2])])
+            try:
+                comnum = int(text[partstart+2:partend-2])
+                result.append(commentlist[comnum])
+            except ValueError:
+                # print "Restoring as is: ", text[partstart:partend]
+                result.append(text[partstart:partend])
             startpos = partend
     result.append(text[startpos:])
     return string.join(result,'')    

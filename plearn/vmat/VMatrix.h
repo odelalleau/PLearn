@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.19 2003/07/04 18:21:06 jkeable Exp $
+   * $Id: VMatrix.h,v 1.20 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 
@@ -393,7 +393,8 @@ public:
   virtual void oldwrite(ostream& out) const;
   virtual void oldread(istream& in);
 
-  DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(VMatrix);
+typedef Object inherited;
+  PLEARN_DECLARE_ABSTRACT_OBJECT(VMatrix);
   void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
 

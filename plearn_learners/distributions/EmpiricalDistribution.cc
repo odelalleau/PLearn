@@ -42,7 +42,7 @@ using namespace std;
 
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(EmpiricalDistribution);
+PLEARN_IMPLEMENT_OBJECT(EmpiricalDistribution, "ONE LINE DESCR", "NO HELP");
 
 void EmpiricalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {

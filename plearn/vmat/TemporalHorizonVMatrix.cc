@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: TemporalHorizonVMatrix.cc,v 1.1 2003/07/02 16:55:57 ducharme Exp $
+   * $Id: TemporalHorizonVMatrix.cc,v 1.2 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 #include "TemporalHorizonVMatrix.h"
@@ -46,7 +46,7 @@ using namespace std;
 
 /** TemporalHorizonVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(TemporalHorizonVMatrix, "TemporalHorizonVMatrix", VMatrix);
+PLEARN_IMPLEMENT_OBJECT(TemporalHorizonVMatrix, "ONE LINE DESCR", "NO HELP");
 
 TemporalHorizonVMatrix::TemporalHorizonVMatrix(VMat the_distr, int the_horizon, int target_size)
   : inherited(the_distr.length()-the_horizon, the_distr->width()),

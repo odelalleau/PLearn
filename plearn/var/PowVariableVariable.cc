@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PowVariableVariable.cc,v 1.2 2003/01/08 21:32:57 ducharme Exp $
+   * $Id: PowVariableVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -60,27 +60,17 @@ PowVariableVariable::PowVariableVariable(Variable* input1, Variable* input2)
 }
 
   
-IMPLEMENT_NAME_AND_DEEPCOPY(PowVariableVariable);
+PLEARN_IMPLEMENT_OBJECT(PowVariableVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void PowVariableVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input1->width(); }
 
 
-void PowVariableVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "PowVariableVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "PowVariableVariable");
-}
 
 
-void PowVariableVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "PowVariableVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "PowVariableVariable");
-}
+
+
 
 
 void PowVariableVariable::fprop()

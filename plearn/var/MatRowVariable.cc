@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatRowVariable.cc,v 1.2 2003/01/08 21:32:34 ducharme Exp $
+   * $Id: MatRowVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,29 +56,17 @@ MatRowVariable::MatRowVariable(const Mat& mat, Variable* input)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(MatRowVariable);
+PLEARN_IMPLEMENT_OBJECT(MatRowVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void MatRowVariable::recomputeSize(int& l, int& w) const
 { l=m.width(); w=1; }
 
 
-void MatRowVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "MatRowVariable");
-  inherited::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, m);
-  readFooter(in, "MatRowVariable");
-}
 
 
-void MatRowVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "MatRowVariable");
-  inherited::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, m);
-  writeFooter(out, "MatRowVariable");
-}
+
+
 
 
 void MatRowVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)

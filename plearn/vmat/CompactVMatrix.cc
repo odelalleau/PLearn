@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: CompactVMatrix.cc,v 1.2 2003/08/13 08:13:45 plearner Exp $
    ******************************************************* */
 
 #include "CompactVMatrix.h"
@@ -71,7 +71,7 @@ void CompactVMatrix::set_n_bits_in_byte()
   }
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(CompactVMatrix);
+PLEARN_IMPLEMENT_OBJECT(CompactVMatrix, "ONE LINE DESCR", "NO HELP");
 
 CompactVMatrix::CompactVMatrix(int the_length, int nvariables, int n_binary, 
                                int n_nonbinary_discrete,

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.cc,v 1.2 2003/08/05 21:41:46 chapados Exp $ 
+   * $Id: JulianizeVMatrix.cc,v 1.3 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.cc */
@@ -47,14 +47,14 @@ using namespace std;
 
 
 JulianizeVMatrix::JulianizeVMatrix()
-  : parentclass()
+  : inherited()
   /* all other compiler-supplied defaults are reasonable */
 { }
 
 JulianizeVMatrix::JulianizeVMatrix(VMat underlying,
                                    DateCode date_code,
                                    int starting_column)
-  : parentclass(underlying->length(), newWidth(underlying, date_code)),
+  : inherited(underlying->length(), newWidth(underlying, date_code)),
     underlying_(underlying),
     cols_codes_(1), und_row_(underlying.width())
 {
@@ -63,7 +63,7 @@ JulianizeVMatrix::JulianizeVMatrix(VMat underlying,
 }
 
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(JulianizeVMatrix, "JulianizeVMatrix", RowBufferedVMatrix);
+PLEARN_IMPLEMENT_OBJECT(JulianizeVMatrix, "ONE LINE DESCR", "NO HELP");
 
 void JulianizeVMatrix::getRow(int i, Vec v) const
 {
@@ -122,7 +122,7 @@ void JulianizeVMatrix::declareOptions(OptionList& ol)
   // ...
 
   // Now call the parent class' declareOptions
-  parentclass::declareOptions(ol);
+  inherited::declareOptions(ol);
 }
 
 string JulianizeVMatrix::help()
@@ -146,13 +146,13 @@ void JulianizeVMatrix::build_()
 // ### Nothing to add here, simply calls build_
 void JulianizeVMatrix::build()
 {
-  parentclass::build();
+  inherited::build();
   build_();
 }
 
 void JulianizeVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  parentclass::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(underlying_, copies);
   deepCopyField(und_row_, copies);
   // cols_codes_ already deep-copied since it is an STL vector

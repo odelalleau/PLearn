@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.2 2003/04/29 21:33:45 plearner Exp $
+   * $Id: FileVMatrix.h,v 1.3 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 
@@ -76,7 +76,7 @@ class FileVMatrix: public VMatrix
   virtual void build();
   void build_();
 
-  DECLARE_NAME_AND_DEEPCOPY(FileVMatrix);
+  PLEARN_DECLARE_OBJECT(FileVMatrix);
 
   static void declareOptions(OptionList & ol);
 

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: IndexedVMatrix.h,v 1.3 2003/05/15 14:00:30 tihocan Exp $
+   * $Id: IndexedVMatrix.h,v 1.4 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 
@@ -62,7 +62,7 @@ public:
 
   IndexedVMatrix() {}
 
-  PLEARN_DECLARE_OBJECT_METHODS(IndexedVMatrix, "IndexedVMatrix", VMatrix);
+  PLEARN_DECLARE_OBJECT(IndexedVMatrix);
 
   static void declareOptions(OptionList& ol);
     

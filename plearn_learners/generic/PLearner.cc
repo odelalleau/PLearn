@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.14 2003/08/08 20:45:54 yoshua Exp $
+   * $Id: PLearner.cc,v 1.15 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -62,10 +62,11 @@ PLearner::PLearner()
    verbosity(1)
 {}
 
-IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(PLearner);
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PLearner, "ONE LINE DESCR", "NO HELP");
 void PLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Object::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(train_set, copies);
   deepCopyField(train_stats, copies);
 }
 
@@ -219,21 +220,29 @@ void PLearner::computeCostsOnly(const Vec& input, const Vec& target,
   computeOutputAndCosts(input, target, tmp_output, costs);
 }
 
-void PLearner::run()
+void PLearner::use(VMat testset, VMat outputs) const
 {
-  if(verbosity<1)
-    train();
-  else  // verbosity >=1    
+  int l = testset.length();
+  Vec input;
+  Vec target;
+  real weight;
+  Vec output(outputsize());
+
+  ProgressBar* pb;
+  if(report_progress)
+    pb = new ProgressBar("Using learner",l);
+
+  for(int i=0; i<l; i++)
     {
-      cerr << "Training learner of type " << classname() 
-           << " from stage " << stage << " to " << nstages << "..." << endl;
-      train();
-      cerr << "*** Training finished at stage " << stage << " *** " << endl;
-      cerr << "Final mean train costs: " << endl;
-      cerr << getTrainCostNames() << endl;
-      cerr << train_stats->getMean() << endl;
-      cerr << "-----------------------------------------------" << endl;
+      testset.getExample(i, input, target, weight);
+      computeOutput(input, output);
+      outputs->putOrAppendRow(i,output);
+      if(pb)
+        pb->update(i);
     }
+
+  if(pb)
+    delete pb;
 }
 
 void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats, 
@@ -245,7 +254,8 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
   real weight;
 
   Vec output(testoutputs ?outputsize() :0);
-  Vec costs(nTrainCosts());
+
+  Vec costs(nTestCosts());
 
   // testset->defineSizes(inputsize(),targetsize(),weightsize());
 
@@ -272,6 +282,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
       if(testcosts)
         testcosts->putOrAppendRow(i, costs);
 
+      // Pascal TODO: incorporate weight in statscollector!!!!
       if(test_stats)
         test_stats->update(costs);
 
@@ -288,135 +299,6 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
 }
 
 
-//! Parses a statname of the form "E[E[test1.class_error]]" or "V[ MIN [train.squared_error]]"
-//! If the external stat is omitted in statname, it will be assumed to be "E[...]"
-//! It will set extat and intstat to be for ex. "E"
-//! setnum will be 0 for "train" and 1 for "test1", 2 for "test2", ...
-
-/*
-void parse_statname(const string& statname, string& extstat, string& intstat, int& setnum, string& errorname)
-{
-  vector<string> tokens = split(removeallblanks(statname), "[]");
-  string set_and_cost;
-  
-  if(tokens.size()==2)
-    {
-      extstat = "E";
-      intstat = tokens[0];
-      set_and_cost = tokens[1];
-    }
-  else if(tokens.size()==3)
-    {
-      extstat = tokens[0];
-      intstat = tokens[1];
-      set_and_cost = tokens[2];
-    }
-  else
-    PLERROR("In parse_statname: parse error for %s",statname.c_str());
-
-  if(set_and_cost.length()<5)
-    PLERROR("In parse_statname: parse error for %s",statname.c_str());
-
-  pair<string,string> set_cost = split_on_first(set_and_cost,".");
-  
-  string dset = set_cost.first;
-  if(dset=="train")
-    setnum = 0;
-  else if(dset=="test")
-    setnum = 1;
-  else if(dset.substr(0,4)=="test")
-    {
-      setnum = toint(dset.substr(4));
-      if(setnum==0)
-        PLERROR("In parse_statname: use the name train instead of test0.\n"
-                "The first set of a split is the training set. The following are test sets named test1 test2 ..."); 
-      if(setnum<=0)
-        PLERROR("In parse_statname: parse error for %s",statname.c_str());        
-    }
-  else
-    PLERROR("In parse_statname: parse error for %s",statname.c_str());
-
-  errorname = set_cost.second;
-}
-*/
-
-/*
-Vec trainTestLearner(PP<PLearner> learner, const VMat &dataset, PP<Splitter> splitter, TVec<string> statnames)
-{
-  splitter->setDataSet(dataset);
-  int nsp = splitter->nsplits(); 
-  int nst = statnames.length();
-  Vec results(nst);
-
-  // First parse the desired statnames
-
-  TVec<string> extstat(nst);
-  TVec<string> intstat(nst);
-  TVec<int> costindex(nst);
-  TVec<int> setnum(nst);
-
-  for(int i=0; i<nst; i++)
-    {          
-      string costname;
-      parse_statname(statnames[i], extstat[i], intstat[i], setnum[i], costname);
-      if(setnum==0) // train cost
-        costindex[i] = learner->getTrainCostIndex(costname);
-      else // test cost
-        costindex[i] = learner->getTestCostIndex(costname);
-    }
-
-  // The global stats collector
-  VecStatsCollector globalstats;
-
-  // Now train/test and collect stats
-  TVec<VecStatsCollector> stats;
-
-  for(int k=0; k<nsp; k++)
-    {
-      Array<VMat> split = splitter->getSplit(k);
-      stats.resize(split.size());
-
-      // train
-      VMat trainset = split[0];
-      VecStatsCollector& st = stats[0];
-      st.forget();
-      learner->setTrainingSet(trainset);
-      learner->setTrainStatsCollector();
-      if(trainset.length()>0)
-        learner->train(st);
-      st.finalize();
-
-      // tests
-      for(int m=1; m<split.size(); m++)
-        {
-          VMat testset = split[m];
-          VecStatsCollector& st = stats[m];
-          st.forget();
-          if(testset.length()>0)
-            learner->test(testset,st);
-          st.finalize();
-        }
-
-      for(int i=0; i<nst; i++)
-        {
-          int setn = setnum[i];
-          if(setn>=stats.size() || stats[setn].size()==0)
-            results[i] = MISSING_VALUE;
-          else
-            results[i] = stats[setn].getStats(costindex[i]).getStat(intstat[i]);
-        }
-
-      globalstats.update(results);
-    }
-
-  globalstats.finalize();
-
-  for(int i=0; i<nst; i++)
-    results[i] = globalstats.getStats(i).getStat(extstat[i]);
-
-  return results;
-}
-*/
 
 
 %> // end of namespace PLearn

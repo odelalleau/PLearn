@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MinusTransposedColumnVariable.cc,v 1.2 2003/01/08 21:32:48 ducharme Exp $
+   * $Id: MinusTransposedColumnVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,27 +59,17 @@ MinusTransposedColumnVariable::MinusTransposedColumnVariable(Variable* input1, V
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(MinusTransposedColumnVariable);
+PLEARN_IMPLEMENT_OBJECT(MinusTransposedColumnVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void MinusTransposedColumnVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input1->width(); }
 
 
-void MinusTransposedColumnVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "MinusTransposedColumnVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "MinusTransposedColumnVariable");
-}
 
 
-void MinusTransposedColumnVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "MinusTransposedColumnVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "MinusTransposedColumnVariable");
-}
+
+
 
 
 void MinusTransposedColumnVariable::fprop()

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VVec.h,v 1.6 2003/05/03 05:02:18 plearner Exp $
+   * $Id: VVec.h,v 1.7 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 
@@ -112,7 +112,8 @@ class VVec : public Object
     return v;
   }
 
-  DECLARE_NAME_AND_DEEPCOPY(VVec);
+  typedef Object inherited;
+  PLEARN_DECLARE_OBJECT(VVec);
 };
 
 inline void operator>>(const VVec& vv, const Vec& v)

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussianProcessRegressor.h,v 1.4 2003/07/08 18:32:58 yoshua Exp $ 
+ * $Id: GaussianProcessRegressor.h,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
  ******************************************************* */
 
 /*! \file GaussianProcessRegressor.h */
@@ -76,7 +76,7 @@
  
 
 /* *******************************************************      
- * $Id: GaussianProcessRegressor.h,v 1.4 2003/07/08 18:32:58 yoshua Exp $
+ * $Id: GaussianProcessRegressor.h,v 1.5 2003/08/13 08:13:46 plearner Exp $
  ******************************************************* */
 
 
@@ -244,7 +244,7 @@ class GaussianProcessRegressor: public PConditionalDistribution
     real BayesianCost();
 
   public:
-    PLEARN_DECLARE_OBJECT_METHODS(GaussianProcessRegressor, "GaussianProcessRegressor", PConditionalDistribution);
+    PLEARN_DECLARE_OBJECT(GaussianProcessRegressor);
 
 };
 

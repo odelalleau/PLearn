@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerProcessedVMatrix.cc,v 1.1 2003/07/04 16:12:36 plearner Exp $ 
+   * $Id: LearnerProcessedVMatrix.cc,v 1.2 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file LearnerProcessedVMatrix.cc */
@@ -50,7 +50,7 @@ LearnerProcessedVMatrix::LearnerProcessedVMatrix()
   build_();
 }
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(LearnerProcessedVMatrix, "LearnerProcessedVMatrix", RowBufferedVMatrix);
+PLEARN_IMPLEMENT_OBJECT(LearnerProcessedVMatrix, "ONE LINE DESCR", "NO HELP");
 
 void LearnerProcessedVMatrix::getRow(int i, Vec v) const
 {
@@ -82,7 +82,7 @@ void LearnerProcessedVMatrix::declareOptions(OptionList& ol)
                 " 'U': unsupervised training using only input part (possibly weighted if weight is present). \n");
 
   // Now call the parent class' declareOptions
-  parentclass::declareOptions(ol);
+  inherited::declareOptions(ol);
 }
 
 string LearnerProcessedVMatrix::help()
@@ -121,13 +121,13 @@ void LearnerProcessedVMatrix::build_()
 // ### Nothing to add here, simply calls build_
 void LearnerProcessedVMatrix::build()
 {
-  parentclass::build();
+  inherited::build();
   build_();
 }
 
 void LearnerProcessedVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  parentclass::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(source, copies);
   deepCopyField(learner, copies);
 }

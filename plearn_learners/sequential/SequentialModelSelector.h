@@ -77,7 +77,7 @@ class SequentialModelSelector: public SequentialLearner
     //! compute the cost of the given sequence of errors (based on the cost_type)
     real sequenceCost(const Vec& sequence_errors);
 
-    //! simply calls parentclass::build() then build_()
+    //! simply calls inherited::build() then build_()
     virtual void build();
 
   //! Redefines so that it ALSO calls the method on all the learners in the TVec models
@@ -109,7 +109,8 @@ class SequentialModelSelector: public SequentialLearner
 
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-    PLEARN_DECLARE_OBJECT_METHODS(SequentialModelSelector, "SequentialModelSelector", SequentialLearner);
+    typedef SequentialLearner inherited;
+    PLEARN_DECLARE_OBJECT(SequentialModelSelector);
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 

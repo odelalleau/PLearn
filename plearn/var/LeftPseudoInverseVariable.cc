@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LeftPseudoInverseVariable.cc,v 1.2 2003/01/08 21:32:31 ducharme Exp $
+   * $Id: LeftPseudoInverseVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,26 +58,16 @@ LeftPseudoInverseVariable::LeftPseudoInverseVariable(Variable* input)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(LeftPseudoInverseVariable);
+PLEARN_IMPLEMENT_OBJECT(LeftPseudoInverseVariable, "ONE LINE DESCR", "NO HELP");
 
 void LeftPseudoInverseVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void LeftPseudoInverseVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "LeftPseudoInverseVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "LeftPseudoInverseVariable");
-}
 
 
-void LeftPseudoInverseVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "LeftPseudoInverseVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "LeftPseudoInverseVariable");
-}
+
+
 
 
 void LeftPseudoInverseVariable::fprop()

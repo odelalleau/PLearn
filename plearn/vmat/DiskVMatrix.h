@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.h,v 1.3 2003/07/24 00:48:53 ducharme Exp $
+   * $Id: DiskVMatrix.h,v 1.4 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 
@@ -91,7 +91,7 @@ public:
   virtual void build();
   void build_();
 
-  PLEARN_DECLARE_OBJECT_METHODS(DiskVMatrix, "DiskVMatrix", RowBufferedVMatrix);
+  PLEARN_DECLARE_OBJECT(DiskVMatrix);
 
   static void declareOptions(OptionList & ol);
   

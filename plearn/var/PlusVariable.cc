@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PlusVariable.cc,v 1.2 2003/01/08 21:32:56 ducharme Exp $
+   * $Id: PlusVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,27 +56,17 @@ PlusVariable::PlusVariable(Variable* input1, Variable* input2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(PlusVariable);
+PLEARN_IMPLEMENT_OBJECT(PlusVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void PlusVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input1->width(); }
 
 
-void PlusVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "PlusVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "PlusVariable");
-}
 
 
-void PlusVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "PlusVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "PlusVariable");
-}
+
+
 
 
 void PlusVariable::fprop()

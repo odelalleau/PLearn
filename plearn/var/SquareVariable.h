@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SquareVariable.h,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: SquareVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,10 +58,10 @@ protected:
 
 public:
   SquareVariable(Variable* input);
-  DECLARE_NAME_AND_DEEPCOPY(SquareVariable);
+  PLEARN_DECLARE_OBJECT(SquareVariable);
   virtual void recomputeSize(int& l, int& w) const;
-  virtual void deepRead(istream& in, DeepReadMap& old2new);
-  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
+  
+  
   virtual void fprop();
   virtual void bprop();
   //!  here don't approximate, do d2C/dx^2 = 4 x^2 d2C/dy^2 + 2 dC/dy 

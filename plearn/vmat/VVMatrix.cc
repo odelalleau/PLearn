@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.4 2003/05/14 21:15:32 jkeable Exp $
+   * $Id: VVMatrix.cc,v 1.5 2003/08/13 08:13:46 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -121,7 +121,7 @@ vector<vector<string> > VVMatrix::extractSourceMatrix(const string & str,const s
 
 time_t VVMatrix::getDateOfVMat(const string& filename)
 {
-  string in=loadFileAsString(filename);
+  string in=readFileAndMacroProcess(filename);
   unsigned int idx_source = in.find("<SOURCES>")+9;
   unsigned int cidx_source;
 
@@ -322,8 +322,7 @@ string VVMatrix::getPrecomputedDataName()
 
 VMat VVMatrix::createPreproVMat(const string & filename)
 {
-  string in=loadFileAsString(filename);
-  remove_comments(in);
+  string in=readFileAndMacroProcess(filename);
   unsigned int idx_source  =  in.find("<SOURCES>");
   unsigned int idx_prefilter= in.find("<PREFILTER>");
   unsigned int idx_postfilter=in.find("<POSTFILTER>");
@@ -545,10 +544,9 @@ void VVMatrix::build_()
   setMetaDataDir(makeExplicitPath(the_filename+".metadata"));
   force_mkdir(getMetaDataDir());
 
-
   the_mat=createPreproVMat(the_filename);
   setMtime(the_mat->getMtime());
-  code = loadFileAsString(the_filename);
+  code = readFileAndMacroProcess(the_filename);
   length_ = the_mat.length();
   width_ = the_mat.width();
 
@@ -569,7 +567,7 @@ void VVMatrix::build_()
 
 void VVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "filename", &VVMatrix::the_filename, OptionBase::buildoption, "Filename of the .vmat");
+  declareOption(ol, "filename", &VVMatrix::the_filename, OptionBase::buildoption, "Path to the .vmat file");
   inherited::declareOptions(ol);
 }
 
@@ -595,7 +593,7 @@ void VVMatrix::declareOptions(OptionList &ol)
 // }
   
 
-IMPLEMENT_NAME_AND_DEEPCOPY(VVMatrix);
+PLEARN_IMPLEMENT_OBJECT(VVMatrix, "ONE LINE DESCR", "NO HELP");
 
 
 

@@ -45,7 +45,7 @@ namespace PLearn <%
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(SequentialValidation, "SequentialValidation", Object);
+PLEARN_IMPLEMENT_OBJECT(SequentialValidation, "ONE LINE DESCR", "NO HELP");
 
 SequentialValidation::SequentialValidation()
   : init_train_size(1),
@@ -74,7 +74,7 @@ void SequentialValidation::build_()
 
 void SequentialValidation::build()
 {
-  parentclass::build();
+  inherited::build();
   build_();
 }
 
@@ -126,7 +126,7 @@ void SequentialValidation::declareOptions(OptionList& ol)
 
   declareOption(ol, "save_stat_collectors", &SequentialValidation::save_stat_collectors, OptionBase::buildoption, "If true, stat collectors of each data sets (train/test) will be saved for each split. \n");
 
-  parentclass::declareOptions(ol);
+  inherited::declareOptions(ol);
 }
 
 string SequentialValidation::help()
@@ -154,7 +154,7 @@ void SequentialValidation::run()
 
   // Save this experiment description in the expdir (buildoptions only)
   if (save_initial_seqval)
-    PLearn::save(dir+"sequential_validation.psave", *this, OptionBase::buildoption);
+    PLearn::save(dir+"sequential_validation.psave", *this);
 
   TVec<string> testcostnames = learner->getTestCostNames();
   TVec<string> traincostnames = learner->getTrainCostNames();

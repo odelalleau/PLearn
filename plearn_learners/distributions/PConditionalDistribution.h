@@ -82,7 +82,7 @@ public:
   virtual void use(const Vec& input, Vec& output);
 
   // Declares a few other classes and functions related to this class
-  PLEARN_DECLARE_OBJECT_METHODS(PConditionalDistribution, "PConditionalDistribution", PDistribution);
+  PLEARN_DECLARE_OBJECT(PConditionalDistribution);
 };
 
   

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.h,v 1.2 2003/03/19 23:15:22 jkeable Exp $
+   * $Id: ConcatRowsVMatrix.h,v 1.3 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 
@@ -96,7 +96,7 @@ class ConcatRowsVMatrix: public VMatrix
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
 
-  DECLARE_NAME_AND_DEEPCOPY(ConcatRowsVMatrix);
+  PLEARN_DECLARE_OBJECT(ConcatRowsVMatrix);
   static void declareOptions(OptionList &ol);
   virtual void build();
   void build_();

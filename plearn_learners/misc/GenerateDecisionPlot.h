@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenerateDecisionPlot.h,v 1.2 2003/06/03 14:52:11 plearner Exp $ 
+   * $Id: GenerateDecisionPlot.h,v 1.3 2003/08/13 08:13:47 plearner Exp $ 
    ******************************************************* */
 
 /*! \file GenerateDecisionPlot.h */
@@ -110,7 +110,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT_METHODS(GenerateDecisionPlot, "GenerateDecisionPlot", Object);
+  PLEARN_DECLARE_OBJECT(GenerateDecisionPlot);
 
 };
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: EqualConstantVariable.cc,v 1.2 2003/01/08 21:32:22 ducharme Exp $
+   * $Id: EqualConstantVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,28 +57,16 @@ EqualConstantVariable::EqualConstantVariable(Variable* input1, real input2)
 {}
 
   
-IMPLEMENT_NAME_AND_DEEPCOPY(EqualConstantVariable);
+PLEARN_IMPLEMENT_OBJECT(EqualConstantVariable, "ONE LINE DESCR", "NO HELP");
 
 void EqualConstantVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void EqualConstantVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "EqualConstantVariable");
-  inherited::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, eqv);
-  readFooter(in, "EqualConstantVariable");
-}
 
 
-void EqualConstantVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "EqualConstantVariable");
-  inherited::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, eqv);
-  writeFooter(out, "EqualConstantVariable");
-}
+
+
 
 
 

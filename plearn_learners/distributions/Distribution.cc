@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.9 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: Distribution.cc,v 1.10 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.cc */
@@ -54,7 +54,7 @@ Distribution::Distribution()
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(Distribution);
+PLEARN_IMPLEMENT_OBJECT(Distribution, "ONE LINE DESCR", "NO HELP");
 
 void Distribution::declareOptions(OptionList& ol)
 {

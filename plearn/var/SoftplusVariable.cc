@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftplusVariable.cc,v 1.2 2003/01/08 21:33:01 ducharme Exp $
+   * $Id: SoftplusVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,26 +53,16 @@ SoftplusVariable::SoftplusVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SoftplusVariable);
+PLEARN_IMPLEMENT_OBJECT(SoftplusVariable, "ONE LINE DESCR", "NO HELP");
 
 void SoftplusVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void SoftplusVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "SoftplusVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "SoftplusVariable");
-}
 
 
-void SoftplusVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "SoftplusVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "SoftplusVariable");
-}
+
+
 
 
 void SoftplusVariable::fprop()

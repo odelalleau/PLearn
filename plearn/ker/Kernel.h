@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.6 2003/06/30 15:13:52 yoshua Exp $
+   * $Id: Kernel.h,v 1.7 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -67,7 +67,7 @@ public:
     : is_symmetric(is__symmetric) 
     {}
 
-  DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(Kernel);
+  PLEARN_DECLARE_ABSTRACT_OBJECT(Kernel);
 
   //!  ** Subclasses must overload this method **
   virtual real evaluate(const Vec& x1, const Vec& x2) const = 0; //!<  returns K(x1,x2) 
@@ -156,7 +156,7 @@ class DistanceKernel: public Kernel
     DistanceKernel(real the_Ln=2):
       n(the_Ln) {}
 
-    DECLARE_NAME_AND_DEEPCOPY(DistanceKernel);
+    PLEARN_DECLARE_OBJECT(DistanceKernel);
   virtual string info() const;
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
   virtual void oldread(istream& in);
@@ -178,7 +178,7 @@ class PowDistanceKernel: public Kernel
  public:
   PowDistanceKernel(real the_Ln):
     n(the_Ln) {}
-  DECLARE_NAME_AND_DEEPCOPY(PowDistanceKernel);
+  PLEARN_DECLARE_OBJECT(PowDistanceKernel);
   virtual string info() const;
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
     //virtual void readOptionVal(istream& in, const string& optionname);
@@ -198,7 +198,7 @@ class DotProductKernel: public Kernel
 		
  public:
   DotProductKernel() {}
-  DECLARE_NAME_AND_DEEPCOPY(DotProductKernel);
+  PLEARN_DECLARE_OBJECT(DotProductKernel);
   virtual real evaluate(const Vec& x1, const Vec& x2) const;  
   virtual real evaluate_i_j(int i, int j) const; //!<  returns evaluate(data(i),data(j))
   virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const; //!<  returns evaluate(data(i),x)
@@ -222,7 +222,7 @@ class PolynomialKernel: public Kernel
  public:
   PolynomialKernel(int degree, real the_beta=1.0)
     : n(degree), beta(the_beta) {}
-  DECLARE_NAME_AND_DEEPCOPY(PolynomialKernel);
+  PLEARN_DECLARE_OBJECT(PolynomialKernel);
 
     inline real evaluateFromDot(real dot_product) const
     { return ipow(beta*dot_product+1.0, n); }
@@ -252,7 +252,7 @@ class SigmoidalKernel: public Kernel
   real c; //!<  smoothing constant
  public:
   SigmoidalKernel(real the_c): c(the_c) {}
-  DECLARE_NAME_AND_DEEPCOPY(SigmoidalKernel);
+  PLEARN_DECLARE_OBJECT(SigmoidalKernel);
   virtual real evaluate(const Vec& x1, const Vec& x2) const; 
     //virtual void readOptionVal(istream& in, const string& optionname);
     static void declareOptions(OptionList &ol);
@@ -275,7 +275,7 @@ class SigmoidPrimitiveKernel: public Kernel
   real c; //!<  smoothing constant
  public:
   SigmoidPrimitiveKernel(real the_c): c(the_c) {}
-  DECLARE_NAME_AND_DEEPCOPY(SigmoidPrimitiveKernel);
+  PLEARN_DECLARE_OBJECT(SigmoidPrimitiveKernel);
   virtual real evaluate(const Vec& x1, const Vec& x2) const;  
   virtual void write(ostream& out) const;
   virtual void oldread(istream& in);
@@ -299,7 +299,7 @@ class ConvexBasisKernel: public Kernel
   real c; //!<  smoothing constant
  public:
   ConvexBasisKernel(real the_c): inherited(false), c(the_c) {}
-  DECLARE_NAME_AND_DEEPCOPY(ConvexBasisKernel);
+  PLEARN_DECLARE_OBJECT(ConvexBasisKernel);
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
     //virtual void readOptionVal(istream& in, const string& optionname);
     static void declareOptions(OptionList &ol);
@@ -336,7 +336,7 @@ private:
     sigma(the_sigma)
   { build_(); }
 
-  DECLARE_NAME_AND_DEEPCOPY(GaussianKernel);
+  PLEARN_DECLARE_OBJECT(GaussianKernel);
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   inline real evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const
@@ -380,7 +380,7 @@ public:
 
   virtual ~PrecomputedKernel();
 
-  DECLARE_NAME_AND_DEEPCOPY(PrecomputedKernel);
+  PLEARN_DECLARE_OBJECT(PrecomputedKernel);
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //!  This method precomputes and stores all kernel values 
@@ -418,7 +418,7 @@ class ScaledGaussianKernel: public Kernel
     :sigma(the_sigma), phi(the_phi)
   {}
 
-  DECLARE_NAME_AND_DEEPCOPY(ScaledGaussianKernel);
+  PLEARN_DECLARE_OBJECT(ScaledGaussianKernel);
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
     //virtual void readOptionVal(istream& in, const string& optionname);
@@ -448,7 +448,7 @@ class GaussianDensityKernel: public Kernel
   static void declareOptions(OptionList& ol);
  public:
   GaussianDensityKernel(real the_sigma):sigma(the_sigma) {}
-  DECLARE_NAME_AND_DEEPCOPY(GaussianDensityKernel);
+  PLEARN_DECLARE_OBJECT(GaussianDensityKernel);
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
   virtual void oldread(istream& in);
 };
@@ -473,7 +473,7 @@ class LogOfGaussianDensityKernel: public Kernel
   static void declareOptions(OptionList& ol);
  public:
   LogOfGaussianDensityKernel(real the_sigma):sigma(the_sigma) {}
-  DECLARE_NAME_AND_DEEPCOPY(LogOfGaussianDensityKernel);
+  PLEARN_DECLARE_OBJECT(LogOfGaussianDensityKernel);
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
 };
 
@@ -494,7 +494,7 @@ class GeneralizedDistanceRBFKernel: public Kernel
     :phi(the_phi), a(the_a), b(the_b), c(the_c)
     {}
 
-  DECLARE_NAME_AND_DEEPCOPY(GeneralizedDistanceRBFKernel);
+  PLEARN_DECLARE_OBJECT(GeneralizedDistanceRBFKernel);
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
     //virtual void readOptionVal(istream& in, const string& optionname);
     static void declareOptions(OptionList &ol);
@@ -521,7 +521,7 @@ class ScaledGeneralizedDistanceRBFKernel: public Kernel
     : b(the_b), c(the_c), phi(the_phi), a(the_a)
     {}
 
-  DECLARE_NAME_AND_DEEPCOPY(ScaledGeneralizedDistanceRBFKernel);
+  PLEARN_DECLARE_OBJECT(ScaledGeneralizedDistanceRBFKernel);
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
     //virtual void readOptionVal(istream& in, const string& optionname);
@@ -548,7 +548,7 @@ class LaplacianKernel: public Kernel
     :phi(the_phi)
     {}
 
-  DECLARE_NAME_AND_DEEPCOPY(LaplacianKernel);
+  PLEARN_DECLARE_OBJECT(LaplacianKernel);
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
     //virtual void readOptionVal(istream& in, const string& optionname);
     static void declareOptions(OptionList &ol);
@@ -574,7 +574,7 @@ class ScaledLaplacianKernel: public Kernel
     :phi(the_phi)
     {}
 
-  DECLARE_NAME_AND_DEEPCOPY(ScaledLaplacianKernel);
+  PLEARN_DECLARE_OBJECT(ScaledLaplacianKernel);
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
   virtual void write(ostream& out) const;
@@ -590,7 +590,7 @@ class DifferenceKernel: public Kernel
 		
 public:
   DifferenceKernel() {}
-  DECLARE_NAME_AND_DEEPCOPY(DifferenceKernel);
+  PLEARN_DECLARE_OBJECT(DifferenceKernel);
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
   virtual void write(ostream& out) const;
   virtual void oldread(istream& in);
@@ -608,7 +608,7 @@ class NegKernel: public Kernel
   Ker ker;
  public:
   NegKernel(const Ker& the_ker): ker(the_ker) {}
-  DECLARE_NAME_AND_DEEPCOPY(NegKernel);
+  PLEARN_DECLARE_OBJECT(NegKernel);
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
   virtual void write(ostream& out) const;
@@ -625,7 +625,7 @@ class NormalizedDotProductKernel: public Kernel
   real norm_to_use;
  public:
   NormalizedDotProductKernel(real the_norm=2.0): norm_to_use(the_norm) {}
-  DECLARE_NAME_AND_DEEPCOPY(NormalizedDotProductKernel);
+  PLEARN_DECLARE_OBJECT(NormalizedDotProductKernel);
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
     //virtual void readOptionVal(istream& in, const string& optionname);
     static void declareOptions(OptionList &ol);
@@ -659,7 +659,7 @@ public:
   SquaredErrorCostFunction(real hot_value, real cold_value)
     : targetindex(-1), classification(true), hotvalue(hot_value), coldvalue(cold_value) {};
 
-  DECLARE_NAME_AND_DEEPCOPY(SquaredErrorCostFunction);
+  PLEARN_DECLARE_OBJECT(SquaredErrorCostFunction);
   virtual string info() const;
   virtual real evaluate(const Vec& output, const Vec& target) const; 
     //virtual void readOptionVal(istream& in, const string& optionname);
@@ -678,7 +678,7 @@ class NegOutputCostFunction: public Kernel
 {
 public:
   NegOutputCostFunction() {}
-  DECLARE_NAME_AND_DEEPCOPY(NegOutputCostFunction);
+  PLEARN_DECLARE_OBJECT(NegOutputCostFunction);
   virtual real evaluate(const Vec& output, const Vec& target) const; 
   virtual void write(ostream& out) const;
   virtual void oldread(istream& in);
@@ -715,7 +715,7 @@ class ClassErrorCostFunction: public Kernel
   ClassErrorCostFunction(bool the_output_is_classnum = false)
     :output_is_classnum(the_output_is_classnum) {}
 
-  DECLARE_NAME_AND_DEEPCOPY(ClassErrorCostFunction);
+  PLEARN_DECLARE_OBJECT(ClassErrorCostFunction);
   virtual string info() const;
   virtual real evaluate(const Vec& output, const Vec& target) const;
     //virtual void readOptionVal(istream& in, const string& optionname);
@@ -737,7 +737,7 @@ class MulticlassErrorCostFunction: public Kernel
  public:
   MulticlassErrorCostFunction() {}
 
-  DECLARE_NAME_AND_DEEPCOPY(MulticlassErrorCostFunction);
+  PLEARN_DECLARE_OBJECT(MulticlassErrorCostFunction);
   virtual string info() const;
   virtual real evaluate(const Vec& output, const Vec& target) const;
     //virtual void readOptionVal(istream& in, const string& optionname);
@@ -775,7 +775,7 @@ class ClassMarginCostFunction: public Kernel
                           bool out_is_positive=false)
     : binary_target_is_01(the_binary_target_is_01), 
     output_is_positive(out_is_positive) {}
-  DECLARE_NAME_AND_DEEPCOPY(ClassMarginCostFunction);
+  PLEARN_DECLARE_OBJECT(ClassMarginCostFunction);
   virtual string info() const;
   virtual real evaluate(const Vec& output, const Vec& target) const;  
     //virtual void readOptionVal(istream& in, const string& optionname);
@@ -803,7 +803,7 @@ class ClassDistanceProportionCostFunction: public Kernel
 {
 public:
   ClassDistanceProportionCostFunction() {}
-  DECLARE_NAME_AND_DEEPCOPY(ClassDistanceProportionCostFunction);
+  PLEARN_DECLARE_OBJECT(ClassDistanceProportionCostFunction);
   virtual real evaluate(const Vec& output, const Vec& target) const;
   virtual void write(ostream& out) const;
   virtual void oldread(istream& in);
@@ -839,7 +839,7 @@ class NegLogProbCostFunction: public Kernel
   NegLogProbCostFunction(bool do_normalize=false, bool do_smooth_map_outputs=false)
     :normalize(do_normalize), smooth_map_outputs(do_smooth_map_outputs) {}
 #endif
-  DECLARE_NAME_AND_DEEPCOPY(NegLogProbCostFunction);
+  PLEARN_DECLARE_OBJECT(NegLogProbCostFunction);
   virtual string info() const;
   virtual real evaluate(const Vec& output, const Vec& target) const;
   //virtual void readOptionVal(istream& in, const string& optionname);
@@ -865,7 +865,7 @@ class WeightedCostFunction: public Kernel
     WeightedCostFunction(Ker the_costfunc)
       :costfunc(the_costfunc) {}
 
-  DECLARE_NAME_AND_DEEPCOPY(WeightedCostFunction);
+  PLEARN_DECLARE_OBJECT(WeightedCostFunction);
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual string info() const;
   virtual real evaluate(const Vec& output, const Vec& target) const;
@@ -889,7 +889,7 @@ class SelectedOutputCostFunction: public Kernel
     SelectedOutputCostFunction(Ker the_costfunc, int the_outputindex)
       :costfunc(the_costfunc), outputindex(the_outputindex) {}
 
-  DECLARE_NAME_AND_DEEPCOPY(SelectedOutputCostFunction);
+  PLEARN_DECLARE_OBJECT(SelectedOutputCostFunction);
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual string info() const;
   virtual real evaluate(const Vec& output, const Vec& target) const; 
@@ -915,7 +915,7 @@ DECLARE_OBJECT_PTR(SelectedOutputCostFunction);
 */
 class LiftBinaryCostFunction: public Kernel
 {
-  DECLARE_NAME_AND_DEEPCOPY(LiftBinaryCostFunction);
+  PLEARN_DECLARE_OBJECT(LiftBinaryCostFunction);
  protected:
   bool make_positive_output;
  public:
@@ -935,7 +935,7 @@ DECLARE_OBJECT_PTR(LiftBinaryCostFunction);
 
 class DirectNegativeCostFunction: public Kernel
 {
-  DECLARE_NAME_AND_DEEPCOPY(DirectNegativeCostFunction);
+  PLEARN_DECLARE_OBJECT(DirectNegativeCostFunction);
  public:
   DirectNegativeCostFunction(){}
   virtual string info() const;
@@ -976,7 +976,7 @@ class QuadraticUtilityCostFunction : public Kernel
       : risk_aversion(the_risk_aversion), profit_function(the_profit)
     {}
 
-    DECLARE_NAME_AND_DEEPCOPY(QuadraticUtilityCostFunction);
+    PLEARN_DECLARE_OBJECT(QuadraticUtilityCostFunction);
     
     virtual string info() const;
     virtual real evaluate(const Vec& output, const Vec& target) const; 
@@ -1020,7 +1020,7 @@ class PricingTransactionPairProfitFunction : public Kernel
       multiplicative_cost(the_multiplicative_cost), additive_cost(the_additive_cost),
       per_unit_cost(the_per_unit_cost) {}
     
-    DECLARE_NAME_AND_DEEPCOPY(PricingTransactionPairProfitFunction);
+    PLEARN_DECLARE_OBJECT(PricingTransactionPairProfitFunction);
     
     virtual string info() const;
     virtual real evaluate(const Vec& output, const Vec& target) const; 

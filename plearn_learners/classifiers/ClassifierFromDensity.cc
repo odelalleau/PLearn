@@ -34,13 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.3 2003/07/04 18:48:59 plearner Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.4 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
 #include "ClassifierFromDensity.h"
 #include "ConcatColumnsVMatrix.h"
 #include "VMat_maths.h"
+#include "Kernel.h"
 
 namespace PLearn <%
 using namespace std;
@@ -51,7 +52,7 @@ ClassifierFromDensity::ClassifierFromDensity()
     // build_();
   }
 
-  PLEARN_IMPLEMENT_OBJECT_METHODS(ClassifierFromDensity, "ClassifierFromDensity", PLearner);
+  PLEARN_IMPLEMENT_OBJECT(ClassifierFromDensity, "ONE LINE DESCR", "NO HELP");
 
   void ClassifierFromDensity::declareOptions(OptionList& ol)
   {

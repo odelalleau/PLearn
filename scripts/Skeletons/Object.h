@@ -49,21 +49,19 @@ protected:
   static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls parentclass::build() then build_() 
-  virtual void build();
 
-  //! Provides a help message describing this class
-  // (PLEASE IMPLEMENT IN .cc)
-  static string help();
+  typedef Object inherited;
+  // Declares other standard object methods
+  //  If your class is not instantiatable (it has pure virtual methods)
+  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+  PLEARN_DECLARE_OBJECT(DERIVEDCLASS);
+
+  // simply calls inherited::build() then build_() 
+  virtual void build();
 
   //! Transforms a shallow copy into a deep copy
   // (PLEASE IMPLEMENT IN .cc)
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-
-  // Declares other standard object methods
-  //  If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
-  PLEARN_DECLARE_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", Object);
 
 };
 

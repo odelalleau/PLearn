@@ -42,7 +42,7 @@ namespace PLearn <%
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(MovingAverage, "MovingAverage", SequentialLearner);
+PLEARN_IMPLEMENT_OBJECT(MovingAverage, "ONE LINE DESCR", "NO HELP");
 
 MovingAverage::MovingAverage()
   : window_length(-1)
@@ -62,7 +62,7 @@ void MovingAverage::build_()
 
 void MovingAverage::build()
 {
-  parentclass::build();
+  inherited::build();
   build_();
 }
 
@@ -74,7 +74,7 @@ void MovingAverage::declareOptions(OptionList& ol)
   declareOption(ol, "cost_funcs", &MovingAverage::cost_funcs,
     OptionBase::buildoption, "a list of cost functions to use \n");
 
-  parentclass::declareOptions(ol);
+  inherited::declareOptions(ol);
 }
 
 void MovingAverage::train()
@@ -198,12 +198,12 @@ TVec<string> MovingAverage::getTestCostNames() const
 { return getTrainCostNames(); }
 
 void MovingAverage::forget()
-{ parentclass::forget(); }
+{ inherited::forget(); }
 
 /*
 void MovingAverage::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  parentclass::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(cost_funcs, copies);
 }
 */

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: RowBufferedVMatrix.cc,v 1.2 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 #include "RowBufferedVMatrix.h"
@@ -46,7 +46,7 @@ using namespace std;
 
 /** RowBufferedVMatrix **/
 
-IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(RowBufferedVMatrix);
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(RowBufferedVMatrix, "ONE LINE DESCR", "NO HELP");
 
 RowBufferedVMatrix::RowBufferedVMatrix(int the_length, int the_width)
   :VMatrix(the_length, the_width), 

@@ -1,0 +1,184 @@
+#!plearn
+
+PTester(
+# string: Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
+expdir = "hyper_nnet";
+
+# provide this PTester'S learner with an expdir, to save its stuff
+provide_learner_expdir = 1;
+
+# actually this dataset is not used, only those from the ExplicitSplitter are used.
+dataset = AutoVMatrix(specification="letters all");
+
+# PP< Splitter >: The splitter to use to generate one or several train/test pairs.
+splitter = TrainTestSplitter(test_fraction=.10) ;
+
+statnames = ["E[E[test1.class_error]]", "E[STDDEV[test1.class_error]]", "E[E[test1.NLL]]", "E[STDDEV[test1.NLL]]"];
+
+save_test_outputs = 1;
+
+# PP< PLearner >: The learner to train/test
+learner =
+
+ HyperLearner( 
+
+   # PP< PLearner >: The learner to train/test
+   learner =
+          NNet(
+          # int: dimensionality of output
+          # (for classification the output is typically a vector of class scores
+          # so this is the number of classes)
+          noutputs = 26;  # 26 letters
+          # int: number of hidden units in first hidden layer (0 means no hidden layer)
+          nhidden = 10;
+
+          # double: global weight decay for all layers
+          weight_decay = 0;
+
+          # string: what transfer function to use for ouput layer?
+          # one of: tanh, sigmoid, exp, softmax
+          # an empty string means no output transfer function
+          output_transfer_func = "softmax"  ;
+
+          # Array< string >:     a list of cost functions to use
+          # in the form "[ cf1; cf2; cf3; ... ]" where each function is one of:
+          #   mse (for regression)
+          #   mse_onehot (for classification)
+          #   NLL (negative log likelihood -log(p[c]) for classification)
+          #   class_error (classification error)
+          # The first function of the list will be used as
+          # the objective function to optimize
+          # (possibly with an added weight decay penalty)
+          cost_funcs = [ "NLL", "class_error" ];
+
+          # PP< Optimizer >:     specify the optimizer to use
+          optimizer = GradientOptimizer(
+                      # double: the initial learning rate
+                      start_learning_rate = 0.01  ;
+
+                      # double: the learning rate decrease constant
+                      decrease_constant = 0  ;
+                      )
+
+          # int: how many samples to use to estimate the avergage gradient before updating the weights
+          # 0 is equivalent to specifying training_set->length()
+          # NOTE: this overrides the optimizer s 'n_updates' and 'every_iterations'.
+          batch_size = 1;
+
+          # long: The initial seed for the random number generator used to initialize this learner's parameters
+          # as typically done in the forget() method...
+          # With a given seed, forget() should always initialize the parameters to the same values.
+          seed = 0  ;
+
+          # int: how many times the optimizer gets to see the whole training set.
+          nstages = 3;
+
+          )
+
+ tester = PTester(
+   # PP< Splitter >: The splitter to use to generate one or several train/test pairs.
+   splitter = TrainTestSplitter(test_fraction=.10) ;
+
+   statnames = ["E[E[train.NLL]]", "E[E[train.class_error]]",
+                "E[E[test.NLL]]", "E[E[test.class_error]]"];
+
+   save_test_outputs = 1;
+
+   )  # end of tester
+
+ # TVec< string >: learner option names to be reported in results table
+ option_fields = ["nstages", "nhidden", "weight_decay", "optimizer.start_learning_rate", "optimizer.decrease_constant"]
+
+ # TVec< string >: a list of names of options, used in the strategy, but that do not require 
+ # calling build() and forget() each time they are modified. 
+ # Note that this is almost always the case of the 'nstages' option 
+ # typically modified incrementally in an 'early stopping' fashion... 
+ dont_restart_upon_change = ["nstages"]
+
+ # bool: should each strategy step be provided a directory expdir/Step# to report its results
+ provide_strategy_expdir = 1
+
+ # TVec< PP< HyperCommand > >: The strategy to follow to optimize the hyper-parameters.
+ # It's a list of hyper-optimization commands to call sequentially,(mostly HyperOptimize and SetOptions commands).
+ strategy = [ HyperOptimize(
+              # int: an index in the tester's statnames to be used as the objective cost to minimize
+              which_cost = 2; # test.NLL
+
+              # bool: should the tester be provided with an expdir for each option combinatin to test
+              provide_tester_expdir = 1  ;
+
+              # PP< OptionsOracle >: Oracle giving trials to explore.
+              oracle = ExplicitListOracle( 
+                       option_names = ["nhidden", "optimizer.start_learning_rate"];
+                       option_values = 4 2 [ 
+                                             10 1e-4;
+                                             10 1e-3;
+                                             5  1e-4; 
+                                             5  1e-3;
+                                           ] )
+  
+              # bool: If this is true, a new evaluation will be performed after executing the sub-strategy,
+              # using this HyperOptimizer's splitter and which_cost
+              # This is useful if the sub_strategy optimizes a different cost, or uses different splitting.
+              rerun_after_sub = 0  ;
+
+              # bool: should sub_strategy commands be provided an expdir
+              provide_sub_expdir = 1  ;
+
+              # TVec< PP< HyperCommand > >: Optional sub-strategy to optimize other hyper-params (for each combination given by the oracle)
+              sub_strategy = [ HyperOptimize(
+                               which_cost = 2; # test.NLL
+                               provide_tester_expdir = 0  ;
+                               oracle = EarlyStoppingOracle(
+                                   # string: the name of the option to change
+                                   option = "nstages"
+
+                                   # TVec< double >: a numerical range of the form [ start, end ] or [ start, end, step ]
+                                   range = [1 5]  # 5 epochs only
+
+                                   # double: minimum allowed error beyond which we stop
+                                   min_value = -3.40282e+38  ;
+
+                                   # double: maximum allowed error beyond which we stop
+                                   max_value = 3.40282e+38  ;
+
+                                   # double: maximum allowed degradation from last best objective value
+                                   max_degradation = 3.40282e+38  ;
+
+                                   # double: maximum allowed degradation from last best objective, relative to abs(best_objective)
+                                   # ex: 0.10 will allow a degradation of 10% the magnitude of best_objective
+                                   # Will be ignored if negative
+                                   relative_max_degradation = -1  ;
+
+                                   # double: minimum required improvement from previous objective value
+                                   min_improvement = -3.40282e+38  ;
+
+                                   # double: minimum required improvement from previous objective value, relative to it.
+                                   # ex: 0.01 means we need an improvement of 0.01*abs(previous_objective)  i.e. 1%
+                                   # Will be ignored if negative
+                                   relative_min_improvement = -1  ;
+
+                                   # int:     ax. nb of steps beyond best found
+                                   max_degraded_steps = 100  ; ) # end of oracle
+                                 ) # end of HyperOptimize
+                               ] # end of sub_strategy
+
+            ) # end of HyperOptimize 
+           ] # end of strategy
+
+
+ # bool: should final learner be saved in expdir/final_learner.psave
+ save_final_learner = 1  ;
+
+ # bool: should progress in learning and testing be reported in a ProgressBar.
+ report_progress = 1  ;
+
+ # int: Level of verbosity. If 0 should not write anything on cerr. 
+ # If >0 may write some info on the steps performed along the way.
+ #  The level of details written should depend on this value.
+ verbosity = 1  ;
+
+ ) # end of HyperLearner
+
+) # end of PTester
+

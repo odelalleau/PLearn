@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.4 2003/07/04 21:28:23 yoshua Exp $ 
+   * $Id: PDistribution.cc,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -47,7 +47,7 @@ PDistribution::PDistribution()
   :outputs_def("l")
 {}
 
-  PLEARN_IMPLEMENT_OBJECT_METHODS(PDistribution, "PDistribution", PLearner);
+  PLEARN_IMPLEMENT_OBJECT(PDistribution, "ONE LINE DESCR", "NO HELP");
 
   void PDistribution::declareOptions(OptionList& ol)
   {
@@ -58,7 +58,7 @@ PDistribution::PDistribution()
       );
   
     // Now call the parent class' declareOptions
-    parentclass::declareOptions(ol);
+    inherited::declareOptions(ol);
   }
 
   string PDistribution::help()
@@ -79,14 +79,14 @@ PDistribution::PDistribution()
   // ### Nothing to add here, simply calls build_
   void PDistribution::build()
   {
-    parentclass::build();
+    inherited::build();
     build_();
   }
 
 
 void PDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  parentclass::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 

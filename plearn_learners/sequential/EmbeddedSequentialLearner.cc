@@ -44,14 +44,14 @@ namespace PLearn <%
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(EmbeddedSequentialLearner, "EmbeddedSequentialLearner", SequentialLearner);
+PLEARN_IMPLEMENT_OBJECT(EmbeddedSequentialLearner, "ONE LINE DESCR", "NO HELP");
 
 EmbeddedSequentialLearner::EmbeddedSequentialLearner()
 {}
 
 void EmbeddedSequentialLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  parentclass::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(learner, copies);
 } 
 
@@ -67,7 +67,7 @@ void EmbeddedSequentialLearner::build_()
 
 void EmbeddedSequentialLearner::build()
 {
-  parentclass::build();
+  inherited::build();
   build_();
 }
 
@@ -76,7 +76,7 @@ void EmbeddedSequentialLearner::declareOptions(OptionList& ol)
   declareOption(ol, "learner", &EmbeddedSequentialLearner::learner,
     OptionBase::buildoption, "The underlying learner \n");
 
-  parentclass::declareOptions(ol);
+  inherited::declareOptions(ol);
 }
 
 void EmbeddedSequentialLearner::train()

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.h,v 1.2 2003/08/08 20:45:54 yoshua Exp $
+   * $Id: ShiftAndRescaleVMatrix.h,v 1.3 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 
@@ -56,7 +56,7 @@ using namespace std;
 */
 class ShiftAndRescaleVMatrix: public VMatrix
 {
-  DECLARE_NAME_AND_DEEPCOPY(ShiftAndRescaleVMatrix);
+  PLEARN_DECLARE_OBJECT(ShiftAndRescaleVMatrix);
   typedef VMatrix inherited;
 
 public:

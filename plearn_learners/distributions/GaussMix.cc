@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.6 2003/07/24 18:33:51 jkeable Exp $ 
+ * $Id: GaussMix.cc,v 1.7 2003/08/13 08:13:46 plearner Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -53,7 +53,7 @@ GaussMix::GaussMix()
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(GaussMix);
+PLEARN_IMPLEMENT_OBJECT(GaussMix, "ONE LINE DESCR", "NO HELP");
 
 void GaussMix::declareOptions(OptionList& ol)
 {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VecElementVariable.cc,v 1.2 2003/01/08 21:33:11 ducharme Exp $
+   * $Id: VecElementVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,28 +56,16 @@ VecElementVariable::VecElementVariable(const Vec& vec, Variable* input)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(VecElementVariable);
+PLEARN_IMPLEMENT_OBJECT(VecElementVariable, "ONE LINE DESCR", "NO HELP");
 
 void VecElementVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
 
 
-void VecElementVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "VecElementVariable");
-  inherited::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, v);
-  readFooter(in, "VecElementVariable");
-}
 
 
-void VecElementVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "VecElementVariable");
-  inherited::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, v);
-  writeFooter(out, "VecElementVariable");
-}
+
+
 
 
 void VecElementVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)

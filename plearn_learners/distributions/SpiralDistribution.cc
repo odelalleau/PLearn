@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.cc,v 1.2 2003/06/05 04:21:14 plearner Exp $ 
+   * $Id: SpiralDistribution.cc,v 1.3 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.cc */
@@ -55,7 +55,7 @@ SpiralDistribution::SpiralDistribution()
     // build_();
   }
 
-  PLEARN_IMPLEMENT_OBJECT_METHODS(SpiralDistribution, "SpiralDistribution", PDistribution);
+  PLEARN_IMPLEMENT_OBJECT(SpiralDistribution, "ONE LINE DESCR", "NO HELP");
 
   string SpiralDistribution::help()
   {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.6 2003/06/25 14:45:56 ducharme Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.7 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
@@ -46,7 +46,7 @@ using namespace std;
 
 /** SelectRowsVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(SelectRowsVMatrix, "SelectRowsVMatrix", VMatrix);
+PLEARN_IMPLEMENT_OBJECT(SelectRowsVMatrix, "ONE LINE DESCR", "NO HELP");
 
 SelectRowsVMatrix::SelectRowsVMatrix() 
 {}

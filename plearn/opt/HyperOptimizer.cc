@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: HyperOptimizer.cc,v 1.3 2002/09/11 07:06:38 morinf Exp $
+   * $Id: HyperOptimizer.cc,v 1.4 2003/08/13 08:13:17 plearner Exp $
    * AUTHORS: Pascal Vincent & Frederic Morin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -46,7 +46,7 @@ namespace PLearn <%
 
 // ###### HyperOptimizer ######################################################
 
-IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(HyperOptimizer);
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(HyperOptimizer, "ONE LINE DESCR", "NO HELP");
 
 void
 HyperOptimizer::declareOptions(OptionList &ol)
@@ -61,7 +61,7 @@ HyperOptimizer::declareOptions(OptionList &ol)
 
 // ###### HSetVal #############################################################
 
-IMPLEMENT_NAME_AND_DEEPCOPY(HSetVal);
+PLEARN_IMPLEMENT_OBJECT(HSetVal, "ONE LINE DESCR", "NO HELP");
 
 void
 HSetVal::declareOptions(OptionList &ol)
@@ -83,7 +83,7 @@ HSetVal::optimize(PP<Learner> learner, const VMat &dataset, const HAliases &alia
 
 // ###### HTryAll #############################################################
 
-IMPLEMENT_NAME_AND_DEEPCOPY(HTryAll);
+PLEARN_IMPLEMENT_OBJECT(HTryAll, "ONE LINE DESCR", "NO HELP");
 
 void
 HTryAll::declareOptions(OptionList &ol)
@@ -111,7 +111,7 @@ HTryAll::optimize(PP<Learner> learner, const VMat &dataset, const HAliases &alia
 
 // ###### HCoordinateDescent ##################################################
 
-IMPLEMENT_NAME_AND_DEEPCOPY(HCoordinateDescent);
+PLEARN_IMPLEMENT_OBJECT(HCoordinateDescent, "ONE LINE DESCR", "NO HELP");
 
 void
 HCoordinateDescent::declareOptions(OptionList &ol)
@@ -133,7 +133,7 @@ HCoordinateDescent::optimize(PP<Learner> learner, const VMat &dataset, const HAl
 
 // ###### HTryCombinations ####################################################
 
-IMPLEMENT_NAME_AND_DEEPCOPY(HTryCombinations);
+PLEARN_IMPLEMENT_OBJECT(HTryCombinations, "ONE LINE DESCR", "NO HELP");
 
 void
 HTryCombinations::declareOptions(OptionList &ol)

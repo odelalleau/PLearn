@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubsampleVariable.cc,v 1.2 2003/01/08 21:33:02 ducharme Exp $
+   * $Id: SubsampleVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,28 +57,16 @@ SubsampleVariable::SubsampleVariable(Variable* input, int the_subsamplefactor)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SubsampleVariable);
+PLEARN_IMPLEMENT_OBJECT(SubsampleVariable, "ONE LINE DESCR", "NO HELP");
 
 void SubsampleVariable::recomputeSize(int& l, int& w) const
 { l=input->length()/subsamplefactor; w=input->width()/subsamplefactor; }
 
 
-void SubsampleVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "SubsampleVariable");
-  inherited::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, subsamplefactor);
-  readFooter(in, "SubsampleVariable");
-}
 
 
-void SubsampleVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "SubsampleVariable");
-  inherited::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, subsamplefactor);
-  writeFooter(out, "SubsampleVariable");
-}
+
+
 
 
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ProductVariable.cc,v 1.2 2003/01/08 21:32:57 ducharme Exp $
+   * $Id: ProductVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,27 +58,17 @@ ProductVariable::ProductVariable(Variable* m1, Variable* m2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ProductVariable);
+PLEARN_IMPLEMENT_OBJECT(ProductVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void ProductVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input2->width(); }
 
 
-void ProductVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "ProductVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "ProductVariable");
-}
 
 
-void ProductVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "ProductVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "ProductVariable");
-}
+
+
 
 
 void ProductVariable::fprop()

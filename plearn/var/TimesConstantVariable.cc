@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: TimesConstantVariable.cc,v 1.2 2003/01/08 21:33:05 ducharme Exp $
+   * $Id: TimesConstantVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,28 +58,16 @@ TimesConstantVariable::TimesConstantVariable(Variable* input, real c)
 {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(TimesConstantVariable);
+PLEARN_IMPLEMENT_OBJECT(TimesConstantVariable, "ONE LINE DESCR", "NO HELP");
 
 void TimesConstantVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void TimesConstantVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "TimesConstantVariable");
-  inherited::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, cst);
-  readFooter(in, "TimesConstantVariable");
-}
 
 
-void TimesConstantVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "TimesConstantVariable");
-  inherited::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, cst);
-  writeFooter(out, "TimesConstantVariable");
-}
+
+
 
 
 void TimesConstantVariable::fprop()

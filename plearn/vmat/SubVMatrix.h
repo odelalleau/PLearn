@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.h,v 1.2 2003/06/03 14:52:09 plearner Exp $
+   * $Id: SubVMatrix.h,v 1.3 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 
@@ -75,7 +75,7 @@ public:
 
   virtual void reset_dimensions();
 
-  DECLARE_NAME_AND_DEEPCOPY(SubVMatrix);
+  PLEARN_DECLARE_OBJECT(SubVMatrix);
   static void declareOptions(OptionList &ol);
   virtual void build();
   void build_();

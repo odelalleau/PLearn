@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.h,v 1.3 2003/01/31 17:32:24 yoshua Exp $
+   * $Id: GhostScript.h,v 1.4 2003/08/13 08:13:16 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -76,10 +76,8 @@ class GhostScript
 
 #if __GNUC__ < 3
   typedef _IO_wchar_t char_type;
-  typedef long ioflag_type;
 #else
   typedef ios::char_type char_type;
-  typedef _Ios_Fmtflags ioflag_type;
 #endif
 
  public:
@@ -155,6 +153,14 @@ class GhostScript
 
   void setcolor(real r, real g, real b)
     { togs << "\n/DeviceRGB setcolorspace " << r << " " << g << " " << b << " setcolor\n"; }
+
+  //! takes color in rgb real as returned by rgb2real
+  void setcolor(real rgb)
+    { 
+      real r,g,b;
+      real2rgb(rgb,r,g,b);
+      setcolor(r,g,b);
+    }
 
   void setcolor(char* colorname)
     {

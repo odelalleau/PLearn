@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: TimesScalarVariable.cc,v 1.2 2003/01/08 21:33:07 ducharme Exp $
+   * $Id: TimesScalarVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,27 +58,17 @@ TimesScalarVariable::TimesScalarVariable(Variable* input1, Variable* input2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(TimesScalarVariable);
+PLEARN_IMPLEMENT_OBJECT(TimesScalarVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void TimesScalarVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input1->width(); }
 
 
-void TimesScalarVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "TimesScalarVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "TimesScalarVariable");
-}
 
 
-void TimesScalarVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "TimesScalarVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "TimesScalarVariable");
-}
+
+
 
 
 void TimesScalarVariable::fprop()

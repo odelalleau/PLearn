@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BatchVMatrix.cc,v 1.1 2003/05/21 19:31:51 tihocan Exp $
+   * $Id: BatchVMatrix.cc,v 1.2 2003/08/13 08:13:45 plearner Exp $
    ******************************************************* */
 
 #include "BatchVMatrix.h"
@@ -41,7 +41,7 @@
 namespace PLearn <%
 using namespace std;
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(BatchVMatrix, "BatchVMatrix", VMatrix);
+PLEARN_IMPLEMENT_OBJECT(BatchVMatrix, "ONE LINE DESCR", "NO HELP");
 
 ////////////////////
 // declareOptions //

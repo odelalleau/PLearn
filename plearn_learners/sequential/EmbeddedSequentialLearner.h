@@ -67,7 +67,7 @@ class EmbeddedSequentialLearner: public SequentialLearner
     //! Constructor
     EmbeddedSequentialLearner();
 
-    //! simply calls parentclass::build() then build_()
+    //! simply calls inherited::build() then build_()
     virtual void build();
     
     //!  Does the actual training.
@@ -105,7 +105,7 @@ class EmbeddedSequentialLearner: public SequentialLearner
     virtual TVec<string> getTrainCostNames() const;
 
     //! Declares a few other classes and functions related to this class
-    PLEARN_DECLARE_OBJECT_METHODS(EmbeddedSequentialLearner, "EmbeddedSequentialLearner", SequentialLearner);
+    PLEARN_DECLARE_OBJECT(EmbeddedSequentialLearner);
 
 };
 

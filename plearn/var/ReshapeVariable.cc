@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ReshapeVariable.cc,v 1.2 2003/01/08 21:32:58 ducharme Exp $
+   * $Id: ReshapeVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,27 +56,17 @@ ReshapeVariable::ReshapeVariable(Variable* v, int the_length, int the_width)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ReshapeVariable);
+PLEARN_IMPLEMENT_OBJECT(ReshapeVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void ReshapeVariable::recomputeSize(int& l, int& w) const
 { l=length_; w=width_; }
 
 
-void ReshapeVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "ReshapeVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "ReshapeVariable");
-}
 
 
-void ReshapeVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "ReshapeVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "ReshapeVariable");
-}
+
+
 
 
 void ReshapeVariable::fprop()

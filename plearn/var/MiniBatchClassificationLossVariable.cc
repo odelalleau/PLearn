@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MiniBatchClassificationLossVariable.cc,v 1.2 2003/01/08 21:32:47 ducharme Exp $
+   * $Id: MiniBatchClassificationLossVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,7 +47,7 @@ using namespace std;
 
 
 /** MiniBatchClassificationLossVariable **/
-IMPLEMENT_NAME_AND_DEEPCOPY(MiniBatchClassificationLossVariable);
+PLEARN_IMPLEMENT_OBJECT(MiniBatchClassificationLossVariable, "ONE LINE DESCR", "NO HELP");
 
 MiniBatchClassificationLossVariable::MiniBatchClassificationLossVariable(Variable* netout, Variable* classnum)
   :BinaryVariable(netout,classnum,classnum->length(),classnum->width())
@@ -61,20 +61,10 @@ void MiniBatchClassificationLossVariable::recomputeSize(int& l, int& w) const
 { l=input2->length(), w=input2->width(); }
 
 
-void MiniBatchClassificationLossVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "MiniBatchClassificationLossVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "MiniBatchClassificationLossVariable");
-}
 
 
-void MiniBatchClassificationLossVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "MiniBatchClassificationLossVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "MiniBatchClassificationLossVariable");
-}
+
+
 
 
 void MiniBatchClassificationLossVariable::fprop()

@@ -44,7 +44,7 @@
 
 namespace PLearn <%
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ManifoldParzen2);
+PLEARN_IMPLEMENT_OBJECT(ManifoldParzen2, "ONE LINE DESCR", "NO HELP");
 
 
 ManifoldParzen2::ManifoldParzen2()

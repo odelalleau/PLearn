@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConstantRegressor.cc,v 1.2 2003/08/08 20:45:54 yoshua Exp $ 
+   * $Id: ConstantRegressor.cc,v 1.3 2003/08/13 08:13:47 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ConstantRegressor.cc */
@@ -50,7 +50,7 @@ ConstantRegressor::ConstantRegressor()
     // build_();
   }
 
-  PLEARN_IMPLEMENT_OBJECT_METHODS(ConstantRegressor, "ConstantRegressor", PLearner);
+  PLEARN_IMPLEMENT_OBJECT(ConstantRegressor, "ONE LINE DESCR", "NO HELP");
 
   void ConstantRegressor::declareOptions(OptionList& ol)
   {
@@ -68,7 +68,7 @@ ConstantRegressor::ConstantRegressor()
       );
 
     // Now call the parent class' declareOptions
-    parentclass::declareOptions(ol);
+    inherited::declareOptions(ol);
   }
 
   string ConstantRegressor::help()
@@ -94,14 +94,14 @@ ConstantRegressor::ConstantRegressor()
   // ### Nothing to add here, simply calls build_
   void ConstantRegressor::build()
   {
-    parentclass::build();
+    inherited::build();
     build_();
   }
 
 
   void ConstantRegressor::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   {
-    parentclass::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
   }
 
 

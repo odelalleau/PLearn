@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FractionSplitter.h,v 1.2 2003/06/03 14:52:09 plearner Exp $ 
+   * $Id: FractionSplitter.h,v 1.3 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file FractionSplitter.h */
@@ -99,7 +99,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(FractionSplitter);
+  PLEARN_DECLARE_OBJECT(FractionSplitter);
 
 
   // ********************************

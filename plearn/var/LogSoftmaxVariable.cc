@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LogSoftmaxVariable.cc,v 1.2 2003/01/08 21:32:34 ducharme Exp $
+   * $Id: LogSoftmaxVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,7 @@ using namespace std;
 
 /** LogSoftmaxVariable **/
 
-IMPLEMENT_NAME_AND_DEEPCOPY(LogSoftmaxVariable);
+PLEARN_IMPLEMENT_OBJECT(LogSoftmaxVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void LogSoftmaxVariable::recomputeSize(int& l, int& w) const

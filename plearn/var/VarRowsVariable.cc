@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VarRowsVariable.cc,v 1.2 2003/01/08 21:33:11 ducharme Exp $
+   * $Id: VarRowsVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,27 +55,17 @@ VarRowsVariable::VarRowsVariable(Variable *input1, Variable *input2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(VarRowsVariable);
+PLEARN_IMPLEMENT_OBJECT(VarRowsVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void VarRowsVariable::recomputeSize(int& l, int& w) const
 { l=input2->length(); w=input1->width(); }
 
 
-void VarRowsVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "VarRowsVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "VarRowsVariable");
-}
 
 
-void VarRowsVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "VarRowsVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "VarRowsVariable");
-}
+
+
 
 
 void VarRowsVariable::fprop()

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.cc,v 1.8 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: HistogramDistribution.cc,v 1.9 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.cc */
@@ -71,7 +71,7 @@ HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_,
   train(data);
 }
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(HistogramDistribution);
+  PLEARN_IMPLEMENT_OBJECT(HistogramDistribution, "ONE LINE DESCR", "NO HELP");
 
   void HistogramDistribution::declareOptions(OptionList& ol)
   {

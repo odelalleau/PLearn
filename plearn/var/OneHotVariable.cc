@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVariable.cc,v 1.2 2003/01/08 21:32:53 ducharme Exp $
+   * $Id: OneHotVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,30 +56,16 @@ OneHotVariable::OneHotVariable(int thelength, Variable* hotindex, real the_coldv
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(OneHotVariable);
+PLEARN_IMPLEMENT_OBJECT(OneHotVariable, "ONE LINE DESCR", "NO HELP");
 
 void OneHotVariable::recomputeSize(int& l, int& w) const
 { l=length_; w=1; }
 
 
-void OneHotVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "OneHotVariable");
-  inherited::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, hotvalue);
-  PLearn::deepRead(in, old2new, coldvalue);
-  readFooter(in, "OneHotVariable");
-}
 
 
-void OneHotVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "OneHotVariable");
-  inherited::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, hotvalue);
-  PLearn::deepWrite(out, already_saved, coldvalue);
-  writeFooter(out, "OneHotVariable");
-}
+
+
 
 
 void OneHotVariable::fprop()

@@ -42,7 +42,7 @@ namespace PLearn <%
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(SequentialModelSelector, "SequentialModelSelector", SequentialLearner);
+PLEARN_IMPLEMENT_OBJECT(SequentialModelSelector, "ONE LINE DESCR", "NO HELP");
 
 SequentialModelSelector::SequentialModelSelector()
   : init_train_size(1), cost_index(0), cost_type("SumCost")
@@ -206,7 +206,7 @@ TVec<string> SequentialModelSelector::getTrainCostNames() const
 
 void SequentialModelSelector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  parentclass::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(models, copies);
   //deepCopyField(mean_costs, copies);
 } 
@@ -224,7 +224,7 @@ void SequentialModelSelector::build_()
 void SequentialModelSelector::build()
 {
   build_();
-  parentclass::build();
+  inherited::build();
 }
 
 void SequentialModelSelector::declareOptions(OptionList& ol)
@@ -241,7 +241,7 @@ void SequentialModelSelector::declareOptions(OptionList& ol)
   declareOption(ol, "cost_type", &SequentialModelSelector::cost_type,
     OptionBase::buildoption, " the type of cost to be used to select best model \n");
 
-  parentclass::declareOptions(ol);
+  inherited::declareOptions(ol);
 }
 
 real SequentialModelSelector::sequenceCost(const Vec& sequence_errors)
@@ -266,7 +266,7 @@ void SequentialModelSelector::forget()
   for (int i=0; i<models.size(); i++)
     models[i]->forget();
 
-  parentclass::forget();
+  inherited::forget();
 }
 
 %> // end of namespace PLearn

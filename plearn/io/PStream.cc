@@ -42,6 +42,8 @@ namespace PLearn <%
 using namespace std;
 
 char PStream::tmpbuf[100];
+PStream_endl_ PLearn::endl; // the only instance!
+PStream_flush_ PLearn::flush; // the only instance!
 
   //! default ctor: the stream is unusable ...
 PStream::PStream()
@@ -256,6 +258,15 @@ void PStream::skipBlanksAndCommentsAndSeparators()
   if(c!=EOF)
     unget();
 }
+
+void PStream::writeAsciiHexNum(unsigned char x)
+{
+  int d = x>>4;
+  put(d<0x0A ?(d+'0') :(d-0x0A+'A'));
+  d = x & 0x0F;
+  put(d<0x0A ?(d+'0') :(d-0x0A+'A'));
+}
+
 
 void PStream::writeAsciiNum(char x)
 {

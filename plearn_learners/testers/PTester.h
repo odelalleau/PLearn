@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.1 2003/07/04 18:48:59 plearner Exp $ 
+   * $Id: PTester.h,v 1.2 2003/08/13 08:13:47 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -106,7 +106,7 @@ public:
   static string help();
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(PTester);
+  PLEARN_DECLARE_OBJECT(PTester);
 
   //! The experiment directory is the directory in which files 
   //! related to this model are to be saved.     
@@ -123,11 +123,16 @@ public:
   virtual void run();
 
   //! performs the test, and returns the global stats specified in statnames
-  //! If set_training_set is set to false AND the splitter returns only one split,
-  //! then we *don't* call setTrainingSet() and a forget() on the learner prior to training it:
-  //! we assume the training set is already set. This is useful for continuation of an incremental  training
-  //! (such as after increasing the number of epochs (nstages) ). 
-  Vec perform(bool set_training_set=true);
+  //! If call_forget is set to false then the call to setTrainingSet() 
+  //! won't call forget and build.
+  //! This is useful for continuation of an incremental  training
+  //! (such as after increasing the number of epochs (nstages) ),
+  //! or generally when trying different option values that don't require
+  //! the learning to be restarted from scratch.
+  //! However call_forget will be forced to true (even if passed as false)
+  //! if the splitter returns more than one split.
+  //! Returns a vector of test statistics corresponding to the requested statnames
+  Vec perform(bool call_forget=true);
 
 };
 

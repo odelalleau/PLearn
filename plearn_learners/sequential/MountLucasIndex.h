@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.h,v 1.3 2003/08/06 17:58:04 ducharme Exp $ 
+   * $Id: MountLucasIndex.h,v 1.4 2003/08/13 08:13:47 plearner Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.h */
@@ -112,7 +112,8 @@ class MountLucasIndex: public SequentialLearner
 
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-    PLEARN_DECLARE_OBJECT_METHODS(MountLucasIndex, "MountLucasIndex", SequentialLearner);
+    typedef SequentialLearner inherited;
+    PLEARN_DECLARE_OBJECT(MountLucasIndex);
     //virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LimitedGaussianSmoother.cc,v 1.7 2003/05/07 05:39:17 plearner Exp $ 
+   * $Id: LimitedGaussianSmoother.cc,v 1.8 2003/08/13 08:13:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file LimitedGaussianSmoother.cc */
@@ -57,7 +57,7 @@ LimitedGaussianSmoother::LimitedGaussianSmoother(real window_size_wrt_sigma_, re
   :Smoother(), window_size_wrt_sigma(window_size_wrt_sigma_), sigma_bin(sigma_bin_)
 {}
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(LimitedGaussianSmoother);
+  PLEARN_IMPLEMENT_OBJECT(LimitedGaussianSmoother, "ONE LINE DESCR", "NO HELP");
 
   void LimitedGaussianSmoother::declareOptions(OptionList& ol)
   {

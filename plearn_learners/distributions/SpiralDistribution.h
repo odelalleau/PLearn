@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.h,v 1.2 2003/06/05 04:21:14 plearner Exp $ 
+   * $Id: SpiralDistribution.h,v 1.3 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.h */
@@ -105,7 +105,7 @@ public:
   // Declares other standard object methods
   //  If your class is not instantiatable (it has pure virtual methods)
   // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
-  PLEARN_DECLARE_OBJECT_METHODS(SpiralDistribution, "SpiralDistribution", PDistribution);
+  PLEARN_DECLARE_OBJECT(SpiralDistribution);
 
   
   // ** specific methods ** 

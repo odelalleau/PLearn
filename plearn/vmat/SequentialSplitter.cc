@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SequentialSplitter.cc,v 1.3 2003/06/03 14:52:09 plearner Exp $ 
+   * $Id: SequentialSplitter.cc,v 1.4 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
@@ -50,7 +50,7 @@ SequentialSplitter::SequentialSplitter(int train_step_, int min_train_)
     : train_step(train_step_), min_train(min_train_)
 {};
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SequentialSplitter);
+PLEARN_IMPLEMENT_OBJECT(SequentialSplitter, "ONE LINE DESCR", "NO HELP");
 
 void SequentialSplitter::declareOptions(OptionList& ol)
 {

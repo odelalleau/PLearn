@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.cc,v 1.4 2003/06/03 14:52:09 plearner Exp $
+   * $Id: ConcatRowsVMatrix.cc,v 1.5 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 #include "ConcatRowsVMatrix.h"
@@ -45,7 +45,7 @@ using namespace std;
 
 /** ConcatRowsVMatrix **/
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ConcatRowsVMatrix);
+PLEARN_IMPLEMENT_OBJECT(ConcatRowsVMatrix, "ONE LINE DESCR", "NO HELP");
 
 void ConcatRowsVMatrix::declareOptions(OptionList &ol)
 {

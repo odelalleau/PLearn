@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.13 2003/05/26 04:12:42 plearner Exp $
+   * $Id: stringutils.h,v 1.14 2003/08/13 08:13:16 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -55,6 +55,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include "TMat.h"
 
 //!  to be replaced ultimately by the use of sstream, but including it currently produces a thousand warnings... [Pascal]
 #include <strstream.h>

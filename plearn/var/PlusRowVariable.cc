@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PlusRowVariable.cc,v 1.2 2003/01/08 21:32:55 ducharme Exp $
+   * $Id: PlusRowVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,27 +59,17 @@ PlusRowVariable::PlusRowVariable(Variable* input1, Variable* input2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(PlusRowVariable);
+PLEARN_IMPLEMENT_OBJECT(PlusRowVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void PlusRowVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input1->width(); }
 
 
-void PlusRowVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "PlusRowVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "PlusRowVariable");
-}
 
 
-void PlusRowVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "PlusRowVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "PlusRowVariable");
-}
+
+
 
 
 void PlusRowVariable::fprop()

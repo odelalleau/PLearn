@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.cc,v 1.4 2003/05/07 05:39:16 plearner Exp $ 
+   * $Id: Binner.cc,v 1.5 2003/08/13 08:13:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Binner.cc */
@@ -57,7 +57,7 @@ Binner::Binner()
   }
 
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(Binner);
+  PLEARN_IMPLEMENT_OBJECT(Binner, "ONE LINE DESCR", "NO HELP");
 
   void Binner::declareOptions(OptionList& ol)
   {

@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.8 2003/06/03 20:54:24 ducharme Exp $ 
+   * $Id: VecStatsCollector.h,v 1.9 2003/08/13 08:13:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -149,7 +149,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(VecStatsCollector);
+  PLEARN_DECLARE_OBJECT(VecStatsCollector);
 };
 
 // Declares a few other classes and functions related to this class

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.8 2003/08/03 20:32:38 yoshua Exp $
+   * $Id: NNet.cc,v 1.9 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -50,7 +50,7 @@ namespace PLearn <%
 using namespace std;
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(NNet);
+PLEARN_IMPLEMENT_OBJECT(NNet, "ONE LINE DESCR", "NO HELP");
 
 NNet::NNet()
   :
@@ -385,6 +385,9 @@ void NNet::train()
 
   int l = train_set->length();  
 
+  if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
+    build();
+
   // number of samples seen by optimizer before each optimizer update
   int nsamples = batch_size>0 ? batch_size : l;
 
@@ -493,8 +496,23 @@ void NNet::forget()
 
 void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(optimizer, copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(input, copies);
+  deepCopyField(target, copies);
+  deepCopyField(sampleweight, copies);
+  deepCopyField(w1, copies);
+  deepCopyField(w2, copies);
+  deepCopyField(wout, copies);
+  deepCopyField(wdirect, copies);
+  deepCopyField(output, copies);
+  deepCopyField(costs, copies);
+  deepCopyField(cost, copies);
+  deepCopyField(params, copies);
+  deepCopyField(paramsvalues, copies);
+  deepCopyField(f, copies);
+  deepCopyField(costf, copies);
+  deepCopyField(output_and_target_to_cost, copies);
+  deepCopyField(optimizer, copies);
 }
 
 %> // end of namespace PLearn

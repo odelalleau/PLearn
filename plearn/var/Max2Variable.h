@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Max2Variable.h,v 1.2 2002/11/08 22:26:19 dorionc Exp $
+   * $Id: Max2Variable.h,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,10 +63,10 @@ protected:
 
 public:
   Max2Variable(Variable* input, Variable* power);
-  DECLARE_NAME_AND_DEEPCOPY(Max2Variable);
+  PLEARN_DECLARE_OBJECT(Max2Variable);
   virtual void recomputeSize(int& l, int& w) const;
-  virtual void deepRead(istream& in, DeepReadMap& old2new);
-  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
+  
+  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();

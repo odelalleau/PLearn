@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: SourceVariable.cc,v 1.2 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: SourceVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,27 +62,11 @@ void SourceVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies
   deepCopyField(rows_to_update, copies);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SourceVariable);
+PLEARN_IMPLEMENT_OBJECT(SourceVariable, "ONE LINE DESCR", "NO HELP");
 
-void SourceVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "SourceVariable");
-  Variable::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, allows_partial_update);
-  PLearn::deepRead(in, old2new, gradient_status);
-  PLearn::deepRead(in, old2new, rows_to_update);
-  readFooter(in, "SourceVariable");
-}
 
-void SourceVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "SourceVariable");
-  Variable::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, allows_partial_update);
-  PLearn::deepWrite(out, already_saved, gradient_status);
-  PLearn::deepWrite(out, already_saved, rows_to_update);
-  writeFooter(out, "SourceVariable");
-}
+
+
 
 void SourceVariable::fprop() {} // No input: nothing to fprop
 void SourceVariable::bprop() {} // No input: nothing to bprop

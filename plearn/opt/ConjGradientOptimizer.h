@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.25 2003/08/06 15:23:07 dorionc Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.26 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -150,7 +150,7 @@ public:
       int n_updates=1, const string& filename="", 
       int every_iterations=1);
 
-  DECLARE_NAME_AND_DEEPCOPY(ConjGradientOptimizer);
+  PLEARN_DECLARE_OBJECT(ConjGradientOptimizer);
 
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies) { inherited::makeDeepCopyFromShallowCopy(copies); }
 

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.12 2003/05/26 04:12:43 plearner Exp $
+   * $Id: Learner.cc,v 1.13 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -85,7 +85,7 @@ Learner::Learner(int the_inputsize, int the_targetsize, int the_outputsize)
   setTestStatistics(mean_stats() & stderr_stats());
 }
 
-IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(Learner);
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Learner, "ONE LINE DESCR", "NO HELP");
 void Learner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Object::makeDeepCopyFromShallowCopy(copies);
@@ -459,7 +459,7 @@ bool Learner::measure(int step, const Vec& costs)
           if(expdir.empty()) // old deprecated mode
             load();
           else
-            PLearn::load(fname,*this, OptionBase::learntoption);          
+            PLearn::load(fname,*this);          
         }
         else
           cout << "Result for benchmark is: " << test_results << endl;

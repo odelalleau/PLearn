@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrixGaussianKernel.h,v 1.1 2002/10/03 07:35:27 plearner Exp $
+   * $Id: CompactVMatrixGaussianKernel.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,7 +68,7 @@ class CompactVMatrixGaussianKernel: public Kernel
  public:
   CompactVMatrixGaussianKernel(real the_sigma,PP<CompactVMatrix>& vm)
     : sigma(the_sigma), m(vm) {}
-  DECLARE_NAME_AND_DEEPCOPY(CompactVMatrixGaussianKernel);
+  PLEARN_DECLARE_OBJECT(CompactVMatrixGaussianKernel);
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
   virtual void setParameters(Vec paramvec);
     //virtual void readOptionVal(istream& in, const string& optionname);

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.11 2003/06/04 21:31:58 plearner Exp $
+   * $Id: RealMapping.cc,v 1.12 2003/08/13 08:13:16 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 namespace PLearn <%
 using namespace std;
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(RealMapping);
+  PLEARN_IMPLEMENT_OBJECT(RealMapping, "ONE LINE DESCR", "NO HELP");
 
   string RealRange::getString() const 
   {

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Smoother.h,v 1.3 2003/05/07 05:39:17 plearner Exp $ 
+   * $Id: Smoother.h,v 1.4 2003/08/13 08:13:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Smoother.h */
@@ -101,7 +101,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(Smoother);
+  PLEARN_DECLARE_ABSTRACT_OBJECT(Smoother);
 
 
   /****

@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.4 2003/06/30 15:13:52 yoshua Exp $
+   * $Id: Kernel.cc,v 1.5 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,7 @@
 namespace PLearn <%
 using namespace std;
   
-  IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(Kernel);
+  PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Kernel, "ONE LINE DESCR", "NO HELP");
   Kernel::~Kernel() {}
 
   void Kernel::setDataForKernelMatrix(VMat the_data)
@@ -321,7 +321,7 @@ Kernel::oldread(istream& in)
 
 // ** PowDistanceKernel **
 
-IMPLEMENT_NAME_AND_DEEPCOPY(PowDistanceKernel);
+PLEARN_IMPLEMENT_OBJECT(PowDistanceKernel, "ONE LINE DESCR", "NO HELP");
 string PowDistanceKernel::info() const { return "(L"+tostring(n)+")^"+tostring(n); }
 real PowDistanceKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return powdistance(x1, x2, n); }
@@ -358,7 +358,7 @@ void PowDistanceKernel::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(DistanceKernel);
+PLEARN_IMPLEMENT_OBJECT(DistanceKernel, "ONE LINE DESCR", "NO HELP");
 string DistanceKernel::info() const { return "L"+tostring(n); }
 real DistanceKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return dist(x1, x2, n); }
@@ -378,7 +378,7 @@ void DistanceKernel::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(DotProductKernel);
+PLEARN_IMPLEMENT_OBJECT(DotProductKernel, "ONE LINE DESCR", "NO HELP");
 real DotProductKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return dot(x1,x2); }
 
@@ -405,7 +405,7 @@ void DotProductKernel::oldread(istream& in)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(PolynomialKernel);
+PLEARN_IMPLEMENT_OBJECT(PolynomialKernel, "ONE LINE DESCR", "NO HELP");
 real PolynomialKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return evaluateFromDot(dot(x1,x2)); }
 real PolynomialKernel::evaluate_i_j(int i, int j) const
@@ -452,7 +452,7 @@ void PolynomialKernel::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SigmoidalKernel);
+PLEARN_IMPLEMENT_OBJECT(SigmoidalKernel, "ONE LINE DESCR", "NO HELP");
 real SigmoidalKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return sigmoid(c*dot(x1,x2)); }
 
@@ -487,7 +487,7 @@ void SigmoidalKernel::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SigmoidPrimitiveKernel);
+PLEARN_IMPLEMENT_OBJECT(SigmoidPrimitiveKernel, "ONE LINE DESCR", "NO HELP");
 real SigmoidPrimitiveKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return log(1.0+exp(c*dot(x1,x2))); }
 
@@ -523,7 +523,7 @@ void SigmoidPrimitiveKernel::declareOptions(OptionList &ol)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ConvexBasisKernel);
+PLEARN_IMPLEMENT_OBJECT(ConvexBasisKernel, "ONE LINE DESCR", "NO HELP");
 real ConvexBasisKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
   real p=1;
@@ -568,7 +568,7 @@ void ConvexBasisKernel::declareOptions(OptionList &ol)
 
 // ** GaussianKernel **
 
-IMPLEMENT_NAME_AND_DEEPCOPY(GaussianKernel);
+PLEARN_IMPLEMENT_OBJECT(GaussianKernel, "ONE LINE DESCR", "NO HELP");
 
 void GaussianKernel::declareOptions(OptionList& ol)
 {
@@ -656,7 +656,7 @@ void GaussianKernel::build()
 
 // ** PrecomputedKernel **
 
-IMPLEMENT_NAME_AND_DEEPCOPY(PrecomputedKernel);
+PLEARN_IMPLEMENT_OBJECT(PrecomputedKernel, "ONE LINE DESCR", "NO HELP");
 
 PrecomputedKernel::~PrecomputedKernel()
 {
@@ -739,7 +739,7 @@ void PrecomputedKernel::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ScaledGaussianKernel);
+PLEARN_IMPLEMENT_OBJECT(ScaledGaussianKernel, "ONE LINE DESCR", "NO HELP");
 void ScaledGaussianKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
@@ -781,7 +781,7 @@ void ScaledGaussianKernel::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(GaussianDensityKernel);
+PLEARN_IMPLEMENT_OBJECT(GaussianDensityKernel, "ONE LINE DESCR", "NO HELP");
 real GaussianDensityKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return exp(-real(0.5)*powdistance(x1, x2, real(2.0))/(sigma*sigma) - x1.length()*(0.5*Log2Pi + log(sigma))); }
 
@@ -800,7 +800,7 @@ void GaussianDensityKernel::oldread(istream& in)
   readFooter(in,"GaussianDensityKernel");
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(LogOfGaussianDensityKernel);
+PLEARN_IMPLEMENT_OBJECT(LogOfGaussianDensityKernel, "ONE LINE DESCR", "NO HELP");
 real LogOfGaussianDensityKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
   // cerr << "LogOfGaussKernel mu: " << x1 << endl; 
@@ -823,7 +823,7 @@ void LogOfGaussianDensityKernel::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(GeneralizedDistanceRBFKernel);
+PLEARN_IMPLEMENT_OBJECT(GeneralizedDistanceRBFKernel, "ONE LINE DESCR", "NO HELP");
 real GeneralizedDistanceRBFKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
 #ifdef BOUNDCHECK
@@ -888,7 +888,7 @@ void GeneralizedDistanceRBFKernel::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ScaledGeneralizedDistanceRBFKernel);
+PLEARN_IMPLEMENT_OBJECT(ScaledGeneralizedDistanceRBFKernel, "ONE LINE DESCR", "NO HELP");
 void ScaledGeneralizedDistanceRBFKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
@@ -956,7 +956,7 @@ void ScaledGeneralizedDistanceRBFKernel::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(LaplacianKernel);
+PLEARN_IMPLEMENT_OBJECT(LaplacianKernel, "ONE LINE DESCR", "NO HELP");
 real LaplacianKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
 #ifdef BOUNDCHECK
@@ -1004,7 +1004,7 @@ void LaplacianKernel::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ScaledLaplacianKernel);
+PLEARN_IMPLEMENT_OBJECT(ScaledLaplacianKernel, "ONE LINE DESCR", "NO HELP");
 void ScaledLaplacianKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
@@ -1042,7 +1042,7 @@ real ScaledLaplacianKernel::evaluate(const Vec& x1, const Vec& x2) const
   return exp(-summ);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(DifferenceKernel);
+PLEARN_IMPLEMENT_OBJECT(DifferenceKernel, "ONE LINE DESCR", "NO HELP");
 real DifferenceKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
   real result = 0.0;
@@ -1063,7 +1063,7 @@ void DifferenceKernel::oldread(istream& in)
   readFooter(in,"DifferenceKernel");
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(NegKernel);
+PLEARN_IMPLEMENT_OBJECT(NegKernel, "ONE LINE DESCR", "NO HELP");
 void NegKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
@@ -1087,7 +1087,7 @@ void NegKernel::oldread(istream& in)
   readFooter(in,"NegKernel");
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(NormalizedDotProductKernel);
+PLEARN_IMPLEMENT_OBJECT(NormalizedDotProductKernel, "ONE LINE DESCR", "NO HELP");
 real NormalizedDotProductKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return dot(x1,x2)/(norm(x1,norm_to_use)*norm(x2,norm_to_use)); }
 
@@ -1123,7 +1123,7 @@ void NormalizedDotProductKernel::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SquaredErrorCostFunction);
+PLEARN_IMPLEMENT_OBJECT(SquaredErrorCostFunction, "ONE LINE DESCR", "NO HELP");
 string SquaredErrorCostFunction::info() const { return "squared_error"; }
 real SquaredErrorCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
@@ -1207,7 +1207,7 @@ void SquaredErrorCostFunction::declareOptions(OptionList &ol)
 
 // *** NegOutputCostFunction ***
 
-IMPLEMENT_NAME_AND_DEEPCOPY(NegOutputCostFunction);
+PLEARN_IMPLEMENT_OBJECT(NegOutputCostFunction, "ONE LINE DESCR", "NO HELP");
 
 real NegOutputCostFunction::evaluate(const Vec& output, const Vec& target) const
 { return -output[0]; }
@@ -1226,7 +1226,7 @@ void NegOutputCostFunction::oldread(istream& in)
 
 // **** ClassErrorCostFunction ****
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ClassErrorCostFunction);
+PLEARN_IMPLEMENT_OBJECT(ClassErrorCostFunction, "ONE LINE DESCR", "NO HELP");
 string ClassErrorCostFunction::info() const { return "class_error"; }
 real ClassErrorCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
@@ -1290,7 +1290,7 @@ ClassErrorCostFunction::declareOptions(OptionList &ol)
 
 // **** MulticlassErrorCostFunction ****
 
-IMPLEMENT_NAME_AND_DEEPCOPY(MulticlassErrorCostFunction);
+PLEARN_IMPLEMENT_OBJECT(MulticlassErrorCostFunction, "ONE LINE DESCR", "NO HELP");
 string MulticlassErrorCostFunction::info() const { return "multiclass_error"; }
 real MulticlassErrorCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
@@ -1318,7 +1318,7 @@ void MulticlassErrorCostFunction::oldread(istream& in)
   readFooter(in,"MulticlassErrorCostFunction");
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ClassMarginCostFunction);
+PLEARN_IMPLEMENT_OBJECT(ClassMarginCostFunction, "ONE LINE DESCR", "NO HELP");
 string ClassMarginCostFunction::info() const { return "class_margin"; }
 real ClassMarginCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
@@ -1382,7 +1382,7 @@ void ClassMarginCostFunction::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ClassDistanceProportionCostFunction);
+PLEARN_IMPLEMENT_OBJECT(ClassDistanceProportionCostFunction, "ONE LINE DESCR", "NO HELP");
 real ClassDistanceProportionCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
   if (output.length()==1)
@@ -1413,7 +1413,7 @@ void ClassDistanceProportionCostFunction::oldread(istream& in)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(NegLogProbCostFunction);
+PLEARN_IMPLEMENT_OBJECT(NegLogProbCostFunction, "ONE LINE DESCR", "NO HELP");
 string NegLogProbCostFunction::info() const { return "negative_log_probability"; }
 
 #define smoothmap sigmoid
@@ -1526,7 +1526,7 @@ void NegLogProbCostFunction::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }   
 
-IMPLEMENT_NAME_AND_DEEPCOPY(WeightedCostFunction);
+PLEARN_IMPLEMENT_OBJECT(WeightedCostFunction, "ONE LINE DESCR", "NO HELP");
 void WeightedCostFunction::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
@@ -1550,7 +1550,7 @@ void WeightedCostFunction::oldread(istream& in)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SelectedOutputCostFunction);
+PLEARN_IMPLEMENT_OBJECT(SelectedOutputCostFunction, "ONE LINE DESCR", "NO HELP");
 void SelectedOutputCostFunction::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
@@ -1592,7 +1592,7 @@ void SelectedOutputCostFunction::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(LiftBinaryCostFunction);
+PLEARN_IMPLEMENT_OBJECT(LiftBinaryCostFunction, "ONE LINE DESCR", "NO HELP");
 string LiftBinaryCostFunction::info() const { return "lift_binary_function"; }
 real LiftBinaryCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
@@ -1648,7 +1648,7 @@ void LiftBinaryCostFunction::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(DirectNegativeCostFunction);
+PLEARN_IMPLEMENT_OBJECT(DirectNegativeCostFunction, "ONE LINE DESCR", "NO HELP");
 
 string DirectNegativeCostFunction::info() const { return "direct_negative_cost_function"; }
 
@@ -1710,7 +1710,7 @@ void QuadraticUtilityCostFunction::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(QuadraticUtilityCostFunction);
+PLEARN_IMPLEMENT_OBJECT(QuadraticUtilityCostFunction, "ONE LINE DESCR", "NO HELP");
 
 string PricingTransactionPairProfitFunction::info() const { return "pricing_pair_profit"; }
 
@@ -1766,7 +1766,7 @@ void PricingTransactionPairProfitFunction::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(PricingTransactionPairProfitFunction);
+PLEARN_IMPLEMENT_OBJECT(PricingTransactionPairProfitFunction, "ONE LINE DESCR", "NO HELP");
 
 
 // *****************

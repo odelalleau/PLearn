@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: TransposeProductVariable.cc,v 1.2 2003/01/08 21:33:07 ducharme Exp $
+   * $Id: TransposeProductVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,26 +58,16 @@ TransposeProductVariable::TransposeProductVariable(Variable* m1, Variable* m2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(TransposeProductVariable);
+PLEARN_IMPLEMENT_OBJECT(TransposeProductVariable, "ONE LINE DESCR", "NO HELP");
 
 void TransposeProductVariable::recomputeSize(int& l, int& w) const
 { l=input1->width(); w=input2->width(); }
 
 
-void TransposeProductVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "TransposeProductVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "TransposeProductVariable");
-}
 
 
-void TransposeProductVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "TransposeProductVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "TransposeProductVariable");
-}
+
+
 
 
 void TransposeProductVariable::fprop()

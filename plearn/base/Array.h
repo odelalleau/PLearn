@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.11 2003/03/19 22:49:16 jkeable Exp $
+   * $Id: Array.h,v 1.12 2003/08/13 08:13:16 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -192,34 +192,6 @@ class Array: public TVec<T>
     }
 */
 
-/*
-   void deepWrite(ostream& out, DeepWriteSet& already_saved) const
-    {
-      writeHeader(out, "Array");
-      PLearn::deepWrite(out, already_saved, array_size);
-      PLearn::deepWrite(out, already_saved, array_capacity);
-      out << "\n";
-      for(int i=0; i<array_size; i++)
-        PLearn::deepWrite(out, already_saved, array[i]);
-      writeFooter(out, "Array");
-    }
-
-    void deepRead(istream& in, DeepReadMap& old2new)
-    {
-      readHeader(in, "Array");
-      PLearn::deepRead(in, old2new, array_size);
-      PLearn::deepRead(in, old2new, array_capacity);
-      for(int i=0; i<array_size; i++)
-        PLearn::deepRead(in, old2new, array[i]);
-      readFooter(in, "Array");
-    }
-
-    void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
-    {
-      for (int i=0; i<length_; i++)
-        deepCopyField(array[i], copies);
-    }
-*/
 };
 
 
@@ -234,14 +206,6 @@ inline PStream & operator<<(PStream &out, const Array<T> &a)
 template<class T>
 ostream& operator<<(ostream& out, const Array<T>& a)
 { a.print(out); return out; }
-
-template <class T>
-void deepWrite(ostream& out, DeepWriteSet& already_saved, const Array<T>& a)
-{ a.deepWrite(out, already_saved); }
-
-template <class T>
-void deepRead(istream& in, DeepReadMap& old2new, Array<T>& a)
-{ a.deepRead(in, old2new); }
 
 template <class T>
 inline void deepCopyField(Array<T>& field, CopiesMap& copies)

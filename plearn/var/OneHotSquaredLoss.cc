@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotSquaredLoss.cc,v 1.2 2003/01/08 21:32:53 ducharme Exp $
+   * $Id: OneHotSquaredLoss.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,7 +49,7 @@ using namespace std;
 
 /** OneHotSquaredLoss **/
 
-IMPLEMENT_NAME_AND_DEEPCOPY(OneHotSquaredLoss);
+PLEARN_IMPLEMENT_OBJECT(OneHotSquaredLoss, "ONE LINE DESCR", "NO HELP");
 
 void OneHotSquaredLoss::recomputeSize(int& l, int& w) const
 { l=1, w=1; }

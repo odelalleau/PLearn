@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.h,v 1.4 2003/06/03 14:52:09 plearner Exp $ 
+   * $Id: Splitter.h,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Splitter.h */
@@ -77,7 +77,7 @@ public:
   // * Constructors *
   // ****************
 
-  DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(Splitter);
+  PLEARN_DECLARE_ABSTRACT_OBJECT(Splitter);
 
   Splitter() {};
 

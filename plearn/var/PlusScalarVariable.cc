@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PlusScalarVariable.cc,v 1.2 2003/01/08 21:32:56 ducharme Exp $
+   * $Id: PlusScalarVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,27 +57,17 @@ PlusScalarVariable::PlusScalarVariable(Variable* input1, Variable* input2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(PlusScalarVariable);
+PLEARN_IMPLEMENT_OBJECT(PlusScalarVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void PlusScalarVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input1->width(); }
 
 
-void PlusScalarVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "PlusScalarVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "PlusScalarVariable");
-}
 
 
-void PlusScalarVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "PlusScalarVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "PlusScalarVariable");
-}
+
+
 
 void PlusScalarVariable::fprop()
 {

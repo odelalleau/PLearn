@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LogAddVariable.cc,v 1.2 2003/01/08 21:32:32 ducharme Exp $
+   * $Id: LogAddVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,27 +58,17 @@ LogAddVariable::LogAddVariable(Variable* input1, Variable* input2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(LogAddVariable);
+PLEARN_IMPLEMENT_OBJECT(LogAddVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void LogAddVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input1->width(); }
 
 
-void LogAddVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "LogAddVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "LogAddVariable");
-}
 
 
-void LogAddVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "LogAddVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "LogAddVariable");
-}
+
+
 
 
 void LogAddVariable::fprop()

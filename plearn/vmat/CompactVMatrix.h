@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: CompactVMatrix.h,v 1.2 2003/08/13 08:13:45 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -178,7 +178,7 @@ class CompactVMatrix : public RowBufferedVMatrix
     //!  reverse of write, can be used by calling load(string)
     virtual void oldread(istream& in);
 
-    DECLARE_NAME_AND_DEEPCOPY(CompactVMatrix);
+    PLEARN_DECLARE_OBJECT(CompactVMatrix);
     void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
     virtual void build() {}  //!<  nothing to do...
 

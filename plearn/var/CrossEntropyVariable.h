@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: CrossEntropyVariable.h,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: CrossEntropyVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,7 +59,7 @@ protected:
 
 public:
   CrossEntropyVariable(Variable* netout, Variable* target);
-  DECLARE_NAME_AND_DEEPCOPY(CrossEntropyVariable);
+  PLEARN_DECLARE_OBJECT(CrossEntropyVariable);
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.cc,v 1.4 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: LocallyWeightedDistribution.cc,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.cc */
@@ -47,7 +47,7 @@ LocallyWeightedDistribution::LocallyWeightedDistribution()
   {}
 
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(LocallyWeightedDistribution);
+  PLEARN_IMPLEMENT_OBJECT(LocallyWeightedDistribution, "ONE LINE DESCR", "NO HELP");
 
   void LocallyWeightedDistribution::declareOptions(OptionList& ol)
   {

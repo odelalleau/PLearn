@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.h,v 1.2 2003/05/15 16:10:49 tihocan Exp $
+   * $Id: SelectColumnsVMatrix.h,v 1.3 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 
@@ -75,7 +75,7 @@ public:
   //! Here the indices will be copied locally into an integer vector
   SelectColumnsVMatrix(VMat the_distr, Vec the_indices);
 
-  PLEARN_DECLARE_OBJECT_METHODS(SelectColumnsVMatrix, "SelectColumnsVMatrix", VMatrix);
+  PLEARN_DECLARE_OBJECT(SelectColumnsVMatrix);
 
   static void declareOptions(OptionList &ol);
   static string help();

@@ -72,7 +72,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(ConditionalGaussianDistribution);
+  PLEARN_DECLARE_OBJECT(ConditionalGaussianDistribution);
 
 
   //! trains the model

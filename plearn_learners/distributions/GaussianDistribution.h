@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.h,v 1.3 2003/05/14 21:15:32 jkeable Exp $
+   * $Id: GaussianDistribution.h,v 1.4 2003/08/13 08:13:46 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -199,7 +199,7 @@ using namespace std;
   public:
     GaussianDistribution();
 
-    DECLARE_NAME_AND_DEEPCOPY(GaussianDistribution);
+    PLEARN_DECLARE_OBJECT(GaussianDistribution);
     void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void train(VMat training_set);

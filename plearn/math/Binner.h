@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.h,v 1.3 2003/05/07 05:39:16 plearner Exp $ 
+   * $Id: Binner.h,v 1.4 2003/08/13 08:13:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Binner.h */
@@ -109,7 +109,7 @@ public:
   virtual PP<RealMapping> getBinning(VMat v) const;
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(Binner);
+  PLEARN_DECLARE_OBJECT(Binner);
 
 };
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PlusConstantVariable.cc,v 1.2 2003/01/08 21:32:55 ducharme Exp $
+   * $Id: PlusConstantVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,28 +57,16 @@ PlusConstantVariable::PlusConstantVariable(Variable* input, real c)
 {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(PlusConstantVariable);
+PLEARN_IMPLEMENT_OBJECT(PlusConstantVariable, "ONE LINE DESCR", "NO HELP");
 
 void PlusConstantVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void PlusConstantVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "PlusConstantVariable");
-  inherited::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, cst);
-  readFooter(in, "PlusConstantVariable");
-}
 
 
-void PlusConstantVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "PlusConstantVariable");
-  inherited::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, cst);
-  writeFooter(out, "PlusConstantVariable");
-}
+
+
 
 
 void PlusConstantVariable::fprop()

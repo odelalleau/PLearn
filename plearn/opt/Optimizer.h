@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.13 2003/05/22 18:26:45 tihocan Exp $
+   * $Id: Optimizer.h,v 1.14 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -132,7 +132,7 @@ using namespace std;
       virtual void setVarOption(const string& optionname, Var value);
       virtual void setVMatOption(const string& optionname, VMat value);
       
-      DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(Optimizer);
+      PLEARN_DECLARE_ABSTRACT_OBJECT(Optimizer);
       virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
       
       void addMeasurer(Measurer& measurer);

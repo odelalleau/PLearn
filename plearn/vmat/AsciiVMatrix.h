@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.h,v 1.5 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: AsciiVMatrix.h,v 1.6 2003/08/13 08:13:45 plearner Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.h */
@@ -111,7 +111,7 @@ public:
   virtual ~AsciiVMatrix();
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(AsciiVMatrix);
+  PLEARN_DECLARE_OBJECT(AsciiVMatrix);
 
 };
 

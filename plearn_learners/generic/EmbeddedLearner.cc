@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.7 2003/06/30 17:32:30 plearner Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.8 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -46,14 +46,16 @@ using namespace std;
 
 // ###### EmbeddedLearner ######################################################
 
-IMPLEMENT_NAME_AND_DEEPCOPY(EmbeddedLearner);
+PLEARN_IMPLEMENT_OBJECT(EmbeddedLearner, "ONE LINE DESCR", "NO HELP");
 
 EmbeddedLearner::EmbeddedLearner()
 {}
 
 void EmbeddedLearner::declareOptions(OptionList& ol)
 {
-    inherited::declareOptions(ol);
+  declareOption(ol, "learner", &EmbeddedLearner::learner_, OptionBase::buildoption,
+                "The embedded learner");
+  inherited::declareOptions(ol);
 }
 
 string EmbeddedLearner::help()

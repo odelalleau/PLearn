@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ArgminOfVariable.cc,v 1.2 2003/01/08 21:32:02 ducharme Exp $
+   * $Id: ArgminOfVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,7 +64,7 @@ ArgminOfVariable::ArgminOfVariable(Variable* the_v,
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ArgminOfVariable);
+PLEARN_IMPLEMENT_OBJECT(ArgminOfVariable, "ONE LINE DESCR", "NO HELP");
 
 void ArgminOfVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }

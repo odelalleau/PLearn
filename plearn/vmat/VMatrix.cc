@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.23 2003/08/05 21:41:46 chapados Exp $
+* $Id: VMatrix.cc,v 1.24 2003/08/13 08:13:46 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -70,7 +70,7 @@ using namespace std;
 
 /** VMatrix **/
 
-IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(VMatrix);
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(VMatrix, "ONE LINE DESCR", "NO HELP");
 
 VMatrix::VMatrix()
   :length_(-1), width_(-1), mtime_(0), 
@@ -100,6 +100,7 @@ void VMatrix::declareOptions(OptionList & ol)
                 "size of target part (-1 if variable or unspecified, 0 if no target)");
   declareOption(ol, "weightsize", &VMatrix::weightsize_, OptionBase::buildoption, 
                 "size of weights (-1 if unspecified, 0 if no weight, 1 for sample weight, >1 currently not supported (include it is recommended to include additional info in target. weight is really reserved for a per sample weight).");
+  inherited::declareOptions(ol);
 }
 
 void VMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)

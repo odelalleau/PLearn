@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: RowAtPositionVariable.cc,v 1.2 2003/01/08 21:32:58 ducharme Exp $
+   * $Id: RowAtPositionVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,27 +59,17 @@ RowAtPositionVariable::RowAtPositionVariable(Variable* input1, Variable* input2,
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(RowAtPositionVariable);
+PLEARN_IMPLEMENT_OBJECT(RowAtPositionVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void RowAtPositionVariable::recomputeSize(int& l, int& w) const
 { l=length_; w=input1->width(); }
 
 
-void RowAtPositionVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "RowAtPositionVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "RowAtPositionVariable");
-}
 
 
-void RowAtPositionVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "RowAtPositionVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "RowAtPositionVariable");
-}
+
+
 
 
 

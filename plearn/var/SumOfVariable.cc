@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOfVariable.cc,v 1.3 2003/05/26 04:12:43 plearner Exp $
+   * $Id: SumOfVariable.cc,v 1.4 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -67,7 +67,7 @@ SumOfVariable::SumOfVariable(VMat the_distr, Func the_f, int the_nsamples)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SumOfVariable);
+PLEARN_IMPLEMENT_OBJECT(SumOfVariable, "ONE LINE DESCR", "NO HELP");
 
 void SumOfVariable::recomputeSize(int& l, int& w) const
 { l=f->outputs[0]->length(); w=f->outputs[0]->width(); }

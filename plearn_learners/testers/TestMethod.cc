@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: TestMethod.cc,v 1.1 2003/07/04 18:48:59 plearner Exp $
+   * $Id: TestMethod.cc,v 1.2 2003/08/13 08:13:47 plearner Exp $
    * AUTHORS: Pascal Vincent & Frederic Morin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -46,7 +46,7 @@ namespace PLearn <%
 
 // ###### TestMethod ##########################################################
 
-IMPLEMENT_NAME_AND_DEEPCOPY(TestMethod);
+PLEARN_IMPLEMENT_OBJECT(TestMethod, "ONE LINE DESCR", "NO HELP");
 
 
 /*

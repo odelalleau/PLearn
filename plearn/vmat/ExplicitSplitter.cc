@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExplicitSplitter.cc,v 1.4 2003/08/04 19:36:50 yoshua Exp $ 
+   * $Id: ExplicitSplitter.cc,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ExplicitSplitter.cc */
@@ -48,7 +48,7 @@ ExplicitSplitter::ExplicitSplitter()
 {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ExplicitSplitter);
+PLEARN_IMPLEMENT_OBJECT(ExplicitSplitter, "ONE LINE DESCR", "NO HELP");
 
 void ExplicitSplitter::declareOptions(OptionList& ol)
 {

@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.cc,v 1.5 2003/06/03 14:52:09 plearner Exp $ 
+   * $Id: TrainTestSplitter.cc,v 1.6 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file TrainTestSplitter.cc */
@@ -50,7 +50,7 @@ TrainTestSplitter::TrainTestSplitter(real the_test_fraction)
   : test_fraction(the_test_fraction)
 {};
 
-IMPLEMENT_NAME_AND_DEEPCOPY(TrainTestSplitter);
+PLEARN_IMPLEMENT_OBJECT(TrainTestSplitter, "ONE LINE DESCR", "NO HELP");
 
 void TrainTestSplitter::declareOptions(OptionList& ol)
 {

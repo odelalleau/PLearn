@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.cc,v 1.10 2003/06/03 14:52:11 plearner Exp $ 
+   * $Id: Experiment.cc,v 1.11 2003/08/13 08:13:47 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.cc */
@@ -50,7 +50,7 @@ Experiment::Experiment()
    save_test_outputs(false), save_test_costs(false)
   {}
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(Experiment);
+  PLEARN_IMPLEMENT_OBJECT(Experiment, "ONE LINE DESCR", "NO HELP");
 
   void Experiment::declareOptions(OptionList& ol)
   {
@@ -114,8 +114,8 @@ void Experiment::run()
       if(!force_mkdir(expdir))
         PLERROR("Could not create experiment directory %s", expdir.c_str());
 
-      // Save this experiment description in the expdir (buildoptions only)
-      PLearn::save(append_slash(expdir)+"experiment.psave", *this, OptionBase::buildoption);
+      // Save this experiment description in the expdir
+      PLearn::save(append_slash(expdir)+"experiment.psave", *this);
     }
 
   int nsplits = splitter->nsplits();

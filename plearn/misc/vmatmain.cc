@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.4 2002/11/30 04:27:33 plearner Exp $
+   * $Id: vmatmain.cc,v 1.5 2003/08/13 08:13:17 plearner Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -582,6 +582,9 @@ int vmatmain(int argc, char** argv)
       string dbname = argv[2];
       VMat vm = getDataSet(dbname);
       cout<<vm.length()<<" x "<<vm.width()<<endl;
+      cout << "inputsize: " << vm->inputsize() << endl;
+      cout << "targetsize: " << vm->targetsize() << endl;
+      cout << "weightsize: " << vm->weightsize() << endl;
       VVMatrix * vvm = dynamic_cast<VVMatrix*>((VMatrix*)vm);
       if(vvm!=NULL)
       {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftmaxVariable.cc,v 1.2 2003/01/08 21:33:00 ducharme Exp $
+   * $Id: SoftmaxVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,26 +52,16 @@ SoftmaxVariable::SoftmaxVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SoftmaxVariable);
+PLEARN_IMPLEMENT_OBJECT(SoftmaxVariable, "ONE LINE DESCR", "NO HELP");
 
 void SoftmaxVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void SoftmaxVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "SoftmaxVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "SoftmaxVariable");
-}
 
 
-void SoftmaxVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "SoftmaxVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "SoftmaxVariable");
-}
+
+
 
 
 void SoftmaxVariable::fprop()

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IsSmallerVariable.cc,v 1.2 2003/01/08 21:32:31 ducharme Exp $
+   * $Id: IsSmallerVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,26 +56,16 @@ IsSmallerVariable::IsSmallerVariable(Variable* input1, Variable* input2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(IsSmallerVariable);
+PLEARN_IMPLEMENT_OBJECT(IsSmallerVariable, "ONE LINE DESCR", "NO HELP");
 
 void IsSmallerVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input1->width(); }
 
 
-void IsSmallerVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "IsSmallerVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "IsSmallerVariable");
-}
 
 
-void IsSmallerVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "IsSmallerVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "IsSmallerVariable");
-}
+
+
 
 
 void IsSmallerVariable::fprop()

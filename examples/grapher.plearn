@@ -1,0 +1,130 @@
+Grapher( 
+basename = "graph";
+
+# VMat: The training set to train the learner on
+trainset = AutoVMatrix(specification="data2d.amat", inputsize=2, targetsize=1, weightsize=0);
+
+# PP< PLearner >: The learner to train/test
+learner = NNet( 
+# int:     number of hidden units in first hidden layer (0 means no hidden layer)
+nhidden = 5 ;
+
+# int:     number of hidden units in second hidden layer (0 means no hidden layer)
+nhidden2 = 0  ;
+
+# int:     number of output units. This gives this learner its outputsize.
+#     It is typically of the same dimensionality as the target for regression problems 
+#     But for classification problems where target is just the class number, noutputs is 
+#     usually of dimensionality number of classes (as we want to output a score or probability 
+#     vector, one per class
+noutputs = 2;
+
+# double:     global weight decay for all layers
+weight_decay = 1e-5 ;
+
+# double:     global bias decay for all layers
+bias_decay = 0  ;
+
+# double:     Additional weight decay for the first hidden layer.  Is added to weight_decay.
+layer1_weight_decay = 0  ;
+
+# double:     Additional bias decay for the first hidden layer.  Is added to bias_decay.
+layer1_bias_decay = 0  ;
+
+# double:     Additional weight decay for the second hidden layer.  Is added to weight_decay.
+layer2_weight_decay = 0  ;
+
+# double:     Additional bias decay for the second hidden layer.  Is added to bias_decay.
+layer2_bias_decay = 0  ;
+
+# double:     Additional weight decay for the output layer.  Is added to 'weight_decay'.
+output_layer_weight_decay = 0  ;
+
+# double:     Additional bias decay for the output layer.  Is added to 'bias_decay'.
+output_layer_bias_decay = 0  ;
+
+# double:     Additional weight decay for the direct in-to-out layer.  Is added to 'weight_decay'.
+direct_in_to_out_weight_decay = 0  ;
+
+# bool:     should we include direct input to output connections?
+direct_in_to_out = 0  ;
+
+# string:     what transfer function to use for ouput layer? 
+#     one of: tanh, sigmoid, exp, softmax 
+#     an empty string means no output transfer function 
+output_transfer_func = "log_softmax"  ;
+
+# Array< string >:     a list of cost functions to use
+#     in the form "[ cf1; cf2; cf3; ... ]" where each function is one of: 
+#       mse (for regression)
+#       mse_onehot (for classification)
+#       NLL (negative log likelihood -log(p[c]) for classification) 
+#       class_error (classification error) 
+#     The first function of the list will be used as 
+#     the objective function to optimize 
+#     (possibly with an added weight decay penalty) 
+cost_funcs = [ "NLL" ]  ;
+
+# PP< Optimizer >:     specify the optimizer to use
+optimizer = GradientOptimizer( 
+# double:     the initial learning rate
+start_learning_rate = 0.05  ;
+
+# double:     the learning rate decrease constant 
+decrease_constant = 0  ;
+);
+
+# int:     how many samples to use to estimate the avergage gradient before updating the weights
+#     0 is equivalent to specifying training_set->length() 
+batch_size = 1  ;
+
+# string: Path of the directory associated with this learner, in which
+# it should save any file it wishes to create. 
+# The directory will be created if it does not already exist.
+# If expdir is the empty string (the default), then the learner 
+# should not create *any* file. Note that, anyway, most file creation and 
+# reporting are handled at the level of the PTester class rather than 
+# at the learner's. 
+expdir = ""  ;
+
+# long: The initial seed for the random number generator used to initialize this learner's parameters
+# as typically done in the forget() method... 
+# With a given seed, forget() should always initialize the parameters to the same values.
+seed = 0  ;
+
+# int: The stage until which train() should train this learner and return.
+# The meaning of 'stage' is learner-dependent, but learner's whose 
+# training is incremental (such as involving incremental optimization), 
+# it is typically synonym with the number of 'epochs', i.e. the number 
+# of passages of the optimization process through the whole training set, 
+# since the last fresh initialisation.
+nstages = 10000;
+
+# bool: should progress in learning and testing be reported in a ProgressBar.
+report_progress = 1  ;
+
+# int: Level of verbosity. If 0 should not write anything on cerr. 
+# If >0 may write some info on the steps performed along the way.
+# The level of details written should depend on this value.
+verbosity = 1  ;
+);
+
+# TVec< pair< double, double > >: A vector of low:high pairs with as many dimensions as the input space
+# ex for 2D: [ -10:10 -3:4 ] 
+# If empty, it will be automatically inferred from the range of the
+# trainset inputs (with an extra 10%)
+gridrange = [];
+
+# TVec< int >: A vector of integers giving the number of sample coordinates
+# for each dimension of the grid. Ex for 2D: [ 100 100 ]
+griddim = [200, 200];
+
+radius = -0.007
+
+# bool: Set this to true if you want to generate black and white eps
+bw = 0;
+
+# string: (Optionally) save trained learner in this file (.psave)
+save_learner_as = ""  ;
+
+);

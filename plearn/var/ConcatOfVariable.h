@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatOfVariable.h,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: ConcatOfVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,7 +66,7 @@ protected:
 
 public:
     ConcatOfVariable(VMat the_distr, Func the_f);
-  DECLARE_NAME_AND_DEEPCOPY(ConcatOfVariable);
+  PLEARN_DECLARE_OBJECT(ConcatOfVariable);
   virtual void recomputeSize(int& l, int& w) const;
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual void fprop();

@@ -14,7 +14,7 @@ DERIVEDCLASS::DERIVEDCLASS()
   }
 
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", Binner);
+PLEARN_IMPLEMENT_OBJECT(DERIVEDCLASS, "ONE LINE DESCR", "NO HELP");
 
   void DERIVEDCLASS::declareOptions(OptionList& ol)
   {
@@ -30,7 +30,7 @@ PLEARN_IMPLEMENT_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", Binner);
     // ...
 
     // Now call the parent class' declareOptions
-    parentclass::declareOptions(ol);
+    inherited::declareOptions(ol);
   }
 
   string DERIVEDCLASS::help()
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", Binner);
   // ### Nothing to add here, simply calls build_
   void DERIVEDCLASS::build()
   {
-    parentclass::build();
+    inherited::build();
     build_();
   }
 

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.32 2003/08/06 15:23:07 dorionc Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.33 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -224,7 +224,7 @@ There are various methods available through the options for both steps 1 and 2.\
 //
 // Implement name and deepCopy
 //
-IMPLEMENT_NAME_AND_DEEPCOPY(ConjGradientOptimizer);
+PLEARN_IMPLEMENT_OBJECT(ConjGradientOptimizer, "ONE LINE DESCR", "NO HELP");
 
 /******************************
  * MAIN METHODS AND FUNCTIONS *

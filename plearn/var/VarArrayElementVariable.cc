@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VarArrayElementVariable.cc,v 1.2 2003/01/08 21:33:10 ducharme Exp $
+   * $Id: VarArrayElementVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,7 +63,7 @@ VarArrayElementVariable(VarArray& input1, const Var& input2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(VarArrayElementVariable);
+PLEARN_IMPLEMENT_OBJECT(VarArrayElementVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void VarArrayElementVariable::recomputeSize(int& l, int& w) const

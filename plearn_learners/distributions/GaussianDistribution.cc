@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.cc,v 1.3 2003/05/20 15:42:12 plearner Exp $
+   * $Id: GaussianDistribution.cc,v 1.4 2003/08/13 08:13:46 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,7 +52,7 @@ using namespace std;
 
 #define ZEROGAMMA
 
-IMPLEMENT_NAME_AND_DEEPCOPY(GaussianDistribution);
+PLEARN_IMPLEMENT_OBJECT(GaussianDistribution, "ONE LINE DESCR", "NO HELP");
 
 void GaussianDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {

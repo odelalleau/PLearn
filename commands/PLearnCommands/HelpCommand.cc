@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HelpCommand.cc,v 1.3 2003/05/21 09:53:50 plearner Exp $ 
+   * $Id: HelpCommand.cc,v 1.4 2003/08/13 08:13:16 plearner Exp $ 
    ******************************************************* */
 
 /*! \file HelpCommand.cc */
@@ -68,7 +68,7 @@ void HelpCommand::helpScripts()
     "You can run plearn with the name of a plearn script file as argument\n"
     "A plearn script file should have a name ending in .plearn\n\n"
     "A plearn script must contain at least one runnable PLearn object\n"
-    "Typical runnable PLearn objects are 'Experiment' and 'ComparisonExperiment'\n"
+    "A typical runnable PLearn object is 'PTester' \n"
     "\n"
     "You can type '" + prgname() + " help xxx' to get a description and the list of build options\n"
     "for any PLearn object xxx linked with the program\n"

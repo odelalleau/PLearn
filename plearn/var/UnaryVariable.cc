@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryVariable.cc,v 1.12 2003/01/08 21:33:08 ducharme Exp $
+   * $Id: UnaryVariable.cc,v 1.13 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,7 +53,7 @@ UnaryVariable::UnaryVariable(Variable* v, int thelength, int thewidth)
 {}
 
 
-IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(UnaryVariable);
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(UnaryVariable, "ONE LINE DESCR", "NO HELP");
 
 void UnaryVariable::declareOptions(OptionList& ol)
 {
@@ -63,22 +63,10 @@ void UnaryVariable::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-void UnaryVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "UnaryVariable");
-  Variable::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, input);
-  readFooter(in, "UnaryVariable");
-}
 
 
-void UnaryVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "UnaryVariable");
-  Variable::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, input);
-  writeFooter(out, "UnaryVariable");
-}
+
+
 
 
 void UnaryVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ArgmaxVariable.cc,v 1.2 2003/01/08 21:32:01 ducharme Exp $
+   * $Id: ArgmaxVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,26 +52,16 @@ ArgmaxVariable::ArgmaxVariable(Variable* input)
   :UnaryVariable(input, input->isVec()?1:2, 1) {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ArgmaxVariable);
+PLEARN_IMPLEMENT_OBJECT(ArgmaxVariable, "ONE LINE DESCR", "NO HELP");
 
 void ArgmaxVariable::recomputeSize(int& l, int& w) const
 { l=input->isVec()?1:2; w=1; }
 
 
-void ArgmaxVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "ArgmaxVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "ArgmaxVariable");
-}
 
 
-void ArgmaxVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "ArgmaxVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "ArgmaxVariable");
-}
+
+
 
 
 void ArgmaxVariable::fprop()

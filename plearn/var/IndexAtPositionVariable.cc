@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IndexAtPositionVariable.cc,v 1.2 2003/01/08 21:32:26 ducharme Exp $
+   * $Id: IndexAtPositionVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,27 +59,17 @@ IndexAtPositionVariable::IndexAtPositionVariable(Variable* input1, Variable* inp
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(IndexAtPositionVariable);
+PLEARN_IMPLEMENT_OBJECT(IndexAtPositionVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void IndexAtPositionVariable::recomputeSize(int& l, int& w) const
 { l=length_; w=width_; }
 
 
-void IndexAtPositionVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "IndexAtPositionVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "IndexAtPositionVariable");
-}
 
 
-void IndexAtPositionVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "IndexAtPositionVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "IndexAtPositionVariable");
-}
+
+
 
 
 void IndexAtPositionVariable::fprop()

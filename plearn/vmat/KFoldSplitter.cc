@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.cc,v 1.5 2003/06/03 14:52:09 plearner Exp $ 
+   * $Id: KFoldSplitter.cc,v 1.6 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
@@ -49,7 +49,7 @@ KFoldSplitter::KFoldSplitter(int k)
     : K(k)
 {};
 
-IMPLEMENT_NAME_AND_DEEPCOPY(KFoldSplitter);
+PLEARN_IMPLEMENT_OBJECT(KFoldSplitter, "ONE LINE DESCR", "NO HELP");
 
 void KFoldSplitter::declareOptions(OptionList& ol)
 {

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: JoinVMatrix.cc,v 1.2 2003/03/19 23:15:24 jkeable Exp $
+   * $Id: JoinVMatrix.cc,v 1.3 2003/08/13 08:13:46 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -43,7 +43,7 @@ namespace PLearn <%
 using namespace std;
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(JoinVMatrix);
+PLEARN_IMPLEMENT_OBJECT(JoinVMatrix, "ONE LINE DESCR", "NO HELP");
 
 JoinVMatrix::JoinVMatrix(VMat mas,VMat sla,TVec<int> mi,TVec<int> si)
   :RowBufferedVMatrix(mas.length(),mas.width()),master(mas),slave(sla),master_idx(mi),slave_idx(si)

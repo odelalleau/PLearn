@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: RowBufferedVMatrix.h,v 1.2 2003/08/13 08:13:46 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -74,7 +74,7 @@ public:
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
 
-  DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(RowBufferedVMatrix);
+  PLEARN_DECLARE_ABSTRACT_OBJECT(RowBufferedVMatrix);
 };
 
 %> // end of namespace PLearn

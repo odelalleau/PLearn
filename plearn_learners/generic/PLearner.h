@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.12 2003/08/08 20:45:54 yoshua Exp $
+   * $Id: PLearner.h,v 1.13 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 
@@ -48,10 +48,11 @@
 #ifndef PLearner_INC
 #define PLearner_INC
 
-#include "Kernel.h"
-#include "VecStatsCollector.h"
-#include "VVec.h"
+#include "Object.h"
+#include "VMat.h"
 #include "Splitter.h"
+#include "TMat.h"
+#include "VecStatsCollector.h"
 
 namespace PLearn <%
 using namespace std;
@@ -118,7 +119,8 @@ using namespace std;
 
     //! Declares the train_set
     //! Then calls build() and forget() if necessary
-    void setTrainingSet(VMat training_set, bool call_forget=true);
+    //! Note: You shouldn't have to overload this in subclasses, except in exotic cases)
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
     //! Returns the current train_set
     inline VMat getTrainingSet() const { return train_set; }
@@ -127,6 +129,10 @@ using namespace std;
     //! during training.
     void setTrainStatsCollector(PP<VecStatsCollector> statscol)
     { train_stats = statscol; }
+
+    //! Returns the train stats collector
+    inline PP<VecStatsCollector> getTrainStatsCollector()
+    { return train_stats; }
 
     //! The experiment directory is the directory in which files 
     //! related to this model are to be saved.     
@@ -242,7 +248,8 @@ using namespace std;
 
     //! *** SUBCLASS WRITING: ***
     //! This should be defined in subclasses to compute the weighted costs from
-    //! already computed output. 
+    //! already computed output. The costs should correspond to the cost names 
+    //! returned by getTestCostNames()
     //! NOTE: In exotic cases, the cost may also depend on some info in the input, 
     //! that's why the method also gets so see it.
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
@@ -260,6 +267,11 @@ using namespace std;
     virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
     
   
+    //! Computes outputs for the input part of testset.
+    //! testset is not required to contain a target part.
+    //! The default version repeatedly calls computeOutput
+    virtual void use(VMat testset, VMat outputs) const;
+
     //! Performs test on testset, updating test cost statistics,
     //! and optionally filling testoutputs and testcosts
     //! The default version repeatedly calls computeOutputAndCosts or computeCostsOnly
@@ -291,12 +303,6 @@ using namespace std;
     //! calls PLERROR (throws a PLearnException) if requested cost is not found.
     int getTrainCostIndex(const string& costname) const;
 
-    //! The run() method simply calls train() and prints the final mean train cost stats
-    //! Thus if you put a PLearner alone in a .plearn script, that's what it will do.
-    //! Note that this is seldom used: you'll probably rather want to run a PTester
-    //! with a PLearner inside.
-    virtual void run();
-
   protected:
     static void declareOptions(OptionList& ol);
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
@@ -304,7 +310,7 @@ using namespace std;
   public:
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-    DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(PLearner);
+    PLEARN_DECLARE_ABSTRACT_OBJECT(PLearner);
   };
 
   DECLARE_OBJECT_PTR(PLearner);

@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: CompactVMatrixGaussianKernel.cc,v 1.1 2002/10/03 07:35:27 plearner Exp $
+   * $Id: CompactVMatrixGaussianKernel.cc,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@ using namespace std;
 
 // ** CompactVMatrixGaussianKernel **
 
-IMPLEMENT_NAME_AND_DEEPCOPY(CompactVMatrixGaussianKernel);
+PLEARN_IMPLEMENT_OBJECT(CompactVMatrixGaussianKernel, "ONE LINE DESCR", "NO HELP");
 real CompactVMatrixGaussianKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
   // return exp(-powdistance(x1, x2, 2.0)/(sigma*sigma)); 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SquareVariable.cc,v 1.2 2003/01/08 21:33:01 ducharme Exp $
+   * $Id: SquareVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,26 +53,16 @@ SquareVariable::SquareVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SquareVariable);
+PLEARN_IMPLEMENT_OBJECT(SquareVariable, "ONE LINE DESCR", "NO HELP");
 
 void SquareVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
 
 
-void SquareVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "SquareVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "SquareVariable");
-}
 
 
-void SquareVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "SquareVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "SquareVariable");
-}
+
+
 
 
 void SquareVariable::fprop()

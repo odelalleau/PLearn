@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenerateDecisionPlot.cc,v 1.4 2003/06/04 02:56:37 plearner Exp $ 
+   * $Id: GenerateDecisionPlot.cc,v 1.5 2003/08/13 08:13:47 plearner Exp $ 
    ******************************************************* */
 
 /*! \file GenerateDecisionPlot.cc */
@@ -467,7 +467,7 @@ GenerateDecisionPlot::GenerateDecisionPlot()
   {
   }
 
-  PLEARN_IMPLEMENT_OBJECT_METHODS(GenerateDecisionPlot, "GenerateDecisionPlot", Object);
+  PLEARN_IMPLEMENT_OBJECT(GenerateDecisionPlot, "ONE LINE DESCR", "NO HELP");
 
   void GenerateDecisionPlot::declareOptions(OptionList& ol)
   {

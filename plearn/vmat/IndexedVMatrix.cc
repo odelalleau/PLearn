@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: IndexedVMatrix.cc,v 1.2 2003/05/15 14:00:30 tihocan Exp $
+   * $Id: IndexedVMatrix.cc,v 1.3 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 #include "IndexedVMatrix.h"
@@ -41,7 +41,7 @@
 namespace PLearn <%
 using namespace std;
 
-PLEARN_IMPLEMENT_OBJECT_METHODS(IndexedVMatrix, "IndexedVMatrix", VMatrix);
+PLEARN_IMPLEMENT_OBJECT(IndexedVMatrix, "ONE LINE DESCR", "NO HELP");
 
 
 void IndexedVMatrix::declareOptions(OptionList& ol)

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateScalarVariable.cc,v 1.2 2003/01/08 21:32:20 ducharme Exp $
+   * $Id: DuplicateScalarVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,26 +57,16 @@ DuplicateScalarVariable::DuplicateScalarVariable(Variable* input, int thelength,
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(DuplicateScalarVariable);
+PLEARN_IMPLEMENT_OBJECT(DuplicateScalarVariable, "ONE LINE DESCR", "NO HELP");
 
 void DuplicateScalarVariable::recomputeSize(int& l, int& w) const
 { l=length_; w=width_; }
 
 
-void DuplicateScalarVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "DuplicateScalarVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "DuplicateScalarVariable");
-}
 
 
-void DuplicateScalarVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "DuplicateScalarVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "DuplicateScalarVariable");
-}
+
+
 
 
 void DuplicateScalarVariable::fprop()

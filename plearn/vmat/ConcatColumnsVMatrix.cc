@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.cc,v 1.3 2003/05/15 13:00:26 tihocan Exp $
+   * $Id: ConcatColumnsVMatrix.cc,v 1.4 2003/08/13 08:13:46 plearner Exp $
    ******************************************************* */
 
 #include "ConcatColumnsVMatrix.h"
@@ -45,7 +45,7 @@ using namespace std;
 
 /** ConcatColumnsVMatrix **/
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ConcatColumnsVMatrix);
+PLEARN_IMPLEMENT_OBJECT(ConcatColumnsVMatrix, "ONE LINE DESCR", "NO HELP");
 
 void ConcatColumnsVMatrix::declareOptions(OptionList &ol)
 {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumSquareVariable.cc,v 1.2 2003/01/08 21:33:04 ducharme Exp $
+   * $Id: SumSquareVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,26 +53,16 @@ SumSquareVariable::SumSquareVariable(Variable* input)
   :UnaryVariable(input, 1, 1) {}
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SumSquareVariable);
+PLEARN_IMPLEMENT_OBJECT(SumSquareVariable, "ONE LINE DESCR", "NO HELP");
 
 void SumSquareVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
 
 
-void SumSquareVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "SumSquareVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "SumSquareVariable");
-}
 
 
-void SumSquareVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "SumSquareVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "SumSquareVariable");
-}
+
+
 
 
 void SumSquareVariable::fprop()

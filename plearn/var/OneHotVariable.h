@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVariable.h,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: OneHotVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,10 +66,10 @@ protected:
 
 public:
   OneHotVariable(int thelength, Variable* index, real the_coldvalue, real the_hotvalue);
-  DECLARE_NAME_AND_DEEPCOPY(OneHotVariable);
+  PLEARN_DECLARE_OBJECT(OneHotVariable);
   virtual void recomputeSize(int& l, int& w) const;
-  virtual void deepRead(istream& in, DeepReadMap& old2new);
-  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
+  
+  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();

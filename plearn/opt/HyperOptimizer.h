@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: HyperOptimizer.h,v 1.3 2002/09/11 07:06:38 morinf Exp $
+   * $Id: HyperOptimizer.h,v 1.4 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -73,7 +73,7 @@ class HyperOptimizer: public Object
     PP<TestMethod> objective;
     HStrategy substrategy;
 
-    DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(HyperOptimizer);
+    PLEARN_DECLARE_ABSTRACT_OBJECT(HyperOptimizer);
     static void declareOptions(OptionList &ol);
 
  protected:
@@ -97,7 +97,7 @@ public:
 
     virtual void optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases);
 
-    DECLARE_NAME_AND_DEEPCOPY(HSetVal);
+    PLEARN_DECLARE_OBJECT(HSetVal);
     static void declareOptions(OptionList &ol);
 protected:
     string param;
@@ -121,7 +121,7 @@ public:
 
     virtual void optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases);
 
-    DECLARE_NAME_AND_DEEPCOPY(HTryAll);
+    PLEARN_DECLARE_OBJECT(HTryAll);
     static void declareOptions(OptionList &ol);
 
     string param;
@@ -145,7 +145,7 @@ public:
 
     virtual void optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases);
 
-    DECLARE_NAME_AND_DEEPCOPY(HCoordinateDescent);
+    PLEARN_DECLARE_OBJECT(HCoordinateDescent);
     static void declareOptions(OptionList &ol);
 protected:
     int max_iterations;
@@ -168,7 +168,7 @@ public:
 
     virtual void optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases);
 
-    DECLARE_NAME_AND_DEEPCOPY(HTryCombinations);
+    PLEARN_DECLARE_OBJECT(HTryCombinations);
     static void declareOptions(OptionList &ol);
 
     virtual void build(); // We put these here to perform error checking on the specifications

@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: TestMethod.h,v 1.1 2003/07/04 18:48:59 plearner Exp $
+   * $Id: TestMethod.h,v 1.2 2003/08/13 08:13:47 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -79,7 +79,7 @@ public:
   //! And returns a Vec with the computed statistics corresponding to the requested statnames 
   //  virtual Vec test(PP<Learner> learner, const VMat &dataset);
 
-  DECLARE_NAME_AND_DEEPCOPY(TestMethod);
+  PLEARN_DECLARE_OBJECT(TestMethod);
   static void declareOptions(OptionList &ol);
 
   virtual void build();

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SetOption.h,v 1.2 2003/05/07 05:39:16 plearner Exp $ 
+   * $Id: SetOption.h,v 1.3 2003/08/13 08:13:16 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SetOption.h */
@@ -108,7 +108,7 @@ public:
   void apply(PP<Object> obj, const map<string, string>& aliases);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(SetOption);
+  PLEARN_DECLARE_OBJECT(SetOption);
 
 };
 

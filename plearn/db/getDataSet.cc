@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.7 2003/07/04 18:48:59 plearner Exp $
+   * $Id: getDataSet.cc,v 1.8 2003/08/13 08:13:16 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -64,9 +64,9 @@ using namespace std;
 string getDataSetHelp()
 {
   return "Dataset specification can be one of: \n"
-    " - the path to a matrix file (.amat or .pmat or plain ascii) \n"
-    " - the path to a DiskVMatrix directory \n"
+    " - the path to a matrix file (or directory) .amat .pmat .vmat .dmat or plain ascii \n"
     " - the basename of an .sdb \n"
+    " - the object specification of a VMatrix subclass \n"
     " - the specification of a preprogrammed dataset i.e. one of the datasetnames below,\n"
     "   followed by the word 'train' or 'test', optionally followed by the word 'normalize'\n"
     + loadClassificationDatasetHelp() + "\n";
@@ -149,33 +149,53 @@ VMat getDataSet(const string& datasetstring, const string& alias)
             PLERROR("In getDataSet: datasetstring is a directory of unknown format"); 
         }
     }
-  else // it's another preprogrammed dataset
+  else // it's either a preprogrammed dataset, or a VMatrix object
   {
-    vector<string> dsetspec = split(datasetstring);
-    if(dsetspec.size()<2)
-      PLERROR("In getDataSet, expecting a specification of the form '<datasetname> <train|test|all> [normalize]. DatasetString = %s' ",datasetstring.c_str());
-    string datasetname = dsetspec[0];
-    bool normalizeinputs = false;
-    if(dsetspec.size()>=3)
-    {
-      if(dsetspec[2]=="normalize")
-        normalizeinputs = true;
-      else PLERROR("In getDataSet specification of predefined dataset contains 3 words, expecting 3rd one to be 'normalize', don't understand '%s'",dsetspec[2].c_str());
-    }
-    
-    int inputsize, nclasses;
-    VMat trainset, testset;
-    loadClassificationDataset(datasetname, inputsize, nclasses, trainset, testset, normalizeinputs);
-    if(dsetspec[1]=="train")
-      vm = trainset;
-    else if(dsetspec[1]=="test")
-      vm = testset;
-    else if(dsetspec[1]=="all")
-      vm = vconcat(trainset,testset);    
-    else 
-      PLERROR("In getDataSet specification of predefined dataset: expecting second word to be 'train' or 'test' or 'all' not %s ...",dsetspec[1].c_str());
-    vm->defineSizes(inputsize, 1);
-    vm->setMetaDataDir("/u/lisa/db/metadata/" + datasetstring);
+    try // try with a preprogrammed dataset
+      {
+        vector<string> dsetspec = split(datasetstring);
+        if(dsetspec.size()<2)
+          PLERROR("In getDataSet, expecting a specification of the form '<datasetname> <train|test|all> [normalize]. DatasetString = %s' ",datasetstring.c_str());
+        string datasetname = dsetspec[0];
+        bool normalizeinputs = false;
+        if(dsetspec.size()>=3)
+          {
+            if(dsetspec[2]=="normalize")
+              normalizeinputs = true;
+            else PLERROR("In getDataSet specification of predefined dataset contains 3 words, expecting 3rd one to be 'normalize', don't understand '%s'",dsetspec[2].c_str());
+          }
+        
+        int inputsize, nclasses;
+        VMat trainset, testset;
+        loadClassificationDataset(datasetname, inputsize, nclasses, trainset, testset, normalizeinputs);
+        if(dsetspec[1]=="train")
+          vm = trainset;
+        else if(dsetspec[1]=="test")
+          vm = testset;
+        else if(dsetspec[1]=="all")
+          vm = vconcat(trainset,testset);    
+        else 
+          PLERROR("In getDataSet specification of predefined dataset: expecting second word to be 'train' or 'test' or 'all' not %s ...",dsetspec[1].c_str());
+        vm->defineSizes(inputsize, 1);
+        vm->setMetaDataDir("/u/lisa/db/metadata/" + datasetstring);
+      }
+    catch(const PLearnError& e)  // OK, it wasn't a preprogrammed dataset, let's try with a VMatrix object
+      {
+        try 
+          { 
+            vm = dynamic_cast<VMatrix*>(newObject(datasetstring));
+            if(!vm)
+              PLERROR("Not a VMatrix object (dynamic cast failed)");
+          }
+        catch(const PLearnError& e2)
+          {
+            PLERROR("Error in getDataSet with specification: %s\n"
+                    "Specification is neither a valid file or directory \n"
+                    "Nor is it a preprogrammed dataset (attempt returned: %s)\n"
+                    "Nor could it be resolved to a VMatrix object (attempt returned: %s)\n",
+                    datasetstring.c_str(), e.message().c_str(), e2.message().c_str());
+          }
+      }
   }
   
   vm->loadAllStringMappings(); // let's comment this until bug fixed by Julien

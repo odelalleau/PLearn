@@ -12,7 +12,7 @@ DERIVEDCLASS::DERIVEDCLASS()
     // build_();
   }
 
-  PLEARN_IMPLEMENT_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", VMatrix);
+  PLEARN_IMPLEMENT_OBJECT(DERIVEDCLASS, "ONE LINE DESCR", "NO HELP");
 
   void DERIVEDCLASS::declareOptions(OptionList& ol)
   {
@@ -28,7 +28,7 @@ DERIVEDCLASS::DERIVEDCLASS()
     // ...
 
     // Now call the parent class' declareOptions
-    parentclass::declareOptions(ol);
+    inherited::declareOptions(ol);
   }
 
   string DERIVEDCLASS::help()
@@ -52,14 +52,14 @@ DERIVEDCLASS::DERIVEDCLASS()
   // ### Nothing to add here, simply calls build_
   void DERIVEDCLASS::build()
   {
-    parentclass::build();
+    inherited::build();
     build_();
   }
 
 
   void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   {
-    parentclass::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
     // ### Call deepCopyField on all "pointer-like" fields 
     // ### that you wish to be deepCopied rather than 

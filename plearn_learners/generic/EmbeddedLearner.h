@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.6 2003/06/30 17:32:30 plearner Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.7 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
@@ -50,10 +50,11 @@ using namespace std;
 
 class EmbeddedLearner: public PLearner
 {
-protected:
+public:
+
+  // build option
     PP<PLearner> learner_;
 
-public:
 
     typedef PLearner inherited;
 
@@ -89,7 +90,7 @@ public:
     virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
     //! Declares name and deepCopy methods
-    DECLARE_NAME_AND_DEEPCOPY(EmbeddedLearner);
+    PLEARN_DECLARE_OBJECT(EmbeddedLearner);
 
     // *******************
     // * PLearner methods *

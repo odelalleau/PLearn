@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VarColumnsVariable.cc,v 1.2 2003/01/08 21:33:10 ducharme Exp $
+   * $Id: VarColumnsVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,27 +55,17 @@ VarColumnsVariable::VarColumnsVariable(Variable *input1, Variable *input2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(VarColumnsVariable);
+PLEARN_IMPLEMENT_OBJECT(VarColumnsVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void VarColumnsVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input2->length(); }
 
 
-void VarColumnsVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "VarColumnsVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "VarColumnsVariable");
-}
 
 
-void VarColumnsVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "VarColumnsVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "VarColumnsVariable");
-}
+
+
 
 
 void VarColumnsVariable::fprop()

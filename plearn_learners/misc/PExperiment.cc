@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.cc,v 1.5 2003/06/03 20:54:33 ducharme Exp $ 
+   * $Id: PExperiment.cc,v 1.6 2003/08/13 08:13:47 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -81,7 +81,7 @@ PTester::PTester()
     provide_learner_expdir(false)
 {}
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(PTester);
+  PLEARN_IMPLEMENT_OBJECT(PTester, "ONE LINE DESCR", "NO HELP");
 
   void PTester::declareOptions(OptionList& ol)
   {

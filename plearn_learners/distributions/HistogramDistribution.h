@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.h,v 1.8 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: HistogramDistribution.h,v 1.9 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.h */
@@ -120,7 +120,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(HistogramDistribution);
+  PLEARN_DECLARE_OBJECT(HistogramDistribution);
 
   // *******************
   // * Learner methods *

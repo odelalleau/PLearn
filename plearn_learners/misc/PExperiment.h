@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.h,v 1.5 2003/06/30 15:13:52 yoshua Exp $ 
+   * $Id: PExperiment.h,v 1.6 2003/08/13 08:13:47 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -105,7 +105,7 @@ public:
   static string help();
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(PTester);
+  PLEARN_DECLARE_OBJECT(PTester);
 
   //! The experiment directory is the directory in which files 
   //! related to this model are to be saved.     

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.5 2003/03/19 22:49:17 jkeable Exp $
+   * $Id: Storage.h,v 1.6 2003/08/13 08:13:16 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -315,71 +315,8 @@ public:
     data[n] = x;
   }
 
-    void deepRead(istream& in, DeepReadMap& old2new)
-    {
-      readHeader(in, "Storage");
-      int len;
-      PLearn::deepRead(in, old2new, len);
-      PLearn::deepRead(in, old2new, dont_delete_data);
-      resize(len);
-      for (int i=0; i<length(); i++) PLearn::deepRead(in, old2new, data[i]);
-      readFooter(in, "Storage");
-
-      fd = STORAGE_UNUSED_HANDLE;
-    }
-
-    void deepWrite(ostream& out, DeepWriteSet& already_saved) const
-    {
-      writeHeader(out, "Storage");
-      PLearn::deepWrite(out, already_saved, length());
-      PLearn::deepWrite(out, already_saved, dont_delete_data);
-      for (int i=0; i<length(); i++) PLearn::deepWrite(out, already_saved, data[i]);
-      writeFooter(out, "Storage");
-    }
-
 };
 
-template <class T>
-inline void deepWrite(ostream& out, DeepWriteSet& already_saved, const Storage<T>& s)
-{ s.deepWrite(out, already_saved); }
-
-template <class T>
-inline void deepRead(istream& in, DeepReadMap& old2new, Storage<T>& s)
-{ s.deepRead(in, old2new); }
-
-template <class T>
-inline void deepWrite(ostream& out, DeepWriteSet& already_saved, const PP< Storage<T> >& ptr)
-{
-  write(out, (unsigned long)(Storage<T>*)ptr);
-  if (ptr)
-  {
-    if (already_saved.find((void*)ptr) == already_saved.end())  //!<  not found
-    {
-      already_saved.insert((void*)ptr);
-      PLearn::deepWrite(out, already_saved, *ptr);
-    }
-  }
-}
- 
-template <class T>
-inline void deepRead(istream& in, DeepReadMap& old2new, PP< Storage<T> >& ptr)
-{
-  unsigned long old_ptr;
-  read(in, old_ptr);
-  if (old_ptr)
-  {
-    if (old2new.find(old_ptr) != old2new.end())
-      ptr = (Storage<T>*)old2new[old_ptr];
-    else
-    {
-      ptr = new Storage<T>;
-      PLearn::deepRead(in, old2new, *ptr);
-      old2new[old_ptr] = ptr;
-    }
-  }
-  else
-    ptr = 0;
-}
 
 template<class T>
 PStream& operator<<(PStream& out, const Storage<T>& seq)

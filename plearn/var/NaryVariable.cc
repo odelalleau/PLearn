@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NaryVariable.cc,v 1.6 2003/01/08 21:32:52 ducharme Exp $
+   * $Id: NaryVariable.cc,v 1.7 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,7 +51,7 @@ NaryVariable::NaryVariable(const VarArray& the_varray, int thelength, int thewid
   :Variable(thelength,thewidth), varray(the_varray) {}
 
 
-IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(NaryVariable);
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(NaryVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void NaryVariable::declareOptions(OptionList& ol)
@@ -72,22 +72,10 @@ void NaryVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 }
 
 
-void NaryVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "NaryVariable");
-  Variable::deepRead(in, old2new);
-  PLearn::deepRead(in, old2new, varray);
-  readFooter(in, "NaryVariable");
-}
 
 
-void NaryVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "NaryVariable");
-  Variable::deepWrite(out, already_saved);
-  PLearn::deepWrite(out, already_saved, varray);
-  writeFooter(out, "NaryVariable");
-}
+
+
 
 
 bool NaryVariable::markPath()

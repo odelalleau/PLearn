@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixAffineTransformFeedbackVariable.cc,v 1.2 2003/01/08 21:32:37 ducharme Exp $
+   * $Id: MatrixAffineTransformFeedbackVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@ namespace PLearn <%
 using namespace std;
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(MatrixAffineTransformFeedbackVariable);
+PLEARN_IMPLEMENT_OBJECT(MatrixAffineTransformFeedbackVariable, "ONE LINE DESCR", "NO HELP");
 
 void MatrixAffineTransformFeedbackVariable::recomputeSize(int& l, int& w) const
 { l=length(), w=width(); }

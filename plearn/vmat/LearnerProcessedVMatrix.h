@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerProcessedVMatrix.h,v 1.1 2003/07/04 16:12:36 plearner Exp $ 
+   * $Id: LearnerProcessedVMatrix.h,v 1.2 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file LearnerProcessedVMatrix.h */
@@ -99,7 +99,7 @@ public:
   //!  This is the only method requiring implementation
   virtual void getRow(int i, Vec v) const;
 
-  // simply calls parentclass::build() then build_() 
+  // simply calls inherited::build() then build_() 
   virtual void build();
 
   //! Provides a help message describing this class
@@ -109,7 +109,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT_METHODS(LearnerProcessedVMatrix, "LearnerProcessedVMatrix", RowBufferedVMatrix);
+  PLEARN_DECLARE_OBJECT(LearnerProcessedVMatrix);
 
 };
 

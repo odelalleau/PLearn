@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.h,v 1.7 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: Distribution.h,v 1.8 2003/08/13 08:13:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.h */
@@ -105,7 +105,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(Distribution);
+  PLEARN_DECLARE_OBJECT(Distribution);
 
   // *******************
   // * Learner methods *

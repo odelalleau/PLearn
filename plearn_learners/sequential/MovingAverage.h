@@ -66,7 +66,7 @@ class MovingAverage: public SequentialLearner
     //! Constructor
     MovingAverage();
 
-    //! simply calls parentclass::build() then build_()
+    //! simply calls inherited::build() then build_()
     virtual void build();
     
     virtual void train();
@@ -84,7 +84,8 @@ class MovingAverage: public SequentialLearner
 
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-    PLEARN_DECLARE_OBJECT_METHODS(MovingAverage, "MovingAverage", SequentialLearner);
+    typedef SequentialLearner inherited;
+    PLEARN_DECLARE_OBJECT(MovingAverage);
     //virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 

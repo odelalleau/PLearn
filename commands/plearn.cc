@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.34 2003/08/08 20:45:53 yoshua Exp $
+   * $Id: plearn.cc,v 1.35 2003/08/13 08:13:15 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -48,7 +48,7 @@
 #include "AutoVMatrix.h"
 #include "IndexedVMatrix.h"
 #include "BatchVMatrix.h"
-
+#include "RegularGridVMatrix.h"
 
 // All Available Learners: 
 // #include "KNN.h"
@@ -79,12 +79,11 @@
 
 #include "Experiment.h"
 
-
 // New generation system
 #include "PTester.h"
 #include "NNet.h"
+#include "Grapher.h"
 #include "ConstantRegressor.h"
-#include "GenerateDecisionPlot.h"
 
 #include "HyperLearner.h"
 #include "HyperOptimize.h"
@@ -101,7 +100,10 @@
 #include "MountLucasIndex.h"
 
 // Commands
+#include "RunCommand.h"
 #include "HelpCommand.h"
+#include "AutoRunCommand.h"
+#include "VMatCommand.h"
 #include "KolmogorovSmirnovCommand.h"
 #include "ReadAndWriteCommand.h"
 

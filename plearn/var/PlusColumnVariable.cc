@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PlusColumnVariable.cc,v 1.2 2003/01/08 21:32:54 ducharme Exp $
+   * $Id: PlusColumnVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,27 +59,17 @@ PlusColumnVariable::PlusColumnVariable(Variable* input1, Variable* input2)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(PlusColumnVariable);
+PLEARN_IMPLEMENT_OBJECT(PlusColumnVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void PlusColumnVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input1->width(); }
 
 
-void PlusColumnVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "PlusColumnVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "PlusColumnVariable");
-}
 
 
-void PlusColumnVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "PlusColumnVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "PlusColumnVariable");
-}
+
+
 
 
 void PlusColumnVariable::fprop()

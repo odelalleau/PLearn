@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.8 2003/06/09 21:00:56 ducharme Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.9 2003/08/13 08:13:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -46,7 +46,7 @@ VecStatsCollector::VecStatsCollector()
   :maxnvalues(0), compute_covariance(false)
   {}
 
-IMPLEMENT_NAME_AND_DEEPCOPY(VecStatsCollector);
+PLEARN_IMPLEMENT_OBJECT(VecStatsCollector, "ONE LINE DESCR", "NO HELP");
 
 void VecStatsCollector::declareOptions(OptionList& ol)
 {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DeterminantVariable.cc,v 1.2 2003/01/08 21:32:18 ducharme Exp $
+   * $Id: DeterminantVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,26 +58,16 @@ DeterminantVariable::DeterminantVariable(Var m)
 }
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(DeterminantVariable);
+PLEARN_IMPLEMENT_OBJECT(DeterminantVariable, "ONE LINE DESCR", "NO HELP");
 
 void DeterminantVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
 
 
-void DeterminantVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "DeterminantVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "DeterminantVariable");
-}
 
 
-void DeterminantVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "DeterminantVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "DeterminantVariable");
-}
+
+
 
 
 

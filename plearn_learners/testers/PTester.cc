@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.2 2003/08/08 20:45:54 yoshua Exp $ 
+   * $Id: PTester.cc,v 1.3 2003/08/13 08:13:47 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -81,7 +81,7 @@ PTester::PTester()
     provide_learner_expdir(false)
 {}
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(PTester);
+  PLEARN_IMPLEMENT_OBJECT(PTester, "ONE LINE DESCR", "NO HELP");
 
   void PTester::declareOptions(OptionList& ol)
   {
@@ -168,7 +168,6 @@ void PTester::build_()
 
 void PTester::run()
 {
-  //perform(false); // sinon le learner ne recoit pas de training set!???, pourquoi etait-ce ainsi? YB
   perform(true);
 }
 
@@ -184,7 +183,7 @@ void PTester::setExperimentDirectory(const string& the_expdir)
     }
 }
 
-Vec PTester::perform(bool set_training_set)
+Vec PTester::perform(bool call_forget)
 {
   if(!learner)
     PLERROR("No learner specified for PTester.");
@@ -193,14 +192,17 @@ Vec PTester::perform(bool set_training_set)
 
   if(expdir!="")
     {
-      // Save this tester description in the expdir (buildoptions only)
+      // Save this tester description in the expdir
       if(save_initial_tester)
-        PLearn::save(append_slash(expdir)+"tester.psave", *this, OptionBase::buildoption);
+        PLearn::save(append_slash(expdir)+"tester.psave", *this);
     }
 
   splitter->setDataSet(dataset);
 
   int nsplits = splitter->nsplits();
+  if(nsplits>1)
+    call_forget = true;
+
   TVec<string> testcostnames = learner->getTestCostNames();
   TVec<string> traincostnames = learner->getTrainCostNames();
 
@@ -258,8 +260,7 @@ Vec PTester::perform(bool set_training_set)
       if(splitdir!="" && provide_learner_expdir)
         learner->setExperimentDirectory(splitdir+"LearnerExpdir/");
 
-      if(set_training_set || nsplits>1)
-        learner->setTrainingSet(trainset);  // also calls forget...
+      learner->setTrainingSet(trainset, call_forget);
 
       if(splitdir!="" && save_initial_learners)
         PLearn::save(splitdir+"initial_learner.psave",learner);

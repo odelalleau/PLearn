@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ManualBinner.cc,v 1.4 2003/05/07 05:39:17 plearner Exp $ 
+   * $Id: ManualBinner.cc,v 1.5 2003/08/13 08:13:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ManualBinner.cc */
@@ -58,7 +58,7 @@ ManualBinner::ManualBinner(Vec bin_positions_)
   }
 
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(ManualBinner);
+  PLEARN_IMPLEMENT_OBJECT(ManualBinner, "ONE LINE DESCR", "NO HELP");
 
   void ManualBinner::declareOptions(OptionList& ol)
   {

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.8 2003/07/28 20:01:38 larocheh Exp $
+   * $Id: Variable.h,v 1.9 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -96,9 +96,6 @@ public:
   void operator=(const Vec& v);
   void operator=(const Mat& m);
 };
-
-void deepRead(istream& in, DeepReadMap& old2new, Var& v);
-void deepWrite(ostream& out, DeepWriteSet& already_saved, const Var& v);
 
 class Variable: public Object
 {
@@ -197,7 +194,7 @@ public:
   bool isColumnVec() const { return width()==1; }
   bool isRowVec() const { return length()==1; }
 
-  DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(Variable);
+  PLEARN_DECLARE_ABSTRACT_OBJECT(Variable);
 
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
@@ -351,8 +348,8 @@ public:
   virtual void oldread(istream& in);
   virtual void write(ostream& out);
 
-  virtual void deepRead(istream& in, DeepReadMap& old2new);
-  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
+  
+  
 
   void copyFrom(const Vec& v)    { value << v; }
   void copyTo(Vec& v)    { v << value; }

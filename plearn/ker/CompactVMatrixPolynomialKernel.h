@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrixPolynomialKernel.h,v 1.1 2002/10/03 07:35:27 plearner Exp $
+   * $Id: CompactVMatrixPolynomialKernel.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,7 +69,7 @@ class CompactVMatrixPolynomialKernel: public Kernel
   public:
     CompactVMatrixPolynomialKernel(int degree, PP<CompactVMatrix>& vm, real the_beta=1.0)
       : n(degree), beta(the_beta), m(vm) {}
-    DECLARE_NAME_AND_DEEPCOPY(CompactVMatrixPolynomialKernel);
+    PLEARN_DECLARE_OBJECT(CompactVMatrixPolynomialKernel);
     virtual real evaluate(const Vec& x1, const Vec& x2) const;    
     //virtual void readOptionVal(istream& in, const string& optionname);
     static void declareOptions(OptionList &ol);

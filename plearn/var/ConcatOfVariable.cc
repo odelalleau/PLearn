@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatOfVariable.cc,v 1.2 2003/01/08 21:32:15 ducharme Exp $
+   * $Id: ConcatOfVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -74,7 +74,7 @@ ConcatOfVariable::ConcatOfVariable(Variable* the_output, const VarArray& the_inp
 }
 */
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ConcatOfVariable);
+PLEARN_IMPLEMENT_OBJECT(ConcatOfVariable, "ONE LINE DESCR", "NO HELP");
 
 void ConcatOfVariable::recomputeSize(int& l, int& w) const
 { l=f->outputs[0]->length()*distr->length(); w=f->outputs[0]->width(); }

@@ -51,7 +51,7 @@ protected:
   static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls parentclass::build() then build_() 
+  // simply calls inherited::build() then build_() 
   virtual void build();
 
   //! Provides a help message describing this class
@@ -60,7 +60,7 @@ public:
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
-  PLEARN_DECLARE_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", Smoother);
+  PLEARN_DECLARE_OBJECT(DERIVEDCLASS);
 
 
   /****
