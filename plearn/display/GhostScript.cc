@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.cc,v 1.2 2002/09/17 01:27:33 zouave Exp $
+   * $Id: GhostScript.cc,v 1.3 2003/01/31 17:32:24 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -274,12 +274,13 @@ using namespace std;
     togs << x << ' ' << y << ' ' << r << " 0 360 arc stroke" << endl; 
   }
 
-  void GhostScript::drawCross(real x, real y, real r, bool vertical)
+  void GhostScript::drawCross(real x, real y, real r, bool vertical, real ry)
   {
+    if (ry<0) ry=r;
     if(vertical)
       {
         drawLine(x-r,y,x+r,y);
-        drawLine(x,y-r,x,y+r);
+        drawLine(x,y-ry,x,y+ry);
       }
     else // diagonal
       {
@@ -288,8 +289,8 @@ using namespace std;
 #else
         r /= M_SQRT2;
 #endif
-        drawLine(x-r,y-r,x+r,y+r);
-        drawLine(x-r,y+r,x+r,y-r);
+        drawLine(x-r,y-ry,x+r,y+ry);
+        drawLine(x-r,y+ry,x+r,y-ry);
       }
   }
 

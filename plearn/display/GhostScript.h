@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.h,v 1.2 2002/09/17 01:27:33 zouave Exp $
+   * $Id: GhostScript.h,v 1.3 2003/01/31 17:32:24 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -199,7 +199,7 @@ class GhostScript
   void drawBox(real x, real y, real width, real height);
   void fillBox(real x, real y, real width, real height);
 
-  void drawCross(real x, real y, real r, bool vertical=false);
+  void drawCross(real x, real y, real r, bool vertical=false, real ry=-1); // default ry=r
 
   void drawCircle(real x, real y, real r);
   void fillCircle(real x, real y, real r);
