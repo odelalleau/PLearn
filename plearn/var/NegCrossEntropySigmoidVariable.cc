@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NegCrossEntropySigmoidVariable.cc,v 1.1 2003/11/07 06:19:58 chapados Exp $
+   * $Id: NegCrossEntropySigmoidVariable.cc,v 1.2 2003/11/12 20:53:44 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -75,12 +75,19 @@ void NegCrossEntropySigmoidVariable::fprop()
   {
     real output = sigmoid(input1->valuedata[i]);
     real target = input2->valuedata[i];
-#if BOUNDCHECK
-    if (output == 0.0 || output == 1.0)
-      PLERROR("NegCrossEntropySigmoidVariable::fprop: model output is either exactly "
-              "0.0 or 1.0; cannot compute cost function");
-#endif
-    cost += target*log(output) + (1.0-target)*log(1.0-output);
+    if (output == 0.0) {
+     if (target == 1.0) {
+        PLWARNING("NegCrossEntropySigmoidVariable::fprop: model output is 0 and target is 1, cost should be infinite !");
+        cost += -1e9;
+     } // If target == 0.0 do nothing, cost is 0.
+    } else if (output == 1.0) {
+     if (target == 0.0) {
+        PLWARNING("NegCrossEntropySigmoidVariable::fprop: model output is 1 and target is 0, cost should be infinite !");
+        cost += -1e9;
+     } // If target == 1.0 do nothing, cost is 0.
+    } else {
+      cost += target*log(output) + (1.0-target)*log(1.0-output);
+    }
   }
   valuedata[0] = -cost;
 }
@@ -91,19 +98,10 @@ void NegCrossEntropySigmoidVariable::bprop()
   real gr = *gradientdata;
   for (int i=0; i<input1->size(); i++)
   {
-    real output = input1->valuedata[i];
+    real output = sigmoid(input1->valuedata[i]);
     real target = input2->valuedata[i];
-#if BOUNDCHECK
-    if (output == target)
-      PLERROR("NegCrossEntropySigmoidVariable::bprop: model output is either exactly "
-              "0.0 or 1.0; cannot compute bprop");
-#endif
-    input1->gradientdata[i] += gr*(sigmoid(output) - target);
+    input1->gradientdata[i] += gr*(output - target);
   }
 }
 
-
-
 %> // end of namespace PLearn
-
-
