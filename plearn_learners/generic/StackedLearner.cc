@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.12 2004/02/20 21:14:47 chrish42 Exp $
+   * $Id: StackedLearner.cc,v 1.13 2004/02/23 14:36:29 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -262,7 +262,7 @@ void StackedLearner::train()
         // First precompute the train set of the combiner in memory.
         VMat precomputed_trainset = combiner->getTrainingSet();
         precomputed_trainset.precompute();
-        combiner->setTrainingSet(precomputed_trainset);
+        combiner->setTrainingSet(precomputed_trainset, false);
       }
       combiner->setTrainStatsCollector(train_stats);
       if (expdir!="")
