@@ -1,45 +1,66 @@
 #!/usr/bin/env python2.3
-
-### pytest is meant to manage all the TestSuite execution.
 import shutil, glob, time, os, string, sys, fpformat, signal, types
-from popen2 import *
-from operator import *
 
-import plearn.utilities.plpath as plpath
+import plearn.utilities.plpath   as plpath
+import plearn.utilities.toolkit  as toolkit
 
-from plearn.pytest                     import *
-from plearn.tasks.dispatch             import *
-
-from plearn.utilities.global_variables import globalvars
-from plearn.utilities.verbosity        import *
+from plearn.pytest                       import *
+from plearn.tasks.dispatch               import *
+from plearn.utilities.verbosity          import *
+from plearn.utilities.global_variables   import *
 
 
 ############################################################
-# Global variables
+# Module variables
 
-globalvars.stats                          = {}   # Will contain stats about executed tests
-
+globalvars.all_roots                      = [ plpath.plearndir,
+                                              plpath.lisaplearndir,
+                                              plpath.apstatdir      ]
 globalvars.dispatch                       = None
 globalvars.options                        = None
 globalvars.targets                        = None
 globalvars.current_mode                   = None
 
-## Should be moved to a field in a Mode's subclass.
-globalvars.modes_with_config = {
-    'compile':CompileTest,
-    'results':ResultsTest,
-    'run':RunTest,
-    'sync':SyncTest
-    }
+## ## Should be moved to a field in a Mode's subclass.
+## globalvars.modes_with_config = {
+##     'compile':CompileTest,
+##     'results':ResultsTest,
+##     'run':RunTest,
+##     'sync':SyncTest
+##     }
 
-globalvars.management_modes = {
-    'add': add_test, ##AddTest,
+## globalvars.management_modes = {
+##     'add': add_test, ##AddTest,
+##     'disable' : disable_test,
+##     'enable' : enable_test
+##     }
+
+mode_routine_mappings = {
+    'add'     : AddTestRoutine, ##add_test,
+    'compile' : CompilationRoutine,
     'disable' : disable_test,
-    'enable' : enable_test
+    'enable'  : enable_test,
+    'results' : ResultsCreationRoutine,
+    'run'     : RunTestRoutine#,
+#    'sync'    : SyncTest
     }
 
 #####################
 ## Functions are listed by alphabetical order
+
+def build_tests(mode_name, directory, dirlist):
+    toolkit.exempt_list_of( dirlist, Routine.forbidden_directories() )
+    
+    os.chdir(directory)
+
+    config = config_file_path()
+    if config in dirlist:
+        execfile(config)
+    
+    if mode_name == "add":
+        Test( name    = globalvars.options.test_name,
+              program = GlobalCompilableProgram( name = "plearn")  )        
+
 
 def check_directory(dirc):
     absdir = os.path.abspath(dirc)
@@ -52,7 +73,7 @@ def check_directory(dirc):
 def commit_mode():
     pdir, pvar = plpath.splitprev(plpath.pytest_variables)
     os.chdir(pdir)
-    cvs_commit(pvar, 'Pytest internal commit')
+    cvs_commit(pvar, 'PyTest internal commit')
     sys.exit()
     
 def common_preprocessing():
@@ -69,191 +90,58 @@ def common_preprocessing():
         if globalvars.options.savelog:
             vprint("Mail and savelog options are not compatible", 0)
             sys.exit()
-        
-##END common_preprocessing
-
-# called only under 'compilePLL' mode
-def compileCurrentDirectory(options = ''):
-    cwd = os.getcwd()
-    dirList = os.listdir(cwd)
-    try:
-        if testPaths.contains( cwd ):
-            compileAndRun('', cwd, dirList)
-    except FormatError:
-        for file in dirList:
-            if isccfile(file):
-                quiet_sys("pymake " + file + " " + options)
-            
-
-def compilePLL():
-    raise DeprecationWarning
-
-    raw_input(("compilePLL:bid, dirpath, dirlist"))
-    sys.exit()
-    
-    recursiveOptionNotSupported("CompilePLL")
-    if len(globalvars.targets) != 0:
-        vprint("*** Can not provide any file or directory with compilePLL mode! ***", 0)
-        sys.exit()
-
-    vprint("Entering compilePLL mode: may last several minutes", 1)
-
-    mixed_options = ['-dbg -float', '-dbg -double', '-opt -float', '-opt -double']
-
-    for options in mixed_options:
-        vprint("+++ Working with " + options, 1)
-        os.chdir(plearnlib_dir)
-        quiet_sys("pymake -clean .")
-        dicoOfErrors = {}
-        os.path.walk(plearnlib_dir, compilePLLSubRoutine, [options, dicoOfErrors])
-        printErrors(dicoOfErrors)
-        vprint("\n\n", 0)
-
-    # It is assumed that TestSuite directory and subdirectories only
-    #  contain tests that are meant to be compiled with the options
-    #  given in the config file
-    vprint("+++ Test Suite", 1)
-    os.system("pytest -run -all -Q > /tmp/.run_all")
-    f = open("/tmp/.run_all",'r')
-    output = f.read()
-    stats_index = string.find(output, globalvars.stats.log_header)
-    vprint( output[stats_index+len(globalvars.stats.log_header) :
-                   len(output)-len("Quitting pytest ...\n")], 1)
-    os.remove("/tmp/.run_all")
-
-    if globalvars.options.mail:
-        mail()
-        return
-
-def compilePLLSubRoutine(options_and_dicoOfErrors, path, dirList):
-    raise DeprecationWarning
-    remove_forbidden_dirs(dirlist,
-                          forbidden_directories+["TestSuite",
-                                                 globalvars.results_path,
-                                                 globalvars.results_on_run])
-    path = os.path.abspath(path)
-    os.chdir(path)
-    compileCurrentDirectory(options_and_dicoOfErrors[0])
-    myCheckObj( path, options_and_dicoOfErrors[1] )
-
-def cvs_add(file):
-    status = cvs_query("status", file, "Status: ")
-    vprint(file + " status: " + status + "\n", 2)
-    if status != '' and string.find(status, "Unknown") == -1:
-        return False
-    
-    addCmd = "cvs add " + file
-    vprint("Adding: " + addCmd, 2)
-    process = Popen3(addCmd, True)
-    errors = process.childerr.readlines()
-    map(lambda err: vprint(err, 1), errors)
-
-    return True
-
-def cvs_commit(files, msg):
-    if isinstance(files, types.StringType):
-        files = [files]
-    elif not isinstance(files, type([])):
-        raise TypeError("The cvs_commit procedure accepts argument of type string of"
-                        "array of string: type (%s) is not valid.\n" % type(files))
-    
-    commitCmd = ("cvs commit -m '" + msg + "' ")
-    for f in files:
-        commitCmd += f + " " 
-        
-    vprint("\n+++ Commiting (from "+ os.getcwd() +"):\n" + commitCmd, 1)
-    commitProcess = Popen3(commitCmd, True)
-    vprint(commitProcess.childerr.read(1024), 1)
-
-def cvs_query(option, fname, lookingFor, delim = "\n"):
-    #print fname
-    cvsProcess = Popen3("cvs " + option + " " + fname, True)
-    lines = cvsProcess.fromchild.readlines()
-    #print lines
-    for line in lines :
-        #print line
-        index = string.find(line, lookingFor)
-        #print("string.find(" + line + ", " + lookingFor + ") : ")
-        #print index
-        if index != -1:
-            result = line[index+len(lookingFor):]
-            result = result[:string.find(result, delim)]
-            return string.rstrip(result)
-    return ''
-
-def cvs_remove(file):
-    status = cvs_query("status", file, "Status: ")
-    if status == '' or string.find(status, "Unknown") != -1:
-        return False
-
-    rmCmd = "cvs remove " + file
-    vprint("Removing: " + rmCmd, 2)
-    process = Popen3(rmCmd, True)
-    errors = process.childerr.readlines()
-    map(lambda err: vprint(err, 1), errors)
-    return True
 
 def dispatch_targets():
-    globalvars.dispatch = Dispatch()
     if globalvars.current_mode.name == 'commit':
-        globalvars.dispatch.set_option('localhost', True)        
-    else: 
-        globalvars.dispatch.set_option('localhost', globalvars.options.localhost)
-        globalvars.dispatch.set_option('nb_hosts', globalvars.options.hosts)
+        globalvars.options.localhost = True        
 
-    ## --all:
-    ## Run all tests in all test_suite branches. If some targets are
+    globalvars.dispatch = Dispatch(
+        localhost = globalvars.options.localhost,
+        nb_hosts  = globalvars.options.hosts
+        )
+    
+    ## --all: Run all tests found in subdirectories of directories in
+    ## globalvars.all_roots test_suite branches. If some targets are
     ## provided, these will be ignored.
     if globalvars.options.all:
-        globalvars.targets = globalvars.branches.keys()
+        globalvars.targets           = globalvars.all_roots
         globalvars.options.recursive = True
 
     ## If no targets are provided, the cwd is the default target.
     if len(globalvars.targets) == 0:
-        globalvars.targets.append( check_directory(os.getcwd()) )
-    else:
-        globalvars.targets = map(check_directory, globalvars.targets)
+        globalvars.targets.append( os.getcwd() )
 
     if globalvars.options.recursive:
         globalvars.targets = remove_subdirs(globalvars.targets)
         
-    #raw_input(("globalvars.targets:", globalvars.targets))
-
     for target in globalvars.targets:
         if globalvars.options.recursive:
             os.path.walk(target, build_tests, globalvars.current_mode.name)
         else:
             build_tests(globalvars.current_mode.name, target, os.listdir(target))
 
+    for (test_name, test) in Test.instances_map.iteritems():
+        RoutineType = mode_routine_mappings[globalvars.current_mode.name]
+        globalvars.dispatch.add_task( RoutineType(test) )
     globalvars.dispatch.run()
-    
-def finalName(dir):
-    (foo, fName) = plpath.splitprev(dir)
-    return fName
 
-def isccfile(filepath):
-    (base,ext) = os.path.splitext(filepath)
-    return ext in ['.cc','.CC','.cpp','.c','.C']
-            
-def lastUserWhoDidCommit(fpath):
-    fpath = os.path.abspath(fpath)
-    (dir, fname) = os.path.split(fpath)
-    os.chdir(dir)
-
-    author = "NEVER BEEN COMMITED"
-    a = cvs_query("log", fname, "author: ", ";")
-    if a != '':
-        author = a
-    
-    return author
+def dynamic_version_header():
+    # Dynamic version header
+    c = lambda s: string.center(s, 45)
+    vprint( "\n[ %s ]\n[ %s ]\n[ %s ]\n"
+            % ( c("PyTest -- version " + pytest_version()),
+                c("(c) 2004 Christian Dorion"),
+                c("Report problems to dorionc@apstat.com") ),
+            0
+            )
 
 def mail():
     # Opening the senmail process
     sendmail = Popen3("sendmail -t", True)
 
     # "Header" of the mail
-    sendmail.tochild.write("From: Pytest -compilePLL -mail\n")
-    sendmail.tochild.write("Subject: Pytest -- List of files that did not compile\n")
+    sendmail.tochild.write("From: PyTest -compilePLL -mail\n")
+    sendmail.tochild.write("Subject: PyTest -- List of files that did not compile\n")
     sendmail.tochild.write("To: " + globalvars.options.mail + "\n")
 
     # Changing the mode of the savelog_file from write to read
@@ -270,39 +158,8 @@ def mail():
     globalvars.options.savelog = None # that way the file isn't closed twice
     #                      # ( see end of pytest() )
 
-# Only called in 'compilePLL' mode
-def myCheckObj(dirpath, dicoOfErrors):
-    names = os.listdir(dirpath)
-    if globalvars.objs in names: names.remove(globalvars.objs)
-    if globalvars.cvs_directory in names: names.remove(globalvars.cvs_directory)
-    for fname in names:
-        fpath = os.path.join(dirpath,fname)
-        if os.path.isfile(fpath):
-            basename, ext = os.path.splitext(fname)
-            if ext in ['.cc','.c','.C','.cpp','.CC']:
-                foundobj = 0 # found the .o file?
-                for f in glob.glob(os.path.join(dirpath, globalvars.objs,'*',basename+'.o')):
-                    if os.path.isfile(f): foundobj = 1
-                if not foundobj:
-                    dicoOfErrors[fpath] = lastUserWhoDidCommit(fpath)
-    
-def printErrors(dico):
-    if len(dico) == 0:
-        vprint("No errors", 1)
-        return
-    
-    vprint("\nfile -> last user who did commit", "Q")
-    vprint("--------------------------------", "Q")
-
-    for key in dico.keys():
-        formattedKey = key
-        index = string.find(key, plearnlib_dir)
-        if index != -1:
-            formattedKey = key[index+len(plearnlib_dir):]
-        vprint(formattedKey + " -> " + dico[key], "Q")
-
 def pytest_version():
-    version_str = '$Id: pytest,v 1.17 2004/10/20 22:46:46 dorionc Exp $'
+    version_str = '$Id: pytest,v 1.18 2004/10/24 22:57:55 dorionc Exp $'
 
     bflag = "pytest,v"
     the_year = time.localtime()[0]
@@ -331,114 +188,74 @@ def remove_subdirs(absdirs):
         absdirs.remove(r)
     return absdirs
 
+def testing_options():
+    testing_options = OptionGroup( parser, "Testing Options",
+                                   "Available under all modes BUT commit." )
+    
+    testing_options.add_option( "--all",
+                                action="store_true", default=False,
+                                help= "Run all tests found in subdirectories of directories in "
+                                "globalvars.all_roots test_suite branches. If some targets "
+                                "are provided, these will be ignored. " 
+                                )
+    
+    testing_options.add_option( "-R", "--recursive",
+                                action="store_true", default=False,
+                                help = 'Process all targets recursively. If some target is '
+                                'the subdirectory to another target, it will be ignored, i.e. '
+                                'the whole hierarchy will be tested only once.'
+                                ) 
+    
+    testing_options.add_option( '-l', '--localhost',
+                                action='store_true',
+                                help='This flag triggers a dispatch using only the local host. '
+                                'CURRENTLY ALWAYS TRUE!!!',
+                                default=True )
+    
+    testing_options.add_option( '--hosts', 
+                                help='The maximum nuber of hosts to use simultaneously.',
+                                default=10 )
+    
+    testing_options.add_option( '-n', '--test-name',
+                                help='Restricts the current mode to the named test.',
+                                default='' )
+    
+    testing_options.add_option( '-v', "--verbosity",
+                                choices=["0", "1", "2"], default="1",
+                                help="Selects the level of verbosity among [0, 1, 2], "
+                                "1 being the default value. Level 0 is very quiet, while level 2 "
+                                "is mainly intended for debug."
+                                )
+    
+    testing_options.add_option("--mail", default=None,
+                               help='Not supported yet.')
+
+    return testing_options
+
 ###################################################################################
 ## MAIN PROGRAM
 parser = ModeAndOptionParser( usage = "%prog mode [options] target*",
                               version = "%prog " + pytest_version(),
                               with_config_mode=False )
 
-# Testing modes:
-parser.add_mode("compile", dispatch_targets,
-                help = short_doc(CompileTest),
-                description = doc(CompileTest) )
+for (mode, mode_routine) in mode_routine_mappings.iteritems():
+    option_groups = []
+##     if mode == 'add':
+##         raw_input("Add command line options...")
+        ##option_groups = [ get_add_options(parser) ]
+                  
+    parser.add_mode( mode, dispatch_targets,
+                     help          = toolkit.short_doc(mode_routine),
+                     description   = toolkit.doc(mode_routine),
+                     option_groups = option_groups
+                    )
 
-parser.add_mode("results", dispatch_targets, "Testing mode",
-                help = short_doc(ResultsTest),
-                description = doc(ResultsTest) )
-
-parser.add_mode("run", dispatch_targets, "Testing mode",
-                help = short_doc(RunTest),
-                description = doc(RunTest) )
-
-parser.add_mode("sync", dispatch_targets, "Testing mode",
-                help = short_doc(SyncTest),
-                description = doc(SyncTest) )
-
-# Management modes
-add_options = get_add_options(parser)
-globalvars.add_options = add_options
-
-parser.add_mode("add", dispatch_targets,
-                option_groups = [add_options],
-                help = short_doc(add_test),
-                description = doc(add_test) )
-
-## parser.add_mode("disable", dispatch_targets,
-##                 help = short_doc(DisableTest),
-##                 description = doc(DisableTest) )
-
-parser.add_mode("disable", dispatch_targets,
-                help = short_doc(disable_test),
-                description = doc(disable_test) )
-
-parser.add_mode("enable", dispatch_targets,
-                help = short_doc(enable_test),
-                description = doc(enable_test) )
-
-## parser.add_mode("restore", dispatch_targets,
-##                 help = short_doc(RestoreTest),
-##                 description = doc(RestoreTest) )
-
-
-## parser.add_mode("remove", dispatch_targets,
-##                 help = short_doc(RemoveTest),
-##                 description = doc(RemoveTest) )
-
-## commit_options = OptionGroup(parser, "Commit Mode Options")
-## commit_options.add_option("--msg", default='Pytest automatic commit')
-## parser.add_mode("commit", dispatch_targets, "",
-##                 option_groups = [commit_options],
-##                 help = short_doc(CommitTest),
-##                 description = doc(CommitTest) )
 parser.add_mode( 'commit', commit_mode,
-                 help='Commits pytest internal modifications (ex: disabled test)',
-                 description='Commits pytest internal modifications (ex: disabled test)',
+                 help='Commits PyTest internal modifications (ex: disabled test)',
+                 description='Commits PyTest internal modifications (ex: disabled test)',
                  max_targets=0 )
 
-parser.add_mode("compilePLL", compilePLL, "",
-                help = "NOT YET!" )
-
-############################################################
-###################### Global Options ######################
-
-parser.add_option( '-v', "--verbosity", choices=["0", "1", "2"], default="1",
-                   help="Selects the level of verbosity among [0, 1, 2], "
-                   "1 being the default value. Level 0 is very quiet, while level 2 "
-                   "is mainly intended for debug.")
-
-##parser.add_option("--savelog", action="store_true", default=False)
-
-############################################################
-##################### Testing Options ######################
-
-testing_options = OptionGroup( parser, "Advanced Options",
-                               "Available under all modes BUT commit." )
-
-testing_options.add_option("--mail", default=None,
-                           help='Not supported yet.')
-
-testing_options.add_option( "-R", "--recursive", action="store_true", default=False,
-                            help = 'Process all targets recursively. If some target is '
-                            'the subdirectory to another target, it will be ignored, i.e. '
-                            'the whole hierarchy will be tested only once.') 
-testing_options.add_option( "--all", action="store_true", default=False,
-                            help='Run all tests in all test_suite branches. If some targets are '
-                            'provided, these will be ignored.')
-
-testing_options.add_option( '-l', '--localhost', action='store_true',
-                   help='This flag triggers a dispatch using only the local host. '
-                   'CURRENTLY ALWAYS TRUE!!!',
-                   default=True )
-
-testing_options.add_option( '-n', '--hosts', 
-                   help='The maximum nuber of hosts to use simultaneously.',
-                   default=10 )
-
-testing_options.add_option( '--test-name',
-                            help='Restrict the current mode to the named test.',
-                            default='' )
-
-parser.add_option_group(testing_options)
+parser.add_option_group( testing_options() )
 
 ############################################################
 ##################### Parsing Options ######################
@@ -449,23 +266,20 @@ globalvars.current_mode                = parser.selected_mode()
 ############################################################
 ################## Some preprocessing ######################
 
-# Initializes the branches dictionnary
-##initialize_branches()
-
 ## Managing the verbosity option.
-set_vprint( VerbosityPrint(globalvars.options.verbosity) )
+set_verbosity( globalvars.options.verbosity )
 
 if globalvars.options.mail is not None:
-    vprint.keep_output()
+    ## vprint.keep_output()
+    raise NotImplementedError
 
-# Dynamic version header
-vprint("\n[ Pytest version " + pytest_version() + " (c) 2004 Christian Dorion ]\n" +
-       "[    (c) 2002 Christian Dorion & Kim Levy       ]\n" +
-       "[    Report problems to dorionc@apstat.com      ]\n", 0)
 
 ############################################################
 # Launching the selected mode: The main part of the program
 ############################################################
+
+## Program name and copyrights with version number
+dynamic_version_header()
 
 try:
     parser.launch_selected_mode()    
@@ -479,26 +293,11 @@ except KeyboardInterrupt, kex:
 ############################################################
 ################## Some postprocessing #####################
 
-for (ttype, bstats) in globalvars.stats.items():
-    vprint(bstats, 0)
-    
-vprint("Quitting pytest.", 1)
+vprint("\n%s" % str(Test.statistics), 0)    
+vprint("Quitting PyTest.", 1)
 kept = vprint.close()    
 if kept is not None:
-    print 'mail not implemented yet'
     for k in kept:
         print k
-
-## if globalvars.from_file.modified:
-##     update_pytest_variables()
+    raise NotImplementedError('mail not implemented yet')
     
-############################################################
-######################         #############################
-######################   Old   #############################
-######################         #############################
-############################################################
-### files relative to pytest
-plearnlib_dir = os.path.join( os.environ["PLEARNDIR"], "plearn" ) 
-mailing_log = os.path.join(plearnlib_dir, "mailing.log")
-savelog_file = '' # Must be replaced by user provided msg
-
