@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.33 2004/01/14 14:24:28 ducharme Exp $
+   * $Id: TMat_maths_impl.h,v 1.34 2004/01/28 14:27:38 lheureup Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -3025,11 +3025,12 @@ void makeRowsSumTo1(const TMat<T>& mat)
 }
 
 //! Uses partial_sort.
-//! Sorts only the first k smalests rows and put it in the k firsts rows. 
+//! Sorts only the first k smallests rows and put it in the k first rows.
 //! The other rows are in an arbitrary order.
-//! If sortk is 0, the k smalest rows are put in the k firsts rows but in an 
-//! arbitrary order. This implementation should be very efficient,
-//! but it does two memory allocation: a first one of mat.length()*(sizeof(real)+sizeof(int))
+//! If sortk is 0, the k smallest rows are put in the k first rows but in an 
+//! arbitrary order. 
+//! This implementation should be very efficient, but it does two memory 
+//! allocation: a first one of mat.length()*(sizeof(real)+sizeof(int))
 //! and a second one of mat.length()*sizeof(int).
 template<class T>
 void partialSortRows(const TMat<T>& mat, int k, int sortk=1, int col=0)
