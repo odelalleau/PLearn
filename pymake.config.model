@@ -40,7 +40,8 @@ mandatory_includedirs = []
 
 # (sys.byteorder does not exist in older versions of python)
 if platform=='linux-i386':
-    compileflags = '-DLINUX -DLITTLEENDIAN -mcpu=i686 -march=i686 -ftemplate-depth-30'
+    compileflags = '-DLINUX -DLITTLEENDIAN -ftemplate-depth-30'
+#    compileflags = '-DLINUX -DLITTLEENDIAN -mcpu=i686 -march=i686 -ftemplate-depth-30'
 elif platform=='linux-ppc':
     compileflags = '-DLINUXPPC -DBIGENDIAN'    
 elif platform=='linux-alpha':
@@ -146,7 +147,7 @@ linkeroptions_tail = '-lstdc++ -lm'
 # First option that appears in each group is the default, and is assumed if you don't specify any option from that group
 options_choices = [
   [ 'g++', 'mpi', 'purify' ],
-  [ 'dbg', 'opt', 'gprof' ],
+  [ 'dbg', 'opt', 'gprof', 'safeopt', 'checkopt' ],
   [ 'double', 'float' ],
   [ 'throwerrors', 'exiterrors' ], 
   [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'noblas'],
@@ -188,7 +189,15 @@ pymakeOption( name = 'dbg',
 # is -funroll-loops hurting?
 pymakeOption( name = 'opt',
               description = 'optimized mode',
-              compileroptions = '-Wall -O3 -funroll-loops -ffast-math' )
+              compileroptions = '-Wall -O3 -funroll-loops' )
+
+pymakeOption( name = 'safeopt',
+              description = 'safe optimized mode',
+              compileroptions = '-Wall -O -DBOUNDCHECK' )
+
+pymakeOption( name = 'checkopt',
+              description = 'safe optimized mode',
+              compileroptions = '-Wall -O3 -funroll-loops' )
 
 pymakeOption( name = 'gprof',
               description = 'optimized mode with profiler support (-pg)',
