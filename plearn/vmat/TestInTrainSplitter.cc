@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestInTrainSplitter.cc,v 1.2 2004/06/08 13:08:10 tihocan Exp $ 
+   * $Id: TestInTrainSplitter.cc,v 1.3 2004/06/08 13:16:29 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -60,7 +60,16 @@ TestInTrainSplitter::TestInTrainSplitter()
 
 PLEARN_IMPLEMENT_OBJECT(TestInTrainSplitter,
     "A splitter that adds the test points given by another splitter into the training set.",
-    "The underlying splitter should return train / test sets of constant size."
+    "The underlying splitter should return train / test sets of constant size.\n"
+    "For instance, if the underlying splitter returns 3 splits of (train,test)\n"
+    "pairs with size 2000 and 500, this splitter will return:\n"
+    " - for 'percentage_added' == 5%, 15 splits of size 2100 and 100, with each\n"
+    "   test point appearing once and only once in a train set and a test set\n"
+    " - for 'percentage_added' == 20%, 6 splits of size 2400,400 and 2400,100, with\n"
+    "   each test point appearing once or more in a train set, and only once in a\n"
+    "   test set (note that the test points appearing more than once in a train set\n"
+    "   will be those at the beginning of the test sets returned by the underlying\n"
+    "   splitter)\n"
 );
 
 void TestInTrainSplitter::declareOptions(OptionList& ol)
