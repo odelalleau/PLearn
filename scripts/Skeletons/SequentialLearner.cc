@@ -23,10 +23,12 @@ void DERIVEDCLASS::build()
 
 void DERIVEDCLASS::build_()
 {
+  forget();
 }
 
 void DERIVEDCLASS::forget()
 {
+  parentclass::forget();
 }
 
 void DERIVEDCLASS::declareOptions(OptionList& ol)

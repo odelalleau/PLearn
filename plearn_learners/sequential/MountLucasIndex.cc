@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.3 2003/08/06 17:58:04 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.4 2003/08/06 21:00:26 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -178,7 +178,7 @@ void MountLucasIndex::train()
           last_month_last_price[i] = last_price[i];
           is_long_position[i] = next_position(i, monthly_unit_asset_value);
         }
-        index_value[current_month] = index_value[current_month-1]*mean(rate_return);
+        index_value[current_month] = index_value[current_month-1]*(1.0 + mean(rate_return));
         predictions(current_month,0) = index_value[current_month];
       }
       ++current_month;
@@ -188,6 +188,8 @@ void MountLucasIndex::train()
   }
   last_train_t = train_set.length()-1;
   if (pb) delete pb;
+
+  savePVec("MLMIndex.pvec", index_value);
 }
 
 // nothing to do in test
