@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.14 2003/10/29 16:55:49 plearner Exp $
+   * $Id: RealMapping.cc,v 1.15 2004/01/08 14:08:55 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -83,13 +83,32 @@ PStream& operator>>(PStream& in, RealRange &x)
 //    return s;
   }  
 
-  bool RealRange::operator==(const RealRange& rr) const
-  {
-    return (rr.low == low && 
-            rr.high == high && 
-            rr.leftbracket == leftbracket && 
-            rr.rightbracket == rightbracket);
-  }
+
+bool RealRange::contains(real val) const
+{ return (val>=low) && (val<=high) && (val!=low || leftbracket=='[') && (val!=high || rightbracket==']'); }
+
+bool RealRange::operator<(real x) const
+{ return high < x || high == x && rightbracket == '['; }
+
+bool RealRange::operator>(real x) const
+{ return low > x || low == x && leftbracket == ']'; }
+
+bool RealRange::operator<(const RealRange& x) const
+{ return high < x.low || (high == x.low && (rightbracket=='[' || x.leftbracket==']')); }
+
+bool RealRange::operator>(const RealRange& x) const
+{ return low > x.high || (low == x.high && (leftbracket==']' || x.rightbracket=='[')); }
+
+bool RealRange::operator==(const RealRange& rr) const
+{
+  return (rr.low == low && 
+          rr.high == high && 
+          rr.leftbracket == leftbracket && 
+          rr.rightbracket == rightbracket);
+}
+
+
+// ==============================================
 
   bool RealMapping::operator==(const RealMapping& rm) const
   {
@@ -147,8 +166,12 @@ void RealMapping::declareOptions(OptionList& ol)
 
 
   void RealMapping::addMapping(const RealRange& range, real val)
-    { 
+    {
+      //PStream perr(&cerr);
+      //perr << "BEFORE " << mapping << endl;
+      //perr << "ADDING " << range << "->" << val << endl;
       mapping[range]= val; 
+      //perr << "AFTER " << mapping << endl;
       // cout<<"adding :"<<range<<" = "<<val<<endl;
       // cout<<"MAPPING:"<<*this<<endl;
     }
@@ -317,9 +340,5 @@ bool RealMapping::checkConsistency()
       return false;
   return true;  
 }
-
-bool RealRange::operator<(const RealRange& x) const
-     { return high < x.low || high == x.low && rightbracket == x.leftbracket; }
-
 
 %> // end of namespace PLearn

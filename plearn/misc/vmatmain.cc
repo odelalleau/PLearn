@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.11 2003/12/15 14:05:27 plearner Exp $
+   * $Id: vmatmain.cc,v 1.12 2004/01/08 14:08:56 plearner Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -181,6 +181,14 @@ void displayBasicStats(VMat vm)
            << stats[k].stderror() << " \t"
            << endl;
     }
+}
+
+void printFieldInfo(VMat vm, string fieldname_or_num)
+{
+  int fieldnum = vm->getFieldIndex(fieldname_or_num);
+  cout << "*** Field #" << fieldnum << ": " << vm->fieldName(fieldnum) << " ***\n" << endl;
+  TVec<StatsCollector> stats = vm->getStats();
+  stats[fieldnum].print(cout);
 }
 
 void printDistanceStatistics(VMat vm, int inputsize)
@@ -880,6 +888,8 @@ int vmatmain(int argc, char** argv)
       "       Will info about dataset (size, etc..)\n"
       "   or: vmat fields <dataset> \n"
       "       To list the fields with their names \n"
+      "   or: vmat fieldinfo <dataset> <fieldname_or_num>\n"
+      "       To display statistics for that field \n"
       "   or: vmat cat <dataset> [<optional_vpl_filtering_code>]\n"
       "       To display the dataset \n"
       "   or: vmat view <vmat> \n"
@@ -986,6 +996,13 @@ int vmatmain(int argc, char** argv)
       cout<<"FieldNames: "<<endl;
       for(int i=0;i<vm.width();i++)
         cout<<i<<": "<<vm->fieldName(i)<<endl;
+    }
+  else if(command=="fieldinfo")
+    {
+      string dbname = argv[2];
+      VMat vm = getDataSet(dbname);
+      string fieldname_or_num = argv[3];
+      printFieldInfo(vm, fieldname_or_num);
     }
   else if(command=="stats")
     {

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.13 2003/10/29 16:55:49 plearner Exp $
+   * $Id: RealMapping.h,v 1.14 2004/01/08 14:08:55 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -93,15 +93,9 @@ class RealRange
     //!   Range `contains` real
     //!   Range < real, if higher bound < real
     //!   Range > real, if lower bound > real
-
-    inline bool contains(real val) const
-    { return (val>=low) && (val<=high) && (val!=low || leftbracket=='[') && (val!=high || rightbracket==']'); }
-
-//     inline bool operator<(real x) const
-//     { return high < x || high == x && rightbracket == '['; }
-
-//     inline bool operator>(real x) const
-//     { return low > x || low == x && leftbracket == ']'; }
+    bool contains(real val) const;
+    bool operator<(real x) const;
+    bool operator>(real x) const;
 
 /*    inline bool operator<(real x) const
     { return low < x || high == x && rightbracket == '['; }
@@ -110,22 +104,12 @@ class RealRange
     { return low > x || low == x && leftbracket == ']'; }
 
 */
-    //! Compare 2 RealRanges:
-    //! the relation is either:
-    //!   Range0 < Range1, if higher bound 0 < lower bound 1
-    //!   Range0 > Range1, if lower bound 0 > higher bound 1
-    //! Any other case is undefined.  Ranges should not overlap.
-/*
-     inline bool operator<(const RealRange& x) const
-     { return high < x.low || high == x.low && rightbracket == x.leftbracket; }
-
-     inline bool operator>(const RealRange& x) const
-     { return low > x.high || low == x.high && leftbracket == x.rightbracket; }
-*/
-
-    // modified by Julien
+    /*! Compare 2 RealRanges:
+      This can be used to sort a list of RealRanges, or to build a map indexed by RealRanges.
+      Note that ordering of ranges is only properly defined for ranges that do not overlap.
+    */
     bool operator<(const RealRange& x) const;
-
+    bool operator>(const RealRange& x) const;
     bool operator==(const RealRange& rr) const;
   };
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.27 2004/01/07 22:24:25 tihocan Exp $
+   * $Id: StatsCollector.cc,v 1.28 2004/01/08 14:08:56 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -288,7 +288,7 @@ RealMapping StatsCollector::getBinMapping(double discrete_mincount,
         (m.first.low == m.first.high))
     {
       // don't join last bin with last-but-one bin
-      mapping.addMapping(RealRange(m.first.leftbracket,m.first.high,max_,']'),
+      mapping.addMapping(RealRange(m.first.rightbracket=='[' ? '[' : ']',m.first.high,max_,']'),
                          mapto++);
       if(fcount)
         fcount->append(cnt);
@@ -408,17 +408,15 @@ void StatsCollector::print(ostream& out) const
   out << "first: " << first_obs() << "\n";
   out << "last:  " << last_obs()  << "\n\n";
   out << "counts size: " << counts.size() << "\n";
-  /*
-    map<real,Counts>::const_iterator it = counts.begin();
-    map<real,Counts>::const_iterator itend = counts.end();
-    for(; it!=itend; ++it)
+  map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
+  map<real,StatsCollectorCounts>::const_iterator itend = counts.end();
+  for(; it!=itend; ++it)
     {
-    out << "value: " << it->first 
-    << "  #equal:" << it->second.n
-    << "  #less:" << it->second.nbelow
-    << "  avg_of_less:" << it->second.sum/it->second.nbelow << endl;
+      out << "value: " << it->first 
+          << "  #equal:" << it->second.n
+          << "  #less:" << it->second.nbelow
+          << "  avg_of_less:" << it->second.sum/it->second.nbelow << endl;
     }
-  */
 }
 
 void StatsCollector::oldwrite(ostream& out) const
