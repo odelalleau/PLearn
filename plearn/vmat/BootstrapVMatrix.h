@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.h,v 1.7 2004/09/09 19:40:49 tihocan Exp $
+   * $Id: BootstrapVMatrix.h,v 1.8 2005/02/02 14:16:27 tihocan Exp $
    ******************************************************* */
 
 
@@ -60,6 +60,7 @@ public:
 
 public:
 
+  //! Default constructor.
   BootstrapVMatrix();
   
   //! Construct a boostrap of another VMatrix.
@@ -67,9 +68,11 @@ public:
 
   PLEARN_DECLARE_OBJECT(BootstrapVMatrix);
 
-  static void declareOptions(OptionList &ol);
-
   virtual void build();
+
+protected:
+
+  static void declareOptions(OptionList &ol);
 
 private:
 
