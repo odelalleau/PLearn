@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ObjectGenerator.cc,v 1.3 2004/06/22 18:27:48 ducharme Exp $
+   * $Id: ObjectGenerator.cc,v 1.4 2004/06/22 20:13:27 ducharme Exp $
    ******************************************************* */
 
 #include "ObjectGenerator.h"
@@ -43,8 +43,7 @@ using namespace std;
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(ObjectGenerator,
     "ObjectGenerator is the base class for implementing object-generation techniques.",
     "The OptionGenerator takes a template Object, and from a list of options,\n"
-    "it will generate another Object (or a complete list).\n";
-);
+    "it will generate another Object (or a complete list).\n");
 
 ObjectGenerator::ObjectGenerator() : generation_began(false)
 {}
