@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.15 2003/05/21 19:27:32 tihocan Exp $
+   * $Id: VMatrix.h,v 1.16 2003/05/22 06:21:36 plearner Exp $
    ******************************************************* */
 
 
@@ -228,8 +228,6 @@ public:
   
   virtual void computeStats(); 
   bool hasStats() const { return fieldstats.size()>0; }
-  void writeStats(ostream& out) const;
-  void readStats(istream& in);
   void saveStats(const string& filename) const;
   void loadStats(const string& filename);
 

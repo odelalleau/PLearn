@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.16 2003/05/20 15:42:12 plearner Exp $
+   * $Id: Object.cc,v 1.17 2003/05/22 06:21:23 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -372,7 +372,7 @@ Object* readObject(PStream &in, unsigned int id)
             PLERROR("readObject() - Type \"%s\" not declared in TypeFactory map (did you do a proper DECLARE_NAME_AND_DEEPCOPY?)", cl.c_str());
         // Go back before the header starts
         in.pl_rdbuf()->seekmark(fence);
-        o->read(in.rawin());
+        o->read(in._do_not_use_this_method_rawin_());
       } 
     else if (c == '*') // Pointer to object
       {

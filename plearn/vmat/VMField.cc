@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMField.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+* $Id: VMField.cc,v 1.2 2003/05/22 06:21:36 plearner Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMField.h"
@@ -49,6 +49,7 @@ using namespace std;
 VMField::VMField(const string& the_name, FieldType the_fieldtype)
   : name(the_name), fieldtype(the_fieldtype) {}
 
+/*
 void VMField::print(ostream& out) const
 {
   out << name << "\t type: ";
@@ -93,6 +94,7 @@ void VMField::read(istream& in)
   //readField(in,"fieldtype", fieldtype);
   readFooter(in,"VMField");
 }
+*/
 
 /** VMFieldStat **/
 

@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.18 2003/05/21 09:53:50 plearner Exp $
+* $Id: VMatrix.cc,v 1.19 2003/05/22 06:21:36 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -139,7 +139,33 @@ void VMatrix::printFields(ostream& out) const
 { 
   for(int j=0; j<width(); j++)
   {
-    out << "Field #" << j << ":  " << getFieldInfos(j);
+    VMField fi = getFieldInfos(j);
+    out << "Field #" << j << ":  ";
+    out << fi.name << "\t type: ";
+    switch(fi.fieldtype)
+      {
+      case VMField::UnknownType:
+        out << "UnknownType\n";
+        break;
+      case VMField::Continuous:
+        out << "Continuous\n";
+        break;
+      case VMField::DiscrGeneral:
+        out << "DiscrGeneral\n";
+        break;
+      case VMField::DiscrMonotonic:
+        out << "DiscrMonotonic\n";
+        break;
+      case VMField::DiscrFloat:
+        out << "DiscrFloat\n";
+        break;
+      case VMField::Date:
+        out << "Date\n";
+        break;
+      default:
+        PLERROR("Can't write name of type");
+      }  
+
     if(fieldstats.size()>0)
     {
       const VMFieldStat& s = fieldStat(j);
@@ -180,18 +206,11 @@ void VMatrix::computeStats()
     }
 }
 
-void VMatrix::writeStats(ostream& out) const
+void VMatrix::loadStats(const string& filename)
 {
-  out << fieldstats.size() << endl;
-  for(int j=0; j<fieldstats.size(); j++)
-  {
-    fieldstats[j].write(out);
-    out << endl;
-  }
-}
-
-void VMatrix::readStats(istream& in)
-{
+  ifstream in(filename.c_str());
+  if(!in)
+    PLERROR("In VMatrix::loadStats Couldn't open file %s for reading",filename.c_str());
   int nfields;
   in >> nfields;
   if(nfields!=width())
@@ -202,20 +221,17 @@ void VMatrix::readStats(istream& in)
     fieldstats[j].read(in);
 }
 
-void VMatrix::loadStats(const string& filename)
-{
-  ifstream in(filename.c_str());
-  if(!in)
-    PLERROR("In VMatrix::loadStats Couldn't open file %s for reading",filename.c_str());
-  readStats(in);
-}
-
 void VMatrix::saveStats(const string& filename) const
 {
   ofstream out(filename.c_str());
   if(!out)
     PLERROR("In VMatrix::saveStats Couldn't open file %s for writing",filename.c_str());
-  writeStats(out);
+  out << fieldstats.size() << endl;
+  for(int j=0; j<fieldstats.size(); j++)
+  {
+    fieldstats[j].write(out);
+    out << endl;
+  }
 }
 
 

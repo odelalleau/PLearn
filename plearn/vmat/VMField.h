@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: VMField.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+ * $Id: VMField.h,v 1.2 2003/05/22 06:21:36 plearner Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -73,21 +73,21 @@ public:
 
   VMField(const string& the_name="", FieldType the_fieldtype=UnknownType);
     
-  void print(ostream& out) const;
-  void write(ostream& out) const;
-  void read(istream& in);
+  //  void print(ostream& out) const;
+  //  void write(ostream& out) const;
+  //  void read(istream& in);
 };
 
-inline ostream& operator<<(ostream& out, const VMField& f) { f.print(out); return out; }
+// inline ostream& operator<<(ostream& out, const VMField& f) { f.print(out); return out; }
 
-inline void write(ostream& out, const VMField& f) { f.write(out); }
-inline void read(istream& in, VMField& f) { f.read(in); }
+// inline void write(ostream& out, const VMField& f) { f.write(out); }
+// inline void read(istream& in, VMField& f) { f.read(in); }
 
-inline PStream &operator<<(PStream &out, const VMField &f)
-{ f.write(out.rawout()); return out; };
+// inline PStream &operator<<(PStream &out, const VMField &f)
+// { f.write(out.rawout()); return out; };
 
-inline PStream &operator>>(PStream &in, VMField &f)
-{ f.read(in.rawin()); return in; };
+// inline PStream &operator>>(PStream &in, VMField &f)
+// { f.read(in.rawin()); return in; };
 
 //!  this class holds simple statistics about a field
 class VMFieldStat
@@ -134,15 +134,6 @@ public:
   void write(ostream& out) const;
   void read(istream& in);
 };
-
-inline void write(ostream& out, const VMFieldStat& f) { f.write(out); }
-inline void read(istream& in, VMFieldStat& f) { f.read(in); }
-
-inline PStream &operator<<(PStream &out, const VMFieldStat &f)
-{ f.write(out.rawout()); return out; };
-
-inline PStream &operator>>(PStream &in, VMFieldStat &f)
-{ f.read(in.rawin()); return in; };
 
 %> // end of namespace PLearn
 

@@ -220,10 +220,8 @@ public:
   inline bool eof() const { return pin->eof(); }
   inline bool good() const { return pin->good() && pout->good(); }
 
-  inline istream& rawin() { return *pin; }   //<! access to underlying istream
-  inline ostream& rawout() { return *pout; } //<! access to underlying ostream
+  inline istream& _do_not_use_this_method_rawin_() { return *pin; }   //<! access to underlying istream
   
-
   /******
    * The folowing methods are 'forwarded' from {i|o}stream.
    */
@@ -360,8 +358,6 @@ public:
   /*****
    * operator<<'s and operator>>'s to set flags, etc.
    */
-  inline istream& operator>>(pl_stream_raw& raw_) { return rawin(); }
-  inline ostream& operator<<(const pl_stream_raw& raw_) { return rawout(); }
   inline PStream& operator>>(pl_stream_clear_flags& flags_) { option_flags_in= 0; return *this; }
   inline PStream& operator<<(const pl_stream_clear_flags& flags_) { option_flags_out= 0; return *this; }
   inline PStream& operator>>(pl_stream_option_flags& flags_) { option_flags_in= flags_.flags; return *this; }
