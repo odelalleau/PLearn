@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatCommand.cc,v 1.6 2004/07/21 16:30:49 chrish42 Exp $ 
+   * $Id: VMatCommand.cc,v 1.7 2005/01/04 21:24:09 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VMatCommand.cc */
@@ -59,6 +59,8 @@ VMatCommand::VMatCommand():
       "       To list the fields with their names \n"
       "   or: vmat fieldinfo <dataset> <fieldname_or_num>\n"
       "       To display statistics for that field \n"
+      "   or: vmat bbox <dataset> [<extra_percent>] \n"
+      "       To display the data bounding box (i.e., for each field, its min and max, possibly extended by +-extra_percent ex: 0.10 for +-10% of the data range )\n"
       "   or: vmat cat <dataset> [<optional_vpl_filtering_code>]\n"
       "       To display the dataset \n"
       "   or: vmat sascat <dataset.vmat> <dataset.txt>\n"
@@ -99,17 +101,34 @@ VMatCommand::VMatCommand():
 //! The actual implementation of the 'VMatCommand' command 
 void VMatCommand::run(const vector<string>& args)
 {
-  // Dirty hack to plug into old vmatmain code
-  // Eventually, should get vmatmain code in here and clean
+  // new vmat sub-commands
+  string command = args[0];
+  if(command=="bbox")
+    {
+      string dataspec = args[1];
+      real extra_percent = 0.00;
+      if(args.size()==3)
+        extra_percent = toreal(args[2]);
+      
+      VMat vm = getDataSet(dataspec);
+      TVec< pair<real, real> > bbox = vm->getBoundingBox(extra_percent);
+      for(int k=0; k<bbox.length(); k++)
+        cout << bbox[k].first << " : " << bbox[k].second << endl;
+    }
+  else
+    {
+      // Dirty hack to plug into old vmatmain code
+      // Eventually, should get vmatmain code in here and clean
 
-  int argc = (int)args.size()+1;
-  char** argv = new char*[argc];
-  string commandname = "vmat";
-  argv[0] = const_cast<char*>(commandname.c_str());
-  for(int i=1 ; i<argc; i++)
-    argv[i] = const_cast<char*>(args[i-1].c_str());
-  vmatmain(argc, argv);
-  delete[] argv;
+      int argc = (int)args.size()+1;
+      char** argv = new char*[argc];
+      string commandname = "vmat";
+      argv[0] = const_cast<char*>(commandname.c_str());
+      for(int i=1 ; i<argc; i++)
+        argv[i] = const_cast<char*>(args[i-1].c_str());
+      vmatmain(argc, argv);
+      delete[] argv;
+    }
 }
 
 } // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerCommand.h,v 1.2 2004/02/20 21:11:40 chrish42 Exp $ 
+   * $Id: LearnerCommand.h,v 1.3 2005/01/04 21:24:07 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -46,6 +46,9 @@
 
 #include "PLearnCommand.h"
 #include "PLearnCommandRegistry.h"
+
+// for definition of real
+#include "plearn/math/pl_math.h"
 
 namespace PLearn {
 using namespace std;
@@ -60,6 +63,16 @@ public:
   static void test(const string& trained_learner_file, const string& testset_spec, const string& stats_file, const string& outputs_file, const string& costs_file);
   static void compute_outputs(const string& trained_learner_file, const string& test_inputs_spec, const string& outputs_file);
 
+  static void compute_outputs_on_1D_grid(const string& trained_learner_file, const string& grid_outputs_file, 
+                                         real xmin, real xmax, int nx);
+
+  static void compute_outputs_on_2D_grid(const string& trained_learner_file, const string& grid_outputs_file, 
+                                         real xmin, real xmax, real ymin, real ymax,
+                                         int nx, int ny);
+
+  static void compute_outputs_on_auto_grid(const string& trained_learner_file, const string& grid_outputs_file, 
+                                           const string& dataset_spec, real extra_percent,
+                                           int nx, int ny=0);
 protected:
   static PLearnCommandRegistry reg_;
 };

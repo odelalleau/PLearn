@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerCommand.cc,v 1.9 2004/12/22 16:23:22 chrish42 Exp $ 
+   * $Id: LearnerCommand.cc,v 1.10 2005/01/04 21:24:06 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -64,10 +64,15 @@ LearnerCommand::LearnerCommand():
                   "  -> Tests the specified learner on the testset. Will produce a cost.stats file (viewable with the plearn stats command) and optionally saves individual outputs and costs\n"
                   "learner compute_outputs <trained_learner.psave> <test_inputs.vmat> <outputs.pmat> (there is 'learner co' as a shortcut for compute_outputs)\n"
                   // "learner compute_costs <trained_learner.psave> <testset.vmat> <outputs.pmat> <costs.pmat>\n" 
-                  "The datasets do not need to be .vmat they can be any valid vmatrix (.amat .pmat .dmat)"
+                  "learner compute_outputs_on_1D_grid <trained_learner.psave> <gridoutputs.pmat> <xmin> <xmax> <nx> (shortcut: learner cg1)\n"
+                  "  -> Computes output of learner on nx equally spaced points in range [xmin, xmax] and writes the list of (x,output) in gridoutputs.pmat \n"
+                  "learner compute_outputs_on_2D_grid <trained_learner.psave> <gridoutputs.pmat> <xmin> <xmax> <ymin> <ymax> <nx> <ny> (shortcut: learner cg2)\n"
+                  "  -> Computes output of learner on the regular 2d grid specified and writes the list of (x,y,output) in gridoutputs.pmat \n"
+                  "learner compute_outputs_on_auto_grid <trained_learner.psave> <gridoutputs.pmat> <trainset.vmat> <nx> [<ny>] (shortcut: learner cg)\n"
+                  "  -> Automatically determines a bounding-box from the trainset (enlarged by 5%), and computes the output along a regular 1D grid of <nx> points or a regular 2D grid of <nx>*<ny> points. (Note: you can also invoke command vmat bbox to determine the bounding-box by yourself, and then invoke learner cg1 or learner cg2 appropriately)\n"
+                  "\nThe datasets do not need to be .vmat they can be any valid vmatrix (.amat .pmat .dmat)"
                   ) 
   {}
-
 
 void LearnerCommand::train(const string& learner_spec_file, const string& trainset_spec, const string& save_learner_file)
 {
@@ -115,6 +120,82 @@ void LearnerCommand::compute_outputs(const string& trained_learner_file, const s
   learner->use(testinputs,testoutputs);
 }
 
+void LearnerCommand::compute_outputs_on_2D_grid(const string& trained_learner_file, const string& grid_outputs_file, 
+                                                real xmin, real xmax, real ymin, real ymax,
+                                                int nx, int ny)
+{
+  if(nx<2 || ny<2)
+    PLERROR("In LearnerCommand::compute_outputs_on_2D_grid invalid nx or ny. Must have at least a 2x2 grid");
+  PP<PLearner> learner;
+  PLearn::load(trained_learner_file,learner);
+  if(learner->inputsize()!=2)
+    PLERROR("In LearnerCommand::compute_outputs_on_2D_grid learner must have inputsize==2 (it's %d)",learner->inputsize());
+  int outputsize = learner->outputsize();
+  VMat gridoutputs = new FileVMatrix(grid_outputs_file,nx*ny,2+outputsize);
+  real deltax = (xmax-xmin)/(nx-1);
+  real deltay = (ymax-ymin)/(ny-1);
+
+  Vec v(2+outputsize);
+  Vec input = v.subVec(0,2);
+  Vec output = v.subVec(2,outputsize);
+
+  real x = xmin;
+  for(int i=0; i<nx; i++, x+=deltax)
+    {
+        input[0] = x;
+        real y = ymin;
+        for(int j=0; j<ny; j++, y+=deltay)
+          {
+            input[1] = y;
+            learner->computeOutput(input,output);
+            gridoutputs->appendRow(v);
+          }
+    }
+  
+}
+
+void LearnerCommand::compute_outputs_on_1D_grid(const string& trained_learner_file, const string& grid_outputs_file, 
+                                                real xmin, real xmax, int nx)
+{
+  if(nx<2)
+    PLERROR("In LearnerCommand::compute_outputs_on_1D_grid invalid nx. Must be at least 2");
+  PP<PLearner> learner;
+  PLearn::load(trained_learner_file,learner);
+  if(learner->inputsize()!=1)
+    PLERROR("In LearnerCommand::compute_outputs_on_1D_grid learner must have inputsize==1 (it's %d)",learner->inputsize());
+  int outputsize = learner->outputsize();
+  VMat gridoutputs = new FileVMatrix(grid_outputs_file,nx,1+outputsize);
+  real deltax = (xmax-xmin)/(nx-1);
+
+  Vec v(1+outputsize);
+  Vec input = v.subVec(0,1);
+  Vec output = v.subVec(1,outputsize);
+  
+  real x=xmin;
+  for(int i=0; i<nx; i++, x+=deltax)
+    {
+        input[0] = x;
+        learner->computeOutput(input,output);
+        gridoutputs->appendRow(v);
+    }  
+}
+
+void LearnerCommand::compute_outputs_on_auto_grid(const string& trained_learner_file, const string& grid_outputs_file, 
+                                                  const string& dataset_spec, real extra_percent,
+                                                  int nx, int ny)
+{
+  TVec< pair<real,real> > bbox = getDataSet(dataset_spec)->getBoundingBox(extra_percent);
+  if(ny>0)
+    compute_outputs_on_2D_grid(trained_learner_file, grid_outputs_file, 
+                               bbox[0].first, bbox[0].second, bbox[1].first, bbox[1].second,
+                               nx, ny);
+  else
+    compute_outputs_on_1D_grid(trained_learner_file, grid_outputs_file, 
+                               bbox[0].first, bbox[0].second,
+                               nx);
+}
+
+
 //! The actual implementation of the 'LearnerCommand' command 
 void LearnerCommand::run(const vector<string>& args)
 {
@@ -150,8 +231,34 @@ void LearnerCommand::run(const vector<string>& args)
         compute_outputs(args[1],args[2],args[3]);
       else
         PLERROR("LearnerCommand::run you must provide 'plearn learner compute_outputs learner_spec_file trainset_spec save_learner_file'");
-    }    
-    
+    }
+  else if (command=="compute_outputs_on_1D_grid" || command=="cg1")
+    {
+      if(args.size()!=6)
+        PLERROR("Subcommand learner compute_outputs_on_1D_grid requires 5 arguments. Check the help!");
+      compute_outputs_on_1D_grid(args[1], args[2], toreal(args[3]), toreal(args[4]), toint(args[5]));
+    }
+  else if (command=="compute_outputs_on_2D_grid" || command=="cg2")
+    {
+      if(args.size()!=9)
+        PLERROR("Subcommand learner compute_outputs_on_2D_grid requires 8 arguments. Check the help!");
+      compute_outputs_on_2D_grid(args[1], args[2], 
+                                 toreal(args[3]), toreal(args[4]),
+                                 toreal(args[5]), toreal(args[6]),
+                                 toint(args[7]), toint(args[8]) );
+    }
+  else if (command=="compute_outputs_on_auto_grid" || command=="cg")
+    {
+      if(args.size()<5)
+        PLERROR("Subcommand learner compute_outputs_on_auto_grid requires 4 or 5 arguments. Check the help!");
+      int nx = toint(args[4]);
+      int ny = 0;
+      if(args.size()==6)
+        ny = toint(args[5]);      
+      compute_outputs_on_auto_grid(args[1], args[2],
+                                   args[3], 0.05,
+                                   nx, ny);
+    }
   else
     PLERROR("Invalid command %s check the help for available commands",command.c_str());
 }
