@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: ProgressBar.h,v 1.5 2004/05/13 20:22:15 nova77 Exp $
+   * $Id: ProgressBar.h,v 1.6 2004/05/14 17:15:37 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -126,8 +126,8 @@ public:
   void update(int newpos){plugin->update(this,newpos);}
 
   // this function assumes plugin is always a valid object (it is created statically in the .cc)
-  void setPlugin(PP<ProgressBarPlugin> plugin_) { plugin = plugin_; }
-  PP<ProgressBarPlugin> getCurrentPlugin() { return plugin; }
+  static void setPlugin(PP<ProgressBarPlugin> plugin_) { plugin = plugin_; }
+  static PP<ProgressBarPlugin> getCurrentPlugin();
 
   // Completes and removes the progressBar 
   void close();
@@ -136,7 +136,7 @@ public:
   ~ProgressBar();
 private:
   bool closed;
-  PP<ProgressBarPlugin> plugin;
+  static PP<ProgressBarPlugin> plugin;
 };
 
 
