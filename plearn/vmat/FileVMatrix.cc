@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.13 2004/03/01 18:32:11 tihocan Exp $
+   * $Id: FileVMatrix.cc,v 1.14 2004/03/15 17:57:46 tihocan Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -49,14 +49,17 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(FileVMatrix, "ONE LINE DESCR", "NO HELP");
 
+/////////////////
+// FileVMatrix //
+/////////////////
 FileVMatrix::FileVMatrix()
-  :filename_(""), f(0) 
+: filename_(""), f(0)
 {
   writable=true;
 }
 
 FileVMatrix::FileVMatrix(const string& filename)
-  :filename_(abspath(filename)), f(0)
+: filename_(abspath(filename)), f(0)
 {
   writable = true;
   build_();
@@ -70,78 +73,35 @@ static int strlen(char* s) {
 }
 
 FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
-  :VMatrix(the_length, the_width), filename_(abspath(filename)), f(0)
+: VMatrix(the_length, the_width), filename_(abspath(filename)), f(0)
 {
   writable = true;
   build_();
-/*
-  force_mkdir_for_file(filename);
-  // cout << "x1 " << strlen("MATRIX 1 12 DOUBLE LITTLE_ENDIAN") << endl;
-  f = fopen(filename.c_str(),"w+b");
-  if (!f)
-    PLERROR("In FileVMatrix constructor, could not open file %s for read/write",filename.c_str());
-
-  setMetaDataDir(filename_ + ".metadata"); 
-  setMtime(mtime(filename_));
-
-  char header[DATAFILE_HEADERLENGTH]; 
-
-#ifdef USEFLOAT
-  file_is_float = true;
-#ifdef LITTLEENDIAN
-  file_is_bigendian = false; 
-  sprintf(header,"MATRIX %d %d FLOAT LITTLE_ENDIAN", length_, width_);
-#endif
-#ifdef BIGENDIAN
-  file_is_bigendian = true; 
-  sprintf(header,"MATRIX %d %d FLOAT BIG_ENDIAN", length_, width_);
-#endif
-#endif
-#ifdef USEDOUBLE
-  file_is_float = false;
-#ifdef LITTLEENDIAN
-  file_is_bigendian = false; 
-  sprintf(header,"MATRIX %d %d DOUBLE LITTLE_ENDIAN", length_, width_);
-#endif
-#ifdef BIGENDIAN
-  file_is_bigendian = true; 
-  sprintf(header,"MATRIX %d %d DOUBLE BIG_ENDIAN", length_, width_);
-#endif
-#endif
-
-  int pos=strlen(header);
-  // Pad the header with whites and terminate it with '\n'
-  for(; pos<DATAFILE_HEADERLENGTH; pos++)
-    header[pos] = ' ';
-  header[DATAFILE_HEADERLENGTH-1] = '\n';
-  //header[DATAFILE_HEADERLENGTH-1] = '\0';
-
-  // write the header to the file
-  fwrite(header,DATAFILE_HEADERLENGTH,1,f);
-
-  if(length_ > 0 && width_ > 0) //ensure we can allocate enough space... if len>0, to ensure
-  {             // that the header ends with a '\n'.
-    if( fseek(f, DATAFILE_HEADERLENGTH+length_*width_*sizeof(real)-1, SEEK_SET) <0 )
-    {
-      perror("");
-      PLERROR("In FileVMatrix constructor Could not fseek to last byte");
-    }
-    fputc('\0',f);
-  }
-
-  getFieldInfos();
-*/
 }
 
+///////////
+// build //
+///////////
 void FileVMatrix::build()
 {
   inherited::build();
   build_();
 }
 
+////////////
+// build_ //
+////////////
 void FileVMatrix::build_()
 {
-  if (f) return; // file already built
+  
+  // Code below is commented because the filename may have been changed,
+  // in which case f should be modified.
+  // TODO note that since it's a FILE*, there will probably be some memory leak.
+//  if (f) return; // file already built
+  // Since we are going to re-create it, we can close the current f.
+  if (f) {
+    fclose(f);
+  }
 
   char header[DATAFILE_HEADERLENGTH];
   char matorvec[20];
@@ -157,48 +117,35 @@ void FileVMatrix::build_()
 
   if (new_file)
   {
+    if (!writable) {
+      PLERROR("In FileVMatrix::build_ - You asked to create a new file, but 'writable' is set to 0 !");
+    }
     writable = true;
     f = fopen(filename_.c_str(),"w+b");
     if (!f)
       PLERROR("In FileVMatrix constructor, could not open file %s",filename_.c_str());
+
 #ifdef USEFLOAT
     file_is_float = true;
-#ifdef LITTLEENDIAN
-    file_is_bigendian = false; 
-    sprintf(header,"MATRIX %d %d FLOAT LITTLE_ENDIAN", length_, width_);
-#endif
-#ifdef BIGENDIAN
-    file_is_bigendian = true; 
-    sprintf(header,"MATRIX %d %d FLOAT BIG_ENDIAN", length_, width_);
-#endif
 #endif
 #ifdef USEDOUBLE
     file_is_float = false;
+#endif 
 #ifdef LITTLEENDIAN
     file_is_bigendian = false; 
-    sprintf(header,"MATRIX %d %d DOUBLE LITTLE_ENDIAN", length_, width_);
 #endif
 #ifdef BIGENDIAN
     file_is_bigendian = true; 
-    sprintf(header,"MATRIX %d %d DOUBLE BIG_ENDIAN", length_, width_);
-#endif
 #endif
 
-    int pos=strlen(header);
-    // Pad the header with whites and terminate it with '\n'
-    for(; pos<DATAFILE_HEADERLENGTH; pos++)
-      header[pos] = ' ';
-    header[DATAFILE_HEADERLENGTH-1] = '\n';
-
-    // write the header to the file
-    fwrite(header,1,DATAFILE_HEADERLENGTH,f);
-
+    updateHeader();
+    
     if(length_ > 0 && width_ > 0) //ensure we can allocate enough space... if len>0, to ensure
     {             // that the header ends with a '\n'.
       if( fseek(f, DATAFILE_HEADERLENGTH+length_*width_*sizeof(real)-1, SEEK_SET) <0 )
       {
         perror("");
-        PLERROR("In FileVMatrix constructor Could not fseek to last byte");
+        PLERROR("In FileVMatrix::build_ - Could not fseek to last byte");
       }
       fputc('\0',f);
     }
@@ -213,7 +160,33 @@ void FileVMatrix::build_()
     fread(header,DATAFILE_HEADERLENGTH,1,f);
     if(header[DATAFILE_HEADERLENGTH-1]!='\n')
       PLERROR("In FileVMatrix constructor, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.(0)");
-    sscanf(header,"%s%d%d%s%s",matorvec,&length_,&width_,datatype,endiantype);
+    int file_length, file_width;
+    bool need_update_header = false;
+    sscanf(header, "%s%d%d%s%s", matorvec, &file_length, &file_width, datatype, endiantype);
+    if (file_length == -1 && this->length_ >= 0 && writable) {
+      // The length set in the file is not valid, but we have specified a length.
+      // This can happen if build() has been called once before the sizes have
+      // been specified. In this case we must modify the file's length.
+      need_update_header = true;
+    } else if (file_length >= 0 && this->length_ >= 0 && file_length != this->length_) {
+      PLERROR("In FileVMatrix::build_ - Lengths of the VMatrix and of the file loaded differ");
+    } else {
+      this->length_ = file_length;
+    }
+
+    if (file_width == -1 && this->width_ >= 0 && writable) {
+      // Same as above, but for the width.
+      need_update_header = true;
+    } else if (file_width >= 0 && this->width_ >= 0 && file_width != this->width_) {
+      PLERROR("In FileVMatrix::build_ - Widths of the VMatrix and of the file loaded differ");
+    } else {
+      this->width_ = file_width;
+    }
+
+    if (need_update_header) {
+      updateHeader();
+    }
+
     if (strcmp(matorvec,"MATRIX")!=0)
       PLERROR("In FileVMatrix constructor, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.(1)");
 
@@ -232,16 +205,24 @@ void FileVMatrix::build_()
       PLERROR("In FileVMatrix constructor, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.(3)");
 
     //resize the string mappings
-    map_sr = TVec<map<string,real> >(width_);
-    map_rs = TVec<map<real,string> >(width_);
+    if (width_ >= 0) {
+      map_sr = TVec<map<string,real> >(width_);
+      map_rs = TVec<map<real,string> >(width_);
+    }
   }
 
-  getFieldInfos();
+  if (width_ >= 0) {
+    getFieldInfos();
+  }
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void FileVMatrix::declareOptions(OptionList & ol)
 {
   declareOption(ol, "filename", &FileVMatrix::filename_, OptionBase::buildoption, "Filename of the matrix");
+
   inherited::declareOptions(ol);
 }
 
@@ -264,6 +245,9 @@ void FileVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   PLERROR("FileVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
+//////////////////
+// ~FileVMatrix //
+//////////////////
 FileVMatrix::~FileVMatrix()
 { 
   saveFieldInfos();
@@ -273,6 +257,9 @@ FileVMatrix::~FileVMatrix()
   }
 }
 
+/////////
+// get //
+/////////
 real FileVMatrix::get(int i, int j) const
 {
   if(file_is_float)
@@ -287,6 +274,9 @@ real FileVMatrix::get(int i, int j) const
   }
 }
 
+///////////////
+// getSubRow //
+///////////////
 void FileVMatrix::getSubRow(int i, int j, Vec v) const
 {
   if(file_is_float)
@@ -301,6 +291,9 @@ void FileVMatrix::getSubRow(int i, int j, Vec v) const
   }  
 }
 
+///////////////
+// putSubRow //
+///////////////
 void FileVMatrix::putSubRow(int i, int j, Vec v)
 {
   if(file_is_float)
@@ -315,6 +308,9 @@ void FileVMatrix::putSubRow(int i, int j, Vec v)
   }  
 }
 
+/////////
+// put //
+/////////
 void FileVMatrix::put(int i, int j, real value)
 {
   if(file_is_float)
@@ -329,6 +325,9 @@ void FileVMatrix::put(int i, int j, real value)
   }
 }
 
+///////////////
+// appendRow //
+///////////////
 void FileVMatrix::appendRow(Vec v)
 {
   if(file_is_float)
@@ -343,8 +342,22 @@ void FileVMatrix::appendRow(Vec v)
   }
   length_++;
 
-  char header[DATAFILE_HEADERLENGTH]; 
+  updateHeader();
+}
 
+///////////
+// flush //
+///////////
+void FileVMatrix::flush()
+{
+  fflush(f);
+}
+
+//////////////////
+// updateHeader //
+//////////////////
+void FileVMatrix::updateHeader() {
+  char header[DATAFILE_HEADERLENGTH]; 
 #ifdef USEFLOAT
 #ifdef LITTLEENDIAN
   sprintf(header,"MATRIX %d %d FLOAT LITTLE_ENDIAN", length_, width_);
@@ -361,23 +374,14 @@ void FileVMatrix::appendRow(Vec v)
   sprintf(header,"MATRIX %d %d DOUBLE BIG_ENDIAN", length_, width_);
 #endif
 #endif
-
   int pos = strlen(header);
   for(; pos<DATAFILE_HEADERLENGTH; pos++)
-  //for(int pos=strlen(header); pos<DATAFILE_HEADERLENGTH-1; pos++)
     {
       header[pos] = ' ';
     }
   header[DATAFILE_HEADERLENGTH-1] = '\n';
-  //header[DATAFILE_HEADERLENGTH-1] = '\0';
-  // write the header to the file
   fseek(f,0,SEEK_SET);
   fwrite(header,1,DATAFILE_HEADERLENGTH,f);
-}
-
-void FileVMatrix::flush()
-{
-  fflush(f);
 }
 
 } // end of namespcae PLearn
