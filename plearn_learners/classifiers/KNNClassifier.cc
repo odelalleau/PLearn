@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNClassifier.cc,v 1.4 2004/12/28 15:49:31 tihocan Exp $ 
+   * $Id: KNNClassifier.cc,v 1.5 2005/04/10 19:06:15 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -156,6 +156,7 @@ void KNNClassifier::build_()
 
   if (kmin <= 0)
     PLERROR("KNNClassifier::build_: the 'kmin' option must be strictly positive");
+
 }
 
 // ### Nothing to add here, simply calls build_
@@ -200,7 +201,8 @@ void KNNClassifier::setTrainingSet(VMat training_set, bool call_forget)
   knn->copy_weight = true;
   knn->copy_index  = false;
   knn->setTrainingSet(training_set,call_forget);
-  knn_costs.resize(knn->nTestCosts());
+  knn_costs.resize(num_neighbors); // Changed for compatibility with HyperLearner
+  //knn_costs.resize(knn->nTestCosts());
   knn_output.resize(knn->outputsize());
 }
 
