@@ -493,14 +493,17 @@ U{Epytext Markup Language Manual<http://epydoc.sourceforge.net/epytext.html>}
 should not take you more than 15 minutes and you will be ready to document your
 code.
 """
-__cvs_id__ = "$Id: pyplearn.py,v 1.25 2005/03/29 16:53:43 dorionc Exp $"
+__cvs_id__ = "$Id: pyplearn.py,v 1.26 2005/04/11 18:56:17 dorionc Exp $"
 
 import string, types
 import plearn.utilities.metaprog as metaprog
 
 __all__ = [ 'PyPlearnError', 'ref', 'bind', 'bindref', 'plvar', 'TMat',
             'plargs', 'generate_expdir', 'plarg_defaults', 'bind_plargs',
-            'PLearnRepr', 'include'
+            'PLearnRepr', 'include',
+
+            ## Exceptions
+            'UnknownArgumentError'
             ]
 
 class plearn_snippet:

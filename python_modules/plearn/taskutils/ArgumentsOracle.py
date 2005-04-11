@@ -45,7 +45,7 @@ class Cursor:
         
     def value( self ):
         return self._value
-    
+
 class CrossProductOracle( ArgumentsOracle ):
     def __init__( self, name_values_pairs ):
         """Sets the internal state of the iterator.

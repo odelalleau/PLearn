@@ -48,6 +48,7 @@ class Xperiment(PyPLearnObject):
     _cached_experiments = None
 
     def load_experiments( cls, expkey=[], dirlist=None ):
+        assert isinstance( expkey, list )
         xperiments = []
 
         if dirlist is None:
