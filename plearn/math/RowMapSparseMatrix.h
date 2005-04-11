@@ -66,44 +66,47 @@ using namespace std;
 */
 
   template <class T>
-  class RowMapSparseMatrix {
+  class RowMapSparseMatrix : public PPointable {
     public:
-    vector< map<int,T> > rows;
+    mutable vector< map<int,T> > rows;
     protected:
     int _width;
 
     public:
     bool save_binary;
+    T null_elem;
 
-    RowMapSparseMatrix(int n_rows=0, int n_columns=0) 
-      : rows(n_rows), _width(n_columns), save_binary(true) {}
+    RowMapSparseMatrix(int n_rows=0, int n_columns=0, T nullelem=0) 
+      : rows(n_rows), _width(n_columns), save_binary(true), null_elem(nuellelem) {}
 
     RowMapSparseMatrix(string filename) { load(filename); }
 
-    RowMapSparseMatrix(const Mat& m, bool fill_all=true) : rows(m.length()), _width(m.width()), save_binary(true)
+    RowMapSparseMatrix(const Mat& m, bool fill_all=true, T nullelem=0) : rows(m.length()), _width(m.width()), 
+                                                                         save_binary(true), null_elem(nuellelem)
     {
       if (fill_all)
-	for (int i=0;i<length();i++)
-	{
-	  real* r=m[i];
-	  map<int,T>& row_i=rows[i];
-	  for (int j=0;j<width();j++)
-	    row_i[j]=T(r[j]);
-	}
+        for (int i=0;i<length();i++)
+        {
+          real* r=m[i];
+          map<int,T>& row_i=rows[i];
+          for (int j=0;j<width();j++)
+            row_i[j]=T(r[j]);
+        }
       else
- 	for (int i=0;i<length();i++)
-	{
-	  real* r=m[i];
-	  map<int,T>& row_i=rows[i];
-	  for (int j=0;j<width();j++){
-	    if(T(r[j])!=0)
-	      row_i[j]=T(r[j]);
-	  }
-	}
+        for (int i=0;i<length();i++)
+        {
+          real* r=m[i];
+          map<int,T>& row_i=rows[i];
+          for (int j=0;j<width();j++){
+            if(T(r[j])!=0)
+              row_i[j]=T(r[j]);
+          }
+        }
     }
 
     //!  Accepts a FORTRAN formatted sparse matrix as an initializer.
-    RowMapSparseMatrix(const SparseMatrix& sm, int n_rows, int n_cols) : rows(n_rows), _width(n_cols), save_binary(false) {
+    RowMapSparseMatrix(const SparseMatrix& sm, int n_rows, int n_cols, T nullelem=0) : 
+      rows(n_rows), _width(n_cols), save_binary(false), null_elem(nuellelem) {
 
       for (int j = 0; j < n_cols; j++) {
         int bcol_j = (int)sm.beginRow[j];
@@ -137,24 +140,52 @@ using namespace std;
 
     T& operator()(int i, int j) { 
 #ifdef BOUNDCHECK      
-      if (i<0 || i>=length() && j<0 || j>=width())
-        PLERROR("RowMapSparseMatrix: out-of-bound access to (%d,%d), dims=(%d,%d)",
-              i,j,length(),width());
-#endif
-      return rows[i][j]; 
-    }
-
-    const T& operator()(int i, int j) const { 
-#ifdef BOUNDCHECK      
-      if (i<0 || i>=length() && j<0 || j>=width())
+      if (i<0 || i>=length() || j<0 || j>=width())
         PLERROR("RowMapSparseMatrix: out-of-bound access to (%d,%d), dims=(%d,%d)",
               i,j,length(),width());
 #endif
       map<int,T>& row_i = rows[i];
       typename map<int,T>::const_iterator it = row_i.find(j);
       if (it==row_i.end())
-        return 0;
+        return null_elem;
       return it->second;
+   }
+
+
+    const T& operator()(int i, int j) const { 
+#ifdef BOUNDCHECK      
+      if (i<0 || i>=length() || j<0 || j>=width())
+        PLERROR("RowMapSparseMatrix: out-of-bound access to (%d,%d), dims=(%d,%d)",
+              i,j,length(),width());
+#endif
+      map<int,T>& row_i = rows[i];
+      typename map<int,T>::const_iterator it = row_i.find(j);
+      if (it==row_i.end())
+        return null_elem;
+      return it->second;
+    }
+
+    T get(int i, int j) const { return (*this)(i,j); }
+
+    void set(int i, int j, T v) const { 
+#ifdef BOUNDCHECK      
+      if (i<0 || i>=length() || j<0 || j>=width())
+        PLERROR("RowMapSparseMatrix: out-of-bound access to (%d,%d), dims=(%d,%d)",
+              i,j,length(),width());
+#endif
+      map<int,T>& row_i = rows[i];
+      row_i[j] = v;
+    }
+
+    bool exists(int i, int j) const { 
+#ifdef BOUNDCHECK      
+      if (i<0 || i>=length() || j<0 || j>=width())
+        PLERROR("RowMapSparseMatrix: out-of-bound access to (%d,%d), dims=(%d,%d)",
+                i,j,length(),width());
+#endif
+      map<int,T>& row_i = rows[i];
+      typename map<int,T>::const_iterator it = row_i.find(j);
+      return (it!=row_i.end());
     }
 
 /*!       Get i-th row. Exemple to iterate on i-th row:
@@ -170,6 +201,7 @@ using namespace std;
       }
 */
     map<int,T>& operator()(int i) { return rows[i]; }
+    map<int,T>& getRow(int i) { return rows[i]; }
 
     //!  NOTE THIS IS A BIT EXPENSIVE!
     int size() const { 
@@ -202,6 +234,7 @@ using namespace std;
       readField(in,"n_rows",n_rows);
       rows.resize(n_rows);
       readField(in,"width",_width);
+      readField(in,"null_elem",null_elem);
       for (int i=0;i<n_rows;i++)
       {
         map<int,T>& row_i = rows[i];
@@ -241,6 +274,7 @@ using namespace std;
       writeField(out,"save_binary",save_binary);
       writeField(out,"n_rows",rows.size());
       writeField(out,"width",_width);
+      writeField(out,"null_elem",null_elem);
       int s=rows.size();
       for (int i=0;i<s;i++)
       {
@@ -297,6 +331,8 @@ using namespace std;
       if (y.length()!=length() || x.length()!=width())
         PLERROR("RowMapSparseMatrix::product: inconsistent arguments (%d,%d), dims=(%d,%d)",
               x.length(),y.length(),length(),width());
+      if (null_elem!=0)
+        PLERROR("RowMapSparseMatrix::product works only when null_elem=0, but was %g\n",null_elem);
 #endif
       int s=rows.size();
       for (int i=0;i<s;i++)
@@ -314,6 +350,7 @@ using namespace std;
     Mat toMat()
     {
       Mat res(length(),width());
+      if (null_elem!=0) res.fill(null_elem);
       for (int i=0;i<length();i++)
       {
         map<int,T>& row_i = rows[i];
@@ -410,7 +447,9 @@ using namespace std;
 #ifdef BOUNDCHECK
       if (v.length()!=width())
         PLERROR("RowMapSparseMatrix::dotRow(%d,v), v.length_=%d != matrix width=%d",
-              i,v.length(),width());
+                i,v.length(),width());
+      if (null_elem!=0)
+        PLERROR("RowMapSparseMatrix::dotRow works only when null_elem=0, but was %g\n",null_elem);
 #endif
       real s = 0;
       real* v_=v.data();
@@ -429,6 +468,8 @@ using namespace std;
       if (v.length()!=length())
         PLERROR("RowMapSparseMatrix::dotColumn(%d,v), v.length_=%d != matrix length=%d",
               j,v.length(),length());
+      if (null_elem!=0)
+        PLERROR("RowMapSparseMatrix::dotColumn works only when null_elem=0, but was %g\n",null_elem);
 #endif
       PLWARNING("RowMapSparseMatrix is not appropriate to perform dotColumn operations");
       real s=0;
@@ -441,6 +482,10 @@ using namespace std;
     //!  M = A' * A
     void transposeProduct(RowMapSparseMatrix& m, bool verbose = false)
     {
+#ifdef BOUNDCHECK
+      if (null_elem!=0)
+        PLERROR("RowMapSparseMatrix::dotColumn works only when null_elem=0, but was %g\n",null_elem);
+#endif
       RowMapSparseMatrix<T>& self = (*this);
       int n = self.length();
       RowMapSparseMatrix<T> mt(n, n);
@@ -474,6 +519,10 @@ using namespace std;
     //!  the non-zero elements
     void add2Rows(Vec row, bool only_on_non_zeros=true)
     {
+#ifdef BOUNDCHECK
+      if (null_elem!=0)
+        PLERROR("RowMapSparseMatrix::add2Rows works only when null_elem=0, but was %g\n",null_elem);
+#endif
       if (!only_on_non_zeros)
         PLERROR("RowMapSparseMatrix::add2Rows(Vec,bool) works only with bool=true");
       real* r=row.data();
@@ -490,6 +539,10 @@ using namespace std;
     //!  the non-zero elements
     void add2Columns(Vec col, bool only_on_non_zeros=true)
     {
+#ifdef BOUNDCHECK
+      if (null_elem!=0)
+        PLERROR("RowMapSparseMatrix::add2Columns works only when null_elem=0, but was %g\n",null_elem);
+#endif
       if (!only_on_non_zeros)
         PLERROR("RowMapSparseMatrix::add2Columns(Vec,bool) works only with bool=true");
       for (int i=0;i<length();i++)
@@ -575,6 +628,10 @@ using namespace std;
     //!  multiply each (non-zero) element
     void operator*=(real scalar)
     {
+#ifdef BOUNDCHECK
+      if (null_elem!=0)
+        PLERROR("RowMapSparseMatrix::operator* works only when null_elem=0, but was %g\n",null_elem);
+#endif
       for (int i=0;i<length();i++)
       {
         map<int,T>& row_i = rows[i];
@@ -651,7 +708,7 @@ using namespace std;
     static real euclidianDistance(map<int, real>& map1, map<int, real>& map2) 
     {
       if (map1.size() == 0 || map2.size() == 0)
-	return 0;
+        return 0;
       map<int, real>::iterator beg1 = map1.begin();
       map<int, real>::iterator beg2 = map2.begin();
       map<int, real>::iterator end1 = map1.end();

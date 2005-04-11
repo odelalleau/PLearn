@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: DoubleAccessSparseMatrix_impl.h,v 1.6 2004/09/13 19:40:04 kermorvc Exp $ 
+ * $Id: DoubleAccessSparseMatrix_impl.h,v 1.7 2005/04/11 17:15:21 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file DoubleAccessSparseMatrix_impl.h */
@@ -61,7 +61,7 @@ DoubleAccessSparseMatrix<T>::DoubleAccessSparseMatrix(int n_rows, int n_cols, st
 }
 
 template <class T>
-void DoubleAccessSparseMatrix<T>::resize(int n_rows, int n_cols) 
+void DoubleAccessSparseMatrix<T>::resize(int n_rows, int n_cols, bool clear_data) 
 {
   height = n_rows;
   width = n_cols;
@@ -76,7 +76,8 @@ void DoubleAccessSparseMatrix<T>::resize(int n_rows, int n_cols)
   {
     cols.resize(n_cols);
   }
-  clear();
+  if (clear_data)
+    clear();
 }
 
 template <class T>
@@ -194,7 +195,7 @@ T DoubleAccessSparseMatrix<T>::get(int i, int j) const
 }
 
 template <class T>
-bool DoubleAccessSparseMatrix<T>::exists(int i, int j)
+bool DoubleAccessSparseMatrix<T>::exists(int i, int j) const
 {
 #ifdef BOUNDCHECK      
   if (i < 0 || i >= height || j < 0 || j >= width)

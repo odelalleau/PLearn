@@ -105,7 +105,7 @@ public:
 
   virtual ~DoubleAccessSparseMatrix() {}
 
-  virtual void resize(int n_rows, int n_cols);
+  virtual void resize(int n_rows, int n_cols, bool clear_data=true);
   
   virtual void clear();
 
@@ -119,7 +119,7 @@ public:
 
   virtual T operator()(int i, int j)const { return get(i, j); }
 
-  virtual bool exists(int i, int j);
+  virtual bool exists(int i, int j) const;
 
   virtual void set(int i, int j, T value);
 
