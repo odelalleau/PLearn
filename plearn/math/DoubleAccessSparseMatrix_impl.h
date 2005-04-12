@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: DoubleAccessSparseMatrix_impl.h,v 1.7 2005/04/11 17:15:21 yoshua Exp $ 
+ * $Id: DoubleAccessSparseMatrix_impl.h,v 1.8 2005/04/12 19:36:08 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file DoubleAccessSparseMatrix_impl.h */
@@ -203,11 +203,11 @@ bool DoubleAccessSparseMatrix<T>::exists(int i, int j) const
 #endif
   if (mode == ROW_WISE)
   {
-    map<int, T>& row_i = rows[i];
+    const map<int, T>& row_i = rows[i];
     return (row_i.find(j) != row_i.end());
   } else
   {
-    map<int, T>& col_j = cols[j];
+    const map<int, T>& col_j = cols[j];
     return (col_j.find(i) != col_j.end());
   }    
 }

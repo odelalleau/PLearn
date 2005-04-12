@@ -77,12 +77,12 @@ using namespace std;
     T null_elem;
 
     RowMapSparseMatrix(int n_rows=0, int n_columns=0, T nullelem=0) 
-      : rows(n_rows), _width(n_columns), save_binary(true), null_elem(nuellelem) {}
+      : rows(n_rows), _width(n_columns), save_binary(true), null_elem(nullelem) {}
 
     RowMapSparseMatrix(string filename) { load(filename); }
 
     RowMapSparseMatrix(const Mat& m, bool fill_all=true, T nullelem=0) : rows(m.length()), _width(m.width()), 
-                                                                         save_binary(true), null_elem(nuellelem)
+                                                                         save_binary(true), null_elem(nullelem)
     {
       if (fill_all)
         for (int i=0;i<length();i++)
@@ -145,7 +145,7 @@ using namespace std;
               i,j,length(),width());
 #endif
       map<int,T>& row_i = rows[i];
-      typename map<int,T>::const_iterator it = row_i.find(j);
+      typename map<int,T>::iterator it = row_i.find(j);
       if (it==row_i.end())
         return null_elem;
       return it->second;
