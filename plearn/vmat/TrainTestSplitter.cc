@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.cc,v 1.12 2005/04/06 19:05:21 lapalmej Exp $ 
+   * $Id: TrainTestSplitter.cc,v 1.13 2005/04/12 15:10:04 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file TrainTestSplitter.cc */
@@ -65,7 +65,7 @@ void TrainTestSplitter::declareOptions(OptionList& ol)
       " will contain three sets)");
 
   declareOption(ol, "calc_with_pct", &TrainTestSplitter::calc_with_pct, OptionBase::buildoption,
-                "Boolean value : if it's true it will compupte the examples in the test set with the test_fraction value");
+                "Boolean value : if it's true it will compute the examples in the test set with the test_fraction value");
   declareOption(ol, "test_fraction", &TrainTestSplitter::test_fraction, OptionBase::buildoption,
                 "the fraction of the dataset reserved to the test set");
   declareOption(ol, "test_fraction_abs", &TrainTestSplitter::test_fraction_abs, OptionBase::buildoption,
