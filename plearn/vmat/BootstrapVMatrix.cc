@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.cc,v 1.13 2005/03/25 16:04:58 tihocan Exp $
+   * $Id: BootstrapVMatrix.cc,v 1.14 2005/04/12 15:08:21 tihocan Exp $
    ******************************************************* */
 
 #include "BootstrapVMatrix.h"
@@ -64,6 +64,7 @@ BootstrapVMatrix::BootstrapVMatrix()
 BootstrapVMatrix::BootstrapVMatrix(VMat m, real frac, bool shuffle)
 {
   this->frac = frac;
+  this->seed = 0;
   this->source = m;
   this->shuffle = shuffle;
   build();
