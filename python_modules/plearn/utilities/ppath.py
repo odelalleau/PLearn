@@ -76,6 +76,13 @@ special_directories    = [ skeldir,
 ##  Helper Functions  ##################
 ########################################
 
+def get_domain_name():
+    from socket import getfqdn
+    host_name = getfqdn()
+    i = host_name.find('.')
+    assert i != -1, "getfqdn didn't return a fully-qualified name (no '.')."
+    return host_name[i+1:]
+
 def exempt_of_subdirectories( directories ):
     """Remove any path in list that is a subdirectory of some other directory in the list.
 
