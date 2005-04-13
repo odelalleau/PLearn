@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.39 2005/03/08 16:20:55 chapados Exp $
+   * $Id: StatsCollector.h,v 1.40 2005/04/13 19:44:13 larocheh Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -184,7 +184,10 @@ public:
   //! must be the average fraction of positive examples in the dataset (= n+ / n).
   real lift(int k, int& n_pos_in_k, int n_pos_in_k_minus_1 = -1, real pos_fraction = -1) const;
   real nips_lift() const;   //!< NIPS_LIFT statistic (see help)
-    
+  //! discrete distribution mode
+  real dmode() const;
+  Vec dmodes() const;
+
   //! currently understood statnames are :
   //!   - E (mean)
   //!   - V (variance)
@@ -202,6 +205,7 @@ public:
   //!   - PRR           (pseudo robust range)
   //!   - SKEW          (skewness == E(X-mu)^3 / sigma^3)
   //!   - KURT          (kurtosis == E(X-mu)^4 / sigma^4 - 3)
+  //!   - DMODE         (discrete distribution mode)
   real getStat(const string& statname) const;
 
   //! simply calls inherited::build() then build_()

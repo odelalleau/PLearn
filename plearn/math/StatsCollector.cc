@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.56 2005/03/14 18:48:35 chapados Exp $
+   * $Id: StatsCollector.cc,v 1.57 2005/04/13 19:44:13 larocheh Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -91,6 +91,7 @@ PLEARN_IMPLEMENT_OBJECT(
   "  - PRR          -  The pseudo robust range, i.e. PSEUDOQ(0.99) - PSEUDOQ(0.01)\n"
   "  - LIFT(f)      -  Lift computed at fraction f (0 <= f <= 1)\n"
   "  - NIPS_LIFT    -  Lift cost as computed in NIPS'2004 challenge\n"
+  "  - DMODE        -  Discrete distribution first mode\n"
   "\n"
   "Notes:\n"
   "  - When computing LIFT-related statistics, all values encountered need to be stored\n"
@@ -782,7 +783,7 @@ void StatsCollector::oldread(istream& in)
 // getStat //
 /////////////
 //! Returns the index in the vector returned by getAllStats of the stat with the given name.
-//! Currently available names are E (mean) V (variance) STDDEV MIN MAX STDERROR SHARPERATIO
+//! Currently available names are E (mean) V (variance) STDDEV MIN MAX STDERROR SHARPERATIO DMODE
 //! Will call PLERROR statname is invalid
 real StatsCollector::getStat(const string& statname) const
 {
@@ -816,6 +817,7 @@ real StatsCollector::getStat(const string& statname) const
     statistics["IQR"]         = STATFUN(&StatsCollector::iqr);
     statistics["PRR"]         = STATFUN(&StatsCollector::prr);
     statistics["NIPS_LIFT"]   = STATFUN(&StatsCollector::nips_lift);
+    statistics["DMODE"]   = STATFUN(&StatsCollector::dmode);
     init = true;
   }
 
@@ -938,6 +940,42 @@ real StatsCollector::nips_lift() const
   real max_performance = 0.5 * (1 / pos_fraction - 1) * (pos_fraction + 1) + 1;
   result = (max_performance - result) / max_performance;
   return result;
+}
+
+
+
+///////////
+// dmode //
+///////////
+real StatsCollector::dmode() const
+{
+  Vec ret = dmodes();
+  if(ret.length() == 0)
+    return MISSING_VALUE;
+  return ret[0];
+}
+
+Vec StatsCollector::dmodes() const
+{
+  Vec cargmax(0);
+  real cmax = -1;
+  
+  map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
+  map<real,StatsCollectorCounts>::const_iterator itend = counts.end();    
+  for(; it!=itend; ++it)
+  {
+    if(it->second.n > cmax)
+      cmax = it->second.n;
+  }
+
+  it = counts.begin();
+  for(; it!=itend; ++it)
+  {
+    if(it->second.n == cmax)
+      cargmax.push_back(it->first);
+  }
+
+  return cargmax;
 }
 
 //////////////////////////////
