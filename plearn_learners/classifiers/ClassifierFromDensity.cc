@@ -34,11 +34,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.17 2005/03/08 16:48:16 tihocan Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.18 2005/04/13 21:46:27 larocheh Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
 #include "ClassifierFromDensity.h"
+#include <plearn/io/PPath.h>
 #include <plearn/base/tostring.h>
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/vmat/VMat_operations.h>
@@ -52,7 +53,8 @@ using namespace std;
 ClassifierFromDensity::ClassifierFromDensity() 
 : nclasses(-1),
   output_log_probabilities(false),
-  normalize_probabilities(true)
+  normalize_probabilities(true),
+  copy_estimator(false)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(
@@ -76,8 +78,9 @@ void ClassifierFromDensity::declareOptions(OptionList& ol)
       "The number of classes");
 
   declareOption(ol, "estimators", &ClassifierFromDensity::estimators, OptionBase::buildoption,
-      "The array of density estimators, one for each class. \n"
-      "You may also specify just one that will be replicated as many times as there are classes.");
+                "The array of density estimators, one for each class. \n"
+                "You may also specify just one that will be replicated as many times as there are classes.\n"
+                "For this to work well with an HyperLearner, copy_estimator MUST be set to true!");
 
   declareOption(ol, "output_log_probabilities", &ClassifierFromDensity::output_log_probabilities, OptionBase::buildoption,
       "Whether computeOutput yields log-probabilities or probabilities (of classes given inputs)");
@@ -89,6 +92,9 @@ void ClassifierFromDensity::declareOptions(OptionList& ol)
 
   declareOption(ol, "log_priors", &ClassifierFromDensity::log_priors, OptionBase::learntoption,
       "The log of the class prior probabilities");
+
+  declareOption(ol, "copy_estimator", &ClassifierFromDensity::copy_estimator, OptionBase::buildoption,
+      "Indication that, at build time, the estimators for all classes is a copy of the first one");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -108,7 +114,7 @@ void ClassifierFromDensity::build()
 ////////////
 void ClassifierFromDensity::build_()
 {
-  if(estimators.size()==1)
+  if(estimators.size()==1 || copy_estimator)
   {
     estimators.resize(nclasses);
     for(int i=1; i<nclasses; i++)

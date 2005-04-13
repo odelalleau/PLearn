@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.h,v 1.8 2005/01/27 14:22:29 tihocan Exp $ 
+   * $Id: ClassifierFromDensity.h,v 1.9 2005/04/13 21:46:29 larocheh Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.h */
@@ -65,6 +65,7 @@ public:
   Vec log_priors;
   bool output_log_probabilities;
   bool normalize_probabilities;
+  bool copy_estimator;
 
   // ****************
   // * Constructors *
