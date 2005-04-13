@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.26 2005/03/08 22:19:49 chapados Exp $
+   * $Id: StackedLearner.cc,v 1.27 2005/04/13 19:39:25 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -45,6 +45,7 @@
 #include <plearn/vmat/PLearnerOutputVMatrix.h>
 #include <plearn/vmat/ShiftAndRescaleVMatrix.h>
 #include <plearn/base/stringutils.h>
+#include <plearn/vmat/SeparateInputVMatrix.h>
 
 namespace PLearn {
 using namespace std;
@@ -57,7 +58,9 @@ StackedLearner::StackedLearner()
   train_base_learners(true),
   normalize_base_learners_output(false),
   precompute_base_learners_output(false),
-  put_raw_input(false)
+  put_raw_input(false),
+  share_learner(false),
+  nsep(1)
   {
   }
 
@@ -65,7 +68,8 @@ StackedLearner::StackedLearner()
                           "Implements stacking, that combines two levels of learner, the 2nd level using the 1st outputs as inputs",
                           "Stacking is a generic strategy in which two levels (or more, recursively) of learners\n"
                           "are combined. The lower level may have one or more learners, and they may be trained\n"
-                          "on the same or different data from the upper level single learner. The outputs of the\n"
+                          "on the same or different data from the upper level single learner. A shared learner can\n"
+                          "also be trained on different parts of the input. The outputs of the\n"
                           "1st level learners are concatenated and serve as inputs to the second level learner.\n"
                           "IT IS ASSUMED THAT ALL BASE LEARNERS HAVE THE SAME NUMBER OF INPUTS AND OUTPUTS\n"
                           "There is also the option to copy the input of the 1st level learner as additional\n"
@@ -101,7 +105,7 @@ StackedLearner::StackedLearner()
        OptionBase::buildoption,
        "If no combiner is provided, simple operation to be performed\n"
        "on the outputs of the base_learners.\n"
-       "Supported: mean (default), min, max, variance, sum, sumofsquares\n"
+       "Supported: mean (default), min, max, variance, sum, sumofsquares, dmode (majority vote)\n"
       );
 
     declareOption(ol, "splitter", &StackedLearner::splitter, OptionBase::buildoption,
@@ -132,6 +136,13 @@ StackedLearner::StackedLearner()
     
     declareOption(ol, "put_raw_input", &StackedLearner::put_raw_input, OptionBase::buildoption,
                   "whether to put the raw inputs in addition of the base learners outputs, in input of the combiner (default=0)\n");
+
+    declareOption(ol, "share_learner", &StackedLearner::share_learner, OptionBase::buildoption,
+                  "If set to 1, the input is devided in nsep equal parts, and a common learner"
+                  "is trained as if each parts constitutes an training example (default=0)\n");
+
+    declareOption(ol, "nsep", &StackedLearner::nsep, OptionBase::buildoption,
+                  "Number of input separations. The input size needs to be a multiple of that value\n");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -169,6 +180,9 @@ StackedLearner::StackedLearner()
       PLERROR("StackedLearner: the Splitter should produce only two sets per split, got %d",splitter->nSetsPerSplit());
     resizeBaseLearnersOutputs();
     default_operation = lowerstring( default_operation );
+
+    if(share_learner && base_train_splitter)
+      PLERROR("StackedLearner::build_: base_train_splitter and share_learner can't both be true");
   }
 
   // ### Nothing to add here, simply calls build_
@@ -223,11 +237,18 @@ void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
       TVec<VMat> sets = splitter->getSplit();
       VMat lower_trainset = sets[0];
       VMat upper_trainset = sets[1];
-      if (base_train_splitter) {
-        base_train_splitter->setDataSet(lower_trainset);
-      } else {
-        for (int i=0;i<base_learners.length();i++)
-          base_learners[i]->setTrainingSet(lower_trainset,call_forget && train_base_learners);
+      if(share_learner)
+      {
+        base_learners[0]->setTrainingSet(new SeparateInputVMatrix(lower_trainset,nsep),call_forget && train_base_learners);
+      }
+      else
+      {
+        if (base_train_splitter) {
+          base_train_splitter->setDataSet(lower_trainset);
+        } else {
+          for (int i=0;i<base_learners.length();i++)
+            base_learners[i]->setTrainingSet(lower_trainset,call_forget && train_base_learners);
+        }
       }
       if (combiner)
         combiner->setTrainingSet(new PLearnerOutputVMatrix(upper_trainset, base_learners, put_raw_input),call_forget);
@@ -236,11 +257,18 @@ void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
     }
   } else
   {
-    if (base_train_splitter) {
-      base_train_splitter->setDataSet(training_set);
-    } else {
-      for (int i=0;i<base_learners.length();i++)
-        base_learners[i]->setTrainingSet(training_set,call_forget && train_base_learners);
+    if(share_learner)
+    {
+      base_learners[0]->setTrainingSet(new SeparateInputVMatrix(training_set,nsep),call_forget && train_base_learners);
+    }
+    else
+    {
+      if (base_train_splitter) {
+        base_train_splitter->setDataSet(training_set);
+      } else {
+        for (int i=0;i<base_learners.length();i++)
+          base_learners[i]->setTrainingSet(training_set,call_forget && train_base_learners);
+      }
     }
     if (combiner)
       combiner->setTrainingSet(new PLearnerOutputVMatrix(training_set, base_learners, put_raw_input),call_forget);
@@ -262,6 +290,7 @@ void StackedLearner::train()
   if (!splitter || splitter->nsplits()==1) // simplest case
   {
     if (train_base_learners)
+    {
       for (int i=0;i<base_learners.length();i++)
       {
         PP<VecStatsCollector> stats = new VecStatsCollector();
@@ -271,6 +300,7 @@ void StackedLearner::train()
         base_learners[i]->train();
         stats->finalize(); // WE COULD OPTIONALLY SAVE THEM AS WELL!
       }
+    }
     if (combiner)
     {
       if (normalize_base_learners_output) {
@@ -296,12 +326,26 @@ void StackedLearner::train()
 
 void StackedLearner::computeOutput(const Vec& input, Vec& output) const
 {
-  for (int i=0;i<base_learners.length();i++)
+
+  if(share_learner)
   {
-    Vec out_i = base_learners_outputs(i);
-    if (!base_learners[i])
-      PLERROR("StackedLearner::computeOutput: base learners have not been created!");
-    base_learners[i]->computeOutput(input,out_i);
+    for (int i=0;i<nsep;i++)
+    {
+      Vec out_i = base_learners_outputs(i);
+      if (!base_learners[0])
+        PLERROR("StackedLearner::computeOutput: base learners have not been created!");
+      base_learners[0]->computeOutput(input.subVec(i*input.length()/nsep,input.length()/nsep),out_i);
+    }
+  }
+  else
+  {
+    for (int i=0;i<base_learners.length();i++)
+    {
+      Vec out_i = base_learners_outputs(i);
+      if (!base_learners[i])
+        PLERROR("StackedLearner::computeOutput: base learners have not been created!");
+      base_learners[i]->computeOutput(input,out_i);
+    }
   }
   if (combiner)
     combiner->computeOutput(base_learners_outputs.toVec(),output);
@@ -323,6 +367,17 @@ void StackedLearner::computeOutput(const Vec& input, Vec& output) const
       columnMean(base_learners_outputs, mean);
       columnVariance(base_learners_outputs, output, mean);
     }
+    else if( default_operation == "dmode")
+    {
+      StatsCollector sc(base_learners.length());
+      for(int o=0; o<output.length(); o++)
+      {
+        sc.forget();
+        for(int j=0; j<base_learners_outputs.length(); j++)         
+          sc.update(base_learners_outputs(o,j),1);
+        output[o] = sc.dmode();
+      }
+    }
     else
       PLERROR("StackedLearner::computeOutput: unsupported default_operation");
   }
@@ -334,7 +389,12 @@ void StackedLearner::computeCostsFromOutputs(const Vec& input, const Vec& output
   if (combiner)
     combiner->computeCostsFromOutputs(base_learners_outputs.toVec(),output,target,costs);
   else // cheat
-    base_learners[0]->computeCostsFromOutputs(input,output,target,costs);
+  {
+    if(share_learner)
+      base_learners[0]->computeCostsFromOutputs(input.subVec(0,input.length()/nsep),output,target,costs);
+    else
+      base_learners[0]->computeCostsFromOutputs(input,output,target,costs);
+  }
 }                                
 
 bool StackedLearner::computeConfidenceFromOutput(const Vec& input, const Vec& output,
@@ -344,12 +404,25 @@ bool StackedLearner::computeConfidenceFromOutput(const Vec& input, const Vec& ou
   if (! combiner)
     PLERROR("StackedLearner::computeConfidenceFromOutput: a 'combiner' must be specified "
             "in order to compute confidence intervals.");
-  for (int i=0;i<base_learners.length();i++)
+  if(share_learner)
   {
-    Vec out_i = base_learners_outputs(i);
-    if (!base_learners[i])
-      PLERROR("StackedLearner::computeOutput: base learners have not been created!");
-    base_learners[i]->computeOutput(input,out_i);
+    for (int i=0;i<nsep;i++)
+    {
+      Vec out_i = base_learners_outputs(i);
+      if (!base_learners[0])
+        PLERROR("StackedLearner::computeOutput: base learners have not been created!");
+      base_learners[0]->computeOutput(input.subVec(i*input.length()/nsep,input.length()/nsep),out_i);
+    }
+  }
+  else
+  {
+    for (int i=0;i<base_learners.length();i++)
+    {
+      Vec out_i = base_learners_outputs(i);
+      if (!base_learners[i])
+        PLERROR("StackedLearner::computeOutput: base learners have not been created!");
+      base_learners[i]->computeOutput(input,out_i);
+    }
   }
   return combiner->computeConfidenceFromOutput(base_learners_outputs.toVec(), output,
                                                probability, intervals);
@@ -384,7 +457,10 @@ void StackedLearner::resizeBaseLearnersOutputs() {
     // The outputsize has changed. We reallocate everything.
     base_learners_outputs = Mat();
   }
-  base_learners_outputs.resize(base_learners.length(),base_learners[0]->outputsize());
+  if(share_learner)
+    base_learners_outputs.resize(nsep,base_learners[0]->outputsize());
+  else
+    base_learners_outputs.resize(base_learners.length(),base_learners[0]->outputsize());
 }
 
 } // end of namespace PLearn
