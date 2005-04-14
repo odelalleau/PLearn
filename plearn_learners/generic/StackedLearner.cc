@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.27 2005/04/13 19:39:25 larocheh Exp $
+   * $Id: StackedLearner.cc,v 1.28 2005/04/14 13:27:12 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -51,8 +51,7 @@ namespace PLearn {
 using namespace std;
 
 StackedLearner::StackedLearner() 
-/* ### Initialise all fields to their default value here */
-  :
+:
   default_operation("mean"),
   base_train_splitter(0),
   train_base_learners(true),
@@ -135,11 +134,11 @@ StackedLearner::StackedLearner()
 
     
     declareOption(ol, "put_raw_input", &StackedLearner::put_raw_input, OptionBase::buildoption,
-                  "whether to put the raw inputs in addition of the base learners outputs, in input of the combiner (default=0)\n");
+                  "whether to put the raw inputs in addition of the base learners outputs, in input of the combiner\n");
 
     declareOption(ol, "share_learner", &StackedLearner::share_learner, OptionBase::buildoption,
-                  "If set to 1, the input is devided in nsep equal parts, and a common learner"
-                  "is trained as if each parts constitutes an training example (default=0)\n");
+                  "If set to 1, the input is divided in nsep equal parts, and a common learner\n"
+                  "is trained as if each part constitutes a training example.");
 
     declareOption(ol, "nsep", &StackedLearner::nsep, OptionBase::buildoption,
                   "Number of input separations. The input size needs to be a multiple of that value\n");
@@ -182,7 +181,7 @@ StackedLearner::StackedLearner()
     default_operation = lowerstring( default_operation );
 
     if(share_learner && base_train_splitter)
-      PLERROR("StackedLearner::build_: base_train_splitter and share_learner can't both be true");
+      PLERROR("StackedLearner::build_: base_train_splitter and share_learner cannot both be true");
   }
 
   // ### Nothing to add here, simply calls build_

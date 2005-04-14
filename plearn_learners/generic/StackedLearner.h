@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.h,v 1.16 2005/04/13 19:39:25 larocheh Exp $
+   * $Id: StackedLearner.h,v 1.17 2005/04/14 13:27:12 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -107,14 +107,14 @@ public:
   //! will be precomputed in memory before training the combiner.
   bool precompute_base_learners_output;
   
-  //! optionally put the raw input as additional input of the combiner
+  //! Optionally put the raw input as additional input of the combiner.
   bool put_raw_input;
 
-  //! If set to 1, the input is devided in nsep equal parts, and a common learner
-  //! is trained as if each parts constitutes an training example
+  //! If set to 1, the input is divided in nsep equal parts, and a common learner
+  //! is trained as if each part constitutes a training example.
   bool share_learner;
 
-  //! Number of input separations
+  //! Number of input separations.
   int nsep;
 
   //! optionally put the costs of all the learners as additional inputs of the combiner
