@@ -64,6 +64,7 @@ public:
   bool use_last_eigenval;
   real scale_factor;
   real global_lambda0;
+  bool learn_mu;
 
   // ************************
   // * public build options *

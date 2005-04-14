@@ -58,7 +58,8 @@ ManifoldParzen2::ManifoldParzen2()
 : nneighbors(4),
   ncomponents(1),
   use_last_eigenval(true),
-  scale_factor(1)
+  scale_factor(1),
+  learn_mu(false)
 {
   nstages = 1;
 }
@@ -90,6 +91,10 @@ void ManifoldParzen2::declareOptions(OptionList& ol)
   
   declareOption(ol,"use_last_eigenval", &ManifoldParzen2::use_last_eigenval, OptionBase::buildoption,
                 "Indication that the last eigenvalue should be used for the remaining directions' variance.");
+
+  declareOption(ol,"learn_mu", &ManifoldParzen2::learn_mu, OptionBase::buildoption,
+                "Indication that the difference vector between the training points and the gaussians should be learned.\n"
+                "By default, the gaussians are centered at the training points.");
 
   declareOption(ol,"global_lambda0", &ManifoldParzen2::global_lambda0, OptionBase::buildoption,
                 "If use_last_eigenvalue is false, used value for the variance of the remaining directions");
@@ -183,14 +188,17 @@ void computePrincipalComponents(Mat dataset, Vec& eig_values, Mat& eig_vectors)
       eig_values[i] = 0;
 }
 
-void computeLocalPrincipalComponents(Mat& dataset, int which_pattern, Mat& delta_neighbors, Vec& eig_values, Mat& eig_vectors, Vec& mean)
+void computeLocalPrincipalComponents(Mat& dataset, int which_pattern, Mat& delta_neighbors, Vec& eig_values, Mat& eig_vectors, Vec& mean, bool learn_mu=false)
 {
   Vec center = dataset(which_pattern);
   if (center.hasMissing())
     PLERROR("dataset row %d has missing values!", which_pattern);
   computeNearestNeighbors(dataset, center, delta_neighbors, which_pattern);
-  //mean.resize(delta_neighbors.width());  // Hugo: the mean should be the current point...
-  //columnMean(delta_neighbors, mean);
+  if(learn_mu)
+  {
+    mean.resize(delta_neighbors.width());  // Hugo: the mean should be the current point...
+    columnMean(delta_neighbors, mean);
+  }
   delta_neighbors -= mean;
   computePrincipalComponents(delta_neighbors, eig_values, eig_vectors);
 }
@@ -255,7 +263,8 @@ void ManifoldParzen2::train()
     n_eigen = eigvals.length() - 1;
     GaussMix::build();
     resizeStuffBeforeTraining();
-    //mu(i) << center;   // Hugo: the mean should be current point... 
+    if(learn_mu)
+      mu(i) << center;   // Hugo: the mean should be current point... 
     eigenvalues(i) << eigvals;
     eigenvalues(i, n_eigen_computed - 1) = lambda0;
     eigenvectors[i] << components_eigenvecs;
