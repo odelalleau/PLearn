@@ -231,7 +231,7 @@ void ManifoldParzen2::train()
     
     Vec center(mu.width());
     center << trainset(i);
-    computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs, center);
+    computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs, center,learn_mu);
 
     eigvals *= scale_factor;
 
