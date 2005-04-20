@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: qld_interface.h,v 1.2 2005/04/12 15:32:04 tihocan Exp $ 
+   * $Id: qld_interface.h,v 1.3 2005/04/20 19:31:47 lamblin Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -157,16 +157,7 @@
  * 
  *********************************************************************/
 
-extern "C"
-int ql0001_(int *m,      int *me,     int *mmax,
-            int *n,      int *nmax,   int *mnn,
-            double *c,   double *d,   double *a,
-            double *b,   double *xl,  double *xu,
-            double *x,   double *u,
-            int *iout,   int *ifail,  int *iprint,
-            double *war, int *lwar,
-            int *iwar,   int *liwar,
-            double *eps1);
+#include "qld.h"
 
 namespace PLearn {
 using namespace std;
