@@ -36,27 +36,23 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.37 2005/04/12 18:26:33 tihocan Exp $
+   * $Id: getDataSet.cc,v 1.38 2005/04/21 15:47:31 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "AutoSDBVMatrix.h"
-//#include "stringutils.h"
-//#include "fileutils.h"
 #include <plearn/vmat/ConcatRowsVMatrix.h>      //!< For vconcat.
 #include "databases.h"              //!< For loadClassificationDataset.
 #include <plearn/vmat/DiskVMatrix.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include "getDataSet.h"
-//#include "ConcatColumnsVMatrix.h"
-//#include "SubVMatrix.h"
 #include <plearn/vmat/StrTableVMatrix.h>
 #include <plearn/base/StringTable.h>
 #include <plearn/vmat/VMat.h>
 #include <plearn/vmat/VVMatrix.h>
 #include <plearn/io/MatIO.h>
-#include <plearn/io/PyPlearnDriver.h>
+#include <plearn/io/PyPLearnScript.h>
 #include <plearn/io/pl_log.h>
 
 namespace PLearn {
@@ -155,7 +151,8 @@ VMat getDataSet(const string& datasetstring, const string& alias)
           {
             if (ext==".py")
               PLWARNING("getDataSet: Note that the Python code in a '.py' file must return a pl.VMatrix");
-            string code = process_pyplearn_script(datasetstring);
+            PP<PyPLearnScript> pyplearn_script = PyPLearnScript::process(datasetstring);
+            const string code = pyplearn_script->getScript();
             vm = dynamic_cast<VMatrix*>(newObject(code));
             if (vm.isNull())
                 PLERROR("getDataSet: Object described in %s is not a VMatrix subclass",datasetstring.c_str());

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.18 2005/02/11 09:16:33 dorionc Exp $ 
+   * $Id: RunCommand.cc,v 1.19 2005/04/21 15:47:16 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
@@ -46,7 +46,6 @@
 #include <plearn/base/Object.h>
 #include <plearn/sys/Popen.h>
 
-//#include <plearn/io/PyPlearnDriver.h>
 #include <plearn/io/PyPLearnScript.h>
 
 #include <plearn/io/openString.h>
