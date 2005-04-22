@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuumDistribution.h,v 1.3 2005/03/08 16:50:32 tihocan Exp $
+   * $Id: GaussianContinuumDistribution.h,v 1.4 2005/04/22 22:11:18 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -141,6 +141,7 @@ public:
   int n_neighbors_density; // number of neighbors for the p(x) density estimation
   int mu_n_neighbors; // number of neighbors to learn the mus
   int n_dim; // number of reduced dimensions (number of tangent vectors to compute)
+  real sigma_grad_scale_factor;
   int update_parameters_every_n_epochs;
   string variances_transfer_function; // "square", "exp" or "softplus"
   PP<Optimizer> optimizer; // to estimate the function that predicts local tangent vectors given the input
@@ -258,6 +259,10 @@ public:
   // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
   // virtual int nTestCosts() const;
   // virtual int nTrainCosts() const;
+
+  Mat getEigenvectors(int j) const;
+  
+  Vec getTrainPoint(int j) const;
 
 };
 
