@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: NllSemisphericalGaussianVariable.cc,v 1.4 2004/09/18 17:03:53 larocheh Exp $
+ * $Id: NllSemisphericalGaussianVariable.cc,v 1.5 2005/04/22 22:45:07 larocheh Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -171,7 +171,7 @@ namespace PLearn {
     F_copy.resize(F.length(),F.width());
     F_copy << F;
     // N.B. this is the SVD of F'
-    lapackSVD(F_copy, Ut, S, V);
+    lapackSVD(F_copy, Ut, S, V,'A',1.5);
     B.clear();
     for (int k=0;k<S.length();k++)
     {
@@ -210,6 +210,8 @@ namespace PLearn {
       transposeProduct(zmj, F, wj); // F' w = z_m
       substract(zj,zmj,znj); // z_n = z - zm
       value[j] = 0.5*(pownorm(zmj,2)/sm[0] + pownorm(znj,2)/sn[0] + n_dim*log(sm[0]) + (n-n_dim)*log(sn[0])) + n/2.0 * Log2Pi; // This value is not really -log(p(y))
+      if(is_missing(p_neighbors[j]))
+         p_neighbors[j] = -1.0*value[j];
     }
      
     // and we can make the noisy zm and zn
@@ -240,39 +242,46 @@ namespace PLearn {
     {
 
       // dNLL/dF
-
+      /*
       for(int i=0; i<F.length(); i++)
         for(int j=0; j<F.width(); j++)
-          varray[0]->matGradient(i,j) += gradient[neighbor]*exp(-1.0*value[neighbor])*(p_target[0]+min_p_x)/(p_neighbors[neighbor]+min_p_x) * (1/sm[0] - 1/sn[0]) * w(neighbor,i) * zn(neighbor,j);
-     
+          //varray[0]->matGradient(i,j) += gradient[neighbor]*exp(-1.0*value[neighbor] + p_target[0] - p_neighbors[neighbor]) * (1/sm[0] - 1/sn[0]) * w(neighbor,i) * zn(neighbor,j);
+          varray[0]->matGradient(i,j) += gradient[neighbor]*exp(p_target[0]) * (1/sm[0] - 1/sn[0]) * w(neighbor,i) * zn(neighbor,j);
+      */
+
+      externalProductScaleAcc(varray[0]->matGradient,w(neighbor),zn(neighbor),gradient[neighbor]*exp(p_target[0]) * (1/sm[0] - 1/sn[0]));
+
       if(neighbor < mu_n_neighbors)
       {
         // dNLL/dmu
         if(!use_noise)
         {
           for(int i=0; i<mu.length(); i++)
-            varray[1]->gradient[i] -= ((real)n_neighbors)/(mu_n_neighbors)*gradient[neighbor]*exp(-1.0*value[neighbor])*(p_target[0]+min_p_x)/(p_neighbors[neighbor]+min_p_x) * ( 1/sm[0] * zm(neighbor,i) + 1/sn[0] * zn(neighbor,i));
+            //varray[1]->gradient[i] -= ((real)n_neighbors)/(mu_n_neighbors)*gradient[neighbor]*exp(-1.0*value[neighbor] + p_target[0] - p_neighbors[neighbor])*( 1/sm[0] * zm(neighbor,i) + 1/sn[0] * zn(neighbor,i));
+            varray[1]->gradient[i] -= ((real)n_neighbors)/(mu_n_neighbors)*gradient[neighbor]*exp(p_target[0])*( 1/sm[0] * zm(neighbor,i) + 1/sn[0] * zn(neighbor,i));
         }
         else
         {
           // dNLL/dmu with noisy data
       
           for(int i=0; i<mu_noisy.length(); i++)
-            varray[8]->gradient[i] -= ((real)n_neighbors)/(mu_n_neighbors)*gradient[neighbor]*exp(-1.0*value[neighbor])*(p_target[0]+min_p_x)/(p_neighbors[neighbor]+min_p_x) * ( 1/sm[0] * zm_noisy(neighbor,i) + 1/sn[0] * zn_noisy(neighbor,i));
+            varray[8]->gradient[i] -= ((real)n_neighbors)/(mu_n_neighbors)*gradient[neighbor]*exp(-1.0*value[neighbor] + p_target[0] - p_neighbors[neighbor])* ( 1/sm[0] * zm_noisy(neighbor,i) + 1/sn[0] * zn_noisy(neighbor,i));
         }
       }
 
       // dNLL/dsm
 
-      varray[2]->gradient[0] += gradient[neighbor]*exp(-1.0*value[neighbor])*(p_target[0]+min_p_x)/(p_neighbors[neighbor]+min_p_x) * (0.5 * n_dim/sm[0] - pownorm(zm(neighbor),2)/(sm[0]*sm[0]));
+      //varray[2]->gradient[0] += gradient[neighbor]*exp(-1.0*value[neighbor] + p_target[0] - p_neighbors[neighbor])* (0.5 * n_dim/sm[0] - pownorm(zm(neighbor),2)/(sm[0]*sm[0]))/(n_dim*n_dim);
+      varray[2]->gradient[0] += gradient[neighbor]*exp(p_target[0])* (0.5 * n_dim/sm[0] - pownorm(zm(neighbor),2)/(sm[0]*sm[0]));
       
       // dNLL/dsn
 
-      varray[3]->gradient[0] += gradient[neighbor]*exp(-1.0*value[neighbor])*(p_target[0]+min_p_x)/(p_neighbors[neighbor]+min_p_x) * (0.5 * (n-n_dim)/sn[0] - pownorm(zn(neighbor),2)/(sn[0]*sn[0]));
+      // varray[3]->gradient[0] += gradient[neighbor]*exp(-1.0*value[neighbor] + p_target[0] - p_neighbors[neighbor])* (0.5 * (n-n_dim)/sn[0] - pownorm(zn(neighbor),2)/(sn[0]*sn[0]))/(n*n);
+      varray[3]->gradient[0] += gradient[neighbor]*exp(p_target[0])* (0.5 * (n-n_dim)/sn[0] - pownorm(zn(neighbor),2)/(sn[0]*sn[0]));
       
       
     }
-
+    //cout << "value = " << value << " p_neighbors = " << p_neighbors << endl;
   }
 
 
