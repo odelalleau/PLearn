@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.27 2005/02/17 17:11:15 plearner Exp $ 
+   * $Id: PDistribution.cc,v 1.28 2005/04/22 13:53:14 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -311,7 +311,10 @@ void PDistribution::finishConditionalBuild() {
 //////////////////////
 TVec<string> PDistribution::getTestCostNames() const
 {
-  return TVec<string>(1,"NLL");
+  static TVec<string> nll_cost;
+  if (nll_cost.isEmpty())
+    nll_cost.append("NLL");
+  return nll_cost;
 }
 
 ///////////////////////
@@ -320,7 +323,7 @@ TVec<string> PDistribution::getTestCostNames() const
 TVec<string> PDistribution::getTrainCostNames() const
 {
   // Default = no train cost computed. This may be overridden in subclasses.
-  TVec<string> c;
+  static TVec<string> c;
   return c;
 }
 
