@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerCommand.cc,v 1.14 2005/02/11 01:31:40 plearner Exp $ 
+   * $Id: LearnerCommand.cc,v 1.15 2005/04/23 13:18:56 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -167,6 +167,8 @@ void LearnerCommand::compute_outputs_on_2D_grid(const string& trained_learner_fi
   Vec input = v.subVec(0,2);
   Vec output = v.subVec(2,outputsize);
 
+  real outputsum = 0;
+
   real x = xmin;
   for(int i=0; i<nx; i++, x+=deltax)
     {
@@ -176,9 +178,12 @@ void LearnerCommand::compute_outputs_on_2D_grid(const string& trained_learner_fi
           {
             input[1] = y;
             learner->computeOutput(input,output);
+            outputsum += output[0];
             gridoutputs->appendRow(v);
           }
     }
+
+  cerr << "integral: " << outputsum*deltax*deltay << endl;
   
 }
 

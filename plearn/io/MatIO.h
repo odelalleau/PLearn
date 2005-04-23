@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.24 2005/02/22 13:29:32 lheureup Exp $
+   * $Id: MatIO.h,v 1.25 2005/04/23 13:19:23 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -82,6 +82,8 @@ void loadPMat(const string& filename, TMat<double>& mat);
 //! WARNING: use only for float, double, and int types. Other type are not guaranteed to work
 
 //! intelligent functions that will load a file in almost all ascii formats that ever existed in this lab
+template<class T>
+void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, int& inputsize, int& targetsize, int& weightsize, TVec<map<string,real> >* map_sr=0);
 template<class T> void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, TVec<map<string,real> >* map_sr = 0);
 template<class T> void loadAscii(const PPath& filename, TMat<T>& mat);
 
@@ -190,15 +192,25 @@ Mat loadSTATLOG(const string& filename, char ****to_symbols=0, int **to_n_symbol
 void loadJPEGrgb(const string& jpeg_filename, Mat& rgbmat, int& row_size, int scale = 1);
 
 
+template<class T>
+void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, TVec<map<string,real> >* map_sr=0)
+{ 
+  int inputsize=-1, targetsize=-1, weightsize=-1;
+  loadAscii(filename, mat, fieldnames, inputsize, targetsize, weightsize, map_sr);
+}
+
 // Intelligent function that will load a file in almost all ascii formats that ever existed in this lab.
 // Additionally, if 'map_sr' is provided, it will fill it with the string -> real mappings encountered.
 template<class T>
-void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, TVec<map<string,real> >* map_sr)
+void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, int& inputsize, int& targetsize, int& weightsize, TVec<map<string,real> >* map_sr=0)
 {
   PStream in = openFile(filename, PStream::raw_ascii, "r");
-
+  
   int length = -1;
   int width = -1;
+  inputsize = -1;
+  targetsize = -1;
+  weightsize = 0;
   bool could_be_old_amat=true; // true while there is still a chance that this be an "old" amat format (length and width in first row with no starting ##)
   
   in >> ws;
@@ -220,6 +232,15 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, TV
         if(dim.size()!=2)  PLERROR("I need exactly 2 dimensions for matrix");
         length = toint(dim[0]);
         width = toint(dim[1]);
+      }
+      else if(sub=="#sizes") // we've found inputsize targetsize weightsize specification
+      {
+        string siz=removeblanks((line.substr(pos)).substr(1));
+        vector<string> dim = split(siz," ");
+        if(dim.size()!=3)  PLERROR("I need exactly 3 numbers after #sizes: inputsize targetsize weightsize");
+        inputsize = toint(dim[0]);
+        targetsize = toint(dim[1]);
+        weightsize = toint(dim[2]);
       }
       else if(sub=="#") // we've found the fieldnames specification line
       {

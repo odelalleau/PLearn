@@ -61,6 +61,7 @@ ManifoldParzen2::ManifoldParzen2()
   scale_factor(1),
   learn_mu(false)
 {
+  type = "general";
   nstages = 1;
 }
 
@@ -107,14 +108,14 @@ void ManifoldParzen2::declareOptions(OptionList& ol)
 
   // Hide unused parent's options.
 
-  redeclareOption(ol,"L", &ManifoldParzen2::L, OptionBase::nosave,
-      "Automatically set (to train_set->length()).");
+  //redeclareOption(ol,"L", &ManifoldParzen2::L, OptionBase::nosave,
+  //    "Automatically set (to train_set->length()).");
 
-  redeclareOption(ol,"type", &ManifoldParzen2::type, OptionBase::nosave,
-      "Automatically set (to 'general').");
+  //redeclareOption(ol,"type", &ManifoldParzen2::type, OptionBase::nosave,
+  //    "Automatically set (to 'general').");
 
-  redeclareOption(ol,"n_eigen", &ManifoldParzen2::n_eigen, OptionBase::nosave,
-      "Automatically set.");
+  //redeclareOption(ol,"n_eigen", &ManifoldParzen2::n_eigen, OptionBase::nosave,
+  //    "Automatically set.");
 
   redeclareOption(ol,"alpha_min", &ManifoldParzen2::alpha_min, OptionBase::nosave,
       "Not used.");

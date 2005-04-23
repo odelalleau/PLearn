@@ -1,0 +1,123 @@
+#!/usr/bin/env python
+
+# pyplot
+# Copyright (C) 2005 Pascal Vincent
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+
+# Author: Pascal Vincent
+
+import os
+import sys
+from plearn.plotting import *
+
+plearncommand = 'mylearn'
+
+    
+
+def print_usage_and_exit():
+    print """
+    Usage: pyplot <task> <dataspec> [<learner>]
+      dataspec can be a .amat .pmat .vmat .pymat, actually anything understood by plearn vmat convert
+      task can be plot_2d 2d_density
+      """
+    sys.exit()
+
+def run_plearn(subcommand_and_args):
+    commandstr = plearncommand+' '+subcommand_and_args
+    print commandstr
+    os.system(commandstr)
+
+
+if len(sys.argv)<3:
+    print_usage_and_exit()
+
+def load_data(dataspec):
+    datapmat = 'pyplot_data.pmat'
+    run_plearn('vmat convert '+dataspec+' '+datapmat)
+    data = load_pmat_as_array(datapmat)
+    return data
+
+def train_learner(learnerspec, dataspec, trained_learner_file):
+    run_plearn('learner train '+learnerspec+' '+dataspec+' '+trained_learner_file)
+
+def learner_compute_outputs_on_2d_grid(learner, trainset, nx=50, ny=50):
+    run_plearn('learner cg '+learner+' gridoutputs.pmat '+trainset+' '+str(nx)+' '+str(ny))
+    outputs = load_pmat_as_array('gridoutputs.pmat')
+    return outputs
+
+
+task = sys.argv[1]
+dataspec = sys.argv[2]
+learnerspec = ''
+try: learnerspec = sys.argv[3]
+except: pass
+
+if task == 'plot_2d':
+    data = load_data(dataspec)
+    data = data[:,0:2]
+    plot_2d_points(data,'.')
+    show()
+
+elif task == '2d_density':
+    nx = 200
+    ny = 200
+    data = load_data(dataspec)
+    data = data[:,0:2]
+    # plot_2d_points(data,'o')
+    # show()
+    train_learner(learnerspec,dataspec,'trained_learner.psave')
+    xymagnitude = learner_compute_outputs_on_2d_grid('trained_learner.psave', dataspec, nx, ny)
+    transform_magnitude_into_covered_percentage(xymagnitude)
+    surfplot_xymagnitude(xymagnitude)
+    imshow_xymagnitude(xymagnitude)
+    plot_2d_points(data,'bo')
+    show()
+
+elif task == '2d_classif':
+    nx = 100
+    ny = 100
+    data = load_data(dataspec)
+    train_learner(learnerspec,dataspec,'trained_learner.psave')
+    print 'computing outputs...'
+    xyscores = learner_compute_outputs_on_2d_grid('trained_learner.psave', dataspec, nx, ny)
+    # print 'scores:'
+    # print xyscores
+    xy_winner_margin = xyscores_to_winner_and_margin(xyscores)
+    # print xy_winner_margin
+    xyrgb = xy_winner_magnitude_to_xyrgb(xy_winner_margin)
+    # print array(xyrgb)
+    imshow_xyrgb(xyrgb)
+    plot_2d_class_points(data,['bo','ro'])
+    show()
+    
+else:
+    print_usage_and_exit()
+    

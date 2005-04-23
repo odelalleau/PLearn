@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.cc,v 1.12 2004/08/31 17:22:40 plearner Exp $
+   * $Id: Gnuplot.cc,v 1.13 2005/04/23 13:19:23 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -481,6 +481,7 @@ void Gnuplot::export_ps(string psfname, string psoptions)
   tognuplot << "set terminal postscript " << psoptions << "\n"
             << "set output '" << psfname << "'\n"
             << "replot\n"
+            << "set output\n"
             << "set terminal x11" << endl;
 }
   

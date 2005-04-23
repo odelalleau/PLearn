@@ -36,7 +36,7 @@
 
  
 /* *******************************************************
-* $Id: VMat.cc,v 1.20 2005/02/04 15:10:52 tihocan Exp $ *
+* $Id: VMat.cc,v 1.21 2005/04/23 13:19:23 plearner Exp $ *
 * This file is part of the PLearn library.               *
 ******************************************************** */
 #include "VMat.h"
@@ -130,8 +130,16 @@ VMat loadAsciiAsVMat(const PPath& filename)
   Mat m;
   TVec<string> fn;
   TVec< map<string,real> > map_sr;  // String -> real mappings.
-  loadAscii(filename, m, fn, &map_sr);
+  int inputsize = -1;
+  int targetsize = -1;
+  int weightsize = -1;
+  loadAscii(filename, m, fn, inputsize, targetsize, weightsize, &map_sr);
   VMat vm = new MemoryVMatrix(m);
+  if(inputsize>=0)
+    vm->defineSizes(inputsize,targetsize,weightsize);
+  else
+    vm->defineSizes(m.width(),0,0);
+
   vm->setMtime(mtime(filename));
   // Set the discovered string -> real mappings.
   for (int i = 0; i < map_sr.length(); i++) {

@@ -59,23 +59,27 @@ def margin(scorevec):
     return sscores[-1]-sscores[-2]
 
 def xyscores_to_winner_and_magnitude(xyscores):
-    return array([ (v[0], v[1], argmax(v[2:]),max(v[2:])) for v in scores ])
+    return array([ (v[0], v[1], argmax(v[2:]),max(v[2:])) for v in xyscores ])
 
 def xyscores_to_winner_and_margin(xyscores):
-    return array([ (v[0], v[1], argmax(v[2:]),margin(v[2:])) for v in scores ])
+    return array([ (v[0], v[1], argmax(v[2:]),margin(v[2:])) for v in xyscores ])
 
 def regular_xyval_to_2d_grid_values(xyval):
     """Returns (grid_values, x0, y0, deltax, deltay)"""
+    xyval = array(xyval)
     n = len(xyval)
     x = xyval[:,0]
     y = xyval[:,1]
     values = xyval[:,2:].copy()
     valsize = size(values,1)
+    print 'valsize=',valsize
+    print 'values.shape=',values.shape
     x0 = x[0]
     y0 = y[0]
 
     k = 1
     if x[1]==x0:
+        print 'ICI'
         deltay = y[1]-y[0]
         while x[k]==x0:
             k = k+1
@@ -84,7 +88,9 @@ def regular_xyval_to_2d_grid_values(xyval):
         nx = n // ny
         # print 'A) nx,ny:',nx,ny
         values.shape = (nx,ny,valsize)
+        values = transpose(values,(1,0,2))
     elif y[1]==y0:
+        print 'LA'
         deltax = x[1]-x[0]
         while y[k]==y0:
             k = k+1
@@ -97,14 +103,43 @@ def regular_xyval_to_2d_grid_values(xyval):
     return values, x0, y0, deltax, deltay
 
 
+def transform_magnitude_into_covered_percentage(xymagnitude):
+    magnitudes = []
+    l = len(xymagnitude)
+    for i in xrange(l):
+        row = xymagnitude[i]
+        magnitudes.append([row[-1],i])
+    magnitudes.sort()
+    # magnitude.reverse()
+    cum = 0
+    for row in magnitudes:
+        mag, i = row
+        cum += mag
+        row[0] = cum
+    for mag,i in magnitudes:
+        xymagnitude[i][-1] = mag/cum
+        
 def imshow_xymagnitude(regular_xymagnitude, interpolation='nearest', cmap = cm.jet):
     grid_values, x0, y0, deltax, deltay = regular_xyval_to_2d_grid_values(regular_xymagnitude)
     imshow_2d_grid_values(grid_values, x0, y0, deltax, deltay, interpolation, cm.jet)
     
 def imshow_xyrgb(regular_xyrgb, interpolation='nearest'):
-    grid_values, x0, y0, deltax, deltay = regular_xyval_to_2d_grid_values(regular_xymagnitude)
-    
+    grid_rgb, x0, y0, deltax, deltay = regular_xyval_to_2d_grid_values(regular_xyrgb)
+    print 'grid_rgb shape=',grid_rgb.shape
+    imshow_2d_grid_rgb(grid_rgb, x0, y0, deltax, deltay, interpolation, cm.jet)
 
+def classcolor(winner,margin=0):
+    colors = { 0: [0.5, 0.5, 1.0],
+               1: [1.0, 0.5, 0.5],
+               2: [0.5, 1.0, 0.5],
+             }
+    return colors[winner]
+    
+def xy_winner_magnitude_to_xyrgb(xy_winner_margin):
+    res = []
+    for x,y,w,m in xy_winner_margin:
+        res.append([x,y]+classcolor(w,m))
+    return res
     
 def surfplot_xymagnitude(regular_xymagnitude):
     gridvalues, x0, y0, deltax, deltay = regular_xyval_to_2d_grid_values(regular_xymagnitude)
@@ -115,6 +150,15 @@ def surfplot_xymagnitude(regular_xymagnitude):
     y = arange(y0,y0+ny*deltay,deltay)    
     imv.surf(x, y, gridvalues)
 
+
+def imshow_2d_grid_rgb(gridrgb, x0, y0, deltax, deltay, interpolation='nearest', cmap = cm.jet):
+    nx = size(gridrgb,0)
+    ny = size(gridrgb,1)
+    extent = (x0-.5*deltax, x0+nx*deltax, y0-.5*deltay, y0+ny*deltay)
+     # gridrgb = reshape(gridrgb,(nx,ny))
+    print 'SHAPE:',gridrgb.shape
+    # print 'gridrgb:', gridrgb
+    imshow(gridrgb, cmap=cmap, origin='lower', extent=extent, interpolation=interpolation)
 
 def imshow_2d_grid_values(gridvalues, x0, y0, deltax, deltay, interpolation='nearest', cmap = cm.jet):
     nx = size(gridvalues,0)
@@ -129,7 +173,11 @@ def plot_2d_points(pointlist, style='bo'):
     x, y = zip(*pointlist)
     plot(x, y, style)
     
-
+def plot_2d_class_points(pointlist, styles):
+    classnum = 0
+    for style in styles:
+        plot_2d_points([ [x,y] for x,y,c in pointlist if c==classnum], style)
+        classnum += 1
 
 
 # def generate_2D_color_plot(x_y_color):

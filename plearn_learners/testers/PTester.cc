@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.55 2005/03/02 20:56:52 plearner Exp $ 
+   * $Id: PTester.cc,v 1.56 2005/04/23 13:19:24 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -137,7 +137,7 @@ void PTester::declareOptions(OptionList& ol)
   declareOption(
     ol, "statnames", &PTester::statnames, OptionBase::buildoption,
     "A list of global statistics we are interested in.\n"
-    "These are strings of the form S1[S2[dataset.cost_name]] where:\n"
+    "These are strings of the form S1[dataset.S2[cost_name]] where:\n"
     "  - dataset is train or test1 or test2 ... (train being \n"
     "    the first dataset in a split, test1 the second, ...) \n"
     "  - cost_name is one of the training or test cost names (depending on dataset) understood \n"
