@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PyPLearnScript.h,v 1.2 2005/02/14 16:42:12 ducharme Exp $ 
+   * $Id: PyPLearnScript.h,v 1.3 2005/04/26 16:51:49 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -58,11 +58,10 @@ public:
   /*!
     Given a filename, call an external process with the given name (default
     = "pyplearn_driver.py") to preprocess it and return the preprocessed
-    version.  Arguments to the subprocess can be passed.  The first element,
-    args[0], is supposed to be some program name, and is never touched.  Of
-    the following arguments, passing '--help' passes it unmodified to the
-    subprogram and is assumed to print a help string.  If '--dump' is
-    passed, the Python-preprocessed script is printed to standard output.
+    version.  Arguments to the subprocess can be passed.
+    Passing '--help' passes it unmodified to the subprogram
+    and is assumed to print a help string.  If '--dump' is passed,
+    the Python-preprocessed script is printed to standard output.
   */
   static PP<PyPLearnScript> process(
     const std::string& filename,

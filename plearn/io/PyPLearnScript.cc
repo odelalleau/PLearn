@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PyPLearnScript.cc,v 1.1 2005/02/11 09:07:50 dorionc Exp $ 
+   * $Id: PyPLearnScript.cc,v 1.2 2005/04/26 16:51:49 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -58,24 +58,16 @@ process( const string& scriptfile,
          const vector<string>& args,
          const string& drivername   )
 {
-  // Handle command-line bindings of the form x=y
-  map<string, string> vars;
-  for (unsigned int i=1; i<args.size(); i++)
-  {
-    string option = args[i];
-    // Skip --foo command-lines options.
-    if (option.size() < 2 || option.substr(0, 2) != "--")
-    {
-      pair<string,string> name_val = split_on_first(option, "=");
-      vars[name_val.first] = name_val.second;
-    }
-  }
-
   string plearn_script;
   bool do_help = false;
   bool do_dump = false;
 
+  // List of arguments passed to the pyplearn_driver.py script.
   vector<string> final_args;
+  // The vars map is for PLearn arguments (i.e. arguments accessed through
+  // the ${varname} syntax.
+  map<string, string> vars;
+
   final_args.push_back(scriptfile);
   
   // This option is understood by the pyplearn driver so that is returns a
@@ -86,13 +78,13 @@ process( const string& scriptfile,
   // arguments: --help to print the doc string of the .pyplearn file,
   // and --dump to show the result of processing the .pyplearn file
   // instead of running it.
-  if (args.size() >= 2)
+  if (args.size() >= 1)
   {
-    if (args[1] == "--help")
+    if (args[0] == "--help")
     {
       do_help = true;
     }
-    else if (args[1] == "--dump")
+    else if (args[0] == "--dump")
     {
       do_dump = true;
     }
@@ -104,9 +96,9 @@ process( const string& scriptfile,
   }
   else
   {
-    // Supply the PLearn command-line arguments to the pylearn driver
+    // Supply the command-line arguments to the pylearn driver
     // script.
-    for (unsigned int i = 1; i < args.size(); i++)
+    for (unsigned int i = 0; i < args.size(); i++)
     {
       string option = args[i];
       // Skip --foo command-lines options.
@@ -128,9 +120,21 @@ process( const string& scriptfile,
          it != vars.end(); ++it)
     {
       final_args.push_back(it->first + '=' + it->second);
-    }          
-  }
-      
+    }
+
+    // Add the command-line arguments to the list of PLearn arguments.
+    for (unsigned int i = 0; i < args.size(); i++)
+      {
+        string option = args[i];
+        // Skip --foo command-lines options.
+        if (option.size() < 2 || option.substr(0, 2) != "--")
+          {
+            pair<string,string> name_val = split_on_first(option, "=");
+            vars[name_val.first] = name_val.second;
+          }
+      }
+    }
+
   Popen popen(drivername, final_args);
   PP<PyPLearnScript> pyplearn_script = new PyPLearnScript();
 

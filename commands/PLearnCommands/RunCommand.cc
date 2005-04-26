@@ -34,10 +34,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.19 2005/04/21 15:47:16 chrish42 Exp $ 
+   * $Id: RunCommand.cc,v 1.20 2005/04/26 16:51:12 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
+#include <algorithm>
+
 #include "RunCommand.h"
 #include <plearn/base/general.h>
 #include <plearn/io/fileutils.h>
@@ -63,26 +65,18 @@ void RunCommand::run(const vector<string>& args)
   if (!file_exists(scriptfile))
     PLERROR("Non-existent script file: %s\n",scriptfile.c_str());
 
-  map<string, string> vars;
-  // populate vars with the arguments passed on the command line
-  for (unsigned int i=1; i<args.size(); i++)
-    {
-      string option = args[i];
-      // Skip --foo command-lines options.
-      if (option.size() < 2 || option.substr(0, 2) != "--")
-        {
-          pair<string,string> name_val = split_on_first(option, "=");
-          vars[name_val.first] = name_val.second;
-        }
-    }
-
   const string extension = extract_extension(scriptfile);
   string script;
 
   PP<PyPLearnScript> pyplearn_script;
   if (extension == ".pyplearn")
   {
-    pyplearn_script = PyPLearnScript::process(scriptfile, args);
+    // Make a copy of args with the first argument (the name of the script)
+    // removed, leaving the first argument to the script at index 0.
+    vector<string> pyplearn_args(args.size()-1);
+    copy(args.begin() + 1, args.end(), pyplearn_args.begin());
+    
+    pyplearn_script = PyPLearnScript::process(scriptfile, pyplearn_args);
     script          = pyplearn_script->getScript();
     
     // When we call the pyplearn script with either
@@ -93,6 +87,19 @@ void RunCommand::run(const vector<string>& args)
   }
   else
   {
+    map<string, string> vars;
+    // populate vars with the arguments passed on the command line
+    for (unsigned int i=1; i<args.size(); i++)
+      {
+        string option = args[i];
+        // Skip --foo command-lines options.
+        if (option.size() < 2 || option.substr(0, 2) != "--")
+          {
+            pair<string, string> name_val = split_on_first(option, "=");
+            vars[name_val.first] = name_val.second;
+          }
+      }
+
     script = readFileAndMacroProcess(scriptfile, vars);
   }
   

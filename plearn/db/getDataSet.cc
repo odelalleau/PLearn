@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.38 2005/04/21 15:47:31 chrish42 Exp $
+   * $Id: getDataSet.cc,v 1.39 2005/04/26 16:51:49 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -105,6 +105,31 @@ time_t getDataSetDate(const string& datasetstring, const string& alias)
   return 0;
 }
 
+
+/** Extracts the dataset and arguments from the string passed
+    to getDataSet() and friends.
+
+    The expected format is filename.ext::ARG1=value1:ARG2=value2 ...
+*/
+void extractDataSetNameAndArgs(const string& datasetString,
+                               string& dataset,
+                               vector<string>& args)
+{
+  args.clear();
+
+  string::size_type pos_of_double_colon = datasetString.find("::");
+  if (pos_of_double_colon == string::npos) {
+    dataset = datasetString;
+    return;
+  }
+
+  dataset = datasetString.substr(0, pos_of_double_colon);
+  string datasetArgs = datasetString.substr(pos_of_double_colon+2, datasetString.length());
+
+  args = split(datasetArgs, ':');
+}
+
+
 VMat getDataSet(const char*   datasetstring, const string& alias)
 {
   return getDataSet(string(datasetstring), alias);
@@ -123,84 +148,88 @@ VMat getDataSet(const string& datasetstring, const string& alias)
     return getDataSet(aliases[datasetstring]);
 
   // it wasn't an alias
+  string dataset;
+  vector<string> datasetArgs;
+  extractDataSetNameAndArgs(datasetstring, dataset, datasetArgs);
+  
   VMat vm;
-  if(isfile(datasetstring+".sdb")) // it's an sdb (without the .sdb extension...)
+  if (isfile(dataset + ".sdb")) // it's an sdb (without the .sdb extension...)
     {
-      vm = new AutoSDBVMatrix(datasetstring);
+      vm = new AutoSDBVMatrix(dataset);
     }
-  else if(pathexists(datasetstring))
+  else if (pathexists(dataset))
     {
-      if(isfile(datasetstring))
+      if (isfile(dataset))
         {
-          string ext = extract_extension(datasetstring);
-          if(ext==".pmat")
-            vm = new FileVMatrix(datasetstring);
-          else if(ext==".vmat" || ext==".txtmat")
+          string ext = extract_extension(dataset);
+          if (ext == ".pmat")
+            vm = new FileVMatrix(dataset);
+          else if (ext==".vmat" || ext==".txtmat")
           {
-            string code = readFileAndMacroProcess(datasetstring);
-            if(removeblanks(code)[0]=='<') // old xml-like format 
-              vm = new VVMatrix(datasetstring);
+            string code = readFileAndMacroProcess(dataset);
+            if (removeblanks(code)[0] == '<') // old xml-like format 
+              vm = new VVMatrix(dataset);
             else
             {
               vm = dynamic_cast<VMatrix*>(newObject(code));
               if(vm.isNull())
-                PLERROR("getDataSet: Object described in %s is not a VMatrix subclass",datasetstring.c_str());
+                PLERROR("getDataSet: Object described in %s is not a VMatrix subclass",dataset.c_str());
             } 
           }
           else if (ext==".pymat" || ext==".py")
           {
             if (ext==".py")
               PLWARNING("getDataSet: Note that the Python code in a '.py' file must return a pl.VMatrix");
-            PP<PyPLearnScript> pyplearn_script = PyPLearnScript::process(datasetstring);
+            PP<PyPLearnScript> pyplearn_script = PyPLearnScript::process(dataset, datasetArgs);
             const string code = pyplearn_script->getScript();
             vm = dynamic_cast<VMatrix*>(newObject(code));
             if (vm.isNull())
-                PLERROR("getDataSet: Object described in %s is not a VMatrix subclass",datasetstring.c_str());
+                PLERROR("getDataSet: Object described in %s is not a VMatrix subclass",dataset.c_str());
           }
-          else if(ext==".amat") {
+          else if (ext==".amat") {
             // Check if the extension is ".bin.amat".
-            if (datasetstring.find(".bin.", ((unsigned int) datasetstring.size()) - 9) != string::npos){
+            if (dataset.find(".bin.", ((unsigned int) dataset.size()) - 9) != string::npos){
               Mat tempMat;
-              loadAsciiSingleBinaryDescriptor(datasetstring,tempMat);
+              loadAsciiSingleBinaryDescriptor(dataset,tempMat);
               vm = VMat(tempMat);
             } else {
-              vm = loadAsciiAsVMat(datasetstring);
+              vm = loadAsciiAsVMat(dataset);
             }
           }
-          else if(ext==".strtable")
-            vm = new StrTableVMatrix(StringTable(datasetstring));
-          else if(ext==".sdb")
-            vm = new AutoSDBVMatrix(remove_extension(datasetstring));            
-          else if(ext==".mat")
-            vm = loadAsciiAsVMat(datasetstring);
+          else if (ext==".strtable")
+            vm = new StrTableVMatrix(StringTable(dataset));
+          else if (ext==".sdb")
+            vm = new AutoSDBVMatrix(remove_extension(dataset));            
+          else if (ext==".mat")
+            vm = loadAsciiAsVMat(dataset);
           else 
             PLERROR("Unknown extension for vmatrix: %s", ext.c_str());
           if (!vm->hasMetaDataDir())
-            vm->setMetaDataDir(extract_directory(datasetstring) + extract_filename(datasetstring) + ".metadata");
+            vm->setMetaDataDir(extract_directory(dataset) + extract_filename(dataset) + ".metadata");
         }
       else // it's a directory
       {
           // is it the directory of a DiskVMatrix?
-          if(isfile(datasetstring+slash+"indexfile") && isfile(datasetstring+slash+"0.data"))
+          if (isfile(dataset + slash + "indexfile") && isfile(dataset + slash + "0.data"))
             {
-              vm = new DiskVMatrix(datasetstring);
+              vm = new DiskVMatrix(dataset);
             }
           else
-            PLERROR("In getDataSet: datasetstring is a directory of unknown format"); 
+            PLERROR("In getDataSet: dataset is a directory of unknown format"); 
         }
     }
   else // it's either a preprogrammed dataset, or a VMatrix object
   {
     try // try with a preprogrammed dataset
       {
-        vector<string> dsetspec = split(datasetstring);
-        if(dsetspec.size()<2)
-          PLERROR("In getDataSet, expecting a specification of the form '<datasetname> <train|test|all> [normalize]. DatasetString = %s' ",datasetstring.c_str());
+        vector<string> dsetspec = split(dataset);
+        if (dsetspec.size() < 2)
+          PLERROR("In getDataSet, expecting a specification of the form '<datasetname> <train|test|all> [normalize]. DatasetString = %s' ",dataset.c_str());
         string datasetname = dsetspec[0];
         bool normalizeinputs = false;
-        if(dsetspec.size()>=3)
+        if (dsetspec.size() >= 3)
           {
-            if(dsetspec[2]=="normalize")
+            if (dsetspec[2] == "normalize")
               normalizeinputs = true;
             else PLERROR("In getDataSet specification of predefined dataset contains 3 words, expecting 3rd one to be 'normalize', don't understand '%s'",dsetspec[2].c_str());
           }
@@ -208,22 +237,23 @@ VMat getDataSet(const string& datasetstring, const string& alias)
         int inputsize, nclasses;
         VMat trainset, testset, allset;
         loadClassificationDataset(datasetname, inputsize, nclasses, trainset, testset, normalizeinputs, allset);
-        if(dsetspec[1]=="train") {
-          if (trainset==NULL) {
+        if (dsetspec[1] == "train") {
+          if (trainset == NULL) {
             PLERROR("In getDataSet, there is no trainset available.");
           }
           vm = trainset;
         }
-        else if(dsetspec[1]=="test") {
-          if (testset==NULL) {
+        else if (dsetspec[1] == "test") {
+          if (testset == NULL) {
             PLERROR("In getDataSet, there is no testset available.");
           }
           vm = testset;
         }
-        else if(dsetspec[1]=="all") {
+        else if (dsetspec[1] == "all") {
           if (allset) {
             vm = allset;
-          } else {
+          }
+          else {
             vm = vconcat(trainset,testset);    
           }
         }
@@ -236,23 +266,23 @@ VMat getDataSet(const string& datasetstring, const string& alias)
 #else
         string mdir = "/u/lisa/db/metadata/";
 #endif
-        vm->setMetaDataDir(append_slash(mdir) + datasetstring);
+        vm->setMetaDataDir(append_slash(mdir) + dataset);
       }
-    catch(const PLearnError& e)  // OK, it wasn't a preprogrammed dataset, let's try with a VMatrix object
+    catch (const PLearnError& e)  // OK, it wasn't a preprogrammed dataset, let's try with a VMatrix object
       {
         try 
           { 
-            vm = dynamic_cast<VMatrix*>(newObject(datasetstring));
-            if(!vm)
+            vm = dynamic_cast<VMatrix*>(newObject(dataset));
+            if (!vm)
               PLERROR("Not a VMatrix object (dynamic cast failed)");
           }
-        catch(const PLearnError& e2)
+        catch (const PLearnError& e2)
           {
             PLERROR("Error in getDataSet with specification: %s\n"
                     "Specification is neither a valid file or directory \n"
                     "Nor is it a preprogrammed dataset (attempt returned: %s)\n"
                     "Nor could it be resolved to a VMatrix object (attempt returned: %s)\n",
-                    datasetstring.c_str(), e.message().c_str(), e2.message().c_str());
+                    dataset.c_str(), e.message().c_str(), e2.message().c_str());
           }
       }
   }
@@ -261,11 +291,11 @@ VMat getDataSet(const string& datasetstring, const string& alias)
   // vm->setAlias(alias); // Aliases are now deprecated.
   vm->unduplicateFieldNames();
 
-  if(vm->inputsize()<0 && vm->targetsize()<0 && vm->weightsize()<0) {
+  if (vm->inputsize() < 0 && vm->targetsize() < 0 && vm->weightsize() < 0) {
     DBG_LOG << "In getDataSet - The loaded VMat has no inputsize, targetsize "
             << "or weightsize specified, setting them to (" << vm->width() << ",0,0)"
             << endl;
-    vm->defineSizes(vm->width(),0,0);
+    vm->defineSizes(vm->width(), 0, 0);
   }
 
   // Ensure sizes do not conflict with width.
