@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.40 2005/04/26 20:32:51 chrish42 Exp $
+   * $Id: getDataSet.cc,v 1.41 2005/04/27 16:04:09 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -178,7 +178,18 @@ VMat getDataSet(const string& datasetstring, const string& alias)
             vm = new FileVMatrix(dataset);
           else if (ext==".vmat" || ext==".txtmat")
           {
-            string code = readFileAndMacroProcess(dataset);
+            /* Convert datasetArgs vector of arguments into a map from
+               argument name to argument value for
+               readFileAndMacroProcess */
+            map<string, string> vars;
+            for (vector<string>::const_iterator it = datasetArgs.begin();
+                 it != datasetArgs.end(); ++it) {
+              string arg_name, arg_value;
+              split_on_first(*it, "=", arg_name, arg_value);
+              vars[arg_name] = arg_value;
+            }
+            
+            string code = readFileAndMacroProcess(dataset, vars);
             if (removeblanks(code)[0] == '<') // old xml-like format 
               vm = new VVMatrix(dataset);
             else
