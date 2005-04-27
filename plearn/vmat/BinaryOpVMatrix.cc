@@ -1,0 +1,135 @@
+// -*- C++ -*-
+
+// BinaryOpVMatrix.cc
+//
+// Copyright (C) 2005 Nicolas Chapados 
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+// 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+// 
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+/* *******************************************************      
+   * $Id: BinaryOpVMatrix.cc,v 1.1 2005/04/27 14:21:11 chapados Exp $ 
+   ******************************************************* */
+
+// Authors: Nicolas Chapados
+
+/*! \file BinaryOpVMatrix.cc */
+
+
+#include "BinaryOpVMatrix.h"
+
+namespace PLearn {
+using namespace std;
+
+
+BinaryOpVMatrix::BinaryOpVMatrix()
+{
+}
+
+PLEARN_IMPLEMENT_OBJECT(BinaryOpVMatrix,
+    "This VMat allows simple binary operations on two VMatrix.",
+    "It is assumed that the two matrices are the same size"
+);
+
+void BinaryOpVMatrix::getNewRow(int i, const Vec& v) const
+{
+  assert( vm1 && vm2 );
+  row1.resize(vm1.width());
+  row2.resize(vm2.width());
+  assert( row1.size() == row2.size() );
+  assert( v.size()    == row1.size() );
+
+  vm1->getRow(i, row1);
+  vm2->getRow(i, row2);
+  
+  for (int i=0, n=row1.size() ; i<n ; ++i)
+    v[i] = selected_op(row1[i], row2[i]);
+}
+
+void BinaryOpVMatrix::declareOptions(OptionList& ol)
+{
+  declareOption(ol, "vm1", &BinaryOpVMatrix::vm1, OptionBase::buildoption,
+                "First VMatrix to operate on");
+  
+  declareOption(ol, "vm2", &BinaryOpVMatrix::vm2, OptionBase::buildoption,
+                "Second VMatrix to operate on");
+
+  declareOption(ol, "op", &BinaryOpVMatrix::op, OptionBase::buildoption,
+                "Operation to perform; may be \"add\", \"sub\", \"mult\", \"div\"");
+  
+  // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
+
+void BinaryOpVMatrix::build_()
+{
+  if (! vm1)
+    PLERROR("BinaryOpVMatrix::build_: vm1 not defined");
+  if (! vm2)
+    PLERROR("BinaryOpVMatrix::build_: vm2 not defined");
+  if (vm1.length() != vm2.length())
+    PLERROR("BinaryOpVMatrix::build_: vm1 has %d rows but vm2 has %d rows; both must "
+            "have the same number of rows.", vm1.length(), vm2.length());
+  if (vm1.width() != vm2.width())
+    PLERROR("BinaryOpVMatrix::build_: vm1 has %d columns but vm2 has %d columns; both must "
+            "have the same number of columns.", vm1.width(), vm2.width());
+
+  if (op == "add")
+    selected_op = op_add;
+  else if (op == "sub")
+    selected_op = op_sub;
+  else if (op == "mult")
+    selected_op = op_mul;
+  else if (op == "div")
+    selected_op = op_div;
+  else
+    PLERROR("BinaryOpVMatrix::build_: unknown operation type \"%s\"; supported operatrions "
+            "are \"add\", \"sub\", \"mult\", \"div\"", op.c_str());
+
+  // Copy the metainformation from first VMat
+  setMetaInfoFrom(vm1);
+}
+
+// ### Nothing to add here, simply calls build_
+void BinaryOpVMatrix::build()
+{
+  inherited::build();
+  build_();
+}
+
+void BinaryOpVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(row1, copies);
+  deepCopyField(row2, copies);
+  deepCopyField(vm1, copies);
+  deepCopyField(vm2, copies);
+}
+
+} // end of namespace PLearn
+
