@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BinaryStump.cc,v 1.4 2005/02/04 17:02:18 larocheh Exp $ 
+   * $Id: BinaryStump.cc,v 1.5 2005/04/27 16:17:47 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -46,7 +46,8 @@
 namespace PLearn {
 using namespace std;
 
-void qsort_vec(TVec< pair<int, real> > v)
+
+void qsort_vec(TVec< pair<int, real> > v, TVec< pair<int,int> > buffer)
 {
   TVec< pair<int,real> > temp(v.length());
   temp << v;
@@ -64,10 +65,60 @@ void qsort_vec(TVec< pair<int, real> > v)
   
   v[first] = temp[0];
 
-  if(first!=0)
-    qsort_vec(v.subVec(0,first));
-  if(last!=v.length()-1)
-    qsort_vec(v.subVec(last+1,v.length()-1-last));
+  int it = 0;
+  pair<int,int> inf_sup;
+  if(first != 0)
+  {
+    inf_sup.first = 0;
+    inf_sup.second = first;
+    buffer[it] = inf_sup;
+    it++;
+  }
+  if(last!=temp.length()-1)
+  {
+    inf_sup.first = last+1;
+    inf_sup.second = v.length()-1-last;
+    buffer[it] = inf_sup;
+    it++;
+  }
+
+  while(it > 0)
+  {
+    it--;
+    temp.resize(buffer[it].second);
+    temp << v.subVec(buffer[it].first,buffer[it].second);
+    pivot = temp[0].second;
+    first = buffer[it].first;
+    last = buffer[it].first+buffer[it].second-1;
+    for(int i=1; i<buffer[it].second; i++)
+      if(temp[i].second >= pivot)
+        v[last--]=temp[i];
+      else
+        v[first++]=temp[i];
+    
+    if(first != last)
+      PLERROR("OUPS!!");
+    
+    v[first] = temp[0];
+    
+    int this_it = it;
+
+    if(first != buffer[this_it].first)
+    { 
+      inf_sup.first =  buffer[this_it].first;
+      inf_sup.second = first-buffer[this_it].first;
+      buffer[it] = inf_sup;
+      it++;
+    }
+    if(last!=  buffer[this_it].first+temp.length()-1)
+    {
+      inf_sup.first =  last+1;
+      inf_sup.second = buffer[this_it].first+temp.length()-1-last;
+      buffer[it] = inf_sup;
+      it++;
+    }
+  }
+
 }
 
 BinaryStump::BinaryStump() 
@@ -136,26 +187,13 @@ void BinaryStump::train()
   train_stats->forget();
 
   int n = train_set->length();
-  sf.resize(inputsize(), n);
-  static Vec input; input.resize(inputsize());
-  static Vec target; target.resize(targetsize());
-  real weight;
-
-  for(int j=0; j<n; j++)
-  {
-    train_set->getExample(j,input, target, weight);
-    if(target[0] != 0 & target[0] != 1)
-      PLERROR("In BinaryStump:train() : target should be either 1 or 0");
-    for(int i=0; i<inputsize(); i++)
-    {
-      sf(i,j).first = j;
-      sf(i,j).second = input[i];
-    }
-  }
-
-  // Sorting features
-  for(int i=0; i<sf.length();i++)
-    qsort_vec(sf(i));
+  sf.resize(n);
+  //static Vec input; input.resize(inputsize());
+  //static Vec target; target.resize(targetsize());
+  real input;
+  //real weight;
+  Vec train_target(n);
+  TVec< pair<int,int> > buffer((int)(n*safeflog(n)));
 
   static Vec example_weights; example_weights.resize(n);
 
@@ -164,13 +202,21 @@ void BinaryStump::train()
   {
     for (int i=0; i<n; ++i) 
     {
-      train_set->getExample(i, input, target, weight);
-      example_weights[i]=weight;
+      //train_set->getExample(i, input, target, weight);
+      //example_weights[i]=weight;
+      example_weights[i]= train_set->get(i,inputsize_+targetsize_);
     }
   }
   else
   {
     example_weights.fill(1.0/n);
+  }
+
+  for (int i=0; i<n; ++i) 
+  {
+    train_target[i]= train_set->get(i,inputsize_);
+    if(train_target[i] != 0 & train_target[i] != 1)
+      PLERROR("In BinaryStump:train() : target should be either 1 or 0");
   }
 
   // Choosing best stump
@@ -186,8 +232,9 @@ void BinaryStump::train()
     for(int i=0; i<n; i++)
     {
       w_sum += example_weights[i];
-      train_set->getExample(i,input,target,weight);
-      if(target[0] == 1)
+      //train_set->getExample(i,input,target,weight);
+      //if(target[0] == 1)
+      if(train_target[i] == 1)
         w_sum_1 += example_weights[i];
     }
 
@@ -212,28 +259,50 @@ void BinaryStump::train()
     // frequent class.
 
     feature = 0;
-    threshold = sf(0,0).second-1; 
+    threshold = sf[0].second-1; 
     ProgressBar *pb;
     if(report_progress)
-      pb = new ProgressBar("Finding best stump",inputsize()*sf.width());
+      pb = new ProgressBar("Finding best stump",inputsize()*sf.length());
     int prog = 0;
     for(int d=0; d<inputsize(); d++)
     {
+
+      // Copying input
+      for(int j=0; j<n; j++)
+      {
+        //train_set->getExample(j,input, target, weight);
+        input = train_set->get(j,d);
+        //if(target[0] != 0 & target[0] != 1)
+        sf[j].first = j;
+        //sf[j].second = input[d];
+        sf[j].second = input;
+      }
       
+
+      
+      // Sorting features
+      //for(int i=0; i<sf.length();i++)
+      qsort_vec(sf,buffer);
+      
+      if(d==0) // initialize threshold
+        threshold = sf[0].second-1; 
+
       real w_sum_l_1 = 0;
       real w_sum_l = 0;
 
-      for(int i=0; i<sf.width()-1; i++)
+      for(int i=0; i<sf.length()-1; i++)
       {
 
-        real f1 = sf(d,i).second;
-        real f2 = sf(d,i+1).second;
+        real f1 = sf[i].second;
+        real f2 = sf[i+1].second;
 
-        train_set->getExample(sf(d,i).first,input,target,weight);
-        real classe = target[0];
+        //train_set->getExample(sf[i].first,input,target,weight);
+        //target = train_set->getExample(sf[i].first,inputsize_);
+        //real classe = target[0];
+        real classe = train_target[sf[i].first];
         if(classe == 1)
-          w_sum_l_1+=example_weights[sf(d,i).first];
-        w_sum_l += example_weights[sf(d,i).first];
+          w_sum_l_1+=example_weights[sf[i].first];
+        w_sum_l += example_weights[sf[i].first];
 
         if(f1 == f2)
           continue;
@@ -273,7 +342,7 @@ void BinaryStump::train()
   train_stats->finalize();
   if(verbosity > 1)
     cout << "Weighted error = " << best_error << endl;
-  sf = TMat< pair<int, real> >(0,0);
+  sf = TVec< pair<int, real> >(0);
 }
 
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BinaryStump.h,v 1.1 2004/09/22 20:15:45 larocheh Exp $ 
+   * $Id: BinaryStump.h,v 1.2 2005/04/27 16:17:47 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -55,7 +55,7 @@ class BinaryStump: public PLearner
 private:
 
   typedef PLearner inherited;
-  TMat< pair<int, real> > sf;
+  TVec< pair<int, real> > sf;
 
 protected:
 
