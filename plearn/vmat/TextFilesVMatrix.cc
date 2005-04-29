@@ -31,7 +31,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* *******************************************************      
-   * $Id: TextFilesVMatrix.cc,v 1.4 2005/01/25 03:15:47 dorionc Exp $ 
+   * $Id: TextFilesVMatrix.cc,v 1.5 2005/04/29 15:04:10 chapados Exp $ 
    ******************************************************* */
 
 // Author: Pascal Vincent
@@ -51,15 +51,34 @@ char TextFilesVMatrix::buf[50000];
 
 TextFilesVMatrix::TextFilesVMatrix()
 : idxfile(0),
+  delimiter("\t"),
   auto_build_map(false),
   auto_extend_map(true),
   build_vmatrix_stringmap(false)
 {
 }
 
-PLEARN_IMPLEMENT_OBJECT(TextFilesVMatrix,
-                        "Parse and represent a text file as a VMatrix",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+  TextFilesVMatrix,
+  "Parse and represent a text file as a VMatrix",
+  "This VMatrix contains a plethora of options for parsing text files,\n"
+  "interpreting the fields (including arbitrary string fields), and\n"
+  "representing the result as a numerical VMatrix.  It can be used to parse\n"
+  "both SAS and CSV files.\n"
+  "\n"
+  "If the TextFilesVMatrix is represented as an 'inline' PLearn object\n"
+  "(rather than be contained in a .txtmat file), the metadatadir option\n"
+  "should probably be specified.\n"
+  ""
+  "Internally, the metadata directory contains the following files:\n"
+  " - a txtmat.idx binary index file (which will be automatically rebuilt if any of the raw text files is newer)\n"
+  " - a txtmat.idx.log file reporting problems encountered while building the .idx file\n"
+  "\n"
+  "The txtmat.idx file is a binary file structured as follows\n"
+  "- 1 byte indicating endianness: 'L' or 'B'\n"
+  "- 4 byte int for length (number of data rows in the raw text file)\n"
+  "- (unsigned char fileno, int pos) indicating in which raw text file and at what position each row starts\n"
+  );
 
 
 void TextFilesVMatrix::getFileAndPos(int i, unsigned char& fileno, int& pos) const
@@ -116,12 +135,13 @@ void TextFilesVMatrix::buildIdx()
           int pos = ftell(f);
           if(!fgets(buf, sizeof(buf), f))
             break;
+          buf[sizeof(buf)-1] = '\0';         // ensure null-terminated
           lineno++;
           if(nskip>0)
             --nskip;
           else if(!isBlank(buf))
             {
-              fields = split(buf,'\t');
+              fields = splitIntoFields(buf);
               int nf = fields.length();
               if(nf!=fieldspec.size())
                 fprintf(logfile, "ERROR In file %d line %d: Found %d fields (should be %d):\n %s",fileno,lineno,nf,fieldspec.size(),buf);
@@ -219,6 +239,11 @@ void TextFilesVMatrix::build_()
 
   if(build_vmatrix_stringmap)
     buildVMatrixStringMapping();
+
+  // Sanity checking
+  if (delimiter.size() != 1)
+    PLERROR("TextFilesVMatrix: the 'delimiter' option '%s' must contain exactly one character",
+            delimiter.c_str());
 }
 
 
@@ -230,7 +255,7 @@ string TextFilesVMatrix::getTextRow(int i) const
   FILE* f = txtfiles[fileno];
   fseek(f,pos,SEEK_SET);
   if(!fgets(buf, sizeof(buf), f))
-    PLERROR("Problem in TextFilesVMatrix::getTextFields fgets for row %d returned NULL",i);
+    PLERROR("Problem in TextFilesVMatrix::getTextRow fgets for row %d returned NULL",i);
   return removenewline(buf);
 }
 
@@ -402,10 +427,15 @@ real TextFilesVMatrix::getMapping(int fieldnum, const string& strval) const
   return val;
 }
 
+TVec<string> TextFilesVMatrix::splitIntoFields(const string& raw_row) const
+{
+  return split(raw_row, delimiter[0]);
+}
+
 TVec<string> TextFilesVMatrix::getTextFields(int i) const
 {
   string rowi = getTextRow(i);  
-  TVec<string> fields =  split(rowi,'\t');
+  TVec<string> fields =  splitIntoFields(rowi);
   if(fields.size() != fieldspec.size())
     PLERROR("In getting fields of row %d, wrong number of fields: %d (should be %d):\n%s\n",i,fields.size(),fieldspec.size(),rowi.c_str());
   for(int k=0; k<fields.size(); k++)
@@ -631,24 +661,30 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "txtfilenames", &TextFilesVMatrix::txtfilenames, OptionBase::buildoption,
                 "A list of paths to raw text files containing the records");
 
+  declareOption(ol, "delimiter", &TextFilesVMatrix::delimiter, OptionBase::buildoption,
+                "Delimiter to use to split the fields.  Common delimiters are:\n"
+                "- \"\\t\" : used for SAS files (the default)\n"
+                "- \",\"  : used for CSV files\n"
+                "- \";\"  : used for a variant of CSV files");
+  
   declareOption(ol, "skipheader", &TextFilesVMatrix::skipheader, OptionBase::buildoption,
                 "An (optional) list of integers, one for each of the txtfilenames,\n"
                 "indicating the number of header lines at the top of the file to be skipped.");
 
   declareOption(ol, "fieldspec", &TextFilesVMatrix::fieldspec, OptionBase::buildoption,
-                "Specification of field names and types (type indicates hoe the text field is to be mapped to one or more reals)\n"
+                "Specification of field names and types (type indicates how the text field is to be mapped to one or more reals)\n"
                 "Currently supported types: \n"
-                "  skip      : Ignore the content of the field, won't be inserted in the resulting VMat\n"
-                "  auto      : If a numeric value, keep it as is, if not, look it up in the mapping (possibly inserting a new mapping if it's not there) \n"
-                "  date      : date of the form 25DEC2003 or 2003/12/25 or 20031225, will be mapped to float date format 1031225\n"
-                "  jdate     : date of the form 25DEC2003 or 2003/12/25 or 20031225, will be mapped to *julian* date format\n"
-                "  sas_date  : date used by SAS = number of days since Jan. 1st, 1960 (with 0 = missing)\n"
-                "  YYYYMM    : date of the form YYYYMM (e.g: 200312), will be mapped to the julian date of the corresponding month. Everthing "\
-                "              other than a number or lower than 197000 is considered as nan\n"
-                "  postal    : canadian postal code \n"
-                "  dollar    : strangely formatted field with dollar amount. Format is sth like '$12 003'\n"
-                "  bell_range: a range like \"A: $0- 250\", replaced by the average of the two bounds;\n"
-                "              if the \"Negative Value\" string is found, it is replaced by -100\n"
+                "- skip       : Ignore the content of the field, won't be inserted in the resulting VMat\n"
+                "- auto       : If a numeric value, keep it as is, if not, look it up in the mapping (possibly inserting a new mapping if it's not there) \n"
+                "- date       : date of the form 25DEC2003 or 2003/12/25 or 20031225, will be mapped to float date format 1031225\n"
+                "- jdate      : date of the form 25DEC2003 or 2003/12/25 or 20031225, will be mapped to *julian* date format\n"
+                "- sas_date   : date used by SAS = number of days since Jan. 1st, 1960 (with 0 = missing)\n"
+                "- YYYYMM     : date of the form YYYYMM (e.g: 200312), will be mapped to the julian date of the corresponding month. Everthing "\
+                "               other than a number or lower than 197000 is considered as nan\n"
+                "- postal     : canadian postal code \n"
+                "- dollar     : strangely formatted field with dollar amount. Format is sth like '$12 003'\n"
+                "- bell_range : a range like \"A: $0- 250\", replaced by the average of the two bounds;\n"
+                "               if the \"Negative Value\" string is found, it is replaced by -100\n"
                 );
 
   declareOption(ol, "auto_extend_map", &TextFilesVMatrix::auto_extend_map, OptionBase::buildoption,
@@ -657,7 +693,9 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "auto_build_map", &TextFilesVMatrix::auto_build_map, OptionBase::buildoption,
                 "If true, all mappings will be automatically computed at build time if they do not exist yet\n");
 
-  declareOption(ol, "build_vmatrix_stringmap", &TextFilesVMatrix::build_vmatrix_stringmap, OptionBase::buildoption, "If true, standard vmatrix stringmap will be built from the txtmat specific stringmap");
+  declareOption(ol, "build_vmatrix_stringmap", &TextFilesVMatrix::build_vmatrix_stringmap,
+                OptionBase::buildoption,
+                "If true, standard vmatrix stringmap will be built from the txtmat specific stringmap");
    
 
   // Now call the parent class' declareOptions

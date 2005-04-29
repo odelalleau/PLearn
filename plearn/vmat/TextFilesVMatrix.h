@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TextFilesVMatrix.h,v 1.3 2005/02/19 22:10:14 tihocan Exp $ 
+   * $Id: TextFilesVMatrix.h,v 1.4 2005/04/29 15:04:10 chapados Exp $ 
    ******************************************************* */
 
 // Author: Pascal Vincent
@@ -62,7 +62,6 @@ The txtmat.idx file is a binary file structured as follows
 - 1 byte indicating endianness: 'L' or 'B'
 - 4 byte int for length (number of data rows in the raw text file)
 - (unsigned char fileno, int pos) indicating in which raw text file and at what position each row starts
-
 
 */
 
@@ -92,15 +91,33 @@ public:
   // ************************
 
   PPath metadatapath; //!< the path to the .metadata directory 
-  
+
+  //! A list of paths to raw text files containing the records
   TVec<string> txtfilenames;
 
+  //! Delimiter to use to split the fields.  Common delimiters are:
+  //! - '\t' : used for SAS files (the default)
+  //! - ','  : used for CSV files
+  //! - ';'  : used for a variant of CSV files
+  string delimiter;
+  
+  //! An (optional) list of integers, one for each of the txtfilenames
+  //! indicating the number of header lines at the top of the file to be skipped.
   TVec<int> skipheader;
 
+  //! Specification of field names and types 
   TVec< pair<string, string> > fieldspec;
 
+  //! If true, all mappings will be automatically computed at build time if
+  //! they do not exist yet
   bool auto_build_map;
+
+  //! If true, new strings for fields of type AUTO will automatically
+  //! appended to the mapping (in the metadata/mappings/fieldname.map file)
   bool auto_extend_map;
+
+  //! If true, standard vmatrix stringmap will be built from the txtmat
+  //! specific stringmap
   bool build_vmatrix_stringmap; 
 
   // ****************
@@ -174,6 +191,9 @@ public:
   int nTextFields() const
   { return fieldspec.length(); }
 
+  //! Split the passed string into fields given the delimiter
+  TVec<string> splitIntoFields(const string& raw_row) const;
+  
   //! Returns the split raw text rows
   TVec<string> getTextFields(int i) const;
 
