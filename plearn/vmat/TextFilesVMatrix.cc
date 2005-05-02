@@ -31,7 +31,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* *******************************************************      
-   * $Id: TextFilesVMatrix.cc,v 1.5 2005/04/29 15:04:10 chapados Exp $ 
+   * $Id: TextFilesVMatrix.cc,v 1.6 2005/05/02 05:14:38 chapados Exp $ 
    ******************************************************* */
 
 // Author: Pascal Vincent
@@ -110,6 +110,12 @@ void TextFilesVMatrix::buildIdx()
   idxfile = fopen(( getMetaDataDir()/"txtmat.idx").c_str(),"wb");
   FILE* logfile = fopen((getMetaDataDir()/"txtmat.idx.log").c_str(),"a");
 
+  if (! idxfile)
+    PLERROR("TextFilesVMatrix::buildIdx: could not open index file '%s'",
+            ( getMetaDataDir()/"txtmat.idx").c_str());
+  if (! logfile)
+    PLERROR("TextFilesVMatrix::buildIdx: could not open log file '%s'",
+            (getMetaDataDir()/"txtmat.idx.log").c_str());
 
   // write endianness
   fputc(byte_order(), idxfile);
@@ -208,7 +214,11 @@ void TextFilesVMatrix::build_()
   mapfiles.resize(n);
   mapfiles.fill(0);
 
-  setMetaDataDir(metadatapath);
+  setMetaDataDir(metadatapath);              // should be changed for metadatadir!?!?
+
+  if(!force_mkdir(getMetaDataDir()))
+    PLERROR("In TextFilesVMatrix::build_: could not create directory '%s'",
+            getMetaDataDir().absolute().c_str());
   PPath metadir = getMetaDataDir();
   PPath idxfname = metadir/"txtmat.idx";
 
