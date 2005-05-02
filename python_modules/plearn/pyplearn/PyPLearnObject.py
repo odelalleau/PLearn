@@ -143,7 +143,7 @@ or private '__')::
         public2                        = "public again"
         )
 """
-__cvs_id__ = "$Id: PyPLearnObject.py,v 1.15 2005/04/04 18:48:27 lamblin Exp $"
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.16 2005/05/02 19:22:56 chrish42 Exp $"
 
 import inspect, string, types
 
@@ -166,7 +166,7 @@ def builtin_predicate( name ):
     return name.startswith('__') and name.endswith('__')
 
 def public_attribute_predicate( name, value ):
-    """Return wether or not attribute name is considered a public attribute.
+    """Return whether or not attribute name is considered a public attribute.
 
     Are consider public attributes whose I{name} does not an underscore and
     I{value} is not a method, a function or a class.
