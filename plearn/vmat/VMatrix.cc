@@ -35,9 +35,11 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /********************************************************
-* $Id: VMatrix.cc,v 1.95 2005/04/06 22:51:54 chapados Exp $
+* $Id: VMatrix.cc,v 1.96 2005/05/03 15:38:29 chapados Exp $
 ******************************************************* */
 
+#include <sstream>
+#include <iomanip>
 #include "VMatrix.h"
 #include "DiskVMatrix.h"
 #include "FileVMatrix.h"
@@ -255,7 +257,7 @@ void VMatrix::build()
 ////////////////////
 // printFieldInfo //
 ////////////////////
-void VMatrix::printFieldInfo(PStream& out, int fieldnum) const
+void VMatrix::printFieldInfo(PStream& out, int fieldnum, bool print_binning) const
 {
     VMField fi = getFieldInfos(fieldnum);
     StatsCollector& s = getStats(fieldnum);
@@ -295,8 +297,7 @@ void VMatrix::printFieldInfo(PStream& out, int fieldnum) const
     out << "max: " << s.max() << '\n';
 
     // TODO To remove if we do not use it ?
-#if 0
-    if(!s.counts.empty())
+    if(!s.counts.empty() && print_binning)
       {
         out << "\nCOUNTS: \n";
         map<real,StatsCollectorCounts>::const_iterator it = s.counts.begin();
@@ -305,24 +306,29 @@ void VMatrix::printFieldInfo(PStream& out, int fieldnum) const
           {
             real val = it->first;
             const StatsCollectorCounts& co = it->second;
-            out << "  " << val;
-            string s = getValString(fieldnum, val);          
-            if(s!="")
-              out << " " << s;
-            out << " \t: n=" << co.n << "\t nbelow=" << co.nbelow << "\t sumbelow=" << co.sum << endl; 
+            string s = getValString(fieldnum, val);
+            ostringstream os;
+            os.setf(ios::left);
+            os << "  "          << setw(12) << val
+               << "  "          << setw(12) << s
+               << "  n="        << setw(10) << co.n
+               << "  nbelow="   << setw(10) << co.nbelow
+               << "  sumbelow=" << setw(10) << co.sum
+               << endl;
+            out << os.str();
             ++it;
         }
       }
-#endif
     out << endl << endl;
 }
 
 ////////////////////
 // printFieldInfo //
 ////////////////////
-void VMatrix::printFieldInfo(PStream& out, const string& fieldname_or_num) const
+void VMatrix::printFieldInfo(PStream& out, const string& fieldname_or_num,
+                             bool print_binning) const
 {
-  printFieldInfo(out, getFieldIndex(fieldname_or_num));  
+  printFieldInfo(out, getFieldIndex(fieldname_or_num), print_binning);
 }
 
 /////////////////

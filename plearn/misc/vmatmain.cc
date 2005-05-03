@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.47 2005/04/06 22:52:59 chapados Exp $
+   * $Id: vmatmain.cc,v 1.48 2005/05/03 15:38:28 chapados Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -40,6 +40,7 @@
 #include <iomanip>                           // for setw and such
 
 #include "vmatmain.h"
+#include <commands/PLearnCommands/PLearnCommandRegistry.h>
 #include <plearn/base/general.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/math/StatsCollector.h>
@@ -1400,6 +1401,8 @@ int vmatmain(int argc, char** argv)
   
   if(argc<3)
   {
+    // Use the VMatCommand help instead of repeating the same help message twice...
+#if 0
     cerr << 
       "Usage: vmat info <dataset> \n"
       "       Will info about dataset (size, etc..)\n"
@@ -1443,6 +1446,9 @@ int vmatmain(int argc, char** argv)
       "<dataset> is a parameter understandable by getDataSet. This includes \n"
       "all matrix file formats. Type 'vmat help dataset' to see what other\n"
       "<dataset> strings are available." << endl;
+#endif
+
+    PLearnCommandRegistry::help("vmat", cout);
     exit(0);
   }
 
@@ -1593,8 +1599,18 @@ int vmatmain(int argc, char** argv)
         PLERROR("The 'fieldinfo' subcommand requires more parameters, please check the help");
       string dbname = argv[2];
       string fieldname_or_num = argv[3];
+
+      bool print_binning = false;
+      if (argc == 5) {
+        if (argv[4] == string("--bin"))
+          print_binning = true;
+        else
+          PLERROR("vmat fieldinfo: unrecognized final argument; can be '--bin' "
+                  "to print the binning");
+      }
+        
       VMat vm = getDataSet(dbname);
-      vm->printFieldInfo(pout, fieldname_or_num);
+      vm->printFieldInfo(pout, fieldname_or_num, print_binning);
     }
   else if(command=="stats")
     {

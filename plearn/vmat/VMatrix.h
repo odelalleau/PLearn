@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.70 2005/02/25 14:11:02 tihocan Exp $
+   * $Id: VMatrix.h,v 1.71 2005/05/03 15:38:29 chapados Exp $
    ******************************************************* */
 
 
@@ -215,8 +215,9 @@ public:
   const VMFieldStat& fieldStat(const string& fieldname) const { return fieldStat(fieldIndex(fieldname)); }
 
   void printFields(PStream& out) const;
-  void printFieldInfo(PStream& out, int fieldnum) const;
-  void printFieldInfo(PStream& out, const string& fieldname_or_num) const;
+  void printFieldInfo(PStream& out, int fieldnum, bool print_binning = false) const;
+  void printFieldInfo(PStream& out, const string& fieldname_or_num,
+                      bool print_binning = false) const;
 
   // TODO Remove ?
   // string fieldheader(int elementcharwidth=8);
