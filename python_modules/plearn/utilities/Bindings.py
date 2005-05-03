@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: Bindings.py,v 1.5 2005/03/29 16:54:36 dorionc Exp $"
+__cvs_id__ = "$Id: Bindings.py,v 1.6 2005/05/03 17:29:22 dorionc Exp $"
 
 from toolkit import quote_if, doc
 
@@ -208,4 +208,5 @@ if __name__ == "__main__":
     print '    bind[3] = "newC"'
     print_bindings(bind)
 
+    
     

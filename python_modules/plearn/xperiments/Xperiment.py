@@ -13,6 +13,17 @@ __all__ = [
     "Xperiment"
     ]
 
+def get_inexistence_predicate( expkey, cache_once=True ):
+    "Returns a predicate checking that the experiment doesn't exist."
+    def inexistence_predicate( arguments ):
+        if not (cache_once and Xperiment._cached_experiments):
+            Xperiment.load_experiments( expkey )
+        matches = Xperiment.match( arguments )
+        return len( matches ) == 0
+
+    return inexistence_predicate
+    
+
 def option_value_split( s, sep="=", rhs_casts=[] ):
     """Returns a (lhs, rhs) pair given I{sep}."""
     lhs_len = s.find( sep )

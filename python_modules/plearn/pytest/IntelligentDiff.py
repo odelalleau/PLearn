@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: IntelligentDiff.py,v 1.13 2005/02/15 15:08:34 dorionc Exp $"
+__cvs_id__ = "$Id: IntelligentDiff.py,v 1.14 2005/05/03 17:29:21 dorionc Exp $"
 
 import copy, os, string
 
@@ -14,7 +14,6 @@ class Resources:
 
     def memorize(cls, abspath, fname):
         if not cls.name_resolution.has_key(abspath):
-            ## cls.name_resolution[abspath] = "$RESOURCES{%s}"%fname
             cls.name_resolution[abspath] = fname        
     memorize = classmethod(memorize)                                
 

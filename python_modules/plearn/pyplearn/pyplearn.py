@@ -493,13 +493,14 @@ U{Epytext Markup Language Manual<http://epydoc.sourceforge.net/epytext.html>}
 should not take you more than 15 minutes and you will be ready to document your
 code.
 """
-__cvs_id__ = "$Id: pyplearn.py,v 1.26 2005/04/11 18:56:17 dorionc Exp $"
+__cvs_id__ = "$Id: pyplearn.py,v 1.27 2005/05/03 17:28:03 dorionc Exp $"
 
 import string, types
 import plearn.utilities.metaprog as metaprog
 
 __all__ = [ 'PyPlearnError', 'ref', 'bind', 'bindref', 'plvar', 'TMat',
-            'plargs', 'generate_expdir', 'plarg_defaults', 'bind_plargs',
+            'plargs', 'generate_expdir', 'plarg_defaults',
+            'bind_plargs', 'plargs_namespace',
             'PLearnRepr', 'include',
 
             ## Exceptions
@@ -805,7 +806,7 @@ def _parse_plargs(args):
         k, v = a.split('=', 1)
         plargs.__dict__[k] = v
 
-def bind_plargs(obj, field_names = None, plarg_names = None):
+def bind_plargs(obj, field_names = None, plarg_names = None, prefix = None):
     """Binds some command line arguments to the fields of an object.
 
     In short, given::
@@ -841,13 +842,19 @@ def bind_plargs(obj, field_names = None, plarg_names = None):
 
     @param plarg_names: The desired names for the plargs. If it is let
     to None, the I{field_names} values will be used.
-    @type  plarg_names: List of strings.    
+    @type  plarg_names: List of strings.
+
+    @param prefix: If provided, the plarg_names will be overridden to be
+    [ "%s_%s" % (prefix, f) for f in field_names ].
+    @type prefix: str
     """
-    if field_names is None:
-        field_names = metaprog.public_members(obj).keys()
-    
-    if plarg_names is None:
-        plarg_names = field_names
+    if field_names is None: field_names = metaprog.public_members(obj).keys()
+
+    if prefix is None:
+        if plarg_names is None:
+            plarg_names = field_names
+    else:
+        plarg_names = [ "%s_%s" % (prefix, f) for f in field_names ]
 
     for i, field in enumerate(field_names):
         arg_name = plarg_names[i]
@@ -856,9 +863,11 @@ def bind_plargs(obj, field_names = None, plarg_names = None):
         ## by obj
         default_value  = getattr(obj, field)
         if default_value is None:
-            setattr(plarg_defaults, arg_name, None)
+            setattr( plarg_defaults, arg_name, None )
+        elif isinstance( default_value, list ):
+            setattr( plarg_defaults, arg_name, ",".join([ str(e) for e in default_value ]) )
         else:
-            setattr(plarg_defaults, arg_name, str(default_value))
+            setattr( plarg_defaults, arg_name, str(default_value) )
 
         ## binding: Then set the obj value to the one returned by
         ## plarg. If it was not provided by the user, the value will
@@ -870,4 +879,27 @@ def bind_plargs(obj, field_names = None, plarg_names = None):
             setattr(obj, field, provided_value)
         else:           
             cast = type(default_value)
+            if cast is list:
+                elem_cast = str
+                if default_value:
+                    elem_cast = type(default_value[0])
+                cast = lambda s: [ elem_cast(e) for e in s.split(",") ]
             setattr(obj, field, cast(provided_value))
+
+class plargs_namespace:
+    """Subclasses will have there class variables binded to plargs.
+
+    The plarg will be prefixed by the classname, e.g.
+
+        class MLM( plargs_namespace ):
+            ma               = 252
+            sdmult           = 1
+            
+        print plargs.MLM_ma          # prints 252
+        print plargs.MLM_sdmult      # prints 1
+
+    Note that MLM.ma == plargs.MLM_ma will always be True.    
+    """
+    class __metaclass__( type ):
+        def __init__(cls, name, bases, dict):
+            bind_plargs( cls, prefix = cls.__name__ )

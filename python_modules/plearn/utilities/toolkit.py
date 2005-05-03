@@ -5,7 +5,7 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
-__cvs_id__ = "$Id: toolkit.py,v 1.22 2005/02/11 09:16:55 dorionc Exp $"
+__cvs_id__ = "$Id: toolkit.py,v 1.23 2005/05/03 17:29:22 dorionc Exp $"
 import inspect, os, popen2, random, string, sys, time, types
 
 __epydoc_is_available = None
@@ -74,10 +74,15 @@ def command_output(command):
     @return: Output lines.
     @rtype:  Array of strings.
     """
+    breakpoint( command, False and command.startswith('diff') )
     process = popen2.Popen4( command )
-    process.wait()
+
     return process.fromchild.readlines()
 
+def breakpoint( msg, cond=True ):
+    if cond:
+        raw_input( msg )
+    
 def cross_product( list1,  list2,
                    joinfct = lambda i,j: (i, j) ):
     """Returns the cross product of I{list1} and I{list2}.
