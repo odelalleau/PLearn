@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatCommand.cc,v 1.10 2005/04/06 22:52:31 chapados Exp $ 
+   * $Id: VMatCommand.cc,v 1.11 2005/05/03 15:35:34 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VMatCommand.cc */
@@ -58,7 +58,7 @@ VMatCommand::VMatCommand():
       "   or: vmat fields <dataset> [name_only] [transpose] \n"
       "       To list the fields with their names (if 'name_only' is specified, the indexes won't be displayed,\n"
       "       and if 'transpose' is also added, the fields will be listed on a single line)\n"
-      "   or: vmat fieldinfo <dataset> <fieldname_or_num>\n"
+      "   or: vmat fieldinfo <dataset> <fieldname_or_num> [--bin]\n"
       "       To display statistics for that field \n"
       "   or: vmat bbox <dataset> [<extra_percent>] \n"
       "       To display the data bounding box (i.e., for each field, its min and max, possibly extended by +-extra_percent ex: 0.10 for +-10% of the data range )\n"
