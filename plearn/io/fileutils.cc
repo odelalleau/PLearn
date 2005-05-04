@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.73 2005/03/31 21:10:51 chrish42 Exp $
+   * $Id: fileutils.cc,v 1.74 2005/05/04 19:23:09 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -902,22 +902,22 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
 
                     case 'C': // it's an INCLUDE{filepath}
                       {
-                        string includefilepath; // path of the file in a $INCLUDE{...} directive
+                        string raw_includefilepath; // The raw path read from the script.
                         readWhileMatches(in, "CLUDE");
                         int c = in.get();
                         if(c=='<')
-                          in.smartReadUntilNext(">", includefilepath, true);
+                          in.smartReadUntilNext(">", raw_includefilepath, true);
                         else if(c=='{')
-                          in.smartReadUntilNext("}", includefilepath, true);
+                          in.smartReadUntilNext("}", raw_includefilepath, true);
                         else
                           PLERROR("$INCLUDE must be followed immediately by a { or <");
-                        PStream pathin = openString(includefilepath, PStream::raw_ascii);
-                        includefilepath = readAndMacroProcess(pathin,variables);
-                        includefilepath = removeblanks(includefilepath);
-                        // TODO Read some PPath.
-                        string dirname = extract_directory(includefilepath);
-                        string filename = extract_filename(includefilepath);
-                        string olddir = PPath::getcwd().absolute();
+                        PStream pathin = openString(raw_includefilepath, PStream::raw_ascii);
+                        raw_includefilepath = readAndMacroProcess(pathin,variables);
+                        raw_includefilepath = removeblanks(raw_includefilepath);
+                        PPath includefilepath = raw_includefilepath; // Conversion to PPath.
+                        PPath dirname = includefilepath.dirname();
+                        PPath filename = includefilepath.basename();
+                        PPath olddir = PPath::getcwd();
                         chdir(dirname);
                         text += readFileAndMacroProcess(filename, variables);
                         chdir(olddir);
