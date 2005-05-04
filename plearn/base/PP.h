@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PP.h,v 1.9 2004/10/15 18:06:36 chrish42 Exp $
+   * $Id: PP.h,v 1.10 2005/05/04 21:44:47 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -226,6 +226,8 @@ class PP
   template<class T>
   inline T* deepCopy(PP<T> source)
   { 
+    if (source.isNull()) return NULL;
+
     CopiesMap copies; //!<  create empty map
     return deepCopy(source, copies);
   }
