@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.48 2005/05/03 15:38:28 chapados Exp $
+   * $Id: vmatmain.cc,v 1.49 2005/05/04 17:48:35 chapados Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -1528,8 +1528,12 @@ int vmatmain(int argc, char** argv)
         vm->saveDMAT(destination);
       else if(ext == ".csv")
       {
-        ofstream out(destination.c_str());
-        save_vmat_as_csv(vm, out, skip_missings, true /*verbose*/);
+        if (destination == "-.csv")
+          save_vmat_as_csv(vm, cout, skip_missings, true /*verbose*/);
+        else {
+          ofstream out(destination.c_str());
+          save_vmat_as_csv(vm, out, skip_missings, true /*verbose*/);
+        }
       }
       else
       {
