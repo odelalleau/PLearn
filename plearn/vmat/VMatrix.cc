@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /********************************************************
-* $Id: VMatrix.cc,v 1.96 2005/05/03 15:38:29 chapados Exp $
+* $Id: VMatrix.cc,v 1.97 2005/05/04 18:02:18 chrish42 Exp $
 ******************************************************* */
 
 #include <sstream>
@@ -296,7 +296,6 @@ void VMatrix::printFieldInfo(PStream& out, int fieldnum, bool print_binning) con
     out << "min: " << s.min() << '\n';
     out << "max: " << s.max() << '\n';
 
-    // TODO To remove if we do not use it ?
     if(!s.counts.empty() && print_binning)
       {
         out << "\nCOUNTS: \n";
