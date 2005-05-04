@@ -1073,9 +1073,6 @@ PStream& PStream::operator>>(bool &x)
     case plearn_binary:
       skipBlanksAndCommentsAndSeparators();
       c = get();
-      if(c==0x12)  // plearn_binary
-        c=get();
-
       if(c=='1')
         x = true;
       else if(c=='0')
@@ -1273,28 +1270,32 @@ PStream& PStream::operator<<(const string &x)
   return *this;
 }
 
-/*
 PStream& PStream::operator<<(bool x) 
 { 
   switch(outmode)
   {
-    case raw_binary:
-    case raw_ascii:
     case plearn_ascii:
-    case pretty_ascii:
       if(x)
         put('1');
       else
         put('0');
       put(' ');
       break;
+    case raw_ascii:
+    case pretty_ascii:
+    case raw_binary:
+    case plearn_binary:
+      if(x)
+        put('1');
+      else
+        put('0');
+      break;    
     default:
       PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
       break;
   }
   return *this;
 }
-*/
 
 PStream& PStream::operator<<(int x) 
 { 

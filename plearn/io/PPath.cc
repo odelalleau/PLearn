@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.22 2005/03/01 22:17:54 ducharme Exp $ 
+   * $Id: PPath.cc,v 1.23 2005/05/04 22:08:04 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -151,24 +151,26 @@ PStream& operator<<(PStream& out, const PPath& path)
         break;
       }
     case PStream::plearn_ascii:
+    case PStream::plearn_binary:
       {
         out << path.canonical();
         break;
       }
     default:
-      PLERROR("In operator<< - This PStream mode is not supported for PPath");
+      PLERROR("This PStream mode is not supported for PPath");
   }
   return out;
 }
-  
+
 PStream& operator>>(PStream& in, PPath& path)
 {
   string spath;
   in >> spath;
   switch (in.inmode) {
-    case PStream::raw_ascii:
-    case PStream::pretty_ascii:
-    case PStream::plearn_ascii:
+  case PStream::raw_ascii:
+  case PStream::pretty_ascii:
+  case PStream::plearn_ascii:
+  case PStream::plearn_binary:
       {
         path = PPath(spath);
         break;

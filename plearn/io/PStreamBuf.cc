@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.cc,v 1.10 2005/02/16 20:19:49 tihocan Exp $ 
+   * $Id: PStreamBuf.cc,v 1.11 2005/05/04 22:08:04 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.cc */
@@ -177,7 +177,7 @@ PStreamBuf::streamsize PStreamBuf::read(char* p, streamsize n)
 void PStreamBuf::unread(const char* p, streamsize n)
 {
   if(streamsize(inbuf_p-inbuf)<n)
-    PLERROR("Cannot unread that many characters: %d, input buffer bound reached", n);
+    PLERROR("Cannot unread that many characters: %d, input buffer bound reached (you may want to increase the unget_capacity)", n);
   
   inbuf_p -= n;
   memcpy(inbuf_p,p,n);

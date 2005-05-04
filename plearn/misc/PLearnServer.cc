@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnServer.cc,v 1.6 2005/03/02 20:56:51 plearner Exp $ 
+   * $Id: PLearnServer.cc,v 1.7 2005/05/04 22:08:04 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -65,10 +65,28 @@ using namespace std;
         chdir(path);
         prepareToSendResults(io,0);
       }
+    else if(name=="binary")
+      {
+        io.setMode(PStream::plearn_binary);
+        prepareToSendResults(io,0);
+      }
+    else if(name=="ascii")
+      {
+        io.setMode(PStream::plearn_ascii);
+        prepareToSendResults(io,0);
+      }
+    else if(name=="implicit_storage") // Takes a single boolean parameter
+      {
+        cerr << "Bebore implicit_storage: " << (io.implicit_storage?'T':'F') << endl;
+        io >> io.implicit_storage;
+        cerr << "After implicit_storage: " << (io.implicit_storage?'T':'F') << endl;
+        prepareToSendResults(io,0);
+      }
     else
       PLERROR("In PLearnServer::callFunction Invalid function name %s",name.c_str());
 
     io << endl;
+    cerr << "Sent it!" << endl;
   }
 
 
@@ -159,6 +177,7 @@ using namespace std;
                 else 
                   {
                     io >> method_name >> n_args;
+                    cerr << "Method: " << method_name << ' ' << n_args << endl;
                     found->second->call(method_name, n_args, io);
                     io << endl;
                   }

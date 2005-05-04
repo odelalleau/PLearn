@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BinaryStump.cc,v 1.5 2005/04/27 16:17:47 larocheh Exp $ 
+   * $Id: BinaryStump.cc,v 1.6 2005/05/04 22:08:04 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -260,7 +260,7 @@ void BinaryStump::train()
 
     feature = 0;
     threshold = sf[0].second-1; 
-    ProgressBar *pb;
+    ProgressBar *pb = 0;
     if(report_progress)
       pb = new ProgressBar("Finding best stump",inputsize()*sf.length());
     int prog = 0;

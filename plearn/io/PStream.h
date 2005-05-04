@@ -537,8 +537,9 @@ public:
   PStream& operator<<(signed char x);
   PStream& operator<<(unsigned char x);
 
-  // PStream& operator<<(bool x);  // If you uncomment this, be prepared to get mysterious mesages of problems with const bool resolutions
-  // As it currently stands, bool will be converted to 0 or 1 int and operator<<(int) will get called.
+  // Note: If you get mysterious mesages of problems with const bool resolutions,
+  // then a workaround might be to not declare <<(bool) as a method, but as an inline function
+  PStream& operator<<(bool x);  
   PStream& operator<<(int x);
   PStream& operator<<(unsigned int x);
   PStream& operator<<(long x);
@@ -682,42 +683,7 @@ public:
   {
     out << const_cast<const T * &>(ptr);
     return out;
-  }
-
-inline PStream& operator<<(PStream& out, bool x) 
-{ 
-  switch(out.outmode)
-  {
-    case PStream::raw_binary:
-    case PStream::raw_ascii:
-    case PStream::pretty_ascii:
-      if(x) 
-        out.put('1'); 
-      else 
-        out.put('0');
-      break;
-    case PStream::plearn_ascii:
-      if(x) 
-        out.put('1'); 
-      else 
-        out.put('0');
-      out.put(' ');
-      break;
-    case PStream::plearn_binary:
-      out.put((char)0x12);
-      if(x) 
-        out.put('1'); 
-      else 
-        out.put('0');
-      break;
-    default:
-      PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-      break;
-  }
-  return out;
-}
-
-  
+  }  
 
 
 // Serialization of pairs in the form:   
@@ -726,10 +692,22 @@ inline PStream& operator<<(PStream& out, bool x)
 template<class A,class B>
 inline PStream& operator<<(PStream& out, const pair<A,B>& x) 
 { 
-  out << x.first;
-  out.write(": ");
-  out << x.second;
-  out.put(' ');
+  switch(out.outmode)
+    {
+    case PStream::raw_ascii:
+    case PStream::pretty_ascii:
+    case PStream::plearn_ascii:
+      out << x.first;
+      out.write(": ");
+      out << x.second;
+      out.put(' ');
+      break;
+    case PStream::plearn_binary:
+      out.put((char)0x16);
+      out << x.first << x.second;
+    default:
+      PLERROR("PStream mode not supported");
+    }
   return out;
 }
 
@@ -737,12 +715,20 @@ template <typename S, typename T>
 inline PStream& operator>>(PStream& in, pair<S, T> &x) 
 { 
   in.skipBlanksAndCommentsAndSeparators();
-  in >> x.first;
-  in.skipBlanksAndComments();
-  if(in.get()!=':')
-    PLERROR("In operator>>(PStream& in, pair<S, T> &x) expected ':' to separate the 2 halves of the pair");
-  in.skipBlanksAndComments();
-  in >> x.second;
+  int c = in.peek();
+  if(c==0x16) // binary pair
+    {
+      in >> x.first >> x.second;
+    }
+  else // suppose it's ascii, separated by :
+    {
+      in >> x.first;
+      in.skipBlanksAndComments();
+      if(in.get()!=':')
+        PLERROR("In operator>>(PStream& in, pair<S, T> &x) expected ':' to separate the 2 halves of the pair");
+      in.skipBlanksAndComments();
+      in >> x.second;
+    }
   return in;
 }
 

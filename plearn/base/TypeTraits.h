@@ -34,7 +34,7 @@
 
  
 /* *******************************************************      
-   * $Id: TypeTraits.h,v 1.8 2004/10/14 21:23:27 ducharme Exp $
+   * $Id: TypeTraits.h,v 1.9 2005/05/04 22:07:58 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -137,7 +137,7 @@ DECLARE_TYPE_TRAITS_FOR_BASETYPE(long, 0x07, 0x08);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned long, 0x0B, 0x0C);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(float, 0x0E, 0x0F);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(double, 0x10, 0x11);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(bool, 0x12, 0x12);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(bool, 0x30, 0x30);
 
 DECLARE_TYPE_TRAITS(string);
 
