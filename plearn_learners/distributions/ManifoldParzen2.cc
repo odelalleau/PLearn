@@ -68,16 +68,15 @@ ManifoldParzen2::ManifoldParzen2()
 ManifoldParzen2::ManifoldParzen2(int the_nneighbors, int the_ncomponents, bool use_last_eigenvalue, real the_scale_factor)
   : nneighbors(the_nneighbors),ncomponents(the_ncomponents),use_last_eigenval(true),scale_factor(the_scale_factor)
 {
+  type = "general";
+  nstages = 1;
 }
 
-// ### Nothing to add here, simply calls build_
 void ManifoldParzen2::build()
 {
   inherited::build();
   build_();
 }
-
-// TODO Hide the options from GaussMix that are overwritten.
 
 ////////////////////
 // declareOptions //
@@ -106,16 +105,16 @@ void ManifoldParzen2::declareOptions(OptionList& ol)
    // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 
-  // Hide unused parent's options.
+  // Redeclare some parent's options.
 
-  //redeclareOption(ol,"L", &ManifoldParzen2::L, OptionBase::nosave,
-  //    "Automatically set (to train_set->length()).");
+  redeclareOption(ol,"L", &ManifoldParzen2::L, OptionBase::learntoption,
+      "Automatically set (to train_set->length()).");
 
-  //redeclareOption(ol,"type", &ManifoldParzen2::type, OptionBase::nosave,
-  //    "Automatically set (to 'general').");
+  redeclareOption(ol,"n_eigen", &ManifoldParzen2::n_eigen, OptionBase::learntoption,
+      "Automatically set during training.");
 
-  //redeclareOption(ol,"n_eigen", &ManifoldParzen2::n_eigen, OptionBase::nosave,
-  //    "Automatically set.");
+  redeclareOption(ol,"type", &ManifoldParzen2::type, OptionBase::nosave,
+      "Automatically set (to 'general').");
 
   redeclareOption(ol,"alpha_min", &ManifoldParzen2::alpha_min, OptionBase::nosave,
       "Not used.");
@@ -210,7 +209,6 @@ void ManifoldParzen2::train()
   int l = train_set.length();
   int w = train_set.width();
   
-  type = "general";
   L = l;
   D = ncomponents;
   n_eigen = ncomponents;
