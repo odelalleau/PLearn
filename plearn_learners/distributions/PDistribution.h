@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.18 2004/09/14 16:04:56 chrish42 Exp $ 
+   * $Id: PDistribution.h,v 1.19 2005/05/05 20:43:55 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.h */
@@ -208,6 +208,9 @@ protected:
   //! Return true iff the input part has changed since last time (this is false
   //! only it is absent from input, which can be seen from its length).
   bool splitCond(const Vec& input) const;
+
+  //! Called in computeOutput when an unknown character is found.
+  virtual void unknownOutput(char def, const Vec& input, Vec& output, int& k) const;
   
   //! This method updates the internal data given a new sorting of the variables
   //! defined by the conditional flags. The default version does nothing: it

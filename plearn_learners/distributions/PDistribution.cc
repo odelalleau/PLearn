@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.28 2005/04/22 13:53:14 tihocan Exp $ 
+   * $Id: PDistribution.cc,v 1.29 2005/05/05 20:43:55 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -90,7 +90,7 @@ void PDistribution::declareOptions(OptionList& ol)
       "output (as a histogram). For 'L', 'D', 'C', 'S', it is the target part that\n"
       "varies, while for 'E' and 'V' it is the input part (for conditional distributions).\n"
       "The number of curve points is determined by the 'n_curve_points' option.\n"
-      "Note that the upper case letters only work for SCALAR variables."
+      "Note that the upper case letters only work for SCALAR variables.\n"
       );
 
   declareOption(ol, "conditional_flags", &PDistribution::conditional_flags, OptionBase::buildoption,
@@ -249,7 +249,9 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
         k += n_curve_points;
         break;
       default:
-        PLERROR("In PDistribution::computeOutput - Unrecognized outputs_def character");
+        // Maybe a subclass knows about this output?
+        unknownOutput(outputs_def[i], input, output, k);
+        break;
     }
   }
 }
@@ -366,7 +368,7 @@ void PDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 int PDistribution::outputsize() const
 {
   int l = 0;
-  for (unsigned int i=0; i<outputs_def.length(); i++) {
+  for (size_t i=0; i<outputs_def.length(); i++) {
     if (outputs_def[i]=='L' || outputs_def[i]=='D' || outputs_def[i]=='C' || outputs_def[i]=='S'
         || outputs_def[i]=='E' || outputs_def[i]=='V')
       l+=n_curve_points;
@@ -607,6 +609,14 @@ void PDistribution::generate(Vec& y) const
 
 void PDistribution::train()
 { PLERROR("train not implemented for this PDistribution"); }
+
+///////////////////
+// unknownOutput //
+///////////////////
+void PDistribution::unknownOutput(char def, const Vec& input, Vec& output, int& k) const {
+  // Default is to throw an error.
+  PLERROR("In PDistribution::unknownOutput - Unrecognized outputs_def character: %s", def);
+}
 
 //////////////////////////////////
 // updateFromConditionalSorting //
