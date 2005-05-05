@@ -705,6 +705,7 @@ inline PStream& operator<<(PStream& out, const pair<A,B>& x)
     case PStream::plearn_binary:
       out.put((char)0x16);
       out << x.first << x.second;
+      break;
     default:
       PLERROR("PStream mode not supported");
     }
