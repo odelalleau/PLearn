@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.29 2005/03/03 20:15:00 tihocan Exp $ 
+   * $Id: GaussMix.h,v 1.30 2005/05/05 20:45:52 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -184,6 +184,9 @@ protected:
   //! Perform K-means.
   void kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clust, int maxit=9999);
 
+  //! Overridden so as to compute specific GaussMix outputs.
+  virtual void unknownOutput(char def, const Vec& input, Vec& output, int& k) const;
+
 public:
 
   //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
@@ -205,6 +208,9 @@ public:
 
   //! Trains the model.
   virtual void train();
+
+  //! Overridden to take into account new outputs computed.
+  virtual int outputsize() const;
 
   // *************************
   // * PDistribution methods *

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.46 2005/03/08 16:49:15 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.47 2005/05/05 20:45:45 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -82,8 +82,12 @@ PLEARN_IMPLEMENT_OBJECT(GaussMix,
     "               The covariance matrix used will be V(t)V + psi with psi a D-vector\n"
     "               (through parameter diags).\n"
     "2 parameters are common to all 4 types :\n"
-    " - alpha : the ponderation factor of the gaussians\n"
+    " - alpha : the ponderation factor of the Gaussians\n"
     " - mu    : their centers\n"
+    "\n"
+    "In addition to the usual costs inherited from PDistribution, an additional output\n"
+    "can be computed by using the character 'p' in the 'outputs_def' option: this will\n"
+    "return an output containing the posterior log-probabilities P(j|Y,X) of each Gaussian.\n"
 );
 
 ////////////////////
@@ -668,7 +672,7 @@ real GaussMix::log_density(const Vec& y) const
     PLERROR("GaussMix::log_density was called while model was not trained");
 #endif
   log_likelihood_dens.resize(L);
-  // First we need to compute the likelihood p(y | x,j) * p(j | x).
+  // First we need to compute the likelihood p(y,j | x) = p(y | x,j) * p(j | x).
   for (int j = 0; j < L; j++) {
     log_likelihood_dens[j] = computeLogLikelihood(y, j) + log_p_j_x[j];
 #ifdef BOUNDCHECK
@@ -722,6 +726,19 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(alpha,copies);
   deepCopyField(mu,copies);
   deepCopyField(sigma,copies);
+}
+
+////////////////
+// outputsize //
+////////////////
+int GaussMix::outputsize() const {
+  int os = inherited::outputsize();
+  for (size_t i = 0; i < outputs_def.length(); i++)
+    if (outputs_def[i] == 'p')
+      // We add L-1 because in inherited::outpusize() this was already
+      // counted as 1.
+      os += L - 1;
+  return os;
 }
 
 /////////////////////
@@ -1036,6 +1053,29 @@ void GaussMix::updateFromConditionalSorting() {
     }
   } else {
     PLERROR("In GaussMix::updateFromConditionalSorting - Not implemented for this type");
+  }
+}
+
+///////////////////
+// unknownOutput //
+///////////////////
+void GaussMix::unknownOutput(char def, const Vec& input, Vec& output, int& k) const {
+  switch(def) {
+    case 'p': // Log posteriors P(j | y).
+      {
+        output.resize(k + L);
+        // Compute p(y | x).
+        real log_p_y_x = log_density(target_part);
+        // This also fills the vector 'log_likelihood_dens' with likelihoods p(y,j | x),
+        // which is exactly what we need in order to compute the posteriors.
+        for (int j = 0; j < L; j++)
+          output[j + k] = log_likelihood_dens[j] - log_p_y_x;
+        k += L;
+        break;
+      }
+    default:
+      inherited::unknownOutput(def, input, output, k);
+      break;
   }
 }
 
