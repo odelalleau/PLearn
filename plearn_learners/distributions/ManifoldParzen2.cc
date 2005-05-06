@@ -97,7 +97,7 @@ void ManifoldParzen2::declareOptions(OptionList& ol)
                 "By default, the gaussians are centered at the training points.");
 
   declareOption(ol,"global_lambda0", &ManifoldParzen2::global_lambda0, OptionBase::buildoption,
-                "If use_last_eigenvalue is false, used value for the variance of the remaining directions");
+                "If use_last_eigenvalue is false, used value for the minimum variance in all directions");
   
   declareOption(ol,"scale_factor", &ManifoldParzen2::scale_factor, OptionBase::buildoption,
                 "Scale factor");
@@ -169,7 +169,7 @@ void computeNearestNeighbors(Mat dataset, Vec x, Mat& neighbors, int ignore_row=
 // Result will be put in the rows of components (which is expected to have the appropriate size).
 // Computed components do not have a norm of 1, but rather a norm corresponding to the eigenvalues
 // (indicating how important the component is...)
-void computePrincipalComponents(Mat dataset, Vec& eig_values, Mat& eig_vectors)
+void computePrincipalComponents(Mat dataset, Vec& eig_values, Mat& eig_vectors, real global_lambda0)
 {
 #ifdef BOUNDCHECK
   if(eig_vectors.width()!=dataset.width())
@@ -184,11 +184,14 @@ void computePrincipalComponents(Mat dataset, Vec& eig_values, Mat& eig_vectors)
   transposeProduct(covar, dataset,dataset);
   eigenVecOfSymmMat(covar, ncomp,  eig_values, eig_vectors); 
   for (int i=0;i<eig_values.length();i++)
+  {
     if (eig_values[i]<0)
       eig_values[i] = 0;
+    eig_values[i] = eig_values[i]/dataset.length() + global_lambda0;
+  }
 }
 
-void computeLocalPrincipalComponents(Mat& dataset, int which_pattern, Mat& delta_neighbors, Vec& eig_values, Mat& eig_vectors, Vec& mean, bool learn_mu=false)
+void computeLocalPrincipalComponents(Mat& dataset, int which_pattern, Mat& delta_neighbors, Vec& eig_values, Mat& eig_vectors, Vec& mean, bool learn_mu=false,real global_lambda0=0)
 {
   Vec center = dataset(which_pattern);
   if (center.hasMissing())
@@ -200,7 +203,7 @@ void computeLocalPrincipalComponents(Mat& dataset, int which_pattern, Mat& delta
     columnMean(delta_neighbors, mean);
   }
   delta_neighbors -= mean;
-  computePrincipalComponents(delta_neighbors, eig_values, eig_vectors);
+  computePrincipalComponents(delta_neighbors, eig_values, eig_vectors,global_lambda0);
 }
 
 void ManifoldParzen2::train()
@@ -230,7 +233,10 @@ void ManifoldParzen2::train()
     
     Vec center(mu.width());
     center << trainset(i);
-    computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs, center,learn_mu);
+    if(use_last_eigenval)
+      computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs, center,learn_mu);
+    else
+      computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs, center,learn_mu,global_lambda0);
 
     eigvals *= scale_factor;
 
@@ -260,8 +266,8 @@ void ManifoldParzen2::train()
 
     alpha[i] = 1.0 / l;
     n_eigen = eigvals.length() - 1;
-    GaussMix::build();
-    resizeStuffBeforeTraining();
+    //GaussMix::build();
+    //resizeStuffBeforeTraining();
     if(learn_mu)
       mu(i) << center;   // Hugo: the mean should be current point... 
     eigenvalues(i) << eigvals;
