@@ -34,7 +34,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperLearner.cc,v 1.4 2005/01/28 00:24:23 dorionc Exp $
+   * $Id: HyperLearner.cc,v 1.5 2005/05/07 23:00:09 larocheh Exp $
    ******************************************************* */
 // Author: Pascal Vincent
 
@@ -153,13 +153,14 @@ void HyperLearner::setLearnerOptions(const TVec<string>& option_names,
 void HyperLearner::setTrainingSet(VMat training_set, bool call_forget)
 { 
   train_set = training_set;
+  
+  // no need to forget a second time
+  learner_->setTrainingSet(training_set,false); // just to make sure the underlying learner knows the targetsize
   if (call_forget)
   {
     build();
     forget();
   }
-  // no need to forget a second time
-  learner_->setTrainingSet(training_set,false); // just to make sure the underlying learner knows the targetsize
 }
 
 void HyperLearner::train()
