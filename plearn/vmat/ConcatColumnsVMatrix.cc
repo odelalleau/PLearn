@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.cc,v 1.13 2005/02/04 15:08:49 tihocan Exp $
+   * $Id: ConcatColumnsVMatrix.cc,v 1.14 2005/05/09 20:14:31 tihocan Exp $
    ******************************************************* */
 
 #include "ConcatColumnsVMatrix.h"
@@ -95,19 +95,28 @@ void ConcatColumnsVMatrix::build_()
   fieldinfos.resize(width_);
   TVec<string> names;
   int fieldindex = 0;
+  init_map_sr();
   for (int i=0; i<array.size(); ++i) 
     {
       int len = array[i]->getFieldInfos().size();
       if (len > 0) // infos exist for this VMat
         {
-          for (int j=0; j<len; ++j)
+          for (int j=0; j<len; ++j) {
+            map<string,real> map = array[i]->getStringToRealMapping(j);
+            if (!map.empty())
+              setStringMapping(fieldindex, map);
             fieldinfos[fieldindex++] = array[i]->getFieldInfos()[j];
+          }
         }
       else // infos don't exist for this VMat, use the index as the name for those fields.
         {
           len = array[i]->width();
-          for(int j=0; j<len; ++j)
+          for(int j=0; j<len; ++j) {
+            map<string,real> map = array[i]->getStringToRealMapping(j);
+            if (!map.empty())
+              setStringMapping(fieldindex, map);
             fieldinfos[fieldindex++] = VMField(tostring(fieldindex));
+          }
         }
     }
   if (no_duplicate_fieldnames) {
