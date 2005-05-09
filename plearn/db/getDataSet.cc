@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.41 2005/04/27 16:04:09 chrish42 Exp $
+   * $Id: getDataSet.cc,v 1.42 2005/05/09 16:37:42 chapados Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -323,8 +323,8 @@ VMat getDataSet(const string& datasetstring, const string& alias)
 
   // Ensure sizes do not conflict with width.
   if (vm->inputsize() >= 0 && vm->targetsize() >= 0 && vm->weightsize() >= 0 &&
-      vm->width() >= 0 &&  vm->width() != vm->inputsize() + vm->targetsize() + vm->weightsize())
-    PLERROR("In getDataSet - The matrix width (%d) should be equal to inputsize (%d) "
+      vm->width() >= 0 &&  vm->width() < vm->inputsize() + vm->targetsize() + vm->weightsize())
+    PLERROR("In getDataSet - The matrix width (%d) should not be smaller than inputsize (%d) "
             "+ targetsize (%d) + weightsize (%d)",
             vm->width(), vm->inputsize(), vm->targetsize(), vm->weightsize());
 
