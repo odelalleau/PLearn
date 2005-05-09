@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.32 2005/02/10 01:12:44 tihocan Exp $
+   * $Id: VMatLanguage.cc,v 1.33 2005/05/09 15:01:08 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -105,7 +105,6 @@ using namespace std;
   // returns the preprocessed sourcecode along with the defines and the fieldnames it generated
   void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,  string& processed_sourcecode, vector<string>& fieldnames)
   {
-    // PStream pout(&cout);
     // pout << defines << endl;
     string token;
     size_t spos;
@@ -161,17 +160,29 @@ using namespace std;
               fieldnames.push_back(token.substr(1));
             else PLERROR("Strange fieldname format (multiple declaration format is :label:0:10");
           }
-        // did we find a fieldcopy macro?
+        // Did we find a fieldcopy macro?
         else if(token[0]=='[')
           {
+            if (token[token.size() - 1] != ']') {
+              // First read until the brackets are closed.
+              string end_of_token;
+              in.smartReadUntilNext("]", end_of_token, false, false);
+              in.get(); // Read the ']' character.
+              token += end_of_token + ']';
+            }
 	    vector<string> parts=split(token.substr(1),":]");
 
-            // fieldcopy macro type is [start,end]
+            // fieldcopy macro type is [start:end]
             // fields can be refered to as %number or @name
-	    if(parts.size()==2)
+	    if (parts.size() == 2 || parts.size() == 3)
               {
                 string astr=parts[0].substr(1);
                 string bstr=parts[1].substr(1);
+                bool code_to_perform = (parts.size() == 3);
+                string performed_code;
+                if (code_to_perform)
+                  performed_code = parts[2];
+
                 int a=-1,b=-1;
                 
                 if(parts[0][0]=='@')
@@ -208,11 +219,13 @@ using namespace std;
                 for(int i=a;i<=b;i++)
                   {
                     processed_sourcecode+=string("%")+tostring(i)+ " ";
+                    if (code_to_perform)
+                      processed_sourcecode += performed_code + " ";
                     fieldnames.push_back(vmsource->fieldName(i));
                   }
               }
-            // fieldcopy macro type is [field]
             else if(parts.size()==1)
+            // fieldcopy macro type is [field]
             {
               string astr=parts[0].substr(1);
               int a=-1;
@@ -396,11 +409,16 @@ using namespace std;
     mappings.resize(0);
     
     // first, warn user if a fieldname appears twice or more in the source matrix
+    string fname;
     for(int i=0;i<vmsource.width();i++)
       {
-        if(defines.find(string("@")+vmsource->fieldName(i)) != defines.end())
-          PLERROR("fieldname %s is duplicate in processed matrix",(string("@")+vmsource->fieldName(i)).c_str());
-        defines[string("@")+vmsource->fieldName(i)]=string("%")+tostring(i);
+        fname = vmsource->fieldName(i);
+        if (!fname.empty()) {
+          fname = string("@") + fname;
+          if(defines.find(fname) != defines.end())
+            PLERROR("fieldname %s is duplicate in processed matrix", fname.c_str());
+          defines[fname]=string("%")+tostring(i);
+        }
       }
 
     // the filednames parameter is an output vector in which we put the fieldnames of the final VMat
