@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ProcessingVMatrix.cc,v 1.11 2005/04/28 23:56:17 chapados Exp $ 
+   * $Id: ProcessingVMatrix.cc,v 1.12 2005/05/09 15:07:03 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -87,7 +87,9 @@ PLEARN_IMPLEMENT_OBJECT(
   "by the fieldname, or % followed by the field number.\n"
   "\n"
   "To batch-copy fields, use the following syntax : [field1:fieldn] (fields\n"
-  "can be in @ or % notation).\n"
+  "can be in @ or % notation). The fields can also be transformed with a VPL\n"
+  "program using the syntax: [field1:fieldn:vpl_code], where vpl_code can be\n"
+  "any VPL code, for example for a 0.5 thresholding: 0.5 < 0 1 ifelse.\n"
   "\n"
   "Here's a real-life example of a VPL program:\n"
   "\n"
