@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.71 2005/05/03 15:38:29 chapados Exp $
+   * $Id: VMatrix.h,v 1.72 2005/05/09 14:08:10 tihocan Exp $
    ******************************************************* */
 
 
@@ -155,6 +155,7 @@ public:
   //! fieldnames, ...) that is not already set, by copying it from the source's
   //! Vmat vm. Modification time is also set to the latest of the current mtime
   //! of this vmat and of the mtime of the source.
+  //! Sizes will be copied only if they are consistent with this VMat's width.
   virtual void setMetaInfoFrom(const VMat& vm);
 
   //! Return true iif it looks like the same matrix, i.e. it has same sizes, width and length.

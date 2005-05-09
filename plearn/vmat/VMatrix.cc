@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /********************************************************
-* $Id: VMatrix.cc,v 1.97 2005/05/04 18:02:18 chrish42 Exp $
+* $Id: VMatrix.cc,v 1.98 2005/05/09 14:08:08 tihocan Exp $
 ******************************************************* */
 
 #include <sstream>
@@ -825,13 +825,22 @@ void VMatrix::setMetaInfoFrom(const VMat& vm)
   if(width_<0)
     width_ = vm->width();
 
-  // copy sizes from vm if not set
-  if(inputsize_<0)
-    inputsize_ = vm->inputsize();
-  if(targetsize_<0)
-    targetsize_ = vm->targetsize();
-  if(weightsize_<0)
-    weightsize_ = vm->weightsize();
+  // Copy sizes from vm if not set and they do not conflict with the width.
+  if(inputsize_<0) {
+    int is = vm->inputsize();
+    if (is <= width_)
+      inputsize_ = is;
+  }
+  if(targetsize_<0) {
+    int ts = vm->targetsize();
+    if (ts + (inputsize_ > 0 ? inputsize_ : 0) <= width_)
+      targetsize_ = ts;
+  }
+  if(weightsize_<0) {
+    int ws = vm->weightsize();
+    if (ws + (inputsize_ > 0 ? inputsize_ : 0) + (targetsize_ > 0 ? targetsize_ : 0) <= width_)
+      weightsize_ = ws;
+  }
 
   // Copy fieldnames from vm if not set and they look good
   if(!hasFieldInfos() && (width() == vm->width()) && vm->hasFieldInfos() )
