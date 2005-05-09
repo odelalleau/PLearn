@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.29 2005/05/05 20:43:55 tihocan Exp $ 
+   * $Id: PDistribution.cc,v 1.30 2005/05/09 14:10:40 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -615,7 +615,7 @@ void PDistribution::train()
 ///////////////////
 void PDistribution::unknownOutput(char def, const Vec& input, Vec& output, int& k) const {
   // Default is to throw an error.
-  PLERROR("In PDistribution::unknownOutput - Unrecognized outputs_def character: %s", def);
+  PLERROR("In PDistribution::unknownOutput - Unrecognized outputs_def character: %c", def);
 }
 
 //////////////////////////////////
