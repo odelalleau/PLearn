@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddLayersNNet.cc,v 1.9 2004/11/03 14:06:40 tihocan Exp $ 
+   * $Id: AddLayersNNet.cc,v 1.10 2005/05/09 18:51:51 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -172,16 +172,10 @@ void AddLayersNNet::build_()
       PLERROR("In AddLayersNNet::build_ - The sum of all parts size (%d) is less than inputsize (%d)", count_parts_size, inputsize_);
   }
 
-  // Now we need to redo the graph of variables, unless there is no added layer,
-  // in which case this is nothing but a regular NNet.
+  // Now we redo the graph of variables, even if there is no added layer
+  // (because the weights are not initialized in the parent class, since
+  // 'initialization_method' is forced to 'zero' at build time).
   
-  bool no_added_layer = true;
-  for (int i = 0; i < n_parts; i++)
-    if (add_hidden[i] > 0)
-      no_added_layer = false;
-  if (no_added_layer)
-    // TODO WRONG: the weights won't be correctly initialized (for now)
-    return;
   params.resize(0);
 
   // Create a Var for each part.
@@ -190,6 +184,7 @@ void AddLayersNNet::build_()
   for (int i = 0; i < n_parts; i++) {
     input_parts[i] = subMat(input, index, 0, real_parts_size[i], 1);
     input_parts[i]->setName("input_part_" + tostring(i));
+    index += real_parts_size[i];
   }
 
   // Add the required hidden layers.
@@ -290,11 +285,9 @@ void AddLayersNNet::initializeParams(bool set_seed) {
     else
       PLearn::seed();
   }
-  for (int i = 0; i < hidden_weights.size() && i < add_hidden.size(); i++) {
-    if (add_hidden[i] > 0) {
+  for (int i = 0; i < add_hidden.size(); i++)
+    if (add_hidden[i] > 0)
       fillWeights(hidden_weights[i], true);
-    }
-  }
   inherited::initializeParams(false); // TODO Put this first later.
 }
 
@@ -305,6 +298,7 @@ void AddLayersNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(real_parts_size, copies);
+  deepCopyField(hidden_layers, copies);
   deepCopyField(hidden_weights, copies);
   deepCopyField(add_hidden, copies);
   deepCopyField(parts_size, copies);
