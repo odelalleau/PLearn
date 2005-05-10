@@ -119,9 +119,6 @@ void ManifoldParzen2::declareOptions(OptionList& ol)
   redeclareOption(ol,"alpha_min", &ManifoldParzen2::alpha_min, OptionBase::nosave,
       "Not used.");
 
-  redeclareOption(ol,"sigma_min", &ManifoldParzen2::sigma_min, OptionBase::nosave,
-      "Not used.");
-
   redeclareOption(ol,"kmeans_iterations", &ManifoldParzen2::kmeans_iterations, OptionBase::nosave,
       "Not used.");
 
