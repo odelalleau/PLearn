@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ProcessingVMatrix.cc,v 1.12 2005/05/09 15:07:03 tihocan Exp $ 
+   * $Id: ProcessingVMatrix.cc,v 1.13 2005/05/10 15:59:26 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -183,6 +183,9 @@ void ProcessingVMatrix::declareOptions(OptionList& ol)
 
 void ProcessingVMatrix::build_()
 {
+  // Do not do anything until we get the source VMat.
+  if (!source)
+    return;
   vector<string> fieldnames;
   program.setSource(source);
   program.compileString(prg,fieldnames); 
