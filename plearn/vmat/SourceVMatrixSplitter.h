@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrixSplitter.h,v 1.3 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: SourceVMatrixSplitter.h,v 1.4 2005/05/10 16:04:23 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -74,6 +74,7 @@ public:
   PP<SourceVMatrix> source_vm;
   PP<Splitter> source_splitter;
   int to_apply;
+  TVec<int> sets_to_modify;
 
   // ****************
   // * Constructors *
