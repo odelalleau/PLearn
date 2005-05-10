@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.42 2005/03/02 20:56:51 plearner Exp $
+   * $Id: Object.cc,v 1.43 2005/05/10 20:21:43 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -58,7 +58,10 @@ using namespace std;
 Object::Object()
 {}
 
-PLEARN_IMPLEMENT_OBJECT(Object, "Base class for PLearn Objects", "NO HELP");   
+PLEARN_IMPLEMENT_OBJECT(Object,
+    "Base class for PLearn Objects.",
+    ""
+);   
 
 // by default, do nothing...
 void Object::makeDeepCopyFromShallowCopy(CopiesMap& copies)
@@ -66,8 +69,7 @@ void Object::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void Object::setOption(const string& optionname, const string& value)
 {
-    istrstream in_(value.c_str());
-    PStream in(&in_);
+    PStream in = openString(value, PStream::plearn_ascii);
     readOptionVal(in, optionname);
 }
 
@@ -261,6 +263,7 @@ string Object::getOptionsToSave() const
 
 void Object::newread(PStream &in)
 {
+  PP<Object> dummy_obj = 0; // Used to read skipped options.
   string cl;
   in.getline(cl, '(');
   cl = removeblanks(cl);
@@ -285,8 +288,15 @@ void Object::newread(PStream &in)
           OptionList::iterator it = find_if(options.begin(), options.end(),
                                             bind2nd(mem_fun(&OptionBase::isOptionNamed), optionname));
           // if (it != options.end() && ((*it)->flags() & in.option_flags_in) == 0)
-          if (it!=options.end() && (*it)->shouldBeSkipped() )
-            (*it)->read_and_discard(in);
+          if (it!=options.end() && (*it)->shouldBeSkipped() ) {
+            // Create a dummy object that will read this option.
+            if (!dummy_obj) {
+              dummy_obj = new Object();
+              PStream dummy_in = openString(this->classname() + "()", PStream::plearn_ascii);
+              dummy_in >> dummy_obj;
+            }
+            dummy_obj->readOptionVal(in, optionname);
+          }
           else
             {
               // cerr << "Reading option: " << optionname << endl;
