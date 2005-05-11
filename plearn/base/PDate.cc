@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDate.cc,v 1.12 2005/03/29 16:25:12 tihocan Exp $
+   * $Id: PDate.cc,v 1.13 2005/05/11 00:31:12 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -72,6 +72,7 @@ PDate::PDate(int julian_day)
 PDate::PDate(string date)
 {
   date = removeblanks(date);
+  search_replace(date, "-", "");      // remove dashes
 
   // Format "2003/01/27"
   if (date.size() == 10 && date[4] == '/' && date[7] == '/') 
@@ -80,12 +81,27 @@ PDate::PDate(string date)
       month = toint(date.substr(5,2));
       day = toint(date.substr(8,2));
     }
-  // Format "27JAN2003"
-  else if(date.size()==9 && isupper(date[2]) && isupper(date[3]) && isupper(date[4]))
+  // Format "27JAN2003" or "27-jan-2003" or "27-jan-03"
+  else if((date.size()==9 || date.size()==7)
+          && isalpha(date[2]) && isalpha(date[3]) && isalpha(date[4]))
     {
+      // Convert to YYYY; assume cutoff point of 39 for years in 2000
+      if (date.size() == 7) {
+        int yy = toint(date.substr(5));
+        int yyyy = -1;
+        if (yy <= 40)
+          yyyy = 2000 + yy;
+        else
+          yyyy = 1900 + yy;
+        date = date.substr(0,5) + tostring(yyyy);
+      }
+      
       year = toint(date.substr(5,4));
       day = toint(date.substr(0,2));
       string mo = date.substr(2,3);
+      // Make uppercase
+      std::transform(mo.begin(), mo.end(), mo.begin(), (int(*)(int)) toupper);
+
       if(mo=="JAN")
         month = 1;
       else if(mo=="FEB")
@@ -111,7 +127,7 @@ PDate::PDate(string date)
       else if(mo=="DEC")
         month = 12;
       else
-        PLERROR("Invalid month string: %s",mo.c_str());
+        PLERROR("Invalid month string: '%s'",mo.c_str());
     }
 
   // Format "20020917"
