@@ -31,7 +31,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* *******************************************************      
-   * $Id: TextFilesVMatrix.cc,v 1.6 2005/05/02 05:14:38 chapados Exp $ 
+   * $Id: TextFilesVMatrix.cc,v 1.7 2005/05/11 00:32:32 chapados Exp $ 
    ******************************************************* */
 
 // Author: Pascal Vincent
@@ -686,8 +686,8 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
                 "Currently supported types: \n"
                 "- skip       : Ignore the content of the field, won't be inserted in the resulting VMat\n"
                 "- auto       : If a numeric value, keep it as is, if not, look it up in the mapping (possibly inserting a new mapping if it's not there) \n"
-                "- date       : date of the form 25DEC2003 or 2003/12/25 or 20031225, will be mapped to float date format 1031225\n"
-                "- jdate      : date of the form 25DEC2003 or 2003/12/25 or 20031225, will be mapped to *julian* date format\n"
+                "- date       : date of the form 25DEC2003 or 25-dec-2003 or 2003/12/25 or 20031225, will be mapped to float date format 1031225\n"
+                "- jdate      : date of the form 25DEC2003 or 25-dec-2003 or 2003/12/25 or 20031225, will be mapped to *julian* date format\n"
                 "- sas_date   : date used by SAS = number of days since Jan. 1st, 1960 (with 0 = missing)\n"
                 "- YYYYMM     : date of the form YYYYMM (e.g: 200312), will be mapped to the julian date of the corresponding month. Everthing "\
                 "               other than a number or lower than 197000 is considered as nan\n"
