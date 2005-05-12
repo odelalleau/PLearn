@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.19 2005/05/04 20:57:56 tihocan Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.20 2005/05/12 13:59:31 larocheh Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
@@ -201,12 +201,27 @@ void ClassifierFromDensity::train()
       PP<VecStatsCollector> train_stats = new VecStatsCollector();
       train_stats->setFieldNames(estimators[c]->getTrainCostNames());
       estimators[c]->setTrainStatsCollector(train_stats);
+      estimators[c]->nstages = nstages;
       estimators[c]->train();
     }
-    stage = 1; // trained!
+    stage = nstages; // trained!
     if (verbosity >= 2)
       pout << ">>> Training is over" << endl;
   }
+  if(stage>0 && stage<nstages)
+  {
+    for(int c=0; c<nclasses; c++)
+    {
+      if(verbosity>=1)
+        pout << ">>> Training class " << c;
+      estimators[c]->nstages = nstages;
+      estimators[c]->train();
+    }
+    stage = nstages;
+    if (verbosity >= 2)
+      pout << ">>> Training is over" << endl;
+  }
+    
 }
 
 ///////////////////
