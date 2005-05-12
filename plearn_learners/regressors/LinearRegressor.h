@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.h,v 1.9 2004/10/21 18:22:45 chapados Exp $
+   * $Id: LinearRegressor.h,v 1.10 2005/05/12 04:08:16 chapados Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.h */
@@ -100,6 +100,13 @@ public:
 
   //! Factor on the squared norm of parameters penalty (zero by default)
   real weight_decay;
+
+  //! If true, the result of computeOutput*() functions is not the
+  //! result of thre regression, but the learned regression parameters.
+  //! (i.e. the matrix 'weights').  The matrix is flattened by rows.
+  //! NOTE by Nicolas Chapados: this option is a bit of a hack and might
+  //! be removed in the future.  Let me know if you come to rely on it.
+  bool output_learned_weights;
 
   // ****************
   // * Constructors *

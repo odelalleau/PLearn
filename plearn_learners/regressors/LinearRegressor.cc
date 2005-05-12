@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.16 2005/02/16 15:17:29 tihocan Exp $
+   * $Id: LinearRegressor.cc,v 1.17 2005/05/12 04:08:16 chapados Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
@@ -55,7 +55,8 @@ LinearRegressor::LinearRegressor()
   BIC(MISSING_VALUE),
   resid_variance(),
   cholesky(true),
-  weight_decay(0)
+  weight_decay(0.0),
+  output_learned_weights(false)
 { }
 
 PLEARN_IMPLEMENT_OBJECT(
@@ -106,6 +107,15 @@ void LinearRegressor::declareOptions(OptionList& ol)
                 OptionBase::buildoption, 
                 "The weight decay is the factor that multiplies the "
                 "squared norm of the parameters in the loss function");
+
+  declareOption(ol, "output_learned_weights",
+                &LinearRegressor::output_learned_weights,
+                OptionBase::buildoption,
+                "If true, the result of computeOutput*() functions is not the\n"
+                "result of thre regression, but the learned regression parameters.\n"
+                "(i.e. the matrix 'weights').  The matrix is flattened by rows.\n"
+                "NOTE by Nicolas Chapados: this option is a bit of a hack and might\n"
+                "be removed in the future.  Let me know if you come to rely on it.");
                 
   
   //#####  Learnt Options  ###################################################
@@ -175,6 +185,11 @@ void LinearRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 int LinearRegressor::outputsize() const
 {
+  // If we output the learned parameters, the outputsize is the number of
+  // parameters
+  if (output_learned_weights)
+    return max((1+inputsize()) * targetsize(), -1);
+
   int ts = targetsize();
   if (ts >= 0) {
     return ts;
@@ -220,7 +235,7 @@ void LinearRegressor::train()
   {
     squared_error =
       linearRegression(train_set.subMatColumns(0, inputsize()), 
-                       train_set.subMatColumns(inputsize(), outputsize()), 
+                       train_set.subMatColumns(inputsize(), targetsize()), 
                        weight_decay*train_set.length(), weights, 
                        !recompute_XXXY, XtX, XtY,
                        sum_squared_y, outputwise_sum_squared_Y,
@@ -230,8 +245,8 @@ void LinearRegressor::train()
   {
     squared_error = weightedLinearRegression(
       train_set.subMatColumns(0, inputsize()), 
-      train_set.subMatColumns(inputsize(), outputsize()),
-      train_set.subMatColumns(inputsize()+outputsize(),1),
+      train_set.subMatColumns(inputsize(), targetsize()),
+      train_set.subMatColumns(inputsize()+targetsize(),1),
       weight_decay*train_set.length(), weights,
       !recompute_XXXY, XtX, XtY, sum_squared_y, outputwise_sum_squared_Y,
       sum_gammas, true, 0, cholesky);
@@ -261,6 +276,13 @@ void LinearRegressor::train()
 
 void LinearRegressor::computeOutput(const Vec& actual_input, Vec& output) const
 {
+  // If 'output_learned_weights', don't compute the linear regression at
+  // all, but instead flatten the weights vector and output it
+  if (output_learned_weights) {
+    output << weights.toVec();
+    return;
+  }
+  
   // Compute the output from the input
   int nout = outputsize();
   output.resize(nout);
@@ -277,6 +299,10 @@ void LinearRegressor::computeOutput(const Vec& actual_input, Vec& output) const
 void LinearRegressor::computeCostsFromOutputs(
   const Vec& /*input*/, const Vec& output, const Vec& target, Vec& costs) const
 {
+  // If 'output_learned_weights', there is no test cost
+  if (output_learned_weights)
+    return;
+  
   // Compute the costs from *already* computed output. 
   costs.resize(5);
   real squared_loss = powdistance(output,target);
@@ -294,6 +320,11 @@ bool LinearRegressor::computeConfidenceFromOutput(
   const Vec&, const Vec& output, real probability,
   TVec< pair<real,real> >& intervals) const
 {
+  // The option 'output_learned_weights' is incompatible with confidence...
+  if (output_learned_weights)
+    PLERROR("LinearRegressor::computeConfidenceFromOutput: the option "
+            "'output_learned_weights' is incompatible with confidence.");
+  
   const int n = output.size();
   if (n != resid_variance.size())
     PLERROR("LinearRegressor::computeConfidenceFromOutput: output vector "
@@ -312,7 +343,11 @@ bool LinearRegressor::computeConfidenceFromOutput(
 
 TVec<string> LinearRegressor::getTestCostNames() const
 {
-  return getTrainCostNames();
+  // If 'output_learned_weights', there is no test cost
+  if (output_learned_weights)
+    return TVec<string>();
+  else
+    return getTrainCostNames();
 }
 
 TVec<string> LinearRegressor::getTrainCostNames() const
