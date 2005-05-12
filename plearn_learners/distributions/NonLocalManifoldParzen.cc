@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzen.cc,v 1.1 2005/05/12 13:47:36 larocheh Exp $
+   * $Id: NonLocalManifoldParzen.cc,v 1.2 2005/05/12 19:21:39 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -598,11 +598,11 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
       substract(x_minus_neighbor,mus(t_nn[neighbor]),z);
 
       mahal = -0.5*pownorm(z)/sns[t_nn[neighbor]];      
-      norm_term = - n/2.0 * Log2Pi - log_L - (n-ncomponents)*log(sns[t_nn[neighbor]]);
+      norm_term = - n/2.0 * Log2Pi - log_L - 0.5*(n-ncomponents)*log(sns[t_nn[neighbor]]);
       for(int k=0; k<ncomponents; k++)
       {       
         mahal -= square(dot(z,Us[t_nn[neighbor]](k)))*(0.5/(sms(t_nn[neighbor],k)+sns[t_nn[neighbor]]) - 0.5/sns[t_nn[neighbor]]); // Pourrait être accéléré!
-        norm_term -= log(sms(t_nn[neighbor],k));
+        norm_term -= 0.5*log(sms(t_nn[neighbor],k)+sns[t_nn[neighbor]]);
       }
       
       log_gauss[neighbor] = mahal + norm_term;
@@ -623,7 +623,7 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
       for(int k=0; k<ncomponents; k++)
       {
         mahal -= square(dot(z,Us[t](k)))*(0.5/(sms(t,k)+sns[t]) - 0.5/sns[t]); // Pourrait être accéléré!
-        norm_term -= 0.5*log(sms(t,k));
+        norm_term -= 0.5*log(sms(t,k)+sns[t]);
       }
 
       log_gauss[t] = mahal + norm_term;

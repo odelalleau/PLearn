@@ -33,10 +33,10 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzen.h,v 1.1 2005/05/12 13:47:36 larocheh Exp $
+   * $Id: NonLocalManifoldParzen.h,v 1.2 2005/05/12 19:21:39 larocheh Exp $
    ******************************************************* */
 
-// Authors: Yoshua Bengio & Martin Monperrus
+// Authors: Yoshua Bengio & Hugo Larochelle
 
 /*! \file NonLocalManifoldParzen.h */
 
