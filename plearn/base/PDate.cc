@@ -34,13 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDate.cc,v 1.13 2005/05/11 00:31:12 chapados Exp $
+   * $Id: PDate.cc,v 1.14 2005/05/12 15:51:10 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 //#include <limits.h>                 // from stdc
-#include "stringutils.h"            //!< For toint.
 #include "PDate.h"
+#include <algorithm>                //!< For std::transform.
+#include "stringutils.h"            //!< For toint.
 //#include "general.h"                // for MISSING_VALUE
 #include <plearn/math/pl_math.h>                //!< For MISSING_VALUE.
 //#include <ctype.h>
