@@ -241,7 +241,7 @@ linkeroptions_tail = '-lm'
 # List of lists of mutually exclusive pymake options.
 # First option that appears in each group is the default, and is assumed if you don't specify any option from that group
 options_choices = [
-  [ 'g++', 'g++3', 'icc', 'mpi', 'purify' ],
+  [ 'g++', 'g++3', 'icc', 'mpi', 'purify', 'quantify' ],
   [ 'dbg', 'opt', 'pintel', 'gprof', 'safegprof', 'safeopt', 'checkopt' ],
   [ 'double', 'float' ],
   [ 'throwerrors', 'exiterrors' ], 
@@ -278,9 +278,15 @@ pymakeOption( name = 'mpi',
 
 pymakeOption( name = 'purify',
               description = 'compiling and linking with purify g++',
-              compiler = 'purify g++',               
+              compiler = 'purify -g++ g++',               
               compileroptions = '-DUSING_MPI=0 -ftemplate-depth-100',
-              linker = 'purify g++' )
+              linker = 'purify -g++ g++' )
+
+pymakeOption( name = 'quantify',
+              description = 'compiling and linking with quantify g++',
+              compiler = 'quantify -g++ g++',               
+              compileroptions = '-DUSING_MPI=0 -ftemplate-depth-100',
+              linker = 'quantify -g++ g++' )
 
 pymakeOption( name = 'dbg',
               description = 'debug mode',
