@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.49 2005/05/04 17:48:35 chapados Exp $
+   * $Id: vmatmain.cc,v 1.50 2005/05/12 19:13:45 chapados Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -1497,8 +1497,10 @@ int vmatmain(int argc, char** argv)
        */
       TVec<string> columns;
       bool skip_missings = false;
-      for (int i=4 ; argv[i] ; ++i) {
-        string curopt = argv[i];
+      for (int i=4 ; i < argc && argv[i] ; ++i) {
+        string curopt = removeblanks(argv[i]);
+        if (curopt == "")
+          continue;
         if (curopt.substr(0,7) == "--cols=") {
           string columns_str = curopt.substr(7);
           columns = split(columns_str, ',');
