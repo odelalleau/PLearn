@@ -35,6 +35,7 @@
 import os, string
 from plearn.pyplearn import *
 import plearn.plio
+import sys
 
 def launch_plearn_server(command = 'plearn server'):
     to_server, from_server = os.popen2(command, 'b')
@@ -44,9 +45,12 @@ class RemotePLearnServer:
 
     def __init__(self, from_server, to_server):
         self.io = plearn.plio.PLearnIO(from_server, to_server)
-        self.callFunction("binary")
         self.nextid = 1
         self.objects = {}
+        self.clear_maps = True
+        self.callFunction("binary")
+        self.callFunction("implicit_storage",True)
+        self.dbg_dump = False
 
     def new(self, objectspec):
         """
@@ -58,9 +62,19 @@ class RemotePLearnServer:
         if type(specstr)!=str:
             specstr = specstr.plearn_repr()
             
-        id = self.newObjectWithId(specstr)
-        obj = RemotePObject(self, id)
-        self.objects[id] = obj
+        objid = self.nextid        
+        self.callNewObject(objid,specstr)
+        self.nextid += 1
+        obj = RemotePObject(self, objid)
+        self.objects[objid] = obj
+        return obj
+
+    def load(self, objfilepath):
+        objid = self.nextid        
+        self.callLoadObject(objid, objfilepath)
+        self.nextid += 1
+        obj = RemotePObject(self, objid)
+        self.objects[objid] = obj
         return obj
 
     def delete(self, obj):
@@ -68,38 +82,47 @@ class RemotePLearnServer:
             objid = obj
         else:
             objid = obj.objid
-        self.deleteObject(objid)
+        self.callDeleteObject(objid)
         del self.objects[objid]
             
-    def newObject(self, objid, objspecstr):
+    def callNewObject(self, objid, objspecstr):
         self.io.write('!N '+str(objid)+' '+objspecstr+'\n')
         self.io.flush()
         self.expectResults(0)
 
-    def newObjectWithId(self, objspecstr):
-        objid = self.nextid        
-        self.newObject(objid,objspecstr)
-        self.nextid += 1
-        return objid
+    def callLoadObject(self, objid, filepath):
+        self.io.write('!L '+str(objid)+' '+filepath+'\n')
+        self.io.flush()
+        self.expectResults(0)
 
-    def deleteObject(self, objid):
+    def callDeleteObject(self, objid):
         self.io.write('!D '+str(objid)+'\n')
         self.io.flush()
         self.expectResults(0)
 
-    def deleteAllObjects(self):
+    def callDeleteAllObjects(self):
         self.io.write('!Z \n')
         self.io.flush()
         self.expectResults(0)
 
+    def clearMaps(self):
+        if self.clear_maps:
+            self.io.copies_map_in.clear()
+            self.io.copies_map_out.clear()
+
     def sendFunctionCallHeader(self, funcname, nargs):
+        self.clearMaps()
         self.io.write('!F '+funcname+' '+str(nargs)+' ')
 
     def sendMethodCallHeader(self, objid, methodname, nargs):
+        self.clearMaps()
         self.io.write('!M '+str(objid)+' '+methodname+' '+str(nargs)+' ')
 
     def getResultsCount(self):
         self.io.skip_blanks_and_comments()
+        c = self.io.get()
+        if c!='!':
+            raise TypeError("Returns received from server are expected to start with a ! but read "+c)
         c = self.io.get()
         if c=='R':
             nreturned = self.io.read_int()
@@ -108,7 +131,7 @@ class RemotePLearnServer:
             msg = self.io.read_string()
             raise RuntimeError(msg)
         else:
-            raise TypeError("Expected R (return command), but read "+c)
+            raise TypeError("Expected !R or !E but read !"+c)
 
     def expectResults(self, nargs_expected):
         nreturned = self.getResultsCount()
@@ -121,7 +144,7 @@ class RemotePLearnServer:
             self.io.write_typed(arg)
         self.io.write('\n')
         self.io.flush()
-        print 'python sent it!'
+        # print 'python sent it!'
         nresults = self.getResultsCount()
         results = []
         for i in xrange(nresults):
@@ -136,8 +159,14 @@ class RemotePLearnServer:
         for arg in args:
             self.io.write_typed(arg)
         self.io.flush()
+
+        if self.dbg_dump:
+            print 'DEBUG DUMP AFTER CALL OF METHOD',methodname,args
+            while True:
+                sys.stderr.write(self.io.get())
+
         nresults = self.getResultsCount()
-        print 'Now reading',nresults,'results'
+        # print 'Now reading',nresults,'results'
         #while True:
         #    print repr(self.io.readline())
         results = []
@@ -180,4 +209,5 @@ class RemotePObject:
 
 ##     def changeOptions(self, **options):
 ##         to_server.write()
+
 

@@ -493,9 +493,11 @@ U{Epytext Markup Language Manual<http://epydoc.sourceforge.net/epytext.html>}
 should not take you more than 15 minutes and you will be ready to document your
 code.
 """
-__cvs_id__ = "$Id: pyplearn.py,v 1.27 2005/05/03 17:28:03 dorionc Exp $"
+__cvs_id__ = "$Id: pyplearn.py,v 1.28 2005/05/12 21:58:22 plearner Exp $"
 
 import string, types
+import numarray
+import numarray.numarraycore
 import plearn.utilities.metaprog as metaprog
 
 __all__ = [ 'PyPlearnError', 'ref', 'bind', 'bindref', 'plvar', 'TMat',
@@ -571,10 +573,15 @@ class PLearnRepr:
             ## return _plearn_repr(x.plearn_repr())
             return x.plearn_repr()
     
+        elif isinstance(x, bool):
+            if x:
+                return '1'
+            else:
+                return '0'
+        elif isinstance(x, int):
+            return str(x)
         elif isinstance(x, float):
             # Don't use repr, so we don't get 0.20000000000000001 for 0.2
-            return str(x)
-        elif isinstance(x, int):
             return str(x)
         elif isinstance(x, str):
             # Escape double quotes inside the string...
@@ -592,6 +599,15 @@ class PLearnRepr:
             return '{' + ', '.join(dict_items) + '}'
         elif isinstance(x, tuple) and len(x) == 2:
             return  PLearnRepr.repr(x[0]) + ':' + PLearnRepr.repr(x[1])
+        elif isinstance(x, numarray.numarraycore.NumArray):
+            if len(x.shape)==1:
+                return str(x.shape[0]) + ' [ ' + ', '.join([ PLearnRepr.repr(e) for e in x ]) + ' ]'
+            elif len(x.shape)==2:
+                res = str(x.shape[0]) + ' ' + str(x.shape[1]) + ' [ \n'
+                for row in x:
+                    res += ', '.join([ PLearnRepr.repr(e) for e in row ]) + ', \n'
+                res += ']\n'
+                return res
         elif isinstance(x, plearn_snippet):
             return x.s
         elif x is None:

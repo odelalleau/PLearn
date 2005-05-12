@@ -42,17 +42,7 @@ matplotlib.use('TkAgg')
   
 from pylab import *
 from mayavi.tools import imv
-
-def load_pmat_as_array(fname):
-    s = file(fname,'rb').read()
-    formatstr = s[0:64]
-    datastr = s[64:]
-    structuretype, l, w, elemtype, endianness = string.split(formatstr)
-    l = int(l)
-    w = int(w)
-    X = fromstring(datastr,'d')
-    X.shape = (l,w)
-    return X
+from plearn.vmat.PMat import *
 
 def margin(scorevec):
     sscores = sort(scorevec)
@@ -172,7 +162,7 @@ def imshow_2d_grid_values(gridvalues, x0, y0, deltax, deltay, interpolation='nea
 def plot_2d_points(pointlist, style='bo'):
     x, y = zip(*pointlist)
     plot(x, y, style)
-    
+
 def plot_2d_class_points(pointlist, styles):
     classnum = 0
     for style in styles:

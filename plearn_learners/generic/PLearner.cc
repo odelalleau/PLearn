@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.46 2005/03/02 20:56:52 plearner Exp $
+   * $Id: PLearner.cc,v 1.47 2005/05/12 22:02:56 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -194,6 +194,13 @@ int PLearner::targetsize() const
   if(targetsize_ == -1) 
     PLERROR("In PLearner::targetsize - 'targetsize_' is -1, either no training set has beeen specified or its sizes were not set properly");
   return targetsize_; 
+}
+
+int PLearner::weightsize() const 
+{ 
+  if(weightsize_ == -1) 
+    PLERROR("In PLearner::weightsize - 'weightsize_' is -1, either no training set has beeen specified or its sizes were not set properly");
+  return weightsize_; 
 }
 
 void PLearner::build_()
@@ -429,22 +436,31 @@ void PLearner::call(const string& methodname, int nargs, PStream& io)
       if(nargs!=1) PLERROR("PLearner remote method computeOutput takes 1 argument");
       Vec input;
       io >> input;
-      Vec output;
-      computeOutput(input,output);
+      tmp_output.resize(outputsize());
+      computeOutput(input,tmp_output);
       prepareToSendResults(io, 1);
-      io << output;
+      io << tmp_output;
       io.flush();    
     }
   else if(methodname=="computeOutputAndCosts")
     {
+      cerr << "ENTERING computeOutputAndCosts" << endl;
       if(nargs!=2) PLERROR("PLearner remote method computeOutputAndCosts takes 2 arguments");
       Vec input, target;
-      io >> input >> target;
-      Vec output, costs;
-      computeOutputAndCosts(input,target,output,costs);
+      // io >> input >> target;
+      io >> input;
+      cerr << "READ input" << endl;
+      io >> target;
+      cerr << "READ target" << endl;
+      tmp_output.resize(outputsize());
+      Vec costs(nTestCosts());
+      computeOutputAndCosts(input,target,tmp_output,costs);
+      cerr << "CALL to method returned. Preparing to send results" << endl;
       prepareToSendResults(io, 2);
-      io << output << costs;
+      cerr << "SENDING output and costs" << endl;
+      io << tmp_output << costs;
       io.flush();
+      cerr << "FLUSHING" << endl;
     }
   else if(methodname=="computeCostsFromOutputs")
     {
@@ -462,10 +478,23 @@ void PLearner::call(const string& methodname, int nargs, PStream& io)
       if(nargs!=3) PLERROR("PLearner remote method computeCostsOnly takes 3 arguments");
       Vec input, target;
       io >> input >> target;
-      Vec costs;
+      Vec costs(nTestCosts());
       computeCostsOnly(input,target,costs);
       prepareToSendResults(io, 1);
       io << costs;
+      io.flush();
+    }
+  else if(methodname=="computeConfidenceFromOutput")
+    {
+      if(nargs!=3) PLERROR("PLearner remote method computeConfidenceFromOutput takes 3 arguments: input, output, probability");
+      Vec input, output;
+      real probability;
+      io >> input >> output >> probability;
+      
+      TVec< pair<real,real> > intervals(output.length());
+      bool ok = computeConfidenceFromOutput(input, output, probability, intervals);
+      prepareToSendResults(io, 2);
+      io << ok << intervals;
       io.flush();
     }
   else if(methodname=="getTestCostNames")

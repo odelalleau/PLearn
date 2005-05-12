@@ -32,16 +32,33 @@
 
 # Author: Pascal Vincent
 
-import string
-import struct
+import sys, string, struct
+import numarray
 import plearn.pyplearn
-from numarray import array,reshape  # for sequences
 
 sign_and_digits = string.digits + "+-"
 float_chars = string.digits+"+-.eE"
 blank_chars = " \t\n\r"
 blank_and_separator_chars = blank_chars+",;"
 wordseparators = " \t\n\r()[]{};,:|#"
+
+pl_typecode_to_arraytype = {
+    '\x01': 'i1',
+    '\x02': 'u2',
+    '\x03': 'i2',
+    '\x04': 'i2',
+    '\x05': 'u2',
+    '\x06': 'u2',
+    '\x07': 'i4',
+    '\x08': 'i4',
+    '\x0B': 'u4',
+    '\x0C': 'u4',
+    '\x0E': 'f4',
+    '\x0F': 'f4',
+    '\x10': 'f8',
+    '\x11': 'f8'
+    }
+
 
 class PObject:
     pass
@@ -53,6 +70,7 @@ class PLearnIO:
         self.pout = pout
         self.unreadstring = ''
         self.copies_map_in = {}
+        self.copies_map_out = {}
 
     def read(self,size):
         result = self.unreadstring[0:size]
@@ -181,76 +199,73 @@ class PLearnIO:
 
             
     def write_typed(self, x):
-        if type(x) is bool:
-            if x:
-                self.write('1 ')
-            else:
-                self.write('0 ')
-        else:
-            spec = plearn.pyplearn.PLearnRepr.repr(x)+' '
-            print 'Sending spec string:',spec
-            self.write(spec)
+        spec = plearn.pyplearn.PLearnRepr.repr(x)+' '
+        # print 'Sending spec string:',spec
+        self.write(spec)
 
     def binread(self):
         self.skip_blanks_and_comments_and_separators()
         c = self.get()
-        code = ord(c)
 
-        if   code==0x01: # signed char
+        if   c=="\x01": # signed char
             return self.get()
-        elif code==0x02: # unsigned char
+        elif c=="\x02": # unsigned char
             return self.get()
 
-        elif code==0x03: # short little endian
+        elif c=="\x03": # short little endian
             return struct.unpack('<h',self.read(2))[0]
-        elif code==0x04: # short big endian
+        elif c=="\x04": # short big endian
             return struct.unpack('>h',self.read(2))[0]
-        elif code==0x05: # unsigned short little endian
+        elif c=="\x05": # unsigned short little endian
             return struct.unpack('<H',self.read(2))[0]
-        elif code==0x06: # unsigned short big endian
+        elif c=="\x06": # unsigned short big endian
             return struct.unpack('>H',self.read(2))[0]
         
-        elif code==0x07: # int little endian
+        elif c=="\x07": # int little endian
             return struct.unpack('<i',self.read(4))[0]
-        elif code==0x08: # int big endian
+        elif c=="\x08": # int big endian
             return struct.unpack('>i',self.read(4))[0]
-        elif code==0x0B: # unsigned int little endian
+        elif c=="\x0B": # unsigned int little endian
             return struct.unpack('<I',self.read(4))[0]
-        elif code==0x0C: # unsigned int big endian
+        elif c=="\x0C": # unsigned int big endian
             return struct.unpack('>I',self.read(4))[0]
 
-        elif code==0x0E: # float little endian
+        elif c=="\x0E": # float little endian
             return struct.unpack('<f',self.read(4))[0]
-        elif code==0x0F: # float big endian
+        elif c=="\x0F": # float big endian
             return struct.unpack('>f',self.read(4))[0]
 
-        elif code==0x10: # double little endian
+        elif c=="\x10": # double little endian
             return struct.unpack('<d',self.read(8))[0]
-        elif code==0x11: # double big endian
+        elif c=="\x11": # double big endian
             return struct.unpack('>d',self.read(8))[0]
 
         elif c in "\x12\x13\x14\x15": # 1D or 2D sequence
             self.unread(c)
             return self.binread_sequence()
 
-        elif c=='"':
+        elif c=="\x16": # pair
+            self.unread(c)
+            return self.binread_pair()
+
+        elif c=='"': # string
             self.unread(c)
             return self.read_string()
 
-        elif c=='*':
+        elif c=='*': # pointer
             self.unread(c)
             return self.binread_pointer()
 
-        elif c=='{':
+        elif c=='{': # dictionary
             self.unread(c)
             return self.binread_dict()
 
-        elif c=='0':
+        elif c=='0': # boolean
             return False
         elif c=='1':
             return True
 
-        elif c in string.ascii_letters:
+        elif c in string.ascii_letters: # object name
             self.unread(c)
             return self.binread_object()
 
@@ -258,86 +273,106 @@ class PLearnIO:
             raise TypeError("binread read unexpected character "+c)
 
 
+
     def binread_sequence(self):
         self.skip_blanks_and_comments()
-        c = self.get()
-        code = ord(c)        
-        if code==0x12: # 1D little endian sequence
-            dimensions = 1
-            elemtype = ord(self.get())
-            length, = struct.unpack('<i',self.read(4))
-            nelems = length
-        elif code==0x13: # 1D big endian sequence
-            dimensions = 1
-            elemtype = ord(self.get())
-            length, = struct.unpack('>i',self.read(4))
-            nelems = length
-        elif code==0x14: # 2D little endian sequence
-            dimensions = 2
-            elemtype = ord(self.get())
-            length,width = struct.unpack('<ii',self.read(4))
-            nelems = length*width
-        elif code==0x15: # 2D big endian sequence
-            dimensions = 2
-            elemtype = ord(self.get())
-            length,width = struct.unpack('>ii',self.read(4))
-            nelems = length*width
+        seqtype = self.get()
+        elemtype = self.get()
+        if seqtype=='\x12': # 1D little endian sequence
+            shape = struct.unpack('<i',self.read(4))
+            endianness = 'little'
+        elif seqtype=='\x13': # 1D big endian sequence
+            shape = struct.unpack('>i',self.read(4))
+            endianness = 'big'
+        elif seqtype=='\x14': # 2D little endian sequence
+            shape = struct.unpack('<ii',self.read(8))
+            endianness = 'little'
+        elif seqtype=='\x15': # 2D big endian sequence
+            shape = struct.unpack('>ii',self.read(8))
+            endianness = 'big'
         else:
-            raise TypeError('In binread_sequence, read invalid starting code char: '+c)
+            raise TypeError('In binread_sequence, read invalid starting seqtype code char: '+seqtype)
 
         seq = []
-        if elemtype==0xFF: # generic sequence
+        nelems = 1
+        for dim in shape:
+            nelems *= dim
+        if elemtype=='\xFF': # generic sequence
             for i in xrange(nelems):
                 seq.append(self.binread())
+            if len(shape)>1:
+                raise TypeError('Reading generic 2D sequence not yet suppored.. Must implement turning this into a list of lists...')
+            return seq
 
-        elif elemtype==0x01: # signed char
-            seq = struct.unpack(nelems*'b',self.read(nelems))
-        elif elemtype==0x02: # unsigned char
-            seq = struct.unpack(nelems*'B',self.read(nelems))
+        try:
+            atype = pl_typecode_to_arraytype[elemtype]
+        except KeyError:
+            raise TypeError('Unsuppored array elemtype: '+elemtype)
 
-        elif elemtype==0x03: # short little endian
-            seq =  struct.unpack('<'+nelems*'h',self.read(2*nelems))
-        elif elemtype==0x04: # short big endian
-            seq =  struct.unpack('>'+nelems*'h',self.read(2*nelems))
-        elif elemtype==0x05: # unsigned short little endian
-            seq =  struct.unpack('<'+nelems*'H',self.read(2*nelems))
-        elif elemtype==0x06: # unsigned short big endian
-            seq =  struct.unpack('>'+nelems*'H',self.read(2*nelems))
+        elemsize = int(atype[-1])
+        data = self.read(nelems*elemsize)
+        ar = numarray.fromstring(data, atype, shape)
         
-        elif elemtype==0x07: # int little endian
-            seq =  struct.unpack('<'+nelems*'i',self.read(4*nelems))
-        elif elemtype==0x08: # int big endian
-            seq =  struct.unpack('>'+nelems*'i',self.read(4*nelems))
-        elif elemtype==0x0B: # unsigned int little endian
-            seq =  struct.unpack('<'+nelems*'I',self.read(4*nelems))
-        elif elemtype==0x0C: # unsigned int big endian
-            seq =  struct.unpack('>'+nelems*'I',self.read(4*nelems))
+        if sys.byteorder!=endianness:
+            ar.byteswap()
 
-        elif elemtype==0x0E: # float little endian
-            seq =  struct.unpack('<'+nelems*'f',self.read(4*nelems))
-        elif elemtype==0x0F: # float big endian
-            seq =  struct.unpack('>'+nelems*'f',self.read(4*nelems))
+        return ar
 
-        elif elemtype==0x10: # double little endian
-            seq =  struct.unpack('<'+nelems*'d',self.read(8*nelems))
-        elif elemtype==0x11: # double big endian
-            seq =  struct.unpack('>'+nelems*'d',self.read(8*nelems))
+##         elif elemtype==0x01: # signed char
+##             ar = numarray.fromfile(self, '', shape)
+##             # seq = struct.unpack(nelems*'b',self.read(nelems))
+##         elif elemtype==0x02: # unsigned char
+##             seq = struct.unpack(nelems*'B',self.read(nelems))
 
-        a = array(seq)
-        if dimensions==2:
-            a = reshape(a,length,width)
-        return a
+##         elif elemtype==0x03: # short little endian
+##             seq =  struct.unpack('<'+nelems*'h',self.read(2*nelems))
+##         elif elemtype==0x04: # short big endian
+##             seq =  struct.unpack('>'+nelems*'h',self.read(2*nelems))
+##         elif elemtype==0x05: # unsigned short little endian
+##             seq =  struct.unpack('<'+nelems*'H',self.read(2*nelems))
+##         elif elemtype==0x06: # unsigned short big endian
+##             seq =  struct.unpack('>'+nelems*'H',self.read(2*nelems))
+        
+##         elif elemtype==0x07: # int little endian
+##             seq =  struct.unpack('<'+nelems*'i',self.read(4*nelems))
+##         elif elemtype==0x08: # int big endian
+##             seq =  struct.unpack('>'+nelems*'i',self.read(4*nelems))
+##         elif elemtype==0x0B: # unsigned int little endian
+##             seq =  struct.unpack('<'+nelems*'I',self.read(4*nelems))
+##         elif elemtype==0x0C: # unsigned int big endian
+##             seq =  struct.unpack('>'+nelems*'I',self.read(4*nelems))
+
+##         elif elemtype==0x0E: # float little endian
+##             seq =  struct.unpack('<'+nelems*'f',self.read(4*nelems))
+##         elif elemtype==0x0F: # float big endian
+##             seq =  struct.unpack('>'+nelems*'f',self.read(4*nelems))
+
+##         elif elemtype==0x10: # double little endian
+##             seq =  struct.unpack('<'+nelems*'d',self.read(8*nelems))
+##         elif elemtype==0x11: # double big endian
+##             seq =  struct.unpack('>'+nelems*'d',self.read(8*nelems))
+
+
+##         if dimensions==2:
+##             a = reshape(a,length,width)
 
 
     def binread_pair(self):
         self.skip_blanks_and_comments()
-        a = self.binread()
-        self.skip_blanks_and_comments()
         c = self.get()
-        if c!=':':
-            raise TypeError('Expected to read : but read '+c)
-        b = self.binread
-        return a,b
+        if c=="\x16": # binary header byte for pair
+            a = self.binread()
+            b = self.binread()
+            return a,b
+        else: # suppose it's an "ascii" kind of pair  A : B
+            self.unread(c)
+            a = self.binread()
+            self.skip_blanks_and_comments()
+            c = self.get()
+            if c!=':':
+                raise TypeError('Expected to read : but read '+c)
+            b = self.binread()
+            return a,b
     
     def binread_dict(self):        
         d = {}
@@ -383,7 +418,7 @@ class PLearnIO:
             if c!=')':
                 raise TypeError("Reading TVec(  ... should end with ), not "+c)
             if storage is None:
-                return array([])
+                return []
             else:
                 return storage[offset:offset+length]
         else:
@@ -435,15 +470,15 @@ class PLearnIO:
         else:
             obj = PObject()
             obj._classname_ = classname
-            print 'In binread_object of class',classname
+            # print 'In binread_object of class',classname
             while True:
                 self.skip_blanks_and_comments_and_separators()
                 if self.peek() == ')':
                     c = self.get()
-                    print 'Finished object because read',c
+                    # print 'Finished object because read',c
                     return obj
                 key = self.read_word()
-                print 'key: ',key
+                # print 'key: ',key
                 self.skip_blanks_and_comments()
                 c = self.get()
                 if c!='=':

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.34 2005/03/02 20:56:52 plearner Exp $
+   * $Id: PLearner.h,v 1.35 2005/05/12 22:02:56 plearner Exp $
    ******************************************************* */
 
 
@@ -132,6 +132,7 @@ public:
 
   //! Declares the train_set
   //! Then calls build() and forget() if necessary
+  //! Also sets this learner's inputsize_ targetsize_ weightsize_ from those of the training_set
   //! Note: You shouldn't have to override this in subclasses, except in maybe to forward the call to an underlying learner.
   virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
@@ -162,11 +163,14 @@ public:
   //! This returns the currently set expdir (see setExperimentDirectory)
   PPath getExperimentDirectory() const { return expdir; }
 
-  //! Default returns train_set->inputsize()
+  //! Default returns inputsize_ cached from train_set->inputsize()
   virtual int inputsize() const;
 
-  //! Default returns train_set->targetsize()
+  //! Default returns targetsize_ cached from train_set->targetsize()
   virtual int targetsize() const; 
+
+  //! Default returns weightsize_ cached from train_set->weightsize()
+  virtual int weightsize() const; 
 
   //! SUBCLASS WRITING: override this so that it returns 
   //! the size of this learner's output, as a function of 
