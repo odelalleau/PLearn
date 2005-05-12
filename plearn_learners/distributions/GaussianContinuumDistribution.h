@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuumDistribution.h,v 1.4 2005/04/22 22:11:18 larocheh Exp $
+   * $Id: GaussianContinuumDistribution.h,v 1.5 2005/05/12 13:50:13 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -77,6 +77,7 @@ protected:
   Var p_x, p_target, p_neighbors, p_neighbors_and_point, target_index, neigbor_indexes;
   Var sum_nll;
   Var min_sig, min_d;
+  Var fixed_min_sig, fixed_min_d;
 
   PP<PDistribution> dist;
 
@@ -135,6 +136,8 @@ public:
   bool walk_on_noise;
   real min_sigma;
   real min_diff;
+  real fixed_min_sigma;
+  real fixed_min_diff;
   real min_p_x;
   bool sm_bigger_than_sn;
   int n_neighbors; // number of neighbors used for gradient descent
@@ -146,6 +149,7 @@ public:
   string variances_transfer_function; // "square", "exp" or "softplus"
   PP<Optimizer> optimizer; // to estimate the function that predicts local tangent vectors given the input
   Var embedding;
+  Func output_embedding;
   Func output_f;
   Func output_f_all;
   Func predictor; // predicts everything about the gaussian
@@ -242,6 +246,11 @@ public:
   virtual void resetGenerator(long g_seed) const;
   */
 
+  //! Produce outputs according to what is specified in outputs_def.
+  virtual void computeOutput(const Vec& input, Vec& output) const;
+
+  //! Returned value depends on outputs_def.
+  virtual int outputsize() const;
 
   /* Not needed anymore
   //! Returns the size of this learner's output, (which typically

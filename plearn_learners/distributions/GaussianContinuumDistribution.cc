@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuumDistribution.cc,v 1.5 2005/04/22 22:11:18 larocheh Exp $
+   * $Id: GaussianContinuumDistribution.cc,v 1.6 2005/05/12 13:50:13 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -71,10 +71,11 @@
 #include <plearn/var/Var_utils.h>
 #include <plearn/var/ConcatRowsVariable.h>
 #include <plearn/var/RowSumVariable.h>
-#include <plearn/var/NoBpropVariable.h>
 #include <plearn/var/ReshapeVariable.h>
 #include <plearn/var/SquareVariable.h>
 #include <plearn/var/ExpVariable.h>
+#include <plearn/var/NoBpropVariable.h>
+#include <plearn/var/ThresholdBpropVariable.h>
 #include <plearn/io/load_and_save.h>
 #include <plearn/vmat/VMat_computeNearestNeighbors.h>
 #include <plearn/vmat/FractionSplitter.h>
@@ -86,7 +87,7 @@ using namespace std;
 
 GaussianContinuumDistribution::GaussianContinuumDistribution() 
 /* ### Initialize all fields to their default value here */
-  : weight_mu_and_tangent(0), include_current_point(false), random_walk_step_prop(1), use_noise(false),use_noise_direction(false), noise(-1), noise_type("uniform"), n_random_walk_step(0), n_random_walk_per_point(0),walk_on_noise(true),min_sigma(0.00001), min_diff(0.01), min_p_x(0.001),sm_bigger_than_sn(true), n_neighbors(5), n_neighbors_density(-1), mu_n_neighbors(2), n_dim(1), sigma_grad_scale_factor(1), update_parameters_every_n_epochs(5), variances_transfer_function("softplus"), architecture_type("single_neural_network"),
+  : weight_mu_and_tangent(0), include_current_point(false), random_walk_step_prop(1), use_noise(false),use_noise_direction(false), noise(-1), noise_type("uniform"), n_random_walk_step(0), n_random_walk_per_point(0),walk_on_noise(true),min_sigma(0.00001), min_diff(0.01),fixed_min_sigma(0.00001), fixed_min_diff(0.01), min_p_x(0.001),sm_bigger_than_sn(true), n_neighbors(5), n_neighbors_density(-1), mu_n_neighbors(2), n_dim(1), sigma_grad_scale_factor(1), update_parameters_every_n_epochs(5), variances_transfer_function("softplus"), architecture_type("single_neural_network"),
     n_hidden_units(-1), batch_size(1), norm_penalization(0), svd_threshold(1e-5)
 {
 }
@@ -471,6 +472,14 @@ void GaussianContinuumDistribution::declareOptions(OptionList& ol)
 		"The minimum value for the difference between sigma manifold and noise.\n"
                 );
 
+  declareOption(ol, "fixed_min_sigma", &GaussianContinuumDistribution::fixed_min_sigma, OptionBase::buildoption,
+		"The fixed minimum value for sigma noise and manifold.\n"
+                );
+
+  declareOption(ol, "fixed_min_diff", &GaussianContinuumDistribution::fixed_min_diff, OptionBase::buildoption,
+		"The fixed minimum value for the difference between sigma manifold and noise.\n"
+                );
+
   declareOption(ol, "min_p_x", &GaussianContinuumDistribution::min_p_x, OptionBase::buildoption,
 		"The minimum value for p_x, for stability concerns when doing gradient descent.\n"
                 );
@@ -524,7 +533,8 @@ void GaussianContinuumDistribution::build_()
   {
 
     Var log_n_examples(1,1,"log(n_examples)");
-
+    if(train_set)
+      reference_set = train_set;
 
     {
       if (n_hidden_units <= 0)
@@ -547,6 +557,7 @@ void GaussianContinuumDistribution::build_()
         W = Var(n_dim,n_hidden_units,"W ");       
         tangent_plane = diagonalized_factors_product(W,1-a*a,V); 
         embedding = product(W,a);
+        output_embedding = Func(x,embedding);
       } 
       else if(architecture_type == "single_neural_network")
       {
@@ -559,10 +570,12 @@ void GaussianContinuumDistribution::build_()
                 architecture_type.c_str());
      
       mu = product(muV,a); 
-      //min_sig = new SourceVariable(1,1);
+      fixed_min_sig = new SourceVariable(1,1);
+      fixed_min_sig->value[0] = fixed_min_sigma;
       min_sig = Var(1,1);
       min_sig->setName("min_sig");
-      //min_d = new SourceVariable(1,1);
+      fixed_min_d = new SourceVariable(1,1);
+      fixed_min_d->value[0] = fixed_min_diff;
       min_d = Var(1,1);
       min_d->setName("min_d");
       if(noise > 0)
@@ -627,38 +640,39 @@ void GaussianContinuumDistribution::build_()
 
       if(sm_bigger_than_sn)
       {
-        if(variances_transfer_function == "softplus") sn = softplus(snb + product(snV,a))  + min_sig;
-        else if(variances_transfer_function == "square") sn = square(snb + product(snV,a)) + min_sig;
-        else if(variances_transfer_function == "exp") sn = exp(snb + product(snV,a)) + min_sig;
+        if(variances_transfer_function == "softplus") sn = softplus(snb + product(snV,a))  + min_sig + fixed_min_sig;
+        else if(variances_transfer_function == "square") sn = square(snb + product(snV,a)) + min_sig + fixed_min_sig;
+        else if(variances_transfer_function == "exp") sn = exp(snb + product(snV,a)) + min_sig + fixed_min_sig;
         else PLERROR("In GaussianContinuumDistribution::build_ : unknown variances_transfer_function option %s ", variances_transfer_function.c_str());
         Var diff;
         
-        if(variances_transfer_function == "softplus") diff = softplus(smb + product(smV,a)) + min_d;
-        else if(variances_transfer_function == "square") diff = square(smb + product(smV,a)) + min_d;
-        else if(variances_transfer_function == "exp") diff = exp(smb + product(smV,a)) + min_d;
+        if(variances_transfer_function == "softplus") diff = softplus(smb + product(smV,a)) + min_d + fixed_min_d;
+        else if(variances_transfer_function == "square") diff = square(smb + product(smV,a)) + min_d + fixed_min_d;
+        else if(variances_transfer_function == "exp") diff = exp(smb + product(smV,a)) + min_d + fixed_min_d;
         sm = sn + diff;
       }
       else
       {
         if(variances_transfer_function == "softplus"){
-          sm = softplus(smb + product(smV,a)) + min_sig; 
-          sn = softplus(snb + product(snV,a)) + min_sig;
+          sm = softplus(smb + product(smV,a)) + min_sig + fixed_min_sig; 
+          sn = softplus(snb + product(snV,a)) + min_sig + fixed_min_sig;
         }
         else if(variances_transfer_function == "square"){
-          sm = square(smb + product(smV,a)) + min_sig; 
-          sn = square(snb + product(snV,a)) + min_sig;
+          sm = square(smb + product(smV,a)) + min_sig + fixed_min_sig; 
+          sn = square(snb + product(snV,a)) + min_sig + fixed_min_sig;
         }
         else if(variances_transfer_function == "exp"){
-          sm = exp(smb + product(smV,a)) + min_sig; 
-          sn = exp(snb + product(snV,a)) + min_sig;
+          sm = exp(smb + product(smV,a)) + min_sig + fixed_min_sig; 
+          sn = exp(snb + product(snV,a)) + min_sig + fixed_min_sig;
         }
         else PLERROR("In GaussianContinuumDistribution::build_ : unknown variances_transfer_function option %s ", variances_transfer_function.c_str());
       }
       
       if(sigma_grad_scale_factor > 0)
       {
-        sm = no_bprop(sm,sigma_grad_scale_factor);
-        sn = no_bprop(sn,sigma_grad_scale_factor);
+        //sm = no_bprop(sm,sigma_grad_scale_factor);
+        //sn = no_bprop(sn,sigma_grad_scale_factor);
+        sn = threshold_bprop(sn,sigma_grad_scale_factor);
       }
 
       mu_noisy->setName("mu_noisy ");
@@ -690,14 +704,14 @@ void GaussianContinuumDistribution::build_()
     target_index->setName("target_index");
     Var neighbor_indexes = Var(n_neighbors,1);
     neighbor_indexes->setName("neighbor_indexes");
-    p_x = Var(train_set->length(),1);
+    p_x = Var(reference_set->length(),1);
     p_x->setName("p_x");
     for(int i=0; i<p_x.length(); i++)
       p_x->value[i] = MISSING_VALUE;
 
     //p_target = new VarRowsVariable(p_x,target_index);
     p_target = new SourceVariable(1,1);
-    p_target->value[0] = log(1.0/train_set->length());
+    p_target->value[0] = log(1.0/reference_set->length());
     p_target->setName("p_target");
     p_neighbors =new VarRowsVariable(p_x,neighbor_indexes);
     p_neighbors->setName("p_neighbors");
@@ -737,9 +751,9 @@ void GaussianContinuumDistribution::build_()
     noisy_data = Func(x,x + noise_var);    // Func to verify what's the noisy data like (doesn't work so far, this problem will be investigated)
     //verify_gradient_func = Func(predictor->inputs & tangent_targets & target_index & neighbor_indexes, predictor->parameters & mu_noisy, sum_nll);  
 
-    if(n_neighbors_density > train_set.length()-!include_current_point || n_neighbors_density < 0) n_neighbors_density = train_set.length() - !include_current_point;
+    if(n_neighbors_density > reference_set.length()-!include_current_point || n_neighbors_density < 0) n_neighbors_density = reference_set.length() - !include_current_point;
 
-    train_nearest_neighbors.resize(train_set.length(), n_neighbors_density-1);
+    train_nearest_neighbors.resize(reference_set.length(), n_neighbors_density-1);
 
     t_row.resize(n);
     Ut_svd.resize(n,n);
@@ -751,13 +765,12 @@ void GaussianContinuumDistribution::build_()
     neighbor_row.resize(n);
     w.resize(n_dim);
 
-    Bs.resize(train_set.length());
-    Fs.resize(train_set.length());
-    mus.resize(train_set.length(), n);
-    sms.resize(train_set.length());
-    sns.resize(train_set.length());
+    Bs.resize(reference_set.length());
+    Fs.resize(reference_set.length());
+    mus.resize(reference_set.length(), n);
+    sms.resize(reference_set.length());
+    sns.resize(reference_set.length());
     
-    reference_set = train_set;
   }
 
 }
@@ -1150,6 +1163,7 @@ void GaussianContinuumDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copie
   deepCopyField(output_f_all, copies);
   deepCopyField(projection_error_f, copies);
   deepCopyField(noisy_data, copies);
+  deepCopyField(output_embedding, copies);
 
   // TODO : NB: It is not complete !
   deepCopyField(log_gauss, copies);
@@ -1174,12 +1188,13 @@ void GaussianContinuumDistribution::train()
 
   // ... on the training set
   
-  for(int t=0; t<train_set.length(); t++)
-  {
-    train_set->getRow(t,t_row);
-    TVec<int> nn = train_nearest_neighbors(t);
-    computeNearestNeighbors(train_set, t_row, nn, t);
-  }
+  if(stage == 0)
+    for(int t=0; t<train_set.length(); t++)
+    {
+      train_set->getRow(t,t_row);
+      TVec<int> nn = train_nearest_neighbors(t);
+      computeNearestNeighbors(train_set, t_row, nn, t);
+    }
   
   VMat train_set_with_targets;
   VMat targets_vmat;
@@ -1371,5 +1386,35 @@ Vec GaussianContinuumDistribution::getTrainPoint(int j) const {
   return ret;
 }
 
+///////////////////
+// computeOutput //
+///////////////////
+void GaussianContinuumDistribution::computeOutput(const Vec& input, Vec& output) const
+{
+  switch(outputs_def[0])
+  {
+  case 'm':
+    output_embedding(input);
+    output << embedding->value;
+    break;
+  default:
+    inherited::computeOutput(input,output);
+  }
+}
+
+////////////////
+// outputsize //
+////////////////
+int GaussianContinuumDistribution::outputsize() const
+{
+  switch(outputs_def[0])
+  {
+  case 'm':
+    return n_dim;
+    break;
+  default:
+    return inherited::outputsize();
+  }
+}
 
 } // end of namespace PLearn
