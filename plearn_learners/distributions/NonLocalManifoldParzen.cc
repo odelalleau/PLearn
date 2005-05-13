@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzen.cc,v 1.2 2005/05/12 19:21:39 larocheh Exp $
+   * $Id: NonLocalManifoldParzen.cc,v 1.3 2005/05/13 20:49:35 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -331,6 +331,11 @@ void NonLocalManifoldParzen::build_()
     sms.resize(L,ncomponents);
     sns.resize(L);
     
+    // Kernel methods
+    mu_temp.resize(n);
+    diff.resize(n);
+    sm_temp.resize(ncomponents);
+    sn_temp.resize(1);
   }
 
 }
@@ -674,6 +679,30 @@ int NonLocalManifoldParzen::outputsize() const
   default:
     return inherited::outputsize();
   }
+}
+
+real NonLocalManifoldParzen::evaluate(Vec x1,Vec x2,real scale)
+{
+  real ret;
+
+  predictor->fprop(x2, F.toVec() & mu_temp & sn_temp);
+    
+  // N.B. this is the SVD of F'
+  lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
+  for (int k=0;k<ncomponents;k++)
+  {
+    sm_temp[k] = S_svd[k];
+    F(k) << Ut_svd(k);
+  }    
+  
+  diff = x1 - x2;
+  diff -= mu_temp;
+  ret = scale * pownorm(diff)/sn_temp[0];
+  for (int k = 0; k < ncomponents ; k++) {
+    ret += scale * (1.0 /( sm_temp[k] + sn_temp[0]) - 1.0/sn_temp[0]) * square(dot(F(k), diff));
+  }
+  return ret;
+  
 }
 
 } // end of namespace PLearn
