@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ManifoldParzenKernel.cc,v 1.1 2005/05/10 21:29:08 larocheh Exp $
+   * $Id: ManifoldParzenKernel.cc,v 1.2 2005/05/13 17:59:27 larocheh Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,6 +58,17 @@ real ManifoldParzenKernel::evaluate(const Vec& x1, const Vec& x2) const
     ret = mp->evaluate(x1,x2,scale) * mp->evaluate(x2,x1,scale);
   else
     ret = mp->evaluate(x1,x2,scale);
+  
+  return ret;
+}
+
+real ManifoldParzenKernel::evaluate_i_j(int i, int j) const
+{ 
+  real ret;
+  if(is_symmetric)
+    ret = mp->evaluate_i_j(i,j,scale) * mp->evaluate_i_j(j,i,scale);
+  else
+    ret = mp->evaluate_i_j(i,j,scale);
   
   return ret;
 }

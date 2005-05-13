@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ManifoldParzenKernel.h,v 1.1 2005/05/10 21:29:09 larocheh Exp $
+   * $Id: ManifoldParzenKernel.h,v 1.2 2005/05/13 17:59:31 larocheh Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,6 +44,7 @@
 #define ManifoldParzenKernel_INC
 
 #include "Kernel.h"
+#include <plearn_learners/distributions/ManifoldParzen2.h>
 
 namespace PLearn {
 using namespace std;
@@ -68,11 +69,13 @@ class ManifoldParzenKernel: public Kernel
   bool train_mp;
 
     ManifoldParzenKernel()
-        : scale(1.0), mp(0), is_symetric(true) {}
+        : inherited(true),scale(1.0), mp(0), train_mp(true){}
    
     PLEARN_DECLARE_OBJECT(ManifoldParzenKernel);
 
     virtual real evaluate(const Vec& x1, const Vec& x2) const;
+
+    virtual real evaluate_i_j(int i, int j) const; 
 
     virtual void setDataForKernelMatrix(VMat the_data);
 
