@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VPLPreprocessedLearner.cc,v 1.1 2005/05/12 22:02:56 plearner Exp $ 
+   * $Id: VPLPreprocessedLearner.cc,v 1.2 2005/05/13 22:00:41 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -212,34 +212,66 @@ void VPLPreprocessedLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
   assert( learner_ );
 
-  row_prg.setSource(training_set);
-  row_prg.compileString(trainset_preproc, row_prg_fieldnames);
-  int newinputsize = row_prg_fieldnames.length()-(newtargetsize+newweightsize);
-  VMat processed_trainset = new ProcessingVMatrix(training_set, trainset_preproc);
-  processed_trainset->defineSizes(newinputsize,newtargetsize,newweightsize);
-
-  learner_->setTrainingSet(processed_trainset, false);
+  if(trainset_preproc!="")
+    {
+      row_prg.setSource(training_set);
+      row_prg.compileString(trainset_preproc, row_prg_fieldnames);
+      int newinputsize = row_prg_fieldnames.length()-(newtargetsize+newweightsize);
+      VMat processed_trainset = new ProcessingVMatrix(training_set, trainset_preproc);
+      processed_trainset->defineSizes(newinputsize,newtargetsize,newweightsize);
+      learner_->setTrainingSet(processed_trainset, false);
+    }
+  else
+    {
+      row_prg.clear();
+      row_prg_fieldnames.resize(0);
+      learner_->setTrainingSet(training_set, false);
+    }
   bool training_set_has_changed = !train_set || !(train_set->looksTheSameAs(training_set));
   if (call_forget && !training_set_has_changed)
     // In this case, learner_->build() will not have been called, which may
     // cause trouble if it updates data from the training set.
     learner_->build();
-  inherited::setTrainingSet(training_set, call_forget); 
+  inherited::setTrainingSet(training_set, call_forget); // will call forget if needed
 
-  int insize = training_set->inputsize();
-  TVec<string> infieldnames = training_set->fieldNames().subVec(0,insize);
-  input_prg.setSourceFieldNames(infieldnames);
-  input_prg.compileString(input_preproc, input_prg_fieldnames);
+  if(input_preproc!="")
+    {
+      int insize = training_set->inputsize();
+      TVec<string> infieldnames = training_set->fieldNames().subVec(0,insize);
+      input_prg.setSourceFieldNames(infieldnames);
+      input_prg.compileString(input_preproc, input_prg_fieldnames);
+    }
+  else
+    {
+      input_prg.clear();
+      input_prg_fieldnames.resize(0);
+    }
 
-  int outsize = learner_->outputsize();
-  TVec<string> outfieldnames(outsize);
-  for(int k=0; k<outsize; k++)
-    outfieldnames[k] = "output"+tostring2(k);
-  output_prg.setSourceFieldNames(outfieldnames);
-  output_prg.compileString(output_postproc, output_prg_fieldnames);
+  if(output_postproc!="")
+    {
+      int outsize = learner_->outputsize();
+      TVec<string> outfieldnames(outsize);
+      for(int k=0; k<outsize; k++)
+        outfieldnames[k] = "output"+tostring2(k);
+      output_prg.setSourceFieldNames(outfieldnames);
+      output_prg.compileString(output_postproc, output_prg_fieldnames);
+    }
+  else
+    {
+      output_prg.clear();
+      output_prg_fieldnames.resize(0);
+    }
 
-  costs_prg.setSourceFieldNames(learner_->getTestCostNames());
-  costs_prg.compileString(costs_postproc, costs_prg_fieldnames);
+  if(costs_postproc!="")
+    {
+      costs_prg.setSourceFieldNames(learner_->getTestCostNames());
+      costs_prg.compileString(costs_postproc, costs_prg_fieldnames);
+    }
+  else
+    {
+      costs_prg.clear();
+      costs_prg_fieldnames.resize(0);
+    }
 }
 
 
@@ -318,8 +350,57 @@ bool VPLPreprocessedLearner::computeConfidenceFromOutput(
   const Vec& input, const Vec& output,
   real probability, TVec< pair<real,real> >& intervals) const
 {
-  PLERROR("computeConfidenceFromOutput not yet implemented");
-  return false;
+  int d = outputsize();
+  if(d!=output.length())
+    PLERROR("In VPLPreprocessedLearner::computeConfidenceFromOutput, length of passed output (%d)"
+            "differes from outputsize (%d)!",output.length(),d);
+
+  assert( learner_ );
+  Vec newinput = input;
+  if(input_prg)
+    {
+      processed_input.resize(input_prg_fieldnames.length());
+      input_prg.run(input, processed_input);
+      newinput = processed_input;
+    }
+
+  bool status = false;
+  if(!output_prg) // output is already the output of the underlying learner
+    status = learner_->computeConfidenceFromOutput(newinput, output, probability, intervals);
+  else // must recompute the output of underlying learner, and post-process returned intervals
+    {
+      learner_->computeOutput(newinput, pre_output);
+      TVec< pair<real,real> > pre_intervals;
+      status = learner_->computeConfidenceFromOutput(newinput, pre_output, probability, pre_intervals);
+      if(!status) // no confidence computation available
+        {
+          intervals.resize(d);
+          for(int k=0; k<d; k++)
+            intervals[k] = pair<real,real>(MISSING_VALUE,MISSING_VALUE);
+        }
+      else // postprocess low and high vectors
+        {
+          int ud = learner_->outputsize(); // dimension of underlying learner's output
+          // first build low and high vectors
+          Vec low(ud);
+          Vec high(ud);
+          for(int k=0; k<ud; k++)
+            {
+              pair<real,real> p = pre_intervals[k];
+              low[k] = p.first;
+              high[k] = p.second;
+            }
+          Vec post_low(d); // postprocesed low
+          Vec post_high(d); // postprocessed high
+          output_prg.run(low, post_low);
+          output_prg.run(high, post_high);
+          // now copy post_low and post_high to intervals
+          intervals.resize(d);
+          for(int k=0; k<d; k++)
+            intervals[k] = pair<real,real>(post_low[k],post_high[k]);
+        }
+    }
+  return status;
 }
 
 

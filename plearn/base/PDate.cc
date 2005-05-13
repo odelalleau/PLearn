@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDate.cc,v 1.14 2005/05/12 15:51:10 tihocan Exp $
+   * $Id: PDate.cc,v 1.15 2005/05/13 22:00:25 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -193,6 +193,21 @@ int PDate::toJulianDay() const
 
   return jc + day + je + jf - 1524;
 }
+
+int PDate::dayOfYear() const
+{
+  return (*this)-PDate(year,(unsigned char)1,(unsigned char)1);
+}
+
+
+int PDate::weekNumber() const
+{
+  // Hack for now, not yet the true iso week number
+  // See: http://personal.ecu.edu/mccartyr/ISOwdALG.txt
+
+  return dayOfYear()/7;
+}
+
 
 float date_to_float(const PDate& t)
 {

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PDate.h,v 1.6 2004/02/28 17:53:01 tihocan Exp $
+   * $Id: PDate.h,v 1.7 2005/05/13 22:00:25 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -125,6 +125,12 @@ public:
   //0=monday ... 6=sunday
   int dayOfWeek() const
   { return toJulianDay()%7; }
+
+  // 0 = january 1 of the year
+  int dayOfYear() const;
+
+  //! Returns week number in the year between 0 and 52 incl. (ISO 8601 minus 1) 
+  int weekNumber() const;
 
   static PDate today()
   {

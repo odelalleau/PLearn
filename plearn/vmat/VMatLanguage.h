@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.19 2005/05/13 16:12:34 plearner Exp $
+   * $Id: VMatLanguage.h,v 1.20 2005/05/13 22:00:41 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -127,6 +127,9 @@ public:
     inline operator bool() const
     { return program.length()>0; }
     
+    //! Make it an empty program by clearing outputfieldnames, program, mappings
+    void clear();
+
     int pstackSize() const {return pstack.size();}
 
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);

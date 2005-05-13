@@ -64,11 +64,12 @@ def load_pmat_as_array(fname):
 
 class PMat:
 
-    def __init__(self, fname, openmode='r', fieldnames=[], elemtype='d'):
+    def __init__(self, fname, openmode='r', fieldnames=[], elemtype='d',
+                 inputsize=-1, targetsize=-1, weightsize=-1):
         self.fname = fname
-        self.inputsize = -1
-        self.targetsize = -1
-        self.weightsize = -1
+        self.inputsize = inputsize
+        self.targetsize = targetsize
+        self.weightsize = weightsize
         if openmode=='r':
             self.f = open(fname,'rb')
             self.read_and_parse_header()
@@ -242,6 +243,11 @@ class PMat:
         return self.length
 
     def plearn_repr(self):
+        # asking for plearn_repr could be to send specification over
+        # to another prg so that will open the .pmat
+        # So we make sure data is flushed to disk.
+        self.flush()
+        
         res = 'FileVMatrix( filename="'+self.fname+'"\n' \
               + "inputsize = "+str(self.inputsize)+'\n' \
               + "targetsize = "+str(self.targetsize)+'\n' \
