@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrixSplitter.cc,v 1.4 2005/05/10 16:04:23 tihocan Exp $ 
+   * $Id: SourceVMatrixSplitter.cc,v 1.5 2005/05/13 19:24:12 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -77,7 +77,7 @@ void SourceVMatrixSplitter::declareOptions(OptionList& ol)
       "Deprecated: the index of the returned set where we apply source_vm.");
 
   declareOption(ol, "sets_to_modify", &SourceVMatrixSplitter::sets_to_modify, OptionBase::buildoption,
-      "The indices of the returned sets on which we apply source_vm.\n"
+      "The indices of the returned sets on which we apply source_vm ([-1] means all sets).\n"
       "This option will override 'to_apply' if it is also provided.");
 
   // Now call the parent class' declareOptions
@@ -152,8 +152,13 @@ TVec<VMat> SourceVMatrixSplitter::getSplit(int k)
     VMat the_vm = static_cast<SourceVMatrix*>(source_vm);
     result[to_apply] = the_vm;
   } else {
-    for (int i = 0; i < sets_to_modify.length(); i++) {
-      int set = sets_to_modify[i];
+    TVec<int> sets_indices = sets_to_modify;
+    if (sets_indices.length() == 1 && sets_indices[0] == -1) {
+      // -1 means we apply it on all sets.
+      sets_indices = TVec<int>(0, source_splitter->nSetsPerSplit() - 1, 1);
+    }
+    for (int i = 0; i < sets_indices.length(); i++) {
+      int set = sets_indices[i];
       // Clear the source of 'source_vm' since we do not want to deep-copy it.
       source_vm->source = 0;
       // Copy 'source_vm' and fill 'result' accordingly.
