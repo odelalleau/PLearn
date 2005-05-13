@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnServer.cc,v 1.7 2005/05/04 22:08:04 plearner Exp $ 
+   * $Id: PLearnServer.cc,v 1.8 2005/05/13 16:12:34 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -44,6 +44,7 @@
 #include "PLearnServer.h"
 #include <plearn/base/plerror.h>
 #include <plearn/io/fileutils.h> //!< For chdir()
+#include <plearn/io/load_and_save.h>
 
 namespace PLearn {
 using namespace std;
@@ -51,7 +52,7 @@ using namespace std;
 // Put function implementations here.
 
   PLearnServer::PLearnServer(const PStream& input_output)
-    :io(input_output)
+    :io(input_output), clear_maps(true)
   {
     
   }
@@ -77,16 +78,16 @@ using namespace std;
       }
     else if(name=="implicit_storage") // Takes a single boolean parameter
       {
-        cerr << "Bebore implicit_storage: " << (io.implicit_storage?'T':'F') << endl;
+        // cerr << "Bebore implicit_storage: " << (io.implicit_storage?'T':'F') << endl;
         io >> io.implicit_storage;
-        cerr << "After implicit_storage: " << (io.implicit_storage?'T':'F') << endl;
+        // cerr << "After implicit_storage: " << (io.implicit_storage?'T':'F') << endl;
         prepareToSendResults(io,0);
       }
     else
       PLERROR("In PLearnServer::callFunction Invalid function name %s",name.c_str());
 
     io << endl;
-    cerr << "Sent it!" << endl;
+    // cerr << "Sent it!" << endl;
   }
 
 
@@ -96,6 +97,7 @@ using namespace std;
              "  !?                                 # print this help message \n"
              "  !F functionname nargs arg1 ...     # calls a supported function.\n"
              "  !N objid object_specification      # creates new object.\n"
+             "  !L objid filepath                  # loads a new object into id from a .plearn .psave .vmat file\n"
              "  !M objid methodname nargs arg1 ... # calls method on object objid. Returns: R <nreturn> ret1 ... \n"
              "  !D objid                   # deletes object objid. Returns: R 0 \n"
              "  !Z                         # delete all objects. Returns: R 0 \n"
@@ -120,17 +122,22 @@ using namespace std;
     ObjMap::iterator found;
     string method_name;
     int n_args; // number of input arguments to the method call
-    string dirpath;
+    string filepath;
 
     for(;;)
       {
+        if(clear_maps)
+          {
+            io.copies_map_in.clear();
+            io.copies_map_out.clear();
+          }
         int c = -1;
         do { c = io.get(); }
         while(c!='!' && c!=EOF);
 
         int command = io.get();
         
-        cerr << "Rceived command: " << char(command) << endl;
+        // cerr << "Rceived command: " << char(command) << endl;
 
         try 
           {            
@@ -148,24 +155,26 @@ using namespace std;
 
               case 'N': // new
                 obj = 0;
-                // io >> obj_id >> obj;           // Read new object
-                cerr << "Reading obj_id" << endl;
-                io >> obj_id;
-                cerr << "Read obj_id = " << obj_id << endl;                 
-                io >> obj;
-                cerr << "Read object " << endl;
+                io >> obj_id >> obj;           // Read new object
                 objmap[obj_id] = obj;
-                cerr << "Writing reply" << endl;
-                io.write("R 0");
+                prepareToSendResults(io,0);
                 io << endl;  
-                cerr << "Wrote result" << endl;
                 break;
             
+              case 'L': // load from file
+                obj = 0;
+                io >> obj_id >> filepath;
+                PLearn::load(filepath,obj);
+                objmap[obj_id] = obj;
+                prepareToSendResults(io,0);
+                io << endl;  
+                break;
+
               case 'D': // delete
                 io >> obj_id;
                 if(objmap.erase(obj_id)==0)
                   PLERROR("Calling delete of a non-existing object");
-                io.write("R 0");
+                prepareToSendResults(io,0);
                 io << endl;
                 break;
 
@@ -177,7 +186,7 @@ using namespace std;
                 else 
                   {
                     io >> method_name >> n_args;
-                    cerr << "Method: " << method_name << ' ' << n_args << endl;
+                    // cerr << "Method: " << method_name << ' ' << n_args << endl;
                     found->second->call(method_name, n_args, io);
                     io << endl;
                   }
@@ -185,13 +194,12 @@ using namespace std;
 
               case 'Z': // delete all objects
                 objmap.clear();
-                io.write("R 0");
-                io << endl;
+                prepareToSendResults(io,0);
                 break;
 
               case 'Q': // quit
               case EOF:
-                cerr << "Quitting" << endl;
+                // cerr << "Quitting" << endl;
                 return;
 
               default:
@@ -200,12 +208,12 @@ using namespace std;
           }
         catch(const PLearnError& e)
           {
-            io.write("E ");
+            io.write("!E ");
             io << e.message() << endl;
           }
         catch (...) 
           {
-            io.write("E ");
+            io.write("!E ");
             io << "Unknown exception" << endl;
           }
       }

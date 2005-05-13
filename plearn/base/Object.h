@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.40 2005/03/09 20:01:26 tihocan Exp $
+   * $Id: Object.h,v 1.41 2005/05/13 16:12:33 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -366,7 +366,7 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
     
     // Must be called by the call method prior to dending results. 
     inline void prepareToSendResults(PStream& out, int nres)
-    { out.write("R "); out << nres; }
+    { out.write("!R "); out << nres; }
 
   public:
 

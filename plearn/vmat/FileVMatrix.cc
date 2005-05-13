@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.32 2005/03/21 15:02:19 tihocan Exp $
+   * $Id: FileVMatrix.cc,v 1.33 2005/05/13 16:12:34 plearner Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -258,6 +258,9 @@ void FileVMatrix::build_()
   } else {
     old_filename = "";
   }
+
+  loadFieldInfos();
+
 }
 
 ////////////////

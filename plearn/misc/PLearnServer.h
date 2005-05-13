@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnServer.h,v 1.3 2005/01/07 18:18:14 plearner Exp $ 
+   * $Id: PLearnServer.h,v 1.4 2005/05/13 16:12:34 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -57,7 +57,7 @@ class PLearnServer
 {
 private:
   static inline void prepareToSendResults(PStream& out, int nres)
-  { out.write("R "); out << nres; }
+  { out.write("!R "); out << nres; }
 
   void callFunction(const string& name, int nargs);
   void printHelp();
@@ -67,6 +67,7 @@ protected:
   typedef map<int, PP<Object> > ObjMap;
 
   PStream io;
+  bool clear_maps;
   ObjMap objmap;
 
 public:

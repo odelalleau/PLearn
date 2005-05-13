@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.33 2005/05/09 15:01:08 tihocan Exp $
+   * $Id: VMatLanguage.cc,v 1.34 2005/05/13 16:12:34 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -97,9 +97,33 @@ using namespace std;
   void
   VMatLanguage::declareOptions(OptionList &ol)
   {
-      declareOption(ol, "vmsource", &VMatLanguage::vmsource, OptionBase::buildoption, "");
+      declareOption(ol, "sourcecode", &VMatLanguage::sourcecode, OptionBase::buildoption,
+                    "The VPL sourcecode of the program.");
+      declareOption(ol, "srcfieldnames", &VMatLanguage::srcfieldnames, OptionBase::buildoption, 
+                    "The fieldnames that were set by setSourceFieldNames");
+      declareOption(ol, "outputfieldnames", &VMatLanguage::outputfieldnames, OptionBase::learntoption, 
+                    "The output fieldnames produced by the program");
+      declareOption(ol, "vmsource", &VMatLanguage::vmsource, OptionBase::learntoption, 
+                    "The VMat that was set by setSource");
+      declareOption(ol, "srcfieldnames", &VMatLanguage::srcfieldnames, OptionBase::learntoption, 
+                    "The fieldnames that were set by setSourceFieldNames");
+      declareOption(ol, "program", &VMatLanguage::program, OptionBase::learntoption,
+                    "The opcodes of the compiled program");
+      declareOption(ol, "mappings", &VMatLanguage::mappings, OptionBase::learntoption,
+                    "The mappings of the compiled program");
+
       inherited::declareOptions(ol);
   }
+
+  void VMatLanguage::setSource(VMat the_source) 
+  { 
+    vmsource = the_source;
+    setSourceFieldNames(vmsource->fieldNames());
+    program.resize(0);
+  }
+  
+  void VMatLanguage::setSourceFieldNames(TVec<string> the_srcfieldnames)
+  { srcfieldnames = the_srcfieldnames; }
 
   // this function (that really should be sliced to to smaller pieces someday) takes raw VPL code and 
   // returns the preprocessed sourcecode along with the defines and the fieldnames it generated
@@ -187,26 +211,26 @@ using namespace std;
                 
                 if(parts[0][0]=='@')
                   {
-                    for(int i=0;i<vmsource.width();i++)
-                      if(vmsource->fieldName(i)==astr){a=i;break;}
+                    for(int i=0;i<srcfieldnames.length();i++)
+                      if(srcfieldnames[i]==astr){a=i;break;}
                   }
                 else if(parts[0][0]=='%')
                   a=toint(parts[0].substr(1));
                 else if (parts[0] == "END")
                   // Keyword indicating we go till the end.
-                  a = vmsource->width() - 1;
+                  a = srcfieldnames.length() - 1;
                 else PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
                 
                 if(parts[1][0]=='@')
                   {
-                    for(int i=0;i<vmsource.width();i++)
-                      if(vmsource->fieldName(i)==bstr){b=i;break;}
+                    for(int i=0;i<srcfieldnames.length();i++)
+                      if(srcfieldnames[i]==bstr){b=i;break;}
                   }
                 else if(parts[1][0]=='%')
                   b=toint(parts[1].substr(1));
                 else if (parts[1] == "END")
                   // Keyword indicating we go till the end.
-                  b = vmsource->width() - 1;
+                  b = srcfieldnames.length() - 1;
                 else PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
                 
                 if(a>b)
@@ -221,7 +245,7 @@ using namespace std;
                     processed_sourcecode+=string("%")+tostring(i)+ " ";
                     if (code_to_perform)
                       processed_sourcecode += performed_code + " ";
-                    fieldnames.push_back(vmsource->fieldName(i));
+                    fieldnames.push_back(srcfieldnames[i]);
                   }
               }
             else if(parts.size()==1)
@@ -231,8 +255,8 @@ using namespace std;
               int a=-1;
               if(parts[0][0]=='@')
               {
-                for(int i=0;i<vmsource.width();i++)
-                  if(vmsource->fieldName(i)==astr){a=i;break;}
+                for(int i=0;i<srcfieldnames.length();i++)
+                  if(srcfieldnames[i]==astr){a=i;break;}
               }
               else if(parts[0][0]=='%')
                 a=toint(parts[0].substr(1));
@@ -240,7 +264,7 @@ using namespace std;
               if(a==-1)
                 PLERROR("In copyfield macro, unknown field :%s",astr.c_str());
               processed_sourcecode+=string("%")+tostring(a)+ " ";
-              fieldnames.push_back(vmsource->fieldName(a));
+              fieldnames.push_back(srcfieldnames[a]);
             }
             else PLERROR("Strange fieldcopy format. e.g : [%0:%5]. Found parts %s",join(parts," ").c_str());
           }
@@ -394,6 +418,15 @@ using namespace std;
     compileStream(in,fieldnames);
   }
 
+  void VMatLanguage::compileString(const string & code, TVec<string>& fieldnames)
+  {
+    vector<string> names;
+    compileString(code, names);
+    fieldnames.resize(names.size());
+    for(int i=0; i<(int)names.size(); i++)
+      fieldnames[i] = names[i];
+  }
+
   void VMatLanguage::compileFile(const PPath& filename, vector<string>& fieldnames)
   {
     PStream in = openFile(filename, PStream::raw_ascii, "r");
@@ -410,27 +443,31 @@ using namespace std;
     
     // first, warn user if a fieldname appears twice or more in the source matrix
     string fname;
-    for(int i=0;i<vmsource.width();i++)
+    for(int i=0;i<srcfieldnames.length();i++)
       {
-        fname = vmsource->fieldName(i);
-        if (!fname.empty()) {
-          fname = string("@") + fname;
-          if(defines.find(fname) != defines.end())
-            PLERROR("fieldname %s is duplicate in processed matrix", fname.c_str());
-          defines[fname]=string("%")+tostring(i);
-        }
+        fname = srcfieldnames[i];
+        if (!fname.empty()) 
+          {
+            fname = string("@") + fname;
+            if(defines.find(fname) != defines.end())
+              PLERROR("fieldname %s is duplicate in processed matrix", fname.c_str());
+            defines[fname]=string("%")+tostring(i);
+          }
       }
 
     // the filednames parameter is an output vector in which we put the fieldnames of the final VMat
     fieldnames.clear();
     preprocess(in, defines, processed_sourcecode, fieldnames);
+    outputfieldnames.resize(fieldnames.size());
+    for(int k=0; k<(int)fieldnames.size(); k++)
+      outputfieldnames[k] = fieldnames[k];
 
     if(output_preproc)
       {
         perr<<"Preprocessed code:"<<endl<<processed_sourcecode<<endl;
         perr<<"FieldNames : "<<endl<<fieldnames<<endl;
       }
-    generateCode(processed_sourcecode);
+    generateCode(processed_sourcecode);    
   }
 
   //! builds the map if it does not already exist
@@ -500,9 +537,14 @@ using namespace std;
 
 void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
   {
+    if(program.length()==0 && sourcecode!="")
+      {
+        TVec<string> outnames;
+        const_cast<VMatLanguage*>(this)->compileString(sourcecode, outnames);
+      }
     real a,b,c;
-    if(srcvec.length()!=vmsource.width())
-      PLERROR("In VMatLanguage::run, srcvec should have length %d, not %d.",vmsource.width(),srcvec.length());
+    if(srcvec.length()!=srcfieldnames.length())
+      PLERROR("In VMatLanguage::run, srcvec should have length %d, not %d.",srcfieldnames.length(),srcvec.length());
     pstack.resize(0);
     TVec<int>::iterator pptr = program.begin();
     TVec<int>::iterator pptrend = program.end();
@@ -839,9 +881,27 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
 
 void VMatLanguage::run(int rowindex, const Vec& result) const
 {
-  myvec.resize(vmsource.width());
+  myvec.resize(srcfieldnames.length());
   vmsource->getRow(rowindex,myvec);
   run(myvec, result, rowindex);
+}
+
+void VMatLanguage::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+
+  // ### Call deepCopyField on all "pointer-like" fields 
+  // ### that you wish to be deepCopied rather than 
+  // ### shallow-copied.
+
+  deepCopyField(vmsource, copies);
+  deepCopyField(srcfieldnames, copies);
+  deepCopyField(outputfieldnames, copies);
+  deepCopyField(program, copies); 
+  deepCopyField(mappings, copies);
+  deepCopyField(pstack, copies);
+  deepCopyField(myvec, copies);
+  deepCopyField(mem, copies);
 }
   
 void  PreprocessingVMatrix::getNewRow(int i, const Vec& v) const
@@ -849,7 +909,114 @@ void  PreprocessingVMatrix::getNewRow(int i, const Vec& v) const
   program.run(i,v);
 }
 
-PLEARN_IMPLEMENT_OBJECT(PreprocessingVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(PreprocessingVMatrix, 
+  "This class implements the VPL mini-language.", 
+  "VPL (VMat Processing Language) is a home brewed mini-language in postfix\n"
+  "notation. As of today, it is used is the {PRE,POST}FILTERING and\n"
+  "PROCESSING sections of a .vmat file. It supports INCLUDEs instructions\n"
+  "and DEFINEs (dumb named string constants). It can handle reals as well\n"
+  "as dates (format is: CYYMMDD, where C is 0 (1900-1999) or 1\n"
+  "(2000-2099). For more info, you can look at PLearnCore/VMatLanguage.*.\n"
+  "\n"
+  "A VPL code snippet is always applied to the row of a VMatrix, and can\n"
+  "only refer to data of that row (in the state it was before any\n"
+  "processing.) The result of the execution will be a vector which is the\n"
+  "execution stack at code termination, defining the row of same index in\n"
+  "the resulting matrix.\n"
+  "\n"
+  "When you use VPL in a PROCESSING section, each field you declare must\n"
+  "have its associated fieldname declaration. The compiler will ensure that\n"
+  "the size of the result vector and the number of declared fieldnames\n"
+  "match. This doesn't apply in the filtering sections, where you don't\n"
+  "declare fieldnames, since the result is always a single value.\n"
+  "\n"
+  "To declare a fieldname, use a colon with the name immediately after. To\n"
+  "batch-declare fieldnames, use eg. :myfield:1:10. This will declare\n"
+  "fields myfield1 up to myfield10.\n"
+  "\n"
+  "There are two notations to refer to a field value: the @ symbol followed\n"
+  "by the fieldname, or % followed by the field number.\n"
+  "\n"
+  "To batch-copy fields, use the following syntax : [field1:fieldn] (fields\n"
+  "can be in @ or % notation). The fields can also be transformed with a VPL\n"
+  "program using the syntax: [field1:fieldn:vpl_code], where vpl_code can be\n"
+  "any VPL code, for example for a 0.5 thresholding: 0.5 < 0 1 ifelse.\n"
+  "\n"
+  "Here's a real-life example of a VPL program:\n"
+  "\n"
+  "    @lease_indicator 88 == 1 0 ifelse :lease_indicator\n"
+  "    @rate_class 1 - 7 onehot :rate_class:0:6\n"
+  "    @collision_deductible { 2->1; 4->2; 5->3; 6->4; 7->5;\n"
+  "       [8 8]->6; MISSING->0; OTHER->0 }\n"
+  "      7 onehot :collision_deductible:0:6\n"
+  "    @roadstar_indicator 89 == 1 0 ifelse :roadstar_indicator\n"
+  "\n"
+  "In the following, the syntax\n"
+  "\n"
+  "    a b c -> f(a,b,c)\n"
+  "\n"
+  "means that (a,b,c) in that order (i.e. 'a' bottommost and 'c' top-of-stack)\n"
+  "are taken from the stack, and the result f(a,b,c) is pushed on the stack\n"
+  "\n"
+  "List of valid VPL operators:\n"
+  "\n"
+  " _ pop            : pop last element from stack\n"
+  " _ dup            : duplicates last element on the stack\n"
+  " _ exch           : exchanges the two top-most elements on the stack\n"
+  " _ onehot         : index nclasses --> one-hot representation of index\n"
+  " _ +              : a b   -->  a + b\n"
+  " _ -              : a b   -->  a - b\n"
+  " _ *              : a b   -->  a * b\n"
+  " _ /              : a b   -->  a / b\n"
+  " _ neg            : a     -->  -a\n"
+  " _ ==             : a b   -->  a == b\n"
+  " _ !=             : a b   -->  a != b\n"
+  " _ >              : a b   -->  a >  b\n"
+  " _ >=             : a b   -->  a >= b\n"
+  " _ <              : a b   -->  a <  b\n"
+  " _ <=             : a b   -->  a <= b\n"
+  " _ and            : a b   -->  a && b\n"
+  " _ or             : a b   -->  a || b\n"
+  " _ not            : a     -->  !a\n"
+  " _ ifelse         : a b c -->  (a != 0? b : c)\n"
+  " _ fabs           : a     -->  fabs(a)\n"
+  " _ rint           : a     -->  rint(a)   ; round to closest int\n"
+  " _ floor          : a     -->  floor(a)\n"
+  " _ ceil           : a     -->  ceil(a)\n"
+  " _ log            : a     -->  log(a)    ; natural log\n"
+  " _ exp            : a     -->  exp(a)    ; e^a\n"
+  " _ rowindex       : pushes the row number in the VMat on the stack\n"
+  " _ isnan          : true if missing value\n"
+  " _ missing        : pushes a missing value\n"
+  " _ year           : CYYMMDD --> YYYY\n"
+  " _ month          : CYYMMDD --> MM\n"
+  " _ day            : CYYMMDD --> DD\n"
+  " _ daydiff        : nb. days\n"
+  " _ monthdiff      : continuous: nb. days / (365.25/12)\n"
+  " _ yeardiff       : continuous: nb. days / 365.25\n"
+  " _ year_month_day : CYYMMDD      --> YYYY MM DD\n"
+  " _ todate         : YYYY MM DD   --> CYYMMDD\n"
+  " _ dayofweek      : from CYYMMDD --> [0..6] (0=monday  6=sunday)\n"
+  " _ today          : todays date CYYMMDD\n"
+  " _ date2julian    : CYYMMDD      --> nb. days\n"
+  " _ julian2date    : nb. days     --> CYYMMDD\n"
+  " _ min            : b a  -->  (a<b? a : b)\n"
+  " _ max            : b a  -->  (a<b? b : a)\n"
+  " _ sqrt           : a    -->  sqrt(a)    ; square root\n"
+  " _ ^              : b a  -->  pow(a,b)   ; a^b\n"
+  " _ modulo         : b a  -->  int(b) % int(a)\n"
+  " _ vecscalmul     : x1 ... xn n alpha  -->  (x1*alpha) ... (xn*alpha)\n"
+  " _ select         : v0 v1 v2 v3 ... vn-1 n i  -->  vi  \n"
+  " _ length         : the length of the currently processed column.\n"
+  " _ sign           : a  -->  sign(a)  (0 -1 or +1)\n"
+  " _ get            : pos  -->  value_of_stack_at_pos\n"
+  "                    (if pos is negative then it's relative to stacke end\n"
+  "                    ex: -1 get will get the previous element of stack)\n"
+  " _ memput         : a mempos  -->    (a is saved in memory position mempos)\n"
+  " _ memget         : mempos    --> a  (gets 'a' from memory in position mempos)\n"
+  " _ sumabs         : v0 v1 v2 ... vn  -->  sum_i |vi|\n"
+  "                    (no pop, and starts from the beginning of the stack)\n"
+);
 
 PreprocessingVMatrix::PreprocessingVMatrix(VMat the_source, const string& program_string)
   : source(the_source), program(the_source)

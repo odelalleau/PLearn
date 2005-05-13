@@ -46,7 +46,7 @@ def print_usage_and_exit():
     print """
     Usage: pyplot <task> <dataspec> [<learner>]
       dataspec can be a .amat .pmat .vmat .pymat, actually anything understood by plearn vmat convert
-      task can be plot_2d 2d_density
+      task can be plot_2d 2d_density 2d_classif 1d_regression
       """
     sys.exit()
 
@@ -73,6 +73,10 @@ def learner_compute_outputs_on_2d_grid(learner, trainset, nx=50, ny=50):
     outputs = load_pmat_as_array('gridoutputs.pmat')
     return outputs
 
+def learner_compute_outputs_on_1d_grid(learner, trainset, nx=1000):
+    run_plearn('learner cg '+learner+' gridoutputs.pmat '+trainset+' '+str(nx))
+    outputs = load_pmat_as_array('gridoutputs.pmat')
+    return outputs
 
 task = sys.argv[1]
 dataspec = sys.argv[2]
@@ -116,6 +120,18 @@ elif task == '2d_classif':
     # print array(xyrgb)
     imshow_xyrgb(xyrgb)
     plot_2d_class_points(data,['bo','ro'])
+    show()
+
+elif task == '1d_regression':
+    nx = 100
+    data = load_data(dataspec)
+    train_learner(learnerspec,dataspec,'trained_learner.psave')
+    print 'computing outputs...'
+    scores = learner_compute_outputs_on_1d_grid('trained_learner.psave', dataspec, nx)
+    print scores.shape
+    # print scores
+    plot_2d_points(scores,'b-')
+    plot_2d_points(data,'ro')
     show()
     
 else:

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.18 2005/02/08 21:55:42 tihocan Exp $
+   * $Id: VMatLanguage.h,v 1.19 2005/05/13 16:12:34 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,6 +64,8 @@ using namespace std;
     typedef Object inherited;
 
     VMat vmsource;
+    TVec<string> srcfieldnames;
+    TVec<string> outputfieldnames;
     TVec<int> program; 
     TVec<RealMapping> mappings;
     mutable Vec pstack;
@@ -86,6 +88,8 @@ using namespace std;
                     vector<string>& fieldnames);
     
 public:
+    string sourcecode;
+
     VMatLanguage():vmsource(Mat()) { build_(); }
     VMatLanguage(VMat vmsrc):vmsource(vmsrc) { build_(); }
 
@@ -102,24 +106,31 @@ public:
     //! and applies program to it.
     void run(int rowindex, const Vec& result) const;
 
-    inline void setSource(VMat the_source) 
-    { 
-      vmsource = the_source;
-      // program must be compiled with the right source in place...
-      program.resize(0);
-    }
+    void setSource(VMat the_source);
+    void setSourceFieldNames(TVec<string> the_srcfieldnames);
+
+    inline TVec<string> getOutputFieldNames() const 
+    { return outputfieldnames; }
 
     // from the outside, use the next 3 high-level functions
     /////////////////////////////////////////////////////////
 
     //! takes a string, filename, or PStream and generate the bytecode from it
-    //! On exit, fieldnames will contain fieldnames of the resulting matrix
-    //! The source vmat must be set before compiling a VPL program. 
+    //! On exit, fieldnames will contain all the fieldnames of the resulting matrix  
+    //! If the program accesses fields by name, you must either have called 
+    //! setSource OR setSourceFieldNames prior to calling one of the compile... methods.
     void compileStream(PStream &in, vector<string>& fieldnames);
     void compileString(const string & code, vector<string>& fieldnames);
     void compileFile(const PPath& filename, vector<string>& fieldnames);
+    void compileString(const string & code, TVec<string>& fieldnames);
+
+    inline operator bool() const
+    { return program.length()>0; }
     
     int pstackSize() const {return pstack.size();}
+
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
 
     // set this to true when debugging. Will dump the preprocessed code when you call compilexxxx
     static bool output_preproc;

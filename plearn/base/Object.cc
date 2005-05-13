@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.43 2005/05/10 20:21:43 tihocan Exp $
+   * $Id: Object.cc,v 1.44 2005/05/13 16:12:30 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -395,6 +395,20 @@ void Object::call(const string& methodname, int nargs, PStream& io)
       prepareToSendResults(io, 1);
       io << *this;
       io.flush();      
+    }
+  else if(methodname=="save")
+    {
+      if(nargs!=2) PLERROR("Object remote method save takes 2 arguments: filepath, io_formatting");
+      string filepath, io_formatting;
+      io >> filepath >> io_formatting;
+      if(io_formatting=="plearn_ascii")
+        PLearn::save(filepath, *this, PStream::plearn_ascii);
+      else if(io_formatting=="plearn_binary")
+        PLearn::save(filepath, *this, PStream::plearn_binary);
+      else
+        PLERROR("In Object remote method save: invalid io_formatting %s",io_formatting.c_str());
+      prepareToSendResults(io, 0);
+      io.flush();
     }
   else if(methodname=="run")
     {

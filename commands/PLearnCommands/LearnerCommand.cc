@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerCommand.cc,v 1.15 2005/04/23 13:18:56 plearner Exp $ 
+   * $Id: LearnerCommand.cc,v 1.16 2005/05/13 16:11:55 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -200,7 +200,7 @@ void LearnerCommand::compute_outputs_on_1D_grid(const string& trained_learner_fi
   if(learner->inputsize()!=1)
     PLERROR("In LearnerCommand::compute_outputs_on_1D_grid learner must have inputsize==1 (it's %d)",learner->inputsize());
   int outputsize = learner->outputsize();
-  VMat gridoutputs = new FileVMatrix(grid_outputs_file,nx,1+outputsize);
+  VMat gridoutputs = new FileVMatrix(grid_outputs_file,0,1+outputsize);
   real deltax = (xmax-xmin)/(nx-1);
 
   Vec v(1+outputsize);
