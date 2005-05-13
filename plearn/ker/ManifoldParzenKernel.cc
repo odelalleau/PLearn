@@ -36,20 +36,19 @@
 
 
 /* *******************************************************      
-   * $Id: ManifoldParzenKernel.cc,v 1.2 2005/05/13 17:59:27 larocheh Exp $
+   * $Id: ManifoldParzenKernel.cc,v 1.3 2005/05/13 20:47:00 larocheh Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ManifoldParzenKernel.h"
-#include <plearn/vmat/VMat_computeNearestNeighbors.h>
 
 namespace PLearn {
 using namespace std;
 
 
   PLEARN_IMPLEMENT_OBJECT(ManifoldParzenKernel, 
-                          "Kernel that uses the diagonal gaussians learned by Manifold Parzen.", 
-                          "It uses the evaluate method from the ManifoldParzen2 class.");
+                          "Kernel that uses the evaluate method of Manifold Parzen.", 
+                          "");
 
 real ManifoldParzenKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 

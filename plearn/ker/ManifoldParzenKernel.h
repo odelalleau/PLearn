@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ManifoldParzenKernel.h,v 1.2 2005/05/13 17:59:31 larocheh Exp $
+   * $Id: ManifoldParzenKernel.h,v 1.3 2005/05/13 20:47:00 larocheh Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,8 +51,7 @@ using namespace std;
 
 
 
-/*!   Kernel that uses the diagonal gaussians learned
-  by Manifold Parzen.
+/*!   Kernel that uses the evaluate method of Manifold Parzen.
 */
 class ManifoldParzenKernel: public Kernel
 {

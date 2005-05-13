@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzenKernel.h,v 1.1 2005/05/13 20:41:36 larocheh Exp $
+   * $Id: NonLocalManifoldParzenKernel.h,v 1.2 2005/05/13 20:47:00 larocheh Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,8 +51,7 @@ using namespace std;
 
 
 
-/*!   Kernel that uses the diagonal gaussians learned
-  by Non-Local Manifold Parzen.
+/*!   Kernel that uses the evaluate method of Non-Local Manifold Parzen
 */
 class NonLocalManifoldParzenKernel: public Kernel
 {

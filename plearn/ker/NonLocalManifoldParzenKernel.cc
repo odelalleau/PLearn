@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzenKernel.cc,v 1.1 2005/05/13 20:41:36 larocheh Exp $
+   * $Id: NonLocalManifoldParzenKernel.cc,v 1.2 2005/05/13 20:47:00 larocheh Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,8 +47,8 @@ using namespace std;
 
 
   PLEARN_IMPLEMENT_OBJECT(NonLocalManifoldParzenKernel, 
-                          "Kernel that uses the diagonal gaussians learned by Manifold Parzen.", 
-                          "It uses the evaluate method from the NonLocalManifoldParzen2 class.");
+                          "Kernel that uses the evaluate method of Non-Local Manifold Parzen.", 
+                          "");
 
 real NonLocalManifoldParzenKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
