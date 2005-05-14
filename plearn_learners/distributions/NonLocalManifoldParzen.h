@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzen.h,v 1.2 2005/05/12 19:21:39 larocheh Exp $
+   * $Id: NonLocalManifoldParzen.h,v 1.3 2005/05/14 17:09:47 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Hugo Larochelle
@@ -79,6 +79,8 @@ protected:
   TVec< Mat > Us;
   Mat mus,sms;
   Vec sns;
+
+  Vec mu_temp,sm_temp,sn_temp,diff;
 
   Mat Ut_svd, V_svd;  // for SVD computation
   Vec S_svd;      // idem
@@ -236,7 +238,7 @@ public:
 
   Mat getEigenvectors(int j) const;
   Vec getTrainPoint(int j) const;
-
+  real evaluate(const Vec x1,const Vec x2,real scale=1);
 };
 
 // Declares a few other classes and functions related to this class.
