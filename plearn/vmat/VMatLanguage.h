@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.20 2005/05/13 22:00:41 plearner Exp $
+   * $Id: VMatLanguage.h,v 1.21 2005/05/16 18:26:04 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -91,7 +91,7 @@ public:
     string sourcecode;
 
     VMatLanguage():vmsource(Mat()) { build_(); }
-    VMatLanguage(VMat vmsrc):vmsource(vmsrc) { build_(); }
+    VMatLanguage(VMat vmsrc);
 
     PLEARN_DECLARE_OBJECT(VMatLanguage);
     static void declareOptions(OptionList &ol);

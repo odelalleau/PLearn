@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.35 2005/05/13 22:00:41 plearner Exp $
+   * $Id: VMatLanguage.cc,v 1.36 2005/05/16 18:26:04 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -165,6 +165,14 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
   "                    (no pop, and starts from the beginning of the stack)\n"
 );
 
+//////////////////
+// VMatLanguage //
+//////////////////
+VMatLanguage::VMatLanguage(VMat vmsrc)
+{
+  setSource(vmsrc);
+  build_();
+}
 
   // returns oldest modification date of a file containing VPL code, searching recursively every
   // file placed after a INCLUDE token
@@ -230,7 +238,12 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
   void VMatLanguage::setSource(VMat the_source) 
   { 
     vmsource = the_source;
-    setSourceFieldNames(vmsource->fieldNames());
+    // Set field names from the source VMat if it has field names, otherwise
+    // set each field name to "".
+    TVec<string> fnames = vmsource->fieldNames();
+    if (fnames.isEmpty())
+      fnames = TVec<string>(vmsource->width());
+    setSourceFieldNames(fnames);
     program.resize(0);
   }
   
