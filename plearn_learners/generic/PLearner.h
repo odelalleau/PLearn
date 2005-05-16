@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.35 2005/05/12 22:02:56 plearner Exp $
+   * $Id: PLearner.h,v 1.36 2005/05/16 22:19:46 yoshua Exp $
    ******************************************************* */
 
 
@@ -124,6 +124,9 @@ protected:
   //! The stats_collector responsible for collecting train cost statistics during training.
   //! This is typically set by some external training harness that wants to collect some stats.
   PP<VecStatsCollector> train_stats;
+
+  //! whether or not to call 'forget' when the training set changes, in setTrainingSet:
+  bool forget_when_training_set_changes;
 
 public:
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.26 2005/01/11 20:06:00 tihocan Exp $
+   * $Id: NNet.h,v 1.27 2005/05/16 22:19:45 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -122,6 +122,8 @@ public:
   real interval_minval, interval_maxval; // if output_transfer_func = interval(minval,maxval), these are the interval bounds
 
   bool do_not_change_params;
+
+  Var fnet_hidden_layer;
 
   //! a list of cost functions to use in the form "[ cf1; cf2; cf3; ... ]"
   // where the cost functions can be one of mse, mse_onehot, NLL,

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.48 2005/05/16 14:24:22 tihocan Exp $
+   * $Id: PLearner.cc,v 1.49 2005/05/16 22:19:45 yoshua Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -60,6 +60,7 @@ PLearner::PLearner()
   inputsize_(-1),
   targetsize_(-1),
   weightsize_(-1),
+  forget_when_training_set_changes(false),
   n_examples(-1)
 {}
 
@@ -120,6 +121,10 @@ void PLearner::declareOptions(OptionList& ol)
                 "The number of cost weight columns in the data sets."
                 "Obtained from training set with setTrainingSet.");
 
+  declareOption(ol, "forget_when_training_set_changes", &PLearner::forget_when_training_set_changes, OptionBase::buildoption, 
+                "Whether or not to call the forget() method (re-initialize model as before training) in setTrainingSet when the\n"
+                "training set changes (e.g. of dimension).");
+
   declareOption(ol, "nstages", &PLearner::nstages, OptionBase::buildoption, 
                 "The stage until which train() should train this learner and return.\n"
                 "The meaning of 'stage' is learner-dependent, but for learners whose \n"
@@ -166,6 +171,8 @@ void PLearner::setTrainingSet(VMat training_set, bool call_forget)
     inputsize_ = train_set->inputsize();
     targetsize_ = train_set->targetsize();
     weightsize_ = train_set->weightsize();
+    if (forget_when_training_set_changes)
+      call_forget=true;
   }
   n_examples = train_set->length();
   if (training_set_has_changed || call_forget)
