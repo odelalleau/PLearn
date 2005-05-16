@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.h,v 1.2 2005/05/16 19:36:56 tihocan Exp $
+   * $Id: FNetLayerVariable.h,v 1.3 2005/05/16 19:50:27 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,7 +65,7 @@ class FNetLayerVariable: public NaryVariable
   real avg_act_gradient; // mov. avg of |dC/da[i,k]|
   bool no_bprop_has_been_done; // have we ever done a bprop before?
   TVec<Mat> u; // normalized input [example index in minibatch](hidden unit, input index)
-  Mat inh; // inhibitory signal on each hidden uniti (minibatch_size x n_hidden)
+  Mat inh; // inhibitory signal on each hidden unit (minibatch_size x n_hidden)
   Mat cum_inh; 
 
   // syntactic sugar
