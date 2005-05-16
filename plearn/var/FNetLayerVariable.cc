@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.cc,v 1.5 2005/05/16 19:50:41 tihocan Exp $
+   * $Id: FNetLayerVariable.cc,v 1.6 2005/05/16 20:45:26 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -96,7 +96,9 @@ FNetLayerVariable::FNetLayerVariable()
   backprop_to_inputs(false),
   exp_moving_average_coefficient(0.001),
   average_error_fraction_to_threshold(0.5)
-{}
+{
+  avg_act_gradient = 0.0;
+}
 
 FNetLayerVariable::FNetLayerVariable(Var inputs,  // x
                                      Var weights,  // W
@@ -150,6 +152,7 @@ FNetLayerVariable::build_()
         u[i].resize(n_hidden,n_inputs);
     no_bprop_has_been_done = true;
     gradient_threshold = 0;
+    avg_act_gradient = 0.0;
   }
 }
 
@@ -189,8 +192,8 @@ void FNetLayerVariable::declareOptions(OptionList& ol)
 void FNetLayerVariable::recomputeSize(int& l, int& w) const
 {
   if (varray[0] && varray[1]) {
-    l = varray[1]->length();
-    w = varray[0]->length();
+    l = varray[0]->length();
+    w = varray[1]->length();
   } else
     l = w = 0;
 }
@@ -207,7 +210,7 @@ void FNetLayerVariable::fprop()
   for (int k=0;k<minibatch_size;k++, x+=mx, y+=my)
   {
     real cum_s = 0;
-    Mat uk = u[k];
+    Mat u_k = u[k];
     real* inh_k = inh[k];
     real* cum_inh_k = cum_inh[k];
     for (int i=0;i<n_hidden;i++)
@@ -216,7 +219,7 @@ void FNetLayerVariable::fprop()
       real bi = b[i];
       if (inhibit_next_units && i>0)
       {
-        cum_inh_k[i] = cum_s / i;
+        cum_inh_k[i] = cum_s / real(i);
         inh_k[i] = sigmoid(c2 * cum_inh_k[i]);
         bi -= c1*inh_k[i];
       }
@@ -224,10 +227,10 @@ void FNetLayerVariable::fprop()
       {
         real* mu_i = mu[i];
         real* invs_i = invs[i];
-        real* uki = uk[i];
+        real* u_ki = u_k[i];
         for (int j=0;j<n_inputs;j++)
-          uki[j] = (x[j] - mu_i[j])*invs_i[j];
-        y[i] = sigmoid(dot_product(bi,uki,Wi,n_inputs));
+          u_ki[j] = (x[j] - mu_i[j])*invs_i[j];
+        y[i] = sigmoid(dot_product(bi,u_ki,Wi,n_inputs));
       }
       else
         y[i] = sigmoid(dot_product(bi,x,Wi,n_inputs));
@@ -249,10 +252,12 @@ void FNetLayerVariable::bprop()
   real& dc1 = varray[3]->gradientdata[0];
   real& dc2 = varray[3]->gradientdata[1];
   int mx=varray[0]->matValue.mod();
+  int mdx = varray[0]->matGradient.mod();
   int my=matValue.mod();
-  for (int k=0;k<minibatch_size;k++, x+=mx, y+=my, dx+=mx, dy+=my)
+  int mdy = matGradient.mod();
+  for (int k=0;k<minibatch_size;k++, x+=mx, y+=my, dx+=mdx, dy+=mdy)
   {
-    Mat uk = u[k];
+    Mat u_k = u[k];
     real* inh_k = inh[k];
     real* cum_inh_k = cum_inh[k];
     real dcum_s = 0;
@@ -269,9 +274,9 @@ void FNetLayerVariable::bprop()
         real* dWi = varray[1]->matGradient[i];
         if (normalize_inputs)
         {
-          real* uki = uk[i];
+          real* u_ki = u_k[i];
           for (int j=0;j<n_inputs;j++)
-            dWi[j] += dai * uki[j];
+            dWi[j] += dai * u_ki[j];
           Vec mu_i = mu(i);
           Vec mu2_i = mu2(i);
           exponentialMovingAverageUpdate(mu_i, xk, exp_moving_average_coefficient);
@@ -283,8 +288,8 @@ void FNetLayerVariable::bprop()
         if (inhibit_next_units && i>0)
         {
           real inh_ki = inh_k[i]; 
-          dc1 += dai * inh_ki;
-          real dinh_ki = dai * c1 * inh_ki * (1 - inh_ki);
+          dc1 -= dai * inh_ki;
+          real dinh_ki = - dai * c1 * inh_ki * (1 - inh_ki);
           dc2 += dinh_ki * cum_inh_k[i];
           dcum_s += dinh_ki * c2 / i;
         }
