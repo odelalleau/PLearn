@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.h,v 1.1 2005/05/16 16:05:16 yoshua Exp $
+   * $Id: FNetLayerVariable.h,v 1.2 2005/05/16 19:36:56 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -95,16 +95,25 @@ public:
 
   PLEARN_DECLARE_OBJECT(FNetLayerVariable);
 
-  static void declareOptions(OptionList &ol);
   virtual void build();
+
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
 
 protected:
+
+  static void declareOptions(OptionList &ol);
+
+private:
+
   void build_();
+
 };
+
+DECLARE_OBJECT_PTR(FNetLayerVariable);
 
 } // end of namespace PLearn
 

@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.cc,v 1.3 2005/05/16 19:23:05 tihocan Exp $
+   * $Id: FNetLayerVariable.cc,v 1.4 2005/05/16 19:36:56 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -91,10 +91,11 @@ PLEARN_IMPLEMENT_OBJECT(FNetLayerVariable,
                         );
 
 FNetLayerVariable::FNetLayerVariable()
-  :inhibit_next_units(true),
-   normalize_inputs(true),
-   exp_moving_average_coefficient(0.001),
-   average_error_fraction_to_threshold(0.5)
+: inhibit_next_units(true),
+  normalize_inputs(true),
+  backprop_to_inputs(false),
+  exp_moving_average_coefficient(0.001),
+  average_error_fraction_to_threshold(0.5)
 {}
 
 FNetLayerVariable::FNetLayerVariable(Var inputs,  // x
@@ -107,7 +108,7 @@ FNetLayerVariable::FNetLayerVariable(Var inputs,  // x
                                      real _exp_moving_average_coefficient,
                                      real _average_error_fraction_to_threshold)
                                      : inherited(inputs & weights &
-                                                 biases & (VarArray)inhibition_weights,
+                                                 biases & inhibition_weights,
                                                  inputs->length(), weights->length()),
                                        inhibit_next_units(_inhibit_next_units),
                                        normalize_inputs(_normalize_inputs),
@@ -298,6 +299,14 @@ void FNetLayerVariable::bprop()
   // invs = 1/ sqrt(mu2 - mu*mu)
   computeInverseStandardDeviationFromMeanAndSquareMean(invs,mu,mu2);
   gradient_threshold = average_error_fraction_to_threshold * avg_act_gradient;
+}
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void FNetLayerVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
+  // TODO Implement.
+  PLERROR("In FNetLayerVariable::makeDeepCopyFromShallowCopy - Not implemented yet");
 }
 
 } // end of namespace PLearn
