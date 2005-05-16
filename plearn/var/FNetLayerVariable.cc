@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.cc,v 1.4 2005/05/16 19:36:56 tihocan Exp $
+   * $Id: FNetLayerVariable.cc,v 1.5 2005/05/16 19:50:41 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -129,28 +129,28 @@ FNetLayerVariable::build()
 void
 FNetLayerVariable::build_()
 {
-    if (varray[0] && varray[1] && varray[2] && varray[3]) {
-      n_inputs = varray[0]->width();
-      n_hidden = varray[1]->length();
-      minibatch_size = varray[0]->length();
-      if (n_inputs+1 != varray[1]->width())
-        PLERROR("In FNetLayerVariable: the size of inputs and weights are not compatible for an affine application of weights on inputs");
-      if (varray[2]->size()!=n_hidden)
-        PLERROR("In FNetLayerVariable: the biases vector should have the same length as the weights matrix number of rows.");
-      mu.resize(n_hidden, n_inputs);
-      mu.clear();
-      invs.fill(1.0);
-      invs.resize(n_hidden, n_inputs);
-      mu2.resize(n_hidden, n_inputs);
-      inh.resize(minibatch_size, n_hidden);
-      cum_inh.resize(minibatch_size, n_hidden);
-      u.resize(minibatch_size);
-      if (normalize_inputs)
-        for (int i=0;i<minibatch_size;i++)
-          u[i].resize(n_hidden,n_inputs);
-      no_bprop_has_been_done = true;
-      gradient_threshold = 0;
-    }
+  if (varray[0] && varray[1] && varray[2] && varray[3]) {
+    n_inputs = varray[0]->width();
+    n_hidden = varray[1]->length();
+    minibatch_size = varray[0]->length();
+    if (n_inputs != varray[1]->width());
+    PLERROR("In FNetLayerVariable: the size of inputs and weights are not compatible for an affine application of weights on inputs");
+    if (varray[2]->size() != n_hidden)
+      PLERROR("In FNetLayerVariable: the biases vector should have the same length as the weights matrix number of rows.");
+    mu.resize(n_hidden, n_inputs);
+    mu.clear();
+    invs.fill(1.0);
+    invs.resize(n_hidden, n_inputs);
+    mu2.resize(n_hidden, n_inputs);
+    inh.resize(minibatch_size, n_hidden);
+    cum_inh.resize(minibatch_size, n_hidden);
+    u.resize(minibatch_size);
+    if (normalize_inputs)
+      for (int i=0;i<minibatch_size;i++)
+        u[i].resize(n_hidden,n_inputs);
+    no_bprop_has_been_done = true;
+    gradient_threshold = 0;
+  }
 }
 
 ////////////////////
