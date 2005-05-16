@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.cc,v 1.1 2005/05/16 16:05:16 yoshua Exp $
+   * $Id: FNetLayerVariable.cc,v 1.2 2005/05/16 19:22:37 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,9 +55,11 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(FNetLayerVariable,
                         "Single layer of a neural network, with acceleration tricks",
-                        "This variable takes two inputs:\n"
+                        "This variable takes four inputs:\n"
                         "(1) the input of the layer (minibatch_size x n_inputs) matrix, and\n"
-                        "(2) the weights and biases (n_hidden x (n_inputs + 2)) matrix (W,b,c).\n"
+                        "(2) the weights matrix (n_hidden x n_inputs)\n"
+                        "(3) the bias vector (n_hidden) b\n"
+                        "(4) a 2-element parameter vector c = (c1,c2) which is used when inhibition is active.\n"
                         "For each row vector x[k] of the input matrix, it computes the following\n"
                         "output row vector y[k] in the fprop function:\n"
                         "  y[k,i] = sigmoid(a[k,i])\n"
@@ -295,6 +297,7 @@ void FNetLayerVariable::bprop()
   }
   // invs = 1/ sqrt(mu2 - mu*mu)
   computeInverseStandardDeviationFromMeanAndSquareMean(invs,mu,mu2);
+  gradient_threshold = average_error_fraction_to_threshold * avg_act_gradient;
 }
 
 } // end of namespace PLearn
