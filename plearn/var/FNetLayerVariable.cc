@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.cc,v 1.6 2005/05/16 20:45:26 tihocan Exp $
+   * $Id: FNetLayerVariable.cc,v 1.7 2005/05/16 20:47:27 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -310,8 +310,13 @@ void FNetLayerVariable::bprop()
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
 void FNetLayerVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
-  // TODO Implement.
-  PLERROR("In FNetLayerVariable::makeDeepCopyFromShallowCopy - Not implemented yet");
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(mu, copies);
+  deepCopyField(invs, copies);
+  deepCopyField(mu2, copies);
+  deepCopyField(u, copies);
+  deepCopyField(inh, copies);
+  deepCopyField(cum_inh, copies);
 }
 
 } // end of namespace PLearn
