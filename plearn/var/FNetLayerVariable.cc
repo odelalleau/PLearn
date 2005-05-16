@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.cc,v 1.2 2005/05/16 19:22:37 yoshua Exp $
+   * $Id: FNetLayerVariable.cc,v 1.3 2005/05/16 19:23:05 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -79,7 +79,7 @@ PLEARN_IMPLEMENT_OBJECT(FNetLayerVariable,
                         "during training.\n"
                         "\n"
                         "In the bprop phase, unlike with other Variable classes, this class can\n"
-                        "optionally compute a pseudo-gradient which is not the actual gradient\n"
+                        "optionally compute a pseudo-gradient which is not the actual gradient.\n"
                         "The pseudo-gradient is obtained by zeroing the gradient on some of the\n"
                         "a[k,i] terms before continuing the gradient propagation to the input and\n"
                         "weight matrices. The gradient on a[k,i] is zeroed if its absolute value is\n"
