@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.67 2005/05/16 22:19:45 yoshua Exp $
+   * $Id: NNet.cc,v 1.68 2005/05/16 22:24:02 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -235,7 +235,7 @@ void NNet::declareOptions(OptionList& ol)
   declareOption(ol, "classification_regularizer", &NNet::classification_regularizer, OptionBase::buildoption, 
                 "Used only in the stable_cross_entropy cost function, to fight overfitting (0<=r<1)\n");
 
-  declareOption(ol, "fnet_hidden_layer", &NNet::fnet_hidden_layer, OptionBase::buildoption, 
+  declareOption(ol, "first_hidden_layer", &NNet::fnet_hidden_layer, OptionBase::buildoption, 
                 "A user-specified NAry Var that computes the output if the first hidden layer\n"
                 "from the network input vector and a set of parameters. Its first argument should\n"
                 "be the network input and the remaining arguments the tunable parameters.\n");
@@ -479,11 +479,11 @@ void NNet::buildFuncs(const Var& the_input, const Var& the_output, const Var& th
 void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& before_transfer_func) {
   output = the_input;
   // first hidden layer
-  if (fnet_hidden_layer)
+  if (first_hidden_layer)
   {
-    NaryVariable* layer_var = dynamic_cast<NaryVariable*>((Variable*)fnet_hidden_layer);
+    NaryVariable* layer_var = dynamic_cast<NaryVariable*>((Variable*)first_hidden_layer);
     if (!layer_var || layer_var->varray.size()<2)
-      PLERROR("NNet: fnet_hidden_layer should be from a subclass of NaryVariable, with the first argument the input and the remainders the parameters");
+      PLERROR("NNet: first_hidden_layer should be from a subclass of NaryVariable, with the first argument the input and the remainders the parameters");
     for (int i=1;i<layer_var->varray.size();i++)
       params.append(layer_var->varray[i]);
     layer_var->varray[0] = output; //here output refers to the neural network input...

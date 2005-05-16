@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.h,v 1.3 2005/05/16 19:50:27 tihocan Exp $
+   * $Id: FNetLayerVariable.h,v 1.4 2005/05/16 22:24:06 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,14 +68,12 @@ class FNetLayerVariable: public NaryVariable
   Mat inh; // inhibitory signal on each hidden unit (minibatch_size x n_hidden)
   Mat cum_inh; 
 
-  // syntactic sugar
-  int n_inputs;
-  int n_hidden;
-  int minibatch_size;
-
 public:
 
   //! OPTIONS
+  int n_inputs;
+  int n_hidden;
+  int minibatch_size;
   bool inhibit_next_units; 
   bool normalize_inputs;
   bool backprop_to_inputs;

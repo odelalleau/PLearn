@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.cc,v 1.7 2005/05/16 20:47:27 tihocan Exp $
+   * $Id: FNetLayerVariable.cc,v 1.8 2005/05/16 22:24:06 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -91,11 +91,14 @@ PLEARN_IMPLEMENT_OBJECT(FNetLayerVariable,
                         );
 
 FNetLayerVariable::FNetLayerVariable()
-: inhibit_next_units(true),
+  : n_inputs(-1), // MUST BE SPECIFIED BY THE USER
+    n_hidden(-1), // MUST BE SPECIFIED BY THE USER
+    minibatch_size(1),
+    inhibit_next_units(true),
   normalize_inputs(true),
-  backprop_to_inputs(false),
-  exp_moving_average_coefficient(0.001),
-  average_error_fraction_to_threshold(0.5)
+    backprop_to_inputs(false),
+    exp_moving_average_coefficient(0.001),
+    average_error_fraction_to_threshold(0.5)
 {
   avg_act_gradient = 0.0;
 }
@@ -112,6 +115,9 @@ FNetLayerVariable::FNetLayerVariable(Var inputs,  // x
                                      : inherited(inputs & weights &
                                                  biases & inhibition_weights,
                                                  inputs->length(), weights->length()),
+                                       n_inputs(inputs->matValue->width()),
+                                       n_hidden(weights->matValue->length()),
+                                       minibatch_size(inputs->matValue->length()),
                                        inhibit_next_units(_inhibit_next_units),
                                        normalize_inputs(_normalize_inputs),
                                        backprop_to_inputs(_backprop_to_inputs),
@@ -131,12 +137,22 @@ FNetLayerVariable::build()
 void
 FNetLayerVariable::build_()
 {
-  if (varray[0] && varray[1] && varray[2] && varray[3]) {
-    n_inputs = varray[0]->width();
-    n_hidden = varray[1]->length();
-    minibatch_size = varray[0]->length();
-    if (n_inputs != varray[1]->width());
-    PLERROR("In FNetLayerVariable: the size of inputs and weights are not compatible for an affine application of weights on inputs");
+  if (varray.size()==0)
+  {
+    varray.resize(4);
+    varray[1] = Var(n_hidden,n_inputs);
+    varray[2] = Var(n_hidden);
+    varray[3] = Var(2);
+  }
+  if (varray[0]) {
+    if (n_inputs != varray[0]->width())
+      PLERROR("In FNetLayerVariable: input var 0 should have width = %d = n_inputs, but is %d\n",n_inputs, varray[0]->width());
+    if (n_hidden != varray[1]->length())
+      PLERROR("In FNetLayerVariable: input var 1 should have length = %d = n_hidden, but is %d\n",n_hidden, varray[1]->length());
+    if (minibatch_size != varray[0]->length())
+      PLERROR("In FNetLayerVariable: input var 0 should have length = %d = minibatch_size, but is %d\n",minibatch_size, varray[0]->length());
+    if (n_inputs != varray[1]->width())
+      PLERROR("In FNetLayerVariable: the size of inputs and weights are not compatible for an affine application of weights on inputs");
     if (varray[2]->size() != n_hidden)
       PLERROR("In FNetLayerVariable: the biases vector should have the same length as the weights matrix number of rows.");
     mu.resize(n_hidden, n_inputs);
@@ -161,6 +177,15 @@ FNetLayerVariable::build_()
 ////////////////////
 void FNetLayerVariable::declareOptions(OptionList& ol)
 {
+  declareOption(ol, "n_inputs", &FNetLayerVariable::n_inputs, OptionBase::buildoption, 
+                "    Number of inputs of the layer, for each element of the mini-batch.\n");
+
+  declareOption(ol, "n_hidden", &FNetLayerVariable::n_hidden, OptionBase::buildoption, 
+                "    Number of outputs of the layer (hidden units), for each element of the mini-batch.\n");
+
+  declareOption(ol, "minibatch_size", &FNetLayerVariable::minibatch_size, OptionBase::buildoption, 
+                "    Number of elements of each mini-batch.\n");
+
   declareOption(ol, "inhibit_next_units", &FNetLayerVariable::inhibit_next_units, OptionBase::buildoption, 
                 "    If true then activation of unit i contains minus the sum of the outputs of\n"
                 "    all units j for j<i, i.e. y[k,i] = sigmoid(W (u[k,i] 1) - 1_{inhibit_next_units} sum_{j<i} y[k,j]).\n");
