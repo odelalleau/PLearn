@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.64 2005/03/03 20:24:07 tihocan Exp $
+   * $Id: TMat_maths_impl.h,v 1.65 2005/05/16 16:03:09 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -4352,6 +4352,34 @@ void computeMeanAndVariance(const TMat<T>& m, TVec<T>& meanvec, TVec<T>& varianc
   columnMean(m,meanvec);
   columnVariance(m,variancevec,meanvec);
 }
+
+// inverse_standard_deviation[i,j] = 
+//    1/sqrt(mean_of_squares[i,j] - means[i,j]^2)
+template<class T>
+void computeInverseStandardDeviationFromMeanAndSquareMean(TMat<T> inverse_standard_deviation,
+                                                          TMat<T> means,
+                                                          TMat<T> mean_of_squares)
+{
+  int n=inverse_standard_deviation.length();
+  int m=inverse_standard_deviation.width();
+#ifdef BOUNDCHECK
+  if (means.length()!=n || means.width()!=m || mean_of_squares.length()!=n
+      || mean_of_squares.width()!=m)
+    PLERROR("computeInverseStandardDeviationFromMeanAndSquareMean: arguments have incompatible sizes!");
+#endif
+  T* invs = inverse_standard_deviation.data();
+  T* mu = means.data();
+  T* mu2 = mean_of_squares.data();
+  for (int i=0;i<n;i++)
+    for (int j=0;j<m;j++, invs++, mu++, mu2++)
+    {
+      real diff = *mu2 - *mu * *mu;
+      if (diff>0)
+        *invs = 1.0/sqrt(diff);
+    }
+}
+
+
 
 template<class T>
 void computeCovar(const TMat<T>& m, const TVec<T>& meanvec, TMat<T>& covarmat)
