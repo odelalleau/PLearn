@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.47 2005/05/12 22:02:56 plearner Exp $
+   * $Id: PLearner.cc,v 1.48 2005/05/16 14:24:22 tihocan Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -132,7 +132,7 @@ void PLearner::declareOptions(OptionList& ol)
                 "should progress in learning and testing be reported in a ProgressBar.\n");
 
   declareOption(ol, "verbosity", &PLearner::verbosity, OptionBase::buildoption, 
-                "Level of verbosity. If 0 should not write anything on cerr. \n"
+                "Level of verbosity. If 0 should not write anything on perr. \n"
                 "If >0 may write some info on the steps performed along the way.\n"
                 "The level of details written should depend on this value.");
 
@@ -444,23 +444,23 @@ void PLearner::call(const string& methodname, int nargs, PStream& io)
     }
   else if(methodname=="computeOutputAndCosts")
     {
-      cerr << "ENTERING computeOutputAndCosts" << endl;
+      perr << "ENTERING computeOutputAndCosts" << endl;
       if(nargs!=2) PLERROR("PLearner remote method computeOutputAndCosts takes 2 arguments");
       Vec input, target;
       // io >> input >> target;
       io >> input;
-      cerr << "READ input" << endl;
+      perr << "READ input" << endl;
       io >> target;
-      cerr << "READ target" << endl;
+      perr << "READ target" << endl;
       tmp_output.resize(outputsize());
       Vec costs(nTestCosts());
       computeOutputAndCosts(input,target,tmp_output,costs);
-      cerr << "CALL to method returned. Preparing to send results" << endl;
+      perr << "CALL to method returned. Preparing to send results" << endl;
       prepareToSendResults(io, 2);
-      cerr << "SENDING output and costs" << endl;
+      perr << "SENDING output and costs" << endl;
       io << tmp_output << costs;
       io.flush();
-      cerr << "FLUSHING" << endl;
+      perr << "FLUSHING" << endl;
     }
   else if(methodname=="computeCostsFromOutputs")
     {
