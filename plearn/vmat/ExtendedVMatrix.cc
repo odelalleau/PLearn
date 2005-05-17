@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVMatrix.cc,v 1.6 2004/07/07 17:30:48 tihocan Exp $
+   * $Id: ExtendedVMatrix.cc,v 1.7 2005/05/17 16:11:10 chapados Exp $
    ******************************************************* */
 
 #include "ExtendedVMatrix.h"
@@ -46,7 +46,15 @@ using namespace std;
 
 /** ExtendedVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(ExtendedVMatrix, "ONE_LINE_DESC", "ONE_LINE_HELP");
+PLEARN_IMPLEMENT_OBJECT(
+  ExtendedVMatrix,
+  "Extends a VMatrix by filling it with a constant",
+  "VMatrix that extends the underlying VMat by appending rows at \n"
+  "its top and bottom and columns at its left and right.\n"
+  "The appended rows/columns are filled with the given fill_value\n"
+  "This can be used for instance to easily implement the usual trick \n"
+  "to include the bias in the weights vectors, by appending a 1 to the inputs.\n");
+
 
 ExtendedVMatrix::ExtendedVMatrix()
   : top_extent(0), bottom_extent(0), left_extent(0), right_extent(0), fill_value(0)
@@ -66,12 +74,24 @@ ExtendedVMatrix::ExtendedVMatrix(VMat the_distr, int the_top_extent, int the_bot
 void
 ExtendedVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "distr", &ExtendedVMatrix::distr, OptionBase::buildoption, "");
-    declareOption(ol, "top_extent", &ExtendedVMatrix::top_extent, OptionBase::buildoption, "");
-    declareOption(ol, "bottom_extent", &ExtendedVMatrix::bottom_extent, OptionBase::buildoption, "");
-    declareOption(ol, "left_extent", &ExtendedVMatrix::left_extent, OptionBase::buildoption, "");
-    declareOption(ol, "right_extent", &ExtendedVMatrix::right_extent, OptionBase::buildoption, "");
-    declareOption(ol, "fill_value", &ExtendedVMatrix::fill_value, OptionBase::buildoption, "");
+    declareOption(ol, "distr", &ExtendedVMatrix::distr,
+                  OptionBase::buildoption,
+                  "The underlying VMatrix to extend.");
+    declareOption(ol, "top_extent", &ExtendedVMatrix::top_extent,
+                  OptionBase::buildoption,
+                  "Number of rows to add at the top");
+    declareOption(ol, "bottom_extent", &ExtendedVMatrix::bottom_extent,
+                  OptionBase::buildoption,
+                  "Number of rows to add at the bottom");
+    declareOption(ol, "left_extent", &ExtendedVMatrix::left_extent,
+                  OptionBase::buildoption,
+                  "Number of columns to add at the left");
+    declareOption(ol, "right_extent", &ExtendedVMatrix::right_extent,
+                  OptionBase::buildoption,
+                  "Number of columns to add at the right");
+    declareOption(ol, "fill_value", &ExtendedVMatrix::fill_value,
+                  OptionBase::buildoption,
+                  "Value to use to fill the added columns/rows");
     inherited::declareOptions(ol);
 }
 
