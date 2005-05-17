@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.70 2005/05/17 13:51:18 tihocan Exp $
+   * $Id: NNet.cc,v 1.71 2005/05/17 15:18:40 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -64,6 +64,7 @@
 #include <plearn/var/SumOfVariable.h>
 #include <plearn/var/SumSquareVariable.h>
 #include <plearn/var/TanhVariable.h>
+#include <plearn/var/TransposeVariable.h>
 #include <plearn/var/TransposeProductVariable.h>
 #include <plearn/var/UnaryHardSlopeVariable.h>
 #include <plearn/var/Var_operators.h>
@@ -482,15 +483,18 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
   if (first_hidden_layer)
   {
     NaryVariable* layer_var = dynamic_cast<NaryVariable*>((Variable*)first_hidden_layer);
-    if (!layer_var || layer_var->varray.size()<2)
+    if (!layer_var)
       PLERROR("In NNet::buildOutputFromInput - 'first_hidden_layer' should be "
-              "from a subclass of NaryVariable, with the first argument the "
-              "input and the remainders the parameters");
+              "from a subclass of NaryVariable");
+    if (layer_var->varray.size() < 1)
+      layer_var->varray.resize(1);
+    layer_var->varray[0] = transpose(output); //here output refers to the neural network input...
+    layer_var->build(); // make sure everything is consistent and finish the build
+    if (layer_var->varray.size()<2)
+      PLERROR("In NNet::buildOutputFromInput - 'first_hidden_layer' should have parameters");
     for (int i=1;i<layer_var->varray.size();i++)
       params.append(layer_var->varray[i]);
-    layer_var->varray[0] = output; //here output refers to the neural network input...
-    layer_var->build(); // make sure everything is consistent and finish the build
-    hidden_layer = layer_var;
+    hidden_layer = transpose(layer_var);
     output = hidden_layer;
   }
   else if(nhidden>0)
@@ -751,7 +755,7 @@ void NNet::initializeParams(bool set_seed)
       PLearn::seed();
   }
 
-  if(nhidden>0) {
+  if(nhidden>0 && !first_hidden_layer) {
     fillWeights(w1, true);
     if(direct_in_to_out) {
       fillWeights(wdirect, false);
