@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.65 2005/05/16 16:03:09 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.66 2005/05/17 13:27:07 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -4356,27 +4356,35 @@ void computeMeanAndVariance(const TMat<T>& m, TVec<T>& meanvec, TVec<T>& varianc
 // inverse_standard_deviation[i,j] = 
 //    1/sqrt(mean_of_squares[i,j] - means[i,j]^2)
 template<class T>
-void computeInverseStandardDeviationFromMeanAndSquareMean(TMat<T> inverse_standard_deviation,
-                                                          TMat<T> means,
-                                                          TMat<T> mean_of_squares)
+void computeInverseStandardDeviationFromMeanAndSquareMean(const TMat<T>& inverse_standard_deviation,
+                                                          const TMat<T>& means,
+                                                          const TMat<T>& mean_of_squares)
 {
   int n=inverse_standard_deviation.length();
   int m=inverse_standard_deviation.width();
+  int invs_mod = inverse_standard_deviation.mod();
+  int mu_mod = means.mod();
+  int mu2_mod = mean_of_squares.mod();
 #ifdef BOUNDCHECK
   if (means.length()!=n || means.width()!=m || mean_of_squares.length()!=n
       || mean_of_squares.width()!=m)
-    PLERROR("computeInverseStandardDeviationFromMeanAndSquareMean: arguments have incompatible sizes!");
+    PLERROR("In computeInverseStandardDeviationFromMeanAndSquareMean - Arguments have incompatible sizes");
 #endif
   T* invs = inverse_standard_deviation.data();
   T* mu = means.data();
   T* mu2 = mean_of_squares.data();
-  for (int i=0;i<n;i++)
-    for (int j=0;j<m;j++, invs++, mu++, mu2++)
+  for (int i=0;i<n;i++, invs += invs_mod, mu += mu_mod, mu2 += mu2_mod) {
+    for (int j=0;j<m;j++)
     {
-      real diff = *mu2 - *mu * *mu;
+      real diff = mu2[j] - mu[j] * mu[j];
       if (diff>0)
-        *invs = 1.0/sqrt(diff);
+        *invs = real(1.0/sqrt(diff));
+      else {
+        PLWARNING("In computeInverseStandardDeviationFromMeanAndSquareMean - Variance is not > 0");
+        *invs = real(1.0);
+      }
     }
+  }
 }
 
 
