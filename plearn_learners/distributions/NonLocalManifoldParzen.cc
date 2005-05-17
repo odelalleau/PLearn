@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzen.cc,v 1.4 2005/05/17 15:55:38 yoshua Exp $
+   * $Id: NonLocalManifoldParzen.cc,v 1.5 2005/05/17 18:26:22 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -475,6 +475,7 @@ void NonLocalManifoldParzen::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(F, copies);
 
   deepCopyField(parameters, copies);
+  varDeepCopyField(hidden_layer, copies);
   deepCopyField(optimizer, copies);
   deepCopyField(predictor, copies);
   deepCopyField(output_f_all, copies);
