@@ -34,12 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.18 2005/05/17 15:57:27 plearner Exp $
+   * $Id: LinearRegressor.cc,v 1.19 2005/05/17 22:26:25 chapados Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
 #include "LinearRegressor.h"
 #include <plearn/vmat/VMat_linalg.h>
+#include <plearn/vmat/ExtendedVMatrix.h>
 #include <plearn/math/pl_erf.h>
 
 namespace PLearn {
@@ -54,6 +55,7 @@ LinearRegressor::LinearRegressor()
   AIC(MISSING_VALUE),
   BIC(MISSING_VALUE),
   resid_variance(),
+  include_bias(true),
   cholesky(true),
   weight_decay(0.0),
   output_learned_weights(false)
@@ -64,7 +66,8 @@ PLEARN_IMPLEMENT_OBJECT(
   "Ordinary Least Squares and Ridge Regression, optionally weighted", 
   "This class performs OLS (Ordinary Least Squares) and Ridge Regression, optionally on weighted\n"
   "data, by solving the linear equation (X'W X + weight_decay*n_examples*I) theta = X'W Y\n"
-  "where X is the (n_examples x (1+inputsize)) matrix of extended inputs (with a 1 in the first column),\n"
+  "where X is the (n_examples x (1+inputsize)) matrix of extended inputs \n"
+  "(with a 1 in the first column, only if the option 'include_bias' is true),\n"
   "Y is the (n_example x targetsize), W is a diagonal matrix of weights (one per example)\n"
   "{the identity matrix if weightsize()==0 in the training set}, and theta is the resulting\n"
   "set of parameters. W_{ii} is obtained from the weight column of the training set, if any.\n"
@@ -98,6 +101,10 @@ void LinearRegressor::declareOptions(OptionList& ol)
 
   //#####  Build Options  ####################################################
 
+  declareOption(ol, "include_bias", &LinearRegressor::include_bias,
+                OptionBase::buildoption,
+                "Whether to include a bias term in the regression (true by default)");
+  
   declareOption(ol, "cholesky", &LinearRegressor::cholesky,
                 OptionBase::buildoption, 
                 "Whether to use the Cholesky decomposition or not, "
@@ -188,7 +195,7 @@ int LinearRegressor::outputsize() const
   // If we output the learned parameters, the outputsize is the number of
   // parameters
   if (output_learned_weights)
-    return max((1+inputsize()) * targetsize(), -1);
+    return max(effective_inputsize() * targetsize(), -1);
 
   int ts = targetsize();
   if (ts >= 0) {
@@ -217,10 +224,14 @@ void LinearRegressor::forget()
 
 void LinearRegressor::train()
 {
+  // Preparatory buffer allocation
   bool recompute_XXXY = (XtX.length()==0);
-  extendedinput.resize(1+inputsize());
-  input = extendedinput.subVec(1,inputsize());
-  extendedinput[0]=1.0;
+  extendedinput.resize(effective_inputsize());
+  input = extendedinput;
+  if (include_bias) {
+    input = extendedinput.subVec(1,inputsize());
+    extendedinput[0]=1.0;
+  }
   target.resize(targetsize());  // the train_set's targetsize()
   weights.resize(extendedinput.length(),target.length());
   if (recompute_XXXY)
@@ -233,14 +244,19 @@ void LinearRegressor::train()
 
   train_stats->forget(); 
 
+  // Compute training inputs and targets; take into account optional bias
   real squared_error=0;
   Vec outputwise_sum_squared_Y;
+  VMat trainset_inputs  = train_set.subMatColumns(0,inputsize());
+  VMat trainset_targets = train_set.subMatColumns(inputsize(), targetsize());
+  if (include_bias)                          // prepend a first column of ones
+    trainset_inputs = new ExtendedVMatrix(trainset_inputs,0,0,1,0,1.0);
 
+  // Choose proper function depending on whether the dataset is weighted
   if (train_set->weightsize()<=0)
   {
     squared_error =
-      linearRegression(train_set.subMatColumns(0, inputsize()), 
-                       train_set.subMatColumns(inputsize(), targetsize()), 
+      linearRegression(trainset_inputs, trainset_targets,
                        weight_decay*train_set.length(), weights, 
                        !recompute_XXXY, XtX, XtY,
                        sum_squared_y, outputwise_sum_squared_Y,
@@ -248,16 +264,16 @@ void LinearRegressor::train()
   }
   else if (train_set->weightsize()==1)
   {
-    squared_error = weightedLinearRegression(
-      train_set.subMatColumns(0, inputsize()), 
-      train_set.subMatColumns(inputsize(), targetsize()),
-      train_set.subMatColumns(inputsize()+targetsize(),1),
-      weight_decay*train_set.length(), weights,
-      !recompute_XXXY, XtX, XtY, sum_squared_y, outputwise_sum_squared_Y,
-      sum_gammas, true, 0, cholesky);
+    squared_error =
+      weightedLinearRegression(trainset_inputs, trainset_targets,
+                               train_set.subMatColumns(inputsize()+targetsize(),1),
+                               weight_decay*train_set.length(), weights,
+                               !recompute_XXXY, XtX, XtY, sum_squared_y, outputwise_sum_squared_Y,
+                               sum_gammas, true, 0, cholesky);
   }
-  else PLERROR("LinearRegressor: expected dataset's weightsize to be either 1 or 0, got %d\n",
-               train_set->weightsize());
+  else
+    PLERROR("LinearRegressor: expected dataset's weightsize to be either 1 or 0, got %d\n",
+            train_set->weightsize());
 
   // Update the AIC and BIC criteria
   computeInformationCriteria(squared_error, train_set.length());
@@ -265,7 +281,8 @@ void LinearRegressor::train()
   // Update the sigmas for confidence intervals (the current formula does
   // not account for the weights in the case of weighted linear regression)
   computeResidualsVariance(outputwise_sum_squared_Y);
-  
+
+  // Update the training costs
   Mat weights_excluding_biases = weights.subMatRows(1,inputsize());
   weights_norm = dot(weights_excluding_biases,weights_excluding_biases);
   train_costs.resize(5);
@@ -293,13 +310,16 @@ void LinearRegressor::computeOutput(const Vec& actual_input, Vec& output) const
   output.resize(nout);
   if (input.length()==0) 
   {
-    extendedinput.resize(1+inputsize());
-    input = extendedinput.subVec(1,inputsize());
-    extendedinput[0]=1;
+    extendedinput.resize(effective_inputsize());
+    input = extendedinput;
+    if (include_bias) {
+      input = extendedinput.subVec(1,inputsize());
+      extendedinput[0] = 1.0;
+    }
   }
   input << actual_input;
   transposeProduct(output,weights,extendedinput);
-}    
+}
 
 void LinearRegressor::computeCostsFromOutputs(
   const Vec& /*input*/, const Vec& output, const Vec& target, Vec& costs) const
@@ -373,9 +393,10 @@ void LinearRegressor::computeInformationCriteria(real squared_error, int n)
   // AIC = ln(squared_error/n) + 2*M/n
   // BIC = ln(squared_error/n) + M*ln(n)/n,
   // where M is the number of parameters
+  // NOTE the change in semantics: squared_error is now a MEAN squared error
 
   real M = weights.length() * weights.width();
-  real lnsqerr = log(squared_error/n);
+  real lnsqerr = log(squared_error);
   AIC = lnsqerr + 2*M/n;
   BIC = lnsqerr + M*log(real(n))/n;
 }

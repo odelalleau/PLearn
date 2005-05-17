@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.h,v 1.11 2005/05/17 15:57:27 plearner Exp $
+   * $Id: LinearRegressor.h,v 1.12 2005/05/17 22:26:25 chapados Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.h */
@@ -94,6 +94,9 @@ public:
   // * public build options *
   // ************************
 
+  //! Whether to include a bias term in the regression (true by default)
+  bool include_bias;
+  
   //! Whether to use Cholesky decomposition for computing the solution
   //! (true by default)
   bool cholesky;
@@ -126,19 +129,6 @@ private:
   void build_();
   void resetAccumulators();
 
-protected: 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
-
-  //! Utility function to compute the AIC, BIC criteria from the
-  //! squared error of the trained  model.  Store the result in
-  //! AIC and BIC members of the object.
-  void computeInformationCriteria(real squared_error, int n);
-
-  //! Utility function to compute the variance of the residuals of the
-  //! regression
-  void computeResidualsVariance(const Vec& outputwise_sum_squared_Y);
-  
 public:
 
   // ************************
@@ -200,6 +190,22 @@ public:
   //! for which it updates the VecStatsCollector train_stats
   virtual TVec<string> getTrainCostNames() const;
 
+protected: 
+  //! Declares this class' options
+  static void declareOptions(OptionList& ol);
+
+  //! Utility function to compute the AIC, BIC criteria from the
+  //! squared error of the trained  model.  Store the result in
+  //! AIC and BIC members of the object.
+  void computeInformationCriteria(real squared_error, int n);
+
+  //! Utility function to compute the variance of the residuals of the
+  //! regression
+  void computeResidualsVariance(const Vec& outputwise_sum_squared_Y);
+
+  //! Inputsize that takes into account optional bias term
+  int effective_inputsize() const
+    { return inputsize() + (include_bias? 1 : 0); }
 };
 
 // Declares a few other classes and functions related to this class
