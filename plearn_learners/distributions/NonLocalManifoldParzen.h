@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzen.h,v 1.3 2005/05/14 17:09:47 larocheh Exp $
+   * $Id: NonLocalManifoldParzen.h,v 1.4 2005/05/17 15:55:38 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Hugo Larochelle
@@ -115,6 +115,9 @@ public:
   real sigma_min;
   //! Number of gaussians
   int L;
+
+  Var hidden_layer; // user specified hidden layer NaryVariable subclass
+
   //! Logarithm of number of gaussians
   real log_L;
   int nneighbors; // number of neighbors used for gradient descent

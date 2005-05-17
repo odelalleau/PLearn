@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzen.cc,v 1.3 2005/05/13 20:49:35 larocheh Exp $
+   * $Id: NonLocalManifoldParzen.cc,v 1.4 2005/05/17 15:55:38 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -79,6 +79,7 @@
 #include <plearn/vmat/VMat_computeNearestNeighbors.h>
 #include <plearn/vmat/FractionSplitter.h>
 #include <plearn/vmat/RepeatSplitter.h>
+#include <plearn/var/FNetLayerVariable.h>
 
 namespace PLearn {
 using namespace std;
@@ -200,6 +201,8 @@ void NonLocalManifoldParzen::build_()
   if (n>0)
   {
 
+    VarArray params;
+
     Var log_n_examples(1,1,"log(n_examples)");
     if(train_set)
     {
@@ -215,9 +218,33 @@ void NonLocalManifoldParzen::build_()
 
       
       x = Var(n);
-      c = Var(n_hidden_units,1,"c ");
-      V = Var(n_hidden_units,n,"V ");               
-      Var a = tanh(c + product(V,x));
+      Var a; // outputs of hidden layer
+
+      if (hidden_layer) // user-specified hidden layer Var
+      {
+         NaryVariable* layer_var = dynamic_cast<NaryVariable*>((Variable*)hidden_layer);
+         if (!layer_var)
+           PLERROR("In NonLocalManifoldParzen::build - 'hidden_layer' should be "
+                   "from a subclass of NaryVariable");
+         if (layer_var->varray.size() < 1)
+           layer_var->varray.resize(1);
+         layer_var->varray[0] = transpose(x);
+         layer_var->build(); // make sure everything is consistent and finish the build
+         if (layer_var->varray.size()<2)
+           PLERROR("In NonLocalManifoldParzen::build - 'hidden_layer' should have parameters");
+         for (int i=1;i<layer_var->varray.size();i++)
+           params.append(layer_var->varray[i]);
+         a = layer_var;
+      }
+      else // standard hidden layer
+      {
+        Var c = Var(n_hidden_units,1,"c ");
+        Var V = Var(n_hidden_units,n,"V ");               
+        params.append(c);
+        params.append(V);
+        a = tanh(c + product(V,x));
+      }
+
       muV = Var(n,n_hidden_units,"muV "); 
       snV = Var(1,n_hidden_units,"snV ");  
       snb = Var(1,1,"snB ");      
@@ -229,18 +256,22 @@ void NonLocalManifoldParzen::build_()
         tangent_plane = diagonalized_factors_product(W,1-a*a,V); 
         embedding = product(W,a);
         output_embedding = Func(x,embedding);
+        params.append(W);
       } 
       else if(architecture_type == "single_neural_network")
       {
         b = Var(ncomponents*n,1,"b");
         W = Var(ncomponents*n,n_hidden_units,"W ");
         tangent_plane = reshape(b + product(W,a),ncomponents,n);
+        params.append(b);
+        params.append(W);
       }
       else
         PLERROR("NonLocalManifoldParzen::build_, unknown architecture_type option %s",
                 architecture_type.c_str());
      
       mu = product(muV,a); 
+      params.append(muV);
       min_sig = new SourceVariable(1,1);
       min_sig->value[0] = sigma_min;
       min_sig->setName("min_sig");
@@ -252,6 +283,10 @@ void NonLocalManifoldParzen::build_()
       else if(variances_transfer_function == "exp") sn = exp(snb + product(snV,a)) + min_sig + exp(init_sig);
       else PLERROR("In NonLocalManifoldParzen::build_ : unknown variances_transfer_function option %s ", variances_transfer_function.c_str());
       
+      params.append(snV);
+      params.append(snb);
+      params.append(init_sig);
+
       if(sigma_threshold_factor > 0)
       {        
         sn = threshold_bprop(sn,sigma_threshold_factor);
@@ -265,10 +300,7 @@ void NonLocalManifoldParzen::build_()
         embedding->setName("embedding ");
       x->setName("x ");
 
-      if(architecture_type == "embedding_neural_network")
-        predictor = Func(x, W & c & V & muV & snV & snb & init_sig , tangent_plane & mu & sn );
-      if(architecture_type == "single_neural_network")
-        predictor = Func(x, b & W & c & V & muV & snV & snb & init_sig, tangent_plane & mu & sn );
+      predictor = Func(x, params , tangent_plane & mu & sn );
 
       output_f_all = Func(x,tangent_plane & mu & sn);
     }
