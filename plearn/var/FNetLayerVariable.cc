@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.cc,v 1.8 2005/05/16 22:24:06 yoshua Exp $
+   * $Id: FNetLayerVariable.cc,v 1.9 2005/05/17 13:31:05 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -137,7 +137,9 @@ FNetLayerVariable::build()
 void
 FNetLayerVariable::build_()
 {
-  if (varray.size()==0)
+  if (   varray.size() != 4
+      || n_hidden      != varray[1].length()
+      || n_inputs      != varray[1].width()  )
   {
     varray.resize(4);
     varray[1] = Var(n_hidden,n_inputs);
