@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.66 2005/05/17 13:27:07 tihocan Exp $
+   * $Id: TMat_maths_impl.h,v 1.67 2005/05/17 20:14:50 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -4378,10 +4378,10 @@ void computeInverseStandardDeviationFromMeanAndSquareMean(const TMat<T>& inverse
     {
       real diff = mu2[j] - mu[j] * mu[j];
       if (diff>0)
-        *invs = real(1.0/sqrt(diff));
+        invs[j] = real(1.0/sqrt(diff));
       else {
         PLWARNING("In computeInverseStandardDeviationFromMeanAndSquareMean - Variance is not > 0");
-        *invs = real(1.0);
+        invs[j] = real(1.0);
       }
     }
   }
