@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.68 2005/05/16 22:24:02 yoshua Exp $
+   * $Id: NNet.cc,v 1.69 2005/05/17 13:33:38 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -236,7 +236,7 @@ void NNet::declareOptions(OptionList& ol)
                 "Used only in the stable_cross_entropy cost function, to fight overfitting (0<=r<1)\n");
 
   declareOption(ol, "first_hidden_layer", &NNet::fnet_hidden_layer, OptionBase::buildoption, 
-                "A user-specified NAry Var that computes the output if the first hidden layer\n"
+                "A user-specified NAry Var that computes the output of the first hidden layer\n"
                 "from the network input vector and a set of parameters. Its first argument should\n"
                 "be the network input and the remaining arguments the tunable parameters.\n");
   
@@ -483,14 +483,15 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
   {
     NaryVariable* layer_var = dynamic_cast<NaryVariable*>((Variable*)first_hidden_layer);
     if (!layer_var || layer_var->varray.size()<2)
-      PLERROR("NNet: first_hidden_layer should be from a subclass of NaryVariable, with the first argument the input and the remainders the parameters");
+      PLERROR("In NNet::buildOutputFromInput - 'first_hidden_layer' should be "
+              "from a subclass of NaryVariable, with the first argument the "
+              "input and the remainders the parameters");
     for (int i=1;i<layer_var->varray.size();i++)
       params.append(layer_var->varray[i]);
     layer_var->varray[0] = output; //here output refers to the neural network input...
     layer_var->build(); // make sure everything is consistent and finish the build
     hidden_layer = layer_var;
     output = hidden_layer;
-      
   }
   else if(nhidden>0)
   {
@@ -818,6 +819,7 @@ void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(f, copies);
   deepCopyField(test_costf, copies);
   deepCopyField(output_and_target_to_cost, copies);
+  varDeepCopyField(first_hidden_layer, copies);
   deepCopyField(optimizer, copies);
 }
 
