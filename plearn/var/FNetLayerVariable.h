@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.h,v 1.4 2005/05/16 22:24:06 yoshua Exp $
+   * $Id: FNetLayerVariable.h,v 1.5 2005/05/17 18:05:55 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -75,6 +75,7 @@ public:
   int n_hidden;
   int minibatch_size;
   bool inhibit_next_units; 
+  bool inhibit_by_sum;
   bool normalize_inputs;
   bool backprop_to_inputs;
   real exp_moving_average_coefficient;

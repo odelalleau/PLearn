@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.cc,v 1.11 2005/05/17 15:25:10 tihocan Exp $
+   * $Id: FNetLayerVariable.cc,v 1.12 2005/05/17 18:05:55 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -96,6 +96,7 @@ FNetLayerVariable::FNetLayerVariable()
     n_hidden(-1), // MUST BE SPECIFIED BY THE USER
     minibatch_size(1),
     inhibit_next_units(true),
+    inhibit_by_sum(false),
     normalize_inputs(true),
     backprop_to_inputs(false),
     exp_moving_average_coefficient(0.001),
@@ -120,6 +121,7 @@ FNetLayerVariable::FNetLayerVariable(Var inputs,  // x
                                        n_hidden(weights->matValue.length()),
                                        minibatch_size(inputs->matValue.length()),
                                        inhibit_next_units(_inhibit_next_units),
+                                       inhibit_by_sum(false),
                                        normalize_inputs(_normalize_inputs),
                                        backprop_to_inputs(_backprop_to_inputs),
                                        exp_moving_average_coefficient(_exp_moving_average_coefficient),
@@ -204,6 +206,11 @@ void FNetLayerVariable::declareOptions(OptionList& ol)
   declareOption(ol, "inhibit_next_units", &FNetLayerVariable::inhibit_next_units, OptionBase::buildoption, 
                 "    If true then activation of unit i contains minus the sum of the outputs of\n"
                 "    all units j for j<i, i.e. y[k,i] = sigmoid(W (u[k,i] 1) - 1_{inhibit_next_units} sum_{j<i} y[k,j]).\n");
+
+  declareOption(ol, "inhibit_by_sum", &FNetLayerVariable::inhibit_by_sum, OptionBase::buildoption, 
+                "    If true, then the inhibition will be based on the sum of the previous units'\n"
+                "    activations, instead of their average.");
+      
   declareOption(ol, "normalize_inputs", &FNetLayerVariable::normalize_inputs, OptionBase::buildoption, 
                 "    If true, then normalized input u[k,i]=(x[k] - mu[i])*invs[i], otherwise u[k,i]=x[k].\n"
                 "    mu[i,j] is a moving average of the x[k,j]'s when |dC/da[k,i]| is above gradient_threshold.\n"
@@ -211,7 +218,7 @@ void FNetLayerVariable::declareOptions(OptionList& ol)
                 "    and invs[i,j] = 1/sqrt(mu2[i,j] - mu[i,j]*mu[i,j]). The moving averages are exponential moving\n"
                 "    averages with coefficient exp_moving_average_coefficient.\n");
   declareOption(ol, "backprop_to_inputs", &FNetLayerVariable::backprop_to_inputs, OptionBase::buildoption, 
-                "    If true than gradient is propagated to the inputs. When this object is the first layer\n"
+                "    If true then gradient is propagated to the inputs. When this object is the first layer\n"
                 "    of a neural network, it is more efficient to set this option to false (which is its default).\n");
 
   declareOption(ol, "exp_moving_average_coefficient", &FNetLayerVariable::exp_moving_average_coefficient, OptionBase::buildoption, 
@@ -259,7 +266,10 @@ void FNetLayerVariable::fprop()
       real bi = b[i];
       if (inhibit_next_units && i>0)
       {
-        cum_inh_k[i] = cum_s / real(i);
+        if (inhibit_by_sum)
+          cum_inh_k[i] = cum_s;
+        else
+          cum_inh_k[i] = cum_s / real(i);
         inh_k[i] = sigmoid(c2 * cum_inh_k[i]);
         bi -= c1*inh_k[i];
       }
