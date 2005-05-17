@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.cc,v 1.9 2005/05/17 13:31:05 tihocan Exp $
+   * $Id: FNetLayerVariable.cc,v 1.10 2005/05/17 13:51:07 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -115,9 +115,9 @@ FNetLayerVariable::FNetLayerVariable(Var inputs,  // x
                                      : inherited(inputs & weights &
                                                  biases & inhibition_weights,
                                                  inputs->length(), weights->length()),
-                                       n_inputs(inputs->matValue->width()),
-                                       n_hidden(weights->matValue->length()),
-                                       minibatch_size(inputs->matValue->length()),
+                                       n_inputs(inputs->matValue.width()),
+                                       n_hidden(weights->matValue.length()),
+                                       minibatch_size(inputs->matValue.length()),
                                        inhibit_next_units(_inhibit_next_units),
                                        normalize_inputs(_normalize_inputs),
                                        backprop_to_inputs(_backprop_to_inputs),

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.69 2005/05/17 13:33:38 tihocan Exp $
+   * $Id: NNet.cc,v 1.70 2005/05/17 13:51:18 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -235,7 +235,7 @@ void NNet::declareOptions(OptionList& ol)
   declareOption(ol, "classification_regularizer", &NNet::classification_regularizer, OptionBase::buildoption, 
                 "Used only in the stable_cross_entropy cost function, to fight overfitting (0<=r<1)\n");
 
-  declareOption(ol, "first_hidden_layer", &NNet::fnet_hidden_layer, OptionBase::buildoption, 
+  declareOption(ol, "first_hidden_layer", &NNet::first_hidden_layer, OptionBase::buildoption, 
                 "A user-specified NAry Var that computes the output of the first hidden layer\n"
                 "from the network input vector and a set of parameters. Its first argument should\n"
                 "be the network input and the remaining arguments the tunable parameters.\n");
