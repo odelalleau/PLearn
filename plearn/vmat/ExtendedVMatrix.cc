@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVMatrix.cc,v 1.7 2005/05/17 16:11:10 chapados Exp $
+   * $Id: ExtendedVMatrix.cc,v 1.8 2005/05/17 16:11:45 chapados Exp $
    ******************************************************* */
 
 #include "ExtendedVMatrix.h"
@@ -48,7 +48,7 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
   ExtendedVMatrix,
-  "Extends a VMatrix by filling it with a constant",
+  "Extends a VMatrix by filling new rows/columns with a constant",
   "VMatrix that extends the underlying VMat by appending rows at \n"
   "its top and bottom and columns at its left and right.\n"
   "The appended rows/columns are filled with the given fill_value\n"
