@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.49 2005/05/16 22:19:45 yoshua Exp $
+   * $Id: PLearner.cc,v 1.50 2005/05/17 15:57:16 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -451,23 +451,15 @@ void PLearner::call(const string& methodname, int nargs, PStream& io)
     }
   else if(methodname=="computeOutputAndCosts")
     {
-      perr << "ENTERING computeOutputAndCosts" << endl;
       if(nargs!=2) PLERROR("PLearner remote method computeOutputAndCosts takes 2 arguments");
       Vec input, target;
-      // io >> input >> target;
-      io >> input;
-      perr << "READ input" << endl;
-      io >> target;
-      perr << "READ target" << endl;
+      io >> input >> target;
       tmp_output.resize(outputsize());
       Vec costs(nTestCosts());
       computeOutputAndCosts(input,target,tmp_output,costs);
-      perr << "CALL to method returned. Preparing to send results" << endl;
       prepareToSendResults(io, 2);
-      perr << "SENDING output and costs" << endl;
       io << tmp_output << costs;
       io.flush();
-      perr << "FLUSHING" << endl;
     }
   else if(methodname=="computeCostsFromOutputs")
     {

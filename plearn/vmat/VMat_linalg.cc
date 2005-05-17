@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_linalg.cc,v 1.2 2004/10/21 18:23:59 chapados Exp $ 
+   * $Id: VMat_linalg.cc,v 1.3 2005/05/17 15:57:16 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -160,21 +160,23 @@ real linearRegression(
 {
   if (outputs.length()!=inputs.length())
     PLERROR("linearRegression: inputs.length()=%d while outputs.length()=%d",inputs.length(),outputs.length());
-  if (theta_t.length()!=inputs.width()+1 || theta_t.width()!=outputs.width())
+  if (theta_t.length()!=inputs.width() || theta_t.width()!=outputs.width())
     PLERROR("linearRegression: theta_t(%d,%d) should be (%dx%d)",
-          theta_t.length(),theta_t.width(),inputs.width()+1,outputs.width());
+          theta_t.length(),theta_t.width(),inputs.width(),outputs.width());
 
   int inputsize = inputs.width();
   int targetsize = outputs.width();
 
-  if(XtX.length()!=inputsize+1 || XtX.width()!=inputsize+1)
-    PLERROR("In linearRegression: XtX should have dimensions %dx%d (inputs.width()+1)x(inputs.width()+1)",inputsize+1,inputsize+1);
-  if(XtY.length()!=inputsize+1 || XtY.width()!=targetsize)
-    PLERROR("In linearRegression: XtY should have dimensions %dx%d (inputs.width()+1)x(outputs.width())",inputsize+1,targetsize);
+  if(XtX.length()!=inputsize || XtX.width()!=inputsize)
+    PLERROR("In linearRegression: XtX should have dimensions %dx%d (inputs.width())x(inputs.width())",
+            inputsize,inputsize);
+  if(XtY.length()!=inputsize || XtY.width()!=targetsize)
+    PLERROR("In linearRegression: XtY should have dimensions %dx%d (inputs.width())x(outputs.width())",
+            inputsize,targetsize);
 
   if(!use_precomputed_XtX_XtY) // then compute them
     {
-      VMat X = new ExtendedVMatrix(inputs,0,0,1,0,1.0); // prepend a first column of ones
+      VMat X = inputs; // new ExtendedVMatrix(inputs,0,0,1,0,1.0); // prepend a first column of ones
       VMat Y = outputs;
       outputwise_sum_squared_Y.resize(targetsize);
       outputwise_sum_squared_Y.fill(0.0);
@@ -217,24 +219,26 @@ real linearRegression(
   if (return_squared_loss)
   {
     // squared loss = sum_{ij} theta_{ij} (X'W X theta')_{ij} + sum_{t,i} Y_{ti}^2 - 2 sum_{ij} theta_{ij} (X'W Y)_{ij}
-    Mat M(inputsize+1,targetsize);
+    Mat M(inputsize,targetsize);
     product(M,XtX,theta_t);
     squared_loss += dot(M,theta_t); // 
     squared_loss += sum_squared_Y;
     squared_loss -= 2*dot(XtY,theta_t);
   }
-  return squared_loss;
+  return squared_loss/inputs.length();
 }
 
-Mat linearRegression(VMat inputs, VMat outputs, real weight_decay)
+Mat linearRegression(VMat inputs, VMat outputs, real weight_decay, bool include_bias)
 {
-  int n = inputs.width()+1;
+  int n = inputs.width()+(include_bias?1:0);
   int n_outputs = outputs.width();
   Mat XtX(n,n);
   Mat XtY(n,n_outputs);
   Mat theta_t(n,n_outputs);
   real sy=0;
   Vec outputwise_sum_squared_Y;
+  if(include_bias)
+    inputs = new ExtendedVMatrix(inputs,0,0,1,0,1.0); // prepend a first column of ones
   linearRegression(inputs, outputs, weight_decay, theta_t,
                    false, XtX, XtY, sy, outputwise_sum_squared_Y);
   return theta_t;
@@ -252,16 +256,24 @@ real weightedLinearRegression(
   int targetsize = outputs.width();
   if (outputs.length()!=inputs.length())
     PLERROR("linearRegression: inputs.length()=%d while outputs.length()=%d",inputs.length(),outputs.length());
-  if (theta_t.length()!=inputsize+1 || theta_t.width()!=targetsize)
+  if (theta_t.length()!=inputsize || theta_t.width()!=targetsize)
     PLERROR("linearRegression: theta_t(%d,%d) should be (%dx%d)",
-            theta_t.length(),theta_t.width(),inputsize+1,targetsize);
+            theta_t.length(),theta_t.width(),inputsize,targetsize);
+
+  if(XtX.length()!=inputsize || XtX.width()!=inputsize)
+    PLERROR("In linearRegression: XtX should have dimensions %dx%d (inputs.width())x(inputs.width())",
+            inputsize,inputsize);
+  if(XtY.length()!=inputsize || XtY.width()!=targetsize)
+    PLERROR("In linearRegression: XtY should have dimensions %dx%d (inputs.width())x(outputs.width())",
+            inputsize,targetsize);
 
   int l=inputs.length();
   if(!use_precomputed_XtX_XtY) // then compute them
   {
     XtX.clear();
     XtY.clear();
-    VMat X = new ExtendedVMatrix(inputs,0,0,1,0,1.0); // prepend a first column of ones
+    // VMat X = new ExtendedVMatrix(inputs,0,0,1,0,1.0); // prepend a first column of ones
+    VMat X = inputs;
     VMat Y = outputs;
     outputwise_sum_squared_Y.resize(targetsize);
     outputwise_sum_squared_Y.fill(0.0);
@@ -299,7 +311,7 @@ real weightedLinearRegression(
   if (return_squared_loss)
   {
     // squared loss = sum_{ij} theta_{ij} (X'W X theta')_{ij} + sum_{t,i} gamma_t*Y_{ti}^2 - 2 sum_{ij} theta_{ij} (X'W Y)_{ij}
-    Mat M(inputsize+1,targetsize);
+    Mat M(inputsize,targetsize);
     product(M,XtX,theta_t);
     squared_loss += dot(M,theta_t); // 
     squared_loss += sum_squared_Y;
@@ -311,9 +323,9 @@ real weightedLinearRegression(
 //! Version that does all the memory allocations of XtX, XtY and
 //! theta_t. Returns theta_t
 Mat weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas,
-                             real weight_decay)
+                             real weight_decay, bool include_bias)
 {
-  int n = inputs.width()+1;
+  int n = inputs.width()+(include_bias?1:0);
   int n_outputs = outputs.width();
   Mat XtX(n,n);
   Mat XtY(n,n_outputs);
@@ -321,6 +333,8 @@ Mat weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas,
   real sy=0;
   real sg=0;
   Vec outputwise_sum_squared_Y;
+  if(include_bias)
+    inputs = new ExtendedVMatrix(inputs,0,0,1,0,1.0); // prepend a first column of ones
   weightedLinearRegression(inputs, outputs, gammas, weight_decay, theta_t,
                            false, XtX, XtY, sy, outputwise_sum_squared_Y,
                            sg);

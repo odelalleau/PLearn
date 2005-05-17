@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.17 2005/05/12 04:08:16 chapados Exp $
+   * $Id: LinearRegressor.cc,v 1.18 2005/05/17 15:57:27 plearner Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
@@ -154,7 +154,7 @@ void LinearRegressor::build_()
 {
   // This resets various accumulators to speed up successive iterations of
   // training in the case the training set has not changed.
-  forget();
+  resetAccumulators();
 }
 
 // ### Nothing to add here, simply calls build_
@@ -200,12 +200,17 @@ int LinearRegressor::outputsize() const
   }
 }
 
-void LinearRegressor::forget()
+void LinearRegressor::resetAccumulators()
 {
   XtX.resize(0,XtX.width());
   XtY.resize(0,XtY.width());
   sum_squared_y = 0;
   sum_gammas = 0;
+}
+
+void LinearRegressor::forget()
+{
+  resetAccumulators();
   resid_variance.resize(0);
 }
   
@@ -328,7 +333,7 @@ bool LinearRegressor::computeConfidenceFromOutput(
   const int n = output.size();
   if (n != resid_variance.size())
     PLERROR("LinearRegressor::computeConfidenceFromOutput: output vector "
-            "size is incorrect or residuals variance not yet computed");
+            "size (=%d) is incorrect or residuals variance (=%d) not yet computed",n,resid_variance.size());
   
   // two-tailed
   const real multiplier = gauss_01_quantile((1+probability)/2);

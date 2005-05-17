@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_linalg.h,v 1.2 2004/10/21 18:23:59 chapados Exp $ 
+   * $Id: VMat_linalg.h,v 1.3 2005/05/17 15:57:16 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -74,10 +74,12 @@ VMat transpose(VMat m1);
   Parameters must have the following sizes:
   inputs(l,n)
   outputs(l,m)
-  theta_t(n+1,m)
-  XtX(n+1,n+1)
-  XtY(n+1,m)
-  The n+1 is due to the inclusion of the bias terms in the matrices (first row of theta_t)
+  theta_t(n,m)
+  XtX(n,n)
+  XtY(n,m)
+  This regression is made with no added bias. If you want a bias, 
+  add it yourself with passing 
+      inputs_w_bias = new ExtendedVMatrix(inputs,0,0,1,0,1.0)
   If use_precomputed_XtX_XtY is false, then they are computed. Otherwise
   they are used as they are (typically passed precomputed from a previous
   call made with a possibly different weight_decay).
@@ -93,11 +95,14 @@ real linearRegression(
 
 //! Version that does all the memory allocations of XtX, XtY and theta_t.
 //! Returns theta_t
-Mat linearRegression(VMat inputs, VMat outputs, real weight_decay);
+Mat linearRegression(VMat inputs, VMat outputs, real weight_decay, bool include_bias=false);
 
 //! Linear regression where each input point is given a different
 //! importance weight (the gammas); 
 //! returns weighted average of squared loss
+//!  This regression is made with no added bias. If you want a bias, 
+//!  add it yourself with passing 
+//!      inputs_w_bias = new ExtendedVMatrix(inputs,0,0,1,0,1.0)
 real weightedLinearRegression(
   VMat inputs, VMat outputs, VMat gammas,
   real weight_decay, Mat theta_t, bool use_precomputed_XtX_XtY, Mat XtX,
@@ -108,7 +113,7 @@ real weightedLinearRegression(
 //! Version that does all the memory allocations of XtX, XtY and theta_t. 
 //! Returns theta_t
 Mat weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas,
-                             real weight_decay);
+                             real weight_decay, bool include_bias=false);
 
 
 } // end of namespace PLearn

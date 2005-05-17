@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.h,v 1.10 2005/05/12 04:08:16 chapados Exp $
+   * $Id: LinearRegressor.h,v 1.11 2005/05/17 15:57:27 plearner Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.h */
@@ -124,6 +124,7 @@ public:
 private: 
   //! This does the actual building. 
   void build_();
+  void resetAccumulators();
 
 protected: 
   //! Declares this class' options

@@ -90,6 +90,8 @@ def regular_xyval_to_2d_grid_values(xyval):
         # print 'B) nx,ny:',nx,ny
         values.shape = (ny,nx,valsize)
         values = transpose(values,(1,0,2))
+    else:
+        raise ValueError("Strange: x[1]!=x0 and y[1]!=y0 this doesn't look like a regular grid...")
     return values, x0, y0, deltax, deltay
 
 
