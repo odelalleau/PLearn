@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.cc,v 1.10 2005/05/17 13:51:07 tihocan Exp $
+   * $Id: FNetLayerVariable.cc,v 1.11 2005/05/17 15:25:10 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -42,6 +42,7 @@
 //#include "ProductVariable.h"
 //#include "TransposeProductVariable.h"
 #include "FNetLayerVariable.h"
+#include <plearn/math/random.h>
 #include <plearn/math/TMat_maths_impl.h>
 #include <plearn/math/TMat_maths_specialisation.h>
 
@@ -95,7 +96,7 @@ FNetLayerVariable::FNetLayerVariable()
     n_hidden(-1), // MUST BE SPECIFIED BY THE USER
     minibatch_size(1),
     inhibit_next_units(true),
-  normalize_inputs(true),
+    normalize_inputs(true),
     backprop_to_inputs(false),
     exp_moving_average_coefficient(0.001),
     average_error_fraction_to_threshold(0.5)
@@ -137,11 +138,16 @@ FNetLayerVariable::build()
 void
 FNetLayerVariable::build_()
 {
+  if (varray.length() == 0 && n_inputs == -1)
+    // Cannot do anything yet.
+    return;
   if (   varray.size() != 4
       || n_hidden      != varray[1].length()
       || n_inputs      != varray[1].width()  )
   {
     varray.resize(4);
+    if (varray[0])
+      n_inputs = varray[0]->width();    // Get n_inputs from first var if present.
     varray[1] = Var(n_hidden,n_inputs);
     varray[2] = Var(n_hidden);
     varray[3] = Var(2);
@@ -171,6 +177,13 @@ FNetLayerVariable::build_()
     no_bprop_has_been_done = true;
     gradient_threshold = 0;
     avg_act_gradient = 0.0;
+    // Initialize parameters.
+    real delta = real(1.0 / n_inputs);
+    fill_random_uniform(varray[1]->matValue, -delta, delta);
+    varray[2]->matValue.fill(0.0);
+    varray[3]->matValue.fill(1.0);
+    // Set correct sizes.
+    resize(minibatch_size, n_hidden);
   }
 }
 
@@ -218,7 +231,7 @@ void FNetLayerVariable::declareOptions(OptionList& ol)
 
 void FNetLayerVariable::recomputeSize(int& l, int& w) const
 {
-  if (varray[0] && varray[1]) {
+  if (varray.length() >= 2 && varray[0] && varray[1]) {
     l = varray[0]->length();
     w = varray[1]->length();
   } else
@@ -328,8 +341,9 @@ void FNetLayerVariable::bprop()
       }
     }
   }
-  // invs = 1/ sqrt(mu2 - mu*mu)
-  computeInverseStandardDeviationFromMeanAndSquareMean(invs,mu,mu2);
+  if (normalize_inputs)
+    // invs = 1/ sqrt(mu2 - mu*mu)
+    computeInverseStandardDeviationFromMeanAndSquareMean(invs,mu,mu2);
   gradient_threshold = average_error_fraction_to_threshold * avg_act_gradient;
 }
 
