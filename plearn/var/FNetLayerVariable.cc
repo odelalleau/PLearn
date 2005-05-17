@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.cc,v 1.12 2005/05/17 18:05:55 tihocan Exp $
+   * $Id: FNetLayerVariable.cc,v 1.13 2005/05/17 20:17:04 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -167,8 +167,8 @@ FNetLayerVariable::build_()
       PLERROR("In FNetLayerVariable: the biases vector should have the same length as the weights matrix number of rows.");
     mu.resize(n_hidden, n_inputs);
     mu.clear();
-    invs.fill(1.0);
     invs.resize(n_hidden, n_inputs);
+    invs.fill(1.0);
     mu2.resize(n_hidden, n_inputs);
     inh.resize(minibatch_size, n_hidden);
     cum_inh.resize(minibatch_size, n_hidden);
