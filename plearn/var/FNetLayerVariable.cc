@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.cc,v 1.13 2005/05/17 20:17:04 tihocan Exp $
+   * $Id: FNetLayerVariable.cc,v 1.14 2005/05/18 15:12:08 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -92,17 +92,20 @@ PLEARN_IMPLEMENT_OBJECT(FNetLayerVariable,
                         );
 
 FNetLayerVariable::FNetLayerVariable()
-  : n_inputs(-1), // MUST BE SPECIFIED BY THE USER
+  : c1_(0),
+    c2_(0),
+    n_inputs(-1), // MUST BE SPECIFIED BY THE USER
     n_hidden(-1), // MUST BE SPECIFIED BY THE USER
     minibatch_size(1),
     inhibit_next_units(true),
     inhibit_by_sum(false),
+    squashed_inhibition(true),
     normalize_inputs(true),
     backprop_to_inputs(false),
     exp_moving_average_coefficient(0.001),
     average_error_fraction_to_threshold(0.5)
 {
-  avg_act_gradient = 0.0;
+  avg_act_gradient = -1;
 }
 
 FNetLayerVariable::FNetLayerVariable(Var inputs,  // x
@@ -117,17 +120,21 @@ FNetLayerVariable::FNetLayerVariable(Var inputs,  // x
                                      : inherited(inputs & weights &
                                                  biases & inhibition_weights,
                                                  inputs->length(), weights->length()),
+                                       c1_(0),
+                                       c2_(0),
                                        n_inputs(inputs->matValue.width()),
                                        n_hidden(weights->matValue.length()),
                                        minibatch_size(inputs->matValue.length()),
                                        inhibit_next_units(_inhibit_next_units),
                                        inhibit_by_sum(false),
+                                       squashed_inhibition(true),
                                        normalize_inputs(_normalize_inputs),
                                        backprop_to_inputs(_backprop_to_inputs),
                                        exp_moving_average_coefficient(_exp_moving_average_coefficient),
                                        average_error_fraction_to_threshold(_average_error_fraction_to_threshold)
 {
-    build_();
+  avg_act_gradient = -1;
+  build_();
 }
 
 void
@@ -165,11 +172,16 @@ FNetLayerVariable::build_()
       PLERROR("In FNetLayerVariable: the size of inputs and weights are not compatible for an affine application of weights on inputs");
     if (varray[2]->size() != n_hidden)
       PLERROR("In FNetLayerVariable: the biases vector should have the same length as the weights matrix number of rows.");
-    mu.resize(n_hidden, n_inputs);
-    mu.clear();
-    invs.resize(n_hidden, n_inputs);
-    invs.fill(1.0);
-    mu2.resize(n_hidden, n_inputs);
+    if (normalize_inputs && (mu.length() != n_hidden || mu.width() != n_inputs)) {
+      mu.resize(n_hidden, n_inputs);
+      mu.clear();
+      invs.resize(n_hidden, n_inputs);
+      invs.fill(1.0);
+      mu2.resize(n_hidden, n_inputs);
+      mu2.fill(0);
+    } else
+      // TODO Remove later, this is just a safety check.
+      PLWARNING("In FNetLayerVariable::build_ - Using previously saved normalization parameters");
     inh.resize(minibatch_size, n_hidden);
     cum_inh.resize(minibatch_size, n_hidden);
     u.resize(minibatch_size);
@@ -178,12 +190,17 @@ FNetLayerVariable::build_()
         u[i].resize(n_hidden,n_inputs);
     no_bprop_has_been_done = true;
     gradient_threshold = 0;
-    avg_act_gradient = 0.0;
+    if (avg_act_gradient < 0)
+      avg_act_gradient = 0.0;
     // Initialize parameters.
     real delta = real(1.0 / n_inputs);
     fill_random_uniform(varray[1]->matValue, -delta, delta);
     varray[2]->matValue.fill(0.0);
     varray[3]->matValue.fill(1.0);
+    if (c1_ != 0)
+      varray[3]->value[0] = c1_;
+    if (c2_ != 0)
+      varray[3]->value[1] = c2_;
     // Set correct sizes.
     resize(minibatch_size, n_hidden);
   }
@@ -210,6 +227,9 @@ void FNetLayerVariable::declareOptions(OptionList& ol)
   declareOption(ol, "inhibit_by_sum", &FNetLayerVariable::inhibit_by_sum, OptionBase::buildoption, 
                 "    If true, then the inhibition will be based on the sum of the previous units'\n"
                 "    activations, instead of their average.");
+
+  declareOption(ol, "squashed_inhibition", &FNetLayerVariable::squashed_inhibition, OptionBase::buildoption, 
+                "    If true, then the inhibition will be squashed by a sigmoid (if false, c2 is not used).");
       
   declareOption(ol, "normalize_inputs", &FNetLayerVariable::normalize_inputs, OptionBase::buildoption, 
                 "    If true, then normalized input u[k,i]=(x[k] - mu[i])*invs[i], otherwise u[k,i]=x[k].\n"
@@ -231,6 +251,25 @@ void FNetLayerVariable::declareOptions(OptionList& ol)
                 OptionBase::buildoption, 
                 "    The fraction of the average of |dC/da[k,i]| that determines the gradient_threshold.\n");
 
+  declareOption(ol, "c1", &FNetLayerVariable::c1_, OptionBase::buildoption, 
+                "    Fixed coefficient c1. '0' means it will be optimized, starting from 1.\n");
+
+  declareOption(ol, "c2", &FNetLayerVariable::c2_, OptionBase::buildoption, 
+                "    Fixed coefficient c2. '0' means it will be optimized, starting from 1.\n");
+
+  // Learnt options.
+
+  declareOption(ol, "avg_act_gradient", &FNetLayerVariable::avg_act_gradient, OptionBase::learntoption, 
+      "The exponential moving average of the absolute value of the gradient.");
+
+  declareOption(ol, "mu", &FNetLayerVariable::mu, OptionBase::learntoption, 
+      "The centers for normalization.");
+
+  declareOption(ol, "mu2", &FNetLayerVariable::mu, OptionBase::learntoption, 
+      "The squared centers for computation of the variance.");
+
+  declareOption(ol, "mu2", &FNetLayerVariable::mu, OptionBase::learntoption, 
+      "The normalization factors.");
 
   inherited::declareOptions(ol);
 }
@@ -270,7 +309,10 @@ void FNetLayerVariable::fprop()
           cum_inh_k[i] = cum_s;
         else
           cum_inh_k[i] = cum_s / real(i);
-        inh_k[i] = sigmoid(c2 * cum_inh_k[i]);
+        if (squashed_inhibition)
+          inh_k[i] = sigmoid(c2 * cum_inh_k[i]);
+        else
+          inh_k[i] = cum_inh_k[i];
         bi -= c1*inh_k[i];
       }
       if (normalize_inputs)
@@ -338,10 +380,23 @@ void FNetLayerVariable::bprop()
         if (inhibit_next_units && i>0)
         {
           real inh_ki = inh_k[i]; 
-          dc1 -= dai * inh_ki;
-          real dinh_ki = - dai * c1 * inh_ki * (1 - inh_ki);
-          dc2 += dinh_ki * cum_inh_k[i];
-          dcum_s += dinh_ki * c2 / i;
+          if (!c1_) // c1 is optimized.
+            dc1 -= dai * inh_ki;
+          if (squashed_inhibition) {
+            real dinh_ki = - dai * c1 * inh_ki * (1 - inh_ki);
+            if (!c2_) // c2 is optimized.
+              dc2 += dinh_ki * cum_inh_k[i];
+            if (inhibit_by_sum)
+              dcum_s += dinh_ki * c2;
+            else
+              dcum_s += dinh_ki * c2 / i;
+          } else {
+            real dinh_ki = - dai * c1;
+            if (inhibit_by_sum)
+              dcum_s += dinh_ki;
+            else
+              dcum_s += dinh_ki / i;
+          }
         }
         if (backprop_to_inputs)
         {

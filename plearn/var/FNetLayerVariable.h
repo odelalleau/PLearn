@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.h,v 1.5 2005/05/17 18:05:55 tihocan Exp $
+   * $Id: FNetLayerVariable.h,v 1.6 2005/05/18 15:12:09 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -71,11 +71,14 @@ class FNetLayerVariable: public NaryVariable
 public:
 
   //! OPTIONS
+  real c1_;
+  real c2_;
   int n_inputs;
   int n_hidden;
   int minibatch_size;
   bool inhibit_next_units; 
   bool inhibit_by_sum;
+  bool squashed_inhibition;
   bool normalize_inputs;
   bool backprop_to_inputs;
   real exp_moving_average_coefficient;
