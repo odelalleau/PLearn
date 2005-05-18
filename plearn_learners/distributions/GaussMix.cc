@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.47 2005/05/05 20:45:45 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.48 2005/05/18 16:32:59 crompb Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -88,6 +88,9 @@ PLEARN_IMPLEMENT_OBJECT(GaussMix,
     "In addition to the usual costs inherited from PDistribution, an additional output\n"
     "can be computed by using the character 'p' in the 'outputs_def' option: this will\n"
     "return an output containing the posterior log-probabilities P(j|Y,X) of each Gaussian.\n"
+    "\n"
+    "If specified to a positive value, the seed will be set to the given value.\n"
+    "If set to -1, the seed will be ignored."
 );
 
 ////////////////////
@@ -495,6 +498,9 @@ void GaussMix::expectation(Vec& result) const
 void GaussMix::forget()
 {
   stage = 0;
+  if (seed_>=0) {
+    manual_seed(seed_);
+  }
 }
 
 //////////////
@@ -613,7 +619,8 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
     while(!ok)
     {
       ok=true;
-      val = rand() % nsamples;
+      //      val = rand() % nsamples;
+      val =  uniform_multinomial_sample(nsamples);
       for(int j=0;j<nclust && start_idx[j]!=-1.0;j++)
         if(start_idx[j]==val)
         {
@@ -659,6 +666,8 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
           break;
         }
   }
+  
+  
 }
 
 /////////////////
