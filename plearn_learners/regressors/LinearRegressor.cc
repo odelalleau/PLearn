@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.19 2005/05/17 22:26:25 chapados Exp $
+   * $Id: LinearRegressor.cc,v 1.20 2005/05/19 19:09:22 chapados Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
@@ -283,7 +283,7 @@ void LinearRegressor::train()
   computeResidualsVariance(outputwise_sum_squared_Y);
 
   // Update the training costs
-  Mat weights_excluding_biases = weights.subMatRows(1,inputsize());
+  Mat weights_excluding_biases = weights.subMatRows(include_bias? 1 : 0, inputsize());
   weights_norm = dot(weights_excluding_biases,weights_excluding_biases);
   train_costs.resize(5);
   train_costs[0] = squared_error + weight_decay*weights_norm;
