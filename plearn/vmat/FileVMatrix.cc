@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.33 2005/05/13 16:12:34 plearner Exp $
+   * $Id: FileVMatrix.cc,v 1.34 2005/05/19 22:00:17 chrish42 Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -125,8 +125,7 @@ void FileVMatrix::build_()
   
   // Code below is commented because the filename may have been changed,
   // in which case f should be modified.
-  // TODO note that since it's a FILE*, there will probably be some memory leak.
-//  if (f) return; // file already built
+
   // Since we are going to re-create it, we can close the current f.
   if (f) {
     fclose(f);
@@ -170,8 +169,10 @@ void FileVMatrix::build_()
 
     updateHeader();
     
-    if(length_ > 0 && width_ > 0) //ensure we can allocate enough space... if len>0, to ensure
-    {             // that the header ends with a '\n'.
+    if(length_ > 0 && width_ > 0) 
+    {
+      // Ensure we can allocate enough space... if len>0, to ensure
+      // that the header ends with a '\n'.
       if( fseek(f, DATAFILE_HEADERLENGTH+length_*width_*sizeof(real)-1, SEEK_SET) <0 )
       {
         perror("");
@@ -301,18 +302,6 @@ void FileVMatrix::declareOptions(OptionList & ol)
 void FileVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields
-  // ### that you wish to be deepCopied rather than
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // TODO Copy correctly the field FILE* f.
-//  deepCopyField(f, copies);
-
-  // Not an error because we may want to do some deep-copying sometimes.
-//  PLWARNING("FileVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 
   f = 0;   // Because we will open again the file (f should not be shared).
   old_filename = ""; // Because build() has not yet been called for this FileVMatrix.

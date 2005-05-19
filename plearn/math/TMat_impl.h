@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_impl.h,v 1.16 2005/03/02 22:41:14 chapados Exp $
+   * $Id: TMat_impl.h,v 1.17 2005/05/19 22:00:08 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -208,28 +208,6 @@ TVec<T> concat(const TVec<T>& v1, const TVec<T>& v2)
     result[i+v1.length()] = v2[i];
   return result;
 }
-
-/*  NOW IN Array.h
-template<class T>
-TVec<T> concat(const Array< TVec<T> >& varray)
-{
-  int l = 0;
-  for(int k=0; k<varray.size(); k++)
-    l += varray[k].length();
-
-  TVec<T> result(l);
-  real* resdata = result.data();
-  for(int k=0; k<varray.size(); k++)
-    {
-      const TVec<T>& v = varray[k];
-      real* vdata = varray[k].data();
-      for(int i=0; i<v.length(); i++)
-        resdata[i] = vdata[i];
-      resdata += v.length();
-    }
-  return result;
-}
-*/
 
 //! if the element to remove is the first or the last one, 
 //! then a submatrix (a view) of m will be returned (for efficiency)
@@ -522,50 +500,6 @@ void select(const TMat<T>& source, const TVec<I>& row_indices, const TVec<I>& co
   }
 }
 
-/* NOW IN Array.h
-template<class T>
-TMat<T> vconcat(const Array< TMat<T> >& ar)
-{
-  int l = 0;
-  int w = ar[0].width();
-  for(int n=0; n<ar.size(); n++)
-    {
-      if(ar[n].width() != w)
-        PLERROR("In Mat vconcat(Array<Mat> ar) all Mats do not have the same width()!");
-      l += ar[n].length();
-    }
-  TMat<T> result(l, w);
-  int pos = 0;
-  for(int n=0; n<ar.size(); n++)
-    {
-      result.subMatRows(pos, ar[n].length()) << ar[n];
-      pos+=ar[n].length();  // do not put this line after the n++ in the for loop, or it will cause a bug!
-    }
-  return result;
-}
-
-template<class T>
-TMat<T> hconcat(const Array< TMat<T> >& ar)
-{
-  int w = 0;
-  int l = ar[0].length();
-  for(int n=0; n<ar.size(); n++)
-    {
-      if(ar[n].length() != l)
-        PLERROR("In Mat hconcat(Array<Mat> ar) all Mats do not have the same length()!");
-      w += ar[n].width();
-    }
-  TMat<T> result(l, w);
-  int pos = 0;
-  for(int n=0; n<ar.size(); n++)
-    {
-      result.subMatColumns(pos, ar[n].width()) << ar[n];
-      pos+=ar[n].width(); // do not put this line after the n++ in the for loop, or it will cause a bug!
-    }
-  return result;
-}
-*/
-
 template<class T>
 TMat<T> removeRow(const TMat<T>& m, int rownum)
 {
@@ -783,26 +717,6 @@ void selectColumns(const TMat<T>& source, const TVec<I>& column_indices, TMat<T>
 template <class T>
 void select(const TMat<T>& source, const TVec<T>& row_indices, const TVec<T>& column_indices, TMat<T>& destination);
 
-/*
-//!  Vertical concatenation (all Mats must have the same width())
-template<class T>
-TMat<T> vconcat(const Array< TMat<T> >& ar);
-
-template<class T>
-inline TMat<T> vconcat(const TMat<T>& m1, const TMat<T>& m2) { return vconcat(Array< TMat<T> >(m1,m2)); }
-
-//!  Horizontal concatenation (all Mats must have the same length())
-template<class T>
-TMat<T> hconcat(const Array< TMat<T> >& ar);
-
-template<class T>
-inline TMat<T> hconcat(const TMat<T>& m1, const TMat<T>& m2) { return hconcat(Array< TMat<T> >(m1,m2)); }
-
-//!  This will allow a convenient way of building arrays of Matrices by writing ex: m1&m2&m3
-template<class T>
-inline Array< TMat<T> > operator&(const TMat<T>& m1, const TMat<T>& m2) { return Array< TMat<T> >(m1,m2); } 
-*/
-
 //! returns a new mat which is m with the given row removed
 //! if the row to remove is the first or the last one, 
 //! then a submatrix (a view) of m will be returned (for efficiency)
@@ -862,10 +776,6 @@ inline string join(const TVec<string>& s, const string& separator)
   }
   return result;
 }
-
-
-
-
 
 } // end of namespace PLearn
 
