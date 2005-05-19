@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.19 2005/01/13 14:24:23 tihocan Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.20 2005/05/19 18:03:26 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -76,7 +76,10 @@ PLEARN_IMPLEMENT_OBJECT(PLearnerOutputVMatrix,
                         "always in the input part of the new VMatrix. The order of the elements of a new row is as follows:\n"
                         "  - the outputs of the learners (concatenated) when applied on the input part of the original data,\n"
                         "  - optionally, the raw input part of the original data,\n"
-                        "  - optionally, all the non-input columns of the original data");
+                        "  - optionally, all the non-input columns of the original data\n"
+                        "\n"
+                        "When the learner is trained, a different dataset can be used for the training and the output,\n"
+                        "by using the 'data_train' option.\n");
 
 void PLearnerOutputVMatrix::getNewRow(int i, const Vec& v) const
 {
@@ -146,6 +149,9 @@ void PLearnerOutputVMatrix::declareOptions(OptionList& ol)
    declareOption(ol, "train_learners", &PLearnerOutputVMatrix::train_learners, OptionBase::buildoption,
                 "If set to 1, the learners will be train on 'data' before computing the output");
 
+   declareOption(ol, "data_train", &PLearnerOutputVMatrix::data_train, OptionBase::buildoption,
+                 "If provided and 'train_learners' is set to 1, the learner will be trained on this dataset.");
+
    declareOption(ol, "compute_output_once", &PLearnerOutputVMatrix::compute_output_once, OptionBase::buildoption,
                 "If set to 1, the output of the learners will be computed once and stored");
 
@@ -169,9 +175,12 @@ void PLearnerOutputVMatrix::build_()
     if (train_learners) {
       // Set the learners' training set.
       for (int i = 0; i < learners.length(); i++) {
-        learners[i]->setTrainingSet(data);
+        if (data_train)
+          learners[i]->setTrainingSet(data_train);
+        else
+          learners[i]->setTrainingSet(data);
       }
-      
+
       // Note that the learners will be train only if we actually call getRow().
       // Hugo: except if compute_output_once is true
     }
@@ -262,6 +271,7 @@ void PLearnerOutputVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(non_input_part_of_data_row, copies);
   deepCopyField(complete_learners_output, copies);
   deepCopyField(data, copies);
+  deepCopyField(data_train, copies);
   deepCopyField(learners, copies);
 }
 
