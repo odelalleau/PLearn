@@ -34,12 +34,12 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.h,v 1.7 2005/05/20 19:37:05 yoshua Exp $
+   * $Id: LocalizedFeaturesLayerVariable.h,v 1.1 2005/05/20 19:37:05 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#ifndef FNetLayerVariable_INC
-#define FNetLayerVariable_INC
+#ifndef LocalizedFeaturesLayerVariable_INC
+#define LocalizedFeaturesLayerVariable_INC
 
 #include "NaryVariable.h"
 
@@ -47,55 +47,38 @@ namespace PLearn {
 using namespace std;
 
 
-//! Single layer of a neural network, with acceleration tricks
-//!
-//! The two inputs are (1) the input of the layer (n_inputs x minibatch_size) and (2) the weights
-//! and biases (layer_size x (n_inputs + 1)).
-class FNetLayerVariable: public NaryVariable
+//! Single layer of a neural network with local connectivity
+//! upon a set of localized features, i.e. each feature is
+//! associated with a location in some low-dimensional space
+//! and each hidden unit takes input only from a subset of
+//! features that are in some local region in that space.
+class LocalizedFeaturesLayerVariable: public NaryVariable
 {
   typedef NaryVariable inherited;
 
   //! INTERNAL LEARNED PARAMETERS
-  Mat mu; // [hidden unit, input element] centering normalization
-  Mat invs; // 1/sqrt(mu2 - mu*mu) for normalization
-  real gradient_threshold; // threshold for |dC/da[k,i]| to 'activate' gradient propagation through unit i at example k
 
   //! INTERNAL COMPUTATION
-  Mat mu2; // to compute invs, the inverse of the standard deviation
-  real avg_act_gradient; // mov. avg of |dC/da[i,k]|
-  bool no_bprop_has_been_done; // have we ever done a bprop before?
-  TVec<Mat> u; // normalized input [example index in minibatch](hidden unit, input index)
-  Mat inh; // inhibitory signal on each hidden unit (minibatch_size x n_hidden)
-  Mat cum_inh; 
+  int n_features; // = nb inputs
+  int n_subsets; // = feature_subsets.length()
+  int n_connections; // = n_hidden_per_subset * sum_i feature_subsets[i].length()
 
 public:
 
   //! OPTIONS
-  real c1_;
-  real c2_;
-  int n_inputs;
-  int n_hidden;
-  int minibatch_size;
-  bool inhibit_next_units; 
-  bool inhibit_by_sum;
-  bool squashed_inhibition;
-  bool normalize_inputs;
   bool backprop_to_inputs;
-  real exp_moving_average_coefficient;
-  real average_error_fraction_to_threshold;
+  Mat feature_locations; // n_features x n_dim
+  TVec<TVec<int> > feature_subsets; // n_subsets x (nb of features in i-th subset)
+  int n_hidden_per_subset;
+  bool knn_subsets;
+  int n_neighbors_per_subset;
+  bool gridding_subsets;
+  bool center_on_feature_locations;
 
   //!  Default constructor for persistence
-  FNetLayerVariable();
+  LocalizedFeaturesLayerVariable();
 
-  FNetLayerVariable(Var inputs, Var weights,
-                    Var biases, Var inhibition_weights,
-                    bool _inhibit_next_units=true,
-                    bool _normalize_inputs=true,
-                    bool _backprop_to_inputs=false,
-                    real _exp_moving_average_coefficient=0.001,
-                    real _average_error_fraction_to_threshold=0.5);
-
-  PLEARN_DECLARE_OBJECT(FNetLayerVariable);
+  PLEARN_DECLARE_OBJECT(LocalizedFeaturesLayerVariable);
 
   virtual void build();
 
@@ -115,7 +98,7 @@ private:
 
 };
 
-DECLARE_OBJECT_PTR(FNetLayerVariable);
+DECLARE_OBJECT_PTR(LocalizedFeaturesLayerVariable);
 
 } // end of namespace PLearn
 
