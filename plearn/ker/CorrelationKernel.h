@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CorrelationKernel.h,v 1.1 2005/05/20 13:55:09 tihocan Exp $ 
+   * $Id: CorrelationKernel.h,v 1.2 2005/05/20 18:32:00 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -45,6 +45,7 @@
 #define CorrelationKernel_INC
 
 #include <plearn/ker/Kernel.h>
+#include <plearn/vmat/VMatLanguage.h>
 
 namespace PLearn {
 
@@ -62,6 +63,14 @@ protected:
   Vec mean_vec;           //!< Used to store the mean of each example (variable).
   Vec var_vec;            //!< Used to store the variance of each example (variable).
   real min_product_var;   //!< Value used to threshold products of variances.
+  //! VPL program that transforms the similarity measure.
+  VMatLanguage transform_prg;
+  //! Fields of the VPL program.
+  TVec<string> transform_prg_fields;
+  //! Used to store the similarity measure.
+  Vec result_vec;
+  //! Used to store the similarity measure tranformed by 'transform_prg'.
+  Vec result_transformed_vec;
 
   // *********************
   // * Protected options *

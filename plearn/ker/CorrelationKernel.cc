@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CorrelationKernel.cc,v 1.1 2005/05/20 13:55:09 tihocan Exp $ 
+   * $Id: CorrelationKernel.cc,v 1.2 2005/05/20 18:31:59 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -81,16 +81,13 @@ void CorrelationKernel::declareOptions(OptionList& ol)
       "- 'linear' : linear correlation\n");
 
   declareOption(ol, "transform", &CorrelationKernel::transform, OptionBase::buildoption,
-      "An additional transformation applied on the similarity, among:\n"
-      "- ''               : no transformation\n"
-      "- 'minus_log'      : - log(similarity)\n"
-      "- 'minus_log_abs'  : - log(|similarity|)\n");
+      "An additional transformation applied on the similarity, in VPL language.\n");
 
   declareOption(ol, "var_threshold", &CorrelationKernel::var_threshold, OptionBase::buildoption,
       "If set to a value > 0, denote by x_i the training point whose variance is the\n"
       "'var_threshold' quantile of all training variances. If v_i is its variance, then\n"
       "all pairs of points whose product of variances is less than v_i^2 will be given a\n"
-      "similarity (correlation) of 1e-3.\n");
+      "similarity (correlation) of 1e-6.\n");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -117,6 +114,10 @@ void CorrelationKernel::build_()
   // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
   // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
   // ### You should assume that the parent class' build_() has already been called.
+  transform_prg.setSourceFieldNames(TVec<string>(1)); // Dummy fieldnames.
+  transform_prg.compileString(transform, transform_prg_fields);
+  result_vec.resize(1);
+  result_transformed_vec.resize(1);
 }
 
 //////////////
@@ -143,8 +144,12 @@ real CorrelationKernel::evaluate(const Vec& x1, const Vec& x2) const {
     real v_1 = variance(x1, mean(x1));
     real v_2 = variance(x2, mean(x2));
     if (v_1 * v_2 < min_product_var)
-      result = 1e-3;
+      result = 1e-6;
   }
+  result_vec[0] = result;
+  transform_prg.run(result_vec, result_transformed_vec);
+  return result_transformed_vec[0];
+  /*
   if (transform.empty())
     return result;
   else if (transform == "minus_log")
@@ -156,6 +161,7 @@ real CorrelationKernel::evaluate(const Vec& x1, const Vec& x2) const {
             "%s", transform.c_str());
     return 0; // To make the compiler happy.
   }
+  */
 }
 
 /* ### This method will very often be overridden.
