@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GramVMatrix.cc,v 1.2 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: GramVMatrix.cc,v 1.3 2005/05/20 13:54:01 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -123,6 +123,7 @@ void GramVMatrix::build_()
       cout << "Time to compute the Gram matrix: " << real_time_for_gram << endl;
     }
     kernel->report_progress = old_report_progress;
+    length_ = width_ = n;
     inherited::build();
   }
 }
