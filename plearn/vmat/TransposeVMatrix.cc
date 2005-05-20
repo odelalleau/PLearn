@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TransposeVMatrix.cc,v 1.3 2004/09/14 16:04:40 chrish42 Exp $ 
+   * $Id: TransposeVMatrix.cc,v 1.4 2005/05/20 13:55:26 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -50,11 +50,12 @@ using namespace std;
 // TransposeVMatrix //
 //////////////////////
 TransposeVMatrix::TransposeVMatrix()
-/* ### Initialize all fields to their default value */
+{}
+
+TransposeVMatrix::TransposeVMatrix(const VMat& the_source)
 {
-  // ...
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
+  source = the_source;
+  build();
 }
 
 PLEARN_IMPLEMENT_OBJECT(TransposeVMatrix,

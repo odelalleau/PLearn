@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TransposeVMatrix.h,v 1.3 2004/09/14 16:04:40 chrish42 Exp $ 
+   * $Id: TransposeVMatrix.h,v 1.4 2005/05/20 13:55:26 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -76,9 +76,10 @@ public:
   // ****************
 
   //! Default constructor.
-  // ### Make sure the implementation in the .cc
-  // ### initializes all fields to reasonable default values.
   TransposeVMatrix();
+
+  //! Convenience constructor.
+  TransposeVMatrix(const VMat& the_source);
 
   // ******************
   // * Object methods *
