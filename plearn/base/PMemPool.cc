@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PMemPool.cc,v 1.1 2005/05/22 03:05:52 chapados Exp $ 
+   * $Id: PMemPool.cc,v 1.2 2005/05/22 04:10:56 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -98,7 +98,9 @@ void PMemArena::deallocate(void* p)
 PMemPool::PMemPool(size_t object_size_, size_t initial_size_,
                    float growth_factor_, bool use_fast_deallocator)
   : last_arena(0),
-    object_size(object_size_), cur_arena_size(initial_size_),
+    object_size(object_size_),
+    initial_arena_size(initial_size_),
+    cur_arena_size(initial_size_),
     arena_growth_factor(growth_factor_),
     fast_deallocate(use_fast_deallocator),
     free_list(0)
@@ -190,5 +192,14 @@ PMemArena* PMemPool::newArena()
   return new_arena;
 }
   
+void PMemPool::purge_memory()
+{
+  arenas.clear();
+  stormap.clear();
+  last_arena = 0;
+  free_list  = 0;
+  cur_arena_size = initial_arena_size;
+}
+
 
 } // end of namespace PLearn

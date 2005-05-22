@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PMemPool.h,v 1.1 2005/05/22 03:05:52 chapados Exp $ 
+   * $Id: PMemPool.h,v 1.2 2005/05/22 04:10:56 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -148,7 +148,8 @@ protected:
   std::list< PP<PMemArena> > arenas; //!< list of allocated arenas
   PMemArena* last_arena;             //!< arena we last allocated from
   size_t object_size;                //!< size of each allocated object
-  size_t cur_arena_size;             //!< how many objects per arena
+  size_t initial_arena_size;         //!< initially, now many objects per arena
+  size_t cur_arena_size;             //!< currently, how many objects per arena
   float arena_growth_factor;         //!< by how much to grow cur_arena_size
   map<void*, PMemArena*> stormap;    //!< quick access to arena storage addresses
   bool fast_deallocate;              //!< whether to use fast deallocator
@@ -174,6 +175,9 @@ public:
 
   //! Return true if no objects remain allocated within the pool
   bool empty() const { return arenas.size() == 0; }
+
+  //! Deallocate all memory from the pool
+  void purge_memory();
   
 protected:
   //! Search the list of arenas for one that contains some storage;
