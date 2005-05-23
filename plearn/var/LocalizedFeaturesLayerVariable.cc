@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.2 2005/05/23 03:01:53 yoshua Exp $
+   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.3 2005/05/23 18:09:27 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,7 +50,7 @@ using namespace std;
 
 /** LocalizedFeaturesLayerVariable **/
 
-// Single layer of a neural network, with acceleration tricks
+// Single layer of a neural network.
 
 PLEARN_IMPLEMENT_OBJECT(LocalizedFeaturesLayerVariable,
                         "Single layer of a neural network, with local connectivity on a set of localized features.\n",
@@ -58,7 +58,7 @@ PLEARN_IMPLEMENT_OBJECT(LocalizedFeaturesLayerVariable,
                         "and each hidden unit takes input only from a subset of features that are\n"
                         "in some local region in that space.\n"
                         "The user can specify the feature subsets or specify the low-dimensional embedding\n"
-                        "of the feature. In the latter case the subsets are derived according to one of\n"
+                        "of the features. In the latter case the subsets are derived according to one of\n"
                         "several algorithms. The default one (knn_subsets) is simply that there is one\n"
                         "subset per feature, with n_neighbors_per_subset+1 features per subset, that include\n"
                         "the 'central' feature and its n_neighbors_per_subset embedding neighbors.\n"
@@ -100,19 +100,24 @@ LocalizedFeaturesLayerVariable::build_()
     varray.resize(3);
     varray[1] = Var(n_connections);
     varray[2] = Var(n_hidden_per_subset*n_subsets);
+    // varray[0] = input
+    // varray[1] = connection weights
+    // varray[2] = biases
   }
   if (varray[0]) {
     if (n_features != varray[0]->value.size())
       PLERROR("In LocalizedFeaturesLayerVariable: input var 0 (features) should have size = %d = n_features, but is %d\n",
               n_features, varray[0]->value.size());
+    /* Cannot happen.
     if (n_connections != varray[1]->value.size())
       PLERROR("In LocalizedFeaturesLayerVariable: input var 1 (weights) should have size = %d = n_connections, but is %d\n",
               n_connections, varray[1]->value.size());
     if (n_hidden_per_subset*n_subsets != varray[2]->value.size())
       PLERROR("In LocalizedFeaturesLayerVariable: input var 2 (biases) should have size = %d = n_hidden, but is %d\n",
               n_hidden_per_subset*n_subsets,varray[2]->value.size());
+    */
 
-    // initialize parameters
+    // Initialize parameters.
     real n_inputs_per_neuron = n_connections / real(n_hidden_per_subset*n_subsets);
     real delta = 1/n_inputs_per_neuron;
     fill_random_uniform(varray[1]->value, -delta, delta);
@@ -124,14 +129,14 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
 {
   if (knn_subsets)
   {
-    n_features = varray[0]->value.size();    // Get n_inputs from first var if present.
+    n_features = varray[0]->value.size();    // Get n_features from first var.
     n_subsets = n_features;
     n_connections = (1+n_neighbors_per_subset) * n_subsets * n_hidden_per_subset;
     feature_subsets.resize(n_subsets);
     BottomNI<real> lowest_distances;
     for (int s=0;s<n_subsets;s++)
     {
-      feature_subsets[s].resize(n_neighbors_per_subset);
+      feature_subsets[s].resize(n_neighbors_per_subset + 1);
       // find k-nearest neighbors of feature s according to feature_locations
       lowest_distances.init(n_neighbors_per_subset);
       Vec center = feature_locations(s);
@@ -144,7 +149,7 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
       TVec< pair<real,int> > neighbors = lowest_distances.getBottomN();
       feature_subsets[s][0] = s;
       for (int k=0;k<n_neighbors_per_subset;k++)
-        feature_subsets[s][k+1] =neighbors[k].second;
+        feature_subsets[s][k+1] = neighbors[k].second;
     }
   }
   else
@@ -162,7 +167,7 @@ void LocalizedFeaturesLayerVariable::declareOptions(OptionList& ol)
 
   declareOption(ol, "feature_locations", &LocalizedFeaturesLayerVariable::feature_locations, 
                 OptionBase::buildoption, 
-                "    (n_features x n_dim) matrix assigning each feature to a location in n_dim'ensional space.\n"
+                "    (n_features x n_dim) matrix assigning each feature to a location in n_dimensional space.\n"
                 "    If feature_subsets is directly provided, it is not necessary to provide this option, as\n"
                 "    the feature locations are only used to infer the feature_subsets.\n");
 
@@ -181,7 +186,7 @@ void LocalizedFeaturesLayerVariable::declareOptions(OptionList& ol)
                 "    Whether to infer feature_subsets using the k-nearest-neighbor algorithm or not.\n"
                 "    This option is only used when feature_subsets is not directly provided by the user.\n"
                 "    Each subset will have size 'n_neighbors_per_subset' and there will be one subset\n"
-                "    per feature, comprising that feature and its 'n_neighbors_per_subset' - 1 neighbors\n"
+                "    per feature, comprising that feature and its 'n_neighbors_per_subset' neighbors\n"
                 "    in terms of Euclidean distance in feature locations.\n");
 
   declareOption(ol, "n_neighbors_per_subset", &LocalizedFeaturesLayerVariable::n_neighbors_per_subset, 
@@ -210,6 +215,8 @@ void LocalizedFeaturesLayerVariable::recomputeSize(int& l, int& w) const
   if (varray.length() >= 2 && varray[0] && varray[1]) {
     l = n_hidden_per_subset * n_subsets;
     w = 1;
+    // TODO Seems different from the FNetVariable
+    // TODO A resize in build ?
   } else
     l = w = 0;
 }
@@ -250,13 +257,14 @@ void LocalizedFeaturesLayerVariable::bprop()
     int subset_size = subset.length();
     for (int k=0;k<n_hidden_per_subset;k++,db++,y++,dy++)
     {
+      // TODO Check this derivative.
       real dact = *dy * *y * (1 - *y);
       *db += dact;
       for (int j=0;j<subset_size;j++,dw++)
         *dw += dact * x[subset[j]];
       if (backprop_to_inputs)
         for (int j=0;j<subset_size;j++,w++)
-          dx[subset[j]] += dact * *dw;
+          dx[subset[j]] += dact * *w;
     }
   }
 }
