@@ -34,12 +34,13 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.1 2005/05/20 19:37:05 yoshua Exp $
+   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.2 2005/05/23 03:01:53 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "LocalizedFeaturesLayerVariable.h"
 #include <plearn/math/random.h>
+#include <plearn/math/BottomNI.h>
 #include <plearn/math/TMat_maths_impl.h>
 #include <plearn/math/TMat_maths_specialisation.h>
 
@@ -56,6 +57,15 @@ PLEARN_IMPLEMENT_OBJECT(LocalizedFeaturesLayerVariable,
                         "Each feature is associated with a location in some low-dimensional space\n"
                         "and each hidden unit takes input only from a subset of features that are\n"
                         "in some local region in that space.\n"
+                        "The user can specify the feature subsets or specify the low-dimensional embedding\n"
+                        "of the feature. In the latter case the subsets are derived according to one of\n"
+                        "several algorithms. The default one (knn_subsets) is simply that there is one\n"
+                        "subset per feature, with n_neighbors_per_subset+1 features per subset, that include\n"
+                        "the 'central' feature and its n_neighbors_per_subset embedding neighbors.\n"
+                        "\n"
+                        "TODO IN A FUTURE RELEASE(?):\n"
+                        "The learning algorithm that estimates feature locations or directly the graph\n"
+                        "that defines subsets of features could be embedded in this class.\n"
                         );
 
 LocalizedFeaturesLayerVariable::LocalizedFeaturesLayerVariable()
@@ -79,16 +89,15 @@ LocalizedFeaturesLayerVariable::build()
 void
 LocalizedFeaturesLayerVariable::build_()
 {
-  if (varray.length() == 0 && n_features == -1)
+  if (varray.length() == 0)
     // Cannot do anything yet.
     return;
+  computeSubsets();
   if (   varray.size() != 3
          || n_connections != varray[1]->value.size()
          || n_hidden_per_subset*n_subsets != varray[2]->value.size()  )
   {
     varray.resize(3);
-    if (varray[0])
-      n_features = varray[0]->value.size();    // Get n_inputs from first var if present.
     varray[1] = Var(n_connections);
     varray[2] = Var(n_hidden_per_subset*n_subsets);
   }
@@ -102,7 +111,44 @@ LocalizedFeaturesLayerVariable::build_()
     if (n_hidden_per_subset*n_subsets != varray[2]->value.size())
       PLERROR("In LocalizedFeaturesLayerVariable: input var 2 (biases) should have size = %d = n_hidden, but is %d\n",
               n_hidden_per_subset*n_subsets,varray[2]->value.size());
+
+    // initialize parameters
+    real n_inputs_per_neuron = n_connections / real(n_hidden_per_subset*n_subsets);
+    real delta = 1/n_inputs_per_neuron;
+    fill_random_uniform(varray[1]->value, -delta, delta);
+    varray[2]->value.clear();
   }
+}
+
+void LocalizedFeaturesLayerVariable::computeSubsets()
+{
+  if (knn_subsets)
+  {
+    n_features = varray[0]->value.size();    // Get n_inputs from first var if present.
+    n_subsets = n_features;
+    n_connections = (1+n_neighbors_per_subset) * n_subsets * n_hidden_per_subset;
+    feature_subsets.resize(n_subsets);
+    BottomNI<real> lowest_distances;
+    for (int s=0;s<n_subsets;s++)
+    {
+      feature_subsets[s].resize(n_neighbors_per_subset);
+      // find k-nearest neighbors of feature s according to feature_locations
+      lowest_distances.init(n_neighbors_per_subset);
+      Vec center = feature_locations(s);
+      for (int f=0;f<n_features;f++)
+        if (f!=s)
+        {
+          real dist = powdistance(center,feature_locations(f));
+          lowest_distances.update(dist,f);
+        }
+      TVec< pair<real,int> > neighbors = lowest_distances.getBottomN();
+      feature_subsets[s][0] = s;
+      for (int k=0;k<n_neighbors_per_subset;k++)
+        feature_subsets[s][k+1] =neighbors[k].second;
+    }
+  }
+  else
+    PLERROR("In LocalizedFeaturesLayerVariable: currently the only method for computing subsets is 'knn_subsets'.\n");
 }
 
 ////////////////////

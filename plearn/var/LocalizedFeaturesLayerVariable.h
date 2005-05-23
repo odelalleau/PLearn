@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.h,v 1.1 2005/05/20 19:37:05 yoshua Exp $
+   * $Id: LocalizedFeaturesLayerVariable.h,v 1.2 2005/05/23 03:01:53 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -91,6 +91,8 @@ public:
 protected:
 
   static void declareOptions(OptionList &ol);
+
+  virtual void computeSubsets();
 
 private:
 
