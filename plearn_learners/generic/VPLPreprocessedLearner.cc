@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VPLPreprocessedLearner.cc,v 1.2 2005/05/13 22:00:41 plearner Exp $ 
+   * $Id: VPLPreprocessedLearner.cc,v 1.3 2005/05/24 13:49:05 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -54,7 +54,10 @@ VPLPreprocessedLearner::VPLPreprocessedLearner()
 {
 }
 
-PLEARN_IMPLEMENT_OBJECT(VPLPreprocessedLearner, "ONE LINE DESCRIPTION", "MULTI-LINE \nHELP");
+PLEARN_IMPLEMENT_OBJECT(VPLPreprocessedLearner,
+    "A learner that can automatically process input and output of another learner.",
+    ""
+);
 
 void VPLPreprocessedLearner::declareOptions(OptionList& ol)
 {
@@ -86,7 +89,7 @@ void VPLPreprocessedLearner::declareOptions(OptionList& ol)
 
   declareOption(ol, "input_preproc", &VPLPreprocessedLearner::input_preproc, OptionBase::buildoption,
                 "Program string in VPL language to be applied to a new input.\n"
-                "This must produce exactly the same thing as the preprocessed\n"
+                "This must produce exactly the same thing as the preprocessed.\n"
                 "Note that names must be given to the generated values with :fieldname VPL syntax.\n"
                 "input part produced by trainset_preproc");
   
