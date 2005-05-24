@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.50 2005/05/12 19:13:45 chapados Exp $
+   * $Id: vmatmain.cc,v 1.51 2005/05/24 18:48:12 tihocan Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -44,7 +44,9 @@
 #include <plearn/base/general.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/math/StatsCollector.h>
+#include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/vmat/SelectColumnsVMatrix.h>
+#include <plearn/vmat/SubVMatrix.h>
 #include <plearn/vmat/VMatLanguage.h>
 #include <plearn/vmat/VVMatrix.h>
 #include <plearn/vmat/VMat.h>
@@ -912,6 +914,79 @@ void viewVMat(const VMat& vm)
         }
         break;
       ///////////////////////////////////////////////////////////////
+      case (int)'i': case (int)'I': 
+        {
+          echo();
+          char strmsg[] = {"Insert before column ('Enter' = current, '-1' = insert at the end): "};
+          mvprintw(LINES-1,0,strmsg);
+          clrtoeol();
+          move(LINES-1, (int)strlen(strmsg));
+          char l[10];
+          getnstr(l, 10);
+          int ins_col = curj;
+          if (l[0] != '\0') {
+            if (!pl_isnumber(l) || toint(l) < -1 || toint(l)>=vm_showed->width()) {
+              mvprintw(LINES-1,0,"*** Invalid column number ***");
+              clrtoeol();
+              refresh();
+              // wait until the user types something
+              key = getch();
+              onError = true;
+              noecho();
+              break;
+            } else {
+              ins_col = toint(l);
+            }
+          }
+          if (ins_col == -1)
+            ins_col = vm_showed->width();
+          char strmsg2[] = {"Name of the column to insert ('Enter' = column number): "};
+          mvprintw(LINES-1,0,strmsg2);
+          clrtoeol();
+          move(LINES-1, (int)strlen(strmsg2));
+          char l2[100];
+          getnstr(l2, 100);
+          string ins_name = tostring(ins_col);
+          if (l2[0] != '\0') {
+            ins_name = l2;
+          }
+          char strmsg3[] = {"Default value ('Enter' = 0): "};
+          mvprintw(LINES-1,0,strmsg3);
+          clrtoeol();
+          move(LINES-1, (int)strlen(strmsg3));
+          char l3[100];
+          getnstr(l3, 100);
+          string default_val = tostring(0);
+          if (l3[0] != '\0') {
+            default_val = l3;
+          }
+          TVec<VMat> vmats;
+          if (ins_col > 0)
+            vmats.append(new SubVMatrix(vm_showed, 0, 0, vm_showed->length(), ins_col));
+          Mat col_mat(vm_showed->length(), 1);
+          VMat col_vmat(col_mat);
+          col_vmat->declareFieldNames(TVec<string>(1, ins_name));
+          real val;
+          if (pl_isnumber(default_val, &val))
+            col_mat.fill(val);
+          else {
+            col_mat.fill(-1000);
+            col_vmat->addStringMapping(0, default_val, -1000);
+          }
+          vmats.append(col_vmat);
+          if (ins_col < vm_showed->width())
+            vmats.append(new SubVMatrix(vm_showed, 0, ins_col, vm_showed->length(), vm_showed->width() - ins_col));
+          vm_showed = new ConcatColumnsVMatrix(vmats);
+          mvprintw(LINES-1,0,"*** Inserted column '%s' at position %d with default value %s ***",
+                   ins_name.c_str(), ins_col, default_val.c_str());
+          clrtoeol();
+          refresh();
+          // Wait for a key to be pressed.
+          key = getch();
+          noecho();
+        }
+        break;
+      ///////////////////////////////////////////////////////////////
       case (int)'e': case (int)'E': 
         {
           echo();
@@ -1113,7 +1188,8 @@ void viewVMat(const VMat& vm)
         mvprintw(vStartHelp++,10," - end: move to the last column");
         mvprintw(vStartHelp++,10," - 'r' or 'R': show only a range or a set of columns");
         mvprintw(vStartHelp++,10," - 'x' or 'X': hide the currently selected column");
-        mvprintw(vStartHelp++,10," - 'a' or 'A': show all the columns");
+        mvprintw(vStartHelp++,10," - 'a' or 'A': show the original VMat");
+        mvprintw(vStartHelp++,10," - 'i' or 'I': insert a new column with default value");
         mvprintw(vStartHelp++,10," - 'l' or 'L': prompt for a line number and go to that line");
         mvprintw(vStartHelp++,10," - 'c' or 'C': prompt for a column number and go to that column");
         mvprintw(vStartHelp++,10," - 's' or 'S': toggle display string fields as strings or numbers ('S' = right indentation)");
