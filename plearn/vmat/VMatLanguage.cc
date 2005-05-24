@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.36 2005/05/16 18:26:04 tihocan Exp $
+   * $Id: VMatLanguage.cc,v 1.37 2005/05/24 21:55:46 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,6 +46,7 @@
 #include <plearn/db/getDataSet.h>
 #include <plearn/io/fileutils.h>
 #include <plearn/io/openFile.h>
+#include <plearn/misc/Calendar.h>
 
 namespace PLearn {
 using namespace std;
@@ -142,11 +143,17 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
   " _ todate         : YYYY MM DD   --> CYYMMDD\n"
   " _ dayofweek      : from CYYMMDD --> [0..6] (0=monday  6=sunday)\n"
   " _ today          : todays date CYYMMDD\n"
-  " _ date2julian    : CYYMMDD      --> nb. days\n"
+  " _ date2julian    : CYYMMDD      --> nb. days (JDate)\n"
   " _ julian2date    : nb. days     --> CYYMMDD\n"
   " _ weeknumber     : CYYMMDD      --> week number in the year between 0 and 52 incl.\n"
   "                                     (ISO 8601 minus 1)\n"
-  " _ dayofyear      : CYYMMDD      -->  number of days since january 1 of year CYY \n"
+  " _ dayofyear      : CYYMMDD      --> number of days since january 1 of year CYY \n"
+  " _ nextincal      : cal# JDate   --> next jdate ON OR AFTER given jdate within\n"
+  "                                     global calendar 'cal#'; global calendar name\n"
+  "                                     should be a string repr. of the integer cal#\n"
+  " _ previncal      : cal# JDate   --> previous jdate ON OR BEFORE given jdatewithin\n"
+  "                                     global calendar 'cal#'; global calendar name\n"
+  "                                     should be a string repr. of the integer cal#\n"
   " _ min            : b a  -->  (a<b? a : b)\n"
   " _ max            : b a  -->  (a<b? b : a)\n"
   " _ sqrt           : a    -->  sqrt(a)    ; square root\n"
@@ -667,6 +674,8 @@ VMatLanguage::VMatLanguage(VMat vmsrc)
         opcodes["sumabs"] = 56;  // v0 v1 v2 ... vn --> sum_i |vi| (no pop, and starts from the beginning of the stack)
         opcodes["weeknumber"] = 57;  // CYYMMDD -> week number in the year between 0 and 52 incl. (ISO 8601 minus 1) 
         opcodes["dayofyear"] = 58;  // CYYMMDD ->  number of days since january 1 of year CYY 
+        opcodes["nextincal"] = 59;  // cal# JDate -> next jdate on or after given jdate in global calendar cal#
+        opcodes["previncal"] = 60;  // cal# JDate -> previous jdate on or before given jdate in global calendar cal#
       }
   }
 
@@ -1003,6 +1012,28 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
           case 58: // dayofyear
             pstack.push(float_to_date(pstack.pop()).dayOfYear());
             break;
+          case 59: // nextincal:  cal# JDate -> next jdate on or after given jdate in global calendar cal#
+          {
+            JTime date = int(pstack.pop());
+            string cal_name = tostring(pstack.pop());
+            const Calendar* cal = Calendar::getGlobalCalendar(cal_name);
+            if (cal)
+              pstack.push(cal->calendarTimeOnOrAfter(date));
+            else
+              PLERROR("Global calendar '%s' does not exist", cal_name.c_str());
+            break;
+          }
+          case 60: // previncal:  cal# JDate -> previous jdate on or before given jdate in global calendar cal#
+          {
+            JTime date = int(pstack.pop());
+            string cal_name = tostring(pstack.pop());
+            const Calendar* cal = Calendar::getGlobalCalendar(cal_name);
+            if (cal)
+              pstack.push(cal->calendarTimeOnOrBefore(date));
+            else
+              PLERROR("Global calendar '%s' does not exist", cal_name.c_str());
+            break;
+          }
           default:
             PLERROR("BUG IN PreproInterpretor::run while running program: invalid opcode: %d", op);
           }
