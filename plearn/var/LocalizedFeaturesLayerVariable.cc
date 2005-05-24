@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.3 2005/05/23 18:09:27 tihocan Exp $
+   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.4 2005/05/24 15:42:12 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -134,16 +134,19 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
     n_connections = (1+n_neighbors_per_subset) * n_subsets * n_hidden_per_subset;
     feature_subsets.resize(n_subsets);
     BottomNI<real> lowest_distances;
+    Vec center(feature_locations->width());
+    Vec feature(feature_locations->width());
     for (int s=0;s<n_subsets;s++)
     {
       feature_subsets[s].resize(n_neighbors_per_subset + 1);
       // find k-nearest neighbors of feature s according to feature_locations
       lowest_distances.init(n_neighbors_per_subset);
-      Vec center = feature_locations(s);
+      feature_locations->getRow(s, center);
       for (int f=0;f<n_features;f++)
         if (f!=s)
         {
-          real dist = powdistance(center,feature_locations(f));
+          feature_locations->getRow(f, feature);
+          real dist = powdistance(center, feature);
           lowest_distances.update(dist,f);
         }
       TVec< pair<real,int> > neighbors = lowest_distances.getBottomN();

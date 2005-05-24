@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.h,v 1.2 2005/05/23 03:01:53 yoshua Exp $
+   * $Id: LocalizedFeaturesLayerVariable.h,v 1.3 2005/05/24 15:42:12 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -67,7 +67,7 @@ public:
 
   //! OPTIONS
   bool backprop_to_inputs;
-  Mat feature_locations; // n_features x n_dim
+  VMat feature_locations; // n_features x n_dim
   TVec<TVec<int> > feature_subsets; // n_subsets x (nb of features in i-th subset)
   int n_hidden_per_subset;
   bool knn_subsets;
