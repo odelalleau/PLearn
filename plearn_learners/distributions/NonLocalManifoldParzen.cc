@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzen.cc,v 1.5 2005/05/17 18:26:22 tihocan Exp $
+   * $Id: NonLocalManifoldParzen.cc,v 1.6 2005/05/24 20:56:38 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -181,7 +181,7 @@ void NonLocalManifoldParzen::declareOptions(OptionList& ol)
 		"The minimum value for sigma noise.\n"
                 );
 
-  declareOption(ol, "sigma_init", &NonLocalManifoldParzen::sigma_min, OptionBase::buildoption,
+  declareOption(ol, "sigma_init", &NonLocalManifoldParzen::sigma_init, OptionBase::buildoption,
 		"Initial minimum value for sigma noise.\n"
                 );
 
