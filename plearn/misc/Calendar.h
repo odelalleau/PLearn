@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Calendar.h,v 1.1 2005/05/24 18:37:46 chapados Exp $ 
+   * $Id: Calendar.h,v 1.2 2005/05/24 21:56:15 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Jean-Sébastien Senécal
@@ -108,6 +108,12 @@ typedef PRange<CTime> CTimeRange;
    contain, in its internal representation, a list of timestamps that
    correspond to, say, Midnight of every Mon/Tues/Wednes/Thurs/Fri-days
    from, say, 1900 to 2099.
+
+   In addition, the class supports a set of global (static) calendars keyed
+   by a string.  Functions are provided to set/get global calendars
+   associated with string keys.  A Remote-Method interface is provided as
+   well to set global calendars.  Special operators are available in
+   VMatLanguage to access those global calendars.
 */
 class Calendar : public Object
 {
@@ -131,6 +137,9 @@ protected:
   //! we have a vector of integers v_c.  The entry v_c[i] indicates what
   //! would be the index in calendar c of the index i in this calendar.
   map< Calendar*, TVec<int> > active_resamplings;
+
+  //! The set of currently-installed global calendars
+  static map<string, PP<Calendar> > global_calendars;
   
 public:
   //! The list of julian timestamps that define this calendar.
@@ -140,8 +149,16 @@ public:
   //! Default constructor.
   Calendar();
   
-  //! Constructor with specified timestamps.
+  //! Constructor with specified timestamps (julian dates)
   Calendar(const JTimeVec& timestamps);
+
+  //! This returns a calendar from a vector of "dates".  The following
+  //! are supported: YYYYMMDD, CYYMMDD, julian dates.  The format is
+  //! recognized automatically.  The dates need not be sorted; they will
+  //! be sortd automatically.  Note that the storage for the dates vector
+  //! is captured and kept; it should not be modified after calling
+  //! this function.
+  static PCalendar makeCalendar(Vec dates);
 
 private:
   //! This does the actual building. 
@@ -160,6 +177,12 @@ public:
   //! Transforms a shallow copy into a deep copy.
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+  //! Support for remote method invocation
+  virtual void call(const string& methodname, int nargs, PStream& io);
+
+
+  //#####  Calendar-Specific Functions  #####################################
+  
   //! Returns true iff this calendar contains no timestamps.
   bool isEmpty() const { return timestamps_.isEmpty(); }
 
@@ -167,10 +190,12 @@ public:
   const JTimeVec& getTimeStamps() const { return timestamps_; }
   
   //! Returns true iff the calendar have the exact same timestamps.
-  bool operator==(const Calendar& cal) { return (timestamps_ == cal.getTimeStamps()); }
+  bool operator==(const Calendar& cal)
+    { return (timestamps_ == cal.getTimeStamps()); }
 
   //! Returns true iff the calendar has different timestamps.
-  bool operator!=(const Calendar& cal) { return (timestamps_ != cal.getTimeStamps()); }
+  bool operator!=(const Calendar& cal)
+    { return (timestamps_ != cal.getTimeStamps()); }
   
   //! Returns the number of timestamps.
   int size() const { return timestamps_.length(); }
@@ -195,11 +220,23 @@ public:
   */
   bool containsTime(JTime julian_time, CTime *calendar_time = 0) const;
 
+  //! Return the JTime of the day in the calendar that comes ON OR AFTER
+  //! the specified day, or MAX_TIME if no such day exist.
+  JTime calendarTimeOnOrAfter(JTime julian_time) const;
+
+  //! Return the JTime of the day in the calendar that comes ON OR BEFORE
+  //! the specified day, or MIN_TIME if no such day exist.
+  JTime calendarTimeOnOrBefore(JTime julian_time) const;  
+  
   //! Return the subset of dates of this calendar that that are between
   //! the given lower and upper times (both endpoints are included in the
   //! the subset).
   PCalendar clamp(JTime lower, JTime upper);
 
+
+  //#####  Resamplings  ######################################################
+
+  
   //! Associate or modify a resampling to another calendar
   void setResampling(Calendar* other_cal, const TVec<int>& resampling)
     { active_resamplings[other_cal] = resampling; }
@@ -227,6 +264,17 @@ public:
   //! Return a new calendar containing the dates of a starting calendar
   //! MINUS the dates given in the list
   static PCalendar calendarDiff(const Calendar* cal, const JTimeVec& to_remove);
+
+
+  //#####  Global Static Calendars  ##########################################
+
+  //! Set a global calendar keyed to the given string
+  static void setGlobalCalendar(const string& calendar_name,
+                                PCalendar calendar);
+
+  //! Return a pointer to the global calendar given the string.
+  //! Return a NULL pointer if the calendar does not exist
+  static const Calendar* getGlobalCalendar(const string& calendar_name);
 };
 
 // Declares a few other classes and functions related to this class

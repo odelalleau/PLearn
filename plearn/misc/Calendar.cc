@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Calendar.cc,v 1.1 2005/05/24 18:37:46 chapados Exp $ 
+   * $Id: Calendar.cc,v 1.2 2005/05/24 21:56:15 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Jean-Sébastien Senécal
@@ -42,12 +42,43 @@
 
 
 #include "Calendar.h"
+#include <plearn/base/PDate.h>
 #include <plearn/math/TMat_sort.h>
 #include <set>
 
 namespace PLearn {
 using namespace std;
 
+PLEARN_IMPLEMENT_OBJECT(
+  Calendar,
+  "Encapsulates the concept of a calendar as an ordered finite list of timestamps.",
+  "This class encapsulates the concept of a calendar as an ordered "
+  "finite list of timestamps. The idea is to provide a tool to "
+  "convert a continuous representation of time (as julian dates) "
+  "into a discrete one. Not only the calendar time units (CTime) are "
+  "different, but the time axis may \"leap-over\" time ranges in "
+  "the continous time (JTime) axis.\n"
+  "\n"
+  "For instance, one may want to represent a conception of time "
+  "where time is sampled daily but only during business week days "
+  "(i.e. monday to friday) s.t. when time t is a friday, time (t+1) "
+  "will be the next monday (and not saturday). Such a calendar would "
+  "contain, in its internal representation, a list of timestamps that "
+  "correspond to, say, Midnight of every Mon/Tues/Wednes/Thurs/Fri-days "
+  "from, say, 1900 to 2099.\n"
+  "\n"
+  "In addition, the class supports a set of global (static) calendars keyed\n"
+  "by a string.  Functions are provided to set/get global calendars\n"
+  "associated with string keys.  A Remote-Method interface is provided as\n"
+  "well to set global calendars.  Special operators are available in\n"
+  "VMatLanguage to access those global calendars.\n"
+  );
+
+
+// Set of global calendars
+map<string,PP<Calendar> > Calendar::global_calendars;
+
+  
 Calendar::Calendar()
   : inherited(),
     last_julian_time_(MISSING_VALUE),
@@ -66,24 +97,42 @@ Calendar::Calendar(const JTimeVec& timestamps)
   build_();
 }
 
-PLEARN_IMPLEMENT_OBJECT(
-  Calendar,
-  "Encapsulates the concept of a calendar as an ordered finite list of timestamps.",
-  "This class encapsulates the concept of a calendar as an ordered "
-  "finite list of timestamps. The idea is to provide a tool to "
-  "convert a continuous representation of time (as julian dates) "
-  "into a discrete one. Not only the calendar time units (CTime) are "
-  "different, but the time axis may \"leap-over\" time ranges in "
-  "the continous time (JTime) axis.\n"
-  "\n"
-  "For instance, one may want to represent a conception of time "
-  "where time is sampled daily but only during business week days "
-  "(i.e. monday to friday) s.t. when time t is a friday, time (t+1) "
-  "will be the next monday (and not saturday). Such a calendar would "
-  "contain, in its internal representation, a list of timestamps that "
-  "correspond to, say, Midnight of every Mon/Tues/Wednes/Thurs/Fri-days "
-  "from, say, 1900 to 2099."
-  );
+
+PCalendar Calendar::makeCalendar(Vec dates)
+{
+  static int Jan1_1900_JDN  = PDate(1900,01,01).toJulianDay();
+  static int Dec31_2199_JDN = PDate(2199,12,31).toJulianDay();
+  
+  // Start by converting the dates to Julian
+  for (int i=0, n=dates.size() ; i<n ; ++i) {
+    real date_i = dates[i];
+
+    // YYYYMMDD
+    if (date_i >= 19000101 && date_i <= 21991231) {
+      int year  = int(date_i / 10000);
+      int month = (int(date_i) % 10000) / 100;
+      int day   = int(date_i) % 100;
+      dates[i]  = PDate(year,month,day).toJulianDay();
+    }
+
+    // CYYMMDD (up to 2099/12/31, since 1900/01/01 == JDN-2415021)
+    else if (date_i >= 000101 && date_i <= 1991231) {
+      dates[i] = float_to_date(date_i).toJulianDay();
+    }
+
+    // Otherwise check it's in the proper range for a JDN
+    else if (date_i < Jan1_1900_JDN ||
+             date_i > Dec31_2199_JDN)
+      PLERROR("The date value '%g' at index %d could not be interpreted\n"
+              "as a date in YYYYMMDD, CYYMMDD or JDN in the 1900/01/01 to\n"
+              "2199/12/31 range.", date_i, i);
+  }
+
+  // Next sort by increasing value...
+  sortElements(dates);
+
+  return new Calendar(dates);
+}
 
 void Calendar::build_()
 {
@@ -151,6 +200,7 @@ CTime Calendar::getCalendarTime(JTime julian_time, bool use_lower_bound) const
   return last_calendar_time_;
 }
 
+
 CTime Calendar::convertCalendarTime(const Calendar& source_calendar,
                                     const Calendar& dest_calendar,
                                     CTime source_time,
@@ -160,6 +210,7 @@ CTime Calendar::convertCalendarTime(const Calendar& source_calendar,
     PLERROR("In convertCalendarTime(), one of the calendars is empty.");
   return dest_calendar.getCalendarTime(source_calendar.getTime(source_time), use_lower_bound);
 }
+
 
 bool Calendar::containsTime(JTime julian_time, CTime *calendar_time) const
 {
@@ -173,6 +224,29 @@ bool Calendar::containsTime(JTime julian_time, CTime *calendar_time) const
   else
     return false;
 }
+
+
+JTime Calendar::calendarTimeOnOrAfter(JTime julian_time) const
+{
+  CTime start_point = getCalendarTime(julian_time);
+  if (getTime(start_point) < julian_time)    // if at very end of calendar
+    return MAX_TIME;
+  else
+    return getTime(start_point);
+}
+
+
+JTime Calendar::calendarTimeOnOrBefore(JTime julian_time) const
+{
+  CTime start_point = getCalendarTime(julian_time);
+  while (start_point >= 0 && getTime(start_point) > julian_time)
+    start_point--;
+  if (start_point < 0)
+    return MIN_TIME;
+  else
+    return getTime(start_point);
+}
+
 
 PCalendar Calendar::unite(const TVec<PCalendar>& raw_calendars)
 {
@@ -199,6 +273,7 @@ PCalendar Calendar::unite(const TVec<PCalendar>& raw_calendars)
   
   return united;
 }
+
 
 PCalendar Calendar::intersect(const TVec<PCalendar>& raw_calendars)
 {
@@ -235,6 +310,7 @@ PCalendar Calendar::intersect(const TVec<PCalendar>& raw_calendars)
   return intersected;
 }
 
+
 PCalendar Calendar::calendarDiff(const Calendar* cal, const JTimeVec& to_remove)
 {
   set<JTime> cal_times(cal->timestamps_.begin(), cal->timestamps_.end());
@@ -245,6 +321,7 @@ PCalendar Calendar::calendarDiff(const Calendar* cal, const JTimeVec& to_remove)
   copy(cal_times.begin(), cal_times.end(), new_timestamps.begin());
   return new Calendar(new_timestamps);
 }
+
 
 PCalendar Calendar::clamp(JTime lower, JTime upper)
 {
@@ -258,4 +335,58 @@ PCalendar Calendar::clamp(JTime lower, JTime upper)
   return clamped;
 }
 
+
+void Calendar::setGlobalCalendar(const string& calendar_name,
+                                 PCalendar calendar)
+{
+  if (calendar_name != "")
+    global_calendars[calendar_name] = calendar;
+  else
+    PLERROR("Calendar::setGlobalCalendar: the calendar name must be specified");
 }
+
+
+const Calendar* Calendar::getGlobalCalendar(const string& calendar_name)
+{
+  map<string,PCalendar>::const_iterator it =
+    global_calendars.find(calendar_name);
+  if (it != global_calendars.end())
+    return (const Calendar*)(it->second);
+  else
+    return 0;
+}
+
+
+void Calendar::call(const string& methodname, int nargs, PStream& io)
+{
+  if (methodname == "setGlobalCalendar") {
+    if (nargs != 2)
+      PLERROR("Calendar remote method 'setGlobalCalendar' takes 2 arguments:\n"
+              "string calendar_name, Vec calendar_dates");
+    string calendar_name;
+    Vec calendar_dates;
+    io >> calendar_name >> calendar_dates;
+    setGlobalCalendar(calendar_name, makeCalendar(calendar_dates));
+    prepareToSendResults(io, 0);
+    io.flush();
+  }
+  else if (methodname == "getGlobalCalendar") {
+    if (nargs != 1)
+      PLERROR("Calendar remote method 'getGlobalCalendar' takes 1 argument:\n"
+              "string calendar_name");
+    string calendar_name;
+    io >> calendar_name;
+    const Calendar* cal = getGlobalCalendar(calendar_name);
+    if (! cal)
+      PLERROR("Global calendar '%s' not found", calendar_name.c_str());
+    else {
+      prepareToSendResults(io, 1);
+      io << cal->timestamps_;
+      io.flush();
+    }
+  }
+  else
+    inherited::call(methodname, nargs, io);
+}
+
+} // end of namespace PLearn
