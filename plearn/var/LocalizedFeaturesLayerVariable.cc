@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.4 2005/05/24 15:42:12 tihocan Exp $
+   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.5 2005/05/24 16:24:39 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -75,7 +75,8 @@ LocalizedFeaturesLayerVariable::LocalizedFeaturesLayerVariable()
     knn_subsets(true),
     n_neighbors_per_subset(-1),
     gridding_subsets(false),
-    center_on_feature_locations(true)
+    center_on_feature_locations(true),
+    seed(-1)
 {
 }
 
@@ -120,9 +121,12 @@ LocalizedFeaturesLayerVariable::build_()
     // Initialize parameters.
     real n_inputs_per_neuron = n_connections / real(n_hidden_per_subset*n_subsets);
     real delta = 1/n_inputs_per_neuron;
+    if (seed >= 0)
+      manual_seed(seed);
     fill_random_uniform(varray[1]->value, -delta, delta);
     varray[2]->value.clear();
   }
+  resize(1, n_hidden_per_subset * n_subsets);
 }
 
 void LocalizedFeaturesLayerVariable::computeSubsets()
@@ -208,6 +212,8 @@ void LocalizedFeaturesLayerVariable::declareOptions(OptionList& ol)
                 "    or on regularly spaced centers in a volume.\n"
                 "    NOT IMPLEMENTED YET.\n");
 
+  declareOption(ol, "seed", &LocalizedFeaturesLayerVariable::seed, OptionBase::buildoption,
+      "Positive seed to initialize the weights (will be ignored if set to -1).");
 
   inherited::declareOptions(ol);
 }
@@ -216,10 +222,8 @@ void LocalizedFeaturesLayerVariable::declareOptions(OptionList& ol)
 void LocalizedFeaturesLayerVariable::recomputeSize(int& l, int& w) const
 {
   if (varray.length() >= 2 && varray[0] && varray[1]) {
-    l = n_hidden_per_subset * n_subsets;
-    w = 1;
-    // TODO Seems different from the FNetVariable
-    // TODO A resize in build ?
+    l = 1;
+    w = n_hidden_per_subset * n_subsets;
   } else
     l = w = 0;
 }
@@ -260,8 +264,7 @@ void LocalizedFeaturesLayerVariable::bprop()
     int subset_size = subset.length();
     for (int k=0;k<n_hidden_per_subset;k++,db++,y++,dy++)
     {
-      // TODO Check this derivative.
-      real dact = *dy * *y * (1 - *y);
+      real dact = *dy * (1 - *y * *y);
       *db += dact;
       for (int j=0;j<subset_size;j++,dw++)
         *dw += dact * x[subset[j]];

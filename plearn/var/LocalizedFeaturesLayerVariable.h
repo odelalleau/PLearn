@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.h,v 1.3 2005/05/24 15:42:12 tihocan Exp $
+   * $Id: LocalizedFeaturesLayerVariable.h,v 1.4 2005/05/24 16:24:40 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -74,6 +74,7 @@ public:
   int n_neighbors_per_subset;
   bool gridding_subsets;
   bool center_on_feature_locations;
+  long seed;
 
   //!  Default constructor for persistence
   LocalizedFeaturesLayerVariable();
