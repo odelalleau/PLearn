@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.72 2005/05/25 14:36:55 tihocan Exp $
+   * $Id: NNet.cc,v 1.73 2005/05/25 14:51:07 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -514,7 +514,7 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
     output = hiddenLayer(output, w2);
   }
 
-  if (nhidden2>0 && nhidden==0)
+  if (nhidden2>0 && nhidden==0 && !first_hidden_layer)
     PLERROR("NNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",nhidden2);
 
   if (rbf_layer_size>0)
