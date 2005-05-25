@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.42 2005/05/09 16:37:42 chapados Exp $
+   * $Id: getDataSet.cc,v 1.43 2005/05/25 19:04:48 dorionc Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -130,14 +130,15 @@ void extractDataSetNameAndArgs(const string& datasetString,
   string::size_type pos_of_arg_start = 0;
   pos_of_double_colon = datasetArgs.find("::", pos_of_arg_start);
   while (pos_of_double_colon != string::npos) {
-    args.push_back(datasetArgs.substr(pos_of_arg_start, pos_of_double_colon));
+    string a = datasetArgs.substr(pos_of_arg_start, pos_of_double_colon-pos_of_arg_start);
+    args.push_back(a);
 
     pos_of_arg_start = pos_of_double_colon + 2;
     pos_of_double_colon = datasetArgs.find("::", pos_of_arg_start);
   }
   if (pos_of_arg_start != pos_of_double_colon) {
     // Append the last argument
-    args.push_back(datasetArgs.substr(pos_of_arg_start, datasetArgs.size()));
+    args.push_back(datasetArgs.substr(pos_of_arg_start, datasetArgs.size()-pos_of_arg_start));
   }
 }
 
