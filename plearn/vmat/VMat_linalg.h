@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_linalg.h,v 1.3 2005/05/17 15:57:16 plearner Exp $ 
+   * $Id: VMat_linalg.h,v 1.4 2005/05/25 21:12:32 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -83,6 +83,11 @@ VMat transpose(VMat m1);
   If use_precomputed_XtX_XtY is false, then they are computed. Otherwise
   they are used as they are (typically passed precomputed from a previous
   call made with a possibly different weight_decay).
+
+  The argument 'apply_decay_from' lets you skip applying the decay
+  to the bias term if one is present.  This should be '1' if regressing
+  with a bias, or '0' if regressing with no added bias.
+  
   Returns average of squared loss.
 */
 real linearRegression(
@@ -90,7 +95,7 @@ real linearRegression(
   bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY,
   real& sum_squared_Y, Vec& outputwise_sum_squared_Y,
   bool return_squared_loss=false, int verbose_computation_every=0,
-  bool cholesky = true);
+  bool cholesky = true, int apply_decay_from = 1);
                       
 
 //! Version that does all the memory allocations of XtX, XtY and theta_t.
@@ -108,7 +113,8 @@ real weightedLinearRegression(
   real weight_decay, Mat theta_t, bool use_precomputed_XtX_XtY, Mat XtX,
   Mat XtY, real& sum_squared_Y, Vec& outputwise_sum_squared_Y,
   real& sum_gammas, bool return_squared_loss=false, 
-  int verbose_computation_every=0, bool cholesky = true);
+  int verbose_computation_every=0, bool cholesky = true,
+  int apply_decay_from = 1);
 
 //! Version that does all the memory allocations of XtX, XtY and theta_t. 
 //! Returns theta_t

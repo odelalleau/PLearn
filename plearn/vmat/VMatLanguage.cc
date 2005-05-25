@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.37 2005/05/24 21:55:46 chapados Exp $
+   * $Id: VMatLanguage.cc,v 1.38 2005/05/25 21:12:32 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -157,8 +157,8 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
   " _ min            : b a  -->  (a<b? a : b)\n"
   " _ max            : b a  -->  (a<b? b : a)\n"
   " _ sqrt           : a    -->  sqrt(a)    ; square root\n"
-  " _ ^              : b a  -->  pow(a,b)   ; a^b\n"
-  " _ modulo         : b a  -->  int(b) % int(a)\n"
+  " _ ^              : a b  -->  pow(a,b)   ; a^b\n"
+  " _ mod            : b a  -->  int(b) % int(a)\n"
   " _ vecscalmul     : x1 ... xn n alpha  -->  (x1*alpha) ... (xn*alpha)\n"
   " _ select         : v0 v1 v2 v3 ... vn-1 n i  -->  vi  \n"
   " _ length         : the length of the currently processed column.\n"
@@ -905,8 +905,8 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
             pstack.push(sqrt(pstack.pop()));
             break;
           case 44: // ^
-            a= pstack.pop();
             b= pstack.pop();
+            a= pstack.pop();
             pstack.push(pow(a,b));
             break;
           case 45: // mod

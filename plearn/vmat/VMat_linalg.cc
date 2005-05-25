@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_linalg.cc,v 1.3 2005/05/17 15:57:16 plearner Exp $ 
+   * $Id: VMat_linalg.cc,v 1.4 2005/05/25 21:12:32 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -156,7 +156,8 @@ real linearRegression(
   VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
   bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY,
   real& sum_squared_Y, Vec& outputwise_sum_squared_Y,
-  bool return_squared_loss, int verbose_every, bool cholesky)
+  bool return_squared_loss, int verbose_every, bool cholesky,
+  int apply_decay_from)
 {
   if (outputs.length()!=inputs.length())
     PLERROR("linearRegression: inputs.length()=%d while outputs.length()=%d",inputs.length(),outputs.length());
@@ -205,7 +206,7 @@ real linearRegression(
     }
 
   // add weight_decay on the diagonal of XX' (except for the bias)
-  for (int i=1; i<XtX.length(); i++)
+  for (int i=apply_decay_from; i<XtX.length(); i++)
     XtX(i,i) += weight_decay;
 
   if (cholesky) {
@@ -250,7 +251,7 @@ real weightedLinearRegression(
   bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY,
   real& sum_squared_Y, Vec& outputwise_sum_squared_Y,
   real& sum_gammas, bool return_squared_loss, int verbose_every,
-  bool cholesky)
+  bool cholesky, int apply_decay_from)
 {
   int inputsize = inputs.width();
   int targetsize = outputs.width();
@@ -297,7 +298,7 @@ real weightedLinearRegression(
   }
 
   // add weight_decay on the diagonal of XX' (except for the bias)
-  for (int i=1; i<XtX.length(); i++)
+  for (int i=apply_decay_from; i<XtX.length(); i++)
     XtX(i,i) += weight_decay;
 
   if (cholesky) {
