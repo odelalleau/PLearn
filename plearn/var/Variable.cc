@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.20 2005/02/04 15:10:02 tihocan Exp $
+   * $Id: Variable.cc,v 1.21 2005/05/25 18:45:30 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -307,8 +307,14 @@ void Variable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(gradient, copies);
   deepCopyField(matValue, copies);
   deepCopyField(matGradient, copies);
-  valuedata = value.data();
-  gradientdata = gradient.data();
+  if (value.getStorage())
+    valuedata = value.data();
+  else
+    valuedata = 0;
+  if (gradient.getStorage())
+    gradientdata = gradient.data();
+  else
+    gradientdata = 0;
   varDeepCopyField(g, copies);
 }
 
