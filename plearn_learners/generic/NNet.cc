@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.73 2005/05/25 14:51:07 tihocan Exp $
+   * $Id: NNet.cc,v 1.74 2005/05/25 15:27:58 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -509,7 +509,7 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
   // second hidden layer
   if(nhidden2>0)
   {
-    w2 = Var(1+nhidden, nhidden2, "w2");
+    w2 = Var(1 + output.length(), nhidden2, "w2");
     params.append(w2);
     output = hiddenLayer(output, w2);
   }
