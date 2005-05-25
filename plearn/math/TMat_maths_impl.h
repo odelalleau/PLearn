@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.67 2005/05/17 20:14:50 tihocan Exp $
+   * $Id: TMat_maths_impl.h,v 1.68 2005/05/25 16:44:54 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -4353,12 +4353,18 @@ void computeMeanAndVariance(const TMat<T>& m, TVec<T>& meanvec, TVec<T>& varianc
   columnVariance(m,variancevec,meanvec);
 }
 
-// inverse_standard_deviation[i,j] = 
-//    1/sqrt(mean_of_squares[i,j] - means[i,j]^2)
+//! inverse_standard_deviation[i,j] = 
+//!    1/sqrt(mean_of_squares[i,j] - means[i,j]^2)
+//! If 'min_stddev' is provided, any standard deviation less than this value
+//! will be set to 'default_stddev' without any warning being issued (even when
+//! a negative variance is encountered, which can happen because of numerical
+//! approximation for an almost constant variable).
 template<class T>
 void computeInverseStandardDeviationFromMeanAndSquareMean(const TMat<T>& inverse_standard_deviation,
                                                           const TMat<T>& means,
-                                                          const TMat<T>& mean_of_squares)
+                                                          const TMat<T>& mean_of_squares,
+                                                          real default_stddev = 1,
+                                                          real min_stddev = -1)
 {
   int n=inverse_standard_deviation.length();
   int m=inverse_standard_deviation.width();
@@ -4377,11 +4383,18 @@ void computeInverseStandardDeviationFromMeanAndSquareMean(const TMat<T>& inverse
     for (int j=0;j<m;j++)
     {
       real diff = mu2[j] - mu[j] * mu[j];
-      if (diff>0)
-        invs[j] = real(1.0/sqrt(diff));
+      if (diff>0) {
+        real sqrt_diff = sqrt(diff);
+        if (sqrt_diff < min_stddev)    // NB: Cannot happen if 'min_stddev' is -1.
+          invs[j] = real(1.0 / default_stddev);
+        else
+          invs[j] = real(1.0 / sqrt_diff);
+      }
       else {
-        PLWARNING("In computeInverseStandardDeviationFromMeanAndSquareMean - Variance is not > 0");
-        invs[j] = real(1.0);
+        if (min_stddev < 0)
+          // No minimum standard deviation provided, this is suspect.
+          PLWARNING("In computeInverseStandardDeviationFromMeanAndSquareMean - Variance is not > 0");
+        invs[j] = real(1.0 / default_stddev);
       }
     }
   }
