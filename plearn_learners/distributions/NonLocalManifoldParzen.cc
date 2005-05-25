@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzen.cc,v 1.6 2005/05/24 20:56:38 larocheh Exp $
+   * $Id: NonLocalManifoldParzen.cc,v 1.7 2005/05/25 18:41:57 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -145,6 +145,11 @@ void NonLocalManifoldParzen::declareOptions(OptionList& ol)
 		"Number of hidden units (if architecture_type is some kind of neural network)\n"
 		);
 
+  declareOption(ol, "hidden_layer", &NonLocalManifoldParzen::hidden_layer, OptionBase::buildoption,
+                "A user-specified NAry Var that computes the output of the first hidden layer\n"
+                "from the network input vector and a set of parameters. Its first argument should\n"
+                "be the network input and the remaining arguments the tunable parameters.\n");
+
   declareOption(ol, "batch_size", &NonLocalManifoldParzen::batch_size, OptionBase::buildoption, 
                 "    how many samples to use to estimate the average gradient before updating the weights\n"
                 "    0 is equivalent to specifying training_set->length() \n");
@@ -213,9 +218,6 @@ void NonLocalManifoldParzen::build_()
     log_L= log((real) L);
 
     {
-      if (n_hidden_units <= 0)
-        PLERROR("NonLocalManifoldParzen::Number of hidden units should be positive, now %d\n",n_hidden_units);
-
       
       x = Var(n);
       Var a; // outputs of hidden layer
@@ -234,12 +236,15 @@ void NonLocalManifoldParzen::build_()
            PLERROR("In NonLocalManifoldParzen::build - 'hidden_layer' should have parameters");
          for (int i=1;i<layer_var->varray.size();i++)
            params.append(layer_var->varray[i]);
-         a = layer_var;
+         a = transpose(layer_var);
+         n_hidden_units = layer_var->width();
       }
       else // standard hidden layer
       {
-        Var c = Var(n_hidden_units,1,"c ");
-        Var V = Var(n_hidden_units,n,"V ");               
+        if (n_hidden_units <= 0)
+          PLERROR("NonLocalManifoldParzen::Number of hidden units should be positive, now %d\n",n_hidden_units);
+        c = Var(n_hidden_units,1,"c ");
+        V = Var(n_hidden_units,n,"V ");               
         params.append(c);
         params.append(V);
         a = tanh(c + product(V,x));
@@ -589,10 +594,10 @@ void NonLocalManifoldParzen::initializeParams()
   else if (architecture_type=="single_neural_network")
   {
     real delta = 1.0 / sqrt(real(inputsize()));
-    fill_random_uniform(V->value, -delta, delta);
+    if (!hidden_layer) fill_random_uniform(V->value, -delta, delta);
     delta = 1.0 / real(n_hidden_units);
     fill_random_uniform(W->matValue, -delta, delta);
-    c->value.clear();
+    if (!hidden_layer) c->value.clear();
     snb->value.clear();
     fill_random_uniform(snV->matValue, -delta, delta);
     fill_random_uniform(muV->matValue, -delta, delta);
