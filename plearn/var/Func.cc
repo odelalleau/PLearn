@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.21 2005/02/24 15:12:22 ducharme Exp $
+   * $Id: Func.cc,v 1.22 2005/05/25 14:35:43 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -560,10 +560,11 @@ void Function::verifyGradient(const Vec& input, real step)
     max(apply(gradient - finitediffgradient,(tRealFunc)FABS)/
         (real(0.5)*apply(gradient + finitediffgradient,(tRealFunc)FABS)))
        << endl;
-  cerr << "cos(angle) : " << dot(gradient,finitediffgradient)/(norm(gradient)*norm(finitediffgradient))
-       << endl;
-  cerr << "angle : " << acos(dot(gradient,finitediffgradient)/(norm(gradient)*norm(finitediffgradient)))
-       << endl;
+  real cos_angle = dot(gradient,finitediffgradient)/(norm(gradient)*norm(finitediffgradient));
+  if (cos_angle > 1)
+    cos_angle = 1;      // Numerical imprecisions can lead to such situation.
+  cerr << "cos(angle) : " << cos_angle << endl;
+  cerr << "angle : " << acos(cos_angle) << endl;
 }
 
 void Function::verifyGradient(real minval, real maxval, real step)
