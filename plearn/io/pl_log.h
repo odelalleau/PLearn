@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: pl_log.h,v 1.4 2005/01/25 03:15:25 dorionc Exp $ 
+   * $Id: pl_log.h,v 1.5 2005/05/25 20:31:19 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados, Christian Dorion
@@ -57,7 +57,7 @@ namespace PLearn {
 #endif
 
 #ifndef PL_LOG_VERBOSITY
-#define PL_LOG_VERBOSITY 1000
+#define PL_LOG_VERBOSITY 499                 // block EXTREME by default
 #endif
 
 enum VerbosityLevel {
@@ -65,7 +65,7 @@ enum VerbosityLevel {
   VLEVEL_IMP      = 1,    // Important
   VLEVEL_NORMAL   = 5,    // Normal
   VLEVEL_DBG      = 10,   // Debug Info
-  VLEVEL_EXTREME  = 20    // Extreme Verbosity
+  VLEVEL_EXTREME  = 500   // Extreme Verbosity
 }; 
   
 class PL_Log
