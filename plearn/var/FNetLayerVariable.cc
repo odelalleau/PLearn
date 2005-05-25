@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.cc,v 1.15 2005/05/25 16:47:15 tihocan Exp $
+   * $Id: FNetLayerVariable.cc,v 1.16 2005/05/25 18:46:06 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -239,6 +239,11 @@ void FNetLayerVariable::declareOptions(OptionList& ol)
                 "    Similarly, mu2[i,j] is a moving average of x[k,j]*x[k,j] when |dC/da[k,i]| is above gradient_threshold\n"
                 "    and invs[i,j] = 1/sqrt(mu2[i,j] - mu[i,j]*mu[i,j]). The moving averages are exponential moving\n"
                 "    averages with coefficient exp_moving_average_coefficient.\n");
+
+  declareOption(ol, "min_stddev", &FNetLayerVariable::min_stddev, OptionBase::buildoption, 
+      "Used only when 'normalize_inputs' is true, any input whose standard deviation is less than this value\n"
+      "will be considered as having this standard deviation (prevents numerical problems with constant inputs).");
+
   declareOption(ol, "backprop_to_inputs", &FNetLayerVariable::backprop_to_inputs, OptionBase::buildoption, 
                 "    If true then gradient is propagated to the inputs. When this object is the first layer\n"
                 "    of a neural network, it is more efficient to set this option to false (which is its default).\n");
