@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.cc,v 1.14 2005/05/18 15:12:08 tihocan Exp $
+   * $Id: FNetLayerVariable.cc,v 1.15 2005/05/25 16:47:15 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -103,7 +103,8 @@ FNetLayerVariable::FNetLayerVariable()
     normalize_inputs(true),
     backprop_to_inputs(false),
     exp_moving_average_coefficient(0.001),
-    average_error_fraction_to_threshold(0.5)
+    average_error_fraction_to_threshold(0.5),
+    min_stddev(1e-2)
 {
   avg_act_gradient = -1;
 }
@@ -131,7 +132,8 @@ FNetLayerVariable::FNetLayerVariable(Var inputs,  // x
                                        normalize_inputs(_normalize_inputs),
                                        backprop_to_inputs(_backprop_to_inputs),
                                        exp_moving_average_coefficient(_exp_moving_average_coefficient),
-                                       average_error_fraction_to_threshold(_average_error_fraction_to_threshold)
+                                       average_error_fraction_to_threshold(_average_error_fraction_to_threshold),
+                                       min_stddev(1e-2)
 {
   avg_act_gradient = -1;
   build_();
@@ -408,7 +410,7 @@ void FNetLayerVariable::bprop()
   }
   if (normalize_inputs)
     // invs = 1/ sqrt(mu2 - mu*mu)
-    computeInverseStandardDeviationFromMeanAndSquareMean(invs,mu,mu2);
+    computeInverseStandardDeviationFromMeanAndSquareMean(invs,mu,mu2, min_stddev, min_stddev);
   gradient_threshold = average_error_fraction_to_threshold * avg_act_gradient;
 }
 

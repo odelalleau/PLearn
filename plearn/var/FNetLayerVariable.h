@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.h,v 1.7 2005/05/20 19:37:05 yoshua Exp $
+   * $Id: FNetLayerVariable.h,v 1.8 2005/05/25 16:47:28 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -83,6 +83,7 @@ public:
   bool backprop_to_inputs;
   real exp_moving_average_coefficient;
   real average_error_fraction_to_threshold;
+  real min_stddev;
 
   //!  Default constructor for persistence
   FNetLayerVariable();
