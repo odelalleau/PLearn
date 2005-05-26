@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.20 2005/05/19 19:09:22 chapados Exp $
+   * $Id: LinearRegressor.cc,v 1.21 2005/05/26 13:56:10 chapados Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
@@ -260,7 +260,7 @@ void LinearRegressor::train()
                        weight_decay*train_set.length(), weights, 
                        !recompute_XXXY, XtX, XtY,
                        sum_squared_y, outputwise_sum_squared_Y,
-                       true, 0, cholesky);
+                       true, 0, cholesky, include_bias > 0);
   }
   else if (train_set->weightsize()==1)
   {
@@ -269,7 +269,7 @@ void LinearRegressor::train()
                                train_set.subMatColumns(inputsize()+targetsize(),1),
                                weight_decay*train_set.length(), weights,
                                !recompute_XXXY, XtX, XtY, sum_squared_y, outputwise_sum_squared_Y,
-                               sum_gammas, true, 0, cholesky);
+                               sum_gammas, true, 0, cholesky, include_bias > 0);
   }
   else
     PLERROR("LinearRegressor: expected dataset's weightsize to be either 1 or 0, got %d\n",
