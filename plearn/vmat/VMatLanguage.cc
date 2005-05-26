@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.38 2005/05/25 21:12:32 chapados Exp $
+   * $Id: VMatLanguage.cc,v 1.39 2005/05/26 03:56:14 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -136,7 +136,7 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
   " _ year           : CYYMMDD --> YYYY\n"
   " _ month          : CYYMMDD --> MM\n"
   " _ day            : CYYMMDD --> DD\n"
-  " _ daydiff        : nb. days\n"
+  " _ daydiff        : CYYMMDD_a CYYMMDD_b --> (CYYMMDD_a - CYMMDD_b) in nb. of days\n"
   " _ monthdiff      : continuous: nb. days / (365.25/12)\n"
   " _ yeardiff       : continuous: nb. days / 365.25\n"
   " _ year_month_day : CYYMMDD      --> YYYY MM DD\n"
@@ -148,12 +148,14 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
   " _ weeknumber     : CYYMMDD      --> week number in the year between 0 and 52 incl.\n"
   "                                     (ISO 8601 minus 1)\n"
   " _ dayofyear      : CYYMMDD      --> number of days since january 1 of year CYY \n"
-  " _ nextincal      : cal# JDate   --> next jdate ON OR AFTER given jdate within\n"
+  " _ nextincal      : CYYMMDD cal# --> next CYYMMDD ON OR AFTER given jdate within\n"
   "                                     global calendar 'cal#'; global calendar name\n"
   "                                     should be a string repr. of the integer cal#\n"
-  " _ previncal      : cal# JDate   --> previous jdate ON OR BEFORE given jdatewithin\n"
+  "                                     If not found, return 0\n"
+  " _ previncal      : CYYMMDD cal# --> previous CYYMMDD ON OR BEFORE given jdatewithin\n"
   "                                     global calendar 'cal#'; global calendar name\n"
   "                                     should be a string repr. of the integer cal#\n"
+  "                                     If not found, return 0\n"
   " _ min            : b a  -->  (a<b? a : b)\n"
   " _ max            : b a  -->  (a<b? b : a)\n"
   " _ sqrt           : a    -->  sqrt(a)    ; square root\n"
@@ -1012,24 +1014,38 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
           case 58: // dayofyear
             pstack.push(float_to_date(pstack.pop()).dayOfYear());
             break;
-          case 59: // nextincal:  cal# JDate -> next jdate on or after given jdate in global calendar cal#
+          case 59: // nextincal
           {
-            JTime date = int(pstack.pop());
             string cal_name = tostring(pstack.pop());
+            PDate d = float_to_date(pstack.pop())
+            JTime date = d.toJulianDay();
             const Calendar* cal = Calendar::getGlobalCalendar(cal_name);
             if (cal)
-              pstack.push(cal->calendarTimeOnOrAfter(date));
+              {
+                JTime next = cal->calendarTimeOnOrAfter(date);
+                if(next<0)
+                  pstack.push(0);
+                else
+                  pstack.push(date_to_float(PDate((int)next)));
+              }
             else
               PLERROR("Global calendar '%s' does not exist", cal_name.c_str());
             break;
           }
-          case 60: // previncal:  cal# JDate -> previous jdate on or before given jdate in global calendar cal#
+          case 60: // previncal
           {
-            JTime date = int(pstack.pop());
             string cal_name = tostring(pstack.pop());
+            PDate d = float_to_date(pstack.pop())
+            JTime date = d.toJulianDay();
             const Calendar* cal = Calendar::getGlobalCalendar(cal_name);
             if (cal)
-              pstack.push(cal->calendarTimeOnOrBefore(date));
+              {
+                JTime next = cal->calendarTimeOnOrBefore(date);
+                if(next<0)
+                  pstack.push(0);
+                else
+                  pstack.push(date_to_float(PDate((int)next)));
+              }
             else
               PLERROR("Global calendar '%s' does not exist", cal_name.c_str());
             break;
