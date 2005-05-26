@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.21 2005/05/26 13:56:10 chapados Exp $
+   * $Id: LinearRegressor.cc,v 1.22 2005/05/26 15:27:49 dorionc Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
@@ -257,7 +257,7 @@ void LinearRegressor::train()
   {
     squared_error =
       linearRegression(trainset_inputs, trainset_targets,
-                       weight_decay*train_set.length(), weights, 
+                       weight_decay, weights, 
                        !recompute_XXXY, XtX, XtY,
                        sum_squared_y, outputwise_sum_squared_Y,
                        true, 0, cholesky, include_bias > 0);
@@ -267,7 +267,7 @@ void LinearRegressor::train()
     squared_error =
       weightedLinearRegression(trainset_inputs, trainset_targets,
                                train_set.subMatColumns(inputsize()+targetsize(),1),
-                               weight_decay*train_set.length(), weights,
+                               weight_decay, weights,
                                !recompute_XXXY, XtX, XtY, sum_squared_y, outputwise_sum_squared_Y,
                                sum_gammas, true, 0, cholesky, include_bias > 0);
   }
