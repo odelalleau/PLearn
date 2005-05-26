@@ -34,7 +34,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperLearner.cc,v 1.5 2005/05/07 23:00:09 larocheh Exp $
+   * $Id: HyperLearner.cc,v 1.6 2005/05/26 13:15:16 tihocan Exp $
    ******************************************************* */
 // Author: Pascal Vincent
 
@@ -106,6 +106,12 @@ HyperLearner::declareOptions(OptionList &ol)
                   "should final learner be saved in expdir/final_learner.psave");
 
     inherited::declareOptions(ol);
+
+    // Hide some unused options.
+
+    redeclareOption(ol, "seed", &HyperLearner::seed_, OptionBase::nosave,
+        "Not used.");
+    
 }
 
 void HyperLearner::setLearnerOptions(const TVec<string>& option_names,
