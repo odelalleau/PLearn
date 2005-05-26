@@ -36,7 +36,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperOptimize.cc,v 1.6 2005/03/17 16:33:55 tihocan Exp $ 
+   * $Id: HyperOptimize.cc,v 1.7 2005/05/26 13:16:59 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file HyperOptimize.cc */
@@ -104,7 +104,7 @@ void HyperOptimize::declareOptions(OptionList& ol)
   declareOption(ol, "oracle", &HyperOptimize::oracle, OptionBase::buildoption,
                 "Oracle to interrogate to get hyper-parameter values to try.");
   declareOption(ol, "provide_tester_expdir", &HyperOptimize::provide_tester_expdir, OptionBase::buildoption,
-                "should the tester be provided with an expdir for each option combinatin to test");
+                "should the tester be provided with an expdir for each option combination to test");
   declareOption(ol, "sub_strategy", &HyperOptimize::sub_strategy, OptionBase::buildoption,
                 "Optional sub-strategy to optimize other hyper-params (for each combination given by the oracle)");
   declareOption(ol, "rerun_after_sub", &HyperOptimize::rerun_after_sub, OptionBase::buildoption,
