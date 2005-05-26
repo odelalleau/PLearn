@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VPLPreprocessedLearner.cc,v 1.3 2005/05/24 13:49:05 tihocan Exp $ 
+   * $Id: VPLPreprocessedLearner.cc,v 1.4 2005/05/26 15:49:53 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -54,10 +54,11 @@ VPLPreprocessedLearner::VPLPreprocessedLearner()
 {
 }
 
-PLEARN_IMPLEMENT_OBJECT(VPLPreprocessedLearner,
-    "A learner that can automatically process input and output of another learner.",
-    ""
-);
+PLEARN_IMPLEMENT_OBJECT(
+  VPLPreprocessedLearner,
+  "Learner whose training-set, inputs and outputs can be pre/post-processed by VPL code",
+  "See VMatLanguage for the definition of the allowed VPL syntax."
+  );
 
 void VPLPreprocessedLearner::declareOptions(OptionList& ol)
 {
@@ -149,10 +150,14 @@ void VPLPreprocessedLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
   deepCopyField(learner_, copies);    
 
-  deepCopyField(row_prg, copies);
-  deepCopyField(input_prg, copies);
-  deepCopyField(output_prg, copies);
-  deepCopyField(costs_prg, copies);
+  // deepCopyField(row_prg, copies);
+  // deepCopyField(input_prg, copies);
+  // deepCopyField(output_prg, copies);
+  // deepCopyField(costs_prg, copies);
+  row_prg.makeDeepCopyFromShallowCopy(copies);
+  input_prg.makeDeepCopyFromShallowCopy(copies);
+  output_prg.makeDeepCopyFromShallowCopy(copies);
+  costs_prg.makeDeepCopyFromShallowCopy(copies);
  
   deepCopyField(row_prg_fieldnames, copies); 
   deepCopyField(input_prg_fieldnames, copies);
