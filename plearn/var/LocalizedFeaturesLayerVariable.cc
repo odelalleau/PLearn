@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.5 2005/05/24 16:24:39 tihocan Exp $
+   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.6 2005/05/26 18:01:09 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -76,7 +76,8 @@ LocalizedFeaturesLayerVariable::LocalizedFeaturesLayerVariable()
     n_neighbors_per_subset(-1),
     gridding_subsets(false),
     center_on_feature_locations(true),
-    seed(-1)
+    seed(-1),
+    shared_weights(false)
 {
 }
 
@@ -96,11 +97,11 @@ LocalizedFeaturesLayerVariable::build_()
   computeSubsets();
   if (   varray.size() != 3
          || n_connections != varray[1]->value.size()
-         || n_hidden_per_subset*n_subsets != varray[2]->value.size()  )
+         || n_hidden_per_subset * (shared_weights ? 1 : n_subsets) != varray[2]->value.size()  )
   {
     varray.resize(3);
     varray[1] = Var(n_connections);
-    varray[2] = Var(n_hidden_per_subset*n_subsets);
+    varray[2] = Var(n_hidden_per_subset * (shared_weights ? 1 : n_subsets));
     // varray[0] = input
     // varray[1] = connection weights
     // varray[2] = biases
@@ -119,7 +120,11 @@ LocalizedFeaturesLayerVariable::build_()
     */
 
     // Initialize parameters.
-    real n_inputs_per_neuron = n_connections / real(n_hidden_per_subset*n_subsets);
+    real n_inputs_per_neuron = 0;
+    if (knn_subsets)
+      n_inputs_per_neuron = 1 + n_neighbors_per_subset;
+    else
+      PLERROR("In LocalizedFeaturesLayerVariable::build_ - Not supported");
     real delta = 1/n_inputs_per_neuron;
     if (seed >= 0)
       manual_seed(seed);
@@ -135,7 +140,9 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
   {
     n_features = varray[0]->value.size();    // Get n_features from first var.
     n_subsets = n_features;
-    n_connections = (1+n_neighbors_per_subset) * n_subsets * n_hidden_per_subset;
+    n_connections = (1+n_neighbors_per_subset) * n_hidden_per_subset;
+    if (!shared_weights)
+      n_connections *= n_subsets;
     feature_subsets.resize(n_subsets);
     BottomNI<real> lowest_distances;
     Vec center(feature_locations->width());
@@ -187,6 +194,9 @@ void LocalizedFeaturesLayerVariable::declareOptions(OptionList& ol)
   declareOption(ol, "n_hidden_per_subset", &LocalizedFeaturesLayerVariable::n_hidden_per_subset, 
                 OptionBase::buildoption, 
                 "    Number of hidden units per unique feature subset.\n");
+
+  declareOption(ol, "shared_weights", &LocalizedFeaturesLayerVariable::shared_weights, OptionBase::buildoption, 
+      "If true, similar hidden neurons in different subsets will share the same weights.");
 
   declareOption(ol, "knn_subsets", &LocalizedFeaturesLayerVariable::knn_subsets, 
                 OptionBase::buildoption, 
@@ -245,6 +255,10 @@ void LocalizedFeaturesLayerVariable::fprop()
         act += *w * x[subset[j]];
       *y = tanh(act);
     }
+    if (shared_weights) {
+      b = varray[2]->valuedata;
+      w = varray[1]->valuedata;
+    }
   }
 }
 
@@ -271,6 +285,11 @@ void LocalizedFeaturesLayerVariable::bprop()
       if (backprop_to_inputs)
         for (int j=0;j<subset_size;j++,w++)
           dx[subset[j]] += dact * *w;
+    }
+    if (shared_weights) {
+      w  = varray[1]->valuedata;
+      dw = varray[1]->valuedata;
+      db = varray[2]->gradientdata;
     }
   }
 }
