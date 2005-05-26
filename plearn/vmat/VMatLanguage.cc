@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.39 2005/05/26 03:56:14 plearner Exp $
+   * $Id: VMatLanguage.cc,v 1.40 2005/05/26 13:20:39 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -1017,7 +1017,7 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
           case 59: // nextincal
           {
             string cal_name = tostring(pstack.pop());
-            PDate d = float_to_date(pstack.pop())
+            PDate d = float_to_date(pstack.pop());
             JTime date = d.toJulianDay();
             const Calendar* cal = Calendar::getGlobalCalendar(cal_name);
             if (cal)
@@ -1035,7 +1035,7 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
           case 60: // previncal
           {
             string cal_name = tostring(pstack.pop());
-            PDate d = float_to_date(pstack.pop())
+            PDate d = float_to_date(pstack.pop());
             JTime date = d.toJulianDay();
             const Calendar* cal = Calendar::getGlobalCalendar(cal_name);
             if (cal)
