@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatKernel.cc,v 1.1 2005/05/26 19:57:14 crompb Exp $ 
+   * $Id: VMatKernel.cc,v 1.2 2005/05/26 21:08:49 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Benoit Cromp
@@ -59,8 +59,9 @@ VMatKernel::VMatKernel()
 }
 
 PLEARN_IMPLEMENT_OBJECT(VMatKernel,
-    "wraper for treating a VMatrix as a kernel",
-    "MULTI-LINE \nHELP"
+    "Kernel that is given its Gram matrix.",
+    "This kernel can only be applied on examples that are integers, and that\n"
+    "correspond to indices in the matrix.\n"
 );
 
 ////////////////////
@@ -79,7 +80,8 @@ void VMatKernel::declareOptions(OptionList& ol)
   //               "Help text describing this option");
   // ...
 
-  declareOption(ol,"source",&VMatKernel::source,OptionBase::buildoption,"Similarity matrix");
+  declareOption(ol,"source",&VMatKernel::source,OptionBase::buildoption,
+      "Gram matrix");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -107,32 +109,31 @@ void VMatKernel::build_()
   // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
   // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
   // ### You should assume that the parent class' build_() has already been called.
-  
 }
 
 //////////////
 // evaluate //
 //////////////
 real VMatKernel::evaluate(const Vec& x1, const Vec& x2) const {
-  // ### Evaluate the kernel on a pair of points.
-  assert(x1.size()==1 && x2.size()==1);
+  assert( source );
+  assert( x1.size()==1 && x2.size()==1 );
   return source->get(int(x1[0]),int(x2[0]));
 }
 
 void VMatKernel::computeGramMatrix(Mat K) const
 {
+  assert( source );
   K << source->toMat();
 }
 
 
-/* ### This method will very often be overridden.
 //////////////////
 // evaluate_i_j //
 //////////////////
 real VMatKernel::evaluate_i_j(int i, int j) const {
-  // ### Evaluate the kernel on a pair of training points.
+  assert( source );
+  return source->get(i,j);
 }
-*/
 
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //

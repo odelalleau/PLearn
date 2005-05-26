@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatKernel.h,v 1.1 2005/05/26 19:57:14 crompb Exp $ 
+   * $Id: VMatKernel.h,v 1.2 2005/05/26 21:08:49 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Benoit Cromp
@@ -125,16 +125,18 @@ public:
   //! Compute K(x1,x2).
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
+  //! Overridden for efficiency.
+  virtual real evaluate_i_j(int i, int j) const;
+  virtual void computeGramMatrix(Mat K) const;
+
   // *** SUBCLASS WRITING: ***
   // While in general not necessary, in case of particular needs 
   // (efficiency concerns for ex) you may also want to overload
   // some of the following methods:
-  // virtual real evaluate_i_j(int i, int j) const;
   // virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
   // virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
   // virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
   // virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
-  virtual void computeGramMatrix(Mat K) const;// K << source->toMat();
   // virtual void setDataForKernelMatrix(VMat the_data);
   // virtual void addDataForKernelMatrix(const Vec& newRow);
   // virtual void setParameters(Vec paramvec);
