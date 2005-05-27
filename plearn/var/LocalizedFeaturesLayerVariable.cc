@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.8 2005/05/27 14:18:02 tihocan Exp $
+   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.9 2005/05/27 19:39:22 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,7 @@
 #include <plearn/math/TMat_maths_impl.h>
 #include <plearn/math/TMat_maths_specialisation.h>
 
-// # define UGLY_HACK
+// #define UGLY_HACK
 
 namespace PLearn {
 using namespace std;
@@ -167,26 +167,23 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
       for (int k=0;k<n_neighbors_per_subset;k++)
         feature_subsets[s][k+1] = neighbors[k].second;
 #ifdef UGLY_HACK
-      if (n_neighbors_per_subset != 4)
+      int a = int(sqrt(real(n_neighbors_per_subset + 1)) + 1e-6);
+      if (fabs(a - sqrt(real(n_neighbors_per_subset + 1))) > 1e-8 || a % 2 != 1)
         PLERROR("Arg");
       int w = int(sqrt(real(n_features)) + 1e-6);
-      pout << "Width = " << w << endl;
-      int right = s + 1;
-      if (right % w == 0)
-        right = s;
-      int left = s - 1;
-      if (left < 0 || left % w == w - 1)
-        left = s;
-      int up = s - w;
-      if (up < 0)
-        up = s;
-      int down = s + w;
-      if (down >= n_features)
-        down = s;
-      feature_subsets[s][1] = right;
-      feature_subsets[s][2] = left;
-      feature_subsets[s][3] = up;
-      feature_subsets[s][4] = down;
+      int b = (a - 1) / 2;
+      int n_start = s - b - b * w;
+      int count = 0;
+      for (int row = 0; row < a; row++) {
+        for (int col = 0; col < a; col++) {
+          int n = n_start + row * w + col;
+          if (n < 0)
+            n += n_features;
+          if (n >= n_features)
+            n -= n_features;
+          feature_subsets[s][count++] = n;
+        }
+      }
 #endif
     }
   }
