@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.6 2005/05/26 18:01:09 tihocan Exp $
+   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.7 2005/05/27 13:54:43 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -43,6 +43,8 @@
 #include <plearn/math/BottomNI.h>
 #include <plearn/math/TMat_maths_impl.h>
 #include <plearn/math/TMat_maths_specialisation.h>
+
+// #define UGLY_HACK
 
 namespace PLearn {
 using namespace std;
@@ -164,6 +166,28 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
       feature_subsets[s][0] = s;
       for (int k=0;k<n_neighbors_per_subset;k++)
         feature_subsets[s][k+1] = neighbors[k].second;
+#ifdef UGLY_HACK
+      if (n_neighbors_per_subset != 4)
+        PLERROR("Arg");
+      int w = int(sqrt(real(n_features)) + 1e-6);
+      pout << "Width = " << w << endl;
+      int right = s + 1;
+      if (right % w == 0)
+        right = s;
+      int left = s - 1;
+      if (left < 0 || left % w == w - 1)
+        left = s;
+      int up = s - w;
+      if (up < 0)
+        up = s;
+      int down = s + w;
+      if (down >= n_features)
+        down = s;
+      feature_subsets[s][1] = right;
+      feature_subsets[s][1] = left;
+      feature_subsets[s][1] = up;
+      feature_subsets[s][1] = down;
+#endif
     }
   }
   else
