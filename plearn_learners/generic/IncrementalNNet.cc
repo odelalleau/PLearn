@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IncrementalNNet.cc,v 1.1 2005/05/27 15:44:42 yoshua Exp $ 
+   * $Id: IncrementalNNet.cc,v 1.2 2005/05/27 20:26:57 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -227,6 +227,8 @@ void IncrementalNNet::train()
 
   bool stopping_criterion_not_met = true;
 
+  real moving_average_coefficient = 1.0/minibatchsize;
+
   while(stage<nstages && stopping_criterion_not_met)
   {
     // clear statistics of previous epoch
@@ -240,13 +242,17 @@ void IncrementalNNet::train()
       computeCostsfromOutputs(input,output,target,train_costs);
       train_costs*=sampleweight;
       train_stats->update(train_costs);
-      if (online)
-        current_average_cost = train_costs[0];
-      else
-        current_average_cost = train_costs[0];
       n_examples_seen++;
-      if (n_examples_seen % minibatchsize == 0) // consider adding a hidden unit
+      int n_batches_seen = n_examples_seen / minibatchsize;
+      int t_since_beginning_of_batch = n_examples_seen - n_batches_seen*minibatchsize;
+      if (!online)
+        moving_average_coefficient = 1.0/(1+t_since_beginning_of_batch);
+      current_average_cost = moving_average_coefficient*train_costs[0]
+        +(1-moving_average_coefficient)*train_costs[0];
+      if (t_since_beginning_of_batch == 0) // consider adding a hidden unit
       {
+        if (!online)
+          current_average_cost = 0;
       }
     }
     until (stage!=nstages || !stopping_criterion_not_met);
