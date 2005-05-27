@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.57 2005/04/12 15:02:51 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.58 2005/05/27 13:09:14 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -106,6 +106,7 @@
 #include <plearn/ker/LLEKernel.h>
 #include <plearn/ker/NegOutputCostFunction.h>
 #include <plearn/ker/ReconstructionWeightsKernel.h>
+#include <plearn/ker/VMatKernel.h>
 
 /*************
  * Optimizer *
