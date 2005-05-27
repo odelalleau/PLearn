@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.7 2005/05/27 13:54:43 tihocan Exp $
+   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.8 2005/05/27 14:18:02 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,7 @@
 #include <plearn/math/TMat_maths_impl.h>
 #include <plearn/math/TMat_maths_specialisation.h>
 
-// #define UGLY_HACK
+// # define UGLY_HACK
 
 namespace PLearn {
 using namespace std;
@@ -184,9 +184,9 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
       if (down >= n_features)
         down = s;
       feature_subsets[s][1] = right;
-      feature_subsets[s][1] = left;
-      feature_subsets[s][1] = up;
-      feature_subsets[s][1] = down;
+      feature_subsets[s][2] = left;
+      feature_subsets[s][3] = up;
+      feature_subsets[s][4] = down;
 #endif
     }
   }
