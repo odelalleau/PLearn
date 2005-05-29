@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.68 2005/05/25 16:44:54 tihocan Exp $
+   * $Id: TMat_maths_impl.h,v 1.69 2005/05/29 23:38:02 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -68,6 +68,19 @@ TVec<T> sign(const TVec<T>& vec)
   }
   
   return sign_;
+}
+
+template <class T> 
+void compute_sign(const TVec<T>& vec, const TVec<T>& dest)
+{
+  int len = vec.length();
+  T*  v   = vec.data();
+  T*  s   = dest.data();
+  while(--len >= 0)
+  {
+    *s = sign( *v );
+    v++; s++; 
+  }
 }
 
 template <class T> 

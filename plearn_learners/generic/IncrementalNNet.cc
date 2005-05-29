@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IncrementalNNet.cc,v 1.2 2005/05/27 20:26:57 yoshua Exp $ 
+   * $Id: IncrementalNNet.cc,v 1.3 2005/05/29 23:38:08 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -47,7 +47,11 @@ namespace PLearn {
 using namespace std;
 
 IncrementalNNet::IncrementalNNet() 
-  : n_outputs(1),
+  : n_examples_seen(0),
+    current_average_cost(0),
+    next_average_cost(0),
+    candidate_unit_bias(0),
+    n_outputs(1),
     output_weight_decay(0),
     online(true),
     minibatch_size(0),
@@ -106,7 +110,7 @@ void IncrementalNNet::declareOptions(OptionList& ol)
                 "where Q is the output cost, f(x_t) is the current prediction, y_t the target, h(x_t) the\n"
                 "output of the new hidden unit.\n");
 
-  declareOption(ol, "hidden_activation_function", &IncrementalNNet::, OptionBase::buildoption,
+  declareOption(ol, "hard_activation_function", &IncrementalNNet::hard_activation_function, OptionBase::buildoption,
                 "if true then h(x) = sign(w'x + b), else h(x) = tanh(w'x + b).\n");
 
   declareOption(ol, "n_epochs_before_considering_a_new_unit", &IncrementalNNet::n_epochs_before_considering_a_new_unit, 
@@ -140,12 +144,21 @@ void IncrementalNNet::declareOptions(OptionList& ol)
   declareOption(ol, "hidden_layer_biases", &IncrementalNNet::hidden_layer_biases, OptionBase::learntoption,
                 "vector of biases of the hidden units.\n");
 
+  declareOption(ol, "candidate_unit_weights", &IncrementalNNet::candidate_unit_weights, OptionBase::learntoption,
+                "vector of weights from input to next candidate hidden unit.\n");
+
+  declareOption(ol, "candidate_unit_bias", &IncrementalNNet::candidate_unit_bias, OptionBase::learntoption,
+                "bias parameter of next candidate hidden unit.\n");
+
   declareOption(ol, "n_examples_seen", &IncrementalNNet::n_examples_seen, OptionBase::learntoption,
                 "number of training examples seen (= number of updates done) seen beginning of training.\n");
 
   declareOption(ol, "current_average_cost", &IncrementalNNet::current_average_cost, OptionBase::learntoption,
                 "current average cost, including fitting and regularization terms. It is computed\n"
                 "differently according to the online and minibatch_size options.\n");
+
+  declareOption(ol, "next_average_cost", &IncrementalNNet::next_average_cost, OptionBase::learntoption,
+                "average cost if candidate hidden unit was included. It is computed like current_average_cost.\n");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -154,6 +167,9 @@ void IncrementalNNet::declareOptions(OptionList& ol)
 void IncrementalNNet::build_()
 {
   output_biases.resize(n_outputs);
+  linear_output.resize(n_outputs);
+  linear_output_with_candidate.resize(n_outputs);
+  h.resize(stage);
 }
 
 // ### Nothing to add here, simply calls build_
@@ -169,8 +185,13 @@ void IncrementalNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   inherited::makeDeepCopyFromShallowCopy(copies);
 
   deepCopyField(output_weights, copies);
+  deepCopyField(output_biases, copies);
   deepCopyField(hidden_layer_weights, copies);
   deepCopyField(hidden_layer_biases, copies);
+  deepCopyField(candidate_unit_weights, copies);
+  deepCopyField(h, copies);
+  deepCopyField(linear_output, copies);
+  deepCopyField(linear_output_with_candidate, copies);
 }
 
 
@@ -189,6 +210,7 @@ void IncrementalNNet::forget()
   stage=0;
   n_examples_seen=0;
   current_average_cost=0;
+  next_average_cost=0;
 }
     
 void IncrementalNNet::train()
@@ -218,6 +240,7 @@ void IncrementalNNet::train()
   output.resize(outputsize());    // the train_set's inputsize()
   target.resize(targetsize());  // the train_set's targetsize()
   real sampleweight; // the train_set's weight on the current example
+  real new_cost;
 
   if(!train_stats)  // make a default stats collector, in case there's none
     train_stats = new VecStatsCollector();
@@ -239,9 +262,20 @@ void IncrementalNNet::train()
     {
       train_set->getSample(input, target, sampleweight);
       computeOutput(input,output);
-      computeCostsfromOutputs(input,output,target,train_costs);
+      computeCostsFromOutputs(input,output,target,train_costs);
       train_costs*=sampleweight;
       train_stats->update(train_costs);
+      // compute output and cost IF WE USED THE CANDIDATE HIDDEN UNIT
+      real new_h = dot(input, candidate_unit_weights) + candidate_unit_bias;
+      if (hard_activation_function)
+        new_h = sign(new_h);
+      else
+        new_h = tanh(new_h);
+      // linear_output_with_candidate = linear_output + candidate_unit_output_weight*new_h;
+      multiplyAdd(linear_output,candidate_unit_output_weight,new_h,linear_output_with_candidate);
+      if (output_cost_type == "discrete_log_likelihoodd")
+        softmax(linear_output_with_candidate,output);
+      computeCostsFromOutputs(input,output,target,costs_with_candidate); 
       n_examples_seen++;
       int n_batches_seen = n_examples_seen / minibatchsize;
       int t_since_beginning_of_batch = n_examples_seen - n_batches_seen*minibatchsize;
@@ -268,21 +302,60 @@ void IncrementalNNet::computeOutput(const Vec& input, Vec& output) const
   // Compute the output from the input.
   int nout = outputsize();
   output.resize(nout);
-  
+  product(h,hidden_layer_weights, input);
+  h+=hidden_biases;
+  if (hard_activation_function)
+    compute_tanh(h,h);
+  else
+    compute_sign(h,h);
+  product(linear_output,output_weights,h);
+  linear_output+=output_biases;
+  if (output_cost_type=="discrete_log_likelihood")
+    softmax(linear_output,output);
+  else
+    output << linear_output;
 }    
 
 void IncrementalNNet::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                            const Vec& target, Vec& costs) const
 {
-// Compute the costs from *already* computed output. 
-// ...
+  // Compute the costs from *already* computed output. 
+  real fit_error=0;
+  if (output_cost_type == "squared_error")
+    fit_error = powdistance(output,target);
+  else {
+    int target_class = target[0];
+    if (output_cost_type == "hinge_loss") // one against all binary classifiers
+    {
+      real margin;
+      for (int i=0;i<n_outputs;i++)
+      {
+        if (target_class==i)
+          margin = output[i] - 1;
+        else
+          margin = 1 - output[i];
+        if (margin < 0)
+          fit_error -= margin;
+      } 
+    }
+    else // (output_cost_type == "discrete_log_likelihood")
+      fit_error = - safelog(output[target_class]);
+  }
+  real regularization_penalty = output_weight_decay * sumabs(output_weights);
+  costs[0] = fit_error + regularization_penalty;
+  costs[1] = fit_error;
+  costs[2] = regularization_penalty;
 }                                
 
 TVec<string> IncrementalNNet::getTestCostNames() const
 {
   // Return the names of the costs computed by computeCostsFromOutpus
   // (these may or may not be exactly the same as what's returned by getTrainCostNames).
-  // ...
+  TVev<string> names(3);
+  names[0]=output_cost_type+"+L1_regularization";
+  names[1]=output_cost_type;
+  names[2]="+L1_regularization";
+  return names;
 }
 
 TVec<string> IncrementalNNet::getTrainCostNames() const
@@ -290,7 +363,7 @@ TVec<string> IncrementalNNet::getTrainCostNames() const
   // Return the names of the objective costs that the train method computes and 
   // for which it updates the VecStatsCollector train_stats
   // (these may or may not be exactly the same as what's returned by getTestCostNames).
-  // ...
+  return getTestCostNames();
 }
 
 

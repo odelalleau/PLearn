@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IncrementalNNet.h,v 1.1 2005/05/27 15:44:42 yoshua Exp $ 
+   * $Id: IncrementalNNet.h,v 1.2 2005/05/29 23:38:08 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -67,8 +67,12 @@ protected:
   Vec output_biases;
   Mat hidden_layer_weights; // [hidden_unit, input]
   Vec hidden_layer_biases; // [hidden_unit]
+  Vec candidate_unit_weights;
+  real candidate_unit_bias;
+  Vec candidate_unit_output_weights;
   int n_examples_seen;
   real current_average_cost;
+  real next_average_cost;
     
 public:
 
@@ -103,7 +107,11 @@ public:
 
   // ** NON-OPTION FIELDS
   //
-  
+  Vec linear_output; // output before possible output-non-linearity = output_weights * h(x) + output_biases
+  Vec h; // output of hidden units after hidden unit non-linearity
+  Vec linear_output_with_candidate;
+  Vec costs_with_candidate;
+
   // ****************
   // * Constructors *
   // ****************
