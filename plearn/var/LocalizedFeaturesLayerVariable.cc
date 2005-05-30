@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.10 2005/05/30 14:51:43 tihocan Exp $
+   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.11 2005/05/30 17:26:46 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -147,7 +147,7 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
     n_features = varray[0]->value.size();    // Get n_features from first var.
     n_subsets = n_features;
 #ifdef UGLY_HACK
-    n_subsets = n_features / (UGLY_DIV * UGLY_DIV);
+    n_subsets = UGLY_DIV * UGLY_DIV;
 #endif
     n_connections = (1+n_neighbors_per_subset) * n_hidden_per_subset;
     if (!shared_weights)
