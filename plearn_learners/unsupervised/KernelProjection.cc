@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.19 2004/09/14 16:04:59 chrish42 Exp $ 
+   * $Id: KernelProjection.cc,v 1.20 2005/05/30 20:15:28 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -121,6 +121,12 @@ void KernelProjection::declareOptions(OptionList& ol)
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
+
+  // Hide unused options.
+
+  redeclareOption(ol, "seed", &KernelProjection::seed_, OptionBase::nosave,
+      "No seed used here.");
+
 }
 
 ///////////
@@ -277,15 +283,14 @@ TVec<string> KernelProjection::getTrainCostNames() const
 void KernelProjection::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("KernelProjection::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(k_x_xi, copies);
+  deepCopyField(result, copies);
+  deepCopyField(used_eigenvectors, copies);
+  deepCopyField(last_input, copies);
+  deepCopyField(last_output, copies);
+  deepCopyField(kernel, copies);
+  deepCopyField(eigenvalues, copies);
+  deepCopyField(eigenvectors, copies);
 }
 
 
