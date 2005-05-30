@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IncrementalNNet.h,v 1.2 2005/05/29 23:38:08 yoshua Exp $ 
+   * $Id: IncrementalNNet.h,v 1.3 2005/05/30 03:16:27 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -109,7 +109,7 @@ public:
   //
   Vec linear_output; // output before possible output-non-linearity = output_weights * h(x) + output_biases
   Vec h; // output of hidden units after hidden unit non-linearity
-  Vec linear_output_with_candidate;
+  // Vec linear_output_with_candidate;
   Vec costs_with_candidate;
 
   // ****************

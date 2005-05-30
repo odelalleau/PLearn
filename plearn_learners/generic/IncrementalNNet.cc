@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IncrementalNNet.cc,v 1.3 2005/05/29 23:38:08 yoshua Exp $ 
+   * $Id: IncrementalNNet.cc,v 1.4 2005/05/30 03:16:26 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -168,8 +168,10 @@ void IncrementalNNet::build_()
 {
   output_biases.resize(n_outputs);
   linear_output.resize(n_outputs);
-  linear_output_with_candidate.resize(n_outputs);
+  output_with_candidate.resize(n_outputs);
+  output_gradient_with_candidate.resize(n_outputs);
   h.resize(stage);
+  costs_with_candidate.resize(3);
 }
 
 // ### Nothing to add here, simply calls build_
@@ -191,7 +193,6 @@ void IncrementalNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(candidate_unit_weights, copies);
   deepCopyField(h, copies);
   deepCopyField(linear_output, copies);
-  deepCopyField(linear_output_with_candidate, copies);
 }
 
 
@@ -235,9 +236,13 @@ void IncrementalNNet::train()
 
   static Vec input;  // static so we don't reallocate/deallocate memory each time...
   static Vec output;
+  static Vec output_gradient;
   static Vec target; // (but be careful that static means shared!)
+  static Vec output_with_candidate;
   input.resize(inputsize());    // the train_set's inputsize()
-  output.resize(outputsize());    // the train_set's inputsize()
+  output.resize(outputsize());    
+  output_gradient.resize(outputsize());    
+  output_with_candidate.resize(outputsize());    
   target.resize(targetsize());  // the train_set's targetsize()
   real sampleweight; // the train_set's weight on the current example
   real new_cost;
@@ -274,17 +279,67 @@ void IncrementalNNet::train()
       // linear_output_with_candidate = linear_output + candidate_unit_output_weight*new_h;
       multiplyAdd(linear_output,candidate_unit_output_weight,new_h,linear_output_with_candidate);
       if (output_cost_type == "discrete_log_likelihoodd")
-        softmax(linear_output_with_candidate,output);
-      computeCostsFromOutputs(input,output,target,costs_with_candidate); 
+        softmax(output_with_candidate,output_with_candidate);
+      computeCostsFromOutputs(input,output_with_candidate,target,costs_with_candidate); 
+
+      real learning_rate = initial_learning_rate / ( 1 + n_examples_seen * decay_factor );
+
+      // backprop & update regular network parameters
+      if (!boosting) // i.e. continue training the existing hidden units
+      {
+        // ** compute gradient on linear output
+        if (output_cost_type=="squared_error")
+        {
+          substract(output,target,output_gradient);
+          output_gradient *= sampleweight * 2;
+        }
+        else if (output_cost_type=="hinge_loss")
+        {
+          int target_class = target[0];
+          for (int i=0;i<n_outputs;i++)
+          {
+            real y_i = (target_class==i)?1:-1;
+            real margin = y_i * output[i];
+            if (margin < 1)
+              output_gradient[i] = -y_i*sampleweight;
+            else
+              output_gradient[i] = 0;
+          }
+        }
+        else // (output_cost_type=="discrete_log_likelihood")
+        {
+          int target_class = target[0];
+          for (int i=0;i<n_outputs;i++)
+          {
+            real y_i = (target_class==i)?1:0;
+            output_gradient[i] = sampleweight*(output[i] - y_i);
+          }
+        }  
+        // ** bprop through the network & update
+        multiplyAcc(output_biases, output_gradient, learning_rate);
+        
+      }
+
+      // backprop & update candidate hidden unit
+
       n_examples_seen++;
       int n_batches_seen = n_examples_seen / minibatchsize;
       int t_since_beginning_of_batch = n_examples_seen - n_batches_seen*minibatchsize;
       if (!online)
         moving_average_coefficient = 1.0/(1+t_since_beginning_of_batch);
       current_average_cost = moving_average_coefficient*train_costs[0]
-        +(1-moving_average_coefficient)*train_costs[0];
-      if (t_since_beginning_of_batch == 0) // consider adding a hidden unit
+        +(1-moving_average_coefficient)*current_average_cost;
+      next_average_cost = moving_average_coefficient*costs_with_candidate[0]
+        +(1-moving_average_coefficient)*next_average_cost;
+      // consider adding a hidden unit
+      if (t_since_beginning_of_batch == 0) // end of a minibatch
       {
+        if (next_average_cost < current_average_cost) 
+        {
+          // insert candidate hidden unit
+          // ...
+          // initialize a new candidate
+        }
         if (!online)
           current_average_cost = 0;
       }
@@ -330,12 +385,8 @@ void IncrementalNNet::computeCostsFromOutputs(const Vec& input, const Vec& outpu
       real margin;
       for (int i=0;i<n_outputs;i++)
       {
-        if (target_class==i)
-          margin = output[i] - 1;
-        else
-          margin = 1 - output[i];
-        if (margin < 0)
-          fit_error -= margin;
+        real y_i = (target_class==i)?1:-1;
+        fit_error -= max(0,1-y_i*output[i]);
       } 
     }
     else // (output_cost_type == "discrete_log_likelihood")
