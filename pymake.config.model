@@ -121,7 +121,7 @@ optionalLibrary( name = 'xml-apstat',
 
 optionalLibrary( name = 'arpack',
                  triggers = 'arpack_proto.h',
-                 linkeroptions = '-L'+ libdir +'/ARPACK/OBJS/' + platform + ' -larpack' )
+                 linkeroptions = '-L'+ libdir +'/ARPACK/OBJS/' + target_platform + ' -larpack' )
 
 # Note: now blas and lapack are together.
 #optionalLibrary( name = 'lapack',
