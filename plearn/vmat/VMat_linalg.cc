@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_linalg.cc,v 1.4 2005/05/25 21:12:32 chapados Exp $ 
+   * $Id: VMat_linalg.cc,v 1.5 2005/05/30 15:53:44 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -209,6 +209,9 @@ real linearRegression(
   for (int i=apply_decay_from; i<XtX.length(); i++)
     XtX(i,i) += weight_decay;
 
+  // VMat(XtX)->savePMAT("plXtX.pmat");
+  // VMat(XtY)->savePMAT("plXtY.pmat");
+  
   if (cholesky) {
     // now solve by Cholesky decomposition
     solveLinearSystemByCholesky(XtX,XtY,theta_t);

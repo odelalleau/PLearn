@@ -493,7 +493,7 @@ U{Epytext Markup Language Manual<http://epydoc.sourceforge.net/epytext.html>}
 should not take you more than 15 minutes and you will be ready to document your
 code.
 """
-__cvs_id__ = "$Id: pyplearn.py,v 1.28 2005/05/12 21:58:22 plearner Exp $"
+__cvs_id__ = "$Id: pyplearn.py,v 1.29 2005/05/30 15:53:45 dorionc Exp $"
 
 import string, types
 import numarray
@@ -501,8 +501,8 @@ import numarray.numarraycore
 import plearn.utilities.metaprog as metaprog
 
 __all__ = [ 'PyPlearnError', 'ref', 'bind', 'bindref', 'plvar', 'TMat',
-            'plargs', 'generate_expdir', 'plarg_defaults',
-            'bind_plargs', 'plargs_namespace',
+            '_parse_plargs', 'plargs', 'generate_expdir', 'plarg_defaults',
+            'bind_plargs', 'plargs_binder', 'plargs_namespace',
             'PLearnRepr', 'include',
 
             ## Exceptions
@@ -701,9 +701,32 @@ def _postprocess_refs(s):
     """Must be called with the *complete* string of the generated .plearn.
        Finds the first instance of each PLearn reference (eg. *1;) and
        replaces it by the correct definition (eg. *1 -> foo(blah...)."""
-    for i in range(1, _last_binding_index+1):
-        s = s.replace("*%d;" % i,
-                      "*%d -> %s" % (i, PLearnRepr.repr(_id_to_binding[i])), 1)
+    references = _id_to_binding.copy()
+    refpos     = s.find('*')    
+    while refpos != -1 and len(references) > 0:
+        maxend = s.find(',', refpos)
+        #print 'maxend',maxend
+        refend = s.find(';', refpos, maxend)
+        #print 'refend',refend
+        if refend == -1:
+            refpos = s.find('*', maxend)
+            #print 'refpos',refpos
+        else:
+            refno  = int( s[refpos+1:refend] )
+            #print 'refno',refno
+            if refno in references:
+                s = "%s -> %s%s" % ( s[:refend],
+                                     PLearnRepr.repr( references[refno] ),
+                                     s[refend+1:] )
+                del references[refno]
+                #print 'references',references.keys()
+            refpos = s.find('*', refpos+1)
+            #print 'refpos',refpos,s[refpos:refpos+10]
+        #raw_input( s )
+
+##     for i in range(1, _last_binding_index+1):
+##         s = s.replace("*%d;" % i,
+##                       "*%d -> %s" % (i, PLearnRepr.repr(_id_to_binding[i])), 1)
     return s
     
 def TMat(num_rows, num_cols, mat_contents):
@@ -899,13 +922,36 @@ def bind_plargs(obj, field_names = None, plarg_names = None, prefix = None):
                 elem_cast = str
                 if default_value:
                     elem_cast = type(default_value[0])
-                cast = lambda s: [ elem_cast(e) for e in s.split(",") ]
+
+                def list_cast( s ):
+                    if s:
+                        return [ elem_cast(e) for e in s.split(",") ]
+                    return []
+                cast = list_cast
             setattr(obj, field, cast(provided_value))
 
-class plargs_namespace:
+class plargs_binder:
     """Subclasses will have there class variables binded to plargs.
 
-    The plarg will be prefixed by the classname, e.g.
+    The plarg name will be the exact field name, e.g.::
+
+        class Preproc( plargs_binder ):
+            start_year       = 2000
+            last_year        = 2004
+            
+        print plargs.start_year      # prints 2000
+        print plargs.last_year       # prints 2004
+
+    Note that Preproc.start_year == int(plargs.start_year) will always be True.    
+    """
+    class __metaclass__( type ):
+        def __init__(cls, name, bases, dict):
+            bind_plargs( cls )
+
+class plargs_namespace:
+    """Subclasses will have there class variables binded to PREFIXED plargs.
+
+    The plarg will be prefixed by the classname, e.g.::
 
         class MLM( plargs_namespace ):
             ma               = 252
@@ -914,7 +960,7 @@ class plargs_namespace:
         print plargs.MLM_ma          # prints 252
         print plargs.MLM_sdmult      # prints 1
 
-    Note that MLM.ma == plargs.MLM_ma will always be True.    
+    Note that MLM.ma == int(plargs.MLM_ma) will always be True.    
     """
     class __metaclass__( type ):
         def __init__(cls, name, bases, dict):

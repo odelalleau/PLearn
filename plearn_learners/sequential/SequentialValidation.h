@@ -74,6 +74,11 @@ public:
   //! The StatefulLearner that will be tested
   PP<StatefulLearner> learner;
 
+  /*!
+    Accessory learners that must be managed in parallel with the main one.
+  */
+  TVec< PP<StatefulLearner> > accessory_learners;
+  
   //! Global statistics or split statistics to be computed
   TVec<string> statnames;
 

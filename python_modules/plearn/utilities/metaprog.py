@@ -1,7 +1,7 @@
 """Metaprogramming tools.
 
 """
-__cvs_id__ = "$Id: metaprog.py,v 1.3 2005/02/04 19:09:01 dorionc Exp $"
+__cvs_id__ = "$Id: metaprog.py,v 1.4 2005/05/30 15:53:45 dorionc Exp $"
 
 import inspect, string, types
 import plearn.utilities.toolkit   as     toolkit
@@ -47,11 +47,17 @@ def members( instance, predicate=(lambda x,y: True) ):
                   if predicate(x, y)
                   ])
 
-def public_members( instance ):
-    predicate = lambda x,y: not ( x.startswith("_")
-                                  or inspect.ismethod(y)
-                                  or inspect.isfunction(y)
-                                  or inspect.isclass(y)
-                                  )
+def public_attribute_predicate( name, value ):
+    """Return whether or not attribute name is considered a public attribute.
 
-    return members( instance, predicate )
+    Are consider public attributes whose I{name} does not an underscore and
+    I{value} is not a method, a function or a class.
+    """
+    return not ( name.startswith("_")
+                 or inspect.ismethod(value)
+                 or inspect.isfunction(value)
+                 or inspect.isclass(value)
+                 )
+
+def public_members( instance ):
+    return members( instance, public_attribute_predicate )

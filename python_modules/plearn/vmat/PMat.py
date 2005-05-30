@@ -65,7 +65,7 @@ def load_pmat_as_array(fname):
 class PMat:
 
     def __init__(self, fname, openmode='r', fieldnames=[], elemtype='d',
-                 inputsize=-1, targetsize=-1, weightsize=-1):
+                 inputsize=-1, targetsize=-1, weightsize=-1, array = None):
         self.fname = fname
         self.inputsize = inputsize
         self.targetsize = targetsize
@@ -93,6 +93,16 @@ class PMat:
         else:
             raise ValueError("Currently only supported openmodes are 'r' and 'w': "+repr(openmode)+" is not supported")
 
+        if array is not None:
+            shape  = array.getshape()
+            if len(shape) == 1:
+                row_format = lambda r: [ r ]
+            elif len(shape) == 2:
+                row_format = lambda r: r
+
+            for row in array:
+                self.appendRow( row_format(row) )
+
     def write_header(self):
         header = 'MATRIX ' + str(self.length) + ' ' + str(self.width) + ' '
 
@@ -119,29 +129,29 @@ class PMat:
         self.f.write(header)
         
     def read_and_parse_header(self):        
-            header = self.f.read(64)
-            mat_type, l, w, data_type, endianness = header.split()
-            if mat_type!='MATRIX':
-                raise ValueError('Invalid file header (should start with MATRIX)')
-            self.length = int(l)
-            self.width = int(w)
-            if endianness=='LITTLE_ENDIAN':
-                byteorder = 'little'
-            elif endianness=='BIG_ENDIAN':
-                byteorder = 'big'
-            else:
-                raise ValueError('Invalid endianness in file header: '+endianness)
-            self.swap_bytes = (byteorder!=sys.byteorder)
+        header = self.f.read(64)
+        mat_type, l, w, data_type, endianness = header.split()
+        if mat_type!='MATRIX':
+            raise ValueError('Invalid file header (should start with MATRIX)')
+        self.length = int(l)
+        self.width = int(w)
+        if endianness=='LITTLE_ENDIAN':
+            byteorder = 'little'
+        elif endianness=='BIG_ENDIAN':
+            byteorder = 'big'
+        else:
+            raise ValueError('Invalid endianness in file header: '+endianness)
+        self.swap_bytes = (byteorder!=sys.byteorder)
 
-            if data_type=='DOUBLE':
-                self.elemtype = 'd'
-                self.elemsize = 8
-            elif data_type=='FLOAT':
-                self.elemtype = 'f'
-                self.elemsize = 4
-            else:
-                raise ValueError('Invalid data type in file header: '+data_type)
-            self.rowsize = self.elemsize*self.width
+        if data_type=='DOUBLE':
+            self.elemtype = 'd'
+            self.elemsize = 8
+        elif data_type=='FLOAT':
+            self.elemtype = 'f'
+            self.elemsize = 4
+        else:
+            raise ValueError('Invalid data type in file header: '+data_type)
+        self.rowsize = self.elemsize*self.width
 
     def load_fieldnames(self):
         self.fieldnames = []

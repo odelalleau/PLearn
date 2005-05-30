@@ -125,6 +125,11 @@ void SequentialValidation::declareOptions(OptionList& ol)
     "The SequentialLearner to train/test. \n");
 
   declareOption(
+    ol, "accessory_learners", &SequentialValidation::accessory_learners,
+    OptionBase::buildoption,
+    "Accessory learners that must be managed in parallel with the main one." );
+  
+  declareOption(
     ol, "dataset", &SequentialValidation::dataset,
     OptionBase::buildoption,
     "The dataset to use for training/testing. \n");
@@ -235,8 +240,11 @@ void SequentialValidation::run()
     PLERROR("No learner specified for SequentialValidation.");
 
   // Get a first dataset to set inputsize() and targetsize()
-  learner->setTrainingSet(trainVMat(init_train_size), false);
-
+  VMat train_vmat = trainVMat(init_train_size);
+  for ( int a=0; a < accessory_learners.length(); a++ )
+    accessory_learners[a]->setTrainingSet( train_vmat, false );
+  learner->setTrainingSet( train_vmat, false );
+  
   setExperimentDirectory( append_slash(expdir) );
 
   // If we need to report memory usage, create the appropriate directory
@@ -256,10 +264,16 @@ void SequentialValidation::run()
 
   TVec< PP<VecStatsCollector> > stcol(2);  // one for train and one for test
 
+  // Always manage the accessory_learners first since they may be used
+  // within the main trader.
+  PP<VecStatsCollector> dummy_train_stats = new VecStatsCollector(); 
+  for ( int a=0; a < accessory_learners.length(); a++ )
+    accessory_learners[a]->setTrainStatsCollector( dummy_train_stats );
+  
   // stats for a train on one split
   PP<VecStatsCollector> train_stats = new VecStatsCollector();
   train_stats->setFieldNames(traincostnames);
-  learner->setTrainStatsCollector(train_stats);
+  learner->setTrainStatsCollector(train_stats);  
   stcol[0] = train_stats;
 
   // stats for a test on one split
@@ -322,10 +336,19 @@ void SequentialValidation::run()
   // have finished to construct the complete structure of sub-learners
   // until AFTER build, and we want the setTestStartTime() message to
   // propagate to everybody.
+  for ( int a=0; a < accessory_learners.length(); a++ )
+  {
+    accessory_learners[a]->setTestStartTime(init_train_size);
+    accessory_learners[a]->build();
+    accessory_learners[a]->setTestStartTime(init_train_size);
+    accessory_learners[a]->resetInternalState();    
+  }
   learner->setTestStartTime(init_train_size);
   learner->build();
   learner->setTestStartTime(init_train_size);
   learner->resetInternalState();
+
+      
   
   VMat test_outputs;
   VMat test_costs;
@@ -339,9 +362,10 @@ void SequentialValidation::run()
   int splitnum = 0;
   double weight;
   Vec input, target;
+  Vec dummy_output; // for accessory_learners
+  Vec dummy_costs;  // for accessory_learners  
   Vec output(learner->outputsize());
   Vec costs(learner->nTestCosts());
-
   for (int t=init_train_size; t <= maxt; t++, splitnum++)
   {
 #ifdef DEBUG
@@ -373,11 +397,18 @@ void SequentialValidation::run()
         PLearn::save(splitdir / "initial_learner.psave",learner);
 
       // TRAIN
+      for ( int a=0; a < accessory_learners.length(); a++ )
+      {
+        dummy_train_stats->forget();
+        accessory_learners[a]->setTrainingSet(sub_train, false);
+        accessory_learners[a]->train();        
+      }
       train_stats->forget();
       learner->setTrainingSet(sub_train, false);
       learner->train();
       train_stats->finalize();
 
+      
       // Save post-train stuff
       if (save_stat_collectors)
         PLearn::save(splitdir / "train_stats.psave",train_stats);
@@ -390,12 +421,19 @@ void SequentialValidation::run()
     // implementation
     VMat sub_test = testVMat(t);
     sub_test.getExample(t, input, target, weight);
+    for ( int a=0; a < accessory_learners.length(); a++ )
+    {
+      accessory_learners[a]->setTestSet(sub_test);         // temporary hack
+      accessory_learners[a]->computeOutputAndCosts( input, target, dummy_output, dummy_costs );
+    }
     test_stats->forget();
     learner->setTestSet(sub_test);           // temporary hack
     learner->computeOutputAndCosts(input, target, output, costs);
     test_stats->update(costs);
     test_stats->finalize();
 
+
+    
     // Save what is required from the test run
     if (save_data_sets)
       PLearn::save(splitdir / "test_set.psave", sub_test);
@@ -536,6 +574,7 @@ void SequentialValidation::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(dataset,             copies);
   deepCopyField(learner,             copies);
+  deepCopyField(accessory_learners,  copies);  
   deepCopyField(statnames,           copies);
   deepCopyField(timewise_statnames,  copies);
   deepCopyField(measure_after_train, copies);

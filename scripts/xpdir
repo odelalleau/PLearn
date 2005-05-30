@@ -1,5 +1,6 @@
 #!/usr/bin/env python2.3
 import getopt, new, os, sys
+from plearn.utilities.moresh     import *
 from plearn.xperiments.Xperiment import *
 
 def duplicates( targets, options, xperiments ):
@@ -17,8 +18,12 @@ def duplicates( targets, options, xperiments ):
 def listdir( targets, options, xperiments ):
     print "\n","\n".join([ str(x) for x in xperiments ])
     print "(%d experiments)" % len(xperiments)
-    
+
 def mkdir( targets, options, xperiments ):    
+    reffunc = os.symlink
+    if options.move:
+        reffunc = lambda src,dest: os.system("mv %s %s"%(src,dest))        
+    
     for exp in xperiments:
         if exp.infos:
             if options.name is None:
@@ -28,8 +33,12 @@ def mkdir( targets, options, xperiments ):
                 dirname = options.name
 
             if not os.path.exists( dirname ):
-                os.mkdir( dirname )                
-            os.system("(cd %s; ln -s ../%s)" % (dirname, exp.path))
+                os.mkdir( dirname )
+
+            pushd( dirname )
+            if not os.path.exists( exp.path ):
+                reffunc( os.path.join('..',exp.path), exp.path )
+            popd()
 
 def running( targets, options, xperiments ):
     assert not targets
@@ -51,7 +60,7 @@ targets = sys.argv[1:]
 mode    = parse_mode( targets, [ duplicates, listdir, mkdir, running ], listdir )
 
 class __options: pass
-options = new.instance( __options, {"name" : None, "cache": None, "load" : None } )
+options = new.instance( __options, {"name" : None, "cache": None, "load" : None, "move" : False } )
 
 if "--name" in targets:
     index = targets.index("--name")
@@ -73,6 +82,11 @@ if "--load" in targets:
     
     options.load = targets[index]
     del targets[index]
+
+if "--move" in targets:
+    index = targets.index("--move")
+    del targets[index]    
+    options.move = True
 
 ### Starting the selected mode
 

@@ -14,7 +14,7 @@ class AffineTransform( PyPLearnObject ):
 
     def __add__(self, val):
         if not operator.isNumberType(val):
-            raise TypeError
+            raise TypeError, type(val)
         
         return AffineTransform( self.obj,
                                 self.a,

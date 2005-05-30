@@ -50,13 +50,30 @@ def option_value_split( s, sep="=", rhs_casts=[] ):
 
 class Xperiment(PyPLearnObject):
     ## The order is important! See rhs() implementation.
-    rhs_casts       = [ int , float ]
-    expdir_prefix   = "expdir" 
-    metainfos_fname = "metainfos.txt"
-    lhs_length      = 35
+    rhs_casts        = [ int , float ]
+    expdir_prefix    = "expdir" 
+    metainfos_fname  = "metainfos.txt"
+    cached_exp_fname = 'Xperiment.py'  
+    lhs_length       = 35
 
     ## See load_experiments
     _cached_experiments = None
+
+    def load_single_exp( cls, path, expkey ):
+        cached = os.path.join( path, cls.cached_exp_fname )
+        if os.path.exists( cached ):
+            return eval( open( cached, 'r' ).read() )
+
+        exp       = cls( path = path , expkey = expkey )
+
+        # THE KEY SHOULD NOT BE PASSED TO THE FIRST LOAD!!!
+        ## cachefile = open( cached, 'w' )
+        ## print >>cachefile, exp.plearn_repr()
+        ## cachefile.close()
+        
+        return exp
+        
+    load_single_exp = classmethod( load_single_exp )
 
     def load_experiments( cls, expkey=[], dirlist=None ):
         assert isinstance( expkey, list )
@@ -66,8 +83,9 @@ class Xperiment(PyPLearnObject):
             dirlist = os.listdir( os.getcwd() )            
 
         for fname in dirlist:
-            if fname.startswith( cls.expdir_prefix ):
-                xperiments.append( cls( path = fname , expkey = expkey ) )            
+            if fname.startswith( cls.expdir_prefix ):                
+                x = cls.load_single_exp( fname, expkey )
+                xperiments.append( x )            
             xperiments.sort()
 
         cls._cached_experiments = \
