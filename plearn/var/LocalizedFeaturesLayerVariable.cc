@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.9 2005/05/27 19:39:22 tihocan Exp $
+   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.10 2005/05/30 14:51:43 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,6 +45,10 @@
 #include <plearn/math/TMat_maths_specialisation.h>
 
 // #define UGLY_HACK
+
+#ifdef UGLY_HACK
+#define UGLY_DIV (4)
+#endif
 
 namespace PLearn {
 using namespace std;
@@ -142,6 +146,9 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
   {
     n_features = varray[0]->value.size();    // Get n_features from first var.
     n_subsets = n_features;
+#ifdef UGLY_HACK
+    n_subsets = n_features / (UGLY_DIV * UGLY_DIV);
+#endif
     n_connections = (1+n_neighbors_per_subset) * n_hidden_per_subset;
     if (!shared_weights)
       n_connections *= n_subsets;
@@ -155,6 +162,19 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
       // find k-nearest neighbors of feature s according to feature_locations
       lowest_distances.init(n_neighbors_per_subset);
       feature_locations->getRow(s, center);
+#ifdef UGLY_HACK
+      int w = int(sqrt(real(n_features)) + 1e-6);
+      if (w % UGLY_DIV != 0)
+        PLERROR("Ouch");
+      int w_s = UGLY_DIV;
+      int w_zone = w / UGLY_DIV;
+      int x_s = s % w_s;
+      int y_s = s / w_s;
+      int x_f = x_s * w_zone + w_zone / 2;
+      int y_f = y_s * w_zone + w_zone / 2;
+      int index_f = y_f * w + x_f;
+      feature_locations->getRow(index_f, center);
+#endif
       for (int f=0;f<n_features;f++)
         if (f!=s)
         {
@@ -170,9 +190,9 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
       int a = int(sqrt(real(n_neighbors_per_subset + 1)) + 1e-6);
       if (fabs(a - sqrt(real(n_neighbors_per_subset + 1))) > 1e-8 || a % 2 != 1)
         PLERROR("Arg");
-      int w = int(sqrt(real(n_features)) + 1e-6);
+      w = int(sqrt(real(n_features)) + 1e-6);
       int b = (a - 1) / 2;
-      int n_start = s - b - b * w;
+      int n_start = index_f - b - b * w;
       int count = 0;
       for (int row = 0; row < a; row++) {
         for (int col = 0; col < a; col++) {
