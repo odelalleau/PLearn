@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CorrelationKernel.h,v 1.2 2005/05/20 18:32:00 tihocan Exp $ 
+   * $Id: CorrelationKernel.h,v 1.3 2005/05/30 20:17:27 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -64,7 +64,7 @@ protected:
   Vec var_vec;            //!< Used to store the variance of each example (variable).
   real min_product_var;   //!< Value used to threshold products of variances.
   //! VPL program that transforms the similarity measure.
-  VMatLanguage transform_prg;
+  PP<VMatLanguage> transform_prg;
   //! Fields of the VPL program.
   TVec<string> transform_prg_fields;
   //! Used to store the similarity measure.

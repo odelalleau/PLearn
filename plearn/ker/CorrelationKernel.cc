@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CorrelationKernel.cc,v 1.2 2005/05/20 18:31:59 tihocan Exp $ 
+   * $Id: CorrelationKernel.cc,v 1.3 2005/05/30 20:17:27 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -57,12 +57,18 @@ CorrelationKernel::CorrelationKernel()
   transform(""),
   var_threshold(0)
 {
+  transform_prg = new VMatLanguage();
 }
 
 PLEARN_IMPLEMENT_OBJECT(CorrelationKernel,
     "Compute a similarity measure between two variables by their correlation.",
     "Here, the two examples x and y in K(x,y) are understood as being samples\n"
     "of a two random variables.\n"
+    "If the 'correlation' option is set to 'mutual_information_norm', the formula used\n"
+    "is the following:\n"
+    " M = - ln |sin(u,v)| where u and v are the centered variables\n"
+    " H_u = 1/2 + ln(sqrt(2Pi) * (stddev(u) + epsilon)) with epsilon = e^{1/2} / sqrt(2Pi)\n"
+    " M_norm = M / (sqrt(H_u) sqrt(H_v))\n"
 );
 
 ////////////////////
@@ -78,7 +84,8 @@ void CorrelationKernel::declareOptions(OptionList& ol)
 
   declareOption(ol, "correlation", &CorrelationKernel::correlation, OptionBase::buildoption,
       "The correlation method used to compute the similarity, among:\n"
-      "- 'linear' : linear correlation\n");
+      "- 'linear'                  : linear correlation\n"
+      "- 'mutual_information_norm' : normalized mutual information\n");
 
   declareOption(ol, "transform", &CorrelationKernel::transform, OptionBase::buildoption,
       "An additional transformation applied on the similarity, in VPL language.\n");
@@ -114,8 +121,8 @@ void CorrelationKernel::build_()
   // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
   // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
   // ### You should assume that the parent class' build_() has already been called.
-  transform_prg.setSourceFieldNames(TVec<string>(1)); // Dummy fieldnames.
-  transform_prg.compileString(transform, transform_prg_fields);
+  transform_prg->setSourceFieldNames(TVec<string>(1)); // Dummy fieldnames.
+  transform_prg->compileString(transform, transform_prg_fields);
   result_vec.resize(1);
   result_transformed_vec.resize(1);
 }
@@ -125,18 +132,43 @@ void CorrelationKernel::build_()
 //////////////
 real CorrelationKernel::evaluate(const Vec& x1, const Vec& x2) const {
   real result = 0;
-  if (correlation == "linear") {
-    int n = x1.length();
+  int n = x1.length();
 #ifdef BOUNDCHECK
-    if (x2.length() != n)
-      PLERROR("In CorrelationKernel::evaluate - x1 and x2 must have same size");
+  if (x2.length() != n)
+    PLERROR("In CorrelationKernel::evaluate - x1 and x2 must have same size");
 #endif
+  if (correlation == "linear") {
     VMat x1_(x1.toMat(n, 1));
     VMat x2_(x2.toMat(n, 1));
     x1_->defineSizes(n, 0, 0);
     x2_->defineSizes(n, 0, 0);
     correlations(x1_, x2_, correl, pvalues, true);
     result = correl(0,0);
+  } else if (correlation == "mutual_information_norm") {
+    Vec x1_c(n);
+    Vec x2_c(n);
+    x1_c << x1;
+    x2_c << x2;
+    x1_c -= mean(x1);
+    x2_c -= mean(x2);
+    real cos12 = dot(x1_c, x2_c) / (norm(x1_c) * norm(x2_c));
+    if (cos12 > 1)
+      cos12 = 1;
+    real sin12 = sqrt(1 - cos12 * cos12);   // |sin(x1,x2)|
+    if (fast_is_equal(sin12, 0.0, 1.0, 1e-5))
+      // The variables are considered equal.
+      result = 1;
+    else {
+      real m = - log(sin12);
+      real epsilon = exp(0.5) / sqrt(2 * Pi);
+      real sigma1 = sqrt(variance(x1_c.toMat(1,n), 0.0));
+      real sigma2 = sqrt(variance(x2_c.toMat(1,n), 0.0));
+      real h1 = 0.5 + log(sqrt(2 * Pi) * (sigma1 + epsilon));
+      real h2 = 0.5 + log(sqrt(2 * Pi) * (sigma2 + epsilon));
+      if (h1 <= 0 || h2 <= 0)
+        PLERROR("In CorrelationKernel::evaluate - Entropy should always be > 0");
+      result = m / (sqrt(h1) * sqrt(h2));
+    }
   } else
     PLERROR("In CorrelationKernel::evaluate - Unknown value for 'correlation': "
             "%s", correlation.c_str());
@@ -147,7 +179,7 @@ real CorrelationKernel::evaluate(const Vec& x1, const Vec& x2) const {
       result = 1e-6;
   }
   result_vec[0] = result;
-  transform_prg.run(result_vec, result_transformed_vec);
+  transform_prg->run(result_vec, result_transformed_vec);
   return result_transformed_vec[0];
   /*
   if (transform.empty())
@@ -179,15 +211,15 @@ real CorrelationKernel::evaluate_i_j(int i, int j) const {
 void CorrelationKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(correl, copies);
+  deepCopyField(pvalues, copies);
+  deepCopyField(mean_vec, copies);
+  deepCopyField(var_vec, copies);
+  deepCopyField(transform_prg, copies);
+  deepCopyField(transform_prg_fields, copies);
+  deepCopyField(result_vec, copies);
+  deepCopyField(result_transformed_vec, copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("CorrelationKernel::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 ////////////////////////////
