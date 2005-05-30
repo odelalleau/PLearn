@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelPCA.cc,v 1.8 2004/09/14 16:04:59 chrish42 Exp $ 
+   * $Id: KernelPCA.cc,v 1.9 2005/05/30 20:15:23 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -140,15 +140,7 @@ void KernelPCA::forget()
 void KernelPCA::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("KernelPCA::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(kpca_kernel, copies);
 }
 
 } // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Isomap.cc,v 1.7 2004/09/14 16:04:58 chrish42 Exp $ 
+   * $Id: Isomap.cc,v 1.8 2005/05/30 20:15:23 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -152,15 +152,7 @@ void Isomap::forget()
 void Isomap::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("Isomap::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(distance_kernel, copies);
 }
 
 } // end of namespace PLearn

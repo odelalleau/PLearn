@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TransposeVMatrix.cc,v 1.4 2005/05/20 13:55:26 tihocan Exp $ 
+   * $Id: TransposeVMatrix.cc,v 1.5 2005/05/30 20:15:23 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -125,15 +125,6 @@ void TransposeVMatrix::getNewRow(int i, const Vec& v) const
 void TransposeVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("TransposeVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 } // end of namespace PLearn

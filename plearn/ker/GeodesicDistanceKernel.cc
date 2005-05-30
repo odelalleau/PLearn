@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.cc,v 1.12 2004/09/14 16:04:36 chrish42 Exp $ 
+   * $Id: GeodesicDistanceKernel.cc,v 1.13 2005/05/30 20:14:54 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -226,15 +226,11 @@ real GeodesicDistanceKernel::evaluate_i_x_again(int i, const Vec& x, real square
 void GeodesicDistanceKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("GeodesicDistanceKernel::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(dist_xi_x_sorted1, copies);
+  deepCopyField(dist_xi_x_sorted2, copies);
+  deepCopyField(dist_xi_x_sorted, copies);
+  deepCopyField(distance_kernel, copies);
+  deepCopyField(geo_distances, copies);
 }
 
 ////////////////////////////

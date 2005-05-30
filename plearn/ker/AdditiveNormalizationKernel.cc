@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.cc,v 1.10 2004/09/14 16:04:35 chrish42 Exp $ 
+   * $Id: AdditiveNormalizationKernel.cc,v 1.11 2005/05/30 20:14:54 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -236,15 +236,9 @@ real AdditiveNormalizationKernel::evaluate_x_i_again(const Vec& x, int i, real s
 void AdditiveNormalizationKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("AdditiveNormalizationKernel::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(all_k_x, copies);
+  deepCopyField(average_col, copies);
+  deepCopyField(average_row, copies);
 }
 
 ////////////////////////////
