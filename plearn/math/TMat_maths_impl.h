@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.69 2005/05/29 23:38:02 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.70 2005/05/30 13:44:04 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -5895,6 +5895,96 @@ void addXandX2IfNonMissing(const TVec<T>& source, const TVec<int>& nnonmissing, 
         s2[i] += s[i]*s[i];
         n[i]++;
       }
+}
+
+// input_gradient[j] = sum_i weights[i,j]*output_gradient[i]
+// weights[i,j] -= learning_rate * output_gradient[i] * input[j]
+template<class T>
+void layerBpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& input, 
+                      const TVec<T>& output_gradient, real learning_rate)
+{
+  int n_inputs = input_gradient.length();
+  int n_outputs = output_gradient.length();
+#ifdef BOUNDCHECK
+  if (output_weights.length() != n_outputs || output_weights.width() != n_inputs
+      || input.length() != n_inputs)
+    PLERROR("layerBpropUpdate: arguments have incompatible sizes");
+#endif 
+  input_gradient.clear();
+  T* in_g = input_gradient.data();
+  T* out_g = output_gradient.data();
+  T* inp = input.data();
+  for (int i=0;i<n_outputs;i++)
+  {
+    T* Wi = weights[i];
+    T out_gi = out_g[i];
+    for (int j=0;j<n_inputs;j++)
+    {
+      in_g[j] += Wi[j] * out_gi;
+      Wi[j] -= learning_rate * out_gi * inp[j];
+    }
+  }
+}
+
+
+// input_gradient[j] = sum_i weights[i,j]*output_gradient[i]
+// weights[i,j] -= learning_rate * (output_gradient[i] * input[j] - weight_decay * weights[i,j])
+template<class T>
+void layerL2BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& input, 
+                        const TVec<T>& output_gradient, real learning_rate, T weight_decay)
+{
+  int n_inputs = input_gradient.length();
+  int n_outputs = output_gradient.length();
+#ifdef BOUNDCHECK
+  if (output_weights.length() != n_outputs || output_weights.width() != n_inputs
+      || input.length() != n_inputs)
+    PLERROR("layerBpropUpdate: arguments have incompatible sizes");
+#endif 
+  input_gradient.clear();
+  T* in_g = input_gradient.data();
+  T* out_g = output_gradient.data();
+  T* inp = input.data();
+  for (int i=0;i<n_outputs;i++)
+  {
+    T* Wi = weights[i];
+    T out_gi = out_g[i];
+    for (int j=0;j<n_inputs;j++)
+    {
+      T Wij = Wi[j];
+      in_g[j] += Wij * out_gi;
+      Wi[j] -= learning_rate * (out_gi * inp[j] + weight_decay * Wij);
+    }
+  }
+}
+
+// input_gradient[j] = sum_i weights[i,j]*output_gradient[i]
+// weights[i,j] -= learning_rate * (output_gradient[i] * input[j] - weight_decay * sign(weights[i,j]))
+template<class T>
+void layerL1BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& input, 
+                        const TVec<T>& output_gradient, real learning_rate, T weight_decay)
+{
+  int n_inputs = input_gradient.length();
+  int n_outputs = output_gradient.length();
+#ifdef BOUNDCHECK
+  if (output_weights.length() != n_outputs || output_weights.width() != n_inputs
+      || input.length() != n_inputs)
+    PLERROR("layerBpropUpdate: arguments have incompatible sizes");
+#endif 
+  input_gradient.clear();
+  T* in_g = input_gradient.data();
+  T* out_g = output_gradient.data();
+  T* inp = input.data();
+  for (int i=0;i<n_outputs;i++)
+  {
+    T* Wi = weights[i];
+    T out_gi = out_g[i];
+    for (int j=0;j<n_inputs;j++)
+    {
+      T Wij = Wi[j];
+      in_g[j] += Wij * out_gi;
+      Wi[j] -= learning_rate * (out_gi * inp[j] + weight_decay * sign(Wij));
+    }
+  }
 }
 
 } // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IncrementalNNet.h,v 1.3 2005/05/30 03:16:27 yoshua Exp $ 
+   * $Id: IncrementalNNet.h,v 1.4 2005/05/30 13:43:16 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -111,6 +111,7 @@ public:
   Vec h; // output of hidden units after hidden unit non-linearity
   // Vec linear_output_with_candidate;
   Vec costs_with_candidate;
+  int cost_type; // 0 = squared_error, 1 = hinge_loss, 2 = discrete_log_likelihood
 
   // ****************
   // * Constructors *
@@ -208,6 +209,8 @@ public:
   // virtual int nTrainCosts() const;
   // virtual void resetInternalState();
   // virtual bool isStatefulLearner() const;
+
+  virtual real output_loss(const Vec& output,const Vec& target); // compute output loss, according to output_loss_type
 
 };
 

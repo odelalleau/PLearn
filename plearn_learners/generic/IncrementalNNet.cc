@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IncrementalNNet.cc,v 1.4 2005/05/30 03:16:26 yoshua Exp $ 
+   * $Id: IncrementalNNet.cc,v 1.5 2005/05/30 13:43:16 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -84,7 +84,7 @@ void IncrementalNNet::declareOptions(OptionList& ol)
                 "L1 regularizer's penalty factor on output weights.");
 
   declareOption(ol, "online", &IncrementalNNet::online, OptionBase::buildoption,
-                "use online or batch version? if batch only consider adding a hidden unit after minibatch_size examples\n"
+                "use online or batch version? only consider adding a hidden unit after minibatch_size examples\n"
                 "Add a hidden unit only if it would reduce the average cost (including the L1 penalty).\n"
                 "This current_average_cost is calculated either with a moving average over a moving target (online version)\n"
                 "or the algorithm proceeds in two phases (batch version): on even batches one improves the\n"
@@ -172,6 +172,13 @@ void IncrementalNNet::build_()
   output_gradient_with_candidate.resize(n_outputs);
   h.resize(stage);
   costs_with_candidate.resize(3);
+  if (output_cost_type=="squared_error")
+    cost_type=0;
+  else if (output_cost_type=="hinge_loss")
+    cost_type=1;
+  else if (output_cost_type=="discrete_log_likelihood")
+    cost_type=2;
+  else PLERROR("IncrementalNNet:build: output_cost_type should either be 'squared_error', 'hinge_loss', or 'discrete_log_likelihood'");
 }
 
 // ### Nothing to add here, simply calls build_
@@ -236,13 +243,17 @@ void IncrementalNNet::train()
 
   static Vec input;  // static so we don't reallocate/deallocate memory each time...
   static Vec output;
-  static Vec output_gradient;
   static Vec target; // (but be careful that static means shared!)
+  static Vec output_gradient;
+  static Vec hidden_gradient;
   static Vec output_with_candidate;
+  static Vec output_with_signchange;
   input.resize(inputsize());    // the train_set's inputsize()
   output.resize(outputsize());    
   output_gradient.resize(outputsize());    
+  hidden_gradient.resize(stage);    
   output_with_candidate.resize(outputsize());    
+  output_with_signchangne.resize(outputsize());    
   target.resize(targetsize());  // the train_set's targetsize()
   real sampleweight; // the train_set's weight on the current example
   real new_cost;
@@ -278,7 +289,7 @@ void IncrementalNNet::train()
         new_h = tanh(new_h);
       // linear_output_with_candidate = linear_output + candidate_unit_output_weight*new_h;
       multiplyAdd(linear_output,candidate_unit_output_weight,new_h,linear_output_with_candidate);
-      if (output_cost_type == "discrete_log_likelihoodd")
+      if (cost_type == 2) // "discrete_log_likelihood"
         softmax(output_with_candidate,output_with_candidate);
       computeCostsFromOutputs(input,output_with_candidate,target,costs_with_candidate); 
 
@@ -288,12 +299,12 @@ void IncrementalNNet::train()
       if (!boosting) // i.e. continue training the existing hidden units
       {
         // ** compute gradient on linear output
-        if (output_cost_type=="squared_error")
+        if (cost_type==0) // "squared_error"
         {
           substract(output,target,output_gradient);
           output_gradient *= sampleweight * 2;
         }
-        else if (output_cost_type=="hinge_loss")
+        else if (cost_type==1) // "hinge_loss"
         {
           int target_class = target[0];
           for (int i=0;i<n_outputs;i++)
@@ -317,7 +328,26 @@ void IncrementalNNet::train()
         }  
         // ** bprop through the network & update
         multiplyAcc(output_biases, output_gradient, learning_rate);
-        
+        layerL1BpropUpdate(hidden_gradient, output_weights, h, output_gradient, learning_rate, output_weight_decay);
+
+        if (hard_activation_function) 
+          // Should h_i(x) change of sign?
+          // Consider the loss that would occur if it did, i.e. with output replaced by output - 2*W[.,i]*h_i(x)
+          // Then consider a weighted classification problem
+          // with the appropriate sign and weight = gradient on h_i(x).
+        {
+          real current_fit_error = train_costs[1];
+          for (int i=0;i<stage;i++)
+          {
+            Vec Wi = output_weights.column(i).toVec();
+            multiplyAdd(output,Wi,-2*h[i],output_with_signchange);
+            real fit_error_with_sign_change = output_loss(output_with_signchange,target);
+            real target_i = sign(fit_error_with_sign_change-current_fit_error)*h[i];
+            real weight_i = fabs(hidden_gradient[i]); // CHECK: when is the sign of hidden_gradient different from (h[i]-target_i)?
+          }
+        }
+        else
+          bprop_tanh(h,hidden_gradient,hidden_gradient);
       }
 
       // backprop & update candidate hidden unit
@@ -332,13 +362,15 @@ void IncrementalNNet::train()
       next_average_cost = moving_average_coefficient*costs_with_candidate[0]
         +(1-moving_average_coefficient)*next_average_cost;
       // consider adding a hidden unit
-      if (t_since_beginning_of_batch == 0) // end of a minibatch
+      t_since_added_a_unit++;
+      if (t_since_added_a_unit >= n_epochs_before_considering_a_new_unit)
       {
         if (next_average_cost < current_average_cost) 
         {
           // insert candidate hidden unit
           // ...
           // initialize a new candidate
+          t_since_added_a_unit=0;
         }
         if (!online)
           current_average_cost = 0;
@@ -365,22 +397,20 @@ void IncrementalNNet::computeOutput(const Vec& input, Vec& output) const
     compute_sign(h,h);
   product(linear_output,output_weights,h);
   linear_output+=output_biases;
-  if (output_cost_type=="discrete_log_likelihood")
+  if (cost_type==2) // "discrete_log_likelihood"
     softmax(linear_output,output);
   else
     output << linear_output;
 }    
 
-void IncrementalNNet::computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                           const Vec& target, Vec& costs) const
+real IncrementalNNet::output_loss(const Vec& output,const Vec& target)
 {
-  // Compute the costs from *already* computed output. 
   real fit_error=0;
-  if (output_cost_type == "squared_error")
+  if (cost_type == 0) // "squared_error"
     fit_error = powdistance(output,target);
   else {
     int target_class = target[0];
-    if (output_cost_type == "hinge_loss") // one against all binary classifiers
+    if (cost_type == 1) // "hinge_loss", one against all binary classifiers
     {
       real margin;
       for (int i=0;i<n_outputs;i++)
@@ -392,6 +422,14 @@ void IncrementalNNet::computeCostsFromOutputs(const Vec& input, const Vec& outpu
     else // (output_cost_type == "discrete_log_likelihood")
       fit_error = - safelog(output[target_class]);
   }
+  return fit_error;
+}
+
+void IncrementalNNet::computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                              const Vec& target, Vec& costs) const
+{
+  // Compute the costs from *already* computed output. 
+  real fit_error = output_loss(output,target);
   real regularization_penalty = output_weight_decay * sumabs(output_weights);
   costs[0] = fit_error + regularization_penalty;
   costs[1] = fit_error;
