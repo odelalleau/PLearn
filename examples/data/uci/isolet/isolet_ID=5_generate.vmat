@@ -1,0 +1,21 @@
+PrecomputedVMatrix( 
+  precomp_type = "pmat"  ;
+  source =
+    BootstrapVMatrix( 
+      shuffle = 1
+      frac = 1
+      seed = 49784598
+      source =
+        ProcessingVMatrix( 
+          prg = "[%0:%616] %617 1 - :target"  ;
+          source =
+            UCIDataVMatrix( 
+              uci_spec =
+                $INCLUDE{isolet_ID=5.plearn}
+            )
+        )
+      metadatadir = "isolet_ID=5_generate.vmat.metadata"  ;
+    )
+)
+
+

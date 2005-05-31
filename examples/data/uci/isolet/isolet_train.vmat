@@ -1,0 +1,7 @@
+FileVMatrix( 
+  filename = "UCI_MLDB:isolet/isolet_ID=1+2+3+4_generate.vmat.metadata/precomp.pmat"
+  inputsize = 617
+  targetsize = 1
+  weightsize = 0
+)
+
