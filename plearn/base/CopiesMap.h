@@ -35,6 +35,8 @@ typedef map<string, double> map_string_double;
 typedef map<double, string> map_double_string;
 typedef map<float, string> map_float_string;
 typedef map<string, string> map_string_string;
+typedef map<float, float> map_float_float;
+typedef map<double, double> map_double_double;
   
 /*! Support for generic deep copying
     
@@ -56,6 +58,8 @@ NODEEPCOPY(map_string_double)
 NODEEPCOPY(map_float_string)
 NODEEPCOPY(map_double_string)
 NODEEPCOPY(map_string_string)
+NODEEPCOPY(map_float_float)
+NODEEPCOPY(map_double_double)
 NODEEPCOPY(string)
 NODEEPCOPY(VMField)
 NODEEPCOPY(VMFieldStat)
