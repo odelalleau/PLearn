@@ -116,11 +116,13 @@ def __plearn_repr( obj, indent_level ):
     if hasattr( obj, 'plearn_repr' ) and callable( obj.plearn_repr ):
         return obj.plearn_repr( indent_level )
 
+    elif isinstance( obj, bool ):
+        return str( int(obj) ) 
+
     # Don't use repr for numeric type, so we don't get 0.20000000000000001
     # for 0.2
     elif ( isinstance( obj, int )
-           or isinstance( obj, float )
-           or isinstance( obj, bool ) ):
+           or isinstance( obj, float ) ):
         return str(obj)
 
     elif isinstance(obj, str):
