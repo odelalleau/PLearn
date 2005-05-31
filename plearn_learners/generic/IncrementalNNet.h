@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IncrementalNNet.h,v 1.5 2005/05/31 02:57:17 yoshua Exp $ 
+   * $Id: IncrementalNNet.h,v 1.6 2005/05/31 12:54:10 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -63,7 +63,7 @@ protected:
 
   // ### declare protected option fields (such as learnt parameters) here
 
-  Mat output_weights; // [hidden_unit, output] ** NOTE IT IS TRANSPOSED ** so as easily add hidden units
+  Mat output_weights; // [hidden_unit, output] ** NOTE IT IS TRANSPOSED ** so can easily add hidden units
   Vec output_biases;
   Mat hidden_layer_weights; // [hidden_unit, input]
   Vec hidden_layer_biases; // [hidden_unit]
@@ -73,6 +73,8 @@ protected:
   int n_examples_seen;
   real current_average_cost;
   real next_average_cost;
+  int n_examples_training_candidate;
+  int current_example;
     
 public:
 
@@ -104,14 +106,13 @@ public:
   bool use_hinge_loss_for_hard_activation; // use hinge loss or cross-entropy to train hidden units, when hard_activation_function
   real initial_learning_rate; // learning_rate = initial_learning_rate / (1 + n_examples_seen * decay_factor);
   real decay_factor;
-
+  real max_n_epochs_to_fail; // Maximum number of epochs (not necessarily an integer) to try improving the new hidden unit
+                             // before declaring failure to improve the regularized cost (and thus stopping training).
   // ** NON-OPTION FIELDS
   //
   Vec linear_output; // output before possible output-non-linearity = output_weights * h(x) + output_biases
   Vec act; // weighted sum of inputs on hidden units, before non-linearity
   Vec h; // output of hidden units after hidden unit non-linearity
-  // Vec linear_output_with_candidate;
-  Vec costs_with_candidate;
   int cost_type; // 0 = squared_error, 1 = hinge_loss, 2 = discrete_log_likelihood
 
   // ****************
@@ -211,10 +212,11 @@ public:
   // virtual void resetInternalState();
   // virtual bool isStatefulLearner() const;
 
-  virtual real output_loss(const Vec& output,const Vec& target); // compute output loss, according to output_loss_type
+  virtual real output_loss(const Vec& output,const Vec& target) const; // compute output loss, according to output_loss_type
 
+  // compute doutput_loss/doutput in output_gradient
   virtual void output_loss_gradient(const Vec& output,const Vec& target,
-                                    Vec output_gradient, real sampleweight);
+                                    Vec output_gradient, real sampleweight) const;
 
 };
 

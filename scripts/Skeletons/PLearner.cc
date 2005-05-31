@@ -108,7 +108,7 @@ void DERIVEDCLASS::train()
           train_stats->forget() 
           
           //... train for 1 stage, and update train_stats,
-          // using train_set->getSample(input, target, weight)
+          // using train_set->getExample(example_index++,input, target, weight)
           // and train_stats->update(train_costs)
           
           ++stage

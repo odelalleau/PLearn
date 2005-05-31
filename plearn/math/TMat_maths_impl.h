@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.71 2005/05/31 02:56:54 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.72 2005/05/31 12:53:40 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -117,7 +117,6 @@ void one_against_all_hinge_loss_bprop(const TVec<T>& output,
   d_output.resize(N);
   T*  o = output.data();
   T*  d_o = d_output.data();
-  T total_hinge_loss = 0;
   while(--N >= 0)
   {
     if (N==target)
@@ -126,7 +125,6 @@ void one_against_all_hinge_loss_bprop(const TVec<T>& output,
       *d_o = d_hinge_loss(*o,-1);
     o++; d_o++;
   }
-  return total_hinge_loss;
 }
 
 template <class T> 
@@ -5952,7 +5950,7 @@ void layerBpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& in
   int n_inputs = input_gradient.length();
   int n_outputs = output_gradient.length();
 #ifdef BOUNDCHECK
-  if (output_weights.length() != n_outputs || output_weights.width() != n_inputs
+  if (weights.length() != n_outputs || weights.width() != n_inputs
       || input.length() != n_inputs)
     PLERROR("layerBpropUpdate: arguments have incompatible sizes");
 #endif 
@@ -5982,9 +5980,9 @@ void layerL2BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& 
   int n_inputs = input_gradient.length();
   int n_outputs = output_gradient.length();
 #ifdef BOUNDCHECK
-  if (output_weights.length() != n_outputs || output_weights.width() != n_inputs
+  if (weights.length() != n_outputs || weights.width() != n_inputs
       || input.length() != n_inputs)
-    PLERROR("layerBpropUpdate: arguments have incompatible sizes");
+    PLERROR("layerL2BpropUpdate: arguments have incompatible sizes");
 #endif 
   input_gradient.clear();
   T* in_g = input_gradient.data();
@@ -6012,9 +6010,9 @@ void layerL1BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& 
   int n_inputs = input_gradient.length();
   int n_outputs = output_gradient.length();
 #ifdef BOUNDCHECK
-  if (output_weights.length() != n_outputs || output_weights.width() != n_inputs
+  if (weights.length() != n_outputs || weights.width() != n_inputs
       || input.length() != n_inputs)
-    PLERROR("layerBpropUpdate: arguments have incompatible sizes");
+    PLERROR("layerL1BpropUpdate: arguments have incompatible sizes");
 #endif 
   input_gradient.clear();
   T* in_g = input_gradient.data();
