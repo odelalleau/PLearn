@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.40 2005/05/26 13:20:39 tihocan Exp $
+   * $Id: VMatLanguage.cc,v 1.41 2005/05/31 22:17:45 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -109,6 +109,9 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
   " _ dup            : duplicates last element on the stack\n"
   " _ exch           : exchanges the two top-most elements on the stack\n"
   " _ onehot         : index nclasses --> one-hot representation of index\n"
+  " _ gausshot       : index nclasses sigma --> smooth 'one-hot' representation of\n"
+  "                    index using a gaussian of width sigma.  Maximum value remains 1;\n"
+  "                    useful if there is some locality structure in the classes\n"
   " _ +              : a b   -->  a + b\n"
   " _ -              : a b   -->  a - b\n"
   " _ *              : a b   -->  a * b\n"
@@ -678,6 +681,7 @@ VMatLanguage::VMatLanguage(VMat vmsrc)
         opcodes["dayofyear"] = 58;  // CYYMMDD ->  number of days since january 1 of year CYY 
         opcodes["nextincal"] = 59;  // cal# JDate -> next jdate on or after given jdate in global calendar cal#
         opcodes["previncal"] = 60;  // cal# JDate -> previous jdate on or before given jdate in global calendar cal#
+        opcodes["gausshot"]  = 61;  // index nclasses sigma --> smooth one-hot
       }
   }
 
@@ -1048,6 +1052,18 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
               }
             else
               PLERROR("Global calendar '%s' does not exist", cal_name.c_str());
+            break;
+          }
+          case 61: // gausshot
+          {
+            real sigma = pstack.pop();
+            int nclasses = int(pstack.pop());
+            int index = int(pstack.pop()); 
+            for(int i=0; i<nclasses; i++) {
+              real diff_index = i-index;
+              real value = exp(- diff_index*diff_index / sigma);
+              pstack.push(value);
+            }
             break;
           }
           default:
