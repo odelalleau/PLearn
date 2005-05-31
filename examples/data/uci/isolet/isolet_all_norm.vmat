@@ -1,0 +1,6 @@
+ShiftAndRescaleVMatrix( 
+  underlying_vmat =
+    $INCLUDE{UCI_MLDB:isolet/isolet_all.vmat}
+  verbosity = 1
+)
+
