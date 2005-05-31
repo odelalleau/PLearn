@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IncrementalNNet.cc,v 1.7 2005/05/31 12:54:10 yoshua Exp $ 
+   * $Id: IncrementalNNet.cc,v 1.8 2005/05/31 22:12:23 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -151,6 +151,9 @@ void IncrementalNNet::declareOptions(OptionList& ol)
   declareOption(ol, "candidate_unit_bias", &IncrementalNNet::candidate_unit_bias, OptionBase::learntoption,
                 "bias parameter of next candidate hidden unit.\n");
 
+  declareOption(ol, "candidate_unit_output_weights", &IncrementalNNet::candidate_unit_output_weights, OptionBase::learntoption,
+                "vector of weights from  next candidate hidden unit to outputs.\n");
+
   declareOption(ol, "n_examples_seen", &IncrementalNNet::n_examples_seen, OptionBase::learntoption,
                 "number of training examples seen (= number of updates done) seen beginning of training.\n");
 
@@ -182,6 +185,11 @@ void IncrementalNNet::build_()
   else if (output_cost_type=="discrete_log_likelihood")
     cost_type=2;
   else PLERROR("IncrementalNNet:build: output_cost_type should either be 'squared_error', 'hinge_loss', or 'discrete_log_likelihood'");
+  if (inputsize_>=0)
+  {
+    candidate_unit_weights.resize(inputsize());
+    candidate_unit_output_weights.resize(n_outputs);
+  }
 }
 
 // ### Nothing to add here, simply calls build_
@@ -332,35 +340,38 @@ void IncrementalNNet::train()
 
         // bprop on output layer
         multiplyAcc(output_biases, output_gradient, learning_rate);
-        layerL1BpropUpdate(hidden_gradient, output_weights, h, output_gradient, learning_rate, output_weight_decay);
-
-        // bprop through hidden units activation
-        if (hard_activation_function) 
-          // Should h_i(x) change of sign?
-          // Consider the loss that would occur if it did, i.e. with output replaced by output - 2*W[.,i]*h_i(x)
-          // Then consider a weighted classification problem
-          // with the appropriate sign and weight = gradient on h_i(x).
+        if (stage>0)
         {
-          for (int i=0;i<int(stage);i++) // loop over hidden units
-          {
-            Vec Wi = output_weights.column(i).toVec();
-            multiplyAdd(output,Wi,-2*h[i],output_with_signchange);
-            real fit_error_with_sign_change = output_loss(output_with_signchange,target);
-            int target_i = int(sign(fit_error_with_sign_change-current_fit_error)*h[i]);
-            real weight_i = fabs(hidden_gradient[i]); // CHECK: when is the sign of hidden_gradient different from (h[i]-target_i)?
-            if (use_hinge_loss_for_hard_activation)
-              hidden_gradient[i] = weight_i * d_hinge_loss(act[i],target_i);
-            else // use cross-entropy
-              hidden_gradient[i] = weight_i * (sigmoid(act[i]) - 2*(target_i+1));
-          }
-        }
-        else
-          bprop_tanh(h,hidden_gradient,hidden_gradient);
+          transposedLayerL1BpropUpdate(hidden_gradient, output_weights, h, output_gradient, learning_rate, output_weight_decay);
 
-        // bprop through hidden layer and update hidden_biases and hidden_weights
-        hidden_gradient *= -learning_rate;
-        hidden_layer_biases += hidden_gradient;
-        externalProductAcc(hidden_layer_weights, hidden_gradient, input);
+          // bprop through hidden units activation
+          if (hard_activation_function) 
+            // Should h_i(x) change of sign?
+            // Consider the loss that would occur if it did, i.e. with output replaced by output - 2*W[.,i]*h_i(x)
+            // Then consider a weighted classification problem
+            // with the appropriate sign and weight = gradient on h_i(x).
+          {
+            for (int i=0;i<int(stage);i++) // loop over hidden units
+            {
+              Vec Wi = output_weights(i);
+              multiplyAdd(output,Wi,-2*h[i],output_with_signchange);
+              real fit_error_with_sign_change = output_loss(output_with_signchange,target);
+              int target_i = int(sign(fit_error_with_sign_change-current_fit_error)*h[i]);
+              real weight_i = fabs(hidden_gradient[i]); // CHECK: when is the sign of hidden_gradient different from (h[i]-target_i)?
+              if (use_hinge_loss_for_hard_activation)
+                hidden_gradient[i] = weight_i * d_hinge_loss(act[i],target_i);
+              else // use cross-entropy
+                hidden_gradient[i] = weight_i * (sigmoid(act[i]) - 2*(target_i+1));
+            }
+          }
+          else
+            bprop_tanh(h,hidden_gradient,hidden_gradient);
+
+          // bprop through hidden layer and update hidden_biases and hidden_weights
+          hidden_gradient *= -learning_rate;
+          hidden_layer_biases += hidden_gradient;
+          externalProductAcc(hidden_layer_weights, hidden_gradient, input);
+        }
       }
 
       // backprop & update candidate hidden unit
@@ -401,7 +412,7 @@ void IncrementalNNet::train()
       {
         n_examples_training_candidate += minibatchsize;
         if (verbosity>1)
-          cout << "At t=" << n_examples_seen/train_set->length() 
+          cout << "At t=" << real(n_examples_seen)/train_set->length() 
                << " epochs, estimated current average cost = " << current_average_cost << endl
                << "Estimated average cost with candidate unit = " << next_average_cost << endl;
         if (next_average_cost < current_average_cost) 
@@ -411,19 +422,22 @@ void IncrementalNNet::train()
           output_weights.resize(stage,n_outputs);
           hidden_layer_weights.resize(stage,inputsize());
           hidden_layer_biases.resize(stage);
+          hidden_gradient.resize(stage);
           output_weights(stage-1) << candidate_unit_output_weights;
           hidden_layer_weights(stage-1) << candidate_unit_weights;
           hidden_layer_biases[stage-1] = candidate_unit_bias;
+          act.resize(stage);
+          h.resize(stage);
           // initialize a new candidate
           candidate_unit_output_weights.fill(0.01/stage);
           candidate_unit_weights.clear();
           candidate_unit_bias=0;
-          n_examples_training_candidate=0;
           if (verbosity>1)
             cout << "Adding hidden unit number " << stage << " after training it for "
                  << n_examples_training_candidate << " examples.\n The average cost is "
                  << "expected to decrease from " << current_average_cost << " to " 
                  << next_average_cost << "." << endl;
+          n_examples_training_candidate=0;
         } else // should we stop?
         {
           if (n_examples_training_candidate >= max_n_epochs_to_fail*train_set->length())
@@ -453,13 +467,18 @@ void IncrementalNNet::computeOutput(const Vec& input, Vec& output) const
   // Compute the output from the input.
   int nout = outputsize();
   output.resize(nout);
-  product(act,hidden_layer_weights, input);
-  act+=hidden_layer_biases;
-  if (hard_activation_function)
-    compute_tanh(act,h);
-  else
-    compute_sign(act,h);
-  product(linear_output,output_weights,h);
+  if (stage>0)
+  {
+    product(act,hidden_layer_weights, input);
+    act+=hidden_layer_biases;
+    if (hard_activation_function)
+      compute_tanh(act,h);
+    else
+      compute_sign(act,h);
+    transposeProduct(linear_output,output_weights,h);
+  } 
+  else 
+    linear_output.clear();
   linear_output+=output_biases;
   if (cost_type==2) // "discrete_log_likelihood"
     softmax(linear_output,output);
@@ -518,16 +537,32 @@ void IncrementalNNet::computeCostsFromOutputs(const Vec& input, const Vec& outpu
   costs[0] = fit_error + regularization_penalty;
   costs[1] = fit_error;
   costs[2] = regularization_penalty;
+  if (cost_type!=0) // classification type
+  {
+    int topscoring_class = argmax(output);
+    int target_class = target[0];
+    costs[3] = (target_class!=topscoring_class); // 1 or 0
+  }
 }                                
 
 TVec<string> IncrementalNNet::getTestCostNames() const
 {
   // Return the names of the costs computed by computeCostsFromOutpus
   // (these may or may not be exactly the same as what's returned by getTrainCostNames).
-  TVec<string> names(3);
+  if (output_cost_type=="squared_error") // regression-type
+  {
+    TVec<string> names(3);
+    names[0]=output_cost_type+"+L1_regularization";
+    names[1]=output_cost_type;
+    names[2]="+L1_regularization";
+    return names;
+  }
+  // else classification-type
+  TVec<string> names(4);
   names[0]=output_cost_type+"+L1_regularization";
   names[1]=output_cost_type;
   names[2]="+L1_regularization";
+  names[3]="class_error";
   return names;
 }
 

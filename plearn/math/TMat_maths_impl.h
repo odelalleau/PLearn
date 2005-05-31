@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.72 2005/05/31 12:53:40 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.73 2005/05/31 22:10:52 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -6001,6 +6001,38 @@ void layerL2BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& 
   }
 }
 
+// like layerL2BpropUpdate but weights is given transposed.
+// input_gradient[j] = sum_i weights[j,i]*output_gradient[i]
+// weights[i,j] -= learning_rate * (output_gradient[i] * input[j] - weight_decay * weights[i,j])
+template<class T>
+void transposedLayerL2BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& input, 
+                                  const TVec<T>& output_gradient, real learning_rate, T weight_decay)
+{
+  int n_inputs = input_gradient.length();
+  int n_outputs = output_gradient.length();
+#ifdef BOUNDCHECK
+  if (weights.width() != n_outputs || weights.length() != n_inputs
+      || input.length() != n_inputs)
+    PLERROR("layerL1BpropUpdate: arguments have incompatible sizes");
+#endif 
+  input_gradient.clear();
+  T* in_g = input_gradient.data();
+  T* out_g = output_gradient.data();
+  T* inp = input.data();
+  for (int j=0;j<n_inputs;j++)
+  {
+    T* Wj = weights[j];
+    T inp_j = inp[j];
+    for (int i=0;i<n_outputs;i++)
+    {
+      T out_gi = out_g[i];
+      T Wji = Wj[i];
+      in_g[j] += Wji * out_gi;
+      Wj[i] -= learning_rate * (out_gi * inp_j + weight_decay * Wji);
+    }
+  }
+}
+
 // input_gradient[j] = sum_i weights[i,j]*output_gradient[i]
 // weights[i,j] -= learning_rate * (output_gradient[i] * input[j] - weight_decay * sign(weights[i,j]))
 template<class T>
@@ -6027,6 +6059,38 @@ void layerL1BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& 
       T Wij = Wi[j];
       in_g[j] += Wij * out_gi;
       Wi[j] -= learning_rate * (out_gi * inp[j] + weight_decay * sign(Wij));
+    }
+  }
+}
+
+// like layerL1BpropUpdate but weights is given transposed.
+// input_gradient[j] = sum_i weights[j,i]*output_gradient[i]
+// weights[i,j] -= learning_rate * (output_gradient[i] * input[j] - weight_decay * sign(weights[i,j]))
+template<class T>
+void transposedLayerL1BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& input, 
+                                  const TVec<T>& output_gradient, real learning_rate, T weight_decay)
+{
+  int n_inputs = input_gradient.length();
+  int n_outputs = output_gradient.length();
+#ifdef BOUNDCHECK
+  if (weights.width() != n_outputs || weights.length() != n_inputs
+      || input.length() != n_inputs)
+    PLERROR("layerL1BpropUpdate: arguments have incompatible sizes");
+#endif 
+  input_gradient.clear();
+  T* in_g = input_gradient.data();
+  T* out_g = output_gradient.data();
+  T* inp = input.data();
+  for (int j=0;j<n_inputs;j++)
+  {
+    T* Wj = weights[j];
+    T inp_j = inp[j];
+    for (int i=0;i<n_outputs;i++)
+    {
+      T out_gi = out_g[i];
+      T Wji = Wj[i];
+      in_g[j] += Wji * out_gi;
+      Wj[i] -= learning_rate * (out_gi * inp_j + weight_decay * sign(Wji));
     }
   }
 }
