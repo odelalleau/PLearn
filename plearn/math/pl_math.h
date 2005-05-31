@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.31 2005/05/31 02:56:54 yoshua Exp $
+   * $Id: pl_math.h,v 1.32 2005/05/31 03:02:02 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -310,7 +310,8 @@ inline real ultrafasttanh(const real& x)
 // target is -1 or 1
 inline real hinge_loss(const real& output, int target)
 {
-  return max(0,1-target*output);
+  real off_margin = 1-target*output;
+  return off_margin>0?off_margin:0;
 }
 
 // return d(hinge_loss(output,target))/doutput
