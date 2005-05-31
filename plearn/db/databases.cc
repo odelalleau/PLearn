@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.21 2005/03/03 20:10:23 tihocan Exp $
+   * $Id: databases.cc,v 1.22 2005/05/31 18:37:36 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -993,6 +993,13 @@ void loadUCIAMat(VMat& data, string file, PP<UCISpecification> uci_spec)
 ////////////////
 // loadUCISet //
 ////////////////
+void loadUCISet(VMat& data, PP<UCISpecification> uci_spec) {
+  assert( uci_spec );
+  if (uci_spec->data_all.isEmpty())
+    PLERROR("In loadUCISet - Need the 'data_all' option to load the set.");
+  loadUCISet(data, uci_spec->data_all.absolute(), uci_spec);
+}
+
 void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec) {
   char *** to_symbols;
   int * to_n_symbols;
