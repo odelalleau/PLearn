@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UCISpecification.cc,v 1.4 2004/09/14 16:04:35 chrish42 Exp $ 
+   * $Id: UCISpecification.cc,v 1.5 2005/05/31 18:36:50 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -66,6 +66,8 @@ PLEARN_IMPLEMENT_OBJECT(UCISpecification,
     "learning repository, such as the input size, target size, etc...\n"
     "It is intended to be used in a script put in the same directory as the\n"
     "database, in order to be loaded by the getDataSet() method.\n"
+    "\n"
+    "NB (Olivier): I am re-doing some stuff in there, it may be a bit messy...\n"
 );
 
 void UCISpecification::declareOptions(OptionList& ol)
@@ -82,8 +84,11 @@ void UCISpecification::declareOptions(OptionList& ol)
   declareOption(ol, "header_fields", &UCISpecification::header_fields, OptionBase::buildoption,
       "The fields that are present in the header");
 
+  declareOption(ol, "data_all", &UCISpecification::data_all, OptionBase::buildoption,
+      "Filename for the whole dataset.");
+
   declareOption(ol, "file_all", &UCISpecification::file_all, OptionBase::buildoption,
-      "The filename for the whole dataset");
+      "DEPRECATED: The filename for the whole dataset");
 
   declareOption(ol, "file_train", &UCISpecification::file_train, OptionBase::buildoption,
       "The filename for the train data.");
