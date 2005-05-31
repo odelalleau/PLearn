@@ -199,7 +199,7 @@ class PLearnIO:
 
             
     def write_typed(self, x):
-        spec = plearn.pyplearn.PLearnRepr.repr(x)+' '
+        spec = plearn.pyplearn.plearn_repr.plearn_repr(x)+' '
         # print 'Sending spec string:',spec
         self.write(spec)
 

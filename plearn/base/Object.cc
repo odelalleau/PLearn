@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.44 2005/05/13 16:12:30 plearner Exp $
+   * $Id: Object.cc,v 1.45 2005/05/31 14:38:01 dorionc Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -265,6 +265,23 @@ void Object::newread(PStream &in)
 {
   PP<Object> dummy_obj = 0; // Used to read skipped options.
   string cl;
+
+  // Allow the use of the pointer syntax for non-pointer instances.
+  in.skipBlanksAndComments();
+  if ( in.peek() == '*' )  
+  {
+    in.get(); // Eat '*'
+    unsigned int id;
+    in >> id;
+    in.skipBlanksAndCommentsAndSeparators();
+
+    in.get(); // Eat '-'
+    char cc = in.get();
+    if(cc != '>') // Eat '>'
+      PLERROR("In PStream::operator>>(T*&)  Wrong format.  Expecting \"*%d->\" but got \"*%d-%c\".", id, id, cc);
+    in.skipBlanksAndCommentsAndSeparators();    
+  }
+    
   in.getline(cl, '(');
   cl = removeblanks(cl);
   if (cl != classname())

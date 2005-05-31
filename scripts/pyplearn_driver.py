@@ -1,11 +1,11 @@
 #!/usr/bin/env python2.3
-__cvs_id__ = "$Id: pyplearn_driver.py,v 1.9 2005/02/20 06:55:54 chapados Exp $"
-
-from plearn.pyplearn import *
+__cvs_id__ = "$Id: pyplearn_driver.py,v 1.10 2005/05/31 14:38:02 dorionc Exp $"
 
 import sys
 import os.path
-from plearn.pyplearn.pyplearn import _parse_plargs, _postprocess_refs
+from plearn.pyplearn             import *
+from plearn.pyplearn.pyplearn    import _parse_plargs
+from plearn.pyplearn.plearn_repr import *
 
 ### Add the absolute directory portion of the current script to the path
 sys.path = [os.path.dirname(os.path.abspath(sys.argv[1]))] + sys.path
@@ -28,7 +28,7 @@ elif len(sys.argv) >= 3 and '--PyPLearnScript' in sys.argv:
 ### Default mode: simply dump the plearn_representation of this
 else:
     _parse_plargs(sys.argv[2:])
-    lines += 'print _postprocess_refs(str(main()))\n'
+    lines += 'print main()\n'
 
 # del pyplearn_file, sys, _parse_plargs
 exec ''.join(lines) in globals()

@@ -493,7 +493,7 @@ U{Epytext Markup Language Manual<http://epydoc.sourceforge.net/epytext.html>}
 should not take you more than 15 minutes and you will be ready to document your
 code.
 """
-__cvs_id__ = "$Id: pyplearn.py,v 1.30 2005/05/31 14:32:58 dorionc Exp $"
+__cvs_id__ = "$Id: pyplearn.py,v 1.31 2005/05/31 14:38:01 dorionc Exp $"
 
 import string, types
 import plearn.utilities.metaprog as metaprog
@@ -511,7 +511,7 @@ class plearn_snippet:
     """Objects of this class are used to wrap the parts of the Python code
        that have already be converted to a PLearn string, so they don't
        get the same treatment as Python strings (which will get wrapped in
-       double quotes by PLearnRepr.repr).
+       double quotes by plearn_repr() ).
     """
     def __init__(self, s):
         self.s = s

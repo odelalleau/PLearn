@@ -1,7 +1,8 @@
 import os, time
 import plearn.utilities.toolkit as toolkit
 
-from plearn.pyplearn.pyplearn       import PLearnRepr, generate_expdir
+from plearn.pyplearn.pyplearn       import generate_expdir
+from plearn.pyplearn.plearn_repr    import plearn_repr
 from plearn.pyplearn.PyPLearnObject import PyPLearnObject
 from plearn.utilities.Bindings      import *
 
@@ -119,7 +120,7 @@ class Xperiment(PyPLearnObject):
 
     def save_cache( cls, filename ):
         cache_file = open( filename, "w" )
-        cache_file.write( PLearnRepr.repr(cls._cached_experiments) )
+        cache_file.write( plearn_repr(cls._cached_experiments) )
         cache_file.close()
     save_cache = classmethod( save_cache )
 
