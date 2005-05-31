@@ -130,15 +130,15 @@ def __plearn_repr( obj, indent_level ):
         elem_format = lambda elem: plearn_repr( elem, indent_level+1 )
         return '[%s]' % format_list_elements( obj, elem_format, indent_level+1 )
 
-    elif isinstance(obj, dict):
+    elif isinstance( obj, dict ):
         def elem_format( elem ):
             k, v = elem
-            return '%s : %s' % ( plearn_repr(k, indent_level),
-                                 plearn_repr(v, indent_level) )        
+            return '%s : %s' % ( plearn_repr(k, indent_level+1),
+                                 plearn_repr(v, indent_level+1) )        
         return '{%s}' % format_list_elements( obj.items(), elem_format, indent_level+1 )
 
-    elif isinstance(obj, tuple) and len(obj) == 2:
-        return  plearn_repr(obj[0], indent_level) + ':' + plearn_repr(obj[1], indent_level)
+    elif isinstance( obj, tuple ) and len(obj) == 2:
+        return plearn_repr( obj[0], indent_level+1 ) + ':' + plearn_repr( obj[1], indent_level+1 )
 
     # Stands for TMat<real>
     elif isinstance( obj, numarray.numarraycore.NumArray ):
