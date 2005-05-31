@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IncrementalNNet.cc,v 1.5 2005/05/30 13:43:16 yoshua Exp $ 
+   * $Id: IncrementalNNet.cc,v 1.6 2005/05/31 02:57:17 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -59,7 +59,7 @@ IncrementalNNet::IncrementalNNet()
     boosting(false),
     minimize_local_cost(false),
     hard_activation_function(false),
-    n_epochs_before_considering_a_new_unit(1),
+    use_hinge_loss_for_hard_activation(true),
     initial_learning_rate(0.01),
     decay_factor(1e-6),
     max_n_epochs_to_fail(1)
@@ -91,8 +91,9 @@ void IncrementalNNet::declareOptions(OptionList& ol)
                 "tentative hidden unit, while on odd batches one evaluates its quality.\n");
 
   declareOption(ol, "minibatch_size", &IncrementalNNet::minibatch_size, OptionBase::buildoption,
-                "0 is a special value meaning minibatch_size == training set size. In batch mode (online==false)\n"
-                "it is the length\n");
+                "0 is a special value meaning minibatch_size == training set size.\n"
+                "After a hidden unit is added, wait at least that number of examples before considering\n"
+                "to add a new one.\n");
 
   declareOption(ol, "output_cost_type", &IncrementalNNet::output_cost_type, OptionBase::buildoption,
                 "'squared_error', 'hinge_loss', 'discrete_log_likelihood' (for probabilistic classification).\n");
@@ -113,10 +114,8 @@ void IncrementalNNet::declareOptions(OptionList& ol)
   declareOption(ol, "hard_activation_function", &IncrementalNNet::hard_activation_function, OptionBase::buildoption,
                 "if true then h(x) = sign(w'x + b), else h(x) = tanh(w'x + b).\n");
 
-  declareOption(ol, "n_epochs_before_considering_a_new_unit", &IncrementalNNet::n_epochs_before_considering_a_new_unit, 
-                OptionBase::buildoption, 
-                "After a hidden unit is added, wait at least that fraction of the training set before considering\n"
-                "to add a new one.\n");
+  declareOption(ol, "use_hinge_loss_for_hard_activation", &IncrementalNNet::use_hinge_loss_for_hard_activation, OptionBase::buildoption,
+                "use hinge loss or cross-entropy to train hidden units, when hard_activation_function\n");
 
   declareOption(ol, "initial_learning_rate", &IncrementalNNet::initial_learning_rate, OptionBase::buildoption,
                 "learning_rate = initial_learning_rate / (1 + n_examples_seen * decay_factor).\n");
@@ -160,6 +159,10 @@ void IncrementalNNet::declareOptions(OptionList& ol)
   declareOption(ol, "next_average_cost", &IncrementalNNet::next_average_cost, OptionBase::learntoption,
                 "average cost if candidate hidden unit was included. It is computed like current_average_cost.\n");
 
+  declareOption(ol, "n_examples_training_candidate", &IncrementalNNet::n_examples_training_candidate, OptionBase::learntoption,
+                "number of examples seen since started to train current candidate hidden unit. Used in\n"
+                "stopping criterion: stop when n_examples_training_candidate >= max_n_epochs_to_fail * train_set->length().\n");
+
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
@@ -170,6 +173,7 @@ void IncrementalNNet::build_()
   linear_output.resize(n_outputs);
   output_with_candidate.resize(n_outputs);
   output_gradient_with_candidate.resize(n_outputs);
+  act.resize(stage);
   h.resize(stage);
   costs_with_candidate.resize(3);
   if (output_cost_type=="squared_error")
@@ -198,6 +202,7 @@ void IncrementalNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(hidden_layer_weights, copies);
   deepCopyField(hidden_layer_biases, copies);
   deepCopyField(candidate_unit_weights, copies);
+  deepCopyField(act, copies);
   deepCopyField(h, copies);
   deepCopyField(linear_output, copies);
 }
@@ -248,6 +253,9 @@ void IncrementalNNet::train()
   static Vec hidden_gradient;
   static Vec output_with_candidate;
   static Vec output_with_signchange;
+  static Mat candidate_unit_output_weights_mat;
+  static Vec candidate_h_vec;
+  static Vec candidate_hidden_gradient;
   input.resize(inputsize());    // the train_set's inputsize()
   output.resize(outputsize());    
   output_gradient.resize(outputsize());    
@@ -255,6 +263,9 @@ void IncrementalNNet::train()
   output_with_candidate.resize(outputsize());    
   output_with_signchangne.resize(outputsize());    
   target.resize(targetsize());  // the train_set's targetsize()
+  candidate_unit_output_weights_mat = candidate_unit_output_weights.toMat(n_outputs,1);
+  candidate_h_vec.resize(1);
+  candidate_hidden_gradient.resize(1);
   real sampleweight; // the train_set's weight on the current example
   real new_cost;
 
@@ -282,13 +293,17 @@ void IncrementalNNet::train()
       train_costs*=sampleweight;
       train_stats->update(train_costs);
       // compute output and cost IF WE USED THE CANDIDATE HIDDEN UNIT
-      real new_h = dot(input, candidate_unit_weights) + candidate_unit_bias;
+      real candidate_act = 
+        dot(input, candidate_unit_weights) + candidate_unit_bias;
+      real candidate_h;
       if (hard_activation_function)
-        new_h = sign(new_h);
+        candidate_h = sign(candidate_act);
       else
-        new_h = tanh(new_h);
-      // linear_output_with_candidate = linear_output + candidate_unit_output_weight*new_h;
-      multiplyAdd(linear_output,candidate_unit_output_weight,new_h,linear_output_with_candidate);
+        candidate_h = tanh(candidate_act);
+      candidate_h_vec[0]=candidate_h;
+      // linear_output_with_candidate = linear_output + candidate_unit_output_weight*candidate_h;
+      multiplyAdd(linear_output,candidate_unit_output_weight,
+                  candidate_h,linear_output_with_candidate);
       if (cost_type == 2) // "discrete_log_likelihood"
         softmax(output_with_candidate,output_with_candidate);
       computeCostsFromOutputs(input,output_with_candidate,target,costs_with_candidate); 
@@ -299,37 +314,15 @@ void IncrementalNNet::train()
       if (!boosting) // i.e. continue training the existing hidden units
       {
         // ** compute gradient on linear output
-        if (cost_type==0) // "squared_error"
-        {
-          substract(output,target,output_gradient);
-          output_gradient *= sampleweight * 2;
-        }
-        else if (cost_type==1) // "hinge_loss"
-        {
-          int target_class = target[0];
-          for (int i=0;i<n_outputs;i++)
-          {
-            real y_i = (target_class==i)?1:-1;
-            real margin = y_i * output[i];
-            if (margin < 1)
-              output_gradient[i] = -y_i*sampleweight;
-            else
-              output_gradient[i] = 0;
-          }
-        }
-        else // (output_cost_type=="discrete_log_likelihood")
-        {
-          int target_class = target[0];
-          for (int i=0;i<n_outputs;i++)
-          {
-            real y_i = (target_class==i)?1:0;
-            output_gradient[i] = sampleweight*(output[i] - y_i);
-          }
-        }  
+        output_loss_gradient(output, target, output_gradient, sampleweight);
+
         // ** bprop through the network & update
+
+        // bprop on output layer
         multiplyAcc(output_biases, output_gradient, learning_rate);
         layerL1BpropUpdate(hidden_gradient, output_weights, h, output_gradient, learning_rate, output_weight_decay);
 
+        // bprop through hidden units activation
         if (hard_activation_function) 
           // Should h_i(x) change of sign?
           // Consider the loss that would occur if it did, i.e. with output replaced by output - 2*W[.,i]*h_i(x)
@@ -337,21 +330,51 @@ void IncrementalNNet::train()
           // with the appropriate sign and weight = gradient on h_i(x).
         {
           real current_fit_error = train_costs[1];
-          for (int i=0;i<stage;i++)
+          for (int i=0;i<stage;i++) // loop over hidden units
           {
             Vec Wi = output_weights.column(i).toVec();
             multiplyAdd(output,Wi,-2*h[i],output_with_signchange);
             real fit_error_with_sign_change = output_loss(output_with_signchange,target);
-            real target_i = sign(fit_error_with_sign_change-current_fit_error)*h[i];
+            int target_i = sign(fit_error_with_sign_change-current_fit_error)*h[i];
             real weight_i = fabs(hidden_gradient[i]); // CHECK: when is the sign of hidden_gradient different from (h[i]-target_i)?
+            if (use_hinge_loss_for_hard_activation)
+              hidden_gradient[i] = weight_i * d_hinge_loss(act[i],target_i);
+            else // use cross-entropy
+              hidden_gradient[i] = weight_i * (sigmoid(act[i]) - 2(target_i+1));
           }
         }
         else
           bprop_tanh(h,hidden_gradient,hidden_gradient);
+
+        // bprop through hidden layer and update hidden_biases and hidden_weights
+        hidden_gradient *= -learning_rate;
+        hidden_biases += hidden_gradient;
+        externalProductAcc(hidden_weights, hidden_gradient, input);
       }
 
       // backprop & update candidate hidden unit
+      output_loss_gradient(output_with_candidate, target, output_gradient, sampleweight);
+      layerBpropUpdate(candidate_hidden_gradient, candidate_unit_output_weights_mat, 
+                       candidate_h_vec, output_gradient, learning_rate);
+      // bprop through candidate hidden unit activation, heuristic method
+      if (hard_activation_function)
+      {
+        multiplyAdd(output_with_candidate,candidate_unit_output_weights,-2*candidate_h,output_with_signchange);
+        real fit_error_with_sign_change = output_loss(output_with_signchange,target);
+        int hidden_class = sign(fit_error_with_sign_change-current_fit_error)*candidate_h;
+        real weight_on_loss = fabs(candidate_hidden_gradient[0]); // CHECK: when is the sign of hidden_gradient different from (h[i]-target_i)?
+        if (use_hinge_loss_for_hard_activation)
+          candidate_hidden_gradient[0] = weight_on_loss * d_hinge_loss(candidate_act,hidden_class);
+        else // use cross-entropy
+          candidate_hidden_gradient[0] = weight_on_loss * (sigmoid(candidate_act) - 2(hidden_class+1));
+      }
+      else
+        bprop_tanh(candidate_h_vec,candidate_hidden_gradient,candidate_hidden_gradient);        
+      candidate_hidden_gradient *= -learning_rate;
+      candidate_unit_bias += candidate_hidden_gradient[0];
+      multiplyAcc(candidate_unit_weights, input, candidate_hidden_gradient[0]);
 
+      // keep track of average performance with and without candidate hidden unit
       n_examples_seen++;
       int n_batches_seen = n_examples_seen / minibatchsize;
       int t_since_beginning_of_batch = n_examples_seen - n_batches_seen*minibatchsize;
@@ -361,16 +384,21 @@ void IncrementalNNet::train()
         +(1-moving_average_coefficient)*current_average_cost;
       next_average_cost = moving_average_coefficient*costs_with_candidate[0]
         +(1-moving_average_coefficient)*next_average_cost;
-      // consider adding a hidden unit
-      t_since_added_a_unit++;
-      if (t_since_added_a_unit >= n_epochs_before_considering_a_new_unit)
+
+      // consider inserting the candidate hidden unit (at every minibatchsize examples)
+      if (t_since_beginning_of_batch == 0)
       {
+        n_examples_seen_since_training_candidate += minibatchsize;
         if (next_average_cost < current_average_cost) 
         {
           // insert candidate hidden unit
           // ...
           // initialize a new candidate
-          t_since_added_a_unit=0;
+          n_examples_seen_since_training_candidate=0;
+        } else // should we stop?
+        {
+          if (n_examples_training_candidate >= max_n_epochs_to_fail*train_set->size())
+            stopping_criterion_not_met = false;
         }
         if (!online)
           current_average_cost = 0;
@@ -389,12 +417,12 @@ void IncrementalNNet::computeOutput(const Vec& input, Vec& output) const
   // Compute the output from the input.
   int nout = outputsize();
   output.resize(nout);
-  product(h,hidden_layer_weights, input);
-  h+=hidden_biases;
+  product(act,hidden_layer_weights, input);
+  act+=hidden_biases;
   if (hard_activation_function)
-    compute_tanh(h,h);
+    compute_tanh(act,h);
   else
-    compute_sign(h,h);
+    compute_sign(act,h);
   product(linear_output,output_weights,h);
   linear_output+=output_biases;
   if (cost_type==2) // "discrete_log_likelihood"
@@ -411,18 +439,39 @@ real IncrementalNNet::output_loss(const Vec& output,const Vec& target)
   else {
     int target_class = target[0];
     if (cost_type == 1) // "hinge_loss", one against all binary classifiers
-    {
-      real margin;
-      for (int i=0;i<n_outputs;i++)
-      {
-        real y_i = (target_class==i)?1:-1;
-        fit_error -= max(0,1-y_i*output[i]);
-      } 
-    }
+      fit_error = one_against_all_hinge_loss(output,target);
     else // (output_cost_type == "discrete_log_likelihood")
       fit_error = - safelog(output[target_class]);
   }
   return fit_error;
+}
+
+void IncrementalNNet::output_loss_gradient(const Vec& output,const Vec& target,
+                                           Vec output_gradient, real sampleweight)
+{
+  if (cost_type==0) // "squared_error"
+  {
+    substract(output,target,output_gradient);
+    output_gradient *= sampleweight * 2;
+    return;
+  }
+  int target_class = target[0];
+  if (cost_type==1) // "hinge_loss"
+  {
+    one_against_all_hinge_loss_bprop(output,target_class,
+                                     output_gradient);
+    if (sampleweight!=1)
+      output_gradient *= sampleweight;
+  }
+  else // (output_cost_type=="discrete_log_likelihood")
+  {
+    int target_class = target[0];
+    for (int i=0;i<n_outputs;i++)
+    {
+      real y_i = (target_class==i)?1:0;
+      output_gradient[i] = sampleweight*(output[i] - y_i);
+    }
+  }  
 }
 
 void IncrementalNNet::computeCostsFromOutputs(const Vec& input, const Vec& output, 

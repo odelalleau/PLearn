@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.70 2005/05/30 13:44:04 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.71 2005/05/31 02:56:54 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -81,6 +81,52 @@ void compute_sign(const TVec<T>& vec, const TVec<T>& dest)
     *s = sign( *v );
     v++; s++; 
   }
+}
+
+// target is an integer between 0 and N-1
+// output is a vector of N discriminant functions 
+// (each of which tries to separate class i from the others)
+template <class T> 
+real one_against_all_hinge_loss(const TVec<T>& output, 
+                                const int target)
+{
+  int N = output.length();
+  T*  o = output.data();
+  T total_hinge_loss = 0;
+  while(--N >= 0)
+  {
+    if (N==target)
+      total_hinge_loss += hinge_loss(*o,1);
+    else
+      total_hinge_loss += hinge_loss(*o,-1);
+    o++;
+  }
+  return total_hinge_loss;
+}
+
+// target is an integer between 0 and N-1
+// output is a vector of N discriminant functions 
+// (each of which tries to separate class i from the others)
+// compute derivative of hinge loss wrt each output, in d_output
+template <class T> 
+void one_against_all_hinge_loss_bprop(const TVec<T>& output, 
+                                      const int target,
+                                      TVec<T> d_output)
+{
+  int N = output.length();
+  d_output.resize(N);
+  T*  o = output.data();
+  T*  d_o = d_output.data();
+  T total_hinge_loss = 0;
+  while(--N >= 0)
+  {
+    if (N==target)
+      *d_o = d_hinge_loss(*o,1);
+    else
+      *d_o = d_hinge_loss(*o,-1);
+    o++; d_o++;
+  }
+  return total_hinge_loss;
 }
 
 template <class T> 

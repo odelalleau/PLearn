@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.30 2005/03/31 16:21:23 lapalmej Exp $
+   * $Id: pl_math.h,v 1.31 2005/05/31 02:56:54 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -306,6 +306,21 @@ inline real ultrafasttanh(const real& x)
     return (real)0.5*(ultrafasttanh(0.5*x)+1.);
     // return fastsigmoid(x);
   }
+
+// target is -1 or 1
+inline real hinge_loss(const real& output, int target)
+{
+  return max(0,1-target*output);
+}
+
+// return d(hinge_loss(output,target))/doutput
+// target is -1 or 1
+inline real d_hinge_loss(const real& output, int target)
+{
+  real margin = target*output;
+  if (margin<1) return -target;
+  return 0;
+}
 
   //! Tells if the passed value means "missing" for its data-type.
   //! The default version of returns false (not a "missing value")

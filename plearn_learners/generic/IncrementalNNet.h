@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IncrementalNNet.h,v 1.4 2005/05/30 13:43:16 yoshua Exp $ 
+   * $Id: IncrementalNNet.h,v 1.5 2005/05/31 02:57:17 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -101,13 +101,14 @@ public:
                  // where Q is the output cost, f(x_t) is the current prediction, y_t the target, h(x_t) the
                  // output of the new hidden unit.
   bool hard_activation_function; // if true then h(x) = sign(w'x + b), else h(x) = tanh(w'x + b)
-  real n_epochs_before_considering_a_new_unit; // can be a fraction of epoch
+  bool use_hinge_loss_for_hard_activation; // use hinge loss or cross-entropy to train hidden units, when hard_activation_function
   real initial_learning_rate; // learning_rate = initial_learning_rate / (1 + n_examples_seen * decay_factor);
   real decay_factor;
 
   // ** NON-OPTION FIELDS
   //
   Vec linear_output; // output before possible output-non-linearity = output_weights * h(x) + output_biases
+  Vec act; // weighted sum of inputs on hidden units, before non-linearity
   Vec h; // output of hidden units after hidden unit non-linearity
   // Vec linear_output_with_candidate;
   Vec costs_with_candidate;
@@ -211,6 +212,9 @@ public:
   // virtual bool isStatefulLearner() const;
 
   virtual real output_loss(const Vec& output,const Vec& target); // compute output loss, according to output_loss_type
+
+  virtual void output_loss_gradient(const Vec& output,const Vec& target,
+                                    Vec output_gradient, real sampleweight);
 
 };
 
