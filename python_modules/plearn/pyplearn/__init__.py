@@ -2,11 +2,13 @@
 
 Note that including this package simply includes the pyplearn module it contains.
 """
-__cvs_id__ = "$Id: __init__.py,v 1.8 2005/02/21 16:08:51 dorionc Exp $"
+__cvs_id__ = "$Id: __init__.py,v 1.9 2005/05/31 14:32:58 dorionc Exp $"
 
-import new, string
-from pyplearn        import *
-from PyPLearnObject  import *
+import new, string, numarray
+from pyplearn                  import *
+from PyPLearnObject            import *
+from operator                  import isNumberType
+from plearn.utilities.metaprog import public_attribute_predicate
 
 class __pyplearn_magic_module:
     """An instance of this class (instanciated as pl) is used to provide
@@ -18,9 +20,12 @@ class __pyplearn_magic_module:
             raise AttributeError
 
         klass = new.classobj(name, (PyPLearnObject,), {})
+        assert issubclass( klass, PyPLearnObject )
 
         def initfunc(**kwargs):
-            return klass(**kwargs)
+            obj = klass(**kwargs)
+            assert isinstance( obj, PyPLearnObject )
+            return obj
         
         return initfunc
 
@@ -37,9 +42,7 @@ class PyPLearnScript( PyPLearnObject ):
 
         self.expdir        = plargs.expdir
         self.metainfos     = self.get_metainfos()
-
-        from pyplearn import _postprocess_refs
-        self.plearn_script = _postprocess_refs( str( main_object ) )
+        self.plearn_script = str( main_object )
 
     def get_metainfos(self):
         import inspect
@@ -64,4 +67,18 @@ class PyPLearnScript( PyPLearnObject ):
                               ]
         return "\n".join( attribute_strings )
 
-        ## plarg_defaults
+
+def TMat( num_rows, num_cols, mat_contents ):
+    mat = []
+    i = j = 0
+    while i < num_rows:
+        row = []
+        while j < num_cols:
+            element = mat_contents[i*num_cols + j]
+            assert isNumberType(element)
+            row.append( element )
+        mat.append( row )
+    return numarray.array( )
+
+if __name__ == "__main__":
+    print TMat(2, 2, ["allo", "mon", "petit", "coco"])

@@ -493,18 +493,16 @@ U{Epytext Markup Language Manual<http://epydoc.sourceforge.net/epytext.html>}
 should not take you more than 15 minutes and you will be ready to document your
 code.
 """
-__cvs_id__ = "$Id: pyplearn.py,v 1.29 2005/05/30 15:53:45 dorionc Exp $"
+__cvs_id__ = "$Id: pyplearn.py,v 1.30 2005/05/31 14:32:58 dorionc Exp $"
 
 import string, types
-import numarray
-import numarray.numarraycore
 import plearn.utilities.metaprog as metaprog
 
-__all__ = [ 'PyPlearnError', 'ref', 'bind', 'bindref', 'plvar', 'TMat',
+__all__ = [ 'PyPlearnError', 'plvar',
             '_parse_plargs', 'plargs', 'generate_expdir', 'plarg_defaults',
             'bind_plargs', 'plargs_binder', 'plargs_namespace',
-            'PLearnRepr', 'include',
-
+            'include',
+            
             ## Exceptions
             'UnknownArgumentError'
             ]
@@ -560,133 +558,6 @@ class UnknownArgumentError(PyPlearnError):
     def __str__(self):
         return "Unknown pyplearn argument: '%s'." % self.arg_name
 
-
-class PLearnRepr:
-    """This class manages pretty formatting of plearn representations."""
-    indent_level   = 0
-
-    def repr(x):
-        """Returns a string that is the PLearn representation
-        of the corresponding Python object."""
-    
-        if hasattr(x, 'plearn_repr') and callable(getattr(x, 'plearn_repr')):
-            ## return _plearn_repr(x.plearn_repr())
-            return x.plearn_repr()
-    
-        elif isinstance(x, bool):
-            if x:
-                return '1'
-            else:
-                return '0'
-        elif isinstance(x, int):
-            return str(x)
-        elif isinstance(x, float):
-            # Don't use repr, so we don't get 0.20000000000000001 for 0.2
-            return str(x)
-        elif isinstance(x, str):
-            # Escape double quotes inside the string...
-            # Also replace embedded newlines by \n. Needed so we can include
-            # Python code in triple-quoted strings and the indentation isn't
-            # disturbed by pyplearn_magic_module's add_indent method. In the
-            # future, it'd be nicer to have a smarted add_indent that doesn't
-            # mess up triple-quoted strings.
-            return '"' + x.replace('"', r'\"').replace('\n', r'\n') + '"'
-        elif isinstance(x, list):
-            ## return str(len(x)) + ' [' + ', '.join([_plearn_repr(e) for e in x]) + ']'
-            return ' [' + ', '.join([PLearnRepr.repr(e) for e in x]) + ']'
-        elif isinstance(x, dict):
-            dict_items = [PLearnRepr.repr(k) + ': ' + PLearnRepr.repr(v) for k, v in x.iteritems()]
-            return '{' + ', '.join(dict_items) + '}'
-        elif isinstance(x, tuple) and len(x) == 2:
-            return  PLearnRepr.repr(x[0]) + ':' + PLearnRepr.repr(x[1])
-        elif isinstance(x, numarray.numarraycore.NumArray):
-            if len(x.shape)==1:
-                return str(x.shape[0]) + ' [ ' + ', '.join([ PLearnRepr.repr(e) for e in x ]) + ' ]'
-            elif len(x.shape)==2:
-                res = str(x.shape[0]) + ' ' + str(x.shape[1]) + ' [ \n'
-                for row in x:
-                    res += ', '.join([ PLearnRepr.repr(e) for e in row ]) + ', \n'
-                res += ']\n'
-                return res
-        elif isinstance(x, plearn_snippet):
-            return x.s
-        elif x is None:
-            return "*0;"
-        else:
-            raise TypeError( 'Does not know how to handle type %s (x = %s)'
-                             % ( type(x), str(x) )
-                             )
-    repr = staticmethod( repr )
-
-    def format( openstr, attribute_strings, closestr ):
-        separator = ( '\n%s'
-                      % string.ljust('', 4*PLearnRepr.indent_level)
-                      )
-                      
-        stringnified_attributes = ' '
-        if len(attribute_strings) > 0:
-            stringnified_attributes = "%s%s%s" % (
-                separator,
-                string.join( attribute_strings, ',%s'%separator ),
-                separator
-                )
-
-        ## Indent level goes down 1
-        PLearnRepr.indent_level -= 1
-
-        return ( "%s%s%s" % ( openstr, stringnified_attributes, closestr ) )
-    format = staticmethod( format )
-
-    def list_plearn_repr( list_of_attributes ):
-        ## Indent level goes up 1
-        PLearnRepr.indent_level += 1
-        
-        attribute_strings = [ PLearnRepr.repr(attr)
-                              for attr in list_of_attributes ]
-        
-        return PLearnRepr.format( "[ ", attribute_strings, " ]" )
-    list_plearn_repr = staticmethod( list_plearn_repr )
-        
-    def plearn_repr( classname, attribute_pairs ):
-        ## Indent level goes up 1
-        PLearnRepr.indent_level += 1
-
-        pretty    = lambda attr_name: string.ljust(attr_name, 30)
-        attribute_strings = [ '%s = %s' % ( pretty(attr),
-                                            PLearnRepr.repr(val) )
-                              for (attr, val) in attribute_pairs ]
-
-        return PLearnRepr.format( "%s("%classname,
-                                       attribute_strings,
-                                       ")"
-                                       )
-    plearn_repr = staticmethod( plearn_repr )
-
-
-_name_to_id = {}
-_id_to_binding = {}
-_last_binding_index = 0
-
-## Support for bindings
-def bind(name, x):
-    """Binds name to the PLearn expression contained in value."""
-    global _last_binding_index
-    if name in _name_to_id:
-        raise DuplicateBindingError(name)
-    _id_to_binding[_last_binding_index+1] = x
-    _name_to_id[name] = _last_binding_index + 1
-    binding_id = _last_binding_index + 1
-    _last_binding_index +=1
-
-def ref(name):
-    """Makes a reference (with "*1;") to the value associated with name by a previous bind call."""
-    return plearn_snippet('*' + PLearnRepr.repr(_name_to_id[name]) + ';')
-
-def bindref(name,x):
-    """Perform a bind, and return the ref(); convenient for functional-style programming"""
-    bind(name,x)
-    return ref(name)
-
 def plvar(variable_name):
     """Emulates the behavior of the plearn ${variable_name} statement.
 
@@ -696,53 +567,6 @@ def plvar(variable_name):
         raise TypeError("The plvar function expects a string representing the "
                         "name of the .plearn variable that you want to refer to.")
     return plearn_snippet('${%s}' % variable_name)
-
-def _postprocess_refs(s):
-    """Must be called with the *complete* string of the generated .plearn.
-       Finds the first instance of each PLearn reference (eg. *1;) and
-       replaces it by the correct definition (eg. *1 -> foo(blah...)."""
-    references = _id_to_binding.copy()
-    refpos     = s.find('*')    
-    while refpos != -1 and len(references) > 0:
-        maxend = s.find(',', refpos)
-        #print 'maxend',maxend
-        refend = s.find(';', refpos, maxend)
-        #print 'refend',refend
-        if refend == -1:
-            refpos = s.find('*', maxend)
-            #print 'refpos',refpos
-        else:
-            refno  = int( s[refpos+1:refend] )
-            #print 'refno',refno
-            if refno in references:
-                s = "%s -> %s%s" % ( s[:refend],
-                                     PLearnRepr.repr( references[refno] ),
-                                     s[refend+1:] )
-                del references[refno]
-                #print 'references',references.keys()
-            refpos = s.find('*', refpos+1)
-            #print 'refpos',refpos,s[refpos:refpos+10]
-        #raw_input( s )
-
-##     for i in range(1, _last_binding_index+1):
-##         s = s.replace("*%d;" % i,
-##                       "*%d -> %s" % (i, PLearnRepr.repr(_id_to_binding[i])), 1)
-    return s
-    
-def TMat(num_rows, num_cols, mat_contents):
-    """Instances of this class represent a PLearn TMat.
-
-    num_rows and num_cols are the number of rows and columns of the matrix.
-    The contents of the matrix is given to mat_contents as a Python list.
-
-    Example: in Python, TMat(2, 3, [1, 2, 3, 4, 5, 6]) gives
-    in PLearn: 2 3 [1 2 3 4 5 6]
-    """
-    return plearn_snippet( PLearnRepr.repr(num_rows) + ' '  +
-                           PLearnRepr.repr(num_cols) + ' [' +
-                          ', '.join([ PLearnRepr.repr(e) for e in mat_contents ]) +
-                          ']'
-                           )
 
 def include(filename, replace_list = []):
     """Includes the contents of a .plearn file.
