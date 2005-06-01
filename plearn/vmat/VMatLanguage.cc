@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.41 2005/05/31 22:17:45 chapados Exp $
+   * $Id: VMatLanguage.cc,v 1.42 2005/06/01 21:44:18 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -1028,7 +1028,9 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
               {
                 JTime next = cal->calendarTimeOnOrAfter(date);
                 if(next<0)
-                  pstack.push(0);
+                  PLERROR("VMatLanguage :: attempting 'nextincal' for date %s on "
+                          "calendar '%s' but no next-date found",
+                          d.info().c_str(), cal_name.c_str());
                 else
                   pstack.push(date_to_float(PDate((int)next)));
               }
@@ -1046,7 +1048,9 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
               {
                 JTime next = cal->calendarTimeOnOrBefore(date);
                 if(next<0)
-                  pstack.push(0);
+                  PLERROR("VMatLanguage :: attempting 'previncal' for date %s on "
+                          "calendar '%s' but no previous-date found",
+                          d.info().c_str(), cal_name.c_str());
                 else
                   pstack.push(date_to_float(PDate((int)next)));
               }
