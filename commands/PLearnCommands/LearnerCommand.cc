@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerCommand.cc,v 1.16 2005/05/13 16:11:55 plearner Exp $ 
+   * $Id: LearnerCommand.cc,v 1.17 2005/06/01 16:48:14 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -123,7 +123,7 @@ void LearnerCommand::test(const string& trained_learner_file, const string& test
   if(costs_file!="")
     testcosts = new FileVMatrix(costs_file,l,learner->nTestCosts());
 
-  PP<VecStatsCollector> test_stats;
+  PP<VecStatsCollector> test_stats = new VecStatsCollector;
   test_stats->build();
   test_stats->forget();
   learner->test(testset, test_stats, testoutputs, testcosts);
