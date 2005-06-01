@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVMatrix.cc,v 1.8 2005/05/17 16:11:45 chapados Exp $
+   * $Id: ExtendedVMatrix.cc,v 1.9 2005/06/01 21:11:59 dorionc Exp $
    ******************************************************* */
 
 #include "ExtendedVMatrix.h"
@@ -92,19 +92,55 @@ ExtendedVMatrix::declareOptions(OptionList &ol)
     declareOption(ol, "fill_value", &ExtendedVMatrix::fill_value,
                   OptionBase::buildoption,
                   "Value to use to fill the added columns/rows");
+
+    declareOption(
+      ol, "extfieldnames", &ExtendedVMatrix::extfieldnames,
+      OptionBase::buildoption,
+      "The fieldnames to use for the added fields. Length must be equal to\n"
+      "left_extent+right_extent.\n"
+      "\n"
+      "Default: [], i.e all are set to \"extended\"." );
+    
     inherited::declareOptions(ol);
 }
 
 void
 ExtendedVMatrix::build()
 {
-    inherited::build();
-    build_();
+  inherited::build();
+  build_();
 }
 
 void
 ExtendedVMatrix::build_()
 {
+  this->length_ = distr->length() + top_extent  + bottom_extent;
+  this->width_  = distr->width()  + left_extent + right_extent;
+
+  if ( ! extfieldnames.isEmpty() )
+    assert( extfieldnames.length() == left_extent + right_extent );
+
+  TVec<string> fieldnames = distr->fieldNames( );
+  TVec<string> extended_fieldnames( width() );
+  for ( int fno = 0, extno=0; fno < width(); fno++ )
+    if ( fno < left_extent )
+    {
+      if ( extfieldnames.isEmpty() )
+        extended_fieldnames[fno] = "extended";
+      else
+        extended_fieldnames[fno] = extfieldnames[extno++];
+    }
+    else if ( fno >= width()-right_extent )
+    {
+      if ( extfieldnames.isEmpty() )
+        extended_fieldnames[fno] = "extended";
+      else
+        extended_fieldnames[fno] = extfieldnames[extno++];
+    }
+    else
+      extended_fieldnames[fno]   = fieldnames[fno-extno];
+
+  declareFieldNames( extended_fieldnames );
 }
 
 void ExtendedVMatrix::getNewRow(int i, const Vec& v) const

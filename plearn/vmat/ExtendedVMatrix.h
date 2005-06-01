@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVMatrix.h,v 1.6 2004/07/07 17:30:48 tihocan Exp $
+   * $Id: ExtendedVMatrix.h,v 1.7 2005/06/01 21:11:59 dorionc Exp $
    ******************************************************* */
 
 
@@ -69,6 +69,14 @@ public:
   int right_extent;
   real fill_value; 
 
+  /*!
+    The fieldnames to use for the added fields. Length must be equal to
+    left_extent+right_extent.
+    
+    Default: [], i.e all are set to "extended".
+  */
+  TVec<string> extfieldnames;
+  
   // ******************
   // *  Constructors  *
   // ******************
