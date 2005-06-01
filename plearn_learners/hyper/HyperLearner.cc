@@ -34,7 +34,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperLearner.cc,v 1.6 2005/05/26 13:15:16 tihocan Exp $
+   * $Id: HyperLearner.cc,v 1.7 2005/06/01 16:46:05 chapados Exp $
    ******************************************************* */
 // Author: Pascal Vincent
 
@@ -48,7 +48,10 @@ namespace PLearn {
 
 // ###### HyperLearner ########################################################
 
-PLEARN_IMPLEMENT_OBJECT(HyperLearner, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+  HyperLearner,
+  "Learner which optimizes a set of hyper-parameters.",
+  "NO HELP");
 
 
 TVec<string> HyperLearner::getTrainCostNames() const
@@ -175,7 +178,8 @@ void HyperLearner::train()
   Vec results;
 
   if (!train_stats)
-    PLERROR("HyperLearner::train train_stats was not set");
+    setTrainStatsCollector(new VecStatsCollector()); // set a dummy one if
+                                                     // none is set...
 
   if(stage==0 && nstages>0)
     {
