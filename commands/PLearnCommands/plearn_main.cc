@@ -33,14 +33,17 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.20 2004/12/01 19:38:02 tihocan Exp $
+   * $Id: plearn_main.cc,v 1.21 2005/06/01 16:48:37 chapados Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
 #include "PLearnCommandRegistry.h"
+#include <plearn/base/stringutils.h>
 #include <plearn/math/random.h>
 #include <plearn/sys/PLMPI.h>
 #include <plearn/io/pl_log.h>
+#include <plearn/misc/Calendar.h>
+#include <plearn/db/getDataSet.h>
 
 namespace PLearn {
 using namespace std;
@@ -76,6 +79,26 @@ static void output_version(int major_version, int minor_version, int fixlevel )
        << __TIME__ << ")"      << endl;
 }
 
+static void set_global_calendars(string command_line_option)
+{
+  // Assume command-line-option of the form
+  // CalendarName1:CalendarFilename1,CalendarName2:CalendarFilename2,...
+  vector<string> names_files = split(command_line_option, ',');
+  for (int i=0, n=names_files.size() ; i<n ; ++i) {
+    vector<string> namefile = split(names_files[i], ':');
+    if (namefile.size() != 2)
+      PLERROR("Cannot understand '%s' for specifying a global calendar.",
+              names_files[i].c_str());
+    string calname = namefile[0];
+    string filename = namefile[1];
+    VMat dates_vmat = getDataSet(filename);
+    Vec dates_vec = dates_vmat.getColumn(0);
+    Calendar::setGlobalCalendar(calname,
+                                Calendar::makeCalendar(dates_vec));
+    cerr << "Set global calendar \"" << calname << "\" from file \"" << filename << '"' << endl;
+  }
+}
+
 static string global_options( vector<string>& command_line,
                               int major_version, int minor_version, int fixlevel )
 {
@@ -103,7 +126,19 @@ static string global_options( vector<string>& command_line,
               "or by an integer value.");
   }
 
-
+  // Option to establish global calendars loaded from a matrix
+  int global_calendar_pos = findpos(command_line, "--global-calendars");
+  int global_calendar_value_pos = -1;
+  if (global_calendar_pos != -1) {
+    global_calendar_value_pos = global_calendar_pos+1;
+    if (global_calendar_value_pos < argc)
+      set_global_calendars(command_line[global_calendar_value_pos]);
+    else
+      PLERROR("Option --global-calendars must be followed by a list of the form\n"
+              "CalendarName1:CalendarFilename1,CalendarName2:CalendarFilename2,...");
+  }
+  
+  
   // The following removes the options from the command line. It also
   // parses the plearn command as being the first non-optional argument on
   // the line. IF ANY OPTION IS ADDED, PLEASE MAKE SURE TO REMOVE IT BY
@@ -114,9 +149,11 @@ static string global_options( vector<string>& command_line,
 
   for ( int c=0; c < argc; c++ )
     // Neglecting to copy options
-    if ( c != no_version_pos   &&
-         c != verbosity_pos    &&
-         c != verbosity_value_pos )
+    if ( c != no_version_pos             &&
+         c != verbosity_pos              &&
+         c != verbosity_value_pos        &&
+         c != global_calendar_pos        &&
+         c != global_calendar_value_pos  )
     {
       if ( the_command == "" )
       {
