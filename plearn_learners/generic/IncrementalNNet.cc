@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IncrementalNNet.cc,v 1.8 2005/05/31 22:12:23 yoshua Exp $ 
+   * $Id: IncrementalNNet.cc,v 1.9 2005/06/01 02:21:29 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -227,6 +227,9 @@ void IncrementalNNet::forget()
   hidden_layer_weights.resize(0,inputsize());
   hidden_layer_biases.resize(0);
   output_biases.clear();
+  candidate_unit_output_weights.fill(0.01);
+  candidate_unit_weights.clear();
+  candidate_unit_bias=0;
   stage=0;
   n_examples_seen=0;
   current_average_cost=0;
@@ -325,8 +328,12 @@ void IncrementalNNet::train()
       multiplyAdd(linear_output,candidate_unit_output_weights,
                   candidate_h,linear_output_with_candidate);
       if (cost_type == 2) // "discrete_log_likelihood"
-        softmax(output_with_candidate,output_with_candidate);
+        softmax(linear_output_with_candidate,output_with_candidate);
+      else
+        output_with_candidate << linear_output_with_candidate;
       computeCostsFromOutputs(input,output_with_candidate,target,costs_with_candidate); 
+      // computeCostsFromOutputs does not count the cost of the candidate's output weights, so add it:
+      costs_with_candidate[0] += output_weight_decay * sumabs(candidate_unit_output_weights);
 
       real learning_rate = initial_learning_rate / ( 1 + n_examples_seen * decay_factor );
 
@@ -406,7 +413,6 @@ void IncrementalNNet::train()
         +(1-moving_average_coefficient)*current_average_cost;
       next_average_cost = moving_average_coefficient*costs_with_candidate[0]
         +(1-moving_average_coefficient)*next_average_cost;
-
       // consider inserting the candidate hidden unit (at every minibatchsize examples)
       if (t_since_beginning_of_batch == 0)
       {
