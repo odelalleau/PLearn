@@ -1,0 +1,7 @@
+FileVMatrix( 
+  filename = "UCI_MLDB:spambase/spambase_generate.vmat.metadata/precomp.pmat"
+  inputsize = 57
+  targetsize = 1
+  weightsize = 0
+)
+
