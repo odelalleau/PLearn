@@ -39,12 +39,13 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.50 2005/05/17 15:57:16 plearner Exp $
+   * $Id: PLearner.cc,v 1.51 2005/06/01 19:53:40 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
 #include <plearn/base/stringutils.h>
 #include <plearn/io/fileutils.h>
+#include <plearn/vmat/FileVMatrix.h>
 
 namespace PLearn {
 using namespace std;
@@ -60,8 +61,8 @@ PLearner::PLearner()
   inputsize_(-1),
   targetsize_(-1),
   weightsize_(-1),
-  forget_when_training_set_changes(false),
-  n_examples(-1)
+  n_examples(-1),
+  forget_when_training_set_changes(false)
 {}
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PLearner,
@@ -319,6 +320,20 @@ void PLearner::use(VMat testset, VMat outputs) const
     delete pb;
 }
 
+TVec<string> PLearner::getOutputNames() const
+{
+  int n = outputsize();
+  TVec<string> outnames(n);
+  char tmp[21];
+  tmp[20] = '\0';
+  for(int k=0; k<n; k++)
+    {
+      snprintf(tmp,20,"out%d",k);
+      outnames[n] = tmp;
+    }
+  return outnames;
+}
+
 ////////////////
 // useOnTrain //
 ////////////////
@@ -448,6 +463,17 @@ void PLearner::call(const string& methodname, int nargs, PStream& io)
       prepareToSendResults(io, 1);
       io << tmp_output;
       io.flush();    
+    }
+  else if(methodname=="use") // use inputs_vmat output_pmat_fname
+    {
+      if(nargs!=2) PLERROR("PLearner remote method use requires 2 argument");
+      VMat inputs;
+      string output_fname;
+      io >> inputs >> output_fname;
+      VMat outputs = new FileVMatrix(output_fname, inputs.length(), outputsize());
+      use(inputs,outputs);
+      prepareToSendResults(io, 0);
+      io.flush();      
     }
   else if(methodname=="computeOutputAndCosts")
     {

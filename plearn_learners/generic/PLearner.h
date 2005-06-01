@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.36 2005/05/16 22:19:46 yoshua Exp $
+   * $Id: PLearner.h,v 1.37 2005/06/01 19:53:41 plearner Exp $
    ******************************************************* */
 
 
@@ -331,6 +331,10 @@ public:
   //! This should return the names of the objective costs that the train method computes and 
   //! for which it updates the VecStatsCollector train_stats
   virtual TVec<string> getTrainCostNames() const =0;
+
+  //! Returns a vector of length outputsize() containing the outputs' names.
+  //! Default version returns ["out0", "out1", ...]
+  virtual TVec<string> getOutputNames() const;
 
   //! Caches getTestCostNames().size() in an internal variable
   //! the first time it is called, and then returns the content of this variable.
