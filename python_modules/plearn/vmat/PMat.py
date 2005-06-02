@@ -163,7 +163,7 @@ class PMat:
                 if len(row)>0:
                     self.fieldnames.append(row[0])
         else:
-            fieldnames = map(str,range(self.width))
+            self.fieldnames = [ str(i) for i in range(self.width) ]
 
     def save_fieldnames(self):
         metadatadir = self.fname+'.metadata'
