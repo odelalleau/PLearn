@@ -34,7 +34,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperLearner.cc,v 1.7 2005/06/01 16:46:05 chapados Exp $
+   * $Id: HyperLearner.cc,v 1.8 2005/06/02 16:47:09 tihocan Exp $
    ******************************************************* */
 // Author: Pascal Vincent
 
@@ -51,7 +51,7 @@ namespace PLearn {
 PLEARN_IMPLEMENT_OBJECT(
   HyperLearner,
   "Learner which optimizes a set of hyper-parameters.",
-  "NO HELP");
+  "");
 
 
 TVec<string> HyperLearner::getTrainCostNames() const
@@ -65,6 +65,9 @@ TVec<string> HyperLearner::getTrainCostNames() const
 HyperLearner::HyperLearner()
   : provide_strategy_expdir(true), save_final_learner(true)
 {
+  // The default behavior is to let the PTester decide whether or not
+  // to provide the underlying learner with an experiment directory.
+  provide_learner_expdir = false;
 }
 
 void
