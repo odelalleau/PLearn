@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.h,v 1.11 2004/09/14 16:04:59 chrish42 Exp $ 
+   * $Id: KernelProjection.h,v 1.12 2005/06/02 14:00:35 crompb Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -92,7 +92,7 @@ public:
   real min_eigenvalue;
   int n_comp;
   int n_comp_for_cost;
-  int normalize;
+  string normalize;
   
   // ************************
   // * public learnt options *

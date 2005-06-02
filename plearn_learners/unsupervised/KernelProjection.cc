@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.20 2005/05/30 20:15:28 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.21 2005/06/02 14:00:34 crompb Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -59,7 +59,7 @@ KernelProjection::KernelProjection()
   min_eigenvalue(-REAL_MAX),
   n_comp(1),
   n_comp_for_cost(-1),
-  normalize(0)
+  normalize("none")
   
 {
 }
@@ -85,9 +85,10 @@ void KernelProjection::declareOptions(OptionList& ol)
 
   declareOption(ol, "normalize", &KernelProjection::normalize, OptionBase::buildoption,
       "The kind of normalization performed when computing the output\n"
-      " - 0: none (classical projection on the eigenvectors)\n"
-      " - 1: normalization to get unit variance on each coordinate\n"
-      " - 2: ignore the eigenvalues and do as if they were all 1\n");
+      " - 'none'      : classical projection on the eigenvectors\n"
+      " - 'unit_var'  : normalization to get unit variance on each coordinate\n"
+      " - 'unit_eigen': ignore the eigenvalues and do as if they were all 1\n"
+      " - 'unit_coord': coordinates are normalized so that they have norm 1\n");
 
   declareOption(ol, "min_eigenvalue", &KernelProjection::min_eigenvalue, OptionBase::buildoption,
       "Any component associated with an eigenvalue <= min_eigenvalue will be discarded.");
@@ -145,13 +146,6 @@ void KernelProjection::build_()
 {
   if (n_comp_kept == -1) {
     n_comp_kept = n_comp;
-  }
-  // Ensure 'normalize' has a correct value.
-  switch(normalize) {
-    case 0: case 1: case 2:
-      break;
-    default:
-      PLERROR("In KernelProjection::build_ - Wrong value for 'normalize')");
   }
   first_output = true;  // Safer.
   last_input.resize(0);
@@ -220,18 +214,23 @@ void KernelProjection::computeOutput(const Vec& input, Vec& output) const
   rowSum(used_eigenvectors * k_x_xi, result);
   output.resize(n_comp_kept);
   result_ptr = result[0];
-  if (normalize == 1) {
+  if (normalize == "none") {
     real norm_coeff = sqrt(real(n_examples));
     for (int i = 0; i < n_comp_kept; i++) {
       output[i] = *(result_ptr++) / eigenvalues[i] * norm_coeff;
     }
-  } else if (normalize == 0) {
+  } else if (normalize == "unit_var") {
     for (int i = 0; i < n_comp_kept; i++) {
       output[i] = *(result_ptr++) / sqrt(eigenvalues[i]);
     }
-  } else if (normalize == 2) {
+  } else if (normalize == "unit_eigen") {
     output << result;
     output *= sqrt(real(n_examples));
+  } else if (normalize == "unit_coord") {
+    output << result;
+    real norm = PLearn::norm(output,2);
+    if (norm != 0)
+      output /= norm;
   } else {
     PLERROR("In KernelProjection::computeOutput - Wrong value for 'normalize')");
   }
