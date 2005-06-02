@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLE.cc,v 1.5 2004/09/14 16:04:59 chrish42 Exp $ 
+   * $Id: LLE.cc,v 1.6 2005/06/02 14:01:11 crompb Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -56,7 +56,7 @@ LLE::LLE()
   regularizer(1e-6)
 {
   lle_kernel = new LLEKernel();
-  this->normalize = 1;  // In LLE, we normalize.
+  this->normalize = "unit_var";  // In LLE, we normalize.
   this->ignore_n_first = 1; // In LLE, we ignore the first eigenvector.
 }
 
@@ -121,10 +121,10 @@ void LLE::build_()
 {
   if (classical_induction) {
     lle_kernel->reconstruct_coeff = -1;
-    normalize = 2;
+    normalize = "unit_eigen";
   } else {
     lle_kernel->reconstruct_coeff = this->reconstruct_coeff;
-    normalize = 1;
+    normalize = "unit_var";
   }
   lle_kernel->knn = this->knn;
   lle_kernel->regularizer = this->regularizer;
