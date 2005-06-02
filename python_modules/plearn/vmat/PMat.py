@@ -280,6 +280,7 @@ if __name__ == '__main__':
 
     pmat = PMat( 'tmp.pmat', 'r' )
     print pmat
+    print pmat[:]
     # print "+++ tmp.pmat contains: "
     # os.system( 'plearn vmat cat tmp.pmat' )
 
