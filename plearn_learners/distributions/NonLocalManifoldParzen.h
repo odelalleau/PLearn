@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzen.h,v 1.4 2005/05/17 15:55:38 yoshua Exp $
+   * $Id: NonLocalManifoldParzen.h,v 1.5 2005/06/02 21:24:31 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Hugo Larochelle
@@ -72,6 +72,8 @@ protected:
   Var tangent_targets; // target for the tangent vectors for one example 
   Var tangent_plane;
   Var mu, sn; // parameters of the conditional models
+  Var mu_noisy, noise_var;
+  PP<PDistribution> dist;
   Var sum_nll;
   Var min_sig, init_sig;
 
@@ -82,9 +84,9 @@ protected:
 
   Vec mu_temp,sm_temp,sn_temp,diff;
 
-  Mat Ut_svd, V_svd;  // for SVD computation
-  Vec S_svd;      // idem
-  Mat F;
+  mutable Mat Ut_svd, V_svd;  // for SVD computation
+  mutable Vec S_svd;      // idem
+  mutable Mat F;
   mutable Vec z, x_minus_neighbor;
   mutable Vec t_row, neighbor_row;
   mutable Vec log_gauss;                        //!< To store log(P(x|k)).
@@ -102,6 +104,16 @@ protected:
   VarArray parameters;
 
 public:
+
+  real noise;
+  
+  string noise_type;
+
+  int omit_last;
+
+  bool learn_mu;
+
+  bool magnified_version;
 
   VMat reference_set;
 
