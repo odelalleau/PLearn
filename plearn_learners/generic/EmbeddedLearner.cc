@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.23 2005/03/03 20:25:25 tihocan Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.24 2005/06/02 16:46:44 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -61,7 +61,8 @@ PLEARN_IMPLEMENT_OBJECT(
 
 EmbeddedLearner::EmbeddedLearner(string expdir_append_)
   : learner_(0),
-    expdir_append(expdir_append_)
+    expdir_append(expdir_append_),
+    provide_learner_expdir(true)
 { }
 
 void EmbeddedLearner::declareOptions(OptionList& ol)
@@ -70,11 +71,17 @@ void EmbeddedLearner::declareOptions(OptionList& ol)
                 OptionBase::buildoption,
                 "The embedded learner");
 
-  declareOption(ol, "expdir_append", &EmbeddedLearner::expdir_append,
+  declareOption(ol, "provide_learner_expdir", &EmbeddedLearner::provide_learner_expdir,
+                OptionBase::buildoption,
+                "Whether or not to provide the underlying learner with an experiment "
+                "directory one is given for this learner.");
+
+   declareOption(ol, "expdir_append", &EmbeddedLearner::expdir_append,
                 OptionBase::buildoption,
                 "A string which should be appended to the expdir for the inner learner;"
                 "default = \"\".");
-  
+
+ 
   inherited::declareOptions(ol);
 }
 
@@ -125,13 +132,12 @@ void EmbeddedLearner::setExperimentDirectory(const PPath& the_expdir)
 {
   assert( learner_ );
   inherited::setExperimentDirectory(the_expdir);
-  if (the_expdir != "") {
-    string sub_expdir =
-      append_slash(append_slash(the_expdir) + expdir_append);
-    learner_->setExperimentDirectory(sub_expdir);
+  if (provide_learner_expdir) {
+    if (!the_expdir.isEmpty())
+      learner_->setExperimentDirectory(the_expdir / expdir_append);
+    else
+      learner_->setExperimentDirectory("");
   }
-  else
-    learner_->setExperimentDirectory("");
 }
 
 int EmbeddedLearner::inputsize() const

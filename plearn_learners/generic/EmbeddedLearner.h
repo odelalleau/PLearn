@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.17 2005/02/08 21:54:23 tihocan Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.18 2005/06/02 16:46:45 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
@@ -59,6 +59,8 @@ public:
 
   //! A string which should be appended to the expdir for the inner learner
   string expdir_append;
+
+  bool provide_learner_expdir;
 
   // ****************
   // * Constructors *
