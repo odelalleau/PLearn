@@ -33,6 +33,7 @@
 # Author: Pascal Vincent
 
 import numarray, sys, os, os.path
+from plearn.pyplearn import plearn_repr
 
 def load_pmat_as_array(fname):
     s = file(fname,'rb').read()
@@ -252,16 +253,37 @@ class PMat:
     def __len__(self):
         return self.length
 
-    def plearn_repr(self):
+    def __str__( self ):
+        return self.plearn_repr( indent_level = 0 )
+    
+    def plearn_repr( self, indent_level = 0 ):
         # asking for plearn_repr could be to send specification over
         # to another prg so that will open the .pmat
         # So we make sure data is flushed to disk.
         self.flush()
+
+        def elem_format( elem ):
+            k, v = elem
+            return '%s = %s' % ( k, plearn_repr.plearn_repr(v, indent_level+1) )
+
+        options = [ ( 'filename',   self.fname      ),
+                    ( 'inputsize',  self.inputsize  ), 
+                    ( 'targetsize', self.targetsize ),
+                    ( 'weightsize', self.weightsize ) ]
+        return 'FileVMatrix(%s)' % plearn_repr.format_list_elements( options, elem_format, indent_level+1 )
         
-        res = 'FileVMatrix( filename="'+self.fname+'"\n' \
-              + "inputsize = "+str(self.inputsize)+'\n' \
-              + "targetsize = "+str(self.targetsize)+'\n' \
-              + "weightsize = "+str(self.weightsize)+'\n' \
-              + ") "
-        return res
-        
+if __name__ == '__main__':
+    pmat = PMat( 'tmp.pmat', 'w', fieldnames=['F1', 'F2'] )
+    pmat.append( [1, 2] )
+    pmat.append( [3, 4] )
+    pmat.close()
+
+    pmat = PMat( 'tmp.pmat', 'r' )
+    print pmat
+    # print "+++ tmp.pmat contains: "
+    # os.system( 'plearn vmat cat tmp.pmat' )
+
+    os.remove( 'tmp.pmat' )
+    if os.path.exists( 'tmp.pmat.metadata' ):
+        import shutil
+        shutil.rmtree( 'tmp.pmat.metadata' )
