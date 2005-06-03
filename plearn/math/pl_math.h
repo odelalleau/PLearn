@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.32 2005/05/31 03:02:02 yoshua Exp $
+   * $Id: pl_math.h,v 1.33 2005/06/03 00:30:47 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -355,6 +355,14 @@ inline real d_hinge_loss(const real& output, int target)
   inline real ipow(real x, int p)
     { 
       real result = 1.0;
+      while(p--)
+        result *= x;
+      return result;
+    }
+
+  inline int ipow(int x, int p)
+    { 
+      int result = 1;
       while(p--)
         result *= x;
       return result;
