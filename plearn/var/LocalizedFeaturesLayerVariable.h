@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.h,v 1.5 2005/05/26 18:01:09 tihocan Exp $
+   * $Id: LocalizedFeaturesLayerVariable.h,v 1.6 2005/06/03 00:28:51 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -61,7 +61,15 @@ class LocalizedFeaturesLayerVariable: public NaryVariable
   //! INTERNAL COMPUTATION
   int n_features; // = nb inputs
   int n_subsets; // = feature_subsets.length()
-  int n_connections; // = n_hidden_per_subset * sum_i feature_subsets[i].length()
+  int n_weights; //!< Total number of weights in the layer.
+
+  //! Local offsets when using shared weights with a local box.
+  Mat mu;
+
+  //! The element k is a matrix whose element (i,j) is the weight of the
+  //! i-th local pattern in the ponderation of the j-th neighbor of the
+  //! k-th feature (when using shared weights with n_box > 0).
+  TVec<Mat> local_weights;
 
 public:
 
@@ -76,6 +84,8 @@ public:
   bool center_on_feature_locations;
   long seed;
   bool shared_weights;
+  int n_box;
+  real sigma;
 
   //!  Default constructor for persistence
   LocalizedFeaturesLayerVariable();

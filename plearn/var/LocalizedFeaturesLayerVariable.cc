@@ -34,11 +34,12 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.11 2005/05/30 17:26:46 tihocan Exp $
+   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.12 2005/06/03 00:28:51 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "LocalizedFeaturesLayerVariable.h"
+#include <plearn/ker/GaussianKernel.h>
 #include <plearn/math/random.h>
 #include <plearn/math/BottomNI.h>
 #include <plearn/math/TMat_maths_impl.h>
@@ -47,7 +48,7 @@
 // #define UGLY_HACK
 
 #ifdef UGLY_HACK
-#define UGLY_DIV (4)
+#define UGLY_DIV (16)
 #endif
 
 namespace PLearn {
@@ -83,7 +84,9 @@ LocalizedFeaturesLayerVariable::LocalizedFeaturesLayerVariable()
     gridding_subsets(false),
     center_on_feature_locations(true),
     seed(-1),
-    shared_weights(false)
+    shared_weights(false),
+    n_box(-1),
+    sigma(1)
 {
 }
 
@@ -102,11 +105,11 @@ LocalizedFeaturesLayerVariable::build_()
     return;
   computeSubsets();
   if (   varray.size() != 3
-         || n_connections != varray[1]->value.size()
+         || n_weights != varray[1]->value.size()
          || n_hidden_per_subset * (shared_weights ? 1 : n_subsets) != varray[2]->value.size()  )
   {
     varray.resize(3);
-    varray[1] = Var(n_connections);
+    varray[1] = Var(n_weights);
     varray[2] = Var(n_hidden_per_subset * (shared_weights ? 1 : n_subsets));
     // varray[0] = input
     // varray[1] = connection weights
@@ -116,19 +119,14 @@ LocalizedFeaturesLayerVariable::build_()
     if (n_features != varray[0]->value.size())
       PLERROR("In LocalizedFeaturesLayerVariable: input var 0 (features) should have size = %d = n_features, but is %d\n",
               n_features, varray[0]->value.size());
-    /* Cannot happen.
-    if (n_connections != varray[1]->value.size())
-      PLERROR("In LocalizedFeaturesLayerVariable: input var 1 (weights) should have size = %d = n_connections, but is %d\n",
-              n_connections, varray[1]->value.size());
-    if (n_hidden_per_subset*n_subsets != varray[2]->value.size())
-      PLERROR("In LocalizedFeaturesLayerVariable: input var 2 (biases) should have size = %d = n_hidden, but is %d\n",
-              n_hidden_per_subset*n_subsets,varray[2]->value.size());
-    */
-
     // Initialize parameters.
     real n_inputs_per_neuron = 0;
-    if (knn_subsets)
-      n_inputs_per_neuron = 1 + n_neighbors_per_subset;
+    if (knn_subsets) {
+      if (shared_weights && n_box >= 0)
+        n_inputs_per_neuron = ipow(n_box, feature_locations->width());
+      else
+        n_inputs_per_neuron = 1 + n_neighbors_per_subset;
+    }
     else
       PLERROR("In LocalizedFeaturesLayerVariable::build_ - Not supported");
     real delta = 1/n_inputs_per_neuron;
@@ -149,17 +147,53 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
 #ifdef UGLY_HACK
     n_subsets = UGLY_DIV * UGLY_DIV;
 #endif
-    n_connections = (1+n_neighbors_per_subset) * n_hidden_per_subset;
+    n_weights = n_hidden_per_subset;
+    int dim = feature_locations->width();
     if (!shared_weights)
-      n_connections *= n_subsets;
+      n_weights *= n_subsets * (1 + n_neighbors_per_subset);
+    else {
+      if (n_box == -1)
+        // No spatial sharing.
+        n_weights *= (1 + n_neighbors_per_subset);
+      else
+        n_weights *= ipow(n_box, dim);
+    }
     feature_subsets.resize(n_subsets);
     BottomNI<real> lowest_distances;
     Vec center(feature_locations->width());
     Vec feature(feature_locations->width());
-    for (int s=0;s<n_subsets;s++)
+    Mat mu_copy;
+    if (shared_weights && n_box >= 0) {
+      assert( n_box >= 2 );
+      int count_max = ipow(n_box, dim);
+      mu.resize(count_max, dim);
+      mu_copy.resize(mu.length(), mu.width());
+      // Find bounding box of the features.
+      TVec< pair<real,real> > bbox = feature_locations->getBoundingBox();
+      assert( bbox.length() == dim );
+      // Heuristic for approximate volume of the neighbors.
+      real total_volume = 1.0;
+      for (int i = 0; i < dim; i++)
+        total_volume *= (bbox[i].second - bbox[i].first);
+      real k_features_volume = total_volume / real(n_features)
+                                            * (n_neighbors_per_subset + 1);
+      real step = pow(k_features_volume, 1.0 / dim) / n_box;
+      // Precompute the offsets for the pre-defined centers.
+      for (int count = 0; count < count_max; count++) {
+        int rest = count;
+        for (int i = 0; i < dim; i++) {
+          int coord_i = rest % n_box;
+          rest /= n_box;
+          mu(count, i) = (coord_i - n_box / 2) * step;
+        }
+      }
+    }
+    GaussianKernel K(sigma);
+    local_weights.resize(n_features);
+    for (int s=0; s<n_subsets; s++)
     {
       feature_subsets[s].resize(n_neighbors_per_subset + 1);
-      // find k-nearest neighbors of feature s according to feature_locations
+      // Find k-nearest neighbors of features according to feature_locations
       lowest_distances.init(n_neighbors_per_subset);
       feature_locations->getRow(s, center);
 #ifdef UGLY_HACK
@@ -186,6 +220,20 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
       feature_subsets[s][0] = s;
       for (int k=0;k<n_neighbors_per_subset;k++)
         feature_subsets[s][k+1] = neighbors[k].second;
+      if (shared_weights && n_box >= 0) {
+        mu_copy << mu;
+        mu_copy += center;
+        int n_neighb = feature_subsets[s].length();
+        local_weights[s].resize(mu.length(), n_neighb);
+        for (int j = 0; j < feature_subsets[s].length(); j++) {
+          for (int i = 0; i < mu.length(); i++) {
+            feature_locations->getRow(feature_subsets[s][j], feature);
+            real k = K.evaluate(mu_copy(i), feature);
+            local_weights[s](i,j) = k;
+          }
+        }
+        normalizeColumns(local_weights[s]);
+      }
 #ifdef UGLY_HACK
       int a = int(sqrt(real(n_neighbors_per_subset + 1)) + 1e-6);
       if (fabs(a - sqrt(real(n_neighbors_per_subset + 1))) > 1e-8 || a % 2 != 1)
@@ -239,6 +287,14 @@ void LocalizedFeaturesLayerVariable::declareOptions(OptionList& ol)
   declareOption(ol, "shared_weights", &LocalizedFeaturesLayerVariable::shared_weights, OptionBase::buildoption, 
       "If true, similar hidden neurons in different subsets will share the same weights.");
 
+  declareOption(ol, "n_box", &LocalizedFeaturesLayerVariable::n_box, OptionBase::buildoption, 
+      "Only used when 'shared_weights' is true: the gridding factor of the box around each feature\n"
+      "where we put the reference centers. The number of centers will thus be n_box^d.\n"
+      "If set to -1, a more basic weights sharing method is used, with no spatial consistency.");
+
+  declareOption(ol, "sigma", &LocalizedFeaturesLayerVariable::sigma, OptionBase::buildoption, 
+      "Width of the Gaussian kernel for the local interpolation when sharing weights.");
+
   declareOption(ol, "knn_subsets", &LocalizedFeaturesLayerVariable::knn_subsets, 
                 OptionBase::buildoption, 
                 "    Whether to infer feature_subsets using the k-nearest-neighbor algorithm or not.\n"
@@ -289,11 +345,23 @@ void LocalizedFeaturesLayerVariable::fprop()
   {
     TVec<int> subset = feature_subsets[s];
     int subset_size = subset.length();
+    Mat& local_weights_s = local_weights[s];
     for (int k=0;k<n_hidden_per_subset;k++,b++,y++)
     {
       real act = *b;
-      for (int j=0;j<subset_size;j++,w++)
-        act += *w * x[subset[j]];
+      if (shared_weights && n_box >= 0) {
+        real* w_ = w;
+        for (int j=0;j<subset_size;j++) {
+          w_ = w;
+          real x_val = x[subset[j]];
+          for (int i = 0; i < mu.length(); i++, w_++) {
+            act += *w_ * x_val * local_weights_s(i, j);
+          }
+        }
+        w = w_;
+      } else
+        for (int j=0;j<subset_size;j++,w++)
+          act += *w * x[subset[j]];
       *y = tanh(act);
     }
     if (shared_weights) {
@@ -317,19 +385,33 @@ void LocalizedFeaturesLayerVariable::bprop()
   {
     TVec<int> subset = feature_subsets[s];
     int subset_size = subset.length();
+    Mat& local_weights_s = local_weights[s];
     for (int k=0;k<n_hidden_per_subset;k++,db++,y++,dy++)
     {
       real dact = *dy * (1 - *y * *y);
       *db += dact;
-      for (int j=0;j<subset_size;j++,dw++)
-        *dw += dact * x[subset[j]];
-      if (backprop_to_inputs)
+      if (shared_weights && n_box >= 0) {
+        real* dw_ = dw;
+        for (int j=0;j<subset_size;j++) {
+          dw_ = dw;
+          real x_val = x[subset[j]];
+          for (int i = 0; i < mu.length(); i++, dw_++) {
+            *dw_ += dact * x_val * local_weights_s(i, j);
+          }
+        }
+        dw = dw_;
+      } else
+        for (int j=0;j<subset_size;j++,dw++)
+          *dw += dact * x[subset[j]];
+      if (backprop_to_inputs) {
+        assert( !shared_weights || n_box < 0 ); // Case not handled.
         for (int j=0;j<subset_size;j++,w++)
           dx[subset[j]] += dact * *w;
+      }
     }
     if (shared_weights) {
       w  = varray[1]->valuedata;
-      dw = varray[1]->valuedata;
+      dw = varray[1]->gradientdata;
       db = varray[2]->gradientdata;
     }
   }
