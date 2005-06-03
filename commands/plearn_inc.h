@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.59 2005/05/31 18:36:01 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.60 2005/06/03 12:36:20 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -220,6 +220,7 @@
 #include <plearn/vmat/CumVMatrix.h>
 #include <plearn/vmat/DatedJoinVMatrix.h>
 #include <plearn/vmat/DictionaryVMatrix.h>
+#include <plearn/vmat/DisregardRowsVMatrix.h>
 #include <plearn/vmat/ExtractNNetParamsVMatrix.h>
 #include <plearn/vmat/FilteredVMatrix.h>
 #include <plearn/vmat/FinancePreprocVMatrix.h>
