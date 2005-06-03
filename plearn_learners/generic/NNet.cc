@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.74 2005/05/25 15:27:58 tihocan Exp $
+   * $Id: NNet.cc,v 1.75 2005/06/03 13:01:14 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -881,7 +881,7 @@ void NNet::train()
       train_stats->forget();
       optimizer->early_stop = false;
       optimizer->optimizeN(*train_stats);
-      // optimizer->verifyGradient(1e-4); // Uncomment if you want to check your new var.
+      // optimizer->verifyGradient(1e-4); // Uncomment if you want to check your new Var.
       train_stats->finalize();
       if(verbosity>2)
         cout << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
