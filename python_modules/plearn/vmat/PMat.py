@@ -62,8 +62,51 @@ def load_pmat_as_array(fname):
         X.byteswap()
     return X
 
+def array_columns( a, cols ):
+    indices = None
+    if isinstance( cols, int ):
+        indices = [ cols ]
+    elif isinstance( cols, slice ):
+        indices = range( *cols.indices(cols.stop) )
+    else:
+        indices = list( cols )            
+        
+    return numarray.take(a, indices, axis=1)
+    
 
-class PMat:
+class VMat:
+    def __getitem__( self, key ):
+        if isinstance( key, slice ):
+            start, stop, step = key.start, key.stop, key.step
+            if step!=None:
+                raise IndexError('Extended slice with step not currently supported')
+            l = self.length
+            if stop > l:
+                stop = l
+            return self.getRows(start,stop-start)
+        
+        elif isinstance( key, tuple ):
+            # Basically returns a SubVMatrix
+            assert len(key) == 2
+            rows = self.__getitem__( key[0] )
+
+            shape = rows.getshape()                       
+            if len(shape) == 1:
+                return rows[ key[1] ]
+            return array_columns( rows, key[1] )
+
+        elif isinstance( key, str ):
+            # The key is considered to be a fieldname and a column is
+            # returned.
+            return array_columns( self.getRows(0,self.length),
+                                  self.fieldnames.index(key)  )
+            
+        else:
+            if key<0: key+=self.length
+            return self.getRow(key)
+        
+
+class PMat( VMat ):
 
     def __init__(self, fname, openmode='r', fieldnames=[], elemtype='d',
                  inputsize=-1, targetsize=-1, weightsize=-1, array = None):
@@ -231,19 +274,6 @@ class PMat:
 
     def append(self,row):
         self.appendRow(row)
-
-    def __getitem__(self,i):
-        if type(i)==slice:
-            start, stop, step = i.start,i.stop,i.step
-            if step!=None:
-                raise IndexError('Extended slice with step not currently supported')
-            l = self.length
-            if stop>l:
-                stop = l
-            return self.getRows(start,stop-start)
-        else:
-            if i<0: i+=self.length
-            return self.getRow(i)
 
     def __setitem__(self, i, row):
         l = self.length
