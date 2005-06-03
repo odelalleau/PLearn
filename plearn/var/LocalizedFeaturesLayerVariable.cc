@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.12 2005/06/03 00:28:51 tihocan Exp $
+   * $Id: LocalizedFeaturesLayerVariable.cc,v 1.13 2005/06/03 20:48:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -86,7 +86,7 @@ LocalizedFeaturesLayerVariable::LocalizedFeaturesLayerVariable()
     seed(-1),
     shared_weights(false),
     n_box(-1),
-    sigma(1)
+    sigma(-1)
 {
 }
 
@@ -163,6 +163,7 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
     Vec center(feature_locations->width());
     Vec feature(feature_locations->width());
     Mat mu_copy;
+    real sig = sigma;
     if (shared_weights && n_box >= 0) {
       assert( n_box >= 2 );
       int count_max = ipow(n_box, dim);
@@ -187,8 +188,13 @@ void LocalizedFeaturesLayerVariable::computeSubsets()
           mu(count, i) = (coord_i - n_box / 2) * step;
         }
       }
+      // Heuristic to compute sigma.
+      if (sigma < 0) {
+        sig = step;
+      }
     }
-    GaussianKernel K(sigma);
+
+    GaussianKernel K(sig);
     local_weights.resize(n_features);
     for (int s=0; s<n_subsets; s++)
     {
@@ -293,7 +299,8 @@ void LocalizedFeaturesLayerVariable::declareOptions(OptionList& ol)
       "If set to -1, a more basic weights sharing method is used, with no spatial consistency.");
 
   declareOption(ol, "sigma", &LocalizedFeaturesLayerVariable::sigma, OptionBase::buildoption, 
-      "Width of the Gaussian kernel for the local interpolation when sharing weights.");
+      "Width of the Gaussian kernel for the local interpolation when sharing weights.\n"
+      "If set to -1, will be heuristically selected.");
 
   declareOption(ol, "knn_subsets", &LocalizedFeaturesLayerVariable::knn_subsets, 
                 OptionBase::buildoption, 
