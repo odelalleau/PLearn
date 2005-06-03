@@ -207,7 +207,7 @@ class PMat( VMat ):
                     self.fieldnames.append(row[0])
         else:
             self.fieldnames = [ "field_"+str(i) for i in range(self.width) ]
-
+            
     def save_fieldnames(self):
         metadatadir = self.fname+'.metadata'
         if not os.path.isdir(metadatadir):
