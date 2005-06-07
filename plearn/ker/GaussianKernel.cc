@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.16 2005/02/07 17:54:21 lamblin Exp $
+   * $Id: GaussianKernel.cc,v 1.17 2005/06/07 12:49:57 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,7 +51,7 @@ using namespace std;
 // ** GaussianKernel **
 
 PLEARN_IMPLEMENT_OBJECT(GaussianKernel,
-    "The good old Gaussian kernel.",
+    "The good old Gaussian kernel: exp(-||x-y||^2 / sigma^2).",
     "");
 
 ////////////////////
