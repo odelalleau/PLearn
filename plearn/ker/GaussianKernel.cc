@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.17 2005/06/07 12:49:57 tihocan Exp $
+   * $Id: GaussianKernel.cc,v 1.18 2005/06/09 17:29:34 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -137,11 +137,11 @@ void GaussianKernel::addDataForKernelMatrix(const Vec& newRow)
 real GaussianKernel::evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const
 {
   if (sqnorm_of_diff < 0) {
-    // This could happen (especiallly in -opt) because of approximations, when
-    // it should actually be 0.
-    if (sqnorm_of_diff < -1e-3)
-      // This should not happen.
-      PLERROR("In GaussianKernel::evaluateFromSquaredNormOfDifference - The given 'sqnorm_of_diff' is (significantly) negative (%f)", sqnorm_of_diff);
+    // This should not happen (anymore) with the isUnsafe check.
+    // You may comment out the PLERROR below if you want to continue your
+    // computations, but then you should investigate why this happens.
+    PLERROR("In GaussianKernel::evaluateFromSquaredNormOfDifference - The given "
+            "'sqnorm_of_diff' is negative (%f)", sqnorm_of_diff);
     sqnorm_of_diff = 0;
   }
   if (scale_by_sigma) {
@@ -200,7 +200,12 @@ real GaussianKernel::evaluate_i_j(int i, int j) const
       PLERROR("%f = sqnorm_j != squarednorms[%d] = %f", sqnorm_j, j, squarednorms[j]);
   }
 #endif
-  return evaluateFromDotAndSquaredNorm(squarednorms[i],data->dot(i,j,data_inputsize),squarednorms[j]); 
+  real sqn_i = squarednorms[i];
+  real sqn_j = squarednorms[j];
+  if (isUnsafe(sqn_i, sqn_j))
+    return inherited::evaluate_i_j(i,j);
+  else
+   return evaluateFromDotAndSquaredNorm(sqn_i, data->dot(i,j,data_inputsize), sqn_j); 
 }
 
 //////////////////
@@ -224,8 +229,11 @@ real GaussianKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) c
 //        << "a*b: " << sqnorm_of_diff*minus_one_over_sigmasquare << endl
 //        << "res: " << exp(sqnorm_of_diff*minus_one_over_sigmasquare) << endl; 
 #endif
-
-  return evaluateFromDotAndSquaredNorm(squarednorms[i],data->dot(i,x),squared_norm_of_x); 
+  real sqn_i = squarednorms[i];
+  if (isUnsafe(sqn_i, squared_norm_of_x))
+    return inherited::evaluate_i_x(i, x, squared_norm_of_x);
+  else
+    return evaluateFromDotAndSquaredNorm(sqn_i, data->dot(i,x), squared_norm_of_x); 
 }
 
 
@@ -236,9 +244,20 @@ real GaussianKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) c
 { 
   if(squared_norm_of_x<0.)
     squared_norm_of_x = pownorm(x);
-  return evaluateFromDotAndSquaredNorm(squared_norm_of_x,data->dot(i,x),squarednorms[i]); 
+  real sqn_i = squarednorms[i];
+  if (isUnsafe(sqn_i, squared_norm_of_x))
+    return inherited::evaluate_x_i(x, i, squared_norm_of_x);
+  else
+    return evaluateFromDotAndSquaredNorm(squared_norm_of_x, data->dot(i,x), sqn_i); 
 }
 
+//////////////
+// isUnsafe //
+//////////////
+bool GaussianKernel::isUnsafe(real sqn_1, real sqn_2) const {
+  return (sqn_1 > 1e6 && fabs(sqn_2 / sqn_1 - 1.0) < 1e-2);
+}
+ 
 ////////////////////////////
 // setDataForKernelMatrix //
 ////////////////////////////

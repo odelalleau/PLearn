@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.h,v 1.11 2005/02/07 19:57:43 lamblin Exp $
+   * $Id: GaussianKernel.h,v 1.12 2005/06/09 17:29:34 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -100,6 +100,14 @@ protected:
 
 protected:
   static void declareOptions(OptionList& ol);  
+
+  //! Return true if estimating the squared difference of two points x1 and x2
+  //! from their squared norms sqn_1 and sqn_2 (and their dot product) might
+  //! lead to unsafe numerical approximations.
+  //! Specifically, it will return true when
+  //! ||x1||^2 > 1e6 and | ||x2||^2 / ||x1||^2 - 1 | < 0.01
+  //! i.e. when the two points have a large similar norm.
+  inline bool isUnsafe(real sqn_1, real sqn_2) const;
 
 private:
 
