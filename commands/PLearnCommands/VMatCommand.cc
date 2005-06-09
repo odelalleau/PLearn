@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatCommand.cc,v 1.11 2005/05/03 15:35:34 chapados Exp $ 
+   * $Id: VMatCommand.cc,v 1.12 2005/06/09 16:12:36 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VMatCommand.cc */
@@ -79,7 +79,9 @@ VMatCommand::VMatCommand():
       "       such as 0-18, or any combination thereof, e.g. 5,3,8-18,Date,74-85\n"
       "       If .csv (Comma-Separated Value) is specified, the option --skip-missings is\n"
       "       also recognized: if a row (after selecting the appropriate columns)\n"
-      "       contains one or more missing values, it is skipped during export\n"
+      "       contains one or more missing values, it is skipped during export.  Also for\n"
+      "       CSV conversion, the option --precision=N requests that a maximum of N digits\n"
+      "       be printed after the decimal point.\n"
       "   or: vmat gendef <source> [binnum1 binnum2 ...] \n"
       "       Generate stats for dataset (will put them in its associated metadatadir). \n"
       "   or: vmat genvmat <source_dataset> <dest_vmat> [binned{num} | onehot{num} | normalized]\n"
