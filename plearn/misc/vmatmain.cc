@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.51 2005/05/24 18:48:12 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.52 2005/06/09 16:16:41 chapados Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -43,6 +43,7 @@
 #include <commands/PLearnCommands/PLearnCommandRegistry.h>
 #include <plearn/base/general.h>
 #include <plearn/base/stringutils.h>
+#include <plearn/base/lexical_cast.h>
 #include <plearn/math/StatsCollector.h>
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/vmat/SelectColumnsVMatrix.h>
@@ -74,11 +75,15 @@ using namespace std;
  * This function converts a VMat to a CSV (comma-separated value) file with
  * the given name.  One can also specify a list of column names or numbers
  * to keep, as well as whether any missing values on a row cause that row
- * to be skipped during export
+ * to be skipped during export.  In addition, the number of significant
+ * digits after the decimal period can be specified
  */
 static void save_vmat_as_csv(VMat source, ostream& destination,
-                             bool skip_missings, bool verbose = true)
+                             bool skip_missings, int precision = 12,
+                             bool verbose = true)
 {
+  char buffer[1000];
+  
   // First, output the fieldnames in quoted CSV format.  Don't forget
   // to quote the quotes
   TVec<string> fields = source->fieldNames();
@@ -102,7 +107,22 @@ static void save_vmat_as_csv(VMat source, ostream& destination,
     Vec currow = source(i);
     if (! skip_missings || ! currow.hasMissing()) {
       for (int j=0, m=currow.size() ; j<m ; ++j) {
-        destination << tostring(currow[j]);  // tostring() ensures correct precision
+        sprintf(buffer, "%#.*f", precision, currow[j]);
+
+        // strip all trailing zeros and final period
+        // there is always a period since sprintf includes # modifier
+        char* period = buffer;
+        while (*period && *period != '.')
+          period++;
+        for (char* last = period + strlen(period) - 1 ;
+             last >= period && (*last == '0' || *last == '.') ; --last) {
+          bool should_break = *last == '.';
+          *last = '\0';
+          if (should_break)
+            break;
+        }
+        
+        destination << buffer;
         if (j < m-1)
           destination << ',';
       }
@@ -1570,9 +1590,13 @@ int vmatmain(int argc, char** argv)
        *     --skip-missings
        *           :: if a row (after selecting the appropriate columns)
        *              contains one or more missing values, skip it during export
+       *
+       *     --precision=N
+       *           :: conversion to CSV keeps N digits AFTER THE DECIMAL POINT
        */
       TVec<string> columns;
       bool skip_missings = false;
+      int precision = 12;
       for (int i=4 ; i < argc && argv[i] ; ++i) {
         string curopt = removeblanks(argv[i]);
         if (curopt == "")
@@ -1583,6 +1607,9 @@ int vmatmain(int argc, char** argv)
         }
         else if (curopt == "--skip-missings")
           skip_missings = true;
+        else if (curopt.substr(0,12) == "--precision=") {
+          precision = toint(curopt.substr(12));
+        }
         else
           PLWARNING("VMat convert: unrecognized option '%s'; ignoring it...",
                     curopt.c_str());
@@ -1607,10 +1634,10 @@ int vmatmain(int argc, char** argv)
       else if(ext == ".csv")
       {
         if (destination == "-.csv")
-          save_vmat_as_csv(vm, cout, skip_missings, true /*verbose*/);
+          save_vmat_as_csv(vm, cout, skip_missings, precision, true /*verbose*/);
         else {
           ofstream out(destination.c_str());
-          save_vmat_as_csv(vm, out, skip_missings, true /*verbose*/);
+          save_vmat_as_csv(vm, out, skip_missings, precision, true /*verbose*/);
         }
       }
       else
