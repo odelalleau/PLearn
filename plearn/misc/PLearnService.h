@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnService.h,v 1.2 2005/01/14 19:40:50 plearner Exp $ 
+   * $Id: PLearnService.h,v 1.3 2005/06/09 21:12:41 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -45,7 +45,11 @@
 #define PLearnService_INC
 
 #include <plearn/base/PP.h>
-#include <set>
+#include <plearn/io/PPath.h>
+#include <plearn/io/PStream.h>
+#include <plearn/math/TVec.h>
+#include <map>
+#include <string>
 
 namespace PLearn {
 
@@ -54,37 +58,42 @@ namespace PLearn {
 class PLearnService: public PPointable
 {
 private:
-  static string service_launch_command;
+  PLearnService();
+  TVec<PStream> serversio; 
+  TVec<int> available_servers;
+  std::map<RemotePLearnServer*,int> reserved_servers;
+
+  //! Frees a previously reserved servers.
+  //! Putting it back into the list of available_servers
+  //! This is called automatically by the RemotePLearnServer's destructor
+  void freeServer(RemotePLearnServer* remoteserv);
 
 public:
   friend class RemotePLearnServer;
 
-  //! Returns single instance of PLearnService
+  //  static void remoteLaunchServers(PPath serverfile, int nservers, int tcpport, const string& launch_command);
+
+  // Returns the unique static instance of class PLearnService
   static PLearnService& instance();
 
-  static void setServiceLaunchCommand(const string& command);
-  static string getServiceLaunchCommand();
+  //! Will establish a TCP connection to all hostname,port in given list
+  void connectToServers(TVec< pair<string,int> > server_names_and_port);
+  
+  //! Will get the list of hostname, pid, port from the serversfile
+  //! and establish a TCP connection to those
+  void connectToServers(PPath serversfile);
+
+  void disconnectFromServers();
 
   //! returns the number of available processing ressources
   int availableServers() const;
 
-  //! Attempts to reserve a remote processing ressource. 
-  //! If sucessful retrns a pointer to a new RemotePLearnServer
-  //! If no server could be successfully reserved, returns 0.
-  RemotePLearnServer* newServer();
+  //! Reserves a remote processing ressource from the pool of servers.
+  //! If sucessful returns a pointer to a new RemotePLearnServer
+  //! If no server is available, returns 0.
+  RemotePLearnServer* reserveServer(); 
 
-private:
-  PLearnService();
-
-  std::set< RemotePLearnServer* > reserved_servers;
-
-  //! Frees a previously reserved processing ressource.
-  /*! This is called automatically by the RemotePLearnServer's destructor
-    and is meant to allow you to do some bookkeeping and cleaning
-    in the PLearnService object, when the server is freed.
-  */
-  void freeServer(RemotePLearnServer* remoteserv);
-
+  ~PLearnService();
 };
 
 } // end of namespace PLearn

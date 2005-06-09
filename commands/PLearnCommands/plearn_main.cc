@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.21 2005/06/01 16:48:37 chapados Exp $
+   * $Id: plearn_main.cc,v 1.22 2005/06/09 21:16:01 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -44,6 +44,7 @@
 #include <plearn/io/pl_log.h>
 #include <plearn/misc/Calendar.h>
 #include <plearn/db/getDataSet.h>
+#include <plearn/misc/PLearnService.h>
 
 namespace PLearn {
 using namespace std;
@@ -118,26 +119,35 @@ static string global_options( vector<string>& command_line,
   {
     // ... here we can set verbosity_value_pos:
     verbosity_value_pos = verbosity_pos+1;
-    if ( verbosity_value_pos < argc )
-      verbosity_value =
-        PL_Log::vlevel_from_string( command_line[verbosity_value_pos] );
-    else
+    if ( verbosity_value_pos >= argc )
       PLERROR("Option --verbosity must be followed by a VerbosityLevel name "
               "or by an integer value.");
+    verbosity_value =
+      PL_Log::vlevel_from_string( command_line[verbosity_value_pos] );
   }
 
   // Option to establish global calendars loaded from a matrix
   int global_calendar_pos = findpos(command_line, "--global-calendars");
   int global_calendar_value_pos = -1;
-  if (global_calendar_pos != -1) {
+  if (global_calendar_pos != -1) 
+    {
     global_calendar_value_pos = global_calendar_pos+1;
-    if (global_calendar_value_pos < argc)
-      set_global_calendars(command_line[global_calendar_value_pos]);
-    else
+    if (global_calendar_value_pos >= argc)
       PLERROR("Option --global-calendars must be followed by a list of the form\n"
               "CalendarName1:CalendarFilename1,CalendarName2:CalendarFilename2,...");
-  }
+    set_global_calendars(command_line[global_calendar_value_pos]);
+    }
   
+  // Option for parallel processing through PLearnService
+  int servers_pos = findpos(command_line, "--servers");
+  if (servers_pos != -1)
+    {
+      int serversfile_pos = servers_pos+1;
+      if ( serversfile_pos >= argc)
+        PLERROR("Option --servers must be followed by the name of a servers file containing a list of hostname pid tcpport\n");
+      string serversfile = command_line[serversfile_pos];
+      PLearnService::instance().connectToServers(serversfile);
+    }
   
   // The following removes the options from the command line. It also
   // parses the plearn command as being the first non-optional argument on

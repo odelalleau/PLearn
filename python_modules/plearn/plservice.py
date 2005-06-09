@@ -86,11 +86,13 @@ class RemotePLearnServer:
         del self.objects[objid]
             
     def callNewObject(self, objid, objspecstr):
+        self.clearMaps()
         self.io.write('!N '+str(objid)+' '+objspecstr+'\n')
         self.io.flush()
         self.expectResults(0)
 
     def callLoadObject(self, objid, filepath):
+        self.clearMaps()
         self.io.write('!L '+str(objid)+' '+filepath+'\n')
         self.io.flush()
         self.expectResults(0)

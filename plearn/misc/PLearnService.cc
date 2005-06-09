@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnService.cc,v 1.3 2005/03/02 20:56:52 plearner Exp $ 
+   * $Id: PLearnService.cc,v 1.4 2005/06/09 21:12:41 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -43,25 +43,25 @@
 
 #include "PLearnService.h"
 #include "RemotePLearnServer.h"
-#include "plearn/io/PStream.h"
-#include "plearn/io/pl_log.h"
+#include <plearn/io/openFile.h>
+#include <plearn/io/openSocket.h>
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;
 
 
-  string PLearnService::service_launch_command;
-
-  void PLearnService::setServiceLaunchCommand(const string& command)
+  /*
+  void PLearnService::remoteLaunchServers(int nservers, int tcpport, const string& launch_command)
   {
-    service_launch_command = command;
+    string full_command = launch_command+'--tcp '+tostring2(tcpport);
+    for(int k=0; k<nservers; k++)
+      {
+        PP<Popen> p = new Popen(full_command);
+      }
+    reserved_servers.add()
   }
-
-  string PLearnService::getServiceLaunchCommand()
-  {
-    return service_launch_command;
-  }
-
+  */
 
   PLearnService& PLearnService::instance()
   {
@@ -70,42 +70,82 @@ using namespace std;
       inst = new PLearnService();
     return *inst;
   }
+  
+  PLearnService::PLearnService()
+  {}
 
 
-  PLearnService::PLearnService() 
+  void PLearnService::connectToServers(PPath serversfile)
   {
+    PStream in = openFile(serversfile, PStream::raw_ascii, "r");
+
+    string hostname;
+    int pid = 0;
+    int tcpport = -1;
+
+    TVec< pair<string,int> > hostname_and_port;
+
+    while(in)
+      {
+        in >> hostname >> pid >> tcpport;
+        if(in)
+          hostname_and_port.append(pair<string,int>(hostname,pid));
+      }
+    connectToServers(hostname_and_port);
+  }
+
+  void PLearnService::connectToServers(TVec< pair<string,int> > hostname_and_port)
+  {
+    if(serversio.length()>0)
+      disconnectFromServers();
+    for(int k=0; k<hostname_and_port.length(); k++)
+      {
+        pair<string, int> host_port = hostname_and_port[k];
+        PStream sock = openSocket(host_port.first, host_port.second, PStream::plearn_binary);
+        serversio.append(sock);
+        available_servers.push(k);
+      }
+  }
+
+  void PLearnService::disconnectFromServers()
+  {
+    serversio = TVec<PStream>();
+    available_servers.resize(0);
   }
 
 
   int PLearnService::availableServers() const
   {    
-    return 0;
+    return available_servers.length();
   }
 
-  RemotePLearnServer* PLearnService::newServer()
+  RemotePLearnServer* PLearnService::reserveServer()
   {
-    // search for a free processing ressource
-    // open an io channel to a plearn server running on found ressource 
-    // string launch_command = "cldispatch "+service_launch_command;
-    string launch_command = service_launch_command;
-    DBG_LOG << "PLearnService::newServer launching: " << launch_command << endl;
-    PP<Popen> p = new Popen(launch_command);
-
-    // return RemotePLearnServer object controlling the remote processing ressource
-    RemotePLearnServer* serv = new RemotePLearnServer(p);
-    
-    reserved_servers.insert(serv);
-
-    DBG_LOG << "PLearnService::newServer(" << (unsigned long) serv << endl;
+    RemotePLearnServer* serv = 0;
+    if(available_servers.size()>0)
+      {
+        int servnum = available_servers.pop();
+        serv = new RemotePLearnServer(serversio[servnum]);
+        reserved_servers[serv] = servnum;
+      }
     return serv;
   }
 
   void PLearnService::freeServer(RemotePLearnServer* remoteserv)
   {
     DBG_LOG << "PLearnService::freeServer(" << (unsigned long) remoteserv << endl;
-    if(reserved_servers.erase(remoteserv)!=1)
-      PLERROR("In PLearnService::freeServer, no such registered server. This should not happen!");
+    std::map<RemotePLearnServer*,int>::iterator it = reserved_servers.find(remoteserv);
+    if(it==reserved_servers.end())
+      PLERROR("Strange bug in PLearnService::freeServer Nothing known about this remoteserv. This should never happen!");
+    // put servernum back in available servers
+    available_servers.push(it->second);
+    // erase servernum from reserved_servers
+    reserved_servers.erase(it);
   }
 
+  PLearnService::~PLearnService()
+  {
+    disconnectFromServers();
+  }
 
 } // end of namespace PLearn
