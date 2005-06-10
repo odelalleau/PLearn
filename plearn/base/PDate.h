@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PDate.h,v 1.7 2005/05/13 22:00:25 plearner Exp $
+   * $Id: PDate.h,v 1.8 2005/06/10 22:14:12 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -167,14 +167,24 @@ inline ostream& operator<<(ostream& os, const PDate& date)
   return os;
 }
   
-//! converts date to float: ex: September 29 1972: 720929; December 25 2002: 1021225
-//! Also converts missing date to missing flat value and vice-versa.
+//! Converts date to float: ex: September 29 1972: 720929; December 25 2002: 1021225
+//! Also converts missing date to missing float value and vice-versa. The format for
+//! a float date is CYYMMDD.
 float date_to_float(const PDate& t);
 
 PDate float_to_date(float f);
 
 inline PDate float_to_date(double d) 
 { return float_to_date(float(d)); }
+
+
+//! Converts date to double: ex: September 29 1972: 720929; December 25 2002: 20021225
+//! Also converts missing date to missing double value and vice-versa. The format for
+//! a double date is YYYYMMDD.
+double date_to_double(const PDate& t);
+
+PDate double_to_date(double d);
+
 
 } // end of namespace PLearn
 

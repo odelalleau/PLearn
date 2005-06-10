@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDate.cc,v 1.15 2005/05/13 22:00:25 plearner Exp $
+   * $Id: PDate.cc,v 1.16 2005/06/10 22:14:12 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -226,6 +226,27 @@ PDate float_to_date(float f)
     d %= 10000;
     date.month = d/100;
     date.day = d%100;
+  }
+  return date;
+}
+
+double date_to_double(const PDate& t)
+{
+  if (t.isMissing())
+    return MISSING_VALUE;
+  else
+    return double((t.year)*10000 + t.month*100 + t.day);  
+}
+
+PDate double_to_date(double d)
+{
+  PDate date;                     // missing by default
+  if (! is_missing(d)) {
+    long l = long(d);
+    date.year = l/10000;
+    l %= 10000;
+    date.month = l/100;
+    date.day = l%100;
   }
   return date;
 }
