@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.17 2005/03/25 16:02:01 tihocan Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.18 2005/06/10 14:23:56 tihocan Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
@@ -105,7 +105,7 @@ void SelectRowsVMatrix::declareOptions(OptionList &ol)
 
     declareOption(ol, "indices_vmat", &SelectRowsVMatrix::indices_vmat, OptionBase::buildoption, 
         "If provided, will override the 'indices' option: the indices will be taken\n"
-        "from the first column of the given VMatrix (taking the integer part).");
+        "from the first column of the given VMatrix (taking the closest integer).");
 
     inherited::declareOptions(ol);
 }
@@ -134,7 +134,7 @@ void SelectRowsVMatrix::build_()
     int n = indices_vmat->length();
     indices.resize(n);
     for (int i = 0; i < n; i++)
-      indices[i] = int(indices_vmat->get(i,0));
+      indices[i] = int(round(indices_vmat->get(i,0)));
   }
   length_ = indices.length();
   if (source) {
