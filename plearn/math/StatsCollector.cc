@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.57 2005/04/13 19:44:13 larocheh Exp $
+   * $Id: StatsCollector.cc,v 1.58 2005/06/10 20:12:30 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -90,7 +90,7 @@ PLEARN_IMPLEMENT_OBJECT(
   "  - IQR          -  The interquartile range, i.e. PSEUDOQ(0.75) - PSEUDOQ(0.25)\n"
   "  - PRR          -  The pseudo robust range, i.e. PSEUDOQ(0.99) - PSEUDOQ(0.01)\n"
   "  - LIFT(f)      -  Lift computed at fraction f (0 <= f <= 1)\n"
-  "  - NIPS_LIFT    -  Lift cost as computed in NIPS'2004 challenge\n"
+  "  - NIPS_LIFT    -  Area under lift curve as computed in NIPS'2004 challenge\n"
   "  - DMODE        -  Discrete distribution first mode\n"
   "\n"
   "Notes:\n"
