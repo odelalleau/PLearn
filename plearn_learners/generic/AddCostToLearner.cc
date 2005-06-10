@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.22 2005/01/25 17:55:34 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.23 2005/06/10 20:15:27 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -228,8 +228,9 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
   int n_original_costs = learner_->nTestCosts();
   // We give only costs.subVec to the sub-learner because it may want to resize it.
   Vec sub_costs = costs.subVec(0, n_original_costs);
+  int target_length = target.length();
   if (compute_costs_on_bags) {
-    learner_->computeCostsFromOutputs(input, output, target.subVec(0, target.length() - 1), sub_costs);
+    learner_->computeCostsFromOutputs(input, output, target.subVec(0, target_length - 1), sub_costs);
   } else {
     learner_->computeCostsFromOutputs(input, output, target, sub_costs);
   }
@@ -238,7 +239,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
     // We only need to compute the costs when the whole bag has been seen,
     // otherwise we just store the outputs of each sample in the bag and fill
     // the cost with MISSING_VALUE.
-    int bag_signal = int(target[target.length() - 1]);
+    int bag_signal = int(target[target_length - 1]);
     if (bag_signal & SumOverBagsVariable::TARGET_COLUMN_FIRST) {
       // Beginning of the bag.
       bag_size = 0;
@@ -281,7 +282,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
           PLERROR("In AddCostToLearner::computeCostsFromOutputs - Unknown value for 'combine_bag_outputs_method'");
       }
       // We re-compute the sub-learner's costs with the brand new combined bag output.
-      learner_->computeCostsFromOutputs(input, combined_output, target.subVec(0, target.length() - 1), sub_costs);
+      learner_->computeCostsFromOutputs(input, combined_output, target.subVec(0, target_length - 1), sub_costs);
     } else {
       costs.fill(MISSING_VALUE);
       return;
@@ -292,7 +293,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
 
   Vec the_target;
   if (compute_costs_on_bags) {
-    the_target = target.subVec(0, target.length() - 1);
+    the_target = target.subVec(0, target_length - 1);
   } else {
     the_target = target;
   }
@@ -316,9 +317,13 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
     }
   }
   if (!rescale_target) {
+    desired_target.resize(target_length);
     desired_target << the_target;
   } else {
     int n = output.length();
+    if (n != target_length)
+      PLERROR("In AddCostToLearner::computeCostsFromOutputs - When rescaling, "
+              "output and target are expected to have the same length");
     for (int i = 0; i < n; i++) {
       desired_target[i] = (the_target[i] - from_min) * fac + to_min;
     }
@@ -343,8 +348,11 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
     if (c == "lift_output") {
       // TODO Using a LiftOutputVariable would be better.
 #ifdef BOUNDCHECK
-      if (sub_learner_output.length() != 1 || desired_target.length() != 1) {
-        PLERROR("In AddCostToLearner::computeCostsFromOutputs - Lift cost is only meant to be used with one-dimensional output and target");
+      if (desired_target.length() != 1 && (sub_learner_output.length() != 1 || sub_learner_output.length() != 2)) {
+        PLERROR("In AddCostToLearner::computeCostsFromOutputs - Lift cost is "
+                "only meant to be used with a one-dimensional target, and a "
+                "one-dimensional output or a two-dimensional output (which "
+                "would give the weights for classes 0 and 1 respectively)");
       }
 #endif
       {
@@ -357,9 +365,15 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
         }
 #endif
         if (desired_target[0] == 1) {
-          costs[ind_cost] = sub_learner_output[0];
+          if (sub_learner_output.length() == 1)
+            costs[ind_cost] = sub_learner_output[0];
+          else
+            costs[ind_cost] = sub_learner_output[1] - sub_learner_output[0];
         } else {
-          costs[ind_cost] = - sub_learner_output[0];
+          if (sub_learner_output.length() == 1)
+            costs[ind_cost] = - sub_learner_output[0];
+          else
+            costs[ind_cost] = sub_learner_output[0] - sub_learner_output[1];
         }
       }
     } else if (c == "cross_entropy") {
@@ -372,12 +386,19 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
       cross_entropy_prop.fprop();
       costs[ind_cost] = cross_entropy_var->valuedata[0];
     } else if (c == "class_error") {
+      int output_length = sub_learner_output.length();
       bool good = true;
-      for (int i = 0; i < desired_target.length(); i++)
-        if (desired_target[i] != sub_learner_output[i]) {
-          good = false;
-          break;
-        }
+      if (output_length == target_length) {
+        for (int i = 0; i < desired_target.length(); i++)
+          if (desired_target[i] != sub_learner_output[i]) {
+            good = false;
+            break;
+          }
+      } else if (target_length == 1) {
+        // We assume the target is a number between 0 and c-1, and the output
+        // is a vector of length c giving the weight for each class.
+        good = (argmax(output) == int(desired_target[0]));
+      }
       if (good)
         costs[ind_cost] = 0;
       else

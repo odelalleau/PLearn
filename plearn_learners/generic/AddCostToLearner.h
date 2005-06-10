@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.h,v 1.10 2004/10/26 21:10:11 tihocan Exp $ 
+   * $Id: AddCostToLearner.h,v 1.11 2005/06/10 20:15:27 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -82,7 +82,7 @@ protected:
   Var cross_entropy_var;
   
   //! Used to store the target when computing a cost.
-  Vec desired_target;
+  mutable Vec desired_target;
 
   //! A precomputed factor for faster mapping.
   real fac;
