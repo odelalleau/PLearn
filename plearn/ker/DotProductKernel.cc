@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DotProductKernel.cc,v 1.6 2004/04/07 23:15:17 morinf Exp $
+   * $Id: DotProductKernel.cc,v 1.7 2005/06/10 14:16:07 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,10 @@ namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(DotProductKernel, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(DotProductKernel,
+    "Simple Euclidean dot product K(x,y) = <x,y> = sum_i x_i y_i.",
+    ""
+);
 
 real DotProductKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return dot(x1,x2); }
