@@ -31,8 +31,8 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-#ifndef TINYVECTOR_H
-#define TINYVECTOR_H
+#ifndef TINYVECTOR_H_INC
+#define TINYVECTOR_H_INC
 
 //#include <utility>
 //#include <stdexcept>			     // for out_of_range
@@ -204,6 +204,10 @@ inline bool operator>=(const TinyVector<T,N,TTrait>& x,
 template <typename T> class TinyVectorTrait {};
 
 template <> class TinyVectorTrait<unsigned char> {
+public:
+  static const unsigned char Missing = UCHAR_MAX; // norman: initialize here
+};
+template <> class TinyVectorTrait<signed char> {
 public:
   static const unsigned char Missing = UCHAR_MAX; // norman: initialize here
 };
@@ -464,4 +468,4 @@ bool operator<(const TinyVector<T,N,TTrait>& x,
     
 } // end of namespace PLearn
 
-#endif // TINYVECTOR_H
+#endif // TINYVECTOR_H_INC
