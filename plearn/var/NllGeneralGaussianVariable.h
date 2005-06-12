@@ -48,6 +48,7 @@ class NllGeneralGaussianVariable: public NaryVariable
   typedef NaryVariable inherited;
   
 public:
+  bool use_noise;
   int n; // dimension of the vectors
   real min_diff; // minimum difference between sigma_noise and the sigma_manifolds
   real log_L; 
@@ -55,10 +56,10 @@ public:
   int nneighbors; // nb of neighbors
   int mu_nneighbors; // nb of neighbors to learn mu
   real tr_inv_Sigma;
-  Vec mu, sm_svd, sn, S;
-  Vec uk, fk, uk2, inv_sigma_zj, zj, inv_sigma_fk;
+  Vec mu, sm_svd, sn, S,mu_noisy,noise_var;
+  Vec uk, fk, uk2, inv_sigma_zj,inv_sigma_zj_noisy, zj,zj_noisy, inv_sigma_fk;
   Vec temp_ncomp;
-  Mat F,F_copy, diff_y_x, z, U, Ut, V, inv_Sigma_F,inv_Sigma_z;
+  Mat F,F_copy, diff_y_x, z, U, Ut, V, inv_Sigma_F,inv_Sigma_z, inv_Sigma_z_noisy;
 
   //!  Default constructor for persistence
   NllGeneralGaussianVariable() {}
@@ -80,9 +81,12 @@ protected:
   DECLARE_OBJECT_PTR(NllGeneralGaussianVariable);
 
   inline Var nll_general_gaussian(Var tangent_plane_var, Var mu_var, Var sn_var, Var neighbors_dist_var, 
-                                                 real log_L, int mu_nneighbors=-1)
+                                                 real log_L, int mu_nneighbors, Var noise_var=0, Var mu_noisy=0)
   {
-    return new NllGeneralGaussianVariable(tangent_plane_var & mu_var & sn_var & neighbors_dist_var,log_L, mu_nneighbors);
+    if(!noise_var)
+      return new NllGeneralGaussianVariable(tangent_plane_var & mu_var & sn_var & neighbors_dist_var,log_L, mu_nneighbors);
+    else
+      return new NllGeneralGaussianVariable(tangent_plane_var & mu_var & sn_var & neighbors_dist_var & noise_var & mu_noisy,log_L, mu_nneighbors);
   }
 
                             

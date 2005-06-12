@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: NllGeneralGaussianVariable.cc,v 1.1 2005/05/12 13:51:34 larocheh Exp $
+ * $Id: NllGeneralGaussianVariable.cc,v 1.2 2005/06/12 19:49:21 larocheh Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -48,7 +48,7 @@
 namespace PLearn {
   using namespace std;
 
-  // R += alhpa diag(s) ( M - v1 v2')
+  // R += alpa ( M - v1 v2')
   template<class T>
 void my_weird_product(const TMat<T>& R, const TMat<T>& M, const TVec<T>& v1, const TVec<T>& v2,T alpha)
 {
@@ -100,7 +100,7 @@ void my_weird_product(const TMat<T>& R, const TMat<T>& M, const TVec<T>& v1, con
     //    - varray[2] = sigma_noise (1 x 1)
     //    - varray[3] = neighbor_distances (nneighbors x n)
      
-    if(varray.length() != 4)
+    if(varray.length() != 4 && varray.length() != 6)
       PLERROR("In NllGeneralGaussianVariable constructor: varray is of length %d but should be of length %d", varray.length(), 4);
     
     if(varray[1]->length() != n || varray[1]->width() != 1) PLERROR("In NllGeneralGaussianVariable constructor: varray[1] is of size (%d,%d), but should be of size (%d,%d)",
@@ -113,20 +113,29 @@ void my_weird_product(const TMat<T>& R, const TMat<T>& M, const TVec<T>& v1, con
                                         varray[3]->length(), varray[3]->width(),
                                         nneighbors, n);
 
-    if(mu_nneighbors < 0)
-      mu_nneighbors = nneighbors;
+    if(mu_nneighbors < 0) mu_nneighbors = nneighbors;
+    use_noise = (varray.length() == 6);
 
     F = varray[0]->matValue;
     mu = varray[1]->value;
     sn = varray[2]->value;
     diff_y_x = varray[3]->matValue;
-    
+    if(use_noise)
+    {
+      noise_var = varray[4]->value;
+      mu_noisy = varray[5]->value;
+    }
     z.resize(nneighbors,n);
     U.resize(ncomponents,n);
     Ut.resize(n,n);
     V.resize(ncomponents,ncomponents);
     inv_Sigma_F.resize(ncomponents,n);
     inv_Sigma_z.resize(nneighbors,n);
+    if(use_noise) 
+    {
+      inv_Sigma_z_noisy.resize(nneighbors,n);
+      zj_noisy.resize(n);
+    } 
     temp_ncomp.resize(ncomponents);
   }
 
@@ -146,7 +155,7 @@ void my_weird_product(const TMat<T>& R, const TMat<T>& M, const TVec<T>& v1, con
     lapackSVD(F_copy, Ut, S, V,'A',1.5);
     for (int k=0;k<ncomponents;k++)
     {
-      sm_svd[k] = S[k];
+      sm_svd[k] = mypow(S[k],2);
       U(k) << Ut(k);
     }  
 
@@ -155,6 +164,7 @@ void my_weird_product(const TMat<T>& R, const TMat<T>& M, const TVec<T>& v1, con
     real dotp = 0;
     real coef = 0;
     inv_Sigma_z.clear();
+    if(use_noise) inv_Sigma_z_noisy.clear();
     tr_inv_Sigma = 0;
     for(int j=0; j<nneighbors;j++)
     {
@@ -185,6 +195,23 @@ void my_weird_product(const TMat<T>& R, const TMat<T>& M, const TVec<T>& v1, con
       }      
 
       value[j] = -1*(norm_term + mahal);
+
+      if(use_noise)
+      {
+        substract(zj,noise_var,zj_noisy);
+        
+        inv_sigma_zj_noisy = inv_Sigma_z_noisy(j);
+        inv_sigma_zj_noisy << zj_noisy; 
+        inv_sigma_zj_noisy /= sn[0];
+
+        for(int k=0; k<ncomponents; k++)
+        { 
+          uk = U(k);
+          dotp = dot(zj_noisy,uk);
+          coef = (1.0/(sm_svd[k]+sn[0]) - 1.0/sn[0]);
+          multiplyAcc(inv_sigma_zj_noisy,uk,dotp*coef);
+        }      
+      }
     }
 
     inv_Sigma_F.clear();
@@ -219,12 +246,14 @@ void my_weird_product(const TMat<T>& R, const TMat<T>& M, const TVec<T>& v1, con
         // dNLL/dmu
 
         multiplyAcc(varray[1]->gradient, inv_Sigma_z(neighbor),-1.0*gradient[neighbor] *coef) ;
+        
+        if(use_noise)
+          multiplyAcc(varray[5]->gradient, inv_Sigma_z_noisy(neighbor),-1.0*gradient[neighbor] *coef) ;
       }
 
       // dNLL/dsn
 
       varray[2]->gradient[0] += gradient[neighbor]*coef* 0.5*(tr_inv_Sigma - pownorm(inv_Sigma_z(neighbor)));
-      
       
     }
   }
