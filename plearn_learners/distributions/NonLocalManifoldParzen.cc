@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzen.cc,v 1.8 2005/06/02 21:24:31 larocheh Exp $
+   * $Id: NonLocalManifoldParzen.cc,v 1.9 2005/06/12 19:45:34 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -89,7 +89,7 @@ using namespace std;
 
 NonLocalManifoldParzen::NonLocalManifoldParzen() 
 /* ### Initialize all fields to their default value here */
-  :  noise(1), noise_type("gaussian"), omit_last(0), learn_mu(true), magnified_version(false), reference_set(0), sigma_init(0.1), sigma_min(0.00001), nneighbors(5), nneighbors_density(-1), mu_nneighbors(2), ncomponents(1), sigma_threshold_factor(1), variances_transfer_function("softplus"), architecture_type("single_neural_network"),
+  :  noise_grad_factor(0.01),noise(0), noise_type("gaussian"), omit_last(0), learn_mu(true), magnified_version(false), reference_set(0), sigma_init(0.1), sigma_min(0.00001), nneighbors(5), nneighbors_density(-1), mu_nneighbors(2), ncomponents(1), sigma_threshold_factor(1), variances_transfer_function("softplus"), architecture_type("single_neural_network"),
     n_hidden_units(-1), batch_size(1), svd_threshold(1e-8)
 {
 }
@@ -206,6 +206,10 @@ void NonLocalManifoldParzen::declareOptions(OptionList& ol)
 
   declareOption(ol, "noise_type", &NonLocalManifoldParzen::noise_type, OptionBase::buildoption,
 		"Type of the noise (\"uniform\" or \"gaussian\").\n"
+                );
+  
+  declareOption(ol, "noise_grad_factor", &NonLocalManifoldParzen::noise_grad_factor, OptionBase::buildoption,
+		"Gradient factor to apply to the noise signal error.\n"
                 );
   
   declareOption(ol, "magnified_version", &NonLocalManifoldParzen::magnified_version, OptionBase::buildoption,
@@ -381,7 +385,7 @@ void NonLocalManifoldParzen::build_()
 
       // Path for noisy mu
       Var a_noisy = tanh(c + product(V,x+noise_var));
-      mu_noisy = product(muV,a_noisy); 
+      mu_noisy = no_bprop(product(muV,a_noisy),noise_grad_factor); 
 
 
       tangent_plane->setName("tangent_plane ");
@@ -486,7 +490,7 @@ void NonLocalManifoldParzen::update_reference_set_parameters()
     lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
     for (int k=0;k<ncomponents;k++)
     {
-      sms(t,k) = S_svd[k];
+      sms(t,k) = mypow(S_svd[k],2);
       Us[t](k) << Ut_svd(k);
     }    
   }
@@ -732,7 +736,7 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
     lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
     for (int k=0;k<ncomponents;k++)
     {
-      sm_temp[k] = S_svd[k];
+      sm_temp[k] = mypow(S_svd[k],2);
       F(k) << Ut_svd(k);
     }    
     
@@ -843,7 +847,7 @@ void NonLocalManifoldParzen::computeOutput(const Vec& input, Vec& output) const
         temp->saveAMAT(fsave,false,true);
         //PLearn::save(fsave,t_row);
       }
-      t_row -= step*F(0);
+      t_row += step*F(0);
     }
     output << t_row;
     break;
@@ -880,7 +884,7 @@ real NonLocalManifoldParzen::evaluate(Vec x1,Vec x2,real scale)
   lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
   for (int k=0;k<ncomponents;k++)
   {
-    sm_temp[k] = S_svd[k];
+    sm_temp[k] = mypow(S_svd[k],2);
     F(k) << Ut_svd(k);
   }    
   

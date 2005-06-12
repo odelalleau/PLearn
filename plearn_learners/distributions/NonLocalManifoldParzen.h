@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzen.h,v 1.5 2005/06/02 21:24:31 larocheh Exp $
+   * $Id: NonLocalManifoldParzen.h,v 1.6 2005/06/12 19:45:34 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Hugo Larochelle
@@ -104,6 +104,8 @@ protected:
   VarArray parameters;
 
 public:
+
+  real noise_grad_factor;
 
   real noise;
   
