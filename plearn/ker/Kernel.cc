@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.37 2005/03/03 20:21:37 tihocan Exp $
+   * $Id: Kernel.cc,v 1.38 2005/06/13 18:39:27 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -244,7 +244,7 @@ real Kernel::evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x, boo
 //////////////////////
 // evaluate_all_i_x //
 //////////////////////
-void Kernel::evaluate_all_i_x(const Vec& x, Vec& k_xi_x, real squared_norm_of_x, int istart) const {
+void Kernel::evaluate_all_i_x(const Vec& x, const Vec& k_xi_x, real squared_norm_of_x, int istart) const {
   k_xi_x[0] = evaluate_i_x_again(istart, x, squared_norm_of_x, true);
   int i_max = istart + k_xi_x.length();
   for (int i = istart + 1; i < i_max; i++) {
@@ -255,7 +255,7 @@ void Kernel::evaluate_all_i_x(const Vec& x, Vec& k_xi_x, real squared_norm_of_x,
 //////////////////////
 // evaluate_all_x_i //
 //////////////////////
-void Kernel::evaluate_all_x_i(const Vec& x, Vec& k_x_xi, real squared_norm_of_x, int istart) const {
+void Kernel::evaluate_all_x_i(const Vec& x, const Vec& k_x_xi, real squared_norm_of_x, int istart) const {
   k_x_xi[0] = evaluate_x_i_again(x, istart, squared_norm_of_x, true);
   int i_max = istart + k_x_xi.length();
   for (int i = istart + 1; i < i_max; i++) {
