@@ -3,7 +3,7 @@
 The class contained in this module is to be used as super class for almost
 any Python class emulating a PLearn cousin class.
 """
-__cvs_id__ = "$Id: PyPLearnObject.py,v 1.18 2005/06/13 15:56:49 dorionc Exp $"
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.19 2005/06/13 16:04:55 dorionc Exp $"
 
 from   AttributeManager            import AttributeManager
 from   plearn.utilities.toolkit    import no_none

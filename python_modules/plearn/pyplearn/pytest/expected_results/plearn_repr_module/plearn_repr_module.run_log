@@ -1,0 +1,72 @@
+plearn_repr.py:205: DeprecationWarning: bind(refname, obj): assign a python object instead.
+*** Use warnings.filterwarnings( action = "ignore" ) to get rid of warnings. ***
+  bind( 'allo-toi', pl.AlloToi( p = "p", a = 1 ) )
+plearn_repr.py:206: DeprecationWarning: ref(refname): refer to a python object instead.
+*** Use warnings.filterwarnings( action = "ignore" ) to get rid of warnings. ***
+  refvalue = ref( 'allo-toi' )
+plearn_repr.py:209: DeprecationWarning: bindref(refname, obj): assign and refer to a python object instead.
+*** Use warnings.filterwarnings( action = "ignore" ) to get rid of warnings. ***
+  br = bindref( 'peanut', pl.Peanut( inside = refvalue ) )
+TopLevel(
+    list_option = [
+        *1 -> SomeClass( name = "Object1" ),
+        *2 -> SomeOtherClass(
+            first_option = "first_option",
+            internal = *1;
+            )
+        ]
+    )
+TopLevel(
+    embedded = *3 -> TopLevel(
+        list_option = [
+            *1;,
+            *2;
+            ]
+        ),
+    name = "Embedded",
+    some_dict = {
+        "a" : 1,
+        "b" : 2
+        },
+    some_mat = *4 -> 2 2 [
+            1,
+            2,
+            3,
+            4
+            ]
+    )
+
+toplevel3
+TopLevel(
+    some_dict = {
+        "a" : 1,
+        "b" : 2
+        },
+    str_list = [
+        "str1",
+        "str2"
+        ]
+    )
+
+Internal view of toplevel3:
+TopLevel(
+    _internal = "_INTERNAL_VALUE",
+    some_dict = {
+        "a" : 1,
+        "b" : 2
+        },
+    str_list = [
+        "str1",
+        "str2"
+        ]
+    )
+AlloToi(
+    a = 1,
+    p = "p"
+    )
+Peanut(
+    inside = *5 -> AlloToi(
+        a = 1,
+        p = "p"
+        )
+    )
