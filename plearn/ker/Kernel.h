@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.34 2005/06/13 18:39:27 tihocan Exp $
+   * $Id: Kernel.h,v 1.35 2005/06/13 19:34:25 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -67,6 +67,8 @@ protected:
 
   VMat data; //!<  data for kernel matrix, which will be used for calls to evaluate_i_j and the like
   int data_inputsize;
+  mutable Mat gram_matrix;
+  mutable bool gram_matrix_is_cached;
   int n_examples;
 
   static void declareOptions(OptionList& ol);
@@ -74,6 +76,7 @@ protected:
 public:
 
   //! Build options.
+  bool cache_gram_matrix;
   bool is_symmetric;
   int report_progress;
   VMat specify_dataset;

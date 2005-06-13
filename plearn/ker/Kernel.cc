@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.38 2005/06/13 18:39:27 tihocan Exp $
+   * $Id: Kernel.cc,v 1.39 2005/06/13 19:34:25 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,7 +49,10 @@ using namespace std;
 
 using namespace std;
   
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Kernel, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Kernel,
+    "A Kernel is a real-valued function K(x,y).",
+    ""
+);
 Kernel::~Kernel() {}
 
 ////////////
@@ -60,7 +63,9 @@ Kernel::Kernel(bool is__symmetric)
   lock_xj(false),
   lock_k_xi_x(false),
   data_inputsize(-1),
+  gram_matrix_is_cached(false),
   n_examples(-1),
+  cache_gram_matrix(false),
   is_symmetric(is__symmetric),
   report_progress(0)
 {}
@@ -82,6 +87,9 @@ void Kernel::declareOptions(OptionList &ol)
   
   declareOption(ol, "specify_dataset", &Kernel::specify_dataset, OptionBase::buildoption,
                 "If set, then setDataForKernelMatrix will be called with this dataset at build time");
+
+  declareOption(ol, "cache_gram_matrix", &Kernel::cache_gram_matrix, OptionBase::buildoption,
+      "If set to 1, the Gram matrix will be cached in memory to avoid multiple computations.");
 
   // Learnt options.
   
@@ -121,6 +129,7 @@ void Kernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(evaluate_xj, copies);
   deepCopyField(k_xi_x, copies);
   deepCopyField(data, copies);
+  deepCopyField(gram_matrix, copies);
   deepCopyField(specify_dataset, copies);
 }
 
@@ -141,6 +150,7 @@ void Kernel::setDataForKernelMatrix(VMat the_data)
     data_inputsize = 0;
     n_examples = 0;
   }
+  gram_matrix_is_cached = false;
 }
 
 ////////////////////////////
@@ -304,6 +314,10 @@ void Kernel::computeNearestNeighbors(const Vec& x, Mat& k_xi_x_sorted, int knn) 
 void Kernel::computeGramMatrix(Mat K) const
 {
   if (!data) PLERROR("Kernel::computeGramMatrix should be called only after setDataForKernelMatrix");
+  if (cache_gram_matrix && gram_matrix_is_cached) {
+    K << gram_matrix;
+    return;
+  }
   int l=data->length();
   int m=K.mod();
   ProgressBar* pb = 0;
@@ -332,6 +346,11 @@ void Kernel::computeGramMatrix(Mat K) const
   }
   if (pb) {
     delete pb;
+  }
+  if (cache_gram_matrix) {
+    gram_matrix.resize(l,l);
+    gram_matrix << K;
+    gram_matrix_is_cached = true;
   }
 }
 
