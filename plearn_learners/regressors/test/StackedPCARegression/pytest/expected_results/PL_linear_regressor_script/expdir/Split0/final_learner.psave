@@ -1,0 +1,26 @@
+*1 ->LinearRegressor(
+include_bias = 1 ;
+cholesky = 1 ;
+weight_decay = 0 ;
+output_learned_weights = 0 ;
+weights = 5  2  [ 
+5.13619797550028867 	11.1385637816564618 	
+-6792.60659839147775 	-259511.530268940318 	
+-13406.8419427241715 	-522476.284966421546 	
+1347.38770786956138 	52367.8145801943028 	
+32.7173751554060317 	-1153.07319706610338 	
+]
+;
+AIC = 6.09268869187651152 ;
+BIC = 6.29339771148292826 ;
+resid_variance = 2 [ 21.7608079452003373 378.956674319862145 ] ;
+expdir = "PYTEST__PL_linear_regressor_script__RESULTS:expdir/Split0/LearnerExpdir/" ;
+stage = 0 ;
+n_examples = 150 ;
+inputsize = 4 ;
+targetsize = 2 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1  )
