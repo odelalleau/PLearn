@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.18 2005/06/09 17:29:34 tihocan Exp $
+   * $Id: GaussianKernel.cc,v 1.19 2005/06/13 18:34:38 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -137,12 +137,18 @@ void GaussianKernel::addDataForKernelMatrix(const Vec& newRow)
 real GaussianKernel::evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const
 {
   if (sqnorm_of_diff < 0) {
-    // This should not happen (anymore) with the isUnsafe check.
-    // You may comment out the PLERROR below if you want to continue your
-    // computations, but then you should investigate why this happens.
-    PLERROR("In GaussianKernel::evaluateFromSquaredNormOfDifference - The given "
-            "'sqnorm_of_diff' is negative (%f)", sqnorm_of_diff);
-    sqnorm_of_diff = 0;
+    if (sqnorm_of_diff * minus_one_over_sigmasquare < 1e-10 )
+      // This can still happen when computing K(x,x), because of numerical
+      // approximations.
+      sqnorm_of_diff = 0;
+    else {
+      // This should not happen (anymore) with the isUnsafe check.
+      // You may comment out the PLERROR below if you want to continue your
+      // computations, but then you should investigate why this happens.
+      PLERROR("In GaussianKernel::evaluateFromSquaredNormOfDifference - The given "
+          "'sqnorm_of_diff' is negative (%f)", sqnorm_of_diff);
+      sqnorm_of_diff = 0;
+    }
   }
   if (scale_by_sigma) {
     return exp(sqnorm_of_diff*minus_one_over_sigmasquare) * sigmasquare_over_two;
