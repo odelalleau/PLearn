@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.52 2005/06/09 16:16:41 chapados Exp $
+   * $Id: vmatmain.cc,v 1.53 2005/06/13 20:42:10 chapados Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -80,6 +80,7 @@ using namespace std;
  */
 static void save_vmat_as_csv(VMat source, ostream& destination,
                              bool skip_missings, int precision = 12,
+                             string delimiter = ",",
                              bool verbose = true)
 {
   char buffer[1000];
@@ -92,7 +93,7 @@ static void save_vmat_as_csv(VMat source, ostream& destination,
     search_replace(curfield, "\"", "\\\"");
     destination << '"' << curfield << '"';
     if (i < n-1)
-      destination << ',';
+      destination << delimiter;
   }
   destination << "\n";
 
@@ -124,7 +125,7 @@ static void save_vmat_as_csv(VMat source, ostream& destination,
         
         destination << buffer;
         if (j < m-1)
-          destination << ',';
+          destination << delimiter;
       }
       destination << "\n";
     }
@@ -1593,10 +1594,14 @@ int vmatmain(int argc, char** argv)
        *
        *     --precision=N
        *           :: conversion to CSV keeps N digits AFTER THE DECIMAL POINT
+       *
+       *     --delimiter=CHAR
+       *           :: conversion to CSV uses specified character as field delimiter
        */
       TVec<string> columns;
       bool skip_missings = false;
       int precision = 12;
+      string delimiter = ",";
       for (int i=4 ; i < argc && argv[i] ; ++i) {
         string curopt = removeblanks(argv[i]);
         if (curopt == "")
@@ -1609,6 +1614,9 @@ int vmatmain(int argc, char** argv)
           skip_missings = true;
         else if (curopt.substr(0,12) == "--precision=") {
           precision = toint(curopt.substr(12));
+        }
+        else if (curopt.substr(0,12) == "--delimiter=") {
+          delimiter = curopt.substr(12);
         }
         else
           PLWARNING("VMat convert: unrecognized option '%s'; ignoring it...",
@@ -1634,10 +1642,10 @@ int vmatmain(int argc, char** argv)
       else if(ext == ".csv")
       {
         if (destination == "-.csv")
-          save_vmat_as_csv(vm, cout, skip_missings, precision, true /*verbose*/);
+          save_vmat_as_csv(vm, cout, skip_missings, precision, delimiter, true /*verbose*/);
         else {
           ofstream out(destination.c_str());
-          save_vmat_as_csv(vm, out, skip_missings, precision, true /*verbose*/);
+          save_vmat_as_csv(vm, out, skip_missings, precision, delimiter, true /*verbose*/);
         }
       }
       else
