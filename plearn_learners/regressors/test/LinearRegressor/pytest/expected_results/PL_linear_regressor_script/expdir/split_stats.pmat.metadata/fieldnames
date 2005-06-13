@@ -1,9 +1,0 @@
-splitnum	0
-train.E[mse]	0
-train.E[aic]	0
-train.E[bic]	0
-train.E[mabic]	0
-test.E[mse]	0
-test.E[aic]	0
-test.E[bic]	0
-test.E[mabic]	0
