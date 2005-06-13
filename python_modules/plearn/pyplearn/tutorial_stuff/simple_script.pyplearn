@@ -1,0 +1,47 @@
+from plearn.pyplearn import *
+from simple_module   import *
+
+class Model( plargs_namespace ):
+    data           = "data.amat"
+    learning_rates = [ float( A * 10**(-B) )
+                       for A in [7, 3, 1]
+                       for B in range(0, 6) ]  
+
+#
+#  Dataset 
+#
+dataset  = pl.AutoVMatrix(
+    specification = Model.data,
+    inputsize     = 2,
+    targetsize    = 2,
+    weightsize    = 0
+    )
+
+splitter = pl.FractionSplitter(
+    splits = TMat(1,2, [ (0,0.75) , (0.75,1) ])
+    )
+
+dataset_manager = pl.DatasetManager( dataset  = dataset,
+                                     splitter = splitter )
+
+#
+#  Using a combiner over simple learners
+#
+underlying_learners = [
+    LearnerWithSomeSettingsIOftenUse( lr, dataset_manager )
+    for lr in Model.learning_rates
+    ]
+
+top_learner = MyCombiner( underlying_learners )
+
+#
+#  Top Level
+#
+tester = pl.MyWeardTester(
+    expdir    = plargs.expdir,
+    learner   = top_learner,
+    provide_learner_expdir = 1,
+    )
+
+def main():
+    return tester
