@@ -1,3 +1,11 @@
+from plearn.utilities               import toolkit
+from plearn.utilities.verbosity     import vprint
+from plearn.pyplearn.PyPLearnObject import PyPLearnObject
+
+class PyTestObject( PyPLearnObject ):
+    def _unreferenced( self ):
+        return True
+
 class PyTestUsageError(Exception): 
     def __init__(self, msg):
         self.msg = msg

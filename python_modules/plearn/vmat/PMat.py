@@ -35,6 +35,17 @@
 import numarray, sys, os, os.path
 from plearn.pyplearn import plearn_repr
 
+def array_columns( a, cols ):
+    indices = None
+    if isinstance( cols, int ):
+        indices = [ cols ]
+    elif isinstance( cols, slice ):
+        indices = range( *cols.indices(cols.stop) )
+    else:
+        indices = list( cols )            
+        
+    return numarray.take(a, indices, axis=1)
+
 def load_pmat_as_array(fname):
     s = file(fname,'rb').read()
     formatstr = s[0:64]
@@ -62,17 +73,46 @@ def load_pmat_as_array(fname):
         X.byteswap()
     return X
 
-def array_columns( a, cols ):
-    indices = None
-    if isinstance( cols, int ):
-        indices = [ cols ]
-    elif isinstance( cols, slice ):
-        indices = range( *cols.indices(cols.stop) )
-    else:
-        indices = list( cols )            
-        
-    return numarray.take(a, indices, axis=1)
+def save_array_as_pmat( fname, ar, fieldnames=[] ):
+    s = file(fname,'wb')
     
+    length, width = ar.getshape()
+    if fieldnames:
+        assert len(fieldnames) == width
+        metadatadir = fname+'.metadata'
+        if not os.path.isdir(metadatadir):
+            os.mkdir(metadatadir)
+        fieldnamefile = os.path.join(metadatadir,'fieldnames')
+        f = open(fieldnamefile,'wb')
+        for name in fieldnames:
+            f.write(name+'\t0\n')
+        f.close()
+    
+    header = 'MATRIX ' + str(length) + ' ' + str(width) + ' '
+    if ar.typecode()=='d':
+        header += 'DOUBLE '
+        elemsize = 8
+
+    elif ar.typecode()=='f':
+        header += 'FLOAT '
+        elemsize = 4
+
+    else:
+        raise TypeError('Unsupported typecode: %s' % ar.typecode())
+
+    rowsize = elemsize*width
+
+    if sys.byteorder=='little':
+        header += 'LITTLE_ENDIAN '
+    elif sys.byteorder=='big':
+        header += 'BIG_ENDIAN '
+    else:
+        raise TypeError('Unsupported sys.byteorder: '+repr(sys.byteorder))
+
+    header += ' '*(63-len(header))+'\n'
+    s.write( header )
+    s.write( ar.tostring() )
+    s.close()    
 
 class VMat:
     def __getitem__( self, key ):
@@ -80,9 +120,14 @@ class VMat:
             start, stop, step = key.start, key.stop, key.step
             if step!=None:
                 raise IndexError('Extended slice with step not currently supported')
+
+            if start is None:
+                start = 0
+
             l = self.length
-            if stop > l:
+            if stop is None or stop > l:
                 stop = l
+
             return self.getRows(start,stop-start)
         
         elif isinstance( key, tuple ):
@@ -127,7 +172,7 @@ class PMat( VMat ):
             self.width = len(fieldnames)
             self.elemtype = elemtype
             self.swap_bytes = False
-            self.write_header()
+            self.write_header()            
             
         elif openmode=='a':
             self.f = open(fname,'r+b')
@@ -261,6 +306,7 @@ class PMat( VMat ):
             ar.byteswap()
         else: # asarray makes a copy if not already a numarray of the right type
             ar = numarray.asarray(row,type=self.elemtype)
+
         self.f.seek(64+self.length*self.rowsize)
         self.f.write(ar.tostring())
         self.length += 1

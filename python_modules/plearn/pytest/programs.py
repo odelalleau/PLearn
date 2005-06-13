@@ -1,13 +1,11 @@
-__cvs_id__ = "$Id: programs.py,v 1.11 2005/03/11 02:49:05 dorionc Exp $"
+__cvs_id__ = "$Id: programs.py,v 1.12 2005/06/13 19:29:14 dorionc Exp $"
 
 import os, string, types
 import plearn.utilities.ppath          as     ppath
 import plearn.utilities.toolkit        as     toolkit
 
-from   plearn.utilities.verbosity      import vprint
-from   plearn.pyplearn.PyPLearnObject  import PyPLearnObject
-
-from   PyTestUsageError                import *
+from PyTestCore                 import *
+from plearn.utilities.verbosity import vprint
 
 ########################################
 ##  Helper Functions  ##################
@@ -51,7 +49,7 @@ def plcommand(command_name):
 ##  Helper Classes  ####################
 ########################################
     
-class Program(PyPLearnObject):
+class Program(PyTestObject):
     class Defaults:
         name                  = None
         __ordered_attr__      = [ 'name' ]
@@ -60,7 +58,7 @@ class Program(PyPLearnObject):
         _processing_directory = None
         
     def __init__(self, **overrides):
-        PyPLearnObject.__init__(self, **overrides)
+        PyTestObject.__init__(self, **overrides)
         assert self.name is not None
 
         self._processing_directory = os.getcwd()

@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: modes.py,v 1.21 2005/03/17 14:24:49 dorionc Exp $"
+__cvs_id__ = "$Id: modes.py,v 1.22 2005/06/13 19:29:14 dorionc Exp $"
 
 import copy, shutil
 import plearn.utilities.version_control as version_control
@@ -11,7 +11,6 @@ from routines                   import *
 from ModeAndOptionParser        import *
 from plearn.utilities.toolkit   import *
 from plearn.utilities.verbosity import *
-## from   plearn.utilities.global_variables   import *
 
 current_mode    = None
 
@@ -285,7 +284,6 @@ class vc_add( PyTestMode ):
 
         for (family, tests) in Test._families_map.iteritems():
             os.chdir( family )
-
 
             config_path = config_file_path()
             try:

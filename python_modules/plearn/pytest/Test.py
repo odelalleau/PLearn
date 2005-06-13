@@ -4,8 +4,7 @@ import plearn.utilities.version_control as version_control
 
 from BasicStats                       import *
 from IntelligentDiff                  import *
-from PyTestUsageError                 import *
-from plearn.pyplearn.PyPLearnObject   import *
+from PyTestCore                       import *
 from plearn.utilities.version_control import is_under_version_control
 
 __all__ = [ "Test" ]
@@ -17,7 +16,7 @@ class DuplicateName( PyTestUsageError ):
             % ( test1.get_path(), test2.get_path() )
             )        
 
-class Test( PyPLearnObject ):
+class Test( PyTestObject ):
     """Test is a class regrouping the elements that define a test for PyTest.
 
     @ivar name: The name of the Test must uniquely determine the
@@ -89,7 +88,7 @@ class Test( PyPLearnObject ):
     current_stats = classmethod(current_stats)
     
     def __init__(self, **overrides):
-        PyPLearnObject.__init__(self, **overrides)        
+        PyTestObject.__init__(self, **overrides)        
 
         self._directory = os.getcwd()
         self._metaprotocol   = string.replace( "PYTEST__%s__RESULTS" %
@@ -122,16 +121,15 @@ class Test( PyPLearnObject ):
                 )
         
         check = ( string.find(self.name, ' ') +
-                  string.find(self.name, '-') +
                   string.find(self.name, '/') +
                   string.find(self.name, '<') +
                   string.find(self.name, '>') 
                   )
 
-        if check != -5:
+        if check != -4:
             raise PyTestUsageError(
                 "%s\n Test.name should contain none of the following chars: "
-                "' ', '-', '/', '<', '>'."
+                "' ', '/', '<', '>'."
                 % self.get_path()
                 )
             
@@ -165,7 +163,7 @@ class Test( PyPLearnObject ):
 
                 ## YES
                 version_control.recursive_remove( results )
-                version_control.commit( '.', 'Removal of %s for new results creation.' )
+                version_control.commit( '.', 'Removal of %s for new results creation.'%results )
 
             ## Will have been removed under svn
             if ( os.path.exists( results ) ):

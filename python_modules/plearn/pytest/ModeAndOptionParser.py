@@ -1,12 +1,12 @@
 #!/usr/bin/env python2.3
-__cvs_id__ = "$Id: ModeAndOptionParser.py,v 1.10 2005/03/11 02:49:05 dorionc Exp $"
+__cvs_id__ = "$Id: ModeAndOptionParser.py,v 1.11 2005/06/13 19:29:14 dorionc Exp $"
 
 import inspect, os, string, sys, types
 
 from   optparse                        import *
+from   PyTestCore                      import *
 import plearn.utilities.toolkit        as     toolkit
 import plearn.utilities.metaprog       as     metaprog
-from   plearn.pyplearn.PyPLearnObject  import *
 
 __all__ = [ 'OptionGroup', 'Mode', 'ModeAndOptionParser' ]
 
@@ -21,7 +21,7 @@ def option_name(option):
     return string.replace(oname, '_', '-')
 
 
-class Mode( PyPLearnObject ):
+class Mode( PyTestObject ):
     def description(self):
         return toolkit.doc( self.__class__ )
 

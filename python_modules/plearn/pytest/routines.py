@@ -1,13 +1,13 @@
-__cvs_id__ = "$Id: routines.py,v 1.2 2005/03/31 20:40:46 chrish42 Exp $"
+__cvs_id__ = "$Id: routines.py,v 1.3 2005/06/13 19:29:14 dorionc Exp $"
 
 import os 
 import plearn.utilities.toolkit as toolkit
 
-from   programs                       import *
-from   BasicStats                     import BasicStats
-from   IntelligentDiff                import *          
-from   plearn.utilities.verbosity     import *
-from   plearn.pyplearn.PyPLearnObject import *
+from   programs                   import *
+from   PyTestCore                 import *
+from   BasicStats                 import BasicStats
+from   IntelligentDiff            import *          
+from   plearn.utilities.verbosity import *
 
 ## New
 from Test import *
@@ -60,7 +60,7 @@ class TaskStatus:
     def __repr__(self):
         return str(self)
 
-class Routine( PyPLearnObject ):
+class Routine( PyTestObject ):
     _report_traceback = False
 
     class Defaults:
@@ -69,7 +69,7 @@ class Routine( PyPLearnObject ):
         status                      = TaskStatus()
         
     def __init__( self, **overrides ):
-        PyPLearnObject.__init__( self, **overrides ) 
+        PyTestObject.__init__( self, **overrides ) 
         os.chdir( self.test.directory() )
         
     def compile_program(self):

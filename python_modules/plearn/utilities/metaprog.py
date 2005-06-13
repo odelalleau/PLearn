@@ -1,16 +1,10 @@
 """Metaprogramming tools.
 
 """
-__cvs_id__ = "$Id: metaprog.py,v 1.5 2005/05/31 14:38:02 dorionc Exp $"
+__cvs_id__ = "$Id: metaprog.py,v 1.6 2005/06/13 19:29:15 dorionc Exp $"
 
 import inspect, string, types
 import plearn.utilities.toolkit   as     toolkit
-
-
-__all__ = [ "classname", "instance_to_string", "members",
-            'public_attribute_predicate', 'public_attributes',
-            'public_members'
-            ]
 
 def classname(obj):
     if inspect.isclass(obj):

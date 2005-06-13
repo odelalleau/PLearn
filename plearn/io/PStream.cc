@@ -1063,6 +1063,8 @@ PStream& PStream::operator>>(unsigned short &x)
 
 PStream& PStream::operator>>(bool &x)
 {
+  int parsed = -1;
+
   char c;
   switch(inmode)
   {
@@ -1074,11 +1076,35 @@ PStream& PStream::operator>>(bool &x)
       skipBlanksAndCommentsAndSeparators();
       c = get();
       if(c=='1')
-        x = true;
+        parsed = 1;
+
       else if(c=='0')
-        x = false;
+        parsed = 0;
+
+      else if(c=='T')
+      {
+        char r = get();        
+        char u = get();        
+        char e = get();
+        if ( r == 'r' && u == 'u' && e == 'e' )
+          parsed = 1;
+      }
+      
+      else if(c=='F')
+      {
+        char a = get();        
+        char l = get();
+        char s = get();        
+        char e = get();
+        if ( a == 'a' && l == 'l' && s == 's' && e == 'e' )
+          parsed = 0;
+      }
+
+      if ( parsed == -1 )
+        PLERROR("In PStream::operator>>(bool &x) wrong format for bool, must be one "
+                "of characters 0 or 1 or unquoted strings True or False" );
       else
-        PLERROR("In PStream::operator>>(bool &x) wrong format for bool, must be character 0 or 1");
+        x = bool(parsed);
       break;
 
     default:
