@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatCommand.cc,v 1.12 2005/06/09 16:12:36 chapados Exp $ 
+   * $Id: VMatCommand.cc,v 1.13 2005/06/13 20:41:24 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VMatCommand.cc */
@@ -77,11 +77,12 @@ VMatCommand::VMatCommand():
       "       (no space between the commas and the columns); columns can be given either as a\n"
       "       number (zero-based) or a column name (string).  You can also specify a range,\n"
       "       such as 0-18, or any combination thereof, e.g. 5,3,8-18,Date,74-85\n"
-      "       If .csv (Comma-Separated Value) is specified, the option --skip-missings is\n"
-      "       also recognized: if a row (after selecting the appropriate columns)\n"
-      "       contains one or more missing values, it is skipped during export.  Also for\n"
-      "       CSV conversion, the option --precision=N requests that a maximum of N digits\n"
-      "       be printed after the decimal point.\n"
+      "       If .csv (Comma-Separated Value) is specified as the destination file, the \n"
+      "       following additional options are also supported:\n"
+      "         --skip-missings: if a row (after selecting the appropriate columns) contains\n"
+      "                          one or more missing values, it is skipped during export\n"
+      "         --precision=N:   a maximum of N digits is printed after the decimal point\n"
+      "         --delimiter=C:   use character C as the field delimiter (default = ',')\n"
       "   or: vmat gendef <source> [binnum1 binnum2 ...] \n"
       "       Generate stats for dataset (will put them in its associated metadatadir). \n"
       "   or: vmat genvmat <source_dataset> <dest_vmat> [binned{num} | onehot{num} | normalized]\n"
