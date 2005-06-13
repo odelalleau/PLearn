@@ -2,19 +2,28 @@
 
 Note that including this package simply includes the pyplearn module it contains.
 """
-__cvs_id__ = "$Id: __init__.py,v 1.9 2005/05/31 14:32:58 dorionc Exp $"
+__cvs_id__ = "$Id: __init__.py,v 1.10 2005/06/13 15:56:49 dorionc Exp $"
 
 import new, string, numarray
 from pyplearn                  import *
 from PyPLearnObject            import *
-from operator                  import isNumberType
 from plearn.utilities.metaprog import public_attribute_predicate
 
 class __pyplearn_magic_module:
-    """An instance of this class (instanciated as pl) is used to provide
+    """PyPLearn Magic Module.
+
+    An instance of this class (instanciated as pl) is used to provide
     the magic behavior whereas bits of Python code like:
-    pl.SequentialAdvisorSelector(comparison_type='foo', etc.) become
-    a string that can be fed to PLearn instead of a .plearn file."""
+
+        pl.SequentialAdvisorSelector(comparison_type='foo', etc.)
+
+    On any attempt to access a function from pl, the magic module creates,
+    on the fly, a PLearn-like class (derived from PyPLearnObject) named
+    after the function asked for. The named arguments provided to the
+    function are forwarded to the constructor of this new class to create
+    an instance of the class. Hence, names of the function's arguments are
+    considered as the PLearn object's option names.
+    """
     def __getattr__(self, name):
         if name.startswith('__'):
             raise AttributeError
@@ -67,18 +76,63 @@ class PyPLearnScript( PyPLearnObject ):
                               ]
         return "\n".join( attribute_strings )
 
+class __TMat:
+    def __init__( self, nrows, ncols, content ):
+        self.nrows   = nrows
+        self.ncols   = ncols
+        self.content = content
 
-def TMat( num_rows, num_cols, mat_contents ):
-    mat = []
-    i = j = 0
-    while i < num_rows:
-        row = []
-        while j < num_cols:
-            element = mat_contents[i*num_cols + j]
-            assert isNumberType(element)
-            row.append( element )
-        mat.append( row )
-    return numarray.array( )
+    def _unreferenced( self ):
+        return True
+    
+    def plearn_repr( self, indent_level=0 ):
+        return "%d %d %s" % (
+            self.nrows, self.ncols, 
+            plearn_repr.plearn_repr( self.content, indent_level+1 ) 
+            )
+    
+def TMat( *args ):
+    nargs   = len(args)
+    is_real = lambda r: isinstance( r, int   ) or isinstance( r, float )
+    
+    # Support for a list of lists
+    if nargs == 1:
+        mat   = args[0]                
+        nrows = len(mat)
+        ncols = 0
+        if nrows:
+            ncols = len( mat[0] )
+
+        # TMat< real >: Will return a numarray
+        if nrows == 0 or is_real( mat[0][0] ):
+            return numarray.array( mat )
+        content = reduce( lambda v1, v2: v1+v2, mat )
+
+
+    # Support for (length, width, content) tuples
+    elif nargs == 3:
+        nrows   = args[0]
+        ncols   = args[1]
+        content = args[2]
+        assert nrows*ncols == len(content)
+
+        # TMat< real >: Will return a numarray
+        if nrows==0 or is_real( content[0] ):
+            mat = []
+            i = j = 0
+            while i < nrows:
+                row = []
+                while j < ncols:
+                    element = content[i*ncols + j]
+                    assert is_real(element)
+                    row.append( element )
+                mat.append( row )
+            return numarray.array( mat )
+            
+    # TMat<T> where T is not real
+    return __TMat( nrows, ncols, content )
+
+        
 
 if __name__ == "__main__":
     print TMat(2, 2, ["allo", "mon", "petit", "coco"])

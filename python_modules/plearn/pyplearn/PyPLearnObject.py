@@ -1,149 +1,9 @@
-"""Tools for emulating PLearn objects.
+"""Class Emulating PLearn Objects in Python
 
-The string representation of a PyPLearnObject simply looks like calling the
-constructor for this object. So that::
-
-    obj = PyPLearnObject()
-    print obj
-
-    ### Will print
-    PyPLearnObject( )
-    
-and::
-
-    obj = PyPLearnObject( foo='bar' )
-    print obj
-
-    ### Will print
-    PyPLearnObject(
-        foo                            = "bar"
-        )
-    
-
-+++ The Defaults class:
-
-At init, the Defaults class is parsed and its attributes are used to set
-default attributes to the new instance. The current protocol is to
-instanciate any classes provided as attributes in Defaults or in
-overrides. The current version uses no arguments at instanciation.
-
-For instance, if::
-
-    class Dummy( PyPLearnObject ):
-        class Defaults:
-            hello = 'hello'
-then::
-
-    obj = Dummy()
-    print obj
-
-    ### Will print
-    Dummy(
-        hello                          = "hello"
-        )
-    
-
-Note that you could well derive from this default class and provide the
-derived class as an override to the embedded one. That is, if::
-
-    class SubDefaults( Dummy.Defaults ):
-        hi = 'hi'
-
-then::
-
-    obj = Dummy( Defaults = SubDefaults )
-    print obj
-
-    ### Will print
-    Dummy(
-        hello                          = "hello",
-        hi                             = "hi"
-        )
-    
-while::
-
-    obj = Dummy( Defaults = SubDefaults, hello = 'HELLO' )
-    print obj
-
-    ### Will print
-    Dummy(
-        hello                          = "HELLO",
-        hi                             = "hi"
-        )
-    
-The hello keyword argument in the above initialization is treated as an
-override to the default value of the hello attribute.
-
-The overrides may also contain attributes that have no default values::
-
-    obj = Dummy( Defaults = SubDefaults, kwarg = 'new_attr' )
-    print obj
-
-    ### Will print
-    Dummy(
-        hello                          = "hello",
-        hi                             = "hi",
-        kwarg                          = "new_attr"
-        )
-    
-
-Since instances of any PyPLearnObject's subclass may not be added new
-attributes after the instanciation, the above mecanism is a simple way to
-get an instance to have specific attributes. It is simpler than defining a
-Defaults subclass for a sinlge use::
-
-    ## Frozen test
-    try:
-        obj = Dummy() 
-        obj.add_member = "add"
-        return "obj._frozen is %s" % str(obj._frozen)
-        raise RuntimeError("Add succeeded on a frozen object!")
-    except AttributeError, e:
-        return "Add failed as expected."
-        
-    ## Will return        
-    Add failed as expected.
-An important method of the PyPLearnObject is the plearn_repr() method,
-which is recognized by the pyplearn._plearn_repr mecanism. The plearn
-representation is defined to be::
-
-    Classname(
-        plearn_option1 = option_value1,
-        plearn_option2 = option_value2,
-        ...
-        plearn_optionN = option_valueN
-        )
-
-where <Classname> is the name you give to the PyPLearnObject's
-subclass. That format is very alike the __str__ behavior except that the
-L{plearn_options()} are considered to be all attributes whose names do not
-start with an underscore. Those are said public, while any attribute
-starting with at least one underscore is considered internal (protected '_'
-or private '__')::
-
-    obj = Dummy( _internal1 = "internal",
-                 _internal2 = "very internal",
-                 public1    = [1, 2, 3],
-                 public2    = "public again"
-                 )
-
-    ## str(obj) returns
-    Dummy(
-        _internal1                     = "internal",
-        _internal2                     = "very internal",
-        hello                          = "hello",
-        public1                        =  [1, 2, 3],
-        public2                        = "public again"
-        )
-
-    ## While obj.plearn_repr() returns
-    Dummy(
-        hello                          = "hello",
-        public1                        =  [1, 2, 3],
-        public2                        = "public again"
-        )
+The class contained in this module is to be used as super class for almost
+any Python class emulating a PLearn cousin class.
 """
-__cvs_id__ = "$Id: PyPLearnObject.py,v 1.17 2005/05/31 14:32:58 dorionc Exp $"
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.18 2005/06/13 15:56:49 dorionc Exp $"
 
 from   AttributeManager            import AttributeManager
 from   plearn.utilities.toolkit    import no_none
@@ -153,10 +13,10 @@ import plearn.utilities.metaprog   as     metaprog
 __all__ = [ "PyPLearnObject", "PyPLearnList" ]
 
 class PyPLearnObject( AttributeManager ):
-    """Class from which to derive python objects that emulate PLearn ones.
+    """A class from which to derive python objects that emulate PLearn ones.
 
     This class provides any of its instances with a plearn_repr() method
-    recognized by the pyplearn._plearn_repr mecanism. The plearn
+    recognized by PyPLearn's plearn_repr mecanism. The plearn
     representation is defined to be::
 
         Classname(
@@ -199,13 +59,6 @@ class PyPLearnObject( AttributeManager ):
         return ilist
     instances = classmethod(instances)
 
-    def instance_index( cls, obj ):
-        for index,instance in enumerate(cls.__instances):
-            if obj is instance:
-                return index
-        raise ValueError, obj
-    instance_index = classmethod(instance_index)
-
     #
     # PyPLearnObject constructor
     #
@@ -231,24 +84,29 @@ class PyPLearnObject( AttributeManager ):
         self.__class__.__instances.append( self )
 
     def __str__( self ):
-        return plearn_repr( self, indent_level = 0 )
+        return self.plearn_repr( indent_level = 0 )
 
     def __repr__( self ):
-        return str(self)
+        return self.plearn_repr( indent_level = 0,
+                                 restricted_to_ploptions = False )
 
-    def plearn_repr( self, indent_level = 0 ):
+    def plearn_repr( self, indent_level = 0, restricted_to_ploptions = True ):
         """PLearn representation of this python object.
 
         Are considered as options any 'public' instance attributes.
         """
-        plearn_options = self.public_attribute_pairs()
-
+        if restricted_to_ploptions:
+            # PLearn options
+            attributes = self.public_attribute_pairs()
+        else:
+            attributes = self.attribute_pairs()
+                        
         def elem_format( elem ):
             k, v = elem
             return '%s = %s' % ( k, plearn_repr(v, indent_level+1) )
         
         return "%s(%s)" % ( self.classname(),
-                            format_list_elements( plearn_options, elem_format, indent_level+1 )
+                            format_list_elements( attributes, elem_format, indent_level+1 )
                             )
     
 
@@ -315,7 +173,7 @@ if __name__ == "__main__":
 
     ### Will print
     %s
-    """ % ( s, str(obj) )
+    """ % ( s, str(obj).replace('\n', (' '*4)+'\n') )
 
     class Dummy( PyPLearnObject ):
         class Defaults:
@@ -431,31 +289,3 @@ or private '__').
     vprint(tutorial)    
 
 
-##     class lop( default_roperators ):
-##         def test(cls):
-##             t = cls()
-##             print t + 10 
-##             print
-
-##             print 10 + t
-##             print
-##             try:
-##                 t << 10
-##                 print "SHOULD NOT WORK!!!"
-##             except Exception:
-##                 print "Failed as expected."
-
-##         test = classmethod(test)
-
-##         def __init__(self, val=0):
-##             default_roperators.__init__(self)
-##             self.val = val
-
-##         def __str__(self):
-##             return "lop(%d)"%self.val
-
-##         def __add__(self, val):
-##             print val
-##             return lop( self.val + val )
-
-##     lop.test()

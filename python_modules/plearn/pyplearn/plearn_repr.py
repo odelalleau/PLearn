@@ -23,7 +23,7 @@ def ref( refname ):
     return globals()[refname]
 
 def bindref( refname, obj ):
-    __deprecated("bind(refname, obj): assign and refer to a python object instead.")
+    __deprecated("bindref(refname, obj): assign and refer to a python object instead.")
     globals()[refname] = obj
     return obj
 
@@ -64,6 +64,12 @@ __pref_map = PRefMap()
 #  Main function
 #
 def plearn_repr( obj, indent_level = 0 ):    
+    """Returns a string that is a valid PLearn representation of I{obj}.
+
+    This function is somehow the core of the whole PyPLearn mecanism. It
+    maps most Python objects to a representation understood by the PLearn
+    serialization mecanism.
+    """ 
 
     # Classes may specify themselves as unreferenced.
     if hasattr( obj, '_unreferenced' ) and obj._unreferenced():
@@ -144,9 +150,18 @@ def __plearn_repr( obj, indent_level ):
 
     # Stands for TMat<real>
     elif isinstance( obj, numarray.numarraycore.NumArray ):
-        l,w      = obj.getshape()
-        listrepr = [ f for row in obj for f in row ]
-        return "%d %d %s" % ( l, w, listrepr )
+        shape = obj.getshape()
+        if len(shape) == 1:
+            listrepr = [ elem for elem in obj ]
+            return "%d %s" % ( shape[0], __plearn_repr(listrepr, indent_level+1) )
+
+        elif len(shape) == 2:
+            l,w = shape
+            listrepr = [ f for row in obj for f in row ]
+            return "%d %d %s" % ( l, w, __plearn_repr(listrepr, indent_level+1) )
+
+        raise ValueError( "Only numarrays of dimension 1 and 2 are understood by plearn_repr." )
+            
     
     elif obj is None:
         return "*0;"
@@ -170,10 +185,17 @@ if __name__ == "__main__":
                              )
     print toplevel2 
 
+    print
+    print "toplevel3"
     toplevel3 = pl.TopLevel( some_dict = { "a" : 1, "b" : 2 }, # should be another dict object
-                             str_list  = [ "str1", "str2" ]
+                             str_list  = [ "str1", "str2" ],
+                             _internal = '_INTERNAL_VALUE'                             
                              )
     print toplevel3
+
+    print
+    print "Internal view of toplevel3:"
+    print repr( toplevel3 )
 
     #
     #  Test deprecated
