@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ThresholdedKernel.cc,v 1.1 2005/06/13 18:36:16 tihocan Exp $ 
+   * $Id: ThresholdedKernel.cc,v 1.2 2005/06/13 19:35:09 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -108,8 +108,26 @@ void ThresholdedKernel::build_()
 // computeGramMatrix //
 ///////////////////////
 void ThresholdedKernel::computeGramMatrix(Mat K) const {
-  // Default = uses the Kernel implementation.
-  Kernel::computeGramMatrix(K);
+  source_kernel->computeGramMatrix(K);
+  int n = K.length();
+  ProgressBar* pb = 0;
+  if (report_progress) {
+    string message = "Thresholding Gram matrix from " + source_kernel->classname();
+    pb = new ProgressBar(message, n);
+  }
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      real& k_i_j = K(i,j);
+      if (method == "knn") {
+        if (k_i_j < knn_kernel_values[i] || k_i_j < knn_kernel_values[j])
+          k_i_j = threshold;
+      }
+    }
+    if (report_progress)
+      pb->update(i+1);
+  }
+  if (pb)
+    delete pb;
 }
 
 //////////////

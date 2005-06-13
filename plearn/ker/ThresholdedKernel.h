@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ThresholdedKernel.h,v 1.1 2005/06/13 18:36:16 tihocan Exp $ 
+   * $Id: ThresholdedKernel.h,v 1.2 2005/06/13 19:35:09 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -136,6 +136,9 @@ public:
   virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
   virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
   virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
+
+  //! Overridden for a more efficient implementation when the underlying kernel
+  //! has cached its Gram matrix.
   virtual void computeGramMatrix(Mat K) const;
 
   //! Overridden to precompute nearest neighbors in the dataset.
