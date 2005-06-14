@@ -1,4 +1,4 @@
-PTester(
+*4 -> PTester(
     dataset = *1 -> AutoVMatrix(
         inputsize = 2,
         specification = "data.amat",
