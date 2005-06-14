@@ -3,7 +3,7 @@
 The class contained in this module is to be used as super class for almost
 any Python class emulating a PLearn cousin class.
 """
-__cvs_id__ = "$Id: PyPLearnObject.py,v 1.19 2005/06/13 16:04:55 dorionc Exp $"
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.20 2005/06/14 18:08:23 dorionc Exp $"
 
 from   AttributeManager            import AttributeManager
 from   plearn.utilities.toolkit    import no_none
@@ -84,7 +84,11 @@ class PyPLearnObject( AttributeManager ):
         self.__class__.__instances.append( self )
 
     def __str__( self ):
-        return self.plearn_repr( indent_level = 0 )
+        """Calls plearn_repr global function over itself.""" 
+        # It is most important no to call this instance's plearn_repr
+        # method!!! Indeed, if we did so, we'd neglect to add the current
+        # instance in the representations map...
+        return plearn_repr( self, indent_level = 0 )
 
     def __repr__( self ):
         return self.plearn_repr( indent_level = 0,
@@ -153,6 +157,20 @@ class PyPLearnList( PyPLearnObject ):
 
     def to_list(self):
         return no_none([ elem for (name,elem) in self.iteritems() ])
+
+
+class PythonObject( PyPLearnObject ):
+    """Subclass of PyPLearnObject behaving like Python ones.
+
+    Entrusted with the features of PyPLearnObject, PythonObject instances
+    are configured to allow the same flexibility in regards of attributes
+    (since instances are not frozen) and are printed with a syntax closer
+    to raw Python.
+    """
+    _frozen = False
+    
+    def _unreferenced( self ):
+        return True
 
 ##########################################
 ### Embedded test/tutorial
