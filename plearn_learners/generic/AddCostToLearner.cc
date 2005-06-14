@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.23 2005/06/10 20:15:27 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.24 2005/06/14 14:43:18 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -115,7 +115,8 @@ void AddCostToLearner::declareOptions(OptionList& ol)
   declareOption(ol, "costs", &AddCostToLearner::costs, OptionBase::buildoption,
       "The costs to be added:\n"
       " - 'class_error': 1 if (t != o), 0 otherwise\n"
-      " - 'lift_output': used to compute the lift cost\n"
+      " - 'lift_output': to compute the lift cost (for the positive class)\n"
+      " - 'opposite_lift_output': to compute the lift cost (for the negative) class\n"
       " - 'cross_entropy': t*log(o) + (1-t)*log(1-o)\n"
       " - 'mse': the mean squared error (o - t)^2\n"
       " - 'squared_norm_reconstruction_error': | ||i||^2 - ||o||^2 |\n"
@@ -196,6 +197,9 @@ void AddCostToLearner::build_()
     if (c == "lift_output") {
       // Output should be positive.
       output_min = max(output_min, real(0));
+    } else if (c == "opposite_lift_output") {
+      // 1 - output should be positive.
+      output_max = min(output_max, real(1));
     } else if (c == "cross_entropy") {
       // Output should be in [0,1].
       output_min = max(output_min, real(0));
@@ -345,8 +349,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
   for (int i = 0; i < this->costs.length(); i++) {
     string c = this->costs[i];
     int ind_cost = i + n_original_costs;
-    if (c == "lift_output") {
-      // TODO Using a LiftOutputVariable would be better.
+    if (c == "lift_output" || c == "opposite_lift_output") {
 #ifdef BOUNDCHECK
       if (desired_target.length() != 1 && (sub_learner_output.length() != 1 || sub_learner_output.length() != 2)) {
         PLERROR("In AddCostToLearner::computeCostsFromOutputs - Lift cost is "
@@ -357,23 +360,39 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
 #endif
       {
         // The 'lift cost', which actually isn't a cost, is the output when
-        // the target is 1, and -output when the target is 0
+        // the target is 1, and -output when the target is 0.
+        // The 'opposite_lift cost' is 1-output when the target is 0, and
+        // -(1-output) when thte target is 1.
 #ifdef BOUNDCHECK
         if (desired_target[0] != 0 && desired_target[0] != 1) {
           // Invalid target.
-          PLERROR("In AddCostToLearner::computeCostsFromOutputs - Target isn't compatible with lift");
+          PLERROR("In AddCostToLearner::computeCostsFromOutputs - Target "
+                  "%f isn't compatible with lift", desired_target[0]);
         }
 #endif
+        bool opposite_lift = (c == "opposite_lift_output");
         if (desired_target[0] == 1) {
           if (sub_learner_output.length() == 1)
-            costs[ind_cost] = sub_learner_output[0];
+            if (opposite_lift)
+              costs[ind_cost] = sub_learner_output[0] - 1;
+            else
+              costs[ind_cost] = sub_learner_output[0];
           else
-            costs[ind_cost] = sub_learner_output[1] - sub_learner_output[0];
+            if (opposite_lift)
+              costs[ind_cost] = - (sub_learner_output[0] - sub_learner_output[1] + 1) / 2.0;
+            else
+              costs[ind_cost] = (sub_learner_output[1] - sub_learner_output[0] + 1) / 2.0;
         } else {
           if (sub_learner_output.length() == 1)
-            costs[ind_cost] = - sub_learner_output[0];
+            if (opposite_lift)
+              costs[ind_cost] = 1 - sub_learner_output[0];
+            else
+              costs[ind_cost] = - sub_learner_output[0];
           else
-            costs[ind_cost] = sub_learner_output[0] - sub_learner_output[1];
+            if (opposite_lift)
+              costs[ind_cost] = (sub_learner_output[0] - sub_learner_output[1] + 1) / 2.0;
+            else
+              costs[ind_cost] = - (sub_learner_output[1] - sub_learner_output[0] + 1) / 2.0;
         }
       }
     } else if (c == "cross_entropy") {
