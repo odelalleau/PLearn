@@ -89,6 +89,7 @@ class AttributeManager:
         ]
         
         def __init__(cls, name, bases, dict):
+            is_frozen   = cls._frozen
             cls._frozen = False
             
             super(type, cls).__init__(name, bases, dict) 
@@ -98,7 +99,7 @@ class AttributeManager:
                      and dict.has_key(lop_name) ):
                     setattr( cls, rop_name, dict[lop_name] )
                     
-            cls._frozen     = True
+            cls._frozen     = is_frozen
             cls.__setattr__ = frozen_public_interface(object.__setattr__)
 
             if hasattr(cls, '_subclasses'):
