@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformWeightPenalty.cc,v 1.9 2004/11/02 20:20:45 tihocan Exp $
+   * $Id: AffineTransformWeightPenalty.cc,v 1.10 2005/06/14 13:18:27 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,7 +47,9 @@ namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(AffineTransformWeightPenalty, "Affine transformation with Weight decay terms", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(AffineTransformWeightPenalty,
+    "Penalty associated with an affine transformation with weight decay terms",
+    "");
 
 void AffineTransformWeightPenalty::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
