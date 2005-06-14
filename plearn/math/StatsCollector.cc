@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.58 2005/06/10 20:12:30 tihocan Exp $
+   * $Id: StatsCollector.cc,v 1.59 2005/06/14 15:39:28 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -91,6 +91,8 @@ PLEARN_IMPLEMENT_OBJECT(
   "  - PRR          -  The pseudo robust range, i.e. PSEUDOQ(0.99) - PSEUDOQ(0.01)\n"
   "  - LIFT(f)      -  Lift computed at fraction f (0 <= f <= 1)\n"
   "  - NIPS_LIFT    -  Area under lift curve as computed in NIPS'2004 challenge\n"
+  "  - PRBP         -  Precision / Recall Breakeven Point = value of precision and recall\n"
+  "                    when they both are equal (computed for the positive class)\n"
   "  - DMODE        -  Discrete distribution first mode\n"
   "\n"
   "Notes:\n"
@@ -109,6 +111,7 @@ PLEARN_IMPLEMENT_OBJECT(
   "      that the formulas on the web site and in the python script are different).\n"
   "  - LIFT(f) actually returns - 100 * LIFT(f), so that lower means better, and it is\n"
   "    scaled by 100, as it is common practice.\n"
+  "  - The comments about the LIFT also apply to the BRPB statistic.\n"
   "  - The skewness and kurtosis are computed in terms of UNCENTERED ACCUMULATORS,\n"
   "    i.e. sum{(x-a)^n}, where a is the first observation encountered, and n is some integer\n"
   "  - EoverSKEWms is defined as EoverSKEW when the both the numerator and denominator\n"
@@ -817,7 +820,8 @@ real StatsCollector::getStat(const string& statname) const
     statistics["IQR"]         = STATFUN(&StatsCollector::iqr);
     statistics["PRR"]         = STATFUN(&StatsCollector::prr);
     statistics["NIPS_LIFT"]   = STATFUN(&StatsCollector::nips_lift);
-    statistics["DMODE"]   = STATFUN(&StatsCollector::dmode);
+    statistics["PRBP"]        = STATFUN(&StatsCollector::prbp);
+    statistics["DMODE"]       = STATFUN(&StatsCollector::dmode);
     init = true;
   }
 
@@ -838,7 +842,7 @@ real StatsCollector::getStat(const string& statname) const
     in.smartReadUntilNext(")", fraction_str);
     real fraction = toreal(fraction_str);
     int dummy_int;
-    return -100 * lift(int(floor(fraction * nnonmissing())), dummy_int);
+    return -100 * lift(int(round(fraction * nnonmissing())), dummy_int);
   }
   
   map<string,STATFUN>::iterator fun = statistics.find(statname);
@@ -912,12 +916,12 @@ real StatsCollector::lift(int k, int& n_pos_in_k, int n_pos_in_k_minus_1, real p
   if (n_pos_in_k_minus_1 < 0)
     // We are not given the number of positive examples in the first (k-1)
     // examples, thus we need to compute it ourselves.
-    n_pos_in_k = int(floor(PLearn::sum(sorted_values.subMat(0, 1, k, 1))));
+    n_pos_in_k = int(round(PLearn::sum(sorted_values.subMat(0, 1, k, 1))));
   else
     n_pos_in_k = n_pos_in_k_minus_1 + int(sorted_values(k - 1, 1));
   if (pos_fraction < 0)
     // We are not given the fraction of positive examples.
-    pos_fraction = int(floor(PLearn::sum(sorted_values.column(1)))) / real(sorted_values.length());
+    pos_fraction = int(round(PLearn::sum(sorted_values.column(1)))) / real(sorted_values.length());
   return real(n_pos_in_k) / (k * pos_fraction);
 }
 
@@ -931,7 +935,7 @@ real StatsCollector::nips_lift() const
   if (!sorted)
     sort_values_by_magnitude();
   real n_total = real(sorted_values.length());
-  real pos_fraction = int(floor(PLearn::sum(sorted_values.column(1)))) / n_total;
+  real pos_fraction = int(round(PLearn::sum(sorted_values.column(1)))) / n_total;
   int n_pos_in_k_minus_1 = -1;
   real result = 0;
   for (int k = 0; k < sorted_values.length(); k++)
@@ -942,6 +946,19 @@ real StatsCollector::nips_lift() const
   return result;
 }
 
+//////////
+// prbp //
+//////////
+real StatsCollector::prbp() const
+{
+  if (more_than_maxnvalues)
+    PLWARNING("In StatsCollector::prbp - You need to increase 'maxnvalues' to get an accurate statistic");
+  if (!sorted)
+    sort_values_by_magnitude();
+  int n_pos = int(round(PLearn::sum(sorted_values.column(1))));
+  int n_pos_at_prbp = int(round(PLearn::sum(sorted_values.subMat(0, 1, n_pos, 1))));
+  return - 100 * n_pos_at_prbp / real(n_pos);
+}
 
 
 ///////////

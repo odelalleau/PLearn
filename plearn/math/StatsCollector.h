@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.40 2005/04/13 19:44:13 larocheh Exp $
+   * $Id: StatsCollector.h,v 1.41 2005/06/14 15:39:28 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -183,7 +183,8 @@ public:
   //! of positive examples in the first (k-1) examples. If provided, pos_fraction
   //! must be the average fraction of positive examples in the dataset (= n+ / n).
   real lift(int k, int& n_pos_in_k, int n_pos_in_k_minus_1 = -1, real pos_fraction = -1) const;
-  real nips_lift() const;   //!< NIPS_LIFT statistic (see help)
+  real nips_lift() const;   //!< NIPS_LIFT statistic (see help).
+  real prbp() const;        //!< PRBP statistic (see help).
   //! discrete distribution mode
   real dmode() const;
   Vec dmodes() const;
