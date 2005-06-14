@@ -1,47 +1,64 @@
-__cvs_id__ = "$Id: modes.py,v 1.22 2005/06/13 19:29:14 dorionc Exp $"
+_cvs_id__ = "$Id: modes.py,v 1.23 2005/06/14 16:39:14 dorionc Exp $"
 
 import copy, shutil
 import plearn.utilities.version_control as version_control
 import plearn.utilities.ppath           as ppath
 import plearn.utilities.toolkit         as toolkit
 
-from Test                       import *
-from programs                   import *
-from routines                   import *
-from ModeAndOptionParser        import *
-from plearn.utilities.toolkit   import *
-from plearn.utilities.verbosity import *
+
+from Test                                 import *
+from programs                             import *
+from routines                             import *
+from plearn.utilities.toolkit             import *
+from plearn.utilities.verbosity           import *
+from plearn.utilities.ModeAndOptionParser import *
 
 current_mode    = None
 
-targets         = None
-options         = None
-
 __all__ = [
-    ## Functions
-    'add_supported_modes',
-
     ## Variables
-    'current_mode', 'targets', 'options'        
+    'current_mode'
     ]
 
-## All modes that are completed must, in the class declaration,
-## 
-supported_modes = [ 'add',
-                    ## 'commit',
-                    'compile', 'disable', 'enable',
-                    ## 'light_commit',
-                    'list',   'ignore',  'prune',   'results',
-                    'run',          'update',
-                    'vc_add'
-                    ]
+class PyTestMode( Mode ):
 
-def add_supported_modes( parser ):
-    for mode in supported_modes:
-        mode_instance = eval( "%s()" % mode )
-        parser.add_mode( mode_instance )
+    def target_options( cls, parser ):
+        target_options = OptionGroup( parser, "Target Options", "" )
 
-class PyTestMode(Mode):
+        target_options.add_option( "--all",
+                                    action="store_true", default=False,
+                                    help= "Run all tests found in subdirectories of directories in"
+                                    "plbranches. If some targets are provided, these will be ignored."
+                                    )
+
+        target_options.add_option( "-R", "--recursive",
+                                    action="store_true", default=False,
+                                    help = 'Process all targets recursively. If some target is '
+                                    'the subdirectory to another target, it will be ignored, i.e. '
+                                    'the whole hierarchy will be tested only once.'
+                                    ) 
+
+        target_options.add_option( '-n', '--test-name',
+                                    help='Restricts the current mode to the named test.',
+                                    default='' )
+
+        return target_options
+    target_options = classmethod( target_options )
+
+    def testing_options( cls, parser ):
+        testing_options = OptionGroup( parser, "Testing Options", "" )
+
+        testing_options.add_option( '-l', '--localhost',
+                                    action='store_true',
+                                    help='CURRENTLY ALWAYS TRUE!!!',
+                                    default=True )
+
+        testing_options.add_option( '--hosts', 
+                                    help='The maximum nuber of hosts to use simultaneously.',
+                                    default=10 )
+        
+        return testing_options
+    testing_options = classmethod( testing_options )
 
     ## Static method
     def build_tests(ignored_directories, directory, dirlist):
@@ -65,112 +82,56 @@ class PyTestMode(Mode):
                 vprint( "%s: %s." % (e.__class__.__name__,e) )
     build_tests = staticmethod(build_tests)
 
-    ## Class methods
-    def initialize(cls):
-        global targets
+    #
+    #  Class methods
+    #
+    def requires_config_parsing(cls):
+        return True
+    requires_config_parsing = classmethod(requires_config_parsing)
 
-        ## --all: Run all tests found in subdirectories of directories in
-        ## globalvars.all_roots test_suite branches. If some targets are
-        ## provided, these will be ignored.
-        if options.all:
-            targets           = plbranches  ## globalvars.all_roots
+    def option_groups( cls, parser ):
+        return []
+    option_groups = classmethod( option_groups )
+
+    #
+    #  Instance methods
+    #
+    def __init__( self, targets, options ):
+        Mode.__init__(self, targets, options)
+
+        # --all: Run all tests found in subdirectories of directories in
+        # plbranches. If some targets are provided, these will be ignored.
+        if hasattr( options, 'all' ) and options.all:
+            targets           = plbranches
             options.recursive = True
 
-        ## If no targets are provided, the cwd is the default target.
+        # If no targets are provided, the cwd is the default target.
         if len(targets) == 0:
             targets.append( os.getcwd() )
 
+        # Ensure paths to be absolute
         for i,target in enumerate(targets):
             targets[i] = os.path.abspath(target)
 
-        if options.recursive:
+        # Sanity check
+        if hasattr( options, 'recursive' ) and options.recursive:
             targets = ppath.exempt_of_subdirectories( targets )
-    initialize = classmethod(initialize)
 
-    def parse_config_files(cls):
-        ignored_directories = []
-        for target in targets:
-            if hasattr(options, 'recursive') and options.recursive:
-                os.path.walk(target, cls.build_tests, ignored_directories)
-            else:
-                cls.build_tests(ignored_directories, target, os.listdir(target))
-        if len(ignored_directories) > 0:
-            ignored = [ "The following directories (and their subdirectories) were ignored", "" ]
-            ignored.extend( [ '    '+ign for ign in ignored_directories ] )
-            vprint.highlight( ignored, highlighter='x' ) 
+        # Parses PyTest's config files if the mode requires it.
+        if self.requires_config_parsing():
+            ignored_directories = []
+            for target in targets:
+                if hasattr( options, 'recursive' ) and options.recursive:
+                    os.path.walk( target, cls.build_tests, ignored_directories )
+                else:
+                    self.build_tests( ignored_directories, target, os.listdir(target) )
 
-    parse_config_files = classmethod(parse_config_files)
+            if len(ignored_directories) > 0:
+                ignored = [ "The following directories (and their subdirectories) were ignored", "" ]
+                ignored.extend( [ '    '+ign for ign in ignored_directories ] )
+                vprint.highlight( ignored, highlighter='x' ) 
 
-           
-    ## Instance methods
-    def __init__(self):
-        Mode.__init__(self)
-
-    def option_groups(self, parser):
-        return []
-    
-    def procedure(self):
-        raise NotImplementedError
-
-    def start(self):
-        try:
-            self.procedure()
-        except PyTestUsageError, e: 
-            if options.traceback:
-                raise
-            else:
-                vprint( "%s: %s." % (e.__class__.__name__,e) )
-
-    def target_options(self, parser):
-        target_options = OptionGroup( parser, "Target Options", "" )
-
-        target_options.add_option( "--all",
-                                    action="store_true", default=False,
-                                    help= "Run all tests found in subdirectories of directories in "
-                                    "globalvars.all_roots test_suite branches. If some targets "
-                                    "are provided, these will be ignored. " 
-                                    )
-
-        target_options.add_option( "-R", "--recursive",
-                                    action="store_true", default=False,
-                                    help = 'Process all targets recursively. If some target is '
-                                    'the subdirectory to another target, it will be ignored, i.e. '
-                                    'the whole hierarchy will be tested only once.'
-                                    ) 
-
-        target_options.add_option( '-n', '--test-name',
-                                    help='Restricts the current mode to the named test.',
-                                    default='' )
-
-        return target_options
-
-
-##    def global_options(self, parser):
-##        global_options = OptionGroup( parser, "Global Options", "" )
-
-##        global_options.add_option( '--traceback',
-##                                    action="store_true",
-##                                    help="This flag triggers routines to report the traceback of "
-##                                    "PyTestUsageError. By default, only the class's name and meesage "
-##                                    "are reported.",
-##                                    default = False )
-        
-##         return global_options
-        
-    def testing_options(self, parser):
-        testing_options = OptionGroup( parser, "Testing Options", "" )
-
-        testing_options.add_option( '-l', '--localhost',
-                                    action='store_true',
-                                    help='CURRENTLY ALWAYS TRUE!!!',
-                                    default=True )
-
-        testing_options.add_option( '--hosts', 
-                                    help='The maximum nuber of hosts to use simultaneously.',
-                                    default=10 )
-        
-        return testing_options
-
+            
 
 class ignore(PyTestMode):
     """Causes the target hierarchy to be ignored by PyTest.
@@ -189,45 +150,20 @@ class ignore(PyTestMode):
         return False
     is_ignored = staticmethod(is_ignored)
 
-    def procedure(self):
-        global targets
-        if len(targets) == 0:
-            targets = [ os.getcwd() ]
-        else:
-            targets = ppath.exempt_of_subdirectories( targets )
+    def requires_config_parsing(cls):
+        return False
+    requires_config_parsing = classmethod(requires_config_parsing)
+
+    def __init__( self, targets, options ):
+        super( ignore, self ).__init__( targets, options )
 
         for target in targets:
             os.system("touch %s" % os.path.join( target, ignore.ignore_file ) )
-
             
 class list(PyTestMode):
     """Lists all tests within target directories."""
-    def procedure(self):
-        self.initialize()
-        self.parse_config_files()
-
-        formatted_string = lambda n,d: ( "%s Disabled: %s"
-                                         % (string.ljust(n, 25), string.ljust(str(d), 15))
-                                         )
-        for (family, tests) in Test._families_map.iteritems():
-            formatted_strings = []
-
-            for test in tests:
-                if options.disabled and not test.disabled:
-                    continue
-                if options.enabled  and test.disabled:
-                    continue
-                formatted_strings.append(
-                    formatted_string(test.name, test.disabled)
-                    )
-
-            if formatted_strings:
-                vprint( "In %s\n    %s\n"
-                        % ( family, string.join(formatted_strings, '\n    ') )
-                        )    
-        
-    def option_groups( self, parser ):
-        list_options = OptionGroup( parser, "Mode Specific Options --- %s" % self.classname(),
+    def option_groups( cls, parser ):
+        list_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
                                     "Available under list mode only." )
 
         list_options.add_option( "-d", "--disabled",
@@ -242,15 +178,46 @@ class list(PyTestMode):
                                  help= "The list provided will contain only enabled tests." 
                                  )
 
-        return [ self.target_options(parser), list_options ]
+        return [ cls.target_options(parser), list_options ]
+    option_groups = classmethod( option_groups )
+
+    #
+    #  Instance methods
+    #
+    def __init__( self, targets, options ):
+        super( list, self ).__init__( targets, options )
+
+        formatted_string = lambda n,d: ( "%s Disabled: %s"
+                                         % (string.ljust(n, 25), string.ljust(str(d), 15))
+                                         )
+        for (family, tests) in Test._families_map.iteritems():
+            formatted_strings = []
+
+            for test in tests:
+                if self.options.disabled and not test.disabled:
+                    continue
+                if self.options.enabled  and test.disabled:
+                    continue
+                formatted_strings.append(
+                    formatted_string(test.name, test.disabled)
+                    )
+
+            if formatted_strings:
+                vprint( "In %s\n    %s\n"
+                        % ( family, string.join(formatted_strings, '\n    ') )
+                        )    
+        
 
 
 class prune( PyTestMode ):
     """Removes all pytest directories within given test directories."""
-    def procedure(self):
-        self.initialize()
-        self.parse_config_files()
-
+    def option_groups( cls, parser ):
+        return [ cls.target_options(parser) ]
+    option_groups = classmethod( option_groups )
+    
+    def __init__( self, targets, options ):
+        super( prune, self ).__init__( targets, options )
+        
         answer = ""
         while not answer in ['yes', 'no']:
             answer = raw_input( "This mode removes all pytest directories within "
@@ -269,19 +236,11 @@ class prune( PyTestMode ):
                 os.chdir( family )
                 shutil.rmtree( "pytest" )
 
-    def option_groups(self, parser):
-        return [ self.target_options(parser) ]
-
 class vc_add( PyTestMode ):
     """Add PyTest's config file and results to version control."""
-    def procedure( self ):
-        global targets
-        if len(targets) == 0:
-            targets = [ os.getcwd() ]
-        else:
-            targets = ppath.exempt_of_subdirectories( targets )            
-        self.parse_config_files()
-
+    def __init__( self, targets, options ):
+        super( vc_add, self ).__init__( targets, options )
+        
         for (family, tests) in Test._families_map.iteritems():
             os.chdir( family )
 
@@ -299,10 +258,13 @@ class vc_add( PyTestMode ):
                     )
 
 class FamilyConfigMode( PyTestMode ):
-    def procedure(self):
-        self.initialize()
-        self.parse_config_files()
+    def option_groups( cls, parser ):
+        return [ cls.target_options(parser) ]
+    option_groups = classmethod( option_groups )
 
+    def __init__( self, targets, options ):
+        super( FamilyConfigMode, self ).__init__( targets, options )
+        
         for (family, tests) in Test._families_map.iteritems():
             config_path  = config_file_path( family )
             if os.path.exists( config_path ):
@@ -322,9 +284,6 @@ class FamilyConfigMode( PyTestMode ):
     def test_hook(self, test):
         raise NotImplementedError
     
-    def option_groups(self, parser):
-        return [ self.target_options(parser) ]
-
 class add( FamilyConfigMode ):
     """Adds a test in a given directory.
     
@@ -339,19 +298,20 @@ class add( FamilyConfigMode ):
     may also define own functions if complicated processing is
     requested before defining the test.
     """
-    
-    ## Static method
-    def build_tests(ignored_directories, directory, dirlist):
-        PyTestMode.build_tests(ignored_directories, directory, dirlist)
 
+    def __init__( self, targets, options ):
         test_name = options.test_name
         if test_name == '':
             test_name = 'MANDATORY_TEST_NAME' 
 
+        #
+        #  Caught by Test's instances management 
+        #
         Test( name    = test_name,
-              program = GlobalCompilableProgram( name = "plearn")  )        
-    build_tests = staticmethod(build_tests)
+              program = GlobalCompilableProgram( name = "plearn")  )
 
+        super( add, self ).__init__( targets, options )
+                
     def test_hook(self, test):
         pass
     
@@ -389,39 +349,44 @@ class update( FamilyConfigMode ):
         pass
     
 class RoutineBasedMode( PyTestMode ):
-    def initialize(cls):
-        PyTestMode.initialize()
-    initialize = classmethod(initialize)
+    #
+    #  Class methods
+    #
+    def description( cls ):
+        return toolkit.doc( cls.routine_type() )
+    description = classmethod( description )
     
-    def description(self):
-        return toolkit.doc( self.routine_type() )
+    def help( cls ):
+        return toolkit.short_doc( cls.routine_type() )
+    help = classmethod( help )
+    
+    def routine_type( cls, options=None ):
+        raise NotImplementedError
+    routine_type = classmethod( routine_type )
 
-    def dispatch_tests(self, test_instances):
-        for (test_name, test) in test_instances:
-            RoutineType = self.routine_type()
-            routine     = RoutineType( test = test )
-            routine.start()
+    def option_groups( cls, parser ):
+        return [ cls.target_options(parser),
+                 cls.testing_options(parser) ]
+    option_groups = classmethod( option_groups )
+    
+    #
+    #  Instance methods
+    #    
+    def __init__( self, targets, options ):
+        super( RoutineBasedMode, self ).__init__( targets, options )
 
-    def help(self):
-        return toolkit.short_doc( self.routine_type() )
-
-    def procedure(self):
-        self.initialize()
-        
         ## --traceback: This flag triggers routines to report the traceback of
         ## PyTestUsageError. By default, only the class's name and meesage
         ## are reported.
-        Routine._report_traceback = options.traceback
-
-        self.parse_config_files()
+        Routine._report_traceback = self.options.traceback
 
         test_instances = None
-        if options.test_name:
-            test_instances = [( options.test_name,
-                                Test._instances_map[ options.test_name ]
+        if self.options.test_name:
+            test_instances = [( self.options.test_name,
+                                Test._instances_map[ self.options.test_name ]
                                 )]
 
-            Test._statistics.restrict( options.test_name )
+            Test._statistics.restrict( self.options.test_name )
             
         else:
             test_instances = Test._instances_map.items()
@@ -429,31 +394,35 @@ class RoutineBasedMode( PyTestMode ):
         self.dispatch_tests( test_instances )
         print_stats()
 
-    def routine_type(self):
-        raise NotImplementedError
-    
-    def option_groups(self, parser):
-        return [ self.target_options(parser),
-                 self.testing_options(parser) ]
+    def dispatch_tests(self, test_instances):
+        for (test_name, test) in test_instances:
+            RoutineType = self.routine_type( self.options )
+            routine     = RoutineType( test = test )
+            routine.start()
+
 
 class compile( RoutineBasedMode ):
-    def routine_type(self): return CompilationRoutine
+    def routine_type( cls, options=None ): return CompilationRoutine
+    routine_type = classmethod( routine_type )
 
 class results( RoutineBasedMode ):
-    def routine_type(self): return ResultsCreationRoutine
+    def routine_type( cls, options=None ): return ResultsCreationRoutine
+    routine_type = classmethod( routine_type )
 
 class run( RoutineBasedMode ):    
-    def routine_type(self):
+    def routine_type(cls, options=None):
         if options:
             RunTestRoutine.no_compile_option = options.no_compile
         return RunTestRoutine
+    routine_type = classmethod( routine_type )
 
-    def option_groups(self, parser):
-        ogroups = RoutineBasedMode.option_groups(self, parser)
+    def option_groups( cls, parser ):
+        ogroups = RoutineBasedMode.option_groups( parser )
 
         ogroups[1].add_option( '--no-compile', default=False,
                                action="store_true",
                                help='Any program compilation is bypassed.' )
 
-        return ogroups
-
+        return ogroups        
+    option_groups = classmethod( option_groups )
+    

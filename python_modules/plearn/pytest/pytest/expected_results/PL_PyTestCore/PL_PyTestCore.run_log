@@ -1,0 +1,52 @@
+#
+#  pytest
+#
+
+#
+#  pytest -h
+#
+
+#
+#  pytest add -h
+#
+
+#
+#  pytest compile -h
+#
+
+#
+#  pytest disable -h
+#
+
+#
+#  pytest enable -h
+#
+
+#
+#  pytest ignore -h
+#
+
+#
+#  pytest list -h
+#
+
+#
+#  pytest prune -h
+#
+
+#
+#  pytest results -h
+#
+
+#
+#  pytest run -h
+#
+
+#
+#  pytest update -h
+#
+
+#
+#  pytest vc_add -h
+#
+

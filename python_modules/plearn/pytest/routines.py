@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: routines.py,v 1.3 2005/06/13 19:29:14 dorionc Exp $"
+__cvs_id__ = "$Id: routines.py,v 1.4 2005/06/14 16:39:14 dorionc Exp $"
 
 import os 
 import plearn.utilities.toolkit as toolkit
@@ -148,6 +148,12 @@ class ResultsRelatedRoutine(Routine):
     
     no_compile_option = False
 
+    def clean_cwd( self ):
+        dirlist = os.listdir( os.getcwd() )
+        for fname in dirlist:
+            if fname.endswith( '.pyc' ):
+                os.remove( fname )
+
     def compiled(self):    
         if not self.__class__.no_compile_option:
             compilation_succeeded = self.compile_program()
@@ -176,6 +182,7 @@ class ResultsRelatedRoutine(Routine):
         cwd = os.getcwd()
         os.chdir( test_results )
         os.system(run_command)
+        self.clean_cwd( )
         os.chdir( cwd )
 
         ## Set the status and quit

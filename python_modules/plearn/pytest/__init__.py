@@ -1,11 +1,12 @@
-__cvs_id__ = "$Id: __init__.py,v 1.16 2005/03/11 02:49:05 dorionc Exp $"
+__cvs_id__ = "$Id: __init__.py,v 1.17 2005/06/14 16:39:14 dorionc Exp $"
                             
 ### The versionning tools are now properly enabled.
 import os, sys, time
 import modes
-from   plearn.utilities.verbosity    import *
-from   ModeAndOptionParser           import ModeAndOptionParser, OptionGroup
-import plearn.utilities.toolkit      as     toolkit
+from PyTestCore                           import *
+from plearn.utilities                     import toolkit
+from plearn.utilities.verbosity           import *
+from plearn.utilities.ModeAndOptionParser import Mode, ModeAndOptionParser, OptionGroup
 
 __all__ = [ "main"
             ]
@@ -32,11 +33,11 @@ def mail():
     # "Header" of the mail
     sendmail.tochild.write("From: PyTest -compilePLL -mail\n")
     sendmail.tochild.write("Subject: PyTest -- List of files that did not compile\n")
-    sendmail.tochild.write("To: " + modes.options.mail + "\n")
+    sendmail.tochild.write("To: " + options.mail + "\n")
 
     # Changing the mode of the savelog_file from write to read
     savelog_file.close()
-    savelog_file = open(modes.options.savelog, "r")
+    savelog_file = open(options.savelog, "r")
 
     # "Body" of the mail
     sendmail.tochild.write(savelog_file.read() + "\n")
@@ -45,7 +46,7 @@ def mail():
     # "Closing" the mail mode
     sendmail.tochild.close()
     savelog_file.close()
-    modes.options.savelog = None # that way the file isn't closed twice
+    options.savelog = None # that way the file isn't closed twice
     #                      # ( see end of pytest() )
 
 ###################################################################################
@@ -69,26 +70,24 @@ def main( pytest_version ):
     parser.add_option( '--traceback',
                        action="store_true",
                        help="This flag triggers routines to report the traceback of "
-                       "PyTestUsageError. By default, only the class's name and meesage "
-                       "are reported.",
+                       "PyTestUsageError or KeyboardInterrupt. By default, "
+                       "only the test's name and message are reported.",
                        default = False )
     
-    modes.add_supported_modes( parser )
-    
-    modes.options, modes.targets = parser.parse_args()
-    modes.current_mode           = parser.selected_mode
+    options, targets   = parser.parse_args()
+    modes.current_mode = parser.selected_mode
     
     ############################################################
     ################## Some preprocessing ######################
     
     ## Managing the verbosity option.
-    if hasattr(modes.options, 'verbosity'):        
-        set_vprint( VerbosityPrint( verbosity        = modes.options.verbosity,
+    if hasattr( options, 'verbosity' ):        
+        set_vprint( VerbosityPrint( verbosity        = options.verbosity,
                                     default_priority = 0
                                     ) )
     
-    if ( hasattr(modes.options, 'mail')
-         and modes.options.mail is not None ):
+    if ( hasattr( options, 'mail' )
+         and options.mail is not None ):
         ## vprint.keep_output()
         raise NotImplementedError
     
@@ -99,13 +98,20 @@ def main( pytest_version ):
     
     ## Program name and copyrights with version number
     dynamic_version_header(  pytest_version  )
-    
-##     try:
-    modes.current_mode.start()    
-            
-##     except KeyboardInterrupt, kex:
-##         print "Interupted by user."
-##         sys.exit()
+
+    try:
+        modes.current_mode( targets, options )    
+    except PyTestUsageError, e: 
+        if options.traceback:
+            raise
+        else:
+            vprint( "%s: %s." % (e.__class__.__name__,e) )
+    except KeyboardInterrupt, kex:
+        if options.traceback:
+            raise
+        else:
+            "Interupted by user."
+            sys.exit()
     
     vprint("\nQuitting PyTest.\n", 1)
     
@@ -115,4 +121,3 @@ def main( pytest_version ):
     ##         print k
     ##     raise NotImplementedError('mail not implemented yet')
    
-    
