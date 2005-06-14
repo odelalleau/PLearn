@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.43 2005/05/25 19:04:48 dorionc Exp $
+   * $Id: getDataSet.cc,v 1.44 2005/06/14 20:27:05 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -164,7 +164,7 @@ VMat getDataSet(const string& datasetstring, const string& alias)
   string dataset;
   vector<string> datasetArgs;
   extractDataSetNameAndArgs(datasetstring, dataset, datasetArgs);
-  
+
   VMat vm;
   if (isfile(dataset + ".sdb")) // it's an sdb (without the .sdb extension...)
     {
@@ -189,7 +189,7 @@ VMat getDataSet(const string& datasetstring, const string& alias)
               split_on_first(*it, "=", arg_name, arg_value);
               vars[arg_name] = arg_value;
             }
-            
+
             string code = readFileAndMacroProcess(dataset, vars);
             if (removeblanks(code)[0] == '<') // old xml-like format 
               vm = new VVMatrix(dataset);

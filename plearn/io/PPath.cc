@@ -33,18 +33,20 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.23 2005/05/04 22:08:04 plearner Exp $ 
+   * $Id: PPath.cc,v 1.24 2005/06/14 20:28:36 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
 
 /*! \file PPath.cc */
 
-#include "PPath.h"
 #include <ctype.h>
-#include <plearn/io/PStream.h>
-#include <plearn/io/openFile.h>
-#include <plearn/io/pl_log.h>
+
+#include "PPath.h"
+#include "PStream.h"
+#include "openFile.h"
+#include "pl_log.h"
+#include "fileutils.h"
 
 ///////////////////////  
 // DOS SETTINGS
@@ -238,32 +240,43 @@ const map<string, PPath>& PPath::metaprotocolToMetapath()
                                                PPath::home() / ".plearn" );    
 
     PPath   config_file_path = plearn_configs / "ppath.config";
-    PStream ppath_config     = openFile(config_file_path, PStream::plearn_ascii );
 
-    string  next_metaprotocol;
-    PPath   next_metapath;    
-    while (ppath_config) {
-      ppath_config >> next_metaprotocol >> next_metapath;
-      if (next_metaprotocol.empty())
-        if (ppath_config)
-          PLERROR("In PPath::metaprotocolToMetapath - Error while parsing PPath config file (%s): read "
-                  "a blank line before reaching the end of the file",
-                   config_file_path.absolute().c_str());
-        else
-          // Nothing left to read.
-          break;
-      // Make sure we managed to read the metapath associated with the metaprotocol.
-      if (next_metapath.empty())
-        PLERROR("In PPath::metaprotocolToMetapath - Error in PPath config file (%s): could not read the "
-                "path associated with '%s'",
-                 config_file_path.absolute().c_str(), next_metaprotocol.c_str());
+    if (isfile(config_file_path))
+    {
+      PStream ppath_config     = openFile(config_file_path, PStream::plearn_ascii );
 
-      // For the sake of simplicity, we do not allow a metapath to end with
-      // a slash unless it is a root directory.
-      next_metapath.removeTrailingSlash();
-      
-      metaprotocol_to_metapath[ next_metaprotocol  ]  = next_metapath;
-    }       
+      string  next_metaprotocol;
+      PPath   next_metapath;    
+      while (ppath_config) {
+        ppath_config >> next_metaprotocol >> next_metapath;
+        if (next_metaprotocol.empty())
+          if (ppath_config)
+            PLERROR("In PPath::metaprotocolToMetapath - Error while parsing PPath config file (%s): read "
+                    "a blank line before reaching the end of the file",
+                    config_file_path.absolute().c_str());
+          else
+            // Nothing left to read.
+            break;
+        // Make sure we managed to read the metapath associated with the metaprotocol.
+        if (next_metapath.empty())
+          PLERROR("In PPath::metaprotocolToMetapath - Error in PPath config file (%s): could not read the "
+                  "path associated with '%s'",
+                  config_file_path.absolute().c_str(), next_metaprotocol.c_str());
+        
+        // For the sake of simplicity, we do not allow a metapath to end with
+        // a slash unless it is a root directory.
+        next_metapath.removeTrailingSlash();
+        
+        metaprotocol_to_metapath[ next_metaprotocol  ] = next_metapath;
+      }       
+    }
+    else
+    {
+      // Default ppath settings
+      metaprotocol_to_metapath["HOME"] = "${HOME}";
+      metaprotocol_to_metapath["PLEARNDIR"] = "HOME:PLearn";
+      metaprotocol_to_metapath["PLEARN_LIBDIR"] = "PLEARNDIR:external_libs";
+    }
   }
 
   return metaprotocol_to_metapath;
