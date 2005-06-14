@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.59 2005/06/14 15:39:28 tihocan Exp $
+   * $Id: StatsCollector.cc,v 1.60 2005/06/14 17:18:28 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,6 +45,7 @@
 #include "pl_erf.h"
 #include <assert.h>
 #include <plearn/io/openString.h>
+#include <plearn/math/random.h>   //!< For shuffleRows().
 
 
 namespace PLearn {
@@ -1011,6 +1012,10 @@ void StatsCollector::sort_values_by_magnitude() const
     for (int i = 0; i < it->second.n; i++)
       sorted_values.appendRow(to_add);
   }
+  // The STL map may have somehow performed some kind of sort, which could
+  // lead to a very specific sort when some predictions are equal (instead of
+  // a random one). Thus we make sure everything is shuffled first.
+  shuffleRows(sorted_values);
   sortRows(sorted_values, 0, false); // Sort by decreasing order of first column.
   sorted = true;
 }
