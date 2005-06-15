@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.28 2005/04/14 13:27:12 tihocan Exp $
+   * $Id: StackedLearner.cc,v 1.29 2005/06/15 15:56:05 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -250,7 +250,10 @@ void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
         }
       }
       if (combiner)
-        combiner->setTrainingSet(new PLearnerOutputVMatrix(upper_trainset, base_learners, put_raw_input),call_forget);
+        if(share_learner)
+          combiner->setTrainingSet(new PLearnerOutputVMatrix(new SeparateInputVMatrix(upper_trainset,nsep), base_learners, put_raw_input),call_forget);
+        else
+          combiner->setTrainingSet(new PLearnerOutputVMatrix(upper_trainset, base_learners, put_raw_input),call_forget);
     } else {
       PLERROR("In StackedLearner::setTrainingSet - The splitter provided should only return one split");
     }
@@ -270,7 +273,10 @@ void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
       }
     }
     if (combiner)
-      combiner->setTrainingSet(new PLearnerOutputVMatrix(training_set, base_learners, put_raw_input),call_forget);
+      if(share_learner)
+        combiner->setTrainingSet(new PLearnerOutputVMatrix(new SeparateInputVMatrix(training_set,nsep), base_learners, put_raw_input),call_forget);
+      else
+        combiner->setTrainingSet(new PLearnerOutputVMatrix(training_set, base_learners, put_raw_input),call_forget);
   }
   if (base_train_splitter) {
     for (int i=0;i<base_learners.length();i++) {
@@ -290,15 +296,27 @@ void StackedLearner::train()
   {
     if (train_base_learners)
     {
-      for (int i=0;i<base_learners.length();i++)
+      if(stage == 0)
       {
-        PP<VecStatsCollector> stats = new VecStatsCollector();
-        base_learners[i]->setTrainStatsCollector(stats);
-        if (expdir!="")
-          base_learners[i]->setExperimentDirectory( expdir / ("Base"+tostring(i)) );
-        base_learners[i]->train();
-        stats->finalize(); // WE COULD OPTIONALLY SAVE THEM AS WELL!
+        for (int i=0;i<base_learners.length();i++)
+        {
+          PP<VecStatsCollector> stats = new VecStatsCollector();
+          base_learners[i]->setTrainStatsCollector(stats);
+          if (expdir!="")
+            base_learners[i]->setExperimentDirectory( expdir / ("Base"+tostring(i)) );
+          base_learners[i]->nstages = nstages;
+          base_learners[i]->train();
+          stats->finalize(); // WE COULD OPTIONALLY SAVE THEM AS WELL!
+        }
+        stage++;
       }
+      else
+        for (int i=0;i<base_learners.length();i++)
+        {
+          base_learners[i]->nstages = nstages;
+          base_learners[i]->train();
+        }
+        
     }
     if (combiner)
     {
