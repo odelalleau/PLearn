@@ -39,13 +39,15 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.51 2005/06/01 19:53:40 plearner Exp $
+   * $Id: PLearner.cc,v 1.52 2005/06/15 14:44:24 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
 #include <plearn/base/stringutils.h>
 #include <plearn/io/fileutils.h>
 #include <plearn/vmat/FileVMatrix.h>
+#include <plearn/misc/PLearnService.h>
+#include <plearn/misc/RemotePLearnServer.h>
 
 namespace PLearn {
 using namespace std;
@@ -58,11 +60,12 @@ PLearner::PLearner()
   stage(0), nstages(1),
   report_progress(true),
   verbosity(1),
+  nservers(0),
   inputsize_(-1),
   targetsize_(-1),
   weightsize_(-1),
   n_examples(-1),
-  forget_when_training_set_changes(false)
+  forget_when_training_set_changes(false)  
 {}
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PLearner,
@@ -142,6 +145,9 @@ void PLearner::declareOptions(OptionList& ol)
                 "If >0 may write some info on the steps performed along the way.\n"
                 "The level of details written should depend on this value.");
 
+  declareOption(ol, "nservers", &PLearner::nservers, OptionBase::buildoption, 
+                "Max number of computation servers to use in parallel with the main process.\n"
+                "If <=0 no parallelization will occur at this level.\n");
   inherited::declareOptions(ol);
 }
 
@@ -283,13 +289,37 @@ void PLearner::computeCostsOnly(const Vec& input, const Vec& target,
 }
 
 bool PLearner::computeConfidenceFromOutput(
-  const Vec&, const Vec& output, real,
-  TVec< pair<real,real> >& intervals) const
+   const Vec& input, const Vec& output,
+   real probability,
+   TVec< pair<real,real> >& intervals) const
 {
   // Default version does not know how to compute confidence intervals
   intervals.resize(output.size());
   intervals.fill(std::make_pair(MISSING_VALUE,MISSING_VALUE));  
   return false;
+}
+
+void PLearner::batchComputeOutputAndConfidence(VMat inputs, real probability, VMat outputs_and_confidence) const
+{
+  Vec input(inputsize());
+  Vec output(outputsize());
+  int outsize = outputsize();
+  Vec output_and_confidence(3*outsize);
+  TVec< pair<real,real> > intervals;
+  int l = inputs.length();
+  for(int i=0; i<l; i++)
+    {
+      inputs->getRow(i,input);
+      computeOutput(input,output);
+      computeConfidenceFromOutput(input,output,probability,intervals);
+      for(int j=0; j<outsize; j++)
+        {
+          output_and_confidence[3*j] = output[j];
+          output_and_confidence[3*j+1] = intervals[j].first;
+          output_and_confidence[3*j+2] = intervals[j].second;
+        }
+      outputs_and_confidence->putOrAppendRow(i,output_and_confidence);
+    }
 }
 
 /////////
@@ -298,27 +328,77 @@ bool PLearner::computeConfidenceFromOutput(
 void PLearner::use(VMat testset, VMat outputs) const
 {
   int l = testset.length();
-  Vec input;
-  Vec target;
-  real weight;
-  Vec output(outputsize());
+  int w = testset.width();
 
-  ProgressBar* pb = NULL;
-  if(report_progress)
-    pb = new ProgressBar("Using learner",l);
+  if(nservers<=0 || PLearnService::instance().availableServers()<=0 ) 
+    { // sequential code      
+      Vec input;
+      Vec target;
+      real weight;
+      Vec output(outputsize());
 
-  for(int i=0; i<l; i++)
-    {
-      testset.getExample(i, input, target, weight);
-      computeOutput(input, output);
-      outputs->putOrAppendRow(i,output);
+      ProgressBar* pb = NULL;
+      if(report_progress)
+        pb = new ProgressBar("Using learner",l);
+
+      for(int i=0; i<l; i++)
+        {
+          testset.getExample(i, input, target, weight);
+          computeOutput(input, output);
+          cerr << "i = " << i << endl;
+          outputs->putOrAppendRow(i,output);
+          if(pb)
+            pb->update(i);
+        }
+
       if(pb)
-        pb->update(i);
+        delete pb;
     }
-
-  if(pb)
-    delete pb;
+  else // parallel code
+    {
+      PLearnService& service = PLearnService::instance();
+      TVec< PP<RemotePLearnServer> > servers;
+      while(servers.length()<nservers)
+        {
+          PP<RemotePLearnServer> serv = service.reserveServer();          
+          if(serv.isNull())
+            break;
+          servers.append(serv);
+        }
+      int n = servers.length(); // number of allocated servers
+      for(int k=0; k<n; k++)  // send this object with objid 0
+        servers[k]->newObject(0, *this);
+      int chunksize = l/n;
+      if(chunksize*n<l)
+        ++chunksize;
+      Mat chunk(chunksize,w);
+      int i=0;
+      for(int k=0; k<n; k++)
+        {
+          int actualchunksize = chunksize;
+          if(i+actualchunksize>l)
+            actualchunksize = l-i;
+          chunk.resize(actualchunksize,w);          
+          testset->getMat(i, 0, chunk);
+          VMat inputs(chunk);
+          inputs->copySizesFrom(testset);
+          servers[k]->callMethod(0,"use2",inputs);
+          i += chunksize;
+        }
+      Mat outmat;
+      i=0;
+      for(int k=0; k<n; k++)
+        {
+          outmat.resize(0,0);
+          servers[k]->getResults(outmat);
+          servers[k] = 0; // free the server
+          for(int ii=0; ii<outmat.length(); ii++)
+            outputs->putOrAppendRow(i++,outmat(ii));
+        }
+    }
 }
+
+
 
 TVec<string> PLearner::getOutputNames() const
 {
@@ -470,9 +550,26 @@ void PLearner::call(const string& methodname, int nargs, PStream& io)
       VMat inputs;
       string output_fname;
       io >> inputs >> output_fname;
+      cerr << "AAAAA" << endl;
       VMat outputs = new FileVMatrix(output_fname, inputs.length(), outputsize());
+      cerr << "BBBBB" << endl;
       use(inputs,outputs);
+      cerr << "CCCCC" << endl;
       prepareToSendResults(io, 0);
+      cerr << "DDDDD" << endl;
+      io.flush();      
+      cerr << "EEEEE" << endl;
+    }
+  else if(methodname=="use2") // use inputs_vmat output_pmat_fname
+    {
+      if(nargs!=2) PLERROR("PLearner remote method use requires 2 argument");
+      VMat inputs;
+      string output_fname;
+      io >> inputs;
+      Mat outputs(inputs.length(),outputsize());
+      use(inputs,outputs);
+      prepareToSendResults(io, 1);
+      io << outputs;
       io.flush();      
     }
   else if(methodname=="computeOutputAndCosts")
@@ -522,6 +619,27 @@ void PLearner::call(const string& methodname, int nargs, PStream& io)
       io << ok << intervals;
       io.flush();
     }
+  else if(methodname=="batchComputeOutputAndConfidencePMat") // input_vmat probability result_pmat_filename
+    {
+      if(nargs!=3) 
+        PLERROR("PLearner remote method batchComputeOutputAndConfidencePMat takes 3 arguments:\n"
+                "input_vmat, probability, result_pmat_filename");
+      VMat inputs;
+      real probability;
+      string pmat_fname;
+      io >> inputs >> probability >> pmat_fname;
+      TVec<string> fieldnames;
+      for(int j=0; j<outputsize(); j++)
+        {
+          fieldnames.append("output_"+tostring2(j));
+          fieldnames.append("low_"+tostring2(j));
+          fieldnames.append("high_"+tostring2(j));
+        }
+      VMat out_and_conf = new FileVMatrix(pmat_fname,inputs.length(),fieldnames);
+      batchComputeOutputAndConfidence(inputs, probability, out_and_conf);
+      prepareToSendResults(io,0);
+      io.flush();
+    }  
   else if(methodname=="getTestCostNames")
     {
       if(nargs!=0) PLERROR("PLearner remote method getTestCostNames takes 0 arguments");
@@ -540,6 +658,7 @@ void PLearner::call(const string& methodname, int nargs, PStream& io)
     }
   else
     inherited::call(methodname, nargs, io);
+  cerr << "End of call " << methodname << endl;
 }
 
 

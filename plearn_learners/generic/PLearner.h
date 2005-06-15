@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.37 2005/06/01 19:53:41 plearner Exp $
+   * $Id: PLearner.h,v 1.38 2005/06/15 14:44:24 plearner Exp $
    ******************************************************* */
 
 
@@ -101,6 +101,8 @@ public:
 
   bool report_progress; //!< should progress in learning and testing be reported in a ProgressBar
   int verbosity; //! Level of verbosity. If 0, should not write anything on cerr. If >0 may write some info on the steps performed (the amount of detail written depends on the value of this option).
+
+  int nservers; //!< max number of computation servers to use in parallel with the main process
 
 protected:
 
@@ -304,7 +306,11 @@ public:
   bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
                                    real probability,
                                    TVec< pair<real,real> >& intervals) const;
-  
+
+  //! Repeatedly calls computeOutput and computeConfidenceFromOutput with the rows of inputs.
+  //! Writes outputs_and_confidence rows (as a series of triples (output, low, high), one for each output)
+  void batchComputeOutputAndConfidence(VMat inputs, real probability, VMat outputs_and_confidence) const;
+
   //! Computes outputs for the input part of testset.
   //! testset is not required to contain a target part.
   //! The default version repeatedly calls computeOutput
