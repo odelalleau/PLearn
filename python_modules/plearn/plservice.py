@@ -51,6 +51,7 @@ class RemotePLearnServer:
         self.callFunction("binary")
         self.callFunction("implicit_storage",True)
         self.dbg_dump = False
+        self.closed = False
 
     def new(self, objectspec):
         """
@@ -180,10 +181,16 @@ class RemotePLearnServer:
             return results
 
     def close(self):
-        self.io.write('!Q')
-        self.io.flush()
+        if not self.closed:
+            self.io.write('!Q')
+            self.io.flush()
+            print 'Python os.wait()'
+            os.wait()
+            self.closed = True
+                
+    def __del__(self):
+        self.close()
         
-
 class RemotePObject:
     
     def __init__(self, serv, objid):
