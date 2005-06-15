@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnServer.cc,v 1.9 2005/06/15 14:41:13 plearner Exp $ 
+   * $Id: PLearnServer.cc,v 1.10 2005/06/15 21:15:07 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -78,9 +78,7 @@ using namespace std;
       }
     else if(name=="implicit_storage") // Takes a single boolean parameter
       {
-        // cerr << "Bebore implicit_storage: " << (io.implicit_storage?'T':'F') << endl;
         io >> io.implicit_storage;
-        // cerr << "After implicit_storage: " << (io.implicit_storage?'T':'F') << endl;
         prepareToSendResults(io,0);
       }
     else
@@ -137,13 +135,11 @@ using namespace std;
         
         if(c==EOF)
           {
-            cerr << "Read EOF: quitting" << endl;
+            // cerr << "Read EOF: quitting" << endl;
             return;
           }
         int command = io.get();
         
-        cerr << "Received command: " << char(command) << endl;
-
         try 
           {            
             switch(command)
@@ -203,7 +199,7 @@ using namespace std;
                 break;
 
               case 'Q': // quit
-                cerr << "Quitting" << endl;
+                // cerr << "Quitting" << endl;
                 return;
 
               default:
@@ -212,14 +208,36 @@ using namespace std;
           }
         catch(const PLearnError& e)
           {
-            cerr << "PLearnServer caught PLearnError \"" << e.message() << '"' << endl;
-            io.write("!E ");
-            io << e.message() << endl;
+            // cerr << "PLearnServer caught PLearnError \"" << e.message() << '"' << endl;
+            try 
+              {
+              io.write("!E ");
+              io << e.message() << endl;
+              }
+            catch(const PLearnError& e2)
+              {
+                perr << "Error: " << e2.message() << endl
+                     << " while trying to send (to io) error: " << e.message() << endl
+                     << " Probably due to peer closing before we finished sending." << endl
+                     << " (If, as is likely, what we were sending were some remaining blanks" << endl
+                     << " no need to worry...)." << endl;
+              }
           }
         catch (...) 
           {
-            io.write("!E ");
-            io << "Unknown exception" << endl;
+            try
+              {
+                io.write("!E ");
+                io << "Unknown exception" << endl;
+              }
+            catch(const PLearnError& e2)
+              {
+                perr << "Error " << e2.message() << endl
+                     << " while trying to send (to io) notification of unknown exception." << endl
+                     << " Probably due to peer closing before we finished sending." << endl
+                     << " (If, as is likely, what we were sending were some remaining blanks" << endl
+                     << " no need to worry...)." << endl;
+              }
           }
       }
     perr << "Exiting PLearnServer::run()" << endl;
