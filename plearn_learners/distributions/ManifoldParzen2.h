@@ -47,6 +47,15 @@ class ManifoldParzen2 : public GaussMix
 private:
 
   typedef GaussMix inherited;
+ 
+  Vec eigenval_copy;
+  mutable Vec row;
+  mutable Vec t_row;
+  mutable VMat reference_set;
+  mutable TMat<real> mu_temp;
+  mutable TVec<real> temp_eigv;
+
+  int find_nearest_neighbor(VMat data, Vec x) const;
 
 public:
 
@@ -115,6 +124,15 @@ public:
   // NOTE : the function assumes that the training_set has only input columns ! (width = dimension of feature space)
   virtual void train(); 
 
+    //! Produce outputs according to what is specified in outputs_def.
+  virtual void computeOutput(const Vec& input, Vec& output) const;
+
+  //! Returned value depends on outputs_def.
+  virtual int outputsize() const;
+
+  real evaluate(const Vec x1,const Vec x2,real scale=1);
+  
+  real evaluate_i_j(int i, int j,real scale=1);
 };
 
 // Declares a few other classes and functions related to this class

@@ -41,6 +41,8 @@
 #include <plearn/math/TMat.h>
 #include <plearn/math/TMat_maths.h>
 #include <plearn/math/BottomNI.h>
+#include <plearn/vmat/VMat_computeNearestNeighbors.h>
+#include <plearn/vmat/MemoryVMatrix.h>
 
 namespace PLearn {
 
@@ -55,7 +57,7 @@ PLEARN_IMPLEMENT_OBJECT(ManifoldParzen2,
 // ManifoldParzen2 //
 /////////////////////
 ManifoldParzen2::ManifoldParzen2()
-: nneighbors(4),
+  : nneighbors(4),
   ncomponents(1),
   use_last_eigenval(true),
   scale_factor(1),
@@ -208,7 +210,9 @@ void ManifoldParzen2::train()
   Mat trainset(train_set);
   int l = train_set.length();
   int w = train_set.width();
-  
+  eigenval_copy.resize(ncomponents+1);
+  row.resize(w);
+
   L = l;
   D = ncomponents;
   n_eigen = ncomponents;
@@ -275,6 +279,150 @@ void ManifoldParzen2::train()
   stage = 1;
   precomputeStuff();
   build();
+}
+
+int ManifoldParzen2::find_nearest_neighbor(VMat data, Vec x) const
+{
+  int ret = -1;
+  real distance = MISSING_VALUE;
+  real temp;
+  for(int i=0; i<data->length(); i++)
+  {
+    data->getRow(i,row);
+    temp = dist(row,x,2);
+    if(is_missing(distance) || temp<distance)
+    {
+      distance = temp;
+      ret = i;
+    }
+  }
+  return ret;
+}
+
+real ManifoldParzen2::evaluate(Vec x1,Vec x2,real scale)
+{
+  real ret;
+  int i = find_nearest_neighbor(train_set,x2);  
+  
+  if(scale == 1)
+    ret = computeLogLikelihood(x1,i);
+  else
+  {
+    eigenval_copy << eigenvalues(i);
+    eigenvalues(i) *= scale;
+
+    // Maybe sigma_min should be adjusted!
+
+    ret = computeLogLikelihood(x1,i);
+
+    eigenvalues(i) << eigenval_copy;
+  }
+  return exp(ret);
+  
+  /*
+  row = x1 - mu(i);
+  ret = 0.5 * scale * pownorm(row)/eigenvalues(i,n_eigen_computed - 1);
+  for (int k = 0; k < n_eigen_computed - 1; k++) {
+    ret += 0.5 * scale * (1.0 / eigenvalues(i,k) - 1.0/eigenvalues(i,n_eigen_computed-1)) * square(dot(eigenvectors[i](k), row));
+  }
+  return ret;
+  */
+}
+
+real ManifoldParzen2::evaluate_i_j(int i,int j,real scale)
+{
+  real ret;
+  
+  if(scale == 1)
+    ret = computeLogLikelihood(mu(i),j);
+  else
+  {
+    eigenval_copy << eigenvalues(j);
+    eigenvalues(j) *= scale;
+
+    // Maybe sigma_min should be adjusted!
+
+    ret = computeLogLikelihood(mu(i),j);
+
+    eigenvalues(j) << eigenval_copy;
+  }
+  return exp(ret);
+  
+  /*
+  row = mu(i) - mu(j);
+  ret = scale * pownorm(row)/eigenvalues(j,n_eigen_computed - 1);
+  for (int k = 0; k < n_eigen_computed - 1; k++) {
+    ret += scale * (1.0 / eigenvalues(j,k) - 1.0/eigenvalues(j,n_eigen_computed-1)) * square(dot(eigenvectors[j](k), row));
+  }
+  return ret;
+  */
+}
+
+
+
+///////////////////
+// computeOutput //
+///////////////////
+void ManifoldParzen2::computeOutput(const Vec& input, Vec& output) const
+{
+  switch(outputs_def[0])
+  {
+  case 'r':
+  {
+    int i, last_i=-1;
+    int nstep = 100000;
+    real step = 0.001;
+    int save_every = 100;
+    string fsave = "";
+    string musave = "";
+    real sign = 0;
+    VMat temp;
+    t_row.resize(input.length());
+    row.resize(input.length());
+    t_row << input;
+    mu_temp.resize(mu.length(),mu.width());
+    temp_eigv.resize(input.length());
+    mu_temp << mu;
+    for(int s=0; s<nstep;s++)
+    {
+      i = find_nearest_neighbor(new MemoryVMatrix(mu_temp),t_row);  
+  
+      if(s % save_every == 0)
+      {
+        fsave = "mp_walk_" + tostring(s) + ".amat";
+        temp = new MemoryVMatrix(t_row.toMat(1,t_row.length()));
+        temp->saveAMAT(fsave,false,true);
+
+        musave = "mp_mu_" + tostring(s) + ".amat";
+        temp = new MemoryVMatrix(mu_temp(i).toMat(1,mu_temp(i).length()));
+        temp->saveAMAT(musave,false,true);
+
+      }
+      temp_eigv << eigenvectors[i](0);
+      real sign = (last_i == -1 || dot(eigenvectors[i](0),eigenvectors[last_i](0)) >= 0 ? 1 : -1);
+      t_row += step*sign*temp_eigv ;
+      last_i = i;
+    }
+    output << t_row;
+    break;
+  }
+  default:
+    inherited::computeOutput(input,output);
+  }
+}
+
+////////////////
+// outputsize //
+////////////////
+int ManifoldParzen2::outputsize() const
+{
+  switch(outputs_def[0])
+  {
+  case 'r':
+    return eigenvectors[0].width();
+  default:
+    return inherited::outputsize();
+  }
 }
 
 } // end of namespace PLearn
