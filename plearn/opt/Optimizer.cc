@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.31 2005/02/08 21:38:56 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.32 2005/06/15 20:13:11 lamblin Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -106,16 +106,19 @@ void Optimizer::reset()
 void Optimizer::declareOptions(OptionList& ol)
 {
   declareOption(ol, "n_updates", &Optimizer::nupdates, OptionBase::buildoption, 
-                "    Deprecated - maximum number of parameter-updates to be performed by the optimizer\n");
+                "Deprecated - maximum number of parameter-updates\n"
+                "  to be performed by the optimizer\n");
 
-  declareOption(ol, "every_iterations", &Optimizer::every, OptionBase::buildoption, 
-                "    Deprecated - call measure() method every that many updates \n");
+  declareOption(ol, "every_iterations", &Optimizer::every,
+                OptionBase::buildoption, 
+                "Deprecated - call measure() method every that many updates \n");
 
   declareOption(ol, "filename", &Optimizer::filename, OptionBase::buildoption, 
-                "    call measure <every> <nupdates> iterations saving the results in the <filename>. \n");
+                "call measure <every> <nupdates> iterations\n"
+                "  saving the results in the <filename>. \n");
 
   declareOption(ol, "nstages", &Optimizer::nstages, OptionBase::buildoption, 
-                "    number of iterations to perform on the next ""optimizeN"" call\n");
+                "  number of iterations to perform on the next ""optimizeN"" call\n");
 
   inherited::declareOptions(ol);
 }
