@@ -37,21 +37,29 @@ from plearn.pyplearn import *
 import plearn.plio
 import sys
 
-def launch_plearn_server(command = 'plearn server'):
+def launch_plearn_server(command = 'plearn server', logger=None):
+    if logger: logger.info('LAUNCHING PLEARN SERVER: command = '+command)                
     to_server, from_server = os.popen2(command, 'b')
-    return RemotePLearnServer(from_server, to_server)
+    return RemotePLearnServer(from_server, to_server, logger)
         
 class RemotePLearnServer:
 
-    def __init__(self, from_server, to_server):
+    def __init__(self, from_server, to_server, logger=None):
+        """from_server and to_server are expected to be two file-like objects
+        (supporting read, write, flush).
+        If you wish to log debugging info, pass ad logger an instance of a logging.Logger
+        as returned for ex. by logging.getLogger()
+        """
         self.io = plearn.plio.PLearnIO(from_server, to_server)
+        self.log = logger
         self.nextid = 1
         self.objects = {}
         self.clear_maps = True
-        self.callFunction("binary")
-        self.callFunction("implicit_storage",True)
         self.dbg_dump = False
         self.closed = False
+        if self.log: self.log.info('CONNEXION ESTABLISHED WITH PLEARN SERVER')
+        self.callFunction("binary")
+        self.callFunction("implicit_storage",True)
 
     def new(self, objectspec):
         """
@@ -85,26 +93,40 @@ class RemotePLearnServer:
             objid = obj.objid
         self.callDeleteObject(objid)
         del self.objects[objid]
-            
+
+    def logged_write(self,msg):
+        """Writes msg to self.io and possibly writes a corresponding entry in the logfile"""
+        self.io.write(msg)
+        if self.log: self.log.debug('SENDING: '+msg)
+        
+    def logged_write_args(self,args):
+        argnum = 0
+        for arg in args:
+            self.io.write_typed(arg)
+            if self.log: self.log.debug(' ARG_'+str(argnum)+': '+repr(arg))
+            argnum += 1
+        self.io.write('\n')
+        self.io.flush()
+
     def callNewObject(self, objid, objspecstr):
         self.clearMaps()
-        self.io.write('!N '+str(objid)+' '+objspecstr+'\n')
+        self.logged_write('!N '+str(objid)+' '+objspecstr+'\n')
         self.io.flush()
         self.expectResults(0)
 
     def callLoadObject(self, objid, filepath):
         self.clearMaps()
-        self.io.write('!L '+str(objid)+' '+filepath+'\n')
+        self.logged_write('!L '+str(objid)+' '+filepath+'\n')
         self.io.flush()
         self.expectResults(0)
 
     def callDeleteObject(self, objid):
-        self.io.write('!D '+str(objid)+'\n')
+        self.logged_write('!D '+str(objid)+'\n')
         self.io.flush()
         self.expectResults(0)
 
     def callDeleteAllObjects(self):
-        self.io.write('!Z \n')
+        self.logged_write('!Z \n')
         self.io.flush()
         self.expectResults(0)
 
@@ -115,11 +137,11 @@ class RemotePLearnServer:
 
     def sendFunctionCallHeader(self, funcname, nargs):
         self.clearMaps()
-        self.io.write('!F '+funcname+' '+str(nargs)+' ')
+        self.logged_write('!F '+funcname+' '+str(nargs)+' ')
 
     def sendMethodCallHeader(self, objid, methodname, nargs):
         self.clearMaps()
-        self.io.write('!M '+str(objid)+' '+methodname+' '+str(nargs)+' ')
+        self.logged_write('!M '+str(objid)+' '+methodname+' '+str(nargs)+' ')
 
     def getResultsCount(self):
         self.io.skip_blanks_and_comments()
@@ -129,29 +151,31 @@ class RemotePLearnServer:
         c = self.io.get()
         if c=='R':
             nreturned = self.io.read_int()
+            if self.log: self.log.debug("RECEIVED RESULT COUNT: !"+c+' '+str(nreturned))
             return nreturned
         elif c=='E':
             msg = self.io.read_string()
+            if self.log: self.log.error("RECEIVED ERROR: "+msg)                
             raise RuntimeError(msg)
         else:
             raise TypeError("Expected !R or !E but read !"+c)
 
-    def expectResults(self, nargs_expected):
+    def expectResults(self, nresults_expected):
+        # if self.log: self.log.debug("EXPECTING "+str(nresults_expected)+" RESULTS")
         nreturned = self.getResultsCount()
-        if nreturned!=nargs_expected:
-            raise TypeError("Expected "+str(nargs_expected)+" return arguments, but read R "+str(nreturned))
+        if nreturned!=nresults_expected:
+            raise TypeError("Expected "+str(nresults_expected)+" return arguments, but read R "+str(nreturned))
 
     def callFunction(self, functionname, *args):
         self.sendFunctionCallHeader(functionname, len(args))
-        for arg in args:
-            self.io.write_typed(arg)
-        self.io.write('\n')
+        self.logged_write_args(args)
         self.io.flush()
-        # print 'python sent it!'
         nresults = self.getResultsCount()
         results = []
         for i in xrange(nresults):
-            results.append(self.io.binread())
+            res = self.io.binread()
+            if self.log: self.log.debug(' RES_'+str(i)+': '+repr(res))
+            results.append(res)
         if len(results)==1:
             return results[0]
         elif len(results)>1:
@@ -159,8 +183,7 @@ class RemotePLearnServer:
 
     def callMethod(self, objid, methodname, *args):
         self.sendMethodCallHeader(objid, methodname, len(args))
-        for arg in args:
-            self.io.write_typed(arg)
+        self.logged_write_args(args)
         self.io.flush()
 
         if self.dbg_dump:
@@ -174,7 +197,9 @@ class RemotePLearnServer:
         #    print repr(self.io.readline())
         results = []
         for i in xrange(nresults):
-            results.append(self.io.binread())
+            res = self.io.binread()
+            if self.log: self.log.debug(' RES_'+str(i)+': '+repr(res))
+            results.append(res)
         if len(results)==1:
             return results[0]
         elif len(results)>1:
@@ -182,10 +207,12 @@ class RemotePLearnServer:
 
     def close(self):
         if not self.closed:
-            self.io.write('!Q')
+            if self.log: self.log.info('NOW CLOSING: method close() called')                
+            self.logged_write('!Q')
             self.io.flush()
-            print 'Python os.wait()'
+            if self.log: self.log.info('WAITING FOR CHILD PROCESS TO FINISH: os.wait()')                
             os.wait()
+            if self.log: self.log.info('CLOSED.')
             self.closed = True
                 
     def __del__(self):
