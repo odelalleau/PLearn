@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdaBoost.cc,v 1.5 2005/02/23 18:08:35 lheureup Exp $
+   * $Id: AdaBoost.cc,v 1.6 2005/06/15 15:58:25 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -533,7 +533,7 @@ void AdaBoost::computeOutput(const Vec& input, Vec& output) const
 void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                        const Vec& target, Vec& costs) const
 {
-  costs.resize(2);
+  costs.resize(3);
 
   // First cost is negative log-likelihood...  output[0] is the likelihood
   // of the first class
@@ -549,6 +549,7 @@ void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
   else PLERROR("AdaBoost::computeCostsFromOutputs: target must be "
                "either 0 or 1; current target=%f", target[0]);
   costs[1] = exp(-1.0*sum_voting_weights*(2*output[0]-1)*(2*target[0]-1));
+  costs[2] = costs[0];
 }
 
 TVec<string> AdaBoost::getTestCostNames() const
@@ -558,9 +559,10 @@ TVec<string> AdaBoost::getTestCostNames() const
 
 TVec<string> AdaBoost::getTrainCostNames() const
 {
-  TVec<string> costs(2);
+  TVec<string> costs(3);
   costs[0] = "binary_class_error";
   costs[1] = "exp_neg_margin";
+  costs[2] = "class_error";
   return costs;
 }
 
