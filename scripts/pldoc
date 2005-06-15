@@ -99,9 +99,14 @@ if __name__ == '__main__':
     #
     #  New version
     #
-    from plearn.utilities.ppath import ppath
-    plpath = os.path.join( ppath( 'PLEARNDIR' ), 'python_modules/plearn' )
+    from plearn.utilities.moresh import *
+    from plearn.utilities.ppath  import ppath
 
+    pushd( os.getcwd() )
+    
+    plpath = os.path.join( ppath( 'PLEARNDIR' ), 'python_modules/plearn' )    
     os.path.walk( plpath, process_tutorial, None )
+
+    popd()
     epydoc([ plpath ]) 
     

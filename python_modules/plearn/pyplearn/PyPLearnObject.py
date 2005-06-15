@@ -3,7 +3,7 @@
 The class contained in this module is to be used as super class for almost
 any Python class emulating a PLearn cousin class.
 """
-__cvs_id__ = "$Id: PyPLearnObject.py,v 1.21 2005/06/15 15:26:15 dorionc Exp $"
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.22 2005/06/15 19:57:51 dorionc Exp $"
 
 from   AttributeManager            import AttributeManager
 from   plearn.utilities.toolkit    import no_none
@@ -27,7 +27,7 @@ class PyPLearnObject( AttributeManager ):
             )
 
     where <Classname> is the name you give to the PyPLearnObject's
-    subclass. The L{plearn_options()} are considered to be all attributes
+    subclass. The L{PLearn} options are considered to be all attributes
     whose names do not start with an underscore. Those are said public,
     while any attribute starting with at least one underscore is considered
     internal (protected '_' or private '__').
@@ -147,7 +147,7 @@ class PyPLearnList( PyPLearnObject ):
     def _unreferenced( self ):
         return True
     
-    def plearn_repr( self, indent_level ):
+    def plearn_repr( self, indent_level = 0, restricted_to_ploptions = True ):
         """PLearn representation of this python object.
 
         Are considered as elements any non-None attributes.

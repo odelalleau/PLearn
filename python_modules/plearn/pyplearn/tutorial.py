@@ -1,55 +1,472 @@
-"""PyPLearn Tutorial.""" 
+"""PyPLearn Tutorial.
 
-def getIndentedScripts( pyplearn_path, indent ):
-    # Reading file from script and indenting
-    indented_pyscript = ""
-    pyplearn_script = open( pyplearn_path, 'r' )
+This tutorial introduces you to the various tools provided by the
+PyPLearn mecanism. Essentially, the PyPLearn mecanism allows you to
+instanciate complex experimental schemes using a powerful and highly
+readable language: Python.
 
-    first = True
-    for line in pyplearn_script:
-        if first:
-            indented_pyscript += line
-            first = False
-        else:            
-            indented_pyscript += indent + line
-    pyplearn_script.close()
+Chapter 1: Introductory Examples
+================================
 
-    # Parsing the script using the pyplearn_driver
-    indented_plscript = ""
-    plearn_script   = toolkit.command_output( "pyplearn_driver.py %s" %
-                                              pyplearn_path )
-    first = True
-    for line in plearn_script:
-        if first:
-            indented_plscript += line
-            first = False
-        else:
-            indented_plscript += indent + line
+    Let's see some examples of what you can do with PyPLearn
+    scripts. First, assume that you want to perform a linear regression
+    over some data contained in 'data.amat'. The following script::
 
-    return indented_pyscript, indented_plscript
+        #
+        #  linear_regressor.pyplearn
+        #
 
-class Tutorial:
-    def start( cls ):
-        print cls.__doc__
+        import os.path
+        from plearn.pyplearn import *
+        
+        plarg_defaults.data    = "data.amat"
+        
+        dataset = pl.AutoVMatrix(
+            specification = plargs.data,
+            inputsize = 2,
+            targetsize = 2,
+            weightsize = 0
+            )
+        
+        learner = pl.LinearRegressor()
+        
+        splitter = pl.FractionSplitter(
+            splits = TMat(1,2, [ (0,0.75) , (0.75,1) ])
+            )
+        
+        tester = pl.PTester(
+            expdir = plargs.expdir,
+            dataset = dataset,
+            splitter = splitter,
+            learner = learner,
+            statnames = ['E[train.E[mse]]', 'E[train.E[aic]]', 'E[train.E[bic]]', 'E[train.E[mabic]]',
+                         'E[test.E[mse]]',  'E[test.E[aic]]',  'E[test.E[bic]]',  'E[test.E[mabic]]'],
+            provide_learner_expdir = 1,
+            save_test_costs = 1,
+            save_test_outputs = 1,
+            save_test_confidence = 1
+            )
+        
+        def main():
+            return tester
 
-        for chp, chapter in enumerate( cls.chapters() ):
-            if isinstance( chapter, tuple ):
-                chapter, chapter_name = chapter
-            else:
-                chapter_name = chapter.__name__
+        
+        #
+        #  End of linear_regressor.pyplearn        
+        #
 
-            if not isinstance( chapter, str ):
-                chapter = chapter.__doc__
-                                
-            print "Chapter %d: %s" % (chp+1, chapter_name)
-            print chapter
+    which will yield::
+
+        #
+        #  PLearn representation (serialization mecanism)
+        #
+
+        *4 -> PTester(
+            dataset = *1 -> AutoVMatrix(
+                inputsize = 2,
+                specification = "data.amat",
+                targetsize = 2,
+                weightsize = 0
+                ),
+            expdir = "expdir_2005_06_15_15:51:04",
+            learner = *2 -> LinearRegressor( ),
+            provide_learner_expdir = 1,
+            save_test_confidence = 1,
+            save_test_costs = 1,
+            save_test_outputs = 1,
+            splitter = *3 -> FractionSplitter(
+                splits = 1 2 [
+                        0:0.75,
+                        0.75:1
+                        ]
+                ),
+            statnames = [
+                "E[train.E[mse]]",
+                "E[train.E[aic]]",
+                "E[train.E[bic]]",
+                "E[train.E[mabic]]",
+                "E[test.E[mse]]",
+                "E[test.E[aic]]",
+                "E[test.E[bic]]",
+                "E[test.E[mabic]]"
+                ]
+            )
+
+        
+Chapter 2: What's Wrong with PLearn Scripts?
+============================================
+
+    As a matter of fact, nothing's wrong with the PLearn scripts,
+    especially in the above example. Hence why not use those directly?
+    First, PLearn serialization format while having a syntax close to the
+    Python still have partilarities of its own that can easily make edit
+    hard to edit. For instance, emacs comes with a sympathetic python-mode
+    while the plearn-mode is still to come...
+
+    This said, remember that the above example shows very simple experiment
+    settings. As settings get more complex, the use of references --- *3 ->
+    FractionSplitter... --- and their management can get confusing, while
+    the use the Python objects is totally intuitive. 
+
+    Furthermore, when writing complex experiments, you may want your script
+    to manage command-line options. Ok, PLearn script accepted command-line
+    arguments too, but some (brave) PLearn developers ended up augmenting
+    the serialization format with statements like IF, SWITCH, DIVIDE,
+    INCLUDE, ...
+
+    In short, they ended up building a new language within the
+    serialization format... Using Python was quite an obvious alternative,
+    since the syntactic similarities, and provides us with a world of
+    possibilities. 
+    
+Chapter 3: A More Complex Example
+=================================
+
+    The first advantage of PyPLearn scripts is that they are Python all the
+    way. Hence, it's easy to package functions in modules to be reused in
+    later experiments::
+
+        #
+        #  My module
+        #
+
+        import random 
+        from plearn.pyplearn import pl
+        
+        def LearnerWithSomeSettingsIOftenUse( learning_rate, dataset_mng ):
+            option1 = pl.Option1( val = 10 )
+            option2 = pl.Option2( foo = 'bar' )
+        
+            return pl.SomeLearner(
+                learning_rate = learning_rate,
+                dataset_mng   = dataset_mng,
+                o1            = option1,
+                o2            = option2
+                )                           
             
-    start = classmethod( start )
+        def MyCombiner( underlying_learners ):
+            weights = [ random.random()
+                        for n in range( len(underlying_learners) ) ]
+        
+            wsum = sum( weights )
+            normalized = [ w/wsum for w in weights ]
+        
+            return pl.CombinerLearner(
+                underlying_learners = underlying_learners,
+                weights             = normalized
+                )
+        
 
+        #
+        #  My script
+        #
+
+        from plearn.pyplearn import *
+        from simple_module   import *
+        
+        class Model( plargs_namespace ):
+            data           = "data.amat"
+            learning_rates = [ float( A * 10**(-B) )
+                               for A in [7, 3, 1]
+                               for B in range(0, 6) ]  
+        
+        #
+        #  Dataset 
+        #
+        dataset  = pl.AutoVMatrix(
+            specification = Model.data,
+            inputsize     = 2,
+            targetsize    = 2,
+            weightsize    = 0
+            )
+        
+        splitter = pl.FractionSplitter(
+            splits = TMat(1,2, [ (0,0.75) , (0.75,1) ])
+            )
+        
+        dataset_manager = pl.DatasetManager( dataset  = dataset,
+                                             splitter = splitter )
+        
+        #
+        #  Using a combiner over simple learners
+        #
+        underlying_learners = [
+            LearnerWithSomeSettingsIOftenUse( lr, dataset_manager )
+            for lr in Model.learning_rates
+            ]
+        
+        top_learner = MyCombiner( underlying_learners )
+        
+        #
+        #  Top Level
+        #
+        tester = pl.MyWeardTester(
+            expdir    = plargs.expdir,
+            learner   = top_learner,
+            provide_learner_expdir = 1,
+            )
+        
+        def main():
+            return tester
+
+
+        #
+        #  The result 
+        #
+
+        *59 -> MyWeardTester(
+            expdir = "expdir_2005_06_15_15:51:05",
+            learner = *58 -> CombinerLearner(
+                underlying_learners = [
+                    *6 -> SomeLearner(
+                        dataset_mng = *3 -> DatasetManager(
+                            dataset = *1 -> AutoVMatrix(
+                                inputsize = 2,
+                                specification = "data.amat",
+                                targetsize = 2,
+                                weightsize = 0
+                                ),
+                            splitter = *2 -> FractionSplitter(
+                                splits = 1 2 [
+                                        0:0.75,
+                                        0.75:1
+                                        ]
+                                )
+                            ),
+                        learning_rate = 7.0,
+                        o1 = *4 -> Option1( val = 10 ),
+                        o2 = *5 -> Option2( foo = "bar" )
+                        ),
+                    *9 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 0.7,
+                        o1 = *7 -> Option1( val = 10 ),
+                        o2 = *8 -> Option2( foo = "bar" )
+                        ),
+                    *12 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 0.07,
+                        o1 = *10 -> Option1( val = 10 ),
+                        o2 = *11 -> Option2( foo = "bar" )
+                        ),
+                    *15 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 0.007,
+                        o1 = *13 -> Option1( val = 10 ),
+                        o2 = *14 -> Option2( foo = "bar" )
+                        ),
+                    *18 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 0.0007,
+                        o1 = *16 -> Option1( val = 10 ),
+                        o2 = *17 -> Option2( foo = "bar" )
+                        ),
+                    *21 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 7e-05,
+                        o1 = *19 -> Option1( val = 10 ),
+                        o2 = *20 -> Option2( foo = "bar" )
+                        ),
+                    *24 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 3.0,
+                        o1 = *22 -> Option1( val = 10 ),
+                        o2 = *23 -> Option2( foo = "bar" )
+                        ),
+                    *27 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 0.3,
+                        o1 = *25 -> Option1( val = 10 ),
+                        o2 = *26 -> Option2( foo = "bar" )
+                        ),
+                    *30 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 0.03,
+                        o1 = *28 -> Option1( val = 10 ),
+                        o2 = *29 -> Option2( foo = "bar" )
+                        ),
+                    *33 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 0.003,
+                        o1 = *31 -> Option1( val = 10 ),
+                        o2 = *32 -> Option2( foo = "bar" )
+                        ),
+                    *36 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 0.0003,
+                        o1 = *34 -> Option1( val = 10 ),
+                        o2 = *35 -> Option2( foo = "bar" )
+                        ),
+                    *39 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 3e-05,
+                        o1 = *37 -> Option1( val = 10 ),
+                        o2 = *38 -> Option2( foo = "bar" )
+                        ),
+                    *42 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 1.0,
+                        o1 = *40 -> Option1( val = 10 ),
+                        o2 = *41 -> Option2( foo = "bar" )
+                        ),
+                    *45 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 0.1,
+                        o1 = *43 -> Option1( val = 10 ),
+                        o2 = *44 -> Option2( foo = "bar" )
+                        ),
+                    *48 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 0.01,
+                        o1 = *46 -> Option1( val = 10 ),
+                        o2 = *47 -> Option2( foo = "bar" )
+                        ),
+                    *51 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 0.001,
+                        o1 = *49 -> Option1( val = 10 ),
+                        o2 = *50 -> Option2( foo = "bar" )
+                        ),
+                    *54 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 0.0001,
+                        o1 = *52 -> Option1( val = 10 ),
+                        o2 = *53 -> Option2( foo = "bar" )
+                        ),
+                    *57 -> SomeLearner(
+                        dataset_mng = *3;,
+                        learning_rate = 1e-05,
+                        o1 = *55 -> Option1( val = 10 ),
+                        o2 = *56 -> Option2( foo = "bar" )
+                        )
+                    ],
+                weights = [
+                    0.0607238844308,
+                    0.0580929002647,
+                    0.0411220207392,
+                    0.0835374314877,
+                    0.0465967057244,
+                    0.0112047769082,
+                    0.0755833603876,
+                    0.0727582392794,
+                    0.091651423733,
+                    0.020527841171,
+                    0.075173834976,
+                    0.0505825777545,
+                    0.0205003340747,
+                    0.047381817399,
+                    0.0684638127913,
+                    0.0737302002471,
+                    0.0282855102363,
+                    0.074083328395
+                    ]
+                ),
+            provide_learner_expdir = 1
+            )
+        
+        
+Chapter 4: And Why Not to Code a Simple Main?
+=============================================
+
+    Didn't you ever compile PLearn??? 
+
+    Believe me, you do not want to recompile each time little changes were
+    made to your experiment's settings...
+    
+Chapter 5: How Does it Work?
+============================
+  1. PyPLearn Magic Module.
+
+    An instance of this class (instanciated as pl) is used to provide
+    the magic behavior whereas bits of Python code like::
+
+        pl.SequentialAdvisorSelector(comparison_type='foo', etc.)
+
+    On any attempt to access a function from I{pl}, the magic module creates,
+    on the fly, a PLearn-like class (derived from PyPLearnObject) named
+    after the function asked for. The named arguments provided to the
+    function are forwarded to the constructor of this new class to create
+    an instance of the class. Hence, names of the function's arguments are
+    considered as the PLearn object's option names.
+    
+    Implementation::
+        class __pyplearn_magic_module:
+            \"\"\"PyPLearn Magic Module.
+        
+            An instance of this class (instanciated as pl) is used to provide
+            the magic behavior whereas bits of Python code like::
+        
+                pl.SequentialAdvisorSelector(comparison_type='foo', etc.)
+        
+            On any attempt to access a function from I{pl}, the magic module creates,
+            on the fly, a PLearn-like class (derived from PyPLearnObject) named
+            after the function asked for. The named arguments provided to the
+            function are forwarded to the constructor of this new class to create
+            an instance of the class. Hence, names of the function's arguments are
+            considered as the PLearn object's option names.
+            \"\"\"
+            def __getattr__(self, name):
+                if name.startswith('__'):
+                    raise AttributeError
+        
+                klass = new.classobj(name, (PyPLearnObject,), {})
+                assert issubclass( klass, PyPLearnObject )
+        
+                def initfunc(**kwargs):
+                    obj = klass(**kwargs)
+                    assert isinstance( obj, PyPLearnObject )
+                    return obj
+                
+                return initfunc
+        
+  2. Function plearn_repr
+
+    Returns a string that is a valid PLearn representation of I{obj}.
+
+    This function is somehow the core of the whole PyPLearn mecanism. It
+    maps most Python objects to a representation understood by the PLearn
+    serialization mecanism.
+    
+Chapter 6: PyPLearnObject
+=========================
+    A class from which to derive python objects that emulate PLearn ones.
+
+    This class provides any of its instances with a plearn_repr() method
+    recognized by PyPLearn's plearn_repr mecanism. The plearn
+    representation is defined to be::
+
+        Classname(
+            plearn_option1 = option_value1,
+            plearn_option2 = option_value2,
+            ...
+            plearn_optionN = option_valueN
+            )
+
+    where <Classname> is the name you give to the PyPLearnObject's
+    subclass. The L{PLearn} options are considered to be all attributes
+    whose names do not start with an underscore. Those are said public,
+    while any attribute starting with at least one underscore is considered
+    internal (protected '_' or private '__').
+
+    The learn more about the way this class manages attribute, see the
+    L{AttributeManager} class defined above.
+    
+"""
+##
+# DO NOT EDIT THIS MODULE DOCSTRING!
+#
+#  This docstring is automatically generated by the Tutorial subclass
+#  contained in this module. Any change made manually will be lost.
+##
+
+#
+#  Imports
+#
 import inspect, os
-from plearn_repr      import plearn_repr
-from PyPLearnObject   import PyPLearnObject
-from plearn.utilities import toolkit
+from plearn_repr               import plearn_repr
+from PyPLearnObject            import PyPLearnObject
+from plearn.utilities.Tutorial import *
+
 #
 #  Global variables
 #
@@ -117,7 +534,7 @@ class PyPLearnTutorial( Tutorial ):
         return """
     Let's see some examples of what you can do with PyPLearn
     scripts. First, assume that you want to perform a linear regression
-    over some data contained in 'data.amat'. The following script
+    over some data contained in 'data.amat'. The following script::
 
         #
         #  linear_regressor.pyplearn
@@ -129,7 +546,7 @@ class PyPLearnTutorial( Tutorial ):
         #  End of linear_regressor.pyplearn        
         #
 
-    which will yield
+    which will yield::
 
         #
         #  PLearn representation (serialization mecanism)
@@ -152,7 +569,7 @@ class PyPLearnTutorial( Tutorial ):
         return """
     The first advantage of PyPLearn scripts is that they are Python all the
     way. Hence, it's easy to package functions in modules to be reused in
-    later experiments.
+    later experiments::
 
         #
         #  My module
@@ -181,12 +598,13 @@ class PyPLearnTutorial( Tutorial ):
         module_source = inspect.getsource( pyplearn_magic_module )
         module_source = module_source.replace('\n', '\n'+' '*8)
 
-        return "  1. %s\n%s\n  2. Function plearn_repr\n    %s" \
+        return "  1. %s\n    Implementation::\n%s\n  2. Function plearn_repr\n\n    %s" \
             % ( pyplearn_magic_module.__doc__,
                 ' '*8 + module_source,
                 plearn_repr.__doc__
                 )
     howDoesItWork = classmethod( howDoesItWork )
+
 if __name__ == "__main__":
-    PyPLearnTutorial.start( )
+    PyPLearnTutorial.build( __file__ )
     

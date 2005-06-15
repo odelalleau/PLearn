@@ -2,7 +2,7 @@
 
 Note that including this package simply includes the pyplearn module it contains.
 """
-__cvs_id__ = "$Id: __init__.py,v 1.10 2005/06/13 15:56:49 dorionc Exp $"
+__cvs_id__ = "$Id: __init__.py,v 1.11 2005/06/15 19:57:51 dorionc Exp $"
 
 import new, string, numarray
 from pyplearn                  import *
@@ -13,11 +13,11 @@ class __pyplearn_magic_module:
     """PyPLearn Magic Module.
 
     An instance of this class (instanciated as pl) is used to provide
-    the magic behavior whereas bits of Python code like:
+    the magic behavior whereas bits of Python code like::
 
         pl.SequentialAdvisorSelector(comparison_type='foo', etc.)
 
-    On any attempt to access a function from pl, the magic module creates,
+    On any attempt to access a function from I{pl}, the magic module creates,
     on the fly, a PLearn-like class (derived from PyPLearnObject) named
     after the function asked for. The named arguments provided to the
     function are forwarded to the constructor of this new class to create
@@ -92,6 +92,19 @@ class __TMat:
             )
     
 def TMat( *args ):
+    """Returns the PyPLearn representation of a TMat.
+
+    Within PyPLearn scripts, TMat instances may have two representations::
+
+       1. A numarray for TMat of numeric types
+       2. A representation wrapper for other types.
+
+    @param args: Arguments may be a list of list or a (I{nrows}, I{ncols},
+    I{content}) tuple where content must be a list of length I{nrows*ncols}.
+
+    @returns: PyPLearn's TMat representation
+    @rtype: A numarray or L{ __TMat} wrapper
+    """
     nargs   = len(args)
     is_real = lambda r: isinstance( r, int   ) or isinstance( r, float )
     
