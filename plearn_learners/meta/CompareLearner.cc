@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CompareLearner.cc,v 1.2 2005/02/08 21:59:55 tihocan Exp $ 
+   * $Id: CompareLearner.cc,v 1.3 2005/06/15 16:01:16 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -42,6 +42,7 @@
 
 
 #include "CompareLearner.h"
+#include <plearn/io/fileutils.h>
 
 namespace PLearn {
 using namespace std;
@@ -258,11 +259,11 @@ void CompareLearner::setExperimentDirectory(const PPath& the_expdir)
     {
       if(!force_mkdir(the_expdir))
         PLERROR("In PLearner::setExperimentDirectory Could not create experiment directory %s",the_expdir.c_str());
-      expdir = abspath(the_expdir);
+      expdir = the_expdir.absolute();
       string learner_expdir;
       for(int i=0; i<n_learners; i++)
       {
-        learner_expdir = abspath(the_expdir + "_" + learner_names[i]);
+        learner_expdir = the_expdir.absolute() + "_" + learner_names[i];
         learners[i]->setExperimentDirectory(learner_expdir); 
       }
     }
