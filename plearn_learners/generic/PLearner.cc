@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.52 2005/06/15 14:44:24 plearner Exp $
+   * $Id: PLearner.cc,v 1.53 2005/06/15 21:19:11 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -345,7 +345,6 @@ void PLearner::use(VMat testset, VMat outputs) const
         {
           testset.getExample(i, input, target, weight);
           computeOutput(input, output);
-          cerr << "i = " << i << endl;
           outputs->putOrAppendRow(i,output);
           if(pb)
             pb->update(i);
@@ -550,15 +549,10 @@ void PLearner::call(const string& methodname, int nargs, PStream& io)
       VMat inputs;
       string output_fname;
       io >> inputs >> output_fname;
-      cerr << "AAAAA" << endl;
       VMat outputs = new FileVMatrix(output_fname, inputs.length(), outputsize());
-      cerr << "BBBBB" << endl;
       use(inputs,outputs);
-      cerr << "CCCCC" << endl;
       prepareToSendResults(io, 0);
-      cerr << "DDDDD" << endl;
       io.flush();      
-      cerr << "EEEEE" << endl;
     }
   else if(methodname=="use2") // use inputs_vmat output_pmat_fname
     {
@@ -658,7 +652,6 @@ void PLearner::call(const string& methodname, int nargs, PStream& io)
     }
   else
     inherited::call(methodname, nargs, io);
-  cerr << "End of call " << methodname << endl;
 }
 
 
