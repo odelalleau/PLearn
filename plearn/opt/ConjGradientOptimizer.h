@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.36 2004/10/07 13:15:33 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.37 2005/06/15 20:15:39 lamblin Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -74,6 +74,7 @@ public:
   //! 1  : Fletcher line search
   //! 2  : GSearch
   //! 3  : Newton line search
+  //! 4  : Brent's line search
   int line_search_algo;
   //! The formula used to find the new search direction
   //! 1  : ConjPOMPD
@@ -100,6 +101,11 @@ public:
   int max_steps;
   real initial_step;
   real low_enough;
+
+  // Brent's algorithm specific options
+  real position_res; // resolution of the coordinates of the point
+  real value_res;    // resolution of the value of the point
+  int n_iterations;  // number of line search iterations
 
 protected:
   
@@ -276,6 +282,10 @@ private:
     int max_steps,
     real initial_step,
     real low_enough);
+
+  // Brent's line search algorithm, implemented in netlab (a matlab library)
+  // by Ian T. Nabney
+  real brentSearch();
   
   //--------------------------- UTILITY FUNCTIONS ----------------------------
   
@@ -363,6 +373,8 @@ private:
   static void quadraticInterpol(
       real f0, real f1, real g0,
       real& a, real& b, real& c);
+
+  void minBrack( real& br_min, real& br_max, real& br_mid );
 
 };
 

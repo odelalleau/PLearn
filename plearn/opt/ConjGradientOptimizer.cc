@@ -2,7 +2,7 @@
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 2003 Olivier Delalleau
-//
+// Copyright (c) 1996-2001, Ian T. Nabney for functions minBrack, brentSearch
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.60 2004/11/29 14:06:24 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.61 2005/06/15 20:15:39 lamblin Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -71,7 +71,8 @@ ConjGradientOptimizer::ConjGradientOptimizer(
   epsilon(the_epsilon),
   sigma(the_sigma), rho(the_rho), fmax(the_fmax),
   stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
-  tau3(the_tau3), max_steps(5), initial_step(0.01), low_enough(1e-6)  {}
+  tau3(the_tau3), max_steps(5), initial_step(0.01), low_enough(1e-6),
+  position_res(1e-4), value_res(1e-4), n_iterations(100)  {}
 
 ConjGradientOptimizer::ConjGradientOptimizer(
     VarArray the_params, 
@@ -126,119 +127,164 @@ ConjGradientOptimizer::ConjGradientOptimizer(
   }
   
 PLEARN_IMPLEMENT_OBJECT(ConjGradientOptimizer,
-    "Optimizer based on the conjugate gradient method.",
-    "The conjugate gradient algorithm is basically the following :\n"
-    "- 0: initialize the search direction d = -gradient\n"
-    "- 1: perform a line search along direction d for the minimum of the gradient\n"
-    "- 2: move to this minimum, update the search direction d and go to step 1\n"
-    "There are various methods available through the options for both steps 1 and 2."
-);
+  "Optimizer based on the conjugate gradient method.",
+  "The conjugate gradient algorithm is basically the following :\n"
+  "- 0: initialize the search direction d = -gradient\n"
+  "- 1: perform a line search along direction d for the minimum of the\n"
+  "     gradient\n"
+  "- 2: move to this minimum, update the search direction d and go to\n"
+  "     step 1\n"
+  "There are various methods available through the options for both\n"
+  "steps 1 and 2.");
 
 // 
 // declareOptions
 // 
 void ConjGradientOptimizer::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "starting_step_size", &ConjGradientOptimizer::starting_step_size, OptionBase::buildoption, 
-                 "    The initial step size for the line search algorithm.\n \
-           This option has very little influence on the algorithm performance, \n \
-           since it is only used for the first iteration, and is set by the algorithm\n \
-           in the later stages.\n");
+  declareOption(ol, "starting_step_size",
+    &ConjGradientOptimizer::starting_step_size, OptionBase::buildoption, 
+    "The initial step size for the line search algorithm.\n"
+    "  This option has very little influence on the algorithm performance, \n"
+    "  since it is only used for the first iteration, and is set by the\n"
+    "  algorithm in the later stages.\n");
 
-    declareOption(ol, "restart_coeff", &ConjGradientOptimizer::restart_coeff, OptionBase::buildoption, 
-                  "    The restart coefficient. A restart is triggered when the following condition is met :\n \
-           abs(gradient(k-1).gradient(k)) >= restart_coeff * gradient(k)^2\n \
-           If no restart is wanted, any high value (e.g. 100) will prevent it.\n");
+  declareOption(ol, "restart_coeff", &ConjGradientOptimizer::restart_coeff,
+    OptionBase::buildoption, 
+    "The restart coefficient.\n"
+    "  A restart is triggered when the following condition is met:\n"
+    "    abs(gradient(k-1).gradient(k)) >= restart_coeff * gradient(k)^2\n"
+    "  If no restart is wanted, any high value (e.g. 100) will prevent it.\n");
 
-    declareOption(ol, "line_search_algo", &ConjGradientOptimizer::line_search_algo, OptionBase::buildoption, 
-                 "    The kind of line search algorithm used :\n \
-        1. The line search algorithm described in :\n \
-           ""Practical Methods of Optimization, 2nd Ed""\n \
-           by Fletcher (1987).\n \
-           This algorithm seeks a minimum m of f(x)=C(x0+x.d) satisfying the two constraints :\n \
-             i. abs(f'(m)) < -sigma.f'(0)\n \
-            ii. f(m) < f(0) + m.rho.f'(0)\n \
-           with rho < sigma <= 1.\n \
-        2. The GSearch algorithm, described in :\n \
-           ""Direct Gradient-Based Reinforcement Learning: II. Gradient Ascent Algorithms and Experiments""\n \
-           by J.Baxter, L. Weaver, P. Bartlett (1999).\n \
-        3. A Newton line search algorithm for quadratic costs only.\n");
+  declareOption(ol, "line_search_algo",
+    &ConjGradientOptimizer::line_search_algo, OptionBase::buildoption, 
+    "The kind of line search algorithm used :\n"
+    "  1. The line search algorithm described in :\n"
+    "     \"Practical Methods of Optimization, 2nd Ed\", by Fletcher (1987).\n"
+    "     This algorithm seeks a minimum m of f(x)=C(x0+x.d) satisfying the\n"
+    "     two constraints:\n"
+    "        i. abs(f'(m)) < -sigma.f'(0)\n"
+    "       ii. f(m) < f(0) + m.rho.f'(0)\n"
+    "     with rho < sigma <= 1.\n"
+    "  2. The GSearch algorithm, described in:\n"
+    "     \"Direct Gradient-Based Reinforcement Learning:\n"
+    "       II. Gradient Ascent Algorithms and Experiments\"\n"
+    "      by J.Baxter, L. Weaver, P. Bartlett (1999).\n"
+    "  3. A Newton line search algorithm for quadratic costs only.\n"
+    "  4. Brent's line search algorithm.\n");
 
-    declareOption(ol, "find_new_direction_formula", &ConjGradientOptimizer::find_new_direction_formula, OptionBase::buildoption, 
-                  "    The kind of formula used in step 2 of the conjugate gradient algorithm to find the\n \
-        new search direction :\n \
-        1. ConjPOMPD : the formula associated with GSearch in the same paper. It is\n \
-                       almost the same as the Polak-Ribiere formula.\n \
-        2. Dai - Yuan\n \
-        3. Fletcher - Reeves\n \
-        4. Hestenes - Stiefel\n \
-        5. Polak - Ribiere : this is probably the most commonly used.\n \
-        The value of this option (from 1 to 5) indicates the formula used.\n");
+  declareOption(ol, "find_new_direction_formula",
+    &ConjGradientOptimizer::find_new_direction_formula,
+    OptionBase::buildoption, 
+    "The kind of formula used in step 2 of the conjugate gradient\n"
+    "  algorithm to find the new search direction:\n"
+    "  1. ConjPOMPD: the formula associated with GSearch in the same paper.\n"
+    "     It is almost the same as the Polak-Ribiere formula.\n"
+    "  2. Dai - Yuan\n"
+    "  3. Fletcher - Reeves\n"
+    "  4. Hestenes - Stiefel\n"
+    "  5. Polak - Ribiere: this is probably the most commonly used.\n"
+    "  The value of this option (from 1 to 5) indicates the formula used.\n");
 
-    declareOption(ol, "epsilon", &ConjGradientOptimizer::epsilon, OptionBase::buildoption, 
-                 "    GSearch specific option : the gradient resolution.\n \
-           This small value is used in the GSearch algorithm instead of 0, to provide\n \
-           some robustness against errors in the estimate of the gradient, and to\n \
-           prevent the algorithm from looping indefinitely if there is no local minimum.\n \
-           Any small value should work, and the overall performance should not depend\n \
-           much on it.\n ");
+  declareOption(ol, "epsilon", &ConjGradientOptimizer::epsilon,
+    OptionBase::buildoption, 
+    "GSearch specific option: the gradient resolution.\n"
+    "  This small value is used in the GSearch algorithm instead of 0,\n"
+    "  to provide some robustness against errors in the estimate of the\n"
+    "  gradient, and to prevent the algorithm from looping indefinitely if\n"
+    "  there is no local minimum.\n"
+    "  Any small value should work, and the overall performance should\n"
+    "  not depend much on it.\n ");
     // TODO Check the last sentence is true !
 
-    declareOption(ol, "sigma", &ConjGradientOptimizer::sigma, OptionBase::buildoption, 
-                  "    Fletcher's line search specific option : constraint parameter in i.\n");
+  declareOption(ol, "sigma", &ConjGradientOptimizer::sigma,
+    OptionBase::buildoption, 
+    "Fletcher's line search specific option: constraint parameter in i.\n");
 
-    declareOption(ol, "rho", &ConjGradientOptimizer::rho, OptionBase::buildoption, 
-                  "    Fletcher's line search specific option : constraint parameter in ii.\n");
+  declareOption(ol, "rho", &ConjGradientOptimizer::rho,
+    OptionBase::buildoption, 
+    "Fletcher's line search specific option : constraint parameter in ii.\n");
 
-    declareOption(ol, "fmax", &ConjGradientOptimizer::fmax, OptionBase::buildoption, 
-                  "    Fletcher's line search specific option : good enough minimum.\n \
-           If it finds a point n such that f(n) < fmax, then the line search returns n as minimum\n\
-           As a consequence, DO NOT USE 0 if f can be negative\n");
+  declareOption(ol, "fmax", &ConjGradientOptimizer::fmax,
+    OptionBase::buildoption, 
+    "Fletcher's line search specific option : good enough minimum.\n"
+    "  If it finds a point n such that f(n) < fmax,\n"
+    "  then the line search returns n as minimum\n"
+    "  As a consequence, DO NOT USE 0 if f can be negative\n");
 
-    declareOption(ol, "stop_epsilon", &ConjGradientOptimizer::stop_epsilon, OptionBase::buildoption, 
-                  "    Fletcher's line search specific option : stopping criterium.\n \
-           This option allows the algorithm to detect when no improvement is possible along\n \
-           the search direction. It should be set to a small value, or we may stop too early.\n \
-           IMPORTANT: this same option is also used to compute the next step size. If you get\n \
-           a nan in the cost, try a higher stop_epsilon.\n");
+  declareOption(ol, "stop_epsilon", &ConjGradientOptimizer::stop_epsilon,
+    OptionBase::buildoption, 
+    "Fletcher's line search specific option : stopping criterion.\n"
+    "  This option allows the algorithm to detect when no improvement\n"
+    "  is possible along the search direction.\n"
+    "  It should be set to a small value, or we may stop too early.\n"
+    "IMPORTANT: this same option is also used to compute the next step size.\n"
+    "  If you get a NaN in the cost, try a higher stop_epsilon.\n");
 
-    declareOption(ol, "tau1", &ConjGradientOptimizer::tau1, OptionBase::buildoption, 
-                  "    Fletcher's line search specific option : bracketing parameter.\n \
-           This option controls how fast is augmenting the bracketing interval in the first\n \
-           phase of the line search algorithm.\n \
-           Fletcher reports good empirical results with tau1 = 9.\n");
+  declareOption(ol, "tau1", &ConjGradientOptimizer::tau1,
+    OptionBase::buildoption, 
+    "Fletcher's line search specific option : bracketing parameter.\n"
+    "  This option controls how fast is augmenting the bracketing\n"
+    "  interval in the first phase of the line search algorithm.\n"
+    "  Fletcher reports good empirical results with tau1 = 9.\n");
 
-    declareOption(ol, "tau2", &ConjGradientOptimizer::tau2, OptionBase::buildoption, 
-                  "    Fletcher's line search specific option : bracketing parameter.\n \
-           This option controls how fast is augmenting the left side of the bracketing\n \
-           interval in the second phase of the line search algorithm.\n \
-           Fletcher reports good empirical results with tau2 = 0.1\n");
+  declareOption(ol, "tau2", &ConjGradientOptimizer::tau2,
+    OptionBase::buildoption, 
+    "Fletcher's line search specific option : bracketing parameter.\n"
 
-    declareOption(ol, "tau3", &ConjGradientOptimizer::tau3, OptionBase::buildoption, 
-                  "    Fletcher's line search specific option : bracketing parameter.\n \
-           This option controls how fast is decreasing the right side of the bracketing\n \
-           interval in the second phase of the line search algorithm.\n \
-           Fletcher reports good empirical results with tau3 = 0.5\n");
+    "  This option controls how fast is augmenting the left side of the\n"
+    "  bracketing interval in the second phase of the line search algorithm.\n"
+    "  Fletcher reports good empirical results with tau2 = 0.1\n");
 
-    declareOption(ol, "max_steps", &ConjGradientOptimizer::max_steps, OptionBase::buildoption, 
-                  "    Newton line search specific option : maximum number of steps at each iteration.\n \
-        This option defines how many steps will be performed to find the minimum, if no\n \
-        value < low_enough is found for the gradient (this can happen if the cost isn't\n \
-        perfectly quadratic).\n");
+  declareOption(ol, "tau3", &ConjGradientOptimizer::tau3,
+    OptionBase::buildoption, 
+    "Fletcher's line search specific option : bracketing parameter.\n"
+    "  This option controls how fast is decreasing the right side of the\n"
+    "  bracketing interval in the second phase of the line search algorithm.\n"
+    "  Fletcher reports good empirical results with tau3 = 0.5\n");
 
-    declareOption(ol, "initial_step", &ConjGradientOptimizer::initial_step, OptionBase::buildoption, 
-                  "    Newton line search specific option : value of the first step.\n \
-           This options controls the size of the first step made in the search direction.\n");
+  declareOption(ol, "max_steps", &ConjGradientOptimizer::max_steps,
+    OptionBase::buildoption, 
+    "Newton line search specific option:\n"
+    "  maximum number of steps at each iteration.\n"
+    "  This option defines how many steps will be performed to find the\n"
+    "  minimum, if no value < low_enough is found for the gradient (this\n"
+    "  can happen if the cost isn't perfectly quadratic).\n");
 
-    declareOption(ol, "low_enough", &ConjGradientOptimizer::low_enough, OptionBase::buildoption, 
-                  "    Newton line search specific option : stopping criterion for the gradient.\n \
-           We say the minimum has been found if we have abs(gradient) < low_enough.\n");
+  declareOption(ol, "initial_step", &ConjGradientOptimizer::initial_step,
+    OptionBase::buildoption, 
+    "Newton line search specific option: value of the first step.\n"
+    "  This options controls the size of the first step made in the\n"
+    "  search direction.\n");
 
-    declareOption(ol, "compute_cost", &ConjGradientOptimizer::compute_cost, OptionBase::buildoption, 
-                  "    If set to 1, will compute and display the mean cost at each epoch.\n");
+  declareOption(ol, "low_enough", &ConjGradientOptimizer::low_enough,
+    OptionBase::buildoption, 
+    "Newton line search specific option:\n"
+    "  stopping criterion for the gradient.\n"
+    "  We say the minimum has been found if we have\n"
+    "  abs(gradient) < low_enough.\n");
 
-    declareOption(ol, "verbosity", &ConjGradientOptimizer::verbosity, OptionBase::buildoption, 
-        "Controls the amount of output.\n");
+  declareOption(ol, "position_res", &ConjGradientOptimizer::position_res,
+    OptionBase::buildoption, 
+    "Brent line search specific option:\n"
+    "  resolution of the point coordinates.\n");
+
+  declareOption(ol, "value_res", &ConjGradientOptimizer::value_res,
+    OptionBase::buildoption,
+    "Brent line search specific option:\n"
+    "  resolution of the point value.\n");
+
+  declareOption(ol, "n_iterations", &ConjGradientOptimizer::n_iterations,
+    OptionBase::buildoption,
+    "Brent line search specific option: number of iterations.\n");
+
+  declareOption(ol, "compute_cost", &ConjGradientOptimizer::compute_cost,
+    OptionBase::buildoption, 
+    "If set to 1, will compute and display the mean cost at each epoch.\n");
+
+  declareOption(ol, "verbosity", &ConjGradientOptimizer::verbosity,
+    OptionBase::buildoption, 
+    "Controls the amount of output.\n");
 
     inherited::declareOptions(ol);
 }
@@ -768,6 +814,9 @@ bool ConjGradientOptimizer::lineSearch() {
     case 3:
       step = newtonSearch(max_steps, initial_step, low_enough);
       break;
+    case 4:
+      step = brentSearch();
+      break;
     default:
       PLERROR("In ConjGradientOptimizer::lineSearch - Invalid conjugate gradient line search algorithm");
       step = 0;
@@ -923,6 +972,8 @@ real ConjGradientOptimizer::newtonSearch(
     cout << "Warning : minimum not reached, is the cost really quadratic ?" << endl;
   return step;
 }
+
+
 
 //////////////
 // optimize //
@@ -1116,5 +1167,283 @@ void ConjGradientOptimizer::updateSearchDirection(real gamma) {
       search_direction[i] = delta[i] + gamma * search_direction[i];
   current_opp_gradient << delta;
 }
+
+//////////////
+// minBrack //
+//////////////
+// Copyright (c) 1996-2001, Ian T. Nabney
+void ConjGradientOptimizer::minBrack(real& br_min, real& br_max, real& br_mid)
+{
+  // Initialisation of the working parameters
+  real a = br_min;
+  real b = br_max;
+  real c = br_mid;
+
+  real fa = cost->value[0];
+  real fb = computeCostValue( b, this );
+  real fc;
+  real fu;
+
+  // Value of golden section (1 + sqrt(5))/2.0
+  real phi = 1.6180339887499;
+
+  // A small non-zero number to avoid dividing by zero in quadratic
+  // interpolation
+  real TINY = 1.e-10;
+
+  // Maximal proportional step to take: don't want to make this too big
+  // as then spend a lot of time finding the minimum inside the bracket
+  real max_step = 10.0;
+
+  // Assume that we know going from a to b is downhill initially.
+  // (usually because gradf(a) < 0).
+  if( fb > fa )
+  {
+    // Minimum must lie between a and b: do golden section until we find point
+    // low enough to be middle of bracket
+    do
+    {
+      c = b;
+      b = a + (c-a)/phi;
+      fb = computeCostValue( b, this );
+    }
+    while( fb > fa );
+  }
+  else
+  {
+    // There is a valid bracket upper bound greater than b
+    c = b + phi*(b-a);
+    fc = computeCostValue( c, this );
+    bool bracket_found = false;
+
+    while( fb > fc )
+    {
+      // Do a quadratic interpolation (i.e. to minimum of quadratic)
+      real r = (b-a)*(fb-fc);
+      real q = (b-c)*(fb-fa);
+      real q_r = q - r;
+      if( fabs( q_r ) < TINY )
+        q_r = sign( q_r ) * TINY;
+      real u = b - ((b-c)*q - (b-a)*r)/(2.*q_r);
+      real ulimit = b + max_step*(c-b);
+
+      if( (b-u)*(u-c) > 0. )
+      {
+        // Interpolant lies between b and c
+        fu = computeCostValue( u, this );
+        if( fu < fc )
+        {
+          // Have a minimum between b and c
+          br_min = b;
+          br_mid = u;
+          br_max = c;
+          return;
+        }
+        else if( fu > fb )
+        {
+          // Have a minimum between a and u
+          br_min = a;
+          br_mid = c;
+          br_max = u;
+          return;
+        }
+        // Quadratic interpolation didn't give a bracket, so take a golden step
+        u = c + phi*(c-b);
+      }
+      else if( (c-u)*(u-ulimit) > 0. )
+      {
+        // Interpolant lies between c and limit
+        fu = computeCostValue( u, this );
+        if( fu < fc )
+        {
+          // Move bracket along, and then take a golden section step
+          b = c;
+          c = u;
+          u = c + phi*(c-b);
+        }
+        else
+        {
+          bracket_found = true;
+        }
+      }
+      else if( (u-ulimit)*(ulimit-c) >= 0. )
+      {
+        // Limit parabolic u to maximum value
+        u = ulimit;
+      }
+      else
+      {
+        // Reject parabolic u and use golden section step
+        u = c + phi*(c-b);
+      }
+
+      if( !bracket_found )
+      {
+        fu = computeCostValue( u, this );
+      }
+
+      a = b;
+      b = c;
+      c = u;
+      fa = fb;
+      fb = fc;
+      fc = fu;
+    }
+  }
+
+  br_mid = b;
+  if( a < c )
+  {
+    br_min = a;
+    br_max = c;
+  }
+  else
+  {
+    br_min = c;
+    br_max = a;
+  }
+}
+
+
+/////////////////
+// brentSearch //
+/////////////////
+// Copyright (c) 1996-2001, Ian T. Nabney
+real ConjGradientOptimizer::brentSearch()
+{
+  // Value of golden section (1 + sqrt(5))/2.0
+  real phi = 1.6180339887499;
+  real cphi = 2 - phi; // 1 - 1/phi
+  real TOL = 2^(-26);  // Maximal fractional precision
+  real TINY = 1.0e-10; // Can't use fractional precision when minimum is at 0
+
+  // Bracket the minimum
+  real br_min = 0.;
+  real br_max = 1.;
+  real br_mid;
+  minBrack( br_min, br_max, br_mid );
+
+  // Use Brent's algorithm to find minimum
+  // Initialise the points and function values
+  real w = br_mid;    // Where second from minimum is
+  real v = br_mid;    // Previous value of w
+  real x = v;         // Where current minimum is
+  real e = 0.;        // Distance moved on step before last
+  real d;
+  real fx = computeCostValue( x, this );
+  real fv = fx;
+  real fw = fx;
+
+  for( int i=0 ; i<n_iterations ; i++ )
+  {
+    real xm = 0.5*(br_min+br_max); // Middle of bracket
+    // Make sure that tolerance is big enough
+    real tol1 = TOL * fabs(x) + TINY;
+    // Decide termination on absolute precision
+    if( fabs(x - xm) <= value_res && (br_max-br_min) < 4*value_res )
+    {
+      return x;
+    }
+
+    // Check if step before last was big enough to try a parabolic step.
+    // Note that this will fail on first iteration, which must be a
+    // golden section step.
+    if( fabs(e) > tol1 )
+    {
+      // Construct a trial parabolic fit through x, v and w
+      real r = (fx - fv) * (x - w);
+      real q = (fx - fw) * (x - v);
+      real p = (x - v)*q - (x - w)*r;
+      q = 2 * (q - r);
+      if( q > 0 )
+      {
+        p = -p;
+        q = -q;
+      }
+
+      // Test if the parabolic fit is OK
+      if( fabs(p) >= fabs(0.5*q*e) || q <= q*(br_min-x) || p >= q*(br_max-x) )
+      {
+        // No it isn't, so take a golden section step
+        if( x >= xm )
+          e = br_min - x;
+        else
+          e = br_max - x;
+
+        d = cphi*e;
+      }
+      else
+      {
+        // Yes it is, so take the parabolic step
+        e = d;
+        d = p/q;
+        real u = x + d;
+        if( u-br_min < 2*tol1 || br_max-u < 2*tol1 )
+          d = sign(xm - x)*tol1;
+      }
+    }
+    else
+    {
+      // Step before last not big enough, so take a golden section step
+      if( x >= xm )
+        e = br_min - x;
+      else
+        e = br_max - x;
+
+      d = cphi * e;
+    }
+
+    // Make sure that step is big enough
+    real u;
+    if( abs(d) >= tol1 )
+      u = x + d;
+    else
+      u = x + sign(d)*tol1;
+
+    // Evaluate function at u
+    real fu = computeCostValue( u, this );
+
+    // Reorganise bracket
+    if( fu <= fx )
+    {
+      if( u >= x )
+        br_min = x;
+      else
+        br_max = x;
+
+      v = w;
+      w = x;
+      x = u;
+      fv = fw;
+      fw = fv;
+      fx = fu;
+    }
+    else
+    {
+      if( u < x )
+        br_min = u;
+      else
+        br_max = u;
+
+      if( fu <= fw || w == x )
+      {
+        v = w;
+        w = u;
+        fv = fw;
+        fw = fu;
+      }
+      else if( fu <= fv || v == x || v == w )
+      {
+        v = u;
+        fv = fu;
+      }
+    }
+  }
+  return x;
+}
+
+
+
+
 
 } // end of namespace PLearn
