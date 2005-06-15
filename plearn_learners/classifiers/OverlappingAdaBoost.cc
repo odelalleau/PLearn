@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: OverlappingAdaBoost.cc,v 1.4 2004/11/17 20:53:32 larocheh Exp $
+   * $Id: OverlappingAdaBoost.cc,v 1.5 2005/06/15 15:53:06 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -47,6 +47,7 @@
 #include <plearn/vmat/MemoryVMatrix.h>
 #include <plearn/vmat/SelectRowsVMatrix.h>
 #include <plearn/math/random.h>
+#include <plearn/io/load_and_save.h>
 
 namespace PLearn {
 using namespace std;
@@ -54,7 +55,7 @@ using namespace std;
 OverlappingAdaBoost::OverlappingAdaBoost()
   : target_error(0.5), output_threshold(0.5), compute_training_error(1), 
     pseudo_loss_adaboost(1), conf_rated_adaboost(0), weight_by_resampling(1), early_stopping(1),
-    save_often(0)
+    save_often(0), penalty_coefficient(0)
   { }
 
 PLEARN_IMPLEMENT_OBJECT(
@@ -123,6 +124,9 @@ void OverlappingAdaBoost::declareOptions(OptionList& ol)
 
   declareOption(ol, "save_often", &OverlappingAdaBoost::save_often, OptionBase::buildoption,
                 "If true, then save the model after training each weak learner, under <expdir>/model.psave\n");
+  
+  declareOption(ol, "penalty_coefficient", &OverlappingAdaBoost::penalty_coefficient, OptionBase::buildoption,
+                "Penalty coefficient for regularized boosting (should be >= 0)\n");
 
   declareOption(ol, "compute_training_error", &OverlappingAdaBoost::compute_training_error, OptionBase::buildoption,
                 "Whether to compute training error at each stage.\n");
@@ -135,6 +139,8 @@ void OverlappingAdaBoost::build_()
 {
   if(conf_rated_adaboost && pseudo_loss_adaboost)
     PLERROR("In Adaboost:build_(): conf_rated_adaboost and pseudo_loss_adaboost cannot both be true, a choice must be made");
+  if(penalty_coefficient < 0)
+    PLERROR("Penalty coefficient should not be negative");
 }
 
 // ### Nothing to add here, simply calls build_
@@ -196,6 +202,7 @@ void OverlappingAdaBoost::train()
   static Vec output;
   static Vec target;
   real weight;
+  real theta;
 
   static Vec examples_error;
 
@@ -383,10 +390,16 @@ void OverlappingAdaBoost::train()
 
     weak_learners.push_back(new_weak_learner);
 
-    if (save_often && expdir!="")
-      PLearn::save(append_slash(expdir)+"model.psave", *this);
+    // This should be done after a full iteration
+     if (save_often && expdir!="")
+       PLearn::save(append_slash(expdir)+"model.psave", *this);
       
     // compute the new learner's weight
+    
+    theta = 2*penalty_coefficient*new_weak_learner->penalty_cost();
+
+    if(theta >= 1) PLWARNING("theta is >= 1, this could cause problems");
+    
     if(conf_rated_adaboost)
     {
       // Find optimal weight with line search, blame Norman if this doesn't work ;) 
@@ -417,7 +430,9 @@ void OverlappingAdaBoost::train()
         fb += example_weights[i]*exp(-1*bx*f_i*y_i);
         fc += example_weights[i]*exp(-1*cx*f_i*y_i);
       }
-
+      fa *= exp(theta*ax);
+      fb *= exp(theta*bx);
+      fc *= exp(theta*cx);
         
       for(iter=1;iter<=itmax;iter++)
       {
@@ -495,7 +510,8 @@ void OverlappingAdaBoost::train()
     }
     else
     {
-      voting_weights.push_back(safeflog(((1-learners_error[stage])*target_error)/(learners_error[stage]*(1-target_error))));
+      voting_weights.push_back(safeflog(((1-learners_error[stage])*target_error)/(learners_error[stage]*(1-target_error)) 
+                                 * (1-theta)/(1+theta)));
       sum_voting_weights += fabs(voting_weights[stage]);
     }
     // update the example weights
@@ -531,6 +547,9 @@ void OverlappingAdaBoost::train()
         cout << "with weights = " << voting_weights << endl;
       }
     }
+
+    //if (save_often && expdir!="")
+    //  PLearn::save(append_slash(expdir)+"model.psave", *this);
   }
 }
 
@@ -562,7 +581,7 @@ void OverlappingAdaBoost::computeOutput(const Vec& input, Vec& output) const
 void OverlappingAdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                        const Vec& target, Vec& costs) const
 {
-  costs.resize(1);
+  costs.resize(2);
 
   // First cost is negative log-likelihood...  output[0] is the likelihood
   // of the first class
@@ -577,6 +596,7 @@ void OverlappingAdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& o
   }
   else PLERROR("OverlappingAdaBoost::computeCostsFromOutputs: target must be "
                "either 0 or 1; current target=%f", target[0]);
+  costs[1] = exp(-1.0*sum_voting_weights*(2*output[0]-1)*(2*target[0]-1));
 }
 
 TVec<string> OverlappingAdaBoost::getTestCostNames() const
@@ -586,8 +606,9 @@ TVec<string> OverlappingAdaBoost::getTestCostNames() const
 
 TVec<string> OverlappingAdaBoost::getTrainCostNames() const
 {
-  TVec<string> costs(1);
+  TVec<string> costs(2);
   costs[0] = "binary_class_error";
+  costs[1] = "exp_neg_margin";
   return costs;
 }
 

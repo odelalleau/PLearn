@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: OverlappingAdaBoost.h,v 1.3 2004/11/12 20:08:35 larocheh Exp $
+   * $Id: OverlappingAdaBoost.h,v 1.4 2005/06/15 15:53:06 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -115,6 +115,9 @@ public:
 
   // save model after each stage into <expdir>/model.psave
   bool save_often;
+
+  // penalty coefficient for regularized boosting
+  real penalty_coefficient;
 
   // ****************
   // * Constructors *
