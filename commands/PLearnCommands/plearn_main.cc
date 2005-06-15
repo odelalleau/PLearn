@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.22 2005/06/09 21:16:01 plearner Exp $
+   * $Id: plearn_main.cc,v 1.23 2005/06/15 14:43:14 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -45,6 +45,7 @@
 #include <plearn/misc/Calendar.h>
 #include <plearn/db/getDataSet.h>
 #include <plearn/misc/PLearnService.h>
+#include <exception>
 
 namespace PLearn {
 using namespace std;
@@ -140,9 +141,10 @@ static string global_options( vector<string>& command_line,
   
   // Option for parallel processing through PLearnService
   int servers_pos = findpos(command_line, "--servers");
+  int serversfile_pos = -1;
   if (servers_pos != -1)
     {
-      int serversfile_pos = servers_pos+1;
+      serversfile_pos = servers_pos+1;
       if ( serversfile_pos >= argc)
         PLERROR("Option --servers must be followed by the name of a servers file containing a list of hostname pid tcpport\n");
       string serversfile = command_line[serversfile_pos];
@@ -163,7 +165,10 @@ static string global_options( vector<string>& command_line,
          c != verbosity_pos              &&
          c != verbosity_value_pos        &&
          c != global_calendar_pos        &&
-         c != global_calendar_value_pos  )
+         c != global_calendar_value_pos  &&
+         c != servers_pos                &&
+         c != serversfile_pos
+         )
     {
       if ( the_command == "" )
       {
@@ -186,9 +191,19 @@ static string global_options( vector<string>& command_line,
   return the_command;
 }
 
+void plearn_terminate_handler()
+{
+  cerr << "PLEARN UNUSUAL TERMINATION: plearn_terminate_handler called, probably due \n"
+       << "to second exception thrown while unwinding stack following a first \n"
+       << "exception. ABORTING!" << endl;
+  abort();
+}
+
 int plearn_main( int argc, char** argv,
                  int major_version, int minor_version, int fixlevel )
 {
+  set_terminate(plearn_terminate_handler);
+
   try {
 
   PLMPI::init(&argc, &argv);

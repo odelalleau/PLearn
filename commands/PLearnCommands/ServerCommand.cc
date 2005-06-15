@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ServerCommand.cc,v 1.6 2005/06/09 21:16:01 plearner Exp $ 
+   * $Id: ServerCommand.cc,v 1.7 2005/06/15 14:43:14 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -43,13 +43,21 @@
 
 #include "ServerCommand.h"
 #include <plearn/misc/PLearnServer.h>
-
-#include <plearn/io/StdPStreamBuf.h>
-#include <plearn/io/PrPStreamBuf.h>
+#include <plearn/io/PStream.h>
+// #include <plearn/io/StdPStreamBuf.h>
 // #include <plearn/io/FdPStreamBuf.h>
+#include <plearn/io/PrPStreamBuf.h>
+#include <plearn/base/tostring.h>
 #include <mozilla/nspr/prio.h>
 #include <mozilla/nspr/prerror.h>
 #include <mozilla/nspr/prnetdb.h>
+
+#ifndef WIN32
+// POSIX includes for getpid() and gethostname()
+#include <sys/types.h>
+#include <unistd.h>
+#endif 
+
 
 namespace PLearn {
 using namespace std;
@@ -81,6 +89,7 @@ void ServerCommand::run(const vector<string>& args)
   if(args.size()>0) // Start TCP server on given port
     {
       PRStatus st;
+      char buf[256];
       int port = toint(args[0]);
       PRFileDesc* sock = PR_NewTCPSocket();
       if (!sock)
@@ -88,35 +97,46 @@ void ServerCommand::run(const vector<string>& args)
       PRNetAddr server_address;
       PR_InitializeNetAddr(PR_IpAddrAny, port, &server_address);
       if (PR_Bind(sock, &server_address) != PR_SUCCESS)
-        PLERROR("ServerCommand: could not bind to port %d!", port);      
+        PLERROR("ServerCommand: could not bind to port %d!", port);
+
+      string myhostname = "UNKNOWN_HOSTNAME";
+      string mypid = "UNKNOWN_PID";      
+#ifndef WIN32
+      mypid = tostring2(getpid());
+      if(gethostname(buf, sizeof(buf))==0)
+         myhostname = buf;
+#endif
+
+      pout << "PLEARN_SERVER_TCP " << myhostname << " " << port << " " << mypid << endl;
       for(;;)
         {
-          cerr << "\n-----------------------------------\n";
-          cerr << "PLEARN SERVER LISTENING ON PORT " << port << "\n"; 
-          st = PR_Listen(sock,1);
+          pout << endl;
+          pout << "######### Waiting for connection #########" << endl;
+          st = PR_Listen(sock,0);
           if(st!=PR_SUCCESS)
             PLERROR("serverCommand: listen on socket failed");
           PRNetAddr addr;
           PRFileDesc* fd = PR_Accept(sock, &addr, PR_INTERVAL_NO_TIMEOUT);
           if(fd==0)
             PLERROR("ServerCommand: accept returned 0, error code is: %d",PR_GetError());
-          char addrstr[100];
-          st = PR_NetAddrToString(&addr, addrstr, sizeof(addrstr));
-          cerr << "CONNECTION FROM " << addrstr << endl;
-          
+          st = PR_NetAddrToString(&addr, buf, sizeof(buf));
+          pout << "CONNECTION_FROM " << buf << endl;
           PStream io(new PrPStreamBuf(fd,fd,true,true));
           PLearnServer server(io);
           server.run();
         }
     }
-  else // Start stdin/stdout seerver
+  else // Start stdin/stdout server
     {
-      cerr << "Type !? to get some help." << endl;
+      perr << "Type !? to get some help." << endl;
       // PStream io(&std::cin, &std::cout);
-      PStream io(new StdPStreamBuf(&std::cin,&std::cout));
+      // PStream io(new StdPStreamBuf(&std::cin,&std::cout));
       // PStream io(new FdPStreamBuf(0,1));
+      PStream io = get_pio();
+      io.setMode(PStream::plearn_ascii);
       PLearnServer server(io);
       server.run();
+      perr << "XXXXXXXXX" << endl;
     }
 }
 
