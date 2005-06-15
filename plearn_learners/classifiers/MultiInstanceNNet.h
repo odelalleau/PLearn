@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.h,v 1.14 2004/07/21 20:14:37 tihocan Exp $
+   * $Id: MultiInstanceNNet.h,v 1.15 2005/06/15 14:40:38 lamblin Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/MultiInstanceNNet.h */
@@ -118,7 +118,8 @@ private:
     real direct_in_to_out_weight_decay; // default: MISSING_VALUE
     real classification_regularizer; // default: 0
 
-    bool L1_penalty; // default: false
+    string penalty_type; // default: "L2_square"
+    bool L1_penalty; // default: false - deprecated, set "penalty_type" to "L1"
     bool direct_in_to_out; // should we include direct input to output connecitons? default: false
     real interval_minval, interval_maxval; // if output_transfer_func = interval(minval,maxval), these are the interval bounds
     mutable int test_bag_size; // counting the number of instances in a test bag

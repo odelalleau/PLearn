@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.h,v 1.10 2004/07/21 16:30:56 chrish42 Exp $
+   * $Id: NeighborhoodSmoothnessNNet.h,v 1.11 2005/06/15 14:40:39 lamblin Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/NeighborhoodSmoothnessNNet.h */
@@ -116,7 +116,8 @@ class NeighborhoodSmoothnessNNet: public PLearner
     real direct_in_to_out_weight_decay; // default: MISSING_VALUE
     real classification_regularizer; // default: 0
 
-    bool L1_penalty; // default: false
+    string penalty_type; // default: "L2_square"
+    bool L1_penalty; // default: false - deprecated, set "penalty_type" to "L1"
     bool direct_in_to_out; // should we include direct input to output connecitons? default: false
     string output_transfer_func; // tanh, sigmoid, softplus, softmax  (default: "" means no transfer function)
     real interval_minval, interval_maxval; // if output_transfer_func = interval(minval,maxval), these are the interval bounds

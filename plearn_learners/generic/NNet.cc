@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.75 2005/06/03 13:01:14 tihocan Exp $
+   * $Id: NNet.cc,v 1.76 2005/06/15 14:40:39 lamblin Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -103,6 +103,7 @@ NNet::NNet() // DEFAULT VALUES FOR ALL OPTIONS
    fixed_output_weights(0),
    rbf_layer_size(0),
    first_class_is_junk(1),
+   penalty_type("L2_square"),
    L1_penalty(false),
    input_reconstruction_penalty(0),
    direct_in_to_out(false),
@@ -160,7 +161,16 @@ void NNet::declareOptions(OptionList& ol)
   declareOption(ol, "direct_in_to_out_weight_decay", &NNet::direct_in_to_out_weight_decay, OptionBase::buildoption, 
                 "Additional weight decay for the direct in-to-out layer.  Is added to 'weight_decay'.\n");
 
-  declareOption(ol, "L1_penalty", &NNet::L1_penalty, OptionBase::buildoption, 
+  declareOption(ol, "penalty_type", &NNet::penalty_type,
+                OptionBase::buildoption,
+                "Penalty to use on the weights (for weight and bias decay).\n"
+                "Can be any of:\n"
+                "  - \"L1\": L1 norm,\n"
+                "  - \"L1_square\": square of the L1 norm,\n"
+                "  - \"L2_square\" (default): square of the L2 norm.\n");
+
+  declareOption(ol, "L1_penalty", &NNet::L1_penalty, OptionBase::buildoption,
+                "Deprecated - You should use \"penalty_type\" instead\n"
                 "should we use L1 penalty instead of the default L2 penalty on the weights?\n");
 
   declareOption(ol, "fixed_output_weights", &NNet::fixed_output_weights, OptionBase::buildoption, 
@@ -299,7 +309,6 @@ void NNet::build_()
     input = Var(inputsize(), "input");
 
     params.resize(0);
-    Var hidden_layer;
     Var before_transfer_func;
 
     // Build main network graph.
@@ -309,6 +318,28 @@ void NNet::build_()
     buildTargetAndWeight();
 
     // Build costs.
+    if( L1_penalty )
+    {
+      PLDEPRECATED("Option \"L1_penalty\" deprecated. Please use \"penalty_type = L1\" instead.");
+      L1_penalty = 0;
+      penalty_type = "L1";
+    }
+
+    string pt = lowerstring( penalty_type );
+    if( pt == "l1" )
+      penalty_type = "L1";
+    else if( pt == "l1_square" || pt == "l1 square" || pt == "l1square" )
+      penalty_type = "L1_square";
+    else if( pt == "l2_square" || pt == "l2 square" || pt == "l2square" )
+      penalty_type = "L2_square";
+    else if( pt == "l2" )
+    {
+      PLWARNING("L2 penalty not supported, assuming you want L2 square");
+      penalty_type = "L2_square";
+    }
+    else
+      PLERROR("penalty_type \"%s\" not supported", penalty_type.c_str());
+
     buildCosts(output, target, hidden_layer, before_transfer_func);
 
     // Shared values hack...
@@ -600,17 +631,19 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
 void NNet::buildPenalties(const Var& hidden_layer) {
   penalties.resize(0);  // prevents penalties from being added twice by consecutive builds
   if(w1 && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
-    penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), L1_penalty));
+    penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), penalty_type));
   if(w2 && ((layer2_weight_decay + weight_decay)!=0 || (layer2_bias_decay + bias_decay)!=0))
-    penalties.append(affine_transform_weight_penalty(w2, (layer2_weight_decay + weight_decay), (layer2_bias_decay + bias_decay), L1_penalty));
+    penalties.append(affine_transform_weight_penalty(w2, (layer2_weight_decay + weight_decay), (layer2_bias_decay + bias_decay), penalty_type));
   if(wout && ((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
     penalties.append(affine_transform_weight_penalty(wout, (output_layer_weight_decay + weight_decay), 
-          (output_layer_bias_decay + bias_decay), L1_penalty));
+          (output_layer_bias_decay + bias_decay), penalty_type));
   if(wdirect && (direct_in_to_out_weight_decay + weight_decay) != 0)
   {
-    if (L1_penalty)
+    if (penalty_type == "L1_square")
+      penalties.append(square(sumabs(wdirect))*(direct_in_to_out_weight_decay + weight_decay));
+    else if (penalty_type == "L1")
       penalties.append(sumabs(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
-    else
+    else if (penalty_type == "L2_square")
       penalties.append(sumsquare(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
   }
   if (input_reconstruction_penalty>0)
@@ -808,6 +841,7 @@ void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   varDeepCopyField(outbias, copies);
   varDeepCopyField(wdirect, copies);
   varDeepCopyField(wrec, copies);
+  varDeepCopyField(hidden_layer, copies);
   varDeepCopyField(rbf_centers, copies);
   varDeepCopyField(rbf_sigmas, copies);
   varDeepCopyField(junk_prob, copies);

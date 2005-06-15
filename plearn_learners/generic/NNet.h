@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.28 2005/05/16 22:24:02 yoshua Exp $
+   * $Id: NNet.h,v 1.29 2005/06/15 14:40:39 lamblin Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -58,15 +58,6 @@ private:
 
 protected:
 
-  Var input;  // Var(inputsize())
-  Var target; // Var(targetsize()-weightsize())
-  Var sampleweight; // Var(1) if train_set->hasWeights()
-  Var w1; // bias and weights of first hidden layer
-  Var w2; // bias and weights of second hidden layer
-  Var wout; // bias and weights of output layer
-  Var outbias; // bias used only if fixed_output_weights
-  Var wdirect; // bias and weights for direct in-to-out connection
-  Var wrec; // input reconstruction weights (optional), from hidden layer to predicted input
   Var rbf_centers; // n_classes (or n_classes-1) x rbf_layer_size = mu_i of RBF gaussians
   Var rbf_sigmas; // n_classes (or n_classes-1) entries (sigma's of the RBFs)
   Var junk_prob; // scalar background (junk) probability, if first_class_is_junk
@@ -80,7 +71,23 @@ protected:
   VarArray invars;
   VarArray params;  // all arameter input vars
 
+// to put back later -- blip  Vec paramsvalues; // values of all parameters
+
+public: // to set these values instead of getting them by training
   Vec paramsvalues; // values of all parameters
+  Var input;  // Var(inputsize())
+  Var target; // Var(targetsize()-weightsize())
+  Var sampleweight; // Var(1) if train_set->hasWeights()
+
+  Var w1; // bias and weights of first hidden layer
+  Var w2; // bias and weights of second hidden layer
+  Var wout; // bias and weights of output layer
+  Var outbias; // bias used only if fixed_output_weights
+  Var wdirect; // bias and weights for direct in-to-out connection
+  Var wrec; // input reconstruction weights (optional), from hidden layer to predicted input
+
+  // first hidden layer
+  Var hidden_layer;
 
 public:
 
@@ -114,7 +121,9 @@ public:
   int rbf_layer_size; // number of representation units when adding an rbf layer in output
   bool first_class_is_junk;
 
-  bool L1_penalty; // default: false
+  string penalty_type; // default: "L2_square"
+  bool L1_penalty; // default: false - deprecated, set "penalty_type" to "L1"
+
   real input_reconstruction_penalty; // default = 0
   bool direct_in_to_out; // should we include direct input to output connecitons? default: false
   string output_transfer_func; // tanh, sigmoid, softplus, softmax, etc...  (default: "" means no transfer function)

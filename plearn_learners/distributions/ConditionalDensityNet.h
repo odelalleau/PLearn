@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.35 2004/09/14 16:04:55 chrish42 Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.36 2005/06/15 14:40:39 lamblin Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -147,7 +147,8 @@ public:
   real output_layer_bias_decay;   // default: MISSING_VALUE
   real direct_in_to_out_weight_decay; // default: MISSING_VALUE
 
-  bool L1_penalty; // default: false
+  string penalty_type; // default: "L2_square"
+  bool L1_penalty; // default: false - deprecated, set "penalty_type" to "L1"
   bool direct_in_to_out; // should we include direct input to output connecitons? default: false
 
   // Build options related to the optimization:

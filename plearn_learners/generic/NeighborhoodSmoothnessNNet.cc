@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.15 2004/07/21 16:30:56 chrish42 Exp $
+   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.16 2005/06/15 14:40:39 lamblin Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
@@ -112,6 +112,7 @@ NeighborhoodSmoothnessNNet::NeighborhoodSmoothnessNNet() // DEFAULT VALUES FOR A
    output_layer_weight_decay(0),
    output_layer_bias_decay(0),
    direct_in_to_out_weight_decay(0),
+   penalty_type("L2_square"),
    L1_penalty(false),
    direct_in_to_out(false),
    output_transfer_func(""),
@@ -174,7 +175,16 @@ void NeighborhoodSmoothnessNNet::declareOptions(OptionList& ol)
   declareOption(ol, "direct_in_to_out_weight_decay", &NeighborhoodSmoothnessNNet::direct_in_to_out_weight_decay, OptionBase::buildoption, 
                 "    Additional weight decay for the direct in-to-out layer.  Is added to 'weight_decay'.\n");
 
+  declareOption(ol, "penalty_type", &NeighborhoodSmoothnessNNet::penalty_type,
+                OptionBase::buildoption,
+                "    Penalty to use on the weights (for weight and bias decay).\n"
+                "    Can be any of:\n"
+                "      - \"L1\": L1 norm,\n"
+                "      - \"L1_square\": square of the L1 norm,\n"
+                "      - \"L2_square\" (default): square of the L2 norm.\n");
+
   declareOption(ol, "L1_penalty", &NeighborhoodSmoothnessNNet::L1_penalty, OptionBase::buildoption, 
+                "    Deprecated - You should use \"penalty_type\" instead\n"
                 "    should we use L1 penalty instead of the default L2 penalty on the weights?\n");
 
   declareOption(ol, "direct_in_to_out", &NeighborhoodSmoothnessNNet::direct_in_to_out, OptionBase::buildoption, 
@@ -335,20 +345,45 @@ void NeighborhoodSmoothnessNNet::build_()
         sampleweight = Var(1, "weight");
       }
 
+      // checking penalty
+      if( L1_penalty )
+      {
+        PLDEPRECATED("Option \"L1_penalty\" deprecated. Please use \"penalty_type = L1\" instead.");
+        L1_penalty = 0;
+        penalty_type = "L1";
+      }
+
+      string pt = lowerstring( penalty_type );
+      if( pt == "l1" )
+        penalty_type = "L1";
+      else if( pt == "l1_square" || pt == "l1 square" || pt == "l1square" )
+        penalty_type = "L1_square";
+      else if( pt == "l2_square" || pt == "l2 square" || pt == "l2square" )
+        penalty_type = "L2_square";
+      else if( pt == "l2" )
+      {
+        PLWARNING("L2 penalty not supported, assuming you want L2 square");
+        penalty_type = "L2_square";
+      }
+      else
+        PLERROR("penalty_type \"%s\" not supported", penalty_type.c_str());
+
       // create penalties
       penalties.resize(0);  // prevents penalties from being added twice by consecutive builds
       if(w1 && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
-        penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), L1_penalty));
+        penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), penalty_type));
       if(w2 && ((layer2_weight_decay + weight_decay)!=0 || (layer2_bias_decay + bias_decay)!=0))
-        penalties.append(affine_transform_weight_penalty(w2, (layer2_weight_decay + weight_decay), (layer2_bias_decay + bias_decay), L1_penalty));
+        penalties.append(affine_transform_weight_penalty(w2, (layer2_weight_decay + weight_decay), (layer2_bias_decay + bias_decay), penalty_type));
       if(wout && ((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
         penalties.append(affine_transform_weight_penalty(wout, (output_layer_weight_decay + weight_decay), 
-                                                         (output_layer_bias_decay + bias_decay), L1_penalty));
+                                                         (output_layer_bias_decay + bias_decay), penalty_type));
       if(wdirect && (direct_in_to_out_weight_decay + weight_decay) != 0)
       {
-        if (L1_penalty)
+        if (penalty_type == "L1_square")
+          penalties.append(square(sumabs(wdirect))*(direct_in_to_out_weight_decay + weight_decay));
+        else if (penalty_type == "L1")
           penalties.append(sumabs(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
-        else
+        else if (penalty_type == "L2_square")
           penalties.append(sumsquare(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
       }
 

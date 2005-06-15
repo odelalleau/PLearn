@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformWeightPenalty.h,v 1.6 2004/04/27 15:59:16 morinf Exp $
+   * $Id: AffineTransformWeightPenalty.h,v 1.7 2005/06/15 14:39:22 lamblin Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,6 +44,7 @@
 #define AffineTransformWeightPenalty_INC
 
 #include "UnaryVariable.h"
+#include <plearn/base/stringutils.h>
 
 namespace PLearn {
 using namespace std;
@@ -57,16 +58,48 @@ class AffineTransformWeightPenalty: public UnaryVariable
   protected:    
     real weight_decay_;
     real bias_decay_;
-    bool L1_penalty_;
+    string penalty_type_;
 
   public:
     //!  Default constructor for persistence
     AffineTransformWeightPenalty()
-      : weight_decay_(0.0), bias_decay_(0.0), L1_penalty_(false)
-    {}
-    AffineTransformWeightPenalty(Variable* affinetransform, real weight_decay, real bias_decay=0., bool L1_penalty=false) 
-      : inherited(affinetransform, 1,1),weight_decay_(weight_decay),bias_decay_(bias_decay),L1_penalty_(L1_penalty)
-    {}
+      : weight_decay_(0.0), bias_decay_(0.0), penalty_type_("L2_square")
+    {
+      string pt = lowerstring( penalty_type_ );
+      if( pt == "l1" )
+        penalty_type_ = "L1";
+      else if( pt == "l1_square" || pt == "l1 square" || pt == "l1square" )
+        penalty_type_ = "L1_square";
+      else if( pt == "l2_square" || pt == "l2 square" || pt == "l2square" )
+        penalty_type_ = "L2_square";
+      else if( pt == "l2" )
+      {
+        PLWARNING("L2 penalty not supported, assuming you want L2 square");
+        penalty_type_ = "L2_square";
+      }
+      else
+        PLERROR("penalty_type_ \"%s\" not supported", penalty_type_.c_str());
+    }
+
+    AffineTransformWeightPenalty(Variable* affinetransform, real weight_decay, real bias_decay=0., string penalty_type="L2_square")
+      : inherited(affinetransform, 1,1),weight_decay_(weight_decay),bias_decay_(bias_decay),penalty_type_(penalty_type)
+    {
+      string pt = lowerstring( penalty_type_ );
+      if( pt == "l1" )
+        penalty_type_ = "L1";
+      else if( pt == "l1_square" || pt == "l1 square" || pt == "l1square" )
+        penalty_type_ = "L1_square";
+      else if( pt == "l2_square" || pt == "l2 square" || pt == "l2square" )
+        penalty_type_ = "L2_square";
+      else if( pt == "l2" )
+      {
+        PLWARNING("L2 penalty not supported, assuming you want L2 square");
+        penalty_type_ = "L2_square";
+      }
+      else
+        PLERROR("penalty_type_ \"%s\" not supported", penalty_type_.c_str());
+    }
+
     PLEARN_DECLARE_OBJECT(AffineTransformWeightPenalty);
     static void declareOptions(OptionList &ol);
 
@@ -79,8 +112,8 @@ DECLARE_OBJECT_PTR(AffineTransformWeightPenalty);
 
 //! weight decay and bias decay terms
 //! This has not been tested yet [Pascal: a tester].
-inline Var affine_transform_weight_penalty(Var transformation, real weight_decay, real bias_decay=0, bool L1_penalty=false)
-{ return new AffineTransformWeightPenalty(transformation, weight_decay, bias_decay, L1_penalty); } 
+inline Var affine_transform_weight_penalty(Var transformation, real weight_decay, real bias_decay=0, string penalty_type="L2_square")
+{ return new AffineTransformWeightPenalty(transformation, weight_decay, bias_decay, penalty_type); } 
 
 } // end of namespace PLearn
 

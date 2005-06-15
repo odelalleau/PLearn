@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformWeightPenalty.cc,v 1.10 2005/06/14 13:18:27 tihocan Exp $
+   * $Id: AffineTransformWeightPenalty.cc,v 1.11 2005/06/15 14:39:22 lamblin Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,13 +59,23 @@ AffineTransformWeightPenalty::declareOptions(OptionList &ol)
 {
     declareOption(ol, "weight_decay_", &AffineTransformWeightPenalty::weight_decay_, OptionBase::buildoption, "");
     declareOption(ol, "bias_decay_", &AffineTransformWeightPenalty::bias_decay_, OptionBase::buildoption, "");
-    declareOption(ol, "L1_penalty_", &AffineTransformWeightPenalty::L1_penalty_, OptionBase::buildoption, "");
-    inherited::declareOptions(ol);
+    declareOption(ol, "penalty_type_", &AffineTransformWeightPenalty::penalty_type_, OptionBase::buildoption, "");
 }
 
 void AffineTransformWeightPenalty::fprop()
 {
-  if (L1_penalty_)
+  if (penalty_type_ == "L1_square")
+  {
+    if (input->length()>1)
+      valuedata[0] = sqrt(fabs(weight_decay_))*sumabs(input->matValue.subMatRows(1,input->length()-1));
+    else
+      valuedata[0] = 0;
+    if(bias_decay_!=0)
+      valuedata[0] += sqrt(fabs(bias_decay_))*sumabs(input->matValue(0));
+
+    valuedata[0] *= valuedata[0];
+  }
+  else if (penalty_type_ == "L1")
   {
     if (input->length()>1)
       valuedata[0] = weight_decay_*sumabs(input->matValue.subMatRows(1,input->length()-1));
@@ -74,7 +84,7 @@ void AffineTransformWeightPenalty::fprop()
     if(bias_decay_!=0)
       valuedata[0] += bias_decay_*sumabs(input->matValue(0));
   }
-  else
+  else if (penalty_type_ == "L2_square")
   {
     if (input->length()>1)
       valuedata[0] = weight_decay_*sumsquare(input->matValue.subMatRows(1,input->length()-1));
@@ -85,11 +95,42 @@ void AffineTransformWeightPenalty::fprop()
   }
 }
 
-    
+
 void AffineTransformWeightPenalty::bprop()
 {
   int l = input->length() - 1;
-  if (L1_penalty_)
+  if ( penalty_type_ == "L1_square" )
+  {
+    if (!input->matGradient.isCompact())
+      PLERROR("AffineTransformWeightPenalty::bprop, L1_square penalty currently not handling non-compact weight matrix");
+    int n=input->width();
+    if (weight_decay_!=0)
+    {
+      real delta = two(valuedata[0])*sqrt(fabs(weight_decay_))*gradientdata[0];
+      real* w = input->matValue[1];
+      real* d_w = input->matGradient[1];
+      int tot = l * n; // Number of weights to update.
+      for (int i = 0; i < tot; i++) {
+        if (w[i] > 0)
+          d_w[i] += delta;
+        else if (w[i] < 0)
+          d_w[i] -= delta;
+      }
+    }
+    if(bias_decay_!=0)
+    {
+      real delta = two(valuedata[0])*sqrt(fabs(bias_decay_))*gradientdata[0];
+      real* d_biases = input->matGradient[0];
+      real* biases = input->matValue[0];
+      for (int i=0;i<n;i++) {
+        if (biases[i]>0)
+          d_biases[i] += delta;
+        else if (biases[i]<0)
+          d_biases[i] -= delta;
+      }
+    }
+  }
+  else if ( penalty_type_ == "L1")
   {
     if (!input->matGradient.isCompact())
       PLERROR("AffineTransformWeightPenalty::bprop, L1 penalty currently not handling non-compact weight matrix");
@@ -119,7 +160,7 @@ void AffineTransformWeightPenalty::bprop()
           d_biases[i] -= delta;
     }
   }
-  else
+  else if (penalty_type_ == "L2_square" )
   {
     multiplyAcc(input->matGradient.subMatRows(1,l), input->matValue.subMatRows(1,l), two(weight_decay_)*gradientdata[0]);
     if(bias_decay_!=0)
