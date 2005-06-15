@@ -1,9 +1,8 @@
-import copy, inspect
+import copy, inspect, re
 
-##########################################
-### Helper functions 
-##########################################
-
+#
+# Helper functions 
+#
 def builtin_predicate( name ):
     """Is I{name} a builtin-like name.
 
@@ -19,6 +18,38 @@ def frozen_public_interface(set):
         else:
             raise AttributeError("You cannot add attributes to an instance of %s" % self.__class__.__name__)
     return set_attr
+
+def getDefaultsSource( obj ):
+    DEFAULTS = 'Defaults' 
+
+    lines, lstart = inspect.getsourcelines( obj )
+
+    pat = re.compile(r'^\s*class\s*' + DEFAULTS + r'\b')
+    for i,line in enumerate( lines ):
+        if pat.match( line ):
+            return inspect.getblock( lines[i:] )
+    else:
+        raise IOError('Could not find Defaults definition')
+
+def getOrderedDefaultsAttrName( obj ): 
+    ordered   = []
+    defsource = getDefaultsSource( obj )
+
+    pat = re.compile( r'^\s*(\w+)\s*=\s*' )
+    for line in defsource[1:]:          # skipping first line
+        comment_start = line.find('#')  # neglecting comments
+        if comment_start != -1:
+            line = line[:comment_start]
+            
+        matchobj = pat.match( line )
+        if matchobj:
+            matches = matchobj.groups()
+            if len(matches) == 1:
+                ordered.append( matches[0] )
+            else:
+                raise ValueError(line)
+    return ordered
+
 
 class AttributeManager:
     """Attributes management for high level objects.

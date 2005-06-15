@@ -1,10 +1,9 @@
-_cvs_id__ = "$Id: modes.py,v 1.23 2005/06/14 16:39:14 dorionc Exp $"
+_cvs_id__ = "$Id: modes.py,v 1.24 2005/06/15 15:26:51 dorionc Exp $"
 
 import copy, shutil
 import plearn.utilities.version_control as version_control
 import plearn.utilities.ppath           as ppath
 import plearn.utilities.toolkit         as toolkit
-
 
 from Test                                 import *
 from programs                             import *
@@ -122,7 +121,7 @@ class PyTestMode( Mode ):
             ignored_directories = []
             for target in targets:
                 if hasattr( options, 'recursive' ) and options.recursive:
-                    os.path.walk( target, cls.build_tests, ignored_directories )
+                    os.path.walk( target, self.build_tests, ignored_directories )
                 else:
                     self.build_tests( ignored_directories, target, os.listdir(target) )
 

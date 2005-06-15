@@ -3,14 +3,14 @@
 The class contained in this module is to be used as super class for almost
 any Python class emulating a PLearn cousin class.
 """
-__cvs_id__ = "$Id: PyPLearnObject.py,v 1.20 2005/06/14 18:08:23 dorionc Exp $"
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.21 2005/06/15 15:26:15 dorionc Exp $"
 
 from   AttributeManager            import AttributeManager
 from   plearn.utilities.toolkit    import no_none
 from   plearn.pyplearn.plearn_repr import *
 import plearn.utilities.metaprog   as     metaprog
 
-__all__ = [ "PyPLearnObject", "PyPLearnList" ]
+__all__ = [ "PyPLearnObject", "PyPLearnList", "PythonObject" ]
 
 class PyPLearnObject( AttributeManager ):
     """A class from which to derive python objects that emulate PLearn ones.

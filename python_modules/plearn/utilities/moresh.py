@@ -9,3 +9,5 @@ def pushd( path ):
 def popd( ):
     os.chdir( DIR_STACK.pop() )
     
+def pwd( ):
+    print os.getcwd( )

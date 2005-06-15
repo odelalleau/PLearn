@@ -1,9 +1,11 @@
-__cvs_id__ = "$Id: __init__.py,v 1.17 2005/06/14 16:39:14 dorionc Exp $"
+__cvs_id__ = "$Id: __init__.py,v 1.18 2005/06/15 15:26:51 dorionc Exp $"
                             
 ### The versionning tools are now properly enabled.
 import os, sys, time
 import modes
-from PyTestCore                           import *
+
+from PyTestCore import *
+
 from plearn.utilities                     import toolkit
 from plearn.utilities.verbosity           import *
 from plearn.utilities.ModeAndOptionParser import Mode, ModeAndOptionParser, OptionGroup

@@ -1,16 +1,15 @@
-__cvs_id__ = "$Id: routines.py,v 1.4 2005/06/14 16:39:14 dorionc Exp $"
+__cvs_id__ = "$Id: routines.py,v 1.5 2005/06/15 15:26:51 dorionc Exp $"
 
 import os 
 import plearn.utilities.toolkit as toolkit
 
-from   programs                   import *
-from   PyTestCore                 import *
-from   BasicStats                 import BasicStats
-from   IntelligentDiff            import *          
-from   plearn.utilities.verbosity import *
+from Test                       import *
+from programs                   import *
+from PyTestCore                 import *
+from BasicStats                 import BasicStats
+from IntelligentDiff            import *          
+from plearn.utilities.verbosity import *
 
-## New
-from Test import *
 
 __all__ = [
     ## Functions
