@@ -107,7 +107,7 @@ PStream& get_perr()
 {
   static bool initialized = false;
   static PStream perr = new PrPStreamBuf(0,
-      PR_GetSpecialFD(PR_StandardOutput));
+      PR_GetSpecialFD(PR_StandardError));
   if(!initialized)
   {
     perr.setMode(PStream::raw_ascii); // raw_ascii default mode

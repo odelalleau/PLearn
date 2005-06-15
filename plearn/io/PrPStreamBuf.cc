@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrPStreamBuf.cc,v 1.6 2005/01/14 20:11:44 chrish42 Exp $ 
+   * $Id: PrPStreamBuf.cc,v 1.7 2005/06/15 14:41:13 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -43,6 +43,7 @@
 
 #include "PrPStreamBuf.h"
 #include <mozilla/nspr/prio.h>
+#include <stdio.h>
 
 namespace PLearn {
 using namespace std;
@@ -57,7 +58,13 @@ using namespace std;
   {
     const bool in_and_out_equal = (in == out);
     
-    flush();
+    try {
+      flush();
+    }
+    catch(...)
+      {
+        fprintf(stderr,"Could not properly clean up (flush) in destructor of PrPStreamBuf\n");
+      }
     if (in && own_in)
       {
         PR_Close(in);
@@ -83,7 +90,7 @@ using namespace std;
   {
     streamsize nwritten = ::PR_Write(out, p, n);
     if (nwritten != n)
-      PLERROR("In PrPStreamBuf::write_ failed to write the requested number of bytes");
+      PLERROR("In PrPStreamBuf::write_ failed to write the requested number of bytes: wrote %d instead of %d",nwritten,n);
   }
   
 } // end of namespace PLearn

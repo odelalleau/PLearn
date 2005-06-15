@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnService.cc,v 1.4 2005/06/09 21:12:41 plearner Exp $ 
+   * $Id: PLearnService.cc,v 1.5 2005/06/15 14:41:13 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -46,6 +46,7 @@
 #include <plearn/io/openFile.h>
 #include <plearn/io/openSocket.h>
 #include <plearn/io/pl_log.h>
+#include <plearn/io/Poll.h>
 
 namespace PLearn {
 using namespace std;
@@ -80,16 +81,16 @@ using namespace std;
     PStream in = openFile(serversfile, PStream::raw_ascii, "r");
 
     string hostname;
-    int pid = 0;
+    string pid;
     int tcpport = -1;
 
     TVec< pair<string,int> > hostname_and_port;
 
     while(in)
       {
-        in >> hostname >> pid >> tcpport;
+        in >> hostname >> tcpport >> pid;
         if(in)
-          hostname_and_port.append(pair<string,int>(hostname,pid));
+          hostname_and_port.append(pair<string,int>(hostname,tcpport));
       }
     connectToServers(hostname_and_port);
   }
@@ -129,6 +130,27 @@ using namespace std;
         reserved_servers[serv] = servnum;
       }
     return serv;
+  }
+
+  int PLearnService::watchServers(TVec< PP<RemotePLearnServer> > servers, int timeout)
+  {
+    Poll p;
+    int n = servers.size();
+    vector<PStream> streams(n);
+    for(int k=0; k<n; k++)
+      streams[k] = servers[k]->io;
+    p.setStreamsToWatch(streams);
+
+    PRInt32 npending = p.waitForEvents(timeout);
+    if(npending<=0)
+      return -1;
+    
+    PStream io = p.getNextPendingEvent();    
+    for(int k=0; k<n; k++)
+      if(streams[k] == io)
+        return k;
+    PLERROR("stream returned by NextPendingEvent is none of the servers' io field. This should not happen!");
+    return -1;  // To make the compiler happy (never reached).
   }
 
   void PLearnService::freeServer(RemotePLearnServer* remoteserv)

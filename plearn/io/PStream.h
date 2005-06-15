@@ -177,6 +177,10 @@ public:
   PStream& operator=(streambuftype* streambuf)
   { inherited::operator=(streambuf); return *this; }
 
+  bool operator==(const PStream& other)
+  { return PP<PStreamBuf>::operator==(other); }
+
+
 
 #if STREAMBUFVER == 0
   inline PStream& operator()(istream* pin)

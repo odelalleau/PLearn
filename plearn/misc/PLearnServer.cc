@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnServer.cc,v 1.8 2005/05/13 16:12:34 plearner Exp $ 
+   * $Id: PLearnServer.cc,v 1.9 2005/06/15 14:41:13 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -134,10 +134,15 @@ using namespace std;
         int c = -1;
         do { c = io.get(); }
         while(c!='!' && c!=EOF);
-
+        
+        if(c==EOF)
+          {
+            cerr << "Read EOF: quitting" << endl;
+            return;
+          }
         int command = io.get();
         
-        // cerr << "Rceived command: " << char(command) << endl;
+        cerr << "Received command: " << char(command) << endl;
 
         try 
           {            
@@ -198,16 +203,16 @@ using namespace std;
                 break;
 
               case 'Q': // quit
-              case EOF:
-                // cerr << "Quitting" << endl;
+                cerr << "Quitting" << endl;
                 return;
 
               default:
-                PLERROR("Invalid PLearnServer command char: %c Type !? for help.",command);
+                PLERROR("Invalid PLearnServer command char: %c Type !? for help.",(char)command);
               }
           }
         catch(const PLearnError& e)
           {
+            cerr << "PLearnServer caught PLearnError \"" << e.message() << '"' << endl;
             io.write("!E ");
             io << e.message() << endl;
           }
@@ -217,6 +222,7 @@ using namespace std;
             io << "Unknown exception" << endl;
           }
       }
+    perr << "Exiting PLearnServer::run()" << endl;
   }
 
 } // end of namespace PLearn

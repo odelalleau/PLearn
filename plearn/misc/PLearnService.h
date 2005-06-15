@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnService.h,v 1.3 2005/06/09 21:12:41 plearner Exp $ 
+   * $Id: PLearnService.h,v 1.4 2005/06/15 14:41:13 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -50,6 +50,7 @@
 #include <plearn/math/TVec.h>
 #include <map>
 #include <string>
+// #include <RemotePLearnServer.h>
 
 namespace PLearn {
 
@@ -92,6 +93,8 @@ public:
   //! If sucessful returns a pointer to a new RemotePLearnServer
   //! If no server is available, returns 0.
   RemotePLearnServer* reserveServer(); 
+
+  int watchServers(TVec< PP<RemotePLearnServer> > servers, int timeout=0);
 
   ~PLearnService();
 };

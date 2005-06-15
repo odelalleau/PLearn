@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PP.h,v 1.10 2005/05/04 21:44:47 ducharme Exp $
+   * $Id: PP.h,v 1.11 2005/06/15 14:41:12 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -185,6 +185,12 @@ class PP
   inline PP<T>& operator=(const PP<T>& other)
     { return operator=((T*)other); }
 
+  inline bool operator==(const PP<T>& other)
+  { return ptr==other.ptr; }
+
+  inline bool operator==(const T* other)
+  { return ptr==other; }
+
   inline ~PP()
     { 
       if(ptr)
@@ -192,6 +198,10 @@ class PP
     }
 
 };
+
+template <class T>
+inline bool operator==(const T* ptr, const PP<T>& b)
+{ return ptr==b.ptr; }
 
   ///////////////////
   // deepCopyField //
