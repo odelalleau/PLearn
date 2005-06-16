@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.61 2005/06/15 20:15:39 lamblin Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.62 2005/06/16 22:10:08 lamblin Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -1069,7 +1069,7 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
   int stage_max = stage + nstages; // the stage to reach
 
 #ifdef BOUNDCHECK
-  if (current_step_size <= 0) {
+  if (current_step_size <= 0 && line_search_algo <= 2) {
     PLERROR("In ConjGradientOptimizer::optimizeN - current_step_size <= 0, have you called reset() ?");
   }
 #endif
