@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.41 2005/06/16 18:24:47 tihocan Exp $
+   * $Id: Kernel.cc,v 1.42 2005/06/16 18:37:22 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -404,7 +404,6 @@ void Kernel::computeSparseGramMatrix(TVec<Mat> K) const
   if (report_progress) {
     pb = new ProgressBar("Computing sparse Gram matrix for " + classname(), (l * (l + 1)) / 2);
   }
-  real Kij;
   Vec j_and_Kij(2);
   for (int i = 0; i < l; i++)
     K[i].resize(0,2);
@@ -413,7 +412,7 @@ void Kernel::computeSparseGramMatrix(TVec<Mat> K) const
     for (int j=0; j<=i; j++)
     {
       j_and_Kij[1] = evaluate_i_j(i,j);
-      if (Kij != 0) {
+      if (j_and_Kij[1] != 0) {
         j_and_Kij[0] = j;
         K[i].appendRow(j_and_Kij);
         if (j < i) {
