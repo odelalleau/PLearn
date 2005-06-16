@@ -4,7 +4,7 @@ all: guides.all
 publish:
 	rsync -v -rlt -e ssh --cvs-exclude --delete --delete-excluded --modify-window=10 * plearner@plearn.sourceforge.net:/home/groups/p/pl/plearn/htdocs
 
-guides.all: guides.ps guides.html guides.pdf 
+guides.all: guides.ps guides.html guides.pdf api.html
 
 doxygen:
 	doxygen
@@ -69,7 +69,5 @@ tools_guide.pdf: tools_guide.tex
 	pdflatex tools_guide
 
 
-
-
-
-
+api.html:
+	pldoc        
