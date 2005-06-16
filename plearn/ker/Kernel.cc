@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.39 2005/06/13 19:34:25 tihocan Exp $
+   * $Id: Kernel.cc,v 1.40 2005/06/16 13:38:30 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,6 +64,7 @@ Kernel::Kernel(bool is__symmetric)
   lock_k_xi_x(false),
   data_inputsize(-1),
   gram_matrix_is_cached(false),
+  sparse_gram_matrix_is_cached(false),
   n_examples(-1),
   cache_gram_matrix(false),
   is_symmetric(is__symmetric),
@@ -130,6 +131,7 @@ void Kernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(k_xi_x, copies);
   deepCopyField(data, copies);
   deepCopyField(gram_matrix, copies);
+  deepCopyField(sparse_gram_matrix, copies);
   deepCopyField(specify_dataset, copies);
 }
 
@@ -151,6 +153,7 @@ void Kernel::setDataForKernelMatrix(VMat the_data)
     n_examples = 0;
   }
   gram_matrix_is_cached = false;
+  sparse_gram_matrix_is_cached = false;
 }
 
 ////////////////////////////
@@ -314,6 +317,8 @@ void Kernel::computeNearestNeighbors(const Vec& x, Mat& k_xi_x_sorted, int knn) 
 void Kernel::computeGramMatrix(Mat K) const
 {
   if (!data) PLERROR("Kernel::computeGramMatrix should be called only after setDataForKernelMatrix");
+  if (!is_symmetric)
+    PLERROR("In Kernel::computeGramMatrix - Currently not implemented for non-symmetric kernels");
   if (cache_gram_matrix && gram_matrix_is_cached) {
     K << gram_matrix;
     return;
@@ -351,6 +356,63 @@ void Kernel::computeGramMatrix(Mat K) const
     gram_matrix.resize(l,l);
     gram_matrix << K;
     gram_matrix_is_cached = true;
+  }
+}
+
+/////////////////////////////
+// computeSparseGramMatrix //
+/////////////////////////////
+void Kernel::computeSparseGramMatrix(TVec<Mat> K) const
+{
+  if (!data) PLERROR("Kernel::computeSparseGramMatrix should be called only after setDataForKernelMatrix");
+  if (!is_symmetric)
+    PLERROR("In Kernel::computeGramMatrix - Currently not implemented for non-symmetric kernels");
+  if (cache_gram_matrix && sparse_gram_matrix_is_cached) {
+    for (int i = 0; i < sparse_gram_matrix.length(); i++) {
+      K[i].resize(sparse_gram_matrix[i].length(), 2);
+      K[i] << sparse_gram_matrix[i];
+    }
+    return;
+  }
+  int l=data->length();
+  ProgressBar* pb = 0;
+  int count = 0;
+  if (report_progress) {
+    pb = new ProgressBar("Computing sparse Gram matrix for " + classname(), (l * (l + 1)) / 2);
+  }
+  real Kij;
+  Vec j_and_Kij(2);
+  for (int i = 0; i < l; i++)
+    K[i].resize(0,2);
+  for (int i=0;i<l;i++)
+  {
+    for (int j=0; j<=i; j++)
+    {
+      j_and_Kij[1] = evaluate_i_j(i,j);
+      if (Kij != 0) {
+        j_and_Kij[0] = j;
+        K[i].appendRow(j_and_Kij);
+        if (j < i) {
+          j_and_Kij[0] = i;
+          K[j].appendRow(j_and_Kij);
+        }
+      }
+    }
+    if (pb) {
+      count += i + 1;
+      pb->update(count);
+    }
+  }
+  if (pb) {
+    delete pb;
+  }
+  if (cache_gram_matrix) {
+    sparse_gram_matrix.resize(l);
+    for (int i = 0; i < l; i++) {
+      sparse_gram_matrix[i].resize(K[i].length(), 2);
+      sparse_gram_matrix[i] << K[i];
+    }
+    sparse_gram_matrix_is_cached = true;
   }
 }
 

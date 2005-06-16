@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.35 2005/06/13 19:34:25 tihocan Exp $
+   * $Id: Kernel.h,v 1.36 2005/06/16 13:38:30 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -67,8 +67,10 @@ protected:
 
   VMat data; //!<  data for kernel matrix, which will be used for calls to evaluate_i_j and the like
   int data_inputsize;
-  mutable Mat gram_matrix;
+  mutable Mat gram_matrix;                //!< Cached Gram matrix.
+  mutable TVec<Mat> sparse_gram_matrix;   //!< Cached sparse Gram matrix.
   mutable bool gram_matrix_is_cached;
+  mutable bool sparse_gram_matrix_is_cached;
   int n_examples;
 
   static void declareOptions(OptionList& ol);
@@ -139,6 +141,12 @@ public:
 
   //! Call evaluate_i_j to fill each of the entries (i,j) of symmetric matrix K.
   virtual void computeGramMatrix(Mat K) const;
+
+  //! Fill K[i] with the non-zero elements of row i of the Gram matrix.
+  //! Specifically, K[i] is a (k_i x 2) matrix where k_i is the number of
+  //! non-zero elements in the i-th row of the Gram matrix, and
+  //! K[i](k) = [ <index of k-th non-zero element> <value of k-th non-zero element>]
+  virtual void computeSparseGramMatrix(TVec<Mat> K) const;
 
   //!  ** Subclasses may overload these methods ** 
   //!  They provide a generic way to set and retrieve kernel parameters
