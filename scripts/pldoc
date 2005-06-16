@@ -1,80 +1,8 @@
-#!/usr/bin/env python2.3
+#!/usr/bin/env python
 import os, string, sys
-from plearn.utilities import toolkit
 
 external = ['__builtin__', 'os', 'sys', 'string']
-        
-class epydoc_error_block:
-    def __init__(self, line):
-        if not line.startswith('===='):
-            raise ValueError
-        self.block         = line
-        self.header        = ''
-        self.header_closed = False
-
-    def __add__(self, line):
-        if line.startswith('----'):
-            self.header_closed = True            
-        elif not self.header_closed:
-            self.header += line
-
-        self.block += line
-        return self
-
-    def __str__(self):
-        if find_first(self.header, external) is not None:
-            return ''            
-        return self.block
-    
-def build_py_list(namespace, dirc):
-    py_list = [namespace]
-    py_list.extend( ['%s.%s'%(namespace, s[:-3])
-                     for s in os.listdir(dirc)
-                     if s[-3:] == '.py' and s[:-3] != "__init__" ] )
-    return py_list
-
-def build_plearn_py_list():
-    plearndir     = os.getenv( 'PLEARNDIR',
-                               os.path.join(os.getenv('HOME'), 'PLearn') )
-    
-    plearn_py     = os.path.join(plearndir, 'python_modules/plearn/')
-
-    py_list       = build_py_list('plearn', plearn_py)
-
-    ##py_list.extend( external )
-
-    return py_list
-
-def epydoc(py_list):
-    cmd = "epydoc --html %s" % string.join(py_list)
-    print( "+++ %s" % cmd )
-    output = toolkit.command_output( cmd )
-    errors = parse_epydoc_errors( output )
-    for block in errors:
-        print block,
-    print
-
-def find_first(s, substrings):
-    for sub in substrings:
-        index = string.find(s, sub)
-        if index != -1:
-            return (sub, index)
-    return None
-
-def parse_epydoc_errors( errors ):
-    blocks        = ['']
-
-    for line in errors:
-        if line.startswith('===='):
-            blocks.append( epydoc_error_block(line) )
-        elif line == '\n':
-            blocks.append('')
-        else:
-            blocks[-1] += line
-        
-    return [ b for b in blocks
-             if str(b) != '' ] 
-     
+             
 def pldoc_help():
     prog = os.path.basename( sys.argv[0] )
     print    
@@ -94,20 +22,39 @@ if __name__ == '__main__':
     if "--help" in sys.argv or '-h' in sys.argv:
         pldoc_help()
 
-    # epydoc( build_plearn_py_list() )
+    from plearn.utilities.ppath   import ppath
+    plearndir = ppath( 'PLEARNDIR' )
+
 
     #
-    #  New version
+    #  Processing Python modules
     #
-    from plearn.utilities.moresh import *
-    from plearn.utilities.ppath  import ppath
-
-    pushd( os.getcwd() )
-    
-    plpath = os.path.join( ppath( 'PLEARNDIR' ), 'python_modules/plearn' )    
+    from plearn.utilities.moresh  import *
+    pushd( os.getcwd() )    
+    plpath = os.path.join( plearndir, 'python_modules/plearn' )    
     os.path.walk( plpath, process_tutorial, None )
-
     popd()
-    # epydoc([ plpath ])
-    toolkit.vsystem( 'epydoc --html %s' % plpath )
-    
+
+    from plearn.utilities.toolkit import vsystem
+    vsystem( 'epydoc --html --output ./python_modules_html %s' % plpath )
+
+    #
+    #  Processing C++ files
+    #
+    pushd( os.path.join( plearndir, 'commands' ) )
+    vsystem( 'pymake plearn_full' )
+    popd( )
+
+    autodoc_path = 'html_autodoc'
+    cpp_doc_path = os.path.join( autodoc_path, 'doc' )
+    if not os.path.exists( cpp_doc_path ):
+        os.mkdir( cpp_doc_path )
+
+    pushd( autodoc_path )
+    vsystem( 'plearn_full htmlhelp html_config.plearn' )
+    popd( )
+
+    pushd( cpp_doc_path )
+    vsystem( 'ln -s ../plearn.css' )
+    vsystem( 'cp ../plearn.jpg .' )
+    vsystem( 'cp ../background.png .' )
