@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ThresholdedKernel.h,v 1.2 2005/06/13 19:35:09 tihocan Exp $ 
+   * $Id: ThresholdedKernel.h,v 1.3 2005/06/16 18:34:50 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -80,6 +80,7 @@ public:
   // ************************
 
   int knn;
+  int max_size_for_full_gram;
   string method;
   real threshold;
 
@@ -103,6 +104,10 @@ protected:
   
   //! Declares this class' options.
   static void declareOptions(OptionList& ol);
+
+  //! Replace all elements in the Gram matrix K by 'threshold' when they meet
+  //! the thresholding condition defined by the thresholding method.
+  virtual void thresholdGramMatrix(const Mat& K) const;
 
 public:
 
