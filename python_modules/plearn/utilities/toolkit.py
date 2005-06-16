@@ -5,7 +5,7 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
-__cvs_id__ = "$Id: toolkit.py,v 1.23 2005/05/03 17:29:22 dorionc Exp $"
+__cvs_id__ = "$Id: toolkit.py,v 1.24 2005/06/16 18:44:01 dorionc Exp $"
 import inspect, os, popen2, random, string, sys, time, types
 
 __epydoc_is_available = None
@@ -323,6 +323,10 @@ def quote_if(s):
 def short_doc(obj):
     return doc(obj, True)
 
+def vsystem( cmd, prefix='+++' ):
+    print prefix, cmd
+    os.system( cmd )
+    
 if __name__ == "__main__":
 
     def header( s ):

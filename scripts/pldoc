@@ -108,5 +108,6 @@ if __name__ == '__main__':
     os.path.walk( plpath, process_tutorial, None )
 
     popd()
-    epydoc([ plpath ]) 
+    # epydoc([ plpath ])
+    toolkit.vsystem( 'epydoc --html %s' % plpath )
     

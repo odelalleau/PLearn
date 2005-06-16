@@ -42,10 +42,55 @@ def dedent( s, itoken = ' '*4 ):
             dedented.append( line )
     return '\n'.join( dedented )
 
-def section( title ):
-    sec = '='*len(title)
-    return '%s\n%s' % ( title, sec )
-                
+class Section:    
+    section_counter = 1
+    
+    def __init__( self, title, content, subsections=[], no=None ):        
+        if no is None:
+            self.no = Section.section_counter
+            Section.section_counter += 1
+        else:
+            self.no = no
+        
+        self.title       = title
+        self.content     = content
+        self.subsections = subsections
+
+    def __str__( self ):
+        header = self.markHeader( "Section %s: %s" % (self.no, self.title) )
+
+        subcontent = ''
+        for subsection in self.subsections:
+            subcontent += '\n\n'+str(subsection) 
+
+        return "%s\n%s%s" % (header, self.content, subcontent)
+
+    def markHeader( self, header ):
+        marker = "="*len(header)
+        return '%s\n%s' % ( header, marker )
+        
+
+class SubSection( Section ):
+    owner              = None
+    subsection_counter = None
+    
+    def __init__( self, title, content ):
+        if SubSection.owner != Section.section_counter:
+            SubSection.subsection_counter = 1
+            SubSection.owner = Section.section_counter
+            
+        no = "%d.%d" % ( Section.section_counter,
+                         SubSection.subsection_counter )
+        SubSection.subsection_counter += 1
+
+        Section.__init__( self, title, content, no = no )
+
+    def markHeader( self, header ):
+        indent = ' '*4
+        marker = "-"*len(header)
+        return '%s%s\n%s%s' % ( indent, header, indent, marker )
+    
+
 class WString:
     """Writable String.
 
@@ -67,18 +112,8 @@ class Tutorial:
         assert os.path.exists( tutorial_file )
         
         print >>cls.wstr, dedent( cls.__doc__ )
-        for chp, chapter in enumerate( cls.chapters() ):
-            if isinstance( chapter, tuple ):
-                chapter, chapter_name = chapter
-            else:
-                chapter_name = chapter.__name__
-
-            if not isinstance( chapter, str ):
-                chapter = ' '*4 + chapter.__doc__
-                                
-            print >>cls.wstr, section( "Chapter %d: %s" % (chp+1, chapter_name) )
-            print >>cls.wstr, chapter
-
+        for section in cls.sections():
+            print >>cls.wstr, section
         tutorial_str = '"""%s"""' % str(cls.wstr).replace( '"""', '\\"\\"\\"' )
 
         #

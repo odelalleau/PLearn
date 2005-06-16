@@ -1,8 +1,5 @@
-"""This package contains all modules related to the pyplearn mecanism.
-
-Note that including this package simply includes the pyplearn module it contains.
-"""
-__cvs_id__ = "$Id: __init__.py,v 1.11 2005/06/15 19:57:51 dorionc Exp $"
+"""This package contains all modules related to the PyPLearn mecanism."""
+__cvs_id__ = "$Id: __init__.py,v 1.12 2005/06/16 18:44:01 dorionc Exp $"
 
 import new, string, numarray
 from pyplearn                  import *
@@ -15,7 +12,7 @@ class __pyplearn_magic_module:
     An instance of this class (instanciated as pl) is used to provide
     the magic behavior whereas bits of Python code like::
 
-        pl.SequentialAdvisorSelector(comparison_type='foo', etc.)
+        pl.SequentialAdvisorSelector( comparison_type='foo', ... )
 
     On any attempt to access a function from I{pl}, the magic module creates,
     on the fly, a PLearn-like class (derived from PyPLearnObject) named
@@ -41,6 +38,17 @@ class __pyplearn_magic_module:
 pl = __pyplearn_magic_module()
 
 class PyPLearnScript( PyPLearnObject ):
+    """Feeded by the PyPLearn driver to PLearn's main.
+
+    This class has a PLearn cousin of the same name that is used to wrap
+    PyPLearn scripts feeded to PLearn application. Most user need not to
+    care about the behaviour of this class and its cousin since their
+    effects are hidden in the core of the PLearn main program.
+
+    Basically, feeding a PyPLearnScript to PLearn allows management of
+    files to be writen in the experiment directory after the experiment was
+    ran.
+    """
     class Defaults:
         expdir        = None
         metainfos     = None
@@ -77,6 +85,7 @@ class PyPLearnScript( PyPLearnObject ):
         return "\n".join( attribute_strings )
 
 class __TMat:
+    """Python representation of TMat of non-numeric elements."""
     def __init__( self, nrows, ncols, content ):
         self.nrows   = nrows
         self.ncols   = ncols

@@ -5,7 +5,7 @@ PyPLearn mecanism. Essentially, the PyPLearn mecanism allows you to
 instanciate complex experimental schemes using a powerful and highly
 readable language: Python.
 
-Chapter 1: Introductory Examples
+Section 1: Introductory Examples
 ================================
 
     Let's see some examples of what you can do with PyPLearn
@@ -68,7 +68,7 @@ Chapter 1: Introductory Examples
                 targetsize = 2,
                 weightsize = 0
                 ),
-            expdir = "expdir_2005_06_15_15:51:04",
+            expdir = "expdir_2005_06_16_14:36:57",
             learner = *2 -> LinearRegressor( ),
             provide_learner_expdir = 1,
             save_test_confidence = 1,
@@ -93,7 +93,151 @@ Chapter 1: Introductory Examples
             )
 
         
-Chapter 2: What's Wrong with PLearn Scripts?
+
+    Section 1.1: L{plargs}
+    ----------------------
+    Values read from or expected for PLearn command-line variables.
+
+    A custom (and encouraged) practice is to write large PyPLearn scripts
+    which behaviour can be modified by command-line arguments, e.g.:: 
+            
+        prompt %> plearn command_line.pyplearn on_cmd_line="somefile.pmat" input_size=10
+    
+    with the command_line.pyplearn script being::
+
+        #
+        # command_line.pyplearn
+        #
+        from plearn.pyplearn import *
+
+        dataset = pl.AutoVMatrix( specification = plargs.on_cmd_line,
+                                  inputsize     = int( plargs.input_size ),
+                                  targetsize    = 1
+                                  )
+    
+        def main():
+            return pl.SomeRunnableObject( dataset  = dataset,
+                                          internal = SomeObject( dataset = dataset ) )
+
+    Note that arguments given on the command line are interpreted as
+    strings, so if you want to pass integers (int) or floating-point
+    values (float), you will have to cast them as above.
+
+    To set default values for some arguments, one can use
+    plarg_defaults. For instance::
+
+        # 
+        # command_line_with_defaults.pyplearn
+        #
+        from plearn.pyplearn import *
+
+        plarg_defaults.on_cmd_line = "some_default_file.pmat"
+        plarg_defaults.input_size  = 10
+        dataset = pl.AutoVMatrix( specification = plargs.on_cmd_line,
+                                  inputsize     = int( plargs.input_size ),
+                                  targetsize    = 1
+                                  )
+    
+        def main( ):
+            return pl.SomeRunnableObject( dataset  = dataset,
+                                          internal = SomeObject( dataset = dataset ) )
+        
+    which won't fail and use C{"some_default_file.pmat"} with C{input_size=10} if::
+    
+        prompt %> plearn command_line.pyplearn
+    
+    is entered. If you are using a lot of command-line arguments, it is
+    suggested that you use the L{bind_plargs} function of the
+    L{plargs_binder} and L{plargs_namespace} classes.
+    
+
+    Section 1.2: L{bind_plargs}
+    ---------------------------
+    Binds some command line arguments to the fields of an object.
+
+    In short, given::
+
+        class MiscDefaults:
+            pca_comp              = 10
+            pca_norm              = 1   # True
+            sigma                 = 2.4
+
+    this call::
+
+        bind_plargs( MiscDefaults, [ "pca_comp", "pca_norm", "sigma" ] )
+
+    is strictly equivalent to::
+
+        plarg_defaults.pca_comp              = MiscDefaults.pca_comp
+        plarg_defaults.pca_norm              = MiscDefaults.pca_norm
+        plarg_defaults.sigma                 = MiscDefaults.sigma
+
+        MiscDefaults.pca_comp                = plargs.pca_comp
+        MiscDefaults.pca_norm                = plargs.pca_norm 
+        MiscDefaults.sigma                   = plargs.sigma
+
+    Therefore, you can configure the I{MiscDefaults} values from the
+    command line. Note that, if you want bind all class variables of a
+    class, you can simply declare that class to be a L{plargs_binder} to
+    avoid the call to C{bind_plargs}::
+
+        class MiscDefaults( plargs_binder ):
+            pca_comp              = 10
+            pca_norm              = 1   # True
+            sigma                 = 2.4
+
+    Also note that B{homogenous} list bindings are understood, so that::
+
+        #
+        # testScript.py
+        #
+        from plearn.pyplearn import plargs_binder
+        class Test( plargs_binder ):
+            some_list = [ 0.0 ]
+
+        print 'List is:', Test.some_list
+
+        # Prompt
+        prompt %> python testScript.py some_list=1,2,3.5
+        List is: [1.0, 2.0, 3.5]
+
+    where the type of the elements in the list is given by the type of the
+    first element in the default list.
+    
+    
+
+    Section 1.3: L{plargs_binder}
+    -----------------------------
+    Subclasses will have there class variables binded to plargs.
+
+    The plarg name will be the exact field name, e.g.::
+
+        class Preproc( plargs_binder ):
+            start_year       = 2000
+            last_year        = 2004
+            
+        print plargs.start_year      # prints 2000
+        print plargs.last_year       # prints 2004
+
+    Note that Preproc.start_year == int(plargs.start_year) will always be True.    
+    
+
+    Section 1.4: L{plargs_namespace}
+    --------------------------------
+    Subclasses will have there class variables binded to PREFIXED plargs.
+
+    The plarg will be prefixed by the classname, e.g.::
+
+        class MLM( plargs_namespace ):
+            ma               = 252
+            sdmult           = 1
+            
+        print plargs.MLM_ma          # prints 252
+        print plargs.MLM_sdmult      # prints 1
+
+    Note that MLM.ma == int(plargs.MLM_ma) will always be True.    
+    
+Section 2: What's Wrong with PLearn Scripts?
 ============================================
 
     As a matter of fact, nothing's wrong with the PLearn scripts,
@@ -119,12 +263,13 @@ Chapter 2: What's Wrong with PLearn Scripts?
     since the syntactic similarities, and provides us with a world of
     possibilities. 
     
-Chapter 3: A More Complex Example
-=================================
 
-    The first advantage of PyPLearn scripts is that they are Python all the
-    way. Hence, it's easy to package functions in modules to be reused in
-    later experiments::
+    Section 2.1: A More Complex Example
+    -----------------------------------
+
+    The main advantage of PyPLearn scripts is that they are Python all the
+    way. Hence, among other things, it's easy to package functions in
+    modules to be reused in later experiments::
 
         #
         #  My module
@@ -215,7 +360,7 @@ Chapter 3: A More Complex Example
         #
 
         *59 -> MyWeardTester(
-            expdir = "expdir_2005_06_15_15:51:05",
+            expdir = "expdir_2005_06_16_14:36:58",
             learner = *58 -> CombinerLearner(
                 underlying_learners = [
                     *6 -> SomeLearner(
@@ -341,31 +486,31 @@ Chapter 3: A More Complex Example
                         )
                     ],
                 weights = [
-                    0.0607238844308,
-                    0.0580929002647,
-                    0.0411220207392,
-                    0.0835374314877,
-                    0.0465967057244,
-                    0.0112047769082,
-                    0.0755833603876,
-                    0.0727582392794,
-                    0.091651423733,
-                    0.020527841171,
-                    0.075173834976,
-                    0.0505825777545,
-                    0.0205003340747,
-                    0.047381817399,
-                    0.0684638127913,
-                    0.0737302002471,
-                    0.0282855102363,
-                    0.074083328395
+                    0.0343492059936,
+                    0.104816000692,
+                    0.07667444272,
+                    0.103567668287,
+                    0.0502086052957,
+                    0.0302677872261,
+                    0.0717352023399,
+                    0.0774347986107,
+                    0.00537628111789,
+                    0.0912779942819,
+                    0.0019735236026,
+                    0.0266736026553,
+                    0.00449994966921,
+                    0.0967657276887,
+                    0.0687936111536,
+                    0.0310307756597,
+                    0.0577376656991,
+                    0.0668171573064
                     ]
                 ),
             provide_learner_expdir = 1
             )
         
         
-Chapter 4: And Why Not to Code a Simple Main?
+Section 3: And Why Not to Code a Simple Main?
 =============================================
 
     Didn't you ever compile PLearn??? 
@@ -373,14 +518,17 @@ Chapter 4: And Why Not to Code a Simple Main?
     Believe me, you do not want to recompile each time little changes were
     made to your experiment's settings...
     
-Chapter 5: How Does it Work?
+Section 4: How Does it Work?
 ============================
-  1. PyPLearn Magic Module.
+
+
+    Section 4.1: L{PyPLearn Magic Module.<__pyplearn_magic_module>}
+    ---------------------------------------------------------------
 
     An instance of this class (instanciated as pl) is used to provide
     the magic behavior whereas bits of Python code like::
 
-        pl.SequentialAdvisorSelector(comparison_type='foo', etc.)
+        pl.SequentialAdvisorSelector( comparison_type='foo', ... )
 
     On any attempt to access a function from I{pl}, the magic module creates,
     on the fly, a PLearn-like class (derived from PyPLearnObject) named
@@ -396,7 +544,7 @@ Chapter 5: How Does it Work?
             An instance of this class (instanciated as pl) is used to provide
             the magic behavior whereas bits of Python code like::
         
-                pl.SequentialAdvisorSelector(comparison_type='foo', etc.)
+                pl.SequentialAdvisorSelector( comparison_type='foo', ... )
         
             On any attempt to access a function from I{pl}, the magic module creates,
             on the fly, a PLearn-like class (derived from PyPLearnObject) named
@@ -419,16 +567,17 @@ Chapter 5: How Does it Work?
                 
                 return initfunc
         
-  2. Function plearn_repr
 
+    Section 4.2: L{plearn_repr}
+    ---------------------------
     Returns a string that is a valid PLearn representation of I{obj}.
 
     This function is somehow the core of the whole PyPLearn mecanism. It
     maps most Python objects to a representation understood by the PLearn
     serialization mecanism.
     
-Chapter 6: PyPLearnObject
-=========================
+Section 5: L{PyPLearnObject}
+============================
     A class from which to derive python objects that emulate PLearn ones.
 
     This class provides any of its instances with a plearn_repr() method
@@ -451,6 +600,93 @@ Chapter 6: PyPLearnObject
     The learn more about the way this class manages attribute, see the
     L{AttributeManager} class defined above.
     
+Section 6: How to reuse my old PLearn scripts?
+==============================================
+
+    Two simple tools will help you do so.
+
+    Section 6.1: L{include}
+    -----------------------
+    Includes the content of a .plearn file.
+
+    Some users that have developed complex chunks of PLearn scripts may not
+    be keen to rewrite those in PyPLearn promptly. Hence, this function
+    (combined with plvar()) allows to do both the followings:
+
+      1. Including a .plearn file::
+        #
+        # script.pyplearn
+        #
+        def main():
+            pl_script  = include("dataset.plearn")
+            pl_script += pl.PTester( expdir = plargs.expdir,
+                                     dataset = plvar("DATASET"),
+                                     statnames = ["E[test.E[mse]]", "V[test.E[mse]]"],
+                                     save_test_outputs = 1, 
+                                     provide_learner_expdir = 1,
+                                     
+                                     learner = pl.SomeLearnerClassTakingNoOption();
+                                     ) # end of PTester
+            return pl_script
+
+        where::
+          #
+          # dataset.plearn
+          #
+          $DEFINE{DATASET}{ AutoVMatrix( specification = "somefile.pmat";
+                                         inputsize     = 10; 
+                                         targetsize    = 1              ) }
+
+      2. Importing 'inline' some plearn chunk of code, that is::
+
+        #
+        # dataset2.plearn
+        #
+        AutoVMatrix( specification = ${DATAPATH};
+                     inputsize     = 10; 
+                     targetsize    = 1              )
+
+        #
+        # script2.pyplearn
+        #
+        def main():
+            plvar( 'DATAPATH', 'somefile.pmat' )
+            return pl.PTester( expdir = plargs.expdir,
+                               dataset = include("dataset2.plearn"),
+                               statnames = ["E[test.E[mse]]", "V[test.E[mse]]"],
+                               save_test_outputs = 1, 
+                               provide_learner_expdir = 1,
+                               
+                               learner = pl.SomeLearnerClassTakingNoOption();
+                               )
+    
+
+    Section 6.2: L{plvar}
+    ---------------------
+    Emulating PLearn's $DEFINE statement.
+    
+    An old .plearn script (included with include()) may depend on some
+    variables to be defined externally. If one wants to define that
+    variable within a PyPLearn script, he must use this function with two
+    arguments::
+
+        plvar( 'DATASET',
+               pl.AutoVMatrix( specification = "somefile.pmat",
+                               inputsize     = 10, 
+                               targetsize    = 1
+                               )
+               )
+
+    which is strictly equivalent to the old::
+
+        $DEFINE{DATASET}{ AutoVMatrix( specification = "somefile.pmat";
+                                       inputsize     = 10; 
+                                       targetsize    = 1              ) }
+    
+    If, on the other hand, a variable is defined within the PLearn script
+    and must be referenced within PyPLearn, the simple C{plvar('DATASET')}
+    will refer to the variable just as C{${DATASET}} would have.
+    
 """
 ##
 # DO NOT EDIT THIS MODULE DOCSTRING!
@@ -463,6 +699,8 @@ Chapter 6: PyPLearnObject
 #  Imports
 #
 import inspect, os
+from pyplearn                  import *
+from pyplearn                  import _plargs_storage_readonly
 from plearn_repr               import plearn_repr
 from PyPLearnObject            import PyPLearnObject
 from plearn.utilities.Tutorial import *
@@ -475,6 +713,20 @@ LINEAR_REGRESSOR_SCRIPT = os.path.join(
     ppath("PLEARNDIR"),
     "plearn_learners/regressors/test/LinearRegressor/linear_regressor.pyplearn"
     )
+
+def pyPLearnMagicModuleSubSection( indent = ' '*4 ):    
+    from plearn import pyplearn
+    pyplearn_magic_module = pyplearn.__dict__['__pyplearn_magic_module']                
+    
+    module_source = inspect.getsource( pyplearn_magic_module )
+    module_source = module_source.replace( '\n', '\n'+(indent*2) )
+
+    doc   = pyplearn_magic_module.__doc__
+    line1 = doc.find('\n')
+    return SubSection( 'L{%s<__pyplearn_magic_module>}' % doc[:line1],
+                       doc[line1+1:] + '\n' + indent + 'Implementation::\n' +
+                       (indent*2) + module_source
+                       )
 
 class PyPLearnTutorial( Tutorial ):
     """PyPLearn Tutorial.
@@ -517,18 +769,48 @@ class PyPLearnTutorial( Tutorial ):
     made to your experiment's settings...
     """
 
-    def chapters( cls ):
-        return [ (cls.introductoryExample(), "Introductory Examples"),
-                 (cls.whatsWrong, "What's Wrong with PLearn Scripts?"),
-                 (cls.moreComplexExample(), "A More Complex Example"),
-                 (cls.whyNotAMain, "And Why Not to Code a Simple Main?"),
-                 (cls.howDoesItWork(), "How Does it Work?"),
-                 PyPLearnObject
+    def sections( cls ):
+        indent = (' '*4)
+        def name_doc_pair( obj ):
+            doc = obj.__doc__
+            at  = doc.find('@') 
+            if at != -1:
+                doc = doc[:at]
+                
+            return ( 'L{%s}'%obj.__name__, indent+doc )
+        
+        return [ Section( "Introductory Examples", cls.introductoryExample(),
+                          [ SubSection( 'L{plargs}',
+                                        indent+_plargs_storage_readonly.__doc__ ),
+                            SubSection( *name_doc_pair(bind_plargs) ),
+                            SubSection( *name_doc_pair(plargs_binder) ),
+                            SubSection( *name_doc_pair(plargs_namespace) ),
+                            ]),
+                 
+                 Section( "What's Wrong with PLearn Scripts?", cls.whatsWrong,
+                          [ SubSection( "A More Complex Example", cls.moreComplexExample() ) ]
+                          ),
+                 
+                 Section( "And Why Not to Code a Simple Main?", cls.whyNotAMain ),
+                 
+                 Section( "How Does it Work?", "",
+                          [ pyPLearnMagicModuleSubSection(),
+                            SubSection( *name_doc_pair(plearn_repr) )
+                            ]
+                          ),
+                 
+                 Section( *name_doc_pair(PyPLearnObject) ),
+                 
+                 Section( "How to reuse my old PLearn scripts?",
+                          "\n    Two simple tools will help you do so.",
+                          [ SubSection( *name_doc_pair(include) ),
+                            SubSection( *name_doc_pair(plvar)   ) ]
+                          )
                  ]
-    chapters = classmethod( chapters )
+    sections = classmethod( sections )
 
     #
-    #  Chapter methods
+    #  Section methods
     #
     def introductoryExample( cls ):
         return """
@@ -567,9 +849,9 @@ class PyPLearnTutorial( Tutorial ):
             )
         
         return """
-    The first advantage of PyPLearn scripts is that they are Python all the
-    way. Hence, it's easy to package functions in modules to be reused in
-    later experiments::
+    The main advantage of PyPLearn scripts is that they are Python all the
+    way. Hence, among other things, it's easy to package functions in
+    modules to be reused in later experiments::
 
         #
         #  My module
@@ -591,19 +873,6 @@ class PyPLearnTutorial( Tutorial ):
         """ % ( module_source, pyscript, plscript )
     moreComplexExample = classmethod( moreComplexExample )    
 
-    def howDoesItWork( cls ):
-        import plearn.pyplearn as pyplearn
-        pyplearn_magic_module = pyplearn.__dict__['__pyplearn_magic_module']                
-        
-        module_source = inspect.getsource( pyplearn_magic_module )
-        module_source = module_source.replace('\n', '\n'+' '*8)
-
-        return "  1. %s\n    Implementation::\n%s\n  2. Function plearn_repr\n\n    %s" \
-            % ( pyplearn_magic_module.__doc__,
-                ' '*8 + module_source,
-                plearn_repr.__doc__
-                )
-    howDoesItWork = classmethod( howDoesItWork )
 
 if __name__ == "__main__":
     PyPLearnTutorial.build( __file__ )
