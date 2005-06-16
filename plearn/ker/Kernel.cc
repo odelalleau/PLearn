@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.40 2005/06/16 13:38:30 tihocan Exp $
+   * $Id: Kernel.cc,v 1.41 2005/06/16 18:24:47 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -372,6 +372,30 @@ void Kernel::computeSparseGramMatrix(TVec<Mat> K) const
       K[i].resize(sparse_gram_matrix[i].length(), 2);
       K[i] << sparse_gram_matrix[i];
     }
+    return;
+  }
+  if (cache_gram_matrix && gram_matrix_is_cached) {
+    // We can obtain the sparse Gram matrix from the full one.
+    int n = K.length();
+    Vec row(2);
+    for (int i = 0; i < n; i++) {
+      Mat& K_i = K[i];
+      K_i.resize(0,2);
+      real* gram_ij = gram_matrix[i];
+      for (int j = 0; j < n; j++, gram_ij++)
+        if (*gram_ij != 0) {
+          row[0] = j;
+          row[1] = *gram_ij;
+          K_i.appendRow(row);
+        }
+    }
+    // TODO Use a method to avoid code duplication below.
+    sparse_gram_matrix.resize(n);
+    for (int i = 0; i < n; i++) {
+      sparse_gram_matrix[i].resize(K[i].length(), 2);
+      sparse_gram_matrix[i] << K[i];
+    }
+    sparse_gram_matrix_is_cached = true;
     return;
   }
   int l=data->length();
