@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.73 2005/05/31 22:10:52 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.74 2005/06/17 15:46:22 lamblin Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -5481,6 +5481,29 @@ TMat<T> transpose(const TMat<T>& src)
   TMat<T> res(src.width(),src.length());
   transpose(src,res);
   return res;
+}
+
+//! Transform a matrix of T into a matrix of U through a unary function
+template<class T, class U>
+void apply(U (*func)(T), const TMat<T>& source, TMat<U>& destination)
+{
+  int l=source.length();
+  int w=source.width();
+  if (l!=destination.length() || w!=destination.width())
+    PLERROR("apply: source(%d,%d) TMat<T> and destination(%d,%d) TMat<U> must have same length and width",
+        l,w,destination.length(),destination.width());
+  for(int i=0; i<l; i++) {
+    for(int j=0; j<w; j++)
+      destination(i,j)=func(source(i,j));
+  }
+}
+
+//! Transform a matrix of T into a matrix of U through a unary function
+//! Same as above, for coherence with TVec<T>'s notation
+template<class T, class U>
+void apply(const TMat<T>& source, TMat<U>& destination, U (*func)(T))
+{
+  apply(func, source, destination);
 }
 
 // Apply a vector operation to each row of matrices, result in rows of a matrix
