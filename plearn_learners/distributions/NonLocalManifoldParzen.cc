@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzen.cc,v 1.9 2005/06/12 19:45:34 larocheh Exp $
+   * $Id: NonLocalManifoldParzen.cc,v 1.10 2005/06/17 16:45:39 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -43,16 +43,20 @@
 
 #include "NonLocalManifoldParzen.h"
 #include <plearn/vmat/LocalNeighborsDifferencesVMatrix.h>
+#include <plearn/vmat/RandomNeighborsDifferencesVMatrix.h>
 #include <plearn/var/ProductVariable.h>
 #include <plearn/var/PlusVariable.h>
 #include <plearn/var/SoftplusVariable.h>
-#include <plearn/var/VarRowsVariable.h>
+#include <plearn/var/SumAbsVariable.h>
+#include <plearn/var/SumSquareVariable.h>
 #include <plearn/var/VarRowVariable.h>
 #include <plearn/var/SourceVariable.h>
 #include <plearn/var/Var_operators.h>
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/math/random.h>
 #include <plearn/var/SumOfVariable.h>
+#include <plearn/var/RowOfVariable.h>
+#include <plearn/var/SumVariable.h>
 #include <plearn/var/TanhVariable.h>
 #include <plearn/var/NllGeneralGaussianVariable.h>
 #include <plearn/var/DiagonalizedFactorsProductVariable.h>
@@ -89,7 +93,7 @@ using namespace std;
 
 NonLocalManifoldParzen::NonLocalManifoldParzen() 
 /* ### Initialize all fields to their default value here */
-  :  noise_grad_factor(0.01),noise(0), noise_type("gaussian"), omit_last(0), learn_mu(true), magnified_version(false), reference_set(0), sigma_init(0.1), sigma_min(0.00001), nneighbors(5), nneighbors_density(-1), mu_nneighbors(2), ncomponents(1), sigma_threshold_factor(1), variances_transfer_function("softplus"), architecture_type("single_neural_network"),
+  :  weight_decay(0), penalty_type("L2_square"),noise_grad_factor(0.01),noise(0), noise_type("gaussian"), omit_last(0), learn_mu(true), magnified_version(false), reference_set(0), sigma_init(0.1), sigma_min(0.00001), nneighbors(5), nneighbors_density(-1), mu_nneighbors(2), ncomponents(1), sigma_threshold_factor(1), variances_transfer_function("softplus"), architecture_type("single_neural_network"),
     n_hidden_units(-1), batch_size(1), svd_threshold(1e-8)
 {
 }
@@ -101,6 +105,17 @@ PLEARN_IMPLEMENT_OBJECT(NonLocalManifoldParzen, "to do",
 
 void NonLocalManifoldParzen::declareOptions(OptionList& ol)
 {
+
+  declareOption(ol, "weight_decay", &NonLocalManifoldParzen::weight_decay, OptionBase::buildoption, 
+                "Global weight decay for all layers\n");
+
+  declareOption(ol, "penalty_type", &NonLocalManifoldParzen::penalty_type,
+                OptionBase::buildoption,
+                "Penalty to use on the weights (for weight and bias decay).\n"
+                "Can be any of:\n"
+                "  - \"L1\": L1 norm,\n"
+                "  - \"L1_square\": square of the L1 norm,\n"
+                "  - \"L2_square\" (default): square of the L2 norm.\n");
 
   declareOption(ol, "omit_last", &NonLocalManifoldParzen::omit_last, OptionBase::buildoption,
 		"Number of training examples at the end of trainin set to ignore in the training.\n"
@@ -411,7 +426,8 @@ void NonLocalManifoldParzen::build_()
     target_index->setName("target_index");
     Var neighbor_indexes = Var(nneighbors,1);
     neighbor_indexes->setName("neighbor_indexes");
-
+    Var random_index = Var(1,1);
+    random_index->setName("neighbor_index");
     /*
     // The following variables are discarded to
     // make the gradient computation faster
@@ -431,13 +447,12 @@ void NonLocalManifoldParzen::build_()
     */
 
     tangent_targets = Var(nneighbors,n);
-    
     if(mu_nneighbors < 0 ) mu_nneighbors = nneighbors;
 
     // compute - sum_{neighbors of x} log ( P(neighbor|x) ) according to semi-spherical model
     Var nll;
     if(noise <= 0)
-      nll = nll_general_gaussian(tangent_plane, mu, sn, tangent_targets, log_L, mu_nneighbors); // + log_n_examples;
+      nll = nll_general_gaussian(tangent_plane, mu, sn, tangent_targets, log_L, mu_nneighbors,0,0); // + log_n_examples;
     else
       nll = nll_general_gaussian(tangent_plane, mu, sn, tangent_targets, log_L, mu_nneighbors,noise_var,mu_noisy); // + log_n_examples;
 
@@ -446,7 +461,41 @@ void NonLocalManifoldParzen::build_()
     knn->value[0] = nneighbors;
     sum_nll = new ColumnSumVariable(nll) / knn;
 
-    cost_of_one_example = Func(x & tangent_targets & target_index & neighbor_indexes, predictor->parameters, sum_nll);
+    if(architecture_type == "embedding_neural_nework")
+    {
+      // Notes: - seulement prendre le plus proche voisin d'un voisin random
+      //        - il va peut-être falloir utiliser des fonctions de distances différentes
+      //        - peut-être utiliser les directions principales apprises!
+      //        - peut-être utiliser les distances dans l'espace initial pour pondérer!
+      //        - il va peut-être falloir mettre un poids différent sur ce nouveau coût
+      //        - utiliser ici une VarRowsVariable(...)
+      //        - question: est-ce que je devrais faire une bprop partout, juste sur embedding
+      //          juste sur neighbor et random, ... ?
+      
+      Var nearest_emb = product(W, tanh(c + product(V,rowOf(reference_set,neighbor_indexes))));
+      Var random_emb = product(W, tanh(c + product(V,rowOf(reference_set,random_index))));
+      
+      Var nearest_emb_diff = nearest_emb - embedding;
+      Var random_emb_diff = random_emb - embedding;
+
+      sum_nll += sum(square(nearest_emb_diff)) - sum(square(random_emb_diff));
+    }
+
+    if(weight_decay > 0 )
+    {
+      if(penalty_type == "L1_square") sum_nll += (square(sumabs(W))+ square(sumabs(V)) + square(sumabs(muV)) + square(sumabs(snV)))*weight_decay;
+      else if(penalty_type == "L1") sum_nll += (sumabs(W)+ sumabs(V) + sumabs(muV) + sumabs(snV))*weight_decay;
+      else if(penalty_type == "L2_square") sum_nll += (sumsquare(W)+ sumsquare(V) + sumsquare(muV) + sumsquare(snV))*weight_decay;
+      else PLERROR("In NonLocalManifoldParzen::build_(): penalty_type %s not recognized", penalty_type.c_str());
+    }
+
+    if(architecture_type == "embedding_neural_nework")
+    {
+      Var random_diff = Var(n,1);
+      cost_of_one_example = Func(x & tangent_targets & target_index & neighbor_indexes & random_diff & random_index, predictor->parameters, sum_nll);
+    }
+    else
+      cost_of_one_example = Func(x & tangent_targets & target_index & neighbor_indexes, predictor->parameters, sum_nll);
 
     if(nneighbors_density >= L || nneighbors_density < 0) nneighbors_density = L;
 
@@ -616,10 +665,13 @@ void NonLocalManifoldParzen::train()
     train_set = new SubVMatrix(train_set,0,0,train_set.length()-omit_last,train_set.width());
   }
 
-  targets_vmat = local_neighbors_differences(train_set, nneighbors, false, true);
+  if(architecture_type == "embedding_neural_nework")
+    targets_vmat = hconcat(local_neighbors_differences(train_set, nneighbors, false, true),random_neighbors_differences(train_set,1,true));
+  else
+    targets_vmat = local_neighbors_differences(train_set, nneighbors, false, true);
 
   train_set_with_targets = hconcat(train_set, targets_vmat);
-  train_set_with_targets->defineSizes(inputsize()+inputsize()*nneighbors+1+nneighbors,0);
+  train_set_with_targets->defineSizes(inputsize()+ inputsize()*nneighbors+1+nneighbors + (architecture_type == "embedding_neural_nework" ? inputsize()+2:0),0);
   int nsamples = batch_size>0 ? batch_size : train_set->length();
 
   Var totalcost = meanOf(train_set_with_targets, cost_of_one_example, nsamples);

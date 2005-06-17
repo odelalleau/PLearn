@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzen.h,v 1.6 2005/06/12 19:45:34 larocheh Exp $
+   * $Id: NonLocalManifoldParzen.h,v 1.7 2005/06/17 16:45:39 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Hugo Larochelle
@@ -68,7 +68,7 @@ protected:
   Func cost_of_one_example;
   //Func verify_gradient_func;
   Var x; // input vector
-  Var b, W, c, V, muV, smV, smb, snV, snb; // explicit view of the parameters (also in parameters field).
+  Var b, W, c, V, muV, snV, snb; // explicit view of the parameters (also in parameters field).
   Var tangent_targets; // target for the tangent vectors for one example 
   Var tangent_plane;
   Var mu, sn; // parameters of the conditional models
@@ -104,6 +104,11 @@ protected:
   VarArray parameters;
 
 public:
+
+  //! Weight decay for all weights
+  real weight_decay;
+  //! Penalty type to use on the weights
+  string penalty_type;
 
   real noise_grad_factor;
 
