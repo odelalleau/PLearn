@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.h,v 1.9 2005/06/17 16:44:08 tihocan Exp $ 
+   * $Id: KFoldSplitter.h,v 1.10 2005/06/17 17:32:42 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file KFoldSplitter.h */
@@ -52,42 +52,41 @@ class KFoldSplitter: public Splitter
     typedef Splitter inherited;
 
 protected:
+
     // *********************
     // * protected options *
     // *********************
 
-    // ### declare protected option fields (such as learnt parameters) here
-    // ...
     
 public:
+
     // ************************
     // * public build options *
     // ************************
 
-    int append_train;
+    bool append_non_constant_test;
+    bool append_train;
     pair<real, real> cross_range;
-    int K; //< the number of splits
+    bool include_test_in_train;
+    int K;
 
     // ****************
     // * Constructors *
     // ****************
 
-    // Default constructor, make sure the implementation in the .cc
-    // initializes all fields to reasonable default values.
+    //! Default constructor.
     KFoldSplitter(int k = 5);
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
     //! This does the actual building. 
-    // (Please implement in .cc)
     void build_();
 
 protected: 
     //! Declares this class' options
-    // (Please implement in .cc)
     static void declareOptions(OptionList& ol);
 
 public:
@@ -100,7 +99,6 @@ public:
 
     // ********************************
     // *        Splitter methods      *
-    // * (must be implemented in .cc) *
     // ********************************
 
     //! Returns the number of available different "splits"
