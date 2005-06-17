@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.h,v 1.8 2004/04/05 22:56:43 morinf Exp $ 
+   * $Id: KFoldSplitter.h,v 1.9 2005/06/17 16:44:08 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file KFoldSplitter.h */
@@ -64,8 +64,9 @@ public:
     // * public build options *
     // ************************
 
-    int K; //< the number of splits
     int append_train;
+    pair<real, real> cross_range;
+    int K; //< the number of splits
 
     // ****************
     // * Constructors *

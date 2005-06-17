@@ -35,25 +35,37 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.cc,v 1.13 2004/11/17 14:09:05 tihocan Exp $ 
+   * $Id: KFoldSplitter.cc,v 1.14 2005/06/17 16:44:08 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
+
 #include "KFoldSplitter.h"
 #include "VMat_basic_stats.h"
+#include <plearn/vmat/ConcatRowsVMatrix.h>
+#include <plearn/vmat/SubVMatrix.h>
 
 namespace PLearn {
 using namespace std;
 
 KFoldSplitter::KFoldSplitter(int k)
-    : K(k),append_train(0)
-{}
+: append_train(0),
+  K(k)
+{
+  // Default cross-validation range is the whole dataset.
+  cross_range.first   = 0;
+  cross_range.second  = 1;
+}
 
 PLEARN_IMPLEMENT_OBJECT(KFoldSplitter,
     "K-fold cross-validation splitter.", 
     "KFoldSplitter implements K splits of the dataset into a training-set and a test-set.\n"
     "If the number of splits is higher than the number of examples, leave-one-out cross-validation\n"
-    "will be performed."
+    "will be performed.\n"
+    "The cross-validation may be performed only on a subset of the source data, using the option\n"
+    "'cross_range', that will define a range of samples on which to perform cross-validation.\n"
+    "All samples before this range will systematically be added to the train set, while all samples\n"
+    "after this range will be added to the test set.\n"
 );
 
 void KFoldSplitter::declareOptions(OptionList& ol)
@@ -65,6 +77,9 @@ void KFoldSplitter::declareOptions(OptionList& ol)
                   "If set to 1, the trainset will be appended after the test set (thus each split\n"
                   "will contain three sets).");
 
+    declareOption(ol, "cross_range", &KFoldSplitter::cross_range, OptionBase::buildoption,
+        "The range on which cross-validation is applied (similar to the FractionSplitter ranges).");
+
     inherited::declareOptions(ol);
 }
 
@@ -72,7 +87,6 @@ void KFoldSplitter::build_()
 {
 }
 
-// ### Nothing to add here, simply calls build_
 void KFoldSplitter::build()
 {
     inherited::build();
@@ -97,13 +111,37 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
     if (k >= K)
         PLERROR("KFoldSplitter::getSplit() - k (%d) cannot be greater than K (%d)", k, K);
 
+    real start = cross_range.first;
+    real end   = cross_range.second;
     int n_data = dataset->length();
-    real test_fraction = K > 0 ? (n_data/(real)K) : 0;
+    assert( start >= 0 && end >= 0 && end > start && start < n_data && end < n_data );
+    int i_start = 0;
+    if (start > 0)
+      i_start = start >= 1 ? int(round(start)) : int(round(n_data * start));
+    int i_end = n_data;
+    if (end != 1)
+      i_end   = end   >= 1 ? int(round(end))   : int(round(n_data * end));
+    // The cross validation will be done only on examples i_start, ..., i_end - 1.
+    int n_cross_data = i_end - i_start;
+    bool do_partial_cross = (n_cross_data != n_data);
+    real test_fraction = K > 0 ? (n_cross_data/(real)K) : 0;
     if ((int)(test_fraction) < 1)
         test_fraction = 1; // leave-one-out cross-validation
 
     TVec<VMat> split_(2);
-    split(dataset, test_fraction, split_[0], split_[1], k, true);
+    if (do_partial_cross) {
+      VMat sub_data = new SubVMatrix(dataset, i_start, 0, n_cross_data, dataset->width());
+      split(sub_data, test_fraction, split_[0], split_[1], k, true);
+      if (i_start > 0) {
+        VMat constant_train = new SubVMatrix(dataset, 0, 0, i_start, dataset->width());
+        split_[0] = new ConcatRowsVMatrix(constant_train, split_[0]);
+      }
+      if (i_end < n_data) {
+        VMat constant_test = new SubVMatrix(dataset, i_end, 0, n_data - i_end, dataset->width());
+        split_[1] = new ConcatRowsVMatrix(split_[1], constant_test);
+      }
+    } else
+      split(dataset, test_fraction, split_[0], split_[1], k, true);
     if (append_train) {
       split_.append(split_[0]);
     }
@@ -111,3 +149,4 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
 }
 
 } // end of namespace PLearn
+
