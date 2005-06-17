@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.62 2005/06/16 22:10:08 lamblin Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.63 2005/06/17 13:27:14 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -1182,7 +1182,7 @@ void ConjGradientOptimizer::minBrack(real& br_min, real& br_max, real& br_mid)
   real fa = cost->value[0];
   real fb = computeCostValue( b, this );
   real fc;
-  real fu;
+  real fu = 0; // Initialization to make the compiler happy.
 
   // Value of golden section (1 + sqrt(5))/2.0
   real phi = 1.6180339887499;
@@ -1324,12 +1324,12 @@ real ConjGradientOptimizer::brentSearch()
   minBrack( br_min, br_max, br_mid );
 
   // Use Brent's algorithm to find minimum
-  // Initialise the points and function values
+  // Initialize the points and function values
   real w = br_mid;    // Where second from minimum is
   real v = br_mid;    // Previous value of w
   real x = v;         // Where current minimum is
   real e = 0.;        // Distance moved on step before last
-  real d;
+  real d = MISSING_VALUE; // Initialization to make the compiler happy.
   real fx = computeCostValue( x, this );
   real fv = fx;
   real fw = fx;
@@ -1375,6 +1375,7 @@ real ConjGradientOptimizer::brentSearch()
       else
       {
         // Yes it is, so take the parabolic step
+        assert( !is_missing(d) );
         e = d;
         d = p/q;
         real u = x + d;
@@ -1441,9 +1442,5 @@ real ConjGradientOptimizer::brentSearch()
   }
   return x;
 }
-
-
-
-
 
 } // end of namespace PLearn
