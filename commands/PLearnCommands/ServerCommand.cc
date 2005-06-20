@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ServerCommand.cc,v 1.7 2005/06/15 14:43:14 plearner Exp $ 
+   * $Id: ServerCommand.cc,v 1.8 2005/06/20 22:07:40 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -136,7 +136,6 @@ void ServerCommand::run(const vector<string>& args)
       io.setMode(PStream::plearn_ascii);
       PLearnServer server(io);
       server.run();
-      perr << "XXXXXXXXX" << endl;
     }
 }
 
