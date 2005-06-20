@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IncrementalNNet.cc,v 1.9 2005/06/01 02:21:29 yoshua Exp $ 
+   * $Id: IncrementalNNet.cc,v 1.10 2005/06/20 17:45:24 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -257,6 +257,9 @@ void IncrementalNNet::train()
   if (minibatch_size == 0)
     minibatchsize = train_set->length();
 
+  real current_average_class_error=0;
+  real next_average_class_error=0;
+
   static Vec input;  // static so we don't reallocate/deallocate memory each time...
   static Vec output;
   static Vec target; // (but be careful that static means shared!)
@@ -313,6 +316,7 @@ void IncrementalNNet::train()
       computeCostsFromOutputs(input,output,target,train_costs);
       real current_total_cost = train_costs[0];
       real current_fit_error = train_costs[1];
+      real current_class_error = (cost_type!=0)?train_costs[3]:0;
       train_costs*=sampleweight;
       train_stats->update(train_costs);
       // compute output and cost IF WE USED THE CANDIDATE HIDDEN UNIT
@@ -334,6 +338,7 @@ void IncrementalNNet::train()
       computeCostsFromOutputs(input,output_with_candidate,target,costs_with_candidate); 
       // computeCostsFromOutputs does not count the cost of the candidate's output weights, so add it:
       costs_with_candidate[0] += output_weight_decay * sumabs(candidate_unit_output_weights);
+      real candidate_class_error = (cost_type!=0)?costs_with_candidate[3]:0;
 
       real learning_rate = initial_learning_rate / ( 1 + n_examples_seen * decay_factor );
 
@@ -346,7 +351,7 @@ void IncrementalNNet::train()
         // ** bprop through the network & update
 
         // bprop on output layer
-        multiplyAcc(output_biases, output_gradient, learning_rate);
+        multiplyAcc(output_biases, output_gradient, -learning_rate);
         if (stage>0)
         {
           transposedLayerL1BpropUpdate(hidden_gradient, output_weights, h, output_gradient, learning_rate, output_weight_decay);
@@ -413,14 +418,26 @@ void IncrementalNNet::train()
         +(1-moving_average_coefficient)*current_average_cost;
       next_average_cost = moving_average_coefficient*costs_with_candidate[0]
         +(1-moving_average_coefficient)*next_average_cost;
+      if (verbosity>1 && cost_type!=0)
+      {
+        current_average_class_error = moving_average_coefficient*current_class_error
+        +(1-moving_average_coefficient)*current_average_class_error;
+        next_average_class_error = moving_average_coefficient*candidate_class_error
+        +(1-moving_average_coefficient)*next_average_class_error;
+      }
       // consider inserting the candidate hidden unit (at every minibatchsize examples)
       if (t_since_beginning_of_batch == 0)
       {
         n_examples_training_candidate += minibatchsize;
-        if (verbosity>1)
+        if (verbosity>1) 
+        {
           cout << "At t=" << real(n_examples_seen)/train_set->length() 
                << " epochs, estimated current average cost = " << current_average_cost << endl
                << "Estimated average cost with candidate unit = " << next_average_cost << endl;
+          if (cost_type!=0)
+            cout << "Estimated current classification error = " << current_average_class_error << endl
+                 << "Estimated classification error with candidate unit = " << next_average_class_error << endl;
+        }
         if (next_average_cost < current_average_cost) 
         {
           // insert candidate hidden unit
@@ -478,9 +495,9 @@ void IncrementalNNet::computeOutput(const Vec& input, Vec& output) const
     product(act,hidden_layer_weights, input);
     act+=hidden_layer_biases;
     if (hard_activation_function)
-      compute_tanh(act,h);
-    else
       compute_sign(act,h);
+    else
+      compute_tanh(act,h);
     transposeProduct(linear_output,output_weights,h);
   } 
   else 
@@ -546,7 +563,7 @@ void IncrementalNNet::computeCostsFromOutputs(const Vec& input, const Vec& outpu
   if (cost_type!=0) // classification type
   {
     int topscoring_class = argmax(output);
-    int target_class = target[0];
+    int target_class = int(target[0]);
     costs[3] = (target_class!=topscoring_class); // 1 or 0
   }
 }                                
