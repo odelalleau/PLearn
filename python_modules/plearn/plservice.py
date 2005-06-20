@@ -52,6 +52,7 @@ class RemotePLearnServer:
         """
         self.io = plearn.plio.PLearnIO(from_server, to_server)
         self.log = logger
+        self.reserved_ids = []
         self.nextid = 1
         self.objects = {}
         self.clear_maps = True
@@ -60,6 +61,36 @@ class RemotePLearnServer:
         if self.log: self.log.info('CONNEXION ESTABLISHED WITH PLEARN SERVER')
         self.callFunction("binary")
         self.callFunction("implicit_storage",True)
+
+    def reserve_new_id(self):
+        """Returns an available object id and adds it to self.reserved_ids"""
+        newid = 1
+        if self.reserved_ids:
+            first_id = self.reserved_ids[0]
+            last_id  = self.reserved_ids[-1]
+            if first_id>1:
+                newid = first_id-1
+                self.reserved_ids.insert(0,newid)
+            elif last_id-first_id+1 == len(self.reserved_ids):
+                newid = last_id+1
+                self.reserved_ids.append(newid)
+            else:
+                prev_id = first_id
+                for pos in xrange(1,len(self.reserved_ids)):
+                    id = self.reserved_ids[pos]
+                    if id-prev_id>1:
+                        newid = id-1
+                        self.reserved_ids.insert(pos,newid)
+                        break
+                    prev_id = id
+        else:
+            self.reserved_ids.append(newid)
+        return newid
+                
+    def free_id(self,id):
+        """Removes an object id from the list self.reserved_ids"""
+        self.reserved_ids.remove(id)
+
 
     def new(self, objectspec):
         """
@@ -71,17 +102,15 @@ class RemotePLearnServer:
         if type(specstr)!=str:
             specstr = specstr.plearn_repr()
             
-        objid = self.nextid        
+        objid = self.reserve_new_id()        
         self.callNewObject(objid,specstr)
-        self.nextid += 1
         obj = RemotePObject(self, objid)
         self.objects[objid] = obj
         return obj
 
     def load(self, objfilepath):
-        objid = self.nextid        
+        objid = self.reserve_new_id()
         self.callLoadObject(objid, objfilepath)
-        self.nextid += 1
         obj = RemotePObject(self, objid)
         self.objects[objid] = obj
         return obj
@@ -93,6 +122,13 @@ class RemotePLearnServer:
             objid = obj.objid
         self.callDeleteObject(objid)
         del self.objects[objid]
+        self.free_id(objid)
+
+    def deleteAll(self):
+        self.callDeleteAllObjects()
+        del self.objects
+        self.objects = {}
+        self.reserved_ids = []
 
     def logged_write(self,msg):
         """Writes msg to self.io and possibly writes a corresponding entry in the logfile"""
