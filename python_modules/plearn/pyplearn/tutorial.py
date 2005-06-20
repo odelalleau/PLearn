@@ -1,9 +1,9 @@
 """PyPLearn Tutorial.
 
-This tutorial introduces you to the various tools provided by the
-PyPLearn mecanism. Essentially, the PyPLearn mecanism allows you to
-instanciate complex experimental schemes using a powerful and highly
-readable language: Python.
+This tutorial introduces the various tools provided by the PyPLearn
+mechanism. Essentially, the PyPLearn mechanism lets you instanciate
+complex experimental schemes using a powerful and highly readable
+language: Python.
 
 Section 1: Introductory Examples
 ================================
@@ -68,7 +68,7 @@ Section 1: Introductory Examples
                 targetsize = 2,
                 weightsize = 0
                 ),
-            expdir = "expdir_2005_06_16_14:36:57",
+            expdir = "expdir_2005_06_16_16:47:51",
             learner = *2 -> LinearRegressor( ),
             provide_learner_expdir = 1,
             save_test_confidence = 1,
@@ -242,26 +242,26 @@ Section 2: What's Wrong with PLearn Scripts?
 
     As a matter of fact, nothing's wrong with the PLearn scripts,
     especially in the above example. Hence why not use those directly?
-    First, PLearn serialization format while having a syntax close to the
-    Python still have partilarities of its own that can easily make edit
-    hard to edit. For instance, emacs comes with a sympathetic python-mode
+    First, the PLearn serialization format, while having a syntax close to
+    Python's, still has peculiarities of its own that can easily make it
+    hard to edit. For instance, emacs comes with a friendly python-mode
     while the plearn-mode is still to come...
 
     This said, remember that the above example shows very simple experiment
-    settings. As settings get more complex, the use of references --- *3 ->
-    FractionSplitter... --- and their management can get confusing, while
-    the use the Python objects is totally intuitive. 
+    settings. As settings get more complex, the use of references -- *3 ->
+    FractionSplitter... -- and their management can get confusing, while
+    the use of Python objects is totally intuitive. 
 
     Furthermore, when writing complex experiments, you may want your script
-    to manage command-line options. Ok, PLearn script accepted command-line
+    to manage command-line options. Ok, PLearn script accepts command-line
     arguments too, but some (brave) PLearn developers ended up augmenting
     the serialization format with statements like IF, SWITCH, DIVIDE,
     INCLUDE, ...
 
     In short, they ended up building a new language within the
     serialization format... Using Python was quite an obvious alternative,
-    since the syntactic similarities, and provides us with a world of
-    possibilities. 
+    because of the syntactic similarities, and provides us with a world of
+    possibilities.
     
 
     Section 2.1: A More Complex Example
@@ -360,7 +360,7 @@ Section 2: What's Wrong with PLearn Scripts?
         #
 
         *59 -> MyWeardTester(
-            expdir = "expdir_2005_06_16_14:36:58",
+            expdir = "expdir_2005_06_16_16:47:51",
             learner = *58 -> CombinerLearner(
                 underlying_learners = [
                     *6 -> SomeLearner(
@@ -486,24 +486,24 @@ Section 2: What's Wrong with PLearn Scripts?
                         )
                     ],
                 weights = [
-                    0.0343492059936,
-                    0.104816000692,
-                    0.07667444272,
-                    0.103567668287,
-                    0.0502086052957,
-                    0.0302677872261,
-                    0.0717352023399,
-                    0.0774347986107,
-                    0.00537628111789,
-                    0.0912779942819,
-                    0.0019735236026,
-                    0.0266736026553,
-                    0.00449994966921,
-                    0.0967657276887,
-                    0.0687936111536,
-                    0.0310307756597,
-                    0.0577376656991,
-                    0.0668171573064
+                    0.0473848618438,
+                    0.0245641991861,
+                    0.0260925879359,
+                    0.0709075249514,
+                    0.0127203369401,
+                    0.0906149676186,
+                    0.0163130928104,
+                    0.0684290369406,
+                    0.0883008211091,
+                    0.0728195773226,
+                    0.0606178832103,
+                    0.0818699501636,
+                    0.0561363557176,
+                    0.0384191291722,
+                    0.03173756307,
+                    0.0481764827469,
+                    0.0730766183782,
+                    0.0918190108825
                     ]
                 ),
             provide_learner_expdir = 1
@@ -515,7 +515,7 @@ Section 3: And Why Not to Code a Simple Main?
 
     Didn't you ever compile PLearn??? 
 
-    Believe me, you do not want to recompile each time little changes were
+    Believe me, you do not want to recompile each time little changes are
     made to your experiment's settings...
     
 Section 4: How Does it Work?
@@ -731,41 +731,41 @@ def pyPLearnMagicModuleSubSection( indent = ' '*4 ):
 class PyPLearnTutorial( Tutorial ):
     """PyPLearn Tutorial.
 
-    This tutorial introduces you to the various tools provided by the
-    PyPLearn mecanism. Essentially, the PyPLearn mecanism allows you to
-    instanciate complex experimental schemes using a powerful and highly
-    readable language: Python.
+    This tutorial introduces the various tools provided by the PyPLearn
+    mechanism. Essentially, the PyPLearn mechanism lets you instanciate
+    complex experimental schemes using a powerful and highly readable
+    language: Python.
     """
     
     whatsWrong = """
     As a matter of fact, nothing's wrong with the PLearn scripts,
     especially in the above example. Hence why not use those directly?
-    First, PLearn serialization format while having a syntax close to the
-    Python still have partilarities of its own that can easily make edit
-    hard to edit. For instance, emacs comes with a sympathetic python-mode
+    First, the PLearn serialization format, while having a syntax close to
+    Python's, still has peculiarities of its own that can easily make it
+    hard to edit. For instance, emacs comes with a friendly python-mode
     while the plearn-mode is still to come...
 
     This said, remember that the above example shows very simple experiment
-    settings. As settings get more complex, the use of references --- *3 ->
-    FractionSplitter... --- and their management can get confusing, while
-    the use the Python objects is totally intuitive. 
+    settings. As settings get more complex, the use of references -- *3 ->
+    FractionSplitter... -- and their management can get confusing, while
+    the use of Python objects is totally intuitive. 
 
     Furthermore, when writing complex experiments, you may want your script
-    to manage command-line options. Ok, PLearn script accepted command-line
+    to manage command-line options. Ok, PLearn script accepts command-line
     arguments too, but some (brave) PLearn developers ended up augmenting
     the serialization format with statements like IF, SWITCH, DIVIDE,
     INCLUDE, ...
 
     In short, they ended up building a new language within the
     serialization format... Using Python was quite an obvious alternative,
-    since the syntactic similarities, and provides us with a world of
-    possibilities. 
+    because of the syntactic similarities, and provides us with a world of
+    possibilities.
     """
     
     whyNotAMain = """
     Didn't you ever compile PLearn??? 
 
-    Believe me, you do not want to recompile each time little changes were
+    Believe me, you do not want to recompile each time little changes are
     made to your experiment's settings...
     """
 
