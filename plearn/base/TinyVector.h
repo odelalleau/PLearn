@@ -109,9 +109,10 @@ public:
   inline explicit TinyVector(size_type n, const T& val=T());
   //!  Use default copy constructor, destructor, assignment operator
 
-  //!  Construct/Copy from Input iterator
-  template <class In>
-  TinyVector(In first, In last);
+  // (Disabled for now; too many ambiguities)
+  // //!  Construct/Copy from Input iterator
+  // template <class In>
+  // TinyVector(In first, In last)  { assign(first, last); }
 	
   template <class In>
   void assign(In first, In last) {
@@ -142,10 +143,15 @@ public:
   }
   void resize(size_type sz, const T& val=T()); //!<  added elts init by val
   void reserve(size_type n);	     //!<  make room for total of n elts
-	
+
 public:
-  //!  Other functions
+  //  Other functions
+
+  //! Swap this with the argument
   void swap(TinyVector&);
+
+  //! Fill with a constant (keeping the size constant)
+  void fill(const T&);
 	
 private:
   T arr[N];
@@ -192,6 +198,14 @@ inline bool operator>=(const TinyVector<T,N,TTrait>& x,
   return !(x < y);
 }
 
+//! To emulate PLearn TVecs, operator<< implements a copy
+template <class T, unsigned N, class TTrait>
+inline void operator<<(TinyVector<T,N,TTrait>& x,
+                       const TinyVector<T,N,TTrait>& y)
+{
+  x = y;
+}
+
 
 //#########################  CLASS  TINYVECTORTRAIT  ######################
 /*!       
@@ -209,11 +223,11 @@ public:
 };
 template <> class TinyVectorTrait<signed char> {
 public:
-  static const unsigned char Missing = UCHAR_MAX; // norman: initialize here
+  static const unsigned char Missing = CHAR_MAX; // norman: initialize here
 };
 template <> class TinyVectorTrait<char> {
 public:
-  static const unsigned char Missing = UCHAR_MAX; // norman: initialize here
+  static const unsigned char Missing = CHAR_MAX; // norman: initialize here
 };
 template <> class TinyVectorTrait<unsigned int> {
 public:
@@ -442,6 +456,13 @@ void TinyVector<T,N,TTrait>::swap(TinyVector<T,N,TTrait>& other)
 					     //!  otherwise uses Koenig lookup
   for (size_type i=0; i<N; ++i)
     swap(arr[i], other.arr[i]);
+}
+
+template <class T, unsigned N, class TTrait>
+void TinyVector<T,N,TTrait>::fill(const T& value)
+{
+  for (int i=0, n=size() ; i<n ; ++i)
+    arr[i] = value;
 }
 
 template <class T, unsigned N, class TTrait>
