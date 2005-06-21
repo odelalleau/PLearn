@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: Bindings.py,v 1.6 2005/05/03 17:29:22 dorionc Exp $"
+__version_id__ = "$Id$"
 
 from toolkit import quote_if, doc
 
@@ -157,9 +157,16 @@ class Bindings:
         self.__setitem__( k, x )
         return x        
         
-    def update( self, dic ):
-        for k in dic.keys():
-            self.__setitem__( k, dic[k] )
+    def update( self, pairs ):
+        try:
+            # Dictionnary
+            iterator = pairs.iteritems()
+        except AttributeError:
+            # List of pairs
+            iterator = iter( pairs )
+            
+        for k, val in iterator:
+            self.__setitem__( k, val )
 
 if __name__ == "__main__":
     print "\nEmbedded test/tutorial for Bindings.py.\n"
