@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 2002 by Pascal Vincent
 %%
-%%  $Id: users_guide.tex,v 1.20 2005/05/04 22:06:51 plearner Exp $
+%%  $Id$
 
 \documentclass[11pt]{book}
 \usepackage{html}               % package for latex2html
@@ -64,6 +64,21 @@ met:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\chapter*{Introduction}
+
+PLearn is an Open Source C++ library and framework with an associated
+collection of software tools developped and used for \emph{research} in
+\emph{statistical machine learning.} 
+
+The emphasis here is on \emph{``research''}: it was built by researchers
+mostly for their own use, i.e. not too much with the general public in
+mind. It is not for the faint of heart, and you are more likely to
+find here exotic algorithms at the forefront of research, rather than a
+comprehensive collection of all the ``standard proven and well tested''
+algorithms of Machine Learning. This being said, if you want to program
+your new idea of a learning algortihm in efficient modern C++, the PLearn
+framework offers a solid foundation.
+
 \chapter{Installation and Setup}
 \label{chap:label}
 
@@ -71,73 +86,157 @@ met:
 
 {\bf Note:} most of the tools and libraries required for PLearn are already
 installed on typical Linux (or other unix-like) systems, or are easy to
-install with ready-made packages (such as RPMs). 
+install with ready-made packages (such as RPMs). PLearn is mostly
+developped in a Linux environment with the gcc/g++ C++ compiler.  Since
+PLearn was mostly written with portability in mind, it is certainly
+portable (and has been ported on occasions) to other platforms or
+compilers, but as we work mainly with Linux/gcc, we only very occasionally
+check the working and correct problems on other platforms.
 
-\subsection{Basic tools}
+
+\subsection{Required tools}
 
 To be able to download, compile and use PLearn, you need the following
 tools to be installed on your system:
 \begin{itemize}
-\item {\bf cvs} (http://www.cvshome.org)
-\item {\bf g++} (http://gcc.gnu.org). We recomend using the latest
-version, but it should work with 2.96 and above.
-\item {\bf python} (http://www.python.org). Version 1.5.2 or above (may
-work with older versions, but no guarantee).
-\item It is highly recomended to also have the {\bf blas} and {\bf lapack}
-libraries installed. There are standard packages (RPMS\ldots) for most
-Linux distributions.
+\item {\bf g++} (http://gcc.gnu.org). We recomend using the latest version,
+  but it should work with 3.2 and above. It is certainly possible to
+  compile PLearn with other compilers (we do this from time to time), but
+  it may necessitate some tweaking.
+\item {\bf python} (http://www.python.org). Version 2.3.3 or above (may
+  work with older versions, but no guarantee). We use python scripts
+  heavily to make our life easier, noticeably as our compilation framework
+  (but if you're really in love with Makefiles you can sure do without
+  pymake).
+\item {\bf subversion (svn)} for version control ( see http://subversion.tigris.org/ )
+Note: some local subprojects may still be based on CVS for version control (http://www.cvshome.org)
+\end{itemize}
+
+
+\subsection{Libraries}
+
+\begin{itemize}
+\item {\bf required:} the standard C and C++ libraries, naturally!
+\item {\bf required:} {\bf NSPR} the Netscape Portable Runtime
+  (http://www.mozilla.org/projects/nspr/). We use NSPR as an OS abstraction
+  layer for things such as file and network access, process control, etc...
+So that PLearn may also somewhat work on Windows...
+\item {\bf highly recomeneded:} {\bf blas} and {\bf lapack} libraries provide linear algebra
+  subroutines that several learning algorithms depend upon. There are standard
+  packages (RPMS\ldots) for most Linux distributions.
+\item {\bf recomended:} Some learning algorithms of PLearn depend on parts
+  of the {\bf boost} library (http://www.boost.org), in particlar those
+  requiring graph algorithms.
+\item {\bf optional:} The libraries of {\bf WordNet} for work on language models.
 \end{itemize}
 
 \subsection{Useful external tools}
 
-A number of additional tools are often used as external programs, mostly for
-display purpose, and may want to have them installed: 
+A number of additional tools are often used as external programs, mostly for plotting and
+display purpose, and interactive GUIs, so you may want to have them installed. 
+Many of them come as python modules and extensions. In particular, if you
+want to empower python as a matlab-like interactive numerical manipulation
+and plotting tool, you may want to install the following python packages:
+
+\begin{itemize}
+\item {\bf numarray} for efficient numeric array operations
+\item {\bf matplotlib} for 2D plots (http://matplotlib.sourceforge.net/)
+\item {\bf ipython} for interactive use; launch it with {\tt ipython --pylab} (http://ipython.scipy.org/) 
+\item {\bf mayavi} for 3D interactive plots (http://mayavi.sourceforge.net/) built on top of VTK (http://public.kitware.com/VTK)
+\item {\bf pygtk} for sophisticated GUIs.
+\end{itemize}
+
+In addition the following tools can be useful:
+
 \begin{itemize}
 \item {\bf gs} (ghostscript) and {\bf gv} (ghostview)
 \item {\bf gnuplot}
+\item {\bf perl} to run older dirty scripts.
 \item a {\bf Java} compiler and interpretor
-\end{itemize}
-
-
-\subsection{Optional libraries}
-
-Moreover, the following (optional) libraries are required by some classes and programs:
-\begin{itemize}
-\item The very well designed {\bf boost} library (http://www.boost.org)
-\item The libraries of {\bf WordNet} for work on language models.
 \end{itemize}
 
 
 \section{Downloading PLearn}
 
-PLearn is hosted on SourceForge, and the latest version is always available through CVS acces.
-For a quick tutorial on how to use cvs, see http://plearn.sourceforge.net/plearncvs.html
+After having been hosted for several years on SourceForge (under CVS), as
+of 2005/06/21 PLearn development has been moved to BerliOS
+(http://developer.berlios.de/) that offered the benefits of a faster
+hosting with the more modern SubVersion (SVN) version control system.
+The latest version is always available through SVN access.  
 
+\subsection{Developer SVN access}
+If you are going to be a serious contributor to PLearn, you should create a
+BerliOS account for yourself, and ask to be added to the developer list.
+This will give you read/write access to the PLearn repository.
 
-\subsection{Anonymous (read-only) CVS access }
-
-Download the PLearn library through anonymous (pserver) cvs
-using the following instructions:
-
-\topsep=0mm
+Make sure you first move any older version of PLearn out of the way, for ex. by renaming it PLearn.old
+You can then check-out a fresh copy of PLearn with the following instruction:
 \begin{verbatim}
-  cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/plearn login
-  cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/plearn co PLearn
+svn checkout svn+ssh://USERNAME@svn.berlios.de/svnroot/repos/plearn/trunk PLearn
 \end{verbatim}
-and press the [enter] key when asked for a password.
+where you replace "USERNAME" by your Berlios username.
+You will be asked for your Berlios password twice.
+
+If you don't want to be bothered with svn asking passwords, clisk on {\em
+  Account Maintenance} on the left panel of your BerliOS personal page, and
+on {\em Edit keys} on the bottom of the Maintenance page.  You can copy
+your ssh public key there. (Note: your ssh public key is normally found in
+your ~/.ssh/*.pub If it's not there, you can do a ssh-keygen). As for many
+changes within BerliOS, it may take a while before this is propagated and
+taken into account.
 
 
+\subsection{Anonymous SVN checkout}
 
-\section{Compiling PLearn programs}
+If you just want to hack PLearn locally, you can do an anonymous checkout (no need for a BerliOS account) with
+\begin{verbatim}
+svn checkout svn://svn.berlios.de/plearn/trunk PLearn
+\end{verbatim}
 
+
+% Sub-projects at your institution may still be under CVS.
+% For a quick tutorial on how to use cvs, see http://plearn.sourceforge.net/plearncvs.html
+
+\subsection{SVN basics}
+
+From within your local PLearn directory:
+\begin{itemize}
+\item {\tt svn update} will update your local version with 
+\item {\tt svn commit} will commit your changes to the repository
+\item {\tt svn add} will add to the repository the files and directories
+  you pass as argument, {\bf recursively}, so make sure you {\em really} want to
+  add all those directories' full content\ldots
+\item There is also {\tt svn rm, svn mv,} and {\tt svn cp} to reorganize the files.
+\end{itemize}
+
+Unlike CVS, most subversion commands are recursive by default. Check the
+help for a particular command {\em before} using it if you are unsure.
+
+For more details, there is a excellent free subversion book online available at:
+http://svnbook.red-bean.com/en/1.1/index.html
+
+If you don't have the time to at least peruse the whole book, I would still
+strongly recommand that you at least read appendix A: Subversion for CVS
+users: http://svnbook.red-bean.com/en/1.1/apa.html
+
+
+\section{Initial setup}
+
+We suppose you have all the necessary software requirements in place (especially python).
 
 First, edit your .cshrc or .bashrc and 
 \begin{itemize}
-\item Set the {\tt PLEARNDIR} environment variable to the path of the PLearn directory. 
+\item Set the {\tt PLEARNDIR} environment variable to the path of your PLearn directory. 
 (csh ex: \verb!setenv PLEARNDIR ${HOME}/PLearn!)
 \item Append \verb!$PLEARNDIR/scripts! and \verb!$PLEARNDIR/commands! to your path.
+\item Restart your shell for these changes to take effect.
 \end{itemize}
 
+From within your PLearn directory run {\tt ./setup}. This should create a
+{\tt .plearn} sub-directory in your home directory, that will contain some
+configuration files.
+
+Now you should be able to try and compile a first version of plearn.
 We have our own make system based on a python script (pymake) that
 automatically parses source files for dependencies and determines what to
 compile, and what to link (including optional libraries), and is able to
@@ -146,12 +245,16 @@ customizable.
 
 The compiling commands are:
 \begin{verbatim}
-cd PLearn/commands
+cd PLearn/commands/
 pymake plearn
 \end{verbatim}
 
 If it doesn't work, you may have to adapt the configuration file to your system
 (PLearn/.pymake/config)
+
+\chapter{Overview of the directory structure}
+
+
 
 
 \chapter{Tutorial}

@@ -12,81 +12,10 @@
 <h2> Keeping up-to-date </h2>
 
 <p>
-The latest code can always be checked out through anonymous (pserver) CVS
-with the following instructions. When prompted for a password for
-anonymous, simply press the Enter key.
+The latest code can always be checked out through SVN.
+See the User's Guide for instructions on how to checkout an up to date version.
 </p>
 
-<tt>cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/plearn login</tt> 
-<br/>
-<tt>cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/plearn co PLearn</tt>
-
-<p>
-Then, to keep up-to-date with the code, you just have to regularly run
-<tt>cvs update -d -P</tt> from <i>within</i> your checked-out PLearn directory.
-</p>
-
-<p>
-I insist that this is only if you want to keep up with the rapid life-cycle of
-the library, in which case you should also subscribe to the developers mailing-list. 
-If you want <b>stability</b>, stick with the official tarball releases.
-</p>
-
-<h2> Occasional contributions </h2>
-
-<p>
-If you have found a bug, or fixed one, or written a piece of code that you
-think might be worth including in the PLearn library, just send me an email
-about it at <a href="mailto:vincentp@iro.umontreal.ca"> vincentp@iro.umontreal.ca </a>
-</p>
-
-<h2> Setting up CVS with write access </h2>
-
-<p>
-If you are to become a regular contributor, trusted with direct write
-permission to the CVS repository, you must check out PLearn in a different
-way.
-</p>
-
-Follow the steps described below:
-
-<ol>
-
-<li>If you don't already have one, open an account on sourceforge.net: go
-<a href="http://sourceforge.net/account/register.php">there</a>, and try
-your luck for a <i>username</i> that's not already taken and that you're
-happy with...</li>
-
-<li>Send me an email with your Source Forge <i>username</i> so that I can
-add you to the list of PLearn developers.</li>
-
-<li>If you don't already have a <tt>~/.ssh/identity.pub</tt> file on your
-computer, generate one by typing the command <tt>ssh-keygen</tt> (or
-<tt>ssh-keygen -t rsa</tt>). If prompted for a passphrase, simply type
-enter (no passphrase) that's what I use and it's probably what you
-want. The aim of the whole procedure is precisely to avoid having to retype
-passwords every time you operate with CVS... And it's very safe as long as
-people can't read your private <tt>~/.ssh/identity</tt> file (if they
-can... well they've already hacked your account!). </li>
-
-<li>Once you have been added to the list of PLearn developers, log in to the sourceforge web (click on <b>my sf.net</b> in the
-tab-bar on sourceforge.net), go to your <b>account options</b> and click
-on <b>[Edit Keys]</b> at the bottom of the page where it says <i>CVS/SSH Shared Authorized Keys</i>.
-There, paste the <i>content</i> of your <tt>~/.ssh/identity.pub</tt> file and click 
-on <b>Update</b> </li>
-
-<li>Make sure that the environment variable <tt>CVS_RSH</tt> is
-<i>always</i> set to <tt>ssh</tt> (add <tt>export CVS_RSH=ssh</tt> to your .shrc or .bashrc file, and 
-<tt>setenv CVS_RSH ssh</tt> to your .cshrc or .tcshrc and launch a new shell)</li>
-
-<li>I'll send you an email when I've added you to the list of
-developers. Once you receive it, you can check-out PLearn (after making
-sure there is no other PLearn directory in the way; rename it in PLearn.old
-if necessary). Simply issue the following command: <br/>
-<tt>cvs -z3 -d:ext:</tt><i>your_sourceforge_username</i><tt>@cvs.sourceforge.net:/cvsroot/plearn co PLearn</tt>
-</li>
-
-</ol>
 
 <h2> IMPORTANT: Copyright and license text </h2>
 
