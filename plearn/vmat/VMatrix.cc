@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /********************************************************
-* $Id: VMatrix.cc,v 1.98 2005/05/09 14:08:08 tihocan Exp $
+* $Id$
 ******************************************************* */
 
 #include <sstream>
@@ -930,11 +930,10 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
       bywho = "UNKNOWN (could not read .lock file)";
     }
 
-    if (verbose) {
+    if (verbose)
       perr << "Waiting for .lock in directory " << metadatadir 
            << " created by " << bywho << endl;
       sleep(uniform_multinomial_sample(10) + 1); // Random wait for more safety.
-    }
   }
   lockf_ = openFile(lockfile, PStream::raw_ascii, "w");  
   string lock_content = "host " + getHost() + ", pid " + tostring(getPid()) + ", user " + getUser();
