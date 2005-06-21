@@ -27,6 +27,8 @@ test results. [Special directory]
 considered to be internal to specific PLearn (or related)
 applications. 
 """
+__version_id__ = "$Id:"
+
 import copy, os, string
 from   plearn.utilities.Bindings import *
 
@@ -42,7 +44,6 @@ __all__ = [
     ## Binding Functions
     "add_binding", "ppath", "write_bindings",     
     ]
-
 
 ########################################
 ##  Module Variables  ##################
