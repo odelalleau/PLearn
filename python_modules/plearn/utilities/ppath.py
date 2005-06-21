@@ -27,7 +27,7 @@ test results. [Special directory]
 considered to be internal to specific PLearn (or related)
 applications. 
 """
-__version_id__ = "$Id:"
+__version_id__ = "$Id$"
 
 import copy, os, string
 from   plearn.utilities.Bindings import *
