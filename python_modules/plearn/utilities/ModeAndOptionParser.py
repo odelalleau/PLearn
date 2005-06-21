@@ -1,5 +1,5 @@
 #!/usr/bin/env python2.3
-__cvs_id__ = "$Id: ModeAndOptionParser.py,v 1.1 2005/06/16 20:11:58 dorionc Exp $"
+__version_id__ = "$Id$"
 
 import inspect, os, string, sys, types
 
@@ -75,19 +75,18 @@ class Mode( PythonObject ):
         return "".join(result)
 
 class ModeAndOptionParser( OptionParser ):
-    class Defaults:
-         usage             = None
-         option_list       = None
-         option_class      = Option
-         version           = None
-         conflict_handler  = "error"
-         description       = None
-         formatter         = None
-         add_help_option   = True
-         prog              = None
+     usage             = None
+     option_list       = None
+     option_class      = Option
+     version           = None
+     conflict_handler  = "error"
+     description       = None
+     formatter         = None
+     add_help_option   = True
+     prog              = None
     
     def __init__(self, **overrides):
-        optparser_overrides = metaprog.public_members( self.Defaults )        
+        optparser_overrides = dict( self.option_pairs( ) )        
         optparser_overrides.update( overrides )        
         OptionParser.__init__( self, **overrides )
 
@@ -101,15 +100,9 @@ class ModeAndOptionParser( OptionParser ):
             self.add_option_group(self.global_options)
         self.global_options.add_option(*args, **kwargs)        
 
-    #BETA: def add_mode(self, mode):        
-    #BETA:     if not isinstance(mode, Mode):
-    #BETA:         raise TypeError("Not a Mode instance: %r" % mode)
-    #BETA:     self.supported_modes[mode.classname()] = mode
-    #BETA:     
-    #BETA:     return mode
-
-    ##################################################################
-    ### Help
+    #
+    #  Help
+    #
     def print_help(self):
         if self.selected_mode is None:
             self.short_help()

@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: verbosity.py,v 1.5 2004/12/21 15:31:50 dorionc Exp $"
+__version_id__ = "$Id$"
 
 import os, string
 import plearn.utilities.toolkit     as toolkit

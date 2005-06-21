@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: cvs.py,v 1.4 2005/02/10 21:18:52 dorionc Exp $"
+__version_id__ = "$Id$"
 
 import os, popen2, string, types
 
