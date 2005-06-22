@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ThresholdedKernel.cc,v 1.3 2005/06/16 18:34:50 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -227,15 +227,9 @@ real ThresholdedKernel::evaluate_x_i_again(const Vec& x, int i, real squared_nor
 void ThresholdedKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("ThresholdedKernel::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(knn_kernel_values, copies);
+  deepCopyField(k_x_xi, copies);
+  deepCopyField(k_x_xi_mat, copies);
 }
 
 ////////////////////////////
