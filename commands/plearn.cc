@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_full.cc,v 1.1 2005/01/20 21:35:20 tihocan Exp $
+   * $Id$
    ******************************************************* */
 
 //! All includes should now go into plearn_inc.h and plearn_full_inc.h
