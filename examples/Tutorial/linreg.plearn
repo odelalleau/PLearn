@@ -1,0 +1,4 @@
+LinearRegressor(
+  weight_decay = 1e-6  
+  )
+

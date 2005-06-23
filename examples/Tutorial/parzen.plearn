@@ -1,0 +1,7 @@
+
+ParzenWindow( 
+sigma_square = 0.06;
+outputs_def = "d"  ;
+
+);
+
