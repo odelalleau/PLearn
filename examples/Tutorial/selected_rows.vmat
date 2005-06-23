@@ -1,0 +1,8 @@
+
+SelectRowsVMatrix( 
+  source = AutoVMatrix( specification = "1d_reg.amat" ),
+  indices = [ 1 1 3 0 3 4],
+  inputsize =   1,
+  targetsize =  0,
+  weightsize =  1
+);
