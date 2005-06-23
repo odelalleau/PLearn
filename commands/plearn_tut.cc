@@ -58,17 +58,19 @@
  ***********/
 // #include <commands/PLearnCommands/AutoRunCommand.h>
 // #include <commands/PLearnCommands/FieldConvertCommand.h>
-// #include <commands/PLearnCommands/HelpCommand.h>
+#include <commands/PLearnCommands/HelpCommand.h>
 // #include <commands/PLearnCommands/JulianDateCommand.h>
 // #include <commands/PLearnCommands/KolmogorovSmirnovCommand.h>
-// #include <commands/PLearnCommands/LearnerCommand.h>
+#include <commands/PLearnCommands/LearnerCommand.h>
 // #include <commands/PLearnCommands/ReadAndWriteCommand.h>
-// #include <commands/PLearnCommands/RunCommand.h>
+#include <commands/PLearnCommands/RunCommand.h>
 // #include <commands/PLearnCommands/ServerCommand.h>
 // #include <commands/PLearnCommands/TestDependenciesCommand.h>
 // #include <commands/PLearnCommands/TestDependencyCommand.h>
 // #include <commands/PLearnCommands/TxtmatCommand.h>
 
+#include <commands/PLearnCommands/VMatCommand.h>
+// #include <commands/PLearnCommands/HTMLHelpCommand.h>
 
 /**************
  * Dictionary *
@@ -139,7 +141,7 @@
 // Regressors
 // #include <plearn_learners/regressors/ConstantRegressor.h>
 // #include <plearn_learners/regressors/KNNRegressor.h>
-// #include <plearn_learners/regressors/LinearRegressor.h>
+#include <plearn_learners/regressors/LinearRegressor.h>
 // #include <plearn_learners/regressors/PLS.h>
 // #include <plearn_learners/regressors/RankLearner.h>
 
@@ -159,7 +161,7 @@
 // #include <plearn_learners/distributions/GaussianDistribution.h>
 // #include <plearn_learners/distributions/GaussianContinuumDistribution.h>
 // #include <plearn_learners/distributions/ManifoldParzen2.h>
-// #include <plearn_learners/distributions/ParzenWindow.h>
+#include <plearn_learners/distributions/ParzenWindow.h>
 // #include <plearn_learners/distributions/SpiralDistribution.h>
 // #include <plearn_learners/distributions/UniformDistribution.h>
  
@@ -242,6 +244,7 @@
 // #include <plearn/vmat/TransposeVMatrix.h>
 // #include <plearn/vmat/VMatrixFromDistribution.h>
 // #include <plearn/vmat/ViewSplitterVMatrix.h>
+#include <plearn/vmat/selectRowsVMatrix.h>
 
 
 

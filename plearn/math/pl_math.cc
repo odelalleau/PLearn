@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.cc,v 1.13 2005/02/18 14:14:04 tihocan Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -136,6 +136,28 @@ real safeflog(real base, real a)
 real safeflog2(real a)
 {
 	return safeflog(a) / LOG_2;
+}
+
+real tabulated_softplus_primitive(real x) {
+    static const int n_softplus_primitive_values = 10000;
+    static const real min_softplus_primitive_arg = -20;
+    static const real max_softplus_primitive_arg = 10;
+    static const real max_offset = max_softplus_primitive_arg*max_softplus_primitive_arg*0.5;
+    static const real softplus_primitive_delta = (n_softplus_primitive_values-1)/(max_softplus_primitive_arg-min_softplus_primitive_arg);
+    static real softplus_primitive_values[n_softplus_primitive_values];
+    static bool computed_softplus_primitive_table = false;
+    if (!computed_softplus_primitive_table)
+    {
+      real y=min_softplus_primitive_arg;
+      real dy=1.0/softplus_primitive_delta;
+      for (int i=0;i<n_softplus_primitive_values;i++,y+=dy)
+        softplus_primitive_values[i] = softplus_primitive(y);
+      computed_softplus_primitive_table=true;
+    }
+    if (x<min_softplus_primitive_arg) return 0;
+    if (x>max_softplus_primitive_arg) return softplus_primitive_values[n_softplus_primitive_values-1]+x*x*0.5 - max_offset;
+    int bin = int(rint((x-min_softplus_primitive_arg)*softplus_primitive_delta));
+    return softplus_primitive_values[bin];
 }
 
 // compute log(exp(log_a)+exp(log_b)) without losing too much precision
