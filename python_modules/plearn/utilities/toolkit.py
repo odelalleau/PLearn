@@ -346,10 +346,11 @@ def version( project_path, build_list ):
 
     major, minor, release_version = build_list[-1]
     
-    revision = project_version - release_version
-    build    = plearn_version  - release_version
+    revision = plearn_version - release_version
+    if revision == 0:
+        return [ major, minor ]
 
-    return [ major, minor, revision, build ]
+    return [ major, minor, revision, plearn_version ]
 
 def vsystem( cmd, prefix='*****' ):
     print prefix, cmd
