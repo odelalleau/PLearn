@@ -56,25 +56,19 @@ class Test( PyTestObject ):
     @type resources: List of Strings
     """
 
-    class Defaults:
-        name              = None
-        description       = ''
-        program           = None
-        arguments         = ''
-        resources         = []
-        disabled          = False
+    name              = None
+    description       = ''
+    program           = None
+    arguments         = ''
+    resources         = []
+    disabled          = False
 
-        __ordered_attr__  = [ 'name',
-                              'description',
-                              'program',
-                              'arguments',
-                              'resources',
-                              'disabled'
-                              ]
+    # Declaration order imposes the options' order.
 
-        ## Internal attributes
-        _directory        = None
-        _metaprotocol     = None
+
+    ## Internal attributes
+    _directory        = None
+    _metaprotocol     = None
         
     _instances_map    = {}
     _families_map     = {}

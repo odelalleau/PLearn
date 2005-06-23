@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.45 2005/05/31 14:38:01 dorionc Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -270,15 +270,26 @@ void Object::newread(PStream &in)
   in.skipBlanksAndComments();
   if ( in.peek() == '*' )  
   {
+    const char* errmsg = "In Object::newread(PStream&) Wrong format. Expecting \"*%d->\" but got \"*%d%c%c\".";
+    
     in.get(); // Eat '*'
     unsigned int id;
     in >> id;
-    in.skipBlanksAndCommentsAndSeparators();
+    in.skipBlanksAndComments();
 
-    in.get(); // Eat '-'
+    char dash = in.get(); // Eat '-'
+    if ( dash != '-' )
+    {
+      if ( dash == ';' )
+        PLERROR("In Object::newread(PStream&): Non pointer objects can be prefixed with dummy "
+                "references ('*%d ->') but these references MUST NOT BE USED afterwards. Just "
+                "read '*%d;'", id, id );
+      PLERROR( errmsg, id, id, dash, in.get() );
+    }
+    
     char cc = in.get();
     if(cc != '>') // Eat '>'
-      PLERROR("In PStream::operator>>(T*&)  Wrong format.  Expecting \"*%d->\" but got \"*%d-%c\".", id, id, cc);
+      PLERROR( errmsg, id, id, dash, cc);
     in.skipBlanksAndCommentsAndSeparators();    
   }
     

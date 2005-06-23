@@ -323,6 +323,34 @@ def quote_if(s):
 def short_doc(obj):
     return doc(obj, True)
 
+def version( project_path, build_list ):
+    """Automatic version control.
+    
+    Builds are tuples of the form (major, minor, plearn_revision) where
+    plearn_revision is the SVN revision of the PLearn project when the
+    project's version was released.
+    """
+    
+    if os.path.isdir( project_path ):
+        dirname, fname = project_path, '.'
+    else:
+        dirname, fname = os.path.split( project_path )
+
+    from moresh import pushd, popd
+    pushd( dirname )
+    info_lines = command_output( 'svn info %s' % fname )
+    popd( )
+
+    plearn_version  = int( info_lines[3].split(':')[1] )
+    project_version = int( info_lines[7].split(':')[1] )
+
+    major, minor, release_version = build_list[-1]
+    
+    revision = project_version - release_version
+    build    = plearn_version  - release_version
+
+    return [ major, minor, revision, build ]
+
 def vsystem( cmd, prefix='*****' ):
     print prefix, cmd
     os.system( cmd )

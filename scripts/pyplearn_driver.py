@@ -2,7 +2,7 @@
 __cvs_id__ = "$Id$"
 
 import sys
-import os.path
+import os
 from plearn.pyplearn             import *
 from plearn.pyplearn.pyplearn    import _parse_plargs
 from plearn.pyplearn.plearn_repr import *
@@ -28,5 +28,7 @@ else:
     _parse_plargs(sys.argv[2:])
     lines += 'print main()\n'
 
-del sys, os.path, _parse_plargs
+del globals()['sys']
+del globals()['os']
+del globals()['_parse_plargs']
 exec ''.join(lines) in globals()

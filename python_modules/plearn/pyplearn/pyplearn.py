@@ -1,17 +1,18 @@
 """PyPLearn's core"""
-__cvs_id__ = "$Id: pyplearn.py,v 1.33 2005/06/16 18:44:01 dorionc Exp $"
+__cvs_id__ = "$Id$"
 
 import string, types
 import plearn.utilities.metaprog as metaprog
 
 from plearn.pyplearn.plearn_repr import plearn_repr
 
-__all__ = [ 'PyPLearnError', 'plvar',
+__all__ = [ 'plvar',
             '_parse_plargs', 'plargs', 'generate_expdir', 'plarg_defaults',
             'bind_plargs', 'plargs_binder', 'plargs_namespace',
             'include',
 
             ## Exceptions
+            'PyPLearnError',
             'UnknownArgumentError'
             ]
 
@@ -377,6 +378,12 @@ class _plargs_storage_readonly:
     is entered. If you are using a lot of command-line arguments, it is
     suggested that you use the L{bind_plargs} function of the
     L{plargs_binder} and L{plargs_namespace} classes.
+
+    B{Note} that the value of plargs.expdir is generated automatically and
+    B{can not} be assigned a default value through plarg_defaults. This
+    behaviour aims to standardize the naming of experiment directories
+    (L{xperiments}). For debugging purpose, however, one may provide on
+    command-line an override to plargs.expdir value.
     """
     
     def __setattr__(self, k, v):
@@ -411,7 +418,7 @@ class plargs_binder:
             bind_plargs( cls )
 
 class plargs_namespace:
-    """Subclasses will have there class variables binded to PREFIXED plargs.
+    """Subclasses will have there class variables binded to B{prefixed} plargs.
 
     The plarg will be prefixed by the classname, e.g.::
 

@@ -124,10 +124,9 @@ class Xperiment(PyPLearnObject):
         cache_file.close()
     save_cache = classmethod( save_cache )
 
-    class Defaults:
-        path   = None
-        infos  = None
-        expkey = None
+    path   = None
+    infos  = None
+    expkey = None
             
     def __init__( self, **overrides ):
         PyPLearnObject.__init__( self, **overrides )

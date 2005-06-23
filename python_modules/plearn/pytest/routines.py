@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: routines.py,v 1.5 2005/06/15 15:26:51 dorionc Exp $"
+__version_id__ = "$Id$"
 
 import os 
 import plearn.utilities.toolkit as toolkit
@@ -62,10 +62,9 @@ class TaskStatus:
 class Routine( PyTestObject ):
     _report_traceback = False
 
-    class Defaults:
-        test = None
-        completion_hook             = None
-        status                      = TaskStatus()
+    test = None
+    completion_hook             = None
+    status                      = TaskStatus()
         
     def __init__( self, **overrides ):
         PyTestObject.__init__( self, **overrides ) 
@@ -224,9 +223,8 @@ class RunTestRoutine( ResultsRelatedRoutine ):
 
     B{Do not modify} the results directory manually.
     """
-    class Defaults( ResultsRelatedRoutine.Defaults ):
-        expected_results = None
-        run_results      = None
+    expected_results = None
+    run_results      = None
 
     def __init__( self, **overrides ):
         ResultsRelatedRoutine.__init__( self, **overrides )

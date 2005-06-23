@@ -1,4 +1,4 @@
-_cvs_id__ = "$Id: modes.py,v 1.24 2005/06/15 15:26:51 dorionc Exp $"
+_cvs_id__ = "$Id$"
 
 import copy, shutil
 import plearn.utilities.version_control as version_control
@@ -60,7 +60,9 @@ class PyTestMode( Mode ):
     testing_options = classmethod( testing_options )
 
     ## Static method
-    def build_tests(ignored_directories, directory, dirlist):
+    def build_tests( args, directory, dirlist):
+        options, ignored_directories = args
+        
         if ignore.is_ignored(directory, dirlist):
             toolkit.exempt_list_of( dirlist, copy.copy(dirlist) )
             ignored_directories.append( directory )
@@ -121,9 +123,9 @@ class PyTestMode( Mode ):
             ignored_directories = []
             for target in targets:
                 if hasattr( options, 'recursive' ) and options.recursive:
-                    os.path.walk( target, self.build_tests, ignored_directories )
+                    os.path.walk( target, self.build_tests, (options, ignored_directories) )
                 else:
-                    self.build_tests( ignored_directories, target, os.listdir(target) )
+                    self.build_tests( (options, ignored_directories), target, os.listdir(target) )
 
             if len(ignored_directories) > 0:
                 ignored = [ "The following directories (and their subdirectories) were ignored", "" ]

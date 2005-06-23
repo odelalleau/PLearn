@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: BasicStats.py,v 1.9 2004/12/21 16:22:39 dorionc Exp $"
+__version_id__ = "$Id$"
 
 from plearn.utilities.toolkit        import plural
 from plearn.utilities.verbosity      import vprint

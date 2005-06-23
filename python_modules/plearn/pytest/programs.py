@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: programs.py,v 1.12 2005/06/13 19:29:14 dorionc Exp $"
+__version_id__ = "$Id$"
 
 import os, string, types
 import plearn.utilities.ppath          as     ppath
@@ -50,12 +50,12 @@ def plcommand(command_name):
 ########################################
     
 class Program(PyTestObject):
-    class Defaults:
-        name                  = None
-        __ordered_attr__      = [ 'name' ]
+    name                  = None
+    # Declaration order imposes the options' order.
 
-        _path                 = None
-        _processing_directory = None
+
+    _path                 = None
+    _processing_directory = None
         
     def __init__(self, **overrides):
         PyTestObject.__init__(self, **overrides)
@@ -120,13 +120,12 @@ class LocalProgram(Program):
 class Compilable:
     ## This map will be used to ensure that there are no doubled
     ## compilation attempts.
-    compilation_status = {}
+    _compilation_status = {}
 
-    class Defaults(Program.Defaults):        
-        compiler        = 'pymake'
-        compile_options = ''
-        __ordered_attr__ = Program.Defaults.__ordered_attr__ + \
-                           ['compiler', 'compile_options']
+    compiler        = 'pymake'
+    compile_options = ''
+    # Declaration order imposes the options' order.
+
         
     def __init__(self, **overides):
         raise NotImplementedError(
@@ -135,8 +134,8 @@ class Compilable:
             )
 
     def compilation_succeeded(self):
-        if Compilable.compilation_status.has_key(self._path):
-            return Compilable.compilation_status[self._path]
+        if Compilable._compilation_status.has_key(self._path):
+            return Compilable._compilation_status[self._path]
 
         ## Internal call: add the status to the map
         status = None
@@ -151,11 +150,11 @@ class Compilable:
             status = True
 
         assert isinstance(status, type(True))
-        Compilable.compilation_status[self._path] = status
+        Compilable._compilation_status[self._path] = status
         return status
     
     def compile(self):
-        if Compilable.compilation_status.has_key(self._path):
+        if Compilable._compilation_status.has_key(self._path):
             return
         
         directory_when_called = os.getcwd()
@@ -186,10 +185,6 @@ class Compilable:
         raise NotImplementedError
     
 class GlobalCompilableProgram(GlobalProgram, Compilable):
-
-    def __init__(self, **overrides):
-        GlobalProgram.__init__(self, Defaults = Compilable.Defaults, **overrides)
-
     def get_name(self):
         return self.name+' --no-version'
 
@@ -199,9 +194,6 @@ class GlobalCompilableProgram(GlobalProgram, Compilable):
         return to_target
         
 class LocalCompilableProgram(LocalProgram, Compilable): 
-    def __init__(self, **overrides):
-        LocalProgram.__init__(self, Defaults = Compilable.Defaults, **overrides)
-
     def path_to_target(self):
         link_target  = os.readlink( self._path )
         to_target    = os.path.join( self._processing_directory, link_target)

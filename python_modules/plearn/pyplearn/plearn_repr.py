@@ -169,7 +169,7 @@ def __plearn_repr( obj, indent_level ):
     
 
 if __name__ == "__main__":
-    from apstat.finance.pyplearn import pl
+    from plearn.pyplearn import pl
 
     object1  = pl.SomeClass( name = "Object1" )    
     object2  = pl.SomeOtherClass( first_option = "first_option", internal = object1 )
@@ -186,13 +186,8 @@ if __name__ == "__main__":
     print "toplevel3"
     toplevel3 = pl.TopLevel( some_dict = { "a" : 1, "b" : 2 }, # should be another dict object
                              str_list  = [ "str1", "str2" ],
-                             _internal = '_INTERNAL_VALUE'                             
                              )
     print toplevel3
-
-    print
-    print "Internal view of toplevel3:"
-    print repr( toplevel3 )
 
     #
     #  Test deprecated

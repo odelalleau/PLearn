@@ -1,6 +1,5 @@
-__cvs_id__ = "$Id: __init__.py,v 1.19 2005/06/15 19:57:52 dorionc Exp $"
+__version_id__ = "$Id$"
                             
-### The versionning tools are now properly enabled.
 import os, sys, time
 import modes
 

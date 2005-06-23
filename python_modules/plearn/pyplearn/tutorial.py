@@ -1,9 +1,9 @@
 """PyPLearn Tutorial.
 
-This tutorial introduces the various tools provided by the PyPLearn
-mechanism. Essentially, the PyPLearn mechanism lets you instanciate
-complex experimental schemes using a powerful and highly readable
-language: Python.
+This tutorial introduces you to the various tools provided by the
+PyPLearn mecanism. Essentially, the PyPLearn mecanism allows you to
+instanciate complex experimental schemes using a powerful and highly
+readable language: Python.
 
 Section 1: Introductory Examples
 ================================
@@ -68,7 +68,7 @@ Section 1: Introductory Examples
                 targetsize = 2,
                 weightsize = 0
                 ),
-            expdir = "expdir_2005_06_16_16:47:51",
+            expdir = "expdir_2005_06_23_11:24:28",
             learner = *2 -> LinearRegressor( ),
             provide_learner_expdir = 1,
             save_test_confidence = 1,
@@ -93,175 +93,32 @@ Section 1: Introductory Examples
             )
 
         
-
-    Section 1.1: L{plargs}
-    ----------------------
-    Values read from or expected for PLearn command-line variables.
-
-    A custom (and encouraged) practice is to write large PyPLearn scripts
-    which behaviour can be modified by command-line arguments, e.g.:: 
-            
-        prompt %> plearn command_line.pyplearn on_cmd_line="somefile.pmat" input_size=10
-    
-    with the command_line.pyplearn script being::
-
-        #
-        # command_line.pyplearn
-        #
-        from plearn.pyplearn import *
-
-        dataset = pl.AutoVMatrix( specification = plargs.on_cmd_line,
-                                  inputsize     = int( plargs.input_size ),
-                                  targetsize    = 1
-                                  )
-    
-        def main():
-            return pl.SomeRunnableObject( dataset  = dataset,
-                                          internal = SomeObject( dataset = dataset ) )
-
-    Note that arguments given on the command line are interpreted as
-    strings, so if you want to pass integers (int) or floating-point
-    values (float), you will have to cast them as above.
-
-    To set default values for some arguments, one can use
-    plarg_defaults. For instance::
-
-        # 
-        # command_line_with_defaults.pyplearn
-        #
-        from plearn.pyplearn import *
-
-        plarg_defaults.on_cmd_line = "some_default_file.pmat"
-        plarg_defaults.input_size  = 10
-        dataset = pl.AutoVMatrix( specification = plargs.on_cmd_line,
-                                  inputsize     = int( plargs.input_size ),
-                                  targetsize    = 1
-                                  )
-    
-        def main( ):
-            return pl.SomeRunnableObject( dataset  = dataset,
-                                          internal = SomeObject( dataset = dataset ) )
-        
-    which won't fail and use C{"some_default_file.pmat"} with C{input_size=10} if::
-    
-        prompt %> plearn command_line.pyplearn
-    
-    is entered. If you are using a lot of command-line arguments, it is
-    suggested that you use the L{bind_plargs} function of the
-    L{plargs_binder} and L{plargs_namespace} classes.
-    
-
-    Section 1.2: L{bind_plargs}
-    ---------------------------
-    Binds some command line arguments to the fields of an object.
-
-    In short, given::
-
-        class MiscDefaults:
-            pca_comp              = 10
-            pca_norm              = 1   # True
-            sigma                 = 2.4
-
-    this call::
-
-        bind_plargs( MiscDefaults, [ "pca_comp", "pca_norm", "sigma" ] )
-
-    is strictly equivalent to::
-
-        plarg_defaults.pca_comp              = MiscDefaults.pca_comp
-        plarg_defaults.pca_norm              = MiscDefaults.pca_norm
-        plarg_defaults.sigma                 = MiscDefaults.sigma
-
-        MiscDefaults.pca_comp                = plargs.pca_comp
-        MiscDefaults.pca_norm                = plargs.pca_norm 
-        MiscDefaults.sigma                   = plargs.sigma
-
-    Therefore, you can configure the I{MiscDefaults} values from the
-    command line. Note that, if you want bind all class variables of a
-    class, you can simply declare that class to be a L{plargs_binder} to
-    avoid the call to C{bind_plargs}::
-
-        class MiscDefaults( plargs_binder ):
-            pca_comp              = 10
-            pca_norm              = 1   # True
-            sigma                 = 2.4
-
-    Also note that B{homogenous} list bindings are understood, so that::
-
-        #
-        # testScript.py
-        #
-        from plearn.pyplearn import plargs_binder
-        class Test( plargs_binder ):
-            some_list = [ 0.0 ]
-
-        print 'List is:', Test.some_list
-
-        # Prompt
-        prompt %> python testScript.py some_list=1,2,3.5
-        List is: [1.0, 2.0, 3.5]
-
-    where the type of the elements in the list is given by the type of the
-    first element in the default list.
-    
-    
-
-    Section 1.3: L{plargs_binder}
-    -----------------------------
-    Subclasses will have there class variables binded to plargs.
-
-    The plarg name will be the exact field name, e.g.::
-
-        class Preproc( plargs_binder ):
-            start_year       = 2000
-            last_year        = 2004
-            
-        print plargs.start_year      # prints 2000
-        print plargs.last_year       # prints 2004
-
-    Note that Preproc.start_year == int(plargs.start_year) will always be True.    
-    
-
-    Section 1.4: L{plargs_namespace}
-    --------------------------------
-    Subclasses will have there class variables binded to PREFIXED plargs.
-
-    The plarg will be prefixed by the classname, e.g.::
-
-        class MLM( plargs_namespace ):
-            ma               = 252
-            sdmult           = 1
-            
-        print plargs.MLM_ma          # prints 252
-        print plargs.MLM_sdmult      # prints 1
-
-    Note that MLM.ma == int(plargs.MLM_ma) will always be True.    
-    
 Section 2: What's Wrong with PLearn Scripts?
 ============================================
 
     As a matter of fact, nothing's wrong with the PLearn scripts,
     especially in the above example. Hence why not use those directly?
-    First, the PLearn serialization format, while having a syntax close to
-    Python's, still has peculiarities of its own that can easily make it
-    hard to edit. For instance, emacs comes with a friendly python-mode
+    First, PLearn serialization format while having a syntax close to the
+    Python still have particularities of its own that can easily make edit
+    hard to edit. For instance, emacs comes with a sympathetic python-mode
     while the plearn-mode is still to come...
 
     This said, remember that the above example shows very simple experiment
-    settings. As settings get more complex, the use of references -- *3 ->
-    FractionSplitter... -- and their management can get confusing, while
-    the use of Python objects is totally intuitive. 
+    settings. As settings get more complex, the use of references --- *3 ->
+    FractionSplitter... --- and their management can get confusing, while
+    the use the Python objects is totally intuitive
+    (L{tutorial_stuff.tuto_complex_scheme}).
 
     Furthermore, when writing complex experiments, you may want your script
-    to manage command-line options. Ok, PLearn script accepts command-line
+    to manage command-line options. Ok, PLearn script accepted command-line
     arguments too, but some (brave) PLearn developers ended up augmenting
     the serialization format with statements like IF, SWITCH, DIVIDE,
     INCLUDE, ...
 
     In short, they ended up building a new language within the
     serialization format... Using Python was quite an obvious alternative,
-    because of the syntactic similarities, and provides us with a world of
-    possibilities.
+    since the syntactic similarities, and provides us with a world of
+    possibilities. 
     
 
     Section 2.1: A More Complex Example
@@ -360,7 +217,7 @@ Section 2: What's Wrong with PLearn Scripts?
         #
 
         *59 -> MyWeardTester(
-            expdir = "expdir_2005_06_16_16:47:51",
+            expdir = "expdir_2005_06_23_11:24:28",
             learner = *58 -> CombinerLearner(
                 underlying_learners = [
                     *6 -> SomeLearner(
@@ -486,24 +343,24 @@ Section 2: What's Wrong with PLearn Scripts?
                         )
                     ],
                 weights = [
-                    0.0473848618438,
-                    0.0245641991861,
-                    0.0260925879359,
-                    0.0709075249514,
-                    0.0127203369401,
-                    0.0906149676186,
-                    0.0163130928104,
-                    0.0684290369406,
-                    0.0883008211091,
-                    0.0728195773226,
-                    0.0606178832103,
-                    0.0818699501636,
-                    0.0561363557176,
-                    0.0384191291722,
-                    0.03173756307,
-                    0.0481764827469,
-                    0.0730766183782,
-                    0.0918190108825
+                    0.133804827306,
+                    0.126014563993,
+                    0.0647392407573,
+                    0.0267401381758,
+                    0.0256956687635,
+                    0.0583077757858,
+                    0.00499858478109,
+                    0.0582677338833,
+                    0.068397691984,
+                    0.0502705250384,
+                    0.0702741195065,
+                    0.0392490584469,
+                    0.090509941543,
+                    0.00878618174419,
+                    0.0250455582353,
+                    0.0330274266606,
+                    0.0107127697865,
+                    0.105158193609
                     ]
                 ),
             provide_learner_expdir = 1
@@ -515,7 +372,7 @@ Section 3: And Why Not to Code a Simple Main?
 
     Didn't you ever compile PLearn??? 
 
-    Believe me, you do not want to recompile each time little changes are
+    Believe me, you do not want to recompile each time little changes were
     made to your experiment's settings...
     
 Section 4: How Does it Work?
@@ -553,11 +410,16 @@ Section 4: How Does it Work?
             an instance of the class. Hence, names of the function's arguments are
             considered as the PLearn object's option names.
             \"\"\"
+            class OnTherFly( PyPLearnObject ):
+                def option_names( klass, ordered = None ):
+                    return []
+                option_names = classmethod( option_names )
+                    
             def __getattr__(self, name):
                 if name.startswith('__'):
                     raise AttributeError
         
-                klass = new.classobj(name, (PyPLearnObject,), {})
+                klass = new.classobj(name, (self.OnTherFly,), {})
                 assert issubclass( klass, PyPLearnObject )
         
                 def initfunc(**kwargs):
@@ -597,15 +459,167 @@ Section 5: L{PyPLearnObject}
     while any attribute starting with at least one underscore is considered
     internal (protected '_' or private '__').
 
-    The learn more about the way this class manages attribute, see the
-    L{AttributeManager} class defined above.
+    Protected and private attributes are not affected by the option mecanisms.
     
-Section 6: How to reuse my old PLearn scripts?
+Section 6: Command-Line Arguments
+=================================
+
+
+    Section 6.1: L{plargs}
+    ----------------------
+    Values read from or expected for PLearn command-line variables.
+
+    A custom (and encouraged) practice is to write large PyPLearn scripts
+    which behaviour can be modified by command-line arguments, e.g.:: 
+            
+        prompt %> plearn command_line.pyplearn on_cmd_line="somefile.pmat" input_size=10
+    
+    with the command_line.pyplearn script being::
+
+        #
+        # command_line.pyplearn
+        #
+        from plearn.pyplearn import *
+
+        dataset = pl.AutoVMatrix( specification = plargs.on_cmd_line,
+                                  inputsize     = int( plargs.input_size ),
+                                  targetsize    = 1
+                                  )
+    
+        def main():
+            return pl.SomeRunnableObject( dataset  = dataset,
+                                          internal = SomeObject( dataset = dataset ) )
+
+    Note that arguments given on the command line are interpreted as
+    strings, so if you want to pass integers (int) or floating-point
+    values (float), you will have to cast them as above.
+
+    To set default values for some arguments, one can use
+    plarg_defaults. For instance::
+
+        # 
+        # command_line_with_defaults.pyplearn
+        #
+        from plearn.pyplearn import *
+
+        plarg_defaults.on_cmd_line = "some_default_file.pmat"
+        plarg_defaults.input_size  = 10
+        dataset = pl.AutoVMatrix( specification = plargs.on_cmd_line,
+                                  inputsize     = int( plargs.input_size ),
+                                  targetsize    = 1
+                                  )
+    
+        def main( ):
+            return pl.SomeRunnableObject( dataset  = dataset,
+                                          internal = SomeObject( dataset = dataset ) )
+        
+    which won't fail and use C{"some_default_file.pmat"} with C{input_size=10} if::
+    
+        prompt %> plearn command_line.pyplearn
+    
+    is entered. If you are using a lot of command-line arguments, it is
+    suggested that you use the L{bind_plargs} function of the
+    L{plargs_binder} and L{plargs_namespace} classes.
+
+    B{Note} that the value of plargs.expdir is generated automatically and
+    B{can not} be assigned a default value through plarg_defaults. This
+    behaviour aims to standardize the naming of experiment directories
+    (L{xperiments}). For debugging purpose, however, one may provide on
+    command-line an override to plargs.expdir value.
+    
+
+    Section 6.2: L{bind_plargs}
+    ---------------------------
+    Binds some command line arguments to the fields of an object.
+
+    In short, given::
+
+        class MiscDefaults:
+            pca_comp              = 10
+            pca_norm              = 1   # True
+            sigma                 = 2.4
+
+    this call::
+
+        bind_plargs( MiscDefaults, [ "pca_comp", "pca_norm", "sigma" ] )
+
+    is strictly equivalent to::
+
+        plarg_defaults.pca_comp              = MiscDefaults.pca_comp
+        plarg_defaults.pca_norm              = MiscDefaults.pca_norm
+        plarg_defaults.sigma                 = MiscDefaults.sigma
+
+        MiscDefaults.pca_comp                = plargs.pca_comp
+        MiscDefaults.pca_norm                = plargs.pca_norm 
+        MiscDefaults.sigma                   = plargs.sigma
+
+    Therefore, you can configure the I{MiscDefaults} values from the
+    command line. Note that, if you want bind all class variables of a
+    class, you can simply declare that class to be a L{plargs_binder} to
+    avoid the call to C{bind_plargs}::
+
+        class MiscDefaults( plargs_binder ):
+            pca_comp              = 10
+            pca_norm              = 1   # True
+            sigma                 = 2.4
+
+    Also note that B{homogenous} list bindings are understood, so that::
+
+        #
+        # testScript.py
+        #
+        from plearn.pyplearn import plargs_binder
+        class Test( plargs_binder ):
+            some_list = [ 0.0 ]
+
+        print 'List is:', Test.some_list
+
+        # Prompt
+        prompt %> python testScript.py some_list=1,2,3.5
+        List is: [1.0, 2.0, 3.5]
+
+    where the type of the elements in the list is given by the type of the
+    first element in the default list.
+    
+    
+
+    Section 6.3: L{plargs_binder}
+    -----------------------------
+    Subclasses will have there class variables binded to plargs.
+
+    The plarg name will be the exact field name, e.g.::
+
+        class Preproc( plargs_binder ):
+            start_year       = 2000
+            last_year        = 2004
+            
+        print plargs.start_year      # prints 2000
+        print plargs.last_year       # prints 2004
+
+    Note that Preproc.start_year == int(plargs.start_year) will always be True.    
+    
+
+    Section 6.4: L{plargs_namespace}
+    --------------------------------
+    Subclasses will have there class variables binded to B{prefixed} plargs.
+
+    The plarg will be prefixed by the classname, e.g.::
+
+        class MLM( plargs_namespace ):
+            ma               = 252
+            sdmult           = 1
+            
+        print plargs.MLM_ma          # prints 252
+        print plargs.MLM_sdmult      # prints 1
+
+    Note that MLM.ma == int(plargs.MLM_ma) will always be True.    
+    
+Section 7: How to reuse my old PLearn scripts?
 ==============================================
 
     Two simple tools will help you do so.
 
-    Section 6.1: L{include}
+    Section 7.1: L{include}
     -----------------------
     Includes the content of a .plearn file.
 
@@ -661,7 +675,7 @@ Section 6: How to reuse my old PLearn scripts?
                                )
     
 
-    Section 6.2: L{plvar}
+    Section 7.2: L{plvar}
     ---------------------
     Emulating PLearn's $DEFINE statement.
     
@@ -731,41 +745,43 @@ def pyPLearnMagicModuleSubSection( indent = ' '*4 ):
 class PyPLearnTutorial( Tutorial ):
     """PyPLearn Tutorial.
 
-    This tutorial introduces the various tools provided by the PyPLearn
-    mechanism. Essentially, the PyPLearn mechanism lets you instanciate
-    complex experimental schemes using a powerful and highly readable
-    language: Python.
+    This tutorial introduces you to the various tools provided by the
+    PyPLearn mecanism. Essentially, the PyPLearn mecanism allows you to
+    instanciate complex experimental schemes using a powerful and highly
+    readable language: Python.
     """
-    
+
+    from tutorial_stuff import tuto_complex_scheme
     whatsWrong = """
     As a matter of fact, nothing's wrong with the PLearn scripts,
     especially in the above example. Hence why not use those directly?
-    First, the PLearn serialization format, while having a syntax close to
-    Python's, still has peculiarities of its own that can easily make it
-    hard to edit. For instance, emacs comes with a friendly python-mode
-    while the plearn-mode is still to come...
+    First, PLearn serialization format while having a syntax close to the
+    Python still have particularities of its own that can easily make edit
+    hard to edit and affect readability. For instance, emacs comes with a
+    sympathetic python-mode while the plearn-mode is still to come...
 
     This said, remember that the above example shows very simple experiment
-    settings. As settings get more complex, the use of references -- *3 ->
-    FractionSplitter... -- and their management can get confusing, while
-    the use of Python objects is totally intuitive. 
+    settings. As settings get more complex, the use of references --- *3 ->
+    FractionSplitter... --- and their management can get confusing, while
+    the use the Python objects is totally intuitive
+    (L{tutorial_stuff.tuto_complex_scheme}).
 
     Furthermore, when writing complex experiments, you may want your script
-    to manage command-line options. Ok, PLearn script accepts command-line
+    to manage command-line options. Ok, PLearn script accepted command-line
     arguments too, but some (brave) PLearn developers ended up augmenting
     the serialization format with statements like IF, SWITCH, DIVIDE,
     INCLUDE, ...
 
     In short, they ended up building a new language within the
     serialization format... Using Python was quite an obvious alternative,
-    because of the syntactic similarities, and provides us with a world of
-    possibilities.
+    since the syntactic similarities, and provides us with a world of
+    possibilities. 
     """
     
     whyNotAMain = """
     Didn't you ever compile PLearn??? 
 
-    Believe me, you do not want to recompile each time little changes are
+    Believe me, you do not want to recompile each time little changes were
     made to your experiment's settings...
     """
 
@@ -779,13 +795,7 @@ class PyPLearnTutorial( Tutorial ):
                 
             return ( 'L{%s}'%obj.__name__, indent+doc )
         
-        return [ Section( "Introductory Examples", cls.introductoryExample(),
-                          [ SubSection( 'L{plargs}',
-                                        indent+_plargs_storage_readonly.__doc__ ),
-                            SubSection( *name_doc_pair(bind_plargs) ),
-                            SubSection( *name_doc_pair(plargs_binder) ),
-                            SubSection( *name_doc_pair(plargs_namespace) ),
-                            ]),
+        return [ Section( "Introductory Examples", cls.introductoryExample() ),
                  
                  Section( "What's Wrong with PLearn Scripts?", cls.whatsWrong,
                           [ SubSection( "A More Complex Example", cls.moreComplexExample() ) ]
@@ -800,7 +810,15 @@ class PyPLearnTutorial( Tutorial ):
                           ),
                  
                  Section( *name_doc_pair(PyPLearnObject) ),
-                 
+
+                 Section( "Command-Line Arguments", '',
+                          [ SubSection( 'L{plargs}',
+                                        indent+_plargs_storage_readonly.__doc__ ),
+                            SubSection( *name_doc_pair(bind_plargs) ),
+                            SubSection( *name_doc_pair(plargs_binder) ),
+                            SubSection( *name_doc_pair(plargs_namespace) ),
+                            ]),
+                                           
                  Section( "How to reuse my old PLearn scripts?",
                           "\n    Two simple tools will help you do so.",
                           [ SubSection( *name_doc_pair(include) ),

@@ -1,27 +1,22 @@
-#!/usr/bin/env python2.3
-__cvs_id__ = '$Id: pytest,v 1.32 2005/06/15 19:52:37 dorionc Exp $'
+#!/usr/bin/env python
 
-## This statement changes the behavior of the import statement
-from plearn.utilities.versionning import *
+import os
+from plearn           import pytest
+from plearn.utilities import toolkit
 
-## Since the main file of the project is the one importing versionning, the
-## builtin import statement was in effect when it was loaded. Therefore, it
-## must declare itself as a module after the project declaration
-project = declare_project("PyTest")
-project.declare_module(__name__, __cvs_id__)
-project.neglect_module( "plearn.utilities.version_control" )
-project.neglect_module( "plearn.utilities.cvs" )
-project.neglect_module( "plearn.utilities.svn" )
+# Builds are tuples of the form (major, minor, plearn_revision) where
+# plearn_revision is the SVN revision of the PLearn project when the
+# project's version was released.
+build_list = [
+    # Major, Minor, PLearn Rev 
+    (   0,     0,       0     ),
+    (   0,     7,       3591  )
+    (   0,     9,       3646  )
+    ]
 
-### When an official build will be ready...
-## official_build( "pytest",
-##                 build_version = [1, 0],
-##                 fixlevels     = [5, 28, 89]
-##                 )
+def pytest_version( ):
+    pytest_dir = os.path.dirname( pytest.__file__ )
+    vtup = toolkit.version( pytest_dir, build_list )
+    return '.'.join([ str(v) for v in vtup ])
 
-## Shorthand
-def pytest_version(extended=False):
-    return project_version("PyTest", extended)
-
-import plearn.pytest
-plearn.pytest.main( pytest_version )
+pytest.main( pytest_version )

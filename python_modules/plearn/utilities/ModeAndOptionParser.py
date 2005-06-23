@@ -6,7 +6,7 @@ import inspect, os, string, sys, types
 from optparse                       import *
 from plearn.utilities               import toolkit
 from plearn.utilities               import metaprog
-from plearn.pyplearn.PyPLearnObject import PythonObject
+from plearn.pyplearn.PyPLearnObject import PyPLearnObject
 
 __all__ = [ 'OptionGroup', 'Mode', 'ModeAndOptionParser' ]
 
@@ -20,18 +20,17 @@ LBOX = 20
 #BETA:    oname += option.dest
 #BETA:    return string.replace(oname, '_', '-')
 
-class Mode( PythonObject ):
-    supported_modes = {}
-    class __metaclass__( PythonObject.__metaclass__ ):
-        def __init__( cls, clsname, bases, dic ):
-            super(cls.__metaclass__, cls).__init__(clsname, bases, dic)            
-            lower = clsname.lower()
-            if clsname == lower:
-                cls.supported_modes[clsname] = cls
+class Mode( PyPLearnObject ):
+    _subclasses = {}
+    _subclass_filter = classmethod( lambda cls, name: name == name.lower() )
 
     #
     #  Class methods
-    #    
+    #
+    def _unreferenced( cls ):
+        return True
+    _unreferenced = classmethod( _unreferenced )
+    
     def description( cls ):
         return toolkit.doc( cls )
     description = classmethod( description )
@@ -41,7 +40,7 @@ class Mode( PythonObject ):
     help = classmethod( help )
 
     def mode_list( cls ):
-        mode_list = cls.supported_modes.keys()        
+        mode_list = cls._subclasses.keys()        
         mode_list.sort( lambda a,b: cmp(a, b) )
         return mode_list
     mode_list = classmethod( mode_list )
@@ -54,7 +53,7 @@ class Mode( PythonObject ):
     #  Instance methods
     #
     def __init__( self, targets, options ):
-        PythonObject.__init__( self )
+        PyPLearnObject.__init__( self )
         self.targets = targets
         self.options = options
         
@@ -74,24 +73,28 @@ class Mode( PythonObject ):
 
         return "".join(result)
 
-class ModeAndOptionParser( OptionParser ):
-     usage             = None
-     option_list       = None
-     option_class      = Option
-     version           = None
-     conflict_handler  = "error"
-     description       = None
-     formatter         = None
-     add_help_option   = True
-     prog              = None
+class ModeParsingOptions( PyPLearnObject ):
+    usage             = None
+    option_list       = None
+    # option_class      = Option
+    version           = None
+    conflict_handler  = "error"
+    description       = None
+    formatter         = None
+    add_help_option   = True
+    prog              = None    
     
+class ModeAndOptionParser( OptionParser ):
     def __init__(self, **overrides):
-        optparser_overrides = dict( self.option_pairs( ) )        
+        defaults = ModeParsingOptions()
+        
+        optparser_overrides = dict( defaults.option_pairs() )        
         optparser_overrides.update( overrides )        
-        OptionParser.__init__( self, **overrides )
+
+        OptionParser.__init__( self, **optparser_overrides )
 
         self.selected_mode   = None
-        self.supported_modes = Mode.supported_modes
+        self.supported_modes = Mode._subclasses
 
     def add_option(self, *args, **kwargs):
         if not hasattr(self, 'global_options'):
@@ -151,32 +154,43 @@ class ModeAndOptionParser( OptionParser ):
         else:
             return self.prog
     
-    def parse_args(self, args=None, values=None):
-        self.parse_mode()
+    def parse_args(self, args=None, values=None, default_mode_name=None ):
+        self.parse_mode( default_mode_name )
         return OptionParser.parse_args(self, args, values)
 
-    def parse_mode(self):
+    def parse_mode( self, default_mode_name = None ):
         # HACK
         if '--version' in sys.argv:
             return
-
-        if len(sys.argv) <= 1:
-            self.print_usage()
-            print("Type '%s --help' for a list of the supported modes." % self.get_prog_name())
-            sys.exit()
-            
-        mode_name = sys.argv[1] 
-        if mode_name in ['-h', '--help']:
-            return
-        sys.argv.pop(1)
         
+        args      = sys.argv[1:]
+        mode_name = None
+
+        # No mode: default mode OR very short help.
+        if len(args) == 0:
+            if default_mode_name is None:
+                self.print_usage()
+                print("Type '%s --help' for a list of the supported modes." % self.get_prog_name())
+                sys.exit()
+            else:
+                mode_name = default_mode_name
+
+        # The mode must be the first argument passed to the program
+        else:
+            mode_name = args[0]
+            if mode_name in ['-h', '--help']:
+                self.print_usage()
+                return
+            sys.argv.remove( args.pop(0) )
+
+        # Sanity check
         if not self.supported_modes.has_key(mode_name):
             print ( "Mode %s not supported. Type '%s --help' "
                     "for a list of the supported modes."
                     % (mode_name, self.get_prog_name())
                     )
             sys.exit()
-        
+
         self.selected_mode = self.supported_modes[mode_name]                
         for group in self.selected_mode.option_groups(self):
             self.add_option_group( group )            

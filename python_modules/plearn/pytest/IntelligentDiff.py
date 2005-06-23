@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: IntelligentDiff.py,v 1.14 2005/05/03 17:29:21 dorionc Exp $"
+__version_id__ = "$Id$"
 
 import copy, os, string
 
@@ -161,6 +161,9 @@ class IntelligentDiff:
                                 ppath.special_directories )
         
         for of_name in other_list:
+            if of_name.endswith('.metadata'):
+                continue
+            
             bf = os.path.join(bench, of_name)
             of = os.path.join(other, of_name)
             self.diff(bf, of)
@@ -173,12 +176,16 @@ class IntelligentDiff:
         if bench.endswith('.psave'):
             self.diff_psave_files(bench, other)
             return
+
+        diff_template = 'diff -u %s %s'
+        if toolkit.isvmat( bench ):
+            diff_template = 'plearn_full --no-version vmat diff %s %s'
         
         bench_dir = os.path.dirname(bench)
         other_dir = os.path.dirname(other)
         
         ## self.preprocess(other, bench_dir, other_dir)
-        some_diff = toolkit.command_output('diff -u %s %s' % (bench, other))
+        some_diff = toolkit.command_output(diff_template % (bench, other))
         if some_diff:
             self.differences.extend( some_diff )
             self.differences.append( "" )

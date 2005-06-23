@@ -1,102 +1,20 @@
-#!/usr/bin/env python2.3
-import getopt, new, os, sys
-from plearn.utilities.moresh     import *
-from plearn.xperiments.Xperiment import *
+#!/usr/bin/env python
 
-def duplicates( targets, options, xperiments ):
-    while xperiments:
-        exp = xperiments.pop()
-        duplicates = []
-        for x in xperiments:
-            if x == exp:
-                duplicates.append( x.path )
-        if duplicates:
-            print exp
-            print "Duplicated by", " ".join(duplicates)
-            print
+import os
+from plearn           import xperiments
+from plearn.utilities import toolkit
 
-def listdir( targets, options, xperiments ):
-    print "\n","\n".join([ str(x) for x in xperiments ])
-    print "(%d experiments)" % len(xperiments)
+# Builds are tuples of the form (major, minor, plearn_revision) where
+# plearn_revision is the SVN revision of the PLearn project when the
+# project's version was released.
+build_list = [
+    # Major, Minor, PLearn Rev 
+    (   0,     1,       3646  )
+    ]
 
-def mkdir( targets, options, xperiments ):    
-    reffunc = os.symlink
-    if options.move:
-        reffunc = lambda src,dest: os.system("mv %s %s"%(src,dest))        
-    
-    for exp in xperiments:
-        if exp.infos:
-            if options.name is None:
-                dirname = "_".join([ "%s=%s" % (lhs, str(rhs))
-                                     for (lhs, rhs) in exp.infos.iteritems() ])
-            else:
-                dirname = options.name
+def xpdir_version( ):
+    xperiments_dir = os.path.dirname( xperiments.__file__ )
+    vtup = toolkit.version( xperiments_dir, build_list )
+    return '.'.join([ str(v) for v in vtup ])
 
-            if not os.path.exists( dirname ):
-                os.mkdir( dirname )
-
-            pushd( dirname )
-            if not os.path.exists( exp.path ):
-                reffunc( os.path.join('..',exp.path), exp.path )
-            popd()
-
-def running( targets, options, xperiments ):
-    assert not targets
-    for exp in experiments:
-        if not exp.infos:
-            print exp
-
-def parse_mode( targets, supported_modes, default_mode ):
-    if targets:
-        candidate_mode = targets[0]
-        for mode in supported_modes:
-            if candidate_mode == mode.__name__:                
-                del targets[0]
-                return mode
-    return default_mode
-            
-### Main program
-targets = sys.argv[1:]
-mode    = parse_mode( targets, [ duplicates, listdir, mkdir, running ], listdir )
-
-class __options: pass
-options = new.instance( __options, {"name" : None, "cache": None, "load" : None, "move" : False } )
-
-if "--name" in targets:
-    index = targets.index("--name")
-    del targets[index]
-    
-    options.name = targets[index]
-    del targets[index]
-
-if "--cache" in targets:
-    index = targets.index("--cache")
-    del targets[index]
-    
-    options.cache = targets[index]
-    del targets[index]
-
-if "--load" in targets:
-    index = targets.index("--load")
-    del targets[index]
-    
-    options.load = targets[index]
-    del targets[index]
-
-if "--move" in targets:
-    index = targets.index("--move")
-    del targets[index]    
-    options.move = True
-
-### Starting the selected mode
-
-if options.load is None:
-    experiments = Xperiment.load_experiments( targets )
-else:
-    Xperiment.load_filed_experiments( options.load )
-    experiments = Xperiment.match( targets )
-    
-mode( targets, options, experiments )
-
-if options.cache is not None:
-    Xperiment.save_cache( options.cache )
+xperiments.main( xpdir_version )
