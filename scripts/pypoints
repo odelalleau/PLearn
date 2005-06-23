@@ -138,24 +138,53 @@ class InputPoints:
         if val>=0 and val<len(self.colors):
             self.currentval.set(val)
 
-    def save(self):
-        #if self.filepath=="":
-        #    self.filepath=tkFileDialog.asksaveasfilename()
+    def get_matrix(self):
+        """returns a real coordinat ematrix.
+        Each row has x, y, c"""
         canvas = self.canvas
         points = canvas.find_all()
         l = len(points)
         w = 3
 
-        f = open(self.filepath,'w')
-        f.write('#size: ' + `l` + ' ' + `w` + '\n')
-        
+        m = []
         for p in points:
             co = canvas.coords(p)  # screen coords
             sx = co[0]+self.radius
             sy = co[1]+self.radius
             c = int(canvas.gettags(p)[0])
             x,y = self.getRealCoords(sx,sy)
-            f.write(`x` + '\t' + `y` + '\t' + `c` + '\n') 
+            m.append((x,y,c))
+        return m
+
+    def save(self):
+        #if self.filepath=="":
+        #    self.filepath=tkFileDialog.asksaveasfilename()
+
+        m = self.get_matrix()
+        l = len(m)
+        cl_0 = [ (x,y) for x,y,c in m if c==0 ]
+        if len(cl_0) == len(m):
+            task = 'regression'
+            w = 2
+            inputsize = 1
+            targetsize = 1
+            weightsize = 0
+        else:
+            task = 'classification'
+            w = 3
+            inputsize = 2
+            targetsize = 1
+            weightsize = 0
+
+        f = open(self.filepath,'w')
+        f.write('#size: ' + `l` + ' ' + `w` + '\n')
+        f.write('#sizes: ' + str(inputsize) + ' ' + str(targetsize) + ' ' +str(weightsize) + '\n')
+
+        for x,y,c in m:
+            if w==3:
+                f.write(`x` + '\t' + `y` + '\t' + `c` + '\n')
+            else:
+                f.write(`x` + '\t' + `y` + '\n')                
 
         f.close()
 
