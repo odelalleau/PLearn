@@ -37,6 +37,7 @@
    ******************************************************* */
 
 //! All includes should go into plearn_inc.h.
+#define PLEARN_MAJOR_VERSION 0
 #define PLEARN_MINOR_VERSION 92
 #define PLEARN_FIXLEVEL 0
 
