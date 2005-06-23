@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.h,v 1.13 2005/03/25 16:02:02 tihocan Exp $
+   * $Id$
    ******************************************************* */
 
 
@@ -58,6 +58,13 @@ class SelectRowsVMatrix: public SourceVMatrix
 private:
 
   typedef SourceVMatrix inherited;
+
+protected:
+
+  //! Protected learnt options.
+  bool obtained_inputsize_from_source;
+  bool obtained_targetsize_from_source;
+  bool obtained_weightsize_from_source;
 
 public:
 

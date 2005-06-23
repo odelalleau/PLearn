@@ -52,11 +52,16 @@ PLEARN_IMPLEMENT_OBJECT(SelectRowsVMatrix,
 );
 
 SelectRowsVMatrix::SelectRowsVMatrix() 
-{
-}
+: obtained_inputsize_from_source(false),
+  obtained_targetsize_from_source(false),
+  obtained_weightsize_from_source(false)
+{}
 
 SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, TVec<int> the_indices)
-: indices(the_indices)
+: obtained_inputsize_from_source(false),
+  obtained_targetsize_from_source(false),
+  obtained_weightsize_from_source(false),
+  indices(the_indices)
 {
   source = the_source;
   build_();
@@ -64,6 +69,9 @@ SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, TVec<int> the_indices)
 
 //! Here the indices will be copied locally into an integer vector
 SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, Vec the_indices)
+: obtained_inputsize_from_source(false),
+  obtained_targetsize_from_source(false),
+  obtained_weightsize_from_source(false)
 {
   source = the_source;
   indices.resize(the_indices.length());
@@ -100,14 +108,27 @@ const map<real,string>& SelectRowsVMatrix::getRealToStringMapping(int col) const
 
 void SelectRowsVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "indices", &SelectRowsVMatrix::indices, OptionBase::buildoption, 
-        "The array of row indices to extract");
+  // Build options.
 
-    declareOption(ol, "indices_vmat", &SelectRowsVMatrix::indices_vmat, OptionBase::buildoption, 
-        "If provided, will override the 'indices' option: the indices will be taken\n"
-        "from the first column of the given VMatrix (taking the closest integer).");
+  declareOption(ol, "indices", &SelectRowsVMatrix::indices, OptionBase::buildoption, 
+      "The array of row indices to extract");
 
-    inherited::declareOptions(ol);
+  declareOption(ol, "indices_vmat", &SelectRowsVMatrix::indices_vmat, OptionBase::buildoption, 
+      "If provided, will override the 'indices' option: the indices will be taken\n"
+      "from the first column of the given VMatrix (taking the closest integer).");
+
+  // Learnt options.
+
+  declareOption(ol, "obtained_inputsize_from_source", &SelectRowsVMatrix::obtained_inputsize_from_source, OptionBase::learntoption, 
+      "Set to 1 if the inputsize was obtained from the source VMat.");
+
+  declareOption(ol, "obtained_targetsize_from_source", &SelectRowsVMatrix::obtained_targetsize_from_source, OptionBase::learntoption, 
+      "Set to 1 if the targetsize was obtained from the source VMat.");
+
+  declareOption(ol, "obtained_weightsize_from_source", &SelectRowsVMatrix::obtained_weightsize_from_source, OptionBase::learntoption, 
+      "Set to 1 if the weightsize was obtained from the source VMat.");
+
+  inherited::declareOptions(ol);
 }
 
 void SelectRowsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
@@ -138,14 +159,42 @@ void SelectRowsVMatrix::build_()
   }
   length_ = indices.length();
   if (source) {
+    string error_msg =
+      "In SelectRowsVMatrix::build_ - For safety reasons, it is forbidden to "
+      "re-use sizes obtained from a previous source VMatrix with a new source "
+      "VMatrix having different sizes";
     width_ = source->width();
-    if(inputsize_<0)
+    if(inputsize_<0) {
       inputsize_ = source->inputsize();
-    if(targetsize_<0)
+      obtained_inputsize_from_source = true;
+    } else if (obtained_inputsize_from_source && inputsize_ != source->inputsize())
+      PLERROR(error_msg.c_str());
+    if(targetsize_<0) {
       targetsize_ = source->targetsize();
-    if(weightsize_<0)
+      obtained_targetsize_from_source = true;
+    } else if (obtained_targetsize_from_source && targetsize_ != source->targetsize())
+      PLERROR(error_msg.c_str());
+    if(weightsize_<0) {
       weightsize_ = source->weightsize();
+      obtained_weightsize_from_source = true;
+    } else if (obtained_weightsize_from_source && weightsize_ != source->weightsize())
+      PLERROR(error_msg.c_str());
     fieldinfos = source->fieldinfos;
+  } else {
+    // Restore the original undefined sizes if the current one had been obtained
+    // from the source VMatrix.
+    if (obtained_inputsize_from_source) {
+      inputsize_ = -1;
+      obtained_inputsize_from_source = false;
+    }
+    if (obtained_targetsize_from_source) {
+      targetsize_ = -1;
+      obtained_targetsize_from_source = false;
+    }
+    if (obtained_weightsize_from_source) {
+      weightsize_ = -1;
+      obtained_weightsize_from_source = false;
+    }
   }
 }
 
