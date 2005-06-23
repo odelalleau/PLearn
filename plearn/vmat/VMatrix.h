@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.72 2005/05/09 14:08:10 tihocan Exp $
+   * $Id$
    ******************************************************* */
 
 
@@ -89,9 +89,9 @@ protected:
   //! For training/testing data sets we assume each row is composed of 3 parts:
   //! an input part, a target part, and a weight part.
   //! These fields give those parts' lengths.
-  int inputsize_;
-  int targetsize_;
-  int weightsize_;
+  mutable int inputsize_;
+  mutable int targetsize_;
+  mutable int weightsize_;
 
   //! Are write operations tolerated?
   bool writable;
@@ -156,7 +156,7 @@ public:
   //! Vmat vm. Modification time is also set to the latest of the current mtime
   //! of this vmat and of the mtime of the source.
   //! Sizes will be copied only if they are consistent with this VMat's width.
-  virtual void setMetaInfoFrom(const VMat& vm);
+  virtual void setMetaInfoFrom(const VMatrix* vm);
 
   //! Return true iif it looks like the same matrix, i.e. it has same sizes, width and length.
   bool looksTheSameAs(const VMat& m);

@@ -459,6 +459,9 @@ void VMatrix::saveFieldInfos() const
   PStream out = openFile(filename, PStream::raw_ascii, "w");
   for(int i= 0; i < fieldinfos.length(); ++i)
     out << fieldinfos[i].name << '\t' << fieldinfos[i].fieldtype << endl;
+  filename = getMetaDataDir() / "sizes";
+  out = openFile(filename, PStream::plearn_ascii, "w");
+  out << inputsize_ << targetsize_ << weightsize_ << endl;
 }
 
 ////////////////////
@@ -469,6 +472,14 @@ void VMatrix::loadFieldInfos() const
   Array<VMField> current_fieldinfos = getSavedFieldInfos();
   setFieldInfos(current_fieldinfos);
   //fieldinfos = current_fieldinfos;
+
+  PPath filename = getMetaDataDir() / "sizes";
+  if (isfile(filename)) 
+    {
+      PStream in = openFile(filename, PStream::plearn_ascii, "r");
+      // perr << "In loadFieldInfos() loading sizes from " << filename << endl;
+      in >> inputsize_ >> targetsize_ >> weightsize_;
+    }
 }
 
 ////////////////////////
@@ -815,7 +826,7 @@ void VMatrix::copySizesFrom(const VMat& m) {
 /////////////////////
 // setMetaInfoFrom //
 /////////////////////
-void VMatrix::setMetaInfoFrom(const VMat& vm)
+void VMatrix::setMetaInfoFrom(const VMatrix* vm)
 {
   setMtime(max(getMtime(),vm->getMtime()));
 
@@ -1378,7 +1389,9 @@ void VMatrix::savePMAT(const PPath& pmatfile) const
   int nsamples = length();
 
   FileVMatrix m(pmatfile,nsamples,width());
-  m.setFieldInfos(getFieldInfos());
+  m.setMetaInfoFrom(this);
+  // m.setFieldInfos(getFieldInfos());
+  // m.copySizesFrom(this);
   Vec tmpvec(width());
 
   ProgressBar pb(cout, "Saving to pmat", nsamples);
@@ -1389,9 +1402,7 @@ void VMatrix::savePMAT(const PPath& pmatfile) const
     m.putRow(i,tmpvec);
     pb(i);
   }
-
-  //save field names if necessary
-  if (fieldinfos.size() > 0) m.saveFieldInfos();      
+  m.saveFieldInfos();      
 }
 
 //////////////
@@ -1401,7 +1412,9 @@ void VMatrix::saveDMAT(const PPath& dmatdir) const
 {
   force_rmdir(dmatdir);  
   DiskVMatrix vm(dmatdir,width());
-  vm.setFieldInfos(getFieldInfos());
+  vm.setMetaInfoFrom(this);
+  // vm.setFieldInfos(getFieldInfos());
+  // vm.copySizesFrom(this);
   Vec v(width());
 
   ProgressBar pb(cout, "Saving to dmat", length());
@@ -1412,6 +1425,7 @@ void VMatrix::saveDMAT(const PPath& dmatdir) const
     vm.appendRow(v);
     pb(i);
   }
+  vm.saveFieldInfos();      
 }
 
 //////////////
@@ -1433,6 +1447,8 @@ void VMatrix::saveAMAT(const PPath& amatfile, bool verbose, bool no_header, bool
         out << space_to_underscore(fieldName(k)) << ' ';
       out << "\n";
     }
+  if(!no_header)
+    out << "#sizes: " << inputsize() << ' ' << targetsize() << ' ' << weightsize() << endl;
 
   ProgressBar* pb = 0;
   if (verbose)
