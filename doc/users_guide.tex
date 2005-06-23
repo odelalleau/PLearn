@@ -22,6 +22,7 @@
 \newcommand{\PPointable}{{\bf PPointable}~} 
 \newcommand{\VMatrix}{{\bf VMatrix}~} 
 \newcommand{\VMat}{{\bf VMat}~} 
+\newcommand{\PLearner}{{\bf PLearner}~} 
 
 \parskip=2mm
 \parindent=0mm
@@ -274,6 +275,8 @@ contains mostly python and perl scripts
   \item {\tt pymake} is our build system 
   \item {\tt pytest} implements our test suite framework
   \item {\tt pyskeleton} is our ``wizard'' or ``template'' system;  it uses source code templates in the {\tt Skeleton/} directory
+  \item {\tt pypoints} allows graphical interactive input of points (for 2D classif or 1D regression)
+  \item {\tt pyplot} allows plotting learner outputs (classif decision surface, density plot, etc...) 
   \item {\tt xpdir} lists the content of PLearn experiment directories
   \item {\tt perlgrep}, {\tt search-replace}, and {\tt undo-search-replace} allow for simple code lookup and transformations.
   \item {\tt pytansform} and the transformations in {\tt Transformations/} allow for complex code transformations.
@@ -334,7 +337,8 @@ so you should first {\tt cd} to this directory.
 
 \section{plearn commands and help}
 
-Usual PLearn executables such as \verb!plearn! or \verb!plearn_light! are typically called in command-line fashion.
+Usual PLearn executables such as \verb!plearn! or \verb!plearn_light! are
+typically called in command-line fashion.
 
 \begin{verbatim}
 valhalla:~/PLearn/examples/Tutorial> plearn
@@ -677,6 +681,16 @@ plearn 0.92.0  (Jun 22 2005 19:42:18)
 3 7.5
 \end{verbatim}
 
+Help on any plearn object can be obtained, as usual, by invoking
+\verb!plearn help ! {\em objectclass}. This will output a commented serialised object, with all its build {\em
+  options} and their default value. This help is also available in online html form. For ex. try:
+
+\begin{verbatim}
+plearn help SelectRowsVMatrix
+\end{verbatim}
+
+This makes for a good starting point for writing a {\tt .vmat} (or {\tt .plearn}), as you can \verb!plearn help SelectRowsVMatrix
+ > mymat.vmat! and then edit the file to your liking (removing unnecessary options that are to keep their default value, etc...)
 
 {\tt .vmat} is not the only file extension associated with specifications
 of PLearn objects in serialised form. Here are the other extensions you may
@@ -703,6 +717,147 @@ macro-processing, this is deprecated in favor of the power of the Python
 preprocessing of {\tt .pymat} and {\tt .pyplearn} files. We will get back
 to this later.
 
+\section{plearn learner}
+
+The concept of a learning algorithm in PLearn is implemented through the \PLearner class.
+Conceptually a \PLearner is an object that:
+\begin{itemize}
+\item can be {\em trained} using a training data set (which contains input and target)
+\item can then be {\em used} by {\em computing outputs} corresponding to new inputs
+\item can be {\em tested} on a test set (containing input and target) and
+  report statistics on some {\em costs} (ex: classification error rate).
+\item can be saved to and loaded from file (like any PLearn object)
+\end{itemize}
+
+The meaning and form of the output vector are learner-dependant, but in PLearn we try to respect 
+the following convention for standard tasks:
+\begin{itemize}
+\item {\bf regression:} output is the {\em predicted} target (i.e. same dimension as terget)
+\item {\bf classification:} target is a scalar between $0$ and {\em
+    nclasses-1}; output is a vector of length {\em nclasses} giving a score for each class (the higher, the more likely).
+\item {\bf density estimation:} output is typically the log of the estimated density at $x$ (but this can be controlled by an option, if you want for ex. the density instead of the log).
+\end{itemize}
+
+For ex. let us create a file \verb!linreg.plearn! with the following content:
+\begin{verbatim}
+LinearRegressor(
+  weight_decay = 1e-6
+  )
+\end{verbatim}
+
+LinearRegressor is a subclass of \PLearner and as such, it can be trained,
+used, tested with the \verb!plearn learner! command:
+
+\begin{verbatim}
+valhalla:~/PLearn/examples/Tutorial> plearn help learner
+plearn 0.92.0  (Jun 22 2005 19:42:18)
+*** Help for command 'learner' ***
+Allows to train, use and test a learner
+learner train <learner_spec.plearn> <trainset.vmat> <trained_learner.psave>
+  -> Will train the specified learner on the specified trainset and save the resulting trained learner as
+     trained_learner.psave
+
+learner test <trained_learner.psave> <testset.vmat> <cost.stats> [<outputs.pmat>] [<costs.pmat>]
+  -> Tests the specified learner on the testset. Will produce a cost.stats file (viewable with the plearn stats
+     command) and optionally saves individual outputs and costs
+
+learner compute_outputs <trained_learner.psave> <test_inputs.vmat> <outputs.pmat> (or 'learner co' as a shortcut)
+
+learner compute_outputs_on_1D_grid <trained_learner.psave> <gridoutputs.pmat> <xmin> <xmax> <nx> (shortcut: learner cg1)
+  -> Computes output of learner on nx equally spaced points in range [xmin, xmax] and writes the list of (x,output)
+     in gridoutputs.pmat
+
+learner compute_outputs_on_2D_grid <trained_learner.psave> <gridoutputs.pmat> <xmin> <xmax> <ymin> <ymax> <nx> <ny> (shortcut: learner cg2)
+  -> Computes output of learner on the regular 2d grid specified and writes the list of (x,y,output) in gridoutputs.pmat
+
+learner compute_outputs_on_auto_grid <trained_learner.psave> <gridoutputs.pmat> <trainset.vmat> <nx> [<ny>] (shortcut: learner cg)
+  -> Automatically determines a bounding-box from the trainset (enlarged by 5%), and computes the output along a
+     regular 1D grid of <nx> points or a regular 2D grid of <nx>*<ny> points. (Note: you can also invoke command vmat
+     bbox to determine the bounding-box by yourself, and then invoke learner cg1 or learner cg2 appropriately)
+
+learner analyze_inputs <data.vmat> <results.pmat> <epsilon> <learner_1> ... <learner_n>
+  -> Analyze the influence of inputs of given learners. The output of each sample in the data VMatrix is computed
+     when each input is perturbed, so as to estimate the derivative of the output with respect to the input. This
+     is averaged over all samples and all learners so as to estimate the influence of each input. In the results.pmat
+     file, are stored the average, variance, min and max of the derivative for all inputs (and outputs).
+
+The datasets do not need to be .vmat they can be any valid vmatrix (.amat .pmat .dmat)
+\end{verbatim}
+
+To train this linear regressor on our data-set \verb!1d_reg.amat! and save
+the resulting trained learner as \verb!linreg_trained.psave! we issue the
+following command:
+\begin{verbatim}
+plearn learner train linreg.plearn 1d_reg.amat linreg_trained.psave
+\end{verbatim}
+
+To get the predicions of the trained learner on new data that was not in
+the training set, (for ex. $x=0.25, x=1.5, x=2.5$) we can create a file
+\verb!1d_reg_test.amat! containing
+\begin{verbatim}
+#size: 3 1
+#: x
+#sizes: 1 0 0
+0.25
+1.5
+2.5
+\end{verbatim}
+
+and issue the commands
+\begin{verbatim}
+valhalla:~/PLearn/examples/Tutorial> plearn learner compute_outputs linreg_trained.psave 1d_reg_test.amat 1d_reg_test_outputs.pmat
+plearn 0.92.0  (Jun 22 2005 19:42:18)
+[---------------------------------------- Using learner (3) -----------------------------------------]
+[....................................................................................................]
+
+valhalla:~/PLearn/examples/Tutorial> plearn vmat cat 1d_reg_test_outputs.pmat
+plearn 0.92.0  (Jun 22 2005 19:42:18)
+3.58836232959270118
+5.3879309848394854
+6.82758590903691243
+\end{verbatim}
+
+We thus get the predictions output by the learner.
+
+To see the learnt parameters of the trained learner, we can examine the file \verb!linreg_trained.psave! :
+\begin{verbatim}
+*1 ->LinearRegressor(
+include_bias = 1 ;
+cholesky = 1 ;
+weight_decay = 9.99999999999999955e-07 ;
+output_learned_weights = 0 ;
+weights = 2  1  [
+3.22844859854334443
+1.43965492419742724
+]
+;
+AIC = -2.53047027031051597 ;
+BIC = -2.6866951053368755 ;
+resid_variance = 1 [ 0.0596271276504959716 ] ;
+expdir = "" ;
+stage = 0 ;
+n_examples = 5 ;
+inputsize = 1 ;
+targetsize = 1 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0  )
+\end{verbatim}
+
+We can see that there are many more {\em options} in the saved learner than
+what we specified. In particular the {\em weights} option gives us the
+parameters tuned by the learning (i.e. the regression weights).
+
+For 1D regression problems such as this, we can easily display the
+predicted output along the real line:
+\begin{verbatim}
+
+\end{verbatim}
+
+\section{running a full experiment: PTester}
 
 
 \chapter{Older Tutorial}
@@ -741,7 +896,9 @@ But there are others:
 
 \texttt{plearn vmat convert truc.pmat truc.amat} to convert a specific data format in an other.
 
-\texttt{plearn learner train}, \texttt{plearn learner test}, \texttt{plearn learner computes\_output} provide useful shortcuts to avoid creating long .plearn script (cf. Tutorial).
+\texttt{plearn learner train}, \texttt{plearn learner test}, \texttt{plearn
+  learner computes\_output} provide useful shortcuts to avoid creating long
+.plearn script (cf. Tutorial).
 
 If you are interested in more information,
 
