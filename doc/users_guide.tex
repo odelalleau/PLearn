@@ -10,8 +10,42 @@
 \usepackage{ae}                 % use virtual fonts for getting good PDF
 \usepackage{isolatin1}          % support for French accents
 \usepackage{hyperref}
-\usepackage{graphicx}
 \usepackage{verbatim}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%  Support for PDF and required packages
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{graphicx}	% enhanced pictures import (w/ PDF)
+
+
+%%% %%% Basic switch to detect whether to use PDF or not
+%%% \newif\ifpdf
+%%% \ifx\pdfoutput\undefined
+%%%   \pdffalse
+%%%   \newcommand{\mypdfoption}{{}}
+%%% \else
+%%%   \pdfoutput=1
+%%%   \pdftrue
+%%%   \newcommand{\mypdfoption}{pdftex}
+%%%   \pdfcompresslevel=9
+%%% \fi
+%%% 
+%%% %%% Packages that behave differently in PDF and non-PDF
+%%% \usepackage[\mypdfoption]{graphicx}	% enhanced pictures import (w/ PDF)
+%%% \usepackage[\mypdfoption]{rotating}	% rotate stuff on the page
+%%% \usepackage[\mypdfoption]{color}        % color support
+%%% \usepackage[\mypdfoption]{colortbl}     % Add color and shading to tables
+%%% 
+%%% %%% Declare graphics file extensions as .pdf or .eps for \includegraphics.
+%%% %%% (You must NOT specify any extension in the filenames!  \includegraphics
+%%% %%% will by itself determine the correct extension.)
+%%% \ifpdf
+%%%   \DeclareGraphicsExtensions{.jpg,.png,.pdf,.mps} % .png before .pdf ==> okay!
+%%% \else
+%%%   \DeclareGraphicsExtensions{.jpg,.eps,.png,.mps} % .eps before .png ==> okay!
+%%% \fi
+
 
 %%%%%%%%% Definitions %%%%%%%%%%%%
 \newcommand{\R}{\sf{I\!R}} 
@@ -66,6 +100,8 @@ met:
 % \cleardoublepage\pagebreak
 % \end{latexonly}
 % \pagenumbering{arabic}
+
+\pagenumbering{arabic}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -229,7 +265,7 @@ strongly recommand that you at least read appendix A: Subversion for CVS
 users: http://svnbook.red-bean.com/en/1.1/apa.html
 
 
-\section{Initial PLearn setup}
+\section{Initial PLearn Setup}
 
 We suppose you have all the necessary software requirements in place (especially python).
 
@@ -335,7 +371,7 @@ We assume you have a copy of the plearn distribution, and a working plearn
 executable accessible through yout PATH. All the files in this tutorial are in \verb!examples/Tutorial/!
 so you should first {\tt cd} to this directory.
 
-\section{plearn commands and help}
+\section{The plearn Commands and Help}
 
 Usual PLearn executables such as \verb!plearn! or \verb!plearn_light! are
 typically called in command-line fashion.
@@ -408,7 +444,7 @@ The {\tt help} command can give detailed help on any available PLearn {\em
 {\bf There is an on-line html version of the help provided by the help command...}
 See {\em PLearn help on user-level commands and objects} on the PLearn homepage\ldots
 
-\section{data matrices}
+\section{Data Matrices}
 
 Machine-learning algorithms learn from data and are then used for prediction on new data.
 In this tutorial, we'll concentrate on the simplest and most usual form of
@@ -466,7 +502,7 @@ $5 \times 2$ matrix:
 This represents a $5 \times 2$ matrix whose columns are named {\em x} and
 {\em y}, and whose {\em inputsize=1, targetsize=1, weightsize=0}.
 
-\section{viewing data matrices}
+\section{Viewing Data Matrices}
 
 Data matrices can be manipulated with the PLearn command {\em vmat}:
 
@@ -577,7 +613,7 @@ command \verb!plearn vmat view 1d_reg.amat! (This is most useful for huge data s
 You can also see the points graphically by using the \verb!pyplot! script
 \verb!pyplot plot_2d 1d_reg.amat!
 
-\section{vmat file formats}
+\section{vmat File Formats}
 
 The {\em V} in \VMatrix stands for {\em Virtual}, because \VMatrix is a C++ virtual
 base class of which there are several concrete derived classes (do a
@@ -615,7 +651,7 @@ plearn vmat convert 1d_reg.amat 1d_reg.pmat
 plearn vmat view 1d_reg.pmat
 \end{verbatim}
 
-\section{PLearn objects, their serialization and specification}
+\section{PLearn Objects, Their Serialization and Specification}
 
 PLearn is first and foremost a C++ class library. PLearn also provides a
 mechanism to serialize such objects to and from files (i.e. write a
@@ -722,7 +758,7 @@ macro-processing, this is deprecated in favor of the power of the Python
 preprocessing of {\tt .pymat} and {\tt .pyplearn} files. We will get back
 to this later.
 
-\section{plearn learner}
+\section{plearn Learner}
 
 The concept of a learning algorithm in PLearn is implemented through the \PLearner class.
 Conceptually a \PLearner is an object that:
@@ -879,7 +915,6 @@ VMatrixFromDistribution(
   weightsize=0);
 \end{verbatim}
 
-
 \begin{verbatim}
 valhalla:~/PLearn/examples/Tutorial> plearn vmat view spiral.vmat
 
@@ -911,9 +946,73 @@ pypoints 2d_classif.amat
 \end{verbatim}
 
 
-\section{running a full experiment: PTester}
+\section{Running a Full Experiment: PTester}
 
-\section{Python preprocessing}
+The class \verb|PTester| is used to wrap the action of running a complete
+experiment in a single runnable \verb|PLearn| object.  The goals of this
+class are as follows:
+
+  \begin{itemize}
+  \item Take a dataset (either a .amat, .vmat, .pmat or .pymat) and
+    \emph{split it} into one or more training and test sets.  We shall
+    denote the $k$-th such split as \emph{Split-k}.
+
+  \item For each split, the \verb|PTester| trains an associated learner
+    (which must be of a class derived from \verb|PLearner|) on the training
+    set of the split.
+
+  \item For each split, the \verb|PTester| then tests the trained learner
+    on the testset data.  Afterwards, it can compute performance statistics
+    and report.
+  \end{itemize}
+
+The relationship among the various parts is illustrated in
+Figure~\ref{fig:ptesteroverall}.
+
+\begin{figure}
+  \centering
+  \resizebox{0.85\textwidth}{!}{\includegraphics{fig/PTesterOverall.jpg}}
+  \caption{Relationship among the classes taking part in the experiment run
+    by PTester.  The PLearner must actually be an instance of a class
+    derived from PLearner; likewise, the Splitter must be an instance of a
+    class derived from Splitter.  The desired statistics are specified as
+    options of the PTester object, and the experiment results are stored in
+    the experiment directory.}
+\label{fig:ptesteroverall}
+\end{figure}
+
+\subsection{Process Underlying PTester}
+
+The process underlying PTester is illustrated in
+Figure~\ref{fig:ptesterprocess}.
+
+\begin{figure}
+  \centering
+  \resizebox{0.85\textwidth}{!}{\includegraphics{fig/PTesterProcess.jpg}}
+  \caption{Process Underlying PTester}
+  \label{fig:ptesterprocess}
+\end{figure}
+
+\subsection{Experiment Directory}
+
+\verb|PTester| executes its experiment in a designated \emph{experiment
+  directory} (often abbreviated \verb|expdir|, the name of the option used
+to specify it within the \verb|PTester| object.)  This directory should be
+empty at the beginning of the experiment (if it does not exist, it is
+created automatically); if it contains the results of a previous
+experiment, \verb|PTester| complains loudly and exits immediately.
+
+Note that if you run your experiments from \verb|.pyplearn| scripts, a
+synthetic experiment directory of the form
+\verb|expdir_YYYY_MM_DD_HH:MM:SS| is created for you automatically, which
+pretty much guarantees uniqueness of the name.
+
+\subsection{Example}
+
+(See the \verb|.pyplearn| tutorial.)
+
+
+\section{Python Preprocessing}
 
 See the {\bf pyplearn tutorial}
 
@@ -924,7 +1023,7 @@ See the {\bf pyplearn tutorial}
 
 \chapter{Basics}
 
-\section{The plearn program}
+\section{The plearn Program}
 
 The {\tt plearn} program is to be found in PLearn/commands and is used to
 \begin{itemize}
@@ -941,7 +1040,7 @@ datasets or result files, but they can also launch more evolved interactive prog
 The {\tt plearn} program has a simple yet very useful command-line help system.
 Type \verb!plearn help! to have an overview.
 
-\section{Essential commmands}
+\section{Essential Commmands}
 
 The basic plearn command is \texttt{plearn script.plearn}.
 
@@ -965,7 +1064,7 @@ plearn help vmat
 plearn help learner
 \end{verbatim}
 
-\section{Essential classes}
+\section{Essential Classes}
 
 Here is a list of essential classes.
 
@@ -978,7 +1077,7 @@ plearn help PLearner
 --- plearn help NNet
 \end{verbatim}
 
-\section{The .plearn object file format}
+\section{The .plearn Object File Format}
 
 PLearn uses the same simple file format, both to describe experiments to be
 performed (in .plearn scripts), and to save and restore objects
@@ -1030,7 +1129,7 @@ Note for strings: unquoted strings, while not recommended are also supported. Th
 a separator (blank, comma, \ldots) or opening or closing symbol (parenthesis, bracket, \ldots) is met.
 
 
-\section{The .amat file format}
+\section{The .amat File Format}
 
 Ascii data file.
 
@@ -1049,11 +1148,11 @@ ex:
     25  1.80   80
 \end{verbatim}
 
-\section{The .pmat file format}
+\section{The .pmat File Format}
 
 PLearn native binary format.
 
-\section{The .vmat file format}
+\section{The .vmat File Format}
 
 File containing a description of a virtual dataset.
 
@@ -1076,7 +1175,7 @@ A .vmat is a text specification of a dataset built from the composition of sourc
 
 \chapter{Howto}
 
-\section{How to build a neural network?}
+\section{How to Build a Neural Network?}
 
 You should have learned with the tutorial basic PLearn neural network. The class used is NNet.
 
@@ -1091,12 +1190,12 @@ Here is a basic NNet script object:
 % ------------------------------------------------------------------------------------------
 % ------------------------------------------------------------------------------------------
 
-\section{The .sdb file format}
+\section{The .sdb File Format}
 
 Any simpledb can be automatically seen as a numeric vmat dataset. 
 String fields are removed.
 
-\section{The .dmat/ format }
+\section{The .dmat/ Format }
 
 Directory containing compressed data.
 
@@ -1226,7 +1325,7 @@ Here's a real-life example of a PROCESSING section:
 </PROCESSING>
 \end{verbatim}
 
-\section{The metadata directory}
+\section{The Metadata Directory}
 
 A metadata directory is associated with each dataset.  For the datasets
 corresponding to a file ({\tt .amat, .pmat, .vmat}) or directory ({\tt .dmat/}) the
@@ -1248,9 +1347,9 @@ In addition, the {\tt .metadata} directory associated with a {\tt .vmat} may con
 
 
 
-\chapter{Appendix A: File formats}
+\chapter{Appendix A: File Formats}
 
-\section{The .plearn and .psave format}
+\section{The .plearn and .psave Formats}
 
 \subsection{Generalities on mixing ascii and binary}
 
