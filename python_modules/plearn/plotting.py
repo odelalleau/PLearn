@@ -44,15 +44,29 @@ from pylab import *
 from mayavi.tools import imv
 from plearn.vmat.PMat import *
 
+threshold = 0
+
 def margin(scorevec):
-    sscores = sort(scorevec)
-    return sscores[-1]-sscores[-2]
+    if len(scorevec)==1:
+        return abs(scorevec[0]-threshold)
+    else:
+        sscores = sort(scorevec)    
+        return sscores[-1]-sscores[-2]
+
+def winner(scorevec):
+    if len(scorevec)==1:
+        if scorevec[0]>threshold:
+            return 1
+        else:
+            return 0
+    else:
+        return argmax(scorevec)
 
 def xyscores_to_winner_and_magnitude(xyscores):
-    return array([ (v[0], v[1], argmax(v[2:]),max(v[2:])) for v in xyscores ])
+    return array([ (v[0], v[1], winner(v[2:]),max(v[2:])) for v in xyscores ])
 
 def xyscores_to_winner_and_margin(xyscores):
-    return array([ (v[0], v[1], argmax(v[2:]),margin(v[2:])) for v in xyscores ])
+    return array([ (v[0], v[1], winner(v[2:]),margin(v[2:])) for v in xyscores ])
 
 def regular_xyval_to_2d_grid_values(xyval):
     """Returns (grid_values, x0, y0, deltax, deltay)"""
@@ -168,7 +182,9 @@ def plot_2d_points(pointlist, style='bo'):
 def plot_2d_class_points(pointlist, styles):
     classnum = 0
     for style in styles:
-        plot_2d_points([ [x,y] for x,y,c in pointlist if c==classnum], style)
+        points_c = [ [x,y] for x,y,c in pointlist if c==classnum]
+        print 'points',classnum,':',points_c
+        plot_2d_points(points_c, style)
         classnum += 1
 
 

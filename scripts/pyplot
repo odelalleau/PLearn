@@ -117,6 +117,7 @@ elif task == '2d_classif':
     xyrgb = xy_winner_magnitude_to_xyrgb(xy_winner_margin)
     # print array(xyrgb)
     imshow_xyrgb(xyrgb)
+    print 'Plotting points of ',dataspec, data
     plot_2d_class_points(data,['bo','ro'])
     show()
 
