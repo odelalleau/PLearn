@@ -37,9 +37,9 @@ script generates boundary.amat, train.amat, test.amat, and space.amat.
 Now, let's train a neural network on this task with PLearn.
 
 We create the PLearn script, a kind of configuration file:
-\verbatiminput{../examples/NNet.spec}
+\verbatiminput{../examples/NNet.plearn}
 
-We call this file \texttt{NNnet.spec}.
+We call this file \texttt{NNnet.plearn}.
 
 Now we have to specify the dataset. In a classification problem, the dataset is 
 a set of examples and their associated classes. We have already created such a 
@@ -53,7 +53,7 @@ All this tasks are made with the following file, called \texttt{train.vmat}:
 
 Now, let's train the network with the folllowing command:
 
-\texttt{plearn learner train NNet.spec train.vmat final.psave}
+\texttt{plearn learner train NNet.plearn train.vmat final.psave}
 
 Then test on the original space:
 
@@ -75,7 +75,7 @@ Then we execute the result\_task1.m script in Matlab to plot the result, as in f
 
 \subsection{What have we done?}
 
-NNet.spec contains informations about the neural net. train.vmat contains informations about the the dataset.
+NNet.plearn contains informations about the neural net. train.vmat contains informations about the the dataset.
 
 PLearn is built with a direct help system. For example:
 

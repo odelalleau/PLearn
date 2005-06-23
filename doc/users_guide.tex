@@ -689,8 +689,13 @@ Help on any plearn object can be obtained, as usual, by invoking
 plearn help SelectRowsVMatrix
 \end{verbatim}
 
-This makes for a good starting point for writing a {\tt .vmat} (or {\tt .plearn}), as you can \verb!plearn help SelectRowsVMatrix
- > mymat.vmat! and then edit the file to your liking (removing unnecessary options that are to keep their default value, etc...)
+This makes for a good starting point for writing a {\tt .vmat} (or {\tt
+  .plearn}), as you can issue:
+\begin{verbatim}
+plearn help SelectRowsVMatrix > mymat.vmat
+\end{verbatim}
+and then edit the file to your liking (removing unnecessary options that
+are to keep their default value, etc...)
 
 {\tt .vmat} is not the only file extension associated with specifications
 of PLearn objects in serialised form. Here are the other extensions you may
@@ -854,11 +859,63 @@ parameters tuned by the learning (i.e. the regression weights).
 For 1D regression problems such as this, we can easily display the
 predicted output along the real line:
 \begin{verbatim}
-
+pyplot 1d_regression 1d_reg.amat linreg.plearn
 \end{verbatim}
+
+This will train the given learner on the given training set, compute the
+output prediction along the real line, and plot the result.
+
+\section{A density estimation example}
+
+Let's make a new data matrix \verb!spiral.vmat! containing:
+
+\begin{verbatim}
+VMatrixFromDistribution(
+  distr = SpiralDistribution(),
+  # nsamples=10600,
+  nsamples=200,
+  inputsize=2,
+  targetsize=0,
+  weightsize=0);
+\end{verbatim}
+
+
+\begin{verbatim}
+valhalla:~/PLearn/examples/Tutorial> plearn vmat view spiral.vmat
+
+valhalla:~/PLearn/examples/Tutorial> pyplot plot_2d spiral.vmat
+\end{verbatim}
+
+Now let's make \verb!parzen.plearn!
+\begin{verbatim}
+ParzenWindow(
+sigma_square = 0.06;
+outputs_def = "d"  ;
+);
+\end{verbatim}
+
+and check how well it estimates the density:
+
+\begin{verbatim}
+valhalla:~/PLearn/examples/Tutorial> pyplot 2d_density spiral.vmat parzen.plearn
+\end{verbatim}
+
+
+\section{A classification example}
+
+See the older tutorial.
+
+Note that we can make a classification data set by issuing
+\begin{verbatim}
+pypoints 2d_classif.amat
+\end{verbatim}
+
 
 \section{running a full experiment: PTester}
 
+\section{Python preprocessing}
+
+See the {\bf pyplearn tutorial}
 
 \chapter{Older Tutorial}
 
