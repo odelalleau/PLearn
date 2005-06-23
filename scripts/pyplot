@@ -38,9 +38,7 @@ import os
 import sys
 from plearn.plotting import *
 
-plearncommand = 'mylearn'
-
-    
+plearncommand = 'plearn'
 
 def print_usage_and_exit():
     print """
@@ -87,7 +85,7 @@ except: pass
 if task == 'plot_2d':
     data = load_data(dataspec)
     data = data[:,0:2]
-    plot_2d_points(data,'.')
+    plot_2d_points(data,'o')
     show()
 
 elif task == '2d_density':
