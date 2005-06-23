@@ -10,7 +10,7 @@ from plearn.utilities import toolkit
 build_list = [
     # Major, Minor, PLearn Rev 
     (   0,     0,       0     ),
-    (   0,     7,       3591  )
+    (   0,     7,       3591  ),
     (   0,     9,       3646  )
     ]
 
