@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HTMLHelpCommand.cc,v 1.5 2004/12/16 02:18:33 chapados Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -207,11 +207,11 @@ void HTMLHelpCommand::helpOnCommand(const string& theCommand)
             theCommand.c_str());
   else
     os << "<div class=\"cmdname\">"
-       << theCommand << "</div>" << endl
+       << quote(theCommand) << "</div>" << endl
        << "<div class=\"cmddescr\">"
-       << it->second->description << "</div>" << endl
+       << quote(it->second->description) << "</div>" << endl
        << "<div class=\"cmdhelp\">"
-       << it->second->helpmsg << "</div>" << endl;
+       << format_free_text(quote(it->second->helpmsg)) << "</div>" << endl;
 
   os << generated_by() << endl;
   
@@ -520,7 +520,7 @@ string HTMLHelpCommand::generated_by() const
     strftime(time_buffer,SIZE,"%Y/%m/%d %H:%M:%S",broken_down_time);
 
     return string("<p>&nbsp;</p>"
-                  "<address>Generated on " ) + time_buffer + " by $Id: HTMLHelpCommand.cc,v 1.5 2004/12/16 02:18:33 chapados Exp $</address>";
+                  "<address>Generated on " ) + time_buffer + " by $Id$</address>";
 }
 
 
