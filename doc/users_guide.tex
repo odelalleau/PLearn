@@ -14,10 +14,14 @@
 \usepackage{verbatim}
 
 %%%%%%%%% Definitions %%%%%%%%%%%%
-\newcommand{\PLearn}{{\bf \it PLearn}}
-\newcommand{\Object}{{\bf Object}} 
-\newcommand{\Learner}{{\bf Learner}} 
-\newcommand{\PPointable}{{\bf PPointable}} 
+\newcommand{\R}{\sf{I\!R}} 
+
+\newcommand{\PLearn}{{\bf \it PLearn}~}
+\newcommand{\Object}{{\bf Object}~} 
+\newcommand{\Learner}{{\bf Learner}~} 
+\newcommand{\PPointable}{{\bf PPointable}~} 
+\newcommand{\VMatrix}{{\bf VMatrix}~} 
+\newcommand{\VMat}{{\bf VMat}~} 
 
 \parskip=2mm
 \parindent=0mm
@@ -152,7 +156,6 @@ In addition the following tools can be useful:
 \item {\bf gs} (ghostscript) and {\bf gv} (ghostview)
 \item {\bf gnuplot}
 \item {\bf perl} to run older dirty scripts.
-\item a {\bf Java} compiler and interpretor
 \end{itemize}
 
 
@@ -161,7 +164,7 @@ In addition the following tools can be useful:
 After having been hosted for several years on SourceForge (under CVS), as
 of 2005/06/21 PLearn development has been moved to BerliOS
 (http://developer.berlios.de/) that offered the benefits of a faster
-hosting with the more modern SubVersion (SVN) version control system.
+hosting with the more modern Subversion (SVN) version control system.
 The latest version is always available through SVN access.  
 
 \subsection{Developer SVN access}
@@ -185,6 +188,11 @@ your ~/.ssh/*.pub If it's not there, you can do a ssh-keygen). As for many
 changes within BerliOS, it may take a while before this is propagated and
 taken into account.
 
+We also suggest that you edit your \verb!~/.subversion/config! and look for
+the line containing \verb!global-ignores!: uncomment it and add OBJS in the list
+of ignored patterns, to avoid being annoyed with these directories when
+doing a svn status command. You'll also have to uncomment the line
+\verb![miscellany]! three lines above.
 
 \subsection{Anonymous SVN checkout}
 
@@ -220,7 +228,7 @@ strongly recommand that you at least read appendix A: Subversion for CVS
 users: http://svnbook.red-bean.com/en/1.1/apa.html
 
 
-\section{Initial setup}
+\section{Initial PLearn setup}
 
 We suppose you have all the necessary software requirements in place (especially python).
 
@@ -229,6 +237,7 @@ First, edit your .cshrc or .bashrc and
 \item Set the {\tt PLEARNDIR} environment variable to the path of your PLearn directory. 
 (csh ex: \verb!setenv PLEARNDIR ${HOME}/PLearn!)
 \item Append \verb!$PLEARNDIR/scripts! and \verb!$PLEARNDIR/commands! to your path.
+\item Append \verb!$PLEARNDIR/python_modules! to your \verb!PYTHONPATH!
 \item Restart your shell for these changes to take effect.
 \end{itemize}
 
@@ -237,7 +246,7 @@ From within your PLearn directory run {\tt ./setup}. This should create a
 configuration files.
 
 Now you should be able to try and compile a first version of plearn.
-We have our own make system based on a python script (pymake) that
+We have our own make system based on a python script ({\tt pymake}) that
 automatically parses source files for dependencies and determines what to
 compile, and what to link (including optional libraries), and is able to
 run parallel compilation on several machines.  It is easily
@@ -246,18 +255,457 @@ customizable.
 The compiling commands are:
 \begin{verbatim}
 cd PLearn/commands/
-pymake plearn
+pymake plearn_light.cc
 \end{verbatim}
 
 If it doesn't work, you may have to adapt the configuration file to your system
 (PLearn/.pymake/config)
 
+If it does work, you can try to \verb!pymake plearn.cc! (which has more dependencies on external libraries).
+
 \chapter{Overview of the directory structure}
 
+Your checked out PLearn has the following high level directory structure:
 
+\begin{itemize}
+\item \verb!scripts/! \\
+contains mostly python and perl scripts
+  \begin{itemize}
+  \item {\tt pymake} is our build system 
+  \item {\tt pytest} implements our test suite framework
+  \item {\tt pyskeleton} is our ``wizard'' or ``template'' system;  it uses source code templates in the {\tt Skeleton/} directory
+  \item {\tt xpdir} lists the content of PLearn experiment directories
+  \item {\tt perlgrep}, {\tt search-replace}, and {\tt undo-search-replace} allow for simple code lookup and transformations.
+  \item {\tt pytansform} and the transformations in {\tt Transformations/} allow for complex code transformations.
+  \item {\tt cvschangeroot} is used to recursively change the locally recorded cvs root. This is useful to indicate that the repository has moved.
+  \item \ldots
+  \end{itemize}
+\item \verb!commands/! \\ 
+contains the main plearn programs (as {\tt .cc} files that can be compiled with {\tt pymake})
+  \begin{itemize}
+  \item \verb!plearn_light.cc! is a minimalistic plearn with limited dependencies
+    on external libraries
+  \item \verb!plearn.cc! is a full plearn with a lot of algorithms
+    compiled in (with more dependencies on external libraries)
+  \item \verb!PLearnCommands/! contains the source code for all PLearn
+    commands (these commands are included in \verb!plearn.cc! or \verb!plearn_light.cc!)
+  \item \verb!language/! contains some programs for manipulating language
+    corpus and WordNet related stuff.
+  \end{itemize}
+\item \verb!python_modules/! \\
+The root for python module namespace. Must be in your \verb!PYTHONPATH!. \\
+It contains mostly a \verb!plearn/! subdirectory, which allows to \verb!import plearn.foobar! from python.
+\item \verb!doc/! \\
+directory within which Pearn's documentation is generated
+\item \verb!examples/! \\
+contains examples of PLearn scripts 
+\item \verb!test_suite! \\
+contains part of the PLearn test suite
+\item \verb!plearn/! \\
+contains all of PLearn's base C++ classes organised in themed subdirectories.
+\item \verb!plearn_learners/! \\
+contains all of PLearn's C++ learner classes organised in themed subdirectories.
+\item \verb!plearn_learners_experimental/! \\
+may contain some {\em very experimental} C++ learner classes\ldots
+\item \verb!plearn_torch/! \\
+contains C++ classes to interface with the Torch library ( http://www.torch.ch/ )
+\item \verb!pylearn/! \\
+is the beginning of a BoostPython interface to access PLearn from python
+\end{itemize}
+
+The \verb!plearn*! directories contain C++ source code ({\tt .h} and {\tt
+  .cc}), and as your root PLearn directory is in the \verb!-I! directive of
+the compilation commands, this allows to include relevant files by
+directives such as, for ex:
+\begin{verbatim}
+#include<plearn/base/Object.h>
+#include<plearn/io/PStream.h>
+#include<plearn_learners/generic/PLearner.h>
+\end{verbatim}
 
 
 \chapter{Tutorial}
+
+This chapter is a tutorial that will walk you through the basic concepts from a user-level perspective.
+
+We assume you have a copy of the plearn distribution, and a working plearn
+executable accessible through yout PATH. All the files in this tutorial are in \verb!examples/Tutorial/!
+so you should first {\tt cd} to this directory.
+
+\section{plearn commands and help}
+
+Usual PLearn executables such as \verb!plearn! or \verb!plearn_light! are typically called in command-line fashion.
+
+\begin{verbatim}
+valhalla:~/PLearn/examples/Tutorial> plearn
+plearn 0.92.0  (Jun 21 2005 12:04:50)
+Type 'plearn help' for help
+
+
+valhalla:~/PLearn/examples/Tutorial> plearn help
+plearn 0.92.0  (Jun 21 2005 12:04:50)
+To run a .plearn script type:                       plearn scriptfile.plearn
+To run a command type:                              plearn command [ command arguments ]
+
+To get help on the script file format:              plearn help scripts
+To get a short description of available commands:   plearn help commands
+To get detailed help on a specific command:         plearn help <command_name>
+To get help on a specific PLearn object:            plearn help <object_type_name>
+To get help on datasets:                            plearn help datasets
+\end{verbatim}
+
+The {\tt plearn} executable can be invoked either with a {\em PLearn script} (more on that later) or with a {\em PLearn command}.\\
+To get the list of available commands:
+
+\begin{verbatim}
+valhalla:~/PLearn/examples/Tutorial> plearn help commands
+plearn 0.92.0  (Jun 21 2005 12:04:50)
+To run a command, type:  % plearn command_name command_arguments
+
+Available commands are:
+FieldConvert    :  Reads a dataset and generates a .vmat file based on the data, but optimized for training.
+
+autorun :  watches files for changes and reruns the .plearn script
+help    :  plearn command-line help
+htmlhelp        :  Output HTML-formatted help for PLearn
+jdate   :  Convert a Julian Date into a JJ/MM/YYYY date
+ks-stat :  Computes the Kolmogorov-Smirnov statistic between 2 matrix columns
+learner :  Allows to train, use and test a learner
+read_and_write  :  Used to check (debug) the serialization system
+run     :  runs a .plearn script
+server  :  Launches plearn in computation server mode
+test-dependencies       :  Compute dependency statistics between input and target variables.
+test-dependency :  Compute dependency statistics between two selected columns of a vmat.
+vmat    :  Examination and manipulation of vmat datasets
+
+
+For more details on a specific command, type:
+  % plearn help <command_name>
+
+\end{verbatim}
+
+PLearn commands accept a number of arguments that are command specific.
+Very often the first argument is itself a sub-command\ldots
+
+{\tt help} is actually a {\em PLearn command}! Thus we can ask help on help!
+
+\begin{verbatim}
+valhalla:~/PLearn/examples/Tutorial> plearn help help
+plearn 0.92.0  (Jun 21 2005 12:04:50)
+*** Help for command 'help' ***
+plearn command-line help
+help <topic>
+Run the help command with no argument to get an overview of the system.
+\end{verbatim}
+
+The {\tt help} command can give detailed help on any available PLearn {\em
+  command}, as well as on any PLearn {\em object class}.
+
+{\bf There is an on-line html version of the help provided by the help command...}
+See {\em PLearn help on user-level commands and objects} on the PLearn homepage\ldots
+
+\section{data matrices}
+
+Machine-learning algorithms learn from data and are then used for prediction on new data.
+In this tutorial, we'll concentrate on the simplest and most usual form of
+data samples: vectors in $\R^d$. 
+
+A dataset of $l$ samples is then simply an $l \times d$ matrix of reals.
+In PLearn such datasets are implemented through the concept of a \VMatrix
+(or \VMat in short).
+
+A \VMat is essentially:
+\begin{itemize}
+\item A $l \times d$ matrix of reals ($l$ is its {\em length}, $d$ its {\em width}),
+\item optionally with an associated {\em fieldname} for each column (or {\em field}),
+\item optionally with associated {\em inputsize, targetsize, weightsize}
+\item optionally with strings associated to specific values of a given column
+\end{itemize}
+
+The {\em inputsize, targetsize, weightsize} are important information for
+learning algorithms, as they specify which part of each row is to be
+considered the known input (the first {\em inputsize} elements), which part
+is the target to predict (the next {\em targetsize} elements), and whether
+or not they are followed by a sample weight ({\em weightsize = 0 or
+  1}).
+
+For the traditional {\em tasks} of statistical machine learning, we have
+the following conventions regarding datasets and ``sizes'':
+\begin{itemize}
+\item {\bf regression:} \\
+{\em inputsize} = number of known inputs (``variables'', ``factors'' or ``features'', i.e. dimensioality of ``$x$'')\\
+{\em targetsize} = number of values to predict (i.e. dimensionality of ``$y$'')
+\item {\bf classification:} \\
+{\em inputsize} = number of known inputs \\
+{\em targetsize} = 1: the target is the class number (between 0 and nclasses-1)
+\item {\bf density estimation:} \\
+{\em inputsize} = dimensionality of $x$ \\
+{\em targetsize} = 0
+\end{itemize}
+
+
+For ex., let's create a simple data set for 1D regression, i.e. to predict a real $y$ from a real $x$.
+Open a file \verb!1d_reg.amat! with your favorite editor, and and enter the following text definint a 
+$5 \times 2$ matrix:
+\begin{verbatim}
+#size: 5 2
+#: x y     
+#sizes: 1 1 0
+
+0    3
+0.5  4
+1    5
+2    6
+3    7.5
+\end{verbatim}
+
+This represents a $5 \times 2$ matrix whose columns are named {\em x} and
+{\em y}, and whose {\em inputsize=1, targetsize=1, weightsize=0}.
+
+\section{viewing data matrices}
+
+Data matrices can be manipulated with the PLearn command {\em vmat}:
+
+\begin{verbatim}
+valhalla:~/PLearn/examples/Tutorial> plearn help vmat
+plearn 0.92.0  (Jun 21 2005 12:04:50)
+*** Help for command 'vmat' ***
+Examination and manipulation of vmat datasets
+Usage: vmat info <dataset>
+       Will info about dataset (size, etc..)
+   or: vmat fields <dataset> [name_only] [transpose]
+       To list the fields with their names (if 'name_only' is specified, the indexes won't be displayed,
+       and if 'transpose' is also added, the fields will be listed on a single line)
+   or: vmat fieldinfo <dataset> <fieldname_or_num> [--bin]
+       To display statistics for that field
+   or: vmat bbox <dataset> [<extra_percent>]
+       To display the data bounding box (i.e., for each field, its min and max, possibly extended by +-extra_percent ex: 0.10 for +-10% of the data range )
+   or: vmat cat <dataset> [<optional_vpl_filtering_code>]
+       To display the dataset
+   or: vmat sascat <dataset.vmat> <dataset.txt>
+       To output in <dataset.txt> the dataset in SAS-like tab-separated format with field names on the first line
+   or: vmat view <dataset>
+       Interactive display to browse on the data.
+   or: vmat stats <dataset>
+       Will display basic statistics for each field
+   or: vmat convert <source> <destination> [--cols=col1,col2,col3,...]
+       To convert any dataset into a .amat, .pmat, .dmat or .csv format.
+       The extension of the destination is used to determine the format you want.
+       If the option --cols is specified, it requests to keep only the given columns
+       (no space between the commas and the columns); columns can be given either as a
+       number (zero-based) or a column name (string).  You can also specify a range,
+       such as 0-18, or any combination thereof, e.g. 5,3,8-18,Date,74-85
+       If .csv (Comma-Separated Value) is specified as the destination file, the
+       following additional options are also supported:
+         --skip-missings: if a row (after selecting the appropriate columns) contains
+                          one or more missing values, it is skipped during export
+         --precision=N:   a maximum of N digits is printed after the decimal point
+         --delimiter=C:   use character C as the field delimiter (default = ',')
+   or: vmat gendef <source> [binnum1 binnum2 ...]
+       Generate stats for dataset (will put them in its associated metadatadir).
+   or: vmat genvmat <source_dataset> <dest_vmat> [binned{num} | onehot{num} | normalized]
+       Will generate a template .vmat file with all the fields of the source preprocessed
+       with the processing you specify
+   or: vmat genkfold <source_dataset> <fileprefix> <kvalue>
+       Will generate <kvalue> pairs of .vmat that are splitted so they can be used for kfold trainings
+       The first .vmat-pair will be named <fileprefix>_train_1.vmat (all source_dataset except the first 1/k)
+       and <fileprefix>_test_1.vmat (the first 1/k of <source_dataset>
+   or: vmat diff <dataset1> <dataset2> [<tolerance> [<verbose>]]
+       Will report all elements that differ by more than tolerance (defauts to 1e-6).
+       If verbose==0 then print only total number of differences
+   or: vmat cdf <dataset> [<dataset> ...]
+       To interactively display cumulative density function for each field
+       along with its basic statistics
+   or: vmat diststat <dataset> <inputsize>
+       Will compute and output basic statistics on the euclidean distance
+       between two consecutive input points
+
+<dataset> is a parameter understandable by getDataSet:
+Dataset specification can be one of:
+ - the path to a matrix file (or directory) .amat .pmat .vmat .dmat or plain ascii
+ - ... 
+\end{verbatim}
+
+OK, too many subcommands here, but let's concentrate on the few ones you're most likely to use:
+
+\begin{verbatim}
+valhalla:~/PLearn/examples/Tutorial> plearn vmat info 1d_reg.amat
+plearn 0.92.0  (Jun 21 2005 12:04:50)
+5 x 2
+inputsize: 1
+targetsize: 1
+weightsize: 0
+
+
+valhalla:~/PLearn/examples/Tutorial> plearn vmat fields 1d_reg.amat
+plearn 0.92.0  (Jun 21 2005 12:04:50)
+FieldNames:
+0: x
+1: y
+
+
+valhalla:~/PLearn/examples/Tutorial> plearn vmat fieldinfo 1d_reg.amat y
+plearn 0.92.0  (Jun 21 2005 12:04:50)
+[------------------------------------- Computing statistics (5) -------------------------------------]
+[....................................................................................................]
+Field #1:  y     type: UnknownType
+nmissing: 0
+nnonmissing: 5
+sum: 25.5
+mean: 5.09999999999999964
+stddev: 1.74642491965729807
+min: 3
+max: 7.5
+
+
+valhalla:~/PLearn/examples/Tutorial> plearn vmat cat 1d_reg.amat
+plearn 0.92.0  (Jun 21 2005 12:04:50)
+0 3
+0.5 4
+1 5
+2 6
+3 7.5
+\end{verbatim}
+
+If you want to browse the data matrix interactively, you can use the
+command \verb!plearn vmat view 1d_reg.amat! (This is most useful for huge data sets\ldots)
+
+You can also see the points graphically by using the \verb!pyplot! script
+\verb!pyplot plot_2d 1d_reg.amat!
+
+\section{vmat file formats}
+
+The {\em V} in \VMatrix stands for {\em Virtual}, because \VMatrix is a C++ virtual
+base class of which there are several concrete derived classes (do a
+\verb!plearn help VMatrix! if you want to see how many\ldots).
+
+Accordingly, there are several file formats that represent real data
+matrices, distinguished by their file extension:
+
+% \begin{table}[h]
+% \caption{vmat file extensions and formats}
+% \label{tab:vmat-formats}
+\begin{center}
+\begin{tabular}{|l|l|} \hline 
+{\bf extension} & {\bf format description} \\ \hline
+.amat           & Simple ascii format  \\ \hline
+.pmat           & Simple raw binary format with 1 line ascii header  \\ \hline
+.dmat           & Directory containing compressed binary data        \\
+                & (possibly split in several files for huge data)    \\ \hline
+.vmat           & Contains the specification of a C++ VMatrix object \\ 
+                & (in PLearn's ascii serialisation format)           \\ \hline
+.pymat          & Python preprocessing code that generates the       \\ 
+                & specification of a C++ VMatrix object (à la .vmat) \\ \hline
+\end{tabular}
+\end{center}
+% \end{table}
+
+In addition, several of those tend to have an associated {\tt .metadata}
+directory, that will contain associated data that is not held within the
+file itself (for ex: fieldnames, inputsize and targetsize, field statistics, etc\ldots)
+
+You can convert from any format to {\tt .amat, .pmat, .dmat, .csv} with PLearn
+command {\tt vmat convert}:
+\begin{verbatim}
+plearn vmat convert 1d_reg.amat 1d_reg.pmat
+plearn vmat view 1d_reg.pmat
+\end{verbatim}
+
+\section{PLearn objects, their serialization and specification}
+
+PLearn is first and foremost a C++ class library. PLearn also provides a
+mechanism to serialize such objects to and from files (i.e. write a
+representation of an in-memory object to a file, or later reload such a
+saved object from that file). PLearn serialization supports both an ASCII
+human-readable format (\verb!plearn_ascii!), and a more efficient binary format (\verb!plearn_binary!).
+
+As a result of this capability, it is also possible to {\em specify} a
+PLearn object by simply writing its ASCII serialized form by hand. 
+This is basically what a {\tt .vmat} file contains: {\em the ASCII serialised form of a C++ subclass of VMatrix}.
+
+For example, create a file \verb!selected_rows.vmat! with the following content:
+
+\begin{verbatim}
+SelectRowsVMatrix(
+  source = AutoVMatrix( specification = "1d_reg.amat" ),
+  indices = [ 1 1 3 0 3 4],
+  inputsize =   1,
+  targetsize =  0,
+  weightsize =  1
+);
+\end{verbatim}
+
+The serialised form of most PLearn objects, as can be seen here, is:
+\begin{verbatim}
+ObjectName(  
+  optionname = optionval
+  optionname = optionval
+  ...
+)
+\end{verbatim}
+
+Note that in \verb!plearn_ascii! format, in general, spaces, newlines, commas and semicolons
+are ignored (any sequence of those is considered a single separator).
+
+There is typically a one to one correspondance between an object's {\em
+  options} (in its serialised form) and the fields of the corresponding C++
+object. A PLearn object often has many options, but they always have a default value,
+so that there is no need to explicitly set those for which the default value is fine.
+
+The above {\tt .vmat} specifies an object of type {\tt SelectRowsVMatrix},
+which is a sort of vmat that will select desired rows from another
+``source'' vmat.  \verb!selected_rows.vmat! will thus be an {\em altered
+  view} of \verb!1d_reg.amat!, for which we also change the values of {\em
+  inputsize, targetsize, weightsize}.
+
+\begin{verbatim}
+valhalla:~/PLearn/examples/Tutorial> plearn vmat info selected_rows.vmat
+plearn 0.92.0  (Jun 22 2005 19:42:18)
+6 x 2
+inputsize: 1
+targetsize: 0
+weightsize: 1
+
+
+valhalla:~/PLearn/examples/Tutorial> plearn vmat cat selected_rows.vmat
+plearn 0.92.0  (Jun 22 2005 19:42:18)
+0.5 4
+0.5 4
+2 6
+0 3
+2 6
+3 7.5
+\end{verbatim}
+
+
+{\tt .vmat} is not the only file extension associated with specifications
+of PLearn objects in serialised form. Here are the other extensions you may
+encounter:
+
+\begin{center}
+\begin{tabular}{|l|l|} \hline 
+{\bf extension} & {\bf format description} \\ \hline
+.vmat           & specification of a subclass of VMatrix in \verb!plearn_ascii!    \\ 
+                & serialization format (with rudimentary macro-processing)  \\ \hline
+.plearn         & specification of any PLearn object in \verb!plearn_ascii!        \\
+                & format (with rudimentary macro-processing)                \\ \hline
+.psave          & serialized PLearn object in \verb!plearn_ascii! or \verb!plearn_binary! \\
+                & format (does not undergo macro-explansion)                \\ \hline
+.pymat          & Python preprocessing code that generates the              \\ 
+                & \verb!plearn_ascii! specification of a VMatrix subclass          \\ \hline 
+.pyplearn       & Python preprocessing code that generates the              \\ 
+                & \verb!plearn_ascii! specification of any PLearn object           \\ \hline
+\end{tabular}
+\end{center}
+
+While {\tt .vmat} and {\tt .plearn} support some rudimentary
+macro-processing, this is deprecated in favor of the power of the Python
+preprocessing of {\tt .pymat} and {\tt .pyplearn} files. We will get back
+to this later.
+
+
+
+\chapter{Older Tutorial}
 
 \include{tutorial}
 
