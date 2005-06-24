@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IndexAtPositionVariable.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,6 +53,11 @@ PLEARN_IMPLEMENT_OBJECT(IndexAtPositionVariable,
                         "ONE LINE DESCR",
                         "NO HELP");
 
+
+IndexAtPositionVariable::IndexAtPositionVariable()
+  : length_(0), width_(0)
+{ }
+  
 IndexAtPositionVariable::IndexAtPositionVariable(Variable* input1, Variable* input2, int the_length, int the_width)
   : inherited(input1, input2, the_length, the_width), length_(the_length), width_(the_width)
 {

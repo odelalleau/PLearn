@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryHardSlopeVariable.cc,v 1.2 2004/04/27 16:03:35 morinf Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,6 +53,10 @@ PLEARN_IMPLEMENT_OBJECT(UnaryHardSlopeVariable,
                         "Hard slope function whose Var input is only the argument of the function.", 
                         "Maps x (elementwise) to 0 if x<left, 1 if x>right, and linear in between otherwise.");
 
+UnaryHardSlopeVariable::UnaryHardSlopeVariable()
+  : left(0), right(0), inv_slope(0)
+{ }
+  
 UnaryHardSlopeVariable::UnaryHardSlopeVariable(Variable* input,real l,real r) 
   : inherited(input, input->length(), input->width()) ,
     left(l), right(r), inv_slope(1.0/(r-l))

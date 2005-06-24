@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.cc,v 1.13 2005/03/07 15:40:17 chapados Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,7 +54,14 @@ using namespace std;
 
 #define ZEROGAMMA
 
-PLEARN_IMPLEMENT_OBJECT(GaussianDistribution, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+  GaussianDistribution,
+  "The ever-useful gaussian-distribution",
+  "This is a density estimation learner.\n"
+  "It uses a compact representation of a Gaussian, by keeping only the k \n"
+  "top eigenvalues and associated eigenvectors of the covariance matrix.\n"
+  "All other eigenvalues are kept at the level of the k+1 th eigenvalue\n"
+  "Optionally, a constant sigma is first added to the diagonal of the covariance matrix.\n");
 
 void GaussianDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {

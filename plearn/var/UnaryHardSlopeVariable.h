@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryHardSlopeVariable.h,v 1.2 2004/04/27 16:03:35 morinf Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,7 +62,7 @@ protected:
 
 public:
   //!  Default constructor for persistence
-  UnaryHardSlopeVariable() {}
+  UnaryHardSlopeVariable();
   UnaryHardSlopeVariable(Variable* input,real l=-1,real r=1);
 
   PLEARN_DECLARE_OBJECT(UnaryHardSlopeVariable);

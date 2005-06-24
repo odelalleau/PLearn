@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.h,v 1.9 2004/08/12 16:15:25 tihocan Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,8 +68,8 @@ using namespace std;
     Mat eigenvectors; 
 
     // Build options
-    int k; // maximum number of eigenvectors to keep
-    real gamma; // The actual covariance matrix used will be VDV' + gamma.I where V'=eigenvectors and D=diag(eigenvalues)
+    int k; //!< maximum number of eigenvectors to keep
+    real gamma; //!< The actual covariance matrix used will be VDV' + gamma.I where V'=eigenvectors and D=diag(eigenvalues)
     float ignore_weights_below; //!< When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored
     
   public:

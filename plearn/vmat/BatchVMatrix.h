@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BatchVMatrix.h,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
+   * $Id$
    ******************************************************* */
 
 
@@ -64,7 +64,7 @@ private:
 
 public:
 
-  BatchVMatrix() {}
+  BatchVMatrix();
 
   PLEARN_DECLARE_OBJECT(BatchVMatrix);
 

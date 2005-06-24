@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OptionBase.h,v 1.10 2005/02/23 21:07:44 chapados Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -91,10 +91,7 @@ public:
   //! with an informative help text. (only optionname and saveit are really important)
   OptionBase(const string& optionname, flag_t flags,
              const string& optiontype, const string& defaultval, 
-             const string& description)
-    :optionname_(optionname), flags_(flags), 
-    optiontype_(optiontype), defaultval_(defaultval),
-    description_(description) {}
+             const string& description);
 
   virtual void read(Object* o, PStream& in) const = 0;
 

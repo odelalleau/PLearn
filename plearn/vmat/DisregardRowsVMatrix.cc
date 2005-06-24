@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DisregardRowsVMatrix.cc,v 1.1 2005/06/03 12:36:37 dorionc Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -52,7 +52,8 @@ using namespace std;
 DisregardRowsVMatrix::
 DisregardRowsVMatrix():
   inherited(),
-  _disregard_missings(true)
+  _disregard_missings(true),
+  _maximum_length(-1)
 {
 }
 

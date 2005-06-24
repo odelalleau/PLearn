@@ -37,7 +37,7 @@
 
 
 /* *******************************************************      
-   * $Id: MarginPerceptronCostVariable.cc,v 1.2 2004/04/27 16:03:35 morinf Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,6 +57,11 @@ PLEARN_IMPLEMENT_OBJECT(
 ////////////////////////////////////
 // MarginPerceptronCostVariable //
 ////////////////////////////////////
+
+MarginPerceptronCostVariable::MarginPerceptronCostVariable()
+  : margin(0.)
+{ }
+  
 MarginPerceptronCostVariable::MarginPerceptronCostVariable(Variable* output, Variable* target, real m)
   : inherited(output,target,1,1),margin(m)
 {

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdaBoost.cc,v 1.6 2005/06/15 15:58:25 larocheh Exp $
+   * $Id$
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -53,7 +53,8 @@ namespace PLearn {
 using namespace std;
 
 AdaBoost::AdaBoost()
-  : target_error(0.5), output_threshold(0.5), compute_training_error(1), 
+  : sum_voting_weights(0.0), initial_sum_weights(0.0),
+    target_error(0.5), output_threshold(0.5), compute_training_error(1), 
     pseudo_loss_adaboost(1), conf_rated_adaboost(0), weight_by_resampling(1), early_stopping(1),
     save_often(0)
   { }

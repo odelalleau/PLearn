@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IndexAtPositionVariable.h,v 1.4 2004/04/27 16:03:35 morinf Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,7 +58,7 @@ protected:
 
 public:
   //!  Default constructor for persistence
-  IndexAtPositionVariable() {}
+  IndexAtPositionVariable();
   IndexAtPositionVariable(Variable* input1, Variable* input2, int the_length, int the_width);
 
   PLEARN_DECLARE_OBJECT(IndexAtPositionVariable);

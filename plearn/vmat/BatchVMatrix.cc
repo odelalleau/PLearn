@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BatchVMatrix.cc,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
+   * $Id$
    ******************************************************* */
 
 #include "BatchVMatrix.h"
@@ -41,17 +41,28 @@
 namespace PLearn {
 using namespace std;
 
-PLEARN_IMPLEMENT_OBJECT(BatchVMatrix, "ONE LINE DESCR", "VMat class that replicates small parts of a matrix (mini-batches), so that each mini-batch appears twice (consecutively).");
+PLEARN_IMPLEMENT_OBJECT(
+  BatchVMatrix,
+  "Replicates small parts of a matrix into mini-batches",
+  "VMat class that replicates small parts of a matrix (mini-batches), \n"
+  "so that each mini-batch appears twice (consecutively).");
 
+BatchVMatrix::BatchVMatrix()
+  : batch_size(0),
+    last_batch(-1),
+    last_batch_size(-1)
+{ }
+
+  
 ////////////////////
 // declareOptions //
 ////////////////////
 void BatchVMatrix::declareOptions(OptionList& ol)
 {
   declareOption(ol, "m", &BatchVMatrix::m, OptionBase::buildoption,
-      "    The matrix viewed by the BatchVMatrix\n");
+      "The matrix viewed by the BatchVMatrix\n");
   declareOption(ol, "batch_size", &BatchVMatrix::batch_size, OptionBase::buildoption,
-      "    The size of each mini-batch\n");
+      "The size of each mini-batch\n");
   inherited::declareOptions(ol);
 }
 
@@ -79,6 +90,9 @@ void BatchVMatrix::build()
 void BatchVMatrix::build_()
 {
   if (m) {
+    if (batch_size < 1)
+      PLERROR("BatchVMatrix::build_: the 'batch_size' option must be nonnegative");
+    
     width_ = m->width();
     length_ = m->length() * 2;
     fieldinfos = m->getFieldInfos();

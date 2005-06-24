@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.21 2005/06/02 14:00:34 crompb Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -52,6 +52,7 @@ using namespace std;
 //////////////////////
 KernelProjection::KernelProjection() 
 : n_comp_kept(-1),
+  n_examples(-1),
   first_output(true),
   compute_costs(false),
   free_extra_components(true),

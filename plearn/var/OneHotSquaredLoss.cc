@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotSquaredLoss.cc,v 1.6 2004/04/27 16:03:35 morinf Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,6 +55,10 @@ PLEARN_IMPLEMENT_OBJECT(OneHotSquaredLoss,
                         "Computes sum(square_i(netout[i]-(i==classnum ?hotval :coldval))",
                         "NO HELP");
 
+OneHotSquaredLoss::OneHotSquaredLoss()
+  : coldval_(0.), hotval_(0.)
+{ }
+  
 OneHotSquaredLoss::OneHotSquaredLoss(Variable* netout, Variable* classnum, real coldval, real hotval)
   : inherited(netout,classnum,1,1), coldval_(coldval), hotval_(hotval)
 {

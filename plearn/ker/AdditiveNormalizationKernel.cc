@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.cc,v 1.11 2005/05/30 20:14:54 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -50,19 +50,23 @@ using namespace std;
 // AdditiveNormalizationKernel //
 /////////////////////////////////
 AdditiveNormalizationKernel::AdditiveNormalizationKernel() 
-: data_will_change(false),
-  double_centering(false),
-  remove_bias(false),
-  remove_bias_in_evaluate(false)
-{}
+  : total_average(0.),
+    total_average_unbiased(0.),
+    data_will_change(false),
+    double_centering(false),
+    remove_bias(false),
+    remove_bias_in_evaluate(false)
+{ }
 
 AdditiveNormalizationKernel::AdditiveNormalizationKernel
   (Ker the_source, bool the_remove_bias, bool the_remove_bias_in_evaluate,
                    bool the_double_centering)
-: data_will_change(false),
-  double_centering(the_double_centering),
-  remove_bias(the_remove_bias),
-  remove_bias_in_evaluate(the_remove_bias_in_evaluate)
+    : total_average(0.),
+      total_average_unbiased(0.),
+      data_will_change(false),
+      double_centering(the_double_centering),
+      remove_bias(the_remove_bias),
+      remove_bias_in_evaluate(the_remove_bias_in_evaluate)
 {
   source_kernel = the_source;
   build();

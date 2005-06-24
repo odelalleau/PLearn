@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeIntegralVariable.cc,v 1.5 2004/04/27 15:59:16 morinf Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,6 +54,10 @@ PLEARN_IMPLEMENT_OBJECT(SoftSlopeIntegralVariable,
                         "This Var computes the integral of the soft_slope function in an interval.", 
                         "Compute the integral of soft_slope(x,s,l,r) over x from a to b\n");
 
+SoftSlopeIntegralVariable::SoftSlopeIntegralVariable()
+  : a(0), b(0), tabulated(false)
+{ }
+  
 SoftSlopeIntegralVariable::  SoftSlopeIntegralVariable(Variable* smoothness, Variable* left, Variable* right, real a_, real b_, bool tabulated_)
   : inherited(VarArray(smoothness) & Var(left) & Var(right), 
               smoothness->length()<left->length()?left->length():smoothness->length(), 

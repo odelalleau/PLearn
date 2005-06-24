@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubMatVariable.h,v 1.6 2004/05/26 20:07:43 tihocan Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,7 +64,7 @@ protected:
 public:
 
   //!  Default constructor for persistence
-  SubMatVariable() : startk () {}
+  SubMatVariable() : startk(0), length_(0), width_(0), i_(0), j_(0) {}
   SubMatVariable(Variable* v, int i, int j, int the_length, int the_width);
   PLEARN_DECLARE_OBJECT(SubMatVariable);
   static void declareOptions(OptionList &ol);

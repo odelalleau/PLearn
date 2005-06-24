@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixOneHotSquaredLoss.h,v 1.4 2004/04/27 16:03:35 morinf Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,7 +58,7 @@ protected:
 
 public:
   //!  Default constructor for persistence
-  MatrixOneHotSquaredLoss() {}
+  MatrixOneHotSquaredLoss();
   MatrixOneHotSquaredLoss(Variable* netout, Variable* classnum, real coldval=0., real hotval=1.);
 
   PLEARN_DECLARE_OBJECT(MatrixOneHotSquaredLoss);

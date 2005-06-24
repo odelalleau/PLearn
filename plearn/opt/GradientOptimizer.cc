@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.32 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,9 +62,11 @@ GradientOptimizer::GradientOptimizer(VarArray the_params, Var the_cost,
                                      real the_decrease_constant,
                                      int n_updates, const string& filename, 
                                      int every_iterations)
-  :inherited(the_params,the_cost, n_updates, filename, every_iterations),
-   start_learning_rate(the_start_learning_rate),
-   decrease_constant(the_decrease_constant) {}
+  : inherited(the_params,the_cost, n_updates, filename, every_iterations),
+    start_learning_rate(the_start_learning_rate),
+    learning_rate(0.),
+    decrease_constant(the_decrease_constant)
+{ }
 
 GradientOptimizer::GradientOptimizer(VarArray the_params, Var the_cost, 
                                      VarArray update_for_measure,
@@ -72,22 +74,24 @@ GradientOptimizer::GradientOptimizer(VarArray the_params, Var the_cost,
                                      real the_decrease_constant,
                                      int n_updates, const string& filename, 
                                      int every_iterations)
-  :inherited(the_params,the_cost, update_for_measure,
-             n_updates, filename, every_iterations),
-  start_learning_rate(the_start_learning_rate),
-  decrease_constant(the_decrease_constant) {}
+  : inherited(the_params,the_cost, update_for_measure,
+              n_updates, filename, every_iterations),
+    start_learning_rate(the_start_learning_rate),
+    learning_rate(0.),
+    decrease_constant(the_decrease_constant)
+{ }
 
 
 void GradientOptimizer::declareOptions(OptionList& ol)
 {
     declareOption(ol, "start_learning_rate", &GradientOptimizer::start_learning_rate, OptionBase::buildoption, 
-                  "    the initial learning rate\n");
+                  "The initial learning rate\n");
 
     declareOption(ol, "learning_rate", &GradientOptimizer::learning_rate, OptionBase::learntoption, 
-                  "    the current learning rate\n");
+                  "The current learning rate\n");
 
     declareOption(ol, "decrease_constant", &GradientOptimizer::decrease_constant, OptionBase::buildoption, 
-                  "    the learning rate decrease constant \n");
+                  "The learning rate decrease constant \n");
 
     declareOption(ol, "lr_schedule", &GradientOptimizer::lr_schedule, OptionBase::buildoption, 
                   "Fixed schedule instead of decrease_constant. This matrix has 2 columns: iteration_threshold \n"
@@ -120,20 +124,23 @@ void GradientOptimizer::oldread(istream& in)
 }
 */
 
-PLEARN_IMPLEMENT_OBJECT(GradientOptimizer, "Optimization by gradient descent.", 
-    "GradientOptimizer is the simple usual gradient descent algorithm \n"
-    " (the number of samples on which to estimate gradients before an \n"
-    "  update, which determines whether we are performing 'batch' \n"
-    "  'stochastic' or even 'minibatch', is currently specified outside \n"
-    "  this class, typically in the numer of s/amples of the meanOf function \n"
-    "  to be optimized, as its 'nsamples' parameter). \n"
-    "Options for GradientOptimizer are [ option_name: <type> (default) ]: \n"
-    "  - start_learning_rate: <real> (0.01) \n"
-    "    the initial learning rate \n"
-    "  - decrease_constant: <real> (0) \n"
-    "    the learning rate decrease constant \n"
-    "\n"
-    "GradientOptimizer derives form Optimizer. \n");
+PLEARN_IMPLEMENT_OBJECT(
+  GradientOptimizer,
+  "Optimization by gradient descent.", 
+  "GradientOptimizer is the simple usual gradient descent algorithm \n"
+  "(the number of samples on which to estimate gradients before an \n"
+  "update, which determines whether we are performing 'batch' \n"
+  "'stochastic' or even 'minibatch', is currently specified outside \n"
+  "this class, typically in the numer of s/amples of the meanOf function \n"
+  "to be optimized, as its 'nsamples' parameter). \n"
+  "\n"
+  "Options for GradientOptimizer are [ option_name: <type> (default) ]: \n"
+  "  - start_learning_rate: <real> (0.01) \n"
+  "    the initial learning rate \n"
+  "  - decrease_constant: <real> (0) \n"
+  "    the learning rate decrease constant \n"
+  "\n"
+  "GradientOptimizer derives form Optimizer. \n");
 
 static bool displayvg=false;
 

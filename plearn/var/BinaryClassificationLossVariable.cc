@@ -37,7 +37,7 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryClassificationLossVariable.cc,v 1.4 2004/10/07 17:49:02 tihocan Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,11 +47,18 @@ using namespace std;
 
 /** BinaryClassificationLossVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(BinaryClassificationLossVariable,
-    "For one-dimensional output.",
-    "Class is 'class_1' if output < 'threshold', and 'class_2' if >= 'threshold'. \n"
-    );
+PLEARN_IMPLEMENT_OBJECT(
+  BinaryClassificationLossVariable,
+  "Variable outputting the class for thresholded binary classification",
+  "For one-dimensional output, \n"
+  "Class is 'class_1' if output < 'threshold', and 'class_2' if >= 'threshold'. \n"
+  );
 
+
+BinaryClassificationLossVariable::BinaryClassificationLossVariable()
+  : threshold(0.0)
+{ }
+  
 ////////////////////
 // declareOptions //
 ////////////////////

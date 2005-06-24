@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.48 2005/05/18 16:32:59 crompb Exp $ 
+ * $Id$ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -54,6 +54,9 @@ using namespace std;
 //////////////
 GaussMix::GaussMix() 
 : PDistribution(),
+  D(0),
+  n_eigen_computed(0),
+  nsamples(0),
   alpha_min(1e-5),
   epsilon(1e-6),
   kmeans_iterations(3),
@@ -81,7 +84,8 @@ PLEARN_IMPLEMENT_OBJECT(GaussMix,
     "               orthogonal/orthonormal.\n"
     "               The covariance matrix used will be V(t)V + psi with psi a D-vector\n"
     "               (through parameter diags).\n"
-    "2 parameters are common to all 4 types :\n"
+    "\n"
+    "Two parameters are common to all 4 types :\n"
     " - alpha : the ponderation factor of the Gaussians\n"
     " - mu    : their centers\n"
     "\n"

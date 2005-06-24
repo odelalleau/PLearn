@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeIntegralVariable.h,v 1.5 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,7 +63,7 @@ public:
 
 public:
   //!  Default constructor for persistence
-  SoftSlopeIntegralVariable() {}
+  SoftSlopeIntegralVariable();
   SoftSlopeIntegralVariable(Variable* smoothness, Variable* left, Variable* right, real a_=0, real b_=1, bool tabulated=true);
 
   PLEARN_DECLARE_OBJECT(SoftSlopeIntegralVariable);

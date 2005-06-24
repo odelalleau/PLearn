@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: StatsIterator.cc,v 1.9 2005/02/08 21:38:30 tihocan Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -534,7 +534,9 @@ void LiftStatsIterator::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
  
 LiftStatsIterator::LiftStatsIterator(int the_index, real the_fraction)
-  : lift_index(the_index), lift_fraction(the_fraction)
+  : nsamples(-1),
+    lift_index(the_index),
+    lift_fraction(the_fraction)
 {}
 
 void LiftStatsIterator::init(int inputsize)

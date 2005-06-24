@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: RowAtPositionVariable.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,6 +53,10 @@ PLEARN_IMPLEMENT_OBJECT(RowAtPositionVariable,
                         "Variables positionned inside a larger zero variable ...",
                         "NO HELP");
 
+RowAtPositionVariable::RowAtPositionVariable()
+  : length_(-1)
+{ }
+  
 RowAtPositionVariable::RowAtPositionVariable(Variable* input1, Variable* input2, int the_length)
   : inherited(input1, input2, the_length, input1->width()), length_(the_length)
 {

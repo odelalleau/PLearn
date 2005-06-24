@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.30 2005/05/09 14:10:40 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -52,8 +52,12 @@ PDistribution::PDistribution()
 : n_input(0),
   n_margin(0),
   n_target(0),
+  already_sorted(false),
+  delta_curve(0.1),
   full_joint_distribution(true),
   need_set_input(true),
+  lower_bound(0.),
+  upper_bound(0.),
   n_curve_points(-1),
   outputs_def("l")
 {}
@@ -80,18 +84,24 @@ void PDistribution::declareOptions(OptionList& ol)
 
   // Build options.
 
-  declareOption(ol, "outputs_def", &PDistribution::outputs_def, OptionBase::buildoption,
-      "Defines what will be given in output. This is a string where the characters\n"
-      "have the following meaning:\n"
-      "'l'-> log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn,\n"
-      "'e' -> expectation, 'v' -> variance.\n"
-      "In lower case they give the value associated with a given observation.\n"
-      "In upper case, a curve is evaluated at regular intervals and produced in\n"
-      "output (as a histogram). For 'L', 'D', 'C', 'S', it is the target part that\n"
-      "varies, while for 'E' and 'V' it is the input part (for conditional distributions).\n"
-      "The number of curve points is determined by the 'n_curve_points' option.\n"
-      "Note that the upper case letters only work for SCALAR variables.\n"
-      );
+  declareOption(
+    ol, "outputs_def", &PDistribution::outputs_def, OptionBase::buildoption,
+    "Defines what will be given in output. This is a string where the characters\n"
+    "have the following meaning:\n"
+    "- 'l' : log_density\n"
+    "- 'd' : density\n"
+    "- 'c' : cdf\n"
+    "- 's' : survival_fn\n"
+    "- 'e' : expectation\n"
+    "- 'v' : variance.\n"
+    "\n"
+    "If these options are specified in lower case they give the value associated with a given observation.\n"
+    "In upper case, a curve is evaluated at regular intervals and produced in\n"
+    "output (as a histogram). For 'L', 'D', 'C', 'S', it is the target part that\n"
+    "varies, while for 'E' and 'V' it is the input part (for conditional distributions).\n"
+    "The number of curve points is determined by the 'n_curve_points' option.\n"
+    "Note that the upper case letters only work for SCALAR variables.\n"
+    );
 
   declareOption(ol, "conditional_flags", &PDistribution::conditional_flags, OptionBase::buildoption,
       "This vector should be set for conditional distributions. It indicates what\n"

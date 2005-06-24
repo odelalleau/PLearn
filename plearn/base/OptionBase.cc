@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: OptionBase.cc,v 1.4 2005/02/23 21:07:44 chapados Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -51,6 +51,18 @@ const OptionBase::flag_t OptionBase::learntoption = 1<<1;
 const OptionBase::flag_t OptionBase::tuningoption = 1<<2;
 const OptionBase::flag_t OptionBase::nosave = 1<<4; 
 
+
+OptionBase::OptionBase(const string& optionname, flag_t flags,
+                       const string& optiontype, const string& defaultval, 
+                       const string& description)
+  : optionname_(optionname), flags_(flags), 
+    optiontype_(optiontype), defaultval_(defaultval),
+    description_(description)
+{
+  if (optionname.size() > 0 && optionname[0] == '_' )
+    PLERROR("OptionBase::OptionBase: options should not start with an underscore: '%s'",
+            optionname.c_str());
+}
 
 bool OptionBase::shouldBeSkipped() const
 {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotSquaredLoss.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,7 +65,7 @@ protected:
 
 public:
   //!  Default constructor for persistence
-  OneHotSquaredLoss() {}
+  OneHotSquaredLoss();
   OneHotSquaredLoss(Variable* netout, Variable* classnum, real coldval=0., real hotval=1.);
 
   PLEARN_DECLARE_OBJECT(OneHotSquaredLoss);

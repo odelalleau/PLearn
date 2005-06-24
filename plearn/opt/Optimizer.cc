@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.32 2005/06/15 20:13:11 lamblin Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -173,7 +173,11 @@ void Optimizer::setVMatOption(const string& optionname, VMat value)
 }
 
 
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Optimizer, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
+  Optimizer,
+  "Base class for Optimization algorithms",
+  "In the PLearn context, these optimizers operate on graph of Variable objects,\n"
+  "mostly expressed in VarArray form.");
 
 //! To use varDeepCopyField.
 #ifdef __INTEL_COMPILER

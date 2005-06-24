@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixOneHotSquaredLoss.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,6 +52,10 @@ PLEARN_IMPLEMENT_OBJECT(MatrixOneHotSquaredLoss,
                         "ONE LINE DESCR",
                         "NO HELP");
 
+MatrixOneHotSquaredLoss::MatrixOneHotSquaredLoss()
+  : coldval_(0.0), hotval_(0.0)
+{ }
+  
 MatrixOneHotSquaredLoss::MatrixOneHotSquaredLoss(Variable* input1, Variable* input2, real coldval, real hotval)
   : inherited(input1,input2,input2->length(),input2->width()), coldval_(coldval), hotval_(hotval)
 {

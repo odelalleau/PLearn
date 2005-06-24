@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubMatTransposeVariable.h,v 1.6 2004/05/26 20:14:26 tihocan Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,7 +65,7 @@ protected:
 public:
 
   //!  Default constructor for persistence
-  SubMatTransposeVariable() : startk(), length_(), width_() {}
+  SubMatTransposeVariable() : startk(0), length_(0), width_(0), i_(0), j_(0) {}
   SubMatTransposeVariable(Variable* v, int i, int j, int the_length, int the_width);
 
   PLEARN_DECLARE_OBJECT(SubMatTransposeVariable);

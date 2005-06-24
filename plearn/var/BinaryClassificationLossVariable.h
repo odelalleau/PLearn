@@ -37,7 +37,7 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryClassificationLossVariable.h,v 1.4 2004/10/07 17:49:02 tihocan Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -60,7 +60,7 @@ public:
   real threshold;
   
   //!  Default constructor for persistence
-  BinaryClassificationLossVariable() {}
+  BinaryClassificationLossVariable();
   BinaryClassificationLossVariable(Variable* netout, Variable* classnum);
 
   PLEARN_DECLARE_OBJECT(BinaryClassificationLossVariable);

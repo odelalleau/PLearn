@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AbsVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,7 +52,10 @@ using namespace std;
 
 /** AbsVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(AbsVariable, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+  AbsVariable,
+  "Variable whose output is the absolute value of its input",
+  "");
 
 AbsVariable::AbsVariable(Variable* input)
   : inherited(input, input->length(), input->width())
