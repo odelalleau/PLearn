@@ -508,7 +508,29 @@ string HTMLHelpCommand::format_free_text(string text) const
     finallines += "</ul>\n";
   
   // Finally join the lines
-  return finallines;
+  return make_http_hyperlinks(finallines);
+}
+
+string HTMLHelpCommand::make_http_hyperlinks(string text) const
+{
+  // Find elements of the form XYZ://x.y.z/a/b/c and make them into
+  // hyperlink. An issue is to determine when
+  static const char* recognized_protocols[] = 
+    { "http://", "https://", "ftp://", "mailto:" };        // for now...
+  static const vector<string> protocols_vector(
+    recognized_protocols,
+    recognized_protocols + sizeof(recognized_protocols) / sizeof(recognized_protocols[0]));
+
+  // Match everything that starts with the recognized protocol up to the
+  // following whitespace, excluding trailing punctuation if any.
+  // Make sure the URL is NOT enclosed in quotes
+  static const boost::regex e( string("(?!\")") + "(" +
+                               "(?:" + join(protocols_vector, "|") + ")" +
+                               "\\S+(?:\\w|/)" +
+                               ")" + "(?!\")" + "([[:punct:]]*\\s|$)");
+  const string repl_str("<a href=\"$1\">$1</a>$2");
+  text = regex_replace(text, e, repl_str, boost::match_default | boost::format_default);
+  return text;
 }
 
 string HTMLHelpCommand::generated_by() const
