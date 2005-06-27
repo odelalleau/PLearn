@@ -357,8 +357,6 @@ def printusage():
             print '   -'+item + ': ' + pymake_options_defs[item].description
     print
     print 'Other possible options are:'
-    print "  -graph: if this is given, targets won't be compiled or linked. Instead their"
-    print "          dependency graph will be generated in targetname.dot and targetname.ps files."
     print '  -force: forces recompilation of all necessary files, even if they are up to date.'
     print '  -local: don\'t use parallel compilation, even if there is a .pymake/<platform>.hosts file.'
     print '  -clean: removes all OBJS subrdirectories recursively in all given directories'
@@ -372,6 +370,15 @@ def printusage():
     print '        Works on AMD64 (linux-x86_64) and linux-i386 machines, probably also on ia64.'
     print '        Allows to compile on .pymake/linux-x86_64.hosts,'
     print '        linux-ia64.hosts and linux-i386.hosts.'
+    print
+    print "A special option is -dependency: if this is givven, target won't be compiled or linked,"
+    print "but information regarding the dependency graph will be produced insted, as follows:"
+    print "  pymake -dependency target "
+    print "    will generate the full dependency graph of target in targetname.dot and targetname.ps file."
+    print "  pymake -dependency target dependency "
+    print "    will look for dependency (which must be a filename.cc or filename.h"
+    print "    without full path or a library_name) and print out the first path it"
+    print "    finds in the dependency graph that links target and dependency"
     print
     print """The configuration file 'config' for pymake is searched for
 first in the .pymake subdirectory of the current directory, then similarly
@@ -1194,6 +1201,30 @@ class FileInfo:
         """returns the filename (without the directory part) of the current node"""
         return self.filebase+self.fileext
 
+    def print_dependency_path(self, dep, visited_files):
+        if self in visited_files:
+            return False
+        visited_files.append(self)
+
+        current_filename = self.filebase+self.fileext
+        # print 'Checking '+current_filename+' for '+dep
+        if current_filename==dep:
+            print '  '+self.filepath
+            return True
+        elif dep in [ lib.name for lib in  self.triggered_libraries ]:
+            print '  LIBRARY '+dep
+            return True
+        else:
+            if not self.is_ccfile and self.corresponding_ccfile and self.corresponding_ccfile.print_dependency_path(dep, visited_files):
+                print '  '+self.filepath
+                return True
+            for hfile in self.includes_from_sourcedirs:
+                if hfile.print_dependency_path(dep, visited_files):
+                    print '  '+self.filepath                
+                    return True
+            return False
+        
+
     def build_dependency_graph(self, dotfile, visited_files):
         if self not in visited_files:
             visited_files.append(self)
@@ -1557,11 +1588,8 @@ def distribute_source(target, cfiles_to_compile, executables_to_link, linkname):
 
 # MAIN PROGRAM
         
-for target in otherargs:
-
-    ccfiles_to_compile = {}
-    executables_to_link = {}
-
+if 'dependency' in optionargs: # We only want to learn something about the dependency graph
+    target = otherargs[0]
     if os.path.isdir(target):
         target_path = os.path.abspath(target)
     else:
@@ -1569,23 +1597,40 @@ for target in otherargs:
         
     configpath = locateconfigfile('config',target_path,default_config_text)    
     execfile( configpath )
-    #print options_choices
-    
-    # remove duplicates from sourcedirs
     sourcedirs = unique(sourcedirs)
     
-    if 'graph' in optionargs: # We just want to generate dependency graphs
-        cctarget = target
-        if not isccfile(target):
-            cctarget = get_ccpath_from_noncc_path(target)            
-        info = file_info(cctarget)
+    cctarget = target
+    if not isccfile(target):
+        cctarget = get_ccpath_from_noncc_path(target)            
+    info = file_info(cctarget)
+
+    if len(otherargs)==1: # only the target was specified: generate the full graph
         print 'Generating dependency graph in '+target+'.dot ...'
         info.save_dependency_graph(target+'.dot')
         print 'Generating dependency graph view in '+target+'.ps ...'
         os.system('dot -T ps '+target+'.dot > '+target+'.ps')
+    else: # target was specified with a possible source dependency
+        dep = otherargs[1]
+        print 'First encountered dependency path linking '+target+' to '+dep+ ' :'
+        if not info.print_dependency_path(dep,[]):
+            print 'THERE APPEARS TO BE NO SUCH DEPENDENCY.'
+            
+else: # We want to compile and possibly link
+    for target in otherargs:
 
-    else: # We want to compile and possibly link
+        ccfiles_to_compile = {}
+        executables_to_link = {}
 
+        if os.path.isdir(target):
+            target_path = os.path.abspath(target)
+        else:
+            target_path = os.path.dirname(os.path.abspath(target))
+
+        configpath = locateconfigfile('config',target_path,default_config_text)    
+        execfile( configpath )
+        # remove duplicates from sourcedirs
+        sourcedirs = unique(sourcedirs)
+    
         options = getOptions(options_choices,optionargs)
 
         # Building name of object subdirectory
