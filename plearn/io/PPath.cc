@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.24 2005/06/14 20:28:36 chrish42 Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -191,7 +191,9 @@ PStream& operator>>(PStream& in, PPath& path)
 //////////
 PPath PPath::home()
 {
-  return PPath( PR_GetEnv("HOME") );
+  // Supply a default value so PLearn doesn't crap
+  // when $HOME isn't defined.
+  return PPath( getenv("HOME", PPath("/")) );
 }
 
 ////////////
@@ -272,10 +274,14 @@ const map<string, PPath>& PPath::metaprotocolToMetapath()
     }
     else
     {
-      // Default ppath settings
-      metaprotocol_to_metapath["HOME"] = "${HOME}";
-      metaprotocol_to_metapath["PLEARNDIR"] = "HOME:PLearn";
-      metaprotocol_to_metapath["PLEARN_LIBDIR"] = "PLEARNDIR:external_libs";
+      if (PR_GetEnv("HOME"))
+      {
+        // Default ppath settings. Defined only if the HOME environment
+        // variable exists.
+        metaprotocol_to_metapath["HOME"] = "${HOME}";
+        metaprotocol_to_metapath["PLEARNDIR"] = "HOME:PLearn";
+        metaprotocol_to_metapath["PLEARN_LIBDIR"] = "PLEARNDIR:external_libs";
+      }
     }
   }
 
