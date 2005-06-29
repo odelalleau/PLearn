@@ -130,7 +130,9 @@ sub process_list(@)
 # Main program #
 ################
 
-@default_globlist = ("*.cc", "*.h", "*.c", "*.cpp", "*.CC", "*.txt", "Makefile", "makefile", "Readme", "README");
+@default_globlist = ( "*.cc", "*.h", "*.c", "*.cpp", "*.CC",
+                      "*.py", "*.pymat", "*.pyplearn",
+                      "*.txt", "Makefile", "makefile", "Readme", "README");
 
 $nargs = $#ARGV+1;
 if($nargs<3)

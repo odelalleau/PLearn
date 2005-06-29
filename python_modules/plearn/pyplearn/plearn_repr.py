@@ -66,9 +66,9 @@ __pref_map = PRefMap()
 def plearn_repr( obj, indent_level = 0 ):    
     """Returns a string that is a valid PLearn representation of I{obj}.
 
-    This function is somehow the core of the whole PyPLearn mecanism. It
+    This function is somehow the core of the whole PyPLearn mechanism. It
     maps most Python objects to a representation understood by the PLearn
-    serialization mecanism.
+    serialization mechanism.
     """ 
 
     # Classes may specify themselves as unreferenced.

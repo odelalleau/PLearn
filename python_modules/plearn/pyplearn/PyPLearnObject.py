@@ -45,7 +45,7 @@ class PyPLearnObject( object ):
     """A class from which to derive python objects that emulate PLearn ones.
 
     This class provides any of its instances with a plearn_repr() method
-    recognized by PyPLearn's plearn_repr mecanism. The plearn
+    recognized by PyPLearn's plearn_repr mechanism. The plearn
     representation is defined to be::
 
         Classname(
@@ -127,7 +127,7 @@ class PyPLearnObject( object ):
         for which default values were provided in any of the current class
         or its parent classes.
 
-        Note that the mecanism is not valid for idle use: if you subclass
+        Note that the mechanism is not valid for idle use: if you subclass
         PyPLearnObject within a Python idle, you should return an explicit
         list of option names.
 
@@ -201,7 +201,7 @@ class PyPLearnObject( object ):
     #
     #  PyPLearnObject's metaclass
     #
-    _subclass_filter = classmethod( lambda cls, name: not name.startswith('_') )
+    _subclass_filter = classmethod( lambda cls: not cls.__name__.startswith('_') )
     class __metaclass__( type ):
         """Implements some support mecanisms.
 
@@ -228,7 +228,7 @@ class PyPLearnObject( object ):
                     
             if hasattr(cls, '_subclasses'):
                 assert isinstance( cls._subclasses, type(dict) ), type( cls._subclasses )
-                if cls._subclass_filter( name ):
+                if cls._subclass_filter( ):
                     cls._subclasses[name] = cls
 
     #
@@ -290,7 +290,7 @@ class PyPLearnObject( object ):
 
         if forbidden:
             raise PLOptionError(
-                'Attempt to set a %s member %s through the option mecanism.'
+                'Attempt to set a %s member %s through the option mechanism.'
                 % (forbidden, option_name)
                 )
             

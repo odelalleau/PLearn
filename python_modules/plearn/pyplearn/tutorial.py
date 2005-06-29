@@ -1,7 +1,7 @@
 """PyPLearn Tutorial.
 
 This tutorial introduces you to the various tools provided by the
-PyPLearn mecanism. Essentially, the PyPLearn mecanism allows you to
+PyPLearn mechanism. Essentially, the PyPLearn mechanism allows you to
 instanciate complex experimental schemes using a powerful and highly
 readable language: Python.
 
@@ -58,7 +58,7 @@ Section 1: Introductory Examples
     which will yield::
 
         #
-        #  PLearn representation (serialization mecanism)
+        #  PLearn representation (serialization mechanism)
         #
 
         *4 -> PTester(
@@ -68,7 +68,7 @@ Section 1: Introductory Examples
                 targetsize = 2,
                 weightsize = 0
                 ),
-            expdir = "expdir_2005_06_23_11:24:28",
+            expdir = "expdir_2005_06_28_11:17:37",
             learner = *2 -> LinearRegressor( ),
             provide_learner_expdir = 1,
             save_test_confidence = 1,
@@ -100,8 +100,8 @@ Section 2: What's Wrong with PLearn Scripts?
     especially in the above example. Hence why not use those directly?
     First, PLearn serialization format while having a syntax close to the
     Python still have particularities of its own that can easily make edit
-    hard to edit. For instance, emacs comes with a sympathetic python-mode
-    while the plearn-mode is still to come...
+    hard to edit and affect readability. For instance, emacs comes with a
+    sympathetic python-mode while the plearn-mode is still to come...
 
     This said, remember that the above example shows very simple experiment
     settings. As settings get more complex, the use of references --- *3 ->
@@ -217,7 +217,7 @@ Section 2: What's Wrong with PLearn Scripts?
         #
 
         *59 -> MyWeardTester(
-            expdir = "expdir_2005_06_23_11:24:28",
+            expdir = "expdir_2005_06_28_11:17:38",
             learner = *58 -> CombinerLearner(
                 underlying_learners = [
                     *6 -> SomeLearner(
@@ -343,24 +343,24 @@ Section 2: What's Wrong with PLearn Scripts?
                         )
                     ],
                 weights = [
-                    0.133804827306,
-                    0.126014563993,
-                    0.0647392407573,
-                    0.0267401381758,
-                    0.0256956687635,
-                    0.0583077757858,
-                    0.00499858478109,
-                    0.0582677338833,
-                    0.068397691984,
-                    0.0502705250384,
-                    0.0702741195065,
-                    0.0392490584469,
-                    0.090509941543,
-                    0.00878618174419,
-                    0.0250455582353,
-                    0.0330274266606,
-                    0.0107127697865,
-                    0.105158193609
+                    0.0397961519858,
+                    0.0660380024182,
+                    0.0367282632288,
+                    0.0488920964683,
+                    0.041391789881,
+                    0.083109532308,
+                    0.0763786513904,
+                    0.0567314312783,
+                    0.0253257509008,
+                    0.0331038200457,
+                    0.0552613031989,
+                    0.0844679358821,
+                    0.0479528234363,
+                    0.0991157947931,
+                    0.0739145192219,
+                    0.0682308904419,
+                    0.00868527858883,
+                    0.0548759645317
                     ]
                 ),
             provide_learner_expdir = 1
@@ -434,16 +434,16 @@ Section 4: How Does it Work?
     ---------------------------
     Returns a string that is a valid PLearn representation of I{obj}.
 
-    This function is somehow the core of the whole PyPLearn mecanism. It
+    This function is somehow the core of the whole PyPLearn mechanism. It
     maps most Python objects to a representation understood by the PLearn
-    serialization mecanism.
+    serialization mechanism.
     
 Section 5: L{PyPLearnObject}
 ============================
     A class from which to derive python objects that emulate PLearn ones.
 
     This class provides any of its instances with a plearn_repr() method
-    recognized by PyPLearn's plearn_repr mecanism. The plearn
+    recognized by PyPLearn's plearn_repr mechanism. The plearn
     representation is defined to be::
 
         Classname(
@@ -746,7 +746,7 @@ class PyPLearnTutorial( Tutorial ):
     """PyPLearn Tutorial.
 
     This tutorial introduces you to the various tools provided by the
-    PyPLearn mecanism. Essentially, the PyPLearn mecanism allows you to
+    PyPLearn mechanism. Essentially, the PyPLearn mechanism allows you to
     instanciate complex experimental schemes using a powerful and highly
     readable language: Python.
     """
@@ -849,7 +849,7 @@ class PyPLearnTutorial( Tutorial ):
     which will yield::
 
         #
-        #  PLearn representation (serialization mecanism)
+        #  PLearn representation (serialization mechanism)
         #
 
         %s

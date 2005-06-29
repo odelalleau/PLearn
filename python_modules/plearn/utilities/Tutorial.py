@@ -91,22 +91,8 @@ class SubSection( Section ):
         return '%s%s\n%s%s' % ( indent, header, indent, marker )
     
 
-class WString:
-    """Writable String.
-
-    Has a write() method.
-    """
-    def __init__( self, s='' ):
-        self.s = s
-
-    def __str__( self ):
-        return self.s
-
-    def write( self, s ):
-        self.s += s
-
 class Tutorial:
-    wstr = WString()
+    wstr = toolkit.WString()
     
     def build( cls, tutorial_file ):
         assert os.path.exists( tutorial_file )

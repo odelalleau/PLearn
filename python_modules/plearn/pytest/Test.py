@@ -36,7 +36,7 @@ class Test( PyTestObject ):
     L{GlobalCompilableProgram}. The I{Local} prefix specifies that the
     program executable should be found in the same directory than the
     I{pytest.config} file, while I{Global} means that the program is a
-    global command. Currently, this mecanism only support commands that
+    global command. Currently, this mechanism only support commands that
     are in one of the <plearn_branch>/commands/ directory.
 
     The I{Compilable} tag specifies that the program must be compiled.

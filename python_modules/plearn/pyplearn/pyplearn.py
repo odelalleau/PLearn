@@ -255,7 +255,7 @@ def plvar( varname, value ):
 #  Core classes
 #
 class PyPLearnError( Exception ):
-    """For unexpected or incorrect use of some PyPLearn mecanism."""
+    """For unexpected or incorrect use of some PyPLearn mechanism."""
     pass
 
 class UnknownArgumentError( PyPLearnError ):

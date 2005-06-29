@@ -8,13 +8,11 @@ I{similar_tasks.py} L{utilities} submodule to move those functions to.
 __version_id__ = "$Id$"
 import inspect, os, popen2, random, string, sys, time, types
 
-__epydoc_is_available = None
+epytext = None
 try:
-    import epydoc.markup 
-    import epydoc.markup.epytext
-    __epydoc_is_available = True
+    from epydoc.markup import epytext
 except ImportError:
-    __epydoc_is_available = False
+    pass
 
 def boxed_lines(s, box_width, indent=''):
     if len(s) <= box_width:
@@ -154,8 +152,8 @@ def doc(obj, short=False):
         errors  = []
 
         parsed = striped
-        if __epydoc_is_available:
-            parsed  = epydoc.markup.epytext.parse_docstring( striped, errors ).to_plaintext(None)
+        if epytext is not None:
+            parsed  = epytext.parse_docstring( striped, errors ).to_plaintext(None)
         
         parsed  = string.rstrip( parsed )
 
@@ -205,6 +203,27 @@ def find_one(s, substrings):
     """
     for sub in iter(substrings):
         index = string.find(s, sub)
+        if index != -1:
+            return (sub, index)
+    return None
+
+def rfind_one(s, substrings):
+    """Searches string I{s} for any string in I{substrings}.
+
+    The I{substrings} list is iterated using iter(substrings).
+
+    @param  s: The string to parse.
+    @type   s: String
+
+    @param  substrings: The strings to look for in s
+    @type   substrings: List of strings
+
+    @returns: A pair formed of the first substring found B{(using rfind)} in
+    I{s} and its position in I{s}. If none of I{substrings} is found, None
+    is returned.
+    """
+    for sub in iter(substrings):
+        index = string.rfind(s, sub)
         if index != -1:
             return (sub, index)
     return None
@@ -355,6 +374,20 @@ def version( project_path, build_list ):
 def vsystem( cmd, prefix='*****' ):
     print prefix, cmd
     os.system( cmd )
+
+class WString:
+    """Writable String.
+
+    Has a write() method.
+    """
+    def __init__( self, s='' ):
+        self.s = s
+
+    def __str__( self ):
+        return self.s
+
+    def write( self, s ):
+        self.s += s
     
 if __name__ == "__main__":
 

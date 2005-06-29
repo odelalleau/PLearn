@@ -22,7 +22,7 @@ LBOX = 20
 
 class Mode( PyPLearnObject ):
     _subclasses = {}
-    _subclass_filter = classmethod( lambda cls, name: name == name.lower() )
+    _subclass_filter = classmethod( lambda cls: cls.__name__ == cls.__name__.lower() )
 
     #
     #  Class methods
@@ -30,6 +30,10 @@ class Mode( PyPLearnObject ):
     def _unreferenced( cls ):
         return True
     _unreferenced = classmethod( _unreferenced )
+
+    def aliases( cls ):
+        return []
+    aliases = classmethod( aliases )
     
     def description( cls ):
         return toolkit.doc( cls )
@@ -40,8 +44,8 @@ class Mode( PyPLearnObject ):
     help = classmethod( help )
 
     def mode_list( cls ):
-        mode_list = cls._subclasses.keys()        
-        mode_list.sort( lambda a,b: cmp(a, b) )
+        mode_list = cls._subclasses.values()        
+        mode_list.sort( lambda a,b: cmp(a.__name__, b.__name__) )
         return mode_list
     mode_list = classmethod( mode_list )
                 
@@ -94,8 +98,16 @@ class ModeAndOptionParser( OptionParser ):
         OptionParser.__init__( self, **optparser_overrides )
 
         self.selected_mode   = None
-        self.supported_modes = Mode._subclasses
 
+        mode_list = Mode.mode_list( )
+        self.supported_modes = {}
+        for mode in mode_list:
+            self.supported_modes[mode.__name__] = mode
+            
+            aliases = mode.aliases()
+            for alias in aliases:
+                self.supported_modes[alias] = mode
+                
     def add_option(self, *args, **kwargs):
         if not hasattr(self, 'global_options'):
             self.global_options = OptionGroup( self, "Global Options",
@@ -117,11 +129,15 @@ class ModeAndOptionParser( OptionParser ):
         help_str = "\nSupported modes are:\n"
 
         mode_list = Mode.mode_list( )
-        for mode_name in mode_list:
-            mode = self.supported_modes[mode_name]
+        for mode in mode_list:
+            aliases = mode.aliases()
+            s = ''
+            if aliases:
+                s += ' (%s)' % ', '.join( aliases )
+            lhs = '%s%s:' % (mode.__name__, s)
             
-            name_box      = 10
-            name          = string.ljust(mode_name+':', name_box)
+            name_box      = 15
+            name          = string.ljust(lhs, name_box)
 
             help          = toolkit.boxed_string( mode.help(), 60 )
 
