@@ -41,6 +41,7 @@
 /*! \file PPath.cc */
 
 #include <ctype.h>
+#include <mozilla/nspr/prenv.h>
 
 #include "PPath.h"
 #include "PStream.h"
@@ -191,9 +192,9 @@ PStream& operator>>(PStream& in, PPath& path)
 //////////
 PPath PPath::home()
 {
-  // Supply a default value so PLearn doesn't crap
+  // Supply a default value so PLearn doesn't crash
   // when $HOME isn't defined.
-  return PPath( getenv("HOME", PPath("/")) );
+  return PPath::getenv("HOME", PPath("/"));
 }
 
 ////////////
@@ -276,7 +277,7 @@ const map<string, PPath>& PPath::metaprotocolToMetapath()
     {
       if (PR_GetEnv("HOME"))
       {
-        // Default ppath settings. Defined only if the HOME environment
+        // Default PPath settings. Defined only if the HOME environment
         // variable exists.
         metaprotocol_to_metapath["HOME"] = "${HOME}";
         metaprotocol_to_metapath["PLEARNDIR"] = "HOME:PLearn";

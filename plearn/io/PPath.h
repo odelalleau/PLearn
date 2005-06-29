@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.h,v 1.10 2005/02/22 14:31:20 dorionc Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Pascal Vincent, Christian Dorion, Nicolas Chapados
@@ -45,9 +45,9 @@
 #define PPath_INC
 
 // Put includes here
+#include <map>
 #include <string>
-#include <mozilla/nspr/prenv.h>
-#include <plearn/base/TypeTraits.h>
+#include <plearn/base/TypeTraits.h>   //!< For DECLARE_TYPE_TRAITS macro.
 
 #define  FILE_PROTOCOL    "file"
 #define  HTTP_PROTOCOL    "http"
