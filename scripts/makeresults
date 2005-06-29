@@ -1,12 +1,12 @@
 #! /bin/sh
 # This script will make a .vmat and .amat to visualize and store the results of PLearn experiments.
-# *** It needs 'plearn_full' to be compiled and in the path ***
+# *** It needs 'plearn' to be compiled and in the path ***
 # Typical usage is to put in the final_commands option of a PTester:
 #   makeresults results_mat ${expdir}/global_stats.pmat param_1 ... param_n
 #
 # Arguments:
 #   <matrix_name>  : the name of the output matrices, without the extension
-#   <template_mat> : a matrix file readable by 'plearn_full vmat fields', whose fields names
+#   <template_mat> : a matrix file readable by 'plearn vmat fields', whose fields names
 #                    will be copied into the .amat field names
 #   <parameter_i>  : the name of the i-th parameter to be reported in the results
 #
@@ -56,7 +56,7 @@ for PARAM in $@; do
 done
 
 # Now uses the template matrix to complete the field names.
-plearn_full vmat fields $TEMPLATEMAT name_only transpose >> $MATNAME.amat
+plearn vmat fields $TEMPLATEMAT name_only transpose >> $MATNAME.amat
 
 # Display exit message.
 echo "Files $MATNAME.vmat and $MATNAME.amat successfully created"
