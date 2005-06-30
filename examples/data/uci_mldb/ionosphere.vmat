@@ -1,7 +1,0 @@
-FileVMatrix( 
-  filename = "UCI_MLDB:ionosphere/ionosphere_generate.vmat.metadata/precomp.pmat"
-  inputsize = 33
-  targetsize = 1
-  weightsize = 0
-)
-
