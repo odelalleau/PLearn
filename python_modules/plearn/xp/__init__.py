@@ -15,7 +15,7 @@ Supported modes are:
 
 Type 'xpdir mode --help' for further help on a mode
 """
-__version_id__ = '$Id:$'
+__version_id__ = '$Id$'
 
 import new, os, sys
 from Xperiment import *
