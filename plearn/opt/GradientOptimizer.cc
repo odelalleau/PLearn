@@ -54,6 +54,7 @@ GradientOptimizer::GradientOptimizer(real the_start_learning_rate,
                                      int n_updates, const string& filename, 
                                      int every_iterations)
   :inherited(n_updates, filename, every_iterations),
+   learning_rate(0.),   
    start_learning_rate(the_start_learning_rate),
    decrease_constant(the_decrease_constant) {}
 
@@ -63,8 +64,8 @@ GradientOptimizer::GradientOptimizer(VarArray the_params, Var the_cost,
                                      int n_updates, const string& filename, 
                                      int every_iterations)
   : inherited(the_params,the_cost, n_updates, filename, every_iterations),
-    start_learning_rate(the_start_learning_rate),
     learning_rate(0.),
+    start_learning_rate(the_start_learning_rate),
     decrease_constant(the_decrease_constant)
 { }
 
@@ -76,8 +77,8 @@ GradientOptimizer::GradientOptimizer(VarArray the_params, Var the_cost,
                                      int every_iterations)
   : inherited(the_params,the_cost, update_for_measure,
               n_updates, filename, every_iterations),
-    start_learning_rate(the_start_learning_rate),
     learning_rate(0.),
+    start_learning_rate(the_start_learning_rate),
     decrease_constant(the_decrease_constant)
 { }
 

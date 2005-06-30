@@ -33,11 +33,6 @@ class Bindings:
             
             self.__setitem__( *pair )
 
-    ## Bindings added methods ########################################
-    def plearn_repr( self ):
-        """Not an actual plearn representation!"""
-        return "Bindings( %s )" % str( self.items() )
-
     ## Emulating containers ##########################################    
     def __len__(self):
         return len(self.ordered_keys)

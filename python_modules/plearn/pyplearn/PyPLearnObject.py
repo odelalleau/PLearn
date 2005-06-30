@@ -5,7 +5,7 @@ any Python class emulating a PLearn cousin class.
 """
 __version_id__ = "$Id$"
 
-import copy, inspect, re
+import copy, inspect, re, warnings
 from   plearn.pyplearn.plearn_repr import *
 import plearn.utilities.metaprog   as     metaprog
 
@@ -40,6 +40,7 @@ def ploption( function ):
 #  Classes
 #
 class PLOptionError( AttributeError ): pass
+class PLOptionWarning( Warning ): pass
 
 class PyPLearnObject( object ):
     """A class from which to derive python objects that emulate PLearn ones.
@@ -153,11 +154,15 @@ class PyPLearnObject( object ):
         try:
             lines, lstart = inspect.getsourcelines( klass )
         except Exception, err:
-            raise PLOptionError( 'Impossible to parse options for class %s (%s: %s). '
-                                 'Please override the classmethod option_names() and '
-                                 'provide an explicit list of option names.'
-                                 % (klass.__name__, err.__class__.__name__, err)
-                                 )
+            warnings.warn( 'Impossible to parse options for class %s (%s: %s). '
+                           'Please override the classmethod option_names() and '
+                           'provide an explicit list of option names or use '
+                           'warnings.filterwarnings( action = "ignore" ) to get '
+                           'rid of these warnings.'
+                           % (klass.__name__, err.__class__.__name__, err),
+                           PLOptionWarning, stacklevel = 2
+                           )
+            return ordered
 
         # Deducing the class indentation from the position of the class
         # keyword.
@@ -350,7 +355,7 @@ class PyPLearnObject( object ):
         return plearn_repr( self, indent_level = 0 )
 
     def __repr__( self ):
-        return self.plearn_repr( 0, lambda mname, member: True )
+        return str( self ) #return self.plearn_repr( 0, lambda mname, member: not mname.startswith('__') )        
 
     def plearn_repr( self, indent_level = 0, predicate = option_predicate ):
         """PLearn representation of this python object.
@@ -359,7 +364,11 @@ class PyPLearnObject( object ):
         """
         def elem_format( elem ):
             k, v = elem
-            return '%s = %s' % ( k, plearn_repr(v, indent_level+1) )
+            try:
+                return '%s = %s' % ( k, plearn_repr(v, indent_level+1) )
+            except Exception, e:
+                raise PLOptionError( 'Option %s in %s instance caused an error in plearn_repr: %s\n%s'
+                                     % ( k, self.classname(), e.__class__.__name__, str(e) ) ) 
         
         return "%s(%s)" % ( self.classname(),
                             format_list_elements( self.option_pairs(predicate),

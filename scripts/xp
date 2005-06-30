@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-from plearn           import xperiments
+from plearn           import xp
 from plearn.utilities import toolkit
 
 # Builds are tuples of the form (major, minor, plearn_revision) where
@@ -12,9 +12,9 @@ build_list = [
     (   0,     1,       3646  )
     ]
 
-def xpdir_version( ):
-    xperiments_dir = os.path.dirname( xperiments.__file__ )
-    vtup = toolkit.version( xperiments_dir, build_list )
+def xp_version( ):
+    xp_dir = os.path.dirname( xp.__file__ )
+    vtup = toolkit.version( xp_dir, build_list )
     return '.'.join([ str(v) for v in vtup ])
 
-xperiments.main( xpdir_version )
+xp.main( xp_version )

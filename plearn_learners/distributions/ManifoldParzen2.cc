@@ -375,7 +375,6 @@ void ManifoldParzen2::computeOutput(const Vec& input, Vec& output) const
     int save_every = 100;
     string fsave = "";
     string musave = "";
-    real sign = 0;
     VMat temp;
     t_row.resize(input.length());
     row.resize(input.length());
