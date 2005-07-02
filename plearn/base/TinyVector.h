@@ -219,23 +219,37 @@ template <typename T> class TinyVectorTrait {};
 
 template <> class TinyVectorTrait<unsigned char> {
 public:
-  static const unsigned char Missing = UCHAR_MAX; // norman: initialize here
+  static const unsigned char Missing = UCHAR_MAX;
 };
+
 template <> class TinyVectorTrait<signed char> {
 public:
-  static const unsigned char Missing = CHAR_MAX; // norman: initialize here
+  static const signed char Missing = CHAR_MAX;
 };
+
 template <> class TinyVectorTrait<char> {
 public:
-  static const unsigned char Missing = CHAR_MAX; // norman: initialize here
+  static const char Missing = CHAR_MAX;
 };
+
+template <> class TinyVectorTrait<unsigned short> {
+public:
+  static const unsigned short Missing = USHRT_MAX;
+};
+
+template <> class TinyVectorTrait<short> {
+public:
+  static const short Missing = SHRT_MAX;
+};
+
 template <> class TinyVectorTrait<unsigned int> {
 public:
-  static const unsigned int Missing = UINT_MAX; // norman: initialize here
+  static const unsigned int Missing = UINT_MAX;
 };
+
 template <> class TinyVectorTrait<int> {
 public:
-  static const int Missing = INT_MAX; // norman: initialize here
+  static const int Missing = INT_MAX;
 };
 
   

@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
 // TinyVector.cc: Implementation of some stuff in TinyVector.h
-// Copyright (c) 2002 by Nicolas Chapados
+// Copyright (c) 2002-2005 by Nicolas Chapados
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -38,21 +38,20 @@ using namespace std;
 
 //#####  Implement Character Traits  ##########################################
 
-// norman: These implementations are useless once have been directly inserted in the 
-//         specialization declarations.
-/*
-template <> 
-const unsigned char TinyVectorTrait<unsigned char>::Missing = UCHAR_MAX;
-  
-template <> 
-const unsigned char TinyVectorTrait<char>::Missing = UCHAR_MAX;
+// norman: These implementations are useless once have been directly inserted
+//         in the specialization declarations.
+//
+// additional note by Nicolas: they are NOT useless, since this definition
+//   allows their address to be taken, which is sometimes necessary.
 
-template <> 
-const unsigned int TinyVectorTrait<unsigned int>::Missing = UINT_MAX;
+template <> const unsigned char  TinyVectorTrait<unsigned char> ::Missing;
+template <> const signed char    TinyVectorTrait<signed char>   ::Missing;
+template <> const char           TinyVectorTrait<char>          ::Missing;
+template <> const unsigned short TinyVectorTrait<unsigned short>::Missing;
+template <> const short          TinyVectorTrait<short>         ::Missing;
+template <> const unsigned int   TinyVectorTrait<unsigned int>  ::Missing;
+template <> const int            TinyVectorTrait<int>           ::Missing;
 
-template <> 
-const int TinyVectorTrait<int>::Missing = INT_MAX;
-*/
 
 } // end of namespace PLearn
 
