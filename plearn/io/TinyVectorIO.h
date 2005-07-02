@@ -44,6 +44,9 @@
 #ifndef TinyVectorIO_INC
 #define TinyVectorIO_INC
 
+// From C++ standard library
+#include <iostream>
+
 // From PLearn
 #include <plearn/base/TinyVector.h>
 #include <plearn/math/TVec.h>
@@ -56,12 +59,27 @@ namespace PLearn {
  */
 
 template <class T, unsigned N, class TTrait>
+ostream& operator<<(ostream& os, const TinyVector<T,N,TTrait>& tiny_vec)
+{
+  os << '[';
+  for (int i=0, n=int(tiny_vec.size()); i<n ; ++i) {
+    os << tiny_vec[i];
+    if (i < n-1)
+      os << ',';
+  }
+  return os << ']';
+}
+
+template <class T, unsigned N, class TTrait>
 PStream& operator<<(PStream& os, const TinyVector<T,N,TTrait>& tiny_vec)
 {
-  // Not very efficient at the moment: convert to TVec and output
-  TVec<T> v(tiny_vec.size());
-  copy(tiny_vec.begin(), tiny_vec.end(), v.begin());
-  return os << v;
+  os << '[';
+  for (int i=0, n=int(tiny_vec.size()); i<n ; ++i) {
+    os << tiny_vec[i];
+    if (i < n-1)
+      os << ',';
+  }
+  return os << ']';
 }
 
 
