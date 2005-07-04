@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ProcessingVMatrix.h,v 1.9 2005/01/25 03:15:46 dorionc Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -76,8 +76,6 @@ public:
   ProcessingVMatrix(VMat the_source, const string& program_string)
     :SourceVMatrix(the_source),prg(program_string)
   { build_(); }
-
-  virtual void setMetaDataDir(const PPath& the_metadatadir);
 
   // ******************
   // * Object methods *

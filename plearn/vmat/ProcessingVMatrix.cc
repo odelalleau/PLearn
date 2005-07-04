@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ProcessingVMatrix.cc,v 1.14 2005/05/13 16:12:34 plearner Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -88,21 +88,25 @@ void ProcessingVMatrix::build_()
   int nfields = (int)fieldnames.size();
   width_ = nfields;
 
+  // Set field infos.
   fieldinfos.resize(nfields);
   for(int j=0; j<nfields; j++)
     fieldinfos[j] = VMField(fieldnames[j]);
+
+  // Try to retrieve string mappings from fields that have been copied.
+  for (int i = 0; i < nfields; i++)
+    if (!pl_isnumber(fieldnames[i])) {
+      int source_index = source->fieldIndex(fieldnames[i]);
+      if (source_index >= 0)
+        // The source VMatrix has a field with the same name (which is not a
+        // number): we can get its string mapping.
+        setStringMapping(i, source->getStringToRealMapping(source_index));
+    }
 
   setMetaInfoFromSource();
   sourcevec.resize(source->width());
 }
 
-void ProcessingVMatrix::setMetaDataDir(const PPath& the_metadatadir)
-{
-  inherited::setMetaDataDir(the_metadatadir);
-  length_ = source->length();
-}
-
-// ### Nothing to add here, simply calls build_
 void ProcessingVMatrix::build()
 {
   inherited::build();
@@ -112,6 +116,7 @@ void ProcessingVMatrix::build()
 void ProcessingVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(sourcevec, copies);
 }
 
 } // end of namespace PLearn
