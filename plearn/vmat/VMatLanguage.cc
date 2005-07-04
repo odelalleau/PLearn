@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.42 2005/06/01 21:44:18 chapados Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -270,9 +270,11 @@ VMatLanguage::VMatLanguage(VMat vmsrc)
     mappings.resize(0);
   }
 
-  // this function (that really should be sliced to to smaller pieces someday) takes raw VPL code and 
-  // returns the preprocessed sourcecode along with the defines and the fieldnames it generated
-  void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,  string& processed_sourcecode, vector<string>& fieldnames)
+  ////////////////
+  // preprocess //
+  ////////////////
+  void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
+                                string& processed_sourcecode, vector<string>& fieldnames)
   {
     // pout << defines << endl;
     string token;

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.21 2005/05/16 18:26:04 tihocan Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -82,10 +82,10 @@ using namespace std;
     void generateCode(const string& processed_sourcecode);
     void generateCode(PStream& processed_sourcecode);
 
-    // this function takes raw VPL code and returns the preprocessed sourcecode 
-    // along with the defines and the fieldnames it generated
-    void preprocess(PStream& in, map<string, string>& defines, string& processed_sourcecode,
-                    vector<string>& fieldnames);
+    // This function takes raw VPL code and returns the preprocessed sourcecode 
+    // along with the defines and fieldnames it generated.
+    void preprocess(PStream& in,                   map<string, string>& defines,
+                    string&  processed_sourcecode, vector<string>&      fieldnames );
     
 public:
     string sourcecode;
