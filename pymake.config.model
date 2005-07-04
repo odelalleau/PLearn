@@ -202,7 +202,9 @@ optionalLibrary( name = 'torch',
 optionalLibrary( name='boost',
                  triggers = 'boost*',
 #                 includedirs = libdir + '/../include',  ## You don't need it if you set CPATH environment 
-                 linkeroptions = '-L'+libdir )
+#                 linkeroptions = '-L'+libdir            ## Systematically added in linkeroptions_tail
+                 linkeroptions = ''
+)
 
 optionalLibrary( name='boost_date_time',
                  triggers = 'boost/date_time*',
@@ -235,7 +237,7 @@ optionalLibrary( name = 'NSPR',
                  linkeroptions = '-L/usr/lib/mozilla -lnspr4')
 
 # What linker options to put always after those from the optional libraries
-linkeroptions_tail = '-lm'
+linkeroptions_tail = '-L' + libdir + ' -lm'
 
 # List of lists of mutually exclusive pymake options.
 # First option that appears in each group is the default, and is assumed if you don't specify any option from that group
