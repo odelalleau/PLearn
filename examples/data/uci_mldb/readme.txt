@@ -34,7 +34,7 @@ learning algorithm.
 It is always true that the concatenation of 'train' and 'test' gives 'all',
 even for normalized or shuffled datasets.
 
-Small datasets (< 5 Mb in memory) are automatically precomputed in memory.
+Small datasets (< 10 Mb in memory) are automatically precomputed in memory.
 Bigger ones are only stored on disk (which can slow down the access to data,
 especially if the dataset is shuffled).
 
