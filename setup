@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-__cvs_id__ = '$Id: setup,v 1.1 2005/01/25 03:14:59 dorionc Exp $'
+__cvs_id__ = '$Id$'
 
 import os
 import plearn.utilities.ppath as ppath
 
-## Syncronization with the environment variable
+## Synchronization with the environment variable
 plearndir       = os.getenv( 'PLEARNDIR',     'HOME:PLearn'             )
 libdir          = os.getenv( 'PLEARN_LIBDIR', 'PLEARNDIR:external_libs' )
 
@@ -12,6 +12,8 @@ libdir          = os.getenv( 'PLEARN_LIBDIR', 'PLEARNDIR:external_libs' )
 ppath.add_binding('HOME',           "${HOME}" )
 ppath.add_binding('PLEARNDIR',      plearndir )
 ppath.add_binding('PLEARN_LIBDIR',  libdir    )
+ppath.add_binding('UCI_MLDB',       "PLEARNDIR:examples/data/uci_mldb"  )
 
 ## This function writes the file down
 ppath.write_bindings()
+
