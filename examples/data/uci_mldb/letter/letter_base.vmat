@@ -1,0 +1,6 @@
+FileVMatrix( 
+  filename = "UCI_MLDB_REP:letter-recognition/letter_generate.vmat.metadata/precomp.pmat"
+  inputsize = 16
+  targetsize = 1
+  weightsize = 0
+)

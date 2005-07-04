@@ -1,0 +1,10 @@
+PrecomputedVMatrix( 
+  precomp_type = "pmat"
+  source =
+    UCIDataVMatrix( 
+      uci_spec =
+        $INCLUDE{UCI_MLDB:letter/letter.plearn}
+    )
+  metadatadir = "UCI_MLDB_REP:letter-recognition/letter_generate.vmat.metadata"
+)
+

@@ -1,0 +1,5 @@
+SubVMatrix(
+  parent = $INCLUDE{UCI_MLDB:letter_all_norm.vmat}
+  istart = 16000
+)
+
