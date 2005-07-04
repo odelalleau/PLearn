@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.34 2005/05/19 22:00:17 chrish42 Exp $
+   * $Id$
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -142,9 +142,6 @@ void FileVMatrix::build_()
   if (build_new_file || !isfile(filename_))
     force_mkdir_for_file(filename_);
 
-  setMetaDataDir(filename_ + ".metadata"); 
-  setMtime(mtime(filename_));
-
   if (build_new_file || !isfile(filename_))
   {
     if (!writable) {
@@ -245,9 +242,11 @@ void FileVMatrix::build_()
     }
   }
 
-  if (width_ >= 0) {
+  setMetaDataDir(filename_ + ".metadata"); 
+  setMtime(mtime(filename_));
+
+  if (width_ >= 0)
     getFieldInfos();
-  }
 
   if (track_ref) {
     string abs = filename_.absolute();
