@@ -93,16 +93,6 @@ void ProcessingVMatrix::build_()
   for(int j=0; j<nfields; j++)
     fieldinfos[j] = VMField(fieldnames[j]);
 
-  // Try to retrieve string mappings from fields that have been copied.
-  for (int i = 0; i < nfields; i++)
-    if (!pl_isnumber(fieldnames[i])) {
-      int source_index = source->fieldIndex(fieldnames[i]);
-      if (source_index >= 0)
-        // The source VMatrix has a field with the same name (which is not a
-        // number): we can get its string mapping.
-        setStringMapping(i, source->getStringToRealMapping(source_index));
-    }
-
   setMetaInfoFromSource();
   sourcevec.resize(source->width());
 }
