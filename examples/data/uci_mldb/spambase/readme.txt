@@ -1,5 +1,5 @@
-# PLearn information.
+# PLearn conversion instructions.
 
-1. Generate dataset from raw data:
-plearn_full vmat info spambase_generate.vmat
+# Generate dataset from raw data
+plearn vmat info UCI_MLDB:spambase/spambase_generate.vmat
 

@@ -1,17 +1,10 @@
 PrecomputedVMatrix( 
-  precomp_type = "pmat"  ;
+  precomp_type = "pmat"
   source =
-    BootstrapVMatrix( 
-      shuffle = 1
-      frac = 1
-      seed = 49784598
-      source =
         UCIDataVMatrix( 
           uci_spec =
-            $INCLUDE{spambase.plearn}
+            $INCLUDE{UCI_MLDB:spambase/spambase.plearn}
         )
-      metadatadir = "spambase_generate.vmat.metadata"  ;
-    )
+  metadatadir = "UCI_MLDB_REP:spambase/spambase_generate.vmat.metadata"
 )
-
 

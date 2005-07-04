@@ -1,0 +1,5 @@
+MemoryVMatrix(
+  data_vm =
+    $INCLUDE{UCI_MLDB:spambase/spambase_base.vmat}
+)
+

@@ -1,0 +1,8 @@
+MemoryVMatrix(
+  data_vm =
+    ShiftAndRescaleVMatrix( 
+      underlying_vmat =
+        $INCLUDE{UCI_MLDB:spambase/spambase_base.vmat}
+    )
+)
+
