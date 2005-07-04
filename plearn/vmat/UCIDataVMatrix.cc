@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UCIDataVMatrix.cc,v 1.1 2005/05/31 18:35:34 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -79,16 +79,8 @@ void UCIDataVMatrix::declareOptions(OptionList& ol)
 
 void UCIDataVMatrix::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
-  if (uci_spec) {
+  if (uci_spec)
     loadUCISet(vm, uci_spec);
-  }
   inherited::build();
 }
 
