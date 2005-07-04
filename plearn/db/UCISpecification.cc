@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UCISpecification.cc,v 1.5 2005/05/31 18:36:50 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -109,7 +109,7 @@ void UCISpecification::declareOptions(OptionList& ol)
       "Weight size of the data");
 
   declareOption(ol, "target_is_first", &UCISpecification::target_is_first, OptionBase::buildoption,
-        "Whether the target is the first column (otherwise it is assumed to be the last one..");
+        "Whether the target is the first column (otherwise it is assumed to be the last one).");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
