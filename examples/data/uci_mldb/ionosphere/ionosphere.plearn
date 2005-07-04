@@ -1,12 +1,11 @@
 UCISpecification( 
-  data_all = "UCI_MLDB:ionosphere/ionosphere.data"
-  file_all = "ionosphere.data"
+  # PPath: Filename for the whole dataset.
+  data_all = "UCI_MLDB_REP:ionosphere/ionosphere.data"
   # int: Input size of the data
-  inputsize = 34  ;
+  inputsize = 34
   # int: Target size of the data
-  targetsize = 1  ;
+  targetsize = 1
   # int: Weight size of the data
-  weightsize = 0  ;
-  # bool: Whether the target is the first column (otherwise it is assumed to be the last one..
-  target_is_first = 0  ;
-);
+  weightsize = 0
+)
+
