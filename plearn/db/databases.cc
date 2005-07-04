@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.22 2005/05/31 18:37:36 tihocan Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1119,6 +1119,22 @@ void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec) {
   }
   free(to_symbols);
   free(to_n_symbols);
+
+  // Add default 'target' name to the target(s) column(s) if there is no fieldname yet.
+  int is = data->inputsize();
+  int ts = data->targetsize();
+  if (ts == 1) {
+    string f_target = data->fieldName(is);
+    if (pl_isnumber(f_target) && toint(f_target) == is)
+      data->declareField(is, "target");
+  } else {
+    string f_target_i;
+    for (int i = 0; i < ts; i++) {
+      f_target_i = data->fieldName(is + i);
+      if (pl_isnumber(f_target_i) && toint(f_target_i) == is + i)
+        data->declareField(is + i, "target_" + tostring(i));
+    }
+  }
 }
 
 } // end of namespace PLearn
