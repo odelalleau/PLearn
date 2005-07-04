@@ -1,0 +1,10 @@
+PrecomputedVMatrix( 
+  precomp_type = "pmat"
+  source =
+    UCIDataVMatrix( 
+      uci_spec =
+        $INCLUDE{UCI_MLDB:isolet/isolet.plearn}
+    )
+  metadatadir = "UCI_MLDB_REP:isolet/isolet_generate.vmat.metadata"
+)
+

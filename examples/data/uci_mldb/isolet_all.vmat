@@ -1,13 +1,2 @@
-BootstrapVMatrix( 
-  shuffle = 1
-  frac = 1
-  seed = 458860
-  source =
-    ConcatRowsVMatrix( 
-      array = [
-        $INCLUDE{UCI_MLDB:isolet_train.vmat}
-        $INCLUDE{UCI_MLDB:isolet_test.vmat}
-      ]
-    )
-)
+$INCLUDE{UCI_MLDB:isolet/isolet_base.vmat}
 

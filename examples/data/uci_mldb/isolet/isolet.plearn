@@ -1,0 +1,13 @@
+UCISpecification( 
+  # PPath: Filename for the train data.
+  data_train = "UCI_MLDB_REP:isolet/isolet1+2+3+4.data"
+  # PPath: Filename for the test data.
+  data_test  = "UCI_MLDB_REP:isolet/isolet5.data"
+  # int: Input size of the data
+  inputsize = 617
+  # int: Target size of the data
+  targetsize = 1
+  # int: Weight size of the data
+  weightsize = 0
+)
+
