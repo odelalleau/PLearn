@@ -1,25 +1,18 @@
 PrecomputedVMatrix( 
   precomp_type = "pmat"
   source =
-    BootstrapVMatrix( 
-      shuffle = 1
-      frac = 1
-      seed = 49784598
+    ProcessingVMatrix( 
+      # Remove column 1, which is constant.
+      prg = "[%0] [%2:%34]"
       source =
-        ProcessingVMatrix( 
-          # Remove column 1, which is constant.
-          prg = "[%0] [%2:%34]"
-          source =
-            UCIDataVMatrix( 
-              uci_spec =
-                $INCLUDE{ionosphere.plearn}
-            )
-          inputsize = 33
-          targetsize = 1
-          weightsize = 0
+        UCIDataVMatrix( 
+          uci_spec =
+            $INCLUDE{UCI_MLDB:ionosphere/ionosphere.plearn}
         )
-      metadatadir = "ionosphere_generate.vmat.metadata"
+      inputsize = 33
+      targetsize = 1
+      weightsize = 0
     )
+  metadatadir = "UCI_MLDB_REP:ionosphere/ionosphere_generate.vmat.metadata"
 )
-
 
