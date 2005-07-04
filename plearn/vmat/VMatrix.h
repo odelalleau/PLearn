@@ -262,7 +262,9 @@ public:
   void saveAllStringMappings();
   
   //! Save a single field's string mapping in file 'fname'.
-  void saveStringMappings(int col, const PPath& fname);
+  //! The corresponding string -> real mapping can optionally be given in argument,
+  //! otherwise it will be obtained through the getStringToRealMapping() method.
+  void saveStringMappings(int col, const PPath& fname, map<string, real>* str_to_real = 0);
 
   //! Adds a string<->real mapping
   void addStringMapping(int col, string str, real val);
@@ -300,10 +302,10 @@ public:
   //! for field# col. Or returns "" if no string is associated.
   virtual string getValString(int col, real val) const;
 
-  //! Returns the string->value mapping for field 'fld'.
+  //! Returns the string->real mapping for column 'col'.
   virtual const map<string,real>& getStringToRealMapping(int col) const;
 
-  //! Returns the value->string mapping for field 'fld'.
+  //! Returns the real->string mapping for column 'col'.
   virtual const map<real,string>& getRealToStringMapping(int col) const;
 
   //! Returns value associated with a string (or MISSING_VALUE if there's no association for this string).

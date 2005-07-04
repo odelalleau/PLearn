@@ -664,27 +664,36 @@ void VMatrix::removeColumnStringMappings(int c)
 void VMatrix::saveAllStringMappings()
 {
   PPath fname;
+  map<string, real> the_map;
   for(int i=0;i<width();i++)
   {
-    fname = getSFIFFilename(i,".smap");
-    saveStringMappings(i,fname);
+    the_map = getStringToRealMapping(i);
+    if (!the_map.empty()) {
+      fname = getSFIFFilename(i,".smap");
+      saveStringMappings(i, fname, &the_map);
+    }
   }
 }
 
 ////////////////////////
 // saveStringMappings //
 ////////////////////////
-void VMatrix::saveStringMappings(int col, const PPath& fname)
+void VMatrix::saveStringMappings(int col, const PPath& fname, map<string, real>* str_to_real)
 {
-  map<string, real> the_map = getStringToRealMapping(col);
-  if(the_map.size()==0)
+  map<string, real> the_map;
+  if (!str_to_real) {
+    the_map = getStringToRealMapping(col);
+    str_to_real = &the_map;
+  }
+  if(str_to_real->empty())
   {
     rm(fname);
     return;
   }
   force_mkdir_for_file(fname);
   PStream o = openFile(fname, PStream::plearn_ascii, "w");
-  for(map<string,real>::iterator it = the_map.begin();it!=the_map.end();++it)
+  for(map<string,real>::iterator it  = str_to_real->begin();
+                                 it != str_to_real->end();   ++it)
     o << it->first << it->second << endl;
 }
 
@@ -799,12 +808,15 @@ const map<real,string>& VMatrix::getRealToStringMapping(int col) const {
 ////////////////////
 void VMatrix::setMetaDataDir(const PPath& the_metadatadir) 
 { 
-  if(the_metadatadir=="")
-    PLERROR("Called setMetaDataDir with an empty string");
+  if (the_metadatadir.isEmpty())
+    PLERROR("In VMatrix::setMetaDataDir - Called setMetaDataDir with an empty PPath");
   metadatadir = the_metadatadir.absolute() / "";
   // We do not create the metadata directory here anymore.
   // This is to prevent the proliferation of useless directories.
   // A VMatrix's subclass should now create the metadatadir itself if it needs it.
+
+  // Load string mappings from the metadatadir.
+  loadAllStringMappings();
 }
 
 //////////////////
@@ -853,30 +865,22 @@ void VMatrix::setMetaInfoFrom(const VMatrix* vm)
       weightsize_ = ws;
   }
 
-  // Copy fieldnames from vm if not set and they look good
+  // Copy fieldnames from vm if not set and they look good.
   if(!hasFieldInfos() && (width() == vm->width()) && vm->hasFieldInfos() )
     setFieldInfos(vm->getFieldInfos());
 
-  // Copy String/Real mappings if not set.
-  if (map_rs.length() == 0) {
-    map_rs.resize(width_);
-    for (int j = 0; j < width_; j++) {
-      if (j < vm->width()) {
-        map_rs[j] = vm->getRealToStringMapping(j);
-      } else {
-        // Empty map.
-        map_rs[j] = map<real,string>();
-      }
-    }
-  }
-  if (map_sr.length() == 0) {
-    map_sr.resize(width_);
-    for (int j = 0; j < width_; j++) {
-      if (j < vm->width()) {
-        map_sr[j] = vm->getStringToRealMapping(j);
-      } else {
-        // Empty map.
-        map_sr[j] = map<string,real>();
+  // Copy string <-> real mappings for fields which have the same name.
+  TVec<string> fnames = fieldNames();
+  for (int i = 0; i < width_; i++) {
+    if (!pl_isnumber(fnames[i])) {
+      int vm_index = vm->fieldIndex(fnames[i]);
+      if (vm_index >= 0) {
+        // The source VMatrix has a field with the same name (which is not a
+        // number): we can get its string mapping.
+        setStringMapping(i, vm->getStringToRealMapping(vm_index));
+        map<string, real> ze_map = vm->getStringToRealMapping(vm_index);
+        int s = ze_map.size();
+        pout << "Copied map of size " << s << endl;
       }
     }
   }
@@ -1403,6 +1407,7 @@ void VMatrix::savePMAT(const PPath& pmatfile) const
     pb(i);
   }
   m.saveFieldInfos();      
+  m.saveAllStringMappings();
 }
 
 //////////////
