@@ -874,14 +874,10 @@ void VMatrix::setMetaInfoFrom(const VMatrix* vm)
   for (int i = 0; i < width_; i++) {
     if (!pl_isnumber(fnames[i])) {
       int vm_index = vm->fieldIndex(fnames[i]);
-      if (vm_index >= 0) {
+      if (vm_index >= 0)
         // The source VMatrix has a field with the same name (which is not a
         // number): we can get its string mapping.
         setStringMapping(i, vm->getStringToRealMapping(vm_index));
-        map<string, real> ze_map = vm->getStringToRealMapping(vm_index);
-        int s = ze_map.size();
-        pout << "Copied map of size " << s << endl;
-      }
     }
   }
 }
