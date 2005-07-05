@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.cc,v 1.14 2005/04/12 15:08:21 tihocan Exp $
+   * $Id$
    ******************************************************* */
 
 #include "BootstrapVMatrix.h"
@@ -46,10 +46,8 @@ using namespace std;
 /** BootstrapVMatrix **/
 
 PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
-    "A VMatrix that sees a bootstrap subset of its parent VMatrix.\n"
-    "This is not a real bootstrap since a sample can only appear once."
-    , 
-    ""
+    "A VMatrix that sees a bootstrap subset of its parent VMatrix.",
+    "Note that this is not a real bootstrap since a sample can only appear once."
 );
 
 //////////////////////
@@ -57,16 +55,18 @@ PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
 //////////////////////
 BootstrapVMatrix::BootstrapVMatrix()
 : frac(0.6667),
+  n_elems(-1),
   seed(0),
   shuffle(false)
 {}
 
-BootstrapVMatrix::BootstrapVMatrix(VMat m, real frac, bool shuffle)
+BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac, bool the_shuffle)
+: frac(the_frac),
+  n_elems(-1),
+  seed(0),
+  shuffle(the_shuffle)
 {
-  this->frac = frac;
-  this->seed = 0;
   this->source = m;
-  this->shuffle = shuffle;
   build();
 }
 
@@ -80,6 +80,9 @@ void BootstrapVMatrix::declareOptions(OptionList &ol)
 
     declareOption(ol, "frac", &BootstrapVMatrix::frac, OptionBase::buildoption,
         "The fraction of elements we keep.");
+
+    declareOption(ol, "n_elems", &BootstrapVMatrix::n_elems, OptionBase::buildoption,
+        "The absolute number of elements we keep (will override 'frac' if provided).");
 
     declareOption(ol, "seed", &BootstrapVMatrix::seed, OptionBase::buildoption,
         "The random generator seed (-1 = initialized from clock, 0 = no initialization).");
@@ -114,10 +117,10 @@ void BootstrapVMatrix::build_()
     else if (seed != 0)
       PLERROR("In BootstrapVMatrix::build_ - The seed must be either -1 or >= 0");
     shuffleElements(indices);
-    indices = indices.subVec(0,int(frac * source.length()));
-    if (!shuffle) {
+    int n = (n_elems >= 0) ? n_elems : int(round(frac * source.length()));
+    indices = indices.subVec(0, n);
+    if (!shuffle)
       sortElements(indices);
-    }
     // Because we changed the indices, a rebuild may be needed.
     inherited::build();
   }
