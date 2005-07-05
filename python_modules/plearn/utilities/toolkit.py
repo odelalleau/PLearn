@@ -371,7 +371,7 @@ def version( project_path, build_list ):
 
     return [ major, minor, revision, plearn_version ]
 
-def vsystem( cmd, prefix='*****' ):
+def vsystem( cmd, prefix='+++' ):
     print prefix, cmd
     os.system( cmd )
 

@@ -2,17 +2,9 @@ import copy, os, time
 import plearn.utilities.toolkit as toolkit
 
 from plearn.pyplearn.pyplearn       import generate_expdir
-from plearn.pyplearn.plearn_repr    import plearn_repr
+from plearn.pyplearn.plearn_repr    import plearn_repr, python_repr
 from plearn.pyplearn.PyPLearnObject import PyPLearnObject
 from plearn.utilities.Bindings      import *
-
-__all__ = [
-    ## Helper functions
-    "option_value_split",
-
-    ## Main class
-    "Experiment"
-    ]
 
 rhs_casts = [ int , float ]
 
@@ -53,16 +45,20 @@ def option_value_split( s, sep="=" ):
 
 class ExpKey( Bindings ):
     def __init__( self, keysrc ):
+        expkey = []
         if isinstance( keysrc, list ):
-            expkey = [ option_value_split( key ) for key in keysrc ]
-        elif isinstance( keysrc, str ):
-            expkey = [ option_value_split( line ) for line in file(keysrc, "r") ]
+            if keysrc and isinstance( keysrc[0], tuple ):
+                expkey = keysrc
+            else:
+                expkey = [ option_value_split( key ) for key in keysrc ]
+        elif isinstance( keysrc, str ) and os.path.exists( keysrc ):
+            expkey = [ option_value_split( line ) for line in file(keysrc, "r") ]        
         Bindings.__init__( self, expkey )
 
 class Experiment(PyPLearnObject):
     ##
     # Options
-    path   = None
+    path    = None
     expkey  = None
             
     ##
@@ -84,9 +80,10 @@ class Experiment(PyPLearnObject):
 
         # Load from scratch and cache
         exp       = cls( path = path )
-        cachefile = open( cached, 'w' )
-        print >>cachefile, str(exp)
-        cachefile.close()
+        if not exp.running():
+            cachefile = open( cached, 'w' )
+            print >>cachefile, repr(exp)
+            cachefile.close()
         
         return exp        
     load = classmethod( load )
@@ -112,8 +109,30 @@ class Experiment(PyPLearnObject):
     def __init__( self, **overrides ):
         PyPLearnObject.__init__( self, **overrides )
         if self.expkey is None:
-            expkey = ExpKey( os.path.join( self.path, self._metainfos_fname ) )
+            self.expkey = ExpKey( os.path.join( self.path, self._metainfos_fname ) )
         
+    def __cmp__( self, other ):
+        if self.path == other.path:
+            return 0
+
+        other_it = other.expkey.iteritems()
+        for item in self.expkey.iteritems():
+            try:
+                compare = cmp( item, other_it.next() )                
+                if compare != 0:
+                    return compare
+            except StopIteration:
+                return 1 ## >
+                
+        ## Non-Positive ( < or == )
+        return len(self.expkey) - len(other.expkey)
+
+    def __str__( self ):
+        s = '%s\n' % self.path
+        for key, value in self.expkey.iteritems():
+            s += '    %s= %s\n' % (key.ljust(30), value)
+        return s
+
     def is_matched( self, expkey ):
         # Always matching empty expkey
         if not expkey:
@@ -133,8 +152,9 @@ class Experiment(PyPLearnObject):
             lhs in self.expkey and \
             ( rhs is None or self.expkey[lhs]==rhs )                       
 
-        # User should probably become aware of the concept of ExpKey... For now:
-        expkey = ExpKey( expkey )
+        # User should probably become aware of the concept of ExpKey.
+        if not isinstance( expkey, ExpKey ): 
+            expkey = ExpKey( expkey )
 
         # All key element must match (match_predicate)
         for lhs, rhs in expkey.iteritems():
@@ -144,19 +164,5 @@ class Experiment(PyPLearnObject):
         # All key element matched
         return True
 
-    def __cmp__( self, other ):
-        if self.path == other.path:
-            return 0
-
-        other_it = other.expkey.iteritems()
-        for item in self.expkey.iteritems():
-            try:
-                compare = cmp( item, other_it.next() )                
-                if compare != 0:
-                    return compare
-            except StopIteration:
-                return 1 ## >
-                
-        ## Non-Positive ( < or == )
-        return len(self.expkey) - len(other.expkey)
-    
+    def running( self ):
+        return not self.expkey

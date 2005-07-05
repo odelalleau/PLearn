@@ -19,18 +19,66 @@ __version_id__ = '$Id$'
 import new, os, sys
 from Experiment import *
 from plearn.utilities.moresh              import *
+from plearn.utilities.toolkit             import vsystem
 from plearn.utilities.ModeAndOptionParser import *
 
-class XpMode( Mode ):
-    def __init__( self, targets, options ):        
-        self.routine( targets, options, Experiment.match( targets ) )
+PYPLEARN_CONFIG_FILE = \
+"""[DEFAULT]
+expdir_root: Experiments
+"""
 
-class duplicates( XpMode ):
+class XpMode( Mode ):
+    pass
+
+class mkdir( XpMode ):
+    def option_groups( cls, parser ):    
+        return []
+        # Should be something like...
+        mkdir_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
+                                     "Available under mkdir mode only." )
+
+        mkdir_options.add_option( "--move",
+                                  default = False,
+                                  action  = 'store_true',
+                                  help    = "Should the experiments directory be moved (instead of linked) in "
+                                  "the created mkdir directory."                       
+                                  )
+        
+        return [ mkdir_options ]
+    option_groups = classmethod( option_groups )
+
+    def __init__( self, targets, options ):
+        dirname = targets[0]
+        
+        vsystem( 'mkdir %s'             % dirname )
+        # expdir_root:   vsystem( 'mkdir %s/Experiments' % dirname )
+        # report script: vsystem( 'mkdir %s/Reports'     % dirname )
+
+        config_fname = '%s/.pyplearn' % dirname
+        config_file  = open( config_fname, 'w' )
+        config_file.write( PYPLEARN_CONFIG_FILE )
+        config_file.close()
+        print '+++', config_fname, 'created.'
+        
+        # Laucher script
+        # lname  = '%s/Launch' % dirname
+        # import LaunchScript
+        # vsystem( 'cp %s %s' % (LaunchScript.__file__, lname) )
+        # vsystem( 'chmod u=rwx %s' % lname )
+        
+#
+#  Modes Parsing ExpKeys
+#
+class ExpKeyMode( XpMode ):
+    def __init__( self, targets, options ):        
+        self.routine( ExpKey( targets ), options, Experiment.match( targets ) )
+
+class duplicates( ExpKeyMode ):
     def aliases( cls ):
         return ['dup']
     aliases = classmethod( aliases )
 
-    def routine( self, targets, options, experiments ):
+    def routine( self, expkey, options, experiments ):
         while experiments:
             exp = experiments.pop()
             duplicates = []
@@ -42,7 +90,7 @@ class duplicates( XpMode ):
                 print "Duplicated by", " ".join(duplicates)
                 print
 
-class listdir( XpMode ):
+class listdir( ExpKeyMode ):
     """List matching experiments directory. B{Default mode.}
     
     Among experiments in the current directory, this mode lists the
@@ -61,11 +109,33 @@ class listdir( XpMode ):
         return ['ls']
     aliases = classmethod( aliases )
     
-    def routine( self, targets, options, experiments ):
-        print "\n","\n".join([ str(x) for x in experiments ])
+    def routine( self, expkey, options, experiments ):
+        if options.full or not expkey:
+            print "\n","\n".join([ str(x) for x in experiments ])
+        else:
+            for x in experiments:
+                print '\n', x.path
+                for key, value in x.expkey.iteritems():
+                    if key in expkey: 
+                        print '    %s= %s' % (key.ljust(30), value)
+            
         print "(%d experiments)" % len(experiments)
 
-class group( XpMode ):
+    def option_groups( cls, parser ):
+        listdir_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
+                                     "Available under listdir mode only." )
+
+        listdir_options.add_option( "--full",
+                                  default = False,
+                                  action  = 'store_true',
+                                  help    = "Listdir's default behaviour is to restrict the printing of the metainfos to "
+                                    "the key provided as target. Use this option to print all metainfos."                       
+                                  )
+        
+        return [ listdir_options ]
+    option_groups = classmethod( option_groups )
+
+class group( ExpKeyMode ):
     def option_groups( cls, parser ):
         group_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
                                      "Available under group mode only." )
@@ -77,7 +147,7 @@ class group( XpMode ):
                                   "the created group directory."                       
                                   )
         
-        group_options.add_option( "--move",
+        group_options.add_option( "--name",
                                   default = None,
                                   help    = "The name that should be given the created group directory. The default "
                                   "name is built from the experiment key."                       
@@ -86,7 +156,7 @@ class group( XpMode ):
         return [ group_options ]
     option_groups = classmethod( option_groups )
     
-    def routine( self, targets, options, experiments ):    
+    def routine( self, expkey, options, experiments ):    
         reffunc = os.symlink
         if options.move:
             reffunc = lambda src,dest: os.system("mv %s %s"%(src,dest))        
@@ -107,13 +177,20 @@ class group( XpMode ):
                     reffunc( os.path.join('..',exp.path), exp.path )
                 popd( )
 
-class running( XpMode ):
-    def routine( self, targets, options, experiments ):
-        assert not targets
+class running( ExpKeyMode ):
+    def routine( self, expkey, options, experiments ):
+        assert not expkey
+        r = 0
         for exp in experiments:
-            if not exp.infos:
+            print
+            if exp.running():
+                r += 1
                 print exp
-
+        print( "(%d experiment%s %s running)"
+               % ( r, toolkit.plural(r),
+                   toolkit.plural(r, 'is', 'are') )
+               )
+        
 #            
 #  Main program
 #

@@ -91,6 +91,26 @@ def plearn_repr( obj, indent_level = 0 ):
     
     return __pref_map[ object_id ]
 
+__pyrepr_map = {}
+def python_repr( obj, indent_level = 0 ):
+    """Benefits from the plearn_repr() mechanisms but is strict Python.
+
+    Can be used in objects' __repr__ overloads so that::
+
+        eval( repr(obj) ) == obj
+    """
+    # The current object can be referenced
+    object_id = id( obj )
+
+    # Create a first representation of the object.
+    if object_id not in __pyrepr_map:
+        try:
+            __pyrepr_map[ object_id ] = __plearn_repr( obj, indent_level, python_repr )
+        except TypeError:
+            __pyrepr_map[ object_id ] = repr(obj)
+    
+    return __pyrepr_map[ object_id ]
+    
 #
 #  Helper functions
 #
@@ -116,11 +136,11 @@ def format_list_elements( the_list, element_format, indent_level ):
 
     return elems_as_str
 
-def __plearn_repr( obj, indent_level ):
+def __plearn_repr( obj, indent_level, inner_repr = plearn_repr ):
     """Returns a string that is the PLearn representation of obj."""
 
     if hasattr( obj, 'plearn_repr' ) and callable( obj.plearn_repr ):
-        return obj.plearn_repr( indent_level )
+        return obj.plearn_repr( indent_level, inner_repr )
 
     # Don't use repr for numeric type, so we don't get 0.20000000000000001
     # for 0.2
@@ -132,30 +152,30 @@ def __plearn_repr( obj, indent_level ):
         return '"%s"' % obj.replace('"', r'\"') # toolkit.quote( obj )
 
     elif isinstance(obj, list):
-        elem_format = lambda elem: plearn_repr( elem, indent_level+1 )
+        elem_format = lambda elem: inner_repr( elem, indent_level+1 )
         return '[%s]' % format_list_elements( obj, elem_format, indent_level+1 )
 
     elif isinstance( obj, dict ):
         def elem_format( elem ):
             k, v = elem
-            return '%s : %s' % ( plearn_repr(k, indent_level+1),
-                                 plearn_repr(v, indent_level+1) )        
+            return '%s : %s' % ( inner_repr(k, indent_level+1),
+                                 inner_repr(v, indent_level+1) )        
         return '{%s}' % format_list_elements( obj.items(), elem_format, indent_level+1 )
 
     elif isinstance( obj, tuple ) and len(obj) == 2:
-        return plearn_repr( obj[0], indent_level+1 ) + ':' + plearn_repr( obj[1], indent_level+1 )
+        return inner_repr( obj[0], indent_level+1 ) + ':' + inner_repr( obj[1], indent_level+1 )
 
     # Stands for TMat<real>
     elif isinstance( obj, numarray.numarraycore.NumArray ):
         shape = obj.getshape()
         if len(shape) == 1:
             listrepr = [ elem for elem in obj ]
-            return "%d %s" % ( shape[0], __plearn_repr(listrepr, indent_level+1) )
+            return "%d %s" % ( shape[0], __inner_repr(listrepr, indent_level+1) )
 
         elif len(shape) == 2:
             l,w = shape
             listrepr = [ f for row in obj for f in row ]
-            return "%d %d %s" % ( l, w, __plearn_repr(listrepr, indent_level+1) )
+            return "%d %d %s" % ( l, w, __inner_repr(listrepr, indent_level+1) )
 
         raise ValueError( "Only numarrays of dimension 1 and 2 are understood by plearn_repr." )
             
@@ -163,9 +183,10 @@ def __plearn_repr( obj, indent_level ):
     elif obj is None:
         return "*0;"
 
+    # No specific mechanism known for that type
     raise TypeError( 'Does not know how to handle type %s (obj = %s)'
                      % ( type(obj), str(obj) )
-                     )
+                     )    
     
 
 if __name__ == "__main__":

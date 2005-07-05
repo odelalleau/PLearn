@@ -197,10 +197,13 @@ class ModeAndOptionParser( OptionParser ):
             if mode_name in ['-h', '--help']:
                 self.print_usage()
                 return
-            sys.argv.remove( args.pop(0) )
+            if mode_name in self.supported_modes:
+                sys.argv.remove( args.pop(0) )
+            else:
+                mode_name = default_mode_name
 
         # Sanity check
-        if not self.supported_modes.has_key(mode_name):
+        if not mode_name in self.supported_modes:
             print ( "Mode %s not supported. Type '%s --help' "
                     "for a list of the supported modes."
                     % (mode_name, self.get_prog_name())

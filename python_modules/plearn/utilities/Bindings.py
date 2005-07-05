@@ -1,6 +1,6 @@
 __version_id__ = "$Id$"
 
-from toolkit import quote_if, doc
+from toolkit                     import quote_if, doc
 
 def c_iterator( container, itype="iteritems" ):
     if hasattr(container, itype ):
@@ -64,6 +64,11 @@ class Bindings:
             s = s % (quote_if(key), quote_if(val))
         s += "}"
         return s        
+
+    def __repr__( self ):
+        return "%s([ %s ])" % ( self.__class__.__name__,
+                                ', '.join([ str(item) for item in self.items() ])
+                                )
 
     ## Iterators  ####################################################
     class item_iterator:

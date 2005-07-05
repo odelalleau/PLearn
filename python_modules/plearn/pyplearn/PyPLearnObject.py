@@ -6,7 +6,7 @@ any Python class emulating a PLearn cousin class.
 __version_id__ = "$Id$"
 
 import copy, inspect, re, warnings
-from   plearn.pyplearn.plearn_repr import *
+from   plearn.pyplearn.plearn_repr import plearn_repr, python_repr, format_list_elements
 import plearn.utilities.metaprog   as     metaprog
 
 #
@@ -355,9 +355,13 @@ class PyPLearnObject( object ):
         return plearn_repr( self, indent_level = 0 )
 
     def __repr__( self ):
-        return str( self ) #return self.plearn_repr( 0, lambda mname, member: not mname.startswith('__') )        
+        # The exact protocol is not fixed yet. Repr should be as
+        # plearn_repr but in strict Python... This means that not only
+        # options should be printer but all instance variables. No PLearn
+        # references should be printed.
+        return python_repr( self, indent_level = 0 )
 
-    def plearn_repr( self, indent_level = 0, predicate = option_predicate ):
+    def plearn_repr( self, indent_level = 0, inner_repr = plearn_repr, predicate = option_predicate ):
         """PLearn representation of this python object.
 
         Are considered as options any 'public' instance attributes.
@@ -365,10 +369,11 @@ class PyPLearnObject( object ):
         def elem_format( elem ):
             k, v = elem
             try:
-                return '%s = %s' % ( k, plearn_repr(v, indent_level+1) )
+                return '%s = %s' % ( k, inner_repr(v, indent_level+1) )
             except Exception, e:
-                raise PLOptionError( 'Option %s in %s instance caused an error in plearn_repr: %s\n%s'
-                                     % ( k, self.classname(), e.__class__.__name__, str(e) ) ) 
+                raise PLOptionError( 'Option %s in %s instance caused an error in %s:\n  %s: %s'
+                                     % ( k, self.classname(), inner_repr.__name__,
+                                         e.__class__.__name__, str(e) ) ) 
         
         return "%s(%s)" % ( self.classname(),
                             format_list_elements( self.option_pairs(predicate),
@@ -394,12 +399,12 @@ class PyPLearnList( PyPLearnObject ):
     def _unreferenced( self ):
         return True
     
-    def plearn_repr( self, indent_level = 0 ):
+    def plearn_repr( self, indent_level = 0, inner_repr = plearn_repr ):
         """PLearn representation of this python object.
 
         Are considered as elements any non-None attributes.
         """
-        elem_format = lambda elem: plearn_repr( elem, indent_level+1 )
+        elem_format = lambda elem: inner_repr( elem, indent_level+1 )
         return '[%s]' % format_list_elements( self.to_list(), elem_format, indent_level+1 )
 
     def to_list(self):
