@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UCISpecification.h,v 1.5 2005/05/31 18:36:50 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -73,6 +73,8 @@ public:
   bool header_exists;
   TVec<pair<int,int> > header_fields;
   PPath data_all;
+  PPath data_test;
+  PPath data_train;
   string file_all;
   string file_test;
   string file_train;

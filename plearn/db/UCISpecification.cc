@@ -87,14 +87,20 @@ void UCISpecification::declareOptions(OptionList& ol)
   declareOption(ol, "data_all", &UCISpecification::data_all, OptionBase::buildoption,
       "Filename for the whole dataset.");
 
+  declareOption(ol, "data_train", &UCISpecification::data_train, OptionBase::buildoption,
+      "Filename for the train data.");
+
+  declareOption(ol, "data_test", &UCISpecification::data_test, OptionBase::buildoption,
+      "Filename for the test data.");
+
   declareOption(ol, "file_all", &UCISpecification::file_all, OptionBase::buildoption,
       "DEPRECATED: The filename for the whole dataset");
 
   declareOption(ol, "file_train", &UCISpecification::file_train, OptionBase::buildoption,
-      "The filename for the train data.");
+      "DEPRECATED: The filename for the train data.");
 
   declareOption(ol, "file_test", &UCISpecification::file_test, OptionBase::buildoption,
-      "The filename for the test data.");
+      "DEPRECATED: The filename for the test data.");
 
   declareOption(ol, "format", &UCISpecification::format, OptionBase::buildoption,
       "The format of the dataset file.");
