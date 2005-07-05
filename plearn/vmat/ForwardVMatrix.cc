@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: ForwardVMatrix.cc,v 1.18 2005/02/04 15:09:26 tihocan Exp $
+ * $Id$
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -72,21 +72,10 @@ ForwardVMatrix::build_()
     length_ = vm->length();
     width_ = vm->width();
     writable = vm->isWritable();
-    if(inputsize_ < 0)
-      inputsize_ = vm->inputsize();
-    if(targetsize_ < 0)
-      targetsize_ = vm->targetsize();
-    if(weightsize_ < 0)
-      weightsize_ = vm->weightsize();
-    setMtime(vm->getMtime());
+    setMetaInfoFrom(vm);
     if(vm->hasMetaDataDir())
       setMetaDataDir(vm->getMetaDataDir());
-    // setAlias(vm->getAlias()); // Aliases are now deprecated.
-    //  field_stats = vm->field_stats;
 
-    // copy fieldnames from vm if not set and they look good
-    if(!hasFieldInfos() && (width() == vm->width()) && vm->hasFieldInfos() )
-      setFieldInfos(vm->getFieldInfos());
   } else {
     length_ = 0;
     width_ = 0;
