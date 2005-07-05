@@ -995,9 +995,14 @@ void loadUCIAMat(VMat& data, string file, PP<UCISpecification> uci_spec)
 ////////////////
 void loadUCISet(VMat& data, PP<UCISpecification> uci_spec) {
   assert( uci_spec );
-  if (uci_spec->data_all.isEmpty())
-    PLERROR("In loadUCISet - Need the 'data_all' option to load the set.");
-  loadUCISet(data, uci_spec->data_all.absolute(), uci_spec);
+  if (!uci_spec->data_all.isEmpty())
+    loadUCISet(data, uci_spec->data_all.absolute(), uci_spec);
+  else {
+    VMat data_train, data_test;
+    loadUCISet(data_train, uci_spec->data_train.absolute(), uci_spec);
+    loadUCISet(data_test,  uci_spec->data_test.absolute(),  uci_spec);
+    data = new ConcatRowsVMatrix(data_train, data_test);
+  }
 }
 
 void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec) {
