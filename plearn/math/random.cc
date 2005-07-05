@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.cc,v 1.11 2005/01/24 14:28:04 tihocan Exp $
+   * $Id$
    ******************************************************* */
 
 extern "C" {
@@ -242,7 +242,7 @@ long  get_seed()
        - Returns a uniform random deviate between 0.0 and 1.0
          (exclusive of the endpoint values).
 
-       - Initilized with a negative seed.
+       - Initialized with a negative seed.
   */
 
 real uniform_sample()  
