@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VPLPreprocessedLearner.cc,v 1.4 2005/05/26 15:49:53 chapados Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -98,7 +98,17 @@ void VPLPreprocessedLearner::declareOptions(OptionList& ol)
                 "Program string in VPL language to optain postprocessed output\n"
                 "from the underlying learner's output.\n"
                 "Note that names must be given to the generated values with :fieldname VPL syntax.\n"
-                "An empty string means NO OUTPUT POSTPROCESSING.");
+                "An empty string means NO OUTPUT POSTPROCESSING.\n\n"
+                "Additional Note: when this snippet of VPL starts executing, the\n"
+                "ORIGINAL (not preprocessed) input row is stored in VPL memory, starting\n"
+                "from memory location 0 until inputsize-1 (inclusive).  You can access these\n"
+                "memory locations using VPL instructions of the form:\n"
+                "\n"
+                "    <memory_location> memget\n"
+                "\n"
+                "This lets the output postprocessor use some information from the input\n"
+                "vector to construct the output (e.g. put back some data that was hidden\n"
+                "from the embedded learner.)");
   declareOption(ol, "costs_postproc", &VPLPreprocessedLearner::costs_postproc, OptionBase::buildoption,
                 "Program string in VPL language to optain postprocessed test costs\n"
                 "from the underlying learner's test costs.\n"
@@ -298,6 +308,8 @@ void VPLPreprocessedLearner::computeOutput(const Vec& input, Vec& output) const
   if(output_prg)
     {
       learner_->computeOutput(newinput, pre_output);
+      output_prg.setMemory(input);           // Put original input vector
+                                             // as context for output postproc
       output_prg.run(pre_output, output);
     }
   else
@@ -336,8 +348,11 @@ void VPLPreprocessedLearner::computeOutputAndCosts(const Vec& input, const Vec& 
   else
     learner_->computeOutputAndCosts(input, target, pre_output, pre_costs);
 
-  if(output_prg)
+  if(output_prg) {
+    output_prg.setMemory(input);           // Put original input vector
+                                           // as context for output postproc
     output_prg.run(pre_output, output);
+  }
   else
     output << pre_output;
 
@@ -400,9 +415,16 @@ bool VPLPreprocessedLearner::computeConfidenceFromOutput(
             }
           Vec post_low(d); // postprocesed low
           Vec post_high(d); // postprocessed high
+
+          // Put original input vector as context for output postproc
+          output_prg.setMemory(input);
           output_prg.run(low, post_low);
+
+          // Put original input vector as context for output postproc
+          output_prg.setMemory(input);
           output_prg.run(high, post_high);
-          // now copy post_low and post_high to intervals
+
+          // Now copy post_low and post_high to intervals
           intervals.resize(d);
           for(int k=0; k<d; k++)
             intervals[k] = pair<real,real>(post_low[k],post_high[k]);
