@@ -44,14 +44,13 @@ using namespace std;
 // additional note by Nicolas: they are NOT useless, since this definition
 //   allows their address to be taken, which is sometimes necessary.
 
-template <> const unsigned char  TinyVectorTrait<unsigned char> ::Missing;
-template <> const signed char    TinyVectorTrait<signed char>   ::Missing;
-template <> const char           TinyVectorTrait<char>          ::Missing;
-template <> const unsigned short TinyVectorTrait<unsigned short>::Missing;
-template <> const short          TinyVectorTrait<short>         ::Missing;
-template <> const unsigned int   TinyVectorTrait<unsigned int>  ::Missing;
-template <> const int            TinyVectorTrait<int>           ::Missing;
-
+const unsigned char  TinyVectorTrait<unsigned char> ::Missing;
+const signed char    TinyVectorTrait<signed char>   ::Missing;
+const char           TinyVectorTrait<char>          ::Missing;
+const unsigned short TinyVectorTrait<unsigned short>::Missing;
+const short          TinyVectorTrait<short>         ::Missing;
+const unsigned int   TinyVectorTrait<unsigned int>  ::Missing;
+const int            TinyVectorTrait<int>           ::Missing;
 
 } // end of namespace PLearn
 
