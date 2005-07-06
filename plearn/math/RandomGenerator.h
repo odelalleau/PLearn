@@ -65,7 +65,7 @@ protected:
   boost::mt19937 rgen;
 
   //! The underlying Boost distribution for uniform sampling.
-  boost::uniform_01<boost::mt19937> uniform_01;
+  boost::uniform_01<boost::mt19937>* uniform_01;
 
   //! The underlying Boost distribution for normal sampling.
   boost::normal_distribution<> normal_distribution;
@@ -89,8 +89,11 @@ public:
   // * Constructors *
   // ****************
 
-  //! Default constructor.
-  RandomGenerator();
+  //! Constructor from a given seed.
+  RandomGenerator(long seed = -1);
+
+  //! Destructor to free memory.
+  virtual ~RandomGenerator();
 
   // ******************
   // * Object methods *

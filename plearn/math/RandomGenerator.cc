@@ -57,12 +57,13 @@ using namespace std;
 /////////////////////
 // RandomGenerator //
 /////////////////////
-RandomGenerator::RandomGenerator() 
-: rgen(),
-  uniform_01(rgen),
-  the_seed(0),
-  seed_(-1)
-{}
+RandomGenerator::RandomGenerator(long seed)
+: the_seed(0),
+  seed_(seed)
+{
+  // For convenience, we systematically call build() in the constructor.
+  build();
+}
 
 PLEARN_IMPLEMENT_OBJECT(RandomGenerator,
     "Perform a number of random operations, including generating random numbers",
@@ -123,7 +124,7 @@ void RandomGenerator::build_()
 // gaussian_01 //
 /////////////////
 real RandomGenerator::gaussian_01() {
-  return real(normal_distribution(rgen));
+  return real(normal_distribution(*uniform_01));
 }
 
 ///////////////////////
@@ -162,10 +163,13 @@ void RandomGenerator::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 /////////////////
 void RandomGenerator::manual_seed(long x)
 {
-  if (x >= long(UINT32_MAX))
-    PLERROR("In RandomGenerator::manual_seed - The seed cannot be more than %d", UINT32_MAX);
   the_seed = uint32_t(x);
   rgen.seed(the_seed);
+  if (uniform_01) {
+    delete uniform_01;
+    uniform_01 = 0;
+  }
+  uniform_01 = new boost::uniform_01<boost::mt19937>(rgen);
 }
 
 ////////////////////////
@@ -187,7 +191,6 @@ int RandomGenerator::multinomial_sample(const Vec& distribution) {
   return i;
 }
 
-
 //////////
 // seed //
 //////////
@@ -207,7 +210,17 @@ void RandomGenerator::seed()
 // uniform_sample //
 ////////////////////
 real RandomGenerator::uniform_sample() {
-  return real(uniform_01());
+  return real((*uniform_01)());
+}
+
+///////
+// ~ //
+///////
+RandomGenerator::~RandomGenerator() {
+  if (uniform_01) {
+    delete uniform_01;
+    uniform_01 = 0;
+  }
 }
 
 } // end of namespace PLearn
