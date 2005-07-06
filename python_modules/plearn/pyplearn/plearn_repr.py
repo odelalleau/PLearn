@@ -4,7 +4,8 @@ from plearn.utilities.metaprog import public_attributes
 from plearn.utilities.Bindings import Bindings
 
 __unreferenced_types = [ int ,   float , str ,
-                         tuple , list ,  dict
+                         tuple , list ,  dict,
+                         numarray.numarraycore.NumArray
                          ]
 
 #
@@ -170,12 +171,12 @@ def __plearn_repr( obj, indent_level, inner_repr = plearn_repr ):
         shape = obj.getshape()
         if len(shape) == 1:
             listrepr = [ elem for elem in obj ]
-            return "%d %s" % ( shape[0], __inner_repr(listrepr, indent_level+1) )
+            return "%d %s" % ( shape[0], inner_repr(listrepr, indent_level+1) )
 
         elif len(shape) == 2:
             l,w = shape
             listrepr = [ f for row in obj for f in row ]
-            return "%d %d %s" % ( l, w, __inner_repr(listrepr, indent_level+1) )
+            return "%d %d %s" % ( l, w, inner_repr(listrepr, indent_level+1) )
 
         raise ValueError( "Only numarrays of dimension 1 and 2 are understood by plearn_repr." )
             
