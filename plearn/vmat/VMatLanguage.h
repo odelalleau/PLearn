@@ -59,87 +59,94 @@ using namespace std;
 
 */
 
-  class VMatLanguage: public Object
-  {
-    typedef Object inherited;
+class VMatLanguage: public Object
+{
+  typedef Object inherited;
 
-    VMat vmsource;
-    TVec<string> srcfieldnames;
-    TVec<string> outputfieldnames;
-    TVec<int> program; 
-    TVec<RealMapping> mappings;
-    mutable Vec pstack;
-    mutable Vec myvec;
-    mutable Vec mem;
+  VMat vmsource;
+  TVec<string> srcfieldnames;
+  TVec<string> outputfieldnames;
+  TVec<int> program; 
+  TVec<RealMapping> mappings;
+  mutable Vec pstack;
+  mutable Vec myvec;
+  mutable Vec mem;
 
-    // maps opcodes strings to opcodes numbers
-    static map<string, int> opcodes;
-    
-    //! builds the opcodes map if it does not already exist
-    static void build_opcodes_map();
+  // maps opcodes strings to opcodes numbers
+  static map<string, int> opcodes;
+  
+  //! builds the opcodes map if it does not already exist
+  static void build_opcodes_map();
 
-    // generates bytecode from a preprocessed text sourcecode
-    void generateCode(const string& processed_sourcecode);
-    void generateCode(PStream& processed_sourcecode);
+  // generates bytecode from a preprocessed text sourcecode
+  void generateCode(const string& processed_sourcecode);
+  void generateCode(PStream& processed_sourcecode);
 
-    // This function takes raw VPL code and returns the preprocessed sourcecode 
-    // along with the defines and fieldnames it generated.
-    void preprocess(PStream& in,                   map<string, string>& defines,
-                    string&  processed_sourcecode, vector<string>&      fieldnames );
+  // This function takes raw VPL code and returns the preprocessed sourcecode 
+  // along with the defines and fieldnames it generated.
+  void preprocess(PStream& in,                   map<string, string>& defines,
+                  string&  processed_sourcecode, vector<string>&      fieldnames );
     
 public:
-    string sourcecode;
+  string sourcecode;
 
-    VMatLanguage():vmsource(Mat()) { build_(); }
-    VMatLanguage(VMat vmsrc);
+  VMatLanguage():vmsource(Mat()) { build_(); }
+  VMatLanguage(VMat vmsrc);
 
-    PLEARN_DECLARE_OBJECT(VMatLanguage);
-    static void declareOptions(OptionList &ol);
+  PLEARN_DECLARE_OBJECT(VMatLanguage);
+  static void declareOptions(OptionList &ol);
 
-    virtual void build();
+  virtual void build();
 
-    //! Executes the program on the srcvec, copy resulting stack to result
-    //! rowindex is only there for instruction 'rowindex' that pushes it on the stack
-    virtual void run(const Vec& srcvec, const Vec& result, int rowindex=-1) const;
+  //! Executes the program on the srcvec, copy resulting stack to result
+  //! rowindex is only there for instruction 'rowindex' that pushes it on the stack
+  virtual void run(const Vec& srcvec, const Vec& result, int rowindex=-1) const;
 
-    //! Gets the row with the given rowindex from the vmsource VMat
-    //! and applies program to it.
-    void run(int rowindex, const Vec& result) const;
+  //! Gets the row with the given rowindex from the vmsource VMat
+  //! and applies program to it.
+  void run(int rowindex, const Vec& result) const;
 
-    void setSource(VMat the_source);
-    void setSourceFieldNames(TVec<string> the_srcfieldnames);
+  void setSource(VMat the_source);
+  void setSourceFieldNames(TVec<string> the_srcfieldnames);
 
-    inline TVec<string> getOutputFieldNames() const 
+  inline TVec<string> getOutputFieldNames() const 
     { return outputfieldnames; }
 
-    // from the outside, use the next 3 high-level functions
-    /////////////////////////////////////////////////////////
+  // from the outside, use the next 3 high-level functions
+  /////////////////////////////////////////////////////////
 
-    //! takes a string, filename, or PStream and generate the bytecode from it
-    //! On exit, fieldnames will contain all the fieldnames of the resulting matrix  
-    //! If the program accesses fields by name, you must either have called 
-    //! setSource OR setSourceFieldNames prior to calling one of the compile... methods.
-    void compileStream(PStream &in, vector<string>& fieldnames);
-    void compileString(const string & code, vector<string>& fieldnames);
-    void compileFile(const PPath& filename, vector<string>& fieldnames);
-    void compileString(const string & code, TVec<string>& fieldnames);
+  //! takes a string, filename, or PStream and generate the bytecode from it
+  //! On exit, fieldnames will contain all the fieldnames of the resulting matrix  
+  //! If the program accesses fields by name, you must either have called 
+  //! setSource OR setSourceFieldNames prior to calling one of the compile... methods.
+  void compileStream(PStream &in, vector<string>& fieldnames);
+  void compileString(const string & code, vector<string>& fieldnames);
+  void compileFile(const PPath& filename, vector<string>& fieldnames);
+  void compileString(const string & code, TVec<string>& fieldnames);
 
-    inline operator bool() const
+  inline operator bool() const
     { return program.length()>0; }
     
-    //! Make it an empty program by clearing outputfieldnames, program, mappings
-    void clear();
+  //! Make it an empty program by clearing outputfieldnames, program, mappings
+  void clear();
 
-    int pstackSize() const {return pstack.size();}
-
-    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+  int pstackSize() const {return pstack.size();}
 
 
-    // set this to true when debugging. Will dump the preprocessed code when you call compilexxxx
-    static bool output_preproc;
-  private:
-      void build_();
-  };
+  //! Return the contents of the memory buffer
+  Vec getMemory() const { return mem; }
+
+  //! Set the contents of the memory buffer
+  void setMemory(const Vec& new_mem) const;
+  
+  
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+  // set this to true when debugging. Will dump the preprocessed code when you call compilexxxx
+  static bool output_preproc;
+private:
+  void build_();
+};
 
 DECLARE_OBJECT_PTR(VMatLanguage);
 
@@ -148,37 +155,37 @@ DECLARE_OBJECT_PTR(VMatLanguage);
   Construct a PreprocessingVMatrix by specifying the source VMat and a string containing the VPL code to process each row
 */
 
-  class PreprocessingVMatrix: public RowBufferedVMatrix
-  {
-    typedef RowBufferedVMatrix inherited;
+class PreprocessingVMatrix: public RowBufferedVMatrix
+{
+  typedef RowBufferedVMatrix inherited;
 
-  protected:
-    VMat source;
-    VMatLanguage program;
-    Vec sourcevec;
-    vector<string> fieldnames;    
+protected:
+  VMat source;
+  VMatLanguage program;
+  Vec sourcevec;
+  vector<string> fieldnames;    
 
-  public:
-    PreprocessingVMatrix(){}
-    PreprocessingVMatrix(VMat the_source, const string& program_string);
+public:
+  PreprocessingVMatrix(){}
+  PreprocessingVMatrix(VMat the_source, const string& program_string);
 
-    PLEARN_DECLARE_OBJECT(PreprocessingVMatrix);
+  PLEARN_DECLARE_OBJECT(PreprocessingVMatrix);
 
-    virtual void build();
+  virtual void build();
 
-  protected:
+protected:
 
-    virtual void getNewRow(int i, const Vec& v) const;
-    static void declareOptions(OptionList &ol);
+  virtual void getNewRow(int i, const Vec& v) const;
+  static void declareOptions(OptionList &ol);
 
-  private:
+private:
 
-      void build_();
-  };
+    void build_();
+};
 
-  DECLARE_OBJECT_PTR(PreprocessingVMatrix);
+DECLARE_OBJECT_PTR(PreprocessingVMatrix);
 
-  time_t getDateOfCode(const string& codefile);
+time_t getDateOfCode(const string& codefile);
 
 } // end of namespace PLearn
 

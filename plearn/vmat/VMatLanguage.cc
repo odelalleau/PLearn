@@ -1096,6 +1096,12 @@ void VMatLanguage::run(int rowindex, const Vec& result) const
   run(myvec, result, rowindex);
 }
 
+void VMatLanguage::setMemory(const Vec& new_mem) const
+{
+  mem.resize(new_mem.size());
+  mem << new_mem;
+}
+
 void VMatLanguage::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);

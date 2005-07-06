@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.20 2005/05/19 18:03:26 tihocan Exp $
+   * $Id$
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -217,6 +217,8 @@ void PLearnerOutputVMatrix::build_()
       PLERROR("In PLearnerOutputVMatrix::build_ - The 'data' matrix has a negative inputsize");
     if (data->targetsize() < 0)
       PLERROR("In PLearnerOutputVMatrix::build_ - The 'data' matrix has a negative targetsize");
+    if (data->weightsize() < 0)
+      PLERROR("In PLearnerOutputVMatrix::build_ - The 'data' matrix has a negative weightsize");
     learner_input = row.subVec(0,data->inputsize());
     learner_target = row.subVec(data->inputsize(),data->targetsize());
     non_input_part_of_data_row = row.subVec(data->inputsize(),data->width()-data->inputsize());
@@ -227,8 +229,8 @@ void PLearnerOutputVMatrix::build_()
     if (put_raw_input) 
       inputsize_ += data->inputsize();
     if (put_non_input) {
-      targetsize_ = data->targetsize();
-      weightsize_ = data->weightsize();
+      targetsize_ = max(0, data->targetsize());   // might be -1, careful
+      weightsize_ = max(0, data->weightsize());   // might be -1, careful
       width_ = inputsize_ + targetsize_ + weightsize_;
     } else {
       targetsize_ = 0;
