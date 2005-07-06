@@ -6,7 +6,7 @@ from   programs                      import PyTestUsageError
 
 import plearn.utilities.ppath        as     ppath
 import plearn.utilities.toolkit      as     toolkit
-from   plearn.utilities.verbosity    import *
+from   plearn.utilities.verbosity    import vprint
 
 class Resources:
     md5_mappings    = {}
@@ -152,7 +152,8 @@ class IntelligentDiff:
             raise RuntimeError(
                 "%s and %s are not links, nor directories, nor files." % (bench, other)
                 )
-        
+
+        vprint( ''.join(self.differences), priority=3 )
         return self.differences
 
     def diff_directories(self, bench, other):

@@ -91,7 +91,7 @@ class Routine( PyTestObject ):
 
     ## Overrides run and succeeded
     def start(self):
-        self.format_n_print("LAUCHED %s" % self.classname())
+        self.format_n_print("LAUNCHED %s" % self.classname())
         self.format_n_print("%s" % self.test.get_name())
         vprint(self.test.formatted_description(), 1)
         
