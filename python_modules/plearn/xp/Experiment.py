@@ -1,9 +1,11 @@
 import copy, os, time
 import plearn.utilities.toolkit as toolkit
 
+from plearn                         import pyplearn
 from plearn.pyplearn.pyplearn       import generate_expdir
 from plearn.pyplearn.plearn_repr    import plearn_repr, python_repr
 from plearn.pyplearn.PyPLearnObject import PyPLearnObject
+from plearn.utilities.moresh        import *
 from plearn.utilities.Bindings      import *
 
 rhs_casts = [ int , float ]
@@ -12,7 +14,7 @@ def get_inexistence_predicate( expkey, cache_once=True ):
     """Returns a predicate checking that the experiment doesn't exist."""
     def inexistence_predicate( arguments ):
         if not (cache_once and Experiment._cached):
-            Experiment.cache_experiments( expkey )
+            Experiment.cache_experiments( )
         matches = Experiment.match( arguments )
         return len( matches ) == 0
 
@@ -44,7 +46,7 @@ def option_value_split( s, sep="=" ):
     return (lhs, rhs)
 
 class ExpKey( Bindings ):
-    def __init__( self, keysrc ):
+    def __init__( self, keysrc=[] ):
         expkey = []
         if isinstance( keysrc, list ):
             if keysrc and isinstance( keysrc[0], tuple ):
@@ -80,22 +82,30 @@ class Experiment(PyPLearnObject):
 
         # Load from scratch and cache
         exp       = cls( path = path )
-        if not exp.running():
-            cachefile = open( cached, 'w' )
-            print >>cachefile, repr(exp)
-            cachefile.close()
+
+        # CACHING DISABLED!!!
+        # if not exp.running():
+        #     cachefile = open( cached, 'w' )
+        #     print >>cachefile, repr(exp)
+        #     cachefile.close()
         
         return exp        
     load = classmethod( load )
 
-    def cache_experiments( cls, dirlist=None ):
-        if dirlist is None:
+    def cache_experiments( cls ):
+        exproot = pyplearn.config.get_option( 'EXPERIMENTS', 'expdir_root' )
+        if exproot:
+            if not os.path.exists( exproot ):
+                cls._cached = []                        
+                return
+            dirlist = os.listdir( exproot )
+        else:
             dirlist = os.listdir( os.getcwd() )            
 
         cls._cached = []
         for fname in dirlist:
             if fname.startswith( cls._expdir_prefix ):                
-                x = cls.load( fname )
+                x = cls.load( os.path.join(exproot, fname) )
                 cls._cached.append( x )            
         cls._cached.sort()
     cache_experiments = classmethod( cache_experiments )
@@ -128,9 +138,29 @@ class Experiment(PyPLearnObject):
         return len(self.expkey) - len(other.expkey)
 
     def __str__( self ):
+        return self.toString()
+
+    def getKey( self, expkey = None ):
+        if expkey is None:
+            return self.expkey
+
+        subset = ExpKey()
+        for key in expkey:
+            if key in self.expkey:
+                subset[key] = self.expkey[key]
+            else:
+                subset[key] = None
+        return subset
+        
+    def toString( self, expkey=None ):        
+        restriction = lambda key: True
+        if expkey is not None:
+            restriction = lambda key: key in expkey
+            
         s = '%s\n' % self.path
         for key, value in self.expkey.iteritems():
-            s += '    %s= %s\n' % (key.ljust(30), value)
+            if restriction(key): 
+                s += '    %s= %s\n' % (key.ljust(30), value)
         return s
 
     def is_matched( self, expkey ):
