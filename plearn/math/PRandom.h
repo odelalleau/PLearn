@@ -155,9 +155,8 @@ public:
   //! Build object.
   //! Note: one should not have to call build() on a PRandom object, as it is
   //! called directly in the constructor and in the time_seed() and manual_seed()
-  //! methods. Be careful that calling build() will re-initialize the random
-  //! number generator, unless the seed has been fixed by the 'fixed_seed'
-  //! option.
+  //! methods. Don't forget that calling build() will re-initialize the random
+  //! number generator.
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy

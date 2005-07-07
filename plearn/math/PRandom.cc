@@ -130,8 +130,6 @@ void PRandom::build_()
       if (seed_ != fixed_seed)
         PLERROR("In PRandom::build_ - You are not allowed to modify the seed of "
                 "a PRandom object whose seed has been fixed");
-      // No need to re-initialize the random number generator.
-      return;
     }
   }
   if (seed_ == -1)
