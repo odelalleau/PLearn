@@ -3,7 +3,7 @@ MemoryVMatrix(
     BootstrapVMatrix( 
       shuffle = 1
       frac = 1
-      seed = 1000000
+      own_seed = 12345678
       source =
         ShiftAndRescaleVMatrix( 
           underlying_vmat =
