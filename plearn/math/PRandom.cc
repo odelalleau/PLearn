@@ -58,7 +58,9 @@ using namespace std;
 // PRandom //
 /////////////
 PRandom::PRandom(long seed)
-: the_seed(0),
+: uniform_01(0),
+  normal_distribution(0),
+  the_seed(0),
   fixed_seed(0),
   seed_(seed)
 {
@@ -168,7 +170,8 @@ PP<PRandom> PRandom::common(bool random_seed)
 // gaussian_01 //
 /////////////////
 real PRandom::gaussian_01() {
-  return real(normal_distribution(*uniform_01));
+  ensure_normal_distribution();
+  return real((*normal_distribution)(*uniform_01));
 }
 
 ///////////////////////
@@ -212,10 +215,14 @@ void PRandom::manual_seed_(long x)
   the_seed = uint32_t(x);
   rgen.seed(the_seed);
   if (uniform_01) {
+    // The boost::uniform_01 object must be re-constructed from the updated
+    // random number generator.
     delete uniform_01;
     uniform_01 = 0;
   }
-  uniform_01 = new boost::uniform_01<boost::mt19937>(rgen);
+  // Systematically construct the uniform_01 member, which is the basis for most
+  // of the random operations.
+  ensure_uniform_01();
 }
 
 ////////////////////////
@@ -275,6 +282,10 @@ PRandom::~PRandom() {
   if (uniform_01) {
     delete uniform_01;
     uniform_01 = 0;
+  }
+  if (normal_distribution) {
+    delete normal_distribution;
+    normal_distribution = 0;
   }
 }
 

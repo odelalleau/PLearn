@@ -68,7 +68,7 @@ protected:
   boost::uniform_01<boost::mt19937>* uniform_01;
 
   //! The underlying Boost distribution for normal sampling.
-  boost::normal_distribution<> normal_distribution;
+  boost::normal_distribution<>* normal_distribution;
 
   //! The actual seed used by the random number generator.
   uint32_t the_seed;
@@ -114,9 +114,26 @@ protected:
   //! Initialize the random number generator with the CPU time.
   //! This is an internal method that does not update the 'seed' option.
   void time_seed_();
+
   //! Initialize the random number generator with the given long 'x'.
   //! This is an internal method that does not update the 'seed' option.
   void manual_seed_(long x);
+
+  //! Ensure the 'uniform_01' member is correctly initialized.
+  //! This method is called in build(), so it should not be needed to call it
+  //! from anywhere else.
+  inline void ensure_uniform_01() {
+    if (!uniform_01)
+      uniform_01 = new boost::uniform_01<boost::mt19937>(rgen);
+  }
+
+  //! Ensure the 'normal_distribution' member is correctly initialized.
+  //! This method should be called before using the 'normal_distribution'
+  //! member, as its presence is not always guaranteed.
+  inline void ensure_normal_distribution() {
+    if (!normal_distribution)
+      normal_distribution = new boost::normal_distribution<>();
+  }
 
 public:
 
