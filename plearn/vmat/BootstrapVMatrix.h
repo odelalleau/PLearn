@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
 // PLearn (A C++ Machine Learning Library)
-// Copyright (C) 2003 Olivier Delalleau
+// Copyright (C) 2003-2005 Olivier Delalleau
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -43,6 +43,7 @@
 #define BootstrapVMatrix_INC
 
 #include "SelectRowsVMatrix.h"
+#include <plearn/math/PRandom.h>
 
 namespace PLearn {
 using namespace std;
@@ -51,11 +52,17 @@ class BootstrapVMatrix: public SelectRowsVMatrix
 {
   typedef SelectRowsVMatrix inherited;
 
+protected:
+
+  //! Random number generator for shuffling the data.
+  PRandom rgen;
+
 public:
 
   //! Public build options
   real frac;
   int n_elems;
+  long own_seed;
   long seed;
   bool shuffle;
 

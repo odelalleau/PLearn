@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
 // PLearn (A C++ Machine Learning Library)
-// Copyright (C) 2003 Olivier Delalleau
+// Copyright (C) 2003-2005 Olivier Delalleau
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -56,6 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
 BootstrapVMatrix::BootstrapVMatrix()
 : frac(0.6667),
   n_elems(-1),
+  own_seed(-2), // -2 = hack value while 'seed' is still there
   seed(0),
   shuffle(false)
 {}
@@ -63,6 +64,7 @@ BootstrapVMatrix::BootstrapVMatrix()
 BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac, bool the_shuffle)
 : frac(the_frac),
   n_elems(-1),
+  own_seed(-2),
   seed(0),
   shuffle(the_shuffle)
 {
@@ -84,8 +86,12 @@ void BootstrapVMatrix::declareOptions(OptionList &ol)
     declareOption(ol, "n_elems", &BootstrapVMatrix::n_elems, OptionBase::buildoption,
         "The absolute number of elements we keep (will override 'frac' if provided).");
 
-    declareOption(ol, "seed", &BootstrapVMatrix::seed, OptionBase::buildoption,
+    declareOption(ol, "own_seed", &BootstrapVMatrix::own_seed, OptionBase::buildoption,
         "The random generator seed (-1 = initialized from clock, 0 = no initialization).");
+
+    declareOption(ol, "seed", &BootstrapVMatrix::seed, OptionBase::buildoption,
+        "DEPRECATED: The random generator seed (-1 = initialized from clock, 0 = no initialization).\n"
+        "Warning: this is a global seed that may affect other PLearn objects.");
 
     inherited::declareOptions(ol);
 
@@ -110,13 +116,22 @@ void BootstrapVMatrix::build_()
 {
   if (source) {
     indices = TVec<int>(0, source.length()-1, 1); // Range-vector
-    if (seed == -1)
-      PLearn::seed();
-    else if (seed > 0)
-      manual_seed(seed);
-    else if (seed != 0)
-      PLERROR("In BootstrapVMatrix::build_ - The seed must be either -1 or >= 0");
-    shuffleElements(indices);
+    if (seed != 0)
+      own_seed = -2;
+    if (own_seed == -2) {
+      PLDEPRECATED("In BootstrapVMatrix::build_ - You are using the deprecated option 'seed', "
+                   "the 'own_seed' option (the one you should use) will thus be ignored");
+      if (seed == -1)
+        PLearn::seed();
+      else if (seed > 0)
+        manual_seed(seed);
+      else if (seed != 0)
+        PLERROR("In BootstrapVMatrix::build_ - The seed must be either -1 or >= 0");
+      shuffleElements(indices);
+    } else {
+      rgen.manual_seed(own_seed);
+      rgen.shuffleElements(indices);
+    }
     int n = (n_elems >= 0) ? n_elems : int(round(frac * source.length()));
     indices = indices.subVec(0, n);
     if (!shuffle)
