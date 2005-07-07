@@ -27,7 +27,7 @@ all input columns, for the whole set (this means the same normalization is
 applied for data_all_norm, data_train_norm and data_test_norm).
 
 Some datasets have a shuffled version, obtained by applying a BootstrapVMatrix
-with a shuffle seed of 1000000. This is usually done when the original dataset
+with a shuffle seed of 12345678. This is usually done when the original dataset
 exhibits a particular order of samples which could introduce some bias in the
 learning algorithm.
 
