@@ -52,7 +52,7 @@ PLEARN_IMPLEMENT_OBJECT(
   "through the constant_output option)");
 
 ConstantVMatrix::ConstantVMatrix() 
-  : inherited(), constant_output(0.0)
+  : inherited(), constant_output(MISSING_VALUE)
 { }
 
 ConstantVMatrix::ConstantVMatrix(int the_length, int the_width, real constant)

@@ -65,11 +65,12 @@ public:
 
   //#####  Object Methods  ##################################################
   
-  //! Default constructor
+  //! Default constructor (default return value is missing value)
   ConstantVMatrix();
 
   //! Initialize with a given size
-  ConstantVMatrix(int the_length, int the_width, real constant_output);
+  ConstantVMatrix(int the_length, int the_width,
+                  real constant_output = MISSING_VALUE);
 
 private: 
 
