@@ -58,8 +58,10 @@ using namespace std;
 // PRandom //
 /////////////
 PRandom::PRandom(long seed)
-: uniform_01(0),
+:
+  exponential_distribution(0),
   normal_distribution(0),
+  uniform_01(0),
   the_seed(0),
   fixed_seed(0),
   seed_(seed)
@@ -165,6 +167,15 @@ PP<PRandom> PRandom::common(bool random_seed)
     return gen_const;
   }
 }
+
+////////////////
+// exp_sample //
+////////////////
+real PRandom::exp_sample() {
+  ensure_exponential_distribution();
+  return real((*exponential_distribution)(*uniform_01));
+}
+
 
 /////////////////
 // gaussian_01 //
@@ -286,6 +297,10 @@ PRandom::~PRandom() {
   if (normal_distribution) {
     delete normal_distribution;
     normal_distribution = 0;
+  }
+  if (exponential_distribution) {
+    delete exponential_distribution;
+    exponential_distribution = 0;
   }
 }
 

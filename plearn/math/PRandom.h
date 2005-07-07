@@ -46,6 +46,7 @@
 #define PRandom_INC
 
 #include <plearn/base/Object.h>
+#include <boost/random/exponential_distribution.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/uniform_01.hpp>
@@ -64,11 +65,14 @@ protected:
   //! The underlying Boost random number generator used.
   boost::mt19937 rgen;
 
-  //! The underlying Boost distribution for uniform sampling.
-  boost::uniform_01<boost::mt19937>* uniform_01;
+  //! The underlying Boost distribution for exponential sampling.
+  boost::exponential_distribution<>* exponential_distribution;
 
   //! The underlying Boost distribution for normal sampling.
   boost::normal_distribution<>* normal_distribution;
+
+  //! The underlying Boost distribution for uniform sampling.
+  boost::uniform_01<boost::mt19937>* uniform_01;
 
   //! The actual seed used by the random number generator.
   uint32_t the_seed;
@@ -135,6 +139,14 @@ protected:
       normal_distribution = new boost::normal_distribution<>();
   }
 
+  //! Ensure the 'exponential_distribution' member is correctly initialized.
+  //! This method should be called before using the 'exponential_distribution'
+  //! member, as its presence is not always guaranteed.
+  inline void ensure_exponential_distribution() {
+    if (!exponential_distribution)
+      exponential_distribution = new boost::exponential_distribution<>();
+  }
+
 public:
 
   // Declares other standard object methods.
@@ -170,9 +182,11 @@ public:
   //! Return a random number generated from a Gaussian with mean mu and stddev sigma.
   real gaussian_mu_sigma(real mu, real sigma);
 
-  /* TODO Implement.
-  //! Return a random number generated from an exponential distribution.
+  //! Return a random number generated from an exponential distribution with
+  //! parameter lambda = 1.
   real exp_sample();
+
+  /* TODO Implement.
   //! Return a random number generated from a gamma distribution.
   real gamma_sample(int ia);
   //! Return a random number generated from a Poisson distribution.
