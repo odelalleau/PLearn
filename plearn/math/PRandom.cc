@@ -255,15 +255,6 @@ int PRandom::multinomial_sample(const Vec& distribution) {
   return i;
 }
 
-///////////////
-// time_seed //
-///////////////
-void PRandom::time_seed()
-{
-  seed_ = -1;
-  build();
-}
-
 ////////////////
 // time_seed_ //
 ////////////////

@@ -163,13 +163,12 @@ public:
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Initialize the random number generator with the CPU time.
-  //! The 'seed' option will be automatically set to -1.
-  void time_seed();
-
   //! Initialize the random number generator with the given long 'x'.
-  //! The 'seed' option will be automatically set to 'x'.
+  //! The 'seed' option will be automatically set to 'x', which may be -1.
   void manual_seed(long x);
+
+  //! Initialize the random number generator with the CPU time.
+  inline void time_seed() { manual_seed(-1); }
 
   //! Return a random number uniformly distributed between 0 and 1.
   real uniform_sample();
