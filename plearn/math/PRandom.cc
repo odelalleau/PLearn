@@ -54,11 +54,12 @@
 namespace PLearn {
 using namespace std;
 
-////////////
+/////////////
 // PRandom //
-////////////
+/////////////
 PRandom::PRandom(long seed)
 : the_seed(0),
+  fixed_seed(0),
   seed_(seed)
 {
   // For convenience, we systematically call build() in the constructor.
@@ -80,6 +81,14 @@ void PRandom::declareOptions(OptionList& ol)
       " - -1      : initialized with the current CPU time\n"
       " -  0      : the current seed is left intact\n"
       " -  x > 0  : the seed is changed to 'x'");
+
+  // Declared as a learnt option to hide some complexity to the novice.
+  declareOption(ol, "fixed_seed", &PRandom::fixed_seed, OptionBase::learntoption,
+      "If set to 0, will be ignored. If set to -2, its value will be copied from\n"
+      "the 'seed' option. If set to any other value, it must always be equal to\n"
+      "'seed' when build() is called. This allows one to prevent the seed from\n"
+      "being accidentally modified by setting 'fixed_seed' to -2. Someone modifying\n"
+      "the seed afterwards will then get an error.\n");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -110,14 +119,49 @@ void PRandom::build()
 ////////////
 void PRandom::build_()
 {
+  if (fixed_seed) {
+    if (fixed_seed == -2)
+      fixed_seed = seed_;
+    else {
+      if (seed_ != fixed_seed)
+        PLERROR("In PRandom::build_ - You are not allowed to modify the seed of "
+                "a PRandom object whose seed has been fixed");
+      // No need to re-initialize the random number generator.
+      return;
+    }
+  }
   if (seed_ == -1)
-    this->seed();
+    this->time_seed_();
   else if (seed_ == 0) {}
   else if (seed_ > 0)
-    this->manual_seed(seed_);
+    this->manual_seed_(seed_);
   else
-    PLERROR("In PRandom::build_ - The 'seed' option must be set to "
-            "-1, 0 or a positive value");
+    PLERROR("In PRandom::build_ - The only value allowed for the seed are "
+            "-1, 0 or a strictly positive long integer");
+}
+
+////////////
+// common //
+////////////
+PP<PRandom> PRandom::common(bool random_seed)
+{
+  static PP<PRandom> gen_random = 0;
+  static PP<PRandom> gen_const  = 0;
+  if (random_seed) {
+    if (!gen_random) {
+      gen_random = new PRandom();
+      gen_random->fixed_seed = -2;
+      gen_random->build();
+    }
+    return gen_random;
+  } else {
+    if (!gen_const) {
+      gen_const = new PRandom(12345678);
+      gen_const->fixed_seed = -2;
+      gen_const->build();
+    }
+    return gen_const;
+  }
 }
 
 /////////////////
@@ -132,13 +176,6 @@ real PRandom::gaussian_01() {
 ///////////////////////
 real PRandom::gaussian_mu_sigma(real mu, real sigma) {
   return gaussian_01() * sigma + mu;
-}
-
-//////////////
-// get_seed //
-//////////////
-long PRandom::get_seed() {
-  return long(the_seed);
 }
 
 /////////////////////////////////
@@ -162,6 +199,15 @@ void PRandom::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 // manual_seed //
 /////////////////
 void PRandom::manual_seed(long x)
+{
+  seed_ = x;
+  build();
+}
+
+//////////////////
+// manual_seed_ //
+//////////////////
+void PRandom::manual_seed_(long x)
 {
   the_seed = uint32_t(x);
   rgen.seed(the_seed);
@@ -191,16 +237,25 @@ int PRandom::multinomial_sample(const Vec& distribution) {
   return i;
 }
 
-//////////
-// seed //
-//////////
-void PRandom::seed()
+///////////////
+// time_seed //
+///////////////
+void PRandom::time_seed()
+{
+  seed_ = -1;
+  build();
+}
+
+////////////////
+// time_seed_ //
+////////////////
+void PRandom::time_seed_()
 {
   time_t ltime;
   struct tm *today;
   time(&ltime);
   today = localtime(&ltime);
-  manual_seed((long)today->tm_sec+
+  manual_seed_((long)today->tm_sec+
       60*today->tm_min+
       60*60*today->tm_hour+
       60*60*24*today->tm_mday);

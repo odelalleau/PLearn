@@ -77,6 +77,8 @@ protected:
   // * protected options *
   // *********************
 
+  long fixed_seed;
+
 public:
 
   // ************************
@@ -109,23 +111,36 @@ protected:
   //! Declares this class' options.
   static void declareOptions(OptionList& ol);
 
+  //! Initialize the random number generator with the CPU time.
+  //! This is an internal method that does not update the 'seed' option.
+  void time_seed_();
+  //! Initialize the random number generator with the given long 'x'.
+  //! This is an internal method that does not update the 'seed' option.
+  void manual_seed_(long x);
+
 public:
 
   // Declares other standard object methods.
   PLEARN_DECLARE_OBJECT(PRandom);
 
   //! Build object.
+  //! Note: one should not have to call build() on a PRandom object, as it is
+  //! called directly in the constructor and in the time_seed() and manual_seed()
+  //! methods. Be careful that calling build() will re-initialize the random
+  //! number generator, unless the seed has been fixed by the 'fixed_seed'
+  //! option.
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   //! Initialize the random number generator with the CPU time.
-  void seed();
+  //! The 'seed' option will be automatically set to -1.
+  void time_seed();
+
   //! Initialize the random number generator with the given long 'x'.
+  //! The 'seed' option will be automatically set to 'x'.
   void manual_seed(long x);
-  //! Return the current seed used by the random number generator.
-  long get_seed();
 
   //! Return a random number uniformly distributed between 0 and 1.
   real uniform_sample();
@@ -171,6 +186,17 @@ public:
       v[j] = tmp;
     }
   }
+
+  /*** Static methods ***/
+
+  //! Return a pointer to a common PRandom object accessible from any PLearn
+  //! code.
+  //! There are two common PRandom objects: one whose seed was given by the CPU
+  //! time (no argument, or 'random_seed' set to true), and another whose seed
+  //! is fixed at compilation time ('random_seed' set to false).
+  //! The latter can be useful to get reproducible results.
+  //! For safety, it is not possible to change their seed.
+  static PP<PRandom> common(bool random_seed = true);
 
 };
 
