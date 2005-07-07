@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.h,v 1.16 2005/05/19 18:03:26 tihocan Exp $
+   * $Id$
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -64,7 +64,8 @@ protected:
 
   mutable Vec row;
   mutable Vec learner_input;
-  mutable Mat learners_output;
+  mutable TVec< Vec > learners_output;       //!< Instead of Mat to allow
+                                             //!< learners of various outputsizes
   mutable Vec learner_target;
   mutable Vec non_input_part_of_data_row;
   mutable bool learners_need_train;  //!< Used to keep track of whether learners need training or not.

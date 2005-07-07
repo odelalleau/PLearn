@@ -96,22 +96,28 @@ void PLearnerOutputVMatrix::getNewRow(int i, const Vec& v) const
     learners_need_train = false;
   }
   data->getRow(i,row);
-  if(compute_output_once)
-  {
+
+  if(compute_output_once)  {
+    // Use precomputed outputs
     for (int j=0;j<learners.length();j++)
     {
       v.subVec(c,learners[j]->outputsize()) << complete_learners_output[j](i);
       c += learners[j]->outputsize();
     }
   }
-  else
-  {
+  
+  else {
+    // Compute output for each learner; now allow each learner to have a
+    // different outputsize.  The variable 'learners_output' is kept for
+    // backwards compatibility, but is no longer strictly necessary
     for (int j=0;j<learners.length();j++)
     {
-      Vec out_j = learners_output(j);
-      learners[j]->computeOutput(learner_input,out_j);
+      int cur_outputsize = learners[j]->outputsize();
+      learners_output[j].resize(cur_outputsize);
+      learners[j]->computeOutput(learner_input, learners_output[j]);
+      v.subVec(c, cur_outputsize) << learners_output[j];
+      c += cur_outputsize;
     }
-    v.subVec(0,c=learners_output.size()) << learners_output.toVec();
   }
  
   if (put_raw_input)
@@ -219,20 +225,26 @@ void PLearnerOutputVMatrix::build_()
       PLERROR("In PLearnerOutputVMatrix::build_ - The 'data' matrix has a negative targetsize");
     if (data->weightsize() < 0)
       PLERROR("In PLearnerOutputVMatrix::build_ - The 'data' matrix has a negative weightsize");
+
+    // Some further state variable initializations
     learner_input = row.subVec(0,data->inputsize());
     learner_target = row.subVec(data->inputsize(),data->targetsize());
     non_input_part_of_data_row = row.subVec(data->inputsize(),data->width()-data->inputsize());
-    learners_output.resize(learners->length(),learners[0]->outputsize());
+    learners_output.resize(learners->length());
+
+    // Compute the total width of the VMatrix and the width of the various
+    // components
     inputsize_ = 0;
     for (int i=0;i<learners->length();i++)
       inputsize_ += learners[i]->outputsize();
     if (put_raw_input) 
       inputsize_ += data->inputsize();
     if (put_non_input) {
-      targetsize_ = max(0, data->targetsize());   // might be -1, careful
-      weightsize_ = max(0, data->weightsize());   // might be -1, careful
+      targetsize_ = data->targetsize();
+      weightsize_ = data->weightsize();
       width_ = inputsize_ + targetsize_ + weightsize_;
-    } else {
+    }
+    else {
       targetsize_ = 0;
       weightsize_ = 0;
       width_ = inputsize_;
