@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.h,v 1.17 2005/04/14 13:27:12 tihocan Exp $
+   * $Id$
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -208,16 +208,12 @@ public:
   //! Then calls build() and forget() if necessary
   virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
-  // *** SUBCLASS WRITING: ***
-  // While in general not necessary, in case of particular needs 
-  // (efficiency concerns for ex) you may also want to overload
-  // some of the following methods:
-  // virtual void computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
-  // virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
-  // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
-  // virtual int nTestCosts() const;
-  // virtual int nTrainCosts() const;
+protected:
+  //! Utility to set training set of base learners
+  void setBaseLearnersTrainingSet(VMat base_trainset, bool call_forget);
 
+  //! Utility to set training set of combiner
+  void setCombinerTrainingSet(VMat comb_trainset, bool call_forget);
 };
 
 // Declares a few other classes and functions related to this class
