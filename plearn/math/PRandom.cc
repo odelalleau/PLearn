@@ -212,6 +212,9 @@ void PRandom::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 /////////////////
 void PRandom::manual_seed(long x)
 {
+  if (fixed_seed)
+    PLERROR("In PRandom::manual_seed - You are not allowed to change the seed "
+            "of a PRandom object whose seed is fixed");
   seed_ = x;
   build();
 }
