@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// RandomGenerator.cc
+// PRandom.cc
 //
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio, University of Montreal
 // Copyright (C) 2005 Olivier Delalleau 
@@ -39,7 +39,7 @@
 
 // Authors: Olivier Delalleau
 
-/*! \file RandomGenerator.cc */
+/*! \file PRandom.cc */
 
 #define __STDC_LIMIT_MACROS     //!< For UINT32_MAX.
 #include <stdint.h>
@@ -49,15 +49,15 @@
 #define RAND_RNMX (1.0 - RAND_EPS)
 
 
-#include "RandomGenerator.h"
+#include "PRandom.h"
 
 namespace PLearn {
 using namespace std;
 
-/////////////////////
-// RandomGenerator //
-/////////////////////
-RandomGenerator::RandomGenerator(long seed)
+////////////
+// PRandom //
+////////////
+PRandom::PRandom(long seed)
 : the_seed(0),
   seed_(seed)
 {
@@ -65,7 +65,7 @@ RandomGenerator::RandomGenerator(long seed)
   build();
 }
 
-PLEARN_IMPLEMENT_OBJECT(RandomGenerator,
+PLEARN_IMPLEMENT_OBJECT(PRandom,
     "Perform a number of random operations, including generating random numbers",
     ""
 );
@@ -73,9 +73,9 @@ PLEARN_IMPLEMENT_OBJECT(RandomGenerator,
 ////////////////////
 // declareOptions //
 ////////////////////
-void RandomGenerator::declareOptions(OptionList& ol)
+void PRandom::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "seed", &RandomGenerator::seed_, OptionBase::buildoption,
+  declareOption(ol, "seed", &PRandom::seed_, OptionBase::buildoption,
       "Seed for the random number generator, set at build time:\n"
       " - -1      : initialized with the current CPU time\n"
       " -  0      : the current seed is left intact\n"
@@ -88,7 +88,7 @@ void RandomGenerator::declareOptions(OptionList& ol)
 /////////////////////
 // bounded_uniform //
 /////////////////////
-real RandomGenerator::bounded_uniform(real a, real b) {
+real PRandom::bounded_uniform(real a, real b) {
   real res = uniform_sample()*(b-a) + a;
   if (res >= b)
     return b*RAND_RNMX;
@@ -99,7 +99,7 @@ real RandomGenerator::bounded_uniform(real a, real b) {
 ///////////
 // build //
 ///////////
-void RandomGenerator::build()
+void PRandom::build()
 {
   inherited::build();
   build_();
@@ -108,7 +108,7 @@ void RandomGenerator::build()
 ////////////
 // build_ //
 ////////////
-void RandomGenerator::build_()
+void PRandom::build_()
 {
   if (seed_ == -1)
     this->seed();
@@ -116,35 +116,35 @@ void RandomGenerator::build_()
   else if (seed_ > 0)
     this->manual_seed(seed_);
   else
-    PLERROR("In RandomGenerator::build_ - The 'seed' option must be set to "
+    PLERROR("In PRandom::build_ - The 'seed' option must be set to "
             "-1, 0 or a positive value");
 }
 
 /////////////////
 // gaussian_01 //
 /////////////////
-real RandomGenerator::gaussian_01() {
+real PRandom::gaussian_01() {
   return real(normal_distribution(*uniform_01));
 }
 
 ///////////////////////
 // gaussian_mu_sigma //
 ///////////////////////
-real RandomGenerator::gaussian_mu_sigma(real mu, real sigma) {
+real PRandom::gaussian_mu_sigma(real mu, real sigma) {
   return gaussian_01() * sigma + mu;
 }
 
 //////////////
 // get_seed //
 //////////////
-long RandomGenerator::get_seed() {
+long PRandom::get_seed() {
   return long(the_seed);
 }
 
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
-void RandomGenerator::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void PRandom::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 
@@ -155,13 +155,13 @@ void RandomGenerator::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   // deepCopyField(trainvec, copies);
 
   // ### Remove this line when you have fully implemented this method.
-  PLERROR("RandomGenerator::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  PLERROR("PRandom::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 /////////////////
 // manual_seed //
 /////////////////
-void RandomGenerator::manual_seed(long x)
+void PRandom::manual_seed(long x)
 {
   the_seed = uint32_t(x);
   rgen.seed(the_seed);
@@ -175,7 +175,7 @@ void RandomGenerator::manual_seed(long x)
 ////////////////////////
 // multinomial_sample //
 ////////////////////////
-int RandomGenerator::multinomial_sample(const Vec& distribution) {
+int PRandom::multinomial_sample(const Vec& distribution) {
   real  u  = this->uniform_sample();
   real* pi = distribution.data();
   real  s  = *pi;
@@ -194,7 +194,7 @@ int RandomGenerator::multinomial_sample(const Vec& distribution) {
 //////////
 // seed //
 //////////
-void RandomGenerator::seed()
+void PRandom::seed()
 {
   time_t ltime;
   struct tm *today;
@@ -209,14 +209,14 @@ void RandomGenerator::seed()
 ////////////////////
 // uniform_sample //
 ////////////////////
-real RandomGenerator::uniform_sample() {
+real PRandom::uniform_sample() {
   return real((*uniform_01)());
 }
 
 ///////
 // ~ //
 ///////
-RandomGenerator::~RandomGenerator() {
+PRandom::~PRandom() {
   if (uniform_01) {
     delete uniform_01;
     uniform_01 = 0;

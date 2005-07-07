@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// RandomGenerator.h
+// PRandom.h
 //
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio, University of Montreal
 // Copyright (C) 2005 Olivier Delalleau 
@@ -39,11 +39,11 @@
 
 // Authors: Olivier Delalleau
 
-/*! \file RandomGenerator.h */
+/*! \file PRandom.h */
 
 
-#ifndef RandomGenerator_INC
-#define RandomGenerator_INC
+#ifndef PRandom_INC
+#define PRandom_INC
 
 #include <plearn/base/Object.h>
 #include <boost/random/mersenne_twister.hpp>
@@ -52,7 +52,7 @@
 
 namespace PLearn {
 
-class RandomGenerator: public Object
+class PRandom: public Object
 {
 
 private:
@@ -90,10 +90,10 @@ public:
   // ****************
 
   //! Constructor from a given seed.
-  RandomGenerator(long seed = -1);
+  PRandom(long seed = -1);
 
   //! Destructor to free memory.
-  virtual ~RandomGenerator();
+  virtual ~PRandom();
 
   // ******************
   // * Object methods *
@@ -112,7 +112,7 @@ protected:
 public:
 
   // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(RandomGenerator);
+  PLEARN_DECLARE_OBJECT(PRandom);
 
   //! Build object.
   virtual void build();
@@ -175,7 +175,7 @@ public:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(RandomGenerator);
+DECLARE_OBJECT_PTR(PRandom);
   
 } // end of namespace PLearn
 
