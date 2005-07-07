@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_full_inc.h,v 1.2 2005/02/23 01:32:46 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -51,6 +51,7 @@
  * Boost *
  *********/
 #include <commands/PLearnCommands/HTMLHelpCommand.h>
+#include <plearn/math/PRandom.h>
 
 /**********
  * Curses *
