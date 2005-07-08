@@ -69,9 +69,15 @@ PLEARN_IMPLEMENT_OBJECT(
   "on the same or different data from the upper level single learner. A shared learner can\n"
   "also be trained on different parts of the input. The outputs of the\n"
   "1st level learners are concatenated and serve as inputs to the second level learner.\n"
-  "IT IS ASSUMED THAT ALL BASE LEARNERS HAVE THE SAME NUMBER OF INPUTS AND OUTPUTS\n"
+  "\n"
+  "Contrarily to previous versions, it is now PERMITTED for each learner to\n"
+  "have a different outputsize() if an explicit combiner is in use.  We assume\n"
+  "that the combiner knows what to do."
+  "\n"
   "There is also the option to copy the input of the 1st level learner as additional\n"
-  " inputs for the second level (put_raw_input).\n"
+  "inputs for the second level (put_raw_input).  If requested, the raw_inputs are\n"
+  "appended AT THE END of the combiner input vector.\n"
+  "\n"
   "A Splitter can optionally be provided to specify how to split the data into\n"
   "the training /validation sets for the lower and upper levels respectively\n"
   );
@@ -127,14 +133,17 @@ void StackedLearner::declareOptions(OptionList& ol)
 
   
   declareOption(ol, "put_raw_input", &StackedLearner::put_raw_input, OptionBase::buildoption,
-                "whether to put the raw inputs in addition of the base learners outputs, in input of the combiner\n");
+                "Whether to put the raw inputs in addition of the base learners\n"
+                "outputs, in input of the combiner.  The raw_inputs are\n"
+                "appended AT THE END of the combiner input vector\n");
 
   declareOption(ol, "share_learner", &StackedLearner::share_learner, OptionBase::buildoption,
                 "If set to 1, the input is divided in nsep equal parts, and a common learner\n"
                 "is trained as if each part constitutes a training example.");
 
   declareOption(ol, "nsep", &StackedLearner::nsep, OptionBase::buildoption,
-                "Number of input separations. The input size needs to be a multiple of that value\n");
+                "Number of input separations. The input size needs to be a "
+                "multiple of that value\n");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -149,32 +158,38 @@ void StackedLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
 
 void StackedLearner::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
-  for (int i=0;i<base_learners.length();i++)
-  {
-    if (!base_learners[i])
-      PLERROR("StackedLearner::build: base learners have not been created!");
-    base_learners[i]->build();
-    if (i>0 && base_learners[i]->outputsize()!=base_learners[i-1]->outputsize())
-      PLERROR("StackedLearner: expecting base learners to have the same number of outputs!");
-  }
-  if (combiner)
-    combiner->build();
-  if (splitter)
-    splitter->build();
+  /**
+   *  NOTE BY NICOLAS: according to Pascal, it's not kosher to call build
+   *  inside build for no reason, since the inner objects HAVE ALREADY been
+   *  built.  You should uncomment the following code only FOR GOOD REASON.
+   *
+   *   for (int i=0;i<base_learners.length();i++)
+   *   {
+   *     if (!base_learners[i])
+   *       PLERROR("StackedLearner::build: base learners have not been created!");
+   *     base_learners[i]->build();
+   *     if (i>0 && base_learners[i]->outputsize()!=base_learners[i-1]->outputsize())
+   *       PLERROR("StackedLearner: expecting base learners to have the same number of outputs!");
+   *   }
+   *   if (combiner)
+   *     combiner->build();
+   *   if (splitter)
+   *     splitter->build();
+   */
+  
+  if (base_learners.size() == 0)
+    PLERROR("StackedLearner::build_: no base learners specified!  Use the "
+            "'base_learners' option");
+  
   if (splitter && splitter->nSetsPerSplit()!=2)
-    PLERROR("StackedLearner: the Splitter should produce only two sets per split, got %d",splitter->nSetsPerSplit());
+    PLERROR("StackedLearner: the Splitter should produce only two sets per split, got %d",
+            splitter->nSetsPerSplit());
+  if(share_learner && base_train_splitter)
+    PLERROR("StackedLearner::build_: options 'base_train_splitter' and 'share_learner'\n"
+            "cannot both be true");
+
   resizeBaseLearnersOutputs();
   default_operation = lowerstring( default_operation );
-
-  if(share_learner && base_train_splitter)
-    PLERROR("StackedLearner::build_: base_train_splitter and share_learner cannot both be true");
 }
 
 // ### Nothing to add here, simply calls build_
@@ -187,16 +202,26 @@ void StackedLearner::build()
 
 void StackedLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(base_learners_outputs,     copies);
+  deepCopyField(all_base_learners_outputs, copies);
+  deepCopyField(base_learners,             copies);
+  deepCopyField(combiner,                  copies);
+  deepCopyField(splitter,                  copies);
+  deepCopyField(base_train_splitter,       copies);
 
-  deepCopyField(base_learners_outputs, copies);
-  deepCopyField(base_learners, copies);
-  if (combiner)
-    deepCopyField(combiner, copies);
-  if (splitter)
-    deepCopyField(splitter, copies);
-  if (base_train_splitter)
-    deepCopyField(base_train_splitter, copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
+}
+
+
+void StackedLearner::setExperimentDirectory(const PPath& the_expdir)
+{
+  if (the_expdir != "") {
+    for (int i=0, n=base_learners.size() ; i<n ; ++i)
+      base_learners[i]->setExperimentDirectory(the_expdir /
+                                               "Base"+tostring(i));
+    if (combiner)
+      combiner->setExperimentDirectory(the_expdir / "Combiner");
+  }
 }
 
 
@@ -221,7 +246,8 @@ void StackedLearner::forget()
 
 void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
-  // --- FIRST SCENARIO: WE HAVE A SPLITTER ---
+  inherited::setTrainingSet(training_set, call_forget);
+
   if (splitter) {
     splitter->setDataSet(training_set);
     if (splitter->nsplits() !=1 )
@@ -233,23 +259,11 @@ void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
     setBaseLearnersTrainingSet(sets[0], call_forget);
     setCombinerTrainingSet    (sets[1], call_forget);
   }
-
-  // --- SECOND SCENARIO: WE DON'T HAVE A SPLITTER ---
   else {
     setBaseLearnersTrainingSet(training_set, call_forget);
     setCombinerTrainingSet    (training_set, call_forget);
   }
   
-  // Finally, optionally set different training sets for various base
-  // learners if required
-  if (base_train_splitter) {
-    for (int i=0;i<base_learners.length();i++) {
-      base_learners[i]->setTrainingSet(base_train_splitter->getSplit(i)[0],
-                                       call_forget && train_base_learners);
-    }
-  }
-  inherited::setTrainingSet(training_set, call_forget);
-
   // Changing the training set may change the outputsize of the base learners.
   resizeBaseLearnersOutputs();
 }
@@ -258,107 +272,123 @@ void StackedLearner::train()
 {
   if (!train_stats)
     PLERROR("StackedLearner::train: train_stats has not been set!");
-  if (!splitter || splitter->nsplits()==1) // simplest case
-  {
-    if (train_base_learners)
-    {
-      if(stage == 0)
+
+  if (splitter && splitter->nsplits() != 1)
+    PLERROR("StackedLearner: multi-splits case not implemented yet");
+
+  // --- PART 1: TRAIN THE BASE LEARNERS ---
+  if (train_base_learners) {
+    if(stage == 0) {
+      for (int i=0;i<base_learners.length();i++)
       {
-        for (int i=0;i<base_learners.length();i++)
-        {
-          PP<VecStatsCollector> stats = new VecStatsCollector();
-          base_learners[i]->setTrainStatsCollector(stats);
-          if (expdir!="")
-            base_learners[i]->setExperimentDirectory( expdir / ("Base"+tostring(i)) );
-          base_learners[i]->nstages = nstages;
-          base_learners[i]->train();
-          stats->finalize(); // WE COULD OPTIONALLY SAVE THEM AS WELL!
-        }
-        stage++;
+        PP<VecStatsCollector> stats = new VecStatsCollector();
+        base_learners[i]->setTrainStatsCollector(stats);
+        base_learners[i]->nstages = nstages;
+        base_learners[i]->train();
+        stats->finalize(); // WE COULD OPTIONALLY SAVE THEM AS WELL!
       }
-      else
-        for (int i=0;i<base_learners.length();i++)
-        {
-          base_learners[i]->nstages = nstages;
-          base_learners[i]->train();
-        }
-        
+      stage++;
     }
-    if (combiner)
-    {
-      if (normalize_base_learners_output) {
-        // Normalize the combiner training set.
-        VMat normalized_trainset = 
-          new ShiftAndRescaleVMatrix(combiner->getTrainingSet(), -1);
-        combiner->setTrainingSet(normalized_trainset);
+    else
+      for (int i=0;i<base_learners.length();i++)
+      {
+        base_learners[i]->nstages = nstages;
+        base_learners[i]->train();
       }
-      if (precompute_base_learners_output) {
-        // First precompute the train set of the combiner in memory.
-        VMat precomputed_trainset = combiner->getTrainingSet();
-        precomputed_trainset.precompute();
-        combiner->setTrainingSet(precomputed_trainset, false);
-      }
-      combiner->setTrainStatsCollector(train_stats);
-      if (expdir!="")
-        combiner->setExperimentDirectory(expdir+"Combiner");
-      combiner->train();
+  }
+
+  // --- PART 2: TRAIN THE COMBINER ---
+  if (combiner)
+  {
+    if (normalize_base_learners_output) {
+      // Normalize the combiner training set.
+      VMat normalized_trainset = 
+        new ShiftAndRescaleVMatrix(combiner->getTrainingSet(), -1);
+      combiner->setTrainingSet(normalized_trainset);
     }
-  } else PLERROR("StackedLearner: multi-splits case not implemented yet");
+    if (precompute_base_learners_output) {
+      // First precompute the train set of the combiner in memory.
+      VMat precomputed_trainset = combiner->getTrainingSet();
+      precomputed_trainset.precompute();
+      combiner->setTrainingSet(precomputed_trainset, false);
+    }
+    combiner->setTrainStatsCollector(train_stats);
+    combiner->train();
+  }
 }
 
 
 void StackedLearner::computeOutput(const Vec& input, Vec& output) const
 {
-  if(share_learner)
-  {
-    for (int i=0;i<nsep;i++)
-    {
-      Vec out_i = base_learners_outputs(i);
+  all_base_learners_outputs.resize(0);
+  if(share_learner) {
+    for (int i=0;i<nsep;i++)  {
       if (!base_learners[0])
         PLERROR("StackedLearner::computeOutput: base learners have not been created!");
+      base_learners_outputs[i].resize(base_learners[0]->outputsize());
       base_learners[0]->computeOutput(input.subVec(i*input.length() / nsep,
                                                    input.length() / nsep),
-                                      out_i);
+                                      base_learners_outputs[i]);
+
+      // append() will be costly only the first time computeOutputAndCosts
+      // is called; afterwards storage will NOT be reallocated
+      all_base_learners_outputs.append(base_learners_outputs[i]);
     }
   }
-  else
-  {
-    for (int i=0;i<base_learners.length();i++)
-    {
-      Vec out_i = base_learners_outputs(i);
+  else {
+    for (int i=0;i<base_learners.length();i++) {
       if (!base_learners[i])
         PLERROR("StackedLearner::computeOutput: base learners have not been created!");
-      base_learners[i]->computeOutput(input,out_i);
+      base_learners_outputs[i].resize(base_learners[i]->outputsize());
+      base_learners[i]->computeOutput(input, base_learners_outputs[i]);
+
+      // append() will be costly only the first time computeOutputAndCosts
+      // is called; afterwards storage will NOT be reallocated
+      all_base_learners_outputs.append(base_learners_outputs[i]);
     }
   }
+
+  if (put_raw_input)
+    all_base_learners_outputs.append(input);
+  
   if (combiner)
-    combiner->computeOutput(base_learners_outputs.toVec(),output);
+    combiner->computeOutput(all_base_learners_outputs, output);
+  
   else // just performs default_operation on the outputs
   {
+    // This is a bit inconvenient... Make it a temporary matrix
+    // If it's often needed, i'll optimize it further  --Nicolas
+    assert( base_learners_outputs.size() > 0 );
+    Mat base_outputs_mat(base_learners_outputs.size(),
+                         base_learners[0]->outputsize());
+    for (int i=0, n=base_learners_outputs.size() ; i<n ; ++i)
+      base_outputs_mat(i) << base_learners_outputs[i];
+    
     if( default_operation == "mean" )
-      columnMean(base_learners_outputs, output);
+      columnMean(base_outputs_mat, output);
     else if( default_operation == "min" )
-      columnMin(base_learners_outputs, output);
+      columnMin(base_outputs_mat, output);
     else if( default_operation == "max" )
-      columnMax(base_learners_outputs, output);
+      columnMax(base_outputs_mat, output);
     else if( default_operation == "sum" )
-      columnSum(base_learners_outputs, output);
+      columnSum(base_outputs_mat, output);
     else if( default_operation == "sumofsquares" )
-      columnSumOfSquares(base_learners_outputs, output);
+      columnSumOfSquares(base_outputs_mat, output);
     else if( default_operation == "variance" )
     {
       Vec mean;
-      columnMean(base_learners_outputs, mean);
-      columnVariance(base_learners_outputs, output, mean);
+      columnMean(base_outputs_mat, mean);
+      columnVariance(base_outputs_mat, output, mean);
     }
     else if( default_operation == "dmode")
     {
+      // NC: should this vvvvvvvvvvvv be base_learners_outputs.length() for sharing?
       StatsCollector sc(base_learners.length());
       for(int o=0; o<output.length(); o++)
       {
         sc.forget();
-        for(int j=0; j<base_learners_outputs.length(); j++)         
-          sc.update(base_learners_outputs(o,j),1);
+        for(int j=0; j<base_outputs_mat.length(); j++)         
+          sc.update(base_outputs_mat(o,j),1);
         output[o] = sc.dmode();
       }
     }
@@ -371,7 +401,8 @@ void StackedLearner::computeCostsFromOutputs(const Vec& input, const Vec& output
                                              const Vec& target, Vec& costs) const
 {
   if (combiner)
-    combiner->computeCostsFromOutputs(base_learners_outputs.toVec(),output,target,costs);
+    combiner->computeCostsFromOutputs(all_base_learners_outputs,
+                                      output,target,costs);
   else // cheat
   {
     if(share_learner)
@@ -380,7 +411,7 @@ void StackedLearner::computeCostsFromOutputs(const Vec& input, const Vec& output
     else
       base_learners[0]->computeCostsFromOutputs(input,output,target,costs);
   }
-}                                
+}
 
 bool StackedLearner::computeConfidenceFromOutput(const Vec& input, const Vec& output,
                                                  real probability,
@@ -389,28 +420,40 @@ bool StackedLearner::computeConfidenceFromOutput(const Vec& input, const Vec& ou
   if (! combiner)
     PLERROR("StackedLearner::computeConfidenceFromOutput: a 'combiner' must be specified "
             "in order to compute confidence intervals.");
+ 
+  all_base_learners_outputs.resize(0);
   if(share_learner)
   {
     for (int i=0;i<nsep;i++)
     {
-      Vec out_i = base_learners_outputs(i);
       if (!base_learners[0])
         PLERROR("StackedLearner::computeOutput: base learners have not been created!");
-      base_learners[0]->computeOutput(input.subVec(i*input.length()/nsep,input.length()/nsep),out_i);
+      base_learners_outputs[0].resize(base_learners[0]->outputsize());
+      base_learners[0]->computeOutput(input.subVec(i*input.length()/nsep,
+                                                   input.length()/nsep),
+                                      base_learners_outputs[i]);
+
+      all_base_learners_outputs.append(base_learners_outputs[i]);
     }
   }
   else
   {
     for (int i=0;i<base_learners.length();i++)
     {
-      Vec out_i = base_learners_outputs(i);
       if (!base_learners[i])
         PLERROR("StackedLearner::computeOutput: base learners have not been created!");
-      base_learners[i]->computeOutput(input,out_i);
+      base_learners_outputs[i].resize(base_learners[i]->outputsize());
+      base_learners[i]->computeOutput(input, base_learners_outputs[i]);
+
+      all_base_learners_outputs.append(base_learners_outputs[i]);
     }
   }
-  return combiner->computeConfidenceFromOutput(base_learners_outputs.toVec(), output,
-                                               probability, intervals);
+  
+  if (put_raw_input)
+    all_base_learners_outputs.append(input);
+  
+  return combiner->computeConfidenceFromOutput(all_base_learners_outputs,
+                                               output, probability, intervals);
 }
 
 TVec<string> StackedLearner::getTestCostNames() const
@@ -438,14 +481,25 @@ TVec<string> StackedLearner::getTrainCostNames() const
 // resizeBaseLearnersOutputs //
 ///////////////////////////////
 void StackedLearner::resizeBaseLearnersOutputs() {
-  if (base_learners[0]->outputsize() != base_learners_outputs.width()) {
-    // The outputsize has changed. We reallocate everything.
-    base_learners_outputs = Mat();
+  // Ensure that all base learners have the same outputsize if we don't use
+  // a combiner
+  assert( base_learners.size() > 0 && base_learners[0] );
+  if (! combiner && ! share_learner) {
+    int outputsize = base_learners[0]->outputsize();
+    if (outputsize > 0) {
+      for (int i=1, n=base_learners.size() ; i<n ; ++i)
+        if (base_learners[i]->outputsize() != outputsize)
+          PLERROR("StackedLearner::build_: base learner #%d does not have the same "
+                  "outputsize (=%d) as base learner #0 (=%d); all outputsizes for "
+                  "base learners must be identical",
+                  i, base_learners[i]->outputsize(), outputsize);
+    }
   }
+  
   if(share_learner)
-    base_learners_outputs.resize(nsep,base_learners[0]->outputsize());
+    base_learners_outputs.resize(nsep);
   else
-    base_learners_outputs.resize(base_learners.length(),base_learners[0]->outputsize());
+    base_learners_outputs.resize(base_learners.size());
 }
 
 
@@ -453,19 +507,27 @@ void StackedLearner::setBaseLearnersTrainingSet(VMat base_trainset, bool call_fo
 {
   assert( base_learners.size() > 0 );
   
-  // Handle base learners
+  // Handle parameter sharing
   if(share_learner) {
     base_learners[0]->setTrainingSet(
       new SeparateInputVMatrix(base_trainset, nsep),
       call_forget && train_base_learners);
   }
   else {
-    if (base_train_splitter)
+    if (base_train_splitter) {
+      // Handle base splitter
       base_train_splitter->setDataSet(base_trainset);
-    else
+      for (int i=0;i<base_learners.length();i++) {
+        base_learners[i]->setTrainingSet(base_train_splitter->getSplit(i)[0],
+                                         call_forget && train_base_learners);
+      }
+    }
+    else {
+      // Default situation: set the same training set into each base learner
       for (int i=0;i<base_learners.length();i++)
         base_learners[i]->setTrainingSet(base_trainset,
                                          call_forget && train_base_learners);
+    }
   }
 }
 

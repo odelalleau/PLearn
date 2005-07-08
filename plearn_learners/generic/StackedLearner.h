@@ -51,26 +51,23 @@ using namespace std;
 
 class StackedLearner: public PLearner
 {
+  typedef PLearner inherited;
+  
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+  //! Temporary buffers for the output of base learners.  This is a
+  //! TVec of Vec since we now allow each learner's outputsize to be
+  //! different
+  TVec< Vec > base_learners_outputs;
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+  //! Buffer for concatenated output of base learners
+  mutable Vec all_base_learners_outputs;
 
-  // NON-OPTIONs
-  Mat base_learners_outputs;
 
 public:
 
-  typedef PLearner inherited;
-  
   // ************************
   // * public build options *
   // ************************
-
-  // ### declare public option fields (such as build options) here
 
   //! A set of 1st level base learners that are independently trained
   //! (here or elsewhere) and whose outputs will serve as inputs to the combiner.
@@ -152,7 +149,11 @@ public:
   // **** Object methods ****
   // ************************
 
+  //! Forwarded to combiner
   void setTrainStatsCollector(PP<VecStatsCollector> statscol);
+
+  //! Forwarded to inner learners
+  virtual void setExperimentDirectory(const PPath& the_expdir);
 
   //! simply calls inherited::build() then build_() 
   virtual void build();
