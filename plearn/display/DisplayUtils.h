@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: DisplayUtils.h,v 1.6 2004/10/07 20:55:26 plearner Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -52,7 +52,7 @@
 #include "GhostScript.h"
 #include <plearn/math/Mat.h>
 #include "Gnuplot.h"
-#include <plearn_learners/generic/Learner.h>
+#include <plearn_learners/generic/PLearner.h>
 #include <plearn/var/Func.h>
 
 namespace PLearn {
@@ -108,7 +108,7 @@ void displayHistogram(Gnuplot& gs, Mat dataColumn,
 
 
 
-/*!     This will return a length*width matrix containing the computed outputs
+/* This will return a length*width matrix containing the computed outputs
     for a learner which has 2 dimensional input, where the inputs are
     taken on a regular grid ranging [min_x,max_x]x[min_y,max_y].  The
     mapping to the matrix m is m(i,j) =
@@ -118,8 +118,10 @@ void displayHistogram(Gnuplot& gs, Mat dataColumn,
     If the output is of length 2: (score for each class)
       the result put in m is output[0]-output[1]
 */
-Mat compute2dGridOutputs(Learner& learner, real min_x=-1, real max_x=+1, real min_y=-1, real max_y=+1, 
+Mat compute2dGridOutputs(PP<PLearner> learner, real min_x=-1, real max_x=+1, real min_y=-1, real max_y=+1, 
                          int length=200, int width=200, real singleoutput_threshold=0.);
+
+
 
   //!  this draws x and + with the given radius for all the points in data (supposed to have width 3: [x, y, classnum]
 void displayPoints(GhostScript& gs, Mat data, real radius, bool color=false);
@@ -130,7 +132,7 @@ void displayPoints(GhostScript& gs, Mat data, real radius, bool color=false);
     the points in svindexes circled in black and the points in outlierindexes circled in gray.
 */
   void displayDecisionSurface(GhostScript& gs, real destx, real desty, real destwidth, real destheight, 
-                              Learner& learner, Mat trainset,
+                              PP<PLearner> learner, Mat trainset,
                               Vec svindexes=Vec(), Vec outlierindexes=Vec(), int nextsvindex=-1,
                               real min_x=-1, real max_x=+1, real min_y=-1, real max_y=+1,
                               real radius=0.05, 

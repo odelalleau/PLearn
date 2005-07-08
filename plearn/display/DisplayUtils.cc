@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: DisplayUtils.cc,v 1.8 2005/02/04 15:09:33 tihocan Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -747,25 +747,25 @@ void displayFunction(Func f, bool display_values, bool display_differentiation, 
     displayVarGraph(f->outputs, display_values, boxwidth, the_filename, must_wait); 
 }
 
-Mat compute2dGridOutputs(Learner& learner, real min_x, real max_x, real min_y, real max_y, int length, int width, real singleoutput_threshold)
+Mat compute2dGridOutputs(PP<PLearner> learner, real min_x, real max_x, real min_y, real max_y, int length, int width, real singleoutput_threshold)
 {
   Mat m(length,width);
   real delta_x = (max_x-min_x)/(width-1);
   real delta_y = (max_y-min_y)/(length-1);
 
-  if(learner.inputsize()!=2 || (learner.outputsize()!=1 && learner.outputsize()!=2) )
+  if(learner->inputsize()!=2 || (learner->outputsize()!=1 && learner->outputsize()!=2) )
      PLERROR("learner is expected to have an inputsize of 2, and an outputsize of 1 (or possibly 2 for binary classification)");
 
   Vec input(2);
-  Vec output(learner.outputsize());
+  Vec output(learner->outputsize());
   for(int i=0; i<length; i++)
   {
     input[1] = min_y+(length-i-1)*delta_y;
     for(int j=0; j<width; j++)
       {
         input[0] = min_x+j*delta_x;
-        learner.use(input,output);
-        if(learner.outputsize()==2)
+        learner->computeOutput(input,output);
+        if(learner->outputsize()==2)
           m(i,j) = output[0]-output[1];
         else
           m(i,j) = output[0]-singleoutput_threshold;
@@ -805,7 +805,7 @@ void displayDecisionSurface(GhostScript& gs, Classifier& cl, real xmin, real xma
       {
         input[0] = xmin+(xmax-xmin)/(nxsamples-1)*j;
         input[1] = ymax-(ymax-ymin)/(nysamples-1)*i;
-        cl.use(input,scores);
+        cl.computeOutput(input,scores);
         // cerr << scores[0] << "| ";
         real r,g,b;
         if(scores[0]<=0.5)
@@ -822,7 +822,7 @@ void displayDecisionSurface(GhostScript& gs, Classifier& cl, real xmin, real xma
 */
 
 void displayDecisionSurface(GhostScript& gs, real destx, real desty, real destwidth, real destheight, 
-                            Learner& learner, Mat trainset, 
+                            PP<PLearner> learner, Mat trainset, 
                             Vec svindexes, Vec outlierindexes, int nextsvindex,
                             real min_x, real max_x, real min_y, real max_y,
                             real radius, 
@@ -834,9 +834,9 @@ void displayDecisionSurface(GhostScript& gs, real destx, real desty, real destwi
     gs.setlinewidth(1.0*scalefactor);
 
     real singleoutput_threshold = 0.;
-    if(learner.outputsize()==1)
+    if(learner->outputsize()==1)
     {
-      Mat targets = trainset.column(learner.inputsize());
+      Mat targets = trainset.column(learner->inputsize());
       singleoutput_threshold = 0.5*(min(targets)+max(targets));
     }
     Mat decisions = compute2dGridOutputs(learner, min_x, max_x, min_y, max_y, ny, nx, singleoutput_threshold);
