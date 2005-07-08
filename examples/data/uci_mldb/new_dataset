@@ -1,0 +1,15 @@
+#!/bin/tcsh
+# Script to easily create PLearn vmats for new datasets, based on existing templates.
+# 'origin' is the template database, 'destination' is the new database.
+
+if ($2 == "")
+  echo "Usage: $0 <origin_name> <destination_name>"
+  exit 127
+endif
+
+foreach C (`ls ${1}*.vmat`)
+  setenv FILE `echo $C | sed -e "s/$1/$2/g"`
+  sed -e "s/$1/$2/g" $C > $FILE
+  echo "Wrote file $FILE"
+end
+
