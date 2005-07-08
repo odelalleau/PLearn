@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ServerCommand.cc,v 1.8 2005/06/20 22:07:40 plearner Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -46,6 +46,7 @@
 #include <plearn/io/PStream.h>
 // #include <plearn/io/StdPStreamBuf.h>
 // #include <plearn/io/FdPStreamBuf.h>
+#include <plearn/io/pl_log.h>
 #include <plearn/io/PrPStreamBuf.h>
 #include <plearn/base/tostring.h>
 #include <mozilla/nspr/prio.h>
@@ -108,10 +109,11 @@ void ServerCommand::run(const vector<string>& args)
 #endif
 
       pout << "PLEARN_SERVER_TCP " << myhostname << " " << port << " " << mypid << endl;
+      NORMAL_LOG << "PLEARN_SERVER STARTING IN TCP MODE ON "  << myhostname << ", PORT " << port << ", PID " << mypid << endl;
+
       for(;;)
         {
-          pout << endl;
-          pout << "######### Waiting for connection #########" << endl;
+          NORMAL_LOG << "\nPLEARN_SERVER WAITING FOR CONNECTION"  << endl;
           st = PR_Listen(sock,0);
           if(st!=PR_SUCCESS)
             PLERROR("serverCommand: listen on socket failed");
@@ -120,7 +122,7 @@ void ServerCommand::run(const vector<string>& args)
           if(fd==0)
             PLERROR("ServerCommand: accept returned 0, error code is: %d",PR_GetError());
           st = PR_NetAddrToString(&addr, buf, sizeof(buf));
-          pout << "CONNECTION_FROM " << buf << endl;
+          NORMAL_LOG << "PLEARN_SERVER CONNECTION_FROM "  << buf << endl;
           PStream io(new PrPStreamBuf(fd,fd,true,true));
           PLearnServer server(io);
           server.run();

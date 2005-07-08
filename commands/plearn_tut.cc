@@ -244,7 +244,7 @@
 // #include <plearn/vmat/TransposeVMatrix.h>
 // #include <plearn/vmat/VMatrixFromDistribution.h>
 // #include <plearn/vmat/ViewSplitterVMatrix.h>
-#include <plearn/vmat/selectRowsVMatrix.h>
+#include <plearn/vmat/SelectRowsVMatrix.h>
 
 
 
