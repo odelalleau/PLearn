@@ -213,11 +213,13 @@ class running( ExpKeyMode ):
         assert not expkey
         r = 0
         for exp in experiments:
-            print
             if exp.running():
+                if r == 0:
+                    print
                 r += 1
                 print exp
-        print( "(%d experiment%s %s running)"
+
+        print( "\n(%d experiment%s %s running)"
                % ( r, toolkit.plural(r),
                    toolkit.plural(r, 'is', 'are') )
                )
