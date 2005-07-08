@@ -7,7 +7,7 @@ from plearn.pyplearn import config
 from plearn.pyplearn.plearn_repr import plearn_repr
 
 __all__ = [ 'plvar',
-            '_parse_plargs', 'plargs', 'generate_expdir', 'plarg_defaults',
+            'plargs', 'generate_expdir', 'plarg_defaults',
             'bind_plargs', 'plargs_binder', 'plargs_namespace',
             'include',
 
@@ -19,16 +19,6 @@ __all__ = [ 'plvar',
 #
 #  Helper functions
 #
-def _parse_plargs(args):
-    """Parsing and storing plargs.
-
-    Parses PLearn command-line arguments (which look like foo=1 bar=2)
-    and stores the value of the arguments as attributes to plargs.
-    """
-    for a in args:
-        k, v = a.split('=', 1)
-        plargs.__dict__[k] = v
-
 def bind_plargs(obj, field_names = None, plarg_names = None, prefix = None):
     """Binds some command line arguments to the fields of an object.
 
@@ -314,24 +304,13 @@ class _plargs_storage_fallback( object ):
     to store the default values for PLearn command-line variables.
     """
     def __init__( self ):
-        self.expdir_root        = config.get_option( 'EXPERIMENTS', 'expdir_root' )
-        self.__dict__['expdir'] = generate_expdir( )
+        self.expdir_root          = config.get_option( 'EXPERIMENTS', 'expdir_root' )
+        self.__dict__['_expdir_'] = generate_expdir( )
         
     def __setattr__(self, k, v):
-        if k in [ 'expdir', '_lookup_' ]:
+        if k in [ 'expdir', '_expdir_' ]:
             raise AttributeError( "Cannot modify the value of '%s'." % k )
         self.__dict__[k] = v
-
-    def _lookup_( self, key, overrides ):
-        # Look for the key in the overrides
-        if key in overrides:
-            return overrides[key]
-
-        # Else, use default value
-        try:
-            return getattr(self, key)
-        except AttributeError:
-            raise UnknownArgumentError(key)        
 plarg_defaults = _plargs_storage_fallback()
 
 
@@ -396,23 +375,41 @@ class _plargs_storage_readonly( object ):
     (L{xperiments}). For debugging purpose, however, one may provide on
     command-line an override to plargs.expdir value.
     """
+
+    def _parse_( self, args ):
+        """Parsing and storing plargs.
+
+        Parses PLearn command-line arguments (which look like foo=1 bar=2)
+        and stores the value of the arguments as attributes to plargs.
+        """
+        for a in args:
+            k, v = a.split('=', 1)
+            if k == 'expdir':
+                k = '_%s_' % k
+            self.__dict__[k] = v
     
     def __setattr__(self, k, v):
         raise AttributeError('Cannot modify plargs')
 
-    def __getattr__( self, key ):    
+    def __getattr__( self, key ):
+        if key.startswith( '__' ):
+            raise AttributeError, key
+        
         if key == 'expdir':
-            expdir = plarg_defaults._lookup_( 'expdir', self.__dict__ )
-            root   = plarg_defaults._lookup_( 'expdir_root', self.__dict__ )
-
+            expdir = self._expdir_
+            root   = self.expdir_root
             if root:
                 expdir = os.path.join( root, expdir )
                 if not os.path.exists( root ):
                     os.makedirs( root )
             return expdir
 
-        else:
-            return plarg_defaults._lookup_( key, self.__dict__ )        
+        # Else, use default value
+        try:
+            return getattr(plarg_defaults, key)
+        except AttributeError:
+            raise UnknownArgumentError(key)        
+
 plargs = _plargs_storage_readonly()
 
 class plargs_binder:
