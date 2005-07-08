@@ -1,0 +1,9 @@
+$INCLUDE{UCI_MLDB:common.plearn}
+${MemoryVMatrix_head}
+
+SubVMatrix(
+  parent = $INCLUDE{UCI_MLDB:ionosphere_all_norm_noshuffle.vmat}
+  istart = 200
+)
+
+${MemoryVMatrix_foot}

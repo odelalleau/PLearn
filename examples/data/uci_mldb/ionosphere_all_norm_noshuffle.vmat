@@ -4,6 +4,7 @@ ${MemoryVMatrix_head}
 ShiftAndRescaleVMatrix( 
   underlying_vmat =
     $INCLUDE{UCI_MLDB:ionosphere/ionosphere_base.vmat}
+  verbosity = 1
 )
 
 ${MemoryVMatrix_foot}

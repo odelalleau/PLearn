@@ -1,0 +1,12 @@
+$INCLUDE{UCI_MLDB:common.plearn}
+${MemoryVMatrix_head}
+
+BootstrapVMatrix( 
+  shuffle = 1
+  frac = 1
+  own_seed = 12345678
+  source =
+    $INCLUDE{UCI_MLDB:ionosphere_train_norm_noshuffle.vmat}
+)
+
+${MemoryVMatrix_foot}
