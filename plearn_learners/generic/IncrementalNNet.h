@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IncrementalNNet.h,v 1.6 2005/05/31 12:54:10 yoshua Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -108,6 +108,9 @@ public:
   real decay_factor;
   real max_n_epochs_to_fail; // Maximum number of epochs (not necessarily an integer) to try improving the new hidden unit
                              // before declaring failure to improve the regularized cost (and thus stopping training).
+                             
+  real rand_range;           // Interval of random numbers when initializing weights/biases: (-rand_range/2, rand_range/2).
+  
   // ** NON-OPTION FIELDS
   //
   Vec linear_output; // output before possible output-non-linearity = output_weights * h(x) + output_biases

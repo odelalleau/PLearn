@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.74 2005/06/17 15:46:22 lamblin Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -117,12 +117,21 @@ void one_against_all_hinge_loss_bprop(const TVec<T>& output,
   d_output.resize(N);
   T*  o = output.data();
   T*  d_o = d_output.data();
-  while(--N >= 0)
+  //MNT old buggy code (opposite numbering of outputs):
+  /*while(--N >= 0)
   {
     if (N==target)
       *d_o = d_hinge_loss(*o,1);
     else
       *d_o = d_hinge_loss(*o,-1);
+    o++; d_o++;
+  }
+  */
+  for( int i = 0; i < N; i++ ) {
+    if ( i == target )
+      *d_o = d_hinge_loss( *o, 1 );
+    else
+      *d_o = d_hinge_loss( *o, -1 );
     o++; d_o++;
   }
 }
@@ -5995,7 +6004,7 @@ void layerBpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& in
 
 
 // input_gradient[j] = sum_i weights[i,j]*output_gradient[i]
-// weights[i,j] -= learning_rate * (output_gradient[i] * input[j] - weight_decay * weights[i,j])
+// weights[i,j] -= learning_rate * (output_gradient[i] * input[j] + weight_decay * weights[i,j])
 template<class T>
 void layerL2BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& input, 
                         const TVec<T>& output_gradient, real learning_rate, T weight_decay)
@@ -6026,7 +6035,7 @@ void layerL2BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& 
 
 // like layerL2BpropUpdate but weights is given transposed.
 // input_gradient[j] = sum_i weights[j,i]*output_gradient[i]
-// weights[i,j] -= learning_rate * (output_gradient[i] * input[j] - weight_decay * weights[i,j])
+// weights[i,j] -= learning_rate * (output_gradient[i] * input[j] + weight_decay * weights[i,j])
 template<class T>
 void transposedLayerL2BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& input, 
                                   const TVec<T>& output_gradient, real learning_rate, T weight_decay)
@@ -6057,7 +6066,7 @@ void transposedLayerL2BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const
 }
 
 // input_gradient[j] = sum_i weights[i,j]*output_gradient[i]
-// weights[i,j] -= learning_rate * (output_gradient[i] * input[j] - weight_decay * sign(weights[i,j]))
+// weights[i,j] -= learning_rate * (output_gradient[i] * input[j] + weight_decay * sign(weights[i,j]))
 template<class T>
 void layerL1BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& input, 
                         const TVec<T>& output_gradient, real learning_rate, T weight_decay)
@@ -6088,7 +6097,7 @@ void layerL1BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& 
 
 // like layerL1BpropUpdate but weights is given transposed.
 // input_gradient[j] = sum_i weights[j,i]*output_gradient[i]
-// weights[i,j] -= learning_rate * (output_gradient[i] * input[j] - weight_decay * sign(weights[i,j]))
+// weights[i,j] -= learning_rate * (output_gradient[i] * input[j] + weight_decay * sign(weights[i,j]))
 template<class T>
 void transposedLayerL1BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& input, 
                                   const TVec<T>& output_gradient, real learning_rate, T weight_decay)

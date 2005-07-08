@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IncrementalNNet.cc,v 1.10 2005/06/20 17:45:24 yoshua Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -52,6 +52,7 @@ IncrementalNNet::IncrementalNNet()
     current_average_cost(0),
     next_average_cost(0),
     n_examples_training_candidate(0),
+    rand_range(1),
     current_example(0),
     n_outputs(1),
     output_weight_decay(0),
@@ -128,6 +129,10 @@ void IncrementalNNet::declareOptions(OptionList& ol)
   declareOption(ol, "max_n_epochs_to_fail", &IncrementalNNet::max_n_epochs_to_fail, OptionBase::buildoption,
                 "Maximum number of epochs (not necessarily an integer) to try improving the new hidden unit\n"
                 "before declaring failure to improve the regularized cost (and thus stopping training).\n");
+                
+  declareOption(ol, "rand_range", &IncrementalNNet::rand_range, OptionBase::buildoption,
+                "Interval of random numbers when initializing weights/biases: (-rand_range/2, rand_range/2).\n");
+
 
   //declareOption(ol, "", &IncrementalNNet::, OptionBase::buildoption,
 
@@ -227,9 +232,12 @@ void IncrementalNNet::forget()
   hidden_layer_weights.resize(0,inputsize());
   hidden_layer_biases.resize(0);
   output_biases.clear();
-  candidate_unit_output_weights.fill(0.01);
-  candidate_unit_weights.clear();
-  candidate_unit_bias=0;
+  candidate_unit_output_weights.fill(0.1);
+  //candidate_unit_weights.clear();
+  //MNT
+  for( int i=0; i < candidate_unit_weights.length(); i++ )
+    candidate_unit_weights[i] = ((real)rand()/RAND_MAX - 0.5)*rand_range; 
+  candidate_unit_bias = ((real)rand()/RAND_MAX - 0.5)*rand_range;
   stage=0;
   n_examples_seen=0;
   current_average_cost=0;
@@ -386,8 +394,35 @@ void IncrementalNNet::train()
         }
       }
 
+            //MNT
+      if ( verbosity > 3 ) {
+        cout << "STAGE: " << stage << endl
+             << "input: " << input << endl 
+             << "output: " << output << endl  
+             << "target: " << target << endl                          
+             << "train_costs: " << train_costs << endl
+             << "output_gradient: " << output_gradient << endl
+             << "candidate_h: " << candidate_h << endl
+             << "current_average_cost: " << current_average_cost << endl
+        ;   
+        if ( stage > 0 ) {
+          cout << "hidden_layer_weights: " << hidden_layer_weights //<< endl             
+               << "hidden_layer_biases: " << hidden_layer_biases << endl
+               ;  
+        }
+        if ( verbosity > 4 ) {     
+          cout << "  output_with_candidate: " << output_with_candidate << endl;
+          cout << "  target: " << target << endl;
+          cout << "  candidate_unit_output_weights_mat(before): " << candidate_unit_output_weights_mat;
+          cout << "  candidate_unit_weights (before): " << candidate_unit_weights << endl;
+          cout << "  candidate_unit_bias (before): " << candidate_unit_bias << endl;
+        }
+      }
+
+      
       // backprop & update candidate hidden unit
-      output_loss_gradient(output_with_candidate, target, output_gradient, sampleweight);
+      output_loss_gradient(output_with_candidate, target, output_gradient, sampleweight);     
+      // should candidate_unit_output_weights_mat be here?
       layerBpropUpdate(candidate_hidden_gradient, candidate_unit_output_weights_mat, 
                        candidate_h_vec, output_gradient, learning_rate);
       // bprop through candidate hidden unit activation, heuristic method
@@ -404,18 +439,31 @@ void IncrementalNNet::train()
       }
       else
         bprop_tanh(candidate_h_vec,candidate_hidden_gradient,candidate_hidden_gradient);        
+      
       candidate_hidden_gradient *= -learning_rate;
       candidate_unit_bias += candidate_hidden_gradient[0];
       multiplyAcc(candidate_unit_weights, input, candidate_hidden_gradient[0]);
 
+      //MNT
+      if ( verbosity > 4 ) {
+        cout << "  candidate_hidden_gradient: " << candidate_hidden_gradient << endl;
+        cout << "  candidate_unit_output_weights_mat(after): " << candidate_unit_output_weights_mat;
+        cout << "  candidate_unit_weights (after): " << candidate_unit_weights << endl;
+        cout << "  candidate_unit_bias (after): " << candidate_unit_bias << endl;
+      }
+
+           
       // keep track of average performance with and without candidate hidden unit
       n_examples_seen++;
       int n_batches_seen = n_examples_seen / minibatchsize;
       int t_since_beginning_of_batch = n_examples_seen - n_batches_seen*minibatchsize;
       if (!online)
         moving_average_coefficient = 1.0/(1+t_since_beginning_of_batch);
-      current_average_cost = moving_average_coefficient*current_total_cost
-        +(1-moving_average_coefficient)*current_average_cost;
+      if (n_examples_seen==1)
+        current_average_cost = current_total_cost;
+      else  
+        current_average_cost = moving_average_coefficient*current_total_cost
+          +(1-moving_average_coefficient)*current_average_cost;
       next_average_cost = moving_average_coefficient*costs_with_candidate[0]
         +(1-moving_average_coefficient)*next_average_cost;
       if (verbosity>1 && cost_type!=0)
@@ -425,8 +473,10 @@ void IncrementalNNet::train()
         next_average_class_error = moving_average_coefficient*candidate_class_error
         +(1-moving_average_coefficient)*next_average_class_error;
       }
+      
+      
       // consider inserting the candidate hidden unit (at every minibatchsize examples)
-      if (t_since_beginning_of_batch == 0)
+      if (t_since_beginning_of_batch == 0) 
       {
         n_examples_training_candidate += minibatchsize;
         if (verbosity>1) 
@@ -434,11 +484,15 @@ void IncrementalNNet::train()
           cout << "At t=" << real(n_examples_seen)/train_set->length() 
                << " epochs, estimated current average cost = " << current_average_cost << endl
                << "Estimated average cost with candidate unit = " << next_average_cost << endl;
+          if (verbosity>2)
+            cout << "(current cost = " << current_total_cost << "; and with candidate = " 
+            << costs_with_candidate[0] << ")" << endl;
           if (cost_type!=0)
             cout << "Estimated current classification error = " << current_average_class_error << endl
                  << "Estimated classification error with candidate unit = " << next_average_class_error << endl;
         }
-        if (next_average_cost < current_average_cost) 
+        if ( next_average_cost < current_average_cost ) 
+        //if ( next_average_class_error < current_average_class_error ) MNT
         {
           // insert candidate hidden unit
           stage++;
@@ -453,8 +507,12 @@ void IncrementalNNet::train()
           h.resize(stage);
           // initialize a new candidate
           candidate_unit_output_weights.fill(0.01/stage);
-          candidate_unit_weights.clear();
-          candidate_unit_bias=0;
+          //candidate_unit_weights.clear();
+          //MNT
+          for( int i=0; i < candidate_unit_weights.length(); i++ )
+            candidate_unit_weights[i] = ((real)rand()/RAND_MAX - 0.5)*rand_range; 
+          candidate_unit_bias = ((real)rand()/RAND_MAX - 0.5)*rand_range;
+          
           if (verbosity>1)
             cout << "Adding hidden unit number " << stage << " after training it for "
                  << n_examples_training_candidate << " examples.\n The average cost is "
@@ -596,6 +654,5 @@ TVec<string> IncrementalNNet::getTrainCostNames() const
   // (these may or may not be exactly the same as what's returned by getTestCostNames).
   return getTestCostNames();
 }
-
 
 } // end of namespace PLearn
