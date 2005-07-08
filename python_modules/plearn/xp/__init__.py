@@ -49,7 +49,8 @@ class mkdir( XpMode ):
         
         lname  = '%s/dispatch' % dirname
         import dispatch_template
-        vsystem( 'cp %s %s' % (dispatch_template.__file__, lname) )
+        template_file = dispatch_template.__file__.replace( '.pyc', '.py' )
+        vsystem( 'cp %s %s' % (template_file, lname) )
         vsystem( 'chmod u=rwx %s' % lname )
         print '+++', lname, 'created.'
         

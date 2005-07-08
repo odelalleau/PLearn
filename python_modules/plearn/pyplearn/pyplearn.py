@@ -3,6 +3,7 @@ __cvs_id__ = "$Id$"
 
 import string, types
 from plearn.utilities import metaprog, toolkit
+from plearn.pyplearn import config
 from plearn.pyplearn.plearn_repr import plearn_repr
 
 __all__ = [ 'plvar',
@@ -139,11 +140,14 @@ def bind_plargs(obj, field_names = None, plarg_names = None, prefix = None):
                 cast = list_cast
             setattr(obj, field, cast(provided_value))
 
-def generate_expdir( root ):
+def generate_expdir( root = None ):
     """Generates a standard experiment directory name."""
     import os
     from plearn.utilities.toolkit import date_time_string    
 
+    if root is None:
+        root = config.get_option( 'EXPERIMENTS', 'expdir_root' )
+        
     expdir = "expdir"
     if root:
         expdir = os.path.join( root, expdir )
@@ -319,14 +323,8 @@ class _plargs_storage_fallback:
     to store the default values for PLearn command-line variables.
     """
     def __init__( self ):
-        from ConfigParser import ConfigParser
-
-        defaults = { 'expdir_root' : '' } 
-        configs = ConfigParser( defaults )
-        configs.read( '.pyplearn' )
-
-        self.expdir_root = configs.get( 'DEFAULT', 'expdir_root' )
-
+        self.expdir_root = config.get_option( 'EXPERIMENTS', 'expdir_root' )
+        
     def __getattr__( self, key ):
         if key == 'expdir':
             self.__dict__['expdir'] = generate_expdir( self.expdir_root )

@@ -207,6 +207,12 @@ def find_one(s, substrings):
             return (sub, index)
     return None
 
+def function_body( func ):
+    func_source, lstart = inspect.getsourcelines( func )
+    body_indent = func_source.pop(0).find('def') + 4
+
+    return "".join([ srcline[body_indent:] for srcline in func_source ])
+
 def rfind_one(s, substrings):
     """Searches string I{s} for any string in I{substrings}.
 
