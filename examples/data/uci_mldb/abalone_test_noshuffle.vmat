@@ -2,9 +2,8 @@ $INCLUDE{UCI_MLDB:common.plearn}
 ${MemoryVMatrix_head}
 
 SubVMatrix(
-  parent = $INCLUDE{UCI_MLDB:letter_all.vmat}
-  istart = 16000
+  parent = $INCLUDE{UCI_MLDB:abalone_all_noshuffle.vmat}
+  istart = 3133
 )
 
 ${MemoryVMatrix_foot}
-

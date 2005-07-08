@@ -3,7 +3,8 @@ ${MemoryVMatrix_head}
 
 ShiftAndRescaleVMatrix( 
   underlying_vmat =
-    $INCLUDE{UCI_MLDB:spambase/spambase_base.vmat}
+    $INCLUDE{UCI_MLDB:abalone/abalone_base.vmat}
+  verbosity = 1
 )
 
 ${MemoryVMatrix_foot}

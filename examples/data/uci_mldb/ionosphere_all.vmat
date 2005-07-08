@@ -1,11 +1,12 @@
-MemoryVMatrix(
-  data_vm =
-    BootstrapVMatrix( 
-      shuffle = 1
-      frac = 1
-      own_seed = 12345678
-      source =
-        $INCLUDE{UCI_MLDB:ionosphere/ionosphere_base.vmat}
-    )
+$INCLUDE{UCI_MLDB:common.plearn}
+${MemoryVMatrix_head}
+
+BootstrapVMatrix( 
+  shuffle = 1
+  frac = 1
+  own_seed = 12345678
+  source =
+    $INCLUDE{UCI_MLDB:ionosphere/ionosphere_base.vmat}
 )
 
+${MemoryVMatrix_foot}

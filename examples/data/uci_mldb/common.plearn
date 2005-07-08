@@ -1,0 +1,42 @@
+# Script to be included in all UCI vmat files.
+
+$IF{$ISDEFINED{UCI_MLDB_common_inc}}{}{
+  $DEFINE{UCI_MLDB_common_inc}{}
+
+  # Counter for the level of MemoryVMatrix.
+  $DEFINE{MemoryVMatrix_count}{0}
+
+  $DEFINE{parenthesis_open}{$CHAR{40}}    # '('
+  $DEFINE{parenthesis_close}{$CHAR{41}}   # ')'
+
+  # Only put a MemoryVMatrix if this is the top MemoryVMatrix, i.e.
+  # MemoryVMatrix_count == 0
+  $DEFINE{MemoryVMatrix_head}{
+    $IF{$ISEQUAL{${MemoryVMatrix_count}}{0}}{
+      MemoryVMatrix${parenthesis_open}
+        data_vm =
+    }{}
+    # The following lines increase MemoryVMatrix_count by 1.
+    $DEFINE{UCI_MLDB_common_tmp}{${MemoryVMatrix_count}}
+    $EVALUATE{UCI_MLDB_common_tmp}
+    $UNDEFINE{MemoryVMatrix_count}
+    $DEFINE{MemoryVMatrix_count}{$PLUS{${UCI_MLDB_common_tmp}}{1}}
+    $EVALUATE{MemoryVMatrix_count}
+    $UNDEFINE{UCI_MLDB_common_tmp}
+  }
+
+  $DEFINE{MemoryVMatrix_foot}{
+    $IF{$ISEQUAL{${MemoryVMatrix_count}}{1}}{
+      ${parenthesis_close}
+    }{}
+    # The following lines decrease MemoryVMatrix_count by 1.
+    $DEFINE{UCI_MLDB_common_tmp}{${MemoryVMatrix_count}}
+    $EVALUATE{UCI_MLDB_common_tmp}
+    $UNDEFINE{MemoryVMatrix_count}
+    $DEFINE{MemoryVMatrix_count}{$MINUS{${UCI_MLDB_common_tmp}}{1}}
+    $EVALUATE{MemoryVMatrix_count}
+    $UNDEFINE{UCI_MLDB_common_tmp}
+  }
+}
+
+

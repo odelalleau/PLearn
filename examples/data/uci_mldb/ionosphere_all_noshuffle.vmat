@@ -1,5 +1,6 @@
-MemoryVMatrix(
-  data_vm =
-    $INCLUDE{UCI_MLDB:ionosphere/ionosphere_base.vmat}
-)
+$INCLUDE{UCI_MLDB:common.plearn}
+${MemoryVMatrix_head}
 
+$INCLUDE{UCI_MLDB:ionosphere/ionosphere_base.vmat}
+
+${MemoryVMatrix_foot}

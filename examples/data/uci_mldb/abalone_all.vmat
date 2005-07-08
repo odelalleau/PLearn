@@ -1,5 +1,11 @@
-MemoryVMatrix(
-  data_vm =
-    $INCLUDE{UCI_MLDB:abalone/abalone_base.vmat}
+$INCLUDE{UCI_MLDB:common.plearn}
+${MemoryVMatrix_head}
+
+ConcatRowsVMatrix( 
+  array = [
+    $INCLUDE{UCI_MLDB:abalone_train.vmat}
+    $INCLUDE{UCI_MLDB:abalone_test.vmat}
+  ]
 )
 
+${MemoryVMatrix_foot}

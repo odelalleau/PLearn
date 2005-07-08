@@ -1,5 +1,9 @@
+$INCLUDE{UCI_MLDB:common.plearn}
+${MemoryVMatrix_head}
+
 SubVMatrix(
   parent = $INCLUDE{UCI_MLDB:letter_all_norm.vmat}
   length = 16000
 )
 
+${MemoryVMatrix_foot}
