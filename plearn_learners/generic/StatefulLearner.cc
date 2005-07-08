@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StatefulLearner.cc,v 1.8 2005/03/07 20:48:46 chapados Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Réjean Ducharme
@@ -119,8 +119,13 @@ void StatefulLearner::computeCostsOnly(const Vec& input, const Vec& target, Vec&
 
 void StatefulLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
-  train_set = training_set;
-  if (call_forget) forget();
+  train_set   = training_set;
+  inputsize_  = train_set->inputsize();
+  targetsize_ = train_set->targetsize();
+  weightsize_ = train_set->weightsize();
+
+  if ( call_forget )
+    forget();
 }
 
 void StatefulLearner::setTestSet(VMat testset)
