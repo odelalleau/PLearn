@@ -363,7 +363,8 @@ def printusage():
     print '  -checkobj: will report all source files that don\'t have *any* correponding .o in OBJS.'
     print '             This processes recursively from  given directories and is typically called'
     print '             after a pymake -clean, and a pymake . to get the list of files that failed to compile.'
-    print '  -so: create a shared object (.so) instead of an executable file.'
+    print '  -static: produce a statically linked executable'
+    print '  -so:  create a shared object (.so) instead of an executable file.'
     print '  -dll: create a dll instead of an executable file.'
     print '        It probably works ONLY on Windows with MinGW installed.'
     print '  -m32: force compilation in 32bits mode.'
@@ -552,9 +553,19 @@ if 'dll' in optionargs:
     create_dll = 1
     optionargs.remove('dll')
 
+static_linking = 0 # do we want to create a statically linked executable
+if 'static' in optionargs:
+    static_linking = 1
+    optionargs.remove('static')
+
 if create_so and create_dll:
     print 'Error: cannot create a DLL and a Shared Object at the same time.  Remove "-dll" or "-so" option.'
     sys.exit()
+
+if static_linking and (create_so or create_dll):
+    print 'Incompatible command line options specified: you may specify only one of -static, -so, -dll'
+    sys.exit()
+    
 
 #if options_choices[0][0] == 'icc'
 if 'icc' in optionargs:
@@ -1282,6 +1293,8 @@ digraph G
             linkeroptions = linkeroptions + ' -m32'
         if create_so:
             so_options = " -shared "
+        elif static_linking:
+            so_options = " -static "            
         for opt in options:
             optdef = pymake_options_defs[opt]
             if optdef.linkeroptions:

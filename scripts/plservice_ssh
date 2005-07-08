@@ -1,0 +1,98 @@
+#!/usr/bin/env python
+import sys, os, select
+from plearn.plos import plearn_config_dir, platform, loadavg
+
+args = sys.argv[1:]
+
+if not os.path.isdir(plearn_config_dir):
+    os.makedirs(plearn_config_dir)
+    
+candidate_hosts_file = os.path.join(plearn_config_dir,'parallel_hosts.'+platform)
+
+if len(args)<5 or args[-2]!="server":
+    print "Usage: "+sys.argv[0]+" <filename.servers> <nservers> <plearnprg> [globalparams] server <port>"
+    print """Will attempt to launch the <plearnprg> remotley using ssh on up to <nservers> hosts.
+    It will attempt to contact the hosts listed in file %s
+    Only hosts whose load average is below 1 will be reserved.
+    On the retained hosts, plearnprg will be launched in
+    TCP server mode on the given <port>.
+    The file filename.servers will be filled with rows indicating
+    all the hosts on which the program was successfully launched.
+    Each row will have the form:
+    host port pid
+    """ % candidate_hosts_file
+    sys.exit()
+
+fname = args[0]
+nservers = int(args[1])
+prg_and_args = ' '.join(args[2:])
+port = args[-1]
+
+f = open(candidate_hosts_file,'rU')
+candidate_hosts = [ host.strip() for host in f.readlines() if host.strip()!='' ]
+# print 'candidate_hosts:',candidate_hosts
+
+def launch_plearn_server(host, prg_and_args):
+    to_child, from_child, from_child_stderr = os.popen3('ssh -x '+host+' nice '+prg_and_args)    
+    # p = os.popen(prg_and_args)
+    line = from_child.readline()
+    fields = line.split()
+    if len(fields)!=4 or fields[0]!='PLEARN_SERVER_TCP':
+        raise ValueError(line.strip())
+    header,ho,port,pid = line.split()
+    return to_child,from_child,from_child_stderr,ho,port,pid
+
+def myselect(flist):
+    iwtd, owtd, ewtd = select.select(flist,[],flist)
+    return iwtd
+##     po = select.poll()
+##     fmap = {}
+##     for f in flist:
+##         fno = f.fileno()
+##         fmap[fno] = f
+##         po.register(fno,select.POLLIN|select.POLLPRI)
+##     fs = [ fmap[fno] for fno,event in po.poll() ]
+##     return fs
+
+    
+retained_hosts = {}
+f = open(fname,'w')
+for host in candidate_hosts:
+    lavg = loadavg(host)
+    if lavg<1:
+        try:
+            to_child,from_child,from_child_stderr,ho,port,pid = launch_plearn_server(host,prg_and_args)
+            f.write(host+' '+port+' '+pid+'\n')
+            print 'LAUNCHED ON '+host+' (' + ho + ' loadavg='+str(lavg)+') port='+port+' pid='+pid
+            retained_hosts[from_child] = (host,port,pid,'stdout')
+            retained_hosts[from_child_stderr] = (host,port,pid,'stderr')
+        except ValueError, msg:
+            print 'FAILED LAUNCH ON '+host+' (loadavg='+str(lavg)+') -> ',msg
+    else:
+        print 'SKIPPING '+host+' BEACAUSE loadavg='+str(lavg)
+    if len(retained_hosts)==nservers:
+        break    
+f.close()
+
+    
+try:
+    while retained_hosts:
+        fds = retained_hosts.keys()
+        iwtd = myselect(fds)
+        for p in iwtd:
+            ho, port, pid, streamtype = retained_hosts[p]
+            line = p.readline()
+            if line!='':
+                print ho+' '+pid+ ' ' + streamtype + ' >>>  '+line[0:-1]
+            else:
+                print ho+' '+pid+ ' ' + streamtype + ' CONNEXION CLOSED.'
+                p.close()
+                local_pid, exit_status = os.wait()
+                del retained_hosts[p]
+except KeyboardInterrupt:
+    for host,port,pid,streamtype in retained_hosts.values():
+        if streamtype=='stdout':
+            print 'KILLING '+pid+' on '+host
+            os.system('ssh -x '+host+' kill '+pid)
+        
+    
