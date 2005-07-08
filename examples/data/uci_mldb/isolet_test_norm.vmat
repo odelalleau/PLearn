@@ -3,7 +3,7 @@ BootstrapVMatrix(
   frac = 1
   own_seed = 12345678
   source =
-    $INCLUDE{UCI_MLDB:isolet_test_norm.vmat}
+    $INCLUDE{UCI_MLDB:isolet_test_norm_noshuffle.vmat}
 )
 
 

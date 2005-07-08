@@ -1,6 +1,6 @@
 ConcatRowsVMatrix( 
   array = [
-    $INCLUDE{UCI_MLDB:isolet_train_shuffle.vmat}
-    $INCLUDE{UCI_MLDB:isolet_test_shuffle.vmat}
+    $INCLUDE{UCI_MLDB:isolet_train.vmat}
+    $INCLUDE{UCI_MLDB:isolet_test.vmat}
   ]
 )

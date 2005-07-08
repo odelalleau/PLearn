@@ -1,5 +1,5 @@
 SubVMatrix(
-  parent = $INCLUDE{UCI_MLDB:isolet_all_norm.vmat}
+  parent = $INCLUDE{UCI_MLDB:isolet_all_norm_noshuffle.vmat}
   length = 6238
 )
 
