@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.38 2005/06/15 14:44:24 plearner Exp $
+   * $Id$
    ******************************************************* */
 
 
@@ -74,60 +74,90 @@ private:
 
 public:
     
-  // Build options
+  //#####  Build Options  ###################################################
 
-  //! Path of the directory associated with this learner, in which
-  //! it should save any file it wishes to create.
-  //! The directory will be created if it does not already exist.
-  //! If expdir is the empty string (the default), then the learner
-  //! should not create *any* file. Note that, anyway, most file creation and
-  //! reporting are handled at the level of the PTester class rather than
-  //! at the learner's.
+  /**
+   * Path of the directory associated with this learner, in which it should
+   * save any file it wishes to create.  The directory will be created if
+   * it does not already exist.  If expdir is the empty string (the
+   * default), then the learner should not create *any* file. Note that,
+   * anyway, most file creation and reporting are handled at the level of
+   * the PTester class rather than at the learner's.
+   */
   PPath expdir; 
 
-  long seed_; //!< the seed used for the random number generator in initializing the learner (see forget() method).
-  int stage; //!< The current training stage, since last fresh initialization (forget()):
-  //!< 0 means untrained, n often means after n epochs or optimization steps, etc...
-  //!< The true meaning is learner-dependant.
-  //!< You should never modify this option directly!
-  //!< It is the role of forget() to bring it back to 0,
-  //!< and the role of train() to bring it up to 'nstages'...
-  int nstages;//!< The stage until which train() should train this learner and return.
-  //!< The meaning of 'stage' is learner-dependent, but for learners whose
-  //!< training is incremental (such as involving incremental optimization),
-  //!< it is typically synonym with the number of 'epochs', i.e. the number
-  //!< of passages of the optimization process through the whole training set,
-  //!< since the last fresh initialisation.
+  //! The seed used for the random number generator in initializing the
+  //! learner (see forget() method).
+  long seed_;
 
-  bool report_progress; //!< should progress in learning and testing be reported in a ProgressBar
-  int verbosity; //! Level of verbosity. If 0, should not write anything on cerr. If >0 may write some info on the steps performed (the amount of detail written depends on the value of this option).
+  /**
+   * The current training stage, since last fresh initialization
+   * (forget()): 0 means untrained, n often means after n epochs or
+   * optimization steps, etc...  The true meaning is learner-dependant.
+   * You should never modify this option directly!  It is the role of
+   * forget() to bring it back to 0, and the role of train() to bring it up
+   * to 'nstages'...
+   */
+  int stage;
 
-  int nservers; //!< max number of computation servers to use in parallel with the main process
+  /**
+   * The stage until which train() should train this learner and return.
+   * The meaning of 'stage' is learner-dependent, but for learners whose
+   * training is incremental (such as involving incremental optimization),
+   * it is typically synonym with the number of 'epochs', i.e. the number
+   * of passages of the optimization process through the whole training
+   * set, since the last fresh initialisation.
+   */
+  int nstages;
 
+  //! Should progress in learning and testing be reported in a ProgressBar
+  bool report_progress;
+
+  //! Level of verbosity. If 0, should not write anything on cerr. If >0
+  //! may write some info on the steps performed (the amount of detail
+  //! written depends on the value of this option).
+  int verbosity; 
+
+  //! Max number of computation servers to use in parallel with the main
+  //! process
+  int nservers; 
+
+  //! Whether the training set should be saved upon a call to
+  //! setTrainingSet().  The saved file is put in the learner's expdir
+  //! (assuming there is one) and has the form "<prefix>_trainset_XXX.pmat"
+  //! The prefix is what this option specifies.  'XXX' is a unique
+  //! serial number that is globally incremented with each saved
+  //! setTrainingSet.  This option is useful when manipulating very
+  //! complex nested learner structures, and you want to ensure that
+  //! the inner learner is getting the correct results.  (Default="",
+  //! i.e. don't save anything.)
+  string save_trainingset_prefix;
+  
 protected:
-
-
-  //! The training set as set by setTrainingSet 
   /*!
-    Data-sets are seen as matrices whose columns or fields are layed out as
-    follows: a number of input fields, followed by (optional) target fields,
-    followed by a (optional) weight field (to weigh each example).
-    The sizes of those areas are given by the VMatrix options
-    inputsize targetsize, and weightsize, which are typically used by the
-    learner upon building.
+    The training set as set by setTrainingSet.  Data-sets are seen as
+    matrices whose columns or fields are layed out as follows: a number of
+    input fields, followed by (optional) target fields, followed by a
+    (optional) weight field (to weigh each example).  The sizes of those
+    areas are given by the VMatrix options inputsize targetsize, and
+    weightsize, which are typically used by the learner upon building.
   */
   VMat train_set;  
 
-  // learnt options all obtained from train_set when doing setTrainingSet
-  int inputsize_, targetsize_, weightsize_, n_examples;
-
+  //! Validation set used in some contexts
   VMat validation_set;
 
-  //! The stats_collector responsible for collecting train cost statistics during training.
-  //! This is typically set by some external training harness that wants to collect some stats.
+  //! Learnt options all obtained from train_set when doing setTrainingSet
+  int inputsize_, targetsize_, weightsize_, n_examples;
+
+
+  //! The stats_collector responsible for collecting train cost statistics
+  //! during training. This is typically set by some external training
+  //! harness that wants to collect some stats.
   PP<VecStatsCollector> train_stats;
 
-  //! whether or not to call 'forget' when the training set changes, in setTrainingSet:
+  //! Whether or not to call 'forget' when the training set changes, in
+  //! setTrainingSet:
   bool forget_when_training_set_changes;
 
 public:

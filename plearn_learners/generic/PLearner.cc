@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.53 2005/06/15 21:19:11 plearner Exp $
+   * $Id$
    ******************************************************* */
 
 #include "PLearner.h"
@@ -53,19 +53,20 @@ namespace PLearn {
 using namespace std;
 
 PLearner::PLearner()
-  :
-  n_train_costs_(-1),
-  n_test_costs_(-1),
-  seed_(-1), 
-  stage(0), nstages(1),
-  report_progress(true),
-  verbosity(1),
-  nservers(0),
-  inputsize_(-1),
-  targetsize_(-1),
-  weightsize_(-1),
-  n_examples(-1),
-  forget_when_training_set_changes(false)  
+  : n_train_costs_(-1),
+    n_test_costs_(-1),
+    seed_(-1), 
+    stage(0),
+    nstages(1),
+    report_progress(true),
+    verbosity(1),
+    nservers(0),
+    save_trainingset_prefix(""),
+    inputsize_(-1),
+    targetsize_(-1),
+    weightsize_(-1),
+    n_examples(-1),
+    forget_when_training_set_changes(false)  
 {}
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PLearner,
@@ -148,6 +149,19 @@ void PLearner::declareOptions(OptionList& ol)
   declareOption(ol, "nservers", &PLearner::nservers, OptionBase::buildoption, 
                 "Max number of computation servers to use in parallel with the main process.\n"
                 "If <=0 no parallelization will occur at this level.\n");
+
+  declareOption(ol, "save_trainingset_prefix", &PLearner::save_trainingset_prefix,
+                OptionBase::buildoption,
+                "Whether the training set should be saved upon a call to\n"
+                "setTrainingSet().  The saved file is put in the learner's expdir\n"
+                "(assuming there is one) and has the form \"<prefix>_trainset_XXX.pmat\"\n"
+                "The prefix is what this option specifies.  'XXX' is a unique\n"
+                "serial number that is globally incremented with each saved\n"
+                "setTrainingSet.  This option is useful when manipulating very\n"
+                "complex nested learner structures, and you want to ensure that\n"
+                "the inner learner is getting the correct results.  (Default="",\n"
+                "i.e. don't save anything.)\n");
+  
   inherited::declareOptions(ol);
 }
 
@@ -169,8 +183,10 @@ void PLearner::setExperimentDirectory(const PPath& the_expdir)
 
 void PLearner::setTrainingSet(VMat training_set, bool call_forget)
 { 
-  // YB: je ne suis pas sur qu'il soit necessaire de faire un build si la LONGUEUR du train_set a change? 
-  // les methodes non-parametriques qui utilisent la longueur devrait faire leur "resize" dans train, pas dans build.
+  // YB: je ne suis pas sur qu'il soit necessaire de faire un build si la
+  // LONGUEUR du train_set a change?  les methodes non-parametriques qui
+  // utilisent la longueur devrait faire leur "resize" dans train, pas dans
+  // build.
   bool training_set_has_changed = !train_set || !(train_set->looksTheSameAs(training_set));
   train_set = training_set;
   if (training_set_has_changed)
@@ -186,6 +202,14 @@ void PLearner::setTrainingSet(VMat training_set, bool call_forget)
     build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un NNet train_set = training_set;
   if (call_forget)
     forget();
+
+  // Save the new training set if desired
+  if (save_trainingset_prefix != "" && expdir != "") {
+    static int trainingset_serial = 1;
+    PPath fname = expdir / (save_trainingset_prefix + "_trainset_" +
+                            tostring(trainingset_serial++) + ".pmat");
+    train_set->savePMAT(fname);
+  }
 }
 
 void PLearner::setValidationSet(VMat validset)
