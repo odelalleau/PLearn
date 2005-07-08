@@ -1,0 +1,6 @@
+FileVMatrix( 
+  filename = "UCI_MLDB_REP:abalone/abalone_generate.vmat.metadata/precomp.pmat"
+  inputsize = 8
+  targetsize = 1
+  weightsize = 0
+)

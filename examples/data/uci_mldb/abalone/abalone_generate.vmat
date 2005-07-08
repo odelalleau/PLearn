@@ -1,0 +1,10 @@
+PrecomputedVMatrix( 
+  precomp_type = "pmat"
+  source =
+    UCIDataVMatrix( 
+      uci_spec =
+        $INCLUDE{UCI_MLDB:abalone/abalone.plearn}
+    )
+  metadatadir = "UCI_MLDB_REP:abalone/abalone_generate.vmat.metadata"
+)
+

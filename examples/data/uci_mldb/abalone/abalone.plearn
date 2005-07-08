@@ -1,0 +1,11 @@
+UCISpecification( 
+  # PPath: Filename for the whole dataset.
+  data_all = "UCI_MLDB_REP:abalone/abalone.data"
+  # int: Input size of the data
+  inputsize = 8
+  # int: Target size of the data
+  targetsize = 1
+  # int: Weight size of the data
+  weightsize = 0
+)
+
