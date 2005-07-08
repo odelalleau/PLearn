@@ -1,6 +1,8 @@
-SubVMatrix(
-  parent = $INCLUDE{UCI_MLDB:isolet_all.vmat}
-  length = 6238
+BootstrapVMatrix( 
+  shuffle = 1
+  frac = 1
+  own_seed = 12345678
+  source =
+    $INCLUDE{UCI_MLDB:isolet_train.vmat}
 )
-
 

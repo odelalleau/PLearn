@@ -1,2 +1,6 @@
-$INCLUDE{UCI_MLDB:isolet/isolet_base.vmat}
-
+ConcatRowsVMatrix( 
+  array = [
+    $INCLUDE{UCI_MLDB:isolet_train_shuffle.vmat}
+    $INCLUDE{UCI_MLDB:isolet_test_shuffle.vmat}
+  ]
+)

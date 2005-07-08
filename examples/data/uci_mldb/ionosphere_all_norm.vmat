@@ -1,8 +1,14 @@
 MemoryVMatrix(
   data_vm =
-    ShiftAndRescaleVMatrix( 
-      underlying_vmat =
-        $INCLUDE{UCI_MLDB:ionosphere/ionosphere_base.vmat}
+    BootstrapVMatrix( 
+      shuffle = 1
+      frac = 1
+      own_seed = 12345678
+      source =
+        ShiftAndRescaleVMatrix( 
+          underlying_vmat =
+            $INCLUDE{UCI_MLDB:ionosphere/ionosphere_base.vmat}
+        )
     )
 )
 

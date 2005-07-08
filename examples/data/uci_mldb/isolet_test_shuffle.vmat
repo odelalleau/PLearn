@@ -1,9 +1,0 @@
-BootstrapVMatrix( 
-  shuffle = 1
-  frac = 1
-  own_seed = 12345678
-  source =
-    $INCLUDE{UCI_MLDB:isolet_test.vmat}
-)
-
-
