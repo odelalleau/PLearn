@@ -1,7 +1,7 @@
 """PyPLearn's core"""
 __cvs_id__ = "$Id$"
 
-import string, types
+import os, string, types
 from plearn.utilities import metaprog, toolkit
 from plearn.pyplearn import config
 from plearn.pyplearn.plearn_repr import plearn_repr
@@ -140,20 +140,11 @@ def bind_plargs(obj, field_names = None, plarg_names = None, prefix = None):
                 cast = list_cast
             setattr(obj, field, cast(provided_value))
 
-def generate_expdir( root = None ):
+def generate_expdir( ):
     """Generates a standard experiment directory name."""
-    import os
     from plearn.utilities.toolkit import date_time_string    
 
-    if root is None:
-        root = config.get_option( 'EXPERIMENTS', 'expdir_root' )
-        
-    expdir = "expdir"
-    if root:
-        expdir = os.path.join( root, expdir )
-        if not os.path.exists( root ):
-            os.makedirs( root )
-        
+    expdir = "expdir"        
     if os.getenv('PyTest', '') != 'Running':                        
         expdir = '%s_%s' % ( expdir, date_time_string() )
 
@@ -316,29 +307,35 @@ class PLearnSnippet:
     def plearn_repr( self, indent_level = 0 ):
         return self.s
 
-class _plargs_storage_fallback:
+class _plargs_storage_fallback( object ):
     """Storing default values for plargs.
 
     A singleton instance of this class is instanciated by the package
     to store the default values for PLearn command-line variables.
     """
     def __init__( self ):
-        self.expdir_root = config.get_option( 'EXPERIMENTS', 'expdir_root' )
-        
-    def __getattr__( self, key ):
-        if key == 'expdir':
-            self.__dict__['expdir'] = generate_expdir( self.expdir_root )
-            return self.expdir
-        raise AttributeError
+        self.expdir_root        = config.get_option( 'EXPERIMENTS', 'expdir_root' )
+        self.__dict__['expdir'] = generate_expdir( )
         
     def __setattr__(self, k, v):
-        if k == 'expdir':
-            raise AttributeError("Cannot modify the value of 'expdir'.")
+        if k in [ 'expdir', '_lookup_' ]:
+            raise AttributeError( "Cannot modify the value of '%s'." % k )
         self.__dict__[k] = v
+
+    def _lookup_( self, key, overrides ):
+        # Look for the key in the overrides
+        if key in overrides:
+            return overrides[key]
+
+        # Else, use default value
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            raise UnknownArgumentError(key)        
 plarg_defaults = _plargs_storage_fallback()
 
 
-class _plargs_storage_readonly:
+class _plargs_storage_readonly( object ):
     """Values read from or expected for PLearn command-line variables.
 
     A custom (and encouraged) practice is to write large PyPLearn scripts
@@ -403,14 +400,19 @@ class _plargs_storage_readonly:
     def __setattr__(self, k, v):
         raise AttributeError('Cannot modify plargs')
 
-    def __getattr__(self, k):
-        if k.startswith('__'):
-           raise AttributeError
+    def __getattr__( self, key ):    
+        if key == 'expdir':
+            expdir = plarg_defaults._lookup_( 'expdir', self.__dict__ )
+            root   = plarg_defaults._lookup_( 'expdir_root', self.__dict__ )
 
-        try:
-            return getattr(plarg_defaults, k)
-        except AttributeError:
-            raise UnknownArgumentError(k)
+            if root:
+                expdir = os.path.join( root, expdir )
+                if not os.path.exists( root ):
+                    os.makedirs( root )
+            return expdir
+
+        else:
+            return plarg_defaults._lookup_( key, self.__dict__ )        
 plargs = _plargs_storage_readonly()
 
 class plargs_binder:

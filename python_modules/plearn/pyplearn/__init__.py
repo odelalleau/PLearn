@@ -72,9 +72,12 @@ class PyPLearnScript( PyPLearnObject ):
                      for (attr_name, attr_val)
                      in inspect.getmembers( obj )
                      if public_attribute_predicate(attr_name, attr_val) ]
-        
+
         plarg_attrs = dict(parse( plarg_defaults ))
+        raw_input( plarg_attrs )
+        
         plarg_attrs.update( dict(parse( plargs )) )
+        raw_input( plarg_attrs )
         
         ## Alphabetical iteration
         keys = plarg_attrs.keys()
