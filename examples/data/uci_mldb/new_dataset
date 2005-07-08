@@ -2,7 +2,7 @@
 # Script to easily create PLearn vmats for new datasets, based on existing templates.
 # 'origin' is the template database, 'destination' is the new database.
 
-if ($2 == "")
+if ("$2" == "") then
   echo "Usage: $0 <origin_name> <destination_name>"
   exit 127
 endif
