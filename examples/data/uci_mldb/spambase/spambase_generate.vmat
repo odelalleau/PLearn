@@ -1,10 +1,15 @@
 PrecomputedVMatrix( 
   precomp_type = "pmat"
   source =
+    RemoveDuplicateVMatrix( 
+      epsilon = 1e-8
+      verbosity = 2
+      source =
         UCIDataVMatrix( 
           uci_spec =
             $INCLUDE{UCI_MLDB:spambase/spambase.plearn}
         )
+    )
   metadatadir = "UCI_MLDB_REP:spambase/spambase_generate.vmat.metadata"
 )
 
