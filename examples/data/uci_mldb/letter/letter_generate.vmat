@@ -1,9 +1,28 @@
 PrecomputedVMatrix( 
   precomp_type = "pmat"
   source =
-    UCIDataVMatrix( 
-      uci_spec =
-        $INCLUDE{UCI_MLDB:letter/letter.plearn}
+    ConcatRowsVMatrix(
+      array = [
+        RemoveDuplicateVMatrix(
+          verbosity = 2
+          source =
+            MemoryVMatrix(
+              data_vm =
+                SubVMatrix(
+                  length = 16000
+                  parent =
+                    *7845874->UCIDataVMatrix( 
+                      uci_spec =
+                        $INCLUDE{UCI_MLDB:letter/letter.plearn}
+                    )
+                )
+            )
+        )
+        SubVMatrix(
+          istart = 16000
+          parent = *7845874
+        )
+      ]
     )
   metadatadir = "UCI_MLDB_REP:letter-recognition/letter_generate.vmat.metadata"
 )
