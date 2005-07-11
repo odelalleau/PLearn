@@ -866,19 +866,24 @@ void VMatrix::setMetaInfoFrom(const VMatrix* vm)
   }
 
   // Copy fieldnames from vm if not set and they look good.
-  if(!hasFieldInfos() && (width() == vm->width()) && vm->hasFieldInfos() )
+  bool same_fields_as_source =
+    (!hasFieldInfos() && (width() == vm->width()) && vm->hasFieldInfos());
+  if(same_fields_as_source)
     setFieldInfos(vm->getFieldInfos());
 
-  // Copy string <-> real mappings for fields which have the same name.
+  // Copy string <-> real mappings for fields which have the same name (or for
+  // all fields if it looks like the fields are the same as the source).
   TVec<string> fnames = fieldNames();
   for (int i = 0; i < width_; i++) {
-    if (!pl_isnumber(fnames[i])) {
-      int vm_index = vm->fieldIndex(fnames[i]);
-      if (vm_index >= 0)
-        // The source VMatrix has a field with the same name (which is not a
-        // number): we can get its string mapping.
-        setStringMapping(i, vm->getStringToRealMapping(vm_index));
-    }
+    int vm_index = -1;
+    if (same_fields_as_source)
+      vm_index = i;
+    else if (!pl_isnumber(fnames[i]))
+      vm_index = vm->fieldIndex(fnames[i]);
+    if (vm_index >= 0)
+      // The source VMatrix has a field with the same name (which is not a
+      // number): we can get its string mapping.
+      setStringMapping(i, vm->getStringToRealMapping(vm_index));
   }
 }
  
