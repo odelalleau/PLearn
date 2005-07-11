@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RemoveDuplicateVMatrix.cc,v 1.6 2005/03/25 16:04:58 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -41,18 +41,19 @@
 /*! \file RemoveDuplicateVMatrix.cc */
 
 
+#include "RemoveDuplicateVMatrix.h"
 #include <plearn/base/tostring.h>
 #include <plearn/ker/DistanceKernel.h>
-#include "RemoveDuplicateVMatrix.h"
 
 namespace PLearn {
 using namespace std;
 
-//////////////////
+////////////////////////////
 // RemoveDuplicateVMatrix //
-//////////////////
+////////////////////////////
 RemoveDuplicateVMatrix::RemoveDuplicateVMatrix()
 : epsilon(1e-6),
+  only_input(false),
   verbosity(1)
 {
   // ...
@@ -77,7 +78,13 @@ void RemoveDuplicateVMatrix::declareOptions(OptionList& ol)
   // ### is OptionBase::nosave
 
   declareOption(ol, "epsilon", &RemoveDuplicateVMatrix::epsilon, OptionBase::buildoption,
-      "Two points will be considered equal iff their square distance is < epsilon.");
+      "Two points will be considered equal iff their square distance is < epsilon.\n"
+      "If epsilon is set to 0, a more accurate check is performed and only samples\n"
+      "which are perfectly equal are removed.\n");
+
+  declareOption(ol, "only_input", &RemoveDuplicateVMatrix::only_input, OptionBase::buildoption,
+      "If set to 1, only the input part will be considered when computing the inter-points\n"
+      "distance. If set to 0, the whole row of the matrix is considered.\n");
 
   declareOption(ol, "verbosity", &RemoveDuplicateVMatrix::verbosity, OptionBase::buildoption,
       "Controls the amount of output.");
@@ -114,21 +121,52 @@ void RemoveDuplicateVMatrix::build_()
     else
       dk.report_progress = false;
     dk.build();
+    int old_is = source->inputsize();
+    int old_ts = source->targetsize();
+    int old_ws = source->weightsize();
+    if (!only_input)
+      source->defineSizes(source->width(), 0, 0);
     dk.setDataForKernelMatrix(source);
     int n = source.length();
+    if (n >= 10000 && verbosity >= 2)
+      PLWARNING("In RemoveDuplicateVMatrix::build_ - Computing a large Gram "
+                "matrix (%d x %d), there may not be enough memory available", n, n);
     Mat distances(n,n);
     dk.computeGramMatrix(distances);
+    if (!only_input)
+      source->defineSizes(old_is, old_ts, old_ws);
     TVec<bool> removed(n);
     removed.fill(false);
-    for (int i = 0; i < n; i++) {
-      if (!removed[i]) {
-        for (int j = i + 1; j < n; j++) {
-          if (!removed[j] && distances(i,j) < epsilon) {
-            removed[j] = true;
-          }
-        }
-      }
+    Vec row_i, row_j;
+    if (epsilon == 0) {
+      int w = only_input ? source->inputsize() : source->width();
+      row_i.resize(w);
+      row_j.resize(w);
     }
+    real delta = epsilon > 0 ? epsilon : 1e-4;
+    for (int i = 0; i < n; i++)
+      if (!removed[i])
+        for (int j = i + 1; j < n; j++)
+          if (!removed[j] && distances(i,j) < delta) {
+            bool equal = true;
+            if (epsilon == 0) {
+              // More accurate check.
+              source->getSubRow(i, 0, row_i);
+              source->getSubRow(j, 0, row_j);
+              real* data_i = row_i->data();
+              real* data_j = row_j->data();
+              int w = row_i->length();
+              for (int k = 0; k < w; k++, data_i++, data_j++)
+                if (*data_i != *data_j)
+                  equal = false;
+            }
+            if (equal) {
+              if (verbosity >= 2)
+                pout << "Removed sample "           << j
+                  << " (duplicated with sample " << i << ")" << endl;
+              removed[j] = true;
+            }
+          }
     indices.resize(0);
     for (int i = 0; i < n; i++)
       if (!removed[i])

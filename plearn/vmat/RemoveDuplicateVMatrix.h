@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RemoveDuplicateVMatrix.h,v 1.2 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -69,7 +69,8 @@ public:
   // ************************
 
   real epsilon;
-  int verbosity;
+  bool only_input;
+  int  verbosity;
 
   // ****************
   // * Constructors *
