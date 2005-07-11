@@ -5,7 +5,9 @@ PLearn needs the following metaprotocols to be defined in the ppath.config file:
 - UCI_MLDB    : path to the PLearn vmat files (default is PLEARNDIR:examples/data/uci_mldb)
 
 In order to enable access to a database named 'data', you must run the
-commands given in the file UCI_MLDB:data/readme.txt.
+commands given in the file UCI_MLDB:data/readme.txt. You should also read
+carefully this file, as it may contain important informations about the
+database.
 
 This will typically precompute the database in a PLearn binary format. The
 database will then be available through all or some of the following files:
@@ -39,4 +41,7 @@ even for normalized and / or shuffled datasets.
 Small datasets (< 10 Mb in memory) are automatically precomputed in memory.
 Bigger ones are only stored on disk (which can slow down the access to data,
 especially if the dataset is shuffled).
+
+Note also that duplicated entries are usually removed from the training set
+(this will be indicated in the file readme.txt specific to each database).
 
