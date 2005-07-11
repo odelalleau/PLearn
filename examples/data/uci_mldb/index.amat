@@ -1,0 +1,27 @@
+# Summary of databases available.
+
+# Fields:
+# PLearn_name: database name within PLearn
+# task: one of classif(n_classes), regression
+# n_total : total number of samples
+# n_train : number of training samples
+# n_test : number of test samples
+# inputsize : number of inputs
+# targetsize : number of targets
+# train/test : whether there is an official train/test split
+# shuffled: whether the dataset is shuffled in PLearn
+# memory  : whether the dataset is precomputed in memory
+# duplicated: how many training examples have been removed because they were duplicated
+# discrete: whether there are non-binary discrete fields
+# original_name: database name in the original UCI repository
+
+
+#: PLearn_name  task        n_total n_train n_test  inputsize targetsize  train/test  shuffled  memory  duplicated  discrete  original_name
+
+abalone         regression    4177    3133    1044     8         1        X           X         X       -           X         abalone
+ionosphere      classif(2)     350     200     150    33         1        X           X         X       -           -         ionosphere
+isolet          classif(26)   7797    6238    1559   617         1        X           X         -       -           -         isolet
+letter          classif(26)  19071   15071    4000    16         1        X           -         X       929         -         letter-recognition
+spambase        classif(2)    4210       -       -    57         1        -           X         X       391         -         spambase
+
+

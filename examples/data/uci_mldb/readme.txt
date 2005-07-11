@@ -1,4 +1,5 @@
 This directory contains scripts to easily load UCI datasets.
+See index.amat for a list of available datasets, with their characteristics.
 
 PLearn needs the following metaprotocols to be defined in the ppath.config file:
 - UCI_MLDB_REP: path to the original UCI_MLDB datafiles
@@ -44,4 +45,5 @@ especially if the dataset is shuffled).
 
 Note also that duplicated entries are usually removed from the training set
 (this will be indicated in the file readme.txt specific to each database).
+
 
