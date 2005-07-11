@@ -69,6 +69,7 @@ public:
   // ************************
 
   real epsilon;
+  int  max_source_length;
   bool only_input;
   int  verbosity;
 

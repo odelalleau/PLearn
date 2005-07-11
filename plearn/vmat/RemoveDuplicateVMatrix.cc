@@ -53,6 +53,7 @@ using namespace std;
 ////////////////////////////
 RemoveDuplicateVMatrix::RemoveDuplicateVMatrix()
 : epsilon(1e-6),
+  max_source_length(10000),
   only_input(false),
   verbosity(1)
 {
@@ -85,6 +86,10 @@ void RemoveDuplicateVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "only_input", &RemoveDuplicateVMatrix::only_input, OptionBase::buildoption,
       "If set to 1, only the input part will be considered when computing the inter-points\n"
       "distance. If set to 0, the whole row of the matrix is considered.\n");
+
+  declareOption(ol, "max_source_length", &RemoveDuplicateVMatrix::max_source_length, OptionBase::buildoption,
+      "If the source's length is higher than this value, the whole Gram matrix will\n"
+      "not be stored in memory (which will be slightly slower).\n");
 
   declareOption(ol, "verbosity", &RemoveDuplicateVMatrix::verbosity, OptionBase::buildoption,
       "Controls the amount of output.");
@@ -128,31 +133,45 @@ void RemoveDuplicateVMatrix::build_()
       source->defineSizes(source->width(), 0, 0);
     dk.setDataForKernelMatrix(source);
     int n = source.length();
-    if (n >= 10000 && verbosity >= 2)
-      PLWARNING("In RemoveDuplicateVMatrix::build_ - Computing a large Gram "
-                "matrix (%d x %d), there may not be enough memory available", n, n);
-    Mat distances(n,n);
-    dk.computeGramMatrix(distances);
+    bool compute_gram = (n <= max_source_length);
+    Mat distances;
+    if (compute_gram) {
+      if (n > 10000 && verbosity >= 2)
+        PLWARNING("In RemoveDuplicateVMatrix::build_ - Computing a large Gram "
+                  "matrix (%d x %d), there may not be enough memory available", n, n);
+      distances.resize(n, n);
+      dk.computeGramMatrix(distances);
+    }
     if (!only_input)
       source->defineSizes(old_is, old_ts, old_ws);
     TVec<bool> removed(n);
     removed.fill(false);
     Vec row_i, row_j;
-    if (epsilon == 0) {
+    if (epsilon == 0 || !compute_gram) {
       int w = only_input ? source->inputsize() : source->width();
       row_i.resize(w);
       row_j.resize(w);
     }
     real delta = epsilon > 0 ? epsilon : 1e-4;
     for (int i = 0; i < n; i++)
-      if (!removed[i])
-        for (int j = i + 1; j < n; j++)
-          if (!removed[j] && distances(i,j) < delta) {
-            bool equal = true;
-            if (epsilon == 0) {
-              // More accurate check.
-              source->getSubRow(i, 0, row_i);
+      if (!removed[i]) {
+        if (!compute_gram)
+          source->getSubRow(i, 0, row_i);
+        for (int j = i + 1; j < n; j++) {
+          if (!removed[j]) {
+            bool equal;
+            if (compute_gram)
+              equal = (distances(i,j) < delta);
+            else {
               source->getSubRow(j, 0, row_j);
+              equal = (dk.evaluate(row_i, row_j) < delta);
+            }
+            if (equal && epsilon == 0) {
+              // More accurate check.
+              if (compute_gram) {
+                source->getSubRow(i, 0, row_i);
+                source->getSubRow(j, 0, row_j);
+              }
               real* data_i = row_i->data();
               real* data_j = row_j->data();
               int w = row_i->length();
@@ -163,10 +182,12 @@ void RemoveDuplicateVMatrix::build_()
             if (equal) {
               if (verbosity >= 2)
                 pout << "Removed sample "           << j
-                  << " (duplicated with sample " << i << ")" << endl;
+                     << " (duplicated with sample " << i << ")" << endl;
               removed[j] = true;
             }
           }
+        }
+      }
     indices.resize(0);
     for (int i = 0; i < n; i++)
       if (!removed[i])
