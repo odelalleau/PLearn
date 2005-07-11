@@ -7,9 +7,17 @@ if ("$2" == "") then
   exit 127
 endif
 
-foreach C (`ls ${1}*.vmat`)
-  setenv FILE `echo $C | sed -e "s/$1/$2/g"`
-  sed -e "s/$1/$2/g" $C > $FILE
+mkdir $2
+
+foreach ORIG_FILE (`ls $1`)
+  setenv FILE `echo $ORIG_FILE | sed -e "s/$1/$2/g"`
+  sed -e "s/$1/$2/g" $1/$ORIG_FILE > $2/$FILE
+  echo "Wrote file $2/$FILE"
+end
+
+foreach ORIG_FILE (`ls ${1}*.vmat`)
+  setenv FILE `echo $ORIG_FILE | sed -e "s/$1/$2/g"`
+  sed -e "s/$1/$2/g" $ORIG_FILE > $FILE
   echo "Wrote file $FILE"
 end
 
