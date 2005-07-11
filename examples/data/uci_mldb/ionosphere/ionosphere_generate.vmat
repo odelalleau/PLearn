@@ -1,17 +1,22 @@
 PrecomputedVMatrix( 
   precomp_type = "pmat"
   source =
-    ProcessingVMatrix( 
-      # Remove column 1, which is constant.
-      prg = "[%0] [%2:%34]"
+    RemoveDuplicateVMatrix(
+      verbosity = 2
+      epsilon = 1e-8
       source =
-        UCIDataVMatrix( 
-          uci_spec =
-            $INCLUDE{UCI_MLDB:ionosphere/ionosphere.plearn}
+        ProcessingVMatrix( 
+          # Remove column 1, which is constant.
+          prg = "[%0] [%2:%34]"
+          source =
+            UCIDataVMatrix( 
+              uci_spec =
+                $INCLUDE{UCI_MLDB:ionosphere/ionosphere.plearn}
+            )
+          inputsize = 33
+          targetsize = 1
+          weightsize = 0
         )
-      inputsize = 33
-      targetsize = 1
-      weightsize = 0
     )
   metadatadir = "UCI_MLDB_REP:ionosphere/ionosphere_generate.vmat.metadata"
 )
