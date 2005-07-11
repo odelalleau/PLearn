@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.23 2005/06/15 14:43:14 plearner Exp $
+   * $Id$
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -233,7 +233,8 @@ int plearn_main( int argc, char** argv,
   }
   catch (...) 
   {
-    cerr << "FATAL ERROR: uncaught unknown exception" << endl;
+    cerr << "FATAL ERROR: uncaught unknown exception "
+         << "(ex: out-of-memory when allocating a matrix)" << endl;
   }
 
   return 0;
