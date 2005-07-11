@@ -153,11 +153,17 @@ void RemoveDuplicateVMatrix::build_()
       row_j.resize(w);
     }
     real delta = epsilon > 0 ? epsilon : 1e-4;
-    for (int i = 0; i < n; i++)
+    int count = 0;
+    ProgressBar* pb = 0;
+    bool report_progress = (!compute_gram && verbosity >= 1);
+    int iterate = 0;
+    if (report_progress)
+      pb = new ProgressBar("Looking for duplicated entries", (n * (n - 1)) / 2);
+    for (int i = 0; i < n; i++) {
       if (!removed[i]) {
         if (!compute_gram)
           source->getSubRow(i, 0, row_i);
-        for (int j = i + 1; j < n; j++) {
+        for (int j = i + 1; j < n; j++, iterate) {
           if (!removed[j]) {
             bool equal;
             if (compute_gram)
@@ -180,19 +186,32 @@ void RemoveDuplicateVMatrix::build_()
                   equal = false;
             }
             if (equal) {
-              if (verbosity >= 2)
+              if (verbosity >= 5)
                 pout << "Removed sample "           << j
                      << " (duplicated with sample " << i << ")" << endl;
               removed[j] = true;
+              count++;
             }
           }
         }
       }
+      iterate += (n - i);
+      if (report_progress)
+        pb->update(iterate);
+    }
+    if (pb)
+      delete pb;
     indices.resize(0);
     for (int i = 0; i < n; i++)
       if (!removed[i])
         indices.append(i);
     inherited::build();
+    if (verbosity >= 2)
+      if (count > 0)
+        pout << "Removed a total of " << count << " duplicated samples (new length: "
+             << length() << ")" << endl;
+      else
+        pout << "No duplicated samples found." << endl;
   }
 }
 
