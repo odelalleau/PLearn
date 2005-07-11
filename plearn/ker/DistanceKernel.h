@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DistanceKernel.h,v 1.8 2005/04/04 02:29:37 yoshua Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,6 +65,7 @@ protected:
 
 public:
 
+    bool optimized;
     bool pow_distance;
 
     DistanceKernel(real the_Ln=2, bool powdist=false);

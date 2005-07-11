@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DistanceKernel.cc,v 1.13 2005/04/04 02:29:36 yoshua Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -61,6 +61,7 @@ PLEARN_IMPLEMENT_OBJECT(
 ////////////////////
 DistanceKernel::DistanceKernel(real the_Ln, bool pd)
 : n(the_Ln),
+  optimized(false),
   pow_distance(pd)
 {}
 
@@ -75,6 +76,10 @@ void DistanceKernel::declareOptions(OptionList& ol)
 
   declareOption(ol, "pow_distance", &DistanceKernel::pow_distance, OptionBase::buildoption, 
       "If set to 1, the distance computed will be elevated to power n.");
+
+  declareOption(ol, "optimized", &DistanceKernel::optimized, OptionBase::buildoption, 
+      "If set to 1, the evaluate_i_j method will be faster, at the cost of potential\n"
+      "approximations in the result.");
 
   inherited::declareOptions(ol);
 }
@@ -95,7 +100,7 @@ real DistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
 //////////////////
 real DistanceKernel::evaluate_i_j(int i, int j) const {
   static real d;
-  if (n == 2.0) {
+  if (optimized && n == 2.0) {
     if (i == j)
       // The case 'i == j' can cause precision issues because of the optimized
       // formula below. Thus we make sure we always return 0.
