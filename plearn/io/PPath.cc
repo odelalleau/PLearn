@@ -48,6 +48,7 @@
 #include "openFile.h"
 #include "pl_log.h"
 #include "fileutils.h"
+#include <plearn/base/stringutils.h>    //!< For the split() method.
 
 ///////////////////////  
 // DOS SETTINGS
@@ -958,6 +959,39 @@ bool PPath::isRoot() const
   PPath no_prot = removeProtocol();
   PPath drv = no_prot.drive();
   return string(no_prot) == string(drv) + _slash();
+}
+
+
+////////////////////////
+// parseUrlParameters //
+////////////////////////
+void PPath::parseUrlParameters(PPath& base_path, map<string, string>& parameters) const
+{
+  size_t pos = rfind('?');
+  if (pos == string::npos) {
+    base_path = *this;
+    return;
+  }
+  size_t check = rfind('?', pos - 1);
+  if (check != string::npos)
+    PLERROR("In PPath::parseUrlParameters - There can be only one '?' in a PPath");
+  base_path = substr(0, pos);
+  string rest = substr(pos + 1);
+  vector<string> pairs = PLearn::split(rest, '&');
+  string equal = "=";
+  string name, value;
+  vector<string>::const_iterator it = pairs.begin();
+  for (; it != pairs.end(); it++) {
+    PLearn::split_on_first(*it, equal, name, value);
+    if (!name.empty()) {
+      if (value.empty())
+        PLERROR("In PPath::parseUrlParameters - The parameter %s has no value",
+                name.c_str());
+      parameters[name] = value;
+    } else if (!value.empty())
+      PLERROR("In PPath::parseUrlParameters - The value %s has no parameter name",
+              value.c_str());
+  }
 }
 
 /////////////////////////

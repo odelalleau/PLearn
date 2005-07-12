@@ -295,6 +295,15 @@ public:
   //! root directory.
   void removeTrailingSlash();
 
+  //! Parse a PPath url-like parameters. For instance, if the PPath is
+  //! protocol:/path?param1=value1&param2=value2&param3=value3
+  //! then after calling this method, 'base_path' will be equal to
+  //! protocol:/path, and the 'parameters' map will be such that
+  //! parameters["paramX"] = "valueX".
+  //! Note that existing mappings in 'parameters' are not removed (unless
+  //! they are overwritten by the PPath parameters).
+  void parseUrlParameters(PPath& base_path, map<string, string>& parameters) const;
+
   //! Return true iff this is an absolute path.
   bool   isAbsPath     ()  const { return isabs();   } 
   bool   isFilePath    ()  const { return  protocol() == FILE_PROTOCOL; }
