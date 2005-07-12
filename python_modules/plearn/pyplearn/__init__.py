@@ -98,10 +98,10 @@ class __TMat:
     def _unreferenced( self ):
         return True
     
-    def plearn_repr( self, indent_level=0 ):
+    def plearn_repr( self, indent_level=0, inner_repr=plearn_repr ):
         return "%d %d %s" % (
             self.nrows, self.ncols, 
-            plearn_repr( self.content, indent_level+1 ) 
+            inner_repr( self.content, indent_level+1 ) 
             )
     
 def TMat( *args ):
