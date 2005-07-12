@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.26 2005/02/04 15:09:21 tihocan Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -543,6 +543,50 @@ ostream& operator<<(ostream& out, const vector<string>& vs)
       ++it;
     }
   return out;
+}
+
+///////////////////////
+// split_from_string //
+///////////////////////
+vector<string> split_from_string(const string& s, const string& delimiter)
+{
+  vector<string> res;
+  string::size_type pos_of_delim;
+  string::size_type pos_of_start = 0;
+  string::size_type size_of_delim = delimiter.size();
+  do {
+    pos_of_delim = s.find(delimiter, pos_of_start);
+    if (pos_of_delim == string::npos)
+      res.push_back(s.substr(pos_of_start));
+    else {
+      res.push_back(s.substr(pos_of_start, pos_of_delim - pos_of_start));
+      pos_of_start = pos_of_delim + size_of_delim;
+    }
+  } while (pos_of_delim != string::npos);
+  return res;
+}
+
+////////////////////////////
+// parseBaseAndParameters //
+////////////////////////////
+void parseBaseAndParameters(const string& s, string& base,
+                            map<string, string>& params,
+                            const string& delimiter)
+{
+  vector<string> splits = split_from_string(s, delimiter);
+  base = splits[0];
+  string name, value;
+  for (vector<string>::size_type i = 1; i < splits.size(); i++) {
+    const string& str = splits[i];
+    if (str.find('=') == string::npos)
+      PLERROR("In parseBaseAndParameters - Could not find the '=' character when parsing "
+              "parameter '%s'", str.c_str());
+    split_on_first(str, "=", name, value);
+    if (name.empty())
+      PLERROR("In parseBaseAndParameters - Read an empty parameter name in string '%s'"
+              , s.c_str());
+    params[name] = value;
+  }
 }
 
 } // end of namespace PLearn

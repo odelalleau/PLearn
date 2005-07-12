@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.30 2005/02/04 15:09:21 tihocan Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -102,6 +102,13 @@ using namespace std;
   //! returns true if s is a blank paragraph (containing only space, tab, until end of **string**)
   bool isParagraphBlank(const string& s);
 
+  //! From a string s = "base_string::arg1=val1::arg2=val2::arg3=val3", fill
+  //! 'base' with 'base_string', and add to 'params' mappings argX -> valX.
+  //! Note that 'params' is not cleared.
+  //! One can use another delimiting string through the 'delimiter' argument.
+  void parseBaseAndParameters(const string& s, string& base,
+                              map<string, string>& params,
+                              const string& delimiter = "::");
 
   //!  replaces all characters <= ' ' (i.e. newline, tab, space, etc...) by '_'
   string space_to_underscore(string str);
@@ -122,6 +129,9 @@ using namespace std;
 //! replaces all occurences of searchstr in the text by replacestr
 //! returns the number of matches that got replaced
 int search_replace(string& text, const string& searchstr, const string& replacestr);
+
+//! Split a string along occurences of the substring 'delimiter'.
+vector<string> split_from_string(const string& s, const string& delimiter);
 
 //! splits a string along occurences of the delimiters.
 vector<string> split(const string& s, char delimiter);
