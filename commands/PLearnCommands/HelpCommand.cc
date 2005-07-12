@@ -33,15 +33,16 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HelpCommand.cc,v 1.10 2004/09/27 20:19:16 plearner Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 /*! \file HelpCommand.cc */
 #include "HelpCommand.h"
 #include <iostream>
-//#include "general.h"
 #include <plearn/db/getDataSet.h>
+#include <plearn/base/general.h>        //!< For prgname().
 #include <plearn/base/stringutils.h>
+#include <plearn/base/TypeFactory.h>    //!< For displayObjectHelp().
 
 namespace PLearn {
 using namespace std;
@@ -51,7 +52,7 @@ PLearnCommandRegistry HelpCommand::reg_(new HelpCommand);
 
 void HelpCommand::helpOverview()
 {
-  cout << 
+  pout << 
     "To run a .plearn script type:                       " + prgname() + " scriptfile.plearn \n"
     "To run a command type:                              " + prgname() + " command [ command arguments ] \n\n"
     "To get help on the script file format:              " + prgname() + " help scripts \n"
@@ -64,7 +65,7 @@ void HelpCommand::helpOverview()
 
 void HelpCommand::helpScripts()
 {
-  cout << 
+  pout << 
     "You can run plearn with the name of a plearn script file as argument\n"
     "A plearn script file should have a name ending in .plearn\n\n"
     "A plearn script must contain at least one runnable PLearn object\n"
@@ -97,28 +98,28 @@ void HelpCommand::helpScripts()
 
 void HelpCommand::helpCommands()
 {
-  cout << "To run a command, type:"
+  pout << "To run a command, type:"
        << "  % " + prgname()  + " command_name command_arguments \n" << endl;
 
-  cout << "Available commands are: " << endl;
-  PLearnCommandRegistry::print_command_summary(cout);
-  cout << endl;
+  pout << "Available commands are: " << endl;
+  PLearnCommandRegistry::print_command_summary(cout); // TODO Change to pout.
+  pout << endl;
 
-  cout << "For more details on a specific command, type: \n" 
+  pout << "For more details on a specific command, type: \n" 
        << "  % " << prgname() << " help <command_name> \n"
        << endl;
 }
 
 void HelpCommand::helpDatasets()
 {
-  cout << getDataSetHelp() << endl;
+  pout << getDataSetHelp() << endl;
 }
 
 void HelpCommand::helpAboutScript(const string& fname)
 {
   if(!file_exists(fname))
     PLERROR("Could not open script file %s", fname.c_str());
-  cout << 
+  pout << 
     "Help about a script file not yet implemented \n"
       << endl;
 }
@@ -140,9 +141,9 @@ void HelpCommand::run(const vector<string>& args)
       else if(about=="datasets")
         helpDatasets();
       else if(PLearnCommandRegistry::is_registered(about))
-        PLearnCommandRegistry::help(about, cout);
+        PLearnCommandRegistry::help(about, cout); // TODO Change to pout.
       else 
-        displayObjectHelp(cout, about);
+        displayObjectHelp(cout, about);   // TODO Change to pout.
     }
 }
 
