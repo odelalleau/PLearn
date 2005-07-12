@@ -54,19 +54,6 @@ using namespace std;
 
 class VMat;
 
-/** Extract the dataset and arguments from the string passed
-    to getDataSet().
-    There are two possible formats for arguments:
-      1. path/filename.ext?arg1=value1&arg2=value2&arg3=value3
-      2. path/filename.ext::arg1=value1::arg2=value2::arg3=value3
-    'args_vec' is filled with strings of the form "argX=valueX", while
-    'args_map' is filled with pairs of the form ("argX", "valueX").
-*/
-void extractDataSetNameAndArgs(const PPath&         dataset_full,
-                               PPath&               dataset_base,
-                               vector<string>&      args_vec,
-                               map<string, string>& args_map);
-
 //! Return help on the dataset syntax.
 string getDataSetHelp();
 

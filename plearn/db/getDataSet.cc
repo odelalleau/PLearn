@@ -64,58 +64,6 @@ time_t getDataSetDate(const PPath& dataset_path)
   return getDataSet(dataset_path)->getMtime();
 }
 
-
-///////////////////////////////
-// extractDataSetNameAndArgs //
-///////////////////////////////
-void extractDataSetNameAndArgs(const PPath&         dataset_full,
-                               PPath&               dataset_base,
-                               vector<string>&      args_vec,
-                               map<string, string>& args_map)
-{
-  args_vec.clear();
-  args_map.clear();
-  // First try with url-like parameters.
-  dataset_full.parseUrlParameters(dataset_base, args_map);
-  if (!args_map.empty()) {
-    map<string, string>::const_iterator it = args_map.begin();
-    for (; it != args_map.end(); it++)
-      args_vec.push_back(it->first + "=" + it->second);
-    return;
-  }
-  // No url-like parameters were found, trying the second format (see .h).
-  string dataset_abs = dataset_full.absolute();
-  string::size_type pos_of_double_colon = dataset_abs.find("::");
-  if (pos_of_double_colon == string::npos) {
-    // No parameters at all.
-    dataset_base = dataset_full;
-    return;
-  }
-
-  dataset_base = dataset_abs.substr(0, pos_of_double_colon);
-  string dataset_args = dataset_abs.substr(pos_of_double_colon+2, dataset_abs.length());
-
-  // TODO Use the PLearn::split() method instead.
-  // Split dataset_args into a vector<string> on "::".
-  string::size_type pos_of_arg_start = 0;
-  pos_of_double_colon = dataset_args.find("::", pos_of_arg_start);
-  while (pos_of_double_colon != string::npos) {
-    string a = dataset_args.substr(pos_of_arg_start, pos_of_double_colon-pos_of_arg_start);
-    args_vec.push_back(a);
-    pos_of_arg_start = pos_of_double_colon + 2;
-    pos_of_double_colon = dataset_args.find("::", pos_of_arg_start);
-  }
-  if (pos_of_arg_start != pos_of_double_colon)
-    // Append the last argument
-    args_vec.push_back(dataset_args.substr(pos_of_arg_start, dataset_args.size()-pos_of_arg_start));
-  string name, value;
-  vector<string>::const_iterator it = args_vec.begin();
-  for (; it != args_vec.end(); it++) {
-    PLearn::split_on_first(*it, "=", name, value);
-    args_map[name] = value;
-  }
-}
-
 ////////////////
 // getDataSet //
 ////////////////
@@ -123,10 +71,10 @@ VMat getDataSet(const PPath& dataset_path)
 {
   VMat vm;
   // Parse the base file name and the potential parameters.
-  PPath dataset;
-  vector<string> args_vec;
-  map<string, string> args_map;
-  extractDataSetNameAndArgs(dataset_path, dataset, args_vec, args_map);
+  string dataset_abs;
+  map<string, string> params;
+  parseBaseAndParameters(dataset_path.absolute(), dataset_abs, params);
+  PPath dataset(dataset_abs);
 
   // Supported formats: .amat .pmat .vmat .txtmat .pymat (file)
   //                    .dmat                            (directory)
@@ -145,7 +93,7 @@ VMat getDataSet(const PPath& dataset_path)
     } else if (ext == "pmat") {
       vm = new FileVMatrix(dataset);
     } else if (ext == "vmat" || ext == "txtmat") {
-      const string code = readFileAndMacroProcess(dataset, args_map);
+      const string code = readFileAndMacroProcess(dataset, params);
       if (removeblanks(code)[0] == '<') {
         // Old XML-like format.
         PLDEPRECATED("In getDataSet - File %s is using the old XML-like VMat format, " 
@@ -161,7 +109,12 @@ VMat getDataSet(const PPath& dataset_path)
     } else if (ext == "pymat" || ext == "py") {
       if (ext == ".py")
         PLWARNING("In getDataSet - Note that the Python code in a '.py' file must return a pl.VMatrix");
-      PP<PyPLearnScript> pyplearn_script = PyPLearnScript::process(dataset, args_vec);
+      // Convert 'params' to a vector<string> with elements "paramX=valueX".
+      map<string, string>::const_iterator it = params.begin();
+      vector<string> params_vec;
+      for (; it != params.end(); it++)
+        params_vec.push_back(it->first + "=" + it->second);
+      PP<PyPLearnScript> pyplearn_script = PyPLearnScript::process(dataset, params_vec);
       const string code = pyplearn_script->getScript();
       vm = dynamic_cast<VMatrix*>(newObject(code));
       if (vm.isNull())
@@ -208,7 +161,7 @@ string getDataSetHelp() {
          "- a file with extension:      .amat .pmat .vmat .txtmat .pymat\n"
          "- a directory with extension: .dmat\n"
          "Optionally, arguments for scripts can be given with the following syntax:\n"
-         "  path/file.ext?arg1=val1&arg2=val2&arg3=val3\n";
+         "  path/file.ext::arg1=val1::arg2=val2::arg3=val3\n";
 }
 
 } // end of namespace PLearn
