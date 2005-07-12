@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.18 2005/02/25 17:25:50 ducharme Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -1267,7 +1267,13 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols,
       {
         /*  find end of word  */
         while ((*cp!=',' && *cp!='\n') && cp<=buffer+line_len) cp++;
-        *cp=0;
+        *cp=0; // Make 'word' point to the current field value only.
+        // Skip blanks at beginning.
+        while (*word == ' ') {
+          word++;
+          if (word >= cp)
+            PLERROR("In loadUCIMLDB - Error while skipping blanks");
+        }
         /*  is this missing?  */
         if (*word == '?')
           *p = MISSING_VALUE;
