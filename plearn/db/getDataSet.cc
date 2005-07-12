@@ -36,283 +36,151 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.44 2005/06/14 20:27:05 chrish42 Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include "AutoSDBVMatrix.h"
-#include <plearn/vmat/ConcatRowsVMatrix.h>      //!< For vconcat.
-#include "databases.h"              //!< For loadClassificationDataset.
+#include "getDataSet.h"
+#include <plearn/io/MatIO.h>              //!< For loadAsciiSingleBinaryDescriptor().
+
+#include <plearn/base/stringutils.h>      //!< For split_on_first().
+#include <plearn/io/fileutils.h>          //!< For isfile().
+#include <plearn/io/pl_log.h>
+#include <plearn/io/PyPLearnScript.h>
 #include <plearn/vmat/DiskVMatrix.h>
 #include <plearn/vmat/FileVMatrix.h>
-#include "getDataSet.h"
-#include <plearn/vmat/StrTableVMatrix.h>
-#include <plearn/base/StringTable.h>
 #include <plearn/vmat/VMat.h>
 #include <plearn/vmat/VVMatrix.h>
-#include <plearn/io/MatIO.h>
-#include <plearn/io/PyPLearnScript.h>
-#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;
 
-
-string getDataSetHelp()
+////////////////////
+// getDataSetDate //
+////////////////////
+time_t getDataSetDate(const PPath& dataset_path)
 {
-  return "Dataset specification can be one of: \n"
-    " - the path to a matrix file (or directory) .amat .pmat .vmat .dmat or plain ascii \n"
-    " - the basename of an .sdb \n"
-    " - the object specification of a VMatrix subclass \n"
-    " - the specification of a preprogrammed dataset i.e. one of the datasetnames below,\n"
-    "   followed by the word 'train' or 'test', optionally followed by the word 'normalize'\n"
-    + loadClassificationDatasetHelp()  
-    + loadUCIDatasetsHelp();
-}
-
-time_t getDataSetDate(const string& datasetstring, const string& alias)
-{
-  VMat vm;
-
-  // search for an alias in a dataset.aliases file
-  map<string,string> aliases = getDatasetAliases(PPath::getcwd());
-  if(aliases.find(datasetstring)!=aliases.end())
-    return getDataSetDate(aliases[datasetstring]);
-
-  if(isfile(datasetstring+".sdb")) // it's an sdb
-    return mtime(datasetstring+".sdb");
-  else if(pathexists(datasetstring))
-    {
-      if(isfile(datasetstring))
-        {
-          if(extract_extension(datasetstring)==".vmat")
-            return VVMatrix::getDateOfVMat(datasetstring);
-          else return mtime(datasetstring);
-        }
-      else // it's a directory
-        {
-          // is it the directory of a DiskVMatrix?
-          if(isfile(datasetstring+slash+"indexfile") && isfile(datasetstring+slash+"0.data"))
-            return mtime(datasetstring+slash+"indexfile");
-          else
-            PLERROR("In getDataSetDate: datasetstring is a directory of unknown format"); 
-        }
-    }
-
-  // Otherwise, it could be a preprogrammed dataset, or just about anything...
-  // we don't really know. So we return 0.
-  return 0;
+  return getDataSet(dataset_path)->getMtime();
 }
 
 
-/** Extracts the dataset and arguments from the string passed
-    to getDataSet() and friends.
-
-    The expected format is filename.ext::ARG1=value1:ARG2=value2 ...
-*/
-void extractDataSetNameAndArgs(const string& datasetString,
-                               string& dataset,
-                               vector<string>& args)
+///////////////////////////////
+// extractDataSetNameAndArgs //
+///////////////////////////////
+void extractDataSetNameAndArgs(const PPath&         dataset_full,
+                               PPath&               dataset_base,
+                               vector<string>&      args_vec,
+                               map<string, string>& args_map)
 {
-  args.clear();
-
-  string::size_type pos_of_double_colon = datasetString.find("::");
+  args_vec.clear();
+  args_map.clear();
+  // First try with url-like parameters.
+  dataset_full.parseUrlParameters(dataset_base, args_map);
+  if (!args_map.empty()) {
+    map<string, string>::const_iterator it = args_map.begin();
+    for (; it != args_map.end(); it++)
+      args_vec.push_back(it->first + "=" + it->second);
+    return;
+  }
+  // No url-like parameters were found, trying the second format (see .h).
+  string dataset_abs = dataset_full.absolute();
+  string::size_type pos_of_double_colon = dataset_abs.find("::");
   if (pos_of_double_colon == string::npos) {
-    dataset = datasetString;
+    // No parameters at all.
+    dataset_base = dataset_full;
     return;
   }
 
-  dataset = datasetString.substr(0, pos_of_double_colon);
-  string datasetArgs = datasetString.substr(pos_of_double_colon+2, datasetString.length());
+  dataset_base = dataset_abs.substr(0, pos_of_double_colon);
+  string dataset_args = dataset_abs.substr(pos_of_double_colon+2, dataset_abs.length());
 
-  // Split datasetArgs into a vector<string> on "::".
+  // TODO Use the PLearn::split() method instead.
+  // Split dataset_args into a vector<string> on "::".
   string::size_type pos_of_arg_start = 0;
-  pos_of_double_colon = datasetArgs.find("::", pos_of_arg_start);
+  pos_of_double_colon = dataset_args.find("::", pos_of_arg_start);
   while (pos_of_double_colon != string::npos) {
-    string a = datasetArgs.substr(pos_of_arg_start, pos_of_double_colon-pos_of_arg_start);
-    args.push_back(a);
-
+    string a = dataset_args.substr(pos_of_arg_start, pos_of_double_colon-pos_of_arg_start);
+    args_vec.push_back(a);
     pos_of_arg_start = pos_of_double_colon + 2;
-    pos_of_double_colon = datasetArgs.find("::", pos_of_arg_start);
+    pos_of_double_colon = dataset_args.find("::", pos_of_arg_start);
   }
-  if (pos_of_arg_start != pos_of_double_colon) {
+  if (pos_of_arg_start != pos_of_double_colon)
     // Append the last argument
-    args.push_back(datasetArgs.substr(pos_of_arg_start, datasetArgs.size()-pos_of_arg_start));
+    args_vec.push_back(dataset_args.substr(pos_of_arg_start, dataset_args.size()-pos_of_arg_start));
+  string name, value;
+  vector<string>::const_iterator it = args_vec.begin();
+  for (; it != args_vec.end(); it++) {
+    PLearn::split_on_first(*it, "=", name, value);
+    args_map[name] = value;
   }
 }
 
-
-VMat getDataSet(const char*   datasetstring, const string& alias)
+////////////////
+// getDataSet //
+////////////////
+VMat getDataSet(const PPath& dataset_path)
 {
-  return getDataSet(string(datasetstring), alias);
-}
-
-VMat getDataSet(const PPath&  datasetpath,   const string& alias)
-{
-  return getDataSet(string(datasetpath.absolute()), alias);
-}
-
-VMat getDataSet(const string& datasetstring, const string& alias)
-{
-  // search for an alias in a dataset.aliases file
-  map<string,string> aliases = getDatasetAliases(PPath::getcwd());
-  if(aliases.find(datasetstring)!=aliases.end())
-    return getDataSet(aliases[datasetstring]);
-
-  // it wasn't an alias
-  string dataset;
-  vector<string> datasetArgs;
-  extractDataSetNameAndArgs(datasetstring, dataset, datasetArgs);
-
   VMat vm;
-  if (isfile(dataset + ".sdb")) // it's an sdb (without the .sdb extension...)
-    {
-      vm = new AutoSDBVMatrix(dataset);
-    }
-  else if (pathexists(dataset))
-    {
-      if (isfile(dataset))
-        {
-          string ext = extract_extension(dataset);
-          if (ext == ".pmat")
-            vm = new FileVMatrix(dataset);
-          else if (ext==".vmat" || ext==".txtmat")
-          {
-            /* Convert datasetArgs vector of arguments into a map from
-               argument name to argument value for
-               readFileAndMacroProcess */
-            map<string, string> vars;
-            for (vector<string>::const_iterator it = datasetArgs.begin();
-                 it != datasetArgs.end(); ++it) {
-              string arg_name, arg_value;
-              split_on_first(*it, "=", arg_name, arg_value);
-              vars[arg_name] = arg_value;
-            }
+  // Parse the base file name and the potential parameters.
+  PPath dataset;
+  vector<string> args_vec;
+  map<string, string> args_map;
+  extractDataSetNameAndArgs(dataset_path, dataset, args_vec, args_map);
 
-            string code = readFileAndMacroProcess(dataset, vars);
-            if (removeblanks(code)[0] == '<') // old xml-like format 
-              vm = new VVMatrix(dataset);
-            else
-            {
-              vm = dynamic_cast<VMatrix*>(newObject(code));
-              if(vm.isNull())
-                PLERROR("getDataSet: Object described in %s is not a VMatrix subclass",dataset.c_str());
-            } 
-          }
-          else if (ext==".pymat" || ext==".py")
-          {
-            if (ext==".py")
-              PLWARNING("getDataSet: Note that the Python code in a '.py' file must return a pl.VMatrix");
-            PP<PyPLearnScript> pyplearn_script = PyPLearnScript::process(dataset, datasetArgs);
-            const string code = pyplearn_script->getScript();
-            vm = dynamic_cast<VMatrix*>(newObject(code));
-            if (vm.isNull())
-                PLERROR("getDataSet: Object described in %s is not a VMatrix subclass",dataset.c_str());
-          }
-          else if (ext==".amat") {
-            // Check if the extension is ".bin.amat".
-            if (dataset.find(".bin.", ((unsigned int) dataset.size()) - 9) != string::npos){
-              Mat tempMat;
-              loadAsciiSingleBinaryDescriptor(dataset,tempMat);
-              vm = VMat(tempMat);
-            } else {
-              vm = loadAsciiAsVMat(dataset);
-            }
-          }
-          else if (ext==".strtable")
-            vm = new StrTableVMatrix(StringTable(dataset));
-          else if (ext==".sdb")
-            vm = new AutoSDBVMatrix(remove_extension(dataset));            
-          else if (ext==".mat")
-            vm = loadAsciiAsVMat(dataset);
-          else 
-            PLERROR("Unknown extension for vmatrix: %s", ext.c_str());
-          if (!vm->hasMetaDataDir())
-            vm->setMetaDataDir(extract_directory(dataset) + extract_filename(dataset) + ".metadata");
-        }
-      else // it's a directory
-      {
-          // is it the directory of a DiskVMatrix?
-          if (isfile(dataset + slash + "indexfile") && isfile(dataset + slash + "0.data"))
-            {
-              vm = new DiskVMatrix(dataset);
-            }
-          else
-            PLERROR("In getDataSet: dataset is a directory of unknown format"); 
-        }
-    }
-  else // it's either a preprogrammed dataset, or a VMatrix object
-  {
-    try // try with a preprogrammed dataset
-      {
-        vector<string> dsetspec = split(dataset);
-        if (dsetspec.size() < 2)
-          PLERROR("In getDataSet, expecting a specification of the form '<datasetname> <train|test|all> [normalize]. DatasetString = %s' ",dataset.c_str());
-        string datasetname = dsetspec[0];
-        bool normalizeinputs = false;
-        if (dsetspec.size() >= 3)
-          {
-            if (dsetspec[2] == "normalize")
-              normalizeinputs = true;
-            else PLERROR("In getDataSet specification of predefined dataset contains 3 words, expecting 3rd one to be 'normalize', don't understand '%s'",dsetspec[2].c_str());
-          }
-        
-        int inputsize, nclasses;
-        VMat trainset, testset, allset;
-        loadClassificationDataset(datasetname, inputsize, nclasses, trainset, testset, normalizeinputs, allset);
-        if (dsetspec[1] == "train") {
-          if (trainset == NULL) {
-            PLERROR("In getDataSet, there is no trainset available.");
-          }
-          vm = trainset;
-        }
-        else if (dsetspec[1] == "test") {
-          if (testset == NULL) {
-            PLERROR("In getDataSet, there is no testset available.");
-          }
-          vm = testset;
-        }
-        else if (dsetspec[1] == "all") {
-          if (allset) {
-            vm = allset;
-          }
-          else {
-            vm = vconcat(trainset,testset);    
-          }
-        }
-        else 
-          PLERROR("In getDataSet specification of predefined dataset: expecting second word to be 'train' or 'test' or 'all' not %s ...",dsetspec[1].c_str());
-        vm->defineSizes(inputsize, 1);
-        // Set metadatadir depending on the METADATADIR variable.
-#ifdef METADATADIR
-        string mdir = METADATADIR;
-#else
-        string mdir = "/u/lisa/db/metadata/";
-#endif
-        vm->setMetaDataDir(append_slash(mdir) + dataset);
+  // Supported formats: .amat .pmat .vmat .txtmat .pymat (file)
+  //                    .dmat                            (directory)
+  string ext = dataset.extension();
+  if (isfile(dataset)) {
+    if (ext == "amat") {
+      // Check if the extension is ".bin.amat".
+      if (dataset.find(".bin.", ((unsigned int) dataset.size()) - 9) != string::npos) {
+        // TODO Ask PJ if he still uses this hack.
+        PLDEPRECATED("In getDataSet - Do we really need .bin.amat files ?");
+        Mat tempMat;
+        loadAsciiSingleBinaryDescriptor(dataset,tempMat);
+        vm = VMat(tempMat);
+      } else
+        vm = loadAsciiAsVMat(dataset);
+    } else if (ext == "pmat") {
+      vm = new FileVMatrix(dataset);
+    } else if (ext == "vmat" || ext == "txtmat") {
+      const string code = readFileAndMacroProcess(dataset, args_map);
+      if (removeblanks(code)[0] == '<') {
+        // Old XML-like format.
+        PLDEPRECATED("In getDataSet - File %s is using the old XML-like VMat format, " 
+                     "you should switch to a PLearn script (ideally a .pymat file).",
+                     dataset.absolute().c_str());
+        vm = new VVMatrix(dataset);
+      } else {
+        vm = dynamic_cast<VMatrix*>(newObject(code));
+        if (vm.isNull())
+          PLERROR("In getDataSet - Object described in %s is not a VMatrix subclass",
+                  dataset.absolute().c_str());
       }
-    catch (const PLearnError& e)  // OK, it wasn't a preprogrammed dataset, let's try with a VMatrix object
-      {
-        try 
-          { 
-            vm = dynamic_cast<VMatrix*>(newObject(dataset));
-            if (!vm)
-              PLERROR("Not a VMatrix object (dynamic cast failed)");
-          }
-        catch (const PLearnError& e2)
-          {
-            PLERROR("Error in getDataSet with specification: %s\n"
-                    "Specification is neither a valid file or directory \n"
-                    "Nor is it a preprogrammed dataset (attempt returned: %s)\n"
-                    "Nor could it be resolved to a VMatrix object (attempt returned: %s)\n",
-                    dataset.c_str(), e.message().c_str(), e2.message().c_str());
-          }
-      }
+    } else if (ext == "pymat" || ext == "py") {
+      if (ext == ".py")
+        PLWARNING("In getDataSet - Note that the Python code in a '.py' file must return a pl.VMatrix");
+      PP<PyPLearnScript> pyplearn_script = PyPLearnScript::process(dataset, args_vec);
+      const string code = pyplearn_script->getScript();
+      vm = dynamic_cast<VMatrix*>(newObject(code));
+      if (vm.isNull())
+        PLERROR("In getDataSet - Object described in %s is not a VMatrix subclass",
+                dataset.absolute().c_str());
+     }
+    else 
+      PLERROR("In getDataSet - Unknown extension for VMat file: %s", ext.c_str());
+    // Set default metadata directory if not already set.
+    if (!vm->hasMetaDataDir())
+      vm->setMetaDataDir(dataset.dirname() / (dataset.basename() + ".metadata"));
+  } else if (isdir(dataset)) {
+    if (ext == "dmat")
+      vm = new DiskVMatrix(dataset);
+    else
+      PLERROR("In getDataSet - Unknown extension for VMat directory: %s", ext.c_str());
   }
   
   vm->loadAllStringMappings();
-  // vm->setAlias(alias); // Aliases are now deprecated.
   vm->unduplicateFieldNames();
 
   if (vm->inputsize() < 0 && vm->targetsize() < 0 && vm->weightsize() < 0) {
@@ -332,51 +200,15 @@ VMat getDataSet(const string& datasetstring, const string& alias)
   return vm;
 }
 
-
-string locateDatasetAliasesDir(const PPath& dir_or_file_path)
-{
-  if(!pathexists(dir_or_file_path))
-    PLERROR("In getDatasetAliases argument '%s' is not an existing directory or file!", dir_or_file_path.absolute().c_str());
-  string dirname = extract_directory(dir_or_file_path.absolute());
-  string dot = ".";
-  while(dirname!=slash && dirname!=dot+slash && !isfile(dirname + "dataset.aliases"))
-    dirname = extract_directory(remove_trailing_slash(dirname));
-
-  if(isfile(dirname+"dataset.aliases"))
-    return dirname;
-  else 
-    return "";
+////////////////////
+// getDataSetHelp //
+////////////////////
+string getDataSetHelp() {
+  return "Dataset specification must be either:\n"
+         "- a file with extension:      .amat .pmat .vmat .txtmat .pymat\n"
+         "- a directory with extension: .dmat\n"
+         "Optionally, arguments for scripts can be given with the following syntax:\n"
+         "  path/file.ext?arg1=val1&arg2=val2&arg3=val3\n";
 }
-
-//! Looks for 'dataset.aliases' file in specified directory and its parent directories;
-//! loads it and returns the corresponding map. Returns an empty map if file was not found.
-map<string,string> getDatasetAliases(const string& dir_or_file_path)
-{
-  map<string,string> aliases;
-  string dirname = locateDatasetAliasesDir(dir_or_file_path);
-  if(!dirname.empty() && isfile(dirname+"dataset.aliases"))
-    {
-      string fpath = dirname+"dataset.aliases";
-      ifstream in(fpath.c_str());
-      if(!in)
-        PLERROR("Could not open %s for reading", fpath.c_str());
-      while(in)
-        {
-          string alias;
-          getline(in,alias,'=');
-          alias = removeblanks(alias);
-          if(alias.empty())
-            break;
-          string datasetdef;
-          PLearn::read(in,datasetdef);
-          aliases[alias] = datasetdef;
-          in >> ws;//skipBlanks(in);
-          if(in.peek()==';')
-            in.get();
-        }
-    }
-  return aliases;
-}
-
 
 } // end of namespace PLearn

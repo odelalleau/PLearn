@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.h,v 1.5 2005/02/08 21:34:27 tihocan Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -44,40 +44,37 @@
 #ifndef getDataSet_INC
 #define getDataSet_INC
 
-#include <map>
-#include <string>
-#include <plearn/vmat/VMat.h>
+//#include <map>
+//#include <string>
+//#include <plearn/vmat/VMat.h>
+#include <plearn/io/PPath.h>
 
 namespace PLearn {
 using namespace std;
 
+class VMat;
 
-//! returns a help describing the datasetstring parameter of getDataSet
+/** Extract the dataset and arguments from the string passed
+    to getDataSet().
+    There are two possible formats for arguments:
+      1. path/filename.ext?arg1=value1&arg2=value2&arg3=value3
+      2. path/filename.ext::arg1=value1::arg2=value2::arg3=value3
+    'args_vec' is filled with strings of the form "argX=valueX", while
+    'args_map' is filled with pairs of the form ("argX", "valueX").
+*/
+void extractDataSetNameAndArgs(const PPath&         dataset_full,
+                               PPath&               dataset_base,
+                               vector<string>&      args_vec,
+                               map<string, string>& args_map);
+
+//! Return help on the dataset syntax.
 string getDataSetHelp();
 
-time_t getDataSetDate(const string& datasetstring, const string& alias="");
+//! Return the last time a dataset was modified.
+time_t getDataSetDate(const PPath& dataset_path);
 
-/*! datasetstring can be one of the following:
-  - the name of a preprogrammed dataset (possibly with parameter specification)
-  - the path of the basename of an .sdb 
-  - the path of a file in one of the recognized matrix data formats
-  - the path of a directory containing a dataset 
-  - the name of an alias in the dataset.aliases file of the current directory or one of its parents
-  alias is a short name that can be used as part of a filename containing results related to the dataset
-  ( it's set using the VMat's setAlias method, and code that wishes to use it can acces it by calling getAlias)
- */
-VMat getDataSet(const char*   datasetstring, const string& alias="");
-VMat getDataSet(const string& datasetstring, const string& alias="");
-VMat getDataSet(const PPath&  datasetpath,   const string& alias="");
-
-//! Looks for 'dataset.aliases' file in specified directory and its parent directories;
-//! Returns the directory containing dataset.aliases (returned string will be terminated 
-//! by a slash) or an empty string if not found.
-string locateDatasetAliasesDir(const PPath& dir_or_file_path=".");
-
-//! Looks for 'dataset.aliases' file in specified directory and its parent directories;
-//! loads it and returns the corresponding map. Returns an empty map if file was not found.
-map<string,string> getDatasetAliases(const string& dir_or_file_path=".");
+//! Return the dataset pointed by 'dataset_path'.
+VMat getDataSet(const PPath& dataset_path);
 
 } // end of namespace PLearn
 
