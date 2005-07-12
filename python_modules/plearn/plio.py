@@ -34,7 +34,7 @@
 
 import sys, string, struct
 import numarray
-import plearn.pyplearn
+from plearn.pyplearn.plearn_repr import plearn_repr
 
 sign_and_digits = string.digits + "+-"
 float_chars = string.digits+"+-.eE"
@@ -199,7 +199,7 @@ class PLearnIO:
 
             
     def write_typed(self, x):
-        spec = plearn.pyplearn.plearn_repr.plearn_repr(x)+' '
+        spec = plearn_repr(x)+' '
         # print 'Sending spec string:',spec
         self.write(spec)
 
