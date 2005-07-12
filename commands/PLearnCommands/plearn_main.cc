@@ -45,6 +45,7 @@
 #include <plearn/misc/Calendar.h>
 #include <plearn/db/getDataSet.h>
 #include <plearn/misc/PLearnService.h>
+#include <plearn/vmat/VMat.h>
 #include <exception>
 
 namespace PLearn {
