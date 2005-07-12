@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.h,v 1.13 2004/10/26 14:22:49 tihocan Exp $
+   * $Id$
    ******************************************************* */
 
 
@@ -85,7 +85,7 @@ public:
   //! The fields names are copied from the FIRST VMat, unless the 'only_common_fields'
   //! option is set to 'true'.
   ConcatRowsVMatrix(TVec<VMat> the_array = TVec<VMat>());
-  ConcatRowsVMatrix(VMat d1, VMat d2);
+  ConcatRowsVMatrix(VMat d1, VMat d2, bool fully_check_mappings = false);
 
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;

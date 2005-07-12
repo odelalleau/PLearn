@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.cc,v 1.17 2005/03/18 14:17:23 tihocan Exp $
+   * $Id$
    ******************************************************* */
 
 #include "ConcatRowsVMatrix.h"
@@ -68,9 +68,9 @@ ConcatRowsVMatrix::ConcatRowsVMatrix(TVec<VMat> the_array)
     build_();
 }
 
-ConcatRowsVMatrix::ConcatRowsVMatrix(VMat d1, VMat d2)
+ConcatRowsVMatrix::ConcatRowsVMatrix(VMat d1, VMat d2, bool the_fully_check_mapping)
 : fill_missing(false),
-  fully_check_mappings(false),
+  fully_check_mappings(the_fully_check_mapping),
   only_common_fields(false)
 {
   array.resize(2);
