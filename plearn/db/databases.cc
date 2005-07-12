@@ -1001,7 +1001,7 @@ void loadUCISet(VMat& data, PP<UCISpecification> uci_spec) {
     VMat data_train, data_test;
     loadUCISet(data_train, uci_spec->data_train.absolute(), uci_spec);
     loadUCISet(data_test,  uci_spec->data_test.absolute(),  uci_spec);
-    data = new ConcatRowsVMatrix(data_train, data_test);
+    data = new ConcatRowsVMatrix(data_train, data_test, true);
   }
 }
 
