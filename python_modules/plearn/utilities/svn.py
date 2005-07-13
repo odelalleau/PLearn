@@ -40,6 +40,15 @@ def recursive_remove( path ):
 
     return __report_status( rm_cmd )
 
+
+def repository_revision( path ):
+    "Return the SVN repository version (as a string) within 'path'."
+    h = os.popen("svn info %s | grep 'Revision:' | cut -d' ' -f2" % path)
+    x = h.readlines()
+    h.close()
+    return x[0].strip()
+
+
 ## def remove( path ):
 ##     rm_cmd = "svn remove -N %s" % path
 ##     vprint("Removing: %s" % rm_cmd, 2)
