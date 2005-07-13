@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PyPLearnScript.cc,v 1.3 2005/06/14 20:28:43 chrish42 Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -58,7 +58,7 @@ process( const string& scriptfile,
          const vector<string>& args,
          const string& drivername   )
 {
-  string plearn_script;
+  string plearn_script; // TODO What is this ?
   bool do_help = false;
   bool do_dump = false;
   
@@ -159,10 +159,10 @@ PyPLearnScript::PyPLearnScript() :
 {}
   
 PLEARN_IMPLEMENT_OBJECT( PyPLearnScript,
-                         "Manage the output of a pyplearn driver.",
-                         "Pyplearn files are Python scripts used to generate the complex plearn\n"
-                         "scripts needed for vast experiments. The driver generating the plearn\n"
-                         "version of the scripts from their pyplearn counterpart is also writen\n"
+                         "Manage the output of a PyPLearn driver.",
+                         "PyPLearn files are Python scripts used to generate the complex PLearn\n"
+                         "scripts needed for vast experiments. The driver generating the PLearn\n"
+                         "version of the scripts from their PyPLearn counterpart is also written\n"
                          "in Python. Hence, this class is needed to bridge between the output of\n"
                          "this driver and the PLearn commands." );
 
@@ -218,7 +218,7 @@ void PyPLearnScript::build_()
 {
   if ( do_help || do_dump )
   {
-    cout << plearn_script << endl;
+    pout << plearn_script << endl;
     plearn_script = "";
     expdir        = ""; // Disabling the close() method.
   }
