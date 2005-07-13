@@ -31,7 +31,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* *******************************************************      
-   * $Id: TextFilesVMatrix.cc,v 1.7 2005/05/11 00:32:32 chapados Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Author: Pascal Vincent
@@ -66,10 +66,8 @@ PLEARN_IMPLEMENT_OBJECT(
   "representing the result as a numerical VMatrix.  It can be used to parse\n"
   "both SAS and CSV files.\n"
   "\n"
-  "If the TextFilesVMatrix is represented as an 'inline' PLearn object\n"
-  "(rather than be contained in a .txtmat file), the metadatadir option\n"
-  "should probably be specified.\n"
-  ""
+  "The metadatadir option should probably be specified.\n"
+  "\n"
   "Internally, the metadata directory contains the following files:\n"
   " - a txtmat.idx binary index file (which will be automatically rebuilt if any of the raw text files is newer)\n"
   " - a txtmat.idx.log file reporting problems encountered while building the .idx file\n"
