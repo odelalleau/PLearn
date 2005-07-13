@@ -145,14 +145,17 @@ def TMat( *args ):
         # TMat< real >: Will return a numarray
         if nrows==0 or is_real( content[0] ):
             mat = []
-            i = j = 0
+            i = 0
             while i < nrows:
                 row = []
+                j = 0
                 while j < ncols:
                     element = content[i*ncols + j]
                     assert is_real(element)
                     row.append( element )
+                    j = j + 1
                 mat.append( row )
+                i = i + 1
             return numarray.array( mat )
             
     # TMat<T> where T is not real
