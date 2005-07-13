@@ -38,6 +38,7 @@
 
 #include "plearn_main.h"
 #include "PLearnCommandRegistry.h"
+#include <plearn/base/pl_repository_revision.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/math/random.h>
 #include <plearn/sys/PLMPI.h>
@@ -78,6 +79,7 @@ static void output_version(int major_version, int minor_version, int fixlevel )
     if (fixlevel >= 0)
       cerr << "."      << fixlevel;
   }
+  cerr << "  svn_revision:" << pl_repository_revision();
   cerr << "  ("    << __DATE__ << " "
        << __TIME__ << ")"      << endl;
 }

@@ -43,10 +43,13 @@ def recursive_remove( path ):
 
 def repository_revision( path ):
     "Return the SVN repository version (as a string) within 'path'."
-    h = os.popen("svn info %s | grep 'Revision:' | cut -d' ' -f2" % path)
-    x = h.readlines()
-    h.close()
-    return x[0].strip()
+    try:
+        h = os.popen("svn info %s | grep 'Revision:' | cut -d' ' -f2" % path)
+        x = h.readlines()
+        h.close()
+        return x[0].strip()
+    except:
+        return "NO_REVISION"
 
 
 ## def remove( path ):
