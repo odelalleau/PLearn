@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PairwiseDiffsCommand.cc,v 1.1 2005/02/17 07:37:09 chapados Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -51,6 +51,7 @@
 #include "PairwiseDiffsCommand.h"
 #include <plearn/base/stringutils.h>
 #include <plearn/math/StatsCollector.h>
+#include <plearn/vmat/VMat.h>
 #include <plearn/db/getDataSet.h>
 
 namespace PLearn {
