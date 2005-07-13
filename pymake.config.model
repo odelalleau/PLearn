@@ -12,7 +12,9 @@
 # (unless the option changes the resulting OBJS files)                                                      #
 #############################################################################################################
 
+import os, os.path
 from plearn.utilities.ppath import ppath
+from plearn.utilities.svn   import repository_revision
 
 # Qt Specific stuff
 
@@ -88,6 +90,21 @@ metadatadir = os.environ.get('METADATADIR','/u/lisa/db/metadata')
 compileflags = compileflags + ' -DMETADATADIR=\\"' + metadatadir + '\\"' 
 #################################################################
 #################################################################
+
+
+#####  Repository Revision String Generation  ###############################
+
+### Touch the file '$PLEARNDIR/plearn/base/pl_repository_revision.cc'
+### to ensure it is always compiled with the latest repository revision
+pl_repository_revision = repository_revision( plearndir )
+os.utime( os.path.join( plearndir, "plearn", "base",
+                        "pl_repository_revision.cc" ), None )
+compileflags = compileflags + ' -DPL_REPOSITORY_REVISION=\\"PL%s\\"' % \
+               pl_repository_revision
+
+
+#####  Optional Libraries  ##################################################
+
 
 # Add available external libraries In the order in which the linkeroptions
 # must appear on the linker command line (typically most basic libraries
