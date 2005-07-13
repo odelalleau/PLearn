@@ -75,24 +75,30 @@ VMat getDataSet(const PPath& dataset_path)
   map<string, string> params;
   parseBaseAndParameters(dataset_path.absolute(), dataset_abs, params);
   PPath dataset(dataset_abs);
+  bool use_params = false;
 
-  // Supported formats: .amat .pmat .vmat .txtmat .pymat (file)
-  //                    .dmat                            (directory)
+  // See getDataSetHelp() for supported formats.
   string ext = dataset.extension();
   if (isfile(dataset)) {
     if (ext == "amat") {
       // Check if the extension is ".bin.amat".
+      // (old deprecated extension)
       if (dataset.find(".bin.", ((unsigned int) dataset.size()) - 9) != string::npos) {
-        // TODO Ask PJ if he still uses this hack.
-        PLDEPRECATED("In getDataSet - Do we really need .bin.amat files ?");
-        Mat tempMat;
-        loadAsciiSingleBinaryDescriptor(dataset,tempMat);
-        vm = VMat(tempMat);
+        PLERROR("In getDataSet - The '.bin.amat' extension is deprecated, you "
+                "must now use the .abmat extension");
       } else
         vm = loadAsciiAsVMat(dataset);
+    } else if (ext == "abmat") {
+      Mat tempMat;
+      loadAsciiSingleBinaryDescriptor(dataset, tempMat);
+      vm = VMat(tempMat);
     } else if (ext == "pmat") {
       vm = new FileVMatrix(dataset);
-    } else if (ext == "vmat" || ext == "txtmat") {
+    } else if (ext == "txtmat") {
+      PLERROR("In getDataSet - The old .txtmat files are deprecated, please "
+              "use a standard .vmat or .pymat script");
+    } else if (ext == "vmat") {
+      use_params = true;
       const string code = readFileAndMacroProcess(dataset, params);
       if (removeblanks(code)[0] == '<') {
         // Old XML-like format.
@@ -107,6 +113,7 @@ VMat getDataSet(const PPath& dataset_path)
                   dataset.absolute().c_str());
       }
     } else if (ext == "pymat" || ext == "py") {
+      use_params = true;
       if (ext == ".py")
         PLWARNING("In getDataSet - Note that the Python code in a '.py' file must return a pl.VMatrix");
       // Convert 'params' to a vector<string> with elements "paramX=valueX".
@@ -123,6 +130,9 @@ VMat getDataSet(const PPath& dataset_path)
      }
     else 
       PLERROR("In getDataSet - Unknown extension for VMat file: %s", ext.c_str());
+    if (!use_params && !params.empty())
+      PLWARNING("In getDataSet - Ignoring parameters when reading file %s",
+                dataset.absolute().c_str());
     // Set default metadata directory if not already set.
     if (!vm->hasMetaDataDir())
       vm->setMetaDataDir(dataset.dirname() / (dataset.basename() + ".metadata"));
@@ -158,8 +168,15 @@ VMat getDataSet(const PPath& dataset_path)
 ////////////////////
 string getDataSetHelp() {
   return "Dataset specification must be either:\n"
-         "- a file with extension:      .amat .pmat .vmat .txtmat .pymat\n"
-         "- a directory with extension: .dmat\n"
+         "- a file with extension:\n"
+         "  .amat   : ASCII VMatrix\n"
+         "  .abmat  : ASCII binary VMatrix\n"
+         "  .pmat   : PLearn binary VMatrix\n"
+         "  .vmat   : PLearn script\n"
+         "  .pymat  : Python script\n"
+         "- a directory with extension:"
+         "  .dmat   : Disk VMatrix\n"
+         "\n"
          "Optionally, arguments for scripts can be given with the following syntax:\n"
          "  path/file.ext::arg1=val1::arg2=val2::arg3=val3\n";
 }
