@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.74 2005/05/04 19:23:09 tihocan Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -695,7 +695,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
             PStream varname_stream = openString(varname, PStream::raw_ascii);
             varname = readAndMacroProcess(varname_stream, variables);
             varname = removeblanks(varname);
-            map<string, string>::iterator it = variables.find(varname);
+            map<string, string>::const_iterator it = variables.find(varname);
             if(it==variables.end())
               PLERROR("Macro variable ${%s} undefined", varname.c_str());
             PStream varin = openString(it->second, PStream::raw_ascii);
@@ -738,7 +738,12 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                   if(in.get()!='{')
                     PLERROR("Bad syntax in .plearn DEFINE macro: correct syntax is $DEFINE{name}{definition}");
                   in.smartReadUntilNext("}", vardef, true);
-                  variables[varname] = vardef;
+                  map<string, string>::const_iterator it = variables.find(varname);
+                  if (it == variables.end())
+                    variables[varname] = vardef;
+                  else
+                    PLERROR("Variable %s is already defined, you need to first $UNDEFINE it "
+                            "if you want to assign it a new value", varname.c_str());
                 }
                 break;
 
@@ -915,11 +920,33 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                         raw_includefilepath = readAndMacroProcess(pathin,variables);
                         raw_includefilepath = removeblanks(raw_includefilepath);
                         PPath includefilepath = raw_includefilepath; // Conversion to PPath.
-                        PPath dirname = includefilepath.dirname();
-                        PPath filename = includefilepath.basename();
+                        PPath base_path;
+                        map<string, string> parameters;
+                        PLearn::parseBaseAndParameters
+                          (includefilepath.absolute(), base_path, parameters);
+                        PPath dirname = base_path.dirname();
+                        PPath filename = base_path.basename();
                         PPath olddir = PPath::getcwd();
                         chdir(dirname);
+                        // Backup existing definitions and add new (temporary)
+                        // ones to 'variables'.
+                        map<string, string> backup;
+                        map<string, string>::const_iterator it = parameters.begin();
+                        map<string, string>::const_iterator pos;
+                        for (; it != parameters.end(); it++) {
+                          pos = variables.find(it->first);
+                          if (pos != variables.end())
+                            backup[pos->first] = pos->second;
+                          variables[it->first] = it->second;
+                        }
+                        // Read file with appropriate variable definitions.
                         text += readFileAndMacroProcess(filename, variables);
+                        // Restore backed-up definitions and remove temporary ones.
+                        for (it = parameters.begin(); it != parameters.end(); it++)
+                          variables.erase(it->first);
+                        for (it = backup.begin(); it != backup.end(); it++)
+                          variables[it->first] = it->second;
+                        // Restore directory.
                         chdir(olddir);
                       }
                       break;
@@ -969,7 +996,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                           PLERROR("$ISDEFINED syntax is: $ISDEFINED{expr}");
                         PStream expr_stream = openString(expr, PStream::raw_ascii);
                         string expr_eval = readAndMacroProcess(expr_stream, variables);
-                        map<string, string>::iterator it = variables.find(expr_eval);
+                        map<string, string>::const_iterator it = variables.find(expr_eval);
                         if(it==variables.end()) {
                           // The variable is not defined.
                           text += "0";
