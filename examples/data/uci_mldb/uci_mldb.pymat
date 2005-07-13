@@ -1,0 +1,53 @@
+# Generic script that returns the appropriate VMatrix loading the desired
+# UCI_MLDB dataset.
+
+from plearn.pyplearn        import *
+from plearn.utilities.ppath import ppath
+from os.path                import isfile,join
+
+plarg_defaults.inputsize = -1
+plarg_defaults.targetsize = 1
+plarg_defaults.weightsize = 0
+
+name = plargs.name
+i_size = int( plargs.inputsize  )
+t_size = int( plargs.targetsize )
+w_size = int( plargs.weightsize )
+
+# PPath initialization.
+uci_mldb_rep  = ppath('UCI_MLDB_REP')
+uci_mldb      = ppath('UCI_MLDB')
+
+# Ensure the precomputed data has been correctly generated.
+generate_meta = join(uci_mldb_rep,
+                     name,
+                     name + '_generate.vmat.metadata')
+pmat_generate = join(generate_meta, 'precomp.pmat')
+
+if not isfile(pmat_generate):
+  uci_spec_file = join(uci_mldb, name, name + '.plearn')
+  assert( isfile(uci_spec_file) )
+  data_base = pl.PrecomputedVMatrix(
+      precomp_type = 'pmat',
+      metadatadir  = generate_meta,
+      source       = pl.UCIDataVMatrix(
+                        uci_spec = pl.UCISpecification(
+                                      data_all = 'UCI_MLDB_REP:ionosphere/ionosphere.data',
+                                      inputsize = 34,
+                                      targetsize = 1,
+                                      weightsize = 0
+                                      )
+                        )
+      )
+else:
+  data_base = pl.FileVMatrix(
+      filename = pmat_generate
+      )
+
+val = 1
+
+dataset = data_base
+
+def main():
+  return dataset
+
