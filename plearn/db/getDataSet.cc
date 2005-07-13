@@ -114,7 +114,7 @@ VMat getDataSet(const PPath& dataset_path)
       }
     } else if (ext == "pymat" || ext == "py") {
       use_params = true;
-      if (ext == ".py")
+      if (ext == "py")
         PLWARNING("In getDataSet - Note that the Python code in a '.py' file must return a pl.VMatrix");
       // Convert 'params' to a vector<string> with elements "paramX=valueX".
       map<string, string>::const_iterator it = params.begin();
