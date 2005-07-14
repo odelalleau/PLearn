@@ -29,3 +29,35 @@ def recursive_remove( path ):
 def is_under_version_control( path ):
     return ( os.path.isdir( os.path.join(path, cvs_directory) ) or
              os.path.isdir( os.path.join(path, subversion_hidden) ) )        
+
+# Return current revision of repository in 'repository_path'.
+# The current revision is stored in the file
+# 'repository_revision_dir'/'repository_name'_'svn or cvs'_repository_revision
+# Finally, if (and only if) the previously stored revision is not the same as
+# the current one, the file 'revision_file_path' is touched.
+def update_repository_revision( repository_name, repository_path,
+                                repository_revision_dir, revision_file_path ):
+    vc_module     = get_vc_module()
+    vc_name       = vc_module.__name__.split('.')[-1]
+    current_rev   = int( vc_module.repository_revision( repository_path ) )
+    rev_file_path = os.path.join(repository_revision_dir,
+                                 repository_name + '_' + vc_name + '_repository_revision')
+    is_up_to_date = False
+    if os.path.isfile(rev_file_path):
+        try:
+            rev_file = open(rev_file_path)
+            last_rev = int( rev_file.read() )
+            rev_file.close()
+            if last_rev == current_rev:
+                is_up_to_date = True
+        except:
+            pass
+
+    if not is_up_to_date:
+        rev_file = open(rev_file_path, "w")
+        rev_file.write( str(current_rev) )
+        rev_file.close()
+        os.utime(revision_file_path, None)
+
+    return str(current_rev)
+
