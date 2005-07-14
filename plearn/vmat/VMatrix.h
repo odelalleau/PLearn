@@ -53,8 +53,6 @@
 #include <plearn/math/TMat_maths_impl.h>
 
 #include <plearn/io/PPath.h>
-//#include <plearn/base/tostring.h>           // Move in .cc as soon as possible
-//#include <plearn/base/lexical_cast.h>  // Move in .cc as soon as possible
 
 namespace PLearn {
 using namespace std;
@@ -99,12 +97,6 @@ protected:
   //! Path of directory (possibly relative to DBDIR) that will contain meta information 
   //! on this dataset (fieldnames, cached statistics, etc...) and possibly the data itself.
   PPath metadatadir; 
-
-  
-  /* TODO Remove
-  // [DEPRECATED] contains a short name that can be used as part of a filename for results associated with this dataset.
-  string alias_;
-  */
 
   //! Statistics for each field.
   mutable TVec<StatsCollector> field_stats;  //!< stats[i] contains stats for field #i 
@@ -351,14 +343,6 @@ public:
   //! It will throw a PLearnError if this object did not hold the lock.
   void unlockMetaDataDir() const;
 
-  /* TODO Remove
-  //! [DEPRECATED]
-  //! Returns the 'alias' for this dataset. The alias is a short name that 
-  //! can be used as part of a filename containing results related to this VMat.
-  string getAlias() const { return alias_; }
-  void setAlias(const string& the_alias) { alias_ = the_alias; }
-  */
-
   //! Returns the unconditonal statistics for all fields from the stats.psave file 
   //! (if the file does not exist, a default version is automatically created).
   TVec<StatsCollector> getStats() const;
@@ -376,15 +360,10 @@ public:
   //! (if the ranges.psave file does not exist, a reasonable default version is created ).
   TVec<RealMapping> getRanges();
 
-  // TODO Why is this commented out ? Should it be removed ?
-  //! Returns the cooccurence statistics conditioned on the given field
-  //! (within the ranges returned by getRanges() )
-  //! The results are cached in file stats#.psave (where # stands for the condfield index)
-  // PP<ConditionalStatsCollector> getConditionalStats(int condfield);
-
   //! This method overloads the Object::save method which is
   //! deprecated. This method is therefore deprecated and you should call
   //! directly the savePMAT() method.
+  //! @deprecated Use savePMAT() instead.
   virtual void save(const PPath& filename) const;
 
   virtual void savePMAT(const PPath& pmatfile) const;
@@ -541,7 +520,7 @@ public:
   //! Output the content of the VMat in the stream 'out'.
   //! Overridden to display only the content of the VMat when out's mode
   //! is 'raw_ascii' or 'pretty_ascii' (instead of doing serialization).
-  //! TODO Deal with raw_binary too !
+  //! @todo Deal with raw_binary too !
   virtual void newwrite(PStream& out) const;
 
   // TODO Remove

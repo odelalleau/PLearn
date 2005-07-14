@@ -1097,14 +1097,6 @@ TVec<RealMapping> VMatrix::getRanges()
   return ranges;
 }
 
-/* TODO Remove
-real VMatrix::get(int i, int j) const
-{
-  PLERROR("get(i,j) method not implemented for this VMat (name=%s), please implement.",classname().c_str());
-  return 0.0;
-}
-*/
-
 /////////
 // put //
 /////////
