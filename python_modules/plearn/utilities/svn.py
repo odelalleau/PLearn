@@ -44,7 +44,16 @@ def recursive_remove( path ):
 def repository_revision( path ):
     "Return the SVN repository version (as a string) within 'path'."
     try:
-        h = os.popen("svn info %s | grep 'Revision:' | cut -d' ' -f2" % path)
+        current_path = os.getcwd()
+
+        # First move to the given path, as svn does not always like absolute
+        # directories.
+        os.chdir(path)
+        h = os.popen("svn info | grep 'Revision:' | cut -d' ' -f2")
+
+        # Move back to the previous current directory.
+        os.chdir(current_path)
+
         x = h.readlines()
         h.close()
         return x[0].strip()
