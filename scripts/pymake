@@ -214,6 +214,10 @@ def pymakeOption( name, description, compiler='', compileroptions='', linker='',
 
 optional_libraries_defs = []
 
+# It is now possible to use lists in the linker and compiler options of an optional library.
+# These lists can contain strings and / or functions (that must return a string), and will
+# be concatenated when the library is triggered (which means the function will not be called
+# if the library is not triggered).
 class OptionalLibrary:
     def __init__(self, name, includedirs, triggers, linkeroptions, compileroptions ):
         self.name = name
@@ -235,6 +239,36 @@ class OptionalLibrary:
                     # print 'INCLUDE ' + include  + ' TRIGGERED BY INCDIR ' + incldir
                     return 1
         return 0            
+
+    # Replaces lists and potential functions in the compiler and linker options
+    # by a single string.
+    # This method is called as soon as the optional library is triggered.
+    def convert_all_options_to_strings(self):
+
+        # Function that takes either a string or a function returning a string,
+        # and that returns the corresponding string.
+        def convert_to_str(str_or_func):
+            import types
+            if type(str_or_func) is str:
+                return str_or_func
+            elif type(str_or_func) is types.FunctionType:
+                return str_or_func()
+            else:
+                print 'In pymake - A compiler option must be either a string or a function'
+                sys.exit()
+
+        # Function that takes either a list of options (strings and / or functions)
+        # or a single string, and return a single string.
+        def convert_options_to_string(options):
+            if type(options) is str:
+                return options
+            else: # It must be a list.
+                return string.join( map(convert_to_str, options), '' )
+    
+   
+        self.compileroptions = convert_options_to_string( self.compileroptions )
+        self.linkeroptions   = convert_options_to_string( self.linkeroptions   )
+
 
 # adds a library to the optional_libraries_defs
 def optionalLibrary( name, linkeroptions, includedirs=[], triggers='', compileroptions='' ):
@@ -745,7 +779,7 @@ class FileInfo:
     def parse_file(self):
         """ Parses the file, and sets self.includes_from_sourcedirs, self.triggered_libraries and self.hasmain"""
 
-        #print "Parsing " + self.filepath
+        # print "Parsing " + self.filepath
 
         f = open(self.filepath,"r")
         text = f.read()
@@ -758,6 +792,7 @@ class FileInfo:
             for optlib in optional_libraries_defs:
                 if optlib.is_triggered_by(includefile) and not optlib in self.triggered_libraries:
                     # print 'triggered: ' + optlib.name + '(file = ' + self.filepath + ', ' + includefile + ')'
+                    optlib.convert_all_options_to_strings()
                     self.triggered_libraries.append(optlib)
                     # print optlib.name + ' TRIGGERED BY INCLUDE ' + includefile + ' IN ' + self.filepath 
 
@@ -1085,12 +1120,14 @@ class FileInfo:
 
         optlib_compopt = self.get_optional_libraries_compileroptions();
         # print optlib_compopt
+
         if platform == 'win32' or nice_value == '0':
           nice = ''
         else:
           nice = nice_command + nice_value + ' '
 
         command = nice + compiler + ' ' + compileflags + ' ' + compileroptions + ' ' + string.join(optlib_compopt, ' ')
+
         includedirs = [] + sourcedirs + mandatory_includedirs + self.get_optional_libraries_includedirs()
         if includedirs:
             command = command + ' -I' + string.join(includedirs,' -I')
