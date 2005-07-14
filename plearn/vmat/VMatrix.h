@@ -220,9 +220,6 @@ public:
   void printFieldInfo(PStream& out, const string& fieldname_or_num,
                       bool print_binning = false) const;
 
-  // TODO Remove ?
-  // string fieldheader(int elementcharwidth=8);
-
   //! Loads/saves from/to the metadatadir/fieldnames file.
   void saveFieldInfos() const;
   void loadFieldInfos() const;

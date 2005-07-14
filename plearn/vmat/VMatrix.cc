@@ -413,20 +413,13 @@ void VMatrix::saveStats(const PPath& filename) const
   }
 }
 
-/// @todo Implementation not done yet. Implement
-// TODO Remove ?
-/*
-string VMatrix::fieldheader(int elementcharwidth)
-{
-  return "VMatrix::fieldheader NOT YET IMPLEMENTED";
-}
-*/
-
 //////////////////
 // declareField //
 //////////////////
 void VMatrix::declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype)
-{ getFieldInfos(fieldindex) = VMField(fieldname,fieldtype); }
+{
+  getFieldInfos(fieldindex) = VMField(fieldname,fieldtype);
+}
 
 ///////////////////////
 // declareFieldNames //
