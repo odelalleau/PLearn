@@ -94,34 +94,17 @@ compileflags = compileflags + ' -DMETADATADIR=\\"' + metadatadir + '\\"'
 
 #####  Repository Revision String Generation  ###############################
 
-### If the repository version is more recent that the one for last compilation,
-### touch the file '$PLEARNDIR/plearn/base/pl_repository_revision.cc'
-### to ensure it is always compiled with the latest repository revision.
-### The version for last compilation is stored in $HOME/.plearn/version.
-pl_repository_revision = repository_revision( plearndir )
-pl_new_version         = int( pl_repository_revision )
-pl_last_version_path   = os.path.join(ppath('HOME'), '.plearn', 'version')
-different_revision = True
+def PL_repository_revision():
+  from plearn.utilities.version_control import update_repository_revision
+  return update_repository_revision('plearn', plearndir,
+                                    os.path.join(ppath('HOME'), '.plearn'),
+                                    os.path.join( plearndir, "plearn", "base",
+                                                  "pl_repository_revision.cc" ))
 
-if os.path.isfile(pl_last_version_path):
-  try:
-    pl_last_version_file = open(pl_last_version_path, 'r')
-    pl_last_version      = int( pl_last_version_file.read() )
-    pl_last_version_file.close()
-    if pl_new_version == pl_last_version:
-      different_revision = False
-  except:
-    pass
-
-if different_revision:
-  pl_last_version_file = open(pl_last_version_path, 'w')
-  pl_last_version_file.write(str(pl_new_version))
-  pl_last_version_file.close()
-  os.utime( os.path.join( plearndir, "plearn", "base",
-                          "pl_repository_revision.cc" ), None )
-compileflags = compileflags + ' -DPL_REPOSITORY_REVISION=\\"PL%s\\"' % \
-               pl_repository_revision
-
+optionalLibrary( name = 'plearn_repository_revision',
+                 triggers = 'pl_repository_revision.h',
+                 compileroptions = [ '-DPL_REPOSITORY_REVISION=\\"PL', PL_repository_revision, '\\"' ],
+                 linkeroptions   = '')
 
 #####  Optional Libraries  ##################################################
 
