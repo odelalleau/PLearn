@@ -49,7 +49,7 @@ def repository_revision( path ):
         # First move to the given path, as svn does not always like absolute
         # directories.
         os.chdir(path)
-        h = os.popen("svn info | grep 'Revision:' | cut -d' ' -f2")
+        h = os.popen("env LC_ALL=C svn info | grep 'Revision:' | cut -d' ' -f2")
 
         # Move back to the previous current directory.
         os.chdir(current_path)
@@ -57,7 +57,8 @@ def repository_revision( path ):
         x = h.readlines()
         h.close()
         return x[0].strip()
-    except:
+    except Exception, e:
+        print 'Could not find SVN revision number:', e
         return "NO_REVISION"
 
 

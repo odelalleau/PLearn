@@ -41,14 +41,14 @@ def update_repository_revision( repository_name, repository_path,
     os.chdir(repository_path)    # Necessary before calling get_vc_module()
     vc_module     = get_vc_module()
     vc_name       = vc_module.__name__.split('.')[-1]
-    current_rev   = int( vc_module.repository_revision( repository_path ) )
+    current_rev   = vc_module.repository_revision( repository_path )
     rev_file_path = os.path.join(repository_revision_dir,
                                  repository_name + '_' + vc_name + '_repository_revision')
     is_up_to_date = False
     if os.path.isfile(rev_file_path):
         try:
             rev_file = open(rev_file_path)
-            last_rev = int( rev_file.read() )
+            last_rev = rev_file.read().strip()
             rev_file.close()
             if last_rev == current_rev:
                 is_up_to_date = True
