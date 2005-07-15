@@ -633,6 +633,7 @@ void addFileAndDateVariables(const PPath& filepath, map<string, string>& variabl
 /////////////////////////////
 string readFileAndMacroProcess(const PPath& filepath, map<string, string>& variables)
 {
+  // pout << "Processing file: " << filepath.absolute() << endl;
   // Save old variables (to allow recursive calls)
   const char* OldVariables[] = {
     "FILEPATH", "DIRPATH", "FILENAME", "FILEBASE", "FILEEXT", "DATE", "TIME", "DATETIME"
