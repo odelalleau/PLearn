@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNRegressor.cc,v 1.2 2004/12/28 15:49:39 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -43,6 +43,7 @@
 #include <assert.h>
 #include <math.h>
 
+#include <plearn/base/tostring.h>
 #include <plearn/math/TMat_maths.h>
 #include <plearn_learners/nearest_neighbors/ExhaustiveNearestNeighbors.h>
 #include <plearn/ker/EpanechnikovKernel.h>
@@ -216,6 +217,20 @@ void KNNRegressor::computeOutput(const Vec& input, Vec& output) const
   Vec knn_targets;                           //!< not used by knn
   knn->computeOutputAndCosts(input, knn_targets, knn_output, knn_costs);
 
+  // A little sanity checking on the knn costs: make sure that they not all
+  // zero as this certainly indicates a wrong kernel
+  bool has_non_zero_costs = false;
+  for (int i=0, n=knn_costs.size() ; i<n && !has_non_zero_costs ; ++i)
+    has_non_zero_costs = !is_missing(knn_costs[i]) && !is_equal(knn_costs[i], 0.0);
+  if (! has_non_zero_costs) {
+    string input_str = tostring2(input, PStream::pretty_ascii);
+    PLWARNING("KNNRegressor::computeOutput: all %d neighbors have zero similarity with\n"
+              "input vector %s;\n"
+              "check the similarity kernel bandwidth.  Replacing them by uniform weights.",
+              knn_costs.size(), input_str.c_str());
+    knn_costs.fill(1.0);
+  }
+  
   // For each neighbor, the KNN object outputs the following:
   //     1) input vector
   //     2) output vector
@@ -239,6 +254,9 @@ void KNNRegressor::computeOutput(const Vec& input, Vec& output) const
     else
       w = 1.0;
 
+    if (is_missing(w))
+      w = 0.0;
+    
     // Patch the existing weight
     knn_output_data[weightoffset] *= w;
     total_weight += knn_output_data[weightoffset];
@@ -280,6 +298,18 @@ void KNNRegressor::computeCostsFromOutputs(const Vec& input, const Vec& output,
   assert( costs.size() == 1 );
   costs[0] = powdistance(output,target,2);
 }
+
+bool KNNRegressor::computeConfidenceFromOutput(const Vec& input, const Vec& output,
+                                               real probability,
+                                               TVec< pair<real,real> >& intervals) const
+{
+  if (! local_model)
+    return false;                            //!< for now -- to be fixed
+
+  // Assume that the local model has been trained; don't re-train it
+  return local_model->computeConfidenceFromOutput(input, output, probability, intervals);
+}
+
 
 TVec<string> KNNRegressor::getTestCostNames() const
 {

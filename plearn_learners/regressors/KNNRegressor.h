@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNRegressor.h,v 1.1 2004/12/25 07:59:45 chapados Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -165,6 +165,14 @@ public:
   //! Computes the costs from already computed output. 
   virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                        const Vec& target, Vec& costs) const;
+
+  //! Delegate to local model if one is specified; not implemented
+  //! otherwise (although one could easily return the standard error
+  //! of the mean, weighted by the kernel measure; -- to do).
+  virtual
+  bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
+                                   real probability,
+                                   TVec< pair<real,real> >& intervals) const;
   
   //! Returns the names of the costs computed by computeCostsFromOutpus
   //! (and thus the test method).
