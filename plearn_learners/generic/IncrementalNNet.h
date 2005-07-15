@@ -67,9 +67,11 @@ protected:
   Vec output_biases;
   Mat hidden_layer_weights; // [hidden_unit, input]
   Vec hidden_layer_biases; // [hidden_unit]
+  vector<Vec> internal_weights;    // among hidden units [to, from]. enabled by enable_internal_weights
   Vec candidate_unit_weights;
   real candidate_unit_bias;
   Vec candidate_unit_output_weights;
+  Vec candidate_unit_internal_weights;
   int n_examples_seen;
   real current_average_cost;
   real next_average_cost;
@@ -110,6 +112,7 @@ public:
                              // before declaring failure to improve the regularized cost (and thus stopping training).
                              
   real rand_range;           // Interval of random numbers when initializing weights/biases: (-rand_range/2, rand_range/2).
+  bool enable_internal_weights; // Network has a cascade topology if true, or one hidden layer if false (default).
   
   // ** NON-OPTION FIELDS
   //

@@ -3,7 +3,7 @@
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
-//
+// Copyright (C) 2005 Yoshua Bengio, Mantas Lukosevicius
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -6033,7 +6033,7 @@ void layerL2BpropUpdate(TVec<T> input_gradient, TMat<T> weights, const TVec<T>& 
   }
 }
 
-// like layerL2BpropUpdate but weights is given transposed.
+// like layerL2BpropUpdate but weights is given transposed (not reflected in the formula below).
 // input_gradient[j] = sum_i weights[j,i]*output_gradient[i]
 // weights[i,j] -= learning_rate * (output_gradient[i] * input[j] + weight_decay * weights[i,j])
 template<class T>

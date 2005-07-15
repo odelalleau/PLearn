@@ -2,7 +2,7 @@
 
 // IncrementalNNet.cc
 //
-// Copyright (C) 2005 Yoshua Bengio 
+// Copyright (C) 2005 Yoshua Bengio, Mantas Lukosevicius 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -47,12 +47,12 @@ namespace PLearn {
 using namespace std;
 
 IncrementalNNet::IncrementalNNet() 
-  : candidate_unit_bias(0),
+  : internal_weights(),
+    candidate_unit_bias(0),
     n_examples_seen(0),
     current_average_cost(0),
     next_average_cost(0),
     n_examples_training_candidate(0),
-    rand_range(1),
     current_example(0),
     n_outputs(1),
     output_weight_decay(0),
@@ -65,7 +65,9 @@ IncrementalNNet::IncrementalNNet()
     use_hinge_loss_for_hard_activation(true),
     initial_learning_rate(0.01),
     decay_factor(1e-6),
-    max_n_epochs_to_fail(1)
+    max_n_epochs_to_fail(1),
+    rand_range(1),
+    enable_internal_weights(false)
 {
 }
 
@@ -133,6 +135,10 @@ void IncrementalNNet::declareOptions(OptionList& ol)
   declareOption(ol, "rand_range", &IncrementalNNet::rand_range, OptionBase::buildoption,
                 "Interval of random numbers when initializing weights/biases: (-rand_range/2, rand_range/2).\n");
 
+  declareOption(ol, "enable_internal_weights", &IncrementalNNet::enable_internal_weights, OptionBase::buildoption,
+                "Network has a cascade topology (each hidden unit has connections to all previous ones) if true,\n" 
+                "or a one hidden layer topology if false (default).\n");
+
 
   //declareOption(ol, "", &IncrementalNNet::, OptionBase::buildoption,
 
@@ -147,6 +153,9 @@ void IncrementalNNet::declareOptions(OptionList& ol)
   declareOption(ol, "hidden_layer_weights", &IncrementalNNet::hidden_layer_weights, OptionBase::learntoption,
                 "matrix of weights from input to hidden units: [hidden_unit, input].\n");
 
+  declareOption(ol, "internal_weights", &IncrementalNNet::internal_weights, OptionBase::learntoption,
+                "weights among hidden units [to, from] in cascade architecture (enabled by enable_internal_weights).\n");
+
   declareOption(ol, "hidden_layer_biases", &IncrementalNNet::hidden_layer_biases, OptionBase::learntoption,
                 "vector of biases of the hidden units.\n");
 
@@ -157,7 +166,10 @@ void IncrementalNNet::declareOptions(OptionList& ol)
                 "bias parameter of next candidate hidden unit.\n");
 
   declareOption(ol, "candidate_unit_output_weights", &IncrementalNNet::candidate_unit_output_weights, OptionBase::learntoption,
-                "vector of weights from  next candidate hidden unit to outputs.\n");
+                "vector of weights from  next candidate hidden unit to outputs.\n");\
+  
+  declareOption(ol, "candidate_unit_internal_weights", &IncrementalNNet::candidate_unit_internal_weights, OptionBase::learntoption,
+                "vector of weights from previous hidden units to the candidate unit (enabled by enable_internal_weights).\n");
 
   declareOption(ol, "n_examples_seen", &IncrementalNNet::n_examples_seen, OptionBase::learntoption,
                 "number of training examples seen (= number of updates done) seen beginning of training.\n");
@@ -195,6 +207,8 @@ void IncrementalNNet::build_()
     candidate_unit_weights.resize(inputsize());
     candidate_unit_output_weights.resize(n_outputs);
   }
+  internal_weights = vector<Vec>(); //.clear();
+  candidate_unit_internal_weights.resize(0);
 }
 
 // ### Nothing to add here, simply calls build_
@@ -213,7 +227,10 @@ void IncrementalNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(output_biases, copies);
   deepCopyField(hidden_layer_weights, copies);
   deepCopyField(hidden_layer_biases, copies);
+  deepCopyField(internal_weights, copies);
   deepCopyField(candidate_unit_weights, copies);
+  deepCopyField(candidate_unit_output_weights, copies);
+  deepCopyField(candidate_unit_internal_weights, copies);
   deepCopyField(act, copies);
   deepCopyField(h, copies);
   deepCopyField(linear_output, copies);
@@ -227,10 +244,11 @@ int IncrementalNNet::outputsize() const
 
 void IncrementalNNet::forget()
 {
-  // reset the number of hidden units to 0 = nstages
+  // reset the number of hidden units to 0 = stage
   output_weights.resize(0,n_outputs);
   hidden_layer_weights.resize(0,inputsize());
   hidden_layer_biases.resize(0);
+  internal_weights.clear();
   output_biases.clear();
   candidate_unit_output_weights.fill(0.1);
   //candidate_unit_weights.clear();
@@ -238,11 +256,16 @@ void IncrementalNNet::forget()
   for( int i=0; i < candidate_unit_weights.length(); i++ )
     candidate_unit_weights[i] = ((real)rand()/RAND_MAX - 0.5)*rand_range; 
   candidate_unit_bias = ((real)rand()/RAND_MAX - 0.5)*rand_range;
+  candidate_unit_internal_weights.clear();
   stage=0;
   n_examples_seen=0;
   current_average_cost=0;
   next_average_cost=0;
   current_example=0;
+  if ( enable_internal_weights ) {
+    internal_weights.clear();
+    candidate_unit_internal_weights.resize(0);
+  }
 }
     
 void IncrementalNNet::train()
@@ -330,6 +353,8 @@ void IncrementalNNet::train()
       // compute output and cost IF WE USED THE CANDIDATE HIDDEN UNIT
       real candidate_act = 
         dot(input, candidate_unit_weights) + candidate_unit_bias;
+      if ( enable_internal_weights && stage > 0 ) 
+        candidate_act += dot( h, candidate_unit_internal_weights );
       real candidate_h;
       if (hard_activation_function)
         candidate_h = sign(candidate_act);
@@ -363,29 +388,47 @@ void IncrementalNNet::train()
         if (stage>0)
         {
           transposedLayerL1BpropUpdate(hidden_gradient, output_weights, h, output_gradient, learning_rate, output_weight_decay);
-
-          // bprop through hidden units activation
-          if (hard_activation_function) 
-            // Should h_i(x) change of sign?
-            // Consider the loss that would occur if it did, i.e. with output replaced by output - 2*W[.,i]*h_i(x)
-            // Then consider a weighted classification problem
-            // with the appropriate sign and weight = gradient on h_i(x).
-          {
-            for (int i=0;i<int(stage);i++) // loop over hidden units
+          
+          if ( !enable_internal_weights ){  // simple one-hidden-layer topology 
+            // bprop through hidden units activation
+            if (hard_activation_function) 
+              // Should h_i(x) change of sign?
+              // Consider the loss that would occur if it did, i.e. with output replaced by output - 2*W[.,i]*h_i(x)
+              // Then consider a weighted classification problem
+              // with the appropriate sign and weight = gradient on h_i(x).
             {
-              Vec Wi = output_weights(i);
-              multiplyAdd(output,Wi,-2*h[i],output_with_signchange);
-              real fit_error_with_sign_change = output_loss(output_with_signchange,target);
-              int target_i = int(sign(fit_error_with_sign_change-current_fit_error)*h[i]);
-              real weight_i = fabs(hidden_gradient[i]); // CHECK: when is the sign of hidden_gradient different from (h[i]-target_i)?
-              if (use_hinge_loss_for_hard_activation)
-                hidden_gradient[i] = weight_i * d_hinge_loss(act[i],target_i);
-              else // use cross-entropy
-                hidden_gradient[i] = weight_i * (sigmoid(act[i]) - 2*(target_i+1));
+              for (int i=0;i<int(stage);i++) // loop over hidden units
+              {
+                Vec Wi = output_weights(i);
+                multiplyAdd(output,Wi,-2*h[i],output_with_signchange);
+                real fit_error_with_sign_change = output_loss(output_with_signchange,target);
+                int target_i = int(sign(fit_error_with_sign_change-current_fit_error)*h[i]);
+                real weight_i = fabs(hidden_gradient[i]); // CHECK: when is the sign of hidden_gradient different from (h[i]-target_i)?
+                if (use_hinge_loss_for_hard_activation)
+                  hidden_gradient[i] = weight_i * d_hinge_loss(act[i],target_i);
+                else // use cross-entropy
+                  hidden_gradient[i] = weight_i * (sigmoid(act[i]) - 2*(target_i+1));
+              }
             }
+            else
+              bprop_tanh(h,hidden_gradient,hidden_gradient);
+          } else {                          // cascade topology
+            //if (hard_activation_function) { // not implemented 
+            //} else {
+            
+            for ( int i = stage-1; i >= 0; i-- ) { // bprop_tanh equivalent, also modifies internal_weights
+              hidden_gradient[i] *= (1 - h[i]*h[i]);
+              for ( int j = 0; j < i; j++ ) {
+                hidden_gradient[j] += internal_weights[i][j]*hidden_gradient[i];
+                internal_weights[i][j] -= learning_rate * ( hidden_gradient[i] * h[j] );
+                                            //+ output_weight_decay * sign(internal_weights[i][j]) );
+              }
+            }
+            
+            //}
+            
+            
           }
-          else
-            bprop_tanh(h,hidden_gradient,hidden_gradient);
 
           // bprop through hidden layer and update hidden_biases and hidden_weights
           hidden_gradient *= -learning_rate;
@@ -422,7 +465,7 @@ void IncrementalNNet::train()
       
       // backprop & update candidate hidden unit
       output_loss_gradient(output_with_candidate, target, output_gradient, sampleweight);     
-      // should candidate_unit_output_weights_mat be here?
+      // computes candidate_hidden_gradient, and updates candidate_unit_output_weights_mat
       layerBpropUpdate(candidate_hidden_gradient, candidate_unit_output_weights_mat, 
                        candidate_h_vec, output_gradient, learning_rate);
       // bprop through candidate hidden unit activation, heuristic method
@@ -443,6 +486,8 @@ void IncrementalNNet::train()
       candidate_hidden_gradient *= -learning_rate;
       candidate_unit_bias += candidate_hidden_gradient[0];
       multiplyAcc(candidate_unit_weights, input, candidate_hidden_gradient[0]);
+      if ( enable_internal_weights && stage > 0 ) 
+        multiplyAcc(candidate_unit_internal_weights, h, candidate_hidden_gradient[0]);
 
       //MNT
       if ( verbosity > 4 ) {
@@ -451,7 +496,6 @@ void IncrementalNNet::train()
         cout << "  candidate_unit_weights (after): " << candidate_unit_weights << endl;
         cout << "  candidate_unit_bias (after): " << candidate_unit_bias << endl;
       }
-
            
       // keep track of average performance with and without candidate hidden unit
       n_examples_seen++;
@@ -491,6 +535,7 @@ void IncrementalNNet::train()
             cout << "Estimated current classification error = " << current_average_class_error << endl
                  << "Estimated classification error with candidate unit = " << next_average_class_error << endl;
         }
+        
         if ( next_average_cost < current_average_cost ) 
         //if ( next_average_class_error < current_average_class_error ) MNT
         {
@@ -503,6 +548,16 @@ void IncrementalNNet::train()
           output_weights(stage-1) << candidate_unit_output_weights;
           hidden_layer_weights(stage-1) << candidate_unit_weights;
           hidden_layer_biases[stage-1] = candidate_unit_bias;
+          if ( enable_internal_weights ) {
+            Vec tmpintw; 
+            tmpintw.resize(stage-1);
+            tmpintw << candidate_unit_internal_weights;
+            internal_weights.push_back( tmpintw );
+            //if ( stage > 1 ) 
+            cout << "internal_weights.size(): " << internal_weights.size() << endl;
+            candidate_unit_internal_weights.resize(stage);
+            candidate_unit_internal_weights.fill(0.01/stage);
+          }
           act.resize(stage);
           h.resize(stage);
           // initialize a new candidate
@@ -537,7 +592,7 @@ void IncrementalNNet::train()
     }
     while (stage<nstages && stopping_criterion_not_met);
           
-    ++stage;
+    //++stage;
     train_stats->finalize(); // finalize statistics for this epoch
   }
 }
@@ -550,16 +605,25 @@ void IncrementalNNet::computeOutput(const Vec& input, Vec& output) const
   output.resize(nout);
   if (stage>0)
   {
-    product(act,hidden_layer_weights, input);
-    act+=hidden_layer_biases;
-    if (hard_activation_function)
-      compute_sign(act,h);
-    else
-      compute_tanh(act,h);
-    transposeProduct(linear_output,output_weights,h);
+    product( act, hidden_layer_weights, input );
+    act += hidden_layer_biases;
+
+    if ( enable_internal_weights ) { // cascade topology     
+      for( int i = 0; i < stage; i++ ) {
+        h[i] = hard_activation_function ? sign( act[i] ) : tanh( act[i] );
+        for( int j = i+1; j < stage; j++ ) {
+          act[j] += h[i] * internal_weights[j][i];
+        }
+      }
+    } else {                         // simple one-hidden-layer topology
+      if (hard_activation_function) 
+        compute_sign(act,h);
+      else 
+        compute_tanh(act,h);
+    } 
+    transposeProduct(linear_output,output_weights,h);      
   } 
-  else 
-    linear_output.clear();
+  else  linear_output.clear();
   linear_output+=output_biases;
   if (cost_type==2) // "discrete_log_likelihood"
     softmax(linear_output,output);
