@@ -93,6 +93,7 @@ void ProcessingVMatrix::build_()
   for(int j=0; j<nfields; j++)
     fieldinfos[j] = VMField(fieldnames[j]);
 
+  length_ = source->length();
   setMetaInfoFromSource();
   sourcevec.resize(source->width());
 }
