@@ -37,6 +37,8 @@ def is_under_version_control( path ):
 # the current one, the file 'revision_file_path' is touched.
 def update_repository_revision( repository_name, repository_path,
                                 repository_revision_dir, revision_file_path ):
+    old_path      = os.getcwd()
+    os.chdir(repository_path)    # Necessary before calling get_vc_module()
     vc_module     = get_vc_module()
     vc_name       = vc_module.__name__.split('.')[-1]
     current_rev   = int( vc_module.repository_revision( repository_path ) )
@@ -58,6 +60,8 @@ def update_repository_revision( repository_name, repository_path,
         rev_file.write( str(current_rev) )
         rev_file.close()
         os.utime(revision_file_path, None)
+
+    os.chdir(old_path)    # Get back to previous directory
 
     return str(current_rev)
 
