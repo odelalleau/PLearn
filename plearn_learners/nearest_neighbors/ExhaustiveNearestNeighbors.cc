@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExhaustiveNearestNeighbors.cc,v 1.5 2005/03/04 20:58:17 lamblin Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -139,7 +139,6 @@ void ExhaustiveNearestNeighbors::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void ExhaustiveNearestNeighbors::setTrainingSet(VMat training_set,
                                                 bool call_forget)
 {
-  training_mat = training_set.toMat();
   inherited::setTrainingSet(training_set, call_forget);
 }
 
@@ -152,7 +151,12 @@ void ExhaustiveNearestNeighbors::forget()
 
 void ExhaustiveNearestNeighbors::train()
 {
-  // Train is instantaneous. :-)
+  // Train is nearly instantaneous. :-)
+  // Note: this conversion is performed on train() rather than
+  // setTrainingSet since the training VMat may depend upon some
+  // PLearners which may not have been trained when setTrainingSet is
+  // called.  It's safer to delay the conversion until necessary.
+  training_mat = getTrainingSet().toMat();
 }
 
 
