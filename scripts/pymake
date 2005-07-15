@@ -773,7 +773,11 @@ class FileInfo:
     def __init__(self,filepath):
         if not os.path.exists(filepath):
             raise "Couldn't find file " + filepath
-        self.filepath = filepath
+        if platform == 'win32':
+            self.filepath = filepath
+        else:
+            # Remove potential links in the path.
+            self.filepath = os.path.realpath(filepath)
 
 
     def parse_file(self):
