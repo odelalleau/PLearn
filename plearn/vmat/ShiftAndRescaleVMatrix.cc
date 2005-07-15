@@ -129,21 +129,12 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
 void ShiftAndRescaleVMatrix::build_()
 {
   if (vm) {
-    length_ = vm->length();
-    width_ = vm->width();
     writable = vm->isWritable();
-    if(inputsize_<0)
-      inputsize_ = vm->inputsize();
-    if(targetsize_<0)
-      targetsize_ = vm->targetsize();
-    if(weightsize_<0)
-      weightsize_ = vm->weightsize();
-    setMtime(vm->getMtime());
-    if (vm->getMetaDataDir() != "") {
+    length_ = vm->length();
+    width_  = vm->width();
+    if (vm->hasMetaDataDir())
       setMetaDataDir(vm->getMetaDataDir());
-    }
-    // setAlias(vm->getAlias()); // Aliases are deprecated.
-    fieldinfos = vm->getFieldInfos();
+    setMetaInfoFrom(vm);
     if (automatic)
     {
       if (n_inputs<0)
