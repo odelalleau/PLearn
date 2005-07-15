@@ -392,6 +392,9 @@ VMatLanguage::VMatLanguage(VMat vmsrc)
                     processed_sourcecode+=string("%")+tostring(i)+ " ";
                     if (code_to_perform)
                       processed_sourcecode += performed_code + " ";
+                    if (i >= srcfieldnames.length())
+                      PLERROR("In VMatLanguage::preprocess - Asked field number %d, but there "
+                              "are only %d fields available", i, srcfieldnames.length());
                     fieldnames.push_back(srcfieldnames[i]);
                   }
               }
@@ -411,6 +414,9 @@ VMatLanguage::VMatLanguage(VMat vmsrc)
               if(a==-1)
                 PLERROR("In copyfield macro, unknown field :%s",astr.c_str());
               processed_sourcecode+=string("%")+tostring(a)+ " ";
+              if (a >= srcfieldnames.length())
+                PLERROR("In VMatLanguage::preprocess - Asked field number %d, but there "
+                        "are only %d fields available", a, srcfieldnames.length());
               fieldnames.push_back(srcfieldnames[a]);
             }
             else PLERROR("Strange fieldcopy format. e.g : [%0:%5]. Found parts %s",join(parts," ").c_str());
