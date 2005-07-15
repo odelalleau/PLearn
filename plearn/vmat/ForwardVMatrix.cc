@@ -48,7 +48,10 @@
 namespace PLearn {
 using namespace std;
 
-PLEARN_IMPLEMENT_OBJECT(ForwardVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(ForwardVMatrix,
+    "Forward all calls to an underlying VMatrix.",
+    ""
+);
 
 ForwardVMatrix::ForwardVMatrix()
 {}

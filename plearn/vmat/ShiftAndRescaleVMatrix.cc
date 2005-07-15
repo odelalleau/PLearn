@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.cc,v 1.14 2005/02/04 15:09:27 tihocan Exp $
+   * $Id$
    ******************************************************* */
 
 #include "ShiftAndRescaleVMatrix.h"
@@ -48,8 +48,12 @@ using namespace std;
 
 /** ShiftAndRescaleVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(ShiftAndRescaleVMatrix, "ONE LINE DESCR",
-                        "ShiftAndRescaleVMatrix allows to shift and scale the first n_inputs columns of an underlying_vm.\n");
+PLEARN_IMPLEMENT_OBJECT(ShiftAndRescaleVMatrix,
+    "Applies a linear transformation to columns of an underlying VMatrix.",
+    "The default behavior is to shift and scale only the input columns in order\n"
+    "to set their mean to 0 and their standard deviation to 1, but the various\n"
+    "options can be used for finer control.\n"
+);
 
 ShiftAndRescaleVMatrix::
 ShiftAndRescaleVMatrix(VMat underlying_vm, Vec the_shift, Vec the_scale)
