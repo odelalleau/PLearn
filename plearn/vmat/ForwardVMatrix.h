@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: ForwardVMatrix.h,v 1.13 2005/01/25 03:15:46 dorionc Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,9 +48,6 @@
 
 namespace PLearn {
 using namespace std;
-
-//! This class is a simple wrapper to an underlying VMatrix of another type
-//! All it does is forward the method calls
 
 class ForwardVMatrix: public VMatrix
 {
