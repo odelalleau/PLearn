@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.cc,v 1.17 2005/02/24 16:34:02 lheureup Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -137,14 +137,16 @@ void FilteredVMatrix::declareOptions(OptionList& ol)
 
 void FilteredVMatrix::build_()
 {
-  vector<string> fieldnames;
-  program.setSource(source);
-  // TODO: What happens when ptr is null
-  program.compileString(prg,fieldnames); 
-  if(metadatadir != "") {
+  if (source && hasMetaDataDir()) {
+    vector<string> fieldnames;
+    program.setSource(source);
+    program.compileString(prg,fieldnames); 
     openIndex();
+    setMetaInfoFromSource();
+  } else {
+    length_ = 0;
+    width_ = 0;
   }
-  setMetaInfoFromSource();
   build_complete = true;
 }
 
