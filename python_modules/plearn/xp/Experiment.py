@@ -20,6 +20,26 @@ def get_inexistence_predicate( expkey, cache_once=True ):
 
     return inexistence_predicate
     
+def keycmp( exp, other, expkey ):
+    if exp.path == other.path:
+        return 0
+
+    exp_subkey   = exp.getKey( expkey )
+    exp_it       = exp_subkey.iteritems()
+
+    other_subkey = other.getKey( expkey )
+    other_it     = other_subkey.iteritems()
+    
+    for item in exp_it:
+        try:
+            compare = cmp( item, other_it.next() )                
+            if compare != 0:
+                return compare
+        except StopIteration:
+            return 1 ## >
+
+    ## Non-Positive ( < or == )
+    return len(exp_subkey) - len(other_subkey)
 
 def option_value_split( s, sep="=" ):
     """Returns a (lhs, rhs) pair given I{sep}."""
@@ -57,6 +77,9 @@ class ExpKey( Bindings ):
             expkey = [ option_value_split( line ) for line in file(keysrc, "r") ]        
         Bindings.__init__( self, expkey )
 
+    def strkey( self ):
+        return " ".join([ '='.join([str(key),str(value)]) for key,value in self.iteritems() ])
+
 class Experiment(PyPLearnObject):
     ##
     # Options
@@ -92,22 +115,27 @@ class Experiment(PyPLearnObject):
         return exp        
     load = classmethod( load )
 
-    def cache_experiments( cls ):
-        exproot = pyplearn.config.get_option( 'EXPERIMENTS', 'expdir_root' )
+    def cache_experiments( cls, exproot=None, forget=True ):
+        if exproot is None:
+            roots = pyplearn.config.get_option( 'EXPERIMENTS', 'expdir_root' ).split(',')            
+            for exproot in roots:
+                cls.cache_experiments( exproot=exproot, forget=False )
+            return
+
+        if cls._cached is None or forget:
+            cls._cached = []
+
         if exproot:
             if not os.path.exists( exproot ):
-                cls._cached = []                        
                 return
             dirlist = os.listdir( exproot )
         else:
             dirlist = os.listdir( os.getcwd() )            
 
-        cls._cached = []
         for fname in dirlist:
             if fname.startswith( cls._expdir_prefix ):                
                 x = cls.load( os.path.join(exproot, fname) )
                 cls._cached.append( x )            
-        cls._cached.sort()
     cache_experiments = classmethod( cache_experiments )
 
     def match( cls, expkey=[] ):
@@ -122,21 +150,8 @@ class Experiment(PyPLearnObject):
             self.expkey = ExpKey( os.path.join( self.path, self._metainfos_fname ) )
         
     def __cmp__( self, other ):
-        if self.path == other.path:
-            return 0
-
-        other_it = other.expkey.iteritems()
-        for item in self.expkey.iteritems():
-            try:
-                compare = cmp( item, other_it.next() )                
-                if compare != 0:
-                    return compare
-            except StopIteration:
-                return 1 ## >
-                
-        ## Non-Positive ( < or == )
-        return len(self.expkey) - len(other.expkey)
-
+        raise NotImplementedError( 'Use keycmp( x1, x2, expkey )' )
+    
     def __str__( self ):
         return self.toString()
 
@@ -152,15 +167,10 @@ class Experiment(PyPLearnObject):
                 subset[key] = None
         return subset
         
-    def toString( self, expkey=None ):        
-        restriction = lambda key: True
-        if expkey is not None:
-            restriction = lambda key: key in expkey
-            
+    def toString( self, expkey=None ):
         s = '%s\n' % self.path
-        for key, value in self.expkey.iteritems():
-            if restriction(key): 
-                s += '    %s= %s\n' % (key.ljust(30), value)
+        for key, value in self.getKey(expkey).iteritems():
+            s += '    %s= %s\n' % (key.ljust(30), value)
         return s
 
     def is_matched( self, expkey ):
@@ -195,4 +205,4 @@ class Experiment(PyPLearnObject):
         return True
 
     def running( self ):
-        return not self.expkey
+        return len(self.expkey) == 0

@@ -401,7 +401,12 @@ class _plargs_storage_readonly( object ):
             if root:
                 expdir = os.path.join( root, expdir )
                 if not os.path.exists( root ):
-                    os.makedirs( root )
+                    # Possible set by parallel thread
+                    try: 
+                        os.makedirs( root )
+                    except OSError, err:
+                        if not os.path.exists( root ):
+                            raise                        
             return expdir
 
         # Else, use default value

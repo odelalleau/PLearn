@@ -164,4 +164,4 @@ def TMat( *args ):
         
 
 if __name__ == "__main__":
-    print TMat(2, 2, ["allo", "mon", "petit", "coco"])
+    print TMat(2, 2, ["allo", "mon", "petit", "coco"]).plearn_repr()

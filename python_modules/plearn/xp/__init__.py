@@ -28,6 +28,43 @@ from plearn.utilities.ModeAndOptionParser import *
 class XpMode( Mode ):
     pass
 
+class merge( XpMode ):
+    """\ls -1 Rank*/expdir* | grep expdir > tmp.sh"""
+    def option_groups( cls, parser ):
+        group_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
+                                     "Available under %s mode only." % cls.__name__ )
+
+        # group_options.add_option( "--move",
+        #                           default = False,
+        #                           action  = 'store_true',
+        #                           help    = "Should the experiments directory be moved (instead of linked) in "
+        #                           "the created directory."                       
+        #                           )
+        
+        group_options.add_option( "--name",
+                                  default = None,
+                                  help    = "The name that should be given the created directory. The default "
+                                  "name is built from the experiment key."                       
+                                  )
+
+        return [ group_options ]
+    option_groups = classmethod( option_groups )
+    
+
+    def __init__( self, targets, options ):
+        if options.name:
+            dirname = options.name
+        else:
+            dirname = 'Merge_%s' % '_'.join(targets)
+        os.makedirs( dirname )
+            
+        for target in targets:
+            dirlist = os.listdir( target )
+            for fname in dirlist:
+                if fname.startswith( Experiment._expdir_prefix ):
+                    fpath = os.path.join( '..', target, fname)
+                    os.symlink( fpath, os.path.join( dirname, fname) )
+
 class mkdir( XpMode ):
     def __init__( self, targets, options ):
         dirname = targets[0]
@@ -102,6 +139,7 @@ class listdir( ExpKeyMode ):
     aliases = classmethod( aliases )
     
     def routine( self, expkey, options, experiments ):
+        experiments.sort( lambda x1, x2: keycmp(x1, x2, expkey) )
         if options.full or not expkey:
             print "\n","\n".join([ str(x) for x in experiments ])
         else:
@@ -127,18 +165,18 @@ class listdir( ExpKeyMode ):
 class group( ExpKeyMode ):
     def option_groups( cls, parser ):
         group_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
-                                     "Available under group mode only." )
+                                     "Available under %s mode only." % cls.__name__ )
 
         group_options.add_option( "--move",
                                   default = False,
                                   action  = 'store_true',
                                   help    = "Should the experiments directory be moved (instead of linked) in "
-                                  "the created group directory."                       
+                                  "the created directory."                       
                                   )
         
         group_options.add_option( "--name",
                                   default = None,
-                                  help    = "The name that should be given the created group directory. The default "
+                                  help    = "The name that should be given the created directory. The default "
                                   "name is built from the experiment key."                       
                                   )
 
@@ -158,55 +196,23 @@ class group( ExpKeyMode ):
             else:
                 dirname = options.name
 
+            if not exp.path.startswith( Experiment._expdir_prefix ):
+                dirname = os.path.join( os.path.dirname(exp.path), dirname )
+
             if not os.path.exists( dirname ):
                 os.mkdir( dirname )
 
             pushd( dirname )
             if not os.path.exists( exp.path ):
-                reffunc( os.path.join('..',exp.path), exp.path )
+                expdir = os.path.basename( exp.path )
+                assert expdir.startswith( Experiment._expdir_prefix ), expdir
+                try:
+                    reffunc( os.path.join('..',expdir), expdir )
+                except OSError, err:
+                    raise OSError( '%s\n in %s\n with expdir=%s'
+                                   % (str(err), os.getcwd(), expdir)
+                                   )
             popd( )
-
-class report( ExpKeyMode ):
-    def routine( self, expkey, options, experiments ):
-        scores = { }
-
-        xstring = lambda xp: xp.toString(expkey)
-        if not expkey:
-            xstring = lambda xp: xp.path
-
-        for exp in experiments:
-            global_stats = PMat( os.path.join(exp.path, 'global_stats.pmat') )
-            scores[ exp.path ] = global_stats[ options.score ][0,0]
-            global_stats.close()            
-
-        if options.sort == 'best':
-            sort_function = lambda xp1, xp2: cmp(scores[xp1.path], scores[xp2.path])
-        elif options.sort == 'key':
-            raise 'Implement keycmp(xp1, xp2, expkey)'
-            sort_function = lambda xp1, xp2: cmp(xp1, xp2) or cmp(scores[xp1.path], scores[xp2.path])
-
-        experiments.sort( sort_function )
-        for exp in experiments:
-            print '%s    %s = %f' % ( xstring(exp), options.score, scores[exp.path] )
-            
-
-    def option_groups( cls, parser ):
-        report_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
-                                     "Available under report mode only." )
-
-        report_options.add_option( "--score",
-                                  default = 'SHARPERATIO[test.E[vsCash_strict_monthly_relative_return]]',
-                                  help    = ""
-                                  )
-
-        report_options.add_option( "--sort",
-                                   default = 'best',
-                                   choices = [ 'best', 'key' ],
-                                   help    = ""
-                                   )        
-
-        return [ report_options ]
-    option_groups = classmethod( option_groups )
 
 class running( ExpKeyMode ):
     def routine( self, expkey, options, experiments ):
@@ -227,7 +233,7 @@ class running( ExpKeyMode ):
 #            
 #  Main program
 #
-def main( xp_version = lambda : '0.1' ):
+def main( xp_version = lambda : '0.1', default_mode_name='listdir' ):
     parser = ModeAndOptionParser( usage = ( "%prog [mode [options]] expkey*\n" +
                                             (' '*7) +"Default mode is listdir" ),
                                   version = "%prog " + xp_version( )   )
@@ -235,7 +241,7 @@ def main( xp_version = lambda : '0.1' ):
     #
     # Actual Launch
     #
-    options, targets = parser.parse_args( default_mode_name='listdir' )
+    options, targets = parser.parse_args( default_mode_name=default_mode_name )
 
     print "xp %s" % xp_version( )    
     parser.selected_mode( targets, options )
