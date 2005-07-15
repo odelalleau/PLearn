@@ -76,7 +76,7 @@ ForwardVMatrix::build_()
     width_ = vm->width();
     writable = vm->isWritable();
     setMetaInfoFrom(vm);
-    if(vm->hasMetaDataDir())
+    if (vm->hasMetaDataDir() && !this->hasMetaDataDir())
       setMetaDataDir(vm->getMetaDataDir());
 
   } else {
@@ -97,8 +97,16 @@ void ForwardVMatrix::setVMat(VMat the_vm)
 void
 ForwardVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "vm", &ForwardVMatrix::vm, OptionBase::buildoption, "");
+    declareOption(ol, "vm", &ForwardVMatrix::vm, OptionBase::buildoption,
+        "The underlying VMat to which all calls are forwarded.");
+
     inherited::declareOptions(ol);
+
+    // Hide unused options (automatically defined at build time).
+
+    declareOption(ol, "writable",    &ForwardVMatrix::writable, OptionBase::nosave, "");
+    declareOption(ol, "length",      &ForwardVMatrix::length_,  OptionBase::nosave, "");
+    declareOption(ol, "width",       &ForwardVMatrix::width_,   OptionBase::nosave, "");
 }
 
 string ForwardVMatrix::getValString(int col, real val) const
