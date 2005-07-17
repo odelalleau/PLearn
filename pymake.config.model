@@ -95,19 +95,22 @@ compileflags = compileflags + ' -DMETADATADIR=\\"' + metadatadir + '\\"'
 #####  Repository Revision String Generation  ###############################
 
 def PL_repository_revision():
+    return PL_default_repository_revision()
+
+def PL_default_repository_revision():
   from plearn.utilities.version_control import update_repository_revision
-  return update_repository_revision('plearn', plearndir,
-                                    os.path.join(ppath('HOME'), '.plearn'),
-                                    os.path.join( plearndir, "plearn", "base",
+  return "PL" + update_repository_revision('plearn', plearndir,
+                                           os.path.join(ppath('HOME'), '.plearn'),
+                                           os.path.join( plearndir, "plearn", "base",
                                                   "pl_repository_revision.cc" ))
 
 optionalLibrary( name = 'plearn_repository_revision',
                  triggers = 'pl_repository_revision.h',
-                 compileroptions = [ '-DPL_REPOSITORY_REVISION=\\"PL', PL_repository_revision, '\\"' ],
+                 compileroptions = [ '-DPL_REPOSITORY_REVISION=\\"', PL_repository_revision, '\\"' ],
                  linkeroptions   = '')
 
-#####  Optional Libraries  ##################################################
 
+#####  Optional Libraries  ##################################################
 
 # Add available external libraries In the order in which the linkeroptions
 # must appear on the linker command line (typically most basic libraries
