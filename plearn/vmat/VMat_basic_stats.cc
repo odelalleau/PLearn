@@ -307,11 +307,12 @@ void computeInputMean(const VMat& d, Vec& meanvec)
 //////////////////////////////
 void computeInputMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
 {
+  assert( d->inputsize() >= 0 );
   VecStatsCollector sc;
   sc.compute_covariance = true;
   sc.build();
-  int n = d->length();
-  int w = d->width();
+  int n  = d->length();
+  int is = d->inputsize();
   Vec input, target;
   real weight;
   for (int i = 0; i < n; i++) {
@@ -319,7 +320,7 @@ void computeInputMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
     sc.update(input, weight);
   }
   sc.getMean(meanvec);
-  covarmat.resize(w,w);
+  covarmat.resize(is,is);
   covarmat << sc.getCovariance();
 }
 
@@ -328,6 +329,7 @@ void computeInputMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
 /////////////////////////////////
 void computeInputMeanAndVariance(const VMat& d, Vec& meanvec, Vec& var)
 {
+  assert( d->inputsize() >= 0 );
   VecStatsCollector sc;
   int n = d->length();
   Vec input, target;
@@ -337,7 +339,7 @@ void computeInputMeanAndVariance(const VMat& d, Vec& meanvec, Vec& var)
     sc.update(input, weight);
   }
   sc.getMean(meanvec);
-  var.resize(d->width());
+  var.resize(d->inputsize());
   var << sc.getVariance();
 }
 
