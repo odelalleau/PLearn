@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_basic_stats.h,v 1.2 2005/03/16 17:08:55 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -77,31 +77,33 @@ using namespace std;
   row 8: mean of positive
   row 9: stddev of positive
 */
-Mat computeBasicStats(VMat m);
+Mat computeBasicStats(const VMat& m);
 
-void computeRowMean(VMat d, Vec& meanvec);
-void computeMean(VMat d, Vec& meanvec);
-void computeWeightedMean(Vec weights, VMat d, Vec& meanvec);
-void computeMeanAndVariance(VMat d, Vec& meanvec, Vec& variancevec);
-void computeMeanAndStddev(VMat d, Vec& meanvec, Vec& stddevvec);
-void computeMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, ostream& logstream=cerr);
-void computeWeightedMeanAndCovar(Vec weights, VMat d, Vec& meanvec, Mat& covarmat);
+//! Compute mean of each row (the returned vector has length d->length()).
+void computeRowMean             (const VMat& d, Vec& meanvec);
+
+//! Compute basic statistics over all samples.
+//! The first methods will compute statistics over *all* columns of a VMat,
+//! including target and weight columns (an additional weight vector must be
+//! supplied if one wants to compute weighted statistics).
+//! The last methods (computeInput...) will compute statistics only on the
+//! *input* part of a VMat, and weighted statistics can be obtained directly
+//! using the weights in the VMat.
+void computeMean                (const VMat& d, Vec& meanvec);
+void computeMeanAndVariance     (const VMat& d, Vec& meanvec, Vec& variancevec);
+void computeMeanAndStddev       (const VMat& d, Vec& meanvec, Vec& stddevvec);
+void computeMeanAndCovar        (const VMat& d, Vec& meanvec, Mat& covarmat);
+void computeWeightedMean        (const Vec& weights, const VMat& d, Vec& meanvec);
+void computeWeightedMeanAndCovar(const Vec& weights, const VMat& d,
+                                 Vec& meanvec, Mat& covarmat);
+void computeInputMean           (const VMat& d, Vec& meanvec);
+void computeInputMeanAndCovar   (const VMat& d, Vec& meanvec, Mat& covarmat);
+void computeInputMeanAndVariance(const VMat& d, Vec& meanvec, Vec& var);
+
 
 void autocorrelation_function(const VMat& data, Mat& acf);
 
-//! Computes the (possibly weighted) mean and covariance of the input part of the dataset.
-//! This will only call d->getExamplev
-void computeInputMean(VMat d, Vec& meanvec);
-void computeInputMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat);
-void computeInputMeanAndVariance(VMat d, Vec& meanvec, Vec& var);
-
-
-void computeRange(VMat d, Vec& minvec, Vec& maxvec);
-
-//! Last column of d is supposed to contain the weight for each sample
-//! Samples with a weight less or equal to threshold will be ignored
-//! (returns the sum of all the weights actually used)
-real computeWeightedMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, real threshold=0);
+void computeRange(const VMat& d, Vec& minvec, Vec& maxvec);
 
 /*!   Computes conditional mean and variance of each target, conditoned on the
   values of categorical integer input feature.  The basic_stats matrix may
@@ -117,16 +119,19 @@ real computeWeightedMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, real thres
   returned matrix array[i] for input features that are not considered
   categorical integers are empty.
 */
-Array<Mat> computeConditionalMeans(VMat trainset, int targetsize, Mat& basic_stats);
+TVec<Mat> computeConditionalMeans(VMat trainset, int targetsize, Mat& basic_stats);
 
-/*!   subtracts mean and divide by stddev
+/*!   Subtracts mean and divide by stddev.
   meanvec and stddevvec can be shorter than d.width() 
   (as we probably only want to 'normalize' the 'input' part of the sample, 
-  and not the 'output' that is typically present in the last columns)
+  and not the 'target' that is typically present in the last columns).
 */
-  VMat normalize(VMat d, Vec meanvec, Vec stddevvec);
-  VMat normalize(VMat d, int inputsize, int ntrain); //!<  Here, mean and stddev are estimated on d.subMat(0,0,ntrain,inputsize)
-  VMat normalize(VMat d, int inputsize); //!<  Here, mean and stddev are estimated on the whole dataset d
+  VMat normalize(const VMat& d, const Vec& meanvec, const Vec& stddevvec);
+
+  //! Here, mean and stddev are estimated on d.subMat(0,0,ntrain,inputsize).
+  VMat normalize(const VMat& d, int inputsize, int ntrain);
+  //! Here, mean and stddev are estimated on the whole dataset d.
+  VMat normalize(const VMat& d, int inputsize);
 
 //! Compute the correlations between each of the columns of x and each of the 
 //! columns of y. The results are in the x.width() by y.width() matrix r.

@@ -3,6 +3,7 @@
 // VMat_basic_stats.cc
 //
 // Copyright (C) 2004 Pascal Vincent 
+// Copyright (C) 2005 Université de Montréal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_basic_stats.cc,v 1.3 2005/03/16 17:08:54 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -52,14 +53,15 @@
 namespace PLearn {
 using namespace std;
 
-/** Statistics functions **/
-void computeWeightedMean(Vec weights, VMat d, Vec& meanvec)
+/////////////////////////
+// computeWeightedMean //
+/////////////////////////
+void computeWeightedMean(const Vec& weights, const VMat& d, Vec& meanvec)
 {
   int w = d->width();
   int l = d->length();
-  if(weights.length() != l) {
-    PLERROR("In VMat.cc, method computeMean: weights.length() != d->length()\n");
-  }
+  if(weights.length() != l)
+    PLERROR("In VMat_basic_stats.cc, method computeMean: weights.length() != d->length()\n");
   meanvec.resize(w);
   meanvec.clear();
   Vec samplevec(w);
@@ -71,8 +73,10 @@ void computeWeightedMean(Vec weights, VMat d, Vec& meanvec)
   meanvec /= sum(weights);
 }
 
-
-void computeRange(VMat d, Vec& minvec, Vec& maxvec)
+//////////////////
+// computeRange //
+//////////////////
+void computeRange(const VMat& d, Vec& minvec, Vec& maxvec)
 {
   int l = d.length();
   int w = d.width();
@@ -93,7 +97,10 @@ void computeRange(VMat d, Vec& minvec, Vec& maxvec)
     }
 }
 
-void computeRowMean(VMat d, Vec& meanvec)
+////////////////////
+// computeRowMean //
+////////////////////
+void computeRowMean(const VMat& d, Vec& meanvec)
 {
   meanvec.resize(d->length());
   Vec samplevec(d->width());
@@ -104,7 +111,10 @@ void computeRowMean(VMat d, Vec& meanvec)
   }
 }
 
-void computeMean(VMat d, Vec& meanvec)
+/////////////////
+// computeMean //
+/////////////////
+void computeMean(const VMat& d, Vec& meanvec)
 {
   meanvec.resize(d->width());
   meanvec.clear();
@@ -117,8 +127,12 @@ void computeMean(VMat d, Vec& meanvec)
   meanvec /= real(d->length());
 }
 
-Mat computeBasicStats(VMat m)
+///////////////////////
+// computeBasicStats //
+///////////////////////
+Mat computeBasicStats(const VMat& m)
 {
+  // TODO Use StatsCollector instead ?
   Vec v(m.width());
   real* vdata = v.data();
   Mat stats(10,m.width());
@@ -180,19 +194,21 @@ Mat computeBasicStats(VMat m)
   return stats;
 }
 
+/////////////////////////////
+// computeConditionalMeans //
+/////////////////////////////
 // mean = sum/n
 // variance = (sumsquare-square(sum)/n)/(n-1)
 // stddev_of_mean = sqrt(variance/n);
 // mse = sumsquare/n - square(sum/n)
 // stddev_of_mse = variance*sqrt(2./n); 
-
-Array<Mat> computeConditionalMeans(VMat trainset, int targetsize, Mat& basic_stats)
+TVec<Mat> computeConditionalMeans(const VMat& trainset, int targetsize, Mat& basic_stats)
 {
   if(!basic_stats)
     basic_stats = computeBasicStats(trainset);
 
   int inputsize = trainset.width()-targetsize;
-  Array<Mat> a(inputsize);
+  TVec<Mat> a(inputsize);
   for(int j=0; j<inputsize; j++)
   {
     real minval = basic_stats(MIN_ROW,j);
@@ -264,7 +280,10 @@ Array<Mat> computeConditionalMeans(VMat trainset, int targetsize, Mat& basic_sta
   return a;
 }
 
-void computeMeanAndVariance(VMat d, Vec& meanvec, Vec& variancevec)
+////////////////////////////
+// computeMeanAndVariance //
+////////////////////////////
+void computeMeanAndVariance(const VMat& d, Vec& meanvec, Vec& variancevec)
 {
   computeMean(d, meanvec);
   variancevec.resize(d->width());
@@ -283,10 +302,12 @@ void computeMeanAndVariance(VMat d, Vec& meanvec, Vec& variancevec)
       variancevec += sqdiffvec;
     }
   variancevec /= real(l-1);
-  
 }
 
-void computeInputMean(VMat d, Vec& meanvec)
+//////////////////////
+// computeInputMean //
+//////////////////////
+void computeInputMean(const VMat& d, Vec& meanvec)
 {
   Vec input;
   Vec target;
@@ -305,7 +326,10 @@ void computeInputMean(VMat d, Vec& meanvec)
   meanvec /= weightsum;
 }
 
-void computeInputMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat)
+//////////////////////////////
+// computeInputMeanAndCovar //
+//////////////////////////////
+void computeInputMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
 {
   Vec input;
   Vec target;
@@ -334,31 +358,33 @@ void computeInputMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat)
   externalProductScaleAcc(covarmat, offset, offset, real(-1));
 }
 
-void computeInputMeanAndVariance(VMat d, Vec& meanvec, Vec& var)
+/////////////////////////////////
+// computeInputMeanAndVariance //
+/////////////////////////////////
+void computeInputMeanAndVariance(const VMat& d, Vec& meanvec, Vec& var)
 {
-  Vec input;
-  Vec target;
-  Vec offset;
+  Vec input, target, offset;
   real weight;
-  int l = d->length();
-  int n = d->inputsize();
+  int l  = d->length();
+  int is = d->inputsize();
   real weightsum = 0;
-  meanvec.resize(n);  
+  meanvec.resize(is);  
   meanvec.clear();
-  var.resize(n);
+  var.resize(is);
   var.clear();
-  offset.resize(n);
+  // We remove 'offset' (equal to the first input) for better numerical precision.
+  offset.resize(is);
   for(int i=0; i<l; i++)
   {
     d->getExample(i,input,target,weight);
     if (i==0) offset<<input;
-    weightsum+=weight;
-    for(int j=0;j<input.size();j++)
+    weightsum += weight;
+    for(int j=0; j<input.size(); j++)
     {
       real xj = input[j]-offset[j];
       var[j]+=weight*xj*xj;
     }
-    multiplyAcc(meanvec,input,weight);
+    multiplyAcc(meanvec, input, weight);
   }
   meanvec /= weightsum;
   var /= weightsum;
@@ -366,15 +392,17 @@ void computeInputMeanAndVariance(VMat d, Vec& meanvec, Vec& var)
   {
     real mu=meanvec[i]-offset[i];
     var[i]-=mu*mu;
-    if (var[i] < 0) {
+    if (var[i] < 0)
       // This can happen because of numerical imprecisions.
       var[i] = 0;
-    }
   }
 }
 
 
-void computeWeightedMeanAndCovar(Vec weights, VMat d, Vec& meanvec, Mat& covarmat)
+/////////////////////////////////
+// computeWeightedMeanAndCovar //
+/////////////////////////////////
+void computeWeightedMeanAndCovar(const Vec& weights, const VMat& d, Vec& meanvec, Mat& covarmat)
 {
   int w = d->width();
   int l = d->length();
@@ -395,58 +423,10 @@ void computeWeightedMeanAndCovar(Vec weights, VMat d, Vec& meanvec, Mat& covarma
   covarmat *= real(1./weight_sum);
 }
 
-//! Last column of d is supposed to contain the weight for each sample
-//! Samples with a weight less or equal to threshold will be ignored
-//! (returns the sum of all weights actually used)
-real computeWeightedMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, real threshold)
-{ 
-  Vec samplevec;
-  Vec diffvec;
-  int w = d->width()-1;
-  int l = d->length();
-  samplevec.resize(w+1);
-  diffvec.resize(w);
-  Vec input = samplevec.subVec(0,w);
-  real& weight = samplevec[w];
-
-  real weightsum = 0;
-
-  // Compute weighted mean
-  meanvec.resize(w);
-  meanvec.clear();
-  for(int i=0; i<l; i++)
-    {
-      d->getRow(i,samplevec);
-      if(weight>threshold)
-        {
-          multiplyAcc(meanvec, input, weight);
-          weightsum += weight;
-        }
-    }
-
-  meanvec *= real(1./weightsum);
-
-  // Compute weighted covariance matrix
-  covarmat.resize(w,w);
-  covarmat.clear();
-  for(int i=0; i<l; i++)
-    {
-      d->getRow(i,samplevec);
-      if(weight>threshold)
-        {
-          substract(input,meanvec,diffvec);
-          externalProductScaleAcc(covarmat, diffvec,diffvec, weight);
-        }
-    }
-
-  covarmat *= real(1./weightsum);
-
-  return weightsum;
-}
-
-
-//! computes empirical mean and covariance in a single pass
-void computeMeanAndCovar(VMat m, Vec& meanvec, Mat& covarmat, ostream& logstream)
+/////////////////////////
+// computeMeanAndCovar //
+/////////////////////////
+void computeMeanAndCovar(const VMat& m, Vec& meanvec, Mat& covarmat)
 {
   int w = m->width();
   int l = m->length();
@@ -462,7 +442,7 @@ void computeMeanAndCovar(VMat m, Vec& meanvec, Mat& covarmat, ostream& logstream
       covarmat.clear();
       Vec v(w);  
 
-      ProgressBar progbar(logstream,"Computing covariance",l);
+      ProgressBar progbar("Computing covariance",l);
 
       if(USING_MPI && PLMPI::synchronized && PLMPI::size>1)
         { //!<  Parallel implementation 
@@ -532,13 +512,19 @@ void computeMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat)
 }
 */
 
-void computeMeanAndStddev(VMat d, Vec& meanvec, Vec& stddevvec)
+//////////////////////////
+// computeMeanAndStddev //
+//////////////////////////
+void computeMeanAndStddev(const VMat& d, Vec& meanvec, Vec& stddevvec)
 {
   computeMeanAndVariance(d,meanvec,stddevvec);
   for(int i=0; i<stddevvec.length(); i++)
     stddevvec[i] = sqrt(stddevvec[i]);
 }
 
+//////////////////////////////
+// autocorrelation_function //
+//////////////////////////////
 void autocorrelation_function(const VMat& data, Mat& acf)
 {
   int T = data.length();
@@ -594,22 +580,28 @@ void autocorrelation_function(const VMat& data, Mat& acf)
 } 
 
 
-VMat normalize(VMat d, Vec meanvec, Vec stddevvec)
+///////////////
+// normalize //
+///////////////
+VMat normalize(const VMat& d, const Vec& meanvec, const Vec& stddevvec)
 {
   int inputsize = meanvec.length();
 
-  Vec shiftvec(d.width(),0.0);
+  Vec shiftvec(d.width(), 0.0);
   shiftvec.subVec(0,inputsize) << meanvec;
   negateElements(shiftvec);
 
-  Vec scalevec(d.width(),1.0);
+  Vec scalevec(d.width(), 1.0);
   scalevec.subVec(0,inputsize) << stddevvec;
   invertElements(scalevec);
   
   return new ShiftAndRescaleVMatrix(d, shiftvec, scalevec);
 }
 
-VMat normalize(VMat d, int inputsize, int ntrain)
+///////////////
+// normalize //
+///////////////
+VMat normalize(const VMat& d, int inputsize, int ntrain)
 {
   Vec meanvec(inputsize);
   Vec stddevvec(inputsize);
@@ -617,8 +609,13 @@ VMat normalize(VMat d, int inputsize, int ntrain)
   return normalize(d, meanvec, stddevvec);
 }
 
+///////////////
+// normalize //
+///////////////
 VMat normalize(VMat d, int inputsize) 
-{ return normalize(d,inputsize,d.length()); }
+{
+  return normalize(d, inputsize, d.length());
+}
 
 //////////////////
 // correlations //
