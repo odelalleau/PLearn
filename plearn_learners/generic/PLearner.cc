@@ -45,6 +45,7 @@
 #include "PLearner.h"
 #include <plearn/base/stringutils.h>
 #include <plearn/io/fileutils.h>
+#include <plearn/io/pl_log.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/misc/PLearnService.h>
 #include <plearn/misc/RemotePLearnServer.h>
@@ -354,7 +355,11 @@ void PLearner::use(VMat testset, VMat outputs) const
   int l = testset.length();
   int w = testset.width();
 
-  if(nservers<=0 || PLearnService::instance().availableServers()<=0 ) 
+  TVec< PP<RemotePLearnServer> > servers;
+  if(nservers>0)
+    servers = PLearnService::instance().reserveServers(nservers);
+
+  if(servers.length()==0) 
     { // sequential code      
       Vec input;
       Vec target;
@@ -379,45 +384,45 @@ void PLearner::use(VMat testset, VMat outputs) const
     }
   else // parallel code
     {
-      PLearnService& service = PLearnService::instance();
-      TVec< PP<RemotePLearnServer> > servers;
-      while(servers.length()<nservers)
-        {
-          PP<RemotePLearnServer> serv = service.reserveServer();          
-          if(serv.isNull())
-            break;
-          servers.append(serv);
-        }
       int n = servers.length(); // number of allocated servers
+      DBG_LOG << "PLearner::use parallel code using " << n << " servers" << endl;
       for(int k=0; k<n; k++)  // send this object with objid 0
         servers[k]->newObject(0, *this);
       int chunksize = l/n;
       if(chunksize*n<l)
         ++chunksize;
+      if(chunksize*w>1000000) // max 1 Mega elements
+        chunksize = max(1,1000000/w);
       Mat chunk(chunksize,w);
-      int i=0;
-      for(int k=0; k<n; k++)
-        {
-          int actualchunksize = chunksize;
-          if(i+actualchunksize>l)
-            actualchunksize = l-i;
-          chunk.resize(actualchunksize,w);          
-          testset->getMat(i, 0, chunk);
-          VMat inputs(chunk);
-          inputs->copySizesFrom(testset);
-          servers[k]->callMethod(0,"use2",inputs);
-          i += chunksize;
-        }
+      int send_i=0;
       Mat outmat;
-      i=0;
-      for(int k=0; k<n; k++)
+      int receive_i = 0;
+      while(send_i<l)
         {
-          outmat.resize(0,0);
-          servers[k]->getResults(outmat);
-          servers[k] = 0; // free the server
-          for(int ii=0; ii<outmat.length(); ii++)
-            outputs->putOrAppendRow(i++,outmat(ii));
+          for(int k=0; k<n && send_i<l; k++)
+            {
+              int actualchunksize = chunksize;
+              if(send_i+actualchunksize>l)
+                actualchunksize = l-send_i;
+              chunk.resize(actualchunksize,w);
+              testset->getMat(send_i, 0, chunk);
+              VMat inputs(chunk);
+              inputs->copySizesFrom(testset);
+              DBG_LOG << "PLearner::use calling use2 remote method with chunk starting at " 
+                      << send_i << " of length " << actualchunksize << ":" << inputs << endl;
+              servers[k]->callMethod(0,"use2",inputs);
+              send_i += actualchunksize;
+            }
+          for(int k=0; k<n && receive_i<l; k++)
+            {
+              outmat.resize(0,0);
+              servers[k]->getResults(outmat);
+              for(int ii=0; ii<outmat.length(); ii++)
+                outputs->putOrAppendRow(receive_i++,outmat(ii));
+            }
         }
+      if(send_i!=l || receive_i!=l)
+        PLERROR("In PLearn::use parallel execution failed to complete successfully.");
     }
 }
 
@@ -567,7 +572,7 @@ void PLearner::call(const string& methodname, int nargs, PStream& io)
       io << tmp_output;
       io.flush();    
     }
-  else if(methodname=="use") // use inputs_vmat output_pmat_fname
+  else if(methodname=="use") // use inputs_vmat output_pmat_fname --> void
     {
       if(nargs!=2) PLERROR("PLearner remote method use requires 2 argument");
       VMat inputs;
@@ -578,12 +583,12 @@ void PLearner::call(const string& methodname, int nargs, PStream& io)
       prepareToSendResults(io, 0);
       io.flush();      
     }
-  else if(methodname=="use2") // use inputs_vmat output_pmat_fname
+  else if(methodname=="use2") // use inputs_vmat --> outputs
     {
-      if(nargs!=2) PLERROR("PLearner remote method use requires 2 argument");
+      if(nargs!=1) PLERROR("PLearner remote method use2 requires 1 argument");
       VMat inputs;
-      string output_fname;
       io >> inputs;
+      // DBG_LOG << " Arg0 = " << inputs << endl;
       Mat outputs(inputs.length(),outputsize());
       use(inputs,outputs);
       prepareToSendResults(io, 1);
