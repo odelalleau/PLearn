@@ -134,6 +134,7 @@ void ShiftAndRescaleVMatrix::build_()
     width_  = vm->width();
     if (vm->hasMetaDataDir())
       setMetaDataDir(vm->getMetaDataDir());
+    setFieldInfos(TVec<VMField>()); // Ensure we get the fieldinfos from vm.
     setMetaInfoFrom(vm);
     if (automatic)
     {
@@ -141,7 +142,8 @@ void ShiftAndRescaleVMatrix::build_()
       {
         n_inputs = vm->inputsize();
         if (n_inputs<0)
-          PLERROR("ShiftAndRescaleVMatrix: either n_inputs should be provided explicitly or the underlying VMatrix should have a set value of inputsize");
+          PLERROR("ShiftAndRescaleVMatrix: either n_inputs should be provided explicitly "
+                  "or the underlying VMatrix should have a set value of inputsize");
       }
       if (ignore_missing) {
         VMat vm_to_normalize;
