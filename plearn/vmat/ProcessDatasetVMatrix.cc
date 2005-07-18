@@ -56,7 +56,9 @@ using namespace std;
 // ProcessDatasetVMatrix //
 ///////////////////////////
 ProcessDatasetVMatrix::ProcessDatasetVMatrix():
-  max_mbytes          (30),
+  max_mbytes_disk     (1000),
+  max_mbytes_memory   (30),
+  duplicate           ("none"),
   input_normalization ("none"),
   precompute          ("auto"),
   target_normalization("none")
@@ -75,14 +77,6 @@ void ProcessDatasetVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "source", &ProcessDatasetVMatrix::source, OptionBase::buildoption,
       "The underlying VMatrix.");
 
-  declareOption(ol, "precompute", &ProcessDatasetVMatrix::precompute, OptionBase::buildoption,
-      "How to precompute the dataset:\n"
-      " - 'no'     : it is not precomputed\n"
-      " - 'memory' : it is precomputed in memory\n"
-      " - 'disk'   : it is precomputed in the underlying VMat metadatadir\n"
-      " - 'auto'   : it is precomputed in memory if it takes less than 'max_mbytes' Mb,\n"
-      "              otherwise it is precomputed in the underlying VMat metadatadir");
-
   declareOption(ol, "input_normalization", &ProcessDatasetVMatrix::input_normalization, OptionBase::buildoption,
       "Kind of normalization performed on the input features:\n"
       " - 'none'      : no normalization\n"
@@ -91,11 +85,36 @@ void ProcessDatasetVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "target_normalization", &ProcessDatasetVMatrix::target_normalization, OptionBase::buildoption,
       "Kind of normalization performed on the target features (see 'input_normalization')");
 
-  declareOption(ol, "max_mbytes", &ProcessDatasetVMatrix::max_mbytes, OptionBase::buildoption,
+  declareOption(ol, "duplicate", &ProcessDatasetVMatrix::duplicate, OptionBase::buildoption,
+      "What to do with duplicated / conflicting samples:\n"
+      " - 'all'                      : nothing (all samples are kept)\n"
+      " - 'no_same_input'            : samples must have a unique input  (first one is kept)\n"
+      " - 'no_same_input_and_target' : only exact duplicates are removed (first one is kept)\n"
+      "Note: duplicated samples will only be removed after normalization is performed.");
+
+  declareOption(ol, "precompute", &ProcessDatasetVMatrix::precompute, OptionBase::buildoption,
+      "How to precompute the dataset:\n"
+      " - 'none'   : it is not precomputed\n"
+      " - 'memory' : it is precomputed in memory\n"
+      " - 'disk'   : it is precomputed in the underlying VMat metadatadir\n"
+      " - 'auto'   : it is precomputed in memory if it takes less than 'max_mbytes' Mb,\n"
+      "              it is precomputed in the underlying VMat metadatadir if it takes\n"
+      "              less than 'max_mbytes_disk' Mb, otherwise it is not precomputed.\n");
+
+  declareOption(ol, "max_mbytes_memory", &ProcessDatasetVMatrix::max_mbytes_memory, OptionBase::buildoption,
       "Maximum number of megabytes allowed in memory when 'precompute' is set to 'auto'");
+
+  declareOption(ol, "max_mbytes_disk", &ProcessDatasetVMatrix::max_mbytes_disk, OptionBase::buildoption,
+      "Maximum number of megabytes allowed on disk when 'precompute' is set to 'auto'");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
+
+  // Hide unused options.
+
+  redeclareOption(ol, "vm", &ProcessDatasetVMatrix::vm, OptionBase::nosave,
+      "Defined at build time.");
+
 }
 
 ///////////
@@ -121,6 +140,10 @@ void ProcessDatasetVMatrix::build_()
   if (source->inputsize() < 0 || source->targetsize() < 0 || source->weightsize() < 0)
     PLERROR("In ProcessDatasetVMatrix::build_ - The source VMat's sizes must be defined");
   vm = source;
+  PPath filename_base = string("processed_dataset")
+                       + "-input_normalization="  + input_normalization
+                       + "-target_normalization=" + target_normalization
+                       + "-duplicate="            + duplicate;
 
   bool target_normalization_is_performed = false;
   if (input_normalization == "none") {
@@ -148,18 +171,31 @@ void ProcessDatasetVMatrix::build_()
     }
   }
 
+  if (duplicate == "all") {
+  } else if (duplicate == "no_same_input") {
+    if (!source->hasMetaDataDir())
+      PLERROR("In ProcessDatasetVMatrix::build_ - The source VMatrix needs to have "
+              "a metadata directory in order to compute duplicated samples");
+    PPath meta = source->getMetaDataDir();
+    // TODO Continue here!
+  }
+
   int n = source->length();
   int w = source->width();
   string precomp = precompute;
   if (precompute == "auto") {
     // Need to find out whether to precompute in memory or on disk.
-    if (n / real(1024) * w / real(1024) * sizeof(real) > real(max_mbytes))
+    real memory_used = n / real(1024) * w / real(1024) * sizeof(real);
+    // pout << "Memory used: " << memory_used << " Mbs" << endl;
+    if (memory_used <= max_mbytes_memory)
+      precomp = "memory";
+    else if (memory_used <= max_mbytes_disk)
       precomp = "disk";
     else
-      precomp = "memory";
+      precomp = "none";
   }
 
-  if (precomp == "no") {
+  if (precomp == "none") {
   } else if (precomp == "memory") {
     vm = new MemoryVMatrix(vm);
   } else if (precomp == "disk") {
@@ -167,13 +203,9 @@ void ProcessDatasetVMatrix::build_()
       PLERROR("In ProcessDatasetVMatrix::build_ - The source VMatrix needs to have "
               "a metadata directory in order to precompute on disk");
     PPath metadata = source->getMetaDataDir();
-    PPath filename =  string("processed_dataset")
-                    + "-input_normalization="  + input_normalization
-                    + "-target_normalization=" + target_normalization
-                    + ".pmat";
-    filename = metadata / filename;
+    PPath filename = metadata / (filename_base + ".pmat");
     bool need_recompute = true;
-    VMat old_vm = 0;
+    VMat old_vm;
     if (isfile(filename)) {
       old_vm = new FileVMatrix(filename);
       if (old_vm->length() == n && old_vm->width() == w)

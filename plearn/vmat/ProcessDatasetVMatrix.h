@@ -67,7 +67,9 @@ public:
   // * public build options *
   // ************************
 
-  int    max_mbytes;
+  int    max_mbytes_disk;
+  int    max_mbytes_memory;
+  string duplicate;
   string input_normalization;
   string precompute;
   string target_normalization;
