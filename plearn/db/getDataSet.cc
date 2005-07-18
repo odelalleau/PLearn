@@ -136,12 +136,15 @@ VMat getDataSet(const PPath& dataset_path)
     // Set default metadata directory if not already set.
     if (!vm->hasMetaDataDir())
       vm->setMetaDataDir(dataset.dirname() / (dataset.basename() + ".metadata"));
-  } else if (isdir(dataset)) {
+  }
+  else if (isdir(dataset)) {
     if (ext == "dmat")
       vm = new DiskVMatrix(dataset);
     else
       PLERROR("In getDataSet - Unknown extension for VMat directory: %s", ext.c_str());
   }
+  else
+    PLERROR("In getDataSet - cannot open dataset \"%s\"", dataset.c_str());
   
   vm->loadAllStringMappings();
   vm->unduplicateFieldNames();
