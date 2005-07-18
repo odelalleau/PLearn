@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrPStreamBuf.cc,v 1.7 2005/06/15 14:41:13 plearner Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Christian Hudon
