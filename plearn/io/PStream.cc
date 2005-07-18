@@ -509,22 +509,27 @@ void PStream::readAsciiNum(long &x)
   skipBlanks();
   x = 0;
   char c = get();
-  int pos_or_neg = 1;
+  bool negate = false;
   if (c == '-')
   {
-    pos_or_neg = -1;
+    negate = true;
     c = get();
   }
   else if (c == '+')
     c = get();
+  
+  if(!isdigit(c))
+    PLERROR("In readAsciiNum: not a valid ascii number, expected a digit, but read %c (ascii code %d)",c,c);
 
-  while(isdigit(c))
-  {
-    x = x*10 + c-'0';
-    c = get();
-  }
+  do
+    {
+      x = x*10 + c-'0';
+      c = get();
+    } while(isdigit(c));
+
   unget();
-  x *= pos_or_neg;
+  if(negate)
+    x = -x;
 }
 
 void PStream::readAsciiNum(unsigned long &x)
@@ -850,7 +855,7 @@ PStream& PStream::operator>>(int &x)
     {
       skipBlanksAndCommentsAndSeparators();
       int c = get();
-      if(c==0x07 || c==0x08)  // plearn_binary
+      if(c==0x07 || c==0x08 || c==0x0B || c==0x0C )  // plearn_binary
       {
         read(reinterpret_cast<char*>(&x),sizeof(int));
         if( (c==0x07 && byte_order()==BIG_ENDIAN_ORDER) 
@@ -888,13 +893,13 @@ PStream& PStream::operator>>(unsigned int &x)
     {
       skipBlanksAndCommentsAndSeparators();
       int c = get();
-      if(c==0x0B || c==0x0C)  // plearn_binary
-      {
+      if(c==0x0B || c==0x0C || c==0x07 || c==0x08)  // plearn_binary unsigned int or int
+        {
         read(reinterpret_cast<char*>(&x),sizeof(unsigned int));
         if( (c==0x0B && byte_order()==BIG_ENDIAN_ORDER) 
             || (c==0x0C && byte_order()==LITTLE_ENDIAN_ORDER) )
           endianswap(&x);
-      }
+        }
       else  // plearn_ascii
       {
         unget();
