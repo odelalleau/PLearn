@@ -58,9 +58,9 @@ using namespace std;
 
   class GaussianDistribution: public PDistribution
   {
-  public:    
-
     typedef PDistribution inherited;
+
+  public:    
 
     // Possibly "Learned" parameters
     Vec mu;
@@ -91,8 +91,16 @@ using namespace std;
     //! Overridden so that it does not necessarily need a training set.
     virtual int inputsize() const;
 
+    //! Public build.
+    virtual void build();
+
   protected:
     static void declareOptions(OptionList& ol);
+
+  private:
+
+    //! Internal build.
+    void build_();
 
   };
 

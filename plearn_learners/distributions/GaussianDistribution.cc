@@ -83,12 +83,14 @@ void GaussianDistribution::declareOptions(OptionList& ol)
   // Build options
   declareOption(ol, "k", &GaussianDistribution::k, OptionBase::buildoption, 
                 "number of eigenvectors to keep");
+
   declareOption(ol, "gamma", &GaussianDistribution::gamma, OptionBase::buildoption, 
                 "Add this to diagonal of empirical covariance matrix.\n"
                 "The actual covariance matrix used will be VDV' + gamma.I \n"
                 "where V'=eigenvectors and D=diag(eigenvalues).");
+
   declareOption(ol, "ignore_weights_below", &GaussianDistribution::ignore_weights_below, OptionBase::buildoption, 
-                "When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored");
+                "DEPRECATED: When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored");
 
   // Learnt options
   declareOption(ol, "mu", &GaussianDistribution::mu, OptionBase::learntoption, "");
@@ -97,6 +99,26 @@ void GaussianDistribution::declareOptions(OptionList& ol)
 
   inherited::declareOptions(ol);
 }                
+
+///////////
+// build //
+///////////
+void GaussianDistribution::build()
+{
+  inherited::build();
+  build_();
+}
+
+////////////
+// build_ //
+////////////
+void GaussianDistribution::build_()
+{
+  if (ignore_weights_below != 0)
+    PLERROR("In GaussianDistribution::build_ - For the sake of simplicity, the "
+            "option 'ignore_weights_below' in GaussianDistribution has been "
+            "removed. If you were using it, please feel free to complain.");
+}
 
 void GaussianDistribution::forget()
 { }
@@ -125,7 +147,7 @@ void GaussianDistribution::train()
   if(ws==0)
     computeMeanAndCovar(training_set, mu, covarmat);
   else if(ws==1)
-    computeWeightedMeanAndCovar(training_set, mu, covarmat, ignore_weights_below);
+    computeInputMeanAndCovar(training_set, mu, covarmat);
   else
     PLERROR("In GaussianDistribution, weightsize can only be 0 or 1");
       
