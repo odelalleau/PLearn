@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenericNearestNeighbors.cc,v 1.9 2005/04/04 18:13:18 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -200,7 +200,8 @@ int GenericNearestNeighbors::outputsize() const
 }
 
 void GenericNearestNeighbors::constructOutputVector(const TVec<int>& indices,
-                                                    Vec& output) const
+                                                    Vec& output,
+                                                    const Mat& train_mat_override) const
 {
   assert( output.size() == outputsize() );
   
@@ -212,8 +213,14 @@ void GenericNearestNeighbors::constructOutputVector(const TVec<int>& indices,
 
   currow.resize(train_set.width());
   for (i=0 ; i<n ; ++i) {
-    train_set->getRow(indices[i], currow);
-    real* currow_data = currow.data();
+    real* currow_data = 0;
+    if (train_mat_override.isNotNull())
+      currow_data = train_mat_override[indices[i]];
+    else {
+      train_set->getRow(indices[i], currow);
+      currow_data = currow.data();
+    }
+    assert( currow_data );
 
     if(copy_input) {
       copy(currow_data, currow_data+inputsize, output_data);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExhaustiveNearestNeighbors.h,v 1.4 2005/03/04 20:58:18 lamblin Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -153,9 +153,12 @@ public:
   virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                        const Vec& target, Vec& costs) const;
   
-  //! Returns the names of the costs computed by computeCostsFromOutpus
-  //! (and thus the test method).
+  //! Returns the names of the costs computed by computeCostsFromOutpus.
+  //! These are always kernel evaluations; there are num_neighbors test costs.
   virtual TVec<std::string> getTestCostNames() const;
+
+  //! Return num_neighbors
+  virtual int nTestCosts() const;
 
   //! Returns the names of the objective costs that the train method
   //! computes and for which it updates the VecStatsCollector train_stats.

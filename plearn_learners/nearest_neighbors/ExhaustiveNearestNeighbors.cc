@@ -182,7 +182,7 @@ void ExhaustiveNearestNeighbors::computeOutputAndCosts(
   for ( ; i < num_neighbors ; ++i )
     costs[i] = MISSING_VALUE;
 
-  constructOutputVector(indices, output);
+  constructOutputVector(indices, output, training_mat);
 }
 
 void ExhaustiveNearestNeighbors::computeOutput(const Vec& input, Vec& output) const
@@ -208,6 +208,12 @@ TVec<string> ExhaustiveNearestNeighbors::getTestCostNames() const
   for (int i=0, n=num_neighbors ; i<n ; ++i)
     costs[i] = "ker" + tostring(i);
   return costs;
+}
+
+
+int ExhaustiveNearestNeighbors::nTestCosts() const
+{
+  return num_neighbors;
 }
 
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenericNearestNeighbors.h,v 1.6 2005/04/04 02:30:42 yoshua Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -163,7 +163,10 @@ protected:
   //! an output vector for the learner, and take into account all the
   //! options.  One can pass less than num_neighbors indices, in which
   //! case the rest of the output vector is filled with missings.
-  void constructOutputVector(const TVec<int>& indices, Vec& output) const;
+  //! In addition, one can pass a Mat from which the data will be obtained
+  //! instead of the (virtual matrix) training set. This is faster.
+  void constructOutputVector(const TVec<int>& indices, Vec& output,
+                             const Mat& train_mat_override = Mat()) const;
 };
 
 // Declares a few other classes and functions related to this class.
