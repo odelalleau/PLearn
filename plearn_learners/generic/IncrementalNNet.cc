@@ -47,7 +47,7 @@ namespace PLearn {
 using namespace std;
 
 IncrementalNNet::IncrementalNNet() 
-  : internal_weights(),
+  : internal_weights(0),
     candidate_unit_bias(0),
     n_examples_seen(0),
     current_average_cost(0),
@@ -207,7 +207,7 @@ void IncrementalNNet::build_()
     candidate_unit_weights.resize(inputsize());
     candidate_unit_output_weights.resize(n_outputs);
   }
-  internal_weights = vector<Vec>(); //.clear();
+  internal_weights.resize(stage); //.clear();
   candidate_unit_internal_weights.resize(0);
 }
 
@@ -248,7 +248,6 @@ void IncrementalNNet::forget()
   output_weights.resize(0,n_outputs);
   hidden_layer_weights.resize(0,inputsize());
   hidden_layer_biases.resize(0);
-  internal_weights.clear();
   output_biases.clear();
   candidate_unit_output_weights.fill(0.1);
   //candidate_unit_weights.clear();
@@ -549,10 +548,12 @@ void IncrementalNNet::train()
           hidden_layer_weights(stage-1) << candidate_unit_weights;
           hidden_layer_biases[stage-1] = candidate_unit_bias;
           if ( enable_internal_weights ) {
-            Vec tmpintw; 
-            tmpintw.resize(stage-1);
+            Vec tmpintw(stage-1); 
+            //tmpintw.resize(stage-1);
             tmpintw << candidate_unit_internal_weights;
-            internal_weights.push_back( tmpintw );
+            //internal_weights.push_back( tmpintw );
+            internal_weights.resize(stage);
+            internal_weights[stage-1] = tmpintw;
             //if ( stage > 1 ) 
             cout << "internal_weights.size(): " << internal_weights.size() << endl;
             candidate_unit_internal_weights.resize(stage);

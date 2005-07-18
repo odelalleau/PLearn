@@ -67,7 +67,7 @@ protected:
   Vec output_biases;
   Mat hidden_layer_weights; // [hidden_unit, input]
   Vec hidden_layer_biases; // [hidden_unit]
-  vector<Vec> internal_weights;    // among hidden units [to, from]. enabled by enable_internal_weights
+  TVec<Vec> internal_weights;    // among hidden units [to, from]. enabled by enable_internal_weights
   Vec candidate_unit_weights;
   real candidate_unit_bias;
   Vec candidate_unit_output_weights;
