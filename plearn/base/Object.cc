@@ -45,6 +45,7 @@
 #include "Object.h"
 #include "stringutils.h"    //!< For removeblanks.
 #include <plearn/io/fileutils.h>
+#include <plearn/io/pl_log.h>
 #include <plearn/io/load_and_save.h>
 #include <plearn/io/openFile.h>
 #include <plearn/io/openString.h>
@@ -387,6 +388,13 @@ void Object::read(istream& in_)
     }
 }
 
+void Object::prepareToSendResults(PStream& out, int nres)
+{ 
+  DBG_LOG << "PREPARING TO SEND " << nres << " RESULTS." << endl;
+  out.write("!R "); out << nres; 
+}
+
+
 void Object::call(const string& methodname, int nargs, PStream& io)
 {
   if(methodname=="changeOptions")
@@ -598,7 +606,7 @@ PStream& operator>>(PStream& in, Object*& x)
               in >> *x;
             else // x is null
               x = readObject(in, id);
-            in.skipBlanksAndCommentsAndSeparators();
+            // in.skipBlanksAndCommentsAndSeparators();
             in.copies_map_in[id]= x;
           } 
         else 

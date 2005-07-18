@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.41 2005/05/13 16:12:33 plearner Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -364,11 +364,11 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
 
     static void declareOptions(OptionList& ol) {}
     
-    // Must be called by the call method prior to dending results. 
-    inline void prepareToSendResults(PStream& out, int nres)
-    { out.write("!R "); out << nres; }
 
   public:
+
+    // Must be called by the call method prior to sending results. 
+    static void prepareToSendResults(PStream& out, int nres);
 
     PLEARN_DECLARE_OBJECT(Object);
 
