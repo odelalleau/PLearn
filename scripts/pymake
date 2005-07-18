@@ -1640,83 +1640,84 @@ def distribute_source(target, cfiles_to_compile, executables_to_link, linkname):
     makefile.close()
     
 
-# MAIN PROGRAM
-        
-if 'dependency' in optionargs: # We only want to learn something about the dependency graph
-    target = otherargs[0]
-    if os.path.isdir(target):
-        target_path = os.path.abspath(target)
-    else:
-        target_path = os.path.dirname(os.path.abspath(target))
-        
-    configpath = locateconfigfile('config',target_path,default_config_text)    
-    execfile( configpath )
-    sourcedirs = unique(sourcedirs)
-    
-    cctarget = target
-    if not isccfile(target):
-        cctarget = get_ccpath_from_noncc_path(target)            
-    info = file_info(cctarget)
-
-    if len(otherargs)==1: # only the target was specified: generate the full graph
-        print 'Generating dependency graph in '+target+'.dot ...'
-        info.save_dependency_graph(target+'.dot')
-        print 'Generating dependency graph view in '+target+'.ps ...'
-        os.system('dot -T ps '+target+'.dot > '+target+'.ps')
-    else: # target was specified with a possible source dependency
-        dep = otherargs[1]
-        print 'First encountered dependency path linking '+target+' to '+dep+ ' :'
-        if not info.print_dependency_path(dep,[]):
-            print 'THERE APPEARS TO BE NO SUCH DEPENDENCY.'
-            
-else: # We want to compile and possibly link
-    for target in otherargs:
-
-        ccfiles_to_compile = {}
-        executables_to_link = {}
-
+try:
+    if 'dependency' in optionargs: # We only want to learn something about the dependency graph
+        target = otherargs[0]
         if os.path.isdir(target):
             target_path = os.path.abspath(target)
         else:
             target_path = os.path.dirname(os.path.abspath(target))
-
+            
         configpath = locateconfigfile('config',target_path,default_config_text)    
         execfile( configpath )
-        # remove duplicates from sourcedirs
         sourcedirs = unique(sourcedirs)
-    
-        options = getOptions(options_choices,optionargs)
+        
+        cctarget = target
+        if not isccfile(target):
+            cctarget = get_ccpath_from_noncc_path(target)            
+        info = file_info(cctarget)
 
-        # Building name of object subdirectory
-        if  objspolicy== 1:
-          objsdir = join('OBJS', target_platform + '__' + string.join(options,'_'))
-        elif objspolicy == 2:
-          objsdir = join(objsdir, target_platform + '__' + string.join(options,'_'))
+        if len(otherargs)==1: # only the target was specified: generate the full graph
+            print 'Generating dependency graph in '+target+'.dot ...'
+            info.save_dependency_graph(target+'.dot')
+            print 'Generating dependency graph view in '+target+'.ps ...'
+            os.system('dot -T ps '+target+'.dot > '+target+'.ps')
+        else: # target was specified with a possible source dependency
+            dep = otherargs[1]
+            print 'First encountered dependency path linking '+target+' to '+dep+ ' :'
+            if not info.print_dependency_path(dep,[]):
+                print 'THERE APPEARS TO BE NO SUCH DEPENDENCY.'
+                
+    else: # We want to compile and possibly link
+        for target in otherargs:
 
-        print '*** Running pymake on '+os.path.basename(target)+' using configuration file: ' + configpath
-        print '*** Running pymake on '+os.path.basename(target)+' using options: ' + string.join(map(lambda o: '-'+o, options))
-        print '++++ Computing dependencies of '+target+' ...'
-        get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link, linkname)
+            ccfiles_to_compile = {}
+            executables_to_link = {}
 
-        # We dont want to compile. We will extract the necessary file to compile
-        # the target with a makefile
-        if distribute:
-            distribute_source(target, ccfiles_to_compile, executables_to_link, linkname)
-        else:
-            print '++++ Compiling...'
-            if platform=='win32':
-                win32_parallel_compile(ccfiles_to_compile.keys())
+            if os.path.isdir(target):
+                target_path = os.path.abspath(target)
             else:
-                parallel_compile(ccfiles_to_compile.keys())
+                target_path = os.path.dirname(os.path.abspath(target))
 
-            if force_link or (executables_to_link.keys() and not create_dll):
-                print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
-                sequential_link(executables_to_link.keys(),linkname)
+            configpath = locateconfigfile('config',target_path,default_config_text)    
+            execfile( configpath )
+            # remove duplicates from sourcedirs
+            sourcedirs = unique(sourcedirs)
+        
+            options = getOptions(options_choices,optionargs)
 
-            if create_dll:
-                print '++++ Creating DLL of', target
-                sequential_dll(file_info(target))
+            # Building name of object subdirectory
+            if  objspolicy== 1:
+              objsdir = join('OBJS', target_platform + '__' + string.join(options,'_'))
+            elif objspolicy == 2:
+              objsdir = join(objsdir, target_platform + '__' + string.join(options,'_'))
 
-            if temp_objs:
-                os.system('chmod 777 --silent '+objsdir+'/*')
-                mychmod(objsdir,33279)
+            print '*** Running pymake on '+os.path.basename(target)+' using configuration file: ' + configpath
+            print '*** Running pymake on '+os.path.basename(target)+' using options: ' + string.join(map(lambda o: '-'+o, options))
+            print '++++ Computing dependencies of '+target+' ...'
+            get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link, linkname)
+
+            # We dont want to compile. We will extract the necessary file to compile
+            # the target with a makefile
+            if distribute:
+                distribute_source(target, ccfiles_to_compile, executables_to_link, linkname)
+            else:
+                print '++++ Compiling...'
+                if platform=='win32':
+                    win32_parallel_compile(ccfiles_to_compile.keys())
+                else:
+                    parallel_compile(ccfiles_to_compile.keys())
+
+                if force_link or (executables_to_link.keys() and not create_dll):
+                    print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
+                    sequential_link(executables_to_link.keys(),linkname)
+
+                if create_dll:
+                    print '++++ Creating DLL of', target
+                    sequential_dll(file_info(target))
+
+                if temp_objs:
+                    os.system('chmod 777 --silent '+objsdir+'/*')
+                    mychmod(objsdir,33279)
+except KeyboardInterrupt:
+    print 'Pymake interrupted by Ctrl-C'
