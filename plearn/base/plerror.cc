@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plerror.cc,v 1.9 2005/01/28 17:43:02 plearner Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -44,10 +44,12 @@
 #include <iostream>
 
 #include "plerror.h"
+#include <plearn/io/pl_log.h>
 // #include "general.h"
 
 #if USING_MPI
 #include <plearn/sys/PLMPI.h>
+
 #endif //USING_MPI
 
 
@@ -83,7 +85,8 @@ void errormsg(const char* msg, ...)
 #endif //USING_MPI
   exit(1);
 #else
-  throw PLearnError(message);
+  IMP_LOG << "Throwing PLearnError exception: " << message << endl;
+  throw PLearnError(message);                
 #endif
 }
 #endif
