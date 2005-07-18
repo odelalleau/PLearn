@@ -68,8 +68,10 @@ using namespace std;
     Mat eigenvectors; 
 
     // Build options
-    int k; //!< maximum number of eigenvectors to keep
-    real gamma; //!< The actual covariance matrix used will be VDV' + gamma.I where V'=eigenvectors and D=diag(eigenvalues)
+    int k; // maximum number of eigenvectors to keep
+    real gamma; 
+    real min_eig;
+    bool use_last_eig;
     float ignore_weights_below; //!< When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored
     
   public:

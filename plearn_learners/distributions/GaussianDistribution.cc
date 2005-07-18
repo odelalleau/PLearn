@@ -54,14 +54,29 @@ using namespace std;
 
 #define ZEROGAMMA
 
-PLEARN_IMPLEMENT_OBJECT(
-  GaussianDistribution,
-  "The ever-useful gaussian-distribution",
-  "This is a density estimation learner.\n"
-  "It uses a compact representation of a Gaussian, by keeping only the k \n"
-  "top eigenvalues and associated eigenvectors of the covariance matrix.\n"
-  "All other eigenvalues are kept at the level of the k+1 th eigenvalue\n"
-  "Optionally, a constant sigma is first added to the diagonal of the covariance matrix.\n");
+PLEARN_IMPLEMENT_OBJECT(GaussianDistribution, 
+                        "A Gaussian distribution represented compactly by the k leading eigenvalues and eigenvectors of its covariance matrix.", 
+                        "This class can be used either to fit a Gaussian to data \n"
+                        "or to explicitly represent a Gaussian with a covariance matrix \n"
+                        "of the form C = VDV' (possibly regularized by adding gamma.I).\n"
+                        "When fitting to data, an eigendecomposition of the empirical \n"
+                        "covariance matrix is performed, and the top k eigenvalues\n"
+                        "and associated eigenvectors V are kept.\n"
+                        "The actual variances used for the principal directions in D are obtained\n"
+                        "from the empirical or specified eigenvalues in the following way:\n"
+                        "  var_i = max(eigenvalue_i+gamma, min_eig) \n"
+                        "In addition, a variance for the remaining directions \n"
+                        "in the null space of VDV' (directions orthogonal to the \n"
+                        "eigenvectors in V) is obtained by:\n"
+                        "  remaining_var = use_last_eig?max(last_eigenvalue+gamma, min_eig) \n"
+                        "                              :max(gamma, min_eig) \n"
+                        "So the full expression of the actual covariance matrix used is: \n"
+                        "  C = VDV' + remaining_var.I \n"
+                        "with D_ii = max(eigenvalue_i+gamma, min_eig) - remaining_var \n"
+                        "Note that with min_eig=0 and use_last_eig=false, we get: \n"
+                        "  C = V.diag(eigenvalues).V' + gamma.I \n");
+
+
 
 void GaussianDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
@@ -73,7 +88,11 @@ void GaussianDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 
 GaussianDistribution::GaussianDistribution()
-  :k(1000), gamma(0), ignore_weights_below(0)
+  :k(1000), 
+   gamma(0), 
+   min_eig(0),
+   use_last_eig(false),
+   ignore_weights_below(0)
 {
 }
 
@@ -82,14 +101,21 @@ void GaussianDistribution::declareOptions(OptionList& ol)
 {
   // Build options
   declareOption(ol, "k", &GaussianDistribution::k, OptionBase::buildoption, 
-                "number of eigenvectors to keep");
+                "number of eigenvectors to keep when training");
 
   declareOption(ol, "gamma", &GaussianDistribution::gamma, OptionBase::buildoption, 
-                "Add this to diagonal of empirical covariance matrix.\n"
-                "The actual covariance matrix used will be VDV' + gamma.I \n"
-                "where V'=eigenvectors and D=diag(eigenvalues).");
+                "Value to add to the empirical eigenvalues to obtain actual variance.\n");
+  declareOption(ol, "min_eig", &GaussianDistribution::min_eig, OptionBase::buildoption, 
+                "Imposes a minimum over the actual variances to be used.\n"
+                "Actual variance used in the principal directions is max(min_eig, eigenvalue_i+gamma)\n");
+  declareOption(ol, "use_last_eig", &GaussianDistribution::use_last_eig, OptionBase::buildoption, 
+                "If true, the actual variance used for directions in the nullspace of VDV' \n"
+                "(i.e. orthogonal to the kept eigenvectors) will be the same as the\n"
+                "actual variance used for the last principal direction. \n"
+                "If false, the actual variance used for directions in the nullspace \n"
+                "will be max(min_eig, gamma)\n");
 
-  declareOption(ol, "ignore_weights_below", &GaussianDistribution::ignore_weights_below, OptionBase::buildoption, 
+  declareOption(ol, "ignore_weights_below", &GaussianDistribution::ignore_weights_below, OptionBase::buildoption | OptionBase::nosave, 
                 "DEPRECATED: When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored");
 
   // Learnt options
@@ -98,7 +124,7 @@ void GaussianDistribution::declareOptions(OptionList& ol)
   declareOption(ol, "eigenvectors", &GaussianDistribution::eigenvectors, OptionBase::learntoption, "");
 
   inherited::declareOptions(ol);
-}                
+}
 
 ///////////
 // build //
@@ -138,7 +164,7 @@ void GaussianDistribution::train()
   static Mat U;
 
   // The maximum number of eigenvalues we want.
-  int maxneigval = min(k+1, min(l,d));
+  int maxneigval = min(k, min(l,d));
 
   // First get mean and covariance
   // (declared static to avoid repeated dynamic memory allocation)
@@ -157,19 +183,47 @@ void GaussianDistribution::train()
 
   // Compute eigendecomposition only if there is a training set...
   // Otherwise, just fill the eigen-* matrices to all NaN...
-  if (l > 0)
-    eigenVecOfSymmMat(covarmat, maxneigval, eigenvalues, eigenvectors);
-  else {
-    eigenvalues.resize(maxneigval);
-    eigenvectors.resize(maxneigval, mu.size());
-    eigenvalues.fill(0);
-    eigenvectors.fill(0);
-  }
+  if (l>0 && maxneigval>0)
+    {
+      eigenVecOfSymmMat(covarmat, maxneigval, eigenvalues, eigenvectors);
+      int neig = 0;
+      while(neig<eigenvalues.length() && eigenvalues[neig]>0.)
+        neig++;
+      eigenvalues.resize(neig);
+      eigenvectors.resize(neig,mu.length());
+    }
+  else 
+    {
+      eigenvalues.resize(0);
+      eigenvectors.resize(0, mu.length());
+      /*
+      eigenvalues.resize(maxneigval);
+      eigenvectors.resize(maxneigval, mu.size());
+      eigenvalues.fill(0);
+      eigenvectors.fill(0);
+      */
+    }
 }
 
 real GaussianDistribution::log_density(const Vec& x) const 
 { 
-  return logOfCompactGaussian(x, mu, eigenvalues, eigenvectors, gamma, true);
+  static Vec actual_eigenvalues;
+
+  if(min_eig<=0 && !use_last_eig)
+    return logOfCompactGaussian(x, mu, eigenvalues, eigenvectors, gamma, true);
+  else
+    {
+      int neig = eigenvalues.length();
+      real remaining_eig = 0; // variance for directions in null space 
+      actual_eigenvalues.resize(neig);
+      for(int j=0; j<neig; j++)
+        actual_eigenvalues[j] = max(eigenvalues[j]+gamma, min_eig);
+      if(use_last_eig)
+        remaining_eig = actual_eigenvalues[neig-1];
+      else
+        remaining_eig = max(gamma, min_eig);
+      return logOfCompactGaussian(x, mu, actual_eigenvalues, eigenvectors, remaining_eig);
+    }
 }
 
 
@@ -181,17 +235,30 @@ void GaussianDistribution::resetGenerator(long g_seed) const
 void GaussianDistribution::generate(Vec& x) const
 {
   static Vec r;
-  int n = eigenvectors.length();
+  int neig = eigenvalues.length();
   int m = mu.length();
-  r.resize(n);
+  r.resize(neig);
+  
+  real remaining_eig = 0;
+  if(use_last_eig)
+    remaining_eig = max(eigenvalues[neig-1]+gamma, min_eig);
+  else
+    remaining_eig = max(gamma, min_eig);
+
   fill_random_normal(r);
-  for(int i=0; i<n; i++)
-    r[i] *= sqrt(eigenvalues[i]);
+  for(int i=0; i<neig; i++)
+    {
+      real neweig = max(eigenvalues[i]+gamma, min_eig)-remaining_eig;
+      r[i] *= sqrt(neweig);
+    }
   x.resize(m);
   transposeProduct(x,eigenvectors,r);
-  r.resize(m);
-  fill_random_normal(r,0,gamma);
-  x += r;
+  if(remaining_eig>0.)
+    {
+      r.resize(m);
+      fill_random_normal(r,0,sqrt(remaining_eig));
+      x += r;
+    }
   x += mu;
 }
 
