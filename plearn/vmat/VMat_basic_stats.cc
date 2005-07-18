@@ -43,12 +43,13 @@
 
 
 #include "VMat_basic_stats.h"
-#include "VMat.h"
+//#include "VMat.h"
 #include "MemoryVMatrix.h"
 #include "ShiftAndRescaleVMatrix.h"
-#include <plearn/math/TMat_maths_impl.h>
+//#include <plearn/math/TMat_maths_impl.h>
 #include <plearn/math/stats_utils.h>
-#include <plearn/sys/PLMPI.h>
+#include <plearn/math/VecStatsCollector.h>
+//#include <plearn/sys/PLMPI.h>
 
 namespace PLearn {
 using namespace std;
@@ -58,19 +59,16 @@ using namespace std;
 /////////////////////////
 void computeWeightedMean(const Vec& weights, const VMat& d, Vec& meanvec)
 {
-  int w = d->width();
-  int l = d->length();
-  if(weights.length() != l)
-    PLERROR("In VMat_basic_stats.cc, method computeMean: weights.length() != d->length()\n");
-  meanvec.resize(w);
-  meanvec.clear();
-  Vec samplevec(w);
-  for(int i=0; i<l; i++)
-  {
-      d->getRow(i,samplevec);
-      meanvec += weights[i]*samplevec;
+  VecStatsCollector sc;
+  int n = d->length();
+  if (weights.length() != n)
+    PLERROR("In computeWeightedMean - weights.length() != d->length()");
+  Vec row(d->width());
+  for (int i = 0; i < n; i++) {
+    d->getRow(i, row);
+    sc.update(row, weights[i]);
   }
-  meanvec /= sum(weights);
+  sc.getMean(meanvec);
 }
 
 //////////////////
@@ -78,23 +76,20 @@ void computeWeightedMean(const Vec& weights, const VMat& d, Vec& meanvec)
 //////////////////
 void computeRange(const VMat& d, Vec& minvec, Vec& maxvec)
 {
-  int l = d.length();
-  int w = d.width();
+  int n = d->length();
+  int w = d->width();
   minvec.resize(w);
   maxvec.resize(w);
-  minvec.fill(FLT_MAX);
-  maxvec.fill(-FLT_MAX);
-
-  Vec v(w);
-  for(int i=0; i<l; i++)
-    {
-      d->getRow(i,v);
-      for(int j=0; j<w; j++)
-        {
-          minvec[j] = min(v[j],minvec[j]);
-          maxvec[j] = max(v[j],maxvec[j]);
-        }
-    }
+  VecStatsCollector sc;
+  Vec row(w);
+  for (int i = 0; i < n; i++) {
+    d->getRow(i, row);
+    sc.update(row);
+  }
+  for (int j = 0; j < w; j++) {
+    minvec[j] = sc.getStats(j).min();
+    maxvec[j] = sc.getStats(j).max();
+  }
 }
 
 ////////////////////
@@ -102,9 +97,10 @@ void computeRange(const VMat& d, Vec& minvec, Vec& maxvec)
 ////////////////////
 void computeRowMean(const VMat& d, Vec& meanvec)
 {
-  meanvec.resize(d->length());
+  int n = d->length();
+  meanvec.resize(n);
   Vec samplevec(d->width());
-  for(int i=0; i<d->length(); i++)
+  for(int i = 0; i < n; i++)
   {
     d->getRow(i,samplevec);
     meanvec[i] = mean(samplevec);
@@ -116,15 +112,8 @@ void computeRowMean(const VMat& d, Vec& meanvec)
 /////////////////
 void computeMean(const VMat& d, Vec& meanvec)
 {
-  meanvec.resize(d->width());
-  meanvec.clear();
-  Vec samplevec(d->width());
-  for(int i=0; i<d->length(); i++)
-    {
-      d->getRow(i,samplevec);
-      meanvec += samplevec;
-    }
-  meanvec /= real(d->length());
+  Vec constant_weight(d->length(), 1.0);
+  computeWeightedMean(constant_weight, d, meanvec);
 }
 
 ///////////////////////
@@ -285,23 +274,16 @@ TVec<Mat> computeConditionalMeans(const VMat& trainset, int targetsize, Mat& bas
 ////////////////////////////
 void computeMeanAndVariance(const VMat& d, Vec& meanvec, Vec& variancevec)
 {
-  computeMean(d, meanvec);
+  VecStatsCollector sc;
+  int n = d->length();
+  Vec row(d->width());
+  for (int i = 0; i < n; i++) {
+    d->getRow(i, row);
+    sc.update(row);
+  }
+  sc.getMean(meanvec);
   variancevec.resize(d->width());
-  variancevec.clear();
-  int w = d->width();
-  int l = d->length();
-  Vec samplevec(w);
-  Vec diffvec(w);
-  Vec sqdiffvec(w);
-  for(int i=0; i<l; i++)
-    {
-      d->getRow(i,samplevec);
-      //variancevec += powdistance(samplevec, meanvec, 2.0);
-      substract(samplevec,meanvec,diffvec);
-      multiply(diffvec,diffvec,sqdiffvec);
-      variancevec += sqdiffvec;
-    }
-  variancevec /= real(l-1);
+  variancevec << sc.getVariance();
 }
 
 //////////////////////
@@ -309,21 +291,15 @@ void computeMeanAndVariance(const VMat& d, Vec& meanvec, Vec& variancevec)
 //////////////////////
 void computeInputMean(const VMat& d, Vec& meanvec)
 {
-  Vec input;
-  Vec target;
+  VecStatsCollector sc;
+  int n = d->length();
+  Vec input, target;
   real weight;
-  int l = d->length();
-  int n = d->inputsize();
-  real weightsum = 0;
-  meanvec.resize(n);  
-  meanvec.clear();
-  for(int i=0; i<l; i++)
-  {
-    d->getExample(i,input,target,weight);
-    weightsum += weight;
-    multiplyAcc(meanvec,input,weight);
+  for (int i = 0; i < n; i++) {
+    d->getExample(i, input, target, weight);
+    sc.update(input, weight);
   }
-  meanvec /= weightsum;
+  sc.getMean(meanvec);
 }
 
 //////////////////////////////
@@ -331,31 +307,20 @@ void computeInputMean(const VMat& d, Vec& meanvec)
 //////////////////////////////
 void computeInputMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
 {
-  Vec input;
-  Vec target;
-  Vec offset;
+  VecStatsCollector sc;
+  sc.compute_covariance = true;
+  sc.build();
+  int n = d->length();
+  int w = d->width();
+  Vec input, target;
   real weight;
-  int l = d->length();
-  int n = d->inputsize();
-  real weightsum = 0;
-  meanvec.resize(n);  
-  meanvec.clear();
-  covarmat.resize(n,n);
-  covarmat.clear();
-  offset.resize(n);
-  for(int i=0; i<l; i++)
-  {
-    d->getExample(i,input,target,weight);
-    weightsum += weight;
-    multiplyAcc(meanvec,input,weight);
-    if (i==0) offset << input;
-    input-=offset;
-    externalProductScaleAcc(covarmat, input, input, weight);
+  for (int i = 0; i < n; i++) {
+    d->getExample(i, input, target, weight);
+    sc.update(input, weight);
   }
-  meanvec *= 1/weightsum;
-  covarmat *= 1/weightsum;
-  offset-=meanvec;
-  externalProductScaleAcc(covarmat, offset, offset, real(-1));
+  sc.getMean(meanvec);
+  covarmat.resize(w,w);
+  covarmat << sc.getCovariance();
 }
 
 /////////////////////////////////
@@ -363,71 +328,59 @@ void computeInputMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
 /////////////////////////////////
 void computeInputMeanAndVariance(const VMat& d, Vec& meanvec, Vec& var)
 {
-  Vec input, target, offset;
+  VecStatsCollector sc;
+  int n = d->length();
+  Vec input, target;
   real weight;
-  int l  = d->length();
-  int is = d->inputsize();
-  real weightsum = 0;
-  meanvec.resize(is);  
-  meanvec.clear();
-  var.resize(is);
-  var.clear();
-  // We remove 'offset' (equal to the first input) for better numerical precision.
-  offset.resize(is);
-  for(int i=0; i<l; i++)
-  {
-    d->getExample(i,input,target,weight);
-    if (i==0) offset<<input;
-    weightsum += weight;
-    for(int j=0; j<input.size(); j++)
-    {
-      real xj = input[j]-offset[j];
-      var[j]+=weight*xj*xj;
-    }
-    multiplyAcc(meanvec, input, weight);
+  for (int i = 0; i < n; i++) {
+    d->getExample(i, input, target, weight);
+    sc.update(input, weight);
   }
-  meanvec /= weightsum;
-  var /= weightsum;
-  for(int i=0;i<input.size();i++)
-  {
-    real mu=meanvec[i]-offset[i];
-    var[i]-=mu*mu;
-    if (var[i] < 0)
-      // This can happen because of numerical imprecisions.
-      var[i] = 0;
-  }
+  sc.getMean(meanvec);
+  var.resize(d->width());
+  var << sc.getVariance();
 }
-
 
 /////////////////////////////////
 // computeWeightedMeanAndCovar //
 /////////////////////////////////
 void computeWeightedMeanAndCovar(const Vec& weights, const VMat& d, Vec& meanvec, Mat& covarmat)
 {
+  VecStatsCollector sc;
+  int n = d->length();
   int w = d->width();
-  int l = d->length();
-  computeWeightedMean(weights, d, meanvec);
+  Vec row(d->width());
+  for (int i = 0; i < n; i++) {
+    d->getRow(i, row);
+    sc.update(row, weights[i]);
+  }
+  sc.getMean(meanvec);
   covarmat.resize(w,w);
-  covarmat.clear();
-  Vec samplevec(w);
-  Vec diffvec(w);
-  real weight_sum = 0;
-  for(int i=0; i<l; i++)
-    {
-      d->getRow(i,samplevec);
-      substract(samplevec,meanvec,diffvec);
-      real weight = weights[i];
-      externalProductScaleAcc(covarmat, diffvec,diffvec, weight);
-      weight_sum += weight;
-    }
-  covarmat *= real(1./weight_sum);
+  covarmat << sc.getCovariance();
 }
 
 /////////////////////////
 // computeMeanAndCovar //
 /////////////////////////
-void computeMeanAndCovar(const VMat& m, Vec& meanvec, Mat& covarmat)
+void computeMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
 {
+  VecStatsCollector sc;
+  sc.compute_covariance = true;
+  sc.build();
+  int n = d->length();
+  int w = d->width();
+  Vec row(d->width());
+  for (int i = 0; i < n; i++) {
+    d->getRow(i, row);
+    sc.update(row);
+  }
+  sc.getMean(meanvec);
+  covarmat.resize(w,w);
+  covarmat << sc.getCovariance();
+
+  /* Commented out old code that had an optimized MPI version, but was probably
+     not used anymore.
+
   int w = m->width();
   int l = m->length();
   meanvec.resize(w);
@@ -488,6 +441,7 @@ void computeMeanAndCovar(const VMat& m, Vec& meanvec, Mat& covarmat)
       covarmat /= real(l);
       externalProductScaleAcc(covarmat,meanvec,meanvec,real(-1.));
     }
+    */
 }
 
 /* // two pass version
@@ -517,7 +471,7 @@ void computeMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat)
 //////////////////////////
 void computeMeanAndStddev(const VMat& d, Vec& meanvec, Vec& stddevvec)
 {
-  computeMeanAndVariance(d,meanvec,stddevvec);
+  computeMeanAndVariance(d, meanvec, stddevvec);
   for(int i=0; i<stddevvec.length(); i++)
     stddevvec[i] = sqrt(stddevvec[i]);
 }
