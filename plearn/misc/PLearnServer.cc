@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnServer.cc,v 1.10 2005/06/15 21:15:07 plearner Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -42,9 +42,12 @@
 
 
 #include "PLearnServer.h"
+#include <plearn/base/pl_repository_revision.h>
+#include <plearn/base/Object.h>
 #include <plearn/base/plerror.h>
 #include <plearn/io/fileutils.h> //!< For chdir()
 #include <plearn/io/load_and_save.h>
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;
@@ -59,33 +62,41 @@ using namespace std;
 
   void PLearnServer::callFunction(const string& name, int nargs)
   {
+    DBG_LOG << "PLearnServer FUNCTION CALL name=" << name << " nargs=" << nargs << endl;
     if(name=="cd")
       {
         string path;
         io >> path;
+        DBG_LOG << "  Arg0 = " << name << endl;        
         chdir(path);
-        prepareToSendResults(io,0);
+        Object::prepareToSendResults(io,0);
       }
     else if(name=="binary")
       {
         io.setMode(PStream::plearn_binary);
-        prepareToSendResults(io,0);
+        Object::prepareToSendResults(io,0);
       }
     else if(name=="ascii")
       {
         io.setMode(PStream::plearn_ascii);
-        prepareToSendResults(io,0);
+        Object::prepareToSendResults(io,0);
       }
     else if(name=="implicit_storage") // Takes a single boolean parameter
       {
         io >> io.implicit_storage;
-        prepareToSendResults(io,0);
+        Object::prepareToSendResults(io,0);
+      }
+    else if(name=="pl_repository_revision") // returns the pl_repository_revision string
+      {
+        string revs = pl_repository_revision();
+        Object::prepareToSendResults(io,1);
+        io << revs;
       }
     else
       PLERROR("In PLearnServer::callFunction Invalid function name %s",name.c_str());
 
     io << endl;
-    // cerr << "Sent it!" << endl;
+    DBG_LOG << "-> FUNCTION CALL DONE." << endl;
   }
 
 
@@ -122,6 +133,7 @@ using namespace std;
     int n_args; // number of input arguments to the method call
     string filepath;
 
+    DBG_LOG << "ENTERING PLearnServer::run()" << endl;
     for(;;)
       {
         if(clear_maps)
@@ -149,57 +161,78 @@ using namespace std;
                 break;
 
               case 'F': // call function 
+
                 io >> method_name >> n_args;
                 callFunction(method_name, n_args);
                 io << endl;
                 break;
 
               case 'N': // new
+                DBG_LOG << "PLearnServer NEW OBJECT" << endl;
                 obj = 0;
                 io >> obj_id >> obj;           // Read new object
+                DBG_LOG << "  obj_id = " << obj_id << endl;
                 objmap[obj_id] = obj;
-                prepareToSendResults(io,0);
+                Object::prepareToSendResults(io,0);
                 io << endl;  
+                DBG_LOG << "-> OBJECT CREATED." << endl;
                 break;
             
               case 'L': // load from file
+                DBG_LOG << "PLearnServer LOAD OBJECT" << endl;
                 obj = 0;
                 io >> obj_id >> filepath;
+                DBG_LOG << "  obj_id = " << obj_id << endl;
+                DBG_LOG << "  filepath = " << filepath << endl;                
                 PLearn::load(filepath,obj);
                 objmap[obj_id] = obj;
-                prepareToSendResults(io,0);
+                Object::prepareToSendResults(io,0);
                 io << endl;  
+                DBG_LOG << "-> OBJECT LOADED." << endl;
                 break;
 
               case 'D': // delete
+                DBG_LOG << "PLearnServer DELETE OBJECT" << endl;
                 io >> obj_id;
+                DBG_LOG << "  ojbj_id = " << obj_id << endl;
                 if(objmap.erase(obj_id)==0)
                   PLERROR("Calling delete of a non-existing object");
-                prepareToSendResults(io,0);
+                Object::prepareToSendResults(io,0);
                 io << endl;
+                DBG_LOG << "-> OBJECT DELETED." << endl;
                 break;
 
               case 'M': // method call
+                DBG_LOG << "PLearnServer METHOD CALL" << endl;
                 io >> obj_id;
+                DBG_LOG << "  ojbj_id = " << obj_id << endl;
                 found = objmap.find(obj_id);
                 if(found == objmap.end()) // unexistant obj_id
                   PLERROR("Calling a method on a non-existing object");
                 else 
                   {
                     io >> method_name >> n_args;
+                    DBG_LOG << "  method_name = " << method_name << endl;
+                    DBG_LOG << "  n_args = " << n_args << endl;
                     // cerr << "Method: " << method_name << ' ' << n_args << endl;
                     found->second->call(method_name, n_args, io);
                     io << endl;
+                    DBG_LOG << "-> METHOD CALL DONE." << endl;
                   }
                 break;
 
               case 'Z': // delete all objects
+                DBG_LOG << "PLearnServer DELETE ALL OBJECTS" << endl;
                 objmap.clear();
-                prepareToSendResults(io,0);
+                Object::prepareToSendResults(io,0);
+                io << endl;
+                DBG_LOG << "-> ALL OBJECTS DELETED." << endl;
                 break;
 
               case 'Q': // quit
+                DBG_LOG << "PLearnServer QUIT" << endl;
                 // cerr << "Quitting" << endl;
+                DBG_LOG << "LEAVING PLearnServer::run()" << endl;
                 return;
 
               default:
@@ -216,11 +249,11 @@ using namespace std;
               }
             catch(const PLearnError& e2)
               {
-                perr << "Error: " << e2.message() << endl
-                     << " while trying to send (to io) error: " << e.message() << endl
-                     << " Probably due to peer closing before we finished sending." << endl
-                     << " (If, as is likely, what we were sending were some remaining blanks" << endl
-                     << " no need to worry...)." << endl;
+                IMP_LOG << "PLearnServer ERROR: " << e2.message() << endl
+                        << " while trying to send (to io) error: " << e.message() << endl
+                        << " Probably due to peer closing before we finished sending." << endl
+                        << " (If, as is likely, what we were sending were some remaining blanks" << endl
+                        << " no need to worry...)." << endl;
               }
           }
         catch (...) 
@@ -232,15 +265,15 @@ using namespace std;
               }
             catch(const PLearnError& e2)
               {
-                perr << "Error " << e2.message() << endl
-                     << " while trying to send (to io) notification of unknown exception." << endl
-                     << " Probably due to peer closing before we finished sending." << endl
-                     << " (If, as is likely, what we were sending were some remaining blanks" << endl
-                     << " no need to worry...)." << endl;
+                IMP_LOG << "PLearnServer ERROR: " << e2.message() << endl
+                        << " while trying to send (to io) notification of unknown exception." << endl
+                        << " Probably due to peer closing before we finished sending." << endl
+                        << " (If, as is likely, what we were sending were some remaining blanks" << endl
+                        << " no need to worry...)." << endl;
               }
           }
       }
-    perr << "Exiting PLearnServer::run()" << endl;
+    DBG_LOG << "LEAVING PLearnServer::run()" << endl;
   }
 
 } // end of namespace PLearn

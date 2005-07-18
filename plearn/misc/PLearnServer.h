@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnServer.h,v 1.4 2005/05/13 16:12:34 plearner Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -56,8 +56,6 @@ namespace PLearn {
 class PLearnServer
 {
 private:
-  static inline void prepareToSendResults(PStream& out, int nres)
-  { out.write("!R "); out << nres; }
 
   void callFunction(const string& name, int nargs);
   void printHelp();
