@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnService.cc,v 1.5 2005/06/15 14:41:13 plearner Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -88,6 +88,9 @@ using namespace std;
 
     while(in)
       {
+        in.skipBlanksAndComments();
+        if(!in)
+          break;
         in >> hostname >> tcpport >> pid;
         if(in)
           hostname_and_port.append(pair<string,int>(hostname,tcpport));
@@ -97,30 +100,35 @@ using namespace std;
 
   void PLearnService::connectToServers(TVec< pair<string,int> > hostname_and_port)
   {
-    if(serversio.length()>0)
+    if(available_servers.size()>0)
       disconnectFromServers();
     for(int k=0; k<hostname_and_port.length(); k++)
       {
         pair<string, int> host_port = hostname_and_port[k];
-        PStream sock = openSocket(host_port.first, host_port.second, PStream::plearn_binary);
-        serversio.append(sock);
-        available_servers.push(k);
+        PStream servio = openSocket(host_port.first, host_port.second, PStream::plearn_binary);
+        // PStream servio = openSocket(host_port.first, host_port.second, PStream::plearn_ascii);
+        PP<RemotePLearnServer> serv = new RemotePLearnServer(servio);
+        serv->callFunction("binary");
+        serv->expectResults(0);
+        available_servers.push(serv);
+        //serversio.append(servio);
+        //available_servers.push(k);
       }
   }
 
   void PLearnService::disconnectFromServers()
   {
-    serversio = TVec<PStream>();
-    available_servers.resize(0);
+    available_servers = TVec< PP<RemotePLearnServer> >();
   }
 
 
   int PLearnService::availableServers() const
   {    
-    return available_servers.length();
+    return available_servers.size();
   }
 
-  RemotePLearnServer* PLearnService::reserveServer()
+  /*
+  RemotePLearnServer* PLearnService::OLD_reserveServer()
   {
     RemotePLearnServer* serv = 0;
     if(available_servers.size()>0)
@@ -130,6 +138,45 @@ using namespace std;
         reserved_servers[serv] = servnum;
       }
     return serv;
+  }
+  */
+
+  PP<RemotePLearnServer> PLearnService::reserveServer()
+  {
+    if(available_servers.size()==0)
+      return 0;
+    PP<RemotePLearnServer> serv = available_servers.pop();
+    reserved_servers.insert(serv);
+    return serv;
+  }
+
+  TVec< PP<RemotePLearnServer> > PLearnService::reserveServers(int nservers)
+  {
+    TVec< PP<RemotePLearnServer> > servers;
+    while(servers.length()<nservers)
+      {
+        PP<RemotePLearnServer> serv = reserveServer();          
+        if(serv.isNull())
+          break;
+        servers.append(serv);
+      }
+    return servers;
+  }
+
+  void PLearnService::freeServer(PP<RemotePLearnServer> server)
+  {
+    DBG_LOG << "PLearnService::freeServer(...)" << endl;
+    server->clearMaps();
+    server->deleteAllObjects();
+    if(reserved_servers.erase(server)!=1)
+      PLERROR("Problem in PLearnService::freeServer are you sure this server had been properly reserved?");
+    available_servers.push(server);
+  }
+    
+  void PLearnService::freeServers(TVec< PP<RemotePLearnServer> > servers)
+  {
+    for(int k=0; k<servers.length(); k++)
+      freeServer(servers[k]);
   }
 
   int PLearnService::watchServers(TVec< PP<RemotePLearnServer> > servers, int timeout)
@@ -153,17 +200,21 @@ using namespace std;
     return -1;  // To make the compiler happy (never reached).
   }
 
+  /*
   void PLearnService::freeServer(RemotePLearnServer* remoteserv)
   {
-    DBG_LOG << "PLearnService::freeServer(" << (unsigned long) remoteserv << endl;
+    DBG_LOG << "PLearnService::freeServer(" << (unsigned long) remoteserv << ")" << endl;
+    remoteserv->clearMaps();
+    remoteserv->deleteAllObjects();
     std::map<RemotePLearnServer*,int>::iterator it = reserved_servers.find(remoteserv);
     if(it==reserved_servers.end())
       PLERROR("Strange bug in PLearnService::freeServer Nothing known about this remoteserv. This should never happen!");
-    // put servernum back in available servers
+    // put servernum back in available servers    
     available_servers.push(it->second);
     // erase servernum from reserved_servers
     reserved_servers.erase(it);
   }
+  */
 
   PLearnService::~PLearnService()
   {

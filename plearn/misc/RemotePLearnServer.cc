@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RemotePLearnServer.cc,v 1.1 2005/06/10 15:45:11 plearner Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -42,7 +42,6 @@
 
 
 #include "RemotePLearnServer.h"
-#include "PLearnService.h"
 #include <plearn/io/pl_log.h>
 
 namespace PLearn {
@@ -97,13 +96,13 @@ using namespace std;
 
   void RemotePLearnServer::expectResults(int nargs_expected)
   {
-    DBG_LOG << "Entering expectResults" << endl;
+    DBG_LOG << "RemotePLearnServer entering expectResults" << endl;
     io.skipBlanksAndComments();
     int headchar = io.get();
     if(headchar!='!')
-      PLERROR("Answers from plearn server are expected to start with a !, but I received a %c",headchar);
+      PLERROR(" Answers from plearn server are expected to start with a !, but I received a %c",headchar);
     int command = io.get();
-    DBG_LOG << "expectResults received command: " << (char)command << endl;
+    DBG_LOG << "RemotePLearnServer expectResults received command: " << (char)command << endl;
     int nreturned;
     string msg;
     switch(command)
@@ -125,12 +124,13 @@ using namespace std;
   RemotePLearnServer::~RemotePLearnServer()
   {
     DBG_LOG << "ENTERING RemotePLearnServer destructor" << endl;
-    // io.write("!Q");
-    // io = 0;
-    // DBG_LOG << "BEFORE wait" << endl;
+    deleteAllObjects();
+    //io.write("!Q");
+    //io = 0;
+    // DBG_LOG << "RemotePLearnServer destructor: BEFORE wait" << endl;
     // prg->wait();
-    // DBG_LOG << "AFTER wait" << endl;
-    PLearnService::instance().freeServer(this);
+    // DBG_LOG << "RemotePLearnServer destructor: AFTER wait" << endl;
+    // PLearnService::instance().freeServer(this);
     DBG_LOG << "LEAVING RemotePLearnServer destructor" << endl;
   }
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnService.h,v 1.4 2005/06/15 14:41:13 plearner Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -48,26 +48,26 @@
 #include <plearn/io/PPath.h>
 #include <plearn/io/PStream.h>
 #include <plearn/math/TVec.h>
-#include <map>
+// #include <map>
+#include <set>
 #include <string>
-// #include <RemotePLearnServer.h>
+#include <plearn/misc/RemotePLearnServer.h>
 
 namespace PLearn {
 
-  class RemotePLearnServer;
+  //  class RemotePLearnServer;
 
 class PLearnService: public PPointable
 {
 private:
   PLearnService();
-  TVec<PStream> serversio; 
-  TVec<int> available_servers;
-  std::map<RemotePLearnServer*,int> reserved_servers;
 
-  //! Frees a previously reserved servers.
-  //! Putting it back into the list of available_servers
-  //! This is called automatically by the RemotePLearnServer's destructor
-  void freeServer(RemotePLearnServer* remoteserv);
+  // TVec<PStream> serversio; 
+  // TVec<int> available_servers;
+  // std::map<RemotePLearnServer*,int> reserved_servers;
+
+  TVec< PP<RemotePLearnServer> > available_servers;
+  std::set< PP<RemotePLearnServer> > reserved_servers;
 
 public:
   friend class RemotePLearnServer;
@@ -92,7 +92,17 @@ public:
   //! Reserves a remote processing ressource from the pool of servers.
   //! If sucessful returns a pointer to a new RemotePLearnServer
   //! If no server is available, returns 0.
-  RemotePLearnServer* reserveServer(); 
+  PP<RemotePLearnServer> reserveServer(); 
+
+  //! Reserves up to nservers servers
+  TVec< PP<RemotePLearnServer> > reserveServers(int nservers);
+
+  //! Frees a previously reserved servers.
+  //! Putting it back into the list of available_servers
+  void freeServer(PP<RemotePLearnServer> server);
+    
+  //! Frees all the servers in the list
+  void freeServers(TVec< PP<RemotePLearnServer> > servers);
 
   int watchServers(TVec< PP<RemotePLearnServer> > servers, int timeout=0);
 
