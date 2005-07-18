@@ -1333,6 +1333,7 @@ bool VMatrix::find(const Vec& input, real tolerance, int* i) const {
 //////////////
 void VMatrix::newwrite(PStream& out) const
 {
+  /*
   switch(out.outmode)
   {
     case PStream::raw_ascii:
@@ -1348,6 +1349,8 @@ void VMatrix::newwrite(PStream& out) const
     default:
       inherited::newwrite(out);
   }
+  */
+  inherited::newwrite(out);
 }
 
 ///////
