@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.cc,v 1.12 2005/02/08 21:59:13 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 /*! \file PTester.cc */

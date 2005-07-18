@@ -1,12 +1,8 @@
-
-
 // -*- C++ -*-
 
-// Distribution.h
+// Experiment.h
 // 
-// Copyright (C) *YEAR* *AUTHOR(S)* 
-// ...
-// Copyright (C) *YEAR* *AUTHOR(S)* 
+// Copyright (C) 2002 Pascal Vincent, Frederic Morin
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -37,51 +33,49 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.h,v 1.13 2004/11/24 18:39:12 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
-/*! \file Distribution.h */
-#ifndef Distribution_INC
-#define Distribution_INC
+/*! \file Experiment.h */
+#ifndef Experiment_INC
+#define Experiment_INC
 
+#include <plearn/base/Object.h>
 #include <plearn_learners/generic/Learner.h>
+#include <plearn/vmat/VMat.h>
+#include <plearn/vmat/Splitter.h>
 
 namespace PLearn {
 using namespace std;
 
-#ifdef __INTEL_COMPILER
-#pragma warning(disable:654)  // Get rid of compiler warning.
-#endif
-
-class Distribution: public Learner
-{
-protected:
-  // *********************
-  // * protected options *
-  // *********************
-
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
-    
+class Experiment: public Object
+{    
 public:
 
-  typedef Learner inherited;
+  typedef Object inherited;
 
   // ************************
   // * public build options *
   // ************************
+  
+  // See declareOptions method in .cc for the role of these options.
 
-  //! A string where the characters have the following meaning:
-  //! 'l'->log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn, 'e' -> expectation, 'v' -> variance
-  string use_returns_what;
+  //! Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
+  string expdir;  
+  PP<Learner> learner;
+  VMat dataset;
+  PP<Splitter> splitter;
+  bool save_models;
+  bool save_initial_models;
+  bool save_test_outputs;
+  bool save_test_costs;
 
   // ****************
   // * Constructors *
   // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  Distribution();
+  // Default constructor
+  Experiment();
 
 
   // ******************
@@ -102,54 +96,17 @@ public:
   // simply calls inherited::build() then build_() 
   virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-
   //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(Distribution);
+  PLEARN_DECLARE_OBJECT(Experiment);
 
-  // *******************
-  // * Learner methods *
-  // *******************
-
-  //! trains the model
-  virtual void train(VMat training_set); 
-
-  //! computes the ouptu of a trained model
-  virtual void use(const Vec& input, Vec& output);
-
-
-  //! return log of probability density log(p(x))
-  virtual double log_density(const Vec& x) const;
-
-  //! return probability density p(x)
-  //! [ default version returns exp(log_density(x)) ]
-  virtual double density(const Vec& x) const;
-  
-  //! return survival fn = P(X>x)
-  virtual double survival_fn(const Vec& x) const;
-
-  //! return survival fn = P(X<x)
-  virtual double cdf(const Vec& x) const;
-
-  //! return E[X] 
-  virtual Vec expectation() const;
-
-  //! return Var[X]
-  virtual Mat variance() const;
-
-  //! return a pseudo-random sample generated from the distribution.
-  virtual void generate(Vec& x) const;
+  //! runs the experiment
+  virtual void run();
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(Distribution);
+DECLARE_OBJECT_PTR(Experiment);
   
 } // end of namespace PLearn
-
-#ifdef __INTEL_COMPILER
-#pragma warning(default:654)
-#endif
 
 #endif

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.cc,v 1.19 2005/01/11 15:36:45 larocheh Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 /*! \file Experiment.cc */

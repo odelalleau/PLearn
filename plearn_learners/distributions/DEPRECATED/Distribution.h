@@ -1,8 +1,12 @@
+
+
 // -*- C++ -*-
 
-// PTester.h
+// Distribution.h
 // 
-// Copyright (C) 2002 Pascal Vincent, Frederic Morin
+// Copyright (C) *YEAR* *AUTHOR(S)* 
+// ...
+// Copyright (C) *YEAR* *AUTHOR(S)* 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,56 +37,51 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.h,v 1.13 2005/02/09 18:21:01 dorionc Exp $ 
+   * $Id$ 
    ******************************************************* */
 
-/*! \file PTester.h */
-#ifndef PExperiment_INC
-#define PExperiment_INC
+/*! \file Distribution.h */
+#ifndef Distribution_INC
+#define Distribution_INC
 
-#include <plearn/base/Object.h>
-#include <plearn_learners/generic/PLearner.h>
-#include <plearn/vmat/VMat.h>
-#include <plearn/vmat/Splitter.h>
-#include <plearn/io/PPath.h>
+#include <plearn_learners/generic/Learner.h>
 
 namespace PLearn {
 using namespace std;
 
-//! This code is deprecated, use PTester.h and PTester.cc instead.
-class PTester: public Object
-{    
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:654)  // Get rid of compiler warning.
+#endif
+
+class Distribution: public Learner
+{
+protected:
+  // *********************
+  // * protected options *
+  // *********************
+
+  // ### declare protected option fields (such as learnt parameters) here
+  // ...
+    
 public:
-  bool save_initial_experiment;
-  typedef Object inherited;
+
+  typedef Learner inherited;
 
   // ************************
   // * public build options *
   // ************************
-  
-  // See declareOptions method in .cc for the role of these options.
 
-  //! Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
-  PPath expdir;  
-  PP<PLearner> learner;
-  PP<Splitter> splitter;
-  TVec<string> statnames;
-  bool report_stats;
-
-  bool save_stat_collectors;
-  bool save_learners;
-  bool save_initial_learners;
-  bool save_data_sets;
-  bool save_test_outputs;
-  bool save_test_costs;
-  bool provide_learner_expdir;
+  //! A string where the characters have the following meaning:
+  //! 'l'->log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn, 'e' -> expectation, 'v' -> variance
+  string use_returns_what;
 
   // ****************
   // * Constructors *
   // ****************
 
-  // Default constructor
-  PTester();
+  // Default constructor, make sure the implementation in the .cc
+  // initializes all fields to reasonable default values.
+  Distribution();
 
 
   // ******************
@@ -103,35 +102,54 @@ public:
   // simply calls inherited::build() then build_() 
   virtual void build();
 
+  //! Transforms a shallow copy into a deep copy
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
   //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(PTester);
+  PLEARN_DECLARE_OBJECT(Distribution);
 
-  //! The experiment directory is the directory in which files 
-  //! related to this model are to be saved.     
-  //! If it is an empty string, it is understood to mean that the 
-  //! user doesn't want any file created by this learner.
-  void setExperimentDirectory(const PPath& the_expdir);
+  // *******************
+  // * Learner methods *
+  // *******************
+
+  //! trains the model
+  virtual void train(VMat training_set); 
+
+  //! computes the ouptu of a trained model
+  virtual void use(const Vec& input, Vec& output);
+
+
+  //! return log of probability density log(p(x))
+  virtual double log_density(const Vec& x) const;
+
+  //! return probability density p(x)
+  //! [ default version returns exp(log_density(x)) ]
+  virtual double density(const Vec& x) const;
   
-  //! This returns the currently set expdir (see setExperimentDirectory)
-  PPath getExperimentDirectory() const { return expdir; }
-  
+  //! return survival fn = P(X>x)
+  virtual double survival_fn(const Vec& x) const;
 
+  //! return survival fn = P(X<x)
+  virtual double cdf(const Vec& x) const;
 
-  //! runs the experiment
-  virtual void run();
+  //! return E[X] 
+  virtual Vec expectation() const;
 
-  //! performs the experiment, and returns the global stats specified in statnames
-  //! If dont_set_training_set is set to true AND the splitter returns only one split,
-  //! then we *don't* call setTrainingSet() and a forget() on the learner prior to training it:
-  //! we assume the training set is already set. This is useful for continuation of an incremental  training
-  //! (such as after increasing the number of epochs (nstages) ). 
-  Vec perform(bool dont_set_training_set=false);
+  //! return Var[X]
+  virtual Mat variance() const;
+
+  //! return a pseudo-random sample generated from the distribution.
+  virtual void generate(Vec& x) const;
 
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(PTester);
+  DECLARE_OBJECT_PTR(Distribution);
   
 } // end of namespace PLearn
+
+#ifdef __INTEL_COMPILER
+#pragma warning(default:654)
+#endif
 
 #endif

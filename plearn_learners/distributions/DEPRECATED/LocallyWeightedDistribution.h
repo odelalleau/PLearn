@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.h,v 1.10 2004/11/24 18:40:15 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.h */

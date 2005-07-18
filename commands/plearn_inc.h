@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.63 2005/06/13 19:39:25 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -153,9 +153,6 @@
 #include <plearn_learners/regressors/LinearRegressor.h>
 #include <plearn_learners/regressors/PLS.h>
 #include <plearn_learners/regressors/RankLearner.h>
-
-// Distribution (deprecated)
-#include <plearn_learners/distributions/LocallyWeightedDistribution.h>
 
 // Unsupervised/KernelProjection
 #include <plearn_learners/unsupervised/Isomap.h>

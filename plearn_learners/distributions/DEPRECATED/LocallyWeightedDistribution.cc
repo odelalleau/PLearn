@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.cc,v 1.10 2004/09/14 16:04:55 chrish42 Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.cc */

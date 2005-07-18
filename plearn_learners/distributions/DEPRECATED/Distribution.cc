@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.19 2004/09/14 16:04:55 chrish42 Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 /*! \file Distribution.cc */

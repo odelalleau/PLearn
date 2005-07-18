@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: TestMethod.cc,v 1.3 2004/02/20 21:14:50 chrish42 Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent & Frederic Morin
    * This file is part of the PLearn library.
    ******************************************************* */
