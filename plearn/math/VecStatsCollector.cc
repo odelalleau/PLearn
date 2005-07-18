@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.34 2005/02/22 17:52:40 chapados Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -49,10 +49,13 @@ VecStatsCollector::VecStatsCollector()
   :maxnvalues(0), no_removal_warnings(false), compute_covariance(false), epsilon(0.0)
   {}
 
-PLEARN_IMPLEMENT_OBJECT(VecStatsCollector, "Collects basic statistics on a vector", "VecStatsCollector allows to collect statistics on a series of vectors.\n"
-      "Individual vectors x are presented by calling update(x), and this class will\n"
-      "collect both individual statistics for each element (as a Vec<StatsCollector>)\n"
-      "as well as (optionally) compute the covariance matrix.");
+PLEARN_IMPLEMENT_OBJECT(VecStatsCollector,
+    "Collects basic statistics on a vector",
+    "VecStatsCollector allows to collect statistics on a series of vectors.\n"
+    "Individual vectors x are presented by calling update(x), and this class will\n"
+    "collect both individual statistics for each element (as a Vec<StatsCollector>)\n"
+    "as well as (optionally) compute the covariance matrix."
+);
 
 void VecStatsCollector::declareOptions(OptionList& ol)
 {
