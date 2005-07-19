@@ -46,6 +46,7 @@
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/db/getDataSet.h>
 #include <plearn/io/load_and_save.h>
+#include <plearn/io/openString.h>
 #include <plearn/base/lexical_cast.h>
 
 namespace PLearn {
@@ -100,7 +101,9 @@ LearnerCommand::LearnerCommand():
 void LearnerCommand::train(const string& learner_spec_file, const string& trainset_spec, const string& save_learner_file)
 {
     PP<PLearner> learner;
-    PLearn::load(learner_spec_file,learner);
+    string learner_spec = readFileAndMacroProcess(learner_spec_file);
+    PStream in = openString(learner_spec, PStream::plearn_ascii);
+    in >> learner;
     VMat trainset = getDataSet(trainset_spec);
     PP<VecStatsCollector> train_stats = new VecStatsCollector();
     learner->setTrainStatsCollector(train_stats);
