@@ -40,6 +40,7 @@
 /*! \file PDistribution.cc */
 
 #include "PDistribution.h"
+#include <plearn/base/tostring.h>
 #include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
@@ -396,7 +397,7 @@ int PDistribution::outputsize() const
 ////////////////////
 void PDistribution::resetGenerator(long g_seed) const
 {
-  seed_ = g_seed;
+// seed_ = seed; // TODO See how to do this
   random.manual_seed(g_seed);
 }
 
