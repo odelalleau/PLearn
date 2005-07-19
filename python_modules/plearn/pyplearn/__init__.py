@@ -84,10 +84,15 @@ class PyPLearnScript( PyPLearnObject ):
             if cls.__dict__['__accessed']:
                 plarg_attrs.extend( parse(cls, '%s.'%clsname) )
         
-        ## Alphabetical iteration
+        ## Pretty printing
         pretty            = lambda attr_name: string.ljust(attr_name, 30)
+        def backward_cast( value ):
+            if isinstance( value, list ):
+                return ",".join([ str(e) for e in value ])
+            return str(value)
+
         attribute_strings = [ '%s = %s'
-                              % ( pretty(attr_name), attr_value ) 
+                              % ( pretty(attr_name), backward_cast(attr_value) ) 
                               for attr_name, attr_value in plarg_attrs ]
         return "\n".join( attribute_strings )
 

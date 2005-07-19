@@ -19,7 +19,6 @@ __all__ = [ 'plvar',
 #
 #  Helper functions
 #
-
 def __intelligent_cast( default_value, provided_value ):
     if default_value is None:
         cast = lambda val: val

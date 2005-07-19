@@ -24,17 +24,18 @@ class Statistics(object):
 
    Available instance attributes:
 
-          N: total number of elements in the data set
-        sum: sum of all values (n) in the data set
-        min: smallest value of the data set
-        max: largest value of the data set
-       mode: value(s) that appear(s) most often in the data set
-       mean: arithmetic average of the data set
-      range: difference between the largest and smallest value in the data set
-     median: value which is in the exact middle of the data set
-   variance: measure of the spread of the data set about the mean
-     stddev: standard deviation - measure of the dispersion of the data set
-             based on variance
+              N: total number of elements in the data set
+            sum: sum of all values (n) in the data set
+            min: smallest value of the data set
+            max: largest value of the data set
+           mode: value(s) that appear(s) most often in the data set
+           mean: arithmetic average of the data set
+          range: difference between the largest and smallest value in the data set
+         median: value which is in the exact middle of the data set
+       variance: measure of the spread of the data set about the mean
+         stddev: standard deviation - measure of the dispersion of the data set
+                 based on variance
+    sharperatio: ratio of the mean and the stddev
 
    identification: Instance ID
 
@@ -101,6 +102,11 @@ class Statistics(object):
       self.__getMedian()
       self.__getVariance()
       self.__getStandardDeviation()
+
+      if self.stddev > 0:
+         self.sharperatio = self.mean / self.stddev
+      else:
+         self.sharperatio = float('nan')
 
       # Instance identification attribute.
       self.identification = id(self)

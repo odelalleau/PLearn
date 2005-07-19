@@ -12,4 +12,4 @@ def fast_softmax( x ):
     return [ r/s for r in res ]
 
 if __name__ == '__main__':
-    print fast_softmax([ 0, 0, 1 ])
+    print fast_softmax([ 0, 0, 100 ])
