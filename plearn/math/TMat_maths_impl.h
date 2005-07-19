@@ -806,8 +806,13 @@ template<class T>
 void normalize(const TVec<T>& vec, double n) 
 { vec /= norm(vec,n); }
 
+//! Compute ||vec1 - vec2||_n^n.
+//! If 'ignore_missing' is set to true, only components where both 'vec1' and
+//! 'vec2' have non missing values will be taken into account. Otherwise,
+//! having missing values will result in a 'nan' value being returned.
 template<class T>
-T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n)
+T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n,
+              bool ignore_missing = false)
 {
   static T result, diff;
 #ifdef BOUNDCHECK
@@ -823,7 +828,7 @@ T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n)
   if(n==1.0) // L1 distance
     {
       for(int i=0; i<length; i++)
-        {
+        if (!ignore_missing || (!is_missing(*v1) && !is_missing(*v2))) {
           diff = *v1++ - *v2++;
           if(diff>=0)
             result += diff;
@@ -834,7 +839,7 @@ T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n)
   else if(n==2.0)
     {
       for(int i=0; i<length; i++)
-        {
+        if (!ignore_missing || (!is_missing(*v1) && !is_missing(*v2))) {
           diff = *v1++ - *v2++;
           result += diff*diff;
         }
@@ -842,7 +847,7 @@ T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n)
   else
     {
       for(int i=0; i<length; i++)
-        {
+        if (!ignore_missing || (!is_missing(*v1) && !is_missing(*v2))) {
           diff = *v1++ - *v2++;
           if(diff<0)
             diff = -diff;
