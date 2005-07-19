@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.41 2005/06/14 15:39:28 tihocan Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -110,6 +110,7 @@ public:
 
   double nmissing_;      //!< (weighted) number of missing values
   double nnonmissing_;   //!< (weighted) number of non missing value 
+  double sumsquarew_;    //!< sum of square of all weights
   double sum_;           //!< sum of all (values-first_)
   double sumsquare_;     //!< sum of square of all (values-first_)
   double sumcube_;       //!< sum of cube of all (values-first_)
@@ -161,8 +162,12 @@ public:
   real max() const                    { return max_; }
   real range() const                  { return max_ - min_; }
   real mean() const                   { return real(sum()/nnonmissing_); }
-  //real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
-  real variance() const               { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
+  //! The normalization for variance (nnonmissing_ - sumsquarew_/nnonmissing_)
+  //! is defined so that the estimator is unbiased. When all weights are equal
+  //! to 1, it reduces to the traditional (n-1) coefficient.
+  //! The estimator is unbiased under the assumption that the weights are fixed
+  //! and the samples are i.i.d. according to a Gaussian distribution.
+  real variance() const               { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_ - sumsquarew_/nnonmissing_)); }
   real stddev() const                 { return sqrt(variance()); }
   real skewness() const;
   real kurtosis() const;

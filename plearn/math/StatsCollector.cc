@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.60 2005/06/14 17:18:28 tihocan Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -137,6 +137,7 @@ PLEARN_IMPLEMENT_OBJECT(
 StatsCollector::StatsCollector(int the_maxnvalues)
   : maxnvalues(the_maxnvalues), no_removal_warnings(false),
     nmissing_(0.), nnonmissing_(0.), 
+    sumsquarew_(0.),
     sum_(0.), sumsquare_(0.),
     sumcube_(0.), sumfourth_(0.),
     min_(MISSING_VALUE), max_(MISSING_VALUE),
@@ -192,6 +193,8 @@ void StatsCollector::declareOptions(OptionList& ol)
                 "number of missing values");
   declareOption(ol, "nnonmissing_", &StatsCollector::nnonmissing_, OptionBase::learntoption,
                 "number of non missing value ");
+  declareOption(ol, "sumsquarew_", &StatsCollector::sumsquarew_, OptionBase::learntoption,
+                "sum of square of all weights");
   declareOption(ol, "sum_", &StatsCollector::sum_, OptionBase::learntoption,
                 "sum of all (values-first_observation)");
   declareOption(ol, "sumsquare_", &StatsCollector::sumsquare_, OptionBase::learntoption,
@@ -250,6 +253,7 @@ void StatsCollector::forget()
 {
     nmissing_ = 0.;
     nnonmissing_ = 0.;
+    sumsquarew_ = 0.;
     sum_ = 0.;
     sumsquare_ = 0.;
     sumcube_ = 0.;
@@ -282,6 +286,7 @@ void StatsCollector::update(real val, real weight)
     else if(val>max_)
       max_ = val;
     nnonmissing_ += weight;
+    sumsquarew_  += weight * weight;
     double sqval = (val-first_)*(val-first_);
     sum_       += (val-first_)       * weight;
     sumsquare_ += sqval              * weight;
@@ -334,7 +339,9 @@ void StatsCollector::remove_observation(real val, real weight)
   {
     sorted = false;
     nnonmissing_ -= weight;
+    sumsquarew_  -= weight * weight;
     assert( nnonmissing_ >= 0 );
+    assert( sumsquarew_  >= 0 );
 
     if( !no_removal_warnings )
     {
@@ -361,7 +368,7 @@ void StatsCollector::remove_observation(real val, real weight)
     if(nnonmissing_==0) {
       // first value encountered
       min_ = max_ = first_ = last_ = MISSING_VALUE;
-      sum_ = sumsquare_ = sumcube_ = sumfourth_ = 0.0;
+      sum_ = sumsquare_ = sumcube_ = sumfourth_ = sumsquarew_ = 0.0;
     }
 
     // assertion is after previous check for nnonmissing_, since the last
