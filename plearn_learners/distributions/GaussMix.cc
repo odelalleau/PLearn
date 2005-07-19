@@ -584,7 +584,7 @@ void GaussMix::generateFromGaussian(Vec& s, int given_gaussian) const {
   static Vec mu_y;
   int j;    // The index of the Gaussian to use.
   if (given_gaussian < 0) {
-    j = multinomial_sample(p_j_x);
+    j = random.multinomial_sample(p_j_x);
   } else {
     j = given_gaussian % alpha.length();
   }
@@ -592,12 +592,12 @@ void GaussMix::generateFromGaussian(Vec& s, int given_gaussian) const {
   if (type == "spherical") {
     mu_y = mu(j).subVec(n_input, n_target);
     for (int k = 0; k < n_target; k++) {
-      s[k] = gaussian_mu_sigma(mu_y[k], sigma[j]);
+      s[k] = random.gaussian_mu_sigma(mu_y[k], sigma[j]);
     }
   } else if (type == "diagonal") {
     mu_y = mu(j).subVec(n_input, n_target);
     for (int k = 0; k < n_target; k++) {
-      s[k] = gaussian_mu_sigma(mu_y[k], diags(k + n_input,j));
+      s[k] = random.gaussian_mu_sigma(mu_y[k], diags(k + n_input,j));
     }
   } else if (type == "general") {
     if (n_margin > 0)
@@ -620,7 +620,7 @@ void GaussMix::generateFromGaussian(Vec& s, int given_gaussian) const {
       mu_y = mu_y_x(j);
     }
     norm.resize(n_eig - 1);
-    fill_random_normal(norm);
+    random.fill_random_normal(norm);
     real var_min = sigma_min*sigma_min;
     lambda0 = max(var_min, eigenvals[n_eig - 1]);
     s.fill(0);
@@ -628,7 +628,7 @@ void GaussMix::generateFromGaussian(Vec& s, int given_gaussian) const {
       s += sqrt(max(var_min, eigenvals[k]) - lambda0) * norm[k] * eigenvecs(k);
     }
     norm.resize(n_target);
-    fill_random_normal(norm);
+    random.fill_random_normal(norm);
     s += norm * sqrt(lambda0);
     s += mu_y;
   } else {
