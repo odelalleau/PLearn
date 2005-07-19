@@ -2,6 +2,7 @@
 // VecStatsCollector.h
 // 
 // Copyright (C) 2002 Pascal Vincent
+// Copyright (C) 2005 Université de Montréal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.29 2005/02/22 17:44:58 chapados Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
