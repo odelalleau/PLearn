@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.19 2005/05/05 20:43:55 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 /*! \file PDistribution.h */
@@ -41,6 +41,7 @@
 #define PDistribution_INC
 
 #include <plearn_learners/generic/PLearner.h>
+#include <plearn/math/PRandom.h>
 
 namespace PLearn {
 using namespace std;
@@ -57,6 +58,9 @@ private:
   mutable Mat store_cov;
 
 protected:
+
+  //! Random number generator.
+  mutable PRandom random;
 
   // *********************
   // * protected options *
@@ -257,6 +261,9 @@ public:
   virtual void variance(Mat& cov) const;
 
   //! Reset the random number generator used by generate() using the given seed.
+  //! Default behavior is to call random.manual_seed(g_seed) and to save the
+  //! given seed.
+  //! This method is called in build().
   virtual void resetGenerator(long g_seed) const;
   
   //! Return a pseudo-random sample generated from the distribution.

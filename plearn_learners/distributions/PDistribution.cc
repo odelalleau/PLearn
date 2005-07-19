@@ -166,9 +166,9 @@ void PDistribution::build()
 ////////////
 void PDistribution::build_()
 {
-  if (n_curve_points > 0) {
+  resetGenerator(seed_);
+  if (n_curve_points > 0)
     delta_curve = (upper_bound - lower_bound) / real(n_curve_points);
-  }
   // Precompute the stuff associated to the conditional flags.
   setConditionalFlagsWithoutUpdate(conditional_flags);
 }
@@ -391,6 +391,15 @@ int PDistribution::outputsize() const
   return l;
 }
 
+////////////////////
+// resetGenerator //
+////////////////////
+void PDistribution::resetGenerator(long g_seed) const
+{
+  seed_ = g_seed;
+  random.manual_seed(g_seed);
+}
+
 /////////////////
 // resizeParts //
 /////////////////
@@ -610,9 +619,6 @@ void PDistribution::expectation(Vec& mu) const
 
 void PDistribution::variance(Mat& covar) const
 { PLERROR("variance not implemented for this PDistribution"); }
-
-void PDistribution::resetGenerator(long g_seed) const
-{ PLERROR("resetGenerator not implemented for this PDistribution"); }
 
 void PDistribution::generate(Vec& y) const
 { PLERROR("generate not implemented for this PDistribution"); }
