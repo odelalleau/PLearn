@@ -44,7 +44,7 @@
 #include <iostream>
 
 #include "plerror.h"
-#include <plearn/io/pl_log.h>
+//#include <plearn/io/pl_log.h>
 // #include "general.h"
 
 #if USING_MPI
@@ -85,7 +85,8 @@ void errormsg(const char* msg, ...)
 #endif //USING_MPI
   exit(1);
 #else
-  IMP_LOG << "Throwing PLearnError exception: " << message << endl;
+// Commented out as one error message seems to be enough.
+//  IMP_LOG << "Throwing PLearnError exception: " << message << endl;
   throw PLearnError(message);                
 #endif
 }
