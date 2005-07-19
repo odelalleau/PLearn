@@ -571,11 +571,18 @@ vector<string> split_from_string(const string& s, const string& delimiter)
 ////////////////////////////
 void parseBaseAndParameters(const string& s, string& base,
                             map<string, string>& params,
+                            map<string, string>* added,
+                            map<string, string>* backup,
                             const string& delimiter)
 {
   vector<string> splits = split_from_string(s, delimiter);
   base = splits[0];
   string name, value;
+  map<string, string>::const_iterator it;
+  if (backup)
+    backup->clear();
+  if (added)
+    added->clear();
   for (vector<string>::size_type i = 1; i < splits.size(); i++) {
     const string& str = splits[i];
     if (str.find('=') == string::npos)
@@ -585,12 +592,13 @@ void parseBaseAndParameters(const string& s, string& base,
     if (name.empty())
       PLERROR("In parseBaseAndParameters - Read an empty parameter name in string '%s'"
               , s.c_str());
+    if (backup && (it = params.find(name)) != params.end())
+      (*backup)[name] = it->second;
     params[name] = value;
+    if (added)
+      (*added)[name] = value;
   }
 }
 
 } // end of namespace PLearn
-
-
-
 

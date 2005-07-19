@@ -106,8 +106,16 @@ using namespace std;
   //! 'base' with 'base_string', and add to 'params' mappings argX -> valX.
   //! Note that 'params' is not cleared.
   //! One can use another delimiting string through the 'delimiter' argument.
+  //! If the optional 'added' map is given, it will be cleared, then filled
+  //! with the added parameters (useful is one wants to keep track of the
+  //! parameters that have been added to 'params').
+  //! If the optional 'backup' map is given, it will be cleared, then filled
+  //! with those parameters in 'params' which have been erased by the parameters
+  //! given in the string 's'.
   void parseBaseAndParameters(const string& s, string& base,
                               map<string, string>& params,
+                              map<string, string>* added =  0,
+                              map<string, string>* backup = 0,
                               const string& delimiter = "::");
 
   //!  replaces all characters <= ' ' (i.e. newline, tab, space, etc...) by '_'
