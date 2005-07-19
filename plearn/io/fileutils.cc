@@ -631,7 +631,8 @@ void addFileAndDateVariables(const PPath& filepath, map<string, string>& variabl
 /////////////////////////////
 // readFileAndMacroProcess //
 /////////////////////////////
-string readFileAndMacroProcess(const PPath& filepath, map<string, string>& variables)
+string readFileAndMacroProcess(const PPath& filepath, map<string, string>& variables,
+                               bool change_dir)
 {
   // pout << "Processing file: " << filepath.absolute() << endl;
   // Save old variables (to allow recursive calls)
@@ -642,17 +643,50 @@ string readFileAndMacroProcess(const PPath& filepath, map<string, string>& varia
   map<string,string> old_vars;
   for (int i=0; i<num_old; ++i)
     old_vars[OldVariables[i]] = variables[OldVariables[i]];
+  PPath file(filepath); // Default: file = filepath.
+
+  map<string, string>* added = 0;
+  map<string, string>* backup = 0;
+  if (!isfile(file)) {
+    // Parse 'file' for potential additional arguments.
+    added  = new map<string, string>();
+    backup = new map<string, string>();
+    parseBaseAndParameters(file.absolute(), file, variables, added, backup);
+  }
+
+  // Possibly change directory.
+  PPath old_dir;
+  if (change_dir) {
+    old_dir = PPath::getcwd();
+    chdir(file.dirname());
+  }
 
   // Add the new file and date variables
-  addFileAndDateVariables(filepath, variables);
+  addFileAndDateVariables(file, variables);
 
   // Perform actual parsing and macro processing...
-  PStream in = openFile(filepath, PStream::plearn_ascii, "r");
+  PStream in = openFile(file, PStream::plearn_ascii, "r");
   string text = readAndMacroProcess(in, variables);
 
   // Restore previous variables
+  if (added)
+    for (map<string, string>::const_iterator it = added->begin();
+         it != added->end(); it++)
+      variables.erase(it->first);
+  if (backup)
+    for (map<string, string>::const_iterator it = backup->begin();
+         it != backup->end(); it++)
+      variables[it->first] = it->second;
   for (int i=0; i<num_old; ++i)
     variables[OldVariables[i]] = old_vars[OldVariables[i]];
+
+  // Restore previous directory.
+  if (change_dir)
+    chdir(old_dir);
+
+  // Free memory.
+  if (added)  delete added;
+  if (backup) delete backup;
 
   return text;
 }
@@ -920,35 +954,9 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                         PStream pathin = openString(raw_includefilepath, PStream::raw_ascii);
                         raw_includefilepath = readAndMacroProcess(pathin,variables);
                         raw_includefilepath = removeblanks(raw_includefilepath);
-                        PPath includefilepath = raw_includefilepath; // Conversion to PPath.
-                        PPath base_path;
-                        map<string, string> parameters;
-                        PLearn::parseBaseAndParameters
-                          (includefilepath.absolute(), base_path, parameters);
-                        PPath dirname = base_path.dirname();
-                        PPath filename = base_path.basename();
-                        PPath olddir = PPath::getcwd();
-                        chdir(dirname);
-                        // Backup existing definitions and add new (temporary)
-                        // ones to 'variables'.
-                        map<string, string> backup;
-                        map<string, string>::const_iterator it = parameters.begin();
-                        map<string, string>::const_iterator pos;
-                        for (; it != parameters.end(); it++) {
-                          pos = variables.find(it->first);
-                          if (pos != variables.end())
-                            backup[pos->first] = pos->second;
-                          variables[it->first] = it->second;
-                        }
                         // Read file with appropriate variable definitions.
-                        text += readFileAndMacroProcess(filename, variables);
-                        // Restore backed-up definitions and remove temporary ones.
-                        for (it = parameters.begin(); it != parameters.end(); it++)
-                          variables.erase(it->first);
-                        for (it = backup.begin(); it != backup.end(); it++)
-                          variables[it->first] = it->second;
-                        // Restore directory.
-                        chdir(olddir);
+                        text += readFileAndMacroProcess
+                                  (PPath(raw_includefilepath), variables, true);
                       }
                       break;
 

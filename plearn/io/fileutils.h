@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.22 2005/02/16 20:25:43 tihocan Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -207,8 +207,19 @@ using namespace std;
       FILEBASE = "foo"
       FILEEXT  = ".plearn"
       Variables for the date and time (DATE, TIME, DATETIME) are also defined.
+
+      If 'change_dir' is set to true, the program will move to the directory
+      containing 'filepath' before reading the file, and will move back to the
+      current directory before exiting the function.
+
+      The path 'filepath' may contain local variables in the form:
+      dir/file::var1=x1::var2=x2 ...
+      These variables will be used when parsing the file, but will not be saved
+      in the 'variables' map.
   */
-  string readFileAndMacroProcess(const PPath& filepath, map<string, string>& variables);
+  string readFileAndMacroProcess(const PPath& filepath,
+                                 map<string, string>& variables,
+                                 bool change_dir = false);
 
   inline string readFileAndMacroProcess(const PPath& filepath)
   {
