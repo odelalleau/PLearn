@@ -324,7 +324,6 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
     }
     mu_y = mu(j).subVec(start, size);
   }
-#ifdef BOUNDCHECK
 #ifdef __INTEL_COMPILER
 #pragma warning(disable:279)  // Get rid of compiler warning.
 #endif
@@ -390,13 +389,14 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
     for (int k = 0; k < size; k++) {
       if (!is_missing(y[k]))
         p += gauss_log_density_stddev(y[k], mu_y[k], sigma_j);
+#ifdef BOUNDCHECK
       if (isnan(p))
         PLWARNING("In GaussMix::computeLogLikelihood - Density is nan");
+#endif
     }
     return p;
 #ifdef __INTEL_COMPILER
 #pragma warning(default:279)
-#endif
 #endif
   } else if (type == "diagonal") {
     p = 0.0;
