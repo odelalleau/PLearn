@@ -3,7 +3,7 @@
 // GaussMix.cc
 // 
 // Copyright (C) 2003 Julien Keable
-// Copyright (C) 2004 Université de Montréal
+// Copyright (C) 2004-2005 Université de Montréal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -178,7 +178,7 @@ void GaussMix::declareOptions(OptionList& ol)
                 "The probability p(j|x), where x is the input part (is computed by exp(log_p_j_x).");
 
   declareOption(ol, "sigma", &GaussMix::sigma, OptionBase::learntoption,
-                "The variance in all directions, for type == 'spherical'.\n");
+                "The standard deviation in all directions, for type == 'spherical'.\n");
 
   // TODO What to do with these options.
   
@@ -217,6 +217,15 @@ void GaussMix::build_()
   log_coeff.resize(0);
   sigma.resize(0);
   y_x_mat.resize(0);
+  /* Work-in-progress code for better handling of missing values (need to be
+     redone anyway).
+  precomputed_vector.resize(L,L);
+  precomputed_constant.resize(L);
+  pout << "D= " << D << endl; // TODO Remove
+  for (int i = 0; i < L; i++)
+    for (int j = 0; j < L; j++)
+      precomputed_vector(i,j).resize(D);
+  */
   if (type == "spherical") {
     sigma.resize(L);
   } else if (type == "diagonal") {
@@ -230,9 +239,8 @@ void GaussMix::build_()
     full_cov.resize(L);
     log_coeff.resize(L);
     y_x_mat.resize(L);
-  } else {
-    PLERROR("In GaussMix::resizeStuffFromOptions - Not implemented for this type");
-  }
+  } else
+    PLERROR("In GaussMix::build_ - Type '%s' is unknown", type.c_str());
   if (n_input == 0) {
     // No input part: the p_j_x must be obtained from the alpha.
     for (int j = 0; j < L; j++) {
@@ -252,9 +260,8 @@ void GaussMix::computeMeansAndCovariances() {
   columnSum(posteriors, sum_columns);
   for (int j = 0; j < L; j++) {
     // Build the weighted dataset.
-    if (sum_columns[j] < epsilon) {
+    if (sum_columns[j] < epsilon)
       PLWARNING("In GaussMix::computeMeansAndCovariances - A posterior is almost zero");
-    }
     VMat weights(columnmatrix(updated_weights(j)));
     weighted_train_set = new ConcatColumnsVMatrix(
         new SubVMatrix(train_set, 0, 0, nsamples, D), weights);
@@ -301,6 +308,7 @@ void GaussMix::computeMeansAndCovariances() {
 real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
   static real p, sig;
   static Vec mu_y;  // The corresponding mean.
+//  static TVec<int> missing_index;
   static int size;  // The length of y (a target, or an input).
   static int start; // n_input if y is a target, and 0 otherwise.
   static Vec eigenvals; // A pointer to the adequate eigenvalues.
@@ -308,34 +316,88 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
   if (type == "spherical" || type == "diagonal") {
     // Both types are very similar.
     if (is_input) {
-      mu_y = mu(j).subVec(0, n_input);
       size = n_input;
       start  = 0;
     } else {
-      mu_y = mu(j).subVec(n_input, n_target);
       size = n_target;
       start = n_input;
     }
+    mu_y = mu(j).subVec(start, size);
   }
-  if (type == "spherical") {
-    // x ~= N(mu_x, sigma)
-    // y|x ~= N(mu_y, sigma)
-    p = 0.0;
-    for (int k = 0; k < size; k++) {
-      p += gauss_log_density_stddev(y[k], mu_y[k], max(sigma_min, sigma[j]));
 #ifdef BOUNDCHECK
 #ifdef __INTEL_COMPILER
 #pragma warning(disable:279)  // Get rid of compiler warning.
 #endif
-      if (isnan(p)) {
-        PLWARNING("In GaussMix::computeLogLikelihood - Density is nan");
+  if (type == "spherical") {
+    // x   ~= N(mu_x, sigma)
+    // y|x ~= N(mu_y, sigma)
+    p = 0.0;
+    real sigma_j = max(sigma_min, sigma[j]);
+    /* Work-in-progress code for better handling of missing values, maybe
+       some day... (need to be redone anyway).
+    if (has_missing) {
+      missing_index.resize(0);
+      // Y has an observed and a missing part: Y = (Y_o, Y_m).
+      for (int k = 0; k < size; k++) {
+        if (!is_missing(y[k]))
+          p += gauss_log_density_stddev(y[k], mu_y[k], sigma_j);
+        else
+          missing_index.append(k);
+        if (isnan(p)) {
+          PLWARNING("In GaussMix::computeLogLikelihood - Density is nan");
+        }
       }
+      // At this point, p = log(P_j(Y_o)).
+      // We want to compute
+      // E_Y_m[P_j(Y_o, Y_m)] = P_j(Y_o) sum_k alpha_k \int_Y_m P_j(Y_m) P_k(Y_m) dY_m
+      // whose log is log(P_j(Y_o)) + logadd_k( log(alpha_k) + log(\int ...) )
+      // TODO Document the whole formula.
+      tmp_vec1.resize(L);
+      tmp_vec1.fill(0.5 * Log2Pi);
+      int n_missing = missing_index.length();
+      real sigma_j = sigma[j];
+      for (int k = 0; k < L; k++) {
+        real sigma_k = sigma[k];
+        real sum_square_sigma = sigma_j * sigma_j + sigma_k * sigma_k;
+        tmp_vec1[k] += log(sigma_j) + log(sigma_k) - 0.5 * log(sum_square_sigma);
+        tmp_vec1[k] *= real(n_missing);
+        tmp_vec1[k] += log(alpha[k]);
+        real sigma_global = sigma_j * sigma_k / sqrt(sum_square_sigma);
+        // TODO WARNING precomputed_constant is not useful (must depend on the
+        // indices of the missing values).
+        real sum_z = 0;
+        real sum_t = 0;
+        real sum_u = 0;
+        Vec& z_vector = precomputed_vector(j,k);
+        Vec& t_vector = precomputed_vector(j,j);
+        Vec& u_vector = precomputed_vector(k,k);
+        for (int i = 0; i < n_missing; i++) {
+          int index = missing_index[i] + start;
+          real val = z_vector[index];
+          sum_z += val * val;
+          val = t_vector[index] * 0.5;
+          sum_t += mu(j,index) * val;
+          val = u_vector[index] * 0.5;
+          sum_u += mu(k,index) * val;
+        }
+        sum_z *= sigma_global * sigma_global;
+        tmp_vec1[k] -= 0.5 * (sum_t + sum_u - sum_z);
+      }
+      p += logadd(tmp_vec1);
+      return p;
+    } else
+    */
+    for (int k = 0; k < size; k++) {
+      if (!is_missing(y[k]))
+        p += gauss_log_density_stddev(y[k], mu_y[k], sigma_j);
+      if (isnan(p))
+        PLWARNING("In GaussMix::computeLogLikelihood - Density is nan");
+    }
+    return p;
 #ifdef __INTEL_COMPILER
 #pragma warning(default:279)
 #endif
 #endif
-    }
-    return p;
   } else if (type == "diagonal") {
     p = 0.0;
     for (int k = 0; k < size; k++) {
@@ -602,7 +664,6 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
 // TODO Put it into the PLearner framework.
 {
   int nsamples = samples.length();
-  Mat newclust(nclust,samples->inputsize());
   clust.resize(nclust,samples->inputsize());
   clust_idx.resize(nsamples);
 
@@ -610,25 +671,28 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
   Vec target(samples->targetsize());
   real weight;
     
-  Vec samples_per_cluster(nclust);
   TVec<int> old_clust_idx(nsamples);
   bool ok=false;
 
+  // Compute mean and standard deviation for all fields (will be used to
+  // generate some random values to replace missing values).
+  Vec mean, stddev;
+  computeMeanAndStddev(samples, mean, stddev);
+
   // build a nclust-long vector of samples indexes to initialize clusters centers
-  Vec start_idx(nclust,-1.0);
+  TVec<int> start_idx(nclust, -1);
   int val;
   for(int i=0;i<nclust;i++)
   {
-    bool ok=false;
+    bool ok = false;
     while(!ok)
     {
-      ok=true;
-      //      val = rand() % nsamples;
-      val =  uniform_multinomial_sample(nsamples);
-      for(int j=0;j<nclust && start_idx[j]!=-1.0;j++)
+      ok = true;
+      val = random.uniform_multinomial_sample(nsamples);
+      for(int j=0;j<nclust && start_idx[j] != -1;j++)
         if(start_idx[j]==val)
         {
-          ok=false;
+          ok = false;
           break;
         }
     }
@@ -637,31 +701,67 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
     clust(i)<<input;
   }
 
-  while(!ok && maxit--)
+  // Ensure there are no missing values in the initialized centers.
+  // To do so we generate random values based on 'mean' and 'stddev'.
+  Vec center;
+  for (int i = 0; i < nclust; i++) {
+    center = clust(i);
+    for (int k = 0; k < center.length(); k++)
+      if (is_missing(center[k]))
+        center[k] = random.gaussian_mu_sigma(mean[k], stddev[k]);
+  }
+
+
+  ProgressBar* pb = 0;
+  if (report_progress)
+    pb = new ProgressBar("Performing K-Means to initialize centers", maxit);
+  int iteration = maxit;
+  TVec<VecStatsCollector> clust_stat(nclust);
+  Vec clust_i;
+  Vec nnonmissing(input.length());
+  while(!ok && iteration--)
   {
-    newclust.clear();
-    samples_per_cluster.clear();
-    old_clust_idx<<clust_idx;
+    for (int i = 0; i < clust_stat.length(); i++)
+      clust_stat[i].forget();
+    old_clust_idx << clust_idx;
     for(int i=0;i<nsamples;i++)
     {
       samples->getExample(i,input,target,weight);
-      real dist,bestdist=1E300;
+      real dist,bestdist = REAL_MAX;
       int bestclust=0;
       if (nclust>1) for(int j=0;j<nclust;j++)
-        if((dist=pownorm(clust(j)-input)) < bestdist)
+        if((dist = powdistance(input, clust(j), 2.0, true)) < bestdist)
         {
           bestdist=dist;
           bestclust=j;
         }
-      clust_idx[i]=bestclust;
-      samples_per_cluster[bestclust] += weight;
-      newclust(bestclust) += input * weight;
+      clust_idx[i] = bestclust;
+      clust_stat[bestclust].update(input, weight);
     }
-    for(int i=0; i<nclust; i++)
-      if (samples_per_cluster[i]>0)
-        newclust(i) /= samples_per_cluster[i];
-    clust << newclust;
+
+    for (int i = 0; i < nclust; i++) {
+      clust_i = clust(i);
+      int j;
+      for (j = 0;
+           j < input.length() && clust_stat[i].getStats(j).nnonmissing() == 0;
+           j++) {}
+      if (j < input.length())
+        // There have been some samples assigned to this cluster.
+        clust_stat[i].getMean(clust_i);
+      else {
+        // Re-initialize randomly the cluster center.
+        int new_center = random.uniform_multinomial_sample(nsamples);
+        samples->getExample(new_center, input, target, weight);
+        clust_i << input;
+      }
+      // Replace missing values by randomly generated values.
+      for (int k = 0; k < clust_i.length(); k++)
+        if (is_missing(clust_i[k]))
+          clust_i[k] = random.gaussian_mu_sigma(mean[k], stddev[k]);
+    }
+
     ok=true;
+
     if (nclust>1)
       for(int i=0;i<nsamples;i++)
         if(old_clust_idx[i]!=clust_idx[i])
@@ -669,9 +769,11 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
           ok=false;
           break;
         }
+    if (report_progress)
+      pb->update(maxit - iteration + 1);
   }
-  
-  
+  if (pb)
+    delete pb;
 }
 
 /////////////////
@@ -758,10 +860,30 @@ int GaussMix::outputsize() const {
 // precomputeStuff //
 /////////////////////
 void GaussMix::precomputeStuff() {
-  if (type == "spherical") {
+  if (type == "spherical" || type == "diagonal") {
     // Nothing to do.
-  } else if (type == "diagonal") {
-    // Nothing to do.
+    /* Work-in progress code for better handling of missing values (need
+       to be redone anyway).
+    // Fill 'precompute_*'...
+    for (int i = 0; i < L; i++)
+      for (int j = 0; j < L; j++)
+        precomputed_vector(i,j).fill(0.);
+    tmp_vec2.resize(D);
+    for (int j = 0; j < L; j++) {
+      if (type == "spherical") {
+        tmp_vec2 << mu(j);
+        tmp_vec2 /= (sigma[j] * sigma[j]);
+      } else
+        // type == "diagonal"
+        for (int i = 0; i < D; i++)
+          tmp_vec2[i] = mu(j,i) / (diags(i,j) * diags(i,j));
+      for (int k = 0; k < L; k++) {
+        precomputed_vector(j,k) += tmp_vec2;
+        precomputed_vector(k,j) += tmp_vec2;
+      }
+      precomputed_constant[j] = dot(mu(j), tmp_vec2);
+    }
+    */
   } else if (type == "general") {
     // Precompute the log_coeff.
     real var_min = sigma_min*sigma_min;
@@ -778,7 +900,7 @@ void GaussMix::precomputeStuff() {
       if(D - n_eigen_computed > 0) {
         log_det += log(max(var_min,eigenvalues(j, n_eigen_computed - 1))) * (D - n_eigen_computed);
       }
-      log_coeff[j] = - 0.5 * (D * log(2*3.141549) + log_det );
+      log_coeff[j] = - 0.5 * (D * Log2Pi + log_det );
     }
   } else {
     PLERROR("In GaussMix::precomputeStuff - Not implemented for this type");
@@ -814,14 +936,6 @@ void GaussMix::replaceGaussian(int j) {
   // Arbitrarily takes half of the weight of this Gaussian.
   alpha[high] /= 2.0;
   alpha[j] = alpha[high];
-}
-
-////////////////////
-// resetGenerator //
-////////////////////
-void GaussMix::resetGenerator(long g_seed) const
-{ 
-  manual_seed(g_seed);  
 }
 
 ///////////////////////////////
@@ -927,8 +1041,7 @@ void GaussMix::train()
     if (train_set->weightsize() <= 0) {
       initial_weights.fill(1);
     } else {
-      Vec tmp1;
-      Vec tmp2;
+      Vec tmp1, tmp2;
       real w;
       for (int i = 0; i < nsamples; i++) {
         train_set->getExample(i, tmp1, tmp2, w);
@@ -939,11 +1052,10 @@ void GaussMix::train()
     TVec<int> clust_idx;  // Store the cluster index for each sample.
     kmeans(train_set, L, clust_idx, mu, kmeans_iterations);
     posteriors.fill(0);
-    for (int i = 0; i < nsamples; i++) {
+    for (int i = 0; i < nsamples; i++)
       // Initially, P(j | s_i) = 0 if s_i is not in the j-th cluster,
       // and 1 otherwise.
       posteriors(i, clust_idx[i]) = 1;
-    }
     updateSampleWeights();
     computeWeights();
     computeMeansAndCovariances();
@@ -954,9 +1066,8 @@ void GaussMix::train()
   bool replaced_gaussian = false;
   ProgressBar* pb = 0;
   int n_steps = nstages - stage;
-  if (report_progress) {
+  if (report_progress)
     pb = new ProgressBar("Training GaussMix", n_steps);
-  }
   while (stage < nstages) {
     do {
       computePosteriors();
@@ -965,16 +1076,14 @@ void GaussMix::train()
     computeMeansAndCovariances();
     precomputeStuff();
     stage++;
-    if (pb) {
+    if (report_progress)
       pb->update(n_steps - nstages + stage);
-    }
   }
   if (pb)
     delete pb;
   // Restore conditional flags if necessary.
-  if (restore_flags) {
+  if (restore_flags)
     setConditionalFlags(old_flags);
-  }
   // Clear 'log_p_j_x', because it may be filled with '-inf' after the initial
   // build: saving it would cause PLearn to crash when reloading the object.
   log_p_j_x.clear();

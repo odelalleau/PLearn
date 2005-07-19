@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.30 2005/05/05 20:45:52 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -134,7 +134,7 @@ protected:
 
   //! Compute log p(y | x,j), where j < L is the index of a component of the mixture.
   //! If 'is_input' is set to true, then it will instead compute log p(x | j)
-  //! (here x = y), the probability of the input part x given j.
+  //! (here x = the method argument y), the probability of input part x given j.
   virtual real computeLogLikelihood(const Vec& y, int j, bool is_input = false) const;
 
   //! Compute the posteriors P(j | s_i) for each sample point and each Gaussian.
@@ -149,7 +149,8 @@ protected:
   //! to -1, then a random Gaussian will be chosen according to the weights alpha.
   virtual void generateFromGaussian(Vec& s, int given_gaussian) const;
 
-  //! Precompute stuff specific to each Gaussian, given its current paremeters.
+  //! Precompute stuff specific to each Gaussian, given its current parameters.
+  //! This method is called after each training step.
   virtual void precomputeStuff();
 
   //! Replace the j-th Gaussian with another one (probably because that one is
@@ -168,8 +169,6 @@ public:
 
   //! Overridden.
   virtual void generate(Vec& s) const;
-
-  virtual void resetGenerator(long g_seed) const;
 
 private: 
 
