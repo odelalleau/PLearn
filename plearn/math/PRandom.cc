@@ -174,6 +174,13 @@ real PRandom::exp_sample() {
   return real((*exponential_distribution)(*uniform_01));
 }
 
+////////////////////////
+// fill_random_normal //
+////////////////////////
+void PRandom::fill_random_normal(const Vec& dest, real mean, real stddev) {
+  for (int i = 0; i < dest.length(); i++)
+    dest[i] = gaussian_mu_sigma(mean, stddev);
+}
 
 /////////////////
 // gaussian_01 //

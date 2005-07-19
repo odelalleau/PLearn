@@ -180,6 +180,10 @@ public:
   //! Return a random number generated from a Gaussian with mean mu and stddev sigma.
   real gaussian_mu_sigma(real mu, real sigma);
 
+  //! Fill vector 'dest' with sample generated from a normal distribution
+  //! with mean 'mean' and standard deviation 'stddev'.
+  void fill_random_normal(const Vec& dest, real mean = 0, real stddev = 1);
+
   //! Return a random number generated from an exponential distribution with
   //! parameter lambda = 1.
   real exp_sample();
