@@ -19,7 +19,28 @@ __all__ = [ 'plvar',
 #
 #  Helper functions
 #
-def bind_plargs(obj, field_names = None, plarg_names = None, prefix = None):
+
+def __intelligent_cast( default_value, provided_value ):
+    if default_value is None:
+        cast = lambda val: val
+
+    else:
+        cast = type(default_value)
+        if cast is list:
+            elem_cast = str
+            if default_value:
+                elem_cast = type(default_value[0])
+
+            def list_cast( s ):
+                if s:
+                    return [ elem_cast(e) for e in s.split(",") ]
+                return []
+            cast = list_cast
+
+    return cast(provided_value)
+    
+
+def bind_plargs(obj, field_names = None, plarg_names = None):
     """Binds some command line arguments to the fields of an object.
 
     In short, given::
@@ -82,18 +103,12 @@ def bind_plargs(obj, field_names = None, plarg_names = None, prefix = None):
     @param plarg_names: The desired names for the plargs. If it is let
     to None, the I{field_names} values will be used.
     @type  plarg_names: List of strings.
-
-    @param prefix: If provided, the plarg_names will be overridden to be
-    [ "%s_%s" % (prefix, f) for f in field_names ].
-    @type prefix: str
     """
-    if field_names is None: field_names = metaprog.public_members(obj).keys()
+    if field_names is None:
+        field_names = metaprog.public_members(obj).keys()
 
-    if prefix is None:
-        if plarg_names is None:
-            plarg_names = field_names
-    else:
-        plarg_names = [ "%s_%s" % (prefix, f) for f in field_names ]
+    if plarg_names is None:
+        plarg_names = field_names
 
     for i, field in enumerate(field_names):
         arg_name = plarg_names[i]
@@ -112,23 +127,8 @@ def bind_plargs(obj, field_names = None, plarg_names = None, prefix = None):
         ## plarg. If it was not provided by the user, the value will
         ## be set exactly to what it was when this funtion was
         ## entered. Otherwise, it will be set to the user provided value
-        provided_value = getattr(plargs, arg_name)
-
-        if default_value is None:
-            setattr(obj, field, provided_value)
-        else:           
-            cast = type(default_value)
-            if cast is list:
-                elem_cast = str
-                if default_value:
-                    elem_cast = type(default_value[0])
-
-                def list_cast( s ):
-                    if s:
-                        return [ elem_cast(e) for e in s.split(",") ]
-                    return []
-                cast = list_cast
-            setattr(obj, field, cast(provided_value))
+        provided_value = __intelligent_cast( default_value, getattr(plargs, arg_name) )
+        setattr( obj, field, provided_value )
 
 def generate_expdir( ):
     """Generates a standard experiment directory name."""
@@ -375,7 +375,9 @@ class _plargs_storage_readonly( object ):
     (L{xperiments}). For debugging purpose, however, one may provide on
     command-line an override to plargs.expdir value.
     """
-
+    class namespace_overrides( dict ):
+        pass
+    
     def _parse_( self, args ):
         """Parsing and storing plargs.
 
@@ -384,9 +386,29 @@ class _plargs_storage_readonly( object ):
         """
         for a in args:
             k, v = a.split('=', 1)
-            if k == 'expdir':
-                k = '_%s_' % k
-            self.__dict__[k] = v
+
+            scoped = k.split('.', 1)
+            if len(scoped) > 1:
+                name, attr = scoped
+
+                # Existing namespace
+                if name in self.__dict__:
+                    nspace = self.__dict__[name]
+                    assert isinstance( nspace, self.namespace_overrides )
+
+                # New namespace
+                else:
+                    nspace = self.namespace_overrides()
+                    self.__dict__[name] = nspace                    
+
+                # Adding the attribute to the namespace
+                nspace[attr] = v
+                
+            elif k == 'expdir':
+                self.__dict__['_%s_'%k] = v
+                
+            else:
+                self.__dict__[k] = v
     
     def __setattr__(self, k, v):
         raise AttributeError('Cannot modify plargs')
@@ -435,9 +457,11 @@ class plargs_binder:
         def __init__(cls, name, bases, dict):
             bind_plargs( cls )
 
-class plargs_namespace:
+class plargs_namespace( object ):
     """Subclasses will have there class variables binded to B{prefixed} plargs.
 
+    PLEASE UPDATE!!!
+    
     The plarg will be prefixed by the classname, e.g.::
 
         class MLM( plargs_namespace ):
@@ -450,6 +474,26 @@ class plargs_namespace:
     Note that MLM.ma == int(plargs.MLM_ma) will always be True.    
     """
     class __metaclass__( type ):
+        _subclasses = {}
         def __init__(cls, name, bases, dict):
-            bind_plargs( cls, prefix = cls.__name__ )
+            if cls.__name__ != 'plargs_namespace':
+                cls._subclasses[cls.__name__] = cls
+        
+        def __new__( metacls, clsname, bases, dic ):
+            overrides = {}
+            if hasattr( plargs, clsname ):
+                overrides = getattr( plargs, clsname )
+
+            for attr_name, value in overrides.iteritems():
+                default        = dic[attr_name]
+                dic[attr_name] = globals()['__intelligent_cast']( default, value )
+            
+            dic['__accessed'] = False
+            return type.__new__( metacls, clsname, bases, dic )
+
+        def __getattribute__( cls, attr ):            
+            a = object.__getattribute__( cls, attr )
+            if metaprog.public_attribute_predicate( attr, a ):
+                setattr( cls, '__accessed', True )
+            return a
 

@@ -124,7 +124,7 @@ class PyPLearnObject( object ):
     def option_names( klass, ordered = None ):
         """Returns the names of options having default values.
         
-        This class method introspect the class to get the names of options
+        This class method introspect the class B{once} to get the names of options
         for which default values were provided in any of the current class
         or its parent classes.
 
@@ -142,11 +142,15 @@ class PyPLearnObject( object ):
         @rtype: list of str.
         """
         assert issubclass( klass, PyPLearnObject )
+        if hasattr( klass, '__option_names' ):
+            return klass.__option_names
+
         if ordered is None:
             ordered = []
 
         # Recursively inspect base class first.
         if klass == PyPLearnObject:
+            klass.__option_names = ordered
             return ordered
         else:
             ordered = klass.__mro__[1].option_names( ordered )
@@ -162,6 +166,7 @@ class PyPLearnObject( object ):
                            % (klass.__name__, err.__class__.__name__, err),
                            PLOptionWarning, stacklevel = 2
                            )
+            klass.__option_names = ordered            
             return ordered
 
         # Deducing the class indentation from the position of the class
@@ -200,6 +205,8 @@ class PyPLearnObject( object ):
                         ordered.append( optname )
                 else:
                     raise ValueError(line)
+
+        klass.__option_names = ordered
         return ordered
     option_names = classmethod( option_names )
     

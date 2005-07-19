@@ -151,7 +151,7 @@ class Experiment(PyPLearnObject):
         
     def __cmp__( self, other ):
         raise NotImplementedError( 'Use keycmp( x1, x2, expkey )' )
-    
+
     def __str__( self ):
         return self.toString()
 
@@ -167,8 +167,12 @@ class Experiment(PyPLearnObject):
                 subset[key] = None
         return subset
         
-    def toString( self, expkey=None ):
+    def toString( self, expkey=None, short=False ):
         s = '%s\n' % self.path
+
+        if short and expkey is None:
+            return s
+        
         for key, value in self.getKey(expkey).iteritems():
             s += '    %s= %s\n' % (key.ljust(30), value)
         return s

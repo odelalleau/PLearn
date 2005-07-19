@@ -62,30 +62,33 @@ class PyPLearnScript( PyPLearnObject ):
         PyPLearnObject.__init__(self, **overrides)
 
         self.expdir        = plargs.expdir
-        self.metainfos     = self.get_metainfos()
         self.plearn_script = str( main_object )
+        self.metainfos     = self.get_metainfos()
 
     def get_metainfos(self):
-        import inspect
-        def parse( obj ):
-            return [ (attr_name, attr_val)
-                     for (attr_name, attr_val)
-                     in inspect.getmembers( obj )
-                     if public_attribute_predicate(attr_name, attr_val) ]
+        # import inspect
+        def parse( obj, prefix='' ):
+            results = []
+            for key in dir(obj):
+                if not key.startswith('_'):
+                    value = getattr(obj, key)
+                    if ( public_attribute_predicate(key, value) and
+                         not isinstance( value, plargs.namespace_overrides ) ):
+                        results.append((prefix+key, value))
+            results.sort()
+            return results
 
-        plarg_attrs = dict(parse( plarg_defaults ))
-        plarg_attrs.update( dict(parse( plargs )) )
+        plarg_attrs = parse( plarg_defaults )
+        plarg_attrs.extend( parse( plargs ) )
+        for clsname, cls in plargs_namespace._subclasses.iteritems():
+            if cls.__dict__['__accessed']:
+                plarg_attrs.extend( parse(cls, '%s.'%clsname) )
         
         ## Alphabetical iteration
-        keys = plarg_attrs.keys()
-        keys.sort()
-        
         pretty            = lambda attr_name: string.ljust(attr_name, 30)
         attribute_strings = [ '%s = %s'
-                              % ( pretty(attr_name), plarg_attrs[attr_name] ) 
-                              for attr_name in keys
-                              if public_attribute_predicate(attr_name, plarg_attrs[attr_name])
-                              ]
+                              % ( pretty(attr_name), attr_value ) 
+                              for attr_name, attr_value in plarg_attrs ]
         return "\n".join( attribute_strings )
 
 class __TMat:

@@ -57,8 +57,15 @@ def public_attribute_predicate( name, value ):
                  or inspect.isbuiltin(value)
                  )
 
-def public_attributes( instance ):
-    return members( instance, public_attribute_predicate )
+def public_attributes( obj ):
+    results = []
+    for key in dir(obj):
+        if not key.startswith('_'):
+            value = getattr(obj, key)
+            if public_attribute_predicate(key, value):
+                results.append((key, value))
+    # results.sort() # should not return a dict but a list...
+    return dict(results)
 
 def public_members( instance ):
     return members( instance, public_attribute_predicate )

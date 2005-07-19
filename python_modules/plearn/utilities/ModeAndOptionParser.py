@@ -31,6 +31,16 @@ class Mode( PyPLearnObject ):
         return True
     _unreferenced = classmethod( _unreferenced )
 
+    def option_names( cls, ordered = None ):
+        """Code Optimization.
+
+        Since the Mode class and its subclasses make no use of the option
+        mecanism, it fastens the code to return explicitly an empty list
+        instead of letting PyPLearnObject introspect the class.
+        """
+        return []
+    option_names = classmethod( option_names )
+    
     def aliases( cls ):
         return []
     aliases = classmethod( aliases )

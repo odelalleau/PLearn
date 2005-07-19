@@ -28,6 +28,15 @@ from plearn.utilities.ModeAndOptionParser import *
 class XpMode( Mode ):
     pass
 
+## class link( XpMode ):
+##     def __init__( self, targets, options ):
+##         for target in targets:
+##             dirlist = os.listdir( target )
+##             for fname in dirlist:
+##                 if fname.startswith( Experiment._expdir_prefix ):
+##                     exppath = os.path.join( target, fname )
+##                     os.symlink
+                        
 class merge( XpMode ):
     """\ls -1 Rank*/expdir* | grep expdir > tmp.sh"""
     def option_groups( cls, parser ):
@@ -107,17 +116,36 @@ class duplicates( ExpKeyMode ):
         return ['dup']
     aliases = classmethod( aliases )
 
+    def option_groups( cls, parser ):
+        duplicates_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
+                                          "Available under %s mode only." % cls.__name__ )
+
+        duplicates_options.add_option( "--sh",
+                                       default = False,
+                                       action  = 'store_true',
+                                       help    = ""
+                                       )
+
+        return [ duplicates_options ]
+    option_groups = classmethod( option_groups )
+
     def routine( self, expkey, options, experiments ):
+        if options.sh:
+            shfile = open('duplicates.sh', 'w')
+            
         while experiments:
             exp = experiments.pop()
             duplicates = []
             for x in experiments:
-                if x == exp:
+                if keycmp(x, exp, expkey) == 0:
                     duplicates.append( x.path )
             if duplicates:
-                print exp
-                print "Duplicated by", " ".join(duplicates)
-                print
+                if options.sh:
+                    shfile.write( 'rm -rf ' + "\nrm -rf ".join(duplicates) + '\n' )
+                else:
+                    print exp.toString( expkey, True )
+                    print "Duplicated by", " ".join(duplicates)
+                    print
 
 class listdir( ExpKeyMode ):
     """List matching experiments directory. B{Default mode.}
