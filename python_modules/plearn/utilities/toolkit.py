@@ -8,12 +8,6 @@ I{similar_tasks.py} L{utilities} submodule to move those functions to.
 __version_id__ = "$Id$"
 import inspect, os, popen2, random, string, sys, time, types
 
-epytext = None
-try:
-    from epydoc.markup import epytext
-except ImportError:
-    pass
-
 def boxed_lines(s, box_width, indent=''):
     if len(s) <= box_width:
         return [s]
@@ -152,8 +146,11 @@ def doc(obj, short=False):
         errors  = []
 
         parsed = striped
-        if epytext is not None:
+        try:
+            from epydoc.markup import epytext
             parsed  = epytext.parse_docstring( striped, errors ).to_plaintext(None)
+        except:
+            pass
         
         parsed  = string.rstrip( parsed )
 
