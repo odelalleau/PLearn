@@ -57,7 +57,7 @@
 #include <plearn/math/random.h>
 #include <plearn/var/SumOfVariable.h>
 #include <plearn/var/RowOfVariable.h>
-#include <plearn/var/RowPowNormVariable.h>
+//#include <plearn/var/RowPowNormVariable.h>
 #include <plearn/var/SumVariable.h>
 #include <plearn/var/TanhVariable.h>
 #include <plearn/var/NllGeneralGaussianVariable.h>
