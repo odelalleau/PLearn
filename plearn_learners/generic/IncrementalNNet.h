@@ -66,12 +66,16 @@ protected:
   Mat output_weights; // [hidden_unit, output] ** NOTE IT IS TRANSPOSED ** so can easily add hidden units
   Vec output_biases;
   Mat hidden_layer_weights; // [hidden_unit, input]
+  Mat hidden_layer_weight_gradients; 
   Vec hidden_layer_biases; // [hidden_unit]
   TVec<Vec> internal_weights;    // among hidden units [to, from]. enabled by enable_internal_weights
+  TVec<Vec> internal_weight_gradients;    
   Vec candidate_unit_weights;
+  Vec candidate_unit_weight_gradients; 
   real candidate_unit_bias;
   Vec candidate_unit_output_weights;
   Vec candidate_unit_internal_weights;
+  Vec candidate_unit_internal_weight_gradients;
   int n_examples_seen;
   real current_average_cost;
   real next_average_cost;
@@ -113,6 +117,9 @@ public:
                              
   real rand_range;           // Interval of random numbers when initializing weights/biases: (-rand_range/2, rand_range/2).
   bool enable_internal_weights; // Network has a cascade topology if true, or one hidden layer if false (default).
+  bool incremental_connections; // Add connections incrementally if true, or all at once if false (default). 
+                                // This option is only supported with n_outputs == 1. 
+  real connection_gradient_threshold;    // Threshold of gradient for connection to be added, when incremental_connections == true.
   
   // ** NON-OPTION FIELDS
   //
