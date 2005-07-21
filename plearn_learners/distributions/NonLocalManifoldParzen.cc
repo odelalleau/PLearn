@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzen.cc,v 1.10 2005/06/17 16:45:39 larocheh Exp $
+   * $Id$
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -43,7 +43,7 @@
 
 #include "NonLocalManifoldParzen.h"
 #include <plearn/vmat/LocalNeighborsDifferencesVMatrix.h>
-#include <plearn/vmat/RandomNeighborsDifferencesVMatrix.h>
+//#include <plearn/vmat/RandomNeighborsDifferencesVMatrix.h>
 #include <plearn/var/ProductVariable.h>
 #include <plearn/var/PlusVariable.h>
 #include <plearn/var/SoftplusVariable.h>
@@ -52,10 +52,12 @@
 #include <plearn/var/VarRowVariable.h>
 #include <plearn/var/SourceVariable.h>
 #include <plearn/var/Var_operators.h>
+#include <plearn/var/DiagonalGaussianVariable.h>
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/math/random.h>
 #include <plearn/var/SumOfVariable.h>
 #include <plearn/var/RowOfVariable.h>
+#include <plearn/var/RowPowNormVariable.h>
 #include <plearn/var/SumVariable.h>
 #include <plearn/var/TanhVariable.h>
 #include <plearn/var/NllGeneralGaussianVariable.h>
@@ -93,18 +95,27 @@ using namespace std;
 
 NonLocalManifoldParzen::NonLocalManifoldParzen() 
 /* ### Initialize all fields to their default value here */
-  :  weight_decay(0), penalty_type("L2_square"),noise_grad_factor(0.01),noise(0), noise_type("gaussian"), omit_last(0), learn_mu(true), magnified_version(false), reference_set(0), sigma_init(0.1), sigma_min(0.00001), nneighbors(5), nneighbors_density(-1), mu_nneighbors(2), ncomponents(1), sigma_threshold_factor(1), variances_transfer_function("softplus"), architecture_type("single_neural_network"),
+  :  //weight_embedding(1),
+     weight_decay(0), penalty_type("L2_square"),
+     //noise_grad_factor(0.01),noise(0), noise_type("gaussian"), omit_last(0),
+     learn_mu(true), 
+     //magnified_version(false), 
+     reference_set(0), sigma_init(0.1), sigma_min(0.00001), nneighbors(5), nneighbors_density(-1), mu_nneighbors(2), ncomponents(1), sigma_threshold_factor(1), variances_transfer_function("softplus"), architecture_type("single_neural_network"),
     n_hidden_units(-1), batch_size(1), svd_threshold(1e-8)
 {
 }
 
-PLEARN_IMPLEMENT_OBJECT(NonLocalManifoldParzen, "to do",
-                        "I SAID TO DO!\n"
+PLEARN_IMPLEMENT_OBJECT(NonLocalManifoldParzen, "Non-Local version of Manifold Parzen Windows",
+                        "Manifold Parzen Windows density model, where the parameters of\n"
+                        "the gaussians in the mixture are predicted by a neural network."
                         );
 
 
 void NonLocalManifoldParzen::declareOptions(OptionList& ol)
 {
+
+//  declareOption(ol, "weight_embedding", &NonLocalManifoldParzen::weight_embedding, OptionBase::buildoption, 
+//                "Embedding penalty weight\n");
 
   declareOption(ol, "weight_decay", &NonLocalManifoldParzen::weight_decay, OptionBase::buildoption, 
                 "Global weight decay for all layers\n");
@@ -117,9 +128,9 @@ void NonLocalManifoldParzen::declareOptions(OptionList& ol)
                 "  - \"L1_square\": square of the L1 norm,\n"
                 "  - \"L2_square\" (default): square of the L2 norm.\n");
 
-  declareOption(ol, "omit_last", &NonLocalManifoldParzen::omit_last, OptionBase::buildoption,
-		"Number of training examples at the end of trainin set to ignore in the training.\n"
-		);
+//  declareOption(ol, "omit_last", &NonLocalManifoldParzen::omit_last, OptionBase::buildoption,
+//		"Number of training examples at the end of trainin set to ignore in the training.\n"
+//		);
 
   declareOption(ol, "learn_mu", &NonLocalManifoldParzen::learn_mu, OptionBase::buildoption,
 		"Indication that mu should be learned.\n"
@@ -191,21 +202,21 @@ void NonLocalManifoldParzen::declareOptions(OptionList& ol)
 		"Number of gaussians.\n"
 		);
 
-  declareOption(ol, "Us", &NonLocalManifoldParzen::Us, OptionBase::learntoption,
-		"The U matrices for the reference set.\n"
-		);
+//  declareOption(ol, "Us", &NonLocalManifoldParzen::Us, OptionBase::learntoption,
+//		"The U matrices for the reference set.\n"
+//		);
 
-  declareOption(ol, "mus", &NonLocalManifoldParzen::mus, OptionBase::learntoption,
-		"The mu vectors for the reference set.\n"
-                );
+//  declareOption(ol, "mus", &NonLocalManifoldParzen::mus, OptionBase::learntoption,
+//		"The mu vectors for the reference set.\n"
+//                );
 
-  declareOption(ol, "sms", &NonLocalManifoldParzen::sms, OptionBase::learntoption,
-		"The sm values for the reference set.\n"
-                );
+//  declareOption(ol, "sms", &NonLocalManifoldParzen::sms, OptionBase::learntoption,
+//		"The sm values for the reference set.\n"
+//                );
   
-  declareOption(ol, "sns", &NonLocalManifoldParzen::sns, OptionBase::learntoption,
-		"The sn values for the reference set.\n"
-                );
+//  declareOption(ol, "sns", &NonLocalManifoldParzen::sns, OptionBase::learntoption,
+//		"The sn values for the reference set.\n"
+//                );
 
   declareOption(ol, "sigma_min", &NonLocalManifoldParzen::sigma_min, OptionBase::buildoption,
 		"The minimum value for sigma noise.\n"
@@ -215,21 +226,29 @@ void NonLocalManifoldParzen::declareOptions(OptionList& ol)
 		"Initial minimum value for sigma noise.\n"
                 );
 
-  declareOption(ol, "noise", &NonLocalManifoldParzen::noise, OptionBase::buildoption,
-		"Noise parameter for the training data. For uniform noise, this gives the half the length \n" "of the uniform window (centered around the origin), and for gaussian noise, this gives the variance of the noise in all directions.\n"
+  declareOption(ol, "rw_n_step", &NonLocalManifoldParzen::rw_n_step, OptionBase::buildoption,
+		"Number of steps in the random walk (for compute output).\n"
                 );
 
-  declareOption(ol, "noise_type", &NonLocalManifoldParzen::noise_type, OptionBase::buildoption,
-		"Type of the noise (\"uniform\" or \"gaussian\").\n"
+  declareOption(ol, "rw_size_step", &NonLocalManifoldParzen::rw_size_step, OptionBase::buildoption,
+		"Size of the steps in the random walk (for compute output).\n"
                 );
+
+//  declareOption(ol, "noise", &NonLocalManifoldParzen::noise, OptionBase::buildoption,
+//		"Noise parameter for the training data. For uniform noise, this gives the half the length \n" "of the uniform window (centered around the origin), and for gaussian noise, this gives the variance of the noise in all directions.\n"
+//                );
+
+//  declareOption(ol, "noise_type", &NonLocalManifoldParzen::noise_type, OptionBase::buildoption,
+//		"Type of the noise (\"uniform\" or \"gaussian\").\n"
+//                );
   
-  declareOption(ol, "noise_grad_factor", &NonLocalManifoldParzen::noise_grad_factor, OptionBase::buildoption,
-		"Gradient factor to apply to the noise signal error.\n"
-                );
+//  declareOption(ol, "noise_grad_factor", &NonLocalManifoldParzen::noise_grad_factor, OptionBase::buildoption,
+//		"Gradient factor to apply to the noise signal error.\n"
+//                );
   
-  declareOption(ol, "magnified_version", &NonLocalManifoldParzen::magnified_version, OptionBase::buildoption,
-		"Indication that, when computing the log density, the magnified estimation should be used.\n"
-                );
+//  declareOption(ol, "magnified_version", &NonLocalManifoldParzen::magnified_version, OptionBase::buildoption,
+//		"Indication that, when computing the log density, the magnified estimation should be used.\n"
+//                );
 
   declareOption(ol, "reference_set", &NonLocalManifoldParzen::reference_set, OptionBase::learntoption,
 		"Reference points for density computation.\n"
@@ -344,6 +363,7 @@ void NonLocalManifoldParzen::build_()
         sn = threshold_bprop(sn,sigma_threshold_factor);
       }
 
+      /*
       if(noise > 0)
       {
         if(noise_type == "uniform")
@@ -391,16 +411,17 @@ void NonLocalManifoldParzen::build_()
       }
       else
       {
+      
         noise_var = new SourceVariable(n,1);
         noise_var->setName("no noise");
         for(int i=0; i<n; i++)
           noise_var->value[i] = 0;
       }
-
+      */
 
       // Path for noisy mu
-      Var a_noisy = tanh(c + product(V,x+noise_var));
-      mu_noisy = no_bprop(product(muV,a_noisy),noise_grad_factor); 
+      //Var a_noisy = tanh(c + product(V,x+noise_var));
+      //mu_noisy = no_bprop(product(muV,a_noisy),noise_grad_factor); 
 
 
       tangent_plane->setName("tangent_plane ");
@@ -412,8 +433,6 @@ void NonLocalManifoldParzen::build_()
       x->setName("x ");
 
       predictor = Func(x, params , tangent_plane & mu & sn );
-
-      output_f_all = Func(x,tangent_plane & mu & sn);
     }
 
     if (parameters.size()>0 && parameters.nelems() == predictor->parameters.nelems())
@@ -451,17 +470,17 @@ void NonLocalManifoldParzen::build_()
 
     // compute - sum_{neighbors of x} log ( P(neighbor|x) ) according to semi-spherical model
     Var nll;
-    if(noise <= 0)
-      nll = nll_general_gaussian(tangent_plane, mu, sn, tangent_targets, log_L, mu_nneighbors,0,0); // + log_n_examples;
-    else
-      nll = nll_general_gaussian(tangent_plane, mu, sn, tangent_targets, log_L, mu_nneighbors,noise_var,mu_noisy); // + log_n_examples;
+    //if(noise <= 0)
+    nll = nll_general_gaussian(tangent_plane, mu, sn, tangent_targets, log_L, mu_nneighbors,0,0); // + log_n_examples;
+    //else
+    //nll = nll_general_gaussian(tangent_plane, mu, sn, tangent_targets, log_L, mu_nneighbors,noise_var,mu_noisy); // + log_n_examples;
 
     Var knn = new SourceVariable(1,1);
     knn->setName("knn");
     knn->value[0] = nneighbors;
     sum_nll = new ColumnSumVariable(nll) / knn;
-
-    if(architecture_type == "embedding_neural_nework")
+    /*
+    if(architecture_type == "embedding_neural_network")
     {
       // Notes: - seulement prendre le plus proche voisin d'un voisin random
       //        - il va peut-être falloir utiliser des fonctions de distances différentes
@@ -472,15 +491,15 @@ void NonLocalManifoldParzen::build_()
       //        - question: est-ce que je devrais faire une bprop partout, juste sur embedding
       //          juste sur neighbor et random, ... ?
       
-      Var nearest_emb = product(W, tanh(c + product(V,rowOf(reference_set,neighbor_indexes))));
+      //Var nearest_emb = product(W, tanh(c + product(V,rowOf(reference_set,neighbor_indexes))));
       Var random_emb = product(W, tanh(c + product(V,rowOf(reference_set,random_index))));
       
-      Var nearest_emb_diff = nearest_emb - embedding;
-      Var random_emb_diff = random_emb - embedding;
-
-      sum_nll += sum(square(nearest_emb_diff)) - sum(square(random_emb_diff));
+      //Var nearest_emb_diff = nearest_emb - embedding;
+      //Var random_emb_diff = random_emb - embedding;
+      //sum_nll += weight_embedding * (sum(square(nearest_emb_diff)) - sum(square(random_emb_diff)));
+      sum_nll += weight_embedding * diagonal_gaussian(random_emb,embedding,no_bprop(rowPowNorm(tangent_plane,2)));
     }
-
+    */
     if(weight_decay > 0 )
     {
       if(penalty_type == "L1_square") sum_nll += (square(sumabs(W))+ square(sumabs(V)) + square(sumabs(muV)) + square(sumabs(snV)))*weight_decay;
@@ -488,14 +507,15 @@ void NonLocalManifoldParzen::build_()
       else if(penalty_type == "L2_square") sum_nll += (sumsquare(W)+ sumsquare(V) + sumsquare(muV) + sumsquare(snV))*weight_decay;
       else PLERROR("In NonLocalManifoldParzen::build_(): penalty_type %s not recognized", penalty_type.c_str());
     }
-
-    if(architecture_type == "embedding_neural_nework")
+    /*
+    if(architecture_type == "embedding_neural_network")
     {
       Var random_diff = Var(n,1);
       cost_of_one_example = Func(x & tangent_targets & target_index & neighbor_indexes & random_diff & random_index, predictor->parameters, sum_nll);
     }
     else
-      cost_of_one_example = Func(x & tangent_targets & target_index & neighbor_indexes, predictor->parameters, sum_nll);
+    */
+    cost_of_one_example = Func(x & tangent_targets & target_index & neighbor_indexes, predictor->parameters, sum_nll);
 
     if(nneighbors_density >= L || nneighbors_density < 0) nneighbors_density = L;
 
@@ -506,21 +526,23 @@ void NonLocalManifoldParzen::build_()
     z.resize(n);
     x_minus_neighbor.resize(n);
     neighbor_row.resize(n);
-
-    Us.resize(L);
-    mus.resize(L, n);
-    sms.resize(L,ncomponents);
-    sns.resize(L);
-    
-    // Kernel methods
+    // log_density and Kernel methods
+    U_temp.resize(ncomponents,n);
     mu_temp.resize(n);
-    diff.resize(n);
     sm_temp.resize(ncomponents);
     sn_temp.resize(1);
+    diff.resize(n);
+
+    //Us.resize(L);
+    //mus.resize(L, n);
+    //sms.resize(L,ncomponents);
+    //sns.resize(L);
+    
   }
 
 }
 
+/*
 void NonLocalManifoldParzen::update_reference_set_parameters()
 {
   // Compute Us, mus, sms, sns
@@ -545,6 +567,7 @@ void NonLocalManifoldParzen::update_reference_set_parameters()
   }
 
 }
+*/
 
 void NonLocalManifoldParzen::knn(const VMat& vm, const Vec& x, const int& k, TVec<int>& neighbors, bool sortk) const
 {
@@ -614,10 +637,10 @@ void NonLocalManifoldParzen::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   varDeepCopyField(init_sig, copies);
   varDeepCopyField(embedding, copies);
 
-  deepCopyField(Us, copies);
-  deepCopyField(mus, copies);
-  deepCopyField(sms, copies);
-  deepCopyField(sns, copies);
+//  deepCopyField(Us, copies);
+//  deepCopyField(mus, copies);
+//  deepCopyField(sms, copies);
+//  deepCopyField(sns, copies);
   deepCopyField(Ut_svd, copies);
   deepCopyField(V_svd, copies);
   deepCopyField(S_svd, copies);
@@ -627,7 +650,6 @@ void NonLocalManifoldParzen::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   varDeepCopyField(hidden_layer, copies);
   deepCopyField(optimizer, copies);
   deepCopyField(predictor, copies);
-  deepCopyField(output_f_all, copies);
   deepCopyField(output_embedding, copies);
 
   // TODO : verify WTF with DistanceKernel
@@ -650,6 +672,10 @@ void NonLocalManifoldParzen::forget()
     
 void NonLocalManifoldParzen::train()
 {
+  
+  // Update sigma_min, in case it was changed,
+  // e.g. using an HyperLearner
+  min_sig->value[0] = sigma_min;
 
   // Set train_stats if not already done.
   if (!train_stats)
@@ -659,19 +685,21 @@ void NonLocalManifoldParzen::train()
   VMat targets_vmat;
   if (!cost_of_one_example)
     PLERROR("NonLocalManifoldParzen::train: build has not been run after setTrainingSet!");
-
+  /*
   if(stage==0)
   {
     train_set = new SubVMatrix(train_set,0,0,train_set.length()-omit_last,train_set.width());
   }
-
-  if(architecture_type == "embedding_neural_nework")
-    targets_vmat = hconcat(local_neighbors_differences(train_set, nneighbors, false, true),random_neighbors_differences(train_set,1,true));
-  else
-    targets_vmat = local_neighbors_differences(train_set, nneighbors, false, true);
+  */
+  /*
+    if(architecture_type == "embedding_neural_network")
+    targets_vmat = hconcat(local_neighbors_differences(train_set, nneighbors, false, true),random_neighbors_differences(train_set,1,false,true));
+    else*/
+  
+  targets_vmat = local_neighbors_differences(train_set, nneighbors, false, true);
 
   train_set_with_targets = hconcat(train_set, targets_vmat);
-  train_set_with_targets->defineSizes(inputsize()+ inputsize()*nneighbors+1+nneighbors + (architecture_type == "embedding_neural_nework" ? inputsize()+2:0),0);
+  train_set_with_targets->defineSizes(inputsize()+ inputsize()*nneighbors+1+nneighbors /*+ (architecture_type == "embedding_neural_network" ? inputsize()+1:0)*/,0);
   int nsamples = batch_size>0 ? batch_size : train_set->length();
 
   Var totalcost = meanOf(train_set_with_targets, cost_of_one_example, nsamples);
@@ -714,7 +742,7 @@ void NonLocalManifoldParzen::train()
   if(pb)
     delete pb;
   
-  update_reference_set_parameters();
+//  update_reference_set_parameters();
 }
 
 //////////////////////
@@ -739,9 +767,9 @@ void NonLocalManifoldParzen::initializeParams()
     fill_random_uniform(muV->matValue, -delta, delta);
     //min_sig->value[0] = sigma_init;
     //min_d->value.fill(diff_init);
-    if(variances_transfer_function == "softplus") { min_sig->value[0] = log(exp(sigma_init)-1); }
-    else if(variances_transfer_function == "square") { min_sig->value[0] = sqrt(sigma_init);}
-    else if(variances_transfer_function == "exp") { min_sig->value[0] = log(sigma_init); }
+    if(variances_transfer_function == "softplus") { init_sig->value[0] = log(exp(sigma_init)-1); }
+    else if(variances_transfer_function == "square") { init_sig->value[0] = sqrt(sigma_init);}
+    else if(variances_transfer_function == "exp") { init_sig->value[0] = log(sigma_init); }
   }
   else if (architecture_type=="single_neural_network")
   {
@@ -780,6 +808,12 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
   t_row << x;
   real mahal = 0;
   real norm_term = 0;
+
+  // Update sigma_min, in case it was changed,
+  // e.g. using an HyperLearner
+  min_sig->value[0] = sigma_min;
+  
+/*
   if(magnified_version)
   {
     predictor->fprop(x, F.toVec() & mu_temp & sn_temp);
@@ -803,7 +837,7 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
     ret = mahal + norm_term + log((real)nneighbors) - log((real)L);
   }
   else
-  {
+  {*/
     if(nneighbors_density != L)
     {
       // Fetching nearest neighbors for density estimation.
@@ -812,15 +846,33 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
       for(int neighbor=0; neighbor<t_nn.length(); neighbor++)
       {
         reference_set->getRow(t_nn[neighbor],neighbor_row);
-        substract(t_row,neighbor_row,x_minus_neighbor);
-        substract(x_minus_neighbor,mus(t_nn[neighbor]),z);
+        
+        predictor->fprop(neighbor_row, F.toVec() & mu_temp & sn_temp);        
+        // N.B. this is the SVD of F'
+        lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
+        for (int k=0;k<ncomponents;k++)
+        {
+          sm_temp[k] = mypow(S_svd[k],2);
+          U_temp(k) << Ut_svd(k);
+        }    
 
-        mahal = -0.5*pownorm(z)/sns[t_nn[neighbor]];      
-        norm_term = - n/2.0 * Log2Pi - log_L - 0.5*(n-ncomponents)*log(sns[t_nn[neighbor]]);
+        substract(t_row,neighbor_row,x_minus_neighbor);
+        //substract(x_minus_neighbor,mus(t_nn[neighbor]),z);
+        substract(x_minus_neighbor,mu_temp,z);
+
+        //mahal = -0.5*pownorm(z)/sns[t_nn[neighbor]];      
+        //norm_term = - n/2.0 * Log2Pi - log_L - 0.5*(n-ncomponents)*log(sns[t_nn[neighbor]]);
+        
+        mahal = -0.5*pownorm(z)/sn_temp[0];      
+        norm_term = - n/2.0 * Log2Pi - log_L - 0.5*(n-ncomponents)*log(sn_temp[0]);
+        
+
         for(int k=0; k<ncomponents; k++)
         {       
-          mahal -= square(dot(z,Us[t_nn[neighbor]](k)))*(0.5/(sms(t_nn[neighbor],k)+sns[t_nn[neighbor]]) - 0.5/sns[t_nn[neighbor]]); // Pourrait être accéléré!
-          norm_term -= 0.5*log(sms(t_nn[neighbor],k)+sns[t_nn[neighbor]]);
+          //mahal -= square(dot(z,Us[t_nn[neighbor]](k)))*(0.5/(sms(t_nn[neighbor],k)+sns[t_nn[neighbor]]) - 0.5/sns[t_nn[neighbor]]); // Pourrait être accéléré!
+          //norm_term -= 0.5*log(sms(t_nn[neighbor],k)+sns[t_nn[neighbor]]);
+          mahal -= square(dot(z,U_temp(k)))*(0.5/(sm_temp[k]+sn_temp[0]) - 0.5/sn_temp[0]); 
+          norm_term -= 0.5*log(sm_temp[k]+sn_temp[0]);
         }
       
         log_gauss[neighbor] = mahal + norm_term;
@@ -833,38 +885,56 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
       for(int t=0; t<L;t++)
       {
         reference_set->getRow(t,neighbor_row);
-        substract(t_row,neighbor_row,x_minus_neighbor);
-        substract(x_minus_neighbor,mus(t),z);
 
-        mahal = -0.5*pownorm(z)/sns[t];      
-        norm_term = - n/2.0 * Log2Pi - log_L - 0.5*(n-ncomponents)*log(sns[t]);
+        predictor->fprop(neighbor_row, F.toVec() & mu_temp & sn_temp);        
+        // N.B. this is the SVD of F'
+        lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
+        for (int k=0;k<ncomponents;k++)
+        {
+          sm_temp[k] = mypow(S_svd[k],2);
+          U_temp(k) << Ut_svd(k);
+        }    
+
+        substract(t_row,neighbor_row,x_minus_neighbor);
+        //substract(x_minus_neighbor,mus(t),z);
+        substract(x_minus_neighbor,mu_temp,z);
+
+        //mahal = -0.5*pownorm(z)/sns[t];      
+        //norm_term = - n/2.0 * Log2Pi - log_L - 0.5*(n-ncomponents)*log(sns[t]);
+        
+        mahal = -0.5*pownorm(z)/sn_temp[0];      
+        norm_term = - n/2.0 * Log2Pi - log_L - 0.5*(n-ncomponents)*log(sn_temp[0]);
+        
         for(int k=0; k<ncomponents; k++)
         {
-          mahal -= square(dot(z,Us[t](k)))*(0.5/(sms(t,k)+sns[t]) - 0.5/sns[t]); // Pourrait être accéléré!
-          norm_term -= 0.5*log(sms(t,k)+sns[t]);
+          //mahal -= square(dot(z,Us[t](k)))*(0.5/(sms(t,k)+sns[t]) - 0.5/sns[t]); // Pourrait être accéléré!
+          //norm_term -= 0.5*log(sms(t,k)+sns[t]);
+
+          mahal -= square(dot(z,U_temp(k)))*(0.5/(sm_temp[k]+sn_temp[0]) - 0.5/sn_temp[0]); 
+          norm_term -= 0.5*log(sm_temp[k]+sn_temp[0]);
         }
 
         log_gauss[t] = mahal + norm_term;
       }
     }
     ret = logadd(log_gauss);
-  }
+    //}
 
   return ret;
 }
 
-/////////////////////
-// getEigenvectors //
-/////////////////////
+/*
 Mat NonLocalManifoldParzen::getEigenvectors(int j) const {
+{
   return Us[j];
 }
-
+  
 Vec NonLocalManifoldParzen::getTrainPoint(int j) const {
   Vec ret(reference_set->width());
   reference_set->getRow(j,ret);
   return ret;
 }
+*/
 
 ///////////////////
 // computeOutput //
@@ -879,19 +949,20 @@ void NonLocalManifoldParzen::computeOutput(const Vec& input, Vec& output) const
     break;
   case 'r':
   {
-    int nstep = 100000;
-    real step = 0.001;
-    int save_every = 100;
-    string fsave = "";
-    VMat temp;
+    //int rw_n_step = 100000;
+    //real step = 0.001;
+    //int save_every = 100;
+    //string fsave = "";
+    //VMat temp;
     t_row << input;
-    for(int s=0; s<nstep;s++)
+    for(int s=0; s<rw_n_step;s++)
     {
       predictor->fprop(t_row, F.toVec() & mu_temp & sn_temp);
     
       // N.B. this is the SVD of F'
       lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
       F(0) << Ut_svd(0);
+      /*
       if(s % save_every == 0)
       {
         fsave = "nlmp_walk_" + tostring(s) + ".amat";
@@ -899,9 +970,16 @@ void NonLocalManifoldParzen::computeOutput(const Vec& input, Vec& output) const
         temp->saveAMAT(fsave,false,true);
         //PLearn::save(fsave,t_row);
       }
-      t_row += step*F(0);
+      */
+      t_row += rw_size_step*F(0);
     }
     output << t_row;
+    break;
+  }
+  case 't':
+  {
+    predictor->fprop(input, F.toVec() & mu_temp & sn_temp);
+    output << F.toVec();
     break;
   }
   default:
@@ -921,6 +999,8 @@ int NonLocalManifoldParzen::outputsize() const
     break;
   case 'r':
     return n;
+  case 't':
+    return ncomponents*n;
   default:
     return inherited::outputsize();
   }
@@ -929,6 +1009,10 @@ int NonLocalManifoldParzen::outputsize() const
 real NonLocalManifoldParzen::evaluate(Vec x1,Vec x2,real scale)
 {
   real ret;
+
+  // Update sigma_min, in case it was changed,
+  // e.g. using an HyperLearner
+  min_sig->value[0] = sigma_min;
 
   predictor->fprop(x2, F.toVec() & mu_temp & sn_temp);
     
