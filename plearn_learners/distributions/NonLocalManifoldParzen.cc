@@ -52,7 +52,7 @@
 #include <plearn/var/VarRowVariable.h>
 #include <plearn/var/SourceVariable.h>
 #include <plearn/var/Var_operators.h>
-#include <plearn/var/DiagonalGaussianVariable.h>
+//#include <plearn/var/DiagonalGaussianVariable.h>
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/math/random.h>
 #include <plearn/var/SumOfVariable.h>
