@@ -443,18 +443,42 @@ T harmonic_mean(const TVec<T>& vec, bool ignore_missing=false)
   return T(double(n)/res);
 }
 
+// This one won't really work if you have missing values in the vector
+// template<class T>
+// T avgdev(const TVec<T>& vec, T meanval)
+// {
+//   #ifdef BOUNDCHECK
+//   if(vec.length()==0)
+//     PLERROR("IN T avgdev(const TVec<T>& vec, T meanval) vec has zero length");
+//   #endif
+//   double res = 0.0;
+//   T* v = vec.data();
+//   for(int i=0; i<vec.length(); i++)
+//       res += fabs(v[i]-meanval);
+//   return res/vec.length();
+// }
+
+// Does avgdev with/without missing values. ignore_missing=true ignores the missing values
+// and computes the stddev without'em
 template<class T>
-T avgdev(const TVec<T>& vec, T meanval)
+T avgdev(const TVec<T>& vec, T meanval, bool ignore_missing = false)
 {
   #ifdef BOUNDCHECK
   if(vec.length()==0)
     PLERROR("IN T avgdev(const TVec<T>& vec, T meanval) vec has zero length");
   #endif
   double res = 0.0;
+  int n = 0;
   T* v = vec.data();
   for(int i=0; i<vec.length(); i++)
-      res += fabs(v[i]-meanval);
-  return res/vec.length();
+	if (!is_missing(v[i]))
+	{
+		res += fabs(v[i]-meanval);
+		n++;
+	}
+	else if (!ignore_missing) return MISSING_VALUE;
+	if (n == 0) return MISSING_VALUE;
+  	return T((double)res/n);
 }
 
 template<class T>
