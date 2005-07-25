@@ -42,6 +42,7 @@
 
 
 #include "NonLocalManifoldParzen.h"
+#include <plearn/display/DisplayUtils.h>
 #include <plearn/vmat/LocalNeighborsDifferencesVMatrix.h>
 //#include <plearn/vmat/RandomNeighborsDifferencesVMatrix.h>
 #include <plearn/var/ProductVariable.h>
@@ -619,48 +620,52 @@ void NonLocalManifoldParzen::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {  inherited::makeDeepCopyFromShallowCopy(copies);
 
   deepCopyField(cost_of_one_example, copies);
-  deepCopyField(reference_set,copies);
   varDeepCopyField(x, copies);
   varDeepCopyField(b, copies);
   varDeepCopyField(W, copies);
   varDeepCopyField(c, copies);
   varDeepCopyField(V, copies);
-  varDeepCopyField(tangent_targets, copies);
   varDeepCopyField(muV, copies);
   varDeepCopyField(snV, copies);
   varDeepCopyField(snb, copies);
+  varDeepCopyField(tangent_targets, copies);
+  varDeepCopyField(tangent_plane, copies);
   varDeepCopyField(mu, copies);
   varDeepCopyField(sn, copies);
-  varDeepCopyField(tangent_plane, copies);
   varDeepCopyField(sum_nll, copies);
   varDeepCopyField(min_sig, copies);
   varDeepCopyField(init_sig, copies);
   varDeepCopyField(embedding, copies);
-
-//  deepCopyField(Us, copies);
-//  deepCopyField(mus, copies);
-//  deepCopyField(sms, copies);
-//  deepCopyField(sns, copies);
-  deepCopyField(Ut_svd, copies);
-  deepCopyField(V_svd, copies);
-  deepCopyField(S_svd, copies);
-  deepCopyField(F, copies);
-
-  deepCopyField(parameters, copies);
-  varDeepCopyField(hidden_layer, copies);
-  deepCopyField(optimizer, copies);
-  deepCopyField(predictor, copies);
   deepCopyField(output_embedding, copies);
+  deepCopyField(predictor, copies);
 
-  // TODO : verify WTF with DistanceKernel
+  deepCopyField(U_temp,copies);
+  deepCopyField(F, copies);
+  deepCopyField(distances,copies);
+  deepCopyField(mu_temp,copies);
+  deepCopyField(sm_temp,copies);
+  deepCopyField(sn_temp,copies);
+  deepCopyField(diff,copies);
   deepCopyField(z,copies);
   deepCopyField(x_minus_neighbor,copies);
   deepCopyField(t_row,copies);
   deepCopyField(neighbor_row,copies);
   deepCopyField(log_gauss,copies);
-  deepCopyField(t_nn,copies);
   deepCopyField(t_dist,copies);
-  deepCopyField(distances,copies);
+  deepCopyField(t_nn,copies);
+  deepCopyField(Ut_svd, copies);
+  deepCopyField(V_svd, copies);
+  deepCopyField(S_svd, copies);
+
+  deepCopyField(parameters, copies);
+
+  deepCopyField(reference_set,copies);
+  varDeepCopyField(hidden_layer, copies);
+  deepCopyField(optimizer, copies);
+
+
+
+  // TODO : verify WTF with DistanceKernel
 }
 
 
@@ -885,9 +890,9 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
       for(int t=0; t<L;t++)
       {
         reference_set->getRow(t,neighbor_row);
-
         predictor->fprop(neighbor_row, F.toVec() & mu_temp & sn_temp);        
-        // N.B. this is the SVD of F'
+ 
+       // N.B. this is the SVD of F'
         lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
         for (int k=0;k<ncomponents;k++)
         {
