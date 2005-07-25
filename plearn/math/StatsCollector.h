@@ -155,6 +155,7 @@ public:
   real n() const { return nmissing_ + nnonmissing_; } //!< number of samples seen with update (length of VMat for ex.)
   real nmissing() const               { return nmissing_; }
   real nnonmissing() const            { return nnonmissing_; }
+  real sumsquarew() const             { return sumsquarew_; }
   real sum() const                    { return real(sum_+nnonmissing_*first_); }
   //real sumsquare() const { return real(sumsquare_); }
   real sumsquare() const              { return real(sumsquare_+2*first_*sum()-first_*first_*nnonmissing_); }
