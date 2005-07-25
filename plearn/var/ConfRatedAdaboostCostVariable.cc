@@ -37,7 +37,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConfRatedAdaboostCostVariable.cc,v 1.1 2004/11/12 20:02:51 larocheh Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,7 +57,7 @@ PLEARN_IMPLEMENT_OBJECT(
 // ConfRatedAdaboostCostVariable //
 ////////////////////////////////////
 ConfRatedAdaboostCostVariable::ConfRatedAdaboostCostVariable(Variable* output, Variable* target, Variable* alpha)
-  : inherited(VarArray(output,target) & Var(alpha),1,1)
+  : inherited(VarArray(output,target) & Var(alpha),output->size(),1)
 {
     build_();
 }
@@ -72,13 +72,10 @@ ConfRatedAdaboostCostVariable::build()
 void
 ConfRatedAdaboostCostVariable::build_()
 {
-    // varrar[1] is target from constructor
-    if (varray[1] && varray[1]->size() != 1)
-        PLERROR("In ConfRatedAdaboostCostVariable: target represents a class (0,1) and must be a single integer");
-    // varray[0] is output from constructor
-    if (varray[0] && varray[0]->size() != 1)
-        PLERROR("In ConfRatedAdaboostCostVariable: output represents a class (0,1) and must be a single real");
-    // varray[2] is output from constructor
+
+    if (varray[1] && varray[0] && varray[1]->size() != varray[0]->size())
+        PLERROR("In ConfRatedAdaboostCostVariable: target and output should have same size");
+
     if (varray[2] && varray[2]->size() != 1)
         PLERROR("In ConfRatedAdaboostCostVariable: target must be a single real");
 }
@@ -92,15 +89,20 @@ ConfRatedAdaboostCostVariable::declareOptions(OptionList &ol)
 // recomputeSize //
 ///////////////////
 void ConfRatedAdaboostCostVariable::recomputeSize(int& l, int& w) const
-{ l=1, w=1; }
+{ l=varray[0]->size(), w=1; }
 
 ///////////
 // fprop //
 ///////////
 void ConfRatedAdaboostCostVariable::fprop()
 {
-  int signed_target = 2*int(varray[1]->valuedata[0])-1;  
-  valuedata[0] = exp(-1*varray[2]->valuedata[0]*signed_target*(2*varray[0]->valuedata[0]-1));
+  
+  int signed_target;
+  for(int i=0; i<length(); i++)
+  {
+    signed_target = 2*int(varray[1]->valuedata[i])-1;  
+    valuedata[i] = exp(-1*varray[2]->valuedata[0]*signed_target*(2*varray[0]->valuedata[i]-1));
+  }
 }
 
 ///////////
@@ -108,8 +110,11 @@ void ConfRatedAdaboostCostVariable::fprop()
 ///////////
 void ConfRatedAdaboostCostVariable::bprop()
 {
-  varray[0]->gradientdata[0] = -2*gradientdata[0]*valuedata[0]*varray[2]->valuedata[0]*(2*int(varray[1]->valuedata[0])-1);  
-  varray[2]->gradientdata[0] = -gradientdata[0]*valuedata[0]*(2*varray[0]->valuedata[0]-1)*(2*int(varray[1]->valuedata[0])-1);  
+  for(int i=0; i<length(); i++)
+  {
+    varray[0]->gradientdata[i] = -2*gradientdata[i]*valuedata[i]*varray[2]->valuedata[0]*(2*int(varray[1]->valuedata[i])-1);  
+    varray[2]->gradientdata[0] = -gradientdata[i]*valuedata[i]*(2*varray[0]->valuedata[i]-1)*(2*int(varray[1]->valuedata[i])-1);  
+  }
 }
 
 void ConfRatedAdaboostCostVariable::symbolicBprop()

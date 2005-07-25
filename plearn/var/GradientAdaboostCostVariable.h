@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GradientAdaboostCostVariable.h,v 1.1 2004/11/12 20:02:52 larocheh Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,11 +48,12 @@
 namespace PLearn {
 using namespace std;
 
-  // cost = -1*signed_target[i]*signe_output[i]
-  // where signed_target is inferred from target as follows.
+  // cost[i] = -1*signed_target[i]*signe_output[i]
+  // where cost is a column vector and
+  // where signed_target and signed_output is inferred from target as follows.
   // target must be in (0,1).
-  // signed_target[0] = target[0]*2-1 and
-  // signed_output[0] = output*[0]2-1
+  // signed_target[i] = target[i]*2-1 and
+  // signed_output[i] = output*[i]2-1
 class GradientAdaboostCostVariable: public BinaryVariable
 {
   typedef BinaryVariable inherited;

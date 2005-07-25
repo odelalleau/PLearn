@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConfRatedAdaboostCostVariable.h,v 1.1 2004/11/12 20:02:52 larocheh Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,11 +48,12 @@
 namespace PLearn {
 using namespace std;
 
-  // cost = exp(- alpha*signed_target*signed_output[i])
-  // where signed_target is inferred from target as follows.
+  // cost[i] = exp(- alpha*signed_target[i]*signed_output[i])
+  // where cost is a column vector and
+  // where signed_target and signed_output is inferred from target as follows.
   // target must be in (0,1).
-  // signed_target = target*2-1 and 
-  // signed_output = 2*output-1
+  // signed_target[i] = target[i]*2-1 and 
+  // signed_output[i] = 2*output[i]-1
 class ConfRatedAdaboostCostVariable: public NaryVariable
 {
   typedef NaryVariable inherited;

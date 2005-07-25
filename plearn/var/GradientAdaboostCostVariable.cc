@@ -37,7 +37,7 @@
 
 
 /* *******************************************************      
-   * $Id: GradientAdaboostCostVariable.cc,v 1.2 2004/12/07 22:41:06 chapados Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,7 +58,7 @@ PLEARN_IMPLEMENT_OBJECT(
 // GradientAdaboostCostVariable //
 ////////////////////////////////////
 GradientAdaboostCostVariable::GradientAdaboostCostVariable(Variable* output, Variable* target)
-  : inherited(output,target,1,1)
+  : inherited(output,target,output->size(),1)
 {
     build_();
 }
@@ -73,13 +73,8 @@ GradientAdaboostCostVariable::build()
 void
 GradientAdaboostCostVariable::build_()
 {
-    // input2 is target from constructor
-    if (input2 && input2->size() != 1)
-        PLERROR("In GradientAdaboostCostVariable: target represents a class (0,1) and must be a single integer");
-    // input1 is output from constructor
-    if (input1 && input1->size() != 1)
-        PLERROR("In GradientAdaboostCostVariable: target represents a class (0,1) and must be a single real");
-
+    if (input2 && input2->size() != input1->size())
+        PLERROR("In GradientAdaboostCostVariable: target and output should have same size");
 }
 
 void
@@ -92,14 +87,15 @@ GradientAdaboostCostVariable::declareOptions(OptionList &ol)
 // recomputeSize //
 ///////////////////
 void GradientAdaboostCostVariable::recomputeSize(int& l, int& w) const
-{ l=1, w=1; }
+{ l=input1->size(), w=1; }
 
 ///////////
 // fprop //
 ///////////
 void GradientAdaboostCostVariable::fprop()
 {
-  valuedata[0] = -1*(2*input1->valuedata[0]-1)*(2*input2->valuedata[0]-1);
+  for(int i=0; i<length(); i++)
+    valuedata[i] = -1*(2*input1->valuedata[i]-1)*(2*input2->valuedata[i]-1);
 }
 
 ///////////
@@ -107,7 +103,8 @@ void GradientAdaboostCostVariable::fprop()
 ///////////
 void GradientAdaboostCostVariable::bprop()
 {
-  input1->gradient[0] = (*gradientdata)*-2*(2*input2->valuedata[0]-1);
+  for(int i=0; i<length(); i++)
+    input1->gradientdata[i] = (gradientdata[i])*-2*(2*input2->valuedata[i]-1);
 }
 
 } // end of namespace PLearn
