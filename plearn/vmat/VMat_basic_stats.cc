@@ -363,6 +363,8 @@ void computeInputMeanAndStddev(const VMat& d, Vec& meanvec, Vec& stddev) {
 void computeWeightedMeanAndCovar(const Vec& weights, const VMat& d, Vec& meanvec, Mat& covarmat)
 {
   VecStatsCollector sc;
+  sc.compute_covariance = true;
+  sc.build();
   int n = d->length();
   int w = d->width();
   Vec row(d->width());
