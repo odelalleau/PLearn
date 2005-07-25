@@ -463,22 +463,25 @@ T harmonic_mean(const TVec<T>& vec, bool ignore_missing=false)
 template<class T>
 T avgdev(const TVec<T>& vec, T meanval, bool ignore_missing = false)
 {
-  #ifdef BOUNDCHECK
+#ifdef BOUNDCHECK
   if(vec.length()==0)
     PLERROR("IN T avgdev(const TVec<T>& vec, T meanval) vec has zero length");
-  #endif
+#endif
   double res = 0.0;
   int n = 0;
   T* v = vec.data();
   for(int i=0; i<vec.length(); i++)
-	if (!is_missing(v[i]))
-	{
-		res += fabs(v[i]-meanval);
-		n++;
-	}
-	else if (!ignore_missing) return MISSING_VALUE;
-	if (n == 0) return MISSING_VALUE;
-  	return T((double)res/n);
+    if (!is_missing(v[i]))
+    {
+      res += fabs(v[i]-meanval);
+      n++;
+    }
+    else if (!ignore_missing)
+      return MISSING_VALUE;
+  if (n == 0)
+    return MISSING_VALUE;
+  else
+    return T(res/n);
 }
 
 template<class T>
