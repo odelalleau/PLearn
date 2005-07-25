@@ -33,10 +33,10 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: OverlappingAdaBoost.h,v 1.4 2005/06/15 15:53:06 larocheh Exp $
+   * $Id$
    ******************************************************* */
 
-// Authors: Yoshua Bengio
+// Authors: Hugo Larochelle
 
 /*! \file OverlappingAdaBoost.h */
 
@@ -56,19 +56,21 @@ public:
 protected:
   // local variables:
 
-  // average weighted error of each learner
+  //! average weighted error of each learner
   Vec learners_error;
-  // weighing scheme over examples
-  Vec example_weights;
+  //! weighing scheme over examples
+  Mat example_weights;
 
   // *********************
   // * protected options *
   // *********************
 
-  // saved options:
-  // (unnormalized) weight associated to each weak learner
-  Vec voting_weights;
-  real sum_voting_weights; // = sum(voting_weights);
+  //! saved options:
+  //! (unnormalized) weight associated to each weak learner
+  Vec voting_weights;  
+
+  //! = sum(voting_weights);
+  real sum_voting_weights; 
   real initial_sum_weights;
 
   //! Vector of weak learners learned from boosting
@@ -89,35 +91,38 @@ public:
   //! NOTE: this weak learner must support deepCopy().
   PP<PLearner> weak_learner_template;
 
-  // normally 0.5
+  //! normally 0.5
   real target_error;
 
-  // whether to give an expdir to the underlying weak learners
+  //! whether to give an expdir to the underlying weak learners
   bool provide_learner_expdir;
   
-  // threshold on output of weak learner to decide if class 0 or class 1
+  //! threshold on output of weak learner to decide if class 0 or class 1
   real output_threshold;
 
-  // whether to compute training error during training
+  //! whether to compute training error during training
   bool compute_training_error;
 
-  // use more refined training criterion when weak classifier is soft
+  //! use more refined training criterion when weak classifier is soft
   bool pseudo_loss_adaboost;
 
   // use confidence-rated adaboost
   bool conf_rated_adaboost;
 
-  // use resampling (vs weighting) to train the underlying classifier
+  //! use resampling (vs weighting) to train the underlying classifier
   bool weight_by_resampling;
 
-  // stop if weak learner does not seem to help
+  //! stop if weak learner does not seem to help
   bool early_stopping;
 
-  // save model after each stage into <expdir>/model.psave
+  //! save model after each stage into <expdir>/model.psave
   bool save_often;
 
-  // penalty coefficient for regularized boosting
+  //! penalty coefficient for regularized boosting
   real penalty_coefficient;
+
+  //! number of classes
+  int nclasses;
 
   // ****************
   // * Constructors *
