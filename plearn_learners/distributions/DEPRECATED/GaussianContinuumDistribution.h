@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuumDistribution.h,v 1.5 2005/05/12 13:50:13 larocheh Exp $
+   * $Id$
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
