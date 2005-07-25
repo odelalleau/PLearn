@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: RowOfVariable.cc,v 1.1 2005/06/17 20:43:32 larocheh Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,8 +52,8 @@ using namespace std;
 /** RowOfVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(RowOfVariable,
-                        "Variable that outputs the row at a certain index in a VMat",
-                        "The index is the first element of the input variable.");
+                        "Variable that outputs the rows at certain indexes in a VMat",
+                        "");
 
 RowOfVariable::RowOfVariable(VMat the_distr, Var the_index)
   : inherited(the_index,the_distr->width(),1), distr(the_distr)
@@ -84,8 +84,8 @@ RowOfVariable::declareOptions(OptionList &ol)
 void RowOfVariable::recomputeSize(int& l, int& w) const
 {
     if (input && distr) {
-      l = distr->width();
-      w = 1;
+      w = distr->width();
+      l = input->nelems();
     } else
       l = w = 0;
 }
@@ -100,12 +100,13 @@ void RowOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void RowOfVariable::fprop()
 {
-  distr->getRow((int)input->value[0],value);
+  for(int i=0; i<input->nelems(); i++)
+    distr->getRow((int)input->valuedata[i],matValue(i));
 }
 
 
 void RowOfVariable::bprop()
-{ fbprop(); }
+{ }
 
 
 void RowOfVariable::fbprop()
