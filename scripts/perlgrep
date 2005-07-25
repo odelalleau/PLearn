@@ -104,7 +104,7 @@ sub process_list(@)
                 
                 @flist = grep { -d $_ or /Makefile|makefile|
                                     \.c$|\.cc$|\.cpp$|\.CC$|\.h$|\.hpp$
-                                   |\.plearn$|\.pyplearn$|\.py$
+                                   |\.plearn$|\.pyplearn$|\.py$|\.pymat$
                                    |\.txt$|^readme|^Readme|^README/x } @flist;
                 process_list(@flist); 
             }
