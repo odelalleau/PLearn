@@ -84,18 +84,17 @@ void VecStatsCollector::declareOptions(OptionList& ol)
                 "Names of the fields of the vector");
 
   declareOption(ol, "compute_covariance", &VecStatsCollector::compute_covariance, OptionBase::buildoption,
-                "should we compute and keep X'.X ?  (default false)");
+                "Should we compute and keep the covariance X'X ?");
 
-  declareOption(ol, "epsilon", &VecStatsCollector::epsilon,
-                OptionBase::buildoption,
-                "Optional regularization to ADD to the variance vector "
-                "(returned by getVariance and getStdDev); default=0.0");
+  declareOption(ol, "epsilon", &VecStatsCollector::epsilon, OptionBase::buildoption,
+                "Optional regularization to *add* to the variance vector "
+                "(used *only* in getVariance, getCovariance and getStdDev).");
   
   declareOption(ol, "stats", &VecStatsCollector::stats, OptionBase::learntoption,
                 "the stats for each element");
 
   declareOption(ol, "cov", &VecStatsCollector::cov, OptionBase::learntoption,
-                "the uncentered covariance matrix (mean not subtracted): X'.X");
+                "The uncentered and unnormalized covariance matrix (mean not subtracted): X'X");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -143,6 +142,9 @@ int VecStatsCollector::getFieldNum(const string& fieldname_or_num) const
 }
 
 
+////////////
+// update //
+////////////
 void VecStatsCollector::update(const Vec& x, real weight)
 {
   int n = x.size();
@@ -163,22 +165,20 @@ void VecStatsCollector::update(const Vec& x, real weight)
     }
 
   if(stats.size()!=n)
-    PLERROR("In VecStatsCollector: problem, called update with vector of length %d, while size of stats (and most likeley previously seen vector) is %d", n, stats.size());
-
-  // this speeds things up a bit
-  //bool has_missing=false;
+    PLERROR("In VecStatsCollector::update -  Called update with vector of length "
+            "%d, while size of stats (and most likely previously seen vector) is "
+            "%d", n, stats.size());
 
   for(int k=0; k<n; k++)
-  {
     stats[k].update(x[k], weight);
-/*    if(is_missing(x[k]))
-      x[k]=0;//has_missing=true;*/
-  }
        
   if(compute_covariance)
     externalProductScaleAcc(cov, x, x, weight);
 }
 
+////////////////////////
+// remove_observation //
+////////////////////////
 void VecStatsCollector::remove_observation(const Vec& x, real weight)
 {
   assert( stats.size() > 0 );
@@ -193,9 +193,14 @@ void VecStatsCollector::remove_observation(const Vec& x, real weight)
   for(int k=0; k<n; k++)
     stats[k].remove_observation(x[k], weight);
   
-  // This removes the observation x contribution to the covariance matrix
-  if( compute_covariance )
-    externalProductScaleAcc(cov, x, x, -weight);  
+  // This removes the observation x contribution to the covariance matrix.
+  if( compute_covariance ) {
+    if (stats[0].nnonmissing() == 0)
+      // We removed the last observation.
+      cov.fill(0);
+    else
+      externalProductScaleAcc(cov, x, x, -weight);  
+  }
 }
 
 
@@ -241,7 +246,9 @@ void VecStatsCollector::finalize()
     stats[i].finalize();
 }
 
-//! returns the empirical mean (sample average) vec
+/////////////
+// getMean //
+/////////////
 void VecStatsCollector::getMean(Vec& res) const
 {
   int n = stats.size();
@@ -250,7 +257,9 @@ void VecStatsCollector::getMean(Vec& res) const
     res[k] = stats[k].mean();
 }
 
-//! returns the empirical variance vec
+/////////////////
+// getVariance //
+/////////////////
 Vec VecStatsCollector::getVariance() const
 {
   int n = stats.size();
@@ -260,7 +269,9 @@ Vec VecStatsCollector::getVariance() const
   return res;
 }
 
-//! returns the empirical standard deviation vec
+///////////////
+// getStdDev //
+///////////////
 Vec VecStatsCollector::getStdDev() const
 {
   int n = stats.size();
@@ -270,7 +281,9 @@ Vec VecStatsCollector::getStdDev() const
   return res;
 }
 
-//! returns the empirical standard deviation vec
+/////////////////
+// getStdError //
+/////////////////
 Vec VecStatsCollector::getStdError() const
 {
   int n = stats.size();
@@ -280,19 +293,36 @@ Vec VecStatsCollector::getStdError() const
   return res;
 }
 
-//! returns centered covariance matrix (mean subtracted)
+///////////////////
+// getCovariance //
+///////////////////
+void VecStatsCollector::getCovariance(Mat& covar) const {
+  static Vec meanvec;
+  assert( compute_covariance && cov.length() == cov.width() );
+  int d = cov.length();
+  real sum_weights = stats[0].nnonmissing();
+  real sum_square_weights = stats[0].sumsquarew();
+  real factor = 1 / (sum_weights - sum_square_weights / sum_weights);
+  getMean(meanvec);
+  covar.resize(d,d);
+  for(int i=0; i<d; i++)
+    for(int j=0; j<d; j++) {
+      covar(i,j) = (cov(i,j) - meanvec[i] * meanvec[j] * sum_weights) * factor;
+      if (j == i)
+        covar(i,j) += epsilon;
+    }
+}
+
 Mat VecStatsCollector::getCovariance() const
 {
-  double invN = 1./stats[0].n();
-  Vec meanvec = getMean();
-  Mat covariance(cov.length(), cov.width());
-  for(int i=0; i<cov.length(); i++)
-    for(int j=0; j<cov.width(); j++)
-      covariance(i, j) = invN*cov(i, j) - meanvec[i]*meanvec[j];
+  Mat covariance;
+  getCovariance(covariance);
   return covariance;
 }
 
-//! returns correlation matrix
+////////////////////
+// getCorrelation //
+////////////////////
 Mat VecStatsCollector::getCorrelation() const
 {  
   Mat norm(cov.width(),cov.width());

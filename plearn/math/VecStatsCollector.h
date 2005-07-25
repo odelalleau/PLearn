@@ -88,8 +88,7 @@ public:
   //! Should we compute and keep X'.X ?  (default false)
   bool compute_covariance;
 
-  //! Optional regularization to ADD to the variance vector
-  //! (returned by getVariance and getStdDev); default=0.0
+  //! See .cc for help.
   double epsilon;
 
   // ******************
@@ -99,9 +98,8 @@ public:
   //! the stats for each element
   TVec<StatsCollector> stats;
 
-  //! the uncentered covariance matrix (mean not subtracted: X'.X)
+  //! See .cc for help.
   Mat cov; 
-
   
   // ****************
   // * Constructors *
@@ -197,11 +195,15 @@ public:
   //! returns the empirical standard deviation vec
   Vec getStdError() const;
 
-  //! returns uncentered covariance matrix (mean not subtracted X'.X)
+  //! Return X'X.
   const Mat& getXtX() const
   { return cov; }
 
-  //! returns centered covariance matrix (mean subtracted)
+  //! Covariance matrix computation.
+  //! Note that the covariance is computed in order to give an unbiased
+  //! estimator (under the i.i.d. assumption), so that the normalization
+  //! coefficient is not exactly the sum of weights.
+  void getCovariance(Mat& covar) const;
   Mat getCovariance() const;
   
   //! returns correlation matrix
