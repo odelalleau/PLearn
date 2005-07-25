@@ -99,7 +99,7 @@ void computeWeightedMeanAndCovar(const Vec& weights, const VMat& d,
 void computeInputMean           (const VMat& d, Vec& meanvec);
 void computeInputMeanAndCovar   (const VMat& d, Vec& meanvec, Mat& covarmat);
 void computeInputMeanAndVariance(const VMat& d, Vec& meanvec, Vec& var);
-
+void computeInputMeanAndStddev  (const VMat& d, Vec& meanvec, Vec& stddev);
 
 void autocorrelation_function(const VMat& data, Mat& acf);
 

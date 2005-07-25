@@ -343,6 +343,20 @@ void computeInputMeanAndVariance(const VMat& d, Vec& meanvec, Vec& var)
   var << sc.getVariance();
 }
 
+///////////////////////////////
+// computeInputMeanAndStddev //
+///////////////////////////////
+void computeInputMeanAndStddev(const VMat& d, Vec& meanvec, Vec& stddev) {
+  computeInputMeanAndVariance(d, meanvec, stddev);
+  for (int i = 0; i < stddev.length(); i++) {
+#ifdef BOUNDCHECK
+    if (stddev[i] < 0)
+      PLERROR("In computeInputMeanAndStddev - The computed variance should be >= 0");
+#endif
+    stddev[i] = sqrt(stddev[i]);
+  }
+}
+
 /////////////////////////////////
 // computeWeightedMeanAndCovar //
 /////////////////////////////////
