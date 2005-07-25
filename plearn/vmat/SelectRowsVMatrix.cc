@@ -134,7 +134,8 @@ void SelectRowsVMatrix::declareOptions(OptionList &ol)
 void SelectRowsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(indices, copies);
+  deepCopyField(indices,      copies);
+  deepCopyField(indices_vmat, copies);
 }
 
 ///////////
