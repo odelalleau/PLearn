@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RandomNeighborsDifferencesVMatrix.cc,v 1.1 2005/06/17 20:32:11 larocheh Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -51,13 +51,13 @@ using namespace std;
 
 
 RandomNeighborsDifferencesVMatrix::RandomNeighborsDifferencesVMatrix()
-  :inherited(), n_neighbors(-1), append_indexes(false)
+  :inherited(), n_neighbors(-1), append_current_point_indexe(false), append_random_neighbors_indexes(false)
   /* ### Initialise all fields to their default value */
 {
 }
 
 PLEARN_IMPLEMENT_OBJECT(RandomNeighborsDifferencesVMatrix, 
-                        "Computes the difference between each input row and a random point in the source data set.", 
+                        "Computes the difference between each input row and n_neighbors random points in the source data set.", 
                         "For each row x of the source VMatrix, the resulting row will be the\n"
                         "concatenation of n_neighbors vectors, each of which is the difference\n"
                         "between one of the random neighbors of x in the source and x itself.\n"
@@ -74,7 +74,7 @@ PLEARN_IMPLEMENT_OBJECT(RandomNeighborsDifferencesVMatrix,
     ith_row.resize(source->width());
     source->getRow(i,ith_row);
     int rand_index;
-    if(append_indexes)
+    if(append_current_point_indexe)
       v[n_neighbors*source->width()+1] = i;
     for (int k=0;k<n_neighbors;k++)
     {
@@ -84,8 +84,8 @@ PLEARN_IMPLEMENT_OBJECT(RandomNeighborsDifferencesVMatrix,
       substract(neighbor_row,ith_row, diff_k);
       // normalize result
       // now it's done in ProjectionErrorVariable diff_k /= norm(diff_k);
-      if(append_indexes)
-        v[n_neighbors*source->width()+1+k] = rand_index;
+      if(append_random_neighbors_indexes)
+        v[n_neighbors*source->width()+(append_current_point_indexe?1:0)+k] = rand_index;
     } 
   }
 
@@ -94,9 +94,13 @@ void RandomNeighborsDifferencesVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "n_neighbors", &RandomNeighborsDifferencesVMatrix::n_neighbors, OptionBase::buildoption,
                 "Number of nearest neighbors. Determines the width of this vmatrix, which\n"
                 "is source->width() * n_neighbors.\n");
-  declareOption(ol, "append_indexes", &RandomNeighborsDifferencesVMatrix::append_indexes, OptionBase::buildoption,
-                "Indication that the indexes of the current data point and of the k nearest neighbors\n" 
-                "should be appended to the row of the VMatrix.\n");
+  declareOption(ol, "append_current_point_indexe", &RandomNeighborsDifferencesVMatrix::append_current_point_indexe, OptionBase::buildoption,
+                "Indication that the indexe of the current data point should be appended \n"
+                "to the row of the VMatrix.\n");
+  declareOption(ol, "append_random_neighbors_indexes", &RandomNeighborsDifferencesVMatrix::append_random_neighbors_indexes, OptionBase::buildoption,
+                "Indication that the indexes of the random data points should be appended \n"
+                "to the row of the VMatrix.\n");
+
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -108,7 +112,8 @@ void RandomNeighborsDifferencesVMatrix::build_()
       // will not work if source is changed but has the same dimensions
   {
     width_ = source->width()*n_neighbors;
-    if(append_indexes) width_ += n_neighbors+1;
+    if(append_current_point_indexe) width_ += 1;
+    if(append_random_neighbors_indexes) width_ += n_neighbors;
     length_ = source->length();
   }
 }

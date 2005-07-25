@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocalNeighborsDifferencesVMatrix.h,v 1.7 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -79,6 +79,7 @@ public:
   int n_neighbors;
   bool concat_neighbors;
   bool append_indexes;
+  bool append_neighbors;
 
   // ****************
   // * Constructors *
@@ -118,13 +119,14 @@ public:
 };
 DECLARE_OBJECT_PTR(LocalNeighborsDifferencesVMatrix);
 
-inline VMat local_neighbors_differences(VMat source, int n_neighbors, bool concat = false, bool append_indexes = false)
+inline VMat local_neighbors_differences(VMat source, int n_neighbors, bool concat = false, bool append_indexes = false, bool append_neighbors=false)
 {
   LocalNeighborsDifferencesVMatrix* vmat = new LocalNeighborsDifferencesVMatrix();
   vmat->concat_neighbors = concat;
   vmat->source=source;
   vmat->n_neighbors=n_neighbors;
   vmat->append_indexes = append_indexes;
+  vmat->append_neighbors = append_neighbors;
   vmat->build();
   return vmat;
 }

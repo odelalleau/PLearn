@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RandomNeighborsDifferencesVMatrix.h,v 1.1 2005/06/17 20:32:12 larocheh Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -75,7 +75,8 @@ public:
   // ### declare public option fields (such as build options) here
   // ...
   int n_neighbors;
-  bool append_indexes;
+  bool append_current_point_indexe;
+  bool append_random_neighbors_indexes;
 
   // ****************
   // * Constructors *
@@ -115,12 +116,13 @@ public:
 };
 DECLARE_OBJECT_PTR(RandomNeighborsDifferencesVMatrix);
 
-inline VMat random_neighbors_differences(VMat source, int n_neighbors, bool append_indexes = false)
+inline VMat random_neighbors_differences(VMat source, int n_neighbors, bool append_current_point_indexe = false, bool append_random_neighbors_indexes = false)
 {
   RandomNeighborsDifferencesVMatrix* vmat = new RandomNeighborsDifferencesVMatrix();
   vmat->source=source;
   vmat->n_neighbors=n_neighbors;
-  vmat->append_indexes = append_indexes;
+  vmat->append_current_point_indexe = append_current_point_indexe;
+  vmat->append_random_neighbors_indexes = append_random_neighbors_indexes;
   vmat->build();
   return vmat;
 }
