@@ -100,6 +100,11 @@ public:
 
   //! See .cc for help.
   Mat cov; 
+
+  Mat sum_cross_weights;
+  Mat sum_cross_square_weights;
+  real sum_non_missing_weights;
+  real sum_non_missing_square_weights;
   
   // ****************
   // * Constructors *
@@ -195,7 +200,8 @@ public:
   //! returns the empirical standard deviation vec
   Vec getStdError() const;
 
-  //! Return X'X.
+  //! Return X'X (note that this matrix is weighted, and the weight might be
+  //! different for each element if there were missing values observed).
   const Mat& getXtX() const
   { return cov; }
 

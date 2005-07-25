@@ -45,9 +45,11 @@
 namespace PLearn {
 using namespace std;
 
-VecStatsCollector::VecStatsCollector() 
-  :maxnvalues(0), no_removal_warnings(false), compute_covariance(false), epsilon(0.0)
-  {}
+VecStatsCollector::VecStatsCollector():
+  maxnvalues(0), no_removal_warnings(false), compute_covariance(false), epsilon(0.0),
+  sum_non_missing_weights(0),
+  sum_non_missing_square_weights(0)
+{}
 
 PLEARN_IMPLEMENT_OBJECT(VecStatsCollector,
     "Collects basic statistics on a vector",
@@ -59,12 +61,6 @@ PLEARN_IMPLEMENT_OBJECT(VecStatsCollector,
 
 void VecStatsCollector::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-
   declareOption(ol, "maxnvalues", &VecStatsCollector::maxnvalues, OptionBase::buildoption,
                 "maximum number of different values to keep track of for each element\n"
                 "(default: 0, meaning we only keep track of global statistics)");
@@ -95,6 +91,20 @@ void VecStatsCollector::declareOptions(OptionList& ol)
 
   declareOption(ol, "cov", &VecStatsCollector::cov, OptionBase::learntoption,
                 "The uncentered and unnormalized covariance matrix (mean not subtracted): X'X");
+
+  declareOption(ol, "sum_cross_weights", &VecStatsCollector::sum_cross_weights, OptionBase::learntoption,
+      "Element (i,j) is the sum of weights when both x_i and x_j were observed\n"
+      "(only used when 'compute_covariance' is set to 1)\n");
+
+  declareOption(ol, "sum_cross_square_weights", &VecStatsCollector::sum_cross_square_weights, OptionBase::learntoption,
+      "Element (i,j) is the sum of square weights when both x_i and x_j were observed\n"
+      "(only used when 'compute_covariance' is set to 1)\n");
+
+  declareOption(ol, "sum_non_missing_weights", &VecStatsCollector::sum_non_missing_weights, OptionBase::learntoption,
+      "Sum of weights for vectors with no missing value.");
+
+  declareOption(ol, "sum_non_missing_square_weights", &VecStatsCollector::sum_non_missing_square_weights, OptionBase::learntoption,
+      "Sum of square weights for vectors with no missing value.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -160,7 +170,11 @@ void VecStatsCollector::update(const Vec& x, real weight)
       if(compute_covariance)
         {
           cov.resize(n,n);
+          sum_cross_weights.resize(n,n);
+          sum_cross_square_weights.resize(n,n);
           cov.fill(0);
+          sum_cross_weights.fill(0);
+          sum_cross_square_weights.fill(0);
         }      
     }
 
@@ -172,8 +186,30 @@ void VecStatsCollector::update(const Vec& x, real weight)
   for(int k=0; k<n; k++)
     stats[k].update(x[k], weight);
        
-  if(compute_covariance)
-    externalProductScaleAcc(cov, x, x, weight);
+  if(compute_covariance) {
+    if (x.hasMissing()) {
+      // Slower version to handle missing values.
+      // TODO Could certainly be optimized.
+      real val_i, val_j;
+      for (int i = 0; i < n; i++) {
+        val_i = x[i];
+        if (!is_missing(val_i)) {
+          for (int j = 0; j < n; j++) {
+            val_j = x[j];
+            if (!is_missing(val_j)) {
+              cov(i,j) += weight * val_i * val_j;
+              sum_cross_weights(i,j) += weight;
+              sum_cross_square_weights(i,j) += weight * weight;
+            }
+          }
+        }
+      }
+    } else {
+      externalProductScaleAcc(cov, x, x, weight);
+      sum_non_missing_weights += weight;
+      sum_non_missing_square_weights += weight * weight;
+    }
+  }
 }
 
 ////////////////////////
@@ -195,11 +231,37 @@ void VecStatsCollector::remove_observation(const Vec& x, real weight)
   
   // This removes the observation x contribution to the covariance matrix.
   if( compute_covariance ) {
-    if (stats[0].nnonmissing() == 0)
+    if (stats[0].nnonmissing() == 0) {
       // We removed the last observation.
       cov.fill(0);
-    else
-      externalProductScaleAcc(cov, x, x, -weight);  
+      sum_cross_weights.fill(0);
+      sum_cross_square_weights.fill(0);
+      sum_non_missing_weights = 0;
+      sum_non_missing_square_weights = 0;
+    } else {
+      if (x.hasMissing()) {
+        // Slower version to handle missing values.
+        // TODO Could certainly be optimized.
+        real val_i, val_j;
+        for (int i = 0; i < n; i++) {
+          val_i = x[i];
+          if (!is_missing(val_i)) {
+            for (int j = 0; j < n; j++) {
+              val_j = x[j];
+              if (!is_missing(val_j)) {
+                cov(i,j) -= weight * val_i * val_j;
+                sum_cross_weights(i,j) -= weight;
+                sum_cross_square_weights(i,j) -= weight * weight;
+              }
+            }
+          }
+        }
+      } else {
+        externalProductScaleAcc(cov, x, x, -weight);
+        sum_non_missing_weights -= weight;
+        sum_non_missing_square_weights -= weight * weight;
+      }
+    }
   }
 }
 
@@ -237,6 +299,10 @@ void VecStatsCollector::forget()
 {
   stats.resize(0);
   cov.resize(0,0);
+  sum_cross_weights.resize(0,0);
+  sum_cross_square_weights.resize(0,0);
+  sum_non_missing_weights = 0;
+  sum_non_missing_square_weights = 0;
 }
 
 void VecStatsCollector::finalize()
@@ -300,17 +366,22 @@ void VecStatsCollector::getCovariance(Mat& covar) const {
   static Vec meanvec;
   assert( compute_covariance && cov.length() == cov.width() );
   int d = cov.length();
-  real sum_weights = stats[0].nnonmissing();
-  real sum_square_weights = stats[0].sumsquarew();
-  real factor = 1 / (sum_weights - sum_square_weights / sum_weights);
   getMean(meanvec);
   covar.resize(d,d);
-  for(int i=0; i<d; i++)
+  for(int i=0; i<d; i++) {
+    real sum_weights_i = stats[i].nnonmissing();
     for(int j=0; j<d; j++) {
-      covar(i,j) = (cov(i,j) - meanvec[i] * meanvec[j] * sum_weights) * factor;
+      real sum_weights_j = stats[j].nnonmissing();
+      real sum_cross_weights_i_j = sum_cross_weights(i,j) + sum_non_missing_weights;
+      real sum_cross_square_weights_i_j = sum_cross_square_weights(i,j)
+                                        + sum_non_missing_square_weights;
+      covar(i,j) = (cov(i,j) - meanvec[i] * meanvec[j] * (sum_cross_weights_i_j))
+                   / (  sum_cross_weights_i_j
+                      * ( 1 - sum_cross_square_weights_i_j / (sum_weights_i * sum_weights_j) ) );
       if (j == i)
         covar(i,j) += epsilon;
     }
+  }
 }
 
 Mat VecStatsCollector::getCovariance() const
@@ -378,20 +449,47 @@ void VecStatsCollector::append(const VecStatsCollector& vsc,
     const int oldsize = cov.width();
     const int vscsize = vsc.cov.width();
     assert( oldsize == cov.length() && vscsize == vsc.cov.length() );
-    Mat newcov(stats.size(), stats.size(), 0.0);
+    int new_n = stats.size();
+    Mat newcov(new_n, new_n, 0.0);
+    Mat new_sum_cross_weights(new_n, new_n, 0.0);
+    Mat new_sum_cross_square_weights(new_n, new_n, 0.0);
     newcov.subMat(0,0,oldsize,oldsize) << cov;
-    if (vsc.compute_covariance)
+    Mat sub = new_sum_cross_weights.subMat(0, 0, oldsize, oldsize);
+    sub << sum_cross_weights;
+    sub += sum_non_missing_weights;
+    sum_non_missing_weights = 0;
+    sub = new_sum_cross_square_weights.subMat(0, 0, oldsize, oldsize);
+    sub << sum_cross_square_weights;
+    sub += sum_non_missing_square_weights;
+    sum_non_missing_square_weights = 0;
+    if (vsc.compute_covariance) {
       newcov.subMat(oldsize,oldsize,vscsize,vscsize) << vsc.cov;
-    else
+      sub = new_sum_cross_weights.subMat(oldsize,oldsize,vscsize,vscsize);
+      sub << vsc.sum_cross_weights;
+      sub += vsc.sum_non_missing_weights;
+      sub = new_sum_cross_square_weights.subMat(oldsize,oldsize,vscsize,vscsize);
+      sub << vsc.sum_cross_square_weights;
+      sub += vsc.sum_non_missing_square_weights;
+    }
+    else {
       newcov.subMat(oldsize,oldsize,vscsize,vscsize).fill(MISSING_VALUE);
+      new_sum_cross_weights.subMat(oldsize,oldsize,vscsize,vscsize).fill(MISSING_VALUE);
+      new_sum_cross_square_weights.subMat(oldsize,oldsize,vscsize,vscsize).fill(MISSING_VALUE);
+    }
     cov = newcov;
+    sum_cross_weights = new_sum_cross_weights;
+    sum_cross_square_weights = new_sum_cross_square_weights;
   }
 }
 
 void VecStatsCollector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Object::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(stats, copies);
+  deepCopyField(fieldnames,               copies);
+  deepCopyField(stats,                    copies);
+  deepCopyField(cov,                      copies);
+  deepCopyField(sum_cross_weights,        copies);
+  deepCopyField(sum_cross_square_weights, copies);
 }
 
 } // end of namespace PLearn
