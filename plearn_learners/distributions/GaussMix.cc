@@ -283,12 +283,12 @@ void GaussMix::computeMeansAndCovariances() {
 #endif
 #endif
     } else if (type == "diagonal") {
-      Vec variance(D);
+      Vec stddev(D);
       Vec center = mu(j);
-      computeInputMeanAndVariance(weighted_train_set, center, variance);
-      for (int i = 0; i < D; i++) {
-        diags(i,j) = sqrt(variance[i]);
-      }
+      computeInputMeanAndStddev(weighted_train_set, center, stddev);
+      // TODO Make diags more "logical" (use its transpose).
+      for (int i = 0; i < D; i++)
+        diags(i,j) = stddev[i];
     } else if (type == "general") {
       Mat covar(D,D);
       Vec center = mu(j);
@@ -306,7 +306,7 @@ void GaussMix::computeMeansAndCovariances() {
 // computeLogLikelihood //
 //////////////////////////
 real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
-  static real p, sig;
+  static real p;
   static Vec mu_y;  // The corresponding mean.
 //  static TVec<int> missing_index;
   static int size;  // The length of y (a target, or an input).
@@ -323,87 +323,30 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
       start = n_input;
     }
     mu_y = mu(j).subVec(start, size);
-  }
+    p = 0.0;
+    if (type == "spherical") {
+      // x   ~= N(mu_x, sigma)
+      // y|x ~= N(mu_y, sigma)
+      real sigma_j = max(sigma_min, sigma[j]);
+      for (int k = 0; k < size; k++)
+        if (!is_missing(y[k]))
+          p += gauss_log_density_stddev(y[k], mu_y[k], sigma_j);
+    } else if (type == "diagonal") {
+      for (int k = 0; k < size; k++)
+        if (!is_missing(y[k]))
+          p += gauss_log_density_stddev(y[k], mu_y[k],
+                                        max(sigma_min, diags(k + start,j)));
+    }
+#ifdef BOUNDCHECK
 #ifdef __INTEL_COMPILER
 #pragma warning(disable:279)  // Get rid of compiler warning.
 #endif
-  if (type == "spherical") {
-    // x   ~= N(mu_x, sigma)
-    // y|x ~= N(mu_y, sigma)
-    p = 0.0;
-    real sigma_j = max(sigma_min, sigma[j]);
-    /* Work-in-progress code for better handling of missing values, maybe
-       some day... (need to be redone anyway).
-    if (has_missing) {
-      missing_index.resize(0);
-      // Y has an observed and a missing part: Y = (Y_o, Y_m).
-      for (int k = 0; k < size; k++) {
-        if (!is_missing(y[k]))
-          p += gauss_log_density_stddev(y[k], mu_y[k], sigma_j);
-        else
-          missing_index.append(k);
-        if (isnan(p)) {
-          PLWARNING("In GaussMix::computeLogLikelihood - Density is nan");
-        }
-      }
-      // At this point, p = log(P_j(Y_o)).
-      // We want to compute
-      // E_Y_m[P_j(Y_o, Y_m)] = P_j(Y_o) sum_k alpha_k \int_Y_m P_j(Y_m) P_k(Y_m) dY_m
-      // whose log is log(P_j(Y_o)) + logadd_k( log(alpha_k) + log(\int ...) )
-      // TODO Document the whole formula.
-      tmp_vec1.resize(L);
-      tmp_vec1.fill(0.5 * Log2Pi);
-      int n_missing = missing_index.length();
-      real sigma_j = sigma[j];
-      for (int k = 0; k < L; k++) {
-        real sigma_k = sigma[k];
-        real sum_square_sigma = sigma_j * sigma_j + sigma_k * sigma_k;
-        tmp_vec1[k] += log(sigma_j) + log(sigma_k) - 0.5 * log(sum_square_sigma);
-        tmp_vec1[k] *= real(n_missing);
-        tmp_vec1[k] += log(alpha[k]);
-        real sigma_global = sigma_j * sigma_k / sqrt(sum_square_sigma);
-        // TODO WARNING precomputed_constant is not useful (must depend on the
-        // indices of the missing values).
-        real sum_z = 0;
-        real sum_t = 0;
-        real sum_u = 0;
-        Vec& z_vector = precomputed_vector(j,k);
-        Vec& t_vector = precomputed_vector(j,j);
-        Vec& u_vector = precomputed_vector(k,k);
-        for (int i = 0; i < n_missing; i++) {
-          int index = missing_index[i] + start;
-          real val = z_vector[index];
-          sum_z += val * val;
-          val = t_vector[index] * 0.5;
-          sum_t += mu(j,index) * val;
-          val = u_vector[index] * 0.5;
-          sum_u += mu(k,index) * val;
-        }
-        sum_z *= sigma_global * sigma_global;
-        tmp_vec1[k] -= 0.5 * (sum_t + sum_u - sum_z);
-      }
-      p += logadd(tmp_vec1);
-      return p;
-    } else
-    */
-    for (int k = 0; k < size; k++) {
-      if (!is_missing(y[k]))
-        p += gauss_log_density_stddev(y[k], mu_y[k], sigma_j);
-#ifdef BOUNDCHECK
-      if (isnan(p))
-        PLWARNING("In GaussMix::computeLogLikelihood - Density is nan");
-#endif
-    }
-    return p;
+    if (isnan(p))
+      PLWARNING("In GaussMix::computeLogLikelihood - Density is nan");
 #ifdef __INTEL_COMPILER
 #pragma warning(default:279)
 #endif
-  } else if (type == "diagonal") {
-    p = 0.0;
-    for (int k = 0; k < size; k++) {
-      sig = diags(k + start,j);
-      p += gauss_log_density_stddev(y[k], mu_y[k], max(sigma_min, sig));
-    }
+#endif
     return p;
   } else if (type == "general") {
     if (n_margin > 0)
@@ -537,9 +480,8 @@ void GaussMix::expectation(Vec& result) const
   if (type == "spherical" || type == "diagonal") {
     // The expectation is the same in the 'spherical' and 'diagonal' cases.
     result.clear();
-    for (int j = 0; j < L; j++) {
+    for (int j = 0; j < L; j++)
       result += mu(j).subVec(n_input, n_target) * p_j_x[j];
-    }
   } else if (type == "general") {
     if (n_margin > 0)
       PLERROR("In GaussMix::expectation - Marginalization not implemented");
@@ -862,28 +804,6 @@ int GaussMix::outputsize() const {
 void GaussMix::precomputeStuff() {
   if (type == "spherical" || type == "diagonal") {
     // Nothing to do.
-    /* Work-in progress code for better handling of missing values (need
-       to be redone anyway).
-    // Fill 'precompute_*'...
-    for (int i = 0; i < L; i++)
-      for (int j = 0; j < L; j++)
-        precomputed_vector(i,j).fill(0.);
-    tmp_vec2.resize(D);
-    for (int j = 0; j < L; j++) {
-      if (type == "spherical") {
-        tmp_vec2 << mu(j);
-        tmp_vec2 /= (sigma[j] * sigma[j]);
-      } else
-        // type == "diagonal"
-        for (int i = 0; i < D; i++)
-          tmp_vec2[i] = mu(j,i) / (diags(i,j) * diags(i,j));
-      for (int k = 0; k < L; k++) {
-        precomputed_vector(j,k) += tmp_vec2;
-        precomputed_vector(k,j) += tmp_vec2;
-      }
-      precomputed_constant[j] = dot(mu(j), tmp_vec2);
-    }
-    */
   } else if (type == "general") {
     // Precompute the log_coeff.
     real var_min = sigma_min*sigma_min;
