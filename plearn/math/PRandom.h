@@ -57,6 +57,9 @@ namespace PLearn {
 //! are meant to save memory. They should not be set outside of this class,
 //! nor should they be used by any other object (as they will be destroyed
 //! with this object).
+//!
+//! Note also that any field added to this object should be properly copied
+//! (and possibly deep-copied) in the copy constructor.
 class PRandom: public Object
 {
 
@@ -102,12 +105,30 @@ public:
   //! Constructor from a given seed.
   PRandom(long seed = -1);
 
+  //! Copy constructor.
+  //! This constructor ensures that no deep-copy is needed. All fields are
+  //! properly [deep-]copied in this constructor.
+  PRandom(const PRandom& rhs);
+
   //! Destructor to free memory.
   virtual ~PRandom();
 
   // ******************
   // * Object methods *
   // ******************
+
+  //! Accessors.
+  const boost::mt19937*                     get_rgen()                     const
+                                              { return &rgen; }
+  boost::exponential_distribution<>*        get_exponential_distribution() const
+                                              { return exponential_distribution; }
+  boost::normal_distribution<>*             get_normal_distribution()      const
+                                              { return normal_distribution; }
+  boost::uniform_01<boost::mt19937>*        get_uniform_01()               const
+                                              { return uniform_01; }
+  uint32_t get_the_seed()   const { return the_seed; }
+  long     get_fixed_seed() const { return fixed_seed; }
+  long     get_seed()       const { return seed_; }
 
 private: 
 

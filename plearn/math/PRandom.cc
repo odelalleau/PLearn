@@ -57,8 +57,7 @@ using namespace std;
 /////////////
 // PRandom //
 /////////////
-PRandom::PRandom(long seed)
-:
+PRandom::PRandom(long seed):
   exponential_distribution(0),
   normal_distribution(0),
   uniform_01(0),
@@ -68,6 +67,23 @@ PRandom::PRandom(long seed)
 {
   // For convenience, we systematically call build() in the constructor.
   build();
+}
+
+PRandom::PRandom(const PRandom& rhs):
+  rgen                    (*(rhs.get_rgen())),
+  the_seed                (rhs.get_the_seed()),
+  fixed_seed              (rhs.get_fixed_seed()),
+  seed_                   (rhs.get_seed())
+{
+  if (exponential_distribution = rhs.get_exponential_distribution())
+      exponential_distribution = new boost::exponential_distribution<>
+                                   (*exponential_distribution);
+  if (normal_distribution      = rhs.get_normal_distribution())
+      normal_distribution      = new boost::normal_distribution<>
+                                   (*normal_distribution);
+  if (uniform_01               = rhs.get_uniform_01())
+      uniform_01               = new boost::uniform_01<boost::mt19937>
+                                   (*uniform_01);
 }
 
 PLEARN_IMPLEMENT_OBJECT(PRandom,
@@ -203,15 +219,9 @@ real PRandom::gaussian_mu_sigma(real mu, real sigma) {
 void PRandom::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-  // The Boost distributions are not meant to be shared among objects.
-  // We just create new copies for this object.
-  if (normal_distribution)
-    normal_distribution = new boost::normal_distribution<>(*normal_distribution);
-  if (uniform_01)
-    uniform_01 = new boost::uniform_01<boost::mt19937>(*uniform_01);
-  if (exponential_distribution)
-    exponential_distribution = new boost::exponential_distribution<>
-                               (*exponential_distribution);
+  // Nothing more should be added here: this object is meant to be properly
+  // copied directly within the copy constructor (this is where you should add
+  // any statement needed for a proper copy).
 }
 
 /////////////////
