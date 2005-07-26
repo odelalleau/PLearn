@@ -206,7 +206,7 @@ void VecStatsCollector::update(const Vec& x, real weight)
       }
     } else {
       externalProductScaleAcc(cov, x, x, weight);
-      sum_non_missing_weights += weight;
+      sum_non_missing_weights        += weight;
       sum_non_missing_square_weights += weight * weight;
     }
   }
@@ -232,12 +232,10 @@ void VecStatsCollector::remove_observation(const Vec& x, real weight)
   // This removes the observation x contribution to the covariance matrix.
   if( compute_covariance ) {
     if (stats[0].nnonmissing() == 0) {
-      // We removed the last observation.
-      cov.fill(0);
-      sum_cross_weights.fill(0);
-      sum_cross_square_weights.fill(0);
-      sum_non_missing_weights = 0;
-      sum_non_missing_square_weights = 0;
+      // We removed the last observation. It may be safer to reset everything
+      // so that numerical approximations do not lead to negative values for
+      // statistics that should always be positive.
+      forget();
     } else {
       if (x.hasMissing()) {
         // Slower version to handle missing values.
@@ -363,6 +361,16 @@ Vec VecStatsCollector::getStdError() const
 // getCovariance //
 ///////////////////
 void VecStatsCollector::getCovariance(Mat& covar) const {
+  // Formula used to compute an unbiased estimate of the covariance. Notations:
+  // x(k)_i                       = i-th coordinate of k-th sample 
+  // sum^i_k   f(i,k)             = sum over k of f(i,k)   for k such that x(k)_i is not missing
+  // sum^i,j_k f(i,j,k)           = sum over k of f(i,j,k) for k such that neither x(k)_i nor x(k)_j is missing
+  // w_k                          = weight of k-th sample
+  // cov_i_j                      = sum^i,j_k w_k x(k)_i * x(k)_j
+  // mean_i                       = (sum^i_k w_k x(k)_i) / sum^i_k w_k
+  // The estimator for element (i,j) of the covariance matrix is then:
+  // covariance(i,j) = [ cov_i_j - mean_i * mean_j * sum^i,j_k w_k ]
+  //                 / [ sum^i,j_k w_k * ( 1 - sum_^i,j_k w_k^2 / (sum^i_k w_k * sum^j_k w_k) ) ]
   static Vec meanvec;
   assert( compute_covariance && cov.length() == cov.width() );
   int d = cov.length();
@@ -375,7 +383,7 @@ void VecStatsCollector::getCovariance(Mat& covar) const {
       real sum_cross_weights_i_j = sum_cross_weights(i,j) + sum_non_missing_weights;
       real sum_cross_square_weights_i_j = sum_cross_square_weights(i,j)
                                         + sum_non_missing_square_weights;
-      covar(i,j) = (cov(i,j) - meanvec[i] * meanvec[j] * (sum_cross_weights_i_j))
+      covar(i,j) = (cov(i,j) - meanvec[i] * meanvec[j] * sum_cross_weights_i_j)
                    / (  sum_cross_weights_i_j
                       * ( 1 - sum_cross_square_weights_i_j / (sum_weights_i * sum_weights_j) ) );
       if (j == i)
