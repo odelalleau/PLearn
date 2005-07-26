@@ -62,11 +62,12 @@ BootstrapVMatrix::BootstrapVMatrix():
   shuffle(false)
 {}
 
-BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac, bool the_shuffle):
+BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac, bool the_shuffle,
+                                   long the_seed):
   rgen(new PRandom()),
   frac(the_frac),
   n_elems(-1),
-  own_seed(-2),
+  own_seed(the_seed),
   seed(0),
   shuffle(the_shuffle)
 {
