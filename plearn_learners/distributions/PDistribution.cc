@@ -488,11 +488,10 @@ void PDistribution::setConditionalFlagsWithoutUpdate(TVec<int>& flags) {
   int j;
   int index;
   cond_swap.resize(0);
-  if (cond_sort.length() != is) {
+  if (cond_sort.length() != is)
     // The previous cond_sort is not valid anymore, we probably
     // have a new training set.
     cond_sort = TVec<int>(0, is - 1, 1);
-  }
   for (int i = 0; i < is; i++) {
     found = false;
     j = 0;
