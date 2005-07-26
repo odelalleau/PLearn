@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVariable.cc,v 1.5 2004/04/27 16:04:13 morinf Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,7 +52,7 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(ConcatRowsVariable,
                         "Concatenation of the rows of several variables",
-                        "NO HELP");
+                        "");
 
 ConcatRowsVariable::ConcatRowsVariable(const VarArray& vararray)
     : inherited(vararray.nonNull(), vararray.sumOfLengths(), vararray.maxWidth())
@@ -84,7 +84,7 @@ void ConcatRowsVariable::recomputeSize(int& l, int& w) const
 {
     if (varray) {
         l = varray.sumOfLengths();
-        w = varray.maxWidth();
+        w = varray.maxWidth(); // Note: actually, all vars have same width.
     } else
         l = w = 0;
 }
