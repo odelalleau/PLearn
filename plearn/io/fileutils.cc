@@ -659,6 +659,7 @@ string readFileAndMacroProcess(const PPath& filepath, map<string, string>& varia
   if (change_dir) {
     old_dir = PPath::getcwd();
     chdir(file.dirname());
+    file = file.basename();
   }
 
   // Add the new file and date variables
