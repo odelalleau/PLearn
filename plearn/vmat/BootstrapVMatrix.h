@@ -55,7 +55,7 @@ class BootstrapVMatrix: public SelectRowsVMatrix
 protected:
 
   //! Random number generator for shuffling the data.
-  PRandom rgen;
+  PP<PRandom> rgen;
 
 public:
 
@@ -77,6 +77,9 @@ public:
   PLEARN_DECLARE_OBJECT(BootstrapVMatrix);
 
   virtual void build();
+
+  //! Transforms a shallow copy into a deep copy.
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
 

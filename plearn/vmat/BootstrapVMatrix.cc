@@ -53,16 +53,18 @@ PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
 //////////////////////
 // BootstrapVMatrix //
 //////////////////////
-BootstrapVMatrix::BootstrapVMatrix()
-: frac(0.6667),
+BootstrapVMatrix::BootstrapVMatrix():
+  rgen(new PRandom()),
+  frac(0.6667),
   n_elems(-1),
   own_seed(-2), // -2 = hack value while 'seed' is still there
   seed(0),
   shuffle(false)
 {}
 
-BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac, bool the_shuffle)
-: frac(the_frac),
+BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac, bool the_shuffle):
+  rgen(new PRandom()),
+  frac(the_frac),
   n_elems(-1),
   own_seed(-2),
   seed(0),
@@ -129,8 +131,8 @@ void BootstrapVMatrix::build_()
         PLERROR("In BootstrapVMatrix::build_ - The seed must be either -1 or >= 0");
       shuffleElements(indices);
     } else {
-      rgen.manual_seed(own_seed);
-      rgen.shuffleElements(indices);
+      rgen->manual_seed(own_seed);
+      rgen->shuffleElements(indices);
     }
     int n = (n_elems >= 0) ? n_elems : int(round(frac * source.length()));
     indices = indices.subVec(0, n);
@@ -139,6 +141,15 @@ void BootstrapVMatrix::build_()
     // Because we changed the indices, a rebuild may be needed.
     inherited::build();
   }
+}
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void BootstrapVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(rgen, copies);
 }
 
 } // end of namespcae PLearn
