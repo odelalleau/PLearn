@@ -290,7 +290,7 @@ void GaussMix::computeMeansAndCovariances() {
       for (int i = 0; i < D; i++)
         diags(i,j) = stddev[i];
     } else if (type == "general") {
-      Mat covar(D,D);
+      Mat covar(D,D); // TODO More efficient memory management.
       Vec center = mu(j);
       computeInputMeanAndCovar(weighted_train_set, center, covar);
       Vec eigenvals = eigenvalues(j); // The eigenvalues vector of the j-th Gaussian.
@@ -308,7 +308,6 @@ void GaussMix::computeMeansAndCovariances() {
 real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
   static real p;
   static Vec mu_y;  // The corresponding mean.
-//  static TVec<int> missing_index;
   static int size;  // The length of y (a target, or an input).
   static int start; // n_input if y is a target, and 0 otherwise.
   static Vec eigenvals; // A pointer to the adequate eigenvalues.
@@ -526,7 +525,7 @@ void GaussMix::generateFromGaussian(Vec& s, int given_gaussian) const {
   static Vec mu_y;
   int j;    // The index of the Gaussian to use.
   if (given_gaussian < 0) {
-    j = random.multinomial_sample(p_j_x);
+    j = random->multinomial_sample(p_j_x);
   } else {
     j = given_gaussian % alpha.length();
   }
@@ -534,12 +533,12 @@ void GaussMix::generateFromGaussian(Vec& s, int given_gaussian) const {
   if (type == "spherical") {
     mu_y = mu(j).subVec(n_input, n_target);
     for (int k = 0; k < n_target; k++) {
-      s[k] = random.gaussian_mu_sigma(mu_y[k], sigma[j]);
+      s[k] = random->gaussian_mu_sigma(mu_y[k], sigma[j]);
     }
   } else if (type == "diagonal") {
     mu_y = mu(j).subVec(n_input, n_target);
     for (int k = 0; k < n_target; k++) {
-      s[k] = random.gaussian_mu_sigma(mu_y[k], diags(k + n_input,j));
+      s[k] = random->gaussian_mu_sigma(mu_y[k], diags(k + n_input,j));
     }
   } else if (type == "general") {
     if (n_margin > 0)
@@ -562,7 +561,7 @@ void GaussMix::generateFromGaussian(Vec& s, int given_gaussian) const {
       mu_y = mu_y_x(j);
     }
     norm.resize(n_eig - 1);
-    random.fill_random_normal(norm);
+    random->fill_random_normal(norm);
     real var_min = sigma_min*sigma_min;
     lambda0 = max(var_min, eigenvals[n_eig - 1]);
     s.fill(0);
@@ -570,7 +569,7 @@ void GaussMix::generateFromGaussian(Vec& s, int given_gaussian) const {
       s += sqrt(max(var_min, eigenvals[k]) - lambda0) * norm[k] * eigenvecs(k);
     }
     norm.resize(n_target);
-    random.fill_random_normal(norm);
+    random->fill_random_normal(norm);
     s += norm * sqrt(lambda0);
     s += mu_y;
   } else {
@@ -630,7 +629,7 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
     while(!ok)
     {
       ok = true;
-      val = random.uniform_multinomial_sample(nsamples);
+      val = random->uniform_multinomial_sample(nsamples);
       for(int j=0;j<nclust && start_idx[j] != -1;j++)
         if(start_idx[j]==val)
         {
@@ -650,7 +649,7 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
     center = clust(i);
     for (int k = 0; k < center.length(); k++)
       if (is_missing(center[k]))
-        center[k] = random.gaussian_mu_sigma(mean[k], stddev[k]);
+        center[k] = random->gaussian_mu_sigma(mean[k], stddev[k]);
   }
 
 
@@ -692,14 +691,14 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
         clust_stat[i].getMean(clust_i);
       else {
         // Re-initialize randomly the cluster center.
-        int new_center = random.uniform_multinomial_sample(nsamples);
+        int new_center = random->uniform_multinomial_sample(nsamples);
         samples->getExample(new_center, input, target, weight);
         clust_i << input;
       }
       // Replace missing values by randomly generated values.
       for (int k = 0; k < clust_i.length(); k++)
         if (is_missing(clust_i[k]))
-          clust_i[k] = random.gaussian_mu_sigma(mean[k], stddev[k]);
+          clust_i[k] = random->gaussian_mu_sigma(mean[k], stddev[k]);
     }
 
     ok=true;

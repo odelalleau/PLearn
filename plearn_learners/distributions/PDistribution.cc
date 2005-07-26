@@ -49,8 +49,9 @@ using namespace std;
 ///////////////////
 // PDistribution //
 ///////////////////
-PDistribution::PDistribution() 
-: n_input(0),
+PDistribution::PDistribution():
+  random(new PRandom()),
+  n_input(0),
   n_margin(0),
   n_target(0),
   already_sorted(false),
@@ -362,15 +363,16 @@ void PDistribution::generateN(const Mat& Y) const
 void PDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(store_expect, copies);
-  deepCopyField(store_result, copies);
-  deepCopyField(store_cov, copies);
-  deepCopyField(cond_sort, copies);
-  deepCopyField(cond_swap, copies);
-  deepCopyField(input_part, copies);
-  deepCopyField(target_part, copies);
-  deepCopyField(conditional_flags, copies);
-  deepCopyField(provide_input, copies);
+  deepCopyField(store_expect,       copies);
+  deepCopyField(store_result,       copies);
+  deepCopyField(store_cov,          copies);
+  deepCopyField(random,             copies);
+  deepCopyField(cond_sort,          copies);
+  deepCopyField(cond_swap,          copies);
+  deepCopyField(input_part,         copies);
+  deepCopyField(target_part,        copies);
+  deepCopyField(conditional_flags,  copies);
+  deepCopyField(provide_input,      copies);
 }
 
 ////////////////
@@ -398,7 +400,7 @@ int PDistribution::outputsize() const
 void PDistribution::resetGenerator(long g_seed) const
 {
 // seed_ = seed; // TODO See how to do this
-  random.manual_seed(g_seed);
+  random->manual_seed(g_seed);
 }
 
 /////////////////

@@ -60,7 +60,7 @@ private:
 protected:
 
   //! Random number generator.
-  mutable PRandom random;
+  PP<PRandom> random;
 
   // *********************
   // * protected options *
