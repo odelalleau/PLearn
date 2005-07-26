@@ -116,10 +116,6 @@ inline real negative(real a) { if (a<0) return a; return 0; }
 #  define ABS(x) ((x)>0 ?(x) :-(x))
 #endif
 
-#if !defined(random)
-#  define random() rand()
-#endif
-
 #if !defined(Pi)
 #  define Pi 3.141592653589793
 #endif
