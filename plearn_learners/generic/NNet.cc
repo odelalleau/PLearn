@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.76 2005/06/15 14:40:39 lamblin Exp $
+   * $Id$
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -674,6 +674,12 @@ void NNet::buildTargetAndWeight() {
 void NNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, 
                                    const Vec& targetv, Vec& costsv) const
 {
+#ifdef BOUNDCHECK
+  // Stable cross entropy needs the value *before* the transfer function.
+  if (cost_funcs.contains("stable_cross_entropy"))
+    PLERROR("In NNet::computeCostsFromOutputs - Cannot directly compute stable "
+            "cross entropy from output and target");
+#endif
   output_and_target_to_cost->fprop(outputv&targetv, costsv); 
 }
 
@@ -735,7 +741,11 @@ void NNet::forget()
 TVec<string> NNet::getTrainCostNames() const
 {
   assert( !cost_funcs.isEmpty() );
-  return (cost_funcs[0]+"+penalty") & cost_funcs;
+  int n_costs = cost_funcs.length();
+  TVec<string> train_costs(n_costs + 1);
+  train_costs[0] = cost_funcs[0] + "+penalty";
+  train_costs.subVec(1, n_costs) << cost_funcs;
+  return train_costs;
 }
 
 //////////////////////

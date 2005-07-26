@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.29 2005/06/15 14:40:39 lamblin Exp $
+   * $Id$
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -134,10 +134,8 @@ public:
 
   Var first_hidden_layer;
 
-  //! a list of cost functions to use in the form "[ cf1; cf2; cf3; ... ]"
-  // where the cost functions can be one of mse, mse_onehot, NLL,
-  // class_error or multiclass_error (no default)
-  Array<string> cost_funcs;  
+  //! Cost functions.
+  TVec<string> cost_funcs;  
 
   // Build options related to the optimization:
   PP<Optimizer> optimizer; // the optimizer to use (no default)
