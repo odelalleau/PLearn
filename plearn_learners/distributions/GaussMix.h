@@ -97,6 +97,10 @@ protected:
   //! multiplied by the posterior P(j | s_i).
   Mat updated_weights;
 
+  //! Storage for the (weighted) covariance matrix of the dataset.
+  //! It is only used with when type == "general".
+  Mat covariance;
+
 public:
 
   // ************************
