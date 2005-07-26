@@ -75,15 +75,17 @@ PRandom::PRandom(const PRandom& rhs):
   fixed_seed              (rhs.get_fixed_seed()),
   seed_                   (rhs.get_seed())
 {
-  if (exponential_distribution = rhs.get_exponential_distribution())
-      exponential_distribution = new boost::exponential_distribution<>
-                                   (*exponential_distribution);
-  if (normal_distribution      = rhs.get_normal_distribution())
-      normal_distribution      = new boost::normal_distribution<>
-                                   (*normal_distribution);
-  if (uniform_01               = rhs.get_uniform_01())
-      uniform_01               = new boost::uniform_01<boost::mt19937>
-                                   (*uniform_01);
+  // Note: the extra parentheses are here to tell the compiler that the
+  // assignments are meant to be used as truth values.
+  if ((exponential_distribution = rhs.get_exponential_distribution()))
+       exponential_distribution = new boost::exponential_distribution<>
+                                    (*exponential_distribution);
+  if ((normal_distribution      = rhs.get_normal_distribution()))
+       normal_distribution      = new boost::normal_distribution<>
+                                    (*normal_distribution);
+  if ((uniform_01               = rhs.get_uniform_01()))
+       uniform_01               = new boost::uniform_01<boost::mt19937>
+                                    (*uniform_01);
 }
 
 PLEARN_IMPLEMENT_OBJECT(PRandom,
