@@ -53,6 +53,10 @@
 
 namespace PLearn {
 
+//! Important note: the pointers used for some Boost distribution objects
+//! are meant to save memory. They should not be set outside of this class,
+//! nor should they be used by any other object (as they will be destroyed
+//! with this object).
 class PRandom: public Object
 {
 

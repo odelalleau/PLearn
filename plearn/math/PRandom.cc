@@ -203,15 +203,15 @@ real PRandom::gaussian_mu_sigma(real mu, real sigma) {
 void PRandom::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("PRandom::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  // The Boost distributions are not meant to be shared among objects.
+  // We just create new copies for this object.
+  if (normal_distribution)
+    normal_distribution = new boost::normal_distribution<>(*normal_distribution);
+  if (uniform_01)
+    uniform_01 = new boost::uniform_01<boost::mt19937>(*uniform_01);
+  if (exponential_distribution)
+    exponential_distribution = new boost::exponential_distribution<>
+                               (*exponential_distribution);
 }
 
 /////////////////
