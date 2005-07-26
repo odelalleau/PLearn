@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.42 2005/06/16 18:37:22 tihocan Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -344,7 +344,7 @@ void Kernel::computeGramMatrix(Mat K) const
       if (j<i)
         *Kji_ = Kij;
     }
-    if (pb) {
+    if (report_progress) {
       count += i + 1;
       pb->update(count);
     }
