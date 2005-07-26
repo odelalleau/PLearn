@@ -459,7 +459,7 @@ T harmonic_mean(const TVec<T>& vec, bool ignore_missing=false)
 // }
 
 // Does avgdev with/without missing values. ignore_missing=true ignores the missing values
-// and computes the stddev without'em
+// and computes the avgdev without'em
 template<class T>
 T avgdev(const TVec<T>& vec, T meanval, bool ignore_missing = false)
 {
@@ -529,8 +529,10 @@ T weighted_mean(const TVec<T>& vec, const TVec<T>& weights, bool ignore_missing=
   return T(res/sum_weights);
 }
 
+// ignore_missing = true means that it computes the variance ignoring
+// the missing values
 template<class T>
-T variance(const TVec<T>& vec, T meanval)
+T variance(const TVec<T>& vec, T meanval, bool ignore_missing=false)
 {
   #ifdef BOUNDCHECK
   if(vec.length()<=1)
@@ -538,12 +540,22 @@ T variance(const TVec<T>& vec, T meanval)
   #endif
   double res = 0.0;
   T* v = vec.data();
+  int n = 0;
   for(int i=0; i<vec.length(); i++)
     {
-      double diff = v[i]-meanval;
-      res += diff*diff;
-    }
-  return res/(vec.length()-1);
+		if (!is_missing(v[i]))
+    		{
+				double diff = v[i]-meanval;
+				res += diff*diff;
+				n++;
+			}
+		else if (!ignore_missing)
+			return MISSING_VALUE;
+	}  
+  	if (n == 0)
+		return MISSING_VALUE;
+	else
+    	return T(res/n);
 }
 
 template<class T>
