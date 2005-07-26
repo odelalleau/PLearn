@@ -120,6 +120,8 @@ public:
   bool incremental_connections; // Add connections incrementally if true, or all at once if false (default). 
                                 // This option is only supported with n_outputs == 1. 
   real connection_gradient_threshold;    // Threshold of gradient for connection to be added, when incremental_connections == true.
+  bool residual_correlation_gradient;  // Use residual correlation gradient (ConvexNN) if true, or classical error 
+                                       // back-propagation if false.
   
   // ** NON-OPTION FIELDS
   //

@@ -70,7 +70,8 @@ IncrementalNNet::IncrementalNNet()
     rand_range(1),
     enable_internal_weights(false),
     incremental_connections(false),
-    connection_gradient_threshold(0.5)
+    connection_gradient_threshold(0.5),
+    residual_correlation_gradient(true)
 {
 }
 
@@ -148,6 +149,9 @@ void IncrementalNNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "connection_gradient_threshold", &IncrementalNNet::connection_gradient_threshold, OptionBase::buildoption,
                 "Threshold of gradient for connection to be added, when incremental_connections == true." );
+
+  declareOption(ol, "residual_correlation_gradient", &IncrementalNNet::residual_correlation_gradient, OptionBase::buildoption,
+                "Use residual correlation gradient (ConvexNN) if true (default), or classical error back-propagation if false." );
 
 
   //declareOption(ol, "", &IncrementalNNet::, OptionBase::buildoption,
@@ -430,7 +434,12 @@ void IncrementalNNet::train()
         multiplyAcc(output_biases, output_gradient, -learning_rate);
         if (stage>0)
         {
+          // hidden_gradient[j] = sum_i output_weights[j,i]*output_gradient[i]
+          // output_weights[i,j] -= learning_rate * (output_gradient[i] * h[j] + output_weight_decay * sign(output_weights[i,j]))
           transposedLayerL1BpropUpdate(hidden_gradient, output_weights, h, output_gradient, learning_rate, output_weight_decay);
+          
+          if ( residual_correlation_gradient ) 
+            hidden_gradient.fill(output_gradient[0]); 
           
           if ( !enable_internal_weights ){  // simple one-hidden-layer topology 
             // bprop through hidden units activation
@@ -454,32 +463,32 @@ void IncrementalNNet::train()
               }
             }
             else
-              bprop_tanh(h,hidden_gradient,hidden_gradient);
-          } else {                          // cascade topology
+              bprop_tanh(h,hidden_gradient,hidden_gradient);  //  hidden_gradient *= ( 1 - h^2 )
+          } else { // cascade topology
             if ( !incremental_connections ){
-            //if (!hard_activation_function) { 
+            //if (hard_activation_function) { /*not implemented*/ } else
               for ( int i = stage-1; i >= 0; i-- ) { // bprop_tanh equivalent, also modifies internal_weights
                 hidden_gradient[i] *= (1 - h[i]*h[i]);
                 for ( int j = 0; j < i; j++ ) {
-                  hidden_gradient[j] += internal_weights[i][j] * hidden_gradient[i];
+                  if ( !residual_correlation_gradient )
+                    hidden_gradient[j] += internal_weights[i][j] * hidden_gradient[i];
                   internal_weights[i][j] -= learning_rate * ( hidden_gradient[i] * h[j] );
                                               //+ output_weight_decay * sign(internal_weights[i][j]) );
                 }
               }            
-            //} else... - not implemented
             } else {
               for ( int i = stage-1; i >= 0; i-- ) { // bprop_tanh equivalent, also modifies internal_weights
                 hidden_gradient[i] *= (1 - h[i]*h[i]);
                 for ( int j = 0; j < i; j++ ) {
                   if ( internal_weights[i][j] == 0.0 ){
-                    internal_weight_gradients[i][j] = moving_average_coefficient *
-                      output_gradient[0] * h[j] * ( 1 - h[i]*h[i] )
-                      +(1-moving_average_coefficient)*internal_weight_gradients[i][j];
+                    internal_weight_gradients[i][j] = hidden_gradient[i] * h[j] 
+                      * moving_average_coefficient +(1-moving_average_coefficient)*internal_weight_gradients[i][j];
                     if ( fabs(internal_weight_gradients[i][j]) > connection_gradient_threshold ){ // add connetion
                       internal_weights[i][j] = - 0.1 * /*sign*/(internal_weight_gradients[i][j]);
                     }      
                   } else {
-                    hidden_gradient[j] += internal_weights[i][j] * hidden_gradient[i];
+                    if ( !residual_correlation_gradient )
+                      hidden_gradient[j] += internal_weights[i][j] * hidden_gradient[i];
                     internal_weights[i][j] -= learning_rate * ( hidden_gradient[i] * h[j] );
                                                 //+ output_weight_decay * sign(internal_weights[i][j]) );
                   }
@@ -489,23 +498,22 @@ void IncrementalNNet::train()
 
           }
           
-          hidden_gradient *= -learning_rate;
-          hidden_layer_biases += hidden_gradient;
+          //hidden_gradient *= -learning_rate;
+          hidden_layer_biases -= hidden_gradient * learning_rate;
           if ( !incremental_connections ) {
-            // bprop through hidden layer and update hidden_biases and hidden_weights
-            externalProductAcc(hidden_layer_weights, hidden_gradient, input);
+            // bprop through hidden layer and update hidden_weights
+            externalProductAcc(hidden_layer_weights, hidden_gradient * (-learning_rate), input);
           } else {
             for ( int i = 0; i < stage; i++ ){
               for ( int j = 0; j < inputsize_; j++ ){
                 if ( hidden_layer_weights[i][j] == 0.0 ){
-                  hidden_layer_weight_gradients[i][j] = moving_average_coefficient *
-                    output_gradient[0] * input[j] * ( 1 - h[i]*h[i] )
-                    + (1-moving_average_coefficient)*hidden_layer_weight_gradients[i][j];
+                  hidden_layer_weight_gradients[i][j] = hidden_gradient[i] * input[j] 
+                    * moving_average_coefficient + (1-moving_average_coefficient)*hidden_layer_weight_gradients[i][j];
                   if ( fabs(hidden_layer_weight_gradients[i][j]) > connection_gradient_threshold ){ // add connetion
-                    hidden_layer_weights[i][j] = - 0.1 * /*sign*/(hidden_layer_weights[i][j]);
+                    hidden_layer_weights[i][j] = - 0.1 * /*sign*/(hidden_layer_weight_gradients[i][j]);
                   }      
                 } else {
-                  hidden_layer_weights[i][j] += hidden_gradient[i] * input[j];
+                  hidden_layer_weights[i][j] -= hidden_gradient[i] * input[j] * learning_rate;
                 }
               }
             }
@@ -544,6 +552,8 @@ void IncrementalNNet::train()
       // computes candidate_hidden_gradient, and updates candidate_unit_output_weights_mat
       layerBpropUpdate(candidate_hidden_gradient, candidate_unit_output_weights_mat, 
                        candidate_h_vec, output_gradient_with_candidate, learning_rate);
+      if ( residual_correlation_gradient ) 
+            candidate_hidden_gradient.fill(output_gradient_with_candidate[0]);
       // bprop through candidate hidden unit activation, heuristic method
       if (hard_activation_function)
       {
@@ -559,38 +569,36 @@ void IncrementalNNet::train()
         bprop_tanh(candidate_h_vec,candidate_hidden_gradient,candidate_hidden_gradient);        
       }
 
-      candidate_hidden_gradient *= -learning_rate;
-      candidate_unit_bias += candidate_hidden_gradient[0];
+      //candidate_hidden_gradient *= -learning_rate;
+      candidate_unit_bias -= candidate_hidden_gradient[0] * learning_rate;
             
       if ( incremental_connections ) {
         // calculate gradients on nonexistant connections, add some connections, train existant ones
         for ( int i = 0; i < inputsize_; i++ ) {
           if ( candidate_unit_weights[i] == 0.0 ) {
-            candidate_unit_weight_gradients[i] = moving_average_coefficient *
-              output_gradient_with_candidate[0] * input[i] * ( 1 - candidate_h*candidate_h )
-              +(1-moving_average_coefficient)*candidate_unit_weight_gradients[i];
+            candidate_unit_weight_gradients[i] = candidate_hidden_gradient[0] * input[i]
+              * moving_average_coefficient +(1-moving_average_coefficient)*candidate_unit_weight_gradients[i];
             if ( fabs(candidate_unit_weight_gradients[i]) > connection_gradient_threshold ){ // add connetion
               candidate_unit_weights[i] = - 0.1 * /*sign*/(candidate_unit_weight_gradients[i]);
             }
-          } else candidate_unit_weights[i] += candidate_hidden_gradient[0] * input[i];          
+          } else candidate_unit_weights[i] -= candidate_hidden_gradient[0] * input[i] * learning_rate;          
         }
         
         if ( enable_internal_weights && stage > 0 ) { // consider weights from older hidden units
           for( int i = 0; i < stage; i++ ) {
             if ( candidate_unit_internal_weights[i] == 0.0 ) {
-              candidate_unit_internal_weight_gradients[i] = moving_average_coefficient *
-                output_gradient_with_candidate[0]*h[i]*(1-candidate_h*candidate_h)
-                +(1-moving_average_coefficient)*candidate_unit_internal_weight_gradients[i];
+              candidate_unit_weight_gradients[i] = candidate_hidden_gradient[0] * input[i]
+                * moving_average_coefficient +(1-moving_average_coefficient)*candidate_unit_weight_gradients[i];
               if ( fabs(candidate_unit_internal_weight_gradients[i]) > connection_gradient_threshold ){ // add connetion
                 candidate_unit_internal_weights[i] = - 0.1 * /*sign*/(candidate_unit_internal_weight_gradients[i]);
               }
-            } else candidate_unit_internal_weights[i] += candidate_hidden_gradient[0]*h[i];          
+            } else candidate_unit_internal_weights[i] -= candidate_hidden_gradient[0] * h[i] * learning_rate;          
           }
         }                
       } else {  // train all connections at once    
-        multiplyAcc(candidate_unit_weights, input, candidate_hidden_gradient[0]);
+        multiplyAcc( candidate_unit_weights, input, candidate_hidden_gradient[0] * (-learning_rate) );
         if ( enable_internal_weights && stage > 0 ) // consider weights from older hidden units
-          multiplyAcc(candidate_unit_internal_weights, h, candidate_hidden_gradient[0]);
+          multiplyAcc( candidate_unit_internal_weights, h, candidate_hidden_gradient[0] * (-learning_rate) );
       }
 
       //MNT
