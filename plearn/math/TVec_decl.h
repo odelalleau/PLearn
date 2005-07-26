@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: TVec_decl.h,v 1.20 2005/02/23 01:40:27 tihocan Exp $
+ * $Id$
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -681,17 +681,11 @@ public:
     }
   bool operator!=(const TVec<T>& value) const { return !((*this)==value); }
 
-  //!  return true if element is in the TVec and false otherwise.
+  //! Return true if 'element' is in the TVec and false otherwise.
   bool contains(const T& element) const
-    {
-      if (length()==0) return false;
-      bool contained=false;
-      T *v = data(); //!<  get start of data
-      for (int i=0; i<length() && !contained; i++)
-        if (v[i]==element)
-          contained=true;
-      return contained;
-    }
+  {
+    return find(element) != -1;
+  }
 
   //!  return the set of indices whose corresponding values are "element". 
   TVec<int> findIndices(const T& element)
