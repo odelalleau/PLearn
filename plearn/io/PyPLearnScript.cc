@@ -47,6 +47,7 @@
 #include <plearn/io/openFile.h>
 #include <plearn/io/fileutils.h>
 #include <plearn/base/stringutils.h>
+#include <plearn/base/pl_repository_revision.h>
 
 
 namespace PLearn {
@@ -207,6 +208,7 @@ void PyPLearnScript::close()
                expdir.c_str() );
     
     PStream out = openFile( expdir / "metainfos.txt", PStream::raw_ascii, "w" );
+    out << "__REVISION__ = " << pl_repository_revision() << endl;
     out << metainfos << endl;
 
     out = openFile( expdir / "experiment.plearn", PStream::raw_ascii, "w" );
