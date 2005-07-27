@@ -65,11 +65,11 @@ protected:
   Mat eigenvalues;
   TVec<Mat> eigenvectors;
   int D;
-  Mat diags;
+  mutable Mat diags;
   Vec log_coeff;
   Vec log_p_j_x;
   Vec log_p_x_j_alphaj;
-  Mat mu_y_x;
+  mutable Mat mu_y_x;
   int n_eigen_computed;
   int nsamples;
   Vec p_j_x;
@@ -78,8 +78,8 @@ protected:
 
   TVec<Mat> cov_x;            //!< The covariance of x.
   TVec<Mat> cov_y_x;          //!< The covariance of y|x.
-  Mat eigenvalues_x;          //!< The eigenvalues of the covariance of X.
-  Mat eigenvalues_y_x;        //!< The eigenvalues of the covariance of Y|x.
+  mutable Mat eigenvalues_x;  //!< The eigenvalues of the covariance of X.
+  mutable Mat eigenvalues_y_x;//!< The eigenvalues of the covariance of Y|x.
   TVec<Mat> eigenvectors_x;   //!< The eigenvectors of the covariance of X.
   TVec<Mat> eigenvectors_y_x; //!< The eigenvectors of the covariance of Y|x.
   TVec<Mat> full_cov;         //!< The full covariance matrix.
@@ -117,7 +117,7 @@ public:
 
   // Currently learnt options, but may be build options in the future.
   Vec alpha;
-  Mat mu;  
+  mutable Mat mu;  
   Vec sigma;
 
   // ****************
@@ -224,7 +224,7 @@ public:
 
   //! This method updates the internal data given a new sorting of the variables
   //! defined by the conditional flags.
-  virtual void updateFromConditionalSorting();
+  virtual void updateFromConditionalSorting() const;
 
   //! return density p(y | x)
   virtual real log_density(const Vec& y) const;

@@ -284,7 +284,9 @@ void GaussMix::computeMeansAndCovariances() {
       Vec center = mu(j);
       computeInputMeanAndCovar(weighted_train_set, center, covariance);
       Vec eigenvals = eigenvalues(j); // The eigenvalues vector of the j-th Gaussian.
+      // pout << "Eigen 3" << endl;
       eigenVecOfSymmMat(covariance, n_eigen_computed, eigenvals, eigenvectors[j]);
+      // pout << "Eigen 3 done" << endl;
     } else {
       PLERROR("In GaussMix::computeMeansAndCovariances - Not implemented for this type of Gaussian");
     }
@@ -350,6 +352,40 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
     static real lambda0;
     static real lambda;
     static int n_eig;
+    static TVec<int> cond_flags_backup;
+    bool need_restore_conditional_flags = false;
+    bool empty_conditional_flags = false;
+    static Vec y_no_missing;
+    if (y.hasMissing()) {
+      // There are missing values: we need to marginalize them first.
+      need_restore_conditional_flags = true;
+      y_no_missing.resize(0);
+      int start;
+      if (is_input)
+        start = 0;
+      else
+        start = n_input;
+      cond_flags_backup.resize(0);
+      if (conditional_flags.isEmpty()) {
+        // No input / marginalized part.
+        empty_conditional_flags = true;
+        conditional_flags.resize(D);
+        conditional_flags.fill(2);
+      }
+      for (int i = 0; i < y.length(); i++)
+        if (is_missing(y[i])) {
+          int index = cond_sort[i + start];
+          cond_flags_backup.append(index);
+          cond_flags_backup.append(conditional_flags[index]);
+          conditional_flags[index] = 0;
+        } else
+          y_no_missing.append(y[i]);
+      setConditionalFlags(conditional_flags);
+    } else {
+      // Just copy the given vector 'y'.
+      y_no_missing.resize(y.length());
+      y_no_missing << y;
+    }
     if (is_input) {
       mu_y = mu(j).subVec(0, n_input);
       size = n_input;
@@ -375,7 +411,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
     }
     t = log_coeff[j];
     y_centered.resize(size);
-    y_centered << y;
+    y_centered << y_no_missing;
     y_centered -= mu_y;
     squared_norm_y_centered = pownorm(y_centered);
     real var_min = sigma_min*sigma_min;
@@ -396,6 +432,14 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
 #endif
       if (lambda > lambda0)
         t -= 0.5 * (1.0 / lambda - one_over_lambda0) * square(dot(eigenvecs(k), y_centered));
+    }
+    if (need_restore_conditional_flags) {
+      if (empty_conditional_flags)
+        conditional_flags.resize(0);
+      else
+        for (int i = 0; i < cond_flags_backup.length(); i += 2)
+          conditional_flags[cond_flags_backup[i]] = cond_flags_backup[i+1];
+      setConditionalFlags(conditional_flags);
     }
     return t;
   } else {
@@ -903,7 +947,10 @@ void GaussMix::setInput(const Vec& input) const {
       x_minus_mu_x << input;
       x_minus_mu_x -= mu(j).subVec(0, n_input);
       mu_target = mu_y_x(j);
-      product(mu_target, y_x_mat[j], x_minus_mu_x);
+      if (n_input > 0)
+        product(mu_target, y_x_mat[j], x_minus_mu_x);
+      else
+        mu_target.fill(0);
       mu_target += mu(j).subVec(n_input, n_target);
     }
   } else {
@@ -1001,7 +1048,7 @@ void GaussMix::train()
 //////////////////////////////////
 // updateFromConditionalSorting //
 //////////////////////////////////
-void GaussMix::updateFromConditionalSorting() {
+void GaussMix::updateFromConditionalSorting() const {
   static Mat inv_cov_x, tmp_cov, work_mat1, work_mat2;
   static Vec eigenvals;
   // Update the centers of the Gaussians.
@@ -1056,31 +1103,40 @@ void GaussMix::updateFromConditionalSorting() {
       // Compute its SVD.
       eigenvectors_x[j].resize(n_input, n_input);
       eigenvals = eigenvalues_x(j);
-      eigenVecOfSymmMat(cov_x[j], n_input, eigenvals, eigenvectors_x[j]);
-      // And its inverse (we'll need it for the covariance of y|x).
-      inv_cov_x.fill(0);
-      lambda0 = max(var_min, eigenvals[n_input - 1]);
-      real one_over_lambda0 = 1 / lambda0;
-      Mat& eigenvectors_x_j = eigenvectors_x[j];
-      for (int k = 0; k < n_input - 1; k++)
-        externalProductScaleAcc(
-            inv_cov_x, eigenvectors_x_j(k), eigenvectors_x_j(k),
-            1 / max(var_min, eigenvals[k]) - one_over_lambda0);
-      for (int i = 0; i < n_input; i++)
-        inv_cov_x(i,i) += one_over_lambda0;
+      if (n_input > 0) {
+        // pout << "Eigen 1" << endl;
+        eigenVecOfSymmMat(cov_x[j], n_input, eigenvals, eigenvectors_x[j]);
+        // pout << "Eigen 1 done" << endl;
+        // And its inverse (we'll need it for the covariance of y|x).
+        inv_cov_x.fill(0);
+        lambda0 = max(var_min, eigenvals[n_input - 1]);
+        real one_over_lambda0 = 1 / lambda0;
+        Mat& eigenvectors_x_j = eigenvectors_x[j];
+        for (int k = 0; k < n_input - 1; k++)
+          externalProductScaleAcc(
+              inv_cov_x, eigenvectors_x_j(k), eigenvectors_x_j(k),
+              1 / max(var_min, eigenvals[k]) - one_over_lambda0);
+        for (int i = 0; i < n_input; i++)
+          inv_cov_x(i,i) += one_over_lambda0;
+      }
       // Compute the covariance of y|x.
       cov_y_x[j].resize(n_target, n_target);
       cov_y_x[j] << full_cov[j].subMat(n_input, n_input, n_target, n_target);
-      tmp_cov = full_cov[j].subMat(n_input, 0, n_target, n_input);
-      product(work_mat1, tmp_cov, inv_cov_x);
-      productTranspose(work_mat2, work_mat1, tmp_cov);
-      cov_y_x[j] -= work_mat2;
       y_x_mat[j].resize(n_target, n_input);
-      y_x_mat[j] << work_mat1;
+      if (n_input > 0 && n_target > 0) {
+        tmp_cov = full_cov[j].subMat(n_input, 0, n_target, n_input);
+        product(work_mat1, tmp_cov, inv_cov_x);
+        productTranspose(work_mat2, work_mat1, tmp_cov);
+        cov_y_x[j] -= work_mat2;
+        y_x_mat[j] << work_mat1;
+      }
       // And its SVD.
       eigenvectors_y_x[j].resize(n_target, n_target);
       eigenvals = eigenvalues_y_x(j);
+      static int eigen_2_count = 0;
+//      pout << "Eigen 2: " << ++eigen_2_count << endl;
       eigenVecOfSymmMat(cov_y_x[j], n_target, eigenvals, eigenvectors_y_x[j]);
+//      pout << "Eigen 2 done" << endl;
     }
   } else {
     PLERROR("In GaussMix::updateFromConditionalSorting - Not implemented for this type");
