@@ -187,8 +187,10 @@ public:
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Initialize the random number generator with the given long 'x'.
-  //! The 'seed' option will be automatically set to 'x', which may be -1.
+  //! Set the 'seed' option to 'x' and reset the random number generator
+  //! accordingly.
+  //! 'x' may be -1 to initialize from the current CPU time, or 0 to make
+  //! no initialization.
   void manual_seed(long x);
 
   //! Initialize the random number generator with the CPU time.
