@@ -7,18 +7,16 @@ from plearn.pyplearn.plearn_repr    import plearn_repr, python_repr
 from plearn.pyplearn.PyPLearnObject import PyPLearnObject
 from plearn.utilities.moresh        import *
 from plearn.utilities.Bindings      import *
+from plearn.vmat.PMat               import PMat
 
 rhs_casts = [ int , float ]
 
-def get_inexistence_predicate( expkey, cache_once=True ):
-    """Returns a predicate checking that the experiment doesn't exist."""
-    def inexistence_predicate( arguments ):
-        if not (cache_once and Experiment._cached):
-            Experiment.cache_experiments( )
-        matches = Experiment.match( arguments )
-        return len( matches ) == 0
-
-    return inexistence_predicate
+def inexistence_predicate( arguments, forget=False ):
+    """Predicate checking that the experiment doesn't exist."""
+    if forget:
+        Experiment.cache_experiments( forget=forget )
+    matches = Experiment.match( arguments )
+    return len( matches ) == 0
     
 def keycmp( exp, other, expkey ):
     if exp.path == other.path:
@@ -65,17 +63,45 @@ def option_value_split( s, sep="=" ):
 
     return (lhs, rhs)
 
+def xpathfunction( func ):
+    def function( obj, *args, **kwargs ):
+        if isinstance( obj, Experiment ):
+            func( obj.path, *args, **kwargs )
+        elif len(args) and isinstance( obj, str ):
+            func( obj, *args, **kwargs )
+        else:
+            raise ValueError( obj )
+    return function
+
+def migrate( path, dest, move=False ):
+    abspath = os.path.abspath( path )
+    if move:
+        absdest = os.path.abspath( dest )
+        os.system( 'mv %s %s'
+                   % ( abspath, absdest )
+                   )
+
+    else:
+        relative_link( abspath, dest )            
+migrate = xpathfunction( migrate )
+
 class ExpKey( Bindings ):
+    _neglected = [ 'expdir', 'expdir_root' ]
+    
     def __init__( self, keysrc=[] ):
         expkey = []
         if isinstance( keysrc, list ):
             if keysrc and isinstance( keysrc[0], tuple ):
                 expkey = keysrc
             else:
-                expkey = [ option_value_split( key ) for key in keysrc ]
+                expkey = [ option_value_split( key ) for key in keysrc ]                
         elif isinstance( keysrc, str ) and os.path.exists( keysrc ):
             expkey = [ option_value_split( line ) for line in file(keysrc, "r") ]        
+
         Bindings.__init__( self, expkey )
+        for neg in self._neglected:
+            if neg in self:
+                del self[neg]
 
     def strkey( self ):
         return " ".join([ '='.join([str(key),str(value)]) for key,value in self.iteritems() ])
@@ -85,6 +111,7 @@ class Experiment(PyPLearnObject):
     # Options
     path    = None
     expkey  = None
+    abspath = None
             
     ##
     # Class variables
@@ -97,23 +124,6 @@ class Experiment(PyPLearnObject):
     ##
     # PyPLearnObject's classmethod
     _unreferenced = classmethod( lambda cls: True )
-
-    def load( cls, path ):
-        cached = os.path.join( path, cls._cached_exp_fname )
-        if os.path.exists( cached ):
-            return eval( open( cached, 'r' ).read() )
-
-        # Load from scratch and cache
-        exp       = cls( path = path )
-
-        # CACHING DISABLED!!!
-        # if not exp.running():
-        #     cachefile = open( cached, 'w' )
-        #     print >>cachefile, repr(exp)
-        #     cachefile.close()
-        
-        return exp        
-    load = classmethod( load )
 
     def cache_experiments( cls, exproot=None, forget=True ):
         if exproot is None:
@@ -134,26 +144,43 @@ class Experiment(PyPLearnObject):
 
         for fname in dirlist:
             if fname.startswith( cls._expdir_prefix ):                
-                x = cls.load( os.path.join(exproot, fname) )
+                x = cls( path = os.path.join(exproot, fname) )
                 cls._cached.append( x )            
     cache_experiments = classmethod( cache_experiments )
 
     def match( cls, expkey=[] ):
         if cls._cached is None:
             cls.cache_experiments()                        
-        return [ exp for exp in cls._cached if exp.is_matched( expkey ) ]
+        return [ exp for exp in cls._cached if exp.isMatched( expkey ) ]
     match = classmethod( match )
 
+    def match_one( cls, expkey ):
+        matches = cls.match( expkey )
+        assert len(matches) == 1, "%d\n%s" % (len(matches), expkey)
+        return matches[0]    
+    match_one = classmethod( match_one )
+
+    #
+    #  Instance methods
+    #
     def __init__( self, **overrides ):
         PyPLearnObject.__init__( self, **overrides )
         if self.expkey is None:
             self.expkey = ExpKey( os.path.join( self.path, self._metainfos_fname ) )
+
+        # Update abspath
+        self.abspath = os.path.abspath( self.path )
         
     def __cmp__( self, other ):
         raise NotImplementedError( 'Use keycmp( x1, x2, expkey )' )
 
     def __str__( self ):
         return self.toString()
+
+    def collect( self, global_stats='global_stats.pmat', test_costs='' ):
+        self.global_stats = PMat( os.path.join(self.abspath, global_stats) )
+        if test_costs:
+            self.test_costs = PMat( os.path.join(self.abspath, test_costs) )
 
     def getKey( self, expkey = None ):
         if expkey is None:
@@ -167,20 +194,14 @@ class Experiment(PyPLearnObject):
                 subset[key] = None
         return subset
         
-    def toString( self, expkey=None, short=False ):
-        s = '%s\n' % self.path
-
-        if short and expkey is None:
-            return s
-        
-        for key, value in self.getKey(expkey).iteritems():
-            s += '    %s= %s\n' % (key.ljust(30), value)
-        return s
-
-    def is_matched( self, expkey ):
+    def isMatched( self, expkey ):
         # Always matching empty expkey
         if not expkey:
             return True 
+
+        # User should probably become aware of the concept of ExpKey.
+        if not isinstance( expkey, ExpKey ): 
+            expkey = ExpKey( expkey )
 
         # For efficiency
         if len(expkey) > len(self.expkey):
@@ -196,10 +217,6 @@ class Experiment(PyPLearnObject):
             lhs in self.expkey and \
             ( rhs is None or self.expkey[lhs]==rhs )                       
 
-        # User should probably become aware of the concept of ExpKey.
-        if not isinstance( expkey, ExpKey ): 
-            expkey = ExpKey( expkey )
-
         # All key element must match (match_predicate)
         for lhs, rhs in expkey.iteritems():
             if not match_predicate(lhs,rhs):
@@ -207,6 +224,16 @@ class Experiment(PyPLearnObject):
         
         # All key element matched
         return True
+
+    def toString( self, expkey=None, short=False ):
+        s = '%s\n' % self.path
+
+        if short and expkey is None:
+            return s
+        
+        for key, value in self.getKey(expkey).iteritems():
+            s += '    %s= %s\n' % (key.ljust(30), value)
+        return s
 
     def running( self ):
         return len(self.expkey) == 0

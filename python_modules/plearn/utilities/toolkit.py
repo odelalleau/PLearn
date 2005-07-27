@@ -374,9 +374,12 @@ def version( project_path, build_list ):
 
     return [ major, minor, revision, plearn_version ]
 
-def vsystem( cmd, prefix='+++' ):
-    print prefix, cmd
-    os.system( cmd )
+def vsystem( cmd, prefix='+++', quiet=False ):
+    if quiet:
+        os.system( "%s > /dev/null" % cmd )
+    else:
+        print prefix, cmd
+        os.system( cmd )
 
 class WString:
     """Writable String.

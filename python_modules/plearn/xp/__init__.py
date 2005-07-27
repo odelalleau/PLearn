@@ -25,6 +25,9 @@ from plearn.utilities.moresh import *
 from plearn.utilities.toolkit import vsystem
 from plearn.utilities.ModeAndOptionParser import *
 
+#
+#  Classes
+#
 class XpMode( Mode ):
     pass
 
@@ -40,23 +43,7 @@ class XpMode( Mode ):
 class merge( XpMode ):
     """\ls -1 Rank*/expdir* | grep expdir > tmp.sh"""
     def option_groups( cls, parser ):
-        group_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
-                                     "Available under %s mode only." % cls.__name__ )
-
-        # group_options.add_option( "--move",
-        #                           default = False,
-        #                           action  = 'store_true',
-        #                           help    = "Should the experiments directory be moved (instead of linked) in "
-        #                           "the created directory."                       
-        #                           )
-        
-        group_options.add_option( "--name",
-                                  default = None,
-                                  help    = "The name that should be given the created directory. The default "
-                                  "name is built from the experiment key."                       
-                                  )
-
-        return [ group_options ]
+        return directory_options( cls, parser )
     option_groups = classmethod( option_groups )
     
 
@@ -66,13 +53,12 @@ class merge( XpMode ):
         else:
             dirname = 'Merge_%s' % '_'.join(targets)
         os.makedirs( dirname )
-            
+
         for target in targets:
             dirlist = os.listdir( target )
             for fname in dirlist:
                 if fname.startswith( Experiment._expdir_prefix ):
-                    fpath = os.path.join( '..', target, fname)
-                    os.symlink( fpath, os.path.join( dirname, fname) )
+                    migrate( os.path.join(target, fname), dirname, options.move )
 
 class mkdir( XpMode ):
     def __init__( self, targets, options ):
@@ -100,6 +86,26 @@ class mkdir( XpMode ):
         vsystem( 'chmod u=rwx %s' % lname )
         print '+++', lname, 'created.'
         
+
+class running( XpMode ):
+    def __init__( self, targets, options ):
+        assert not targets
+        
+        r = 0
+        for exp in ls():
+            if exp.startswith( Experiment._expdir_prefix ) and \
+               not os.path.exists( os.path.join( exp, Experiment._metainfos_fname ) ):
+                if r == 0:
+                    print
+                r += 1
+                print exp
+
+        print( "\n(%d experiment%s %s running)"
+               % ( r, toolkit.plural(r),
+                   toolkit.plural(r, 'is', 'are') )
+               )
+        
+
 #
 #  Modes Parsing ExpKeys
 #
@@ -190,25 +196,10 @@ class listdir( ExpKeyMode ):
         return [ listdir_options ]
     option_groups = classmethod( option_groups )
 
+
 class group( ExpKeyMode ):
     def option_groups( cls, parser ):
-        group_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
-                                     "Available under %s mode only." % cls.__name__ )
-
-        group_options.add_option( "--move",
-                                  default = False,
-                                  action  = 'store_true',
-                                  help    = "Should the experiments directory be moved (instead of linked) in "
-                                  "the created directory."                       
-                                  )
-        
-        group_options.add_option( "--name",
-                                  default = None,
-                                  help    = "The name that should be given the created directory. The default "
-                                  "name is built from the experiment key."                       
-                                  )
-
-        return [ group_options ]
+        return directory_options( cls, parser )
     option_groups = classmethod( option_groups )
     
     def routine( self, expkey, options, experiments ):    
@@ -242,22 +233,29 @@ class group( ExpKeyMode ):
                                    )
             popd( )
 
-class running( ExpKeyMode ):
-    def routine( self, expkey, options, experiments ):
-        assert not expkey
-        r = 0
-        for exp in experiments:
-            if exp.running():
-                if r == 0:
-                    print
-                r += 1
-                print exp
+#
+#  Helper functions
+#
+def directory_options( cls, parser ):
+    directory_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
+                                     "Available under %s mode only." % cls.__name__ )
 
-        print( "\n(%d experiment%s %s running)"
-               % ( r, toolkit.plural(r),
-                   toolkit.plural(r, 'is', 'are') )
-               )
-        
+    directory_options.add_option( "--move",
+                                  default = False,
+                                  action  = 'store_true',
+                                  help    = "Should the experiments directory be moved (instead of linked) in "
+                                  "the created directory."                       
+                                  )
+    
+    directory_options.add_option( "--name",
+                                  default = None,
+                                  help    = "The name that should be given the created directory. The default "
+                                  "name is built from the experiment key."                       
+                                  )
+
+    return [ directory_options ]
+
+
 #            
 #  Main program
 #
