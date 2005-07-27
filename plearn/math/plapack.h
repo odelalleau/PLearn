@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.21 2004/06/29 13:21:20 tihocan Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -321,6 +321,12 @@ void lapackGeneralizedEIGEN(const TMat<num_t>& A, const TMat<num_t>& B, int ITYP
 template<class num_t>
 void eigenVecOfSymmMat(TMat<num_t>& m, int k, TVec<num_t>& eigen_values, TMat<num_t>& eigen_vectors)
 {
+  if (m.isEmpty()) {
+    // Empty matrix: we just need to do some resizing.
+    eigen_values.resize(0);
+    eigen_vectors.resize(m.length(), m.width());
+    return;
+  }
   eigen_vectors.resize(k,m.width());
   eigen_values.resize(k);
   // FASTER
