@@ -40,9 +40,7 @@
 
 // From PLeearn
 #include "SequentialValidation.h"
-#include <plearn/math/VecStatsCollector.h>
 #include <plearn/vmat/FileVMatrix.h>
-#include <plearn_learners/testers/PTester.h>  // for using class StatSpec
 #include <plearn/base/stringutils.h>
 #include <plearn/io/MatIO.h>
 #include <plearn/io/load_and_save.h>
@@ -59,6 +57,7 @@ PLEARN_IMPLEMENT_OBJECT(
 
 SequentialValidation::SequentialValidation()
   : init_train_size(1),
+    warmup_size(0),
     train_step(1),
     last_test_time(-1),
     expdir(""),
@@ -141,6 +140,17 @@ void SequentialValidation::declareOptions(OptionList& ol)
     "the method setTestStartTime() is called on the learner with init_train_size\n"
     "as argument.");
 
+  declareOption(
+    ol, "warmup_size", &SequentialValidation::warmup_size,
+    OptionBase::buildoption,
+    "If specified, this is a number of time-steps that are taken FROM THE\n"
+    "END of init_train_size to start \"testing\" (i.e. alternating between\n"
+    "train and test), but WITHOUT ACCUMULATING ANY TEST STATISTICS.  In\n"
+    "other words, this is a \"warmup\" period just before the true test.\n"
+    "Before starting the real test period, the setTestStartTime() method is\n"
+    "called on the learner, followed by resetInternalState().  Note that\n"
+    "the very first \"init_train_size\" is REDUCED by the warmup_size.\n");
+  
   declareOption(
     ol, "train_step", &SequentialValidation::train_step,
     OptionBase::buildoption,
@@ -237,8 +247,15 @@ void SequentialValidation::run()
   }
 
   if (!learner)
-    PLERROR("No learner specified for SequentialValidation.");
+    PLERROR("SequentialValidation::run: learner not specified.");
 
+  if (warmup_size >= init_train_size)
+    PLERROR("SequentialValidation::run: 'warmup_size' must be strictly smaller than "
+            "'init_train_size'");
+
+  if (warmup_size < 0 || init_train_size < 0)
+    PLERROR("SequentialValidation::run: negative warmup_size or init_train_size.");
+  
   // Get a first dataset to set inputsize() and targetsize()
   VMat train_vmat = trainVMat(init_train_size);
   for ( int a=0; a < accessory_learners.length(); a++ )
@@ -249,123 +266,42 @@ void SequentialValidation::run()
 
   // If we need to report memory usage, create the appropriate directory
   if (report_memory_usage)
-    force_mkdir( append_slash(expdir) + "MemoryUsage" );
+    force_mkdir( expdir / "MemoryUsage" );
 
   // Save this experiment description in the expdir (buildoptions only)
   if (save_initial_seqval)
-    PLearn::save(expdir+"sequential_validation.psave", *this);
+    PLearn::save(expdir / "sequential_validation.psave", *this);
 
-  TVec<string> testcostnames = learner->getTestCostNames();
-  TVec<string> traincostnames = learner->getTrainCostNames();
- 
-  int outputsize = learner->outputsize();
-  int nstats = statnames.length();
-  int timewise_nstats = timewise_statnames.length();
-
-  TVec< PP<VecStatsCollector> > stcol(2);  // one for train and one for test
-
-  // Always manage the accessory_learners first since they may be used
-  // within the main trader.
-  PP<VecStatsCollector> dummy_train_stats = new VecStatsCollector(); 
-  for ( int a=0; a < accessory_learners.length(); a++ )
-    accessory_learners[a]->setTrainStatsCollector( dummy_train_stats );
+  // Create the stat collectors and set them into the learner(s)
+  createStatCollectors();
+  createStatSpecs();
   
-  // stats for a train on one split
-  PP<VecStatsCollector> train_stats = new VecStatsCollector();
-  train_stats->setFieldNames(traincostnames);
-  learner->setTrainStatsCollector(train_stats);  
-  stcol[0] = train_stats;
-
-  // stats for a test on one split
-  PP<VecStatsCollector> test_stats = new VecStatsCollector();
-  test_stats->setFieldNames(testcostnames);
-  stcol[1] = test_stats;
-
-  // stats over all sequence
-  PP<VecStatsCollector> sequence_stats = new VecStatsCollector();
-
-  // Stat specs (overall)
-  TVec<StatSpec> statspecs(nstats);
-  for (int k=0; k<nstats; k++)
-    statspecs[k].init(statnames[k]);
-
-  // timewise stats (may not be used)
-  PP<VecStatsCollector> timewise_stats = new VecStatsCollector();
-
-  // Stat specs (timewise)
-  TVec<StatSpec> timewise_statspecs(timewise_nstats);
-  for (int k=0; k<timewise_nstats; ++k)
-    timewise_statspecs[k].init(timewise_statnames[k]);
-
-  VMat global_stats_vm;   // vmat where to save global result stats specified in statnames
-  VMat split_stats_vm;    // vmat where to save per split result stats
-  VMat timewise_stats_vm; // vmat where to save timewise statistics
+  // Warm up the model before starting the real experiment; this is done
+  // after setting the training stats collectors into everybody...
+  if (warmup_size > 0)
+    warmupModel(warmup_size);
 
   // Create all VMatrix related to saving statistics
   if (report_stats)
-  {
-    saveStringInFile(expdir+"train_cost_names.txt", join(traincostnames,"\n")+"\n");
-    saveStringInFile(expdir+"test_cost_names.txt", join(testcostnames,"\n")+"\n");
+    createStatVMats();
 
-    global_stats_vm = new FileVMatrix(expdir+"global_stats.pmat", 0, nstats);
-    for(int k=0; k<nstats; k++)
-      global_stats_vm->declareField(k,statspecs[k].statName());
-    global_stats_vm->saveFieldInfos();
-
-    if (save_sequence_stats) {
-      split_stats_vm = new FileVMatrix(expdir+"sequence_stats.pmat", 0,
-                                       1+nstats);
-      split_stats_vm->declareField(0,"splitnum");
-      for(int k=0; k<nstats; k++)
-        split_stats_vm->declareField(k+1,statspecs[k].setname + "." + statspecs[k].intstatname);
-      split_stats_vm->saveFieldInfos();
-    }
-
-    if (timewise_nstats > 0) {
-      timewise_stats_vm = new FileVMatrix(expdir+"timewise_stats.pmat", 0,
-                                          timewise_nstats);
-      for (int k=0; k<timewise_nstats; ++k)
-        timewise_stats_vm->declareField(k, timewise_statspecs[k].statName());
-      timewise_stats_vm->saveFieldInfos();
-    }
-  }
-
-  // Ensure correct build of learner and reset internal state.  We call
-  // setTestStartTime TWICE, because some learners need it before build,
-  // and because other learners, such as SequentialSelector-types, will not
-  // have finished to construct the complete structure of sub-learners
-  // until AFTER build, and we want the setTestStartTime() message to
-  // propagate to everybody.
-  for ( int a=0; a < accessory_learners.length(); a++ )
-  {
-    accessory_learners[a]->setTestStartTime(init_train_size);
-    accessory_learners[a]->build();
-    accessory_learners[a]->setTestStartTime(init_train_size);
-    accessory_learners[a]->resetInternalState();    
-  }
-  learner->setTestStartTime(init_train_size);
-  learner->build();
-  learner->setTestStartTime(init_train_size);
-  learner->resetInternalState();
-
-      
+  // Final model initialization before the test
+  setTestStartTime(init_train_size, true /* call_build */);
   
   VMat test_outputs;
   VMat test_costs;
   if (save_test_outputs)
-    test_outputs = new FileVMatrix(expdir+"/test_outputs.pmat",0,outputsize);
+    test_outputs = new FileVMatrix(expdir / "test_outputs.pmat",0,
+                                   learner->outputsize());
   if (save_test_costs)
-    test_costs = new FileVMatrix(expdir+"/test_costs.pmat",0,testcostnames);
+    test_costs = new FileVMatrix(expdir / "test_costs.pmat",0,
+                                 learner->getTestCostNames());
 
   // Some further initializations
   int maxt = (last_test_time >= 0? last_test_time : maxTimeStep() - 1);
   int splitnum = 0;
-  double weight;
-  Vec input, target;
-  Vec dummy_output; // for accessory_learners
-  Vec dummy_costs;  // for accessory_learners  
-  Vec output(learner->outputsize());
-  Vec costs(learner->nTestCosts());
+  output.resize(learner->outputsize());
+  costs.resize(learner->nTestCosts());
   for (int t=init_train_size; t <= maxt; t++, splitnum++)
   {
 #ifdef DEBUG
@@ -396,18 +332,8 @@ void SequentialValidation::run()
       if (save_initial_model)
         PLearn::save(splitdir / "initial_learner.psave",learner);
 
-      // TRAIN
-      for ( int a=0; a < accessory_learners.length(); a++ )
-      {
-        dummy_train_stats->forget();
-        accessory_learners[a]->setTrainingSet(sub_train, false);
-        accessory_learners[a]->train();        
-      }
-      train_stats->forget();
-      learner->setTrainingSet(sub_train, false);
-      learner->train();
-      train_stats->finalize();
-
+      // Perform train
+      trainLearners(sub_train);
       
       // Save post-train stuff
       if (save_stat_collectors)
@@ -420,19 +346,7 @@ void SequentialValidation::run()
     // TEST: simply use computeOutputAndCosts for 1 observation in this
     // implementation
     VMat sub_test = testVMat(t);
-    sub_test.getExample(t, input, target, weight);
-    for ( int a=0; a < accessory_learners.length(); a++ )
-    {
-      accessory_learners[a]->setTestSet(sub_test);         // temporary hack
-      accessory_learners[a]->computeOutputAndCosts( input, target, dummy_output, dummy_costs );
-    }
-    test_stats->forget();
-    learner->setTestSet(sub_test);           // temporary hack
-    learner->computeOutputAndCosts(input, target, output, costs);
-    test_stats->update(costs);
-    test_stats->finalize();
-
-
+    testLearners(sub_test);
     
     // Save what is required from the test run
     if (save_data_sets)
@@ -445,6 +359,7 @@ void SequentialValidation::run()
       PLearn::save(splitdir / "test_stats.psave",test_stats);
     measureOptions(measure_after_test, splitdir);
 
+    const int nstats = statnames.size();
     Vec splitres(1+nstats);
     splitres[0] = splitnum;
 
@@ -468,6 +383,7 @@ void SequentialValidation::run()
     // statistics; then update the stats collector; then loop on the outer
     // statistics
     if (timewise_stats_vm) {
+      const int timewise_nstats = timewise_statnames.size();
       Vec timewise_res(timewise_nstats);
       for (int k=0; k<timewise_nstats; ++k) {
         StatSpec& sp = timewise_statspecs[k];
@@ -487,6 +403,7 @@ void SequentialValidation::run()
 
   sequence_stats->finalize();
 
+  const int nstats = statnames.size();
   Vec global_result(nstats);
   for (int k=0; k<nstats; k++)
     global_result[k] = sequence_stats->getStats(k).getStat(statspecs[k].extstat);
@@ -497,11 +414,55 @@ void SequentialValidation::run()
   reportStats(global_result);
 }
 
+void SequentialValidation::warmupModel(int warmup_size)
+{
+  assert( warmup_size < init_train_size );
+  setTestStartTime(init_train_size - warmup_size, true /* call_build */);
+  
+  for (int t = init_train_size-warmup_size ; t<init_train_size ; ++t) {
+    VMat sub_train = trainVMat(t);           // train
+    trainLearners(sub_train);
+
+    VMat sub_test = testVMat(t);             // test
+    testLearners(sub_test);
+  }
+}
+
+void SequentialValidation::setTestStartTime(int test_start_time, bool call_build)
+{
+  // Ensure correct build of learner and reset internal state.  We call
+  // setTestStartTime TWICE, because some learners need it before build,
+  // and because other learners, such as SequentialSelector-types, will not
+  // have finished to construct the complete structure of sub-learners
+  // until AFTER build, and we want the setTestStartTime() message to
+  // propagate to everybody.
+
+  assert( test_start_time > 0 );
+  
+  // Start with the accessory learners
+  for (int a=0, n=accessory_learners.length() ; a<n ; ++a ) {
+    if (call_build) {
+      accessory_learners[a]->setTestStartTime(test_start_time);
+      accessory_learners[a]->build();
+    }
+    accessory_learners[a]->setTestStartTime(test_start_time);
+    accessory_learners[a]->resetInternalState();
+  }
+
+  // And now the main learner
+  if (call_build) {
+    learner->setTestStartTime(test_start_time);
+    learner->build();
+  }
+  learner->setTestStartTime(test_start_time);
+  learner->resetInternalState();
+}
+
 void SequentialValidation::setExperimentDirectory(const PPath& _expdir)
 {
   expdir = _expdir;
   if(provide_learner_expdir)
-    learner->setExperimentDirectory(append_slash(expdir)+"Model");
+    learner->setExperimentDirectory(expdir / "Model");
 }
 
 void SequentialValidation::reportStats(const Vec& global_result)
@@ -569,16 +530,141 @@ void SequentialValidation::measureOptions(
   }
 }
 
+void SequentialValidation::createStatCollectors()
+{
+  // Always manage the accessory_learners first since they may be used
+  // within the main trader.
+  accessory_train_stats = new VecStatsCollector(); 
+  for (int a=0, n=accessory_learners.length() ; a<n ; ++a)
+    accessory_learners[a]->setTrainStatsCollector( accessory_train_stats );
+  
+  // stats for a train on one split
+  stcol.resize(2);
+  train_stats = new VecStatsCollector();
+  train_stats->setFieldNames(learner->getTrainCostNames());
+  learner->setTrainStatsCollector(train_stats);  
+  stcol[0] = train_stats;
+
+  // stats for a test on one split
+  test_stats = new VecStatsCollector();
+  test_stats->setFieldNames(learner->getTestCostNames());
+  stcol[1] = test_stats;
+
+  // stats over all sequence
+  sequence_stats = new VecStatsCollector();
+
+  // timewise stats (may not be used)
+  timewise_stats = new VecStatsCollector();
+}
+
+void SequentialValidation::createStatSpecs()
+{
+  // Stat specs (overall)
+  const int nstats = statnames.length();
+  statspecs.resize(nstats);
+  for (int k=0; k<nstats; k++)
+    statspecs[k].init(statnames[k]);
+
+  // Stat specs (timewise)
+  const int timewise_nstats = timewise_statnames.length();
+  timewise_statspecs.resize(timewise_nstats);
+  for (int k=0; k<timewise_nstats; ++k)
+    timewise_statspecs[k].init(timewise_statnames[k]);
+}
+
+void SequentialValidation::createStatVMats()
+{
+  TVec<string> traincostnames = learner->getTrainCostNames();
+  TVec<string> testcostnames  = learner->getTestCostNames();
+  const int nstats = statnames.size();
+  const int timewise_nstats = timewise_statnames.size();
+
+  saveStringInFile(expdir / "train_cost_names.txt", join(traincostnames,"\n")+"\n");
+  saveStringInFile(expdir / "test_cost_names.txt",  join(testcostnames,"\n")+"\n");
+
+  global_stats_vm = new FileVMatrix(expdir / "global_stats.pmat", 0, nstats);
+  for(int k=0; k<nstats; k++)
+    global_stats_vm->declareField(k,statspecs[k].statName());
+  global_stats_vm->saveFieldInfos();
+
+  if (save_sequence_stats) {
+    split_stats_vm = new FileVMatrix(expdir+"sequence_stats.pmat", 0,
+                                     1+nstats);
+    split_stats_vm->declareField(0,"splitnum");
+    for(int k=0; k<nstats; k++)
+      split_stats_vm->declareField(k+1,statspecs[k].setname + "." + statspecs[k].intstatname);
+    split_stats_vm->saveFieldInfos();
+  }
+
+  if (timewise_nstats > 0) {
+    timewise_stats_vm = new FileVMatrix(expdir+"timewise_stats.pmat", 0,
+                                        timewise_nstats);
+    for (int k=0; k<timewise_nstats; ++k)
+      timewise_stats_vm->declareField(k, timewise_statspecs[k].statName());
+    timewise_stats_vm->saveFieldInfos();
+  }
+}
+
+void SequentialValidation::trainLearners(VMat training_set)
+{
+  for (int a=0, n=accessory_learners.length(); a<n ; ++a)
+  {
+    accessory_train_stats->forget();
+    accessory_learners[a]->setTrainingSet(training_set, false);
+    accessory_learners[a]->train();        
+  }
+  train_stats->forget();
+  learner->setTrainingSet(training_set, false);
+  learner->train();
+  train_stats->finalize();  
+}
+
+void SequentialValidation::testLearners(VMat test_set)
+{
+  double weight;
+  test_set.getExample(test_set.length()-1, input, target, weight);
+  for (int a=0, n=accessory_learners.length() ; a<n ; ++a )
+  {
+    accessory_learners[a]->setTestSet(test_set);         // temporary hack
+    accessory_learners[a]->computeOutputAndCosts(input, target,
+                                                 dummy_output, dummy_costs);
+  }
+  test_stats->forget();
+  learner->setTestSet(test_set);           // temporary hack
+  learner->computeOutputAndCosts(input, target, output, costs);
+  test_stats->update(costs);
+  test_stats->finalize();
+}
+
 void SequentialValidation::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(dataset,             copies);
-  deepCopyField(learner,             copies);
-  deepCopyField(accessory_learners,  copies);  
-  deepCopyField(statnames,           copies);
-  deepCopyField(timewise_statnames,  copies);
-  deepCopyField(measure_after_train, copies);
-  deepCopyField(measure_after_test,  copies);
+
+  deepCopyField(train_stats,            copies);
+  deepCopyField(accessory_train_stats,  copies);
+  deepCopyField(test_stats,             copies);
+  deepCopyField(sequence_stats,         copies);
+  deepCopyField(timewise_stats,         copies);
+  deepCopyField(stcol,                  copies);
+  deepCopyField(statspecs,              copies);
+  deepCopyField(timewise_statspecs,     copies);
+  deepCopyField(global_stats_vm,        copies);
+  deepCopyField(split_stats_vm,         copies);
+  deepCopyField(timewise_stats_vm,      copies); 
+  deepCopyField(input,                  copies);
+  deepCopyField(target,                 copies);
+  deepCopyField(dummy_output,           copies);
+  deepCopyField(dummy_costs,            copies);
+  deepCopyField(output,                 copies);
+  deepCopyField(costs,                  copies);
+  
+  deepCopyField(dataset,                copies);
+  deepCopyField(learner,                copies);
+  deepCopyField(accessory_learners,     copies);  
+  deepCopyField(statnames,              copies);
+  deepCopyField(timewise_statnames,     copies);
+  deepCopyField(measure_after_train,    copies);
+  deepCopyField(measure_after_test,     copies);
 }
 
 

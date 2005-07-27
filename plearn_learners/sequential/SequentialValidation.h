@@ -38,11 +38,13 @@
 #ifndef SEQUENTIAL_VALIDATION
 #define SEQUENTIAL_VALIDATION
 
-#include <plearn/base/Object.h>
-#include <plearn_learners/generic/StatefulLearner.h>
-#include <plearn/vmat/VMat.h>
 #include <plearn/base/PP.h>
+#include <plearn/base/Object.h>
+#include <plearn/vmat/VMat.h>
+#include <plearn/math/VecStatsCollector.h>
 #include <plearn/io/PPath.h>
+#include <plearn_learners/testers/PTester.h>  // for using class StatSpec
+#include <plearn_learners/generic/StatefulLearner.h>
 
 namespace PLearn {
 using namespace std;
@@ -52,6 +54,49 @@ class SequentialValidation: public Object
 {
   typedef Object inherited;
 
+protected:
+  //#####  Data members required for simulation  ############################
+
+  //! Training stat collector for main learner
+  PP<VecStatsCollector> train_stats;
+
+  //! Training stat collector for accessory learners
+  PP<VecStatsCollector> accessory_train_stats;
+  
+  //! Test stat collector
+  PP<VecStatsCollector> test_stats;
+
+  //! Sequence stat collector
+  PP<VecStatsCollector> sequence_stats;
+
+  //! Timewise stat collector
+  PP<VecStatsCollector> timewise_stats;
+  
+  // Contains pointers to train_stats and test_stats
+  TVec< PP<VecStatsCollector> > stcol;
+
+  //! Statspec corresponding to statnames
+  TVec<StatSpec> statspecs;
+
+  //! Statspec corresponding to timewise_statnames
+  TVec<StatSpec> timewise_statspecs;
+  
+  //! vmat where to save global result stats specified in statnames
+  VMat global_stats_vm;
+
+  //! vmat where to save per split result stats
+  VMat split_stats_vm;
+
+  //! vmat where to save timewise statistics
+  VMat timewise_stats_vm; 
+
+  //! Buffers
+  Vec input, target;
+  Vec dummy_output;                          //!< for accessory_learners
+  Vec dummy_costs;                           //!< for accessory_learners  
+  Vec output;
+  Vec costs;
+  
 public:
   
   // *********************
@@ -61,6 +106,17 @@ public:
   //! Size of first training set (default: 1)
   int init_train_size;
 
+  /**
+   * If specified, this is a number of time-steps that are taken FROM THE
+   * END of init_train_size to start "testing" (i.e. alternating between
+   * train and test), but WITHOUT ACCUMULATING ANY TEST STATISTICS.  In
+   * other words, this is a "warmup" period just before the true test.
+   * Before starting the real test period, the setTestStartTime() method is
+   * called on the learner, followed by resetInternalState().  Note that
+   * the very first "init_train_size" is REDUCED by the warmup_size.
+   */
+  int warmup_size;
+    
   //! At how many timesteps must we retrain?  (default: 1)
   //! If this is zero, train() is never called.
   int train_step;
@@ -174,6 +230,29 @@ public:
 
   //! The main method;  runs the experiment
   virtual void run();
+
+  //! If warmup_size > 0, warmup the learner before running the experiment
+  virtual void warmupModel(int warmup_size);
+
+  //! Set the test-start time of learner and accessory learners;
+  //! call resetInternalState() and optionally build()
+  virtual void setTestStartTime(int test_start_time, bool call_build = true);
+
+  //! Create the stat collectors
+  virtual void createStatCollectors();
+
+  //! Create the stat specs
+  virtual void createStatSpecs();
+  
+  //! Create the vmatrix required for saving the statistics
+  virtual void createStatVMats();
+
+  //! Train the main learner (and accessory learners)
+  virtual void trainLearners(VMat training_set);
+
+  //! Test learner on LAST OBSERVATION of test_set; also call
+  //! computeOutputAndCosts on accessory learners
+  virtual void testLearners(VMat test_set);
   
   //!  Does the necessary operations to transform a shallow copy (this)
   //!  into a deep copy by deep-copying all the members that need to be.
