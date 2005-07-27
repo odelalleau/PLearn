@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NGramDistribution.h,v 1.3 2004/10/20 14:55:11 larocheh Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -173,7 +173,7 @@ public:
 
   //! This method updates the internal data given a new sorting of the variables
   //! defined by the conditional flags.
-  virtual void updateFromConditionalSorting();
+  virtual void updateFromConditionalSorting() const;
 
   //! Return probability density p(y | x)
   virtual real density(const Vec& y) const;

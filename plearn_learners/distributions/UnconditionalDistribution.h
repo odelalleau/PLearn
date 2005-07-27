@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UnconditionalDistribution.h,v 1.3 2005/01/27 14:24:09 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -111,7 +111,7 @@ public:
 
   //! Return an error (not used in unconditional distributions).
   void setInput(const Vec& input) const;
-  void updateFromConditionalSorting();
+  void updateFromConditionalSorting() const;
 
   //! Overridden to use the default PLearner method instead of the conditional
   //! distribution version.

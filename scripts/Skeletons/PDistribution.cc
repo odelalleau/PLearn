@@ -202,7 +202,7 @@ void DERIVEDCLASS::train()
 //////////////////////////////////
 // updateFromConditionalSorting //
 //////////////////////////////////
-void DERIVEDCLASS::updateFromConditionalSorting() {
+void DERIVEDCLASS::updateFromConditionalSorting() const {
   // ### Update internal data for new conditional flags.
   // ### This method would typically call sortFromFlags() to update
   // ### internal data.

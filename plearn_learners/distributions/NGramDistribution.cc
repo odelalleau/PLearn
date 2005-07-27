@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NGramDistribution.cc,v 1.5 2004/10/20 14:55:11 larocheh Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -347,7 +347,7 @@ real NGramDistribution::survival_fn(const Vec& y) const
 //////////////////////////////////
 // updateFromConditionalSorting //
 //////////////////////////////////
-void NGramDistribution::updateFromConditionalSorting() {
+void NGramDistribution::updateFromConditionalSorting() const {
   return ;
 }
 

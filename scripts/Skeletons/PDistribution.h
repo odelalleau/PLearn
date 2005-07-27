@@ -102,7 +102,7 @@ public:
 
   //! This method updates the internal data given a new sorting of the variables
   //! defined by the conditional flags.
-  virtual void updateFromConditionalSorting();
+  virtual void updateFromConditionalSorting() const;
 
   // ### These methods may be overridden for efficiency purpose:
   /*

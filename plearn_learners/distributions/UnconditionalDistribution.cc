@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UnconditionalDistribution.cc,v 1.4 2005/01/27 14:24:09 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -157,7 +157,7 @@ void UnconditionalDistribution::setInput(const Vec& input) const {
 //////////////////////////////////
 // updateFromConditionalSorting //
 //////////////////////////////////
-void UnconditionalDistribution::updateFromConditionalSorting() {
+void UnconditionalDistribution::updateFromConditionalSorting() const {
     PLERROR("updateFromConditionalSorting not implemented for UnconditionalDistribution");
 }
 
