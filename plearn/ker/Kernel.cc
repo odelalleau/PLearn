@@ -327,9 +327,8 @@ void Kernel::computeGramMatrix(Mat K) const
   int m=K.mod();
   ProgressBar* pb = 0;
   int count = 0;
-  if (report_progress) {
+  if (report_progress)
     pb = new ProgressBar("Computing Gram matrix for " + classname(), (l * (l + 1)) / 2);
-  }
   real Kij;
   real* Ki;
   real* Kji_;
@@ -346,12 +345,12 @@ void Kernel::computeGramMatrix(Mat K) const
     }
     if (report_progress) {
       count += i + 1;
+      assert( pb );
       pb->update(count);
     }
   }
-  if (pb) {
+  if (pb)
     delete pb;
-  }
   if (cache_gram_matrix) {
     gram_matrix.resize(l,l);
     gram_matrix << K;
