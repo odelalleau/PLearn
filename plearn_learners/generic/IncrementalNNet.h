@@ -2,7 +2,7 @@
 
 // IncrementalNNet.h
 //
-// Copyright (C) 2005 Yoshua Bengio 
+// Copyright (C) 2005 Yoshua Bengio, Mantas Lukosevicius
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -36,7 +36,7 @@
    * $Id$ 
    ******************************************************* */
 
-// Authors: Yoshua Bengio
+// Authors: Yoshua Bengio, Mantas Lukosevicius
 
 /*! \file IncrementalNNet.h */
 
@@ -64,6 +64,7 @@ protected:
   // ### declare protected option fields (such as learnt parameters) here
 
   Mat output_weights; // [hidden_unit, output] ** NOTE IT IS TRANSPOSED ** so can easily add hidden units
+  Mat output_weight_gradients;
   Vec output_biases;
   Mat hidden_layer_weights; // [hidden_unit, input]
   Mat hidden_layer_weight_gradients; 
@@ -74,6 +75,7 @@ protected:
   Vec candidate_unit_weight_gradients; 
   real candidate_unit_bias;
   Vec candidate_unit_output_weights;
+  Vec candidate_unit_output_weight_gradients;
   Vec candidate_unit_internal_weights;
   Vec candidate_unit_internal_weight_gradients;
   int n_examples_seen;
@@ -82,6 +84,8 @@ protected:
   int n_examples_training_candidate;
   int current_example;
     
+  real moving_average_coefficient; // = 1.0/minibatchsize;
+  real learning_rate; // = initial_learning_rate / ( 1 + n_examples_seen * decay_factor );
 public:
 
   // ************************
@@ -232,6 +236,10 @@ public:
   // compute doutput_loss/doutput in output_gradient
   virtual void output_loss_gradient(const Vec& output,const Vec& target,
                                     Vec output_gradient, real sampleweight) const;
+  
+  // update moving avarage gradients on connections, add/remove some connections, train existant ones.
+  // works for input connections of a single unit. 
+  virtual void update_incremental_connections( Vec weights, Vec MAgradients, const Vec& input, real gradient ) const;
 
 };
 

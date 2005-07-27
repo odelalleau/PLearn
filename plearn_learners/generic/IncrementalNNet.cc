@@ -36,7 +36,7 @@
    * $Id$ 
    ******************************************************* */
 
-// Authors: Yoshua Bengio
+// Authors: Yoshua Bengio, Mantas Lukosevicius
 
 /*! \file IncrementalNNet.cc */
 
@@ -160,6 +160,12 @@ void IncrementalNNet::declareOptions(OptionList& ol)
                 "matrix of [hidden_unit, output] output weights.\n"
                 "** NOTE IT IS TRANSPOSED ** with respect to\n"
                 "the 'natural' index order, so as to easily add hidden units.\n");
+    
+  declareOption(ol, "output_weight_gradients", &IncrementalNNet::output_weight_gradients, OptionBase::learntoption,
+                "Moving average gradients on matrix of [hidden_unit, output] output weights\n"
+                "(enabled by residual_correlation_gradient && outputsize() > 1).\n"
+                "** NOTE IT IS TRANSPOSED ** with respect to\n"
+                "the 'natural' index order, so as to easily add hidden units.\n");
 
   declareOption(ol, "output_biases", &IncrementalNNet::output_biases, OptionBase::learntoption,
                 "vector of output biases\n");
@@ -189,8 +195,13 @@ void IncrementalNNet::declareOptions(OptionList& ol)
                 "bias parameter of next candidate hidden unit.\n");
 
   declareOption(ol, "candidate_unit_output_weights", &IncrementalNNet::candidate_unit_output_weights, OptionBase::learntoption,
-                "vector of weights from  next candidate hidden unit to outputs.\n");\
+                "vector of weights from next candidate hidden unit to outputs.\n");
   
+  declareOption(ol, "candidate_unit_output_weight_gradients", &IncrementalNNet::candidate_unit_output_weight_gradients,
+                OptionBase::learntoption,
+                "Moving average gradients on vector of weights from next candidate hidden unit to outputs.\n"
+                "(enabled by residual_correlation_gradient && outputsize() > 1).\n");
+      
   declareOption(ol, "candidate_unit_internal_weights", &IncrementalNNet::candidate_unit_internal_weights, OptionBase::learntoption,
                 "vector of weights from previous hidden units to the candidate unit (enabled by enable_internal_weights).\n");
 
@@ -251,7 +262,12 @@ void IncrementalNNet::build_()
       internal_weight_gradients.resize(stage);
       candidate_unit_internal_weight_gradients.resize(stage);
     }
+  } 
+  if ( residual_correlation_gradient & n_outputs > 1 ) {
+    output_weight_gradients.resize(stage,n_outputs);
+    candidate_unit_output_weight_gradients.resize(n_outputs);
   }
+
 }
 
 // ### Nothing to add here, simply calls build_
@@ -267,6 +283,7 @@ void IncrementalNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   inherited::makeDeepCopyFromShallowCopy(copies);
 
   deepCopyField(output_weights, copies);
+  deepCopyField(output_weight_gradients, copies);
   deepCopyField(output_biases, copies);
   deepCopyField(hidden_layer_weights, copies);
   deepCopyField(hidden_layer_weight_gradients, copies);
@@ -276,6 +293,7 @@ void IncrementalNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(candidate_unit_weights, copies);  
   deepCopyField(candidate_unit_weight_gradients, copies);
   deepCopyField(candidate_unit_output_weights, copies);
+  deepCopyField(candidate_unit_output_weight_gradients, copies);
   deepCopyField(candidate_unit_internal_weights, copies);
   deepCopyField(candidate_unit_internal_weight_gradients, copies);
   deepCopyField(act, copies);
@@ -309,6 +327,9 @@ void IncrementalNNet::forget()
     candidate_unit_weights.fill(0.0);
     candidate_unit_weight_gradients.fill(0.0);
   }
+  if ( residual_correlation_gradient && n_outputs > 1 ){
+    candidate_unit_output_weight_gradients.fill(0.0);
+  }
 }
     
 void IncrementalNNet::train()
@@ -326,8 +347,8 @@ void IncrementalNNet::train()
       train_set->targetsize()!=1)
     PLERROR("IncrementalNNet::train 'hinge_loss' or 'discrete_log_likelihood' output_cost_type is for classification, train_set->targetsize(%d) should be 1",
             train_set->targetsize());
-  if ( incremental_connections && n_outputs != 1 )
-    PLERROR("IncrementalNNet::train incremental_connections is only supported with n_outputs == 1\n");
+//  if ( incremental_connections && n_outputs != 1 )
+//    PLERROR("IncrementalNNet::train incremental_connections is only supported with n_outputs == 1\n");
 
   int minibatchsize = minibatch_size;
   if (minibatch_size == 0)
@@ -375,7 +396,7 @@ void IncrementalNNet::train()
 
   bool stopping_criterion_not_met = true;
 
-  real moving_average_coefficient = 1.0/minibatchsize;
+  moving_average_coefficient = 1.0/minibatchsize;
 
   while(stage<nstages && stopping_criterion_not_met)
   {
@@ -419,7 +440,7 @@ void IncrementalNNet::train()
       costs_with_candidate[0] += output_weight_decay * sumabs(candidate_unit_output_weights);
       real candidate_class_error = (cost_type!=0)?costs_with_candidate[3]:0;
 
-      real learning_rate = initial_learning_rate / ( 1 + n_examples_seen * decay_factor );
+      learning_rate = initial_learning_rate / ( 1 + n_examples_seen * decay_factor );
       
       // TRAINING OF THE NETWORK
       // backprop & update regular network parameters // TRAINING OF THE NETWORK
@@ -438,8 +459,25 @@ void IncrementalNNet::train()
           // output_weights[i,j] -= learning_rate * (output_gradient[i] * h[j] + output_weight_decay * sign(output_weights[i,j]))
           transposedLayerL1BpropUpdate(hidden_gradient, output_weights, h, output_gradient, learning_rate, output_weight_decay);
           
-          if ( residual_correlation_gradient ) 
-            hidden_gradient.fill(output_gradient[0]); 
+          if ( residual_correlation_gradient ) {
+            if ( n_outputs > 1 ){
+              for ( int i = 0; i < stage; i++ ) { // calculate output_weight_gradients
+                int max_gradient_index = 0;
+                real max_gradient_value = -1.0;
+                bool initial = ( h[i] == 0.0 ); // maybe not needed
+                for ( int j = 0; j < n_outputs; j++ ) {
+                  output_weight_gradients[i][j] = output_gradient[j] * h[i] 
+                      * moving_average_coefficient +(1-moving_average_coefficient)*output_weight_gradients[i][j];
+                  real gradient_abs = fabs( initial ? output_gradient[j] : output_weight_gradients[i][j] );
+                  if ( gradient_abs > max_gradient_value ){ 
+                    max_gradient_value = gradient_abs;
+                    max_gradient_index = j;
+                  }
+                }
+                hidden_gradient[i] = output_gradient[max_gradient_index] * sign( output_weights[i][max_gradient_index] );
+              }             
+            } else hidden_gradient.fill(output_gradient[0]);           
+          }
           
           if ( !enable_internal_weights ){  // simple one-hidden-layer topology 
             // bprop through hidden units activation
@@ -470,14 +508,14 @@ void IncrementalNNet::train()
               for ( int i = stage-1; i >= 0; i-- ) { // bprop_tanh equivalent, also modifies internal_weights
                 hidden_gradient[i] *= (1 - h[i]*h[i]);
                 for ( int j = 0; j < i; j++ ) {
-                  if ( !residual_correlation_gradient )
-                    hidden_gradient[j] += internal_weights[i][j] * hidden_gradient[i];
+                  if ( !residual_correlation_gradient ) // back-propagate gradients through internal weights
+                    hidden_gradient[j] += internal_weights[i][j] * hidden_gradient[i]; 
                   internal_weights[i][j] -= learning_rate * ( hidden_gradient[i] * h[j] );
                                               //+ output_weight_decay * sign(internal_weights[i][j]) );
                 }
               }            
-            } else {
-              for ( int i = stage-1; i >= 0; i-- ) { // bprop_tanh equivalent, also modifies internal_weights
+            } else { // incremental_connections
+              for ( int i = stage-1; i >= 0; i-- ) { 
                 hidden_gradient[i] *= (1 - h[i]*h[i]);
                 for ( int j = 0; j < i; j++ ) {
                   if ( internal_weights[i][j] == 0.0 ){
@@ -495,7 +533,6 @@ void IncrementalNNet::train()
                 }
               } 
             }           
-
           }
           
           //hidden_gradient *= -learning_rate;
@@ -503,19 +540,21 @@ void IncrementalNNet::train()
           if ( !incremental_connections ) {
             // bprop through hidden layer and update hidden_weights
             externalProductAcc(hidden_layer_weights, hidden_gradient * (-learning_rate), input);
-          } else {
+          } else { // incremental_connections
             for ( int i = 0; i < stage; i++ ){
-              for ( int j = 0; j < inputsize_; j++ ){
+              update_incremental_connections( hidden_layer_weights(i), hidden_layer_weight_gradients(i), input, 
+                hidden_gradient[i] );
+/*              for ( int j = 0; j < inputsize_; j++ ){
                 if ( hidden_layer_weights[i][j] == 0.0 ){
                   hidden_layer_weight_gradients[i][j] = hidden_gradient[i] * input[j] 
                     * moving_average_coefficient + (1-moving_average_coefficient)*hidden_layer_weight_gradients[i][j];
                   if ( fabs(hidden_layer_weight_gradients[i][j]) > connection_gradient_threshold ){ // add connetion
-                    hidden_layer_weights[i][j] = - 0.1 * /*sign*/(hidden_layer_weight_gradients[i][j]);
+                    hidden_layer_weights[i][j] = - 0.1 * (hidden_layer_weight_gradients[i][j]);
                   }      
                 } else {
                   hidden_layer_weights[i][j] -= hidden_gradient[i] * input[j] * learning_rate;
                 }
-              }
+              }*/
             }
           }
         }
@@ -552,8 +591,27 @@ void IncrementalNNet::train()
       // computes candidate_hidden_gradient, and updates candidate_unit_output_weights_mat
       layerBpropUpdate(candidate_hidden_gradient, candidate_unit_output_weights_mat, 
                        candidate_h_vec, output_gradient_with_candidate, learning_rate);
-      if ( residual_correlation_gradient ) 
-            candidate_hidden_gradient.fill(output_gradient_with_candidate[0]);
+      
+      if ( residual_correlation_gradient ) {
+        if ( n_outputs > 1 ){ // calculate candidate_unit_output_weight_gradients
+            int max_gradient_index = 0;
+            real max_gradient_value = -1.0;
+            bool initial = ( candidate_h == 0.0 );
+            for ( int j = 0; j < n_outputs; j++ ) {
+              candidate_unit_output_weight_gradients[j] = output_gradient_with_candidate[j] * candidate_h 
+                  * moving_average_coefficient +(1-moving_average_coefficient)*candidate_unit_output_weight_gradients[j];
+              real gradient_abs = 
+                  fabs( initial ? output_gradient_with_candidate[j] : candidate_unit_output_weight_gradients[j] );
+              if ( gradient_abs > max_gradient_value ){ 
+                max_gradient_value = gradient_abs;
+                max_gradient_index = j;
+              }
+            }
+            candidate_hidden_gradient[0] = output_gradient_with_candidate[max_gradient_index] 
+              * sign( candidate_unit_output_weights[max_gradient_index] );              
+        } else candidate_hidden_gradient.fill(output_gradient_with_candidate[0]);
+      }
+      
       // bprop through candidate hidden unit activation, heuristic method
       if (hard_activation_function)
       {
@@ -573,27 +631,12 @@ void IncrementalNNet::train()
       candidate_unit_bias -= candidate_hidden_gradient[0] * learning_rate;
             
       if ( incremental_connections ) {
-        // calculate gradients on nonexistant connections, add some connections, train existant ones
-        for ( int i = 0; i < inputsize_; i++ ) {
-          if ( candidate_unit_weights[i] == 0.0 ) {
-            candidate_unit_weight_gradients[i] = candidate_hidden_gradient[0] * input[i]
-              * moving_average_coefficient +(1-moving_average_coefficient)*candidate_unit_weight_gradients[i];
-            if ( fabs(candidate_unit_weight_gradients[i]) > connection_gradient_threshold ){ // add connetion
-              candidate_unit_weights[i] = - 0.1 * /*sign*/(candidate_unit_weight_gradients[i]);
-            }
-          } else candidate_unit_weights[i] -= candidate_hidden_gradient[0] * input[i] * learning_rate;          
-        }
+        update_incremental_connections( candidate_unit_weights, candidate_unit_weight_gradients, input,
+          candidate_hidden_gradient[0]);
         
         if ( enable_internal_weights && stage > 0 ) { // consider weights from older hidden units
-          for( int i = 0; i < stage; i++ ) {
-            if ( candidate_unit_internal_weights[i] == 0.0 ) {
-              candidate_unit_weight_gradients[i] = candidate_hidden_gradient[0] * input[i]
-                * moving_average_coefficient +(1-moving_average_coefficient)*candidate_unit_weight_gradients[i];
-              if ( fabs(candidate_unit_internal_weight_gradients[i]) > connection_gradient_threshold ){ // add connetion
-                candidate_unit_internal_weights[i] = - 0.1 * /*sign*/(candidate_unit_internal_weight_gradients[i]);
-              }
-            } else candidate_unit_internal_weights[i] -= candidate_hidden_gradient[0] * h[i] * learning_rate;          
-          }
+          update_incremental_connections( candidate_unit_internal_weights, candidate_unit_weight_gradients, h,
+            candidate_hidden_gradient[0]);
         }                
       } else {  // train all connections at once    
         multiplyAcc( candidate_unit_weights, input, candidate_hidden_gradient[0] * (-learning_rate) );
@@ -663,6 +706,11 @@ void IncrementalNNet::train()
           if ( incremental_connections ){
             hidden_layer_weight_gradients.resize(stage,inputsize());  
             hidden_layer_weight_gradients(stage-1) << candidate_unit_weight_gradients;
+          }
+          if ( residual_correlation_gradient && n_outputs > 1 ) {
+            output_weight_gradients.resize(stage,n_outputs);
+            output_weight_gradients(stage-1) << candidate_unit_output_weight_gradients;
+            candidate_unit_output_weight_gradients.fill(0.0);
           }
           if ( enable_internal_weights ) {
             internal_weights.resize(stage);
@@ -841,6 +889,19 @@ TVec<string> IncrementalNNet::getTrainCostNames() const
   // for which it updates the VecStatsCollector train_stats
   // (these may or may not be exactly the same as what's returned by getTestCostNames).
   return getTestCostNames();
+}
+
+void IncrementalNNet::update_incremental_connections( Vec weights, Vec MAgradients, const Vec& input, real gradient ) const{
+  int n = input.size();
+  for ( int i = 0; i < n; i++ ) {
+    if ( weights[i] == 0.0 ) {
+      MAgradients[i] = gradient * input[i]
+        * moving_average_coefficient +(1-moving_average_coefficient)*MAgradients[i];
+      if ( fabs(MAgradients[i]) > connection_gradient_threshold ){ // add connetion
+        weights[i] = - 0.1 * /*sign*/(MAgradients[i]);
+      }
+    } else weights[i] -= gradient * input[i] * learning_rate;          
+  }
 }
 
 } // end of namespace PLearn
