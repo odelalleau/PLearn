@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: TMat_decl.h,v 1.7 2005/01/25 03:15:26 dorionc Exp $
+ * $Id$
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -632,10 +632,10 @@ public:
     { return storage.isNotNull(); }
 
   bool isEmpty() const
-    { return length_==0; }
+    { return length_ == 0 || width_ == 0; }
 
   bool isNotEmpty() const
-    { return length_!=0; }
+    { return length_ != 0 && width_ != 0; }
 
   /*! This method is commented out because it is much too dangerous:
     it allows a TMat to be converted into an int, which can cause some
