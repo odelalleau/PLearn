@@ -406,7 +406,7 @@ void PDistribution::resetGenerator(long g_seed) const
 /////////////////
 // resizeParts //
 /////////////////
-void PDistribution::resizeParts() {
+void PDistribution::resizeParts() const {
   input_part.resize(n_input);
   target_part.resize(n_target);
 }
@@ -414,7 +414,7 @@ void PDistribution::resizeParts() {
 /////////////////////////
 // setConditionalFlags //
 /////////////////////////
-void PDistribution::setConditionalFlags(TVec<int>& flags) {
+void PDistribution::setConditionalFlags(const TVec<int>& flags) const {
   // Update the conditional flags.
   setConditionalFlagsWithoutUpdate(flags);
   // And call the method that updates the internal Vec and Mat given the new
@@ -425,7 +425,7 @@ void PDistribution::setConditionalFlags(TVec<int>& flags) {
 //////////////////////////////////////
 // setConditionalFlagsWithoutUpdate //
 //////////////////////////////////////
-void PDistribution::setConditionalFlagsWithoutUpdate(TVec<int>& flags) {
+void PDistribution::setConditionalFlagsWithoutUpdate(const TVec<int>& flags) const {
   static TVec<int> input;
   static TVec<int> target;
   static TVec<int> margin;
@@ -536,7 +536,7 @@ void PDistribution::setTrainingSet(VMat training_set, bool call_forget) {
 ///////////////////
 // sortFromFlags //
 ///////////////////
-void PDistribution::sortFromFlags(Vec& v) {
+void PDistribution::sortFromFlags(Vec& v) const {
   static Vec tmp_copy;
   tmp_copy.resize(v.length());
   tmp_copy << v;
@@ -545,7 +545,7 @@ void PDistribution::sortFromFlags(Vec& v) {
   }
 }
 
-void PDistribution::sortFromFlags(Mat& m, bool sort_columns, bool sort_rows) {
+void PDistribution::sortFromFlags(Mat& m, bool sort_columns, bool sort_rows) const {
   static int j,k;
   static Mat tmp_copy;
   static Vec row;
@@ -639,7 +639,7 @@ void PDistribution::unknownOutput(char def, const Vec& input, Vec& output, int& 
 //////////////////////////////////
 // updateFromConditionalSorting //
 //////////////////////////////////
-void PDistribution::updateFromConditionalSorting() {
+void PDistribution::updateFromConditionalSorting() const {
   // Default does nothing.
   return;
 }

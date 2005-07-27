@@ -46,6 +46,9 @@
 namespace PLearn {
 using namespace std;
 
+//! Note that many methods are declared as 'const' because of the 'const'
+//! plague, but are actually not true 'const' methods.
+//! This is also why almost everything is mutable.
 class PDistribution: public PLearner
 {
 
@@ -66,23 +69,23 @@ protected:
   // * protected options *
   // *********************
 
-  TVec<int> cond_sort;
-  int n_input;
-  int n_margin;
-  int n_target;
+  mutable TVec<int> cond_sort;
+  mutable int n_input;
+  mutable int n_margin;
+  mutable int n_target;
 
   // Fields below are not options.
 
   //! A boolean indicating whether the input, target and margin part are
   //! already sorted nicely, so we actually don't have to swap indices
   //! when given a new vector.
-  bool already_sorted;
+  mutable bool already_sorted;
 
   //! A vector indicating which indices need to be swapped when we have modified
   //! the conditional flags, in order to still have input, target, margin in this
   //! order. It is made of pairs (j,k) indicating that the new j-th variable
   //! must be the old k-th variable.
-  TVec<int> cond_swap;
+  mutable TVec<int> cond_swap;
 
   //! The step when plotting the curve (upper case outputs_def).
   real delta_curve;
@@ -90,14 +93,14 @@ protected:
   //! A boolean indicating whether the distribution is only a full joint
   //! distribution (no conditional or marginalized variables). Its value is
   //! deduced from the conditional flags.
-  bool full_joint_distribution;
-
-  mutable Vec input_part;       //!< Used to store the x part in p(y|x).
-  mutable Vec target_part;      //!< Used to store the y part in p(y|x).
+  mutable bool full_joint_distribution;
 
   //! A boolean indicating whether the input part has changed since last time,
   //! and thus if setInput() needs to be called.
   mutable bool need_set_input;
+
+  mutable Vec input_part;       //!< Used to store the x part in p(y|x).
+  mutable Vec target_part;      //!< Used to store the y part in p(y|x).
 
 public:
 
@@ -105,7 +108,7 @@ public:
   // * public build options *
   // ************************
 
-  TVec<int> conditional_flags;
+  mutable TVec<int> conditional_flags;
   real lower_bound, upper_bound; 
   int n_curve_points;
   string outputs_def;
@@ -181,7 +184,7 @@ private:
   //! to subclasses during their build. The updateFromConditionalSorting() method
   //! should then be called when the subclass' build ends (this will be done in
   //! finishConditionalBuild()).
-  void setConditionalFlagsWithoutUpdate(TVec<int>& flags);
+  void setConditionalFlagsWithoutUpdate(const TVec<int>& flags) const;
 
 protected:
 
@@ -197,14 +200,14 @@ protected:
   void finishConditionalBuild();
 
   //! Resize input_part and target_part according to n_input and n_target.
-  void resizeParts();
+  void resizeParts() const;
 
   //! Sort a vector or a matrix according to the conditional flags currently
   //! defined. The indices are sorted as follows: input, target, margin.
   //! The vector (or matrix) is assumed to be sorted according to the
   //! previously defined flags.
-  void sortFromFlags(Vec& v);
-  void sortFromFlags(Mat& m, bool sort_columns = true, bool sort_rows = false);
+  void sortFromFlags(Vec& v) const;
+  void sortFromFlags(Mat& m, bool sort_columns = true, bool sort_rows = false) const;
 
   //! Split an input into the part corresponding to the 'real' input (in
   //! 'input_part'), and the target (in 'target_part').
@@ -219,12 +222,12 @@ protected:
   //! This method updates the internal data given a new sorting of the variables
   //! defined by the conditional flags. The default version does nothing: it
   //! should be implemented in each conditional subclass.
-  virtual void updateFromConditionalSorting();
+  virtual void updateFromConditionalSorting() const;
 
 public:
 
   //! Set the conditional flags.
-  void setConditionalFlags(TVec<int>& flags);
+  void setConditionalFlags(const TVec<int>& flags) const;
 
   //! Set the value for the input part of a conditional probability.
   //! This needs to be implemented in subclasses if there is something
