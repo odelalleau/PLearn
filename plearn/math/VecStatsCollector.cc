@@ -378,7 +378,7 @@ void VecStatsCollector::getCovariance(Mat& covar) const {
   covar.resize(d,d);
   for(int i=0; i<d; i++) {
     real sum_weights_i = stats[i].nnonmissing();
-    for(int j=0; j<d; j++) {
+    for(int j=i; j<d; j++) {
       real sum_weights_j = stats[j].nnonmissing();
       real sum_cross_weights_i_j = sum_cross_weights(i,j) + sum_non_missing_weights;
       real sum_cross_square_weights_i_j = sum_cross_square_weights(i,j)
@@ -388,6 +388,8 @@ void VecStatsCollector::getCovariance(Mat& covar) const {
                       * ( 1 - sum_cross_square_weights_i_j / (sum_weights_i * sum_weights_j) ) );
       if (j == i)
         covar(i,j) += epsilon;
+      else
+        covar(j,i) = covar(i,j);
     }
   }
 }
