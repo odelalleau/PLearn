@@ -1,0 +1,8 @@
+E[train.E[mse]]	0
+E[train.E[aic]]	0
+E[train.E[bic]]	0
+E[train.E[mabic]]	0
+E[test.E[mse]]	0
+E[test.E[aic]]	0
+E[test.E[bic]]	0
+E[test.E[mabic]]	0
