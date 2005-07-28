@@ -327,6 +327,17 @@ void eigenVecOfSymmMat(TMat<num_t>& m, int k, TVec<num_t>& eigen_values, TMat<nu
     eigen_vectors.resize(m.length(), m.width());
     return;
   }
+  if (!m.isSymmetric()) {
+    if (m.isSymmetric(false))
+      // Almost symmetric.
+      PLWARNING("In eigenVecOfSymmMat - The matrix is only 'almost' symmetric, "
+                "it will be forced to be exactly symmetric");
+    else
+      PLWARNING("In eigenVecOfSymmMat - The matrix is not symmetric, it will "
+                "be forced to be exactly symmetric by copying the top "
+                "right part to the bottom left part");
+    fillItSymmetric(m);
+  }
   eigen_vectors.resize(k,m.width());
   eigen_values.resize(k);
   // FASTER
