@@ -1,0 +1,31 @@
+*1 -> Test(
+    option1 = "option1",
+    option2 = "option2",
+    option3 = "option3"
+    )
+PLOptionError Attempt to set a protected member _protected through the option mechanism.
+PLOptionError Attempt to set a private member __private through the option mechanism.
+*3 -> SubTest(
+    option1 = "OPTION1",
+    option2 = 2,
+    option3 = "option3",
+    inner_test = *2 -> Test(
+        option1 = "option1",
+        option2 = "option2",
+        option3 = "option3"
+        ),
+    option4 = 4,
+    a = "",
+    b = "",
+    c = "",
+    d = "",
+    e = "",
+    f = ""
+    )
+the foo option
+the bar option
+PLOptionError: Trying to set undefined options {'bar': 'the bar option'} on a FooNoBar
+Mode(
+    options = *0;,
+    targets = *0;
+    )
