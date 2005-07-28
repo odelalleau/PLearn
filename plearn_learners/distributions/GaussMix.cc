@@ -282,11 +282,23 @@ void GaussMix::computeMeansAndCovariances() {
         diags(i,j) = stddev[i];
     } else if (type == "general") {
       Vec center = mu(j);
+      // weighted_train_set->saveAMAT("weighted_train_set_" + tostring(j) + ".amat");
       computeInputMeanAndCovar(weighted_train_set, center, covariance);
+#ifdef BOUNDCHECK
+      if (covariance.hasMissing() || center.hasMissing())
+        PLERROR("In GaussMix::computeMeansAndCovariances - Found missing values "
+                "when computing weighted mean and covariance");
+#endif
       Vec eigenvals = eigenvalues(j); // The eigenvalues vector of the j-th Gaussian.
-      // pout << "Eigen 3" << endl;
       eigenVecOfSymmMat(covariance, n_eigen_computed, eigenvals, eigenvectors[j]);
-      // pout << "Eigen 3 done" << endl;
+      assert( eigenvals.length() == n_eigen_computed );
+      // Get rid of negative eigenvalues: these can occur because of missing
+      // values giving rise to a non positive definite covariance matrix.
+      for (int i = n_eigen_computed - 1; i >= 0; i--)
+        if (eigenvals[i] < 0)
+          eigenvals[i] = 0;
+        else
+          break;
     } else {
       PLERROR("In GaussMix::computeMeansAndCovariances - Not implemented for this type of Gaussian");
     }
@@ -487,21 +499,22 @@ void GaussMix::computePosteriors() {
 ////////////////////
 bool GaussMix::computeWeights() {
   bool replaced_gaussian = false;
-  if (L==1) alpha[0]=1; else {
-  alpha.fill(0);
-  for (int i = 0; i < nsamples; i++) {
-    for (int j = 0; j < L; j++)
-      alpha[j] += posteriors(i,j);
+  if (L==1)
+    alpha[0] = 1;
+  else {
+    alpha.fill(0);
+    for (int i = 0; i < nsamples; i++)
+      for (int j = 0; j < L; j++)
+        alpha[j] += posteriors(i,j);
+    alpha /= real(nsamples);
+    for (int j = 0; j < L && !replaced_gaussian; j++)
+      if (alpha[j] < alpha_min) {
+        // alpha[j] is too small! We need to remove this Gaussian from the
+        // mixture, and find a new (better) one.
+        replaceGaussian(j);
+        replaced_gaussian = true;
+      }
   }
-  alpha /= real(nsamples);
-  for (int j = 0; j < L && !replaced_gaussian; j++) {
-    if (alpha[j] < alpha_min) {
-      // alpha[j] is too small! We need to remove this Gaussian from the
-      // mixture, and find a new (better) one.
-      replaceGaussian(j);
-      replaced_gaussian = true;
-    }
-  } }
   return replaced_gaussian;
 }
 
@@ -585,9 +598,9 @@ void GaussMix::generateFromGaussian(Vec& s, int given_gaussian) const {
     static Vec norm;
     static real lambda0;
     static int n_eig;
-    static Vec eigenvals;
     static Mat eigenvecs;
     static Vec mu_y;
+    Vec eigenvals;
     if (n_input == 0) {
       n_eig = n_eigen_computed;
       eigenvals = eigenvalues(j);
@@ -754,6 +767,9 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
   }
   if (pb)
     delete pb;
+  if (report_progress && verbosity >= 2 && iteration > 0)
+    pout << "K-Means performed in only " << maxit - iteration << " iterations."
+         << endl;
 }
 
 /////////////////
@@ -1133,8 +1149,11 @@ void GaussMix::updateFromConditionalSorting() const {
       // And its SVD.
       eigenvectors_y_x[j].resize(n_target, n_target);
       eigenvals = eigenvalues_y_x(j);
-      static int eigen_2_count = 0;
+//      static int eigen_2_count = 0;
 //      pout << "Eigen 2: " << ++eigen_2_count << endl;
+      // Ensure covariance matrix is perfectly symmetric.
+      assert( cov_y_x[j].isSymmetric(false, true) );
+      fillItSymmetric(cov_y_x[j]);
       eigenVecOfSymmMat(cov_y_x[j], n_target, eigenvals, eigenvectors_y_x[j]);
 //      pout << "Eigen 2 done" << endl;
     }
