@@ -312,7 +312,6 @@ void computeInputMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
   sc.compute_covariance = true;
   sc.build();
   int n  = d->length();
-  int is = d->inputsize();
   Vec input, target;
   real weight;
   for (int i = 0; i < n; i++) {
@@ -320,8 +319,7 @@ void computeInputMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
     sc.update(input, weight);
   }
   sc.getMean(meanvec);
-  covarmat.resize(is,is);
-  covarmat << sc.getCovariance();
+  sc.getCovariance(covarmat);
 }
 
 /////////////////////////////////
@@ -366,15 +364,13 @@ void computeWeightedMeanAndCovar(const Vec& weights, const VMat& d, Vec& meanvec
   sc.compute_covariance = true;
   sc.build();
   int n = d->length();
-  int w = d->width();
   Vec row(d->width());
   for (int i = 0; i < n; i++) {
     d->getRow(i, row);
     sc.update(row, weights[i]);
   }
   sc.getMean(meanvec);
-  covarmat.resize(w,w);
-  covarmat << sc.getCovariance();
+  sc.getCovariance(covarmat);
 }
 
 /////////////////////////
@@ -386,15 +382,13 @@ void computeMeanAndCovar(const VMat& d, Vec& meanvec, Mat& covarmat)
   sc.compute_covariance = true;
   sc.build();
   int n = d->length();
-  int w = d->width();
   Vec row(d->width());
   for (int i = 0; i < n; i++) {
     d->getRow(i, row);
     sc.update(row);
   }
   sc.getMean(meanvec);
-  covarmat.resize(w,w);
-  covarmat << sc.getCovariance();
+  sc.getCovariance(covarmat);
 
   /* Commented out old code that had an optimized MPI version, but was probably
      not used anymore.
