@@ -866,10 +866,10 @@ T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n,
   T* v2 = vec2.data();
   if(n==1.0) // L1 distance
     {
-      for(int i=0; i<length; i++)
+      for(int i=0; i<length; i++, v1++, v2++)
         if (!ignore_missing || (!is_missing(*v1) && !is_missing(*v2))) {
-          diff = *v1++ - *v2++;
-          if(diff>=0)
+          diff = *v1 - *v2;
+          if(diff >= 0)
             result += diff;
           else
             result -= diff;
@@ -877,17 +877,17 @@ T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n,
     }
   else if(n==2.0)
     {
-      for(int i=0; i<length; i++)
+      for(int i=0; i<length; i++, v1++, v2++)
         if (!ignore_missing || (!is_missing(*v1) && !is_missing(*v2))) {
-          diff = *v1++ - *v2++;
+          diff = *v1 - *v2;
           result += diff*diff;
         }
     }
   else
     {
-      for(int i=0; i<length; i++)
+      for(int i=0; i<length; i++, v1++, v2++)
         if (!ignore_missing || (!is_missing(*v1) && !is_missing(*v2))) {
-          diff = *v1++ - *v2++;
+          diff = *v1 - *v2;
           if(diff<0)
             diff = -diff;
           result += mypow(diff,n);
