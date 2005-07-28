@@ -112,6 +112,9 @@ void FilteredVMatrix::setMetaDataDir(const PPath& the_metadatadir)
     // Only call openIndex() if the build has been completed,
     // otherwise the filtering program won't be ready yet.
     openIndex();
+    // We call 'setMetaInfoFromSource' only after the index file has been
+    // correctly read.
+    setMetaInfoFromSource();
   }
 }
 
@@ -137,17 +140,18 @@ void FilteredVMatrix::declareOptions(OptionList& ol)
 
 void FilteredVMatrix::build_()
 {
-  if (source && hasMetaDataDir()) {
+  if (source) {
     vector<string> fieldnames;
     program.setSource(source);
     program.compileString(prg,fieldnames); 
-    openIndex();
-    setMetaInfoFromSource();
-  } else {
-    length_ = 0;
-    width_ = 0;
-  }
-  build_complete = true;
+    build_complete = true;
+    if (hasMetaDataDir())
+      setMetaDataDir(getMetaDataDir());
+    else
+      // Ensure we do not retain a previous value for length and width.
+      length_ = width_ = -1;
+  } else
+    length_ = width_ = 0;
 }
 
 // ### Nothing to add here, simply calls build_
