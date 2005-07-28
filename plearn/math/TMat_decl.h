@@ -204,8 +204,9 @@ public:
       else
       {
         if(storage->usage()>1 && newwidth > mod()-offset_%mod())
-          PLERROR("IN TMat::resize(int newlength, int newwidth)\nFor safety reasons, increasing the width() beyond mod() - offset_%mod() is not allowed when the storage is shared with others");
-
+          PLERROR("IN TMat::resize(int newlength, int newwidth) - For safety "
+                  "reasons, increasing the width() beyond mod()-offset_ modulo "
+                  "mod() is not allowed when the storage is shared with others");
         int newsize = offset_+newlength*MAX(mod(),newwidth);
         if(offset_+newsize>storage->length())
           storage->resize(offset_+newsize+extrabytes);
@@ -717,21 +718,44 @@ public:
   bool isCompact() const
     { return mod() == width(); }
 
-  bool isSymmetric() const 
+  //! Return 'true' iff the matrix is symmetric.
+  //! If 'exact_check' is true, it performs a fast exact equality check (which
+  //! does not handle 'nan' or 'inf' for instance), otherwise it uses the
+  //! approximate and slower 'is_equal' function from pl_math.h.
+  //! If 'accept_empty' is set to 'true', then empty matrices will be considered
+  //! as symmetric, otherwise a warning will be issued and 'false' will be
+  //! returned.
+  bool isSymmetric(bool exact_check = true, bool accept_empty = false) const 
     {
       if (!isSquare())
         return false;
 
-      if (length() == 0)
+      if (isEmpty())
       {
-        PLWARNING("at bool TMat::isSymmetric(), the size of the matrix is 0\n");
-        return false;
+        if (accept_empty)
+          return true;
+        else {
+          PLWARNING("In TMat::isSymmetric - The matrix is empty, considering "
+                    "it is not symmetric (use 'accept_empty' if you want to "
+                    " allow it)");
+          return false;
+        }
       }
 
-      for (int i = 0; i < length() - 1 ; i++)
-        for (int j = i + 1; j < width(); j++)
-          if ( (*this)[i][j] != (*this)[j][i] )
-            return false;
+      int n = length();
+      assert( width() == n );
+
+      if (exact_check) {
+        for (int i = 0; i < n - 1 ; i++)
+          for (int j = i + 1; j < n; j++)
+            if ( (*this)[i][j] != (*this)[j][i] )
+              return false;
+      } else {
+        for (int i = 0; i < n ; i++)
+          for (int j = i + 1; j < n; j++)
+            if ( !is_equal((*this)[i][j], (*this)[j][i] ) )
+              return false;
+      }
 
       return true;
     }
