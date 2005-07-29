@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TObject.cc,v 1.3 2005/02/23 21:51:11 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -112,10 +112,33 @@ void TObject::updateFromPLearn(Torch::Object* ptr) {
   if (ptr) {
     if (object) {
       // First remove old mapping from torch_objects.
+#if 0
+      cout << "Erasing object " << object << endl;
+      for (TObjectMap::const_iterator it = torch_objects.begin(); it != torch_objects.end(); it++) {
+        string classname;
+        if (it->first != object) {
+          cout << "Accessing " << it->second << endl;
+          classname = " (" + it->second->classname() + ")";
+          cout << "Accessed!" << endl;
+        }
+        else
+          classname = " (<-- erased)";
+        cout << it->first << " -> " << it->second << classname << endl;
+        cout << endl;
+      }
+#endif
       assert( torch_objects.find(object) != torch_objects.end() ); // Sanity check.
       torch_objects.erase(object);
     }
     object = ptr;
+#if 0
+      cout << "Adding object " << object << " mapped to " << this << " (" << this->classname() << ")" << endl;
+      for (TObjectMap::const_iterator it = torch_objects.begin(); it != torch_objects.end(); it++) {
+        cout << it->first << " -> " << it->second << flush;
+        cout << " (" << it->second->classname() << ")" << endl;
+      }
+      cout << endl;
+#endif
     assert( torch_objects.find(object) == torch_objects.end() ); // Sanity check.
     torch_objects[object] = this;
   }
@@ -131,5 +154,19 @@ void TObject::updateFromTorch() {
   // Nothing to do.
 }
 
+//////////////
+// ~TObject //
+//////////////
+TObject::~TObject() {
+  delete allocator;
+  // Remove maps to this object in 'torch_objects'. This may not be really
+  // necessary, but better play it safe.
+  for (TObjectMap::const_iterator it =  torch_objects.begin();
+                                  it != torch_objects.end(); it++)
+    if (it->second == this) {
+      torch_objects.erase(it->first);
+      break;
+    }
+}
 
 } // end of namespace PLearn

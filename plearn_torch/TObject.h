@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TObject.h,v 1.4 2005/02/24 14:09:45 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -186,7 +186,7 @@ public:
   virtual void updateFromTorch();
 
   //! Destructor to free allocated memory.
-  virtual ~TObject() {delete allocator;}
+  virtual ~TObject();
 
   // ******************
   // * Static members *
