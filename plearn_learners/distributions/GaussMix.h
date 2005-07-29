@@ -2,7 +2,7 @@
 
 // GaussMix.h
 // 
-// Copyright (C) 2004 Université de Montréal
+// Copyright (C) 2004-2005 Université de Montréal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
