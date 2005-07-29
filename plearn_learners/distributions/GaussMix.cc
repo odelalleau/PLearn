@@ -79,13 +79,15 @@ PLEARN_IMPLEMENT_OBJECT(GaussMix,
     "               decomposing the covariance matrix. The remaining eigenvectors are\n"
     "               considered as having a fixed eigenvalue equal to the next highest\n"
     "               eigenvalue in the decomposition.\n"
+    /* To implement some day.
     " - factor    : (not implemented!) as in the general case, the Gaussians are defined\n"
     "               with K<=D vectors (through KxD matrix 'V'), but these need not be\n"
     "               orthogonal/orthonormal.\n"
     "               The covariance matrix used will be V(t)V + psi with psi a D-vector\n"
     "               (through parameter diags).\n"
+    */
     "\n"
-    "Two parameters are common to all 4 types :\n"
+    "Two parameters are common to all 3 types :\n"
     " - alpha : the ponderation factor of the Gaussians\n"
     " - mu    : their centers\n"
     "\n"
@@ -109,12 +111,13 @@ void GaussMix::declareOptions(OptionList& ol)
                 "Number of Gaussians in the mixture.");
   
   declareOption(ol,"type", &GaussMix::type, OptionBase::buildoption,
-                "One of: 'spherical', 'diagonal', 'general', 'factor'.\n"
+                "One of: 'spherical', 'diagonal', 'general'.\n"
                 "This is the type of covariance matrix for each Gaussian.\n"
                 "   - spherical : spherical covariance matrix sigma * I\n"
                 "   - diagonal  : diagonal covariance matrix\n"
-                "   - general   : unconstrained covariance matrix (defined by its eigenvectors)\n"
-                "   - factor    : (not implemented) represented by Ks[i] principal components\n");
+                "   - general   : unconstrained covariance matrix (defined by its eigenvectors)\n");
+  // To implement some day:
+  //  "   - factor    : represented by Ks[i] principal components\n");
 
   declareOption(ol,"n_eigen", &GaussMix::n_eigen, OptionBase::buildoption,
                 "If type == 'general', the number of eigenvectors used for the covariance matrix.\n"
@@ -151,7 +154,7 @@ void GaussMix::declareOptions(OptionList& ol)
                 "Number of dimensions in input space.");
     
   declareOption(ol,"diags", &GaussMix::diags, OptionBase::learntoption,
-                "The element (i,j) is the stddev of Gaussian j on the i-th dimension.");
+                "Element (j,k) is the standard deviation of Gaussian j on the k-th dimension.");
     
   declareOption(ol, "log_coeff", &GaussMix::log_coeff, OptionBase::learntoption,
                 "The log of the constant part in the p(x) equation: log(1/sqrt(2*pi^D * Det(C))).");
@@ -180,7 +183,7 @@ void GaussMix::declareOptions(OptionList& ol)
   declareOption(ol, "sigma", &GaussMix::sigma, OptionBase::learntoption,
                 "The standard deviation in all directions, for type == 'spherical'.\n");
 
-  // TODO What to do with these options.
+  // Would be used if the 'factor' type is implemented some day.
   
 /*  declareOption(ol, "V_idx", &GaussMix::V_idx, OptionBase::buildoption,
                 "Used for general and factore Gaussians : A vector of size L. V_idx[l] is the row index of the first vector of Gaussian 'l' in the matrix 'V' (also used to index vector 'lambda')"); */
@@ -203,6 +206,17 @@ void GaussMix::build()
 ////////////
 void GaussMix::build_()
 {
+  // Check 'diags' has correct size: it used to be (D x L) instead of (L x D).
+  if (diags.length() == D && diags.width() == L) {
+    if (L == D)
+      PLWARNING("In GaussMix::build_ - The 'diags' option has recently been "
+                "modified to be the transpose of its previous value. Since "
+                "it is square it is not possible to know if it is correct.");
+    else
+      PLERROR("In GaussMix::build_ - 'diags' has not the right size, you "
+              "are probably trying to load an old GaussMix object created "
+              "before 'diags' was transposed: please transpose it by hand");
+  }
   alpha.resize(L);
   log_p_x_j_alphaj.resize(L);
   log_p_j_x.resize(L);
@@ -277,9 +291,7 @@ void GaussMix::computeMeansAndCovariances() {
       Vec stddev(D);
       Vec center = mu(j);
       computeInputMeanAndStddev(weighted_train_set, center, stddev);
-      // TODO Make diags more "logical" (use its transpose).
-      for (int i = 0; i < D; i++)
-        diags(i,j) = stddev[i];
+      diags(j) << stddev;
     } else if (type == "general") {
       Vec center = mu(j);
       // weighted_train_set->saveAMAT("weighted_train_set_" + tostring(j) + ".amat");
@@ -315,8 +327,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
   static Vec mu_y;  // The corresponding mean.
   static int size;  // The length of y (a target, or an input).
   static int start; // n_input if y is a target, and 0 otherwise.
-  static Vec eigenvals; // A pointer to the adequate eigenvalues.
   static Mat eigenvecs; // A pointer to the adequate eigenvectors.
+  Vec eigenvals;    // A pointer to the adequate eigenvalues.
   if (type == "spherical" || type == "diagonal") {
     // Both types are very similar.
     if (is_input) {
@@ -339,7 +351,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
       for (int k = 0; k < size; k++)
         if (!is_missing(y[k]))
           p += gauss_log_density_stddev(y[k], mu_y[k],
-                                        max(sigma_min, diags(k + start,j)));
+                                        max(sigma_min, diags(j, k + start)));
     }
 #ifdef BOUNDCHECK
 #ifdef __INTEL_COMPILER
@@ -556,9 +568,8 @@ void GaussMix::expectation(Vec& result) const
 void GaussMix::forget()
 {
   stage = 0;
-  if (seed_>=0) {
+  if (seed_ >= 0)
     manual_seed(seed_);
-  }
 }
 
 //////////////
@@ -575,22 +586,19 @@ void GaussMix::generate(Vec& x) const
 void GaussMix::generateFromGaussian(Vec& s, int given_gaussian) const {
   static Vec mu_y;
   int j;    // The index of the Gaussian to use.
-  if (given_gaussian < 0) {
+  if (given_gaussian < 0)
     j = random->multinomial_sample(p_j_x);
-  } else {
+  else
     j = given_gaussian % alpha.length();
-  }
   s.resize(n_target);
   if (type == "spherical") {
     mu_y = mu(j).subVec(n_input, n_target);
-    for (int k = 0; k < n_target; k++) {
+    for (int k = 0; k < n_target; k++)
       s[k] = random->gaussian_mu_sigma(mu_y[k], sigma[j]);
-    }
   } else if (type == "diagonal") {
     mu_y = mu(j).subVec(n_input, n_target);
-    for (int k = 0; k < n_target; k++) {
-      s[k] = random->gaussian_mu_sigma(mu_y[k], diags(k + n_input,j));
-    }
+    for (int k = 0; k < n_target; k++)
+      s[k] = random->gaussian_mu_sigma(mu_y[k], diags(j, k + n_input));
   } else if (type == "general") {
     /* Should work sooner or later...
     if (n_margin > 0)
@@ -897,7 +905,7 @@ void GaussMix::replaceGaussian(int j) {
   if (type == "spherical") {
     sigma[j] = sigma[high];
   } else if (type == "diagonal") {
-    diags.column(j) << diags.column(high);
+    diags(j) << diags(high);
   } else if (type == "general") {
     eigenvalues(j) << eigenvalues(high);
     eigenvectors[j] << eigenvectors[high];
@@ -925,7 +933,7 @@ void GaussMix::resizeStuffBeforeTraining() {
   eigenvalues_x.resize(0,0);
   eigenvalues_y_x.resize(0,0);
   if (type == "diagonal") {
-    diags.resize(D,L);
+    diags.resize(L,D);
   } else if (type == "general") {
     if (n_eigen == -1 || n_eigen == D)
       // We need to compute all eigenvectors.
@@ -1067,13 +1075,13 @@ void GaussMix::train()
 //////////////////////////////////
 void GaussMix::updateFromConditionalSorting() const {
   static Mat inv_cov_x, tmp_cov, work_mat1, work_mat2;
-  static Vec eigenvals;
+  Vec eigenvals;
   // Update the centers of the Gaussians.
   sortFromFlags(mu);
   if (type == "spherical") {
     // Nothing more to do.
   } else if (type == "diagonal") {
-    sortFromFlags(diags, false, true);
+    sortFromFlags(diags);
   } else if (type == "general") {
 
     /* Trying to implement the n_margin > 0 case.
