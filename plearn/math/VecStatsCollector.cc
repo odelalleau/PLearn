@@ -92,6 +92,9 @@ void VecStatsCollector::declareOptions(OptionList& ol)
   declareOption(ol, "cov", &VecStatsCollector::cov, OptionBase::learntoption,
                 "The uncentered and unnormalized covariance matrix (mean not subtracted): X'X");
 
+  declareOption(ol, "sum_cross", &VecStatsCollector::sum_cross, OptionBase::learntoption,
+      "Element (i,j) is equal to the (weighted) sum of x_i when both x_i and x_j were observed");
+
   declareOption(ol, "sum_cross_weights", &VecStatsCollector::sum_cross_weights, OptionBase::learntoption,
       "Element (i,j) is the sum of weights when both x_i and x_j were observed\n"
       "(only used when 'compute_covariance' is set to 1)\n");
@@ -170,9 +173,11 @@ void VecStatsCollector::update(const Vec& x, real weight)
       if(compute_covariance)
         {
           cov.resize(n,n);
+          sum_cross.resize(n,n);
           sum_cross_weights.resize(n,n);
           sum_cross_square_weights.resize(n,n);
           cov.fill(0);
+          sum_cross.fill(0);
           sum_cross_weights.fill(0);
           sum_cross_square_weights.fill(0);
         }      
@@ -197,8 +202,9 @@ void VecStatsCollector::update(const Vec& x, real weight)
           for (int j = 0; j < n; j++) {
             val_j = x[j];
             if (!is_missing(val_j)) {
-              cov(i,j) += weight * val_i * val_j;
-              sum_cross_weights(i,j) += weight;
+              cov(i,j)                      += weight * val_i * val_j;
+              sum_cross(i,j)                += weight * val_i;
+              sum_cross_weights(i,j)        += weight;
               sum_cross_square_weights(i,j) += weight * weight;
             }
           }
@@ -208,6 +214,10 @@ void VecStatsCollector::update(const Vec& x, real weight)
       externalProductScaleAcc(cov, x, x, weight);
       sum_non_missing_weights        += weight;
       sum_non_missing_square_weights += weight * weight;
+      // TODO The two lines below could be optimized with an additional Vec
+      // storing the sum of weighted x_i for non missing data.
+      for (int i = 0; i < n; i++)
+        sum_cross(i)                 += weight * x[i];
     }
   }
 }
@@ -247,8 +257,9 @@ void VecStatsCollector::remove_observation(const Vec& x, real weight)
             for (int j = 0; j < n; j++) {
               val_j = x[j];
               if (!is_missing(val_j)) {
-                cov(i,j) -= weight * val_i * val_j;
-                sum_cross_weights(i,j) -= weight;
+                cov(i,j)                      -= weight * val_i * val_j;
+                sum_cross(i,j)                -= weight * val_i;
+                sum_cross_weights(i,j)        -= weight;
                 sum_cross_square_weights(i,j) -= weight * weight;
               }
             }
@@ -256,8 +267,12 @@ void VecStatsCollector::remove_observation(const Vec& x, real weight)
         }
       } else {
         externalProductScaleAcc(cov, x, x, -weight);
-        sum_non_missing_weights -= weight;
+        sum_non_missing_weights        -= weight;
         sum_non_missing_square_weights -= weight * weight;
+        // TODO The two lines below could be optimized with an additional Vec
+        // storing the sum of weighted x_i for non missing data.
+        for (int i = 0; i < n; i++)
+          sum_cross(i)                 -= weight * x[i];
       }
     }
   }
@@ -297,6 +312,7 @@ void VecStatsCollector::forget()
 {
   stats.resize(0);
   cov.resize(0,0);
+  sum_cross.resize(0,0);
   sum_cross_weights.resize(0,0);
   sum_cross_square_weights.resize(0,0);
   sum_non_missing_weights = 0;
@@ -361,16 +377,26 @@ Vec VecStatsCollector::getStdError() const
 // getCovariance //
 ///////////////////
 void VecStatsCollector::getCovariance(Mat& covar) const {
-  // Formula used to compute an unbiased estimate of the covariance. Notations:
+  // Formula used to compute an unbiased estimate of the covariance with a
+  // positive (semi)-definite matrix. Notations:
   // x(k)_i                       = i-th coordinate of k-th sample 
-  // sum^i_k   f(i,k)             = sum over k of f(i,k)   for k such that x(k)_i is not missing
-  // sum^i,j_k f(i,j,k)           = sum over k of f(i,j,k) for k such that neither x(k)_i nor x(k)_j is missing
-  // w_k                          = weight of k-th sample
-  // cov_i_j                      = sum^i,j_k w_k x(k)_i * x(k)_j
-  // mean_i                       = (sum^i_k w_k x(k)_i) / sum^i_k w_k
+  // sum^i_k   f(i,k)             = sum over k of f(i,k)   for k such that
+  //                                x(k)_i is not missing
+  // sum^i,j_k f(i,j,k)           = sum over k of f(i,j,k) for k such that
+  //                                neither x(k)_i nor x(k)_j is missing
+  // w(k)                         = weight of k-th sample
+  // cov_i_j                      = sum^i,j_k w(k) x(k)_i * x(k)_j
+  // mean_i                       = (sum^i_k w(k) x(k)_i) / sum^i_k w(k)
   // The estimator for element (i,j) of the covariance matrix is then:
-  // covariance(i,j) = [ cov_i_j - mean_i * mean_j * sum^i,j_k w_k ]
-  //                 / [ sum^i,j_k w_k * ( 1 - sum_^i,j_k w_k^2 / (sum^i_k w_k * sum^j_k w_k) ) ]
+  // covariance(i,j) = [ cov_i_j + mean_i * mean_j * sum^i,j_k w(k)
+  //                             - mean_j * sum^i,j_k w(k) x(k)_i
+  //                             - mean_i * sum^i,j_k w(k) x(k)_j
+  //                   ] /
+  //                   [    sum^i,j_k w(k)
+  //                     + (sum^i,j_k w(k) - sum^i_k w(k) - sum^j_k w(k) )
+  //                       * sum^i,j_k w(k)^2 / (sum^i_k w(k) * sum^j_k w(k))
+  //                   ]
+   
   static Vec meanvec;
   assert( compute_covariance && cov.length() == cov.width() );
   int d = cov.length();
@@ -383,9 +409,16 @@ void VecStatsCollector::getCovariance(Mat& covar) const {
       real sum_cross_weights_i_j = sum_cross_weights(i,j) + sum_non_missing_weights;
       real sum_cross_square_weights_i_j = sum_cross_square_weights(i,j)
                                         + sum_non_missing_square_weights;
-      covar(i,j) = (cov(i,j) - meanvec[i] * meanvec[j] * sum_cross_weights_i_j)
-                   / (  sum_cross_weights_i_j
-                      * ( 1 - sum_cross_square_weights_i_j / (sum_weights_i * sum_weights_j) ) );
+      real mean_i = meanvec[i];
+      real mean_j = meanvec[j];
+      covar(i,j) = (cov(i,j) + mean_i * mean_j * sum_cross_weights_i_j
+                             - mean_j * sum_cross(i,j)
+                             - mean_i * sum_cross(j,i)
+                   ) /
+                   (  sum_cross_weights_i_j
+                    + (sum_cross_weights_i_j - sum_weights_i - sum_weights_j)
+                      * sum_cross_square_weights_i_j / (sum_weights_i * sum_weights_j)
+                   );
       if (j == i)
         covar(i,j) += epsilon;
       else
@@ -461,10 +494,13 @@ void VecStatsCollector::append(const VecStatsCollector& vsc,
     assert( oldsize == cov.length() && vscsize == vsc.cov.length() );
     int new_n = stats.size();
     Mat newcov(new_n, new_n, 0.0);
+    Mat new_sum_cross(new_n, new_n, 0.0);
     Mat new_sum_cross_weights(new_n, new_n, 0.0);
     Mat new_sum_cross_square_weights(new_n, new_n, 0.0);
     newcov.subMat(0,0,oldsize,oldsize) << cov;
-    Mat sub = new_sum_cross_weights.subMat(0, 0, oldsize, oldsize);
+    Mat sub = new_sum_cross.subMat(0, 0, oldsize, oldsize);
+    sub << sum_cross;
+    sub = new_sum_cross_weights.subMat(0, 0, oldsize, oldsize);
     sub << sum_cross_weights;
     sub += sum_non_missing_weights;
     sum_non_missing_weights = 0;
@@ -474,6 +510,8 @@ void VecStatsCollector::append(const VecStatsCollector& vsc,
     sum_non_missing_square_weights = 0;
     if (vsc.compute_covariance) {
       newcov.subMat(oldsize,oldsize,vscsize,vscsize) << vsc.cov;
+      sub = new_sum_cross.subMat(oldsize,oldsize,vscsize,vscsize);
+      sub << vsc.sum_cross;
       sub = new_sum_cross_weights.subMat(oldsize,oldsize,vscsize,vscsize);
       sub << vsc.sum_cross_weights;
       sub += vsc.sum_non_missing_weights;
@@ -483,11 +521,13 @@ void VecStatsCollector::append(const VecStatsCollector& vsc,
     }
     else {
       newcov.subMat(oldsize,oldsize,vscsize,vscsize).fill(MISSING_VALUE);
+      new_sum_cross.subMat(oldsize, oldsize, vscsize, vscsize).fill(MISSING_VALUE);
       new_sum_cross_weights.subMat(oldsize,oldsize,vscsize,vscsize).fill(MISSING_VALUE);
       new_sum_cross_square_weights.subMat(oldsize,oldsize,vscsize,vscsize).fill(MISSING_VALUE);
     }
-    cov = newcov;
-    sum_cross_weights = new_sum_cross_weights;
+    cov                      = newcov;
+    sum_cross                = new_sum_cross;
+    sum_cross_weights        = new_sum_cross_weights;
     sum_cross_square_weights = new_sum_cross_square_weights;
   }
 }
@@ -498,6 +538,7 @@ void VecStatsCollector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(fieldnames,               copies);
   deepCopyField(stats,                    copies);
   deepCopyField(cov,                      copies);
+  deepCopyField(sum_cross,                copies);
   deepCopyField(sum_cross_weights,        copies);
   deepCopyField(sum_cross_square_weights, copies);
 }
