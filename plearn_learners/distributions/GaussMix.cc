@@ -70,16 +70,16 @@ GaussMix::GaussMix()
 
 PLEARN_IMPLEMENT_OBJECT(GaussMix, 
     "Gaussian mixture, either set non-parametrically or trained by EM.", 
-    "GaussMix implements a mixture of L gaussians.\n"
+    "GaussMix implements a mixture of L Gaussians.\n"
     "There are 4 possible parametrization types:\n"
-    " - spherical : gaussians have covar matrix = diag(sigma). Parameter used : sigma.\n"
-    " - diagonal  : gaussians have covar matrix = diag(sigma_i). Parameters used : diags.\n"
-    " - general   : gaussians have an unconstrained covariance matrix.\n"
+    " - spherical : Gaussians have covar matrix = diag(sigma). Parameter used : sigma.\n"
+    " - diagonal  : Gaussians have covar matrix = diag(sigma_i). Parameters used : diags.\n"
+    " - general   : Gaussians have an unconstrained covariance matrix.\n"
     "               The user specifies the number 'n_eigen' of eigenvectors kept when\n"
     "               decomposing the covariance matrix. The remaining eigenvectors are\n"
     "               considered as having a fixed eigenvalue equal to the next highest\n"
     "               eigenvalue in the decomposition.\n"
-    " - factor    : (not implemented!) as in the general case, the gaussians are defined\n"
+    " - factor    : (not implemented!) as in the general case, the Gaussians are defined\n"
     "               with K<=D vectors (through KxD matrix 'V'), but these need not be\n"
     "               orthogonal/orthonormal.\n"
     "               The covariance matrix used will be V(t)V + psi with psi a D-vector\n"
@@ -106,10 +106,10 @@ void GaussMix::declareOptions(OptionList& ol)
   // Build options.
 
   declareOption(ol,"L", &GaussMix::L, OptionBase::buildoption,
-                "Number of gaussians in the mixture.");
+                "Number of Gaussians in the mixture.");
   
   declareOption(ol,"type", &GaussMix::type, OptionBase::buildoption,
-                "A string :  'spherical', 'diagonal', 'general', 'factor',\n"
+                "One of: 'spherical', 'diagonal', 'general', 'factor'.\n"
                 "This is the type of covariance matrix for each Gaussian.\n"
                 "   - spherical : spherical covariance matrix sigma * I\n"
                 "   - diagonal  : diagonal covariance matrix\n"
@@ -136,8 +136,8 @@ void GaussMix::declareOptions(OptionList& ol)
   // Learnt options.
 
   declareOption(ol, "alpha", &GaussMix::alpha, OptionBase::learntoption,
-                "Coefficients of each gaussian.\n"
-                "They sum to 1 and are positive: they can be interpreted as prior P(gaussian i).\n");
+                "Coefficients of each Gaussian.\n"
+                "They sum to 1 and are positive: they can be interpreted as prior P(Gaussian i).\n");
 
   declareOption(ol, "eigenvalues", &GaussMix::eigenvalues, OptionBase::learntoption,
                 "The eigenvalues associated to the principal eigenvectors (element (j,k) is the\n"
@@ -183,7 +183,7 @@ void GaussMix::declareOptions(OptionList& ol)
   // TODO What to do with these options.
   
 /*  declareOption(ol, "V_idx", &GaussMix::V_idx, OptionBase::buildoption,
-                "Used for general and factore gaussians : A vector of size L. V_idx[l] is the row index of the first vector of gaussian 'l' in the matrix 'V' (also used to index vector 'lambda')"); */
+                "Used for general and factore Gaussians : A vector of size L. V_idx[l] is the row index of the first vector of Gaussian 'l' in the matrix 'V' (also used to index vector 'lambda')"); */
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -292,16 +292,17 @@ void GaussMix::computeMeansAndCovariances() {
       Vec eigenvals = eigenvalues(j); // The eigenvalues vector of the j-th Gaussian.
       eigenVecOfSymmMat(covariance, n_eigen_computed, eigenvals, eigenvectors[j]);
       assert( eigenvals.length() == n_eigen_computed );
-      // Get rid of negative eigenvalues: these can occur because of missing
-      // values giving rise to a non positive definite covariance matrix.
+#ifdef BOUNDCHECK
+      // Make sure there are no negative eigenvalues.
       for (int i = n_eigen_computed - 1; i >= 0; i--)
         if (eigenvals[i] < 0)
-          eigenvals[i] = 0;
+          PLERROR("In GaussMix::computeMeansAndCovariances - Eigenvalue %d "
+                  "(equal to %f) is negative", i, eigenvals[i]);
         else
           break;
-    } else {
+#endif
+    } else
       PLERROR("In GaussMix::computeMeansAndCovariances - Not implemented for this type of Gaussian");
-    }
     // TODO Implement them all.
   }
 }
