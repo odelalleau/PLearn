@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Option.h,v 1.9 2005/02/23 21:07:44 chapados Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -129,13 +129,13 @@ public:
   virtual void readIntoIndex(Object* o, PStream& in, const string& index)
     {
       int i = tolong(index);
-      in >> (dynamic_cast<ObjectType*>(o)->*ptr)[i];
+      in >> (dynamic_cast<ObjectType*>(o)->*(this->ptr))[i];
     }
 
   virtual void writeAtIndex(const Object* o, PStream& out, const string& index) const
     {
       int i = tolong(index);
-      out << (dynamic_cast<ObjectType*>(const_cast<Object*>(o))->*ptr)[i];
+      out << (dynamic_cast<ObjectType*>(const_cast<Object*>(o))->*(this->ptr))[i];
     }
 };
 
