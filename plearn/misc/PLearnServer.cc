@@ -107,18 +107,19 @@ using namespace std;
              "  !F functionname nargs arg1 ...     # calls a supported function.\n"
              "  !N objid object_specification      # creates new object.\n"
              "  !L objid filepath                  # loads a new object into id from a .plearn .psave .vmat file\n"
-             "  !M objid methodname nargs arg1 ... # calls method on object objid. Returns: R <nreturn> ret1 ... \n"
-             "  !D objid                   # deletes object objid. Returns: R 0 \n"
-             "  !Z                         # delete all objects. Returns: R 0 \n"
+             "  !M objid methodname nargs arg1 ... # calls method on object objid. Returns: !R <nreturn> ret1 ... \n"
+             "  !D objid                   # deletes object objid. Returns: !R 0 \n"
+             "  !Z                         # delete all objects. Returns: !R 0 \n"
+             "  !P                         # Ping. Returns: !R 0 \n"
              "  !Q                         # Quit. Returns nothing. \n"
              "\n"
              "Except for ? and Q, all commands upon success return: \n"
-             "  R n_return_args arg1 ... \n"
+             "  !R n_return_args arg1 ... \n"
              "If an error or exception occurs, the following is returned: \n"
-             "  E \"errormsg\" \n"
+             "  !E \"errormsg\" \n"
              "\n"
              "Summary of currently supported functions:\n"
-             "  F cd 1 \"path\" \n"
+             "  !F cd 1 \"path\" \n"
              "\n"
              );
     io << endl;
@@ -158,6 +159,11 @@ using namespace std;
               {
               case '?':
                 printHelp();
+                break;
+             
+              case 'P': // ping
+                Object::prepareToSendResults(io,0);
+                io << endl;
                 break;
 
               case 'F': // call function 
