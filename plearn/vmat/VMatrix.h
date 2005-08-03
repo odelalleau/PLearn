@@ -130,7 +130,7 @@ public:
   virtual void build();
 
   //! Make sure string mappings are the right size.
-  void init_map_sr() const { if (map_sr.length()==0) { map_sr.resize(width()); map_rs.resize(width()); } }
+  void init_map_sr() const { if (map_sr.length()==0 || map_sr.length() != width()) { map_sr.resize(width()); map_rs.resize(width()); } }
 
   // Data-set info
   // Sample parts sizes
