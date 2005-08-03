@@ -978,10 +978,6 @@ PPath VMatrix::getMetaDataDir() const
 ///////////////////////////
 void VMatrix::loadAllStringMappings()
 {
-  // if this is a StrTableVMatrix, smap are already created
-  // TODO WOW ! Please override !!
-  if(classname()=="StrTableVMatrix")
-    return;
   for(int i=0;i<width();i++)
     loadStringMapping(i);
 }

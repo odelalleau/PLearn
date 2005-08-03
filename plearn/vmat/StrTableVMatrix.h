@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StrTableVMatrix.h,v 1.9 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,14 +51,15 @@ class StrTableVMatrix: public MemoryVMatrix
 public:
   StrTableVMatrix(const StringTable & st);
   StrTableVMatrix();
+
+  virtual void loadAllStringMappings();
+
   PLEARN_DECLARE_OBJECT(StrTableVMatrix);
 };
 
 DECLARE_OBJECT_PTR(StrTableVMatrix);
 
 } // end of namespace PLearn
-
-
 
 #endif // StrTableVMatrix_H
 

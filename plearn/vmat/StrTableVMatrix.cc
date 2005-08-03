@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StrTableVMatrix.cc,v 1.7 2004/11/17 16:16:18 tihocan Exp $
+   * $Id$
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -112,6 +112,14 @@ StrTableVMatrix::StrTableVMatrix(const StringTable & st)
   inherited::build();
   
 }
+
+
+void StrTableVMatrix::loadAllStringMappings()
+{
+  // For a StrTableVMatrix, smap are already created
+  return;
+}
+
 
 PLEARN_IMPLEMENT_OBJECT(StrTableVMatrix, "ONE LINE DESCR", "NO HELP");
 
