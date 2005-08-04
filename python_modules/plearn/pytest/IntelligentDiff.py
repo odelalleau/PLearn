@@ -197,9 +197,8 @@ class IntelligentDiff:
         
         The psave files are meant to change over time which additions of
         new options to the various class of the library. To avoid a diff to
-        failed on the addition of a new option, the psave files are
-        canonized through the read_and_write command prior to the diff
-        call.
+        fail on the addition of a new option, the psave files are canonized
+        through the read_and_write command prior to the diff call.
         """
         directory_when_called = os.getcwd()
         (_b_, basename) = os.path.split(bench)
