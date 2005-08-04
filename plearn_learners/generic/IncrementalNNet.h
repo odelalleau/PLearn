@@ -63,6 +63,8 @@ protected:
 
   // ### declare protected option fields (such as learnt parameters) here
 
+  Mat direct_weights; // direct connections from input to output
+  Mat direct_weight_gradients;
   Mat output_weights; // [hidden_unit, output] ** NOTE IT IS TRANSPOSED ** so can easily add hidden units
   Mat output_weight_gradients;
   Vec output_biases;
@@ -124,6 +126,8 @@ public:
   bool incremental_connections; // Add connections incrementally if true, or all at once if false (default). 
                                 // This option is only supported with n_outputs == 1. 
   real connection_gradient_threshold;    // Threshold of gradient for connection to be added, when incremental_connections == true.
+  real connection_removing_threshold;   // Connections are removed for which |weight|+|MAgradient| < connection_removing_threshold.
+                                        // Default value is 0 (connections are not removed). Ednabled by incremental_connections.
   bool residual_correlation_gradient;  // Use residual correlation gradient (ConvexNN) if true, or classical error 
                                        // back-propagation if false.
   
@@ -239,8 +243,14 @@ public:
   
   // update moving avarage gradients on connections, add/remove some connections, train existant ones.
   // works for input connections of a single unit. 
-  virtual void update_incremental_connections( Vec weights, Vec MAgradients, const Vec& input, real gradient ) const;
+  void update_incremental_connections( Vec weights, Vec MAgradients, const Vec& input, real gradient ) const;
 
+  void residual_correlation_output_gradient( Vec MAgradients,  const Vec& weights, const Vec& output_gradient, 
+  real activation, real& hidden_gradient ) const;
+  
+/*  void residualCorrelationLayerBpropUpdate( Vec input_gradient, Mat weights, const Vec& input, 
+                      const Vec& output_gradient, real learning_rate) const;*/
+  
 };
 
 // Declares a few other classes and functions related to this class.

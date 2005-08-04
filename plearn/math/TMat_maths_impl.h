@@ -38,7 +38,7 @@
 
 /* *******************************************************      
    * $Id$
-   * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
+   * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme & Mantas Lukosevicius
    * This file is part of the PLearn library.
    ******************************************************* */
 
