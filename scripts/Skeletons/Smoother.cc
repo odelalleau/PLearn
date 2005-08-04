@@ -6,13 +6,14 @@ using namespace std;
 
 DERIVEDCLASS::DERIVEDCLASS() 
   :Smoother() 
-/* ### Initialise all fields to their default value */
-  {
-    // ...
+/* ### Initialize all fields to their default value */
+{
+  // ...
 
-    // ### You may or may not want to call build_() to finish building the object
-    // build_();
-  }
+  // ### You may (or not) want to call build_() to finish building the object
+  // ### (doing so assumes the parent classes' build_() have been called too
+  // ### in the parent classes' constructors, something that you must ensure)
+}
 
 
 PLEARN_IMPLEMENT_OBJECT(DERIVEDCLASS, "ONE LINE DESCR", "NO HELP");
