@@ -1,0 +1,165 @@
+#!/usr/bin/env python
+
+# toldiff
+# Copyright (C) 2005 Pascal Vincent
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+"""
+Usage: toldiff <file1> <file2> [<numeric_tolerance>] [<whitespace_tolerance>]
+
+toldiff compares two ascii files while being tolerant to small relative
+differences between numbers.
+
+If the two files are considered the same, the script outputs nothing.
+If there are noticeable differences, the script will output the first rows
+which differ.
+
+numeric_tolerance is tol=1e-6 by default.
+
+If min(|a|,|b|)<tol we use the absolute difference,
+i.e. a and b are considered to differ if |a-b| > tol.
+
+Otherwise, we use relative difference, i.e. a and b are
+considered to differ if |a-b|/min(|a|,|b|) > tol.
+
+If a whitespace_tolerance argument is given then blank lines and differing
+sequences of blanks within a line will be ignored (i.e. the files won't be
+considered to differ if they only differ by those).
+"""
+
+import sys
+
+blanks = ' \t\n\r'
+
+
+def split_on_transitions(text, separators=blanks):
+
+    """Splits text wherever there is a transition between a character not
+    in separators and a character in separators.
+
+    Returns a list of strings, each of which is made of only non-separator
+    characters or only separator characters"""
+    
+    tokens = []
+    l = len(text)
+    pos = 0
+    while pos<l:
+        startpos = pos
+        if text[pos] in separators:
+            while pos<l and text[pos] in separators:
+                pos += 1
+        else:  # non-separator
+            while pos<l and text[pos] not in separators:
+                pos += 1
+        tokens.append(text[startpos:pos])                
+    return tokens
+
+
+def floats_are_equal(a, b, numtol=1e-6):
+    # print "Comparing floats ",a,b,numtol
+    minabs = min(abs(a),abs(b))
+    if minabs<numtol:
+        return abs(a-b) <= numtol
+    return abs(a-b) <= numtol*minabs
+
+def lines_differ(tokens1, tokens2, numtol, blanktol=False):
+    if len(tokens1)!=len(tokens2):
+        return True
+    for tok1,tok2 in zip(tokens1,tokens2):
+        if tok1!=tok2:  # strings differ
+            if tok1[0] in blanks and tok2[0] in blanks:
+                if not blanktol:
+                    return True
+            else: # one at least is not blank
+                try:
+                    if not floats_are_equal(float(tok1),float(tok2),numtol):                        
+                        return True
+                except ValueError:
+                    return True
+    return False
+
+def toldiff(filename1, filename2, numtol=1e-6, blanktol=False):
+    """Returns true if the 2 files differ.
+    Also prints the first encountered difference."""
+    f1 = open(filename1)
+    f2 = open(filename2)
+    i1 = 0
+    i2 = 0
+    l1 = ''
+    l2 = ''
+    while True:
+        l1 = f1.readline()
+        i1 += 1
+        l2 = f2.readline()
+        i2 += 1
+        if blanktol:
+            while l1 and not l1.strip():
+                l1 = f1.readline()
+                i1 += 1
+            while l2 and not l2.strip():
+                l2 = f2.readline()
+                i2 += 1
+        if not l1 or not l2: # reached EOF
+            if l1!=l2:
+                print 'Different number of rows.'
+                return True
+            else:
+                return False
+        r1 = split_on_transitions(l1)
+        r2 = split_on_transitions(l2)
+        if lines_differ(r1,r2,numtol,blanktol):
+            print 'Line',i1,'of first file differs from line',i2,'of second file:'
+            print l1,
+            print l2,
+            return True
+    return False
+
+
+if __name__=='__main__':
+
+    args = sys.argv[:]
+    del args[0] # ignore program name
+
+    if len(args)<2:
+        print __doc__
+        sys.exit()
+
+    filename1 = args[0]
+    filename2 = args[1]
+    try:
+        numtol = float(args[2])
+    except IndexError:
+        numtol = 1e-6
+    try:
+        blanktol = bool(args[3])
+    except IndexError:
+        blanktol = False
+    
+    toldiff(filename1, filename2, numtol, blanktol)
