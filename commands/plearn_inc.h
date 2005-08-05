@@ -2,7 +2,7 @@
 
 // plearn_inc.h
 //
-// Copyright (C) 2004 Olivier Delalleau 
+// Copyright (C) 2004-2005 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -68,6 +68,7 @@
  * Command *
  ***********/
 #include <commands/PLearnCommands/AutoRunCommand.h>
+#include <commands/PLearnCommands/DiffCommand.h>
 #include <commands/PLearnCommands/FieldConvertCommand.h>
 #include <commands/PLearnCommands/HelpCommand.h>
 #include <commands/PLearnCommands/JulianDateCommand.h>
@@ -235,6 +236,7 @@
 #include <plearn/vmat/PLearnerOutputVMatrix.h>
 #include <plearn/vmat/PairsVMatrix.h>
 #include <plearn/vmat/PrecomputedVMatrix.h>
+#include <plearn/vmat/ProcessDatasetVMatrix.h>
 #include <plearn/vmat/ProcessingVMatrix.h>
 #include <plearn/vmat/RankedVMatrix.h>
 #include <plearn/vmat/RegularGridVMatrix.h>
