@@ -55,8 +55,9 @@
 namespace PLearn {
 using std::string;
 
-// Predeclaration of Object
+//! Forward declarations.
 class Object;
+class PLearnDiff;
 
 //! Base class for option definitions
 class OptionBase: public PPointable
@@ -124,7 +125,13 @@ public:
 
   //! The name of the option (field)
   inline const string& optionname() const { return optionname_; }
-  inline bool isOptionNamed(string name) const { return name == optionname(); }
+  //! Test the option name.
+  //! One cannot use a 'const string&' because it is used by STL.
+  inline bool isOptionNamed(string name) const
+    { return name == optionname(); }
+  //! Set option name.
+  inline void setOptionName(const string& name)
+    { optionname_ = name; }
   
   inline const string& optiontype() const { return optiontype_; }
   inline const string& defaultval() const { return defaultval_; }
@@ -134,6 +141,10 @@ public:
   //! Change the string representation of the default value.
   inline void setDefaultVal(const string& newdefaultval)
   { defaultval_ = newdefaultval; }
+
+  //! Comparison between two option values.
+  virtual int diff(const string& refer, const string& other, PLearnDiff* diffs) const = 0;
+
 };
 
 typedef std::vector< PP<OptionBase> > OptionList;
