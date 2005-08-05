@@ -47,13 +47,15 @@
 #define Option_INC
 
 #include "OptionBase.h"
+#include <plearn/base/diff.h>
 #include <plearn/base/lexical_cast.h>
 
 namespace PLearn {
 using std::string;
 
-template <class T> class TVec;               //!< Forward-declare
-
+//! Forward declarations.
+template <class T> class TVec;
+class PLearnDiff;
 
 //#####  Generic Option  ######################################################
   
@@ -69,7 +71,7 @@ protected:
 public:
 
   //! Most of these parameters only serve to provide the user 
-  //! with an informative help text. (only optionname and saveit are really important)
+  //! with an informative help text.
   Option(const string& optionname, OptionType ObjectType::* member_ptr, 
          flag_t flags, const string& optiontype, const string& defaultval,
          const string& description)
@@ -82,6 +84,11 @@ public:
 
   virtual void read_and_discard(PStream& in) const
   { 
+    // Current implementation seems buggy (the ';' is not compulsory), thus
+    // better throw an error (this method doesn't seem to be used anymore
+    // anyway, maybe we could throw it away).
+    PLERROR("In Option::read_and_discard() - Current implementation would not "
+            "work correctly");
     string dummy;
     int c = in.smartReadUntilNext(";)", dummy);
     in.putback((char)c);
@@ -106,8 +113,13 @@ public:
 
   virtual string optionHolderClassName(const Object* o) const
     { return dynamic_cast<const ObjectType*>(o)->ObjectType::_classname_(); }
-};
 
+  virtual int diff(const string& refer, const string& other, PLearnDiff* diffs) const
+    {
+      return PLearn::diff(refer, other, this, diffs);
+    }
+
+};
 
 //#####  TVec-Specific Option  ################################################
 
@@ -137,6 +149,7 @@ public:
       int i = tolong(index);
       out << (dynamic_cast<ObjectType*>(const_cast<Object*>(o))->*(this->ptr))[i];
     }
+
 };
 
 
