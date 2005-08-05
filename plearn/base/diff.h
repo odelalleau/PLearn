@@ -58,18 +58,21 @@ namespace PLearn {
 //! Forward declarations.
 class Object;
 template<class ObjectType, class OptionType> class Option;
-//template <class T> class TVec;
+//template <class T> class TVec; TODO Use this if possible.
 class VMat;
 class VMatrix;
+class PLearnDiff;
+void addDiffPrefix(PLearnDiff* diffs, const string& prefix, int n);
+int diff(PLearnDiff* diffs, const string& refer, const string& other, const string& name);
  
 //! Default diff function: compare the two strings.
-int diff(const string& refer, const string& other, const OptionBase* opt, vector<string>& diffs);
+int diff(const string& refer, const string& other, const OptionBase* opt, PLearnDiff* diffs);
 
 //! Specialization for TVec<>.
 template<class ObjectType, class VecElementType>
-int diff(const string& refer, const string& other, const Option<ObjectType, TVec<VecElementType> >* opt, vector<string>& diffs)
+int diff(const string& refer, const string& other, const Option<ObjectType, TVec<VecElementType> >* opt, PLearnDiff* diffs)
 {
-  pout << "Calling diff(..., const Option<ObjectType, TVec<T> > opt, ...)" << endl;
+  // pout << "Calling diff(..., const Option<ObjectType, TVec<T> > opt, ...)" << endl;
   int n_diffs = 0;
   TVec<VecElementType> refer_vec;
   TVec<VecElementType> other_vec;
@@ -82,8 +85,8 @@ int diff(const string& refer, const string& other, const Option<ObjectType, TVec
   int n = refer_vec.length();
   if (other_vec.length() != n)
     // If the two vectors do not have the same size, no need to go further.
-    n_diffs += diff(tostring(n), tostring(other_vec.length()),
-                    opt->optionname() + ".length", diffs);
+    n_diffs += diff(diffs, tostring(n), tostring(other_vec.length()),
+                    opt->optionname() + ".length");
   else {
     PP<OptionBase> option_elem = new Option<ObjectType, VecElementType>
       ("", 0, 0, TypeTraits<VecElementType>::name(), "", "");
@@ -102,11 +105,53 @@ int diff(const string& refer, const string& other, const Option<ObjectType, TVec
   return n_diffs;
 }
 
+//! Specialization for TMat<>.
+template<class ObjectType, class MatElementType>
+int diff(const string& refer, const string& other, const Option<ObjectType, TMat<MatElementType> >* opt, PLearnDiff* diffs)
+{
+  // pout << "Calling diff(..., const Option<ObjectType, TMat<T> > opt, ...)" << endl;
+  TMat<MatElementType> refer_mat;
+  TMat<MatElementType> other_mat;
+  string option = opt->optionname();
+  PStream in;
+  in = openString(refer, PStream::plearn_ascii);
+  in >> refer_mat;
+  in = openString(other, PStream::plearn_ascii);
+  in >> other_mat;
+  int n = refer_mat.length();
+  if (other_mat.length() != n)
+    // If the two matrices do not have the same length, no need to go further.
+    return diff(diffs, tostring(n), tostring(other_mat.length()),
+                opt->optionname() + ".length");
+  int w = refer_mat.width();
+  if (other_mat.width() != w)
+    // If the two matrices do not have the same width, no need to go further.
+    return diff(diffs, tostring(w), tostring(other_mat.width()),
+                opt->optionname() + ".width");
+  int n_diffs = 0;
+  PP<OptionBase> option_elem = new Option<ObjectType, MatElementType>
+    ("", 0, 0, TypeTraits<MatElementType>::name(), "", "");
+  string refer_ij, other_ij;
+  for (int i = 0; i < n; i++)
+    for (int j = 0; j < w; j++) {
+      option_elem->setOptionName(opt->optionname() + "(" + tostring(i)
+                                 + "," + tostring(j) + ")");
+      PStream out = openString(refer_ij, PStream::plearn_ascii, "w");
+      out << refer_mat(i,j);
+      out.flush();
+      out = openString(other_ij, PStream::plearn_ascii, "w");
+      out << other_mat(i,j);
+      out.flush();
+      n_diffs += option_elem->diff(refer_ij, other_ij, diffs);
+    }
+  return n_diffs;
+}
+
 //! Specialization for PP<>.
 template<class ObjectType, class PointedType>
-int diff(const string& refer, const string& other, const Option<ObjectType, PP<PointedType> >* opt, vector<string>& diffs)
+int diff(const string& refer, const string& other, const Option<ObjectType, PP<PointedType> >* opt, PLearnDiff* diffs)
 {
-  pout << "Calling diff with Option< ObjectType, " << opt->optiontype() << " >" << endl;
+  // pout << "Calling diff with Option< ObjectType, " << opt->optiontype() << " >" << endl;
   PP<PointedType> refer_obj;
   PP<PointedType> other_obj;
   PStream in = openString(refer, PStream::plearn_ascii);
@@ -115,20 +160,20 @@ int diff(const string& refer, const string& other, const Option<ObjectType, PP<P
   in >> other_obj;
   int n_diffs = diff(static_cast<PointedType*>(refer_obj),
                      static_cast<PointedType*>(other_obj), diffs);
-  addDiffPrefix(opt->optionname() + ".", diffs, n_diffs);
+  addDiffPrefix(diffs, opt->optionname() + ".", n_diffs);
   return n_diffs;
 }
 
 //! Specialization for VMat.
 template<class ObjectType>
-int diff(const string& refer, const string& other, const Option<ObjectType, VMat >* opt, vector<string>& diffs)
+int diff(const string& refer, const string& other, const Option<ObjectType, VMat >* opt, PLearnDiff* diffs)
 {
   return diff(refer, other,
               (Option<ObjectType, PP<VMatrix> >*) opt, diffs);
 }
 
 //! Add 'prefix' in front of the last 'n' difference names in 'diffs'.
-void addDiffPrefix(const string& prefix, vector<string>& diffs, int n);
+void addDiffPrefix(const string& prefix, PLearnDiff* diffs, int n);
 
 /*
 template<class ObjectType, class VecElementType>
@@ -138,14 +183,16 @@ int diff(PP<Object> refer, PP<Object> other, const Option<ObjectType, TVec<VecEl
 }
 */
 
-int diff(PP<Object> refer, PP<Object> other, vector<string>& diffs);
+int diff(PP<Object> refer, PP<Object> other, PLearnDiff* diffs = 0);
 
+/*
 //! If 'refer != other, add a new difference with name 'name', reference
 //! value 'refer' and other value 'other' to given vector of differences.
 //! 'is_diff' is increased by 1 in this case (otherwise it is not changed).
 // TODO Update comment.
 int diff(const string& refer, const string& other, const string& name,
          vector<string>& diffs);
+         */
 
 } // end of namespace PLearn
 
