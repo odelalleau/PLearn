@@ -43,7 +43,7 @@ which differ.
 
 numeric_tolerance (tol) is 1e-6 by default.
 
-If min(|a|,|b|)<tol we use the absolute difference,
+If min(|a|,|b|)<1 we use the absolute difference,
 i.e. a and b are considered to differ if |a-b| > tol.
 
 Otherwise, we use relative difference, i.e. a and b are
@@ -85,7 +85,7 @@ def split_on_transitions(text, separators=blanks):
 def floats_are_equal(a, b, numtol=1e-6):
     # print "Comparing floats ",a,b,numtol
     minabs = min(abs(a),abs(b))
-    if minabs<numtol:
+    if minabs<1.0:
         return abs(a-b) <= numtol
     return abs(a-b) <= numtol*minabs
 
