@@ -169,7 +169,7 @@ class IntelligentDiff:
             of = os.path.join(other, of_name)
             self.diff(bf, of)
 
-    def diff_files(self, bench, other):
+    def diff_files(self, bench, other, diff_template = 'toldiff %s %s'): #'diff -u %s %s'):
         if bench.endswith( 'metainfos.txt' ):
             vprint('Skipping metainfos.txt comparison', 2)
             return
@@ -178,7 +178,6 @@ class IntelligentDiff:
             self.diff_psave_files(bench, other)
             return
 
-        diff_template = 'diff -u %s %s'
         if toolkit.isvmat( bench ):
             diff_template = 'plearn --no-version vmat diff %s %s'
         
@@ -202,9 +201,6 @@ class IntelligentDiff:
         """
         directory_when_called = os.getcwd()
         (_b_, basename) = os.path.split(bench)
-
-## CURRENTLY, ALL PSAVE FILES ARE MANAGED
-##         if basename in self.comparable_psaves:
 
         ## The read_and_write command must be called within the appropriate
         ## 'plearn' like program
