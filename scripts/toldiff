@@ -40,7 +40,10 @@ differences between numbers.
 If the two files are considered the same, the script outputs nothing.
 If there are noticeable differences, the script will output on which row
 they first differ.
-Only numbers delimited by blanks will undergo tolerant comparison.
+
+Only numbers delimited by blanks will undergo tolerant comparison
+(if this poses a problem, send me pascal@apstat.com an email and I'll change
+the semantic for locating numbers)
 
 numeric_tolerance (tol) is 1e-6 by default.
 
