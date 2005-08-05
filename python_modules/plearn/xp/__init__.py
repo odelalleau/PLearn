@@ -52,7 +52,9 @@ class merge( XpMode ):
             dirname = options.name
         else:
             dirname = 'Merge_%s' % '_'.join(targets)
-        os.makedirs( dirname )
+
+        if not os.path.isdir( dirname ):
+            os.makedirs( dirname )
 
         for target in targets:
             dirlist = os.listdir( target )

@@ -33,6 +33,8 @@ def iter_cross_product( *sets ):
 
 class Bindings( object ):
     """Acts like a Python dictionary but keeps the addition order."""
+
+    class __no_default: pass
     
     def __init__(self, container=[], value=None):
         self.ordered_keys  = []
@@ -162,13 +164,13 @@ class Bindings( object ):
     def has_key( self, key ):
         return key in self.ordered_keys
 
-    def pop( self, key, x=None ):
+    def pop( self, key, x=__no_default() ):
         if key in self:
             self.ordered_keys.remove(key)
             return self.internal_dict.pop(key)
 
-        if x is None:
-            raise KeyError("Binding object does not contain any '%s' key.") 
+        if isinstance( x, self.__no_default ):
+            raise KeyError("Binding object does not contain any '%s' key." % key ) 
         return x
         
     def popitem( self ):

@@ -46,8 +46,8 @@ def relative_link( src, dest ):
     pushd( common )
     # raw_input( common )
 
-    relsrc  = src.replace( common, '' )
-    reldest = dest.replace( common, '' )
+    relsrc  = relative_path( src, common )
+    reldest = relative_path( dest, common )
     # raw_input( relsrc )
     # raw_input( reldest )
 
@@ -72,6 +72,12 @@ def relative_link( src, dest ):
     popd()
     popd()
 
+def relative_path( path, basepath ):
+    path = path.replace( basepath, '' )
+    if path.startswith('/'):
+        return path[1:]
+    return path
+        
 def softlink( src, dest ):
     if os.path.exists( src ):
         if not os.path.exists( dest ):

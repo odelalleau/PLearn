@@ -1,5 +1,11 @@
-from datetime import *
+from datetime                  import *
+from fpconst                   import isNaN
+from matplotlib.ticker         import Locator, Formatter
+from plearn.utilities.Bindings import Bindings
 
+#
+#  Module functions
+#
 def cyymmdd_to_date(x):
     cyymmdd  = int(x)
     cyymm,dd = divmod(cyymmdd,100)
@@ -18,4 +24,87 @@ def cyymmdd_to_ordinal(x):
 
 def ordinal_to_cyymmdd(ordinal):
     return date_to_cyymmdd(date.fromordinal(int(ordinal)))
+
+#
+#  Module classes
+#
+class YearIndices:
+    def __init__( self, start_index, start_date ):        
+        self.start_date = date( start_date.year, 01, 01 )
+        self.last_date  = date( start_date.year, 12, 31 )
+        
+        self.year       = start_date.year
+        self.months     = Bindings()
+        self.indices    = []
+
+        self.add( start_index, start_date )
+
+    def __getitem__( self, month ):
+        return self.months[ month ]
+
+    def __str__( self ):
+        return ( "Year %s: Start at %d (%s observations)\n  " % (self.year, self.indices[0], len(self.indices))
+                 + "\n  ".join([ str(m) for m in self.months.itervalues() ])
+                 )
+
+    def __iter__( self ):
+        return self.months.iteritems()
+
+    def add( self, index, date ):
+        self.indices.append( index )
+
+        try:
+            self.months[ date.month ].add( index, date )
+        except ( KeyError, ValueError ), err:
+            self.months[ date.month ] = MonthIndices( index, date )
+    
+
+class MonthIndices:
+    def __init__( self, start_index, start_date ):
+        self.start_date = date( start_date.year, start_date.month, 01 )
+        if start_date.month == 12:
+            self.last_date = date( start_date.year, 12, 31 )
+        else:
+            self.last_date = date( start_date.year, start_date.month+1, 01 ) - timedelta(1)
+        
+        self.month      = start_date.month
+        self.months     = Bindings()
+        self.indices    = []
+
+        self.add( start_index, date )
+
+    def __str__( self ):
+        return "Month %s: Start at %d (%s observations)" % (self.month, self.indices[0], len(self.indices))
+
+    def add( self, index, date ):
+        self.indices.append( index )
+
+class IndexedDates:
+    def __init__( self, dates ):
+        self.dates = dates
+        self.years = Bindings()
+        for index, date in enumerate(dates):
+            try:
+                self.years[ date.year ].add( index, date )
+            except ( KeyError, ValueError ), err:
+                self.years[ date.year ] = YearIndices( index, date )
+
+    def __getitem__( self, datelike ):
+        if isinstance( datelike, date ):
+            return self.dates.index( date )
+        
+        elif len(datelike) == 1:
+            return self.years[ datelike ]
+
+        elif len(datelike) == 2:
+            return self.years[ datelike[0] ][ datelike[1] ]
+
+        else:
+            raise ValueError(datelike) 
+
+    def __iter__( self ):
+        return self.years.iteritems()
+
+    def __str__( self ):
+        return "\n\n".join([ str(y) for y in self.years.itervalues() ])
 

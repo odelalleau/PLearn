@@ -177,10 +177,9 @@ class Experiment(PyPLearnObject):
     def __str__( self ):
         return self.toString()
 
-    def collect( self, global_stats='global_stats.pmat', test_costs='' ):
-        self.global_stats = PMat( os.path.join(self.abspath, global_stats) )
-        if test_costs:
-            self.test_costs = PMat( os.path.join(self.abspath, test_costs) )
+    def loadPMat( self, *pmats ):
+        for pmat in pmats:
+            setattr( self, pmat[:-5], PMat( os.path.join(self.abspath, pmat) ) )
 
     def getKey( self, expkey = None ):
         if expkey is None:
