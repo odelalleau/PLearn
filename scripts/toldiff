@@ -41,7 +41,7 @@ If the two files are considered the same, the script outputs nothing.
 If there are noticeable differences, the script will output the first rows
 which differ.
 
-numeric_tolerance is tol=1e-6 by default.
+numeric_tolerance (tol) is 1e-6 by default.
 
 If min(|a|,|b|)<tol we use the absolute difference,
 i.e. a and b are considered to differ if |a-b| > tol.
@@ -108,8 +108,8 @@ def lines_differ(tokens1, tokens2, numtol, blanktol=False):
 def toldiff(filename1, filename2, numtol=1e-6, blanktol=False):
     """Returns true if the 2 files differ.
     Also prints the first encountered difference."""
-    f1 = open(filename1)
-    f2 = open(filename2)
+    f1 = open(filename1,'rb')
+    f2 = open(filename2,'rb')
     i1 = 0
     i2 = 0
     l1 = ''
@@ -135,9 +135,9 @@ def toldiff(filename1, filename2, numtol=1e-6, blanktol=False):
         r1 = split_on_transitions(l1)
         r2 = split_on_transitions(l2)
         if lines_differ(r1,r2,numtol,blanktol):
-            print 'Line',i1,'of first file differs from line',i2,'of second file:'
-            print l1,
-            print l2,
+            print 'Line',i1,'of',filename1,'differs from line',i2,'of',filename2
+            # print l1,
+            # print l2,
             return True
     return False
 
@@ -157,9 +157,6 @@ if __name__=='__main__':
         numtol = float(args[2])
     except IndexError:
         numtol = 1e-6
-    try:
-        blanktol = bool(args[3])
-    except IndexError:
-        blanktol = False
+    blanktol = (len(args)>3)
     
     toldiff(filename1, filename2, numtol, blanktol)
