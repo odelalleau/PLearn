@@ -38,8 +38,9 @@ toldiff compares two ascii files while being tolerant to small relative
 differences between numbers.
 
 If the two files are considered the same, the script outputs nothing.
-If there are noticeable differences, the script will output the first rows
-which differ.
+If there are noticeable differences, the script will output on which row
+they first differ.
+Only numbers delimited by blanks will undergo tolerant comparison.
 
 numeric_tolerance (tol) is 1e-6 by default.
 
