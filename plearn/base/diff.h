@@ -59,8 +59,8 @@ namespace PLearn {
 class Object;
 template<class ObjectType, class OptionType> class Option;
 //template <class T> class TVec;
-//class VMatrix;
-//class VMat; // TODO Remove
+class VMat;
+class VMatrix;
  
 //! Default diff function: compare the two strings.
 int diff(const string& refer, const string& other, const OptionBase* opt, vector<string>& diffs);
@@ -119,24 +119,13 @@ int diff(const string& refer, const string& other, const Option<ObjectType, PP<P
   return n_diffs;
 }
 
-/*
-//! Specialization for VMat (should not need that!). TODO How to get rid ?
+//! Specialization for VMat.
 template<class ObjectType>
 int diff(const string& refer, const string& other, const Option<ObjectType, VMat >* opt, vector<string>& diffs)
 {
-  pout << "Calling diff with Option< ObjectType, " << opt->optiontype() << " >" << endl;
-  Option<ObjectType, PP<VMatrix>>* new_opt = opt;
-  PP<Object> refer_obj;
-  PP<Object> other_obj;
-  PStream in = openString(refer, PStream::plearn_ascii);
-  in >> refer_obj;
-  in = openString(other, PStream::plearn_ascii);
-  in >> other_obj;
-  int n_diffs = diff(refer_obj, other_obj, diffs);
-  addDiffPrefix(opt->optionname() + ".", diffs, n_diffs);
-  return n_diffs;
+  return diff(refer, other,
+              (Option<ObjectType, PP<VMatrix> >*) opt, diffs);
 }
-*/
 
 //! Add 'prefix' in front of the last 'n' difference names in 'diffs'.
 void addDiffPrefix(const string& prefix, vector<string>& diffs, int n);
