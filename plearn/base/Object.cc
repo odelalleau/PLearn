@@ -112,6 +112,9 @@ void Object::build()
 
 string Object::info() const { return classname(); }
 
+///////////////////
+// readOptionVal //
+///////////////////
 void Object::readOptionVal(PStream &in, const string &optionname)
 {
   try 
@@ -261,7 +264,9 @@ string Object::getOptionsToSave() const
   return res;
 }
 
-
+/////////////
+// newread //
+/////////////
 void Object::newread(PStream &in)
 {
   PP<Object> dummy_obj = 0; // Used to read skipped options.
