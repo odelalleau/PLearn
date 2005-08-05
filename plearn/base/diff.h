@@ -68,6 +68,40 @@ int diff(PLearnDiff* diffs, const string& refer, const string& other, const stri
 //! Default diff function: compare the two strings.
 int diff(const string& refer, const string& other, const OptionBase* opt, PLearnDiff* diffs);
 
+//! Specialization for double.
+template<class ObjectType>
+int diff(const string& refer, const string& other, const Option<ObjectType, double>* opt, PLearnDiff* diffs)
+{
+  double x_refer, x_other;
+  PStream in = openString(refer, PStream::plearn_ascii);
+  in >> x_refer;
+  in.flush();
+  in = openString(other, PStream::plearn_ascii);
+  in >> x_other;
+  in.flush();
+  if (is_equal(real(x_refer), real(x_other)))
+    return 0;
+  else
+    return diff(diffs, refer, other, opt->optionname());
+}
+
+//! Specialization for float.
+template<class ObjectType>
+int diff(const string& refer, const string& other, const Option<ObjectType, float>* opt, PLearnDiff* diffs)
+{
+  float x_refer, x_other;
+  PStream in = openString(refer, PStream::plearn_ascii);
+  in >> x_refer;
+  in.flush();
+  in = openString(other, PStream::plearn_ascii);
+  in >> x_other;
+  in.flush();
+  if (is_equal(real(x_refer), real(x_other)))
+    return 0;
+  else
+    return diff(diffs, refer, other, opt->optionname());
+}
+
 //! Specialization for TVec<>.
 template<class ObjectType, class VecElementType>
 int diff(const string& refer, const string& other, const Option<ObjectType, TVec<VecElementType> >* opt, PLearnDiff* diffs)
