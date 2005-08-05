@@ -554,10 +554,17 @@ void PStream::readAsciiNum(float &x)
 
 void PStream::readAsciiNum(double &x)
 {
+  static const char* error_msg = "Bug while reading file and expecting a double";
   skipBlanks();
   int l=0;
+  bool opposite = false;
   
   char c = get();
+  if (c == '-') {
+    tmpbuf[l++] = c;
+    opposite = true;
+    c = get();
+  }
 
   switch(c)
     {
@@ -569,14 +576,14 @@ void PStream::readAsciiNum(double &x)
       if(get()=='a' && get()=='n')
         x = MISSING_VALUE;
       else
-        PLERROR("Bug while reading file and expecting a double");
+        PLERROR(error_msg);
       break;
     case 'i':
     case 'I':
       if (get()=='n' && get()=='f')
-        x = INFINITY;
+        x = opposite ? - INFINITY : INFINITY;
       else
-        PLERROR("Bug while reading file and expecting a double");
+        PLERROR(error_msg);
       break ; 
     default:
       while(isdigit(c) || c=='-' || c=='+' || c=='.' || c=='e' || c=='E')
