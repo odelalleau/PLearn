@@ -34,12 +34,12 @@
 """
 Usage: toldiff <file1> <file2> [<numeric_tolerance>] [<whitespace_tolerance>]
 
-toldiff compares two ascii files while being tolerant to small relative
-differences between numbers.
+toldiff compares two files while being tolerant to small relative
+differences between ascii numbers.
 
 If the two files are considered the same, the script outputs nothing.
-If there are noticeable differences, the script will output before which
-character position they appear to differ.
+If there are noticeable differences, the script will output the
+character positions before which they appear to differ.
 
 numeric_tolerance (tol) is 1e-6 by default.
 
@@ -59,31 +59,6 @@ not differ by more than whitespace_tolerance characters.
 import sys
 import re
 
-blanks = ' \t\n\r'
-
-
-def split_on_transitions(text, separators=blanks):
-
-    """Splits text wherever there is a transition between a character not
-    in separators and a character in separators.
-
-    Returns a list of strings, each of which is made of only non-separator
-    characters or only separator characters"""
-    
-    tokens = []
-    l = len(text)
-    pos = 0
-    while pos<l:
-        startpos = pos
-        if text[pos] in separators:
-            while pos<l and text[pos] in separators:
-                pos += 1
-        else:  # non-separator
-            while pos<l and text[pos] not in separators:
-                pos += 1
-        tokens.append(text[startpos:pos])                
-    return tokens
-
 
 def floats_are_equal(a, b, numtol=1e-6):
     # print "Comparing floats ",a,b,numtol
@@ -92,103 +67,8 @@ def floats_are_equal(a, b, numtol=1e-6):
         return abs(a-b) <= numtol
     return abs(a-b) <= numtol*minabs
 
-def lines_differ(tokens1, tokens2, numtol, blanktol=False):
-    if len(tokens1)!=len(tokens2):
-        return True
-    for tok1,tok2 in zip(tokens1,tokens2):
-        if tok1!=tok2:  # strings differ
-            if tok1[0] in blanks and tok2[0] in blanks:
-                if not blanktol:
-                    return True
-            else: # one at least is not blank
-                try:
-                    if not floats_are_equal(float(tok1),float(tok2),numtol):                        
-                        return True
-                except ValueError:
-                    return True
-    return False
 
-def toldiff(filename1, filename2, numtol=1e-6, blanktol=False):
-    """Returns true if the 2 files differ.
-    Also prints the first encountered difference."""
-    f1 = open(filename1,'rb')
-    f2 = open(filename2,'rb')
-    i1 = 0
-    i2 = 0
-    l1 = ''
-    l2 = ''
-    while True:
-        l1 = f1.readline()
-        i1 += 1
-        l2 = f2.readline()
-        i2 += 1
-        if blanktol:
-            while l1 and not l1.strip():
-                l1 = f1.readline()
-                i1 += 1
-            while l2 and not l2.strip():
-                l2 = f2.readline()
-                i2 += 1
-        if not l1 or not l2: # reached EOF
-            if l1!=l2:
-                print 'Different number of rows.'
-                return True
-            else:
-                return False
-        r1 = split_on_transitions(l1)
-        r2 = split_on_transitions(l2)
-        if lines_differ(r1,r2,numtol,blanktol):
-            print 'Line',i1,'of',filename1,'differs from line',i2,'of',filename2
-            # print l1,
-            # print l2,
-            return True
-    return False
-
-
-def toldiff2(filename1, filename2, numtol=1e-6, blanktol=0):
-
-    if blanktol>0:
-        splitexpr = re.compile('(\s+|[+-]?\d*\.?\d+[Ee]?[+-]?\d*)')
-    else:
-        splitexpr = re.compile('([+-]?\d*\.?\d+[Ee]?[+-]?\d*)')
-
-    split1 = splitexpr.split(open(filename1,'rb').read())
-    split2 = splitexpr.split(open(filename2,'rb').read())
-
-    if len(split1)!=len(split2):
-        print 'Number of text elements differ.'
-        return True
-
-    pos1 = 0
-    pos2 = 0
-    for tok1, tok2 in zip(split1,split2):
-        if tok1!=tok2:
-            if tok1[0] in ' \t\n\r':
-                if abs(len(tok1)-len(tok2))>blanktol:
-                    break
-            elif tok1[0] in '+-0123456789.':
-                try:
-                    if not floats_are_equal(float(tok1),float(tok2),numtol):                        
-                        break
-                except ValueError:
-                    break
-            else:
-                break
-        pos1 += len(tok1)
-        pos2 += len(tok2)
-    else:
-        return False
-
-    # We exited the for loop with a break statement
-    # Locate precise position for first difference
-    for pos in xrange(min(len(tok1),len(tok2))):
-        if tok1[pos]!=tok2[pos]:
-            break
-    print filename1,'and',filename2,'differ at positions:',pos1+pos,'!=',pos2+pos
-    return True
-    
-
-def toldiff3(filename1, filename2, numtol=1e-6, blanktol=0):
+def toldiff(filename1, filename2, numtol=1e-6, blanktol=0):
 
     f1 = open(filename1,'rb')
     f2 = open(filename2,'rb')
@@ -233,7 +113,7 @@ def toldiff3(filename1, filename2, numtol=1e-6, blanktol=0):
             c1 = f1.read(1)
             c2 = f2.read(1)
             
-    else:   
+    else:       # We exited the while loop normally
         return False
 
     # We exited the while loop with a break statement
@@ -263,4 +143,4 @@ if __name__=='__main__':
     except IndexError:
         blanktol = 0
     
-    toldiff3(filename1, filename2, numtol, blanktol)
+    toldiff(filename1, filename2, numtol, blanktol)
