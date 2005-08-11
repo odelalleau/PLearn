@@ -142,8 +142,9 @@ class PyPLearnObject( object ):
         @rtype: list of str.
         """
         assert issubclass( klass, PyPLearnObject )
-        if hasattr( klass, '__option_names' ):
-            return klass.__option_names
+        # cached = '_%s__option_names'%klass.__name__
+        # if cached in klass.__dict__:
+        #     return klass.__dict__[cached]
 
         if ordered is None:
             ordered = []
@@ -206,7 +207,7 @@ class PyPLearnObject( object ):
                 else:
                     raise ValueError(line)
 
-        klass.__option_names = ordered
+        # setattr( klass, cached, ordered)
         return ordered
     option_names = classmethod( option_names )
     
@@ -317,6 +318,9 @@ class PyPLearnObject( object ):
 
         self.__dict__[option_name] = option_value        
 
+    def get_members( self ):
+        return inspect.getmembers(self)
+
     def option_pairs( self, predicate = option_predicate ):
         """Returns the list of (name, value) pairs for all options respecting I{predicate}.
 
@@ -347,7 +351,7 @@ class PyPLearnObject( object ):
         #  The option parsing
         #
         optpairs = [ (x,y)
-                     for (x,y) in inspect.getmembers(self)
+                     for (x,y) in self.get_members()
                      if predicate(x, y)
                      ]               
         optpairs.sort( option_sort )

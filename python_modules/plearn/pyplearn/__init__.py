@@ -66,7 +66,6 @@ class PyPLearnScript( PyPLearnObject ):
         self.metainfos     = self.get_metainfos()
 
     def get_metainfos(self):
-        # import inspect
         def parse( obj, prefix='' ):
             results = []
             for key in dir(obj):
@@ -78,11 +77,12 @@ class PyPLearnScript( PyPLearnObject ):
             results.sort()
             return results
 
-        plarg_attrs = parse( plarg_defaults )
-        plarg_attrs.extend( parse( plargs ) )
+        from plearn.utilities.Bindings import Bindings
+        plarg_attrs = Bindings( parse(plarg_defaults) )
+        plarg_attrs.update( parse(plargs) )
         for clsname, cls in plargs_namespace._subclasses.iteritems():
             if cls.__dict__['__accessed']:
-                plarg_attrs.extend( parse(cls, '%s.'%clsname) )
+                plarg_attrs.update( parse(cls, '%s.'%clsname) )
         
         ## Pretty printing
         pretty            = lambda attr_name: string.ljust(attr_name, 30)
@@ -93,7 +93,7 @@ class PyPLearnScript( PyPLearnObject ):
 
         attribute_strings = [ '%s = %s'
                               % ( pretty(attr_name), backward_cast(attr_value) ) 
-                              for attr_name, attr_value in plarg_attrs ]
+                              for attr_name, attr_value in plarg_attrs.iteritems() ]
         return "\n".join( attribute_strings )
 
 class __TMat:

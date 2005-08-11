@@ -37,21 +37,21 @@ def pwd( ):
 def relative_link( src, dest ):
     src  = os.path.realpath( src )
     dest = os.path.realpath( dest )
-    # raw_input( src )
-    # raw_input( dest )
-        
     common = os.path.commonprefix([ src, dest ])
-    if not os.path.isdir( common ):
-        common = os.path.dirname( common )
+
+    # Even if common is a directory, it does no exclude that it may not be
+    # a valid common path:
+    #
+    #   src:  /home/dorionc/tmp/file.txt
+    #   dest: /home/dorionc/tmp2/file.txt
+    #
+    # will have '/home/dorionc/tmp' common while the common path is clearly
+    # '/home/dorionc'. Hence, we always take the dirname.
+    common = os.path.dirname( common )
     pushd( common )
-    # raw_input( common )
 
     relsrc  = relative_path( src, common )
     reldest = relative_path( dest, common )
-    # raw_input( relsrc )
-    # raw_input( reldest )
-
-    
     if os.path.isdir( reldest ):
         if reldest.endswith('/'):
             reldest = reldest[:-1]
@@ -60,7 +60,6 @@ def relative_link( src, dest ):
     else:
         reldest, dest = os.path.split( reldest )
         pushd( reldest )        
-    # raw_input( reldest )
 
     src = ''
     while reldest:
