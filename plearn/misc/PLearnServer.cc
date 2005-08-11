@@ -127,6 +127,8 @@ using namespace std;
 
   void PLearnServer::run()
   {
+      const int upper_bound_id = 10000;
+
     int obj_id;
     Object* obj;
     ObjMap::iterator found;
@@ -141,6 +143,10 @@ using namespace std;
           {
             io.copies_map_in.clear();
             io.copies_map_out.clear();
+
+            for (ObjMap::iterator it = objmap.begin(); it != objmap.end(); ++it)
+                if (it->first > upper_bound_id)
+                    io.copies_map_in[it->first] = it->second;
           }
         int c = -1;
         do { c = io.get(); }
@@ -179,6 +185,7 @@ using namespace std;
                 io >> obj_id >> obj;           // Read new object
                 DBG_LOG << "  obj_id = " << obj_id << endl;
                 objmap[obj_id] = obj;
+//                io.copies_map_in[obj_id] = obj;
                 Object::prepareToSendResults(io,0);
                 io << endl;  
                 DBG_LOG << "-> OBJECT CREATED." << endl;
@@ -192,6 +199,7 @@ using namespace std;
                 DBG_LOG << "  filepath = " << filepath << endl;                
                 PLearn::load(filepath,obj);
                 objmap[obj_id] = obj;
+//                io.copies_map_in[obj_id] = obj;
                 Object::prepareToSendResults(io,0);
                 io << endl;  
                 DBG_LOG << "-> OBJECT LOADED." << endl;
@@ -203,6 +211,7 @@ using namespace std;
                 DBG_LOG << "  ojbj_id = " << obj_id << endl;
                 if(objmap.erase(obj_id)==0)
                   PLERROR("Calling delete of a non-existing object");
+//                io.copies_map_in.erase(obj_id);
                 Object::prepareToSendResults(io,0);
                 io << endl;
                 DBG_LOG << "-> OBJECT DELETED." << endl;
