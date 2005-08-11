@@ -4,15 +4,19 @@ namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(DERIVEDCLASS, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+    DERIVEDCLASS,
+    "ONE LINE DESCR",
+    "NO HELP"
+    );
 
 DERIVEDCLASS::DERIVEDCLASS():
 {}
 
 void DERIVEDCLASS::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void DERIVEDCLASS::build_()
@@ -21,12 +25,12 @@ void DERIVEDCLASS::build_()
 
 void DERIVEDCLASS::forget()
 {
-  inherited::forget();
+    inherited::forget();
 }
 
 void DERIVEDCLASS::declareOptions(OptionList& ol)
 {
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 void DERIVEDCLASS::train()
@@ -64,11 +68,23 @@ void DERIVEDCLASS::computeCostsFromOutputs(const Vec& input,
 
 void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("DERIVEDCLASS::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("DERIVEDCLASS::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 } 
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :
