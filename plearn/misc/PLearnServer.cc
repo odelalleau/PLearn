@@ -112,8 +112,9 @@ using namespace std;
              "  !Z                         # delete all objects. Returns: !R 0 \n"
              "  !P                         # Ping. Returns: !R 0 \n"
              "  !Q                         # Quit. Returns nothing. \n"
+             "  !K                         # Kill server and quit. Returns nothing. \n"
              "\n"
-             "Except for ? and Q, all commands upon success return: \n"
+             "Except for ?, Q and K, all commands upon success return: \n"
              "  !R n_return_args arg1 ... \n"
              "If an error or exception occurs, the following is returned: \n"
              "  !E \"errormsg\" \n"
@@ -249,6 +250,13 @@ using namespace std;
                 // cerr << "Quitting" << endl;
                 DBG_LOG << "LEAVING PLearnServer::run()" << endl;
                 return;
+              
+              case 'K': // kill
+                  DBG_LOG << "PLearnServer KILL" << endl;
+                  DBG_LOG << "LEAVING PLearnServer::run()" << endl;
+//                  PLERROR("This is not an error");
+                  exit(1);
+                  return;
 
               default:
                 PLERROR("Invalid PLearnServer command char: %c Type !? for help.",(char)command);
