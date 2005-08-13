@@ -2,7 +2,7 @@
 
 // MultiInstanceNNet.cc
 // Copyright (c) 1998-2002 Pascal Vincent
-// Copyright (C) 1999-2002 Yoshua Bengio and University of Montreal
+// Copyright (c) 1999-2005 Yoshua Bengio and University of Montreal
 // Copyright (c) 2002 Jean-Sebastien Senecal, Xavier Saint-Mleux, Rejean Ducharme
 //
 // Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.31 2005/06/15 14:40:38 lamblin Exp $
+   * $Id$
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
