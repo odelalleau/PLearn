@@ -25,7 +25,7 @@ if len(sys.argv[1:]) == 0:
 for fname in sys.argv[1:]:
     print >> sys.stderr, "Processing",fname
     f = open(fname, "rU")
-    alllines = lines = f.readlines()
+    lines = f.readlines()
     f.close()
 
     ## From the end, start by finding the last ^L (page break)
@@ -34,9 +34,12 @@ for fname in sys.argv[1:]:
         if lines[i].strip() == "\x0c":
             lastpage = i
             break
-
-    ## From lines, find "Local Variables" and delete from thereon starting
-    ## from start of comment
+    
+    ## From lines, find "Local Variables" within the last 15 lines of the
+    ## file, and delete from thereon starting from start of comment
+    if lastpage == 0:
+        lastpage = len(lines)-15
+        
     stripto = -1
     for i in range(lastpage, len(lines))[::-1] :
         if lines[i].lower().find("local variables") >= 0 :
@@ -69,3 +72,7 @@ for fname in sys.argv[1:]:
                     '-f save-buffer') % \
                     fname
     os.system(command_line)
+
+
+### Local Variables:
+### mode:python
