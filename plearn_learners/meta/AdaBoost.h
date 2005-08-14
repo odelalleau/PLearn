@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdaBoost.h,v 1.1 2005/01/06 18:45:11 larocheh Exp $
+   * $Id$
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -54,8 +54,6 @@ public:
   typedef PLearner inherited;
   
 protected:
-  // local variables:
-
   // average weighted error of each learner
   Vec learners_error;
   // weighing scheme over examples

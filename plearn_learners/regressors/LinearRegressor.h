@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.h,v 1.12 2005/05/17 22:26:25 chapados Exp $
+   * $Id$
    ******************************************************* */
 
 /*! \file LinearRegressor.h */
@@ -56,7 +56,6 @@ class LinearRegressor: public PLearner
   Vec train_costs;
 
 protected:
-  // local variables
   Mat XtX; //!<  can be re-used if train is called several times on the same data set
   Mat XtY; //!<  can be re-used if train is called several times on the same data set
   real sum_squared_y; //!< can be re-used if train is called several times on the same data set

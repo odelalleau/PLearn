@@ -54,8 +54,6 @@ public:
   typedef PLearner inherited;
   
 protected:
-  // local variables:
-
   //! average weighted error of each learner
   Vec learners_error;
   //! weighing scheme over examples
