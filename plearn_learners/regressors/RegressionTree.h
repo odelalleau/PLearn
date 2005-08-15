@@ -61,8 +61,12 @@ private:
 */
 
   int  missing_is_valid;
-  real loss_function_weight; 
-  int maximum_number_of_nodes;             
+  real loss_function_weight;
+  int maximum_number_of_nodes;
+  int compute_train_stats;   
+  real complexity_penalty_factor;
+  Vec multiclass_outputs;
+  PP<RegressionTreeLeave> leave_template;    
   PP<RegressionTreeRegisters> sorted_train_set;
   
 /*
@@ -83,7 +87,8 @@ private:
   int inputsize;
   int targetsize;
   int weightsize;
-  real computed_loss_function_weight;
+  real l2_loss_function_factor;
+  real l1_loss_function_factor;
   int each_train_sample_index;
   Vec sample_input;
   Vec sample_output;
@@ -114,7 +119,7 @@ public:
 private:
           void         build_();
           void         initialiseTree();
-          void         expandTree();
+          int          expandTree();
           void         verbose(string msg, int level);
 };
 

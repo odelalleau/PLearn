@@ -88,6 +88,8 @@ void RegressionTreeLeave::declareOptions(OptionList& ol)
       "The sum of weighted targets for the samples in this leave\n");
   declareOption(ol, "weighted_squared_targets_sum", &RegressionTreeLeave::weighted_squared_targets_sum, OptionBase::learntoption,
       "The sum of squared weighted target values for the samples in this leave\n");
+  declareOption(ol, "loss_function_factor", &RegressionTreeLeave::loss_function_factor, OptionBase::learntoption,
+      "2 / pow(loss_function_weight, 2.0).\n");
   inherited::declareOptions(ol);
 }
 
@@ -107,6 +109,7 @@ void RegressionTreeLeave::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(squared_targets_sum, copies);
   deepCopyField(weighted_targets_sum, copies);
   deepCopyField(weighted_squared_targets_sum, copies);
+  deepCopyField(loss_function_factor, copies);
 }
 
 void RegressionTreeLeave::build()
@@ -130,14 +133,17 @@ void RegressionTreeLeave::initStats()
   output.resize(2);
   output[0] = 0.0;
   output[1] = 0.0;
-  error.resize(2);
+  error.resize(3);
   error[0]  = 0.0;
   error[1]  = 0.0;
+  error[2] = 0.0;
   weights_sum= 0.0;
   targets_sum = 0.0;
   squared_targets_sum = 0.0;
   weighted_targets_sum = 0.0;
   weighted_squared_targets_sum = 0.0; 
+  if (loss_function_weight != 0.0) loss_function_factor = 2.0 / pow(loss_function_weight, 2.0);
+  else loss_function_factor = 1.0;
 }
 
 void RegressionTreeLeave::addRow(int row, Vec outputv, Vec errorv)
@@ -176,19 +182,21 @@ void RegressionTreeLeave::removeRow(int row, Vec outputv, Vec errorv)
 void RegressionTreeLeave::computeOutputAndError()
 {
   output[0] = weighted_targets_sum / weights_sum;
-  error[0] = ((weights_sum * output[0] * output[0]) - (2.0 * weighted_targets_sum * output[0]) + weighted_squared_targets_sum) * loss_function_weight * 2.0;
   if (missing_leave >= 1)
   {
     output[1] = 0.0;
-    error[1] = weights_sum;
     error[0] = 0.0;
+    error[1] = weights_sum;
+    error[2] = 0.0;
   }
   else
   {
     output[1] = 1.0;
+    error[0] = ((weights_sum * output[0] * output[0]) - (2.0 * weighted_targets_sum * output[0]) + weighted_squared_targets_sum) * loss_function_factor;
+    if (error[0] < 1E-10) error[0] = 0.0;
     error[1] = 0.0;
+    if (error[0] > weights_sum * loss_function_factor) error[2] = weights_sum * loss_function_factor; else error[2] = error[0];
   }
-  if (error[0] < 1E-10) error[0] = 0.0;
 }
 
 void RegressionTreeLeave::registerRow(int row)
@@ -210,6 +218,7 @@ void RegressionTreeLeave::getError(Vec errorv)
 {
   errorv[0] = error[0];
   errorv[1] = error[1];  
+  errorv[2] = error[2]; 
 }
 
 void RegressionTreeLeave::getOutput(Vec outputv)

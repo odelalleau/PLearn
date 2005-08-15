@@ -43,6 +43,7 @@
 #define RegressionTreeNode_INC
 
 #include "RegressionTreeLeave.h"
+#include "RegressionTreeMulticlassLeave.h"
 
 namespace PLearn {
 using namespace std;
@@ -59,7 +60,8 @@ private:
 
   int  missing_is_valid;
   real loss_function_weight;
-  int verbosity;
+  int verbosity; 
+  PP<RegressionTreeLeave> leave_template; 
   PP<RegressionTreeRegisters> train_set;
   PP<RegressionTreeLeave> leave;
  
@@ -111,7 +113,7 @@ public:
   static  void         declareOptions(OptionList& ol);
   virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
   virtual void         build();
-          void         initNode(PP<RegressionTreeRegisters> train_set, PP<RegressionTreeLeave> leave);
+          void         initNode(PP<RegressionTreeRegisters> train_set, PP<RegressionTreeLeave> leave, PP<RegressionTreeLeave> leave_template);
           void         lookForBestSplit();
           void         compareSplit(int col, real left_leave_last_feature, real right_leave_first_feature);
           int          expandNode();

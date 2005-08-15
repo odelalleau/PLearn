@@ -60,7 +60,9 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTree,
 RegressionTree::RegressionTree()     
   : missing_is_valid(0),
     loss_function_weight(1.0),
-    maximum_number_of_nodes(400)
+    maximum_number_of_nodes(400),
+    compute_train_stats(1),
+    complexity_penalty_factor(0.0)
 {
 }
 
@@ -77,6 +79,18 @@ void RegressionTree::declareOptions(OptionList& ol)
   declareOption(ol, "maximum_number_of_nodes", &RegressionTree::maximum_number_of_nodes, OptionBase::buildoption,
       "The maximum number of nodes for this tree.\n"
       "(If less than nstages, nstages will be used).");
+  declareOption(ol, "compute_train_stats", &RegressionTree::compute_train_stats, OptionBase::buildoption,
+      "If set to 1 (the default value) the train statistics are computed.\n"
+      "(When using the tree as a base regressor, we dont need the stats and it goes quicker when computations are suppressed).");
+  declareOption(ol, "complexity_penalty_factor", &RegressionTree::complexity_penalty_factor, OptionBase::buildoption,
+      "A factor that is multiplied with the square root of the number of leaves.\n"
+      "If the error inprovement for the next split is less than the result, the algorithm proceed to an early stop."
+      "(When set to 0.0, the default value, it has no impact).");
+  declareOption(ol, "multiclass_outputs", &RegressionTree::multiclass_outputs, OptionBase::buildoption,
+      "A vector of possible output values when solving a multiclass problem.\n"
+      "When making a prediction, the tree will adjust the output value of each leave to the closest value provided in this vector.");
+  declareOption(ol, "leave_template", &RegressionTree::leave_template, OptionBase::buildoption,
+      "The template for the leave objects to create.\n");
   declareOption(ol, "sorted_train_set", &RegressionTree::sorted_train_set, OptionBase::buildoption, 
       "The train set sorted on all columns\n"
       "If it is not provided by a wrapping algorithm, it is created at stage 0.\n");
@@ -100,6 +114,10 @@ void RegressionTree::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(missing_is_valid, copies);
   deepCopyField(loss_function_weight, copies);
   deepCopyField(maximum_number_of_nodes, copies);
+  deepCopyField(compute_train_stats, copies);
+  deepCopyField(complexity_penalty_factor, copies);
+  deepCopyField(multiclass_outputs, copies);
+  deepCopyField(leave_template, copies);
   deepCopyField(sorted_train_set, copies);
   deepCopyField(root, copies);
   deepCopyField(priority_queue, copies);
@@ -126,12 +144,20 @@ void RegressionTree::build_()
     if (inputsize < 1) PLERROR("RegressionTree: expected  inputsize greater than 0, got %d", inputsize);
     if (targetsize != 1) PLERROR("RegressionTree: expected targetsize to be 1, got %d", targetsize);
     if (weightsize != 1 && weightsize != 0)  PLERROR("RegressionTree: expected weightsize to be 1 or 0, got %d", weightsize_);
-    if (loss_function_weight != 0.0) computed_loss_function_weight = 1.0 / pow(loss_function_weight, 2.0);
-    else computed_loss_function_weight = 0.0;
+    if (loss_function_weight != 0.0)
+    {
+      l2_loss_function_factor = 2.0 / pow(loss_function_weight, 2.0);
+      l1_loss_function_factor = 2.0 / loss_function_weight;
+    }
+    else
+    {
+      l2_loss_function_factor = 1.0;
+      l1_loss_function_factor = 1.0;
+    }
     sample_input.resize(inputsize);
     sample_target.resize(targetsize);
     sample_output.resize(2);
-    sample_costs.resize(3);
+    sample_costs.resize(4);
   }
 }
 
@@ -145,10 +171,14 @@ void RegressionTree::train()
   }
   for (; stage < nstages; stage++)
   {    
-    if (stage > 0) expandTree();
+    if (stage > 0)
+    {
+      if (expandTree() < 0) break;
+    }
     if (report_progress) pb->update(stage);
   }
   if (report_progress) delete pb;
+  if (compute_train_stats < 1) return;
   if (report_progress)
   {
     pb = new ProgressBar("RegressionTree : computing the statistics: ", length);
@@ -191,11 +221,11 @@ void RegressionTree::initialiseTree()
     sorted_train_set->reinitRegisters();
   }
   first_leave_output.resize(2);
-  first_leave_error.resize(2);
-  first_leave = new RegressionTreeLeave();
+  first_leave_error.resize(3);
+  first_leave = ::PLearn::deepCopy(leave_template);
   first_leave->setOption("id", tostring(sorted_train_set->getNextId()));
   first_leave->setOption("missing_leave", "0");
-  first_leave->setOption("loss_function_weight", tostring(computed_loss_function_weight));
+  first_leave->setOption("loss_function_weight", tostring(loss_function_weight));
   first_leave->setOption("verbosity", tostring(verbosity));
   first_leave->initLeave(sorted_train_set);
   first_leave->initStats();
@@ -206,9 +236,9 @@ void RegressionTree::initialiseTree()
   }
   root = new RegressionTreeNode();
   root->setOption("missing_is_valid", tostring(missing_is_valid));
-  root->setOption("loss_function_weight", tostring(computed_loss_function_weight));
+  root->setOption("loss_function_weight", tostring(loss_function_weight));
   root->setOption("verbosity", tostring(verbosity));
-  root->initNode(sorted_train_set, first_leave);
+  root->initNode(sorted_train_set, first_leave, leave_template);
   root->lookForBestSplit();
   if (maximum_number_of_nodes < nstages) maximum_number_of_nodes = nstages;
   priority_queue = new RegressionTreeQueue();
@@ -218,22 +248,30 @@ void RegressionTree::initialiseTree()
   priority_queue->addHeap(root);
 }
 
-void RegressionTree::expandTree()
+int RegressionTree::expandTree()
 {
   if (priority_queue->isEmpty() <= 0)
   {
-    verbose("RegressionTree: priority queue empty", 3);
-    return;
+    verbose("RegressionTree: priority queue empty, stage: " + tostring(stage), 3);
+    return -1;
   }
   node = priority_queue->popHeap();
+  if (node->getErrorImprovment() < complexity_penalty_factor * sqrt((real)stage))
+  {
+    verbose("RegressionTree: early stopping at stage: " + tostring(stage)
+            + ", error improvement: " + tostring(node->getErrorImprovment())
+            + ", penalty: " + tostring(complexity_penalty_factor * sqrt((real)stage)), 3);
+    return -1;
+  }
   if (node->expandNode() < 0)
   {
     verbose("RegressionTree: expand is negative?", 3);
-    return;
+    return -1;
   }
   priority_queue->addHeap(node->getNodes()[0]); 
   priority_queue->addHeap(node->getNodes()[1]);
-  if (missing_is_valid > 0) priority_queue->addHeap(node->getNodes()[2]); 
+  if (missing_is_valid > 0) priority_queue->addHeap(node->getNodes()[2]);
+  return 1; 
 }
 
 void RegressionTree::setSortedTrainSet(PP<RegressionTreeRegisters> the_sorted_train_set)
@@ -248,10 +286,11 @@ int RegressionTree::outputsize() const
 
 TVec<string> RegressionTree::getTrainCostNames() const
 {
-  TVec<string> return_msg(3);
+  TVec<string> return_msg(4);
   return_msg[0] = "mse";
   return_msg[1] = "base confidence";
-  return_msg[2] = "base reward";
+  return_msg[2] = "base reward - l2";
+  return_msg[3] = "base reward - l1";
   return return_msg;
 }
 
@@ -263,6 +302,18 @@ TVec<string> RegressionTree::getTestCostNames() const
 void RegressionTree::computeOutput(const Vec& inputv, Vec& outputv) const
 {
   root->computeOutput(inputv, outputv);
+  if (multiclass_outputs.length() <= 0) return;
+  real closest_value;
+  real margin_to_closest_value;
+  for (int value_ind = 0; value_ind < multiclass_outputs.length(); value_ind++)
+  {
+    if (value_ind == 0 || abs(outputv[0] - multiclass_outputs[value_ind]) < margin_to_closest_value)
+    {
+      closest_value = multiclass_outputs[value_ind];
+      margin_to_closest_value = abs(outputv[0] - multiclass_outputs[value_ind]);
+    }
+  }
+  outputv[0] = closest_value;
 }
 
 void RegressionTree::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, Vec& outputv, Vec& costsv) const
@@ -275,7 +326,8 @@ void RegressionTree::computeCostsFromOutputs(const Vec& inputv, const Vec& outpu
 {
   costsv[0] = pow((outputv[0] - targetv[0]), 2.0);
   costsv[1] = outputv[1];
-  costsv[2] = 1.0 - (2.0 * computed_loss_function_weight * costsv[0]);
+  costsv[2] = 1.0 - (l2_loss_function_factor * costsv[0]);
+  costsv[3] = 1.0 - (l1_loss_function_factor * abs(outputv[0] - targetv[0]));
 }
 
 } // end of namespace PLearn
