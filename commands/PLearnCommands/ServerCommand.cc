@@ -110,23 +110,27 @@ void ServerCommand::run(const vector<string>& args)
 
       pout << "PLEARN_SERVER_TCP " << myhostname << " " << port << " " << mypid << endl;
       NORMAL_LOG << "PLEARN_SERVER STARTING IN TCP MODE ON "  << myhostname << ", PORT " << port << ", PID " << mypid << endl;
-
-      for(;;)
-        {
+      
+      for (bool running = true; running; ) {
           NORMAL_LOG << "\nPLEARN_SERVER WAITING FOR CONNECTION"  << endl;
           st = PR_Listen(sock,0);
           if(st!=PR_SUCCESS)
-            PLERROR("serverCommand: listen on socket failed");
+              PLERROR("serverCommand: listen on socket failed");
           PRNetAddr addr;
           PRFileDesc* fd = PR_Accept(sock, &addr, PR_INTERVAL_NO_TIMEOUT);
           if(fd==0)
-            PLERROR("ServerCommand: accept returned 0, error code is: %d",PR_GetError());
+              PLERROR("ServerCommand: accept returned 0, error code is: %d",PR_GetError());
           st = PR_NetAddrToString(&addr, buf, sizeof(buf));
           NORMAL_LOG << "PLEARN_SERVER CONNECTION_FROM "  << buf << endl;
           PStream io(new PrPStreamBuf(fd,fd,true,true));
+
           PLearnServer server(io);
-          server.run();
-        }
+          running = server.run();
+      }
+
+      NORMAL_LOG << "PLEARN_SERVER CLOSING SOCKET" << endl;
+      if (PR_Close(sock) != PR_SUCCESS)
+          PLERROR("ServerCommand: couldn't close port %d!", port);
     }
   else // Start stdin/stdout server
     {

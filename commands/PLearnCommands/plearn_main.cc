@@ -233,11 +233,13 @@ int plearn_main( int argc, char** argv,
   catch(const PLearnError& e)
   {
     cerr << "FATAL ERROR: " << e.message() << endl;
+    return 1;
   }
   catch (...) 
   {
     cerr << "FATAL ERROR: uncaught unknown exception "
          << "(ex: out-of-memory when allocating a matrix)" << endl;
+    return 2;
   }
 
   return 0;
