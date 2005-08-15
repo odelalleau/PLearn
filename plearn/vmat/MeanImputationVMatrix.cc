@@ -229,6 +229,11 @@ void MeanImputationVMatrix::build_()
   }
 }
 
+TVec<real> MeanImputationVMatrix::getMeanVector()
+{
+  return variable_mean;
+}
+
 void MeanImputationVMatrix::computeMeanVector()
 {
   int length = length_;

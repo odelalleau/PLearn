@@ -70,32 +70,33 @@ public:
 
 public:
 
-                       MeanImputationVMatrix();
-                       MeanImputationVMatrix(VMat the_source, real the_number_of_train_samples = 0.0);
-  virtual              ~MeanImputationVMatrix();
+                     MeanImputationVMatrix();
+                     MeanImputationVMatrix(VMat the_source, real the_number_of_train_samples = 0.0);
+  virtual            ~MeanImputationVMatrix();
 
-  static void declareOptions(OptionList &ol);
+  static void        declareOptions(OptionList &ol);
 
-  virtual void build();
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+  virtual void       build();
+  virtual void       makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 public:
 
-  virtual void getExample(int i, Vec& input, Vec& target, real& weight);
-  virtual real get(int i, int j) const;
-  virtual void put(int i, int j, real value);
-  virtual void getSubRow(int i, int j, Vec v) const;
-  virtual void putSubRow(int i, int j, Vec v);
-  virtual void appendRow(Vec v);
-  virtual void insertRow(int i, Vec v);  
-  virtual void getRow(int i, Vec v) const;
-  virtual void putRow(int i, Vec v);
-  virtual void getColumn(int i, Vec v) const;
+  virtual void       getExample(int i, Vec& input, Vec& target, real& weight);
+  virtual real       get(int i, int j) const;
+  virtual void       put(int i, int j, real value);
+  virtual void       getSubRow(int i, int j, Vec v) const;
+  virtual void       putSubRow(int i, int j, Vec v);
+  virtual void       appendRow(Vec v);
+  virtual void       insertRow(int i, Vec v);  
+  virtual void       getRow(int i, Vec v) const;
+  virtual void       putRow(int i, Vec v);
+  virtual void       getColumn(int i, Vec v) const;
+          TVec<real> getMeanVector();
 
 private:
 
-  void build_();
-  void computeMeanVector();  
+          void       build_();
+          void       computeMeanVector();  
   
   PLEARN_DECLARE_OBJECT(MeanImputationVMatrix);
 
