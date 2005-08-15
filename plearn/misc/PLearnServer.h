@@ -67,11 +67,11 @@ protected:
   PStream io;
   bool clear_maps;
   ObjMap objmap;
-
 public:
   PLearnServer(const PStream& input_output);
   
-  void run();
+  bool run();
+
 };
 
 

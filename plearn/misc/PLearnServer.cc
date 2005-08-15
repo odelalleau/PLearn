@@ -55,7 +55,7 @@ using namespace std;
 // Put function implementations here.
 
   PLearnServer::PLearnServer(const PStream& input_output)
-    :io(input_output), clear_maps(true)
+      :io(input_output), clear_maps(true)
   {
     
   }
@@ -126,7 +126,7 @@ using namespace std;
     io << endl;
   }
 
-  void PLearnServer::run()
+  bool PLearnServer::run()
   {
       const int upper_bound_id = 10000;
 
@@ -156,7 +156,7 @@ using namespace std;
         if(c==EOF)
           {
             // cerr << "Read EOF: quitting" << endl;
-            return;
+            return true;
           }
         int command = io.get();
         
@@ -249,14 +249,14 @@ using namespace std;
                 DBG_LOG << "PLearnServer QUIT" << endl;
                 // cerr << "Quitting" << endl;
                 DBG_LOG << "LEAVING PLearnServer::run()" << endl;
-                return;
+                return true;
               
               case 'K': // kill
                   DBG_LOG << "PLearnServer KILL" << endl;
                   DBG_LOG << "LEAVING PLearnServer::run()" << endl;
+                  return false;
 //                  PLERROR("This is not an error");
-                  exit(1);
-                  return;
+//                  exit(1);
 
               default:
                 PLERROR("Invalid PLearnServer command char: %c Type !? for help.",(char)command);
