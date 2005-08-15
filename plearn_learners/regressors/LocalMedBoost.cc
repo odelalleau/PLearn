@@ -55,7 +55,9 @@ PLEARN_IMPLEMENT_OBJECT(LocalMedBoost,
 
 LocalMedBoost::LocalMedBoost()     
   : robustness(0.1),
+    adapt_robustness_factor(0.0),
     loss_function_weight(1.0),
+    objective_function("l2"),
     regression_tree(1),
     max_nstages(1)
 {
@@ -68,9 +70,14 @@ LocalMedBoost::~LocalMedBoost()
 void LocalMedBoost::declareOptions(OptionList& ol)
 {
   declareOption(ol, "robustness", &LocalMedBoost::robustness, OptionBase::buildoption,
-      "The robustness parameter of the boosting algorithm\n");
+      "The robustness parameter of the boosting algorithm.\n");
+  declareOption(ol, "adapt_robustness_factor", &LocalMedBoost::adapt_robustness_factor, OptionBase::buildoption,
+      "If not 0.0, robustness will be adapted at each stage with max(t)min(i) base_award + this constant.\n");
   declareOption(ol, "loss_function_weight", &LocalMedBoost::loss_function_weight, OptionBase::buildoption,
-      "The hyper parameter to balance the error and the confidence factor\n");   
+      "The hyper parameter to balance the error and the confidence factor\n");  
+  declareOption(ol, "objective_function", &LocalMedBoost::objective_function, OptionBase::buildoption,
+      "Indicates which of the base reward to use. default is l2 and the other posibility is l1.\n"
+      "Normally it should be consistent with the objective function optimised by the base regressor.\n"); 
   declareOption(ol, "regression_tree", &LocalMedBoost::regression_tree, OptionBase::buildoption,
       "If set to 1, the tree_regressor_template is used instead of the base_regressor_template.\n"
       "It permits to sort the train set only once for all boosting iterations.\n");   
@@ -80,12 +87,18 @@ void LocalMedBoost::declareOptions(OptionList& ol)
   declareOption(ol, "base_regressor_template", &LocalMedBoost::base_regressor_template, OptionBase::buildoption,
       "The template for the base regressor to be boosted (used if the regression_tree option is set to 0).\n");   
   declareOption(ol, "tree_regressor_template", &LocalMedBoost::tree_regressor_template, OptionBase::buildoption,
-      "The template for a RegressionTree base regressor when the regression_tree option is set to 1.\n");
+      "The template for a RegressionTree base regressor when the regression_tree option is set to 1.\n");  
+  declareOption(ol, "tree_wrapper_template", &LocalMedBoost::tree_wrapper_template, OptionBase::buildoption,
+      "The template for a RegressionTree base regressor to be boosted thru a wrapper."
+      "This is useful when you want to used a different confidence function."
+      "The regression_tree option needs to be set to 2.\n");
  
   declareOption(ol, "end_stage", &LocalMedBoost::end_stage, OptionBase::learntoption,
       "The last train stage after end of training\n");
   declareOption(ol, "bound", &LocalMedBoost::bound, OptionBase::learntoption,
       "Cumulative bound computed after each boosting stage\n");
+  declareOption(ol, "maxt_base_award", &LocalMedBoost::maxt_base_award, OptionBase::learntoption,
+      "max(t)min(i) base_award kept to adapt robustness at each stage.\n");
   declareOption(ol, "sorted_train_set", &LocalMedBoost::sorted_train_set, OptionBase::learntoption,
       "A sorted train set when using a tree as a base regressor\n");
   declareOption(ol, "base_regressors", &LocalMedBoost::base_regressors, OptionBase::learntoption,
@@ -95,7 +108,7 @@ void LocalMedBoost::declareOptions(OptionList& ol)
   declareOption(ol, "loss_function", &LocalMedBoost::loss_function, OptionBase::learntoption,
       "The array of loss_function values built by the boosting algorithm\n");
   declareOption(ol, "sample_weights", &LocalMedBoost::sample_weights, OptionBase::learntoption,
-      "The array to represent different distributions on the samples of the training sem\n");
+      "The array to represent different distributions on the samples of the training set.\n");
   inherited::declareOptions(ol);
 }
 
@@ -103,13 +116,17 @@ void LocalMedBoost::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(robustness, copies);
+  deepCopyField(adapt_robustness_factor, copies);
   deepCopyField(loss_function_weight, copies);
+  deepCopyField(objective_function, copies);
   deepCopyField(regression_tree, copies);
   deepCopyField(max_nstages, copies);
   deepCopyField(base_regressor_template, copies);
   deepCopyField(tree_regressor_template, copies);
+  deepCopyField(tree_wrapper_template, copies);
   deepCopyField(end_stage, copies);
   deepCopyField(bound, copies);
+  deepCopyField(maxt_base_award, copies);
   deepCopyField(sorted_train_set, copies);
   deepCopyField(base_regressors, copies);
   deepCopyField(function_weights, copies);
@@ -156,6 +173,7 @@ void LocalMedBoost::train()
   {
     base_regressors.resize(max_nstages);
     tree_regressors.resize(max_nstages);
+    tree_wrappers.resize(max_nstages);
     function_weights.resize(max_nstages);
     loss_function.resize(max_nstages);
     initializeSampleWeight();
@@ -176,9 +194,18 @@ void LocalMedBoost::train()
     verbose("LocalMedBoost: The base regressor is being trained at stage: " + tostring(stage), 4);
     if (regression_tree > 0)
     {
-      tree_regressors[stage] = ::PLearn::deepCopy(tree_regressor_template);
-      tree_regressors[stage]->setSortedTrainSet(sorted_train_set);
-      base_regressors[stage] = tree_regressors[stage];
+      if (regression_tree == 1)
+      {
+        tree_regressors[stage] = ::PLearn::deepCopy(tree_regressor_template);
+        tree_regressors[stage]->setSortedTrainSet(sorted_train_set);
+        base_regressors[stage] = tree_regressors[stage];
+      }
+      else
+      {
+        tree_wrappers[stage] = ::PLearn::deepCopy(tree_wrapper_template);
+        tree_wrappers[stage]->setSortedTrainSet(sorted_train_set);
+        base_regressors[stage] = tree_wrappers[stage];
+      }
     }
     else
     {
@@ -200,7 +227,7 @@ void LocalMedBoost::train()
     }
     function_weights[stage] = findArgminFunctionWeight();
     computeLossBound();
-    verbose("LocalMedBoost: stage: " + tostring(stage) + " alpha: " +tostring(function_weights[stage]), 3);
+    verbose("LocalMedBoost: stage: " + tostring(stage) + " alpha: " + tostring(function_weights[stage]) + " robustness: " + tostring(robustness), 3);
     if (function_weights[stage] <= 0.0) break;
     recomputeSampleWeight();
     if (report_progress) pb->update(stage);
@@ -231,15 +258,32 @@ void LocalMedBoost::computeBaseAwards()
   edge = 0.0;
   capacity_too_large = true;
   capacity_too_small = true;
+  real mini_base_award; 
   for (each_train_sample_index = 0; each_train_sample_index < length; each_train_sample_index++)
   {
     train_set->getExample(each_train_sample_index, sample_input, sample_target, sample_weight);
     base_regressors[stage]->computeOutputAndCosts(sample_input, sample_target, sample_output, sample_costs);
-    base_rewards[each_train_sample_index] = sample_costs[2];
+    if (objective_function == "l1")
+    {
+      base_rewards[each_train_sample_index] = sample_costs[3];
+    }
+    else
+    {
+      base_rewards[each_train_sample_index] = sample_costs[2];
+    }
     base_confidences[each_train_sample_index] = sample_costs[1];
     base_awards[each_train_sample_index] = base_rewards[each_train_sample_index] * base_confidences[each_train_sample_index];
+    if (each_train_sample_index == 0) mini_base_award = base_awards[each_train_sample_index];
+    if (base_awards[each_train_sample_index] < mini_base_award) mini_base_award = base_awards[each_train_sample_index];
     edge += sample_weight * base_awards[each_train_sample_index];
     if (base_awards[each_train_sample_index] < robustness) capacity_too_large = false;
+  }
+  if (stage == 0) maxt_base_award = mini_base_award;
+  if (mini_base_award > maxt_base_award) maxt_base_award = mini_base_award;
+  if (adapt_robustness_factor > 0.0)
+  {
+    robustness = maxt_base_award + adapt_robustness_factor;
+    capacity_too_large = false;
   }
   if (edge >= robustness)
   {

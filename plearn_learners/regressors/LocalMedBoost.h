@@ -42,6 +42,7 @@
 #define LocalMedBoost_INC
 
 #include "RegressionTree.h"
+#include "BaseRegressorWrapper.h"
 
 namespace PLearn {
 using namespace std;
@@ -55,25 +56,30 @@ private:
   Build options: they have to be set before training
 */
 
-  real robustness;                               // robustness parameter of the boosting algorithm
-  real loss_function_weight;                     // hyper-parameter to balance the error and the confidence facto
-  int regression_tree;                           // indicator to use the tree_regressor_template is set to 1, and the base_regressor_template otherwise
-  int max_nstages;                               // maximum number of nstages in the hyper learner to size the vectors of base learners
-  PP<PLearner> base_regressor_template;          // template for a generic regressor as the base learner to be boosted
-  PP<RegressionTree> tree_regressor_template;    // template for a tree regressor to be boosted as the base regressor
+  real robustness;                                   // robustness parameter of the boosting algorithm
+  real adapt_robustness_factor;                      // if not 0.0, robustness will be adapted at each stage with max(t)min(i) base_award + this constant
+  real loss_function_weight;                         // hyper-parameter to balance the error and the confidence factor
+  string objective_function;                         // indicates to used l2 or flaten_l2 as base regressor objective function
+  int regression_tree;                               // indicator to use the tree_regressor_template if set to 1, and the base_regressor_template otherwise
+  int max_nstages;                                   // maximum number of nstages in the hyper learner to size the vectors of base learners
+  PP<PLearner> base_regressor_template;              // template for a generic regressor as the base learner to be boosted
+  PP<RegressionTree> tree_regressor_template;        // template for a tree regressor to be boosted as the base regressor
+  PP<BaseRegressorWrapper> tree_wrapper_template;    // template for a tree regressor to be boosted thru a wrapper for a different confidence function
   
 /*
   Learnt options: they are sized and initialized if need be, at stage 0
 */
 
-  int end_stage;                                 // last train stage after end of training
-  real bound;                                    // cumulative bound computed after each boosting stage
-  PP<RegressionTreeRegisters> sorted_train_set;  // a sorted train set when using a tree as a base regressor
-  TVec< PP<PLearner> > base_regressors;          // base regressors built at each boosting stage 
-  TVec< PP<RegressionTree> > tree_regressors;    // tree regressors built at each boosting stage
-  TVec<real> function_weights;                   // array of function weights built by the boosting algorithm 
-  TVec<real> loss_function;                      // array of the loss function
-  TVec<real> sample_weights;                     // array to represent different distributions on the samples of the training set
+  int end_stage;                                      // last train stage after end of training
+  real bound;                                         // cumulative bound computed after each boosting stage
+  real maxt_base_award;                               // max(t)min(i) base_award to adapt robustness at each stage
+  PP<RegressionTreeRegisters> sorted_train_set;       // a sorted train set when using a tree as a base regressor
+  TVec< PP<PLearner> > base_regressors;               // base regressors built at each boosting stage 
+  TVec< PP<RegressionTree> > tree_regressors;         // tree regressors built at each boosting stage
+  TVec< PP<BaseRegressorWrapper> > tree_wrappers;     // tree regressors built at each boosting stage
+  TVec<real> function_weights;                        // array of function weights built by the boosting algorithm 
+  TVec<real> loss_function;                           // array of the loss function
+  TVec<real> sample_weights;                          // array to represent different distributions on the samples of the training set
  
 /*
   Work fields: they are sized and initialized if need be, at buid time
