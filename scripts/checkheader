@@ -1,0 +1,72 @@
+#!/usr/bin/env perl
+# checkheader (Pascal Vincent 02/2000)
+
+$nargs = $#ARGV+1;
+if ($nargs < 1)
+{
+    print "Usage: checkheader [list of files]\n";
+    print "checks PLearn native binary matrix file headers and transforms them to conform to the new format if necessary\n";
+}
+
+# returns a proper 64 bytes long header that starts with the given string
+sub header($)
+{
+    $padding = " " x (64-length($_[0])-1);
+    return "$_[0]$padding\n";
+}
+
+foreach $fname (@ARGV)
+{
+  open(FILE,"<$fname") or die "couldn't open file $fname in read/write mode";
+  read(FILE,$header,64);
+  @words = split(/\s+/,$header);
+  seek(FILE,0,0);  # back to the beginning
+
+  if(substr($header,63,1) ne "\n")
+  {
+      print "$fname: WRONG HEADER!!! 64th byte is not a newline!! Please correct the problem manually. (Header must be a 64 byte long ascii header terminated by a \\n newline)\n";
+  }
+  elsif($words[0] eq "MATRIX" or $words[0] eq "VECTOR")
+  {
+      print "$fname: header seems correct (new format)\n";
+  }
+  elsif($words[0] eq "MAT_FLOAT")
+  {
+      print "$fname: transforming header from old to new format...\n";
+      if($words[3] eq "LITTLE_ENDIAN" or $words[3] eq "LITTLEENDIAN")
+      {
+          print FILE header("MATRIX $words[1] $words[2] FLOAT BIG_ENDIAN");
+      }
+      elsif($words[3] eq "BIG_ENDIAN" or $words[3] eq "BIGENDIAN")
+      {
+          print FILE header("MATRIX $words[1] $words[2] FLOAT LITTLE_ENDIAN");
+      }
+      else
+      {
+          print "$fname: WRONG HEADER!!! Please correct the problem manually\n";
+      }
+  }
+  elsif($words[0] eq "VEC_FLOAT")
+  {
+      print "$fname: transforming header from old to new format\n";
+      if($words[2] eq "LITTLE_ENDIAN" or $words[2] eq "LITTLEENDIAN")
+      {
+          print FILE header("VECTOR $words[1] FLOAT BIG_ENDIAN");
+      }
+      elsif($words[2] eq "BIG_ENDIAN" or $words[2] eq "BIGENDIAN")
+      {
+          print FILE header("VECTOR $words[1] FLOAT LITTLE_ENDIAN");
+      }
+      else
+      {
+          print "$fname: WRONG HEADER!!! Please correct the problem manually\n";
+      }
+  }
+  else
+  {
+      print "$fname: WRONG HEADER !!! Please correct the problem manually\n";
+  }
+
+  close(FILE);
+}
+
