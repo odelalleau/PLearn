@@ -102,7 +102,7 @@ void ServerCommand::run(const vector<string>& args)
 
       // Allow reuse of the socket immediately after the server shuts down
       PRSocketOptionData socket_option_data;
-      socket_option_data.value.keep_alive = PR_SockOpt_Reuseaddr;
+      socket_option_data.value.reuse_addr = PR_SockOpt_Reuseaddr;
       PR_SetSocketOption(sock, &socket_option_data);
 
       string myhostname = "UNKNOWN_HOSTNAME";
