@@ -100,6 +100,11 @@ void ServerCommand::run(const vector<string>& args)
       if (PR_Bind(sock, &server_address) != PR_SUCCESS)
         PLERROR("ServerCommand: could not bind to port %d!", port);
 
+      // Allow reuse of the socket immediately after the server shuts down
+      PRSocketOptionData socket_option_data;
+      socket_option_data.value.keep_alive = PR_SockOpt_Reuseaddr;
+      PR_SetSocketOption(sock, &socket_option_data);
+
       string myhostname = "UNKNOWN_HOSTNAME";
       string mypid = "UNKNOWN_PID";      
 #ifndef WIN32
@@ -127,8 +132,9 @@ void ServerCommand::run(const vector<string>& args)
           PLearnServer server(io);
           running = server.run();
       }
-
       NORMAL_LOG << "PLEARN_SERVER CLOSING SOCKET" << endl;
+      if (PR_Shutdown(sock, PR_SHUTDOWN_BOTH) != PR_SUCCESS)
+          PLERROR("ServerCommand: couldn't shutdown socket %d!", port);
       if (PR_Close(sock) != PR_SUCCESS)
           PLERROR("ServerCommand: couldn't close port %d!", port);
     }
