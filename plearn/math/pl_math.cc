@@ -49,7 +49,7 @@ using namespace std;
 
 
 # ifdef BIGENDIAN
-_plearn_nan_type plearn_nan = {{ 0x7f, 0xc0, 0, 0 }};
+_plearn_nan_type plearn_nan = { 0x7f, 0xc0, 0, 0 };
 # endif
 # ifdef LITTLEENDIAN
 _plearn_nan_type plearn_nan = { 0, 0, 0xc0, 0x7f };
