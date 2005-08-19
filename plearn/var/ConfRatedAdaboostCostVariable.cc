@@ -112,8 +112,8 @@ void ConfRatedAdaboostCostVariable::bprop()
 {
   for(int i=0; i<length(); i++)
   {
-    varray[0]->gradientdata[i] = -2*gradientdata[i]*valuedata[i]*varray[2]->valuedata[0]*(2*int(varray[1]->valuedata[i])-1);  
-    varray[2]->gradientdata[0] = -gradientdata[i]*valuedata[i]*(2*varray[0]->valuedata[i]-1)*(2*int(varray[1]->valuedata[i])-1);  
+    varray[0]->gradientdata[i] += -2*gradientdata[i]*valuedata[i]*varray[2]->valuedata[0]*(2*int(varray[1]->valuedata[i])-1);  
+    varray[2]->gradientdata[0] += -gradientdata[i]*valuedata[i]*(2*varray[0]->valuedata[i]-1)*(2*int(varray[1]->valuedata[i])-1);  
   }
 }
 

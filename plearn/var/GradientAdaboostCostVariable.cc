@@ -104,7 +104,7 @@ void GradientAdaboostCostVariable::fprop()
 void GradientAdaboostCostVariable::bprop()
 {
   for(int i=0; i<length(); i++)
-    input1->gradientdata[i] = (gradientdata[i])*-2*(2*input2->valuedata[i]-1);
+    input1->gradientdata[i] += (gradientdata[i])*-2*(2*input2->valuedata[i]-1);
 }
 
 } // end of namespace PLearn
