@@ -247,10 +247,7 @@ public:
 
   void residual_correlation_output_gradient( Vec MAgradients,  const Vec& weights, const Vec& output_gradient, 
   real activation, real& hidden_gradient ) const;
-  
-/*  void residualCorrelationLayerBpropUpdate( Vec input_gradient, Mat weights, const Vec& input, 
-                      const Vec& output_gradient, real learning_rate) const;*/
-  
+    
 };
 
 // Declares a few other classes and functions related to this class.

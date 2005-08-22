@@ -373,6 +373,9 @@ void IncrementalNNet::train()
 
   real current_average_class_error=0;
   real next_average_class_error=0;
+  real old_current_average_cost;
+  real old_next_average_cost;
+
 
   static Vec input;  // static so we don't reallocate/deallocate memory each time...
   static Vec output;
@@ -414,6 +417,7 @@ void IncrementalNNet::train()
   bool stopping_criterion_not_met = true;
 
   moving_average_coefficient = 1.0/minibatchsize;
+  learning_rate = initial_learning_rate;
 
   while(stage<nstages && stopping_criterion_not_met)
   {
@@ -457,7 +461,8 @@ void IncrementalNNet::train()
       costs_with_candidate[0] += output_weight_decay * sumabs(candidate_unit_output_weights);
       real candidate_class_error = (cost_type!=0)?costs_with_candidate[3]:0;
 
-      learning_rate = initial_learning_rate / ( 1 + n_examples_seen * decay_factor );
+      if ( decay_factor != 0.0 ) 
+        learning_rate = initial_learning_rate / ( 1 + n_examples_seen * decay_factor );
       
       // TRAINING OF THE NETWORK
       // backprop & update regular network parameters // TRAINING OF THE NETWORK
@@ -481,6 +486,7 @@ void IncrementalNNet::train()
          
         if (stage>0)
         {
+          // the method below does:
           // hidden_gradient[j] = sum_i output_weights[j,i]*output_gradient[i]
           // output_weights[i,j] -= learning_rate * (output_gradient[i] * h[j] + output_weight_decay * sign(output_weights[i,j]))
           transposedLayerL1BpropUpdate(hidden_gradient, output_weights, h, output_gradient, learning_rate, output_weight_decay);
@@ -530,7 +536,7 @@ void IncrementalNNet::train()
                 }
               }            
             } else { // incremental internal connections 
-              for ( int i = stage-1; i > 0; i-- ) { 
+              for ( int i = stage-1; i >= 0; i-- ) { 
                 hidden_gradient[i] *= (1 - h[i]*h[i]);
                 if ( !residual_correlation_gradient ) {
                   for ( int j = 0; j < i; j++ ) // back-propagate gradients through internal connections.
@@ -538,7 +544,7 @@ void IncrementalNNet::train()
                 }
                 update_incremental_connections( internal_weights[i], internal_weight_gradients[i], h, hidden_gradient[i] );
               } 
-              hidden_gradient[0] *= (1 - h[0]*h[0]);  // the first unit has no incomming internal connections
+              //hidden_gradient[0] *= (1 - h[0]*h[0]);  // the first unit has no incomming internal connections
             }           
           }
           
@@ -639,13 +645,18 @@ void IncrementalNNet::train()
       int t_since_beginning_of_batch = n_examples_seen - n_batches_seen*minibatchsize;
       if (!online)
         moving_average_coefficient = 1.0/(1+t_since_beginning_of_batch);
-      if (n_examples_seen==1)
-        current_average_cost = current_total_cost;
-      else  
-        current_average_cost = moving_average_coefficient*current_total_cost
-          +(1-moving_average_coefficient)*current_average_cost;
+      
       next_average_cost = moving_average_coefficient*costs_with_candidate[0]
         +(1-moving_average_coefficient)*next_average_cost;
+      if (n_examples_seen==1) {
+        current_average_cost = current_total_cost;
+        old_current_average_cost = current_average_cost;
+        old_next_average_cost = next_average_cost;
+      } else { 
+        current_average_cost = moving_average_coefficient*current_total_cost
+          +(1-moving_average_coefficient)*current_average_cost;
+      }
+      
       if (verbosity>1 && cost_type!=0)
       {
         current_average_class_error = moving_average_coefficient*current_class_error
@@ -653,27 +664,30 @@ void IncrementalNNet::train()
         next_average_class_error = moving_average_coefficient*candidate_class_error
         +(1-moving_average_coefficient)*next_average_class_error;
       }
-      
-      
+           
       // consider inserting the candidate hidden unit (at every minibatchsize examples)
       if (t_since_beginning_of_batch == 0) 
-      {
+      {        
+        
+        old_current_average_cost = current_average_cost;
+        old_next_average_cost = next_average_cost;
+
         n_examples_training_candidate += minibatchsize;
         if (verbosity>1) 
         {
           cout << "At t=" << real(n_examples_seen)/train_set->length() 
-               << " epochs, estimated current average cost = " << current_average_cost << endl
-               << "Estimated average cost with candidate unit = " << next_average_cost << endl;
+               << " epochs, estimated average cost = " << current_average_cost 
+               << " (with candidate " << next_average_cost << " )"<< endl;
           if (verbosity>2)
             cout << "(current cost = " << current_total_cost << "; and with candidate = " 
             << costs_with_candidate[0] << ")" << endl;
           if (cost_type!=0)
-            cout << "Estimated current classification error = " << current_average_class_error << endl
-                 << "Estimated classification error with candidate unit = " << next_average_class_error << endl;
+            cout << "Estimated classification error = " << current_average_class_error 
+                 << " (with candidate " << next_average_class_error << " )"<< endl;
+          cout << "learning rate = " << learning_rate << endl;
         }
         
-        if ( next_average_cost < current_average_cost ) 
-        //if ( next_average_class_error < current_average_class_error ) MNT
+        if ( next_average_cost < current_average_cost && stage < nstages ) 
         {
           // insert candidate hidden unit
           stage++;
@@ -706,8 +720,12 @@ void IncrementalNNet::train()
               internal_weight_gradients[stage-1] << candidate_unit_internal_weight_gradients;
               candidate_unit_internal_weight_gradients.resize(stage);
               candidate_unit_internal_weights.fill(.0);
+              //candidate_unit_internal_weights.fill(0.01/stage);
               candidate_unit_internal_weight_gradients.fill(.0);
-            } else candidate_unit_internal_weights.fill(0.01/stage);
+            } else {
+              candidate_unit_internal_weights.fill(.0);
+              //candidate_unit_internal_weights.fill(0.01/stage);
+            }
           }
           act.resize(stage);
           h.resize(stage);
@@ -727,8 +745,7 @@ void IncrementalNNet::train()
                  << "expected to decrease from " << current_average_cost << " to " 
                  << next_average_cost << "." << endl;
           n_examples_training_candidate=0;
-        } else // should we stop?
-        {
+        } else {// should we stop?
           if (n_examples_training_candidate >= max_n_epochs_to_fail*train_set->length())
           {
             stopping_criterion_not_met = false; // STOP
@@ -794,7 +811,7 @@ real IncrementalNNet::output_loss(const Vec& output,const Vec& target) const
     if (cost_type == 1) // "hinge_loss", one against all binary classifiers
       fit_error = one_against_all_hinge_loss(output,target_class);
     else // (output_cost_type == "discrete_log_likelihood")
-      fit_error = - safelog(output[target_class]);
+      fit_error = - safelog(output[target_class]); // - sum safelog(1-the_rest_of_the_output)?
   }
   return fit_error;
 }
@@ -832,6 +849,7 @@ void IncrementalNNet::computeCostsFromOutputs(const Vec& input, const Vec& outpu
   // Compute the costs from *already* computed output. 
   real fit_error = output_loss(output,target);
   real regularization_penalty = output_weight_decay * sumabs(output_weights);
+  //regularization_penalty += output_weight_decay * sumabs(direct_weights); - doesn't change anything
   costs[0] = fit_error + regularization_penalty;
   costs[1] = fit_error;
   costs[2] = regularization_penalty;
@@ -879,10 +897,11 @@ void IncrementalNNet::update_incremental_connections( Vec weights, Vec MAgradien
       * moving_average_coefficient + (1-moving_average_coefficient)*MAgradients[i];
     if ( weights[i] == 0.0 ) {
       if ( fabs(MAgradients[i]) > connection_gradient_threshold ){ // add connection
-        weights[i] = - 5 * learning_rate * MAgradients[i];
+        //weights[i] = - 5 * learning_rate * MAgradients[i];
+        weights[i] -= gradient * input[i] * learning_rate;
       }
     } else {
-      if ( fabs(weights[i]) + fabs( MAgradients[i] ) < connection_removing_threshold ) 
+      if ( fabs( weights[i] ) + fabs( MAgradients[i] ) < connection_removing_threshold ) 
         weights[i] = 0.0;  // remove connection
       else 
         weights[i] -= gradient * input[i] * learning_rate; // update connection
@@ -912,15 +931,5 @@ void IncrementalNNet::residual_correlation_output_gradient( Vec MAgradients, con
   } else hidden_gradient = output_gradient[0];
 
 }
-
-// void IncrementalNNet::residualCorrelationLayerBpropUpdate( Vec input_gradient, Mat weights, const Vec& input, 
-//                       const Vec& output_gradient, real learning_rate) const {
-//   int n = input_gradient.length();
-//   int m = output_gradient.length();
-//   for ( int i = 0; i < n; i++ ){
-//     for ( int j = 0; j < m; j++ ){   
-//     }
-//   }
-// }
 
 } // end of namespace PLearn
