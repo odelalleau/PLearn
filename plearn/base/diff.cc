@@ -51,12 +51,14 @@ using namespace std;
 //////////
 // diff //
 //////////
+/*
 int diff(const string& refer, const string& other, const OptionBase* opt, PLearnDiff* diffs)
 {
-  // pout << "Calling basic diff with Option< ObjectType, " << opt->optiontype() << " >" << endl;
+  pout << "Calling basic diff with Option< ObjectType, " << opt->optiontype() << " >" << endl;
   assert( diffs );
   return diffs->diff(refer, other, opt->optionname());
 }
+*/
 
 //////////
 // diff //

@@ -66,9 +66,16 @@ void addDiffPrefix(PLearnDiff* diffs, const string& prefix, int n);
 int diff(PLearnDiff* diffs, const string& refer, const string& other, const string& name);
  
 //! Default diff function: compare the two strings.
-int diff(const string& refer, const string& other, const OptionBase* opt, PLearnDiff* diffs);
+template<class ObjectType, class OptionType>
+int diff(const string& refer, const string& other,
+         const Option<ObjectType, OptionType>* opt, PLearnDiff* diffs)
+{
+  pout << "Calling basic diff with Option< ObjectType, " << opt->optiontype() << " >" << endl;
+  assert( diffs );
+  return diff(diffs, refer, other, opt->optionname());
+}
 
-//! Specialization for double.
+//! diff for double.
 template<class ObjectType>
 int diff(const string& refer, const string& other, const Option<ObjectType, double>* opt, PLearnDiff* diffs)
 {
@@ -85,10 +92,11 @@ int diff(const string& refer, const string& other, const Option<ObjectType, doub
     return diff(diffs, refer, other, opt->optionname());
 }
 
-//! Specialization for float.
+//! diff for float.
 template<class ObjectType>
 int diff(const string& refer, const string& other, const Option<ObjectType, float>* opt, PLearnDiff* diffs)
 {
+  // TODO Avoid code duplication with double.
   float x_refer, x_other;
   PStream in = openString(refer, PStream::plearn_ascii);
   in >> x_refer;
@@ -102,7 +110,7 @@ int diff(const string& refer, const string& other, const Option<ObjectType, floa
     return diff(diffs, refer, other, opt->optionname());
 }
 
-//! Specialization for TVec<>.
+//! diff for TVec<>.
 template<class ObjectType, class VecElementType>
 int diff(const string& refer, const string& other, const Option<ObjectType, TVec<VecElementType> >* opt, PLearnDiff* diffs)
 {
@@ -116,6 +124,7 @@ int diff(const string& refer, const string& other, const Option<ObjectType, TVec
   in >> refer_vec;
   in = openString(other, PStream::plearn_ascii);
   in >> other_vec;
+  in.flush();
   int n = refer_vec.length();
   if (other_vec.length() != n)
     // If the two vectors do not have the same size, no need to go further.
@@ -139,7 +148,7 @@ int diff(const string& refer, const string& other, const Option<ObjectType, TVec
   return n_diffs;
 }
 
-//! Specialization for TMat<>.
+//! diff for TMat<>.
 template<class ObjectType, class MatElementType>
 int diff(const string& refer, const string& other, const Option<ObjectType, TMat<MatElementType> >* opt, PLearnDiff* diffs)
 {
@@ -152,6 +161,7 @@ int diff(const string& refer, const string& other, const Option<ObjectType, TMat
   in >> refer_mat;
   in = openString(other, PStream::plearn_ascii);
   in >> other_mat;
+  in.flush();
   int n = refer_mat.length();
   if (other_mat.length() != n)
     // If the two matrices do not have the same length, no need to go further.
@@ -181,7 +191,7 @@ int diff(const string& refer, const string& other, const Option<ObjectType, TMat
   return n_diffs;
 }
 
-//! Specialization for PP<>.
+//! diff for PP<>.
 template<class ObjectType, class PointedType>
 int diff(const string& refer, const string& other, const Option<ObjectType, PP<PointedType> >* opt, PLearnDiff* diffs)
 {
@@ -198,7 +208,36 @@ int diff(const string& refer, const string& other, const Option<ObjectType, PP<P
   return n_diffs;
 }
 
-//! Specialization for VMat.
+/*
+//! diff for Object.
+template<class ObjectType, class OptionType>
+int diff(const string& refer, const string& other,
+         const Option<ObjectType, OptionType>* opt, PLearnDiff* diffs,
+// TODO Continue here
+
+         const Object* ptr = 0)
+{
+  pout << "Calling diff_Object with Option< ObjectType, " << opt->optiontype() << " >" << endl;
+  PP<OptionBase> new_opt = new Option<ObjectType, PP<OptionType> >
+                                (opt->optionname(), 0, 0, "", "", "");
+  return new_opt->diff(refer, other, diffs);
+  */
+
+  /*
+  PP<PointedType> refer_obj; PP<PointedType> other_obj; PStream in =
+  openString(refer, PStream::plearn_ascii); in >> refer_obj; in =
+  openString(other, PStream::plearn_ascii); in >> other_obj; int n_diffs =
+  diff(static_cast<PointedType*>(refer_obj),
+  static_cast<PointedType*>(other_obj), diffs); addDiffPrefix(diffs,
+  opt->optionname() + ".", n_diffs); return n_diffs;
+  return 0;
+  */
+/*
+}
+*/
+
+
+//! diff for VMat.
 template<class ObjectType>
 int diff(const string& refer, const string& other, const Option<ObjectType, VMat >* opt, PLearnDiff* diffs)
 {
