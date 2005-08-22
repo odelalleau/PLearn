@@ -116,6 +116,7 @@ public:
 
   virtual int diff(const string& refer, const string& other, PLearnDiff* diffs) const
     {
+      // TODO COMMIT WITH THE PLERROR UNTIL IT IS FIXED.
       PLERROR("OLIVIER: gcc 3.4.4 n'aime pas la ligne ci-dessous...");
       // return PLearn::diff(refer, other, this, diffs);
       return -1;
