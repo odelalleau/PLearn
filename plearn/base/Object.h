@@ -2,7 +2,7 @@
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 1999-2005 Pascal Vincent, Yoshua Bengio and University of Montreal
 // Copyright (C) 2002 Frederic Morin
 
 // Redistribution and use in source and binary forms, with or without
@@ -249,7 +249,9 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
 
 /*! The following macro should be called just *after* the declaration of
   an object subclass. It declares and defines a few inline functions needed for
-  the serialisation of pointers to the newly declared object type. */
+  the serialization of pointers to the newly declared object type and the
+  comparison (diff) with other objects.
+*/
 
 #define DECLARE_OBJECT_PTR(CLASSTYPE)                                      \
         inline Object *toObjectPtr(const CLASSTYPE &o)                     \
@@ -274,6 +276,15 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
               PLERROR("Mismatched classes while reading a PP: %s is not a %s", \
                    ptr->classname().c_str(),CLASSTYPE::_classname_().c_str()); \
             return in;                                                     \
+          }                                                                \
+        template<class ObjectType>                                         \
+        int diff(const string& refer, const string& other,                 \
+                 const Option<ObjectType, CLASSTYPE>* opt, PLearnDiff* diffs)  \
+          { pout << "Calling diff_Object with Option< ObjectType, " <<     \
+              opt->optiontype() << " >" << endl;                           \
+            PP<OptionBase> new_opt = new Option<ObjectType, PP<CLASSTYPE> >\
+                (opt->optionname(), 0, 0, "", "", "");                     \
+            return new_opt->diff(refer, other, diffs);                     \
           }                                                                \
         DECLARE_TYPE_TRAITS(CLASSTYPE)
 
