@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SVMClassificationTorch.cc,v 1.6 2005/02/24 15:34:56 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -213,6 +213,14 @@ void SVMClassificationTorch::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
   // ### Remove this line when you have fully implemented this method.
   PLERROR("SVMClassificationTorch::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+}
+
+////////////////////
+// setTrainingSet //
+////////////////////
+void SVMClassificationTorch::setTrainingSet(VMat training_set, bool call_forget) {
+  kernel->setDataForKernelMatrix(training_set);
+  inherited::setTrainingSet(training_set, call_forget);
 }
 
 #if 0

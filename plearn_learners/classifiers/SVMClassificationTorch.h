@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SVMClassificationTorch.h,v 1.5 2005/02/24 15:34:56 tihocan Exp $ 
+   * $Id$ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -139,6 +139,9 @@ public:
   //! for which it updates the VecStatsCollector train_stats.
   virtual TVec<std::string> getTrainCostNames() const;
 
+  //! Overridden to forward the dataset to the kernel.
+  virtual void setTrainingSet(VMat training_set, bool call_forget = true);
+
   // *** SUBCLASS WRITING: ***
   // While in general not necessary, in case of particular needs 
   // (efficiency concerns for ex) you may also want to overload
@@ -148,7 +151,6 @@ public:
   // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
   // virtual int nTestCosts() const;
   // virtual int nTrainCosts() const;
-  // virtual void setTrainingSet(VMat training_set, bool call_forget = true);
   // virtual void resetInternalState();
   // virtual bool isStatefulLearner() const;
 
