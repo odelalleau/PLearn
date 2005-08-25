@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReadAndWriteCommand.cc,v 1.8 2005/01/28 17:42:35 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file ReadAndWriteCommand.cc */
 #include "ReadAndWriteCommand.h"
@@ -52,45 +52,57 @@ using namespace std;
 PLearnCommandRegistry ReadAndWriteCommand::reg_(new ReadAndWriteCommand);
 
 ReadAndWriteCommand::ReadAndWriteCommand():
-  PLearnCommand("read_and_write",
+    PLearnCommand("read_and_write",
                 
-                "Used to check (debug) the serialization system",
+                  "Used to check (debug) the serialization system",
                 
-                "read_and_write <sourcefile> <destfile> \n"
-                "Reads an Object (in PLearn serialization format) from the <sourcefile> and writes it to the <destfile>\n"
-                "If the sourcefile ends with a .psave file, then it will not be subjected to macro preprosessing \n"
-                "Otherwise (ex: .plearn .vmat) it will. \n"
-                )
+                  "read_and_write <sourcefile> <destfile> \n"
+                  "Reads an Object (in PLearn serialization format) from the <sourcefile> and writes it to the <destfile>\n"
+                  "If the sourcefile ends with a .psave file, then it will not be subjected to macro preprosessing \n"
+                  "Otherwise (ex: .plearn .vmat) it will. \n"
+        )
 {}
 
 //! The actual implementation of the 'ReadAndWriteCommand' command 
 void ReadAndWriteCommand::run(const vector<string>& args)
 {
-  if(args.size()!=2)
-    PLERROR("read_and_write takes 2 arguments");
-  string source = args[0];
-  string dest = args[1];
+    if(args.size()!=2)
+        PLERROR("read_and_write takes 2 arguments");
+    string source = args[0];
+    string dest = args[1];
 
-  string ext = extract_extension(source);
-  PP<Object> o;
+    string ext = extract_extension(source);
+    PP<Object> o;
 
-  if(ext==".psave") // may be binay. Don't macro-process
+    if(ext==".psave") // may be binay. Don't macro-process
     {
-      PLearn::load(source,o);
+        PLearn::load(source,o);
     }
-  else
+    else
     {
-      map<string, string> vars;
-      string script = readFileAndMacroProcess(source, vars);
-      PStream in = openString(script,PStream::plearn_ascii);
-      o = readObject(in);
+        map<string, string> vars;
+        string script = readFileAndMacroProcess(source, vars);
+        PStream in = openString(script,PStream::plearn_ascii);
+        o = readObject(in);
     }
 
-  PStream out = openFile(dest,PStream::plearn_ascii,"w");
-  if(!out)
-    PLERROR("Could not open file %s for writing",dest.c_str());
-  out << *o;
+    PStream out = openFile(dest,PStream::plearn_ascii,"w");
+    if(!out)
+        PLERROR("Could not open file %s for writing",dest.c_str());
+    out << *o;
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

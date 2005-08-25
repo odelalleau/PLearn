@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HelpCommand.h,v 1.2 2004/02/20 21:11:40 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file HelpCommand.h */
 #ifndef HelpCommand_INC
@@ -50,30 +50,43 @@ class HelpCommand: public PLearnCommand
 {
 protected:
 
-  void helpOverview();
-  void helpAboutScript(const string& fname);
-  void helpScripts();
-  void helpCommands();
-  void helpDatasets();
-  void helpObject(const string& objectname="");
+    void helpOverview();
+    void helpAboutScript(const string& fname);
+    void helpScripts();
+    void helpCommands();
+    void helpDatasets();
+    void helpObject(const string& objectname="");
   
 public:
-  HelpCommand():
-    PLearnCommand("help",
-                  "plearn command-line help",
+    HelpCommand():
+        PLearnCommand("help",
+                      "plearn command-line help",
 
-                  "help <topic>\n"
-                  "Run the help command with no argument to get an overview of the system.\n"
-                  ) 
-  {}
+                      "help <topic>\n"
+                      "Run the help command with no argument to get an overview of the system.\n"
+            ) 
+    {}
                     
-  virtual void run(const vector<string>& args);
+    virtual void run(const vector<string>& args);
 
 protected:
-  static PLearnCommandRegistry reg_;
+    static PLearnCommandRegistry reg_;
 };
 
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

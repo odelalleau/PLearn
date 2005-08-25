@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestDependenciesCommand.h,v 1.4 2005/03/14 17:08:39 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file TestDependenciesCommand.h */
 #ifndef TestDependenciesCommand_INC
@@ -49,15 +49,28 @@ using namespace std;
 class TestDependenciesCommand: public PLearnCommand
 {
 public:
-  TestDependenciesCommand();
+    TestDependenciesCommand();
                      
-  virtual void run(const vector<string>& args);
+    virtual void run(const vector<string>& args);
 
 protected:
-  static PLearnCommandRegistry reg_;
+    static PLearnCommandRegistry reg_;
 };
 
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

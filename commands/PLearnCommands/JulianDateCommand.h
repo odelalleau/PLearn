@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianDateCommand.h,v 1.2 2004/02/20 21:11:40 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Rejean Ducharme
 
@@ -53,14 +53,27 @@ using namespace std;
 class JulianDateCommand: public PLearnCommand
 {
 public:
-  JulianDateCommand();                    
-  virtual void run(const vector<string>& args);
+    JulianDateCommand();                    
+    virtual void run(const vector<string>& args);
 
 protected:
-  static PLearnCommandRegistry reg_;
+    static PLearnCommandRegistry reg_;
 };
 
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

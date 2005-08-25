@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AutoRunCommand.h,v 1.2 2004/02/20 21:11:40 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file AutoRunCommand.h */
 #ifndef AutoRunCommand_INC
@@ -50,25 +50,38 @@ using namespace std;
 class AutoRunCommand: public PLearnCommand
 {
 public:
-  AutoRunCommand():
-    PLearnCommand("autorun",
+    AutoRunCommand():
+        PLearnCommand("autorun",
 
-                  "watches files for changes and reruns the .plearn script",
+                      "watches files for changes and reruns the .plearn script",
 
-                  "watch <script.plearn> [other files to watch]\n"
-                  "Will run the .plearn script once and watches its and other files for changes.\n"
-                  "Will rerun the script automatically each time its date changes \n"
-                  "or the date of one of the watched files changes. \n"
-                  ) 
-  {}
+                      "watch <script.plearn> [other files to watch]\n"
+                      "Will run the .plearn script once and watches its and other files for changes.\n"
+                      "Will rerun the script automatically each time its date changes \n"
+                      "or the date of one of the watched files changes. \n"
+            ) 
+    {}
                     
-  virtual void run(const vector<string>& args);
+    virtual void run(const vector<string>& args);
 
 protected:
-  static PLearnCommandRegistry reg_;
+    static PLearnCommandRegistry reg_;
 };
 
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

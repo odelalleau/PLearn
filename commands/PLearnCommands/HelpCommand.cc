@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file HelpCommand.cc */
 #include "HelpCommand.h"
@@ -52,100 +52,112 @@ PLearnCommandRegistry HelpCommand::reg_(new HelpCommand);
 
 void HelpCommand::helpOverview()
 {
-  pout << 
-    "To run a .plearn script type:                       " + prgname() + " scriptfile.plearn \n"
-    "To run a command type:                              " + prgname() + " command [ command arguments ] \n\n"
-    "To get help on the script file format:              " + prgname() + " help scripts \n"
-    "To get a short description of available commands:   " + prgname() + " help commands \n"
-    "To get detailed help on a specific command:         " + prgname() + " help <command_name> \n"
-    "To get help on a specific PLearn object:            " + prgname() + " help <object_type_name> \n"
-    "To get help on datasets:                            " + prgname() + " help datasets \n" 
-      << endl;
+    pout << 
+        "To run a .plearn script type:                       " + prgname() + " scriptfile.plearn \n"
+        "To run a command type:                              " + prgname() + " command [ command arguments ] \n\n"
+        "To get help on the script file format:              " + prgname() + " help scripts \n"
+        "To get a short description of available commands:   " + prgname() + " help commands \n"
+        "To get detailed help on a specific command:         " + prgname() + " help <command_name> \n"
+        "To get help on a specific PLearn object:            " + prgname() + " help <object_type_name> \n"
+        "To get help on datasets:                            " + prgname() + " help datasets \n" 
+         << endl;
 }
 
 void HelpCommand::helpScripts()
 {
-  pout << 
-    "You can run plearn with the name of a plearn script file as argument\n"
-    "A plearn script file should have a name ending in .plearn\n\n"
-    "A plearn script must contain at least one runnable PLearn object\n"
-    "A typical runnable PLearn object is 'PTester' \n"
-    "\n"
-    "You can type '" + prgname() + " help xxx' to get a description and the list of build options\n"
-    "for any PLearn object xxx linked with the program\n"
-    "\n"
-    "A plearn script can use macro variable definitions and expansion. Macro commands start by a $\n"
-    "ex: $DEFINE{toto}{[1,2,3,4]}  ${toto}  $INCLUDE{otherfile.pscript} \n"
-    "Macro variable definitions can also be provided on the command line in the form \n"
-    "varname=varvalue with each such pair separated by a blank, thus\n"
-    "allowing for scripts with arguments\n"
-    "In addition, the following variables are automatically defined from the script's filepath: \n"
-    "FILEPATH DIRPATH FILENAME FILEBASE FILEEXT \n" 
-    "Ex: if the absolute path to the script file is /home/me/foo.plearn \n"
-    " Then we'll get: \n"
-    "FILEPATH = /home/me/foo.plearn \n"
-    "DIRPATH  = /home/me \n"
-    "FILENAME = foo.plearn \n"
-    "FILEBASE = foo \n"
-    "FILEEXT  = .plearn \n"
-    "\n"
-    "The additional variables are also available:\n"
-    "DATE     = Date in YYYYMMDD format\n"
-    "TIME     = Time in HHMMSS format\n"
-    "DATETIME = Date and time in YYYYMMDD:HHMMSS format\n"
-       << endl;
+    pout << 
+        "You can run plearn with the name of a plearn script file as argument\n"
+        "A plearn script file should have a name ending in .plearn\n\n"
+        "A plearn script must contain at least one runnable PLearn object\n"
+        "A typical runnable PLearn object is 'PTester' \n"
+        "\n"
+        "You can type '" + prgname() + " help xxx' to get a description and the list of build options\n"
+        "for any PLearn object xxx linked with the program\n"
+        "\n"
+        "A plearn script can use macro variable definitions and expansion. Macro commands start by a $\n"
+        "ex: $DEFINE{toto}{[1,2,3,4]}  ${toto}  $INCLUDE{otherfile.pscript} \n"
+        "Macro variable definitions can also be provided on the command line in the form \n"
+        "varname=varvalue with each such pair separated by a blank, thus\n"
+        "allowing for scripts with arguments\n"
+        "In addition, the following variables are automatically defined from the script's filepath: \n"
+        "FILEPATH DIRPATH FILENAME FILEBASE FILEEXT \n" 
+        "Ex: if the absolute path to the script file is /home/me/foo.plearn \n"
+        " Then we'll get: \n"
+        "FILEPATH = /home/me/foo.plearn \n"
+        "DIRPATH  = /home/me \n"
+        "FILENAME = foo.plearn \n"
+        "FILEBASE = foo \n"
+        "FILEEXT  = .plearn \n"
+        "\n"
+        "The additional variables are also available:\n"
+        "DATE     = Date in YYYYMMDD format\n"
+        "TIME     = Time in HHMMSS format\n"
+        "DATETIME = Date and time in YYYYMMDD:HHMMSS format\n"
+         << endl;
 }
 
 void HelpCommand::helpCommands()
 {
-  pout << "To run a command, type:"
-       << "  % " + prgname()  + " command_name command_arguments \n" << endl;
+    pout << "To run a command, type:"
+         << "  % " + prgname()  + " command_name command_arguments \n" << endl;
 
-  pout << "Available commands are: " << endl;
-  PLearnCommandRegistry::print_command_summary(cout); // TODO Change to pout.
-  pout << endl;
+    pout << "Available commands are: " << endl;
+    PLearnCommandRegistry::print_command_summary(cout); // TODO Change to pout.
+    pout << endl;
 
-  pout << "For more details on a specific command, type: \n" 
-       << "  % " << prgname() << " help <command_name> \n"
-       << endl;
+    pout << "For more details on a specific command, type: \n" 
+         << "  % " << prgname() << " help <command_name> \n"
+         << endl;
 }
 
 void HelpCommand::helpDatasets()
 {
-  pout << getDataSetHelp() << endl;
+    pout << getDataSetHelp() << endl;
 }
 
 void HelpCommand::helpAboutScript(const string& fname)
 {
-  if(!file_exists(fname))
-    PLERROR("Could not open script file %s", fname.c_str());
-  pout << 
-    "Help about a script file not yet implemented \n"
-      << endl;
+    if(!file_exists(fname))
+        PLERROR("Could not open script file %s", fname.c_str());
+    pout << 
+        "Help about a script file not yet implemented \n"
+         << endl;
 }
 
 //! The actual implementation of the 'HelpCommand' command 
 void HelpCommand::run(const vector<string>& args)
 {
-  if(args.size()==0)
-    helpOverview();
-  else
+    if(args.size()==0)
+        helpOverview();
+    else
     {
-      string about = args[0];
-      if(extract_extension(about)==".plearn") // help is asked about a plearn script
-        helpAboutScript(about);
-      if(about=="scripts")
-        helpScripts();
-      else if(about=="commands")
-        helpCommands();
-      else if(about=="datasets")
-        helpDatasets();
-      else if(PLearnCommandRegistry::is_registered(about))
-        PLearnCommandRegistry::help(about, cout); // TODO Change to pout.
-      else 
-        displayObjectHelp(cout, about);   // TODO Change to pout.
+        string about = args[0];
+        if(extract_extension(about)==".plearn") // help is asked about a plearn script
+            helpAboutScript(about);
+        if(about=="scripts")
+            helpScripts();
+        else if(about=="commands")
+            helpCommands();
+        else if(about=="datasets")
+            helpDatasets();
+        else if(PLearnCommandRegistry::is_registered(about))
+            PLearnCommandRegistry::help(about, cout); // TODO Change to pout.
+        else 
+            displayObjectHelp(cout, about);   // TODO Change to pout.
     }
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

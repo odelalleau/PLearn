@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -92,7 +92,7 @@ LearnerCommand::LearnerCommand():
                   "     file, are stored the average, variance, min and max of the derivative for all inputs (and outputs).\n"
                   "\n"
                   "The datasets do not need to be .vmat they can be any valid vmatrix (.amat .pmat .dmat)"
-                  ) 
+        ) 
 {}
 
 ///////////
@@ -117,24 +117,24 @@ void LearnerCommand::train(const string& learner_spec_file, const string& trains
 //////////
 void LearnerCommand::test(const string& trained_learner_file, const string& testset_spec, const string& stats_file, const string& outputs_file, const string& costs_file)
 {
-  PP<PLearner> learner;
-  PLearn::load(trained_learner_file,learner);
-  VMat testset = getDataSet(testset_spec);
-  int l = testset.length();
-  VMat testoutputs;
-  if(outputs_file!="")
-    testoutputs = new FileVMatrix(outputs_file,l,learner->outputsize());
-  VMat testcosts;
-  if(costs_file!="")
-    testcosts = new FileVMatrix(costs_file,l,learner->nTestCosts());
+    PP<PLearner> learner;
+    PLearn::load(trained_learner_file,learner);
+    VMat testset = getDataSet(testset_spec);
+    int l = testset.length();
+    VMat testoutputs;
+    if(outputs_file!="")
+        testoutputs = new FileVMatrix(outputs_file,l,learner->outputsize());
+    VMat testcosts;
+    if(costs_file!="")
+        testcosts = new FileVMatrix(costs_file,l,learner->nTestCosts());
 
-  PP<VecStatsCollector> test_stats = new VecStatsCollector;
-  test_stats->build();
-  test_stats->forget();
-  learner->test(testset, test_stats, testoutputs, testcosts);
-  test_stats->finalize();
+    PP<VecStatsCollector> test_stats = new VecStatsCollector;
+    test_stats->build();
+    test_stats->forget();
+    learner->test(testset, test_stats, testoutputs, testcosts);
+    test_stats->finalize();
 
-  PLearn::save(stats_file,test_stats);
+    PLearn::save(stats_file,test_stats);
 }
 
 /////////////////////
@@ -142,12 +142,12 @@ void LearnerCommand::test(const string& trained_learner_file, const string& test
 /////////////////////
 void LearnerCommand::compute_outputs(const string& trained_learner_file, const string& test_inputs_spec, const string& outputs_file)
 {
-  PP<PLearner> learner;
-  PLearn::load(trained_learner_file,learner);
-  VMat testinputs = getDataSet(test_inputs_spec);
-  int l = testinputs.length();
-  VMat testoutputs = new FileVMatrix(outputs_file,l,learner->outputsize());
-  learner->use(testinputs,testoutputs);
+    PP<PLearner> learner;
+    PLearn::load(trained_learner_file,learner);
+    VMat testinputs = getDataSet(test_inputs_spec);
+    int l = testinputs.length();
+    VMat testoutputs = new FileVMatrix(outputs_file,l,learner->outputsize());
+    learner->use(testinputs,testoutputs);
 }
 
 ////////////////////////////////
@@ -157,38 +157,38 @@ void LearnerCommand::compute_outputs_on_2D_grid(const string& trained_learner_fi
                                                 real xmin, real xmax, real ymin, real ymax,
                                                 int nx, int ny)
 {
-  if(nx<2 || ny<2)
-    PLERROR("In LearnerCommand::compute_outputs_on_2D_grid invalid nx or ny. Must have at least a 2x2 grid");
-  PP<PLearner> learner;
-  PLearn::load(trained_learner_file,learner);
-  if(learner->inputsize()!=2)
-    PLERROR("In LearnerCommand::compute_outputs_on_2D_grid learner must have inputsize==2 (it's %d)",learner->inputsize());
-  int outputsize = learner->outputsize();
-  VMat gridoutputs = new FileVMatrix(grid_outputs_file,0,2+outputsize);
-  real deltax = (xmax-xmin)/(nx-1);
-  real deltay = (ymax-ymin)/(ny-1);
+    if(nx<2 || ny<2)
+        PLERROR("In LearnerCommand::compute_outputs_on_2D_grid invalid nx or ny. Must have at least a 2x2 grid");
+    PP<PLearner> learner;
+    PLearn::load(trained_learner_file,learner);
+    if(learner->inputsize()!=2)
+        PLERROR("In LearnerCommand::compute_outputs_on_2D_grid learner must have inputsize==2 (it's %d)",learner->inputsize());
+    int outputsize = learner->outputsize();
+    VMat gridoutputs = new FileVMatrix(grid_outputs_file,0,2+outputsize);
+    real deltax = (xmax-xmin)/(nx-1);
+    real deltay = (ymax-ymin)/(ny-1);
 
-  Vec v(2+outputsize);
-  Vec input = v.subVec(0,2);
-  Vec output = v.subVec(2,outputsize);
+    Vec v(2+outputsize);
+    Vec input = v.subVec(0,2);
+    Vec output = v.subVec(2,outputsize);
 
-  real outputsum = 0;
+    real outputsum = 0;
 
-  real x = xmin;
-  for(int i=0; i<nx; i++, x+=deltax)
+    real x = xmin;
+    for(int i=0; i<nx; i++, x+=deltax)
     {
         input[0] = x;
         real y = ymin;
         for(int j=0; j<ny; j++, y+=deltay)
-          {
+        {
             input[1] = y;
             learner->computeOutput(input,output);
             outputsum += output[0];
             gridoutputs->appendRow(v);
-          }
+        }
     }
 
-  cerr << "integral: " << outputsum*deltax*deltay << endl;
+    cerr << "integral: " << outputsum*deltax*deltay << endl;
   
 }
 
@@ -198,22 +198,22 @@ void LearnerCommand::compute_outputs_on_2D_grid(const string& trained_learner_fi
 void LearnerCommand::compute_outputs_on_1D_grid(const string& trained_learner_file, const string& grid_outputs_file, 
                                                 real xmin, real xmax, int nx)
 {
-  if(nx<2)
-    PLERROR("In LearnerCommand::compute_outputs_on_1D_grid invalid nx. Must be at least 2");
-  PP<PLearner> learner;
-  PLearn::load(trained_learner_file,learner);
-  if(learner->inputsize()!=1)
-    PLERROR("In LearnerCommand::compute_outputs_on_1D_grid learner must have inputsize==1 (it's %d)",learner->inputsize());
-  int outputsize = learner->outputsize();
-  VMat gridoutputs = new FileVMatrix(grid_outputs_file,0,1+outputsize);
-  real deltax = (xmax-xmin)/(nx-1);
+    if(nx<2)
+        PLERROR("In LearnerCommand::compute_outputs_on_1D_grid invalid nx. Must be at least 2");
+    PP<PLearner> learner;
+    PLearn::load(trained_learner_file,learner);
+    if(learner->inputsize()!=1)
+        PLERROR("In LearnerCommand::compute_outputs_on_1D_grid learner must have inputsize==1 (it's %d)",learner->inputsize());
+    int outputsize = learner->outputsize();
+    VMat gridoutputs = new FileVMatrix(grid_outputs_file,0,1+outputsize);
+    real deltax = (xmax-xmin)/(nx-1);
 
-  Vec v(1+outputsize);
-  Vec input = v.subVec(0,1);
-  Vec output = v.subVec(1,outputsize);
+    Vec v(1+outputsize);
+    Vec input = v.subVec(0,1);
+    Vec output = v.subVec(1,outputsize);
   
-  real x=xmin;
-  for(int i=0; i<nx; i++, x+=deltax)
+    real x=xmin;
+    for(int i=0; i<nx; i++, x+=deltax)
     {
         input[0] = x;
         learner->computeOutput(input,output);
@@ -228,90 +228,90 @@ void LearnerCommand::compute_outputs_on_auto_grid(const string& trained_learner_
                                                   const string& dataset_spec, real extra_percent,
                                                   int nx, int ny)
 {
-  TVec< pair<real,real> > bbox = getDataSet(dataset_spec)->getBoundingBox(extra_percent);
-  if(ny>0)
-    compute_outputs_on_2D_grid(trained_learner_file, grid_outputs_file, 
-                               bbox[0].first, bbox[0].second, bbox[1].first, bbox[1].second,
-                               nx, ny);
-  else
-    compute_outputs_on_1D_grid(trained_learner_file, grid_outputs_file, 
-                               bbox[0].first, bbox[0].second,
-                               nx);
+    TVec< pair<real,real> > bbox = getDataSet(dataset_spec)->getBoundingBox(extra_percent);
+    if(ny>0)
+        compute_outputs_on_2D_grid(trained_learner_file, grid_outputs_file, 
+                                   bbox[0].first, bbox[0].second, bbox[1].first, bbox[1].second,
+                                   nx, ny);
+    else
+        compute_outputs_on_1D_grid(trained_learner_file, grid_outputs_file, 
+                                   bbox[0].first, bbox[0].second,
+                                   nx);
 }
 
 ////////////////////
 // analyze_inputs //
 ////////////////////
 void LearnerCommand::analyze_inputs(const string& data_file, const string& result_file, real epsilon, const TVec<string>& learner_files) {
-  // Load dataset and learners.
-  cout << "Loading dataset and learners" << endl;
-  VMat data = getDataSet(data_file);
-  int dim = data->inputsize();
-  if (dim <= 0)
-    PLERROR("In LearnerCommand::analyze_inputs - Cannot analyze inputs if the data's inputsize is not set");
-  int n_learners = learner_files.length();
-  TVec< PP<PLearner> > learners(n_learners);
-  for (int i = 0; i < learner_files.length(); i++)
-    PLearn::load(learner_files[i], learners[i]);
-  int n_outputs = learners[0]->outputsize();
-  // Analyze inputs.
-  ProgressBar* pb = new ProgressBar("Analyzing inputs", data->length());
-  Vec v(dim);
-  Vec w(dim);
-  Mat outputs(n_learners, n_outputs);
-  Vec new_output(n_outputs);
-  Vec dummy_target;
-  real dummy_weight;
-  Vec deriv(n_outputs);
-  TVec<string> stats;
-  stats.append("E");
-  stats.append("V");
-  stats.append("MIN");
-  stats.append("MAX");
-  int n_stats = stats.length(); // Number of statistics computed for each input and output.
-  VMat results = new FileVMatrix(result_file, data->inputsize(), n_stats * n_outputs + 1);
-  TVec<VecStatsCollector> statscol(dim);
-  Vec output_k;
-  for (int i = 0; i < data->length(); pb->update(++i)) {
-    data->getExample(i, v, dummy_target, dummy_weight);
-    w << v;
-    for (int k = 0; k < n_learners; k++) {
-      output_k = outputs(k);
-      learners[k]->computeOutput(w, output_k);
+    // Load dataset and learners.
+    cout << "Loading dataset and learners" << endl;
+    VMat data = getDataSet(data_file);
+    int dim = data->inputsize();
+    if (dim <= 0)
+        PLERROR("In LearnerCommand::analyze_inputs - Cannot analyze inputs if the data's inputsize is not set");
+    int n_learners = learner_files.length();
+    TVec< PP<PLearner> > learners(n_learners);
+    for (int i = 0; i < learner_files.length(); i++)
+        PLearn::load(learner_files[i], learners[i]);
+    int n_outputs = learners[0]->outputsize();
+    // Analyze inputs.
+    ProgressBar* pb = new ProgressBar("Analyzing inputs", data->length());
+    Vec v(dim);
+    Vec w(dim);
+    Mat outputs(n_learners, n_outputs);
+    Vec new_output(n_outputs);
+    Vec dummy_target;
+    real dummy_weight;
+    Vec deriv(n_outputs);
+    TVec<string> stats;
+    stats.append("E");
+    stats.append("V");
+    stats.append("MIN");
+    stats.append("MAX");
+    int n_stats = stats.length(); // Number of statistics computed for each input and output.
+    VMat results = new FileVMatrix(result_file, data->inputsize(), n_stats * n_outputs + 1);
+    TVec<VecStatsCollector> statscol(dim);
+    Vec output_k;
+    for (int i = 0; i < data->length(); pb->update(++i)) {
+        data->getExample(i, v, dummy_target, dummy_weight);
+        w << v;
+        for (int k = 0; k < n_learners; k++) {
+            output_k = outputs(k);
+            learners[k]->computeOutput(w, output_k);
+        }
+        for (int j = 0; j < dim; j++) {
+            // Analyze j-th input.
+            w[j] += epsilon;
+            for (int k = 0; k < n_learners; k++) {
+                learners[k]->computeOutput(w, new_output);
+                // Compute the derivative of the m-th output with respect to the j-th input.
+                for (int m = 0; m < n_outputs; m++)
+                    deriv[m] = (new_output[m] - outputs(k,m)) / epsilon;
+                statscol[j].update(deriv);
+            }
+            w[j] = v[j];
+        }
     }
-    for (int j = 0; j < dim; j++) {
-      // Analyze j-th input.
-      w[j] += epsilon;
-      for (int k = 0; k < n_learners; k++) {
-        learners[k]->computeOutput(w, new_output);
-        // Compute the derivative of the m-th output with respect to the j-th input.
-        for (int m = 0; m < n_outputs; m++)
-          deriv[m] = (new_output[m] - outputs(k,m)) / epsilon;
-        statscol[j].update(deriv);
-      }
-      w[j] = v[j];
+    delete pb;
+    // Compiling stats.
+    pb = new ProgressBar("Compiling statistics", dim);
+    for (int j = 0; j < dim; pb->update(++j)) {
+        statscol[j].finalize();
+        Vec all(1 + n_outputs * n_stats);
+        for (int i = 0; i < n_stats; i++)
+            all.subVec(1 + i * n_outputs, n_outputs) << statscol[j].getAllStats(stats[i]);
+        all[0] = j;
+        results->putRow(j, all);
+        results->addStringMapping(0, data->fieldName(j), j);
     }
-  }
-  delete pb;
-  // Compiling stats.
-  pb = new ProgressBar("Compiling statistics", dim);
-  for (int j = 0; j < dim; pb->update(++j)) {
-    statscol[j].finalize();
-    Vec all(1 + n_outputs * n_stats);
+    TVec<string> fieldnames;
+    fieldnames.append("Field");
     for (int i = 0; i < n_stats; i++)
-      all.subVec(1 + i * n_outputs, n_outputs) << statscol[j].getAllStats(stats[i]);
-    all[0] = j;
-    results->putRow(j, all);
-    results->addStringMapping(0, data->fieldName(j), j);
-  }
-  TVec<string> fieldnames;
-  fieldnames.append("Field");
-  for (int i = 0; i < n_stats; i++)
-    for (int j = 0; j < n_outputs; j++)
-      fieldnames.append(stats[i]);
-  results->declareFieldNames(fieldnames);
-  results->saveAllStringMappings();
-  delete pb;
+        for (int j = 0; j < n_outputs; j++)
+            fieldnames.append(stats[i]);
+    results->declareFieldNames(fieldnames);
+    results->saveAllStringMappings();
+    delete pb;
 }
 
 /////////
@@ -320,80 +320,92 @@ void LearnerCommand::analyze_inputs(const string& data_file, const string& resul
 //! The actual implementation of the 'LearnerCommand' command 
 void LearnerCommand::run(const vector<string>& args)
 {
-  string command = args[0];
-  if(command=="train")
+    string command = args[0];
+    if(command=="train")
     {
         if (args.size()==4)
             train(args[1],args[2],args[3]);
         else 
             PLERROR("LearnerCommand::run you must provide 'plearn learner train learner_spec_file trainset_spec save_learner_file'");
     }
-  else if(command=="test")    
+    else if(command=="test")    
     {
-      if (args.size()>3)
-      {
-        string trained_learner_file = args[1];
-        string testset_spec = args[2];
-        string stats_basename = args[3];
-        string outputs_file;
-        if(args.size()>4)
-            outputs_file = args[4];
-        string costs_file;
-        if(args.size()>5)
-            costs_file = args[5];
-        test(trained_learner_file, testset_spec, stats_basename, outputs_file, costs_file);
-      }
-      else
-        PLERROR("LearnerCommand::run you must provide at least 'plearn learner test <trained_learner.psave> <testset.vmat> <cost.stats>'");
+        if (args.size()>3)
+        {
+            string trained_learner_file = args[1];
+            string testset_spec = args[2];
+            string stats_basename = args[3];
+            string outputs_file;
+            if(args.size()>4)
+                outputs_file = args[4];
+            string costs_file;
+            if(args.size()>5)
+                costs_file = args[5];
+            test(trained_learner_file, testset_spec, stats_basename, outputs_file, costs_file);
+        }
+        else
+            PLERROR("LearnerCommand::run you must provide at least 'plearn learner test <trained_learner.psave> <testset.vmat> <cost.stats>'");
     }
-  else if ((command=="compute_outputs") ||(command=="co"))
+    else if ((command=="compute_outputs") ||(command=="co"))
     {
-      if (args.size()==4)
-        compute_outputs(args[1],args[2],args[3]);
-      else
-        PLERROR("LearnerCommand::run you must provide 'plearn learner compute_outputs learner_spec_file trainset_spec save_learner_file'");
+        if (args.size()==4)
+            compute_outputs(args[1],args[2],args[3]);
+        else
+            PLERROR("LearnerCommand::run you must provide 'plearn learner compute_outputs learner_spec_file trainset_spec save_learner_file'");
     }
-  else if (command=="compute_outputs_on_1D_grid" || command=="cg1")
+    else if (command=="compute_outputs_on_1D_grid" || command=="cg1")
     {
-      if(args.size()!=6)
-        PLERROR("Subcommand learner compute_outputs_on_1D_grid requires 5 arguments. Check the help!");
-      compute_outputs_on_1D_grid(args[1], args[2], toreal(args[3]), toreal(args[4]), toint(args[5]));
+        if(args.size()!=6)
+            PLERROR("Subcommand learner compute_outputs_on_1D_grid requires 5 arguments. Check the help!");
+        compute_outputs_on_1D_grid(args[1], args[2], toreal(args[3]), toreal(args[4]), toint(args[5]));
     }
-  else if (command=="compute_outputs_on_2D_grid" || command=="cg2")
+    else if (command=="compute_outputs_on_2D_grid" || command=="cg2")
     {
-      if(args.size()!=9)
-        PLERROR("Subcommand learner compute_outputs_on_2D_grid requires 8 arguments. Check the help!");
-      compute_outputs_on_2D_grid(args[1], args[2], 
-                                 toreal(args[3]), toreal(args[4]),
-                                 toreal(args[5]), toreal(args[6]),
-                                 toint(args[7]), toint(args[8]) );
+        if(args.size()!=9)
+            PLERROR("Subcommand learner compute_outputs_on_2D_grid requires 8 arguments. Check the help!");
+        compute_outputs_on_2D_grid(args[1], args[2], 
+                                   toreal(args[3]), toreal(args[4]),
+                                   toreal(args[5]), toreal(args[6]),
+                                   toint(args[7]), toint(args[8]) );
     }
-  else if (command=="compute_outputs_on_auto_grid" || command=="cg")
+    else if (command=="compute_outputs_on_auto_grid" || command=="cg")
     {
-      if(args.size()<5)
-        PLERROR("Subcommand learner compute_outputs_on_auto_grid requires 4 or 5 arguments. Check the help!");
-      int nx = toint(args[4]);
-      int ny = 0;
-      if(args.size()==6)
-        ny = toint(args[5]);      
-      compute_outputs_on_auto_grid(args[1], args[2],
-                                   args[3], 0.05,
-                                   nx, ny);
+        if(args.size()<5)
+            PLERROR("Subcommand learner compute_outputs_on_auto_grid requires 4 or 5 arguments. Check the help!");
+        int nx = toint(args[4]);
+        int ny = 0;
+        if(args.size()==6)
+            ny = toint(args[5]);      
+        compute_outputs_on_auto_grid(args[1], args[2],
+                                     args[3], 0.05,
+                                     nx, ny);
     }
-  else if (command == "analyze_inputs") {
-    if (args.size() < 5)
-      PLERROR("In LearnerCommand::run - The 'analyze_inputs' subcommand requires 4 arguments (see help)");
-    real epsilon;
-    if (!pl_isnumber(args[3], &epsilon))
-      PLERROR("In LearnerCommand::run - The 'epsilon' option must be a real number");
-    TVec<string> learners;
-    for (size_t i = 4; i < args.size(); i++)
-      learners.append(args[i]);
-    analyze_inputs(args[1], args[2], epsilon, learners);
-  }
-  else
-    PLERROR("Invalid command %s check the help for available commands",command.c_str());
+    else if (command == "analyze_inputs") {
+        if (args.size() < 5)
+            PLERROR("In LearnerCommand::run - The 'analyze_inputs' subcommand requires 4 arguments (see help)");
+        real epsilon;
+        if (!pl_isnumber(args[3], &epsilon))
+            PLERROR("In LearnerCommand::run - The 'epsilon' option must be a real number");
+        TVec<string> learners;
+        for (size_t i = 4; i < args.size(); i++)
+            learners.append(args[i]);
+        analyze_inputs(args[1], args[2], epsilon, learners);
+    }
+    else
+        PLERROR("Invalid command %s check the help for available commands",command.c_str());
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

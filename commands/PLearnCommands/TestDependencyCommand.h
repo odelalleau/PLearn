@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestDependencyCommand.h,v 1.1 2004/02/21 14:59:22 yoshua Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 /*! \file TestDependencyCommand.h */
 #ifndef TestDependencyCommand_INC
@@ -49,24 +49,37 @@ using namespace std;
 class TestDependencyCommand: public PLearnCommand
 {
 public:
-  TestDependencyCommand():
-    PLearnCommand("test-dependency",
-                  "Compute dependency statistics between two selected columns of a vmat.",
-                  "  test-dependency <VMat> <x> <y>\n"
-                  "Reads a VMatrix (or any matrix format) and computes dependency statistics between\n"
-                  "two variables <x> and <y>. The current implementation only computes the Spearman rank correlation\n"
-                  "and the linear correlation. The format of <x> and <y> is the following:\n"
-                  "   - column number (starting at 0 for the first column), or\n"
-                  "   - @<fieldname> \n")
-  {}
+    TestDependencyCommand():
+        PLearnCommand("test-dependency",
+                      "Compute dependency statistics between two selected columns of a vmat.",
+                      "  test-dependency <VMat> <x> <y>\n"
+                      "Reads a VMatrix (or any matrix format) and computes dependency statistics between\n"
+                      "two variables <x> and <y>. The current implementation only computes the Spearman rank correlation\n"
+                      "and the linear correlation. The format of <x> and <y> is the following:\n"
+                      "   - column number (starting at 0 for the first column), or\n"
+                      "   - @<fieldname> \n")
+    {}
                     
-  virtual void run(const vector<string>& args);
+    virtual void run(const vector<string>& args);
 
 protected:
-  static PLearnCommandRegistry reg_;
+    static PLearnCommandRegistry reg_;
 };
 
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

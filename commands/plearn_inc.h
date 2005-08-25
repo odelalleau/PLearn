@@ -33,16 +33,16 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
 /*! \file plearn_inc.h */
 
 /*! Include here all classes available in the PLearn CVS repository 
-    that do NOT depend upon fancy external libraries.
- */
+  that do NOT depend upon fancy external libraries.
+*/
 
 #ifndef plearn_inc_INC
 #define plearn_inc_INC
@@ -253,3 +253,15 @@
 #include <plearn/vmat/ViewSplitterVMatrix.h>
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -81,75 +81,87 @@ ServerCommand::ServerCommand():
                   "  Will wait for a connection on the given TCP port. \n"
                   "  All i/o for commands are then done through that connection. \n"
                   " \n"
-                  )
-  {}
+        )
+{}
 
 //! The actual implementation of the 'ServerCommand' command 
 void ServerCommand::run(const vector<string>& args)
 {
-  if(args.size()>0) // Start TCP server on given port
+    if(args.size()>0) // Start TCP server on given port
     {
-      PRStatus st;
-      char buf[256];
-      int port = toint(args[0]);
-      PRFileDesc* sock = PR_NewTCPSocket();
-      if (!sock)
-        PLERROR("Servercommand: socket creation failed! (Maybe you ran out of file descriptors?)");
-      PRNetAddr server_address;
-      PR_InitializeNetAddr(PR_IpAddrAny, port, &server_address);
-      if (PR_Bind(sock, &server_address) != PR_SUCCESS)
-        PLERROR("ServerCommand: could not bind to port %d!", port);
+        PRStatus st;
+        char buf[256];
+        int port = toint(args[0]);
+        PRFileDesc* sock = PR_NewTCPSocket();
+        if (!sock)
+            PLERROR("Servercommand: socket creation failed! (Maybe you ran out of file descriptors?)");
+        PRNetAddr server_address;
+        PR_InitializeNetAddr(PR_IpAddrAny, port, &server_address);
+        if (PR_Bind(sock, &server_address) != PR_SUCCESS)
+            PLERROR("ServerCommand: could not bind to port %d!", port);
 
-      // Allow reuse of the socket immediately after the server shuts down
-      PRSocketOptionData socket_option_data;
-      socket_option_data.value.reuse_addr = PR_SockOpt_Reuseaddr;
-      PR_SetSocketOption(sock, &socket_option_data);
+        // Allow reuse of the socket immediately after the server shuts down
+        PRSocketOptionData socket_option_data;
+        socket_option_data.value.reuse_addr = PR_SockOpt_Reuseaddr;
+        PR_SetSocketOption(sock, &socket_option_data);
 
-      string myhostname = "UNKNOWN_HOSTNAME";
-      string mypid = "UNKNOWN_PID";      
+        string myhostname = "UNKNOWN_HOSTNAME";
+        string mypid = "UNKNOWN_PID";      
 #ifndef WIN32
-      mypid = tostring2(getpid());
-      if(gethostname(buf, sizeof(buf))==0)
-         myhostname = buf;
+        mypid = tostring2(getpid());
+        if(gethostname(buf, sizeof(buf))==0)
+            myhostname = buf;
 #endif
 
-      pout << "PLEARN_SERVER_TCP " << myhostname << " " << port << " " << mypid << endl;
-      NORMAL_LOG << "PLEARN_SERVER STARTING IN TCP MODE ON "  << myhostname << ", PORT " << port << ", PID " << mypid << endl;
+        pout << "PLEARN_SERVER_TCP " << myhostname << " " << port << " " << mypid << endl;
+        NORMAL_LOG << "PLEARN_SERVER STARTING IN TCP MODE ON "  << myhostname << ", PORT " << port << ", PID " << mypid << endl;
       
-      for (bool running = true; running; ) {
-          NORMAL_LOG << "\nPLEARN_SERVER WAITING FOR CONNECTION"  << endl;
-          st = PR_Listen(sock,0);
-          if(st!=PR_SUCCESS)
-              PLERROR("serverCommand: listen on socket failed");
-          PRNetAddr addr;
-          PRFileDesc* fd = PR_Accept(sock, &addr, PR_INTERVAL_NO_TIMEOUT);
-          if(fd==0)
-              PLERROR("ServerCommand: accept returned 0, error code is: %d",PR_GetError());
-          st = PR_NetAddrToString(&addr, buf, sizeof(buf));
-          NORMAL_LOG << "PLEARN_SERVER CONNECTION_FROM "  << buf << endl;
-          PStream io(new PrPStreamBuf(fd,fd,true,true));
+        for (bool running = true; running; ) {
+            NORMAL_LOG << "\nPLEARN_SERVER WAITING FOR CONNECTION"  << endl;
+            st = PR_Listen(sock,0);
+            if(st!=PR_SUCCESS)
+                PLERROR("serverCommand: listen on socket failed");
+            PRNetAddr addr;
+            PRFileDesc* fd = PR_Accept(sock, &addr, PR_INTERVAL_NO_TIMEOUT);
+            if(fd==0)
+                PLERROR("ServerCommand: accept returned 0, error code is: %d",PR_GetError());
+            st = PR_NetAddrToString(&addr, buf, sizeof(buf));
+            NORMAL_LOG << "PLEARN_SERVER CONNECTION_FROM "  << buf << endl;
+            PStream io(new PrPStreamBuf(fd,fd,true,true));
 
-          PLearnServer server(io);
-          running = server.run();
-      }
-      NORMAL_LOG << "PLEARN_SERVER CLOSING SOCKET" << endl;
-      if (PR_Shutdown(sock, PR_SHUTDOWN_BOTH) != PR_SUCCESS)
-          PLERROR("ServerCommand: couldn't shutdown socket %d!", port);
-      if (PR_Close(sock) != PR_SUCCESS)
-          PLERROR("ServerCommand: couldn't close port %d!", port);
+            PLearnServer server(io);
+            running = server.run();
+        }
+        NORMAL_LOG << "PLEARN_SERVER CLOSING SOCKET" << endl;
+        if (PR_Shutdown(sock, PR_SHUTDOWN_BOTH) != PR_SUCCESS)
+            PLERROR("ServerCommand: couldn't shutdown socket %d!", port);
+        if (PR_Close(sock) != PR_SUCCESS)
+            PLERROR("ServerCommand: couldn't close port %d!", port);
     }
-  else // Start stdin/stdout server
+    else // Start stdin/stdout server
     {
-      perr << "Type !? to get some help." << endl;
-      // PStream io(&std::cin, &std::cout);
-      // PStream io(new StdPStreamBuf(&std::cin,&std::cout));
-      // PStream io(new FdPStreamBuf(0,1));
-      PStream io = get_pio();
-      io.setMode(PStream::plearn_ascii);
-      PLearnServer server(io);
-      server.run();
+        perr << "Type !? to get some help." << endl;
+        // PStream io(&std::cin, &std::cout);
+        // PStream io(new StdPStreamBuf(&std::cin,&std::cout));
+        // PStream io(new FdPStreamBuf(0,1));
+        PStream io = get_pio();
+        io.setMode(PStream::plearn_ascii);
+        PLearnServer server(io);
+        server.run();
     }
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

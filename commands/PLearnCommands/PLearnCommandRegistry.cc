@@ -33,9 +33,9 @@
 
 
 /* *******************************************************      
-   * $Id: PLearnCommandRegistry.cc,v 1.7 2004/02/20 21:11:40 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "PLearnCommandRegistry.h"
 #include <iostream>
@@ -46,8 +46,8 @@ using namespace std;
 
 PLearnCommandRegistry::command_map& PLearnCommandRegistry::commands()
 {
-  static PLearnCommandRegistry::command_map commands_;
-  return commands_;
+    static PLearnCommandRegistry::command_map commands_;
+    return commands_;
 }
 
 
@@ -62,43 +62,55 @@ void PLearnCommandRegistry::print_command_summary(ostream& out)
     command_map::iterator it = commands().begin();
     command_map::iterator itend = commands().end();
     while(it!=itend)
-      {
+    {
         out << it->first << "\t:  " << it->second->description << endl;
         ++it;
-      }
+    }
     out << endl;
-  }
+}
 
-  //! Issues a "bad command" message
-  void PLearnCommandRegistry::badcommand(const string& commandname)
-  {
+//! Issues a "bad command" message
+void PLearnCommandRegistry::badcommand(const string& commandname)
+{
     cerr << "No '" << commandname << "' command available." << endl;
     cerr << "Available commands are: " << endl;
     print_command_summary(cerr);
     cerr << "You can get more help for any of these commands by invoking the help command" << endl;
-  }
+}
 
-  void PLearnCommandRegistry::run(const string& commandname, const vector<string>& args)
-  { 
+void PLearnCommandRegistry::run(const string& commandname, const vector<string>& args)
+{ 
     command_map::iterator it = commands().find(commandname);
     if(it==commands().end())
-      badcommand(commandname);
+        badcommand(commandname);
     else
-      it->second->run(args);
-  }
+        it->second->run(args);
+}
   
-  void PLearnCommandRegistry::help(const string& commandname, ostream& out)
-  { 
+void PLearnCommandRegistry::help(const string& commandname, ostream& out)
+{ 
     command_map::iterator it = commands().find(commandname);
     if(it==commands().end())
-      badcommand(commandname);
+        badcommand(commandname);
     else
-      {
+    {
         out << "*** Help for command '" << commandname << "' ***" << endl;
         out << it->second->description << endl;
         out << it->second->helpmsg << endl;        
-      }
-  }
+    }
+}
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KolmogorovSmirnovCommand.cc,v 1.3 2004/07/21 16:30:49 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file KolmogorovSmirnovCommand.cc */
 #include "KolmogorovSmirnovCommand.h"
@@ -50,26 +50,38 @@ PLearnCommandRegistry KolmogorovSmirnovCommand::reg_(new KolmogorovSmirnovComman
 //! The actual implementation of the 'KolmogorovSmirnovCommand' command 
 void KolmogorovSmirnovCommand::run(const vector<string>& args)
 {
-  if(args.size()!=4 && args.size()!=5)
-    PLERROR("ks-stat expects 4 or 5 arguments, check the help");
+    if(args.size()!=4 && args.size()!=5)
+        PLERROR("ks-stat expects 4 or 5 arguments, check the help");
 
-  VMat m1 = getDataSet(args[0]);
-  int c1 = toint(args[1]);
-  VMat m2 = getDataSet(args[2]);
-  int c2 = toint(args[3]);
-  int conv = 10;
-  if(args.size()==5)
-     conv = toint(args[4]);
+    VMat m1 = getDataSet(args[0]);
+    int c1 = toint(args[1]);
+    VMat m2 = getDataSet(args[2]);
+    int c2 = toint(args[3]);
+    int conv = 10;
+    if(args.size()==5)
+        conv = toint(args[4]);
 
-  Vec v1 = m1.getColumn(c1);
-  Vec v2 = m2.getColumn(c2);
+    Vec v1 = m1.getColumn(c1);
+    Vec v2 = m2.getColumn(c2);
 
-  real D, ks_stat;
-  KS_test(v1, v2, conv, D, ks_stat);
+    real D, ks_stat;
+    KS_test(v1, v2, conv, D, ks_stat);
 
-  cout << "Maximum absolute difference between the 2 cdfs is: " << D << endl;
-  cout << "Result of Kolmogorov-Smirnov test is: " << ks_stat << endl;
+    cout << "Maximum absolute difference between the 2 cdfs is: " << D << endl;
+    cout << "Result of Kolmogorov-Smirnov test is: " << ks_stat << endl;
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

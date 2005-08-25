@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.20 2005/04/26 16:51:12 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file RunCommand.cc */
 #include <algorithm>
@@ -61,59 +61,71 @@ PLearnCommandRegistry RunCommand::reg_(new RunCommand);
 //! The actual implementation of the 'RunCommand' command 
 void RunCommand::run(const vector<string>& args)
 {
-  string scriptfile = args[0];
-  if (!file_exists(scriptfile))
-    PLERROR("Non-existent script file: %s\n",scriptfile.c_str());
+    string scriptfile = args[0];
+    if (!file_exists(scriptfile))
+        PLERROR("Non-existent script file: %s\n",scriptfile.c_str());
 
-  const string extension = extract_extension(scriptfile);
-  string script;
+    const string extension = extract_extension(scriptfile);
+    string script;
 
-  PP<PyPLearnScript> pyplearn_script;
-  if (extension == ".pyplearn")
-  {
-    // Make a copy of args with the first argument (the name of the script)
-    // removed, leaving the first argument to the script at index 0.
-    vector<string> pyplearn_args(args.size()-1);
-    copy(args.begin() + 1, args.end(), pyplearn_args.begin());
+    PP<PyPLearnScript> pyplearn_script;
+    if (extension == ".pyplearn")
+    {
+        // Make a copy of args with the first argument (the name of the script)
+        // removed, leaving the first argument to the script at index 0.
+        vector<string> pyplearn_args(args.size()-1);
+        copy(args.begin() + 1, args.end(), pyplearn_args.begin());
     
-    pyplearn_script = PyPLearnScript::process(scriptfile, pyplearn_args);
-    script          = pyplearn_script->getScript();
+        pyplearn_script = PyPLearnScript::process(scriptfile, pyplearn_args);
+        script          = pyplearn_script->getScript();
     
-    // When we call the pyplearn script with either
-    // --help or --dump, everything will already have been done by
-    // the time the PyPLearnScript is built. 
-    if ( script == "" )
-      return;    
-  }
-  else
-  {
-    map<string, string> vars;
-    // populate vars with the arguments passed on the command line
-    for (unsigned int i=1; i<args.size(); i++)
-      {
-        string option = args[i];
-        // Skip --foo command-lines options.
-        if (option.size() < 2 || option.substr(0, 2) != "--")
-          {
-            pair<string, string> name_val = split_on_first(option, "=");
-            vars[name_val.first] = name_val.second;
-          }
-      }
+        // When we call the pyplearn script with either
+        // --help or --dump, everything will already have been done by
+        // the time the PyPLearnScript is built. 
+        if ( script == "" )
+            return;    
+    }
+    else
+    {
+        map<string, string> vars;
+        // populate vars with the arguments passed on the command line
+        for (unsigned int i=1; i<args.size(); i++)
+        {
+            string option = args[i];
+            // Skip --foo command-lines options.
+            if (option.size() < 2 || option.substr(0, 2) != "--")
+            {
+                pair<string, string> name_val = split_on_first(option, "=");
+                vars[name_val.first] = name_val.second;
+            }
+        }
 
-    script = readFileAndMacroProcess(scriptfile, vars);
-  }
+        script = readFileAndMacroProcess(scriptfile, vars);
+    }
   
-  PStream in = openString( script, PStream::plearn_ascii );
-  while ( in )
-  {
-    PP<Object> o = readObject(in);
-    o->run();
-    in.skipBlanksAndCommentsAndSeparators();
-  }
+    PStream in = openString( script, PStream::plearn_ascii );
+    while ( in )
+    {
+        PP<Object> o = readObject(in);
+        o->run();
+        in.skipBlanksAndCommentsAndSeparators();
+    }
 
-  if ( pyplearn_script.isNotNull() )
-    pyplearn_script->close();
+    if ( pyplearn_script.isNotNull() )
+        pyplearn_script->close();
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

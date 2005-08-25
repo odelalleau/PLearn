@@ -33,8 +33,8 @@
 
 
 /* *******************************************************      
-   * $Id: old_plearn_main.h,v 1.3 2004/07/21 16:30:49 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #ifndef old_plearn_main_INC
 #define old_plearn_main_INC
@@ -53,3 +53,16 @@ int old_plearn_main(int argc, char** argv);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.h,v 1.20 2005/02/04 15:08:38 tihocan Exp $
+ * $Id$
  ******************************************************* */
 
 #ifndef FieldConvertCommand_INC
@@ -49,38 +49,38 @@ class FieldConvertCommand: public PLearnCommand
 {
 public:
 
-  //! Default empty constructor.
-  FieldConvertCommand();
+    //! Default empty constructor.
+    FieldConvertCommand();
 
-  //! The available types for a field.
-  enum FieldType {
-    binary,
-    constant,
-    continuous,
-    discrete_corr,
-    discrete_uncorr,
-    skip,
-    unknown //< Default value before the decision on the field type is made.
-  };
+    //! The available types for a field.
+    enum FieldType {
+        binary,
+        constant,
+        continuous,
+        discrete_corr,
+        discrete_uncorr,
+        skip,
+        unknown //< Default value before the decision on the field type is made.
+    };
   
-  virtual void run(const vector<string>& args);
+    virtual void run(const vector<string>& args);
 
 protected:
 
-  // Convert a string into our enum type.
-  FieldType stringToFieldType(string s);
+    // Convert a string into our enum type.
+    FieldType stringToFieldType(string s);
 
-  static PLearnCommandRegistry reg_;
+    static PLearnCommandRegistry reg_;
 
-  real DISCRETE_TOLERANCE;
-  real UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS;
-  real PVALUE_THRESHOLD;
-  real FRAC_MISSING_TO_SKIP;
-  real FRAC_ENOUGH;
-  PPath source_fn, desti_fn,force_fn,report_fn;
-  string precompute;
-  int target;
-  FieldType type;
+    real DISCRETE_TOLERANCE;
+    real UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS;
+    real PVALUE_THRESHOLD;
+    real FRAC_MISSING_TO_SKIP;
+    real FRAC_ENOUGH;
+    PPath source_fn, desti_fn,force_fn,report_fn;
+    string precompute;
+    int target;
+    FieldType type;
 };
 
   
@@ -88,3 +88,15 @@ protected:
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

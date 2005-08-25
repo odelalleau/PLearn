@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerCommand.h,v 1.4 2005/01/13 19:25:48 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -57,30 +57,30 @@ class LearnerCommand: public PLearnCommand
 
 public:
 
-  LearnerCommand();                    
+    LearnerCommand();                    
 
-  virtual void run(const vector<string>& args);
+    virtual void run(const vector<string>& args);
 
-  static void train(const string& learner_spec_file, const string& trainset_spec, const string& save_learner_file);
-  static void test(const string& trained_learner_file, const string& testset_spec, const string& stats_file, const string& outputs_file, const string& costs_file);
-  static void compute_outputs(const string& trained_learner_file, const string& test_inputs_spec, const string& outputs_file);
+    static void train(const string& learner_spec_file, const string& trainset_spec, const string& save_learner_file);
+    static void test(const string& trained_learner_file, const string& testset_spec, const string& stats_file, const string& outputs_file, const string& costs_file);
+    static void compute_outputs(const string& trained_learner_file, const string& test_inputs_spec, const string& outputs_file);
 
-  static void compute_outputs_on_1D_grid(const string& trained_learner_file, const string& grid_outputs_file, 
-                                         real xmin, real xmax, int nx);
+    static void compute_outputs_on_1D_grid(const string& trained_learner_file, const string& grid_outputs_file, 
+                                           real xmin, real xmax, int nx);
 
-  static void compute_outputs_on_2D_grid(const string& trained_learner_file, const string& grid_outputs_file, 
-                                         real xmin, real xmax, real ymin, real ymax,
-                                         int nx, int ny);
+    static void compute_outputs_on_2D_grid(const string& trained_learner_file, const string& grid_outputs_file, 
+                                           real xmin, real xmax, real ymin, real ymax,
+                                           int nx, int ny);
 
-  static void compute_outputs_on_auto_grid(const string& trained_learner_file, const string& grid_outputs_file, 
-                                           const string& dataset_spec, real extra_percent,
-                                           int nx, int ny=0);
+    static void compute_outputs_on_auto_grid(const string& trained_learner_file, const string& grid_outputs_file, 
+                                             const string& dataset_spec, real extra_percent,
+                                             int nx, int ny=0);
 
-  static void analyze_inputs(const string& data_file, const string& result_file, real epsilon, const TVec<string>& learner_files);
+    static void analyze_inputs(const string& data_file, const string& result_file, real epsilon, const TVec<string>& learner_files);
   
 protected:
 
-  static PLearnCommandRegistry reg_;
+    static PLearnCommandRegistry reg_;
 
 };
 
@@ -88,3 +88,16 @@ protected:
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

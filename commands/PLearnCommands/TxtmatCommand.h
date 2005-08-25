@@ -36,8 +36,8 @@
 // Authors: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: TxtmatCommand.h,v 1.2 2005/01/12 14:41:53 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file TxtmatCommand.h */
 #ifndef TxtmatCommand_INC
@@ -53,19 +53,32 @@ using namespace std;
 class TxtmatCommand: public PLearnCommand
 {
 public:
-  TxtmatCommand();
+    TxtmatCommand();
                     
-  virtual void run(const vector<string>& args);
+    virtual void run(const vector<string>& args);
 
-  //! curses interactive viewing
-  static void view(PP<TextFilesVMatrix> vm, int lin=0, int col=0);
-  static void checkstuff(PP<TextFilesVMatrix> vm);
+    //! curses interactive viewing
+    static void view(PP<TextFilesVMatrix> vm, int lin=0, int col=0);
+    static void checkstuff(PP<TextFilesVMatrix> vm);
 
 protected:
-  static PLearnCommandRegistry reg_;
+    static PLearnCommandRegistry reg_;
 };
 
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

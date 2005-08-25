@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
-   ******************************************************* */
+ * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -58,35 +58,48 @@ class DiffCommand: public PLearnCommand
 
 public:
 
-  DiffCommand();                    
-  virtual void run(const std::vector<std::string>& args);
+    DiffCommand();                    
+    virtual void run(const std::vector<std::string>& args);
 
 protected:
 
-  static PLearnCommandRegistry reg_;
+    static PLearnCommandRegistry reg_;
 
 public:
 
 //  static int diff(PP<Object> refer, PP<Object> other, vector<string>& diffs);
-      /*
-                   const string& refer_name,
-                   const string& other_name,
-                   PStream& out = pout, PStream& err = err);
-                   */
+    /*
+      const string& refer_name,
+      const string& other_name,
+      PStream& out = pout, PStream& err = err);
+    */
 
-  /*
-  static bool diff(PP<Object> refer, PP<Object> other, PP<OptionBase> opt,
-                   vector<string>& diffs);
+    /*
+      static bool diff(PP<Object> refer, PP<Object> other, PP<OptionBase> opt,
+      vector<string>& diffs);
 
-  static bool diff(const string& refer, const string& other, const string& name,
-                   const string& type, TMat<string>& diffs);
+      static bool diff(const string& refer, const string& other, const string& name,
+      const string& type, TMat<string>& diffs);
 
-  static void newDiff(TMat<string>& diffs,
-                      const string& name, const string& val1, const string& val2);
-                      */
+      static void newDiff(TMat<string>& diffs,
+      const string& name, const string& val1, const string& val2);
+    */
 };
 
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

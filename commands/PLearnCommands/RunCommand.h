@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.h,v 1.3 2004/02/20 21:11:40 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file RunCommand.h */
 #ifndef RunCommand_INC
@@ -50,26 +50,39 @@ using namespace std;
 class RunCommand: public PLearnCommand
 {
 public:
-  RunCommand():
-    PLearnCommand("run",
+    RunCommand():
+        PLearnCommand("run",
 
-                  "runs a .plearn script",
+                      "runs a .plearn script",
 
-                  "run <script.plearn> [ argname1=val argname2=val ... ] \n"
-                  "Runs a .plearn script, with the arguments defined as\n"
-                  "macro variables, accessible from within the script as ${argname} \n"
-                  "'run' is what gets called when you give NO command name, but a valid .plearn script \n"
-                  "Lookup plearn help scripts for more info on scripts. \n"
-                  ) 
-  {}
+                      "run <script.plearn> [ argname1=val argname2=val ... ] \n"
+                      "Runs a .plearn script, with the arguments defined as\n"
+                      "macro variables, accessible from within the script as ${argname} \n"
+                      "'run' is what gets called when you give NO command name, but a valid .plearn script \n"
+                      "Lookup plearn help scripts for more info on scripts. \n"
+            ) 
+    {}
                     
-  virtual void run(const vector<string>& args);
+    virtual void run(const vector<string>& args);
 
 protected:
-  static PLearnCommandRegistry reg_;
+    static PLearnCommandRegistry reg_;
 };
 
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KolmogorovSmirnovCommand.h,v 1.2 2004/02/20 21:11:40 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file KolmogorovSmirnovCommand.h */
 #ifndef KolmogorovSmirnovCommand_INC
@@ -49,23 +49,36 @@ using namespace std;
 class KolmogorovSmirnovCommand: public PLearnCommand
 {
 public:
-  KolmogorovSmirnovCommand():
-    PLearnCommand("ks-stat",
-                  "Computes the Kolmogorov-Smirnov statistic between 2 matrix columns",
-                  "ks-stat <matA> <colA> <matB> <colB> [conv] \n"
-                  "Will compute the ks-statistic between column colA of matrix matA \n"
-                  "and column colB of matrix matB, with presion conv (defaults to 10). \n"
-                  "You can use any matrix files recognized by PLearn \n"
-                  ) 
-  {}
+    KolmogorovSmirnovCommand():
+        PLearnCommand("ks-stat",
+                      "Computes the Kolmogorov-Smirnov statistic between 2 matrix columns",
+                      "ks-stat <matA> <colA> <matB> <colB> [conv] \n"
+                      "Will compute the ks-statistic between column colA of matrix matA \n"
+                      "and column colB of matrix matB, with presion conv (defaults to 10). \n"
+                      "You can use any matrix files recognized by PLearn \n"
+            ) 
+    {}
                     
-  virtual void run(const vector<string>& args);
+    virtual void run(const vector<string>& args);
 
 protected:
-  static PLearnCommandRegistry reg_;
+    static PLearnCommandRegistry reg_;
 };
 
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

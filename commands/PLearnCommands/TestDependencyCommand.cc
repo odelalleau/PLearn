@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestDependencyCommand.cc,v 1.3 2004/09/27 20:19:16 plearner Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 /*! \file TestDependencyCommand.cc */
 #include "TestDependencyCommand.h"
@@ -52,48 +52,60 @@ PLearnCommandRegistry TestDependencyCommand::reg_(new TestDependencyCommand);
 //! The actual implementation of the 'TestDependencyCommand' command 
 void TestDependencyCommand::run(const vector<string>& args)
 {
-  if(args.size()<3 || args.size()>3)
-    PLERROR("test-dependencies expects 3 arguments, check the help");
+    if(args.size()<3 || args.size()>3)
+        PLERROR("test-dependencies expects 3 arguments, check the help");
 
-  VMat data = getDataSet(args[0]);
-  string x_spec = args[1];
-  string y_spec = args[2];
-  int x_col=0, y_col=0;
-  if (x_spec[0]!='@')
-    x_col = toint(x_spec);
-  else {
-    string x_name = x_spec.substr(1,x_spec.length()-1);
-    x_col = data->fieldIndex(x_name);
-    if (x_col<0) PLERROR("could not find field named %s in %s",x_name.c_str(),args[0].c_str());
-  }
-  if (y_spec[0]!='@')
-    y_col = toint(y_spec);
-  else {
-    string y_name = y_spec.substr(1,y_spec.length()-1);
-    y_col = data->fieldIndex(y_name);
-    if (y_col<0) PLERROR("could not find field named %s in %s",y_name.c_str(),args[0].c_str());
-  }
+    VMat data = getDataSet(args[0]);
+    string x_spec = args[1];
+    string y_spec = args[2];
+    int x_col=0, y_col=0;
+    if (x_spec[0]!='@')
+        x_col = toint(x_spec);
+    else {
+        string x_name = x_spec.substr(1,x_spec.length()-1);
+        x_col = data->fieldIndex(x_name);
+        if (x_col<0) PLERROR("could not find field named %s in %s",x_name.c_str(),args[0].c_str());
+    }
+    if (y_spec[0]!='@')
+        y_col = toint(y_spec);
+    else {
+        string y_name = y_spec.substr(1,y_spec.length()-1);
+        y_col = data->fieldIndex(y_name);
+        if (y_col<0) PLERROR("could not find field named %s in %s",y_name.c_str(),args[0].c_str());
+    }
 
-  // extract the two columns
-  TVec<int> columns(2);
-  columns[0]=x_col;
-  columns[1]=y_col;
-  Mat xy_mat = data.columns(columns).toMat();
-  VMat x = VMat(xy_mat.column(0));
-  VMat y = VMat(xy_mat.column(1));
+    // extract the two columns
+    TVec<int> columns(2);
+    columns[0]=x_col;
+    columns[1]=y_col;
+    Mat xy_mat = data.columns(columns).toMat();
+    VMat x = VMat(xy_mat.column(0));
+    VMat y = VMat(xy_mat.column(1));
 
-  Mat spearman_pvalue(1,1);
-  Mat spearman_r(1,1);
-  testSpearmanRankCorrelation(x,y,spearman_r,spearman_pvalue);
-  Mat linear_pvalue(1,1);
-  Mat linear_r(1,1);
-  correlations(x,y,linear_r,linear_pvalue);
+    Mat spearman_pvalue(1,1);
+    Mat spearman_r(1,1);
+    testSpearmanRankCorrelation(x,y,spearman_r,spearman_pvalue);
+    Mat linear_pvalue(1,1);
+    Mat linear_r(1,1);
+    correlations(x,y,linear_r,linear_pvalue);
 
-  cout << "test-dependency between " << data->fieldName(x_col) << " (column " << x_col << ") and "
-       <<  data->fieldName(y_col) << " (column " << y_col << "):" << endl;
-  cout << "rank correlation = " << spearman_r(0,0) << " {p-value = " << spearman_pvalue(0,0) << "}" << endl;
-  cout << "linear correlation = " << linear_r(0,0) << " {p-value = " << linear_pvalue(0,0) << "}" << endl;
+    cout << "test-dependency between " << data->fieldName(x_col) << " (column " << x_col << ") and "
+         <<  data->fieldName(y_col) << " (column " << y_col << "):" << endl;
+    cout << "rank correlation = " << spearman_r(0,0) << " {p-value = " << spearman_pvalue(0,0) << "}" << endl;
+    cout << "linear correlation = " << linear_r(0,0) << " {p-value = " << linear_pvalue(0,0) << "}" << endl;
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

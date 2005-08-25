@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
-   ******************************************************* */
+ * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -57,55 +57,55 @@ using namespace std;
 PLearnCommandRegistry DiffCommand::reg_(new DiffCommand);
 
 DiffCommand::DiffCommand():
-  PLearnCommand("diff",
-                "Compare PLearn objects",
-                "The files with the objects' specifications are given in argument,\n"
-                "the first one being the reference object"
-  ) 
+    PLearnCommand("diff",
+                  "Compare PLearn objects",
+                  "The files with the objects' specifications are given in argument,\n"
+                  "the first one being the reference object"
+        ) 
 {}
 
 //! The actual implementation of the 'DiffCommand' command 
 void DiffCommand::run(const vector<string>& args)
 {
-  if (args.size() < 2)
-    PLERROR("In DiffCommand::run - You need to provide at least two file names");
-  // Parse arguments.
-  TVec<PPath> obj_spec;
-  for (vector<string>::size_type i = 0; i < args.size(); i++)
-    obj_spec.append(args[i]);
-  // Load objects.
-  TVec< PP<Object> > obj;
-  int n = int(args.size());
-  for (int i = 0; i < n; i++) {
-    PP<Object> new_object;
-    string object_spec = readFileAndMacroProcess(obj_spec[i]);
-    PStream in = openString(object_spec, PStream::plearn_ascii);
-    in >> new_object;
-    if (!new_object)
-      PLERROR("In DiffCommand::run - Unable to serialize file %s as an Object",
-              obj_spec[i].absolute().c_str());
-    obj.append(new_object);
-  }
-  // Compare objects.
-  PStream& out = pout;
-  PP<Object> refer = obj[0];
-  PP<PLearnDiff> diffs = new PLearnDiff();
-  for (int i = 1; i < n; i++) {
-    PP<Object> other = obj[i];
-    diffs->forget();
-    int n_diffs = diff(refer, other, diffs);
-    if (n_diffs > 0) {
-      out << "Reference (" << obj_spec[0] << ") and object " << i << " ( "
-          << obj_spec[i] << ") differ:" << endl;
-      diffs->printDiffs(out);
+    if (args.size() < 2)
+        PLERROR("In DiffCommand::run - You need to provide at least two file names");
+    // Parse arguments.
+    TVec<PPath> obj_spec;
+    for (vector<string>::size_type i = 0; i < args.size(); i++)
+        obj_spec.append(args[i]);
+    // Load objects.
+    TVec< PP<Object> > obj;
+    int n = int(args.size());
+    for (int i = 0; i < n; i++) {
+        PP<Object> new_object;
+        string object_spec = readFileAndMacroProcess(obj_spec[i]);
+        PStream in = openString(object_spec, PStream::plearn_ascii);
+        in >> new_object;
+        if (!new_object)
+            PLERROR("In DiffCommand::run - Unable to serialize file %s as an Object",
+                    obj_spec[i].absolute().c_str());
+        obj.append(new_object);
     }
-    /*
-    if (!diffs.empty()) {
-      for (vector<string>::size_type j = 0; j < diffs.size(); j += 3)
-        out << "  " << diffs[j] << " = " << diffs[j+1] << " != " << diffs[j+2] << endl;
+    // Compare objects.
+    PStream& out = pout;
+    PP<Object> refer = obj[0];
+    PP<PLearnDiff> diffs = new PLearnDiff();
+    for (int i = 1; i < n; i++) {
+        PP<Object> other = obj[i];
+        diffs->forget();
+        int n_diffs = diff(refer, other, diffs);
+        if (n_diffs > 0) {
+            out << "Reference (" << obj_spec[0] << ") and object " << i << " ( "
+                << obj_spec[i] << ") differ:" << endl;
+            diffs->printDiffs(out);
+        }
+        /*
+          if (!diffs.empty()) {
+          for (vector<string>::size_type j = 0; j < diffs.size(); j += 3)
+          out << "  " << diffs[j] << " = " << diffs[j+1] << " != " << diffs[j+2] << endl;
+          }
+        */
     }
-    */
-  }
 }
 
 /*
@@ -113,14 +113,14 @@ void DiffCommand::run(const vector<string>& args)
 // newDiff //
 /////////////
 void DiffCommand::newDiff(vector<string>& diffs, const string& name,
-                          const string& val1,  const string& val2)
+const string& val1,  const string& val2)
 {
-  static TVec<string> new_diff;
-  new_diff.resize(3);
-  new_diff[0] = name;
-  new_diff[1] = val1;
-  new_diff[2] = val2;
-  diffs.appendRow(new_diff);
+static TVec<string> new_diff;
+new_diff.resize(3);
+new_diff[0] = name;
+new_diff[1] = val1;
+new_diff[2] = val2;
+diffs.appendRow(new_diff);
 }
 */
 
@@ -129,28 +129,28 @@ void DiffCommand::newDiff(vector<string>& diffs, const string& name,
 // diff //
 //////////
 int DiffCommand::diff(PP<Object> refer, PP<Object> other,
-    vector<string>& diffs)
+vector<string>& diffs)
 {
-  int n_diffs = 0;
-  OptionBase::newDiff("classname", refer->classname(),
-                      other->classname(), diffs, n_diffs);
-  if (n_diffs > 0)
-    return n_diffs; // We cannot compare two objects from different classes.
-  OptionList& options = refer->getOptionList();
-  for (OptionList::const_iterator it = options.begin(); it != options.end(); it++) {
-    // pout << "Comparing " << (*it)->optionname() << endl;
-    n_diffs += (*it)->isDiff(refer->getOption((*it)->optionname()),
-                             other->getOption((*it)->optionname()),
-                             diffs);
-  }
-  return n_diffs;
+int n_diffs = 0;
+OptionBase::newDiff("classname", refer->classname(),
+other->classname(), diffs, n_diffs);
+if (n_diffs > 0)
+return n_diffs; // We cannot compare two objects from different classes.
+OptionList& options = refer->getOptionList();
+for (OptionList::const_iterator it = options.begin(); it != options.end(); it++) {
+// pout << "Comparing " << (*it)->optionname() << endl;
+n_diffs += (*it)->isDiff(refer->getOption((*it)->optionname()),
+other->getOption((*it)->optionname()),
+diffs);
+}
+return n_diffs;
 }
 */
 
 /*
-bool DiffCommand::diff(PP<Object> refer, PP<Object> other, PP<OptionBase> opt,
-                       vector<string>& diffs)
-{
+  bool DiffCommand::diff(PP<Object> refer, PP<Object> other, PP<OptionBase> opt,
+  vector<string>& diffs)
+  {
   string optionname = opt->optionname();
   string optiontype = opt->optiontype();
   string refer_opt = refer->getOption(optionname);
@@ -160,28 +160,40 @@ bool DiffCommand::diff(PP<Object> refer, PP<Object> other, PP<OptionBase> opt,
   // pout << "Other = " << other_opt << endl;
   return diff(refer_opt, other_opt, optionname, optiontype, diffs);
   // pout << "Total: " << diffs.length() << " differences" << endl;
-}
+  }
 
-bool DiffCommand::diff(const string& refer, const string& other, const string& name,
-                       const string& type, vector<string>& diffs)
-{
+  bool DiffCommand::diff(const string& refer, const string& other, const string& name,
+  const string& type, vector<string>& diffs)
+  {
   bool is_diff;
   if (type == "double") {
-    double val_refer = todouble(refer);
-    double val_other = todouble(other);
-    is_diff = !is_equal(val_refer, val_other);
+  double val_refer = todouble(refer);
+  double val_other = todouble(other);
+  is_diff = !is_equal(val_refer, val_other);
   } else if (type == "float") {
-    float val_refer = tofloat(refer);
-    float val_other = tofloat(other);
-    is_diff = !is_equal(val_refer, val_other);
+  float val_refer = tofloat(refer);
+  float val_other = tofloat(other);
+  is_diff = !is_equal(val_refer, val_other);
   } else
-    // Default: just compare the strings.
-    is_diff = (refer != other);
+  // Default: just compare the strings.
+  is_diff = (refer != other);
   if (is_diff)
-    newDiff(diffs, name, refer, other);
+  newDiff(diffs, name, refer, other);
   return is_diff;
-}
+  }
 */
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

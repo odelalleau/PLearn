@@ -33,9 +33,9 @@
 
 
 /* *******************************************************      
-   * $Id: PLearnCommand.h,v 1.2 2004/02/20 21:11:40 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/Object.h */
@@ -55,17 +55,17 @@ using namespace std;
 class PLearnCommand
 {
 public:
-  string name;        // The name of the command
-  string description; // A short one line description of what the command does
-  string helpmsg; // A more detailed help of the command and its options
+    string name;        // The name of the command
+    string description; // A short one line description of what the command does
+    string helpmsg; // A more detailed help of the command and its options
 
-  PLearnCommand(const string& name_, const string& description_, const string& helpmsg_)
-    : name(name_), description(description_), helpmsg(helpmsg_) 
-  {}
+    PLearnCommand(const string& name_, const string& description_, const string& helpmsg_)
+        : name(name_), description(description_), helpmsg(helpmsg_) 
+    {}
 
-  virtual void run(const vector<string>& args) = 0;
+    virtual void run(const vector<string>& args) = 0;
 
-  virtual ~PLearnCommand() {}
+    virtual ~PLearnCommand() {}
 };
 
 
@@ -73,5 +73,15 @@ public:
 
 #endif
 
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

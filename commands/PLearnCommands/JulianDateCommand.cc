@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianDateCommand.cc,v 1.3 2004/07/21 16:30:49 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Rejean Ducharme
 
@@ -59,23 +59,35 @@ JulianDateCommand::JulianDateCommand():
 
                   "Usage: jdate <julian_day_number> \n"
                   "       To get the equivalent JJ/MM/YYYY date \n"
-                  ) 
-  {}
+        ) 
+{}
 
 //! The actual implementation of the 'JulianDateCommand' command 
 void JulianDateCommand::run(const vector<string>& args)
 {
-  if (args.size() != 1)
-    PLERROR("jdate expect only 1 argument, the juliay day number");
+    if (args.size() != 1)
+        PLERROR("jdate expect only 1 argument, the juliay day number");
 
-  int jdn = toint(args[0]);
-  PDate date(jdn);
-  int dd = date.day;
-  int mm = date.month;
-  int yyyy = date.year;
+    int jdn = toint(args[0]);
+    PDate date(jdn);
+    int dd = date.day;
+    int mm = date.month;
+    int yyyy = date.year;
 
-  cout << args[0] << " correspond to " << dd << "/" << mm << "/" << yyyy << endl;
+    cout << args[0] << " correspond to " << dd << "/" << mm << "/" << yyyy << endl;
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

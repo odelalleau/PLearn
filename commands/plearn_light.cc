@@ -33,8 +33,8 @@
 
 
 /* *******************************************************      
-   * $Id$
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 //! All includes should go into plearn_inc.h.
 #include "plearn_inc.h"
@@ -44,9 +44,21 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  return plearn_main( argc, argv, 
-                      PLEARN_MAJOR_VERSION, 
-                      PLEARN_MINOR_VERSION, 
-                      PLEARN_FIXLEVEL       );
+    return plearn_main( argc, argv, 
+                        PLEARN_MAJOR_VERSION, 
+                        PLEARN_MINOR_VERSION, 
+                        PLEARN_FIXLEVEL       );
 }
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

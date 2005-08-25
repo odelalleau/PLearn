@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AutoRunCommand.cc,v 1.6 2004/07/21 16:30:49 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file AutoRunCommand.cc */
 
@@ -59,44 +59,44 @@ PLearnCommandRegistry AutoRunCommand::reg_(new AutoRunCommand);
 //! The actual implementation of the 'AutoRunCommand' command 
 void AutoRunCommand::run(const vector<string>& args)
 {
-  string scriptname = args[0];
-  int nargs = (int)args.size();
+    string scriptname = args[0];
+    int nargs = (int)args.size();
 
-  vector<string> runargs(1);
-  runargs[0] = scriptname;
+    vector<string> runargs(1);
+    runargs[0] = scriptname;
 
-  TVec<int> times(nargs);
+    TVec<int> times(nargs);
 
-  for(;;)
+    for(;;)
     {
-      try 
+        try 
         {
-          RunCommand rc;
-          cerr << ">>> Running script " << scriptname << endl; 
-          rc.run(runargs);
+            RunCommand rc;
+            cerr << ">>> Running script " << scriptname << endl; 
+            rc.run(runargs);
         }
-      catch(const PLearnError& e)
+        catch(const PLearnError& e)
         {
-          cerr << "FATAL ERROR running script " << scriptname << "\n"
-               << e.message() << endl;
+            cerr << "FATAL ERROR running script " << scriptname << "\n"
+                 << e.message() << endl;
         }
       
-      sleep(1);
+        sleep(1);
 
-      // Store times
-      for(int k=0; k<nargs; k++)
-        times[k] = mtime(args[k]);
+        // Store times
+        for(int k=0; k<nargs; k++)
+            times[k] = mtime(args[k]);
 
-      bool up_to_date = true;
-      while(up_to_date)
+        bool up_to_date = true;
+        while(up_to_date)
         {
-          sleep(1);
-          for(int k=0; k<nargs; k++)
-            if(times[k] < mtime(args[k]))
-              {
-                cerr << " File " << args[k] << " has changed." << endl;
-                up_to_date = false;
-              }
+            sleep(1);
+            for(int k=0; k<nargs; k++)
+                if(times[k] < mtime(args[k]))
+                {
+                    cerr << " File " << args[k] << " has changed." << endl;
+                    up_to_date = false;
+                }
         }
     }
 
@@ -104,3 +104,15 @@ void AutoRunCommand::run(const vector<string>& args)
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

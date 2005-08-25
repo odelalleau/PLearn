@@ -33,9 +33,9 @@
 
 
 /* *******************************************************      
-   * $Id: PLearnCommandRegistry.h,v 1.6 2004/11/25 23:00:22 chapados Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef PLearnCommandRegistry_INC
 #define PLearnCommandRegistry_INC
@@ -53,39 +53,39 @@ class HTMLHelpCommand;
   
 class PLearnCommandRegistry
 {
-  // Minor help for the HTML helper here...
-  friend class HTMLHelpCommand;
+    // Minor help for the HTML helper here...
+    friend class HTMLHelpCommand;
 
 protected:
-  typedef map<string, PLearnCommand*> command_map;
+    typedef map<string, PLearnCommand*> command_map;
 
-  //! Returns a reference to the unique command map
-  static command_map& commands();
+    //! Returns a reference to the unique command map
+    static command_map& commands();
 
-  //! Issues a "bad command" message
-  static void badcommand(const string& commandname);
+    //! Issues a "bad command" message
+    static void badcommand(const string& commandname);
 
  
 public:
 
-  //! registers a command
-  static void do_register(PLearnCommand* command);
+    //! registers a command
+    static void do_register(PLearnCommand* command);
 
-  //! checks wether a command is registered with that name
-  static bool is_registered(const string& commandname);
+    //! checks wether a command is registered with that name
+    static bool is_registered(const string& commandname);
   
-  //! prints a list of all commands with their one-line summary
-  static void print_command_summary(ostream& out);
+    //! prints a list of all commands with their one-line summary
+    static void print_command_summary(ostream& out);
 
-  //! run the given (registered) command with the given arguments
-  static void run(const string& commandname, const vector<string>& args);
+    //! run the given (registered) command with the given arguments
+    static void run(const string& commandname, const vector<string>& args);
   
-  //! prints out detailed help for the given command on the given stream
-  static void help(const string& commandname, ostream& out);
+    //! prints out detailed help for the given command on the given stream
+    static void help(const string& commandname, ostream& out);
 
-  //! This constructor will simply register the given PLearnCommand
-  inline PLearnCommandRegistry(PLearnCommand* plcommand)
-  { do_register(plcommand); }
+    //! This constructor will simply register the given PLearnCommand
+    inline PLearnCommandRegistry(PLearnCommand* plcommand)
+    { do_register(plcommand); }
   
 };
   
@@ -93,3 +93,16 @@ public:
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :
