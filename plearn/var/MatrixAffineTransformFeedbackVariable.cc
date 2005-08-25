@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixAffineTransformFeedbackVariable.cc,v 1.6 2004/11/24 18:25:11 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "MatrixAffineTransformFeedbackVariable.h"
 
@@ -50,11 +50,11 @@ PLEARN_IMPLEMENT_OBJECT(MatrixAffineTransformFeedbackVariable,
                         "Affine transformation of a MATRIX variable.",
                         "NO HELP");
 /*
-void MatrixAffineTransformFeedbackVariable::recomputeSize(int& l, int& w) const
-{
-    l = length();
-    w = width();
-}
+  void MatrixAffineTransformFeedbackVariable::recomputeSize(int& l, int& w) const
+  {
+  l = length();
+  w = width();
+  }
 */
 void MatrixAffineTransformFeedbackVariable::fprop()
 {
@@ -69,9 +69,9 @@ void MatrixAffineTransformFeedbackVariable::fprop()
 
     for (int i = 0; i < input1->length(); i++)
         for (int j = 0; j < input1->width(); j++)
-            {
+        {
             bias_g[i] += input1->matGradient[i][j];
-            }
+        }
     productTransposeAcc(lintr_g, input2->matValue, input1->matGradient);
 }
 
@@ -79,4 +79,15 @@ void MatrixAffineTransformFeedbackVariable::fprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

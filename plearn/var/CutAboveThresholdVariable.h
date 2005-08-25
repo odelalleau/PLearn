@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: CutAboveThresholdVariable.h,v 1.5 2004/04/27 15:59:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef CutAboveThresholdVariable_INC
 #define CutAboveThresholdVariable_INC
@@ -51,24 +51,24 @@ using namespace std;
 
 class CutAboveThresholdVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 protected:
-  real threshold;
+    real threshold;
 
 public:
-  //!  Default constructor for persistence
-  CutAboveThresholdVariable() : threshold() {}
-  CutAboveThresholdVariable(Variable* input, real the_threshold);
+    //!  Default constructor for persistence
+    CutAboveThresholdVariable() : threshold() {}
+    CutAboveThresholdVariable(Variable* input, real the_threshold);
 
-  PLEARN_DECLARE_OBJECT(CutAboveThresholdVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(CutAboveThresholdVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void recomputeSize(int& l, int& w) const;  
+    virtual void recomputeSize(int& l, int& w) const;  
   
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 };
 
 DECLARE_OBJECT_PTR(CutAboveThresholdVariable);
@@ -82,3 +82,16 @@ inline Var negative(Var v)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

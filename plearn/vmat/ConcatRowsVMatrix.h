@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id$
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file ConcatRowsVMatrix.h */
@@ -54,85 +54,85 @@ class ConcatRowsVMatrix: public VMatrix
   
 private:
 
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
 protected:
 
-  TVec<VMat> array;
+    TVec<VMat> array;
 
-  //! A vector containing the final VMats to concatenate.
-  //! These are either the same as the ones in 'array', or a selection
-  //! of their fields when the 'only_common_fields' option is true.
-  TVec<VMat> to_concat;
+    //! A vector containing the final VMats to concatenate.
+    //! These are either the same as the ones in 'array', or a selection
+    //! of their fields when the 'only_common_fields' option is true.
+    TVec<VMat> to_concat;
 
-  //! Will be set to 'true' iff two VMats concatenated have not the same
-  //! mapping for a given string. This means the output must systematically
-  //! be checked to ensure consistency.
-  bool need_fix_mappings;
+    //! Will be set to 'true' iff two VMats concatenated have not the same
+    //! mapping for a given string. This means the output must systematically
+    //! be checked to ensure consistency.
+    bool need_fix_mappings;
 
-  //! This is a matrix of size (number of matrices to concatenate, number of columns).
-  //! The element (i, j) is a mapping that says which value needs to be replaced with
-  //! what in the j-th column of the i-th matrix. This is to fix the mappings when
-  //! 'need_fix_mappings' is true.
-  TMat< map<real, real> > fixed_mappings;
+    //! This is a matrix of size (number of matrices to concatenate, number of columns).
+    //! The element (i, j) is a mapping that says which value needs to be replaced with
+    //! what in the j-th column of the i-th matrix. This is to fix the mappings when
+    //! 'need_fix_mappings' is true.
+    TMat< map<real, real> > fixed_mappings;
 
 public:
 
-  bool fill_missing;
-  bool fully_check_mappings;
-  bool only_common_fields;
+    bool fill_missing;
+    bool fully_check_mappings;
+    bool only_common_fields;
 
-  //! The fields names are copied from the FIRST VMat, unless the 'only_common_fields'
-  //! option is set to 'true'.
-  ConcatRowsVMatrix(TVec<VMat> the_array = TVec<VMat>());
-  ConcatRowsVMatrix(VMat d1, VMat d2, bool fully_check_mappings = false);
+    //! The fields names are copied from the FIRST VMat, unless the 'only_common_fields'
+    //! option is set to 'true'.
+    ConcatRowsVMatrix(TVec<VMat> the_array = TVec<VMat>());
+    ConcatRowsVMatrix(VMat d1, VMat d2, bool fully_check_mappings = false);
 
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
+    virtual real get(int i, int j) const;
+    virtual void getSubRow(int i, int j, Vec v) const;
 
-  virtual void reset_dimensions();
+    virtual void reset_dimensions();
 
-  virtual real dot(int i1, int i2, int inputsize) const;
-  virtual real dot(int i, const Vec& v) const;
-  virtual void putMat(int i, int j, Mat m);
+    virtual real dot(int i1, int i2, int inputsize) const;
+    virtual real dot(int i, const Vec& v) const;
+    virtual void putMat(int i, int j, Mat m);
 
-  PLEARN_DECLARE_OBJECT(ConcatRowsVMatrix);
-  virtual void build();
+    PLEARN_DECLARE_OBJECT(ConcatRowsVMatrix);
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
 
-  //!  Returns the index of the correct VMat in the array and the row
-  //!  number in this VMat that correspond to row i in the ConcatRowsVMat.
-  void getpositions(int i, int& whichvm, int& rowofvm) const; 
+    //!  Returns the index of the correct VMat in the array and the row
+    //!  number in this VMat that correspond to row i in the ConcatRowsVMat.
+    void getpositions(int i, int& whichvm, int& rowofvm) const; 
 
-  static void declareOptions(OptionList &ol);
+    static void declareOptions(OptionList &ol);
 
 private:
 
-  void build_();
+    void build_();
 
-  //! Build the string <-> real mappings so that they are consistent with the
-  //! different mappings from the concatenated VMats (the same string must
-  //! be mapped to the same value).
-  void ensureMappingsConsistency();
+    //! Build the string <-> real mappings so that they are consistent with the
+    //! different mappings from the concatenated VMats (the same string must
+    //! be mapped to the same value).
+    void ensureMappingsConsistency();
 
-  //! Browse through all data in the VMats to make sure there is no numerical
-  //! value conflicting with a string mapping. An error occurs if it is the case.
-  void fullyCheckMappings(bool report_progress = true);
+    //! Browse through all data in the VMats to make sure there is no numerical
+    //! value conflicting with a string mapping. An error occurs if it is the case.
+    void fullyCheckMappings(bool report_progress = true);
 
-  //! Selects all the fields that appear in any of the concatenated VMat.
-  void findAllFields();
+    //! Selects all the fields that appear in any of the concatenated VMat.
+    void findAllFields();
 
-  //! Selects the fields common to all VMats to concatenate (called at build
-  //! time if 'only_common_fields' is true).
-  void findCommonFields();
+    //! Selects the fields common to all VMats to concatenate (called at build
+    //! time if 'only_common_fields' is true).
+    void findCommonFields();
 
-  //! Recompute length and width (same as reset_dimensions(), except it does not
-  //! forward to the underlying VMats).
-  void recomputeDimensions();
+    //! Recompute length and width (same as reset_dimensions(), except it does not
+    //! forward to the underlying VMats).
+    void recomputeDimensions();
 
 };
 
@@ -142,13 +142,26 @@ inline VMat vconcat(VMat d1, VMat d2)
 { return new ConcatRowsVMatrix(d1,d2); }
 
 inline VMat vconcat(Array<VMat> ds) {
-  if (ds.size() == 1) {
-    // Only one matrix: no need to use a ConcatRowsVMatrix.
-    return ds[0];
-  } else {
-    return new ConcatRowsVMatrix(ds);
-  }
+    if (ds.size() == 1) {
+        // Only one matrix: no need to use a ConcatRowsVMatrix.
+        return ds[0];
+    } else {
+        return new ConcatRowsVMatrix(ds);
+    }
 }
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

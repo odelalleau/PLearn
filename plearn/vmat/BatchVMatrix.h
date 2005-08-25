@@ -33,8 +33,8 @@
 
 
 /* *******************************************************      
-   * $Id$
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 #ifndef BatchVMatrix_INC
@@ -49,37 +49,37 @@ using namespace std;
 //! each mini-batch appears twice (consecutively).
 class BatchVMatrix: public VMatrix
 {
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
 public:
 
-  //! Public build options
-  VMat m;         //< the source matrix
-  int batch_size; //< the size of each mini_batch
+    //! Public build options
+    VMat m;         //< the source matrix
+    int batch_size; //< the size of each mini_batch
 
 private:
 
-  int last_batch; // contains the index of the last mini-batch (=n_batches-1)
-  int last_batch_size; // contains the size of the last batch
+    int last_batch; // contains the index of the last mini-batch (=n_batches-1)
+    int last_batch_size; // contains the size of the last batch
 
 public:
 
-  BatchVMatrix();
+    BatchVMatrix();
 
-  PLEARN_DECLARE_OBJECT(BatchVMatrix);
+    PLEARN_DECLARE_OBJECT(BatchVMatrix);
 
-  static void declareOptions(OptionList& ol);
+    static void declareOptions(OptionList& ol);
     
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  virtual void build();
-  virtual real get(int i, int j) const;
-  virtual void put(int i, int j, real value);
+    virtual void build();
+    virtual real get(int i, int j) const;
+    virtual void put(int i, int j, real value);
 
 private:
 
-  void build_();
+    void build_();
 
 };
 
@@ -87,3 +87,16 @@ DECLARE_OBJECT_PTR(BatchVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

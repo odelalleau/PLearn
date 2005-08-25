@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilePStreamBuf.cc,v 1.6 2005/01/14 19:40:49 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -48,40 +48,53 @@ using namespace std;
 
 FilePStreamBuf::FilePStreamBuf(FILE* in_f, FILE* out_f, 
                                bool own_in_, bool own_out_)
-  :PStreamBuf(in_f!=0, out_f!=0, 4096, 4096, default_ungetsize), 
-   in(in_f), out(out_f), own_in(own_in_), own_out(own_out_)
-  {}
+    :PStreamBuf(in_f!=0, out_f!=0, 4096, 4096, default_ungetsize), 
+     in(in_f), out(out_f), own_in(own_in_), own_out(own_out_)
+{}
 
-  FilePStreamBuf::~FilePStreamBuf()
-  {
+FilePStreamBuf::~FilePStreamBuf()
+{
     const bool in_and_out_equal = (in == out);
 
     flush();
     if(in && own_in)
-      {
+    {
         fclose(in);
         in = 0;
-      }
+    }
     if(out && own_out)
-      {
+    {
         if (!in_and_out_equal)
-          fclose(out);
+            fclose(out);
         out = 0;
-      }        
-  }
+    }        
+}
 
-  FilePStreamBuf::streamsize FilePStreamBuf::read_(char* p, streamsize n)
-  {
+FilePStreamBuf::streamsize FilePStreamBuf::read_(char* p, streamsize n)
+{
     return fread(p, 1, n, in);
-  }
+}
 
-  //! writes exactly n characters from p (unbuffered, must flush)
-  void FilePStreamBuf::write_(const char* p, streamsize n)
-  {
+//! writes exactly n characters from p (unbuffered, must flush)
+void FilePStreamBuf::write_(const char* p, streamsize n)
+{
     streamsize nwritten = fwrite(p, 1, n, out);
     if(nwritten!=n)
-      PLERROR("In FilePStreamBuf::write_ failed to write the requested number of bytes");
+        PLERROR("In FilePStreamBuf::write_ failed to write the requested number of bytes");
     fflush(out);
-  }
+}
   
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

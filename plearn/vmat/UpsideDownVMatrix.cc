@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UpsideDownVMatrix.cc,v 1.6 2004/09/14 16:04:40 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -51,9 +51,9 @@ UpsideDownVMatrix::UpsideDownVMatrix()
 {}
 
 UpsideDownVMatrix::UpsideDownVMatrix(VMat the_source)
-  :SourceVMatrix(the_source)
+    :SourceVMatrix(the_source)
 { 
-  build_(); 
+    build_(); 
 }
 
 
@@ -61,31 +61,43 @@ PLEARN_IMPLEMENT_OBJECT(UpsideDownVMatrix, "ONE LINE DESCRIPTION", "MULTI-LINE \
 
 void UpsideDownVMatrix::getNewRow(int i, Vec& v) const
 {
-  source->getRow(length_-(i+1),v);
+    source->getRow(length_-(i+1),v);
 }
 
 void UpsideDownVMatrix::declareOptions(OptionList& ol)
 {
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 void UpsideDownVMatrix::build_()
 {
-  if (source)
-    setMetaInfoFromSource();
+    if (source)
+        setMetaInfoFromSource();
 }
 
 // ### Nothing to add here, simply calls build_
 void UpsideDownVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void UpsideDownVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

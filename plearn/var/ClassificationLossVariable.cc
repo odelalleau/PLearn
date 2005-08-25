@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ClassificationLossVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ClassificationLossVariable.h"
 namespace PLearn {
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(ClassificationLossVariable,
                         "NO HELP");
 
 ClassificationLossVariable::ClassificationLossVariable(Variable* netout, Variable* classnum)
-  : inherited(netout,classnum,1,1)
+    : inherited(netout,classnum,1,1)
 {
     build_();
 }
@@ -79,13 +79,24 @@ void ClassificationLossVariable::recomputeSize(int& l, int& w) const
 
 void ClassificationLossVariable::fprop()
 {
-  int topscorepos = argmax(input1->value);
-  int classnum = int(input2->valuedata[0]);
-  valuedata[0] = (topscorepos==classnum ?0 :1);
+    int topscorepos = argmax(input1->value);
+    int classnum = int(input2->valuedata[0]);
+    valuedata[0] = (topscorepos==classnum ?0 :1);
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

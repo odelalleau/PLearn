@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.h,v 1.10 2005/02/21 15:26:36 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -51,57 +51,57 @@ using namespace std;
 
 class PrecomputedVMatrix: public SourceVMatrix
 {
-  typedef SourceVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 protected:
-  VMat precomp_source; // The precomputed source, as a DiskVMatrix
+    VMat precomp_source; // The precomputed source, as a DiskVMatrix
 
 public:
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  string precomp_type;
+    string precomp_type;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  PrecomputedVMatrix();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    PrecomputedVMatrix();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
   
-  void usePrecomputed();
+    void usePrecomputed();
 
 protected: 
 
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
-  //! This is the only method requiring implementation.
-  virtual void getNewRow(int i, const Vec& v) const;
+    //! This is the only method requiring implementation.
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  virtual void setMetaDataDir(const PPath& the_metadatadir);
+    virtual void setMetaDataDir(const PPath& the_metadatadir);
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods.
-  PLEARN_DECLARE_OBJECT(PrecomputedVMatrix);
+    //! Declares name and deepCopy methods.
+    PLEARN_DECLARE_OBJECT(PrecomputedVMatrix);
 
 };
 
@@ -109,3 +109,16 @@ DECLARE_OBJECT_PTR(PrecomputedVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

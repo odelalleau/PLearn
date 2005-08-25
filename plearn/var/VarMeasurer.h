@@ -33,9 +33,9 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VarMeasurer.h,v 1.4 2004/07/21 16:30:54 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VarMeasurer.h */
@@ -52,23 +52,23 @@ using namespace std;
 
 class VarMeasurer: public Measurer
 {
-  public:
+public:
     Var v;
     int every;
     string filename;
     ofstream out;
     string onscreen_prompt;
 
-  public:
+public:
 
     VarMeasurer(Var the_v, int the_every, const string& the_filename, const string& the_onscreen_prompt="")
-      :v(the_v), every(the_every), filename(the_filename), onscreen_prompt(the_onscreen_prompt)
-      { 
+        :v(the_v), every(the_every), filename(the_filename), onscreen_prompt(the_onscreen_prompt)
+    { 
         if (filename.size() != 0)
-          out.open(filename.c_str());
-      }
+            out.open(filename.c_str());
+    }
 
-  virtual bool measure(int t, const Vec& costs);
+    virtual bool measure(int t, const Vec& costs);
 
 };
 
@@ -76,5 +76,15 @@ class VarMeasurer: public Measurer
 
 #endif
 
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TransposeVMatrix.h,v 1.4 2005/05/20 13:55:26 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,63 +54,63 @@ class TransposeVMatrix: public SourceVMatrix
 
 private:
 
-  typedef SourceVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // ### declare public option fields (such as build options) here
-  // ...
+    // ### declare public option fields (such as build options) here
+    // ...
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  TransposeVMatrix();
+    //! Default constructor.
+    TransposeVMatrix();
 
-  //! Convenience constructor.
-  TransposeVMatrix(const VMat& the_source);
+    //! Convenience constructor.
+    TransposeVMatrix(const VMat& the_source);
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
-  //! Fill the vector 'v' with the content of the i-th row.
-  //! v is assumed to be the right size.
-  virtual void getNewRow(int i, const Vec& v) const;
+    //! Fill the vector 'v' with the content of the i-th row.
+    //! v is assumed to be the right size.
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  // Simply calls inherited::build() then build_().
-  virtual void build();
+    // Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(TransposeVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(TransposeVMatrix);
 
 };
 
@@ -119,3 +119,16 @@ DECLARE_OBJECT_PTR(TransposeVMatrix);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

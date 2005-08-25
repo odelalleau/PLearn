@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: KernelVMatrix.h,v 1.4 2004/09/14 16:04:39 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef KernelVMatrix_INC
 #define KernelVMatrix_INC
@@ -51,9 +51,9 @@ using namespace std;
 
 
 /*!   *****************
-  * KernelVMatrix *
-  *****************
-*/
+ * KernelVMatrix *
+ *****************
+ */
 
 /*!   This VMat is built from 2 other (possibly identical)
   VMats and a Kernel K.
@@ -63,29 +63,29 @@ using namespace std;
 class KernelVMatrix: public VMatrix
 {
     typedef VMatrix inherited;
- //protected:
- //!   KernelVMatrix() : d1(), d2(), ker(), input1(), input2() {}
+    //protected:
+    //!   KernelVMatrix() : d1(), d2(), ker(), input1(), input2() {}
 protected:
-  VMat d1;
-  VMat d2;
-  Ker ker;
+    VMat d1;
+    VMat d2;
+    Ker ker;
 
-  Vec input1;
-  Vec input2;
+    Vec input1;
+    Vec input2;
 
 public:
-  KernelVMatrix();
-  KernelVMatrix(VMat data1, VMat data2, Ker the_ker);
+    KernelVMatrix();
+    KernelVMatrix(VMat data1, VMat data2, Ker the_ker);
 
-  PLEARN_DECLARE_OBJECT(KernelVMatrix);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(KernelVMatrix);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  //DECLARE_NAME_AND_DEEPCOPY(KernelVMatrix);
-  //virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
+    //DECLARE_NAME_AND_DEEPCOPY(KernelVMatrix);
+    //virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual real get(int i, int j) const;
+    virtual void getSubRow(int i, int j, Vec v) const;
 private:
     void build_();
 };
@@ -96,3 +96,15 @@ DECLARE_OBJECT_PTR(KernelVMatrix);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

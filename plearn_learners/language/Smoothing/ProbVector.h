@@ -45,14 +45,14 @@ using namespace std;
 
 class ProbVector : public Vec
 {
- protected:
-  // Smoothing Method :
+protected:
+    // Smoothing Method :
   
-  int smoothingMethod;  
+    int smoothingMethod;  
   
- public:
-  void smoothNormalize(string name,real discounting_value= DISCOUNT_MASS);
-  void normalize();
+public:
+    void smoothNormalize(string name,real discounting_value= DISCOUNT_MASS);
+    void normalize();
   
   
 };
@@ -64,3 +64,16 @@ class ProbVector : public Vec
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

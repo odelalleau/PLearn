@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SoftHistogramBinner.cc,v 1.3 2004/11/04 15:01:44 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -52,37 +52,37 @@ using namespace std;
 SoftHistogramBinner::SoftHistogramBinner() 
 /* ### Initialize all fields to their default value */
 {
-  // ...
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
+    // ...
+    // ### You may or may not want to call build_() to finish building the object
+    // build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(SoftHistogramBinner,
-    "Computes bins which may overlap, but contain the same number of elements.",
-    "This binner does not compute a mapping to each bin, because a sample may\n"
-    "appear in different bins. Instead, one should use it directly through the\n"
-    "getBins() method.\n"
-    "The number of bins is given through the 'n_bins' option. The bins split\n"
-    "uniformly the interval [min_val, max_val] defined by the data. Each bin\n"
-    "contains 'samples_per_bin' samples (if this value is >= 1), or this fraction\n"
-    "of the total number of samples (if it is < 1). The value '-1' can be used\n"
-    "to specify that each bin contains all samples (though this is probably\n"
-    "not very useful).\n"
-);
+                        "Computes bins which may overlap, but contain the same number of elements.",
+                        "This binner does not compute a mapping to each bin, because a sample may\n"
+                        "appear in different bins. Instead, one should use it directly through the\n"
+                        "getBins() method.\n"
+                        "The number of bins is given through the 'n_bins' option. The bins split\n"
+                        "uniformly the interval [min_val, max_val] defined by the data. Each bin\n"
+                        "contains 'samples_per_bin' samples (if this value is >= 1), or this fraction\n"
+                        "of the total number of samples (if it is < 1). The value '-1' can be used\n"
+                        "to specify that each bin contains all samples (though this is probably\n"
+                        "not very useful).\n"
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void SoftHistogramBinner::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "samples_per_bin", &SoftHistogramBinner::samples_per_bin, OptionBase::buildoption,
-      "The number of samples in each bin (if >= 1), or as a fraction (if < 1).");
+    declareOption(ol, "samples_per_bin", &SoftHistogramBinner::samples_per_bin, OptionBase::buildoption,
+                  "The number of samples in each bin (if >= 1), or as a fraction (if < 1).");
 
-  declareOption(ol, "n_bins", &SoftHistogramBinner::n_bins, OptionBase::buildoption,
-      "The number of bins computed.");
+    declareOption(ol, "n_bins", &SoftHistogramBinner::n_bins, OptionBase::buildoption,
+                  "The number of bins computed.");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ////////////
@@ -90,8 +90,8 @@ void SoftHistogramBinner::declareOptions(OptionList& ol)
 ////////////
 void SoftHistogramBinner::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -99,91 +99,91 @@ void SoftHistogramBinner::build()
 ////////////
 void SoftHistogramBinner::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation. 
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+    // ### You should assume that the parent class' build_() has already been called.
   
-  // Check validity of the 'samples_per_bin' option.
-  if (samples_per_bin != -1 && !(samples_per_bin >= 0 && samples_per_bin < 1)
-      && !(samples_per_bin >= 1 && fabs(samples_per_bin - int(samples_per_bin)) < 1e-8))
-    PLERROR("In SoftHistogramBinner::build_ - Invalid value for 'samples_per_bin'");
+    // Check validity of the 'samples_per_bin' option.
+    if (samples_per_bin != -1 && !(samples_per_bin >= 0 && samples_per_bin < 1)
+        && !(samples_per_bin >= 1 && fabs(samples_per_bin - int(samples_per_bin)) < 1e-8))
+        PLERROR("In SoftHistogramBinner::build_ - Invalid value for 'samples_per_bin'");
 }
 
 /////////////
 // getBins //
 /////////////
 TVec< TVec<int> > SoftHistogramBinner::getBins(const Vec& v) const {
-  // Find out how many samples we have in each bin.
-  int n;
-  if (samples_per_bin == -1)
-    n = v.length();
-  else if (samples_per_bin < 1)
-    n = int(samples_per_bin * v.length());
-  else
-    n = int(samples_per_bin);
-  if (n == 0)
-    PLERROR("In SoftHistogramBinner::getBins - You can't ask for empty bins");
-  // Sort the data to make things easier.
-  Mat w(v.length(), 2);
-  w.column(0) << v;
-  w.column(1) << TVec<int>(0, w.length() - 1, 1);
-  sortRows(w);
-  // Construct bins.
-  TVec< TVec<int> > bins(n_bins);
-  real min = w(0,0);
-  real max = w(w.length() - 1, 0);
-  real bin_width = (max - min) / real(n_bins);
-  for (int i = 0; i < n_bins; i++) {
-    real bin_left = min + i * bin_width;
-    real bin_right = bin_left + bin_width;
-    real bin_mid = (bin_left + bin_right) / 2;  // Center of the bin.
-    // Find data point closest to bin_mid.
-    int k = 0;
-    int min;
-    while (bin_mid > w(k,0)) k++;
-    if (w(k,0) - bin_mid > bin_mid - w(k-1,0))
-      min = k -1;
+    // Find out how many samples we have in each bin.
+    int n;
+    if (samples_per_bin == -1)
+        n = v.length();
+    else if (samples_per_bin < 1)
+        n = int(samples_per_bin * v.length());
     else
-      min = k;
-    bins[i].append(int(w(min, 1)));
-    // Expand to get n samples in the bin.
-    int count = 1;
-    int right = min;
-    int left = min;
-    int to_add;
-    while (count < n) {
-      if (right + 1 < w.length()) {
-        // We can get more data on our right.
-        if (left - 1 >= 0) {
-          // We can get more data on our left.
-          if (w(right + 1,0) - bin_mid < bin_mid - w(left - 1,0)) {
-            // Next point to add is on our right.
-            right++;
-            to_add = right;
-          } else {
-            // Next point to add is on our left.
-            left--;
-            to_add = left;
-          }
-        } else {
-          // No more data on the left.
-          right++;
-          to_add = right;
+        n = int(samples_per_bin);
+    if (n == 0)
+        PLERROR("In SoftHistogramBinner::getBins - You can't ask for empty bins");
+    // Sort the data to make things easier.
+    Mat w(v.length(), 2);
+    w.column(0) << v;
+    w.column(1) << TVec<int>(0, w.length() - 1, 1);
+    sortRows(w);
+    // Construct bins.
+    TVec< TVec<int> > bins(n_bins);
+    real min = w(0,0);
+    real max = w(w.length() - 1, 0);
+    real bin_width = (max - min) / real(n_bins);
+    for (int i = 0; i < n_bins; i++) {
+        real bin_left = min + i * bin_width;
+        real bin_right = bin_left + bin_width;
+        real bin_mid = (bin_left + bin_right) / 2;  // Center of the bin.
+        // Find data point closest to bin_mid.
+        int k = 0;
+        int min;
+        while (bin_mid > w(k,0)) k++;
+        if (w(k,0) - bin_mid > bin_mid - w(k-1,0))
+            min = k -1;
+        else
+            min = k;
+        bins[i].append(int(w(min, 1)));
+        // Expand to get n samples in the bin.
+        int count = 1;
+        int right = min;
+        int left = min;
+        int to_add;
+        while (count < n) {
+            if (right + 1 < w.length()) {
+                // We can get more data on our right.
+                if (left - 1 >= 0) {
+                    // We can get more data on our left.
+                    if (w(right + 1,0) - bin_mid < bin_mid - w(left - 1,0)) {
+                        // Next point to add is on our right.
+                        right++;
+                        to_add = right;
+                    } else {
+                        // Next point to add is on our left.
+                        left--;
+                        to_add = left;
+                    }
+                } else {
+                    // No more data on the left.
+                    right++;
+                    to_add = right;
+                }
+            } else {
+                // No more data on the right.
+                left--;
+                to_add = left;
+            }
+            bins[i].append(int(w(to_add, 1)));
+            count++;
         }
-      } else {
-        // No more data on the right.
-        left--;
-        to_add = left;
-      }
-      bins[i].append(int(w(to_add, 1)));
-      count++;
     }
-  }
-  return bins;
+    return bins;
 }
 
 /////////////////////////////////
@@ -191,23 +191,36 @@ TVec< TVec<int> > SoftHistogramBinner::getBins(const Vec& v) const {
 /////////////////////////////////
 void SoftHistogramBinner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Object::makeDeepCopyFromShallowCopy(copies);
+    Object::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("SoftHistogramBinner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("SoftHistogramBinner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 ///////////
 // nBins //
 ///////////
 int SoftHistogramBinner::nBins() const {
-  return n_bins;
+    return n_bins;
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

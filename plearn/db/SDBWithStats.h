@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: SDBWithStats.h,v 1.4 2004/03/03 14:11:01 tihocan Exp $
-   * AUTHORS: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnUtil/SDBWithStats.h */
@@ -55,11 +55,11 @@
 namespace PLearn {
 using namespace std;
 
-  class FieldStat
-  {
+class FieldStat
+{
     friend class SDBWithStats;
 
-  protected:
+protected:
 
     //!  For all values:
     int nonmissing_; //!<  number of entries with non missing value
@@ -74,7 +74,7 @@ using namespace std;
     double mean_;
     double stddev_;
 
-  public:
+public:
 
     //!  For symbolic values
     map<string,int> symbolcount;
@@ -83,8 +83,8 @@ using namespace std;
     static int max_nsymbols; //!<  stop remembering symbols above this number...
 
     FieldStat()
-      :nonmissing_(0), missing_(0), 
-      sum_(0.), sumsquare_(0), min_(FLT_MAX), max_(-FLT_MAX)
+        :nonmissing_(0), missing_(0), 
+         sum_(0.), sumsquare_(0), min_(FLT_MAX), max_(-FLT_MAX)
     {}
 
     int ntotal() const { return missing_+nonmissing_; }
@@ -101,16 +101,16 @@ using namespace std;
 
     void clear(); //!<  clear everything 
     void finalize(); //!<  computes final mean and stddev
-  };
+};
 
-  class SDBWithStats: public SDB
-  {
-  public:
+class SDBWithStats: public SDB
+{
+public:
     vector<FieldStat> fieldstat;
     int nfields() { return (int)getSchema().size(); }
     string fieldname(int i) { return getSchema()[i].name; }
 
-  public:
+public:
     SDBWithStats(string basename, string path=".", AccessType access = readwrite,
 		 bool verbose=true);
 
@@ -126,8 +126,21 @@ using namespace std;
     const FieldStat& getStat(int i) const;
     FieldStat& getStat(const string& fieldname);
     const FieldStat& getStat(const string& fieldname) const;
-  };
+};
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

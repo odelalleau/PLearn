@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianDensityKernel.h,v 1.3 2004/04/07 23:15:17 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef GaussianDensityKernel_INC
 #define GaussianDensityKernel_INC
@@ -59,9 +59,9 @@ class GaussianDensityKernel: public Kernel
 {
     typedef Kernel inherited;
 
- protected:
+protected:
     real sigma;
- public:
+public:
     GaussianDensityKernel()
         : sigma() {}
     GaussianDensityKernel(real the_sigma)
@@ -81,3 +81,15 @@ DECLARE_OBJECT_PTR(GaussianDensityKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

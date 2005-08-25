@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StdPStreamBuf.h,v 1.5 2005/02/19 22:09:54 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -71,85 +71,98 @@ class StdPStreamBuf: public PStreamBuf
 
 private:
   
-  typedef PStreamBuf inherited;
+    typedef PStreamBuf inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
-  istream* pin;  //!< underlying input stream
-  ostream* pout; //!< underlying output stream
-  bool own_pin, own_pout; //!< true if {pin|pout} was created internally
+    // *********************
+    // * protected options *
+    // *********************
+    istream* pin;  //!< underlying input stream
+    ostream* pout; //!< underlying output stream
+    bool own_pin, own_pout; //!< true if {pin|pout} was created internally
 
 #if DONT_USE_PLSTREAMBUF == 0
-  PP<pl_streambuf> the_inbuf;   //!< markable input buffer
-  PP<pl_fdstreambuf> the_fdbuf; //!< buffer on a POSIX file descriptor
+    PP<pl_streambuf> the_inbuf;   //!< markable input buffer
+    PP<pl_fdstreambuf> the_fdbuf; //!< buffer on a POSIX file descriptor
 
-  //! ptrs. to the original buffers;  used to 'reset' the underlying
-  //! streams to a valid state when the PStream is destroyed.
-  streambuf* original_bufin;
-  streambuf* original_bufout;
+    //! ptrs. to the original buffers;  used to 'reset' the underlying
+    //! streams to a valid state when the PStream is destroyed.
+    streambuf* original_bufin;
+    streambuf* original_bufout;
 
-  //! initInBuf: called by ctors. to ensure that pin's buffer is markable
-  void initInBuf();
+    //! initInBuf: called by ctors. to ensure that pin's buffer is markable
+    void initInBuf();
 #endif
 
 
 public:
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  StdPStreamBuf();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    StdPStreamBuf();
 
-  //! ctor. from an istream (I)
-  StdPStreamBuf(istream* pin_, bool own_pin_=false);
+    //! ctor. from an istream (I)
+    StdPStreamBuf(istream* pin_, bool own_pin_=false);
 
-  //! ctor. from an ostream (O)
-  StdPStreamBuf(ostream* pout_, bool own_pout_=false);
+    //! ctor. from an ostream (O)
+    StdPStreamBuf(ostream* pout_, bool own_pout_=false);
 
-  //! ctor. from an iostream (IO)
-  StdPStreamBuf(iostream* pios_, bool own_pios_=false);
+    //! ctor. from an iostream (IO)
+    StdPStreamBuf(iostream* pios_, bool own_pios_=false);
 
-  //! ctor. from an istream and an ostream (IO)
-  StdPStreamBuf(istream* pin_, ostream* pout_, bool own_pin_=false, bool own_pout_=false);
+    //! ctor. from an istream and an ostream (IO)
+    StdPStreamBuf(istream* pin_, ostream* pout_, bool own_pin_=false, bool own_pout_=false);
 
-  virtual ~StdPStreamBuf();
+    virtual ~StdPStreamBuf();
 
 
-  void setIn(istream* pin_, bool own_pin_=false);
+    void setIn(istream* pin_, bool own_pin_=false);
 
-  void setOut(ostream* pout_, bool own_pout_=false);
+    void setOut(ostream* pout_, bool own_pout_=false);
 
 #if STREAMBUFVER == 0
-  //! attach: "attach" to a POSIX file descriptor.
-  void attach(int fd);
+    //! attach: "attach" to a POSIX file descriptor.
+    void attach(int fd);
 #endif
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 protected: 
 
-  virtual streamsize read_(char* p, streamsize n);
+    virtual streamsize read_(char* p, streamsize n);
 
-  //! writes exactly n characters from p (unbuffered, must flush)
-  virtual void write_(const char* p, streamsize n);
+    //! writes exactly n characters from p (unbuffered, must flush)
+    virtual void write_(const char* p, streamsize n);
 
 public:
 
-  inline istream* rawin() { return pin; }   //!< access to underlying istream
-  inline ostream* rawout() { return pout; }
+    inline istream* rawin() { return pin; }   //!< access to underlying istream
+    inline ostream* rawout() { return pout; }
 
 #if STREAMBUFVER == 0
-  //! returns the markable input buffer
-  //! DEPRECATED: TO BE REMOVED SOON, DO NOT USE!
-  inline pl_streambuf* pl_rdbuf() { return the_inbuf; }
+    //! returns the markable input buffer
+    //! DEPRECATED: TO BE REMOVED SOON, DO NOT USE!
+    inline pl_streambuf* pl_rdbuf() { return the_inbuf; }
 #endif 
 
-  virtual bool good() const;
+    virtual bool good() const;
 };
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

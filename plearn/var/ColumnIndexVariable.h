@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ColumnIndexVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ColumnIndexVariable_INC
 #define ColumnIndexVariable_INC
@@ -52,35 +52,48 @@ using namespace std;
 //return a row vector with the elements indexed in each column
 class ColumnIndexVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  ColumnIndexVariable() {}
-  ColumnIndexVariable(Variable* input1, Variable* input2);
+    //!  Default constructor for persistence
+    ColumnIndexVariable() {}
+    ColumnIndexVariable(Variable* input1, Variable* input2);
 
-  PLEARN_DECLARE_OBJECT(ColumnIndexVariable);
+    PLEARN_DECLARE_OBJECT(ColumnIndexVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(ColumnIndexVariable);
 
 inline Var matrixIndex(Var mat, Var index)
 {
-  if(index->size()!=mat->width())
-    PLERROR("matrixIndex: index->size() should be equal to mat->width()");
-  return new ColumnIndexVariable(mat,index);  
+    if(index->size()!=mat->width())
+        PLERROR("matrixIndex: index->size() should be equal to mat->width()");
+    return new ColumnIndexVariable(mat,index);  
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

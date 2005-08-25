@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SoftmaxVariable.h,v 1.5 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef SoftmaxVariable_INC
 #define SoftmaxVariable_INC
@@ -52,21 +52,21 @@ using namespace std;
 
 class SoftmaxVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  SoftmaxVariable() {}
-  SoftmaxVariable(Variable* input);
+    //!  Default constructor for persistence
+    SoftmaxVariable() {}
+    SoftmaxVariable(Variable* input);
 
-  PLEARN_DECLARE_OBJECT(SoftmaxVariable);
+    PLEARN_DECLARE_OBJECT(SoftmaxVariable);
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void bbprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void bbprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 };
 
 DECLARE_OBJECT_PTR(SoftmaxVariable);
@@ -74,23 +74,36 @@ DECLARE_OBJECT_PTR(SoftmaxVariable);
 // Now we have a special box!
 inline Var softmax(Var v)
 {
- if(v->isVec()) 
-   return new SoftmaxVariable(v);
- else return new MatrixSoftmaxVariable(v);
+    if(v->isVec()) 
+        return new SoftmaxVariable(v);
+    else return new MatrixSoftmaxVariable(v);
 }
 
 //* OLD implementation 
 /*
-inline Var old_softmax(Var input)
-{ 
+  inline Var old_softmax(Var input)
+  { 
   //!  This is supposed to be numerically more stable, but is it really backpropable (it would be if dividing by a constnat, but with this max ?)
   Var maxin = max(input);
   Var exp_input = exp(input-maxin);
   return exp_input/sum(exp_input); 
-}
+  }
 */
 
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

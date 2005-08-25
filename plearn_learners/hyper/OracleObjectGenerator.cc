@@ -34,8 +34,8 @@
 
 // Authors: Rejean Ducharme
 /* *******************************************************      
-   * $Id: OracleObjectGenerator.cc,v 1.1 2005/01/11 23:22:44 plearner Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "OracleObjectGenerator.h"
 
@@ -52,64 +52,77 @@ OracleObjectGenerator::OracleObjectGenerator()
 
 void OracleObjectGenerator::build_()
 {
-  if (oracle.isNull())
-    PLERROR("An OracleObjectGenerator MUST contain an oracle (an OptionsOracle).");
+    if (oracle.isNull())
+        PLERROR("An OracleObjectGenerator MUST contain an oracle (an OptionsOracle).");
     //PLERROR("An OracleObjectGenerator MUST contain an oracle (a CartesianProductOracle).");
 
-  oracle->build();
-  last_params.resize(0);
+    oracle->build();
+    last_params.resize(0);
 }
 
 void OracleObjectGenerator::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void OracleObjectGenerator::forget()
 {
-  inherited::forget();
-  oracle->forget();
-  last_params.resize(0);
+    inherited::forget();
+    oracle->forget();
+    last_params.resize(0);
 }
 
 void OracleObjectGenerator::declareOptions(OptionList& ol)
 {
-   declareOption(ol, "oracle", &OracleObjectGenerator::oracle,
-       OptionBase::buildoption, "The OptionsOracle used to generate the new Object parameters. \n");
-       //OptionBase::buildoption, "The CartesianProductOracle used to generate the new Object parameters. \n");
+    declareOption(ol, "oracle", &OracleObjectGenerator::oracle,
+                  OptionBase::buildoption, "The OptionsOracle used to generate the new Object parameters. \n");
+    //OptionBase::buildoption, "The CartesianProductOracle used to generate the new Object parameters. \n");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 PP<Object> OracleObjectGenerator::generateNextObject()
 {
-  PP<Object> next_obj;
+    PP<Object> next_obj;
 
-  TVec<string> new_params = generation_began ? oracle->generateNextTrial(last_params, FLT_MAX) : oracle->generateFirstTrial();
+    TVec<string> new_params = generation_began ? oracle->generateNextTrial(last_params, FLT_MAX) : oracle->generateFirstTrial();
 
-  if (new_params.size() > 0)
-  {
-    CopiesMap copies;
-    next_obj = template_object->deepCopy(copies);
-    TVec<string> option_names = oracle->getOptionNames();
-    for (int i=0; i<option_names.size(); i++)
+    if (new_params.size() > 0)
     {
-      next_obj->setOption(option_names[i], new_params[i]);
+        CopiesMap copies;
+        next_obj = template_object->deepCopy(copies);
+        TVec<string> option_names = oracle->getOptionNames();
+        for (int i=0; i<option_names.size(); i++)
+        {
+            next_obj->setOption(option_names[i], new_params[i]);
+        }
+        next_obj->build();
     }
-    next_obj->build();
-  }
 
-  last_params = new_params;
-  generation_began = true;
+    last_params = new_params;
+    generation_began = true;
 
-  return next_obj;
+    return next_obj;
 }
 
 void OracleObjectGenerator::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(last_params, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(last_params, copies);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

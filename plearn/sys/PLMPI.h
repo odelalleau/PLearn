@@ -36,10 +36,10 @@
  
 
 /* *******************************************************      
-   * $Id: PLMPI.h,v 1.9 2005/01/07 17:58:50 chrish42 Exp $
-   * AUTHORS: Pascal Vincent 
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent 
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/PLMPI.h */
@@ -69,9 +69,9 @@ In your main function, make sure to call
 
 int main(int argc, char** argv)
 {
-  PLMPI::init(&argc,&argv);
-  ... [ your code here ]
-  PLMPI::finalize();
+PLMPI::init(&argc,&argv);
+... [ your code here ]
+PLMPI::finalize();
 }
 
 Inside the #if USING_MPI section, you can use any MPI calls you see fit.
@@ -186,29 +186,29 @@ int do_something( ... parameters ...)
 {
 //  ... sequential part
 
-  if(USING_MPI && PLMPI::synchronized && size_of_problem_is_worth_a_parallel_computation)
-  { //  Parallel implementation 
+    if(USING_MPI && PLMPI::synchronized && size_of_problem_is_worth_a_parallel_computation)
+    { //  Parallel implementation 
 #if USING_MPI 
-    PLMPI::synchronized = false;
+        PLMPI::synchronized = false;
 
-    //  ... each node starts doing sometihng different
-    //  ex: switch(PLMPI::rank) ...
+        //  ... each node starts doing sometihng different
+        //  ex: switch(PLMPI::rank) ...
 
-    //  Here we may call other functions, that should entirely run in sequential mode (unless you know what you are doing!)
+        //  Here we may call other functions, that should entirely run in sequential mode (unless you know what you are doing!)
 
-    //  ... we resynchronize the state of each node. (collect their collective answer, etc...) For ex:
-    //  MPI_Allgather(...)
+        //  ... we resynchronize the state of each node. (collect their collective answer, etc...) For ex:
+        //  MPI_Allgather(...)
 
-    PLMPI::synchronized = true;
+        PLMPI::synchronized = true;
 #endif 
-  }
-  else //  default sequential implementation
-  {
-  }
+    }
+    else //  default sequential implementation
+    {
+    }
 
 }
 
- */
+*/
 
 
 
@@ -228,41 +228,41 @@ int do_something( ... parameters ...)
 class PLMPI
 {
 protected:
-  static streambuf* new_cin_buf;
+    static streambuf* new_cin_buf;
 
 public:
-  static bool using_mpi; //!<  true when USING_MPI is defined, false otherwise
-  static int size;  //!<  total number of nodes (or processes) running in this MPI_COMM_WORLD  (0 if not using mpi)
-  static int rank;  //!<  rank of this node (if not using mpi it's always 0)
+    static bool using_mpi; //!<  true when USING_MPI is defined, false otherwise
+    static int size;  //!<  total number of nodes (or processes) running in this MPI_COMM_WORLD  (0 if not using mpi)
+    static int rank;  //!<  rank of this node (if not using mpi it's always 0)
 
 /*!     The synchronized flag is used for a particular kind of parallelism and
-    is described in more details above, including a sample of how it
-    should typically be used. When synchronized is true at a given point
-    in the instruciton stream, it roughly means: *** all the data *used by
-    the following section* is the same on all nodes when they are at this
-    point***".  It's set to true initially. (But will be set to false if
-    you launch the PLMPIServ server, which uses a different
-    parallelisation paradigm).
+  is described in more details above, including a sample of how it
+  should typically be used. When synchronized is true at a given point
+  in the instruciton stream, it roughly means: *** all the data *used by
+  the following section* is the same on all nodes when they are at this
+  point***".  It's set to true initially. (But will be set to false if
+  you launch the PLMPIServ server, which uses a different
+  parallelisation paradigm).
 */
-  static bool synchronized; //!<  Do ALL the nodes have a synchronized state and are carrying the same sequential instructions? 
+    static bool synchronized; //!<  Do ALL the nodes have a synchronized state and are carrying the same sequential instructions? 
 
 /*!     These will correspond to this process's initial streams before we
-    tamper with them (init changes cout and cin, redirecting them to/from
-    /dev/null for nodes other than the rank#0 node)
+  tamper with them (init changes cout and cin, redirecting them to/from
+  /dev/null for nodes other than the rank#0 node)
 */
 //  static oassignstream mycout;
 //  static oassignstream mycerr;
 //  static iassignstream mycin;
-  static PStream mycout;
-  static PStream mycerr;
-  static PStream mycin;
+    static PStream mycout;
+    static PStream mycerr;
+    static PStream mycin;
 
-  //!  The default tag to be used by all send/receive 
-  //!  (we typically use this single tag through all of PLearn)
-  static int tag; //!<  Defaults to 2909
+    //!  The default tag to be used by all send/receive 
+    //!  (we typically use this single tag through all of PLearn)
+    static int tag; //!<  Defaults to 2909
 
-  static void init(int* argc, char*** argv);
-  static void finalize();
+    static void init(int* argc, char*** argv);
+    static void finalize();
   
     // exchange blocks of data among the PLMPI::size CPUs:
     // each CPU has the block starting at position PLMPI::rank*blocksize
@@ -285,17 +285,17 @@ public:
     
 #if USING_MPI  
 /*!     Waits for an incoming message from any node (with the default_tag) 
-    and returns the rank of the sending node (the source).
-    This call is blocking.
+  and returns the rank of the sending node (the source).
+  This call is blocking.
 */
-  inline static int wait_any();
+    inline static int wait_any();
 
 /*!     Same as wait_any but the call is not blocking.
-    If no message is currently waiting to be received from any node, 
-    the call returns -1. If there is a waiting message, the call returns
-    the rank of the sending node.
+  If no message is currently waiting to be received from any node, 
+  the call returns -1. If there is a waiting message, the call returns
+  the rank of the sending node.
 */
-  inline static int peek_any();
+    inline static int peek_any();
 #endif
 
 };
@@ -306,17 +306,17 @@ public:
 class pofstream: public ofstream
 {
 public:
-  pofstream() {}
-  pofstream(const char *name, ios::openmode mode=ios::out)
-  { open(name, mode); }
+    pofstream() {}
+    pofstream(const char *name, ios::openmode mode=ios::out)
+    { open(name, mode); }
 
-  void open(const char *name,  ios::openmode mode=ios::out)
-  { 
-    if(PLMPI::rank==0)
-      ofstream::open(name, mode); 
-    else
-      ios::rdbuf(nullout.rdbuf());
-  }
+    void open(const char *name,  ios::openmode mode=ios::out)
+    { 
+        if(PLMPI::rank==0)
+            ofstream::open(name, mode); 
+        else
+            ios::rdbuf(nullout.rdbuf());
+    }
 
 };
 #else
@@ -327,22 +327,22 @@ typedef ofstream pofstream;
 
 #if USING_MPI
 inline int PLMPI::wait_any()
-  {
+{
     MPI_Status status;
     MPI_Probe(MPI_ANY_SOURCE, PLMPI::tag, MPI_COMM_WORLD, &status);
     return status.MPI_SOURCE;
-  }
+}
 
 inline int PLMPI::peek_any()
-  {
+{
     int ready;
     MPI_Status status;
     MPI_Iprobe(MPI_ANY_SOURCE, PLMPI::tag, MPI_COMM_WORLD, &ready, &status);
     if(!ready)
-      return -1;
+        return -1;
     else
-      return status.MPI_SOURCE;
-  }
+        return status.MPI_SOURCE;
+}
 #endif
 
 } // end of namespace PLearn
@@ -350,7 +350,15 @@ inline int PLMPI::peek_any()
 
 #endif
 
-
-
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -44,143 +44,143 @@ namespace PLearn {
 using namespace std;
 
 /*!
-*/
+ */
 
 class SequentialModelSelector: public SequentialLearner
 {
 private:
-  // *********************
-  // * private members   *
-  // *********************
-  typedef SequentialLearner inherited;
+    // *********************
+    // * private members   *
+    // *********************
+    typedef SequentialLearner inherited;
 
-  //! This does the actual building
-  void build_();
+    //! This does the actual building
+    void build_();
 
-  void checkModelNames() const;
+    void checkModelNames() const;
 
 protected:
 
-  // *********************
-  // * protected members *
-  // *********************
+    // *********************
+    // * protected members *
+    // *********************
   
-  //! See common_costs options for details. Row index: model. Column index: common_cost.
-  TMat<int> common_cost_indices;
-  TVec<int> best_model; // best model selected at time t
-  Vec sequence_costs;  // the costs of each model on the training set
+    //! See common_costs options for details. Row index: model. Column index: common_cost.
+    TMat<int> common_cost_indices;
+    TVec<int> best_model; // best model selected at time t
+    Vec sequence_costs;  // the costs of each model on the training set
 
-  /*! 
-    If true, the model selector will report as costs the paired T tests on common_cost_indices[0] for
-    models[0] against each other model. The model selector will only report T tests once, 
-    at t=(max_seq_len-1)
+    /*! 
+      If true, the model selector will report as costs the paired T tests on common_cost_indices[0] for
+      models[0] against each other model. The model selector will only report T tests once, 
+      at t=(max_seq_len-1)
 
-    Default: false.
-  */
-  bool report_paired_T_tests;
+      Default: false.
+    */
+    bool report_paired_T_tests;
 
-  // *********************
-  // * protected methods *
-  // *********************
+    // *********************
+    // * protected methods *
+    // *********************
   
-  //! Declare this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declare this class' options
+    static void declareOptions(OptionList& ol);
   
 public:
 
-  // *********************
-  // * public options    *
-  // *********************
+    // *********************
+    // * public options    *
+    // *********************
 
-  /*! 
-    Does the model selector hass to save errors at each step. 
-    Default: true.
-  */
-  bool stepwise_save;
+    /*! 
+      Does the model selector hass to save errors at each step. 
+      Default: true.
+    */
+    bool stepwise_save;
 
-  //! List of all the models.
-  TVec< PP<SequentialLearner> > models;  
+    //! List of all the models.
+    TVec< PP<SequentialLearner> > models;  
 
-  //! If the user desires to provide a name for each model instead of model_i
-  mutable TVec< string > model_names;
+    //! If the user desires to provide a name for each model instead of model_i
+    mutable TVec< string > model_names;
 
-  /*!
-    The names of costs that are common to all models and that the user wishes the model
-    selector to keep track of. The first one is considered to be the main cost, the one
-    from which models will be compared to choose the best model.
-   */
-  TVec<string> common_costs;
+    /*!
+      The names of costs that are common to all models and that the user wishes the model
+      selector to keep track of. The first one is considered to be the main cost, the one
+      from which models will be compared to choose the best model.
+    */
+    TVec<string> common_costs;
   
-  /*!
-    From the common_costs list, the first cost is the one from which models will be compared 
-    to choose the best model. But should the best model be chosen according to the
+    /*!
+      From the common_costs list, the first cost is the one from which models will be compared 
+      to choose the best model. But should the best model be chosen according to the
     
-    max/min
+      max/min
       +/-   1: Mean
       +/-   2: Mean / Variance
       +/-   3: more to come.
 
-    of the cost realizations. 
-    Default: 1.
-   */
-  int comparison_type;
+      of the cost realizations. 
+      Default: 1.
+    */
+    int comparison_type;
 
-  /*!
-    If positive, the comparison performed on the basis of common_cost[0] will be applyed only
-    the comparison_window last elements of the cost sequence.
-    Default: -1. (No window)
-  */
-  int comparison_window;
+    /*!
+      If positive, the comparison performed on the basis of common_cost[0] will be applyed only
+      the comparison_window last elements of the cost sequence.
+      Default: -1. (No window)
+    */
+    int comparison_window;
 
-  // *********************
-  // * public methods    *
-  // *********************
+    // *********************
+    // * public methods    *
+    // *********************
 
-  //! Constructor
-  SequentialModelSelector();
+    //! Constructor
+    SequentialModelSelector();
 
-  //! compute the cost of the given sequence of errors (based on the cost_type)
-  real sequenceCost(const Vec& sequence_errors);
+    //! compute the cost of the given sequence of errors (based on the cost_type)
+    real sequenceCost(const Vec& sequence_errors);
   
-  //! Computes a paired t-test between common_cost[cc] series of models m1 and m2
-  real paired_t_test(const int& m1, const int& m2, int cc=0) const;
+    //! Computes a paired t-test between common_cost[cc] series of models m1 and m2
+    real paired_t_test(const int& m1, const int& m2, int cc=0) const;
 
-  //! simply calls inherited::build() then build_()
-  virtual void build();
+    //! simply calls inherited::build() then build_()
+    virtual void build();
 
-  //! Redefines so that it ALSO calls the method on all the learners in the TVec models
-  virtual void setExperimentDirectory(const PPath& _expdir);
+    //! Redefines so that it ALSO calls the method on all the learners in the TVec models
+    virtual void setExperimentDirectory(const PPath& _expdir);
   
-  virtual void train();
+    virtual void train();
  
-  virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
-        VMat testoutputs=0, VMat testcosts=0) const;
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
+                      VMat testoutputs=0, VMat testcosts=0) const;
 
-  virtual void computeOutput(const Vec& input, Vec& output) const;
+    virtual void computeOutput(const Vec& input, Vec& output) const;
   
-  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
-                                       const Vec& target, Vec& costs) const;
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
+                                         const Vec& target, Vec& costs) const;
   
-  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-                                     Vec& output, Vec& costs) const;
+    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                       Vec& output, Vec& costs) const;
   
-  virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
+    virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
 
-  virtual void matlabSave(const string& matlab_subdir);
+    virtual void matlabSave(const string& matlab_subdir);
 
-  //! This should return the names of the costs computed by computeCostsFromOutputs
-  virtual TVec<string> getTestCostNames() const;
+    //! This should return the names of the costs computed by computeCostsFromOutputs
+    virtual TVec<string> getTestCostNames() const;
   
-  //! This should return the names of the objective costs that the train method
-  //! computes and for which it updates the VecStatsCollector train_stats
-  virtual TVec<string> getTrainCostNames() const;
+    //! This should return the names of the objective costs that the train method
+    //! computes and for which it updates the VecStatsCollector train_stats
+    virtual TVec<string> getTrainCostNames() const;
 
-  virtual void forget();
+    virtual void forget();
   
-  //!  Does the necessary operations to transform a shallow copy (this)
-  //!  into a deep copy by deep-copying all the members that need to be.
-  PLEARN_DECLARE_OBJECT(SequentialModelSelector);
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //!  Does the necessary operations to transform a shallow copy (this)
+    //!  into a deep copy by deep-copying all the members that need to be.
+    PLEARN_DECLARE_OBJECT(SequentialModelSelector);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
 //! Declares a few other classes and functions related to this class
@@ -189,3 +189,16 @@ DECLARE_OBJECT_PTR(SequentialModelSelector);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

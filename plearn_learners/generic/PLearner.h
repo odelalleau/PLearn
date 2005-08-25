@@ -39,8 +39,8 @@
  
 
 /* *******************************************************      
-   * $Id$
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnAlgo/PLearner.h */
@@ -57,216 +57,216 @@ namespace PLearn {
 using namespace std;
 
 /*!     The base class for learning algorithms, which
-    should be the main "products" of PLearn.
+  should be the main "products" of PLearn.
 */
 class PLearner: public Object
 {
 
 private:
 
-  typedef Object inherited;
+    typedef Object inherited;
 
-  mutable int n_train_costs_;
-  mutable int n_test_costs_;
+    mutable int n_train_costs_;
+    mutable int n_test_costs_;
 
-  //! Global storage to save memory allocations.
-  mutable Vec tmp_output;
+    //! Global storage to save memory allocations.
+    mutable Vec tmp_output;
 
 public:
     
-  //#####  Build Options  ###################################################
+    //#####  Build Options  ###################################################
 
-  /**
-   * Path of the directory associated with this learner, in which it should
-   * save any file it wishes to create.  The directory will be created if
-   * it does not already exist.  If expdir is the empty string (the
-   * default), then the learner should not create *any* file. Note that,
-   * anyway, most file creation and reporting are handled at the level of
-   * the PTester class rather than at the learner's.
-   */
-  PPath expdir; 
+    /**
+     * Path of the directory associated with this learner, in which it should
+     * save any file it wishes to create.  The directory will be created if
+     * it does not already exist.  If expdir is the empty string (the
+     * default), then the learner should not create *any* file. Note that,
+     * anyway, most file creation and reporting are handled at the level of
+     * the PTester class rather than at the learner's.
+     */
+    PPath expdir; 
 
-  //! The seed used for the random number generator in initializing the
-  //! learner (see forget() method).
-  long seed_;
+    //! The seed used for the random number generator in initializing the
+    //! learner (see forget() method).
+    long seed_;
 
-  /**
-   * The current training stage, since last fresh initialization
-   * (forget()): 0 means untrained, n often means after n epochs or
-   * optimization steps, etc...  The true meaning is learner-dependant.
-   * You should never modify this option directly!  It is the role of
-   * forget() to bring it back to 0, and the role of train() to bring it up
-   * to 'nstages'...
-   */
-  int stage;
+    /**
+     * The current training stage, since last fresh initialization
+     * (forget()): 0 means untrained, n often means after n epochs or
+     * optimization steps, etc...  The true meaning is learner-dependant.
+     * You should never modify this option directly!  It is the role of
+     * forget() to bring it back to 0, and the role of train() to bring it up
+     * to 'nstages'...
+     */
+    int stage;
 
-  /**
-   * The stage until which train() should train this learner and return.
-   * The meaning of 'stage' is learner-dependent, but for learners whose
-   * training is incremental (such as involving incremental optimization),
-   * it is typically synonym with the number of 'epochs', i.e. the number
-   * of passages of the optimization process through the whole training
-   * set, since the last fresh initialisation.
-   */
-  int nstages;
+    /**
+     * The stage until which train() should train this learner and return.
+     * The meaning of 'stage' is learner-dependent, but for learners whose
+     * training is incremental (such as involving incremental optimization),
+     * it is typically synonym with the number of 'epochs', i.e. the number
+     * of passages of the optimization process through the whole training
+     * set, since the last fresh initialisation.
+     */
+    int nstages;
 
-  //! Should progress in learning and testing be reported in a ProgressBar
-  bool report_progress;
+    //! Should progress in learning and testing be reported in a ProgressBar
+    bool report_progress;
 
-  //! Level of verbosity. If 0, should not write anything on cerr. If >0
-  //! may write some info on the steps performed (the amount of detail
-  //! written depends on the value of this option).
-  int verbosity; 
+    //! Level of verbosity. If 0, should not write anything on cerr. If >0
+    //! may write some info on the steps performed (the amount of detail
+    //! written depends on the value of this option).
+    int verbosity; 
 
-  //! Max number of computation servers to use in parallel with the main
-  //! process
-  int nservers; 
+    //! Max number of computation servers to use in parallel with the main
+    //! process
+    int nservers; 
 
-  //! Whether the training set should be saved upon a call to
-  //! setTrainingSet().  The saved file is put in the learner's expdir
-  //! (assuming there is one) and has the form "<prefix>_trainset_XXX.pmat"
-  //! The prefix is what this option specifies.  'XXX' is a unique
-  //! serial number that is globally incremented with each saved
-  //! setTrainingSet.  This option is useful when manipulating very
-  //! complex nested learner structures, and you want to ensure that
-  //! the inner learner is getting the correct results.  (Default="",
-  //! i.e. don't save anything.)
-  string save_trainingset_prefix;
+    //! Whether the training set should be saved upon a call to
+    //! setTrainingSet().  The saved file is put in the learner's expdir
+    //! (assuming there is one) and has the form "<prefix>_trainset_XXX.pmat"
+    //! The prefix is what this option specifies.  'XXX' is a unique
+    //! serial number that is globally incremented with each saved
+    //! setTrainingSet.  This option is useful when manipulating very
+    //! complex nested learner structures, and you want to ensure that
+    //! the inner learner is getting the correct results.  (Default="",
+    //! i.e. don't save anything.)
+    string save_trainingset_prefix;
   
 protected:
-  /*!
-    The training set as set by setTrainingSet.  Data-sets are seen as
-    matrices whose columns or fields are layed out as follows: a number of
-    input fields, followed by (optional) target fields, followed by a
-    (optional) weight field (to weigh each example).  The sizes of those
-    areas are given by the VMatrix options inputsize targetsize, and
-    weightsize, which are typically used by the learner upon building.
-  */
-  VMat train_set;  
+    /*!
+      The training set as set by setTrainingSet.  Data-sets are seen as
+      matrices whose columns or fields are layed out as follows: a number of
+      input fields, followed by (optional) target fields, followed by a
+      (optional) weight field (to weigh each example).  The sizes of those
+      areas are given by the VMatrix options inputsize targetsize, and
+      weightsize, which are typically used by the learner upon building.
+    */
+    VMat train_set;  
 
-  //! Validation set used in some contexts
-  VMat validation_set;
+    //! Validation set used in some contexts
+    VMat validation_set;
 
-  //! Learnt options all obtained from train_set when doing setTrainingSet
-  int inputsize_, targetsize_, weightsize_, n_examples;
+    //! Learnt options all obtained from train_set when doing setTrainingSet
+    int inputsize_, targetsize_, weightsize_, n_examples;
 
 
-  //! The stats_collector responsible for collecting train cost statistics
-  //! during training. This is typically set by some external training
-  //! harness that wants to collect some stats.
-  PP<VecStatsCollector> train_stats;
+    //! The stats_collector responsible for collecting train cost statistics
+    //! during training. This is typically set by some external training
+    //! harness that wants to collect some stats.
+    PP<VecStatsCollector> train_stats;
 
-  //! Whether or not to call 'forget' when the training set changes, in
-  //! setTrainingSet:
-  bool forget_when_training_set_changes;
-
-public:
-
-  PLearner();
-  virtual ~PLearner();
-
-  //! Declares the train_set
-  //! Then calls build() and forget() if necessary
-  //! Also sets this learner's inputsize_ targetsize_ weightsize_ from those of the training_set
-  //! Note: You shouldn't have to override this in subclasses, except in maybe to forward the call to an underlying learner.
-  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
-
-  //! Returns the current train_set
-  inline VMat getTrainingSet() const { return train_set; }
-
-  //! Set the validation set (optionally) for learners that are able to use it directly 
-  virtual void setValidationSet(VMat validset);
-
-  //! Returns the current validation set
-  VMat getValidationSet() const { return validation_set; }
-
-  //! Sets the statistics collector whose update() method will be called 
-  //! during training.
-  //! Note: You shouldn't have to override this in subclasses, except maybe to forward the call to an underlying learner.
-  virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol);
-
-  //! Returns the train stats collector
-  inline PP<VecStatsCollector> getTrainStatsCollector()
-  { return train_stats; }
-
-  //! The experiment directory is the directory in which files 
-  //! related to this model are to be saved.     
-  //! If it is an empty string, it is understood to mean that the 
-  //! user doesn't want any file created by this learner.
-  virtual void setExperimentDirectory(const PPath& the_expdir);
-
-  //! This returns the currently set expdir (see setExperimentDirectory)
-  PPath getExperimentDirectory() const { return expdir; }
-
-  //! Default returns inputsize_ cached from train_set->inputsize()
-  virtual int inputsize() const;
-
-  //! Default returns targetsize_ cached from train_set->targetsize()
-  virtual int targetsize() const; 
-
-  //! Default returns weightsize_ cached from train_set->weightsize()
-  virtual int weightsize() const; 
-
-  //! SUBCLASS WRITING: override this so that it returns 
-  //! the size of this learner's output, as a function of 
-  //! its inputsize(), targetsize() and set options
-  virtual int outputsize() const =0;
+    //! Whether or not to call 'forget' when the training set changes, in
+    //! setTrainingSet:
+    bool forget_when_training_set_changes;
 
 public:
 
-  //!  **** SUBCLASS WRITING: ****
-  //! This method should be redefined in subclasses, to just call inherited::build() and then build_()
-  virtual void build();
+    PLearner();
+    virtual ~PLearner();
+
+    //! Declares the train_set
+    //! Then calls build() and forget() if necessary
+    //! Also sets this learner's inputsize_ targetsize_ weightsize_ from those of the training_set
+    //! Note: You shouldn't have to override this in subclasses, except in maybe to forward the call to an underlying learner.
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+
+    //! Returns the current train_set
+    inline VMat getTrainingSet() const { return train_set; }
+
+    //! Set the validation set (optionally) for learners that are able to use it directly 
+    virtual void setValidationSet(VMat validset);
+
+    //! Returns the current validation set
+    VMat getValidationSet() const { return validation_set; }
+
+    //! Sets the statistics collector whose update() method will be called 
+    //! during training.
+    //! Note: You shouldn't have to override this in subclasses, except maybe to forward the call to an underlying learner.
+    virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol);
+
+    //! Returns the train stats collector
+    inline PP<VecStatsCollector> getTrainStatsCollector()
+    { return train_stats; }
+
+    //! The experiment directory is the directory in which files 
+    //! related to this model are to be saved.     
+    //! If it is an empty string, it is understood to mean that the 
+    //! user doesn't want any file created by this learner.
+    virtual void setExperimentDirectory(const PPath& the_expdir);
+
+    //! This returns the currently set expdir (see setExperimentDirectory)
+    PPath getExperimentDirectory() const { return expdir; }
+
+    //! Default returns inputsize_ cached from train_set->inputsize()
+    virtual int inputsize() const;
+
+    //! Default returns targetsize_ cached from train_set->targetsize()
+    virtual int targetsize() const; 
+
+    //! Default returns weightsize_ cached from train_set->weightsize()
+    virtual int weightsize() const; 
+
+    //! SUBCLASS WRITING: override this so that it returns 
+    //! the size of this learner's output, as a function of 
+    //! its inputsize(), targetsize() and set options
+    virtual int outputsize() const =0;
+
+public:
+
+    //!  **** SUBCLASS WRITING: ****
+    //! This method should be redefined in subclasses, to just call inherited::build() and then build_()
+    virtual void build();
 
 protected:
-  //! Building part of the PLearner that needs the train_set
-  virtual void build_from_train_set() {}
+    //! Building part of the PLearner that needs the train_set
+    virtual void build_from_train_set() {}
 
 private:
-  /*!       **** SUBCLASS WRITING: ****
-    This method should finalize building of the object,
-    according to set 'options', in *any* situation. 
+    /*!       **** SUBCLASS WRITING: ****
+      This method should finalize building of the object,
+      according to set 'options', in *any* situation. 
 
-    Typical situations include:
-    - Initial building of an object from a few user-specified options
-    - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    - Updating or "re-building" of an object after a few "tuning" options 
-    (such as hyper-parameters) have been modified.
+      Typical situations include:
+      - Initial building of an object from a few user-specified options
+      - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+      - Updating or "re-building" of an object after a few "tuning" options 
+      (such as hyper-parameters) have been modified.
 
-    You can assume that the parent class' build_() has already been called.
+      You can assume that the parent class' build_() has already been called.
 
-    A typical build method will want to know the inputsize(), targetsize() and outputsize(),
-    and may also want to check whether train_set->hasWeights(). All these methods require a 
-    train_set to be set, so the first thing you may want to do, is check if(train_set), before
-    doing any heavy building... 
+      A typical build method will want to know the inputsize(), targetsize() and outputsize(),
+      and may also want to check whether train_set->hasWeights(). All these methods require a 
+      train_set to be set, so the first thing you may want to do, is check if(train_set), before
+      doing any heavy building... 
 
-    Note: build() is always called by setTrainingSet.
-  */
-  void build_();
+      Note: build() is always called by setTrainingSet.
+    */
+    void build_();
 
 public:
-  //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
-  //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
-  /*!       *** SUBCLASS WRITING: ***
-    A typical forget() method should do the following:
-    - initialize a random number generator with the seed option
-    - initialize the learner's parameters, using this random generator
-    - stage = 0;
-    This method is typically called by the build_() method, after 
-    it has finished setting up the parameters, and if it deemed
-    useful to set or reset the learner in its fresh state. 
-    (remember build may be called after modifying options that do not 
-    necessarily require the learner to restart from a fresh state...)
-    forget is also called by the setTrainingSet method, after calling build(),
-    so it will generally be called TWICE during setTrainingSet!
-  */
-  virtual void forget() =0;
+    //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
+    //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
+    /*!       *** SUBCLASS WRITING: ***
+      A typical forget() method should do the following:
+      - initialize a random number generator with the seed option
+      - initialize the learner's parameters, using this random generator
+      - stage = 0;
+      This method is typically called by the build_() method, after 
+      it has finished setting up the parameters, and if it deemed
+      useful to set or reset the learner in its fresh state. 
+      (remember build may be called after modifying options that do not 
+      necessarily require the learner to restart from a fresh state...)
+      forget is also called by the setTrainingSet method, after calling build(),
+      so it will generally be called TWICE during setTrainingSet!
+    */
+    virtual void forget() =0;
 
 
-  //! The role of the train method is to bring the learner up to stage==nstages,
-  //! updating the stats with training costs measured on-line in the process.
+    //! The role of the train method is to bring the learner up to stage==nstages,
+    //! updating the stats with training costs measured on-line in the process.
 
-  /*! *** SUBCLASS WRITING: ***
+    /*! *** SUBCLASS WRITING: ***
 
     TYPICAL CODE:
 
@@ -277,138 +277,138 @@ public:
     real weight;
 
     if(!train_stats)  // make a default stats collector, in case there's none
-      train_stats = new VecStatsCollector();
+    train_stats = new VecStatsCollector();
 
     if(nstages<stage) // asking to revert to a previous stage!
-      forget();  // reset the learner to stage=0
+    forget();  // reset the learner to stage=0
 
     while(stage<nstages)
-      {
-        // clear statistics of previous epoch
-        train_stats->forget(); 
+    {
+    // clear statistics of previous epoch
+    train_stats->forget(); 
           
-        //... train for 1 stage, and update train_stats,
-        // using train_set->getSample(input, target, weight);
-        // and train_stats->update(train_costs)
+    //... train for 1 stage, and update train_stats,
+    // using train_set->getSample(input, target, weight);
+    // and train_stats->update(train_costs)
         
-        ++stage;
-        train_stats->finalize(); // finalize statistics for this epoch
-      }
-  */
-  virtual void train() =0;
+    ++stage;
+    train_stats->finalize(); // finalize statistics for this epoch
+    }
+    */
+    virtual void train() =0;
 
 
-  //! *** SUBCLASS WRITING: ***
-  //! This should be defined in subclasses to compute the output from the input
-  virtual void computeOutput(const Vec& input, Vec& output) const =0;
+    //! *** SUBCLASS WRITING: ***
+    //! This should be defined in subclasses to compute the output from the input
+    virtual void computeOutput(const Vec& input, Vec& output) const =0;
 
-  //! *** SUBCLASS WRITING: ***
-  //! This should be defined in subclasses to compute the weighted costs from
-  //! already computed output. The costs should correspond to the cost names 
-  //! returned by getTestCostNames()
-  //! NOTE: In exotic cases, the cost may also depend on some info in the input, 
-  //! that's why the method also gets so see it.
-  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                       const Vec& target, Vec& costs) const =0;
+    //! *** SUBCLASS WRITING: ***
+    //! This should be defined in subclasses to compute the weighted costs from
+    //! already computed output. The costs should correspond to the cost names 
+    //! returned by getTestCostNames()
+    //! NOTE: In exotic cases, the cost may also depend on some info in the input, 
+    //! that's why the method also gets so see it.
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const =0;
                                 
-  //! Default calls computeOutput and computeCostsFromOutputs
-  //! You may override this if you have a more efficient way to 
-  //! compute both output and weighted costs at the same time.
-  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-                                     Vec& output, Vec& costs) const;
+    //! Default calls computeOutput and computeCostsFromOutputs
+    //! You may override this if you have a more efficient way to 
+    //! compute both output and weighted costs at the same time.
+    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                       Vec& output, Vec& costs) const;
 
-  //! Default calls computeOutputAndCosts
-  //! This may be overridden if there is a more efficient way to compute the costs
-  //! directly, without computing the whole output vector.
-  virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
+    //! Default calls computeOutputAndCosts
+    //! This may be overridden if there is a more efficient way to compute the costs
+    //! directly, without computing the whole output vector.
+    virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
 
-  //! Compute a confidence intervals for the output, given the input and
-  //! the pre-computed output (resulting from computeOutput or similar).
-  //! The probability level of the confidence interval must be specified.
-  //! (e.g. 0.95).  Result is stored in a TVec of pairs low:high for each
-  //! output variable (this is a "box" interval; it does not account for
-  //! correlations among the output variables).  If the interval can be
-  //! computed, the function returns TRUE; otherwise (i.e. interval
-  //! computation is not available), it returns FALSE.  The default
-  //! implementation in PLearner is to return FALSE (with missing values
-  //! in the returned intervals).
-  virtual
-  bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
-                                   real probability,
-                                   TVec< pair<real,real> >& intervals) const;
+    //! Compute a confidence intervals for the output, given the input and
+    //! the pre-computed output (resulting from computeOutput or similar).
+    //! The probability level of the confidence interval must be specified.
+    //! (e.g. 0.95).  Result is stored in a TVec of pairs low:high for each
+    //! output variable (this is a "box" interval; it does not account for
+    //! correlations among the output variables).  If the interval can be
+    //! computed, the function returns TRUE; otherwise (i.e. interval
+    //! computation is not available), it returns FALSE.  The default
+    //! implementation in PLearner is to return FALSE (with missing values
+    //! in the returned intervals).
+    virtual
+    bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
+                                     real probability,
+                                     TVec< pair<real,real> >& intervals) const;
 
-  //! Repeatedly calls computeOutput and computeConfidenceFromOutput with the rows of inputs.
-  //! Writes outputs_and_confidence rows (as a series of triples (output, low, high), one for each output)
-  void batchComputeOutputAndConfidence(VMat inputs, real probability, VMat outputs_and_confidence) const;
+    //! Repeatedly calls computeOutput and computeConfidenceFromOutput with the rows of inputs.
+    //! Writes outputs_and_confidence rows (as a series of triples (output, low, high), one for each output)
+    void batchComputeOutputAndConfidence(VMat inputs, real probability, VMat outputs_and_confidence) const;
 
-  //! Computes outputs for the input part of testset.
-  //! testset is not required to contain a target part.
-  //! The default version repeatedly calls computeOutput
-  virtual void use(VMat testset, VMat outputs) const;
+    //! Computes outputs for the input part of testset.
+    //! testset is not required to contain a target part.
+    //! The default version repeatedly calls computeOutput
+    virtual void use(VMat testset, VMat outputs) const;
 
-  //! Compute the output on the training set of the learner, and save
-  //! the result in the provided matrix.
-  virtual void useOnTrain(Mat& outputs) const;
+    //! Compute the output on the training set of the learner, and save
+    //! the result in the provided matrix.
+    virtual void useOnTrain(Mat& outputs) const;
 
-  //! Performs test on testset, updating test cost statistics,
-  //! and optionally filling testoutputs and testcosts
-  //! The default version repeatedly calls computeOutputAndCosts or computeCostsOnly
-  //! Note that neither test_stats->forget() nor test_stats->finalize() is called,
-  //! so that you should call them yourself (respectively before and after calling
-  //! this method) if you don't plan to accumulate statistics.
-  virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
-                    VMat testoutputs=0, VMat testcosts=0) const;
+    //! Performs test on testset, updating test cost statistics,
+    //! and optionally filling testoutputs and testcosts
+    //! The default version repeatedly calls computeOutputAndCosts or computeCostsOnly
+    //! Note that neither test_stats->forget() nor test_stats->finalize() is called,
+    //! so that you should call them yourself (respectively before and after calling
+    //! this method) if you don't plan to accumulate statistics.
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
+                      VMat testoutputs=0, VMat testcosts=0) const;
 
-  //! *** SUBCLASS WRITING: ***
-  //! This should return the names of the costs computed by computeCostsFromOutpus
-  virtual TVec<string> getTestCostNames() const =0;
+    //! *** SUBCLASS WRITING: ***
+    //! This should return the names of the costs computed by computeCostsFromOutpus
+    virtual TVec<string> getTestCostNames() const =0;
 
-  //! *** SUBCLASS WRITING: ***
-  //! This should return the names of the objective costs that the train method computes and 
-  //! for which it updates the VecStatsCollector train_stats
-  virtual TVec<string> getTrainCostNames() const =0;
+    //! *** SUBCLASS WRITING: ***
+    //! This should return the names of the objective costs that the train method computes and 
+    //! for which it updates the VecStatsCollector train_stats
+    virtual TVec<string> getTrainCostNames() const =0;
 
-  //! Returns a vector of length outputsize() containing the outputs' names.
-  //! Default version returns ["out0", "out1", ...]
-  virtual TVec<string> getOutputNames() const;
+    //! Returns a vector of length outputsize() containing the outputs' names.
+    //! Default version returns ["out0", "out1", ...]
+    virtual TVec<string> getOutputNames() const;
 
-  //! Caches getTestCostNames().size() in an internal variable
-  //! the first time it is called, and then returns the content of this variable.
-  virtual int nTestCosts() const;
+    //! Caches getTestCostNames().size() in an internal variable
+    //! the first time it is called, and then returns the content of this variable.
+    virtual int nTestCosts() const;
 
-  //! Caches getTrainCostNames().size() in an internal variable
-  //! the first time it is called, and then returns the content of this variable.
-  virtual int nTrainCosts() const;
+    //! Caches getTrainCostNames().size() in an internal variable
+    //! the first time it is called, and then returns the content of this variable.
+    virtual int nTrainCosts() const;
 
-  //! returns the index of the given cost in the vector of testcosts
-  //! calls PLERROR (throws a PLearnException) if requested cost is not found.
-  int getTestCostIndex(const string& costname) const;
+    //! returns the index of the given cost in the vector of testcosts
+    //! calls PLERROR (throws a PLearnException) if requested cost is not found.
+    int getTestCostIndex(const string& costname) const;
 
-  //! returns the index of the given cost in the vector of traincosts (objectives)
-  //! calls PLERROR (throws a PLearnException) if requested cost is not found.
-  int getTrainCostIndex(const string& costname) const;
+    //! returns the index of the given cost in the vector of traincosts (objectives)
+    //! calls PLERROR (throws a PLearnException) if requested cost is not found.
+    int getTrainCostIndex(const string& costname) const;
 
-  //! If any, reset the internal state
-  //! Default: do nothing
-  virtual void resetInternalState();
+    //! If any, reset the internal state
+    //! Default: do nothing
+    virtual void resetInternalState();
 
-  //! Does this PLearner has an internal state?
-  //! Default: false
-  virtual bool isStatefulLearner() const;
+    //! Does this PLearner has an internal state?
+    //! Default: false
+    virtual bool isStatefulLearner() const;
 
 protected:
 
-  static void declareOptions(OptionList& ol);
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    static void declareOptions(OptionList& ol);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 public:
 
-  //!  Does the necessary operations to transform a shallow copy (this)
-  //!  into a deep copy by deep-copying all the members that need to be.
-  PLEARN_DECLARE_ABSTRACT_OBJECT(PLearner);
+    //!  Does the necessary operations to transform a shallow copy (this)
+    //!  into a deep copy by deep-copying all the members that need to be.
+    PLEARN_DECLARE_ABSTRACT_OBJECT(PLearner);
 
-  //! Support for remote method invocation
-  virtual void call(const string& methodname, int nargs, PStream& io);
+    //! Support for remote method invocation
+    virtual void call(const string& methodname, int nargs, PStream& io);
 
 };
 
@@ -427,7 +427,15 @@ DECLARE_OBJECT_PTR(PLearner);
 
 #endif
 
-
-
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

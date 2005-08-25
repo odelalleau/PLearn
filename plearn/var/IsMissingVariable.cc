@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: IsMissingVariable.cc,v 1.5 2004/04/27 15:59:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "IsMissingVariable.h"
 
@@ -74,15 +74,15 @@ void IsMissingVariable::recomputeSize(int& l, int& w) const
 
 void IsMissingVariable::fprop()
 {
-  if (parallel)
-    for(int i=0; i<nelems(); i++)
-      valuedata[i] = finite(input->valuedata[i]);
-  else
+    if (parallel)
+        for(int i=0; i<nelems(); i++)
+            valuedata[i] = finite(input->valuedata[i]);
+    else
     {
-      bool nomissing=true;
-      for(int i=0; i<nelems(); i++)
-        nomissing = nomissing && finite(input->valuedata[i]);
-      valuedata[0] = !nomissing;
+        bool nomissing=true;
+        for(int i=0; i<nelems(); i++)
+            nomissing = nomissing && finite(input->valuedata[i]);
+        valuedata[0] = !nomissing;
     }
 }
 
@@ -96,4 +96,15 @@ void IsMissingVariable::symbolicBprop() {}
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

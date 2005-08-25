@@ -38,7 +38,7 @@ namespace PLearn {
 using namespace std;
 
 PConditionalDistribution::PConditionalDistribution() 
-  :PDistribution(), input_part_size(-1)
+    :PDistribution(), input_part_size(-1)
 {
    
 }
@@ -60,34 +60,34 @@ PLEARN_IMPLEMENT_OBJECT(PConditionalDistribution,
 
 void PConditionalDistribution::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "input_part_size", &PConditionalDistribution::input_part_size, OptionBase::buildoption,
-                "This option should be used only if outputs_def is 'l','d','c' or 's' (or upper case),\n"
-                "which is when computeOutput takes as input both the X and Y parts to compute P(Y|X).\n"
-                "This option gives the size of X, that is the length of the part of the data input which\n"
-                "contains the conditioning part of the distribution. The rest of the data input vector should\n"
-                "contain the Y value. If outputs_def is 'e' or 'v' or upper case then this option is ignored.\n");
-  inherited::declareOptions(ol);
+    declareOption(ol, "input_part_size", &PConditionalDistribution::input_part_size, OptionBase::buildoption,
+                  "This option should be used only if outputs_def is 'l','d','c' or 's' (or upper case),\n"
+                  "which is when computeOutput takes as input both the X and Y parts to compute P(Y|X).\n"
+                  "This option gives the size of X, that is the length of the part of the data input which\n"
+                  "contains the conditioning part of the distribution. The rest of the data input vector should\n"
+                  "contain the Y value. If outputs_def is 'e' or 'v' or upper case then this option is ignored.\n");
+    inherited::declareOptions(ol);
 }
 
-  void PConditionalDistribution::build_()
-  {
+void PConditionalDistribution::build_()
+{
     if (train_set)
     {
-      if (outputs_def=="L" || outputs_def=="D" || outputs_def=="C" || outputs_def=="S" || outputs_def=="e" || outputs_def=="v")
-        input_part_size = train_set->inputsize();
+        if (outputs_def=="L" || outputs_def=="D" || outputs_def=="C" || outputs_def=="S" || outputs_def=="e" || outputs_def=="v")
+            input_part_size = train_set->inputsize();
     }
-  }
+}
 
-  // ### Nothing to add here, simply calls build_
-  void PConditionalDistribution::build()
-  {
+// ### Nothing to add here, simply calls build_
+void PConditionalDistribution::build()
+{
     inherited::build();
     build_();
-  }
+}
 
 void PConditionalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 void PConditionalDistribution::setInput(const Vec& input) const
@@ -96,74 +96,87 @@ void PConditionalDistribution::setInput(const Vec& input) const
 
 void PConditionalDistribution::computeOutput(const Vec& input, Vec& output) const
 {
-  Vec x = input.subVec(0,input_part_size);
-  int d=input.length()-input_part_size;
-  Vec y = input.subVec(input_part_size,d);
-  setInput(x);
-  if (outputs_def=="l")
-    output[0]=log_density(y);
-  else if (outputs_def=="d")
-    output[0]=density(y);
-  else if (outputs_def=="c")
-    output[0]=cdf(y);
-  else if (outputs_def=="s")
-    output[0]=survival_fn(y);
-  else if (outputs_def=="e")
-    expectation(output);
-  else if (outputs_def=="v")
-  {
-    Mat covmat = output.toMat(d,d);
-    variance(covmat);
-  }
-  else if (outputs_def=="L")
-  {
-    real lower = lower_bound;
-    real upper = upper_bound;
-    real delta = (upper - lower)/n_curve_points;
-    Vec y(1); y[0]=lower;
-    for (int i=0;i<n_curve_points;i++)
+    Vec x = input.subVec(0,input_part_size);
+    int d=input.length()-input_part_size;
+    Vec y = input.subVec(input_part_size,d);
+    setInput(x);
+    if (outputs_def=="l")
+        output[0]=log_density(y);
+    else if (outputs_def=="d")
+        output[0]=density(y);
+    else if (outputs_def=="c")
+        output[0]=cdf(y);
+    else if (outputs_def=="s")
+        output[0]=survival_fn(y);
+    else if (outputs_def=="e")
+        expectation(output);
+    else if (outputs_def=="v")
     {
-      output[i] = log_density(y);
-      y[0]+=delta;
+        Mat covmat = output.toMat(d,d);
+        variance(covmat);
     }
-  }
-  else if (outputs_def=="D")
-  {
-    real lower = lower_bound;
-    real upper = upper_bound;
-    real delta = (upper - lower)/n_curve_points;
-    Vec y(1); y[0]=lower;
-    for (int i=0;i<n_curve_points;i++)
+    else if (outputs_def=="L")
     {
-      output[i] = density(y);
-      y[0]+=delta;
+        real lower = lower_bound;
+        real upper = upper_bound;
+        real delta = (upper - lower)/n_curve_points;
+        Vec y(1); y[0]=lower;
+        for (int i=0;i<n_curve_points;i++)
+        {
+            output[i] = log_density(y);
+            y[0]+=delta;
+        }
     }
-  }
-  else if (outputs_def=="C")
-  {
-    real lower = lower_bound;
-    real upper = upper_bound;
-    real delta = (upper - lower)/n_curve_points;
-    Vec y(1); y[0]=lower;
-    for (int i=0;i<n_curve_points;i++)
+    else if (outputs_def=="D")
     {
-      output[i] = cdf(y);
-      y[0]+=delta;
+        real lower = lower_bound;
+        real upper = upper_bound;
+        real delta = (upper - lower)/n_curve_points;
+        Vec y(1); y[0]=lower;
+        for (int i=0;i<n_curve_points;i++)
+        {
+            output[i] = density(y);
+            y[0]+=delta;
+        }
     }
-  }
-  else if (outputs_def=="S")
-  {
-    real lower = lower_bound;
-    real upper = upper_bound;
-    real delta = (upper - lower)/n_curve_points;
-    Vec y(1); y[0]=lower;
-    for (int i=0;i<n_curve_points;i++)
+    else if (outputs_def=="C")
     {
-      output[i] = survival_fn(y);
-      y[0]+=delta;
+        real lower = lower_bound;
+        real upper = upper_bound;
+        real delta = (upper - lower)/n_curve_points;
+        Vec y(1); y[0]=lower;
+        for (int i=0;i<n_curve_points;i++)
+        {
+            output[i] = cdf(y);
+            y[0]+=delta;
+        }
     }
-  }
-  else PLERROR("PConditionalDistribution: unknown setting of outputs_def = %s",outputs_def.c_str());
+    else if (outputs_def=="S")
+    {
+        real lower = lower_bound;
+        real upper = upper_bound;
+        real delta = (upper - lower)/n_curve_points;
+        Vec y(1); y[0]=lower;
+        for (int i=0;i<n_curve_points;i++)
+        {
+            output[i] = survival_fn(y);
+            y[0]+=delta;
+        }
+    }
+    else PLERROR("PConditionalDistribution: unknown setting of outputs_def = %s",outputs_def.c_str());
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

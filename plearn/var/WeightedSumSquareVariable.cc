@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: WeightedSumSquareVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "WeightedSumSquareVariable.h"
 #include "Var_operators.h"
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(WeightedSumSquareVariable,
                         "NO HELP");
 
 WeightedSumSquareVariable::WeightedSumSquareVariable(Variable* input, Variable* weights)
-  : inherited(input,weights,1,1)
+    : inherited(input,weights,1,1)
 {
     build_();
 }
@@ -84,32 +84,43 @@ void WeightedSumSquareVariable::recomputeSize(int& l, int& w) const
 
 void WeightedSumSquareVariable::fprop()
 {
-  int n=input1->nelems();
-  *valuedata= 0;
-  for(int i=0; i<n; i++)
-    *valuedata+= input1->valuedata[i]*input1->valuedata[i] * input2->valuedata[i];
+    int n=input1->nelems();
+    *valuedata= 0;
+    for(int i=0; i<n; i++)
+        *valuedata+= input1->valuedata[i]*input1->valuedata[i] * input2->valuedata[i];
 }
 
 
 void WeightedSumSquareVariable::bprop()
 {
-  int n=input1->nelems();
-  for(int i=0; i<n; i++)
+    int n=input1->nelems();
+    for(int i=0; i<n; i++)
     {
-      input1->gradientdata[i]+= 2.0 * input1->valuedata[i] * input2->valuedata[i] * *gradientdata;
-      input2->gradientdata[i]+= input1->valuedata[i] * input1->valuedata[i] * *gradientdata;
+        input1->gradientdata[i]+= 2.0 * input1->valuedata[i] * input2->valuedata[i] * *gradientdata;
+        input2->gradientdata[i]+= input1->valuedata[i] * input1->valuedata[i] * *gradientdata;
     }
 }
 
 
 void WeightedSumSquareVariable::symbolicBprop()
 {
-  input1->accg(2.0 * (g*input1*input2));
-  input2->accg(g*input1*input1);
+    input1->accg(2.0 * (g*input1*input2));
+    input2->accg(g*input1*input1);
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

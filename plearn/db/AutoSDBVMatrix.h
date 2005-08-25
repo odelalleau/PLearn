@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: AutoSDBVMatrix.h,v 1.10 2005/01/28 17:43:02 plearner Exp $
-   * AUTHOR: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHOR: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
 
@@ -58,40 +58,40 @@ namespace PLearn {
 using namespace std;
 
 
-  //class StringFieldMapping; //fwd decl.
+//class StringFieldMapping; //fwd decl.
 
 class StringFieldMapping
 {
 public:
 
-  real dft_val;
-  mutable hash_map<string, real> mapping;
+    real dft_val;
+    mutable hash_map<string, real> mapping;
 
-  StringFieldMapping()
-  {}
+    StringFieldMapping()
+    {}
 
-  StringFieldMapping(string filename_, real dft_val_= MISSING_VALUE)
-    :dft_val(dft_val_), mapping()
-  {
-    /*ifstream*/ PStream f = openFile(filename_.c_str(),PStream::plearn_ascii);
-    while(f)
-      {
-	string s;
-    f >> s;
-	//PLearn::read(f, s);
-	real val;
-    f >> val;
-	//PLearn::read(f, val);
-	if(f) mapping[s]= val;
-      }
-  }
+    StringFieldMapping(string filename_, real dft_val_= MISSING_VALUE)
+        :dft_val(dft_val_), mapping()
+    {
+        /*ifstream*/ PStream f = openFile(filename_.c_str(),PStream::plearn_ascii);
+        while(f)
+        {
+            string s;
+            f >> s;
+            //PLearn::read(f, s);
+            real val;
+            f >> val;
+            //PLearn::read(f, val);
+            if(f) mapping[s]= val;
+        }
+    }
 
-  real operator[](const string& s) const
-  {
-    if(mapping.end() == mapping.find(s))
-      return dft_val;
-    return mapping[s]; 
-  }
+    real operator[](const string& s) const
+    {
+        if(mapping.end() == mapping.find(s))
+            return dft_val;
+        return mapping[s]; 
+    }
  
 };
 
@@ -100,53 +100,53 @@ class NumToStringMapping
 {
 public:
 
-  string filename;
-  string dft_val;
-  mutable hash_map<real, string> mapping;
-  mutable bool loaded;
+    string filename;
+    string dft_val;
+    mutable hash_map<real, string> mapping;
+    mutable bool loaded;
 
-  NumToStringMapping()
-    :loaded(false)
-  {}
+    NumToStringMapping()
+        :loaded(false)
+    {}
 
-  NumToStringMapping(string filename_, const string& dft_val_= "")
-    :filename(filename_), dft_val(dft_val_), mapping(), loaded(false)
-  {}
+    NumToStringMapping(string filename_, const string& dft_val_= "")
+        :filename(filename_), dft_val(dft_val_), mapping(), loaded(false)
+    {}
 
-  void read(istream& in) const
-  {
-    while(in)
-      {
-	string s;
-	PLearn::read(in, s);
-	real val;	    
-	PLearn::read(in, val);
-	if(in) mapping[val]= s;
-      }
-    loaded= true;
-  }
+    void read(istream& in) const
+    {
+        while(in)
+        {
+            string s;
+            PLearn::read(in, s);
+            real val;	    
+            PLearn::read(in, val);
+            if(in) mapping[val]= s;
+        }
+        loaded= true;
+    }
 
-  void load(string filename_= "")
-  {
-    if(filename_ != "")
-      filename= filename_;
-    ifstream f(filename.c_str());
-    read(f);
-  }
+    void load(string filename_= "")
+    {
+        if(filename_ != "")
+            filename= filename_;
+        ifstream f(filename.c_str());
+        read(f);
+    }
 
-  void load() const
-  {
-    ifstream f(filename.c_str());
-    read(f);
-  }
+    void load() const
+    {
+        ifstream f(filename.c_str());
+        read(f);
+    }
 
-  const string& operator[](real x) const
-  {
-    if(!loaded) load();
-    if(mapping.end() == mapping.find(x))
-      return dft_val;
-    return mapping[x]; 
-  }
+    const string& operator[](real x) const
+    {
+        if(!loaded) load();
+        if(mapping.end() == mapping.find(x))
+            return dft_val;
+        return mapping[x]; 
+    }
  
 };
 
@@ -156,34 +156,34 @@ public:
 class AutoSDBVMatrix: public RowBufferedVMatrix
 {
 public:
-  AutoSDBVMatrix(const string& dbname);
+    AutoSDBVMatrix(const string& dbname);
 
 
-  //! Returns the number of string fields (these will not be used in getRow!)
-  inline int nstrings() { return sdb_.width() - width(); }
+    //! Returns the number of string fields (these will not be used in getRow!)
+    inline int nstrings() { return sdb_.width() - width(); }
   
-  //! gets mappings for each string field
-  void getMappings();
+    //! gets mappings for each string field
+    void getMappings();
 
-  //! returns the string associated with value val 
-  //! for field# col. Or returns "" if no string is associated.
-  virtual string getValString(int col, real val) const
-  {
-    hash_map<string, NumToStringMapping>::const_iterator it= 
-      num2string_map.find(fieldName(col));
-    if(it != num2string_map.end())
-      return it->second[val];
-    return "";
-  }
+    //! returns the string associated with value val 
+    //! for field# col. Or returns "" if no string is associated.
+    virtual string getValString(int col, real val) const
+    {
+        hash_map<string, NumToStringMapping>::const_iterator it= 
+            num2string_map.find(fieldName(col));
+        if(it != num2string_map.end())
+            return it->second[val];
+        return "";
+    }
 
 protected:
 
-  virtual void getNewRow(int i, const Vec& v) const;  
+    virtual void getNewRow(int i, const Vec& v) const;  
 
-  SDB sdb_;
-  mutable Row row_;
-  hash_map<string, StringFieldMapping> string_field_map;
-  hash_map<string, NumToStringMapping> num2string_map;
+    SDB sdb_;
+    mutable Row row_;
+    hash_map<string, StringFieldMapping> string_field_map;
+    hash_map<string, NumToStringMapping> num2string_map;
 };
 
 
@@ -193,3 +193,16 @@ protected:
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

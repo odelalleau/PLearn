@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateRowVariable.cc,v 1.6 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ColumnSumVariable.h"
 #include "DuplicateRowVariable.h"
@@ -53,7 +53,7 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(DuplicateRowVariable, "ONE LINE DESCR", "NO HELP");
 
 DuplicateRowVariable::DuplicateRowVariable(Variable* input, int thelength)
-  : inherited(input, thelength, input->width()), length_(thelength)
+    : inherited(input, thelength, input->width()), length_(thelength)
 {
     build_();
 }
@@ -90,29 +90,40 @@ void DuplicateRowVariable::recomputeSize(int& l, int& w) const
 
 void DuplicateRowVariable::fprop()
 {
-  int k=0;
-  for(int i=0; i<length(); i++)
-    for(int j=0; j<width(); j++, k++)
-      valuedata[k] = input->valuedata[j];
+    int k=0;
+    for(int i=0; i<length(); i++)
+        for(int j=0; j<width(); j++, k++)
+            valuedata[k] = input->valuedata[j];
 }
 
 
 void DuplicateRowVariable::bprop()
 {
-  int k=0;
-  for(int i=0; i<length(); i++)
-    for(int j=0; j<width(); j++, k++)
-      input->gradientdata[j] += gradientdata[k];
+    int k=0;
+    for(int i=0; i<length(); i++)
+        for(int j=0; j<width(); j++, k++)
+            input->gradientdata[j] += gradientdata[k];
 }
 
 
 void DuplicateRowVariable::symbolicBprop()
 {
-  input->accg(columnSum(g));
+    input->accg(columnSum(g));
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

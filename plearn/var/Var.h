@@ -37,9 +37,9 @@
  
 
 /* *******************************************************      
-   * $Id: Var.h,v 1.12 2004/03/09 18:34:23 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/Var.h */
@@ -55,14 +55,14 @@ using namespace std;
 
 inline ostream& operator<<(ostream& out, const Var& v)
 {
-  string name=v->getName();
-  if (name != "")
-    cout<<name<<endl;
-  if (v->width()==1)
-    out << v->value;
-  else
-    out << v->matValue;
-  return out;
+    string name=v->getName();
+    if (name != "")
+        cout<<name<<endl;
+    if (v->width()==1)
+        out << v->value;
+    else
+        out << v->matValue;
+    return out;
 }
 
 
@@ -73,17 +73,29 @@ inline Var var(real init_value) { Var v(1); v=init_value; return v; }
 template <> 
 inline void deepCopyField(Var& field, CopiesMap& copies)
 {
-  PLWARNING(
-      "In Var.h - You called deepCopyField on a Var, but this is known to sometimes "
-      "cause bugs in optimized mode. Use varDeepCopyField instead! "
-      "This warning may also appear when using a TVec<Var>, in this case, just switch "
-      "to a VarArray."
-  );
-  if (field)
-    field = field->deepCopy(copies);
+    PLWARNING(
+        "In Var.h - You called deepCopyField on a Var, but this is known to sometimes "
+        "cause bugs in optimized mode. Use varDeepCopyField instead! "
+        "This warning may also appear when using a TVec<Var>, in this case, just switch "
+        "to a VarArray."
+        );
+    if (field)
+        field = field->deepCopy(copies);
 }
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

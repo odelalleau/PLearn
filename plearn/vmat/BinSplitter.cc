@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BinSplitter.cc,v 1.1 2004/10/29 21:17:21 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -51,36 +51,36 @@ using namespace std;
 // BinSplitter //
 /////////////////
 BinSplitter::BinSplitter() 
-: column(0),
-  column_spec("")
+    : column(0),
+      column_spec("")
 {
 }
 
 PLEARN_IMPLEMENT_OBJECT(BinSplitter, 
-    "Split a dataset into bins given by a Binner object.",
-    ""
-);
+                        "Split a dataset into bins given by a Binner object.",
+                        ""
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void BinSplitter::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "binner", &BinSplitter::binner, OptionBase::buildoption,
-      "The binner used to create the bins.");
+    declareOption(ol, "binner", &BinSplitter::binner, OptionBase::buildoption,
+                  "The binner used to create the bins.");
 
-  declareOption(ol, "column", &BinSplitter::column, OptionBase::buildoption,
-      "The column used to defined the bins.");
+    declareOption(ol, "column", &BinSplitter::column, OptionBase::buildoption,
+                  "The column used to defined the bins.");
 
-  declareOption(ol, "column_spec", &BinSplitter::column_spec, OptionBase::buildoption,
-      "Alternatively, this option can be used to override the 'column' option:\n"
-      " - 'first_input' : the first input column\n"
-      " - 'last_input'  : the last input column\n"
-      " - 'first_target': the first target column\n"
-      " - 'last_target' : the last target column");
+    declareOption(ol, "column_spec", &BinSplitter::column_spec, OptionBase::buildoption,
+                  "Alternatively, this option can be used to override the 'column' option:\n"
+                  " - 'first_input' : the first input column\n"
+                  " - 'last_input'  : the last input column\n"
+                  " - 'first_target': the first target column\n"
+                  " - 'last_target' : the last target column");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ////////////
@@ -95,22 +95,22 @@ void BinSplitter::build_()
 ///////////
 void BinSplitter::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void BinSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Splitter::makeDeepCopyFromShallowCopy(copies);
+    Splitter::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("BinSplitter::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("BinSplitter::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 /////////////
@@ -118,7 +118,7 @@ void BinSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 /////////////
 int BinSplitter::nsplits() const
 {
-  return 1;
+    return 1;
 }
 
 ///////////////////
@@ -126,7 +126,7 @@ int BinSplitter::nsplits() const
 ///////////////////
 int BinSplitter::nSetsPerSplit() const
 {
-  return binner->nBins();
+    return binner->nBins();
 }
 
 //////////////
@@ -134,39 +134,52 @@ int BinSplitter::nSetsPerSplit() const
 //////////////
 TVec<VMat> BinSplitter::getSplit(int k)
 {
-  TVec<VMat> sets(nSetsPerSplit());
-  for (int i = 0; i < sets.length(); i++) {
-    sets[i] = new SelectRowsVMatrix(dataset, bins[i]);
-  }
-  return sets;
+    TVec<VMat> sets(nSetsPerSplit());
+    for (int i = 0; i < sets.length(); i++) {
+        sets[i] = new SelectRowsVMatrix(dataset, bins[i]);
+    }
+    return sets;
 }
 
 ////////////////
 // setDataSet //
 ////////////////
 void BinSplitter::setDataSet(VMat the_dataset) {
-  inherited::setDataSet(the_dataset);
-  int col = column;
-  if (column_spec != "") {
-    if (column_spec == "first_input")
-      col = 0;
-    else if (column_spec == "last_input")
-      col = the_dataset->inputsize() - 1;
-    else if (column_spec == "first_target")
-      col = the_dataset->inputsize();
-    else if (column_spec == "last_target")
-      col = the_dataset->inputsize() + the_dataset->targetsize() - 1;
-    else
-      PLERROR("In BinSplitter::setDataSet - Wrong value for 'column_spec'");
-    if (col < 0)
-      PLERROR("In BinSplitter::setDataSet - Found a negative column, check the dataset sizes are correctly defined");
-  }
-  else if (column >= the_dataset->width())
-    PLERROR("In BinSplitter::setDataSet - The column number is higher than available");
-  Vec col_vec = the_dataset.column(col)->toMat().toVec();
-  if (!binner)
-    PLERROR("In BinSplitter::setDataSet - You must provide a binner first.");
-  bins = binner->getBins(col_vec);
+    inherited::setDataSet(the_dataset);
+    int col = column;
+    if (column_spec != "") {
+        if (column_spec == "first_input")
+            col = 0;
+        else if (column_spec == "last_input")
+            col = the_dataset->inputsize() - 1;
+        else if (column_spec == "first_target")
+            col = the_dataset->inputsize();
+        else if (column_spec == "last_target")
+            col = the_dataset->inputsize() + the_dataset->targetsize() - 1;
+        else
+            PLERROR("In BinSplitter::setDataSet - Wrong value for 'column_spec'");
+        if (col < 0)
+            PLERROR("In BinSplitter::setDataSet - Found a negative column, check the dataset sizes are correctly defined");
+    }
+    else if (column >= the_dataset->width())
+        PLERROR("In BinSplitter::setDataSet - The column number is higher than available");
+    Vec col_vec = the_dataset.column(col)->toMat().toVec();
+    if (!binner)
+        PLERROR("In BinSplitter::setDataSet - You must provide a binner first.");
+    bins = binner->getBins(col_vec);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

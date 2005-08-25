@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_computeNearestNeighbors.h,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -50,11 +50,24 @@
 namespace PLearn {
 using namespace std;
 
-  class VMat;
+class VMat;
 
-  void computeNearestNeighbors(VMat dataset, Vec x, TVec<int>& neighbors, int ignore_row=-1);
+void computeNearestNeighbors(VMat dataset, Vec x, TVec<int>& neighbors, int ignore_row=-1);
 
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

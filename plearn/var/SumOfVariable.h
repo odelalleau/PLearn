@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SumOfVariable.h,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef SumOfVariable_INC
 #define SumOfVariable_INC
@@ -53,8 +53,8 @@ class SumOfVariable: public NaryVariable
 {
     typedef NaryVariable inherited;
 
-  public:
-  //protected:
+public:
+    //protected:
     VMat distr;
     Func f;
     int nsamples;
@@ -64,7 +64,7 @@ class SumOfVariable: public NaryVariable
     Vec input_gradient;
     Vec output_value;
     
-  public:
+public:
     //!  protected default constructor for persistence
     SumOfVariable() : distr(), f(), nsamples(), curpos() {}
     //!  Sum_{inputs \in distr} f(inputs)
@@ -110,3 +110,16 @@ inline Var meanOf(Var output, const VarArray& inputs, VMat distr, int nsamples, 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

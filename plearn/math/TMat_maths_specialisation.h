@@ -35,10 +35,10 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_specialisation.h,v 1.9 2004/11/24 18:22:29 tihocan Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnCore/TMat_maths_specialisation.h */
 
@@ -57,65 +57,65 @@ using namespace std;
 #include "blas_proto.h"
 
 
-  /*
-    // These seem to generate a "Illegal instruction core dump" !
-    // So I'll stick with the memcpy versions in general.h
-  inline float* copy(float* first, float* last, float* dest)
-  { 
-    int n = last-first; 
-    int one = 1;
-    scopy_(&n, first, &one, dest, &one); 
-    return dest+n; 
-  }
+/*
+// These seem to generate a "Illegal instruction core dump" !
+// So I'll stick with the memcpy versions in general.h
+inline float* copy(float* first, float* last, float* dest)
+{ 
+int n = last-first; 
+int one = 1;
+scopy_(&n, first, &one, dest, &one); 
+return dest+n; 
+}
 
-  inline double* copy(double* first, double* last, double* dest)
-  { 
+inline double* copy(double* first, double* last, double* dest)
+{ 
     int n = last-first; 
     int one = 1;
     dcopy_(&n, first, &one, dest, &one); 
     return dest+n; 
-  }
-  */
+}
+*/
 
-  /*
+/*
   inline void multiplyAcc(const TVec<double>& vec, const TVec<double>& x, double scale)
-    {
-      int n = vec.length();
-#ifdef BOUNDCHECK
-      if(vec.length()!=x.length())
-        PLERROR("In multiplyAcc this has length_=%d and x has length_=%d", vec.length(),n);
-#endif
-      int one = 1;
-      daxpy_( &n, &scale, x.data(), &one, vec.data(), &one);
-    }
+  {
+  int n = vec.length();
+  #ifdef BOUNDCHECK
+  if(vec.length()!=x.length())
+  PLERROR("In multiplyAcc this has length_=%d and x has length_=%d", vec.length(),n);
+  #endif
+  int one = 1;
+  daxpy_( &n, &scale, x.data(), &one, vec.data(), &one);
+  }
 
   inline void operator+=(const TVec<double>& vec, const TVec<double>& x)
   { multiplyAcc(vec,x,1.); }
-  */
+*/
 
-  //  C = alpha A.B + beta C
-  // ( Will use the transpose of A and/or B instead, if you set the correpsonding flags to true)
-  inline void productScaleAcc(const TMat<double>& C, const TMat<double>& A, bool transposeA, const TMat<double>& B, bool transposeB, double alpha, double beta)
-  {
+//  C = alpha A.B + beta C
+// ( Will use the transpose of A and/or B instead, if you set the correpsonding flags to true)
+inline void productScaleAcc(const TMat<double>& C, const TMat<double>& A, bool transposeA, const TMat<double>& B, bool transposeB, double alpha, double beta)
+{
 #ifdef BOUNDCHECK
     int l2;
 #endif
     int l1, w1, w2;
     char transa, transb;
     if(transposeA)
-      {
+    {
         l1 = A.width();
         w1 = A.length();
         transa = 'T';
-      }
+    }
     else
-      {
+    {
         l1 = A.length();
         w1 = A.width();
         transa = 'N';
-      }
+    }
     if(transposeB)
-      {
+    {
 #ifdef BOUNDCHECK
         l2 = B.width();
 #endif
@@ -123,42 +123,42 @@ using namespace std;
         transb = 'T';
     }
     else
-      {
+    {
 #ifdef BOUNDCHECK
         l2 = B.length();
 #endif
         w2 = B.width();
         transb = 'N';
-      }
+    }
 
 #ifdef BOUNDCHECK
     if (w1!=l2 || C.length()!=l1 || C.width()!=w2)
-      PLERROR("productScaleAcc, incompatible arguments (%dx%d) <- %s(%dx%d) . %s(%dx%d)",
-              C.length(), C.width(), 
-              transposeA?"transpose":"", A.length(), A.width(), 
-              transposeB?"transpose":"", B.length(), B.width());
+        PLERROR("productScaleAcc, incompatible arguments (%dx%d) <- %s(%dx%d) . %s(%dx%d)",
+                C.length(), C.width(), 
+                transposeA?"transpose":"", A.length(), A.width(), 
+                transposeB?"transpose":"", B.length(), B.width());
 #endif
 
     int lda = A.mod();
     int ldb = B.mod();
     int ldc = C.mod();
     dgemm_(&transb, &transa, &w2, &l1, &w1, &alpha, B.data(), &ldb, A.data(), &lda, &beta, C.data(), &ldc);
-  }
+}
 
-  //! y <- alpha A.x + beta y   (will use the transposed of A instead if tranposeA is true)
-  inline void productScaleAcc(const TVec<double>& y, const TMat<double>& A, bool transposeA, const TVec<double>& x, double alpha, double beta)
-  {
+//! y <- alpha A.x + beta y   (will use the transposed of A instead if tranposeA is true)
+inline void productScaleAcc(const TVec<double>& y, const TMat<double>& A, bool transposeA, const TVec<double>& x, double alpha, double beta)
+{
 #ifdef BOUNDCHECK
     if(!transposeA)
-      {
+    {
         if(A.length()!=y.length() || A.width()!=x.length())
-          PLERROR("productScaleAcc, incompatible arguments Vec(%d) <- Mat(%d,%d) . Vec(%d)", y.length(), A.length(), A.width(), x.length());
-      }
+            PLERROR("productScaleAcc, incompatible arguments Vec(%d) <- Mat(%d,%d) . Vec(%d)", y.length(), A.length(), A.width(), x.length());
+    }
     else
-      {
+    {
         if(A.length()!=x.length() || A.width()!=y.length())
-          PLERROR("productScaleAcc, incompatible arguments Vec(%d) <- Mat(%d,%d)' . Vec(%d)", y.length(), A.length(), A.width(), x.length());
-      }
+            PLERROR("productScaleAcc, incompatible arguments Vec(%d) <- Mat(%d,%d)' . Vec(%d)", y.length(), A.length(), A.width(), x.length());
+    }
 #endif
 
     int one = 1;
@@ -167,21 +167,21 @@ using namespace std;
     int m = A.width();
     int n = A.length();
     dgemv_(&trans, &m, &n, &alpha, A.data(), &lda, x.data(), &one, &beta, y.data(), &one);
-  }
+}
 
-  //! A <- A + alpha x.y'
-  inline void externalProductScaleAcc(const TMat<double>& A, const TVec<double>& x, const TVec<double>& y, double alpha)
-  {
+//! A <- A + alpha x.y'
+inline void externalProductScaleAcc(const TMat<double>& A, const TVec<double>& x, const TVec<double>& y, double alpha)
+{
 #ifdef BOUNDCHECK
     if(A.length()!=x.length() || A.width()!=y.length())
-      PLERROR("In externalProductScaleAcc, incompatible dimensions: Mat(%d,%d) <- Vec(%d).Vec(%d)'",A.length(), A.width(), x.length(), y.length());
+        PLERROR("In externalProductScaleAcc, incompatible dimensions: Mat(%d,%d) <- Vec(%d).Vec(%d)'",A.length(), A.width(), x.length(), y.length());
 #endif
     int one = 1;
     int lda = A.mod();
     int m = A.width();
     int n = A.length();
     dger_(&m, &n, &alpha, y.data(), &one, x.data(), &one, A.data(), &lda);
-  }
+}
 
 inline void externalProductAcc(const TMat<double>& A, const TVec<double>& x, const TVec<double>& y)
 { externalProductScaleAcc(A, x, y, 1.); }
@@ -227,29 +227,29 @@ inline void productTransposeAcc(const TMat<double>& mat, const TMat<double>& m1,
 // float
 
 
-  //  C = alpha A.B + beta C
-  // ( Will use the transpose of A and/or B instead, if you set the correpsonding flags to true)
-  inline void productScaleAcc(const TMat<float>& C, const TMat<float>& A, bool transposeA, const TMat<float>& B, bool transposeB, float alpha, float beta)
-  {
+//  C = alpha A.B + beta C
+// ( Will use the transpose of A and/or B instead, if you set the correpsonding flags to true)
+inline void productScaleAcc(const TMat<float>& C, const TMat<float>& A, bool transposeA, const TMat<float>& B, bool transposeB, float alpha, float beta)
+{
 #ifdef BOUNDCHECK
     int l2;
 #endif
     int l1, w1, w2;
     char transa, transb;
     if(transposeA)
-      {
+    {
         l1 = A.width();
         w1 = A.length();
         transa = 'T';
-      }
+    }
     else
-      {
+    {
         l1 = A.length();
         w1 = A.width();
         transa = 'N';
-      }
+    }
     if(transposeB)
-      {
+    {
 #ifdef BOUNDCHECK
         l2 = B.width();
 #endif
@@ -257,79 +257,79 @@ inline void productTransposeAcc(const TMat<double>& mat, const TMat<double>& m1,
         transb = 'T';
     }
     else
-      {
+    {
 #ifdef BOUNDCHECK
         l2 = B.length();
 #endif
         w2 = B.width();
         transb = 'N';
-      }
+    }
 
 #ifdef BOUNDCHECK
     if (w1!=l2 || C.length()!=l1 || C.width()!=w2)
-      PLERROR("productScaleAcc, incompatible arguments (%dx%d) <- %s(%dx%d) . %s(%dx%d)",
-              C.length(), C.width(), 
-              transposeA?"transpose":"", A.length(), A.width(), 
-              transposeB?"transpose":"", B.length(), B.width());
+        PLERROR("productScaleAcc, incompatible arguments (%dx%d) <- %s(%dx%d) . %s(%dx%d)",
+                C.length(), C.width(), 
+                transposeA?"transpose":"", A.length(), A.width(), 
+                transposeB?"transpose":"", B.length(), B.width());
 #endif
 
     int lda = A.mod();
     int ldb = B.mod();
     int ldc = C.mod();
     sgemm_(&transb, &transa, &w2, &l1, &w1, &alpha, B.data(), &ldb, A.data(), &lda, &beta, C.data(), &ldc);
-  }
+}
 
-  //! y <- alpha A.x + beta y   (will use the transposed of A instead if tranposeA is true)
-  inline void productScaleAcc(const TVec<float>& y, const TMat<float>& A, bool transposeA, const TVec<float>& x, float alpha, float beta)
-  {
+//! y <- alpha A.x + beta y   (will use the transposed of A instead if tranposeA is true)
+inline void productScaleAcc(const TVec<float>& y, const TMat<float>& A, bool transposeA, const TVec<float>& x, float alpha, float beta)
+{
 #ifdef BOUNDCHECK
     if(!transposeA)
-      {
+    {
         if(A.length()!=y.length() || A.width()!=x.length())
-          PLERROR("productScaleAcc, incompatible arguments Vec(%d) <- Mat(%d,%d) . Vec(%d)", y.length(), A.length(), A.width(), x.length());
-      }
+            PLERROR("productScaleAcc, incompatible arguments Vec(%d) <- Mat(%d,%d) . Vec(%d)", y.length(), A.length(), A.width(), x.length());
+    }
     else
-      {
+    {
         if(A.length()!=x.length() || A.width()!=y.length())
-          PLERROR("productScaleAcc, incompatible arguments Vec(%d) <- Mat(%d,%d)' . Vec(%d)", y.length(), A.length(), A.width(), x.length());
-      }
+            PLERROR("productScaleAcc, incompatible arguments Vec(%d) <- Mat(%d,%d)' . Vec(%d)", y.length(), A.length(), A.width(), x.length());
+    }
 #endif
 
 /*    int one = 1;
-    char trans = transposeA ?'N' :'T';
-    int lda = A.mod();
-    int m = A.width();
-    int n = A.length();
-    static int ndbg=0;
+      char trans = transposeA ?'N' :'T';
+      int lda = A.mod();
+      int m = A.width();
+      int n = A.length();
+      static int ndbg=0;
 
-    extern bool debug_;
-    if (debug_ && ndbg<3)
+      extern bool debug_;
+      if (debug_ && ndbg<3)
       {
-        cout << "A=" << A << " * " << x << " ==> " << y << endl;
-        ndbg++;
+      cout << "A=" << A << " * " << x << " ==> " << y << endl;
+      ndbg++;
       }
-    sgemv_(&trans, &m, &n, &alpha, A.data(), &lda, x.data(), &one, &beta, y.data(), &one);
-    if (debug_ && ndbg<3)
+      sgemv_(&trans, &m, &n, &alpha, A.data(), &lda, x.data(), &one, &beta, y.data(), &one);
+      if (debug_ && ndbg<3)
       {
-        cout << "A=" << A << " * " << x << " ==> " << y << endl;
-        ndbg++;
+      cout << "A=" << A << " * " << x << " ==> " << y << endl;
+      ndbg++;
       }
 */
-  }
+}
 
-  //! A <- A + alpha x.y'
-  inline void externalProductScaleAcc(const TMat<float>& A, const TVec<float>& x, const TVec<float>& y, float alpha)
-  {
+//! A <- A + alpha x.y'
+inline void externalProductScaleAcc(const TMat<float>& A, const TVec<float>& x, const TVec<float>& y, float alpha)
+{
 #ifdef BOUNDCHECK
     if(A.length()!=x.length() || A.width()!=y.length())
-      PLERROR("In externalProductScaleAcc, incompatible dimensions: Mat(%d,%d) <- Vec(%d).Vec(%d)'",A.length(), A.width(), x.length(), y.length());
+        PLERROR("In externalProductScaleAcc, incompatible dimensions: Mat(%d,%d) <- Vec(%d).Vec(%d)'",A.length(), A.width(), x.length(), y.length());
 #endif
     int one = 1;
     int lda = A.mod();
     int m = A.width();
     int n = A.length();
     sger_(&m, &n, &alpha, y.data(), &one, x.data(), &one, A.data(), &lda);
-  }
+}
 
 inline void externalProductAcc(const TMat<float>& A, const TVec<float>& x, const TVec<float>& y)
 { externalProductScaleAcc(A, x, y, 1.); }
@@ -382,23 +382,23 @@ inline void productTransposeAcc(const TMat<float>& mat, const TMat<float>& m1, c
 inline real dot_product(real s,real* x,real* y,int n)
 {
 #ifdef UNFOLD
-	int n4 = (n >> 2) << 2;
-	int i=0;
-	for (;i<n4;i+=4)
-	{
-		real s1 = x[i] * y[i];
-		real s2 = x[i+1] * y[i+1];
-		real s3 = x[i+2] * y[i+2];
-		real s4 = x[i+3] * y[i+3];
-		s += s1+s2+s3+s4;
-	}
-	for (;i<n;i++)
-		s += x[i] * y[i];
+    int n4 = (n >> 2) << 2;
+    int i=0;
+    for (;i<n4;i+=4)
+    {
+        real s1 = x[i] * y[i];
+        real s2 = x[i+1] * y[i+1];
+        real s3 = x[i+2] * y[i+2];
+        real s4 = x[i+3] * y[i+3];
+        s += s1+s2+s3+s4;
+    }
+    for (;i<n;i++)
+        s += x[i] * y[i];
 #else
-	for (int i=0;i<n;i++)
-		s += *x++ * *y++;
+    for (int i=0;i<n;i++)
+        s += *x++ * *y++;
 #endif
-	return s;
+    return s;
 }
 
 // norman: sse is not supported in WIN32
@@ -410,102 +410,102 @@ inline real dot_product(real s,real* x,real* y,int n)
 // dx[j] += sum_i dy[i]*w(i,j)
 // w(i,j) -= learning_rate*(dy[i]*x[j] + weight_decay*w(i,j))
 inline void bprop_update_layer(real* dy, real* x, real* dx, real* w,
-															 int n_y, int n_x, real learning_rate,
-															 real weight_decay)
+                               int n_y, int n_x, real learning_rate,
+                               real weight_decay)
 {
 #ifdef BUNDLE
-	int nx8 = (n_x >> 3) << 3;
-	int j8=0;
-	real* xj = x;
-	real* dxj = dx;
-	int delta_w1 = n_x - 8;
-	int delta_w2 = n_y*n_x - 8;
-	real* w_ij = w;
-	for (;j8<nx8;j8+=8,xj+=8,dxj+=8,w_ij-=delta_w2)
-	{
-		real* dy_ = dy;
-		for (int i=0;i<n_y;i++)
-		{
-			real* next_w = w_ij + delta_w1;
-			prefetchnta(*next_w);
-			real* x_j = xj;
-			real* dx_j = dxj;
-			real d_y = dy_[i];
-			*dx_j   += d_y * *w_ij;
-			*w_ij   -= learning_rate*(d_y * *x_j + weight_decay * *w_ij);
-			dx_j[1] += d_y * w_ij[1];
-			w_ij[1] -= learning_rate*(d_y * x_j[1] + weight_decay * w_ij[1]);
-			dx_j[2] += d_y * w_ij[2];
-			w_ij[2] -= learning_rate*(d_y * x_j[2] + weight_decay * w_ij[2]);
-			dx_j[3] += d_y * w_ij[3];
-			w_ij[3] -= learning_rate*(d_y * x_j[3] + weight_decay * w_ij[3]);
-			dx_j[4] += d_y * w_ij[4];
-			w_ij[4] -= learning_rate*(d_y * x_j[4] + weight_decay * w_ij[4]);
-			dx_j[5] += d_y * w_ij[5];
-			w_ij[5] -= learning_rate*(d_y * x_j[5] + weight_decay * w_ij[5]);
-			dx_j[6] += d_y * w_ij[6];
-			w_ij[6] -= learning_rate*(d_y * x_j[6] + weight_decay * w_ij[6]);
-			dx_j[7] += d_y * w_ij[7];
-			w_ij[7] -= learning_rate*(d_y * x_j[7] + weight_decay * w_ij[7]);
-			w_ij = next_w;
-		}
-	}
-	for (int i=0;i<n_y;i++)
-	{
-		real dy_i = dy[i];
-		real *dx_j = dx;
-		real *x_j = x;
-		for (int j=j8;j<n_x;j++)
-		{
-			*dx_j++ += dy_i * *w;
-			*w++ -= learning_rate*(dy_i * *x_j++ + weight_decay * *w);
-		}
-	}
+    int nx8 = (n_x >> 3) << 3;
+    int j8=0;
+    real* xj = x;
+    real* dxj = dx;
+    int delta_w1 = n_x - 8;
+    int delta_w2 = n_y*n_x - 8;
+    real* w_ij = w;
+    for (;j8<nx8;j8+=8,xj+=8,dxj+=8,w_ij-=delta_w2)
+    {
+        real* dy_ = dy;
+        for (int i=0;i<n_y;i++)
+        {
+            real* next_w = w_ij + delta_w1;
+            prefetchnta(*next_w);
+            real* x_j = xj;
+            real* dx_j = dxj;
+            real d_y = dy_[i];
+            *dx_j   += d_y * *w_ij;
+            *w_ij   -= learning_rate*(d_y * *x_j + weight_decay * *w_ij);
+            dx_j[1] += d_y * w_ij[1];
+            w_ij[1] -= learning_rate*(d_y * x_j[1] + weight_decay * w_ij[1]);
+            dx_j[2] += d_y * w_ij[2];
+            w_ij[2] -= learning_rate*(d_y * x_j[2] + weight_decay * w_ij[2]);
+            dx_j[3] += d_y * w_ij[3];
+            w_ij[3] -= learning_rate*(d_y * x_j[3] + weight_decay * w_ij[3]);
+            dx_j[4] += d_y * w_ij[4];
+            w_ij[4] -= learning_rate*(d_y * x_j[4] + weight_decay * w_ij[4]);
+            dx_j[5] += d_y * w_ij[5];
+            w_ij[5] -= learning_rate*(d_y * x_j[5] + weight_decay * w_ij[5]);
+            dx_j[6] += d_y * w_ij[6];
+            w_ij[6] -= learning_rate*(d_y * x_j[6] + weight_decay * w_ij[6]);
+            dx_j[7] += d_y * w_ij[7];
+            w_ij[7] -= learning_rate*(d_y * x_j[7] + weight_decay * w_ij[7]);
+            w_ij = next_w;
+        }
+    }
+    for (int i=0;i<n_y;i++)
+    {
+        real dy_i = dy[i];
+        real *dx_j = dx;
+        real *x_j = x;
+        for (int j=j8;j<n_x;j++)
+        {
+            *dx_j++ += dy_i * *w;
+            *w++ -= learning_rate*(dy_i * *x_j++ + weight_decay * *w);
+        }
+    }
 
 #else
 #ifdef UNFOLD
-  int nx4 = (n_x >> 2) << 2;
-  real *w_i = w;
-	for (int i=0;i<n_y;i++,w_i+=n_x)
-	{
-		real dy_i = dy[i];
-		real *dx_j = dx;
-		real *x_j = x;
-		int j=0;
-		for (;j<nx4;j+=4)
-		{
-      real w_ij0 = w_i[j];
-      real w_ij1 = w_i[j+1];
-      real w_ij2 = w_i[j+2];
-      real w_ij3 = w_i[j+3];
-      dx_j[j] += dy_i * w_ij0;
-      dx_j[j+1] += dy_i * w_ij1;
-      dx_j[j+2] += dy_i * w_ij2;
-      dx_j[j+3] += dy_i * w_ij3;
-      w_i[j] -= learning_rate*(dy_i * x_j[j] + weight_decay * w_ij0);
-      w_i[j+1] -= learning_rate*(dy_i * x_j[j+1] + weight_decay * w_ij1);
-      w_i[j+2] -= learning_rate*(dy_i * x_j[j+2] + weight_decay * w_ij2);
-      w_i[j+3] -= learning_rate*(dy_i * x_j[j+3] + weight_decay * w_ij3);
-    }
-    for (;j<n_x;j++)
+    int nx4 = (n_x >> 2) << 2;
+    real *w_i = w;
+    for (int i=0;i<n_y;i++,w_i+=n_x)
     {
-      real w_ij = w_i[j];
-      dx_j[j] += dy_i * w_ij;
-      w_i[j] -= learning_rate*(dy_i * x_j[j] + weight_decay * w_ij);
+        real dy_i = dy[i];
+        real *dx_j = dx;
+        real *x_j = x;
+        int j=0;
+        for (;j<nx4;j+=4)
+        {
+            real w_ij0 = w_i[j];
+            real w_ij1 = w_i[j+1];
+            real w_ij2 = w_i[j+2];
+            real w_ij3 = w_i[j+3];
+            dx_j[j] += dy_i * w_ij0;
+            dx_j[j+1] += dy_i * w_ij1;
+            dx_j[j+2] += dy_i * w_ij2;
+            dx_j[j+3] += dy_i * w_ij3;
+            w_i[j] -= learning_rate*(dy_i * x_j[j] + weight_decay * w_ij0);
+            w_i[j+1] -= learning_rate*(dy_i * x_j[j+1] + weight_decay * w_ij1);
+            w_i[j+2] -= learning_rate*(dy_i * x_j[j+2] + weight_decay * w_ij2);
+            w_i[j+3] -= learning_rate*(dy_i * x_j[j+3] + weight_decay * w_ij3);
+        }
+        for (;j<n_x;j++)
+        {
+            real w_ij = w_i[j];
+            dx_j[j] += dy_i * w_ij;
+            w_i[j] -= learning_rate*(dy_i * x_j[j] + weight_decay * w_ij);
+        }
     }
-  }
 #else
-  for (int i=0;i<n_y;i++)
-  {
-    real dy_i = dy[i];
-    real *dx_j = dx;
-    real *x_j = x;
-    for (int j=0;j<n_x;j++)
+    for (int i=0;i<n_y;i++)
     {
-      *dx_j++ += dy_i * *w;
-      *w++ -= learning_rate*(dy_i * *x_j++ + weight_decay * *w);
+        real dy_i = dy[i];
+        real *dx_j = dx;
+        real *x_j = x;
+        for (int j=0;j<n_x;j++)
+        {
+            *dx_j++ += dy_i * *w;
+            *w++ -= learning_rate*(dy_i * *x_j++ + weight_decay * *w);
+        }
     }
-  }
 #endif
 #endif
 }
@@ -514,8 +514,15 @@ inline void bprop_update_layer(real* dy, real* x, real* dx, real* w,
 
 #endif
 
-
-
-
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

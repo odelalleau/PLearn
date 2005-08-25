@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UCIDataVMatrix.h,v 1.1 2005/05/31 18:35:34 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,55 +54,55 @@ class UCIDataVMatrix: public ForwardVMatrix
 
 private:
 
-  typedef ForwardVMatrix inherited;
+    typedef ForwardVMatrix inherited;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  PP<UCISpecification> uci_spec;
+    PP<UCISpecification> uci_spec;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  UCIDataVMatrix();
+    //! Default constructor.
+    UCIDataVMatrix();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // Simply call inherited::build() then build_().
-  virtual void build();
+    // Simply call inherited::build() then build_().
+    virtual void build();
 
-  //! Transform a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transform a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declare name and deepCopy methods.
-  PLEARN_DECLARE_OBJECT(UCIDataVMatrix);
+    //! Declare name and deepCopy methods.
+    PLEARN_DECLARE_OBJECT(UCIDataVMatrix);
 
 };
 
@@ -110,3 +110,16 @@ DECLARE_OBJECT_PTR(UCIDataVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ClassificationLossVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ClassificationLossVariable_INC
 #define ClassificationLossVariable_INC
@@ -54,36 +54,49 @@ using namespace std;
 //! Indicator(classnum==argmax(netout))
 class ClassificationLossVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  ClassificationLossVariable() {}
-  ClassificationLossVariable(Variable* netout, Variable* classnum);
+    //!  Default constructor for persistence
+    ClassificationLossVariable() {}
+    ClassificationLossVariable(Variable* netout, Variable* classnum);
 
-  PLEARN_DECLARE_OBJECT(ClassificationLossVariable);
+    PLEARN_DECLARE_OBJECT(ClassificationLossVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  //! can't bprop through a hard classification error...
-  virtual void bprop() {}
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    //! can't bprop through a hard classification error...
+    virtual void bprop() {}
 
 protected:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(ClassificationLossVariable);
 
 inline Var classification_loss(Var network_output, Var classnum)
 { 
-  if(classnum->isScalar())
-    return new ClassificationLossVariable(network_output, classnum); 
-  else return new MiniBatchClassificationLossVariable(network_output, classnum); 
+    if(classnum->isScalar())
+        return new ClassificationLossVariable(network_output, classnum); 
+    else return new MiniBatchClassificationLossVariable(network_output, classnum); 
 }
 
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

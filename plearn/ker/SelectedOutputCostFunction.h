@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SelectedOutputCostFunction.h,v 1.6 2005/02/04 15:08:49 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef SelectedOutputCostFunction_INC
 #define SelectedOutputCostFunction_INC
@@ -58,8 +58,8 @@ class SelectedOutputCostFunction: public Kernel
     typedef Kernel inherited;
 		
 protected:
-  Ker costfunc;
-  int outputindex;
+    Ker costfunc;
+    int outputindex;
 
 public:
     SelectedOutputCostFunction() : costfunc(), outputindex() {}
@@ -68,11 +68,11 @@ public:
 
     PLEARN_DECLARE_OBJECT(SelectedOutputCostFunction);
 
-  virtual string info() const
-        { return "selected_output[" + tostring(outputindex) + "] "+costfunc->info(); }
+    virtual string info() const
+    { return "selected_output[" + tostring(outputindex) + "] "+costfunc->info(); }
 
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-  virtual real evaluate(const Vec& output, const Vec& target) const; 
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual real evaluate(const Vec& output, const Vec& target) const; 
 
 protected:
     //!  recognized option are "outputindex" and "costfunc"
@@ -85,3 +85,15 @@ DECLARE_OBJECT_PTR(SelectedOutputCostFunction);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

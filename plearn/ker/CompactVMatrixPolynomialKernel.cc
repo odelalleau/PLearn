@@ -35,9 +35,9 @@
  
 
 /* *******************************************************      
-   * $Id: CompactVMatrixPolynomialKernel.cc,v 1.4 2004/04/07 23:15:58 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "CompactVMatrixPolynomialKernel.h"
 
@@ -48,12 +48,12 @@ PLEARN_IMPLEMENT_OBJECT(CompactVMatrixPolynomialKernel, "ONE LINE DESCR", "NO HE
 
 real CompactVMatrixPolynomialKernel::evaluate(const Vec& x1, const Vec& x2) const
 { // return ipow(beta*dot(x1,x2)+1.0, n);
-  real dot_product=0;
-  if (m)
-    dot_product=m->dotProduct(int(x1[0]),int(x2[0]));
-  else
-    dot_product=dot(x1,x2);
-  return ipow(beta*dot_product+1.0, n);
+    real dot_product=0;
+    if (m)
+        dot_product=m->dotProduct(int(x1[0]),int(x2[0]));
+    else
+        dot_product=dot(x1,x2);
+    return ipow(beta*dot_product+1.0, n);
 }
 
 void CompactVMatrixPolynomialKernel::declareOptions(OptionList &ol)
@@ -68,3 +68,16 @@ void CompactVMatrixPolynomialKernel::declareOptions(OptionList &ol)
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

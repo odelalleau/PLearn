@@ -42,40 +42,53 @@ using namespace std;
 
 void endianswap2(void* ptr, int n)
 {
-  char *mptr = (char *) ptr;
-  char tmp;
-  while(n--)
+    char *mptr = (char *) ptr;
+    char tmp;
+    while(n--)
     {
-      tmp = mptr[0]; mptr[0]=mptr[1]; mptr[1]=tmp;
-      mptr+=2;
+        tmp = mptr[0]; mptr[0]=mptr[1]; mptr[1]=tmp;
+        mptr+=2;
     }
 }
 
 void endianswap4(void* ptr, int n)
 {
-  char *mptr = (char *) ptr;
-  char tmp;
-  while(n--)
+    char *mptr = (char *) ptr;
+    char tmp;
+    while(n--)
     {
-    tmp = mptr[0]; mptr[0]=mptr[3]; mptr[3]=tmp;
-    tmp = mptr[1]; mptr[1]=mptr[2]; mptr[2]=tmp;
-    mptr+=4;
-  }
+        tmp = mptr[0]; mptr[0]=mptr[3]; mptr[3]=tmp;
+        tmp = mptr[1]; mptr[1]=mptr[2]; mptr[2]=tmp;
+        mptr+=4;
+    }
 }
 
 void endianswap8(void* ptr, int n)
 {
-  char *mptr = (char *) ptr;
-  char tmp;
-  while(n--)
+    char *mptr = (char *) ptr;
+    char tmp;
+    while(n--)
     {
-      tmp = mptr[0]; mptr[0]=mptr[7]; mptr[7]=tmp;
-      tmp = mptr[1]; mptr[1]=mptr[6]; mptr[6]=tmp;
-      tmp = mptr[2]; mptr[2]=mptr[5]; mptr[5]=tmp;
-      tmp = mptr[3]; mptr[3]=mptr[4]; mptr[4]=tmp;
-      mptr+=8;
+        tmp = mptr[0]; mptr[0]=mptr[7]; mptr[7]=tmp;
+        tmp = mptr[1]; mptr[1]=mptr[6]; mptr[6]=tmp;
+        tmp = mptr[2]; mptr[2]=mptr[5]; mptr[5]=tmp;
+        tmp = mptr[3]; mptr[3]=mptr[4]; mptr[4]=tmp;
+        mptr+=8;
     }
 }
 
 
 }
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

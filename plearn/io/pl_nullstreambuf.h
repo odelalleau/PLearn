@@ -55,22 +55,35 @@ class pl_nullstreambuf : public streambuf
 {
 private:
 #if __GNUC__ < 3 && !defined(WIN32)
-  typedef int int_type;
+    typedef int int_type;
 #endif
-  static const int_type eof = EOF;
+    static const int_type eof = EOF;
 
 protected:
-  //! underflow: always return eof
-  virtual int_type underflow() { return pl_nullstreambuf::eof; }
+    //! underflow: always return eof
+    virtual int_type underflow() { return pl_nullstreambuf::eof; }
 
-  //! overflow: do nothing; just return the passed value.
-  virtual int_type overflow(int_type meta = pl_nullstreambuf::eof) { return meta; }
+    //! overflow: do nothing; just return the passed value.
+    virtual int_type overflow(int_type meta = pl_nullstreambuf::eof) { return meta; }
 
 public:
-  //! default and only ctor.
-  pl_nullstreambuf() :streambuf() {}
+    //! default and only ctor.
+    pl_nullstreambuf() :streambuf() {}
 };
 
 } // namespace PLearn
 
 #endif //ndef pl_nullstreambuf_INC
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.21 2005/02/08 21:33:31 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "DiskVMatrix.h"
 #include <errno.h>
@@ -86,238 +86,238 @@ for backward compatibility only. ]
 
 */
 
-DiskVMatrix::DiskVMatrix()
-  : indexf(0),freshnewfile(false),
-    old_format(false),swap_endians(false),
-    tolerance(1e-6)
-{
-  writable = false;
-}
+    DiskVMatrix::DiskVMatrix()
+        : indexf(0),freshnewfile(false),
+          old_format(false),swap_endians(false),
+          tolerance(1e-6)
+    {
+        writable = false;
+    }
 
 DiskVMatrix::DiskVMatrix(const string& the_dirname, bool readwrite)
-  : indexf(0),freshnewfile(false),
-    old_format(false),swap_endians(false),
-    dirname(remove_trailing_slash(the_dirname)),
-    tolerance(1e-6)
+    : indexf(0),freshnewfile(false),
+      old_format(false),swap_endians(false),
+      dirname(remove_trailing_slash(the_dirname)),
+      tolerance(1e-6)
 {
-  writable = readwrite;
-  build_();
+    writable = readwrite;
+    build_();
 }
 
 DiskVMatrix::DiskVMatrix(const string& the_dirname, int the_width, bool write_double_as_float)  
-  : RowBufferedVMatrix(0,the_width),
-    indexf(0), 
-    freshnewfile(true),
-    old_format(false),swap_endians(false),
-    dirname(remove_trailing_slash(the_dirname)),
-    tolerance(1e-6)
+    : RowBufferedVMatrix(0,the_width),
+      indexf(0), 
+      freshnewfile(true),
+      old_format(false),swap_endians(false),
+      dirname(remove_trailing_slash(the_dirname)),
+      tolerance(1e-6)
 {
-  writable = true;
-  build_();
+    writable = true;
+    build_();
 }
 
 void DiskVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void DiskVMatrix::build_()
 {
-  if(!freshnewfile)
-  {
-    if(!isdir(dirname))
-      PLERROR("In DiskVMatrix constructor, directory %s could not be found",dirname.c_str());
-    setMetaDataDir(dirname + ".metadata"); 
-    setMtime( mtime( dirname/"indexfile" ) );
-    string omode;
-    if(writable)
-      omode = "r+b";
-    else // read-only
-      omode = "rb";
-
-    string indexfname = dirname/"indexfile";
-    indexf = fopen(indexfname.c_str(), omode.c_str());
-    if(!indexf)
-      PLERROR("In DiskVMatrix constructor, could not open file %s in specified mode", indexfname.c_str());
-  
-    unsigned char header[4];
-    fread(header,1,4,indexf);
-    if(header[0]=='L' || header[0]=='B')
-      { // New format
-        old_format = false;
-        swap_endians = (header[0]!=byte_order());
-      }
-    else if(header[0]==16)  
-      { // Old format
-        old_format = true;
-        if(byte_order()!='L')
-          PLERROR("Old format DiskVMatrix can only be read from a little-endian machine.\n"
-                  "Convert it to a new format on a little-endian machine prior to attempt\n"
-                  "using it from a big endian machine.\n");
-        swap_endians = false;
-      } 
-    else
-      {
-        PLERROR("Wrong header byte in index file %s: ascii code %d\n"
-                "(should be 'L' or 'B' or '...')\n", indexfname.c_str(), header[0]);
-      }
-
-    fread(&length_,sizeof(int),1,indexf);
-    fread(&width_,sizeof(int),1,indexf);
-    if(swap_endians)
-      {
-        endianswap(&length_);
-        endianswap(&width_);
-      }
-    int k=0;
-    string fname = dirname/tostring(k)+".data";
-    while(isfile(fname))
+    if(!freshnewfile)
     {
-      FILE* f = fopen(fname.c_str(), omode.c_str());
-      if(!f)
-        PLERROR("In DiskVMatrix constructor, could not open file %s in specified mode", fname.c_str());
-      dataf.append(f);
-      fname = dirname/(tostring(++k)+".data");
-    }
-    // Stuff related to RowBufferedVMatrix, for consistency
-    current_row_index = -1;
-    current_row.resize(width_);
-    other_row_index = -1;
-    other_row.resize(width_);
+        if(!isdir(dirname))
+            PLERROR("In DiskVMatrix constructor, directory %s could not be found",dirname.c_str());
+        setMetaDataDir(dirname + ".metadata"); 
+        setMtime( mtime( dirname/"indexfile" ) );
+        string omode;
+        if(writable)
+            omode = "r+b";
+        else // read-only
+            omode = "rb";
 
-    //resize the string mappings
-    map_sr = TVec<map<string,real> >(width_);
-    map_rs = TVec<map<real,string> >(width_);
-
-    getFieldInfos();
-    if (writable)
-        fseek(indexf, 0, SEEK_END);
-  }
-  else
-  {
-    if(isdir(dirname))
-      PLERROR("In DiskVMatrix constructor (with specified width), directory %s already exists",dirname.c_str());
-    setMetaDataDir(dirname + ".metadata");
-    setMtime(mtime( dirname/"indexfile" ));
-
-    if(isfile(dirname)) // patch for running mkstemp (TmpFilenames)
-      unlink(dirname.c_str());
-    if(!force_mkdir(dirname)) // force directory creation 
-      PLERROR("In DiskVMatrix constructor (with specified width), could not create directory %s  Error was: %s",dirname.c_str(), strerror(errno));
-
-    string indexfname = dirname/"indexfile";
-    indexf = fopen(indexfname.c_str(),"w+b");
-
-    char header[4];
-    header[0] = byte_order();
-    header[1] = ' ';
-    header[2] = ' ';
-    header[3] = ' ';
-    fwrite(header,1,4,indexf);
-    fwrite((char*)&length_,sizeof(int),1,indexf);
-    fwrite((char*)&width_,sizeof(int),1,indexf);
+        string indexfname = dirname/"indexfile";
+        indexf = fopen(indexfname.c_str(), omode.c_str());
+        if(!indexf)
+            PLERROR("In DiskVMatrix constructor, could not open file %s in specified mode", indexfname.c_str());
   
-    string fname = dirname/"0.data";
-    FILE* f = fopen(fname.c_str(), "w+b");
-    dataf.append(f);
-  }
-  freshnewfile=false;
+        unsigned char header[4];
+        fread(header,1,4,indexf);
+        if(header[0]=='L' || header[0]=='B')
+        { // New format
+            old_format = false;
+            swap_endians = (header[0]!=byte_order());
+        }
+        else if(header[0]==16)  
+        { // Old format
+            old_format = true;
+            if(byte_order()!='L')
+                PLERROR("Old format DiskVMatrix can only be read from a little-endian machine.\n"
+                        "Convert it to a new format on a little-endian machine prior to attempt\n"
+                        "using it from a big endian machine.\n");
+            swap_endians = false;
+        } 
+        else
+        {
+            PLERROR("Wrong header byte in index file %s: ascii code %d\n"
+                    "(should be 'L' or 'B' or '...')\n", indexfname.c_str(), header[0]);
+        }
+
+        fread(&length_,sizeof(int),1,indexf);
+        fread(&width_,sizeof(int),1,indexf);
+        if(swap_endians)
+        {
+            endianswap(&length_);
+            endianswap(&width_);
+        }
+        int k=0;
+        string fname = dirname/tostring(k)+".data";
+        while(isfile(fname))
+        {
+            FILE* f = fopen(fname.c_str(), omode.c_str());
+            if(!f)
+                PLERROR("In DiskVMatrix constructor, could not open file %s in specified mode", fname.c_str());
+            dataf.append(f);
+            fname = dirname/(tostring(++k)+".data");
+        }
+        // Stuff related to RowBufferedVMatrix, for consistency
+        current_row_index = -1;
+        current_row.resize(width_);
+        other_row_index = -1;
+        other_row.resize(width_);
+
+        //resize the string mappings
+        map_sr = TVec<map<string,real> >(width_);
+        map_rs = TVec<map<real,string> >(width_);
+
+        getFieldInfos();
+        if (writable)
+            fseek(indexf, 0, SEEK_END);
+    }
+    else
+    {
+        if(isdir(dirname))
+            PLERROR("In DiskVMatrix constructor (with specified width), directory %s already exists",dirname.c_str());
+        setMetaDataDir(dirname + ".metadata");
+        setMtime(mtime( dirname/"indexfile" ));
+
+        if(isfile(dirname)) // patch for running mkstemp (TmpFilenames)
+            unlink(dirname.c_str());
+        if(!force_mkdir(dirname)) // force directory creation 
+            PLERROR("In DiskVMatrix constructor (with specified width), could not create directory %s  Error was: %s",dirname.c_str(), strerror(errno));
+
+        string indexfname = dirname/"indexfile";
+        indexf = fopen(indexfname.c_str(),"w+b");
+
+        char header[4];
+        header[0] = byte_order();
+        header[1] = ' ';
+        header[2] = ' ';
+        header[3] = ' ';
+        fwrite(header,1,4,indexf);
+        fwrite((char*)&length_,sizeof(int),1,indexf);
+        fwrite((char*)&width_,sizeof(int),1,indexf);
+  
+        string fname = dirname/"0.data";
+        FILE* f = fopen(fname.c_str(), "w+b");
+        dataf.append(f);
+    }
+    freshnewfile=false;
 }
 
 void DiskVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "dirname", &DiskVMatrix::dirname, OptionBase::buildoption, "Directory name of the.dmat");
-  declareOption(ol, "tolerance", &DiskVMatrix::tolerance, OptionBase::buildoption, "The absolute error tolerance for storing doubles as floats");
-  inherited::declareOptions(ol);
+    declareOption(ol, "dirname", &DiskVMatrix::dirname, OptionBase::buildoption, "Directory name of the.dmat");
+    declareOption(ol, "tolerance", &DiskVMatrix::tolerance, OptionBase::buildoption, "The absolute error tolerance for storing doubles as floats");
+    inherited::declareOptions(ol);
 }
 
 void DiskVMatrix::getNewRow(int i, const Vec& v) const
 { 
 #ifdef BOUNDCHECK
-  if(i<0 || i>length())
-    PLERROR("In DiskVMatrix::getNewRow, bad row number %d",i);
-  if(v.length() != width())
-    PLERROR("In DiskVMatrix::getNewRow, length of v (%d) does not match matrix width (%d)",v.length(),width());
+    if(i<0 || i>length())
+        PLERROR("In DiskVMatrix::getNewRow, bad row number %d",i);
+    if(v.length() != width())
+        PLERROR("In DiskVMatrix::getNewRow, length of v (%d) does not match matrix width (%d)",v.length(),width());
 #endif
 
-  unsigned char filenum;
-  unsigned int position;
-  fseek(indexf,3*sizeof(int) + i*(sizeof(unsigned char)+sizeof(unsigned int)), SEEK_SET);
-  fread(&filenum,sizeof(unsigned char),1,indexf);
-  fread(&position,sizeof(unsigned int),1,indexf);
-  if(swap_endians)
-    endianswap(&position);
-  FILE* f = dataf[int(filenum)];
-  fseek(f,position,SEEK_SET);
-  if(old_format)
-    binread_compressed(f,v.data(),v.length());
-  else
-    new_read_compressed(f, v.data(), v.length(), swap_endians);      
+    unsigned char filenum;
+    unsigned int position;
+    fseek(indexf,3*sizeof(int) + i*(sizeof(unsigned char)+sizeof(unsigned int)), SEEK_SET);
+    fread(&filenum,sizeof(unsigned char),1,indexf);
+    fread(&position,sizeof(unsigned int),1,indexf);
+    if(swap_endians)
+        endianswap(&position);
+    FILE* f = dataf[int(filenum)];
+    fseek(f,position,SEEK_SET);
+    if(old_format)
+        binread_compressed(f,v.data(),v.length());
+    else
+        new_read_compressed(f, v.data(), v.length(), swap_endians);      
 }
 
 void DiskVMatrix::putRow(int i, Vec v)
 { 
-  PLERROR("putRow cannot in general be correctly and efficiently implemented for a DiskVMatrix.\n"
-          "Use appendRow if you wish to write more rows.");
+    PLERROR("putRow cannot in general be correctly and efficiently implemented for a DiskVMatrix.\n"
+            "Use appendRow if you wish to write more rows.");
 }
 
 void DiskVMatrix::appendRow(Vec v)
 {
-  if(!writable)
-    PLERROR("In DiskVMatrix::appendRow cannot append row in read only mode, set readwrite parameter to true when calling the constructor");
-  if(v.length() != width())
-    PLERROR("In DiskVMatrix::appendRow, length of v (%d) does not match matrix width (%d)",v.length(),width());
+    if(!writable)
+        PLERROR("In DiskVMatrix::appendRow cannot append row in read only mode, set readwrite parameter to true when calling the constructor");
+    if(v.length() != width())
+        PLERROR("In DiskVMatrix::appendRow, length of v (%d) does not match matrix width (%d)",v.length(),width());
 
-  int filenum = dataf.size()-1;
-  FILE* f = dataf[filenum];
-  fseek(f,0,SEEK_END);
-  unsigned int position = (unsigned int)ftell(f);
-  if(position>500000000L)
-  {
-    fflush(f);
-    filenum++;
-    string filename = dirname / (tostring(filenum) + ".data");
-    f = fopen(filename.c_str(), "w+b");
-    dataf.append(f);
-    position = 0;
-  }
-  if(old_format)
-    binwrite_compressed(f,v.data(),v.length());
-  else
-    new_write_compressed(f, v.data(),v.length(), tolerance, swap_endians);
+    int filenum = dataf.size()-1;
+    FILE* f = dataf[filenum];
+    fseek(f,0,SEEK_END);
+    unsigned int position = (unsigned int)ftell(f);
+    if(position>500000000L)
+    {
+        fflush(f);
+        filenum++;
+        string filename = dirname / (tostring(filenum) + ".data");
+        f = fopen(filename.c_str(), "w+b");
+        dataf.append(f);
+        position = 0;
+    }
+    if(old_format)
+        binwrite_compressed(f,v.data(),v.length());
+    else
+        new_write_compressed(f, v.data(),v.length(), tolerance, swap_endians);
 
-  fseek(indexf,0,SEEK_END);
-  fputc(filenum,indexf);
-  fwrite((char*)&position,sizeof(unsigned int),1,indexf);
-  length_++;
-  fseek(indexf,sizeof(int),SEEK_SET);
-  int le = length_;
-  if(swap_endians)
-    endianswap(&le);
-  fwrite(&le,sizeof(int),1,indexf);
+    fseek(indexf,0,SEEK_END);
+    fputc(filenum,indexf);
+    fwrite((char*)&position,sizeof(unsigned int),1,indexf);
+    length_++;
+    fseek(indexf,sizeof(int),SEEK_SET);
+    int le = length_;
+    if(swap_endians)
+        endianswap(&le);
+    fwrite(&le,sizeof(int),1,indexf);
 }
 
 void DiskVMatrix::flush()
 {
-  int filenum = dataf.size()-1;
-  FILE* f = dataf[filenum];
-  fflush(f);
-  fflush(indexf);
+    int filenum = dataf.size()-1;
+    FILE* f = dataf[filenum];
+    fflush(f);
+    fflush(indexf);
 }
 
 DiskVMatrix::~DiskVMatrix()
 {
-  for(int i=0; i<dataf.size(); i++)
+    for(int i=0; i<dataf.size(); i++)
     {
-      if(dataf[i])
-        fclose(dataf[i]);
+        if(dataf[i])
+            fclose(dataf[i]);
     }
   
-  if(indexf)
-    fclose(indexf);
+    if(indexf)
+        fclose(indexf);
   
-  saveFieldInfos();
+    saveFieldInfos();
 }
 
 PLEARN_IMPLEMENT_OBJECT(DiskVMatrix, "ONE LINE DESCR", "NO HELP");
@@ -327,3 +327,16 @@ PLEARN_IMPLEMENT_OBJECT(DiskVMatrix, "ONE LINE DESCR", "NO HELP");
 #endif
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

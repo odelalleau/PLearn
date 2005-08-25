@@ -36,8 +36,8 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: ExplicitListOracle.cc,v 1.1 2005/01/11 23:22:44 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file ExplicitListOracle.cc */
 #include "ExplicitListOracle.h"
@@ -46,19 +46,19 @@ namespace PLearn {
 using namespace std;
 
 ExplicitListOracle::ExplicitListOracle() 
-  :OptionsOracle()
+    :OptionsOracle()
 /* ### Initialise all fields to their default value */
-  {
+{
     // ...
 
     // ### You may or may not want to call build_() to finish building the object
     // build_();
-  }
+}
 
 PLEARN_IMPLEMENT_OBJECT(ExplicitListOracle, "ONE LINE DESCR", "NO HELP");
 
-  void ExplicitListOracle::declareOptions(OptionList& ol)
-  {
+void ExplicitListOracle::declareOptions(OptionList& ol)
+{
     declareOption(ol, "option_names", &ExplicitListOracle::option_names, OptionBase::buildoption,
                   "name of options");
 
@@ -67,28 +67,28 @@ PLEARN_IMPLEMENT_OBJECT(ExplicitListOracle, "ONE LINE DESCR", "NO HELP");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
+}
 
 TVec<string>  ExplicitListOracle::getOptionNames() const
 { return option_names; }
 
 TVec<string> ExplicitListOracle::generateNextTrial(const TVec<string>& older_trial, real obtained_objective)
 {
-  if(nreturned < option_values.length())
-    return option_values(nreturned++);
-  else 
-    return TVec<string>();  
+    if(nreturned < option_values.length())
+        return option_values(nreturned++);
+    else 
+        return TVec<string>();  
 }
 
 void ExplicitListOracle::forget()
 {
-  nreturned = 0;
+    nreturned = 0;
 }
 
 
 
-  void ExplicitListOracle::build_()
-  {
+void ExplicitListOracle::build_()
+{
     // ### This method should do the real building of the object,
     // ### according to set 'options', in *any* situation. 
     // ### Typical situations include:
@@ -96,21 +96,34 @@ void ExplicitListOracle::forget()
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
-  }
+}
 
-  // ### Nothing to add here, simply calls build_
-  void ExplicitListOracle::build()
-  {
+// ### Nothing to add here, simply calls build_
+void ExplicitListOracle::build()
+{
     inherited::build();
     build_();
-  }
+}
 
 
-  void ExplicitListOracle::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-  {
+void ExplicitListOracle::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(option_names, copies);
     deepCopyField(option_values, copies);
-  }
+}
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

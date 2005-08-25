@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io_deprecated.h,v 1.9 2005/02/08 21:37:36 tihocan Exp $
-   * AUTHORS: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/pl_io.h */
@@ -66,7 +66,7 @@ using namespace std;
 // *************************************************************************
 
 //!  Swap bytes between Big-Endian and Little-Endian representation in memory
-  //! NOTE: these calls are deprecated, use directly endianswap from base/byte_order.h
+//! NOTE: these calls are deprecated, use directly endianswap from base/byte_order.h
 inline void reverse_uint(const unsigned int* ptr, int n) { endianswap((unsigned int*) ptr,n); }
 inline void reverse_int(const int* ptr, int n) { endianswap((int*)ptr,n); }
 inline void reverse_float(const float* ptr, int n) { endianswap((float*)ptr,n); }
@@ -76,40 +76,40 @@ inline void reverse_short(const short* ptr, int n) { endianswap((short*)ptr,n); 
 
 //!  Writes binary data to the file in the specified representation (little or big endian)
 //!  regardeless of the endianness used on the current architecture.
-  void  fwrite_int(FILE *f, const int* ptr, int n, bool is_file_bigendian=true);
-  void  fwrite_float(FILE *f, const float* ptr, int n, bool is_file_bigendian=true);
-  void  fwrite_float(FILE *f, const double* ptr, int n, bool is_file_bigendian=true); //!<  writes double array to float file
-  void  fwrite_double(FILE *f, const double* ptr, int n, bool is_file_bigendian=true);
-  void  fwrite_double(FILE *f, const float* ptr, int n, bool is_file_bigendian=true); //!<  writes float array to double file
+void  fwrite_int(FILE *f, const int* ptr, int n, bool is_file_bigendian=true);
+void  fwrite_float(FILE *f, const float* ptr, int n, bool is_file_bigendian=true);
+void  fwrite_float(FILE *f, const double* ptr, int n, bool is_file_bigendian=true); //!<  writes double array to float file
+void  fwrite_double(FILE *f, const double* ptr, int n, bool is_file_bigendian=true);
+void  fwrite_double(FILE *f, const float* ptr, int n, bool is_file_bigendian=true); //!<  writes float array to double file
 
 //!  Reads binary data from a file assuming it is in the specified representation (either little or big endian)
 //!  If necessary the representation is translated to the endianness on the current architecture.
-  void  fread_int(FILE *f, int* ptr, int n, bool is_file_bigendian=true);
-  void  fread_float(FILE *f, float* ptr, int n, bool is_file_bigendian=true);
-  void  fread_float(FILE *f, double* ptr, int n, bool is_file_bigendian=true); //!<  reads disk floats into double array
-  void  fread_double(FILE *f, double* ptr, int n, bool is_file_bigendian=true);
-  void  fread_double(FILE *f, float* ptr, int n, bool is_file_bigendian=true); //!<  reads disk doubles into float array
-  void  fread_short(FILE *f, unsigned short* ptr, int n, bool is_file_bigendian=true);
+void  fread_int(FILE *f, int* ptr, int n, bool is_file_bigendian=true);
+void  fread_float(FILE *f, float* ptr, int n, bool is_file_bigendian=true);
+void  fread_float(FILE *f, double* ptr, int n, bool is_file_bigendian=true); //!<  reads disk floats into double array
+void  fread_double(FILE *f, double* ptr, int n, bool is_file_bigendian=true);
+void  fread_double(FILE *f, float* ptr, int n, bool is_file_bigendian=true); //!<  reads disk doubles into float array
+void  fread_short(FILE *f, unsigned short* ptr, int n, bool is_file_bigendian=true);
 
 /*!   The following calls read a single value from the file, assuming it is in the specified representation
   (either little or big endian) If necessary the representation is translated to the endianness used on
   the current architecture.
 */
-  inline int fread_int(FILE *f, bool is_file_bigendian=true) 
-    { int res; fread_int(f,&res,1,is_file_bigendian); return res; }
-  inline float fread_float(FILE *f, bool is_file_bigendian=true)
-    { float res; fread_float(f,&res,1,is_file_bigendian); return res; }
-  inline double fread_double(FILE *f, bool is_file_bigendian=true)
-    { double res; fread_double(f,&res,1,is_file_bigendian); return res; }
+inline int fread_int(FILE *f, bool is_file_bigendian=true) 
+{ int res; fread_int(f,&res,1,is_file_bigendian); return res; }
+inline float fread_float(FILE *f, bool is_file_bigendian=true)
+{ float res; fread_float(f,&res,1,is_file_bigendian); return res; }
+inline double fread_double(FILE *f, bool is_file_bigendian=true)
+{ double res; fread_double(f,&res,1,is_file_bigendian); return res; }
 
 //!  The following calls write a single value to the file in the specified representation,
 //!  regardeless of the endianness on the current architecture
-  inline void fwrite_int(FILE *f, int value, bool is_file_bigendian=true)
-    { fwrite_int(f, &value, 1, is_file_bigendian); }
-  inline void fwrite_float(FILE *f, float value, bool is_file_bigendian=true)
-    { fwrite_float(f, &value, 1, is_file_bigendian); }
-  inline void fwrite_double(FILE *f, double value, bool is_file_bigendian=true)
-    { fwrite_double(f, &value, 1, is_file_bigendian); }
+inline void fwrite_int(FILE *f, int value, bool is_file_bigendian=true)
+{ fwrite_int(f, &value, 1, is_file_bigendian); }
+inline void fwrite_float(FILE *f, float value, bool is_file_bigendian=true)
+{ fwrite_float(f, &value, 1, is_file_bigendian); }
+inline void fwrite_double(FILE *f, double value, bool is_file_bigendian=true)
+{ fwrite_double(f, &value, 1, is_file_bigendian); }
 
 //!  Writes binary data to the file in the specified representation (little or big endian)
 //!  regardeless of the endianness used on the current architecture.
@@ -170,27 +170,27 @@ inline unsigned short read_ushort(istream& in, bool is_file_bigendian=true)
 { unsigned short res; read_ushort(in,&res,1,is_file_bigendian); return res; }
 inline signed char read_sbyte(istream& in)
 { 
-  char res;
-  in.read(&res,1);
-  return (signed char) res;
+    char res;
+    in.read(&res,1);
+    return (signed char) res;
 }
 inline unsigned char read_ubyte(istream& in)
 { 
-  char res;
-  in.read(&res,1);
-  return (unsigned char) res;
+    char res;
+    in.read(&res,1);
+    return (unsigned char) res;
 }
 
 // ***************************************
 // *** DEPRECATED SERIALIZATION SYSTEM ***
 // ***************************************
 
-  //!  These functions are there to help you write and read object headers and
-  //!  footers for the persistance mechanism.
-  void writeHeader(ostream& out, const string& classname, int version=0); //!<  writes "<ClassName:version>\n"
-  void writeFooter(ostream& out, const string& classname); //!<  writes "</ClassName>\n"
-  int readHeader(PStream& in, const string& classname);   //!<  consumes "<ClassName:version>\n and returns version"
-  void readFooter(PStream& in, const string& classname);   //!<  consumes "</ClassName>\n"
+//!  These functions are there to help you write and read object headers and
+//!  footers for the persistance mechanism.
+void writeHeader(ostream& out, const string& classname, int version=0); //!<  writes "<ClassName:version>\n"
+void writeFooter(ostream& out, const string& classname); //!<  writes "</ClassName>\n"
+int readHeader(PStream& in, const string& classname);   //!<  consumes "<ClassName:version>\n and returns version"
+void readFooter(PStream& in, const string& classname);   //!<  consumes "</ClassName>\n"
 
 
 //! Writes a single newline character
@@ -203,68 +203,68 @@ inline void readNewline(istream& in)
 
 
 /*!     writes and reads the given fieldname (should be followed by
-    wrtiting or reading of the field's value. The readFieldName method
-    checks the read fieldname against the one passed as argument and
-    issues an error if they do not match
+  wrtiting or reading of the field's value. The readFieldName method
+  checks the read fieldname against the one passed as argument and
+  issues an error if they do not match
 */
-  void writeFieldName(ostream& out, const string& fieldname); //!<  writes "fieldname: "
-  //!  consumes "fieldname: " if possible, and return true if it does
-  //!  however if force=true and fieldname is not found then call error.
-  bool readFieldName(istream& in, const string& fieldname, bool force=false);   
+void writeFieldName(ostream& out, const string& fieldname); //!<  writes "fieldname: "
+//!  consumes "fieldname: " if possible, and return true if it does
+//!  however if force=true and fieldname is not found then call error.
+bool readFieldName(istream& in, const string& fieldname, bool force=false);   
 
-  //!  generic field writing and reading
-  template<class T>
-  void writeField(ostream& out, const string& fieldname, const T& x)
-  { 
+//!  generic field writing and reading
+template<class T>
+void writeField(ostream& out, const string& fieldname, const T& x)
+{ 
 // Norman: This gives problems on VSNet when T is a Array<VMFieldStat> or VMFieldStat.
 //         Because it is deprecated, well, I have decided to wipe it out! :)
 #ifndef WIN32
-	  writeFieldName(out,fieldname); write(out,x); out << '\n'; 
+    writeFieldName(out,fieldname); write(out,x); out << '\n'; 
 #endif
-  }
+}
 
-  template<class T>
-  void readField(istream& in, const string& fieldname, T& x)
-  { 
+template<class T>
+void readField(istream& in, const string& fieldname, T& x)
+{ 
 // Norman: This gives problems on VSNet when T is a Array<VMFieldStat> or VMFieldStat.
 //         Because it is deprecated, well, I have decided to wipe it out! :)
 #ifndef WIN32
-  readFieldName(in,fieldname,true); 
-  read(in,x); 
-  if(!isspace(in.get())) 
-    in.unget(); 
+    readFieldName(in,fieldname,true); 
+    read(in,x); 
+    if(!isspace(in.get())) 
+        in.unget(); 
 #endif
-  }
+}
 
-  //!  generic field BINARY writing and reading
-  template<class T>
-  void binwriteField(ostream& out, const string& fieldname, const T& x)
-  { writeFieldName(out,fieldname); binwrite(out,x); out << '\n'; }
+//!  generic field BINARY writing and reading
+template<class T>
+void binwriteField(ostream& out, const string& fieldname, const T& x)
+{ writeFieldName(out,fieldname); binwrite(out,x); out << '\n'; }
 
-  template<class T>
-  void binreadField(istream& in, const string& fieldname, T& x)
-  { readFieldName(in,fieldname,true); binread(in,x); in.get(); }
+template<class T>
+void binreadField(istream& in, const string& fieldname, T& x)
+{ readFieldName(in,fieldname,true); binread(in,x); in.get(); }
 
-  template<class T>
-  void binwriteField_double(ostream& out, const string& fieldname, const T& x)
-  { writeFieldName(out,fieldname); binwrite_double(out,x); out << '\n'; }
+template<class T>
+void binwriteField_double(ostream& out, const string& fieldname, const T& x)
+{ writeFieldName(out,fieldname); binwrite_double(out,x); out << '\n'; }
 
-  template<class T>
-  void binreadField_double(istream& in, const string& fieldname, T& x)
-  { readFieldName(in,fieldname,true); binread_double(in,x); in.get(); }
+template<class T>
+void binreadField_double(istream& in, const string& fieldname, T& x)
+{ readFieldName(in,fieldname,true); binread_double(in,x); in.get(); }
 
-  //!  readField with a default value when the field is not found
-  template<class T>
-  void readField(istream& in, const string& fieldname, T& x, T default_value)
-  { 
+//!  readField with a default value when the field is not found
+template<class T>
+void readField(istream& in, const string& fieldname, T& x, T default_value)
+{ 
     if (readFieldName(in,fieldname)) 
-      { 
+    { 
         read(in,x); 
         if(!isspace(in.get())) 
-          in.unget(); 
-      } 
+            in.unget(); 
+    } 
     else x=default_value; 
-  }
+}
 
 
 
@@ -274,3 +274,16 @@ inline void readNewline(istream& in)
 
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

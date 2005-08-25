@@ -37,9 +37,9 @@
 
 
 /* *******************************************************      
-   * $Id: NegCrossEntropySigmoidVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "NegCrossEntropySigmoidVariable.h"
 
@@ -57,7 +57,7 @@ PLEARN_IMPLEMENT_OBJECT(NegCrossEntropySigmoidVariable,
 // NegCrossEntropySigmoidVariable //
 ////////////////////////////////////
 NegCrossEntropySigmoidVariable::NegCrossEntropySigmoidVariable(Variable* netout, Variable* target, real regularizer_)
-  : inherited(netout,target,1,1),regularizer(regularizer_)
+    : inherited(netout,target,1,1),regularizer(regularizer_)
 {
     build_();
 }
@@ -90,33 +90,33 @@ void NegCrossEntropySigmoidVariable::recomputeSize(int& l, int& w) const
 ///////////
 void NegCrossEntropySigmoidVariable::fprop()
 {
-  real cost = 0.0;
-  for (int i=0; i<input1->size(); i++)
-  {
-    real output = sigmoid(input1->valuedata[i]);
-    real target = input2->valuedata[i];
-    if (output == 0.0) {
-     if (target == 1.0) {
-        PLWARNING("NegCrossEntropySigmoidVariable::fprop: model output is 0 and target is 1, cost should be infinite !");
-        cost += -1e9;
-     } // If target == 0.0 do nothing, cost is 0.
-    } else if (output == 1.0) {
-     if (target == 0.0) {
-        PLWARNING("NegCrossEntropySigmoidVariable::fprop: model output is 1 and target is 0, cost should be infinite !");
-        cost += -1e9;
-     } // If target == 1.0 do nothing, cost is 0.
-    } else {
-      if (!regularizer) {
-        // Standard cross entropy.
-        cost += target*log(output) + (1.0-target)*log(1.0-output);
-      } else {
-        // Regularized cross entropy.
-        cost += target*((1 - regularizer) * log(output) + regularizer * log(1.0 - output)) +
-                (1.0-target)*((1 - regularizer) * log(1.0-output) + regularizer * log(output));
-      }
+    real cost = 0.0;
+    for (int i=0; i<input1->size(); i++)
+    {
+        real output = sigmoid(input1->valuedata[i]);
+        real target = input2->valuedata[i];
+        if (output == 0.0) {
+            if (target == 1.0) {
+                PLWARNING("NegCrossEntropySigmoidVariable::fprop: model output is 0 and target is 1, cost should be infinite !");
+                cost += -1e9;
+            } // If target == 0.0 do nothing, cost is 0.
+        } else if (output == 1.0) {
+            if (target == 0.0) {
+                PLWARNING("NegCrossEntropySigmoidVariable::fprop: model output is 1 and target is 0, cost should be infinite !");
+                cost += -1e9;
+            } // If target == 1.0 do nothing, cost is 0.
+        } else {
+            if (!regularizer) {
+                // Standard cross entropy.
+                cost += target*log(output) + (1.0-target)*log(1.0-output);
+            } else {
+                // Regularized cross entropy.
+                cost += target*((1 - regularizer) * log(output) + regularizer * log(1.0 - output)) +
+                    (1.0-target)*((1 - regularizer) * log(1.0-output) + regularizer * log(output));
+            }
+        }
     }
-  }
-  valuedata[0] = -cost;
+    valuedata[0] = -cost;
 }
 
 ///////////
@@ -124,25 +124,25 @@ void NegCrossEntropySigmoidVariable::fprop()
 ///////////
 void NegCrossEntropySigmoidVariable::bprop()
 {
-  real gr = *gradientdata;
-  for (int i=0; i<input1->size(); i++)
-  {
-    real output = sigmoid(input1->valuedata[i]);
-    real target = input2->valuedata[i];
-    if (!regularizer) {
-      // Standard cross entropy.
-      input1->gradientdata[i] += gr*(output - target);
-    } else {
-      // Regularized cross entropy.
-      if (target == 0.0) {
-        input1->gradientdata[i] += gr*((1-regularizer) * output - regularizer * (1-output));
-      } else if (target == 1.0) {
-        input1->gradientdata[i] += gr*(regularizer * output - (1-regularizer) * (1-output));
-      } else {
-        PLERROR("NegCrossEntropySigmoidVariable::bprop: target is neither 0 nor 1");
-      }
+    real gr = *gradientdata;
+    for (int i=0; i<input1->size(); i++)
+    {
+        real output = sigmoid(input1->valuedata[i]);
+        real target = input2->valuedata[i];
+        if (!regularizer) {
+            // Standard cross entropy.
+            input1->gradientdata[i] += gr*(output - target);
+        } else {
+            // Regularized cross entropy.
+            if (target == 0.0) {
+                input1->gradientdata[i] += gr*((1-regularizer) * output - regularizer * (1-output));
+            } else if (target == 1.0) {
+                input1->gradientdata[i] += gr*(regularizer * output - (1-regularizer) * (1-output));
+            } else {
+                PLERROR("NegCrossEntropySigmoidVariable::bprop: target is neither 0 nor 1");
+            }
+        }
     }
-  }
 }
 
 ////////////////////
@@ -151,7 +151,20 @@ void NegCrossEntropySigmoidVariable::bprop()
 void NegCrossEntropySigmoidVariable::setRegularizer(real r)
 {
     PLWARNING("NegCrossEntropySigmoidVariable::setRegularizer() has been deprecated, use the setOption() method instead");
-  this->regularizer = r;
+    this->regularizer = r;
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

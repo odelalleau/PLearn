@@ -34,9 +34,9 @@
 
 
 /* *******************************************************      
-   * $Id: LocalizedFeaturesLayerVariable.h,v 1.6 2005/06/03 00:28:51 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef LocalizedFeaturesLayerVariable_INC
 #define LocalizedFeaturesLayerVariable_INC
@@ -54,61 +54,61 @@ using namespace std;
 //! features that are in some local region in that space.
 class LocalizedFeaturesLayerVariable: public NaryVariable
 {
-  typedef NaryVariable inherited;
+    typedef NaryVariable inherited;
 
-  //! INTERNAL LEARNED PARAMETERS
+    //! INTERNAL LEARNED PARAMETERS
 
-  //! INTERNAL COMPUTATION
-  int n_features; // = nb inputs
-  int n_subsets; // = feature_subsets.length()
-  int n_weights; //!< Total number of weights in the layer.
+    //! INTERNAL COMPUTATION
+    int n_features; // = nb inputs
+    int n_subsets; // = feature_subsets.length()
+    int n_weights; //!< Total number of weights in the layer.
 
-  //! Local offsets when using shared weights with a local box.
-  Mat mu;
+    //! Local offsets when using shared weights with a local box.
+    Mat mu;
 
-  //! The element k is a matrix whose element (i,j) is the weight of the
-  //! i-th local pattern in the ponderation of the j-th neighbor of the
-  //! k-th feature (when using shared weights with n_box > 0).
-  TVec<Mat> local_weights;
+    //! The element k is a matrix whose element (i,j) is the weight of the
+    //! i-th local pattern in the ponderation of the j-th neighbor of the
+    //! k-th feature (when using shared weights with n_box > 0).
+    TVec<Mat> local_weights;
 
 public:
 
-  //! OPTIONS
-  bool backprop_to_inputs;
-  VMat feature_locations; // n_features x n_dim
-  TVec<TVec<int> > feature_subsets; // n_subsets x (nb of features in i-th subset)
-  int n_hidden_per_subset;
-  bool knn_subsets;
-  int n_neighbors_per_subset;
-  bool gridding_subsets;
-  bool center_on_feature_locations;
-  long seed;
-  bool shared_weights;
-  int n_box;
-  real sigma;
+    //! OPTIONS
+    bool backprop_to_inputs;
+    VMat feature_locations; // n_features x n_dim
+    TVec<TVec<int> > feature_subsets; // n_subsets x (nb of features in i-th subset)
+    int n_hidden_per_subset;
+    bool knn_subsets;
+    int n_neighbors_per_subset;
+    bool gridding_subsets;
+    bool center_on_feature_locations;
+    long seed;
+    bool shared_weights;
+    int n_box;
+    real sigma;
 
-  //!  Default constructor for persistence
-  LocalizedFeaturesLayerVariable();
+    //!  Default constructor for persistence
+    LocalizedFeaturesLayerVariable();
 
-  PLEARN_DECLARE_OBJECT(LocalizedFeaturesLayerVariable);
+    PLEARN_DECLARE_OBJECT(LocalizedFeaturesLayerVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
 
 protected:
 
-  static void declareOptions(OptionList &ol);
+    static void declareOptions(OptionList &ol);
 
-  virtual void computeSubsets();
+    virtual void computeSubsets();
 
 private:
 
-  void build_();
+    void build_();
 
 };
 
@@ -117,3 +117,16 @@ DECLARE_OBJECT_PTR(LocalizedFeaturesLayerVariable);
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

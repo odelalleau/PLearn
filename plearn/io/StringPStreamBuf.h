@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StringPStreamBuf.h,v 1.3 2005/01/14 19:40:49 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -55,36 +55,49 @@ class StringPStreamBuf: public PStreamBuf
 
 private:
   
-  typedef PStreamBuf inherited;
+    typedef PStreamBuf inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
   
-  string* st;
-  string::size_type read_index;
-  bool own_string; // if true st will be destroyed
+    string* st;
+    string::size_type read_index;
+    bool own_string; // if true st will be destroyed
 
 public:
 
-  StringPStreamBuf(string* ptrs, const string& openmode="r", bool own_string_=false,
-                   streamsize inbuf_capacity=1000, streamsize outbuf_capacity=1000, streamsize unget_capacity=100);
+    StringPStreamBuf(string* ptrs, const string& openmode="r", bool own_string_=false,
+                     streamsize inbuf_capacity=1000, streamsize outbuf_capacity=1000, streamsize unget_capacity=100);
 
-  StringPStreamBuf(const string* ptrs, const string& openmode="r", bool own_string_=false, 
-                   streamsize inbuf_capacity=1000, streamsize unget_capacity=100);
+    StringPStreamBuf(const string* ptrs, const string& openmode="r", bool own_string_=false, 
+                     streamsize inbuf_capacity=1000, streamsize unget_capacity=100);
 
-  virtual ~StringPStreamBuf();
+    virtual ~StringPStreamBuf();
 
 protected:
 
-  virtual streamsize read_(char* p, streamsize n);
+    virtual streamsize read_(char* p, streamsize n);
 
-  //! writes exactly n characters from p (unbuffered, must flush)
-  virtual void write_(const char* p, streamsize n);
+    //! writes exactly n characters from p (unbuffered, must flush)
+    virtual void write_(const char* p, streamsize n);
 
 };
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

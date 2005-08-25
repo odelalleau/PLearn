@@ -58,109 +58,109 @@ using namespace std;
 */
 
 template <class T, unsigned SizeBits,
-  class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
+          class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 class SmallVector
 {
-  public:
-  //!  Typedefs
-  typedef SmallVector<T,SizeBits> self_type;
-  typedef Allocator alloc_type;
+public:
+    //!  Typedefs
+    typedef SmallVector<T,SizeBits> self_type;
+    typedef Allocator alloc_type;
     
-  typedef T value_type;
-  typedef size_t size_type;
-  typedef ptrdiff_t difference_type;
+    typedef T value_type;
+    typedef size_t size_type;
+    typedef ptrdiff_t difference_type;
 
-  typedef T* iterator;
-  typedef const T* const_iterator;
+    typedef T* iterator;
+    typedef const T* const_iterator;
 	
-  typedef T* pointer;
-  typedef const T* const_pointer;
-  typedef T& reference;
-  typedef const T& const_reference;
+    typedef T* pointer;
+    typedef const T* const_pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
 
-  public:
-  //!  Iterators
-  inline iterator begin();
-  inline const_iterator begin() const;
-  inline iterator end();
-  inline const_iterator end() const;
+public:
+    //!  Iterators
+    inline iterator begin();
+    inline const_iterator begin() const;
+    inline iterator end();
+    inline const_iterator end() const;
 
-  public:
-  //!  Unchecked element access
-  inline reference operator[](size_type n);
-  inline const_reference operator[](size_type n) const;
+public:
+    //!  Unchecked element access
+    inline reference operator[](size_type n);
+    inline const_reference operator[](size_type n) const;
 
-  //!  Checked element access
-  reference at(size_type n);
-  const_reference at(size_type n) const;
+    //!  Checked element access
+    reference at(size_type n);
+    const_reference at(size_type n) const;
 
-  inline reference front();	     //!<  first element
-  inline const_reference front() const;
-  inline reference back();	     //!<  last element
-  inline const_reference back() const;
+    inline reference front();	     //!<  first element
+    inline const_reference front() const;
+    inline reference back();	     //!<  last element
+    inline const_reference back() const;
 
-  public:
-  //!  Constructors, etc.
-  inline SmallVector();
-  inline SmallVector(size_type n, const T& val=T());
-  ~SmallVector();
-  SmallVector(const self_type&);
-  self_type& operator=(const self_type&);
+public:
+    //!  Constructors, etc.
+    inline SmallVector();
+    inline SmallVector(size_type n, const T& val=T());
+    ~SmallVector();
+    SmallVector(const self_type&);
+    self_type& operator=(const self_type&);
 
-  //!  Construct/Copy from Input iterator
-  template <class In>
-  SmallVector(In first, In last) : i(0,0) {
-    assign(first,last);
-  }
+    //!  Construct/Copy from Input iterator
+    template <class In>
+    SmallVector(In first, In last) : i(0,0) {
+        assign(first,last);
+    }
 	
-  template <class In>
-  void assign(In first, In last) {
-    //!  could not define it out-of-line; bug in gcc?
-    resize(last-first);
-    iterator dest = begin();
-    while (first != last)
-    *dest++ = *first++;
-  }
+    template <class In>
+    void assign(In first, In last) {
+        //!  could not define it out-of-line; bug in gcc?
+        resize(last-first);
+        iterator dest = begin();
+        while (first != last)
+            *dest++ = *first++;
+    }
 	
-  inline void assign(size_type n, const T& val);	//!<  n copies of val
+    inline void assign(size_type n, const T& val);	//!<  n copies of val
 
-  public:
-  //!  Stack operations 
-  void push_back(const T& x);		     //!<  add to end
-  void pop_back();			     //!<  remove last element
+public:
+    //!  Stack operations 
+    void push_back(const T& x);		     //!<  add to end
+    void pop_back();			     //!<  remove last element
 
-  public:
-  //!  (list operations are NOT provided at the moment)
+public:
+    //!  (list operations are NOT provided at the moment)
 
-  public:
-  //!  Size and capacity operations
-  size_type size() const;		     //!<  number of elements
-  bool empty() const {
-    return size() == 0;
-  }
-  size_type max_size() {
-    typename alloc_type::index_type dummy(unsigned(-1), unsigned(-1));
-    return dummy.size;
-  }
-  void resize(size_type sz, const T& val=T()); //!<  added elts init by val
-  void reserve(size_type n);		     //!<  make room for total of n elts
+public:
+    //!  Size and capacity operations
+    size_type size() const;		     //!<  number of elements
+    bool empty() const {
+        return size() == 0;
+    }
+    size_type max_size() {
+        typename alloc_type::index_type dummy(unsigned(-1), unsigned(-1));
+        return dummy.size;
+    }
+    void resize(size_type sz, const T& val=T()); //!<  added elts init by val
+    void reserve(size_type n);		     //!<  make room for total of n elts
 	
-  public:
-  //!  Other functions
-  void swap(SmallVector&);
+public:
+    //!  Other functions
+    void swap(SmallVector&);
 
-  //!  Set here the allocator you want (we capture the object)
-  static void allocator(alloc_type* the_alloc) {
-    assert(the_alloc);
-    alloc = the_alloc;
-  }
-  static alloc_type& allocator() {
-    return *alloc;
-  }
+    //!  Set here the allocator you want (we capture the object)
+    static void allocator(alloc_type* the_alloc) {
+        assert(the_alloc);
+        alloc = the_alloc;
+    }
+    static alloc_type& allocator() {
+        return *alloc;
+    }
     
-  private:
-  static alloc_type* alloc;		     //!<  underlying allocator
-  typename alloc_type::index_type i;	     //!<  index of vector in memory
+private:
+    static alloc_type* alloc;		     //!<  underlying allocator
+    typename alloc_type::index_type i;	     //!<  index of vector in memory
 };
 
 //!  hash function for hash tables
@@ -180,7 +180,7 @@ bool operator==(const SmallVector<T,SizeBits,Allocator>& a,
 //!   const SmallVector<T,SizeBits,Allocator>& y) { return !(x==y); }
 template <class T, unsigned SizeBits, class Allocator>
 inline bool operator!=(const SmallVector<T,SizeBits,Allocator>& x,
-  const SmallVector<T,SizeBits,Allocator>& y) { return !(x==y); }
+                       const SmallVector<T,SizeBits,Allocator>& y) { return !(x==y); }
 
 
 //!  Lexicographical Ordering
@@ -206,8 +206,8 @@ template <class T, unsigned SizeBits, class Allocator>
 typename SmallVector<T,SizeBits,Allocator>::iterator
 SmallVector<T,SizeBits,Allocator>::begin()
 {
-  //!  This is always correct, even for zero-size vectors
-  return allocator().toPointer(i);
+    //!  This is always correct, even for zero-size vectors
+    return allocator().toPointer(i);
 }
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
@@ -215,8 +215,8 @@ template <class T, unsigned SizeBits, class Allocator>
 typename SmallVector<T,SizeBits,Allocator>::const_iterator
 SmallVector<T,SizeBits,Allocator>::begin() const
 {
-  //!  This is always correct, even for zero-size vectors
-  return allocator().toPointer(i);
+    //!  This is always correct, even for zero-size vectors
+    return allocator().toPointer(i);
 }
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
@@ -224,7 +224,7 @@ template <class T, unsigned SizeBits, class Allocator>
 typename SmallVector<T,SizeBits,Allocator>::iterator
 SmallVector<T,SizeBits,Allocator>::end()
 {
-  return begin() + size();
+    return begin() + size();
 }
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
@@ -232,7 +232,7 @@ template <class T, unsigned SizeBits, class Allocator>
 typename SmallVector<T,SizeBits,Allocator>::const_iterator
 SmallVector<T,SizeBits,Allocator>::end() const
 {
-  return begin() + size();
+    return begin() + size();
 }
 
 
@@ -244,10 +244,10 @@ typename SmallVector<T,SizeBits,Allocator>::reference
 SmallVector<T,SizeBits,Allocator>::operator[](size_type n)
 {
 #ifdef BOUNDCHECK
-  if (n >= size())
+    if (n >= size())
 	PLERROR("%s: out-of-range.",typeid(*this).name());
 #endif
-  return *(begin()+n);
+    return *(begin()+n);
 }
     
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
@@ -256,10 +256,10 @@ typename SmallVector<T,SizeBits,Allocator>::const_reference
 SmallVector<T,SizeBits,Allocator>::operator[](size_type n) const
 {
 #ifdef BOUNDCHECK
-  if (n >= size())
+    if (n >= size())
 	PLERROR("%s: out-of-range.",typeid(*this).name());
 #endif
-  return *(begin()+n);
+    return *(begin()+n);
 }
     
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
@@ -267,11 +267,11 @@ template <class T, unsigned SizeBits, class Allocator>
 typename SmallVector<T,SizeBits,Allocator>::reference
 SmallVector<T,SizeBits,Allocator>::at(size_type n)
 {
-  //!  n cannot be less than zero, because size_type is usually unsigned
-  if (n >= size())
+    //!  n cannot be less than zero, because size_type is usually unsigned
+    if (n >= size())
 	PLERROR("%s: out-of-range.",typeid(*this).name());
 	
-  return *(begin()+n);
+    return *(begin()+n);
 }
     
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
@@ -279,11 +279,11 @@ template <class T, unsigned SizeBits, class Allocator>
 typename SmallVector<T,SizeBits,Allocator>::const_reference
 SmallVector<T,SizeBits,Allocator>::at(size_type n) const
 {
-  //!  n cannot be less than zero, because size_type is usually unsigned
-  if (n >= size())
+    //!  n cannot be less than zero, because size_type is usually unsigned
+    if (n >= size())
 	PLERROR("%s: out-of-range.",typeid(*this).name());
 	
-  return *(begin()+n);
+    return *(begin()+n);
 }
     
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
@@ -291,10 +291,10 @@ template <class T, unsigned SizeBits, class Allocator>
 typename SmallVector<T,SizeBits,Allocator>::reference
 SmallVector<T,SizeBits,Allocator>::front()
 {
-  if (empty())
+    if (empty())
 	PLERROR("%s: out-of-range.",typeid(*this).name());
 	
-  return *begin();
+    return *begin();
 }
     
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
@@ -302,10 +302,10 @@ template <class T, unsigned SizeBits, class Allocator>
 typename SmallVector<T,SizeBits,Allocator>::const_reference
 SmallVector<T,SizeBits,Allocator>::front() const
 {
-  if (empty())
+    if (empty())
 	PLERROR("%s: out-of-range.",typeid(*this).name());
 	
-  return *begin();
+    return *begin();
 }
     
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
@@ -313,10 +313,10 @@ template <class T, unsigned SizeBits, class Allocator>
 typename SmallVector<T,SizeBits,Allocator>::reference
 SmallVector<T,SizeBits,Allocator>::back()
 {
-  if (empty())
+    if (empty())
 	PLERROR("%s: out-of-range.",typeid(*this).name());
 	
-  return *(end()-1);
+    return *(end()-1);
 }
     
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
@@ -324,10 +324,10 @@ template <class T, unsigned SizeBits, class Allocator>
 typename SmallVector<T,SizeBits,Allocator>::const_reference
 SmallVector<T,SizeBits,Allocator>::back() const
 {
-  if (empty())
+    if (empty())
 	PLERROR("%s: out-of-range.",typeid(*this).name());
 	
-  return *(end()-1);
+    return *(end()-1);
 }
 
     
@@ -337,41 +337,41 @@ SmallVector<T,SizeBits,Allocator>::back() const
 template <class T, unsigned SizeBits, class Allocator>
 void SmallVector<T,SizeBits,Allocator>::assign(size_type n, const T& val)
 {
-  if (n > max_size())
+    if (n > max_size())
 	PLERROR("%s: out-of-range.",typeid(*this).name());
 
-  resize(n);
-  for (size_type i=0; i<n; ++i)
+    resize(n);
+    for (size_type i=0; i<n; ++i)
 	(*this)[i] = val;
 }
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
 inline SmallVector<T,SizeBits,Allocator>::SmallVector()
-  : i(0,0)
+    : i(0,0)
 { }
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
 inline SmallVector<T,SizeBits,Allocator>::SmallVector(size_type n, const T& val)
-  : i(0,0)
+    : i(0,0)
 {
-  assign(n, val);
+    assign(n, val);
 }
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
 SmallVector<T,SizeBits,Allocator>::SmallVector(const self_type& other)
-  : i(0)
+    : i(0)
 {
-  assign(other.begin(), other.end());
+    assign(other.begin(), other.end());
 }
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
 SmallVector<T,SizeBits,Allocator>::~SmallVector()
 {
-  allocator().deallocate(i);
+    allocator().deallocate(i);
 }
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
@@ -379,14 +379,14 @@ template <class T, unsigned SizeBits, class Allocator>
 typename SmallVector<T,SizeBits,Allocator>::self_type&
 SmallVector<T,SizeBits,Allocator>::operator=(const self_type& other)
 {
-  if (size() != other.size()) {
-    self_type tmp(other);
-    swap(tmp);
-  }
-  else {
-    assign(other.begin(), other.end());
-  }
-  return *this;
+    if (size() != other.size()) {
+        self_type tmp(other);
+        swap(tmp);
+    }
+    else {
+        assign(other.begin(), other.end());
+    }
+    return *this;
 }
 
 
@@ -396,19 +396,19 @@ SmallVector<T,SizeBits,Allocator>::operator=(const self_type& other)
 template <class T, unsigned SizeBits, class Allocator>
 void SmallVector<T,SizeBits,Allocator>::push_back(const T& x)
 {
-  size_type s = size();
-  resize(s+1);
-  (*this)[s] = x;
+    size_type s = size();
+    resize(s+1);
+    (*this)[s] = x;
 }
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
 void SmallVector<T,SizeBits,Allocator>::pop_back()
 {
-  size_type s = size();
-  if (s == 0)
+    size_type s = size();
+    if (s == 0)
 	PLERROR("%s: out-of-range.",typeid(*this).name());
-  resize(s-1);
+    resize(s-1);
 }
 
     
@@ -419,9 +419,9 @@ template <class T, unsigned SizeBits, class Allocator>
 typename SmallVector<T,SizeBits,Allocator>::size_type
 SmallVector<T,SizeBits,Allocator>::size() const
 {
-  if (i.isNull())
+    if (i.isNull())
 	return 0;
-  else
+    else
 	return i.size;
 }
 
@@ -429,26 +429,26 @@ SmallVector<T,SizeBits,Allocator>::size() const
 template <class T, unsigned SizeBits, class Allocator>
 void SmallVector<T,SizeBits,Allocator>::resize(size_type sz, const T& val)
 {
-  if (sz > max_size())
+    if (sz > max_size())
 	PLERROR("%s: out-of-range.",typeid(*this).name());
 
-  pointer newdata = allocator().allocate(sz);
-  typename alloc_type::index_type newi = allocator().toIndex(newdata, sz);
+    pointer newdata = allocator().allocate(sz);
+    typename alloc_type::index_type newi = allocator().toIndex(newdata, sz);
 
-  //!  Copy old data on new data
-  pointer olddata = allocator().toPointer(i);
-  size_type n = std::min(int(sz), int(i.size));
-  while (n--)
+    //!  Copy old data on new data
+    pointer olddata = allocator().toPointer(i);
+    size_type n = std::min(int(sz), int(i.size));
+    while (n--)
 	*newdata++ = *olddata++;
 
-  //!  Initialize remaining of new data
-  n = std::max(0, int(sz) - int(i.size));
-  while (n--)
+    //!  Initialize remaining of new data
+    n = std::max(0, int(sz) - int(i.size));
+    while (n--)
 	*newdata++ = val;
 
-  //!  make new size effective
-  allocator().deallocate(i);
-  i = newi;
+    //!  make new size effective
+    allocator().deallocate(i);
+    i = newi;
 }
 
 
@@ -456,7 +456,7 @@ void SmallVector<T,SizeBits,Allocator>::resize(size_type sz, const T& val)
 template <class T, unsigned SizeBits, class Allocator>
 void SmallVector<T,SizeBits,Allocator>::reserve(size_type n)
 {
-  if (n > max_size())
+    if (n > max_size())
 	PLERROR("%s: out-of-range.",typeid(*this).name());
 	
 }
@@ -468,7 +468,7 @@ void SmallVector<T,SizeBits,Allocator>::reserve(size_type n)
 template <class T, unsigned SizeBits, class Allocator>
 void SmallVector<T,SizeBits,Allocator>::swap(SmallVector<T,SizeBits,Allocator>& other)
 {
-  std::swap(i,other.i);
+    std::swap(i,other.i);
 }
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
@@ -476,14 +476,14 @@ template <class T, unsigned SizeBits, class Allocator>
 bool operator==(const SmallVector<T,SizeBits,Allocator>& x,
                 const SmallVector<T,SizeBits,Allocator>& y)
 {
-  bool equal = true;
-  typename SmallVector<T,SizeBits,Allocator>::const_iterator
+    bool equal = true;
+    typename SmallVector<T,SizeBits,Allocator>::const_iterator
 	xit=x.begin(), xend=x.end(), yit=y.begin(), yend=y.end();
-  if (xend-xit != yend-yit)
+    if (xend-xit != yend-yit)
 	return false;
-  for ( ; equal && xit != xend && yit != yend ; ++xit, ++yit)
+    for ( ; equal && xit != xend && yit != yend ; ++xit, ++yit)
 	equal = (*xit == *yit);
-  return equal;
+    return equal;
 }
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
@@ -491,11 +491,24 @@ template <class T, unsigned SizeBits, class Allocator>
 bool operator<(const SmallVector<T,SizeBits,Allocator>& x,
                const SmallVector<T,SizeBits,Allocator>& y)
 {
-  return std::lexicographical_compare(x.begin(), x.end(),
-                                      y.begin(), y.end());
+    return std::lexicographical_compare(x.begin(), x.end(),
+                                        y.begin(), y.end());
 }
 
 } // end of namespace PLearn
 
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

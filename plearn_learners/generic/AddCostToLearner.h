@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.h,v 1.11 2005/06/10 20:15:27 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -56,133 +56,133 @@ class AddCostToLearner: public EmbeddedLearner
 
 private:
 
-  typedef EmbeddedLearner inherited;
+    typedef EmbeddedLearner inherited;
 
-  //! Global storage to save memory allocations.
-  mutable Vec combined_output;
+    //! Global storage to save memory allocations.
+    mutable Vec combined_output;
   
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // Fields below are not options.
+    // Fields below are not options.
 
-  //! Used to store the outputs of the sub-learner for each sample in a bag.
-  mutable Mat bag_outputs;
+    //! Used to store the outputs of the sub-learner for each sample in a bag.
+    mutable Mat bag_outputs;
 
-  //! Used to count the number of instances in a bag.
-  mutable int bag_size;
+    //! Used to count the number of instances in a bag.
+    mutable int bag_size;
     
-  //! Propagation path for the cross entropy cost.
-  mutable VarArray cross_entropy_prop;
+    //! Propagation path for the cross entropy cost.
+    mutable VarArray cross_entropy_prop;
   
-  //! Variable giving the cross entropy cost.
-  Var cross_entropy_var;
+    //! Variable giving the cross entropy cost.
+    Var cross_entropy_var;
   
-  //! Used to store the target when computing a cost.
-  mutable Vec desired_target;
+    //! Used to store the target when computing a cost.
+    mutable Vec desired_target;
 
-  //! A precomputed factor for faster mapping.
-  real fac;
+    //! A precomputed factor for faster mapping.
+    real fac;
 
-  //! Constraints on the output given the costs being computed.
-  real output_max;
-  real output_min;
+    //! Constraints on the output given the costs being computed.
+    real output_max;
+    real output_min;
 
-  //! Its value is sub_learner_output[0].
-  Var output_var;
+    //! Its value is sub_learner_output[0].
+    Var output_var;
   
-  //! Used to store the sub-learner output.
-  Vec sub_learner_output;
+    //! Used to store the sub-learner output.
+    Vec sub_learner_output;
 
-  //! Used to store the input given to the sub-learner, when it needs to be
-  //! copied in a separate place.
-  mutable Vec sub_input;
+    //! Used to store the input given to the sub-learner, when it needs to be
+    //! copied in a separate place.
+    mutable Vec sub_input;
 
-  //! Its value is desired_target[0].
-  Var target_var;
+    //! Its value is desired_target[0].
+    Var target_var;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  bool check_output_consistency;
-  int combine_bag_outputs_method;
-  bool compute_costs_on_bags;
-  TVec<string> costs;
-  bool force_output_to_target_interval;
-  real from_max;
-  real from_min;
-  bool rescale_output;
-  bool rescale_target;
-  real to_max;
-  real to_min;
+    bool check_output_consistency;
+    int combine_bag_outputs_method;
+    bool compute_costs_on_bags;
+    TVec<string> costs;
+    bool force_output_to_target_interval;
+    real from_max;
+    real from_min;
+    bool rescale_output;
+    bool rescale_target;
+    real to_max;
+    real to_min;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  AddCostToLearner();
+    AddCostToLearner();
 
-  // ******************
-  // * PLearner methods *
-  // ******************
+    // ******************
+    // * PLearner methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(AddCostToLearner);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(AddCostToLearner);
 
 
-  // **************************
-  // **** PLearner methods ****
-  // **************************
+    // **************************
+    // **** PLearner methods ****
+    // **************************
 
-  //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
-  //! And sets 'stage' back to 0   (this is the stage of a fresh learner!).
-  virtual void forget();
+    //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
+    //! And sets 'stage' back to 0   (this is the stage of a fresh learner!).
+    virtual void forget();
 
-  //! Computes the costs from already computed output. 
-  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                       const Vec& target, Vec& costs) const;
+    //! Computes the costs from already computed output. 
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const;
 
-  //! Overridden to use default PLearner behavior.
-  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-                                           Vec& output, Vec& costs) const;
+    //! Overridden to use default PLearner behavior.
+    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                       Vec& output, Vec& costs) const;
 
-  //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
-  virtual TVec<string> getTestCostNames() const;
+    //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
+    virtual TVec<string> getTestCostNames() const;
 
-  //! Returns the names of the objective costs that the train method computes and 
-  //! for which it updates the VecStatsCollector train_stats.
-  virtual TVec<string> getTrainCostNames() const;
+    //! Returns the names of the objective costs that the train method computes and 
+    //! for which it updates the VecStatsCollector train_stats.
+    virtual TVec<string> getTrainCostNames() const;
 
-  //! Overridden because of the specific bag behavior.
-  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+    //! Overridden because of the specific bag behavior.
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
 };
 
@@ -192,3 +192,16 @@ DECLARE_OBJECT_PTR(AddCostToLearner);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

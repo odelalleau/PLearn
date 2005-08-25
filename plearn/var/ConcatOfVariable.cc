@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatOfVariable.cc,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ConcatOfVariable.h"
 
@@ -53,22 +53,22 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(ConcatOfVariable, "Concatenates the results of each operation in the loop into the resulting variable", "NO HELP");
 
 ConcatOfVariable::ConcatOfVariable(VMat the_distr, Func the_f)
-  : inherited(nonInputParentsOfPath(the_f->inputs, the_f->outputs), 
-              the_f->outputs[0]->length() * the_distr->length(), 
-              the_f->outputs[0]->width()),
-    distr(the_distr), f(the_f)
+    : inherited(nonInputParentsOfPath(the_f->inputs, the_f->outputs), 
+                the_f->outputs[0]->length() * the_distr->length(), 
+                the_f->outputs[0]->width()),
+      distr(the_distr), f(the_f)
 {
     build_();
 }
 
 /* Old constructor
-ConcatOfVariable::ConcatOfVariable(Variable* the_output, const VarArray& the_inputs, VMat the_distr, const VarArray& the_parameters)
-  :NaryVariable(nonInputParentsOfPath(the_inputs,the_output), the_output->length()*the_distr->length(), the_output->width()), inputs(the_inputs), distr(the_distr), output(the_output), parameters(the_parameters)
-{
-  full_fproppath = propagationPath(inputs&parameters, output);
-  fproppath = propagationPath(inputs, output);
-  bproppath = propagationPath(parameters, output);
-}
+   ConcatOfVariable::ConcatOfVariable(Variable* the_output, const VarArray& the_inputs, VMat the_distr, const VarArray& the_parameters)
+   :NaryVariable(nonInputParentsOfPath(the_inputs,the_output), the_output->length()*the_distr->length(), the_output->width()), inputs(the_inputs), distr(the_distr), output(the_output), parameters(the_parameters)
+   {
+   full_fproppath = propagationPath(inputs&parameters, output);
+   fproppath = propagationPath(inputs, output);
+   bproppath = propagationPath(parameters, output);
+   }
 */
 
 
@@ -112,49 +112,49 @@ void ConcatOfVariable::recomputeSize(int& l, int& w) const
 
 void ConcatOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  NaryVariable::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(distr, copies);
-  deepCopyField(f, copies);
-  deepCopyField(input_value, copies);
-  deepCopyField(input_gradient, copies);
+    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(distr, copies);
+    deepCopyField(f, copies);
+    deepCopyField(input_value, copies);
+    deepCopyField(input_gradient, copies);
 }
 
 
 
 void ConcatOfVariable::fprop()
 {
-  f->recomputeParents();
+    f->recomputeParents();
 
-  int pos = 0;
-  int singleoutputsize = f->outputs[0]->nelems();
-  for(int i=0; i<distr->length(); i++, pos+=singleoutputsize)
+    int pos = 0;
+    int singleoutputsize = f->outputs[0]->nelems();
+    for(int i=0; i<distr->length(); i++, pos+=singleoutputsize)
     {
-      distr->getRow(i,input_value);
-      f->fprop(input_value, value.subVec(pos,singleoutputsize));
+        distr->getRow(i,input_value);
+        f->fprop(input_value, value.subVec(pos,singleoutputsize));
     }
 }
 
 
 void ConcatOfVariable::bprop()
 {
-  fbprop();
+    fbprop();
 }
 
 
 void ConcatOfVariable::fbprop()
 {
-  f->recomputeParents();
+    f->recomputeParents();
 
-  int pos = 0;
-  int singleoutputsize = f->outputs[0]->nelems();
-  for(int i=0; i<distr->length(); i++, pos+=singleoutputsize)
+    int pos = 0;
+    int singleoutputsize = f->outputs[0]->nelems();
+    for(int i=0; i<distr->length(); i++, pos+=singleoutputsize)
     {
-      distr->getRow(i, input_value);
-      f->fbprop(input_value, value.subVec(pos,singleoutputsize), 
-                input_gradient, gradient.subVec(pos,singleoutputsize));
-      // We don't use the computed input_gradients, as the input is a dummy variable.
-      // The gradients on other (non-input) variables which we are interested in, 
-      // have been accumulated by the call as a side effect.
+        distr->getRow(i, input_value);
+        f->fbprop(input_value, value.subVec(pos,singleoutputsize), 
+                  input_gradient, gradient.subVec(pos,singleoutputsize));
+        // We don't use the computed input_gradients, as the input is a dummy variable.
+        // The gradients on other (non-input) variables which we are interested in, 
+        // have been accumulated by the call as a side effect.
     }
 }
 
@@ -162,4 +162,15 @@ void ConcatOfVariable::fbprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -34,9 +34,9 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.21 2005/03/15 15:29:01 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef RealMapping_INC
 #define RealMapping_INC
@@ -49,31 +49,31 @@
 namespace PLearn {
 using namespace std;
 
-  //! represents a real range: i.e. one of ]low,high[ ; [low,high[; [low,high]; ]low,high]
+//! represents a real range: i.e. one of ]low,high[ ; [low,high[; [low,high]; ]low,high]
 class RealRange
-  {
-  public:
+{
+public:
     real low;
     real high;
     char leftbracket; // either '[' (inclusive left) or ']' (exclusive left)
     char rightbracket; // // either '[' (exclusive right) or ']' (inclusive right)
 
-  public:
+public:
     RealRange(): // default construvtor
-      low(0), high(0), leftbracket(']'), rightbracket('[')
+        low(0), high(0), leftbracket(']'), rightbracket('[')
     {}
      
 
     RealRange(char leftbracket_, real low_, real high_, char rightbracket_):
-      low(low_), high(high_), leftbracket(leftbracket_), rightbracket(rightbracket_)
+        low(low_), high(high_), leftbracket(leftbracket_), rightbracket(rightbracket_)
     { checkbrackets(); } 
 
     real span(){return abs(high-low);}
     
     void checkbrackets() const
     {
-      if( (leftbracket!='[' && leftbracket!=']') || (rightbracket!='[' && rightbracket!=']') )
-        PLERROR("In RealRange: Brackets must be either '[' or ']'"); 
+        if( (leftbracket!='[' && leftbracket!=']') || (rightbracket!='[' && rightbracket!=']') )
+            PLERROR("In RealRange: Brackets must be either '[' or ']'"); 
     }
 
     void print(ostream& out) const
@@ -98,10 +98,10 @@ class RealRange
     bool operator>(real x) const;
 
 /*    inline bool operator<(real x) const
-    { return low < x || high == x && rightbracket == '['; }
+      { return low < x || high == x && rightbracket == '['; }
 
-    inline bool operator>(real x) const
-    { return low > x || low == x && leftbracket == ']'; }
+      inline bool operator>(real x) const
+      { return low > x || low == x && leftbracket == ']'; }
 
 */
     /*! Compare 2 RealRanges:
@@ -111,22 +111,22 @@ class RealRange
     bool operator<(const RealRange& x) const;
     bool operator>(const RealRange& x) const;
     bool operator==(const RealRange& rr) const;
-  };
+};
 
-  inline void write(ostream& out, const RealRange& range) { range.write(out); }
-  inline ostream& operator<<(ostream& out, const RealRange& range) { range.print(out); return out; } 
-  inline void read(PStream& in, RealRange& range) { range.read(in); }
+inline void write(ostream& out, const RealRange& range) { range.write(out); }
+inline ostream& operator<<(ostream& out, const RealRange& range) { range.print(out); return out; } 
+inline void read(PStream& in, RealRange& range) { range.read(in); }
 
 PStream& operator<<(PStream& out, const RealRange& x);
 PStream& operator>>(PStream& in, RealRange &x);
 
 
-  class RealMapping: public Object
-  {
-  protected: 
+class RealMapping: public Object
+{
+protected: 
     static void declareOptions(OptionList& ol);
 
-  public:
+public:
     typedef pair<RealRange, real> single_mapping_t;
     typedef TVec< single_mapping_t > ordered_mapping_t;
     typedef map<RealRange, real> mapping_t;
@@ -141,14 +141,14 @@ PStream& operator>>(PStream& in, RealRange &x);
     bool keep_other_as_is; // if true, values not in mapping are left as is, otherwise they're mappred to other_mapsto
     real other_mapsto; // value to which to map values not inmapping, if keep_other_as_is is false 
     
-  public:
+public:
     typedef Object inherited;
     PLEARN_DECLARE_OBJECT(RealMapping);
     
     RealMapping()
-      :missing_mapsto(MISSING_VALUE),
-       keep_other_as_is(true),
-       other_mapsto(MISSING_VALUE)
+        :missing_mapsto(MISSING_VALUE),
+         keep_other_as_is(true),
+         other_mapsto(MISSING_VALUE)
     {}
 
     int size() const { return (int)mapping.size(); }
@@ -163,20 +163,20 @@ PStream& operator>>(PStream& in, RealRange &x);
 
     void removeMapping(const RealRange& range)
     { 
-      mapping_t::iterator it= mapping.find(range);
-      if(it != mapping.end())
-	mapping.erase(it);
-      else
-	PLWARNING("In RealMapping::removeMapping  mapping not removed: does not exist.");
+        mapping_t::iterator it= mapping.find(range);
+        if(it != mapping.end())
+            mapping.erase(it);
+        else
+            PLWARNING("In RealMapping::removeMapping  mapping not removed: does not exist.");
     }
 
     void removeMapping(real x) //remove range where x falls
     {
-      mapping_t::iterator it= mapping.lower_bound(RealRange('[',x,x,']'));
-      if(it != mapping.end() && it->first.contains(x))
-	mapping.erase(it);
-      else
-	PLWARNING("In RealMapping::removeMapping  mapping not removed: does not exist.");
+        mapping_t::iterator it= mapping.lower_bound(RealRange('[',x,x,']'));
+        if(it != mapping.end() && it->first.contains(x))
+            mapping.erase(it);
+        else
+            PLWARNING("In RealMapping::removeMapping  mapping not removed: does not exist.");
     }
 
     void addMapping(const RealRange& range, real val);
@@ -235,10 +235,23 @@ PStream& operator>>(PStream& in, RealRange &x);
     //! e.g.: [0,1[  [1, 5[  [5, 10]  ]10, 15]--> <0,1,5,10,15>.
     Vec getCutPoints() const;
 
-  };
+};
 
-  DECLARE_OBJECT_PTR(RealMapping);
+DECLARE_OBJECT_PTR(RealMapping);
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

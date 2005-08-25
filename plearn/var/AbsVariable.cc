@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "AbsVariable.h"
 #include "IfThenElseVariable.h"
@@ -53,12 +53,12 @@ using namespace std;
 /** AbsVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(
-  AbsVariable,
-  "Variable whose output is the absolute value of its input",
-  "");
+    AbsVariable,
+    "Variable whose output is the absolute value of its input",
+    "");
 
 AbsVariable::AbsVariable(Variable* input)
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 
@@ -73,30 +73,30 @@ void AbsVariable::recomputeSize(int& l, int& w) const
 
 void AbsVariable::fprop()
 {
-  for(int i=0; i<nelems(); i++)
+    for(int i=0; i<nelems(); i++)
     {
-      real val = input->valuedata[i];
-      valuedata[i] = val>=0 ?val :-val;
+        real val = input->valuedata[i];
+        valuedata[i] = val>=0 ?val :-val;
     }
 }
 
 
 void AbsVariable::bprop()
 {
-  for(int i=0; i<nelems(); i++)
+    for(int i=0; i<nelems(); i++)
     {
-      real val = input->valuedata[i];
-      if(val>=0)        
-        input->gradientdata[i] += gradientdata[i];
-      else
-        input->gradientdata[i] -= gradientdata[i];
+        real val = input->valuedata[i];
+        if(val>=0)        
+            input->gradientdata[i] += gradientdata[i];
+        else
+            input->gradientdata[i] -= gradientdata[i];
     }
 }
 
 
 void AbsVariable::symbolicBprop()
 {
-  input->accg(ifThenElse(input >= 0., g, -g));
+    input->accg(ifThenElse(input >= 0., g, -g));
 }
 
 
@@ -104,17 +104,28 @@ void AbsVariable::symbolicBprop()
 // R{abs(x)} = -R(x) while x < 0
 void AbsVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  int n=nelems();
-  for(int i=0; i<n; i++)
-    if (input->valuedata[i] < 0) 
-        rvaluedata[i] = -input->rvaluedata[i];
+    if (rValue.length()==0) resizeRValue();
+    int n=nelems();
+    for(int i=0; i<n; i++)
+        if (input->valuedata[i] < 0) 
+            rvaluedata[i] = -input->rvaluedata[i];
         else 
-        rvaluedata[i] = input->rvaluedata[i];
+            rvaluedata[i] = input->rvaluedata[i];
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

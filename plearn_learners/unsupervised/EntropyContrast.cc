@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: EntropyContrast.cc,v 1.7 2004/09/27 20:19:31 plearner Exp $ 
+ * $Id$ 
  ******************************************************* */
 
 /*! \file EntropyContrast.cc */
@@ -48,60 +48,60 @@ using namespace std;
 
 EntropyContrast::EntropyContrast() 
     :nconstraints(4) //TODO: change to input_size 
-    {
-        learning_rate = 0.001;
-        decay_factor = 0;
-        weight_real = weight_gen = weight_extra = 1;
-        nconstraints = 0 ; 
-        n = 0 ; 
-        evaluate_every_n_epochs = 1;
-        evaluate_first_epoch = true;
-        evaluation_method = "no_evaluation";
-        nhidden = 0 ;
-        alpha = 0.0 ; 
-    }
+{
+    learning_rate = 0.001;
+    decay_factor = 0;
+    weight_real = weight_gen = weight_extra = 1;
+    nconstraints = 0 ; 
+    n = 0 ; 
+    evaluate_every_n_epochs = 1;
+    evaluate_first_epoch = true;
+    evaluation_method = "no_evaluation";
+    nhidden = 0 ;
+    alpha = 0.0 ; 
+}
 
 PLEARN_IMPLEMENT_OBJECT(EntropyContrast, 
-        "Performs a EntropyContrast search", 
-        "Detailed Description ");
+                        "Performs a EntropyContrast search", 
+                        "Detailed Description ");
 
 void EntropyContrast::declareOptions(OptionList& ol)
 {
 
     declareOption(ol, "nconstraints", &EntropyContrast::nconstraints, OptionBase::buildoption,
-            "The number of constraints to create (that's also the outputsize)");
+                  "The number of constraints to create (that's also the outputsize)");
     declareOption(ol, "learning_rate", &EntropyContrast::learning_rate, OptionBase::buildoption,
-            "The learning rate of the algorithm");
+                  "The learning rate of the algorithm");
     declareOption(ol, "decay_factor", &EntropyContrast::decay_factor, OptionBase::buildoption,
-            "The decay factor of the learning rate");
+                  "The decay factor of the learning rate");
 
     declareOption(ol, "weight_decay_hidden", &EntropyContrast::weight_decay_hidden, OptionBase::buildoption,
-            "The decay factor for the hidden units");
+                  "The decay factor for the hidden units");
     declareOption(ol, "weight_decay_output", &EntropyContrast::weight_decay_output, OptionBase::buildoption,
-            "The decay factor for the output units");
+                  "The decay factor for the output units");
 
     declareOption(ol, "cost_real", &EntropyContrast::cost_real, OptionBase::buildoption,
-            "The method to compute the real cost");
+                  "The method to compute the real cost");
     declareOption(ol, "cost_gen", &EntropyContrast::cost_gen, OptionBase::buildoption,
-            "The method to compute the cost for the generated cost");
+                  "The method to compute the cost for the generated cost");
     declareOption(ol, "cost_extra", &EntropyContrast::cost_extra, OptionBase::buildoption,
-            "The method to compute the extra cost");
+                  "The method to compute the extra cost");
     declareOption(ol, "gen_method", &EntropyContrast::gen_method, OptionBase::buildoption,
-            "Method used to generate new points");
+                  "Method used to generate new points");
     declareOption(ol, "weight_real", &EntropyContrast::weight_real, OptionBase::buildoption,
-            "the relative weight of the cost of the real data, by default it is 1");
+                  "the relative weight of the cost of the real data, by default it is 1");
     declareOption(ol, "weight_gen", &EntropyContrast::weight_gen, OptionBase::buildoption,
-            "the relative weight of the cost of the generated data, by default it is 1");  
+                  "the relative weight of the cost of the generated data, by default it is 1");  
     declareOption(ol, "weight_extra", &EntropyContrast::weight_extra, OptionBase::buildoption,
-            "the relative weight of the extra cost, by default it is 1");  
+                  "the relative weight of the extra cost, by default it is 1");  
     declareOption(ol, "evaluation_method", &EntropyContrast::evaluation_method, OptionBase::buildoption,
-            "Method for evaluation of constraint learning");  
+                  "Method for evaluation of constraint learning");  
     declareOption(ol, "evaluate_every_n_epochs", &EntropyContrast::evaluate_every_n_epochs, OptionBase::buildoption,
-            "Number of epochs after which the constraints evaluation is done");  
+                  "Number of epochs after which the constraints evaluation is done");  
     declareOption(ol, "test_set", &EntropyContrast::test_set, OptionBase::buildoption,
-            "VMat test set");  
+                  "VMat test set");  
     declareOption(ol, "nhidden", &EntropyContrast::nhidden, OptionBase::buildoption,
-            "the number of hidden units");
+                  "the number of hidden units");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -273,7 +273,7 @@ void EntropyContrast:: get_grad_log_variance_wrt_f(Vec & grad, const Vec& f_x, c
 /// Compute all the gradiants wrt to the parameters of the neural network
 /////////////////////////////////////////////////
 void EntropyContrast::set_NNcontinuous_gradient(Vec &grad_C_real_wrt_f_x,Mat& grad_H_f_x_wrt_w, Mat& grad_H_f_x_wrt_v, 
-        Vec & hidden_units, Vec & input_units,  Vec &grad_H_f_x_wrt_bias_hidden, Vec &grad_H_f_x_wrt_bias_output)
+                                                Vec & hidden_units, Vec & input_units,  Vec &grad_H_f_x_wrt_bias_hidden, Vec &grad_H_f_x_wrt_bias_output)
 {
     // set the gradiant grad_H_f_x_wrt_w ; 
 
@@ -624,7 +624,7 @@ void EntropyContrast::train()
             // Set gradient for the constraint using real data
             // set the gradiant of the cost wrt to the weights w,v and to the bias
             set_NNcontinuous_gradient(grad_C_real_wrt_f_x,grad_H_f_x_wrt_w,grad_H_f_x_wrt_v,z_x,x,
-                    grad_H_f_x_wrt_bias_hidden,grad_H_f_x_wrt_bias_output);
+                                      grad_H_f_x_wrt_bias_hidden,grad_H_f_x_wrt_bias_output);
 
             if (cost_extra == "derivative"){
                 set_NNcontinuous_gradient_from_extra_cost(grad_C_wrt_df_dx,x) ;   
@@ -661,7 +661,7 @@ void EntropyContrast::train()
             // Set gradient for the constraint using generated data
 
             set_NNcontinuous_gradient(grad_C_generated_wrt_f_x_hat,grad_H_f_x_hat_wrt_w,grad_H_f_x_hat_wrt_v,z_x_hat,x_hat,
-                    grad_H_f_x_hat_wrt_bias_hidden,grad_H_f_x_hat_wrt_bias_output);       
+                                      grad_H_f_x_hat_wrt_bias_hidden,grad_H_f_x_hat_wrt_bias_output);       
 
             ///////////
             // Update
@@ -710,69 +710,69 @@ void EntropyContrast::train()
         cout << "--------------------------------" << endl;
 
         /*
-        ostringstream sss;
-        sss << t;
-        string sstage = sss.str();
-        ofstream file1((string("gen1_")+sstage+".dat").c_str());
-        ofstream file2(("gen2_"+sstage+".dat").c_str());
-        ofstream file3(("gen3_"+sstage+".dat").c_str());
+          ostringstream sss;
+          sss << t;
+          string sstage = sss.str();
+          ofstream file1((string("gen1_")+sstage+".dat").c_str());
+          ofstream file2(("gen2_"+sstage+".dat").c_str());
+          ofstream file3(("gen3_"+sstage+".dat").c_str());
 
 
-        for(int t=0 ; t<train_set.length() ; ++t) { 
-            train_set->getRow(t,x);
+          for(int t=0 ; t<train_set.length() ; ++t) { 
+          train_set->getRow(t,x);
 
-            compute_df_dx(df_dx,x);
+          compute_df_dx(df_dx,x);
 
-            file1 << x << " " << df_dx(0) << endl;
-            file2 << x << " " << df_dx(1) << endl;
-            file3 << x << " " << dot(df_dx(0),df_dx(1))/(pownorm(df_dx(0))*pownorm(df_dx(1))) << endl;
+          file1 << x << " " << df_dx(0) << endl;
+          file2 << x << " " << df_dx(1) << endl;
+          file3 << x << " " << dot(df_dx(0),df_dx(1))/(pownorm(df_dx(0))*pownorm(df_dx(1))) << endl;
 
 
-        }
+          }
 
-        file1.close();
-        file2.close();
-        file3.close();
-*/
+          file1.close();
+          file2.close();
+          file3.close();
+        */
 
     }
 
     /*
-       FILE * f1 = fopen("gen1.dat","wt") ;
-       FILE * f2 = fopen("gen2.dat","wt") ;
-       FILE * f3 = fopen("gen3.dat","wt") ;
+      FILE * f1 = fopen("gen1.dat","wt") ;
+      FILE * f2 = fopen("gen2.dat","wt") ;
+      FILE * f3 = fopen("gen3.dat","wt") ;
 
-       for (int i = -10 ; i <= 10 ; i+=2) {
-       for (int j = -1 ; j <= 9 ; j+=2 ) {
-       for (int k = -1 ; k <= 9 ; k+=3 ) {
-       Mat res(2,3) ; 
-       Vec input(3) ;
-       Vec ones(nhidden) ; 
-       ones.fill(1) ; 
-       input[0] = (real)i / 10 ; 
-       input[1] = (real)j / 10 ;
-       input[2] = (real)k / 100 ; 
-       Vec hidden(nhidden);
-       hidden = product(v,input) ; 
-       Vec diag(nhidden) ;
-       diag = ones - square(tanh(hidden)) ; 
-       diagonalizedFactorsProduct(res,w,diag,v); 
-       fprintf(f1,"%f %f %f %f %f %f\n",(real)i/10,(real)j/10,(real)k/100,res(0,0),res(0,1),res(0,2)); 
-       fprintf(f2,"%f %f %f %f %f %f\n",(real)i/10,(real)j/10,(real)k/100,res(1,0),res(1,1),res(1,2)); 
-       real norm0 = sqrt(res(0,0)*res(0,0)+res(0,1)*res(0,1)+res(0,2)*res(0,2)) ; 
-       real norm1 = sqrt(res(1,0)*res(1,0)+res(1,1)*res(1,1)+res(1,2)*res(1,2)) ; 
-       real angle = res(0,0) / norm0 * res(1,0) / norm1 + res(0,1) / norm0 * res(1,1) / norm1 + res(0,2) / norm0 * res(1,2) / norm1 ;  
-       fprintf(f3,"%f %f %f %f\n",(real)i/10,(real)j/10,(real)k/100,angle) ; 
-    //                fprintf(f2,"%f %f %f %f\n",(real)i/10,(real)j/10,res(1,0),res(1,1)) ; 
-    }
-    }
-    }
+      for (int i = -10 ; i <= 10 ; i+=2) {
+      for (int j = -1 ; j <= 9 ; j+=2 ) {
+      for (int k = -1 ; k <= 9 ; k+=3 ) {
+      Mat res(2,3) ; 
+      Vec input(3) ;
+      Vec ones(nhidden) ; 
+      ones.fill(1) ; 
+      input[0] = (real)i / 10 ; 
+      input[1] = (real)j / 10 ;
+      input[2] = (real)k / 100 ; 
+      Vec hidden(nhidden);
+      hidden = product(v,input) ; 
+      Vec diag(nhidden) ;
+      diag = ones - square(tanh(hidden)) ; 
+      diagonalizedFactorsProduct(res,w,diag,v); 
+      fprintf(f1,"%f %f %f %f %f %f\n",(real)i/10,(real)j/10,(real)k/100,res(0,0),res(0,1),res(0,2)); 
+      fprintf(f2,"%f %f %f %f %f %f\n",(real)i/10,(real)j/10,(real)k/100,res(1,0),res(1,1),res(1,2)); 
+      real norm0 = sqrt(res(0,0)*res(0,0)+res(0,1)*res(0,1)+res(0,2)*res(0,2)) ; 
+      real norm1 = sqrt(res(1,0)*res(1,0)+res(1,1)*res(1,1)+res(1,2)*res(1,2)) ; 
+      real angle = res(0,0) / norm0 * res(1,0) / norm1 + res(0,1) / norm0 * res(1,1) / norm1 + res(0,2) / norm0 * res(1,2) / norm1 ;  
+      fprintf(f3,"%f %f %f %f\n",(real)i/10,(real)j/10,(real)k/100,angle) ; 
+      //                fprintf(f2,"%f %f %f %f\n",(real)i/10,(real)j/10,res(1,0),res(1,1)) ; 
+      }
+      }
+      }
 
-    fclose(f1) ; 
-    fclose(f2) ; 
-    fclose(f3) ; 
+      fclose(f1) ; 
+      fclose(f2) ; 
+      fclose(f3) ; 
 
-     */
+    */
 
 }
 void EntropyContrast::computeOutput(const Vec& input, Vec& output) const
@@ -785,7 +785,7 @@ void EntropyContrast::reconstruct(const Vec& output, Vec& input) const
 }
 
 void EntropyContrast::computeCostsFromOutputs(const Vec& input, const Vec& output, 
-        const Vec& target, Vec& costs) const
+                                              const Vec& target, Vec& costs) const
 {
 }                                
 
@@ -802,3 +802,16 @@ TVec<string> EntropyContrast::getTrainCostNames() const
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

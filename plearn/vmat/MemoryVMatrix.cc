@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.27 2004/11/26 16:57:23 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "MemoryVMatrix.h"
 
@@ -48,43 +48,43 @@ using namespace std;
 /** MemoryVMatrix **/
 
 PLEARN_IMPLEMENT_OBJECT(MemoryVMatrix,
-    "A VMatrix whose data is stored in memory.",
-    "The data can either be given directly by a Mat, or by another VMat that\n"
-    "will be precomputed in memory at build time.\n"
-);
+                        "A VMatrix whose data is stored in memory.",
+                        "The data can either be given directly by a Mat, or by another VMat that\n"
+                        "will be precomputed in memory at build time.\n"
+    );
 
 MemoryVMatrix::MemoryVMatrix()
-: synch_data(true),
-  data(Mat())
+    : synch_data(true),
+      data(Mat())
 {
-  memory_data = data;
+    memory_data = data;
 }
 
 MemoryVMatrix::MemoryVMatrix(int l, int w)
-: VMatrix(l, w),
-  synch_data(false)
+    : VMatrix(l, w),
+      synch_data(false)
 {
-  data.resize(l,w);
-  memory_data = data;
-  defineSizes(data.width(), 0, 0);
+    data.resize(l,w);
+    memory_data = data;
+    defineSizes(data.width(), 0, 0);
 }
 
 MemoryVMatrix::MemoryVMatrix(const Mat& the_data)
-: VMatrix(the_data.length(), the_data.width()),
-  synch_data(true),
-  data(the_data)
+    : VMatrix(the_data.length(), the_data.width()),
+      synch_data(true),
+      data(the_data)
 {
-  memory_data = the_data;
-  defineSizes(the_data.width(), 0, 0);
+    memory_data = the_data;
+    defineSizes(the_data.width(), 0, 0);
 }
 
 MemoryVMatrix::MemoryVMatrix(VMat the_data_vm)
-: VMatrix(the_data_vm->length(), the_data_vm->width()),
-  memory_data(the_data_vm->toMat()),
-  synch_data(false)
+    : VMatrix(the_data_vm->length(), the_data_vm->width()),
+      memory_data(the_data_vm->toMat()),
+      synch_data(false)
 {
-  copySizesFrom(the_data_vm);
-  setMetaInfoFrom(the_data_vm);
+    copySizesFrom(the_data_vm);
+    setMetaInfoFrom(the_data_vm);
 }
 
 ////////////////////
@@ -92,13 +92,13 @@ MemoryVMatrix::MemoryVMatrix(VMat the_data_vm)
 ////////////////////
 void MemoryVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "data", &MemoryVMatrix::data, OptionBase::buildoption,
-      "The underlying Mat.");
+    declareOption(ol, "data", &MemoryVMatrix::data, OptionBase::buildoption,
+                  "The underlying Mat.");
 
-  declareOption(ol, "data_vm", &MemoryVMatrix::data_vm, OptionBase::buildoption,
-      "The underlying VMatrix. Will overwrite 'data' if provided.");
+    declareOption(ol, "data_vm", &MemoryVMatrix::data_vm, OptionBase::buildoption,
+                  "The underlying VMatrix. Will overwrite 'data' if provided.");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 /////////////////////////////////
@@ -106,10 +106,10 @@ void MemoryVMatrix::declareOptions(OptionList& ol)
 /////////////////////////////////
 void MemoryVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(memory_data, copies);
-  deepCopyField(data, copies);
-  deepCopyField(data_vm, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(memory_data, copies);
+    deepCopyField(data, copies);
+    deepCopyField(data_vm, copies);
 }
 
 ////////////
@@ -117,40 +117,40 @@ void MemoryVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////
 void MemoryVMatrix::build_()
 {
-  if (data_vm) {
-    // Precompute data from data_vm;
-    memory_data = data_vm->toMat();
-    copySizesFrom(data_vm);
-    setMetaInfoFrom(data_vm);
-    synch_data = false;
-  } else {
-    synch_data = true;
-  }
-  if (synch_data) {
-    memory_data = data;
-    // We temporarily set data to a new empty Mat, so that memory_data
-    // can be safely resized.
-    data = Mat();
-  }
-  if (this->length() >= 0 && this->length() != memory_data.length()) {
-    // New length specified.
-    memory_data.resize(this->length(), memory_data.width());
-  }
-  if (this->width() >= 0 && this->width() != memory_data.width()) {
-    // New width specified.
-    memory_data.resize(memory_data.length(), this->width());
-  }
-  if (this->length() < 0 && memory_data.length() >= 0) {
-    // Take the length from the data matrix.
-    this->length_ = memory_data.length();
-  }
-  if (this->width() < 0 && memory_data.width() >= 0) {
-    // Take the width from the data matrix.
-    this->width_ = memory_data.width();
-  }
-  if (synch_data)
-    // Restore data so that it is equal to memory_data.
-    data = memory_data;
+    if (data_vm) {
+        // Precompute data from data_vm;
+        memory_data = data_vm->toMat();
+        copySizesFrom(data_vm);
+        setMetaInfoFrom(data_vm);
+        synch_data = false;
+    } else {
+        synch_data = true;
+    }
+    if (synch_data) {
+        memory_data = data;
+        // We temporarily set data to a new empty Mat, so that memory_data
+        // can be safely resized.
+        data = Mat();
+    }
+    if (this->length() >= 0 && this->length() != memory_data.length()) {
+        // New length specified.
+        memory_data.resize(this->length(), memory_data.width());
+    }
+    if (this->width() >= 0 && this->width() != memory_data.width()) {
+        // New width specified.
+        memory_data.resize(memory_data.length(), this->width());
+    }
+    if (this->length() < 0 && memory_data.length() >= 0) {
+        // Take the length from the data matrix.
+        this->length_ = memory_data.length();
+    }
+    if (this->width() < 0 && memory_data.width() >= 0) {
+        // Take the width from the data matrix.
+        this->width_ = memory_data.width();
+    }
+    if (synch_data)
+        // Restore data so that it is equal to memory_data.
+        data = memory_data;
 }
 
 ///////////
@@ -158,8 +158,8 @@ void MemoryVMatrix::build_()
 ///////////
 void MemoryVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 /////////
@@ -177,12 +177,12 @@ void MemoryVMatrix::getColumn(int i, Vec v) const
 void MemoryVMatrix::getSubRow(int i, int j, Vec v) const
 {
 #ifdef BOUNDCHECK
-  if (j+v.length()>width())
-    PLERROR("MemoryVMatrix::getSubRow(int i, int j, Vec v) OUT OF BOUNDS. "
-            "j=%d, v.length()=%d, width()=%d", j, v.length(), width());
+    if (j+v.length()>width())
+        PLERROR("MemoryVMatrix::getSubRow(int i, int j, Vec v) OUT OF BOUNDS. "
+                "j=%d, v.length()=%d, width()=%d", j, v.length(), width());
 #endif
-  if (v.length() > 0)
-    v.copyFrom(memory_data[i]+j, v.length());
+    if (v.length() > 0)
+        v.copyFrom(memory_data[i]+j, v.length());
 }
 
 ////////////
@@ -190,8 +190,8 @@ void MemoryVMatrix::getSubRow(int i, int j, Vec v) const
 ////////////
 void MemoryVMatrix::getRow(int i, Vec v) const
 {
-  if (v.length() > 0)
-    v.copyFrom(memory_data[i], width_);
+    if (v.length() > 0)
+        v.copyFrom(memory_data[i], width_);
 }
 
 ////////////
@@ -206,12 +206,12 @@ void MemoryVMatrix::getMat(int i, int j, Mat m) const
 void MemoryVMatrix::putSubRow(int i, int j, Vec v)
 {
 #ifdef BOUNDCHECK
-  if (j+v.length()>width())
-    PLERROR("MemoryVMatrix::putSubRow(int i, int j, Vec v) OUT OF BOUNDS. "
-            "j=%d, v.length()=%d, width()=%d", j, v.length(), width());
+    if (j+v.length()>width())
+        PLERROR("MemoryVMatrix::putSubRow(int i, int j, Vec v) OUT OF BOUNDS. "
+                "j=%d, v.length()=%d, width()=%d", j, v.length(), width());
 #endif
-  if (v.length() > 0)
-    v.copyTo(memory_data[i]+j);
+    if (v.length() > 0)
+        v.copyTo(memory_data[i]+j);
 }
 
 //////////
@@ -226,8 +226,8 @@ void MemoryVMatrix::fill(real value)
 ////////////
 void MemoryVMatrix::putRow(int i, Vec v)
 {
-  if (v.length() > 0)
-    v.copyTo(memory_data[i]);
+    if (v.length() > 0)
+        v.copyTo(memory_data[i]);
 }
 
 ////////////
@@ -241,8 +241,8 @@ void MemoryVMatrix::putMat(int i, int j, Mat m)
 ///////////////
 void MemoryVMatrix::appendRow(Vec v)
 { 
-  memory_data.appendRow(v); 
-  length_++;
+    memory_data.appendRow(v); 
+    length_++;
 }
 
 ///////////
@@ -263,32 +263,45 @@ VMat MemoryVMatrix::subMat(int i, int j, int l, int w)
 real MemoryVMatrix::dot(int i1, int i2, int inputsize) const
 {
 #ifdef BOUNDCHECK
-  if(inputsize>width())
-    PLERROR("In MemoryVMatrix::dot inputsize>width()");
+    if(inputsize>width())
+        PLERROR("In MemoryVMatrix::dot inputsize>width()");
 #endif
-  real* v1 = memory_data.rowdata(i1);
-  real* v2 = memory_data.rowdata(i2);
-  real res = 0.;
-  for(int k=0; k<inputsize; k++)
-    res += (*v1++) * (*v2++);
-  return res;
+    real* v1 = memory_data.rowdata(i1);
+    real* v2 = memory_data.rowdata(i2);
+    real res = 0.;
+    for(int k=0; k<inputsize; k++)
+        res += (*v1++) * (*v2++);
+    return res;
 }
 
 real MemoryVMatrix::dot(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
-  if(v.length()>width())
-    PLERROR("In MemoryVMatrix::dot length of vector v is greater than VMat's width");
+    if(v.length()>width())
+        PLERROR("In MemoryVMatrix::dot length of vector v is greater than VMat's width");
 #endif
-  if (v.length() > 0) {
-    real* v1 = memory_data.rowdata(i);
-    real* v2 = v.data();
-    real res = 0.;
-    for(int k=0; k<v.length(); k++)
-      res += v1[k]*v2[k];
-    return res;
-  }
-  return 0.0;                                // in the case of a null vector
+    if (v.length() > 0) {
+        real* v1 = memory_data.rowdata(i);
+        real* v2 = v.data();
+        real res = 0.;
+        for(int k=0; k<v.length(); k++)
+            res += v1[k]*v2[k];
+        return res;
+    }
+    return 0.0;                                // in the case of a null vector
 }
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SquareVariable.h,v 1.5 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef SquareVariable_INC
 #define SquareVariable_INC
@@ -51,22 +51,22 @@ using namespace std;
 
 class SquareVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  SquareVariable() {}
-  SquareVariable(Variable* input);
+    //!  Default constructor for persistence
+    SquareVariable() {}
+    SquareVariable(Variable* input);
 
-  PLEARN_DECLARE_OBJECT(SquareVariable);
+    PLEARN_DECLARE_OBJECT(SquareVariable);
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  //!  here don't approximate, do d2C/dx^2 = 4 x^2 d2C/dy^2 + 2 dC/dy 
-  virtual void bbprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    //!  here don't approximate, do d2C/dx^2 = 4 x^2 d2C/dy^2 + 2 dC/dy 
+    virtual void bbprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 };
 
 DECLARE_OBJECT_PTR(SquareVariable);
@@ -77,3 +77,16 @@ inline Var square(Var v)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

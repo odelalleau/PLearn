@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedPython.h,v 1.1 2004/11/30 09:38:21 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -63,11 +63,24 @@ namespace PLearn {
 class PythonEmbedder
 {
 public:
-  PythonEmbedder();
-  ~PythonEmbedder();
+    PythonEmbedder();
+    ~PythonEmbedder();
 };
 
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

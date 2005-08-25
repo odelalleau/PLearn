@@ -35,9 +35,9 @@
 
 
 /* *********************************************************************************   
-   * $Id: RegressionTreeMulticlassLeave.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout     *
-   * This file is part of the PLearn library.                                      *
-   ********************************************************************************* */
+ * $Id: RegressionTreeMulticlassLeave.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout     *
+ * This file is part of the PLearn library.                                      *
+ ********************************************************************************* */
 
 #ifndef RegressionTreeMulticlassLeave_INC
 #define RegressionTreeMulticlassLeave_INC
@@ -49,7 +49,7 @@ using namespace std;
 
 class RegressionTreeMulticlassLeave: public RegressionTreeLeave
 {
-  typedef RegressionTreeLeave inherited;
+    typedef RegressionTreeLeave inherited;
   
 private:
 
@@ -57,45 +57,57 @@ private:
   Build options: they have to be set before building
 */
 
-  Vec multiclass_outputs;
-  string objective_function;       
+    Vec multiclass_outputs;
+    string objective_function;       
  
 /*
   Learnt options: they are sized and initialized if need be, in initLeave(...)
 */
 
-  real l1_loss_function_factor;
-  real l2_loss_function_factor;
-  Vec multiclass_weights_sum;
+    real l1_loss_function_factor;
+    real l2_loss_function_factor;
+    Vec multiclass_weights_sum;
  
 /*
   Work fields: they are sized and initialized if need be, at buid time
 */  
  
- int multiclass_ind;
- int multiclass_winer;
+    int multiclass_ind;
+    int multiclass_winer;
   
 public:
-                       RegressionTreeMulticlassLeave();
-  virtual              ~RegressionTreeMulticlassLeave();
+    RegressionTreeMulticlassLeave();
+    virtual              ~RegressionTreeMulticlassLeave();
     PLEARN_DECLARE_OBJECT(RegressionTreeMulticlassLeave);
 
-  static  void         declareOptions(OptionList& ol);
-  virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
-  virtual void         build();
-          void         initStats();
-          void         addRow(int row, Vec outputv, Vec errorv);
-          void         removeRow(int row, Vec outputv, Vec errorv);
-          void         computeOutputAndError();
-          void         printStats();
+    static  void         declareOptions(OptionList& ol);
+    virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
+    virtual void         build();
+    void         initStats();
+    void         addRow(int row, Vec outputv, Vec errorv);
+    void         removeRow(int row, Vec outputv, Vec errorv);
+    void         computeOutputAndError();
+    void         printStats();
   
 private:
-          void         build_();
+    void         build_();
 };
 
-  DECLARE_OBJECT_PTR(RegressionTreeMulticlassLeave);
+DECLARE_OBJECT_PTR(RegressionTreeMulticlassLeave);
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

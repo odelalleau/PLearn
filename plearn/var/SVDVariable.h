@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SVDVariable.h,v 1.1 2004/10/01 19:40:59 mariusmuja Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef SVDVariable_INC
 #define SVDVariable_INC
@@ -51,26 +51,26 @@ using namespace std;
 
 class SVDVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  SVDVariable() {}
-  SVDVariable(Variable* input);
+    //!  Default constructor for persistence
+    SVDVariable() {}
+    SVDVariable(Variable* input);
 
-  PLEARN_DECLARE_OBJECT(SVDVariable);
+    PLEARN_DECLARE_OBJECT(SVDVariable);
   
-  int m,n;
-  Mat input_copy; // calling SVD(A,U,S,Vt) destroys the content of A, so we use this to make a backup 
-  Mat U,Vt;
-  Vec S;
+    int m,n;
+    Mat input_copy; // calling SVD(A,U,S,Vt) destroys the content of A, so we use this to make a backup 
+    Mat U,Vt;
+    Vec S;
 
-  virtual void recomputeSize(int& l, int& w) const;  
-  virtual void fprop();
-  virtual void bprop();
-  //virtual void bbprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;  
+    virtual void fprop();
+    virtual void bprop();
+    //virtual void bbprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 };
 
 DECLARE_OBJECT_PTR(SVDVariable);
@@ -81,3 +81,16 @@ inline Var svd(Var v)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

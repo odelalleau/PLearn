@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: LogVariable.cc,v 1.10 2004/07/21 16:30:54 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "LogVariable.h"
 #include <plearn/display/DisplayUtils.h>
@@ -56,7 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(LogVariable,
                         "NO HELP");
 
 LogVariable::LogVariable(Variable* input)
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 void LogVariable::recomputeSize(int& l, int& w) const
@@ -70,44 +70,56 @@ void LogVariable::recomputeSize(int& l, int& w) const
 
 void LogVariable::fprop()
 {
-  for(int i=0; i<nelems(); i++)
-  {
-    valuedata[i] = safeflog(input->valuedata[i]);
-#ifdef BOUNDCHECK
-    if (!finite(valuedata[i]) && finite(input->valuedata[i]))
+    for(int i=0; i<nelems(); i++)
     {
-      //PLWARNING("LogVariable::fprop qqchose va pas");
-      cout << "inputdata[i]= " << input->valuedata[i] << endl;
-      cout << "valuedata[i]= " << valuedata[i] << endl;
-      displayVarGraph(this, true, 250);
-      PLERROR("LogVariable::fprop qqchose va pas");
-    }
+        valuedata[i] = safeflog(input->valuedata[i]);
+#ifdef BOUNDCHECK
+        if (!finite(valuedata[i]) && finite(input->valuedata[i]))
+        {
+            //PLWARNING("LogVariable::fprop qqchose va pas");
+            cout << "inputdata[i]= " << input->valuedata[i] << endl;
+            cout << "valuedata[i]= " << valuedata[i] << endl;
+            displayVarGraph(this, true, 250);
+            PLERROR("LogVariable::fprop qqchose va pas");
+        }
 #endif
-  }
+    }
 }
 
 
 void LogVariable::bprop()
 {
-  for(int i=0; i<nelems(); i++)
-    if (input->valuedata[i]>0)
-      input->gradientdata[i] += gradientdata[i]/input->valuedata[i];
+    for(int i=0; i<nelems(); i++)
+        if (input->valuedata[i]>0)
+            input->gradientdata[i] += gradientdata[i]/input->valuedata[i];
 }
 
 
 void LogVariable::symbolicBprop()
 {
-  input->accg(g / input);
+    input->accg(g / input);
 }
 
 
 // R{log(x)} = 1/x R(x)
 void LogVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  for(int i=0; i<nelems(); i++)
-    rvaluedata[i] = input->rvaluedata[i] / input->valuedata[i];
+    if (rValue.length()==0) resizeRValue();
+    for(int i=0; i<nelems(); i++)
+        rvaluedata[i] = input->rvaluedata[i] / input->valuedata[i];
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

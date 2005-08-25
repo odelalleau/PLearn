@@ -47,7 +47,7 @@ PLEARN_IMPLEMENT_OBJECT(ParzenWindow,
                         "Parzen Window density estimate.", 
                         "Standard Parzen Window algorithm. The user only needs\n"
                         "to set the sigma_square parameter"
-);
+    );
 
 // TODO Allow the user to specify the kernel.
 
@@ -55,21 +55,21 @@ PLEARN_IMPLEMENT_OBJECT(ParzenWindow,
 // ParzenWindow //
 /////////////////////
 ParzenWindow::ParzenWindow()
-: sigma_square(1)
+    : sigma_square(1)
 {
-  nstages = 1;
+    nstages = 1;
 }
 
 ParzenWindow::ParzenWindow(real the_sigma_square)
-  : sigma_square(the_sigma_square)
+    : sigma_square(the_sigma_square)
 {
 }
 
 // ### Nothing to add here, simply calls build_
 void ParzenWindow::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 // TODO Hide the options from GaussMix that are overwritten.
@@ -79,11 +79,11 @@ void ParzenWindow::build()
 ////////////////////
 void ParzenWindow::declareOptions(OptionList& ol)
 {
-  declareOption(ol,"sigma_square", &ParzenWindow::sigma_square, OptionBase::buildoption,
-                "Spherical variance parameter");
+    declareOption(ol,"sigma_square", &ParzenWindow::sigma_square, OptionBase::buildoption,
+                  "Spherical variance parameter");
 
-   // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void ParzenWindow::build_()
@@ -91,47 +91,60 @@ void ParzenWindow::build_()
 
 void ParzenWindow::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  //PLERROR("ParzenWindow::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    //PLERROR("ParzenWindow::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 void ParzenWindow::train()
 {
-  Mat trainset(train_set);
-  int l = train_set.length();
+    Mat trainset(train_set);
+    int l = train_set.length();
   
-  type = "spherical";
-  L = l;
-  D = -1;
-  GaussMix::build();
-  resizeStuffBeforeTraining();
+    type = "spherical";
+    L = l;
+    D = -1;
+    GaussMix::build();
+    resizeStuffBeforeTraining();
 //  setMixtureTypeGeneral(l, ncomponents, w); // TODO Remove this line when it works.
   
 
-  for(int i=0; i<l; i++)
-  {
-    if(i%100==0)
-      cerr << "[SEQUENTIAL TRAIN: processing pattern #" << i << "/" << l << "]\n";
+    for(int i=0; i<l; i++)
+    {
+        if(i%100==0)
+            cerr << "[SEQUENTIAL TRAIN: processing pattern #" << i << "/" << l << "]\n";
       
-    // center is sample
-    mu(i) << trainset(i);
-    sigma[i] = sigma_square;
+        // center is sample
+        mu(i) << trainset(i);
+        sigma[i] = sigma_square;
 
-    alpha[i] = 1.0 / l;
-    GaussMix::build();
-    resizeStuffBeforeTraining();
-  }
-  stage = 1;
-  precomputeStuff();
-  build();
+        alpha[i] = 1.0 / l;
+        GaussMix::build();
+        resizeStuffBeforeTraining();
+    }
+    stage = 1;
+    precomputeStuff();
+    build();
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: NoBpropVariable.cc,v 1.1 2004/08/21 14:42:05 yoshua Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "NoBpropVariable.h"
 
@@ -58,7 +58,7 @@ PLEARN_IMPLEMENT_OBJECT(NoBpropVariable,
                         "gradient_scaling_factor option, thus allowing to either\n"
                         "block completely or simply scale down the gradient flow.\n");
 
-  NoBpropVariable::NoBpropVariable(Variable* input, real the_gradient_scaling_factor)
+NoBpropVariable::NoBpropVariable(Variable* input, real the_gradient_scaling_factor)
     : inherited(input, input->length(), input->width()),
       gradient_scaling_factor(the_gradient_scaling_factor)
 {
@@ -89,28 +89,39 @@ NoBpropVariable::declareOptions(OptionList &ol)
 void NoBpropVariable::recomputeSize(int& l, int& w) const
 {
     if (input) {
-      l = input->length();
-      w = input->width();
+        l = input->length();
+        w = input->width();
     } else
-      l = w = 0;
+        l = w = 0;
 }
 
 void NoBpropVariable::fprop()
 {
-  for(int k=0; k<input->nelems(); k++)
-    valuedata[k] = input->valuedata[k];
+    for(int k=0; k<input->nelems(); k++)
+        valuedata[k] = input->valuedata[k];
 }
 
 
 void NoBpropVariable::bprop()
 {
-  if(gradient_scaling_factor!=0)
+    if(gradient_scaling_factor!=0)
     {
-      for(int k=0; k<input->nelems(); k++)
-        input->gradientdata[k] += gradient_scaling_factor*gradientdata[k];
+        for(int k=0; k<input->nelems(); k++)
+            input->gradientdata[k] += gradient_scaling_factor*gradientdata[k];
     }
 }
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

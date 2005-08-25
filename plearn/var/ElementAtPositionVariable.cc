@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ElementAtPositionVariable.h"
 #include "VarElementVariable.h"
@@ -50,18 +50,18 @@ using namespace std;
 /** ElementAtPositionVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(
-  ElementAtPositionVariable,
-  "Indicator-like variable",
-  "A variable of size length() x width(), filled with zeros except for the "
-  "single element indexed by input2 =(i,j) or input2 = (k).");
+    ElementAtPositionVariable,
+    "Indicator-like variable",
+    "A variable of size length() x width(), filled with zeros except for the "
+    "single element indexed by input2 =(i,j) or input2 = (k).");
   
 ElementAtPositionVariable::ElementAtPositionVariable()
-  : length_(0), width_(0)
+    : length_(0), width_(0)
 { }
 
   
 ElementAtPositionVariable::ElementAtPositionVariable(Variable* input1, Variable* input2, int the_length, int the_width)
-  : inherited(input1, input2, the_length, the_width), length_(the_length), width_(the_width)
+    : inherited(input1, input2, the_length, the_width), length_(the_length), width_(the_width)
 {
     build_();
 }
@@ -76,10 +76,10 @@ ElementAtPositionVariable::build()
 void
 ElementAtPositionVariable::build_()
 {
-  if (input1 && !input1->isScalar())
-      PLERROR("In ElementAtPositionVariable: element must be a scalar var");
-  if (input2 && input2->nelems()>2)
-      PLERROR("In ElementAtPositionVariable: position must have 1 or 2 elements");
+    if (input1 && !input1->isScalar())
+        PLERROR("In ElementAtPositionVariable: element must be a scalar var");
+    if (input2 && input2->nelems()>2)
+        PLERROR("In ElementAtPositionVariable: position must have 1 or 2 elements");
 }
 
 void
@@ -95,58 +95,58 @@ void ElementAtPositionVariable::recomputeSize(int& l, int& w) const
 
 void ElementAtPositionVariable::fprop()
 {
-  value.clear();
-  if (input2->isScalar()) // input2 is a scalar (interpreted as a k)
+    value.clear();
+    if (input2->isScalar()) // input2 is a scalar (interpreted as a k)
     {
-      int k = (int)input2->valuedata[0];
-      valuedata[k] = input1->valuedata[0];
+        int k = (int)input2->valuedata[0];
+        valuedata[k] = input1->valuedata[0];
     }
-  else // input2 has 2 elements (interpreted as (i,j) coordinates)
+    else // input2 has 2 elements (interpreted as (i,j) coordinates)
     {
-      int i = (int)input2->valuedata[0];
-      int j = (int)input2->valuedata[1];
-      valuedata[i*width()+j] = input1->valuedata[0];
+        int i = (int)input2->valuedata[0];
+        int j = (int)input2->valuedata[1];
+        valuedata[i*width()+j] = input1->valuedata[0];
     }
 }
 
 
 void ElementAtPositionVariable::bprop()
 {
-  if (input2->isScalar()) // input2 is a scalar (interpreted as a k)
+    if (input2->isScalar()) // input2 is a scalar (interpreted as a k)
     {
-      int k = (int)input2->valuedata[0];
-      input1->gradientdata[0] += gradientdata[k];
+        int k = (int)input2->valuedata[0];
+        input1->gradientdata[0] += gradientdata[k];
     }
-  else // input2 has 2 elements (interpreted as (i,j) coordinates)
+    else // input2 has 2 elements (interpreted as (i,j) coordinates)
     {
-      int i = (int)input2->valuedata[0];
-      int j = (int)input2->valuedata[1];
-      input1->gradientdata[0] += gradientdata[i*width()+j];
+        int i = (int)input2->valuedata[0];
+        int j = (int)input2->valuedata[1];
+        input1->gradientdata[0] += gradientdata[i*width()+j];
     }  
 }
 
 
 void ElementAtPositionVariable::symbolicBprop()
 {
-  input1->accg(new VarElementVariable(g,input2));
+    input1->accg(new VarElementVariable(g,input2));
 }
 
 
 
 void ElementAtPositionVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  rValue.clear();
-  if (input2->isScalar()) // input2 is a scalar (interpreted as a k)
+    if (rValue.length()==0) resizeRValue();
+    rValue.clear();
+    if (input2->isScalar()) // input2 is a scalar (interpreted as a k)
     {
-      int k = (int)input2->valuedata[0];
-      rvaluedata[k] = input1->rvaluedata[0];
+        int k = (int)input2->valuedata[0];
+        rvaluedata[k] = input1->rvaluedata[0];
     }
-  else // input2 has 2 elements (interpreted as (i,j) coordinates)
+    else // input2 has 2 elements (interpreted as (i,j) coordinates)
     {
-      int i = (int)input2->valuedata[0];
-      int j = (int)input2->valuedata[1];
-      rvaluedata[i*width()+j] = input1->rvaluedata[0];
+        int i = (int)input2->valuedata[0];
+        int j = (int)input2->valuedata[1];
+        rvaluedata[i*width()+j] = input1->rvaluedata[0];
     }
 }
 
@@ -154,4 +154,15 @@ void ElementAtPositionVariable::rfprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

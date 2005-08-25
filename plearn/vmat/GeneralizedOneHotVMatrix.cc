@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: GeneralizedOneHotVMatrix.cc,v 1.6 2004/07/09 19:42:23 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "GeneralizedOneHotVMatrix.h"
 
@@ -55,22 +55,22 @@ GeneralizedOneHotVMatrix::GeneralizedOneHotVMatrix()
 GeneralizedOneHotVMatrix::GeneralizedOneHotVMatrix(VMat the_distr, Vec the_index,
                                                    Vec the_nclasses, Vec the_cold_value,
                                                    Vec the_host_value)
-  : inherited(the_distr->length(), the_distr->width()+(int)sum(the_nclasses)-the_nclasses.length()),
-    distr(the_distr), index(the_index), nclasses(the_nclasses),
-    cold_value(the_cold_value), hot_value(the_host_value)
+    : inherited(the_distr->length(), the_distr->width()+(int)sum(the_nclasses)-the_nclasses.length()),
+      distr(the_distr), index(the_index), nclasses(the_nclasses),
+      cold_value(the_cold_value), hot_value(the_host_value)
 {
-  if (min(index)<0 || max(index)>distr->length()-1)
-    PLERROR("In GeneralizedOneHotVMatrix: all values of index must be in range [0,%d]",
-      distr->length()-1);
-  if (index.length()!=nclasses.length() || cold_value.length()!=hot_value.length() || index.length()!=hot_value.length())
-    PLERROR("In GeneralizedOneHotVMatrix: index, nclasses, cold_value and hot_value must have same length");
+    if (min(index)<0 || max(index)>distr->length()-1)
+        PLERROR("In GeneralizedOneHotVMatrix: all values of index must be in range [0,%d]",
+                distr->length()-1);
+    if (index.length()!=nclasses.length() || cold_value.length()!=hot_value.length() || index.length()!=hot_value.length())
+        PLERROR("In GeneralizedOneHotVMatrix: index, nclasses, cold_value and hot_value must have same length");
 }
 
 void
 GeneralizedOneHotVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void
@@ -81,41 +81,54 @@ GeneralizedOneHotVMatrix::build_()
 void
 GeneralizedOneHotVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "distr", &GeneralizedOneHotVMatrix::distr, OptionBase::buildoption, "");
-  declareOption(ol, "index", &GeneralizedOneHotVMatrix::index, OptionBase::buildoption, "");
-  declareOption(ol, "nclasses", &GeneralizedOneHotVMatrix::nclasses, OptionBase::buildoption, "");
-  declareOption(ol, "cold_value", &GeneralizedOneHotVMatrix::cold_value, OptionBase::buildoption, "");
-  declareOption(ol, "hot_value", &GeneralizedOneHotVMatrix::hot_value, OptionBase::buildoption, "");
-  inherited::declareOptions(ol);
+    declareOption(ol, "distr", &GeneralizedOneHotVMatrix::distr, OptionBase::buildoption, "");
+    declareOption(ol, "index", &GeneralizedOneHotVMatrix::index, OptionBase::buildoption, "");
+    declareOption(ol, "nclasses", &GeneralizedOneHotVMatrix::nclasses, OptionBase::buildoption, "");
+    declareOption(ol, "cold_value", &GeneralizedOneHotVMatrix::cold_value, OptionBase::buildoption, "");
+    declareOption(ol, "hot_value", &GeneralizedOneHotVMatrix::hot_value, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
 }
 
 void GeneralizedOneHotVMatrix::getNewRow(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length())
-    PLERROR("In OneHotVMatrix::getNewRow OUT OF BOUNDS");
-  if(v.length()!=width())
-    PLERROR("In GeneralizedOneHotVMatrix::getNewRow v.length() must be equal to the VMat's width");
+    if(i<0 || i>=length())
+        PLERROR("In OneHotVMatrix::getNewRow OUT OF BOUNDS");
+    if(v.length()!=width())
+        PLERROR("In GeneralizedOneHotVMatrix::getNewRow v.length() must be equal to the VMat's width");
 #endif
 
-  Vec input(distr->width());
-  distr->getRow(i, input);
-  int v_pos = 0;
-  for (int j=0; j<input.length(); j++) {
-    const int index_pos = vec_find(index, (real)j);
-    if (index_pos == -1)
-      v[v_pos++] = input[j];
-    else {
-      const int nb_class = (int)nclasses[index_pos];
-      Vec target = v.subVec(v_pos, nb_class);
-      const real cold = cold_value[index_pos];
-      const real hot = hot_value[index_pos];
-      const int classnum = int(distr->get(i,j));
-      fill_one_hot(target, classnum, cold, hot);
-      v_pos += nb_class;
+    Vec input(distr->width());
+    distr->getRow(i, input);
+    int v_pos = 0;
+    for (int j=0; j<input.length(); j++) {
+        const int index_pos = vec_find(index, (real)j);
+        if (index_pos == -1)
+            v[v_pos++] = input[j];
+        else {
+            const int nb_class = (int)nclasses[index_pos];
+            Vec target = v.subVec(v_pos, nb_class);
+            const real cold = cold_value[index_pos];
+            const real hot = hot_value[index_pos];
+            const int classnum = int(distr->get(i,j));
+            fill_one_hot(target, classnum, cold, hot);
+            v_pos += nb_class;
+        }
     }
-  }
 }
 
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -52,26 +52,26 @@ using namespace std;
 
 
 pl_fdstreambuf::pl_fdstreambuf(int fd_, int inbufsize) 
-  :fd(fd_), inbuf(0), inbuf_capacity(0)
+    :fd(fd_), inbuf(0), inbuf_capacity(0)
 {
-  if(inbufsize > 0)
-    reserveInputBuffer(inbufsize);
+    if(inbufsize > 0)
+        reserveInputBuffer(inbufsize);
 }
 
 
 pl_fdstreambuf::~pl_fdstreambuf()
 {
-  if(inbuf)
-    delete[] inbuf;
+    if(inbuf)
+        delete[] inbuf;
 }
 
 streambuf* pl_fdstreambuf::setbuf(char* p, int len)
 {
-  if(p && len>0)
-    setp(p, p+len-1); // -1 because we want space to put the extra character passed to overflow()
-  else
-    setp(0,0);
-  return this;
+    if(p && len>0)
+        setp(p, p+len-1); // -1 because we want space to put the extra character passed to overflow()
+    else
+        setp(0,0);
+    return this;
 }
 
 //! not implemented (yet)
@@ -80,57 +80,57 @@ streamsize  pl_fdstreambuf::showmanyc()
 
 int pl_fdstreambuf::underflow()
 {
-  int msglength= read(fd, inbuf, inbuf_capacity);
-  if(msglength < 1)
-    return EOF;
-  setg(inbuf, inbuf, inbuf+msglength);
-  return *inbuf;
+    int msglength= read(fd, inbuf, inbuf_capacity);
+    if(msglength < 1)
+        return EOF;
+    setg(inbuf, inbuf, inbuf+msglength);
+    return *inbuf;
 }
 
 int pl_fdstreambuf::overflow(int c)
 {
-  if(c!=EOF)
+    if(c!=EOF)
     {
-      if(pbase()) // buffered mode
+        if(pbase()) // buffered mode
 	{
-	  streamsize n = pptr() - pbase();
-	  *pptr()= char(c); // put it in extra space
-	  if(write(fd, pbase(), n) < 0)
-	    return EOF;
-	  pbump(-n);
+            streamsize n = pptr() - pbase();
+            *pptr()= char(c); // put it in extra space
+            if(write(fd, pbase(), n) < 0)
+                return EOF;
+            pbump(-n);
 	}
-      else // unbuffered mode
+        else // unbuffered mode
 	{
-	  char tinybuf[1];
-	  tinybuf[0] = c;
-	  //cout << "writing " << (char)c << endl;
-	  if(write(fd, tinybuf, 1) < 0)
-	    return EOF;
+            char tinybuf[1];
+            tinybuf[0] = c;
+            //cout << "writing " << (char)c << endl;
+            if(write(fd, tinybuf, 1) < 0)
+                return EOF;
 	}
     }
-  else // extra char is EOF, we ignore it
+    else // extra char is EOF, we ignore it
     {
-      if(pbase()) // buffered mode
+        if(pbase()) // buffered mode
 	{
-	  streamsize n = pptr() - pbase();
-	  if(write(fd, pbase(), n) < 0)
-	    return EOF;
-	  pbump(-n);
+            streamsize n = pptr() - pbase();
+            if(write(fd, pbase(), n) < 0)
+                return EOF;
+            pbump(-n);
 	}
     }
-  return c;
+    return c;
 }
 
 int pl_fdstreambuf::sync()
 {
-  streamsize n = pptr() - pbase();
-  if(n>0)
+    streamsize n = pptr() - pbase();
+    if(n>0)
     {
-      if(write(fd, pbase(), n) < 0)
-	return EOF;
-      pbump(-n);
+        if(write(fd, pbase(), n) < 0)
+            return EOF;
+        pbump(-n);
     }
-  return 0;
+    return 0;
 }
 
 // Smart implementation of xsputn:
@@ -139,17 +139,17 @@ int pl_fdstreambuf::sync()
 // (ex: whhen sending a long vector for ex.).
 streamsize pl_fdstreambuf::xsputn(const char* s, streamsize n)
 {      
-  if(n>epptr()-pptr())  // n greater than buffer size! 
+    if(n>epptr()-pptr())  // n greater than buffer size! 
     {
-      // Let's not waste time copying stuff into the buffer, send it directly
-      sync(); // first make sure we send what's left in the buffer
-      if(write(fd, (char *)s, n) < 0)
-	return 0;
+        // Let's not waste time copying stuff into the buffer, send it directly
+        sync(); // first make sure we send what's left in the buffer
+        if(write(fd, (char *)s, n) < 0)
+            return 0;
     }
-  else  // call the default method
-    streambuf::xsputn(s,n);
+    else  // call the default method
+        streambuf::xsputn(s,n);
 
-  return n;
+    return n;
 }
 
 //use default implementation
@@ -158,42 +158,55 @@ streamsize pl_fdstreambuf::xsgetn(char* s, streamsize n)
 
 void pl_fdstream::init(int fd, int inbufsize, int outbufsize)
 {
-  rdbuf(new pl_fdstreambuf(fd, inbufsize));
-  if(outbufsize<=1)
+    rdbuf(new pl_fdstreambuf(fd, inbufsize));
+    if(outbufsize<=1)
 #if __GNUC__ < 3 && !defined(WIN32)
-    rdbuf()->setbuf(0,0);
+        rdbuf()->setbuf(0,0);
 #else
     rdbuf()->pubsetbuf(0,0);
 #endif
-  else
+    else
     {
-      outbuffer = new char[outbufsize];
+        outbuffer = new char[outbufsize];
 #if __GNUC__ < 3 && !defined(WIN32)
-      rdbuf()->setbuf(outbuffer,outbufsize);
+        rdbuf()->setbuf(outbuffer,outbufsize);
 #else
-      rdbuf()->pubsetbuf(outbuffer,outbufsize);
+        rdbuf()->pubsetbuf(outbuffer,outbufsize);
 #endif
     }
 }
 
 void pl_fdstream::attach(int fd)
 {
-  rdbuf(new pl_fdstreambuf(fd, pl_dftbuflen));
-  outbuffer= new char[pl_dftbuflen];
+    rdbuf(new pl_fdstreambuf(fd, pl_dftbuflen));
+    outbuffer= new char[pl_dftbuflen];
 #if __GNUC__ < 3 && !defined(WIN32)
-  rdbuf()->setbuf(outbuffer, pl_dftbuflen);
+    rdbuf()->setbuf(outbuffer, pl_dftbuflen);
 #else
-  rdbuf()->pubsetbuf(outbuffer, pl_dftbuflen);
+    rdbuf()->pubsetbuf(outbuffer, pl_dftbuflen);
 #endif
 }
 
 
 pl_fdstream::~pl_fdstream()
 {
-  flush();
-  delete rdbuf(0); // delete pl_fdstreambuf
-  if(outbuffer)
-    delete[] outbuffer;
+    flush();
+    delete rdbuf(0); // delete pl_fdstreambuf
+    if(outbuffer)
+        delete[] outbuffer;
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

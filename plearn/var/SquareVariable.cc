@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SquareVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "SquareVariable.h"
 #include "Var_operators.h"
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(SquareVariable,
                         "NO HELP");
 
 SquareVariable::SquareVariable(Variable* input)
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 void SquareVariable::recomputeSize(int& l, int& w) const
@@ -70,50 +70,61 @@ void SquareVariable::recomputeSize(int& l, int& w) const
 
 void SquareVariable::fprop()
 {
-  int n=nelems();
-  for(int i=0; i<n; i++)
-    valuedata[i] = input->valuedata[i]*input->valuedata[i];
+    int n=nelems();
+    for(int i=0; i<n; i++)
+        valuedata[i] = input->valuedata[i]*input->valuedata[i];
 }
 
 
 void SquareVariable::bprop()
 {
-  int n=nelems();
-  for(int i=0; i<n; i++)
-    input->gradientdata[i] += 2.0 * input->valuedata[i] * gradientdata[i];
+    int n=nelems();
+    for(int i=0; i<n; i++)
+        input->gradientdata[i] += 2.0 * input->valuedata[i] * gradientdata[i];
 }
 
 
 void SquareVariable::bbprop()
 {
-  if (input->diaghessian.length()==0)
-    input->resizeDiagHessian();
-  int n=nelems();
-  for(int i=0; i<n; i++)
-  {
-    real input_i = input->valuedata[i];
-    input->diaghessiandata[i] += 4.0 * input_i * input_i * diaghessiandata[i]
-      + 2.0 * gradientdata[i];
-  }
+    if (input->diaghessian.length()==0)
+        input->resizeDiagHessian();
+    int n=nelems();
+    for(int i=0; i<n; i++)
+    {
+        real input_i = input->valuedata[i];
+        input->diaghessiandata[i] += 4.0 * input_i * input_i * diaghessiandata[i]
+            + 2.0 * gradientdata[i];
+    }
 }
 
 
 void SquareVariable::symbolicBprop()
 {
-  input->accg(2. * (g * input));
+    input->accg(2. * (g * input));
 }
 
 
 void SquareVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  int n=nelems();
-  for(int i=0; i<n; i++)
-    rvaluedata[i] = 2*input->valuedata[i]*input->rvaluedata[i];
+    if (rValue.length()==0) resizeRValue();
+    int n=nelems();
+    for(int i=0; i<n; i++)
+        rvaluedata[i] = 2*input->valuedata[i]*input->rvaluedata[i];
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

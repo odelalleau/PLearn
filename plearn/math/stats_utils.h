@@ -33,9 +33,9 @@
 
 
 /* *******************************************************      
-   * $Id: stats_utils.h,v 1.7 2005/03/11 19:19:58 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/stats_utils.h */
@@ -95,37 +95,37 @@ real max_cdf_diff(Vec& v1, Vec& v2);
 
 
 /*! 
-   Return the probability that the Kolmogorov-Smirnov statistic
-   D takes the observed value or greater, given the null hypothesis
-   that the distributions  that are compared are
-   really identical. N is the effective number of samples 
-   used for comparing the distributions. 
-   The argument conv gives the precision with which
-   this probability is computed. A value above 10 does not bring
-   much improvement. Note that the statistic D can
-   be obtained as follows:
+  Return the probability that the Kolmogorov-Smirnov statistic
+  D takes the observed value or greater, given the null hypothesis
+  that the distributions  that are compared are
+  really identical. N is the effective number of samples 
+  used for comparing the distributions. 
+  The argument conv gives the precision with which
+  this probability is computed. A value above 10 does not bring
+  much improvement. Note that the statistic D can
+  be obtained as follows:
 
-   Comparing two empirical distributions from data sets D_1 and D_2:
-     Let F_1(x) the empirical cumulative distribution of D_1 of size N_1, and
-     let F_2(x) the empirical cumulative distribution of D_2 of size N_2. Then
+  Comparing two empirical distributions from data sets D_1 and D_2:
+  Let F_1(x) the empirical cumulative distribution of D_1 of size N_1, and
+  let F_2(x) the empirical cumulative distribution of D_2 of size N_2. Then
 
-       D = max_x | F_1(x) - F_2(x) |
+  D = max_x | F_1(x) - F_2(x) |
 
-     and the effective N is N_1 N_2 / (N_1 + N_2).
+  and the effective N is N_1 N_2 / (N_1 + N_2).
 
-   Comparing a theoretical distribution F and a data set D of size N with 
-   empirical cumulative distribution F_N:
+  Comparing a theoretical distribution F and a data set D of size N with 
+  empirical cumulative distribution F_N:
  
-       D  = max_x | F(x) - F_N(x) |
+  D  = max_x | F(x) - F_N(x) |
 
-   This function returns the following
+  This function returns the following
 
-      P(D > observed d | same distributions) estimated by
-        2 sum_{k=1}^{infty} (-1)^{k-1} exp(-2k^2 a^2)
+  P(D > observed d | same distributions) estimated by
+  2 sum_{k=1}^{infty} (-1)^{k-1} exp(-2k^2 a^2)
 
-   where a = sqrt(D*(sqrt(N)+0.12+0.11/sqrt(N)))
+  where a = sqrt(D*(sqrt(N)+0.12+0.11/sqrt(N)))
 
-   Ref: Stephens, M.A. (1970), Journal of the Royal Statistical Society B, vol. 32, pp. 115-122.
+  Ref: Stephens, M.A. (1970), Journal of the Royal Statistical Society B, vol. 32, pp. 115-122.
 */
 real KS_test(real D, real N, int conv=10);
 
@@ -154,3 +154,16 @@ real paired_t_test(Vec u, Vec v);
 
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

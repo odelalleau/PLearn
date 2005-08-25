@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ManualBinner.cc,v 1.8 2004/09/14 16:04:36 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file ManualBinner.cc */
 #include "ManualBinner.h"
@@ -43,58 +43,58 @@ namespace PLearn {
 using namespace std;
 
 ManualBinner::ManualBinner() 
-  :Binner(), the_mapping(0), bin_positions()
-  {
+    :Binner(), the_mapping(0), bin_positions()
+{
     // ...
 
     // ### You may or may not want to call build_() to finish building the object
     // build_();
-  }
+}
 
 ManualBinner::ManualBinner(Vec bin_positions_) 
-  :Binner(), the_mapping(0), bin_positions(bin_positions_.copy())
-  {
+    :Binner(), the_mapping(0), bin_positions(bin_positions_.copy())
+{
     build_();
-  }
+}
 
 
-  PLEARN_IMPLEMENT_OBJECT(ManualBinner, "Binner with predefined cut-points.", 
-      "ManualBinner implements a Binner for which cutpoints are predefined.  "
-      "It's getBinning function doesn't have to look at the data; it simply "
-      "builds a RealMapping from the supplied bin_positions.");
+PLEARN_IMPLEMENT_OBJECT(ManualBinner, "Binner with predefined cut-points.", 
+                        "ManualBinner implements a Binner for which cutpoints are predefined.  "
+                        "It's getBinning function doesn't have to look at the data; it simply "
+                        "builds a RealMapping from the supplied bin_positions.");
 
-  void ManualBinner::declareOptions(OptionList& ol)
-  {
+void ManualBinner::declareOptions(OptionList& ol)
+{
     declareOption(ol, "bin_positions", &ManualBinner::bin_positions, OptionBase::buildoption,
-                   "The supplied cut points; should be sorted in ascending order.");
+                  "The supplied cut points; should be sorted in ascending order.");
 
     declareOption(ol, "the_mapping", &ManualBinner::the_mapping, OptionBase::learntoption,
-                   "Pre-calculated RealMapping object that is returned by getBinning");
+                  "Pre-calculated RealMapping object that is returned by getBinning");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
+}
 
-  void ManualBinner::build_()
-  {
+void ManualBinner::build_()
+{
     // create the pre-calculated RealMapping from bin_position
     if(the_mapping == 0)
-      the_mapping= new RealMapping();
+        the_mapping= new RealMapping();
     the_mapping->clear();
     for(int i= 1; i < bin_positions.length(); ++i)
-      the_mapping->addMapping(RealRange(']', bin_positions[i-1], bin_positions[i], ']'), i-1);
-  }
+        the_mapping->addMapping(RealRange(']', bin_positions[i-1], bin_positions[i], ']'), i-1);
+}
 
-  // ### Nothing to add here, simply calls build_
-  void ManualBinner::build()
-  {
+// ### Nothing to add here, simply calls build_
+void ManualBinner::build()
+{
     inherited::build();
     build_();
-  }
+}
 
 
-  void ManualBinner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-  {
+void ManualBinner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
     Object::makeDeepCopyFromShallowCopy(copies);
 
     // ### Call deepCopyField on all "pointer-like" fields 
@@ -105,7 +105,7 @@ ManualBinner::ManualBinner(Vec bin_positions_)
 
     // ### Remove this line when you have fully implemented this method.
     PLERROR("ManualBinner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-  }
+}
 
 
 //! Returns a binning for a single column vmatrix v 
@@ -117,3 +117,16 @@ PP<RealMapping> ManualBinner::getBinning() const
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

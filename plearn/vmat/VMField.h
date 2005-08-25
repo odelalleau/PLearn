@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: VMField.h,v 1.6 2005/02/04 15:10:46 tihocan Exp $
+ * $Id$
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -58,23 +58,23 @@ class VMField
 {
 public:
 
-  enum FieldType 
+    enum FieldType 
     {
-      UnknownType = 0,
-      Continuous,
-      DiscrGeneral,
-      DiscrMonotonic,
-      DiscrFloat,
-      Date
+        UnknownType = 0,
+        Continuous,
+        DiscrGeneral,
+        DiscrMonotonic,
+        DiscrFloat,
+        Date
     };
 
-  string name;
-  FieldType fieldtype;
+    string name;
+    FieldType fieldtype;
 
-  VMField(const string& the_name="", FieldType the_fieldtype=UnknownType);
+    VMField(const string& the_name="", FieldType the_fieldtype=UnknownType);
 
-  bool operator==(const VMField& other) const;
-  bool operator!=(const VMField& other) const;
+    bool operator==(const VMField& other) const;
+    bool operator!=(const VMField& other) const;
     
 };
 
@@ -83,49 +83,61 @@ public:
 class VMFieldStat
 {
 protected:
-  int nmissing_;  //!<  number of missing values
-  int nnonmissing_;  //!<  number of non-missing values
-  int npositive_; //!<  number of values >0
-  int nnegative_; //!<  number of values <0
-  double sum_;    //!<  sum of all non missing values
-  double sumsquare_; //!<  sum of square of all non missing values
-  real min_;       //!<  minimum value
-  real max_;       //!<  maximum value
+    int nmissing_;  //!<  number of missing values
+    int nnonmissing_;  //!<  number of non-missing values
+    int npositive_; //!<  number of values >0
+    int nnegative_; //!<  number of values <0
+    double sum_;    //!<  sum of all non missing values
+    double sumsquare_; //!<  sum of square of all non missing values
+    real min_;       //!<  minimum value
+    real max_;       //!<  maximum value
       
-  //!  maximum number of different discrete values to keep track of
-  int maxndiscrete; 
+    //!  maximum number of different discrete values to keep track of
+    int maxndiscrete; 
 
 public:
       
-  //!  counts of discrete values. If the size of counts exceeds maxndiscrete
-  //!  maxndiscrete is set to -1, counts is erased, and we stop counting!
-  map<real,int> counts;
+    //!  counts of discrete values. If the size of counts exceeds maxndiscrete
+    //!  maxndiscrete is set to -1, counts is erased, and we stop counting!
+    map<real,int> counts;
       
-  VMFieldStat(int the_maxndiscrete=255);
+    VMFieldStat(int the_maxndiscrete=255);
       
-  int count() const { return nmissing_ + nnonmissing_; } //!<  should be equal to length of VMField
-  int nmissing() const { return nmissing_; }
-  int nnonmissing() const { return nnonmissing_; }
-  int npositive() const { return npositive_; }
-  int nnegative() const { return nnegative_; }
-  int nzero() const { return nnonmissing_ - (npositive_+nnegative_); }
-  real sum() const { return real(sum_); }
-  real sumsquare() const { return real(sumsquare_); }
-  real min() const { return min_; }
-  real max() const { return max_; }
-  real mean() const { return real(sum_/nnonmissing_); }
-  real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
-  real stddev() const { return sqrt(variance()); }
+    int count() const { return nmissing_ + nnonmissing_; } //!<  should be equal to length of VMField
+    int nmissing() const { return nmissing_; }
+    int nnonmissing() const { return nnonmissing_; }
+    int npositive() const { return npositive_; }
+    int nnegative() const { return nnegative_; }
+    int nzero() const { return nnonmissing_ - (npositive_+nnegative_); }
+    real sum() const { return real(sum_); }
+    real sumsquare() const { return real(sumsquare_); }
+    real min() const { return min_; }
+    real max() const { return max_; }
+    real mean() const { return real(sum_/nnonmissing_); }
+    real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
+    real stddev() const { return sqrt(variance()); }
 
-  real prob(real value) { return counts[value]/real(nnonmissing()); }
+    real prob(real value) { return counts[value]/real(nnonmissing()); }
 
-  void update(real val);
+    void update(real val);
       
-  void write(PStream& out) const;
-  void read(PStream& in);
+    void write(PStream& out) const;
+    void read(PStream& in);
 };
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

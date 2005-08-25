@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Dictionary.h,v 1.4 2004/10/01 20:04:17 kermorvc Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
 
@@ -77,97 +77,97 @@ class Dictionary: public Object
 
 private:
   
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  //! string to int mapping
-  map<string,int> string_to_int;
-  //! int to string mapping
-  map<int,string> int_to_string;
+    //! string to int mapping
+    map<string,int> string_to_int;
+    //! int to string mapping
+    map<int,string> int_to_string;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
-  //! update mode update/no update 
-  int update_mode;
+    // ************************
+    // * public build options *
+    // ************************
+    //! update mode update/no update 
+    int update_mode;
   
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  Dictionary();
+    //! Default constructor.
+    Dictionary();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  PLEARN_DECLARE_OBJECT(Dictionary);
+    PLEARN_DECLARE_OBJECT(Dictionary);
 
-  //! Set update dictionary mode : UPDATE/NO_UPDATE.
-  void  setUpdateMode(bool up_mode);
+    //! Set update dictionary mode : UPDATE/NO_UPDATE.
+    void  setUpdateMode(bool up_mode);
 
-  //! Gives the id of a symbol in the dictionary
-  //! If the symbol is not in the dictionary, 
-  //! returns the index of oov if update_mode = NO_UPDATE.
-  //! Insert the new word otherwise and return its index
-  //! When a symbol is added to the dictionary, the following fields
-  //! are updated: string_to_int, int_to_string, values
-  //! Options can be specified ...
-virtual  int getId(string symbol, TVec<string> options = TVec<string>(0));
+    //! Gives the id of a symbol in the dictionary
+    //! If the symbol is not in the dictionary, 
+    //! returns the index of oov if update_mode = NO_UPDATE.
+    //! Insert the new word otherwise and return its index
+    //! When a symbol is added to the dictionary, the following fields
+    //! are updated: string_to_int, int_to_string, values
+    //! Options can be specified ...
+    virtual  int getId(string symbol, TVec<string> options = TVec<string>(0));
 
-  //! Const version. Do not insert unknown words
-  //! Options can be specified ...
-virtual  int getId(string symbol, TVec<string> options = TVec<string>(0))const;
+    //! Const version. Do not insert unknown words
+    //! Options can be specified ...
+    virtual  int getId(string symbol, TVec<string> options = TVec<string>(0))const;
   
-  //! Gives the symbol from an id of the dictionary
-  //! If the id is invalid, the string returned is ""
-  //! Options can be specified ...
-virtual  string getSymbol(int id, TVec<int> options = TVec<int>(0))const;
+    //! Gives the symbol from an id of the dictionary
+    //! If the id is invalid, the string returned is ""
+    //! Options can be specified ...
+    virtual  string getSymbol(int id, TVec<int> options = TVec<int>(0))const;
   
-  //! Get dimension of the dictionary (number of differents values in the dictionary)
-  //! Options can be specified to restrict the number of possible values. 
-  int getDimension(TVec<int> options=TVec<int>(0)){return string_to_int.size();}
+    //! Get dimension of the dictionary (number of differents values in the dictionary)
+    //! Options can be specified to restrict the number of possible values. 
+    int getDimension(TVec<int> options=TVec<int>(0)){return string_to_int.size();}
 
-  //! Returns a Vec containing every possible id values of the Dictionary
-  //! Options can be specified to restrict the number of possible values. 
-  //! Here, values is simply copied (which can be costly!), and then the copy is returned
-  virtual Vec getValues(TVec<int> options=TVec<int>(0))
+    //! Returns a Vec containing every possible id values of the Dictionary
+    //! Options can be specified to restrict the number of possible values. 
+    //! Here, values is simply copied (which can be costly!), and then the copy is returned
+    virtual Vec getValues(TVec<int> options=TVec<int>(0))
     { 
-      Vec ret(string_to_int.size());
-      int i=0;
-      for(map<string,int>::iterator it = string_to_int.begin(); it != string_to_int.end(); it++)
-        ret[i++] = it->second;
-      return ret;
+        Vec ret(string_to_int.size());
+        int i=0;
+        for(map<string,int>::iterator it = string_to_int.begin(); it != string_to_int.end(); it++)
+            ret[i++] = it->second;
+        return ret;
     }
 
-  //! Indicates if a symbol is in the dictionary
-  bool isIn(string symbol){return string_to_int.find(symbol) != string_to_int.end();};
+    //! Indicates if a symbol is in the dictionary
+    bool isIn(string symbol){return string_to_int.find(symbol) != string_to_int.end();};
   
-  //! Indicates if an id is in the dictionary
-  bool isIn(int id){return int_to_string.find(id) != int_to_string.end();};
+    //! Indicates if an id is in the dictionary
+    bool isIn(int id){return int_to_string.find(id) != int_to_string.end();};
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 
@@ -177,3 +177,16 @@ DECLARE_OBJECT_PTR(Dictionary);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_sort.h,v 1.1 2004/04/17 00:44:55 plearner Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnCore/TMat_maths_impl.h */
 
@@ -58,60 +58,60 @@ using namespace std;
 template<class T> class SelectedIndicesCmp
 {
 private:
-  TVec<int> indices;
-  bool use_less_than; 
+    TVec<int> indices;
+    bool use_less_than; 
 
 public:
-  typedef T first_argument_type;
-  typedef T second_argument_type;
-  typedef bool result_type;
+    typedef T first_argument_type;
+    typedef T second_argument_type;
+    typedef bool result_type;
 
-  SelectedIndicesCmp(TVec<int> the_indices, bool use_lexical_less_than=true)
-    :indices(the_indices), use_less_than(use_lexical_less_than)
-  {}
+    SelectedIndicesCmp(TVec<int> the_indices, bool use_lexical_less_than=true)
+        :indices(the_indices), use_less_than(use_lexical_less_than)
+    {}
 
-  bool operator()(const T& x, const T& y)
-  {
-    int n = indices.length();
-    if(use_less_than) // lexical <
-      {
-        for(int k=0; k<n; k++)
-          {
-            int i = indices[k];
-            if(x[i]<y[i])
-              return true;
-            else if(x[i]>y[i])
-              return false;
-          }
-        return false;
-      }
-    else // lexical >
-      {
-        for(int k=0; k<n; k++)
-          {
-            int i = indices[k];
-            if(x[i]>y[i])
-              return true;
-            else if(x[i]<y[i])
-              return false;
-          }
-        return false;
-      }
-  }
+    bool operator()(const T& x, const T& y)
+    {
+        int n = indices.length();
+        if(use_less_than) // lexical <
+        {
+            for(int k=0; k<n; k++)
+            {
+                int i = indices[k];
+                if(x[i]<y[i])
+                    return true;
+                else if(x[i]>y[i])
+                    return false;
+            }
+            return false;
+        }
+        else // lexical >
+        {
+            for(int k=0; k<n; k++)
+            {
+                int i = indices[k];
+                if(x[i]>y[i])
+                    return true;
+                else if(x[i]<y[i])
+                    return false;
+            }
+            return false;
+        }
+    }
 };
 
-  template<class T>
-  void sortRows(TMat<T>& mat, const TVec<int>& key_columns, bool increasing_order=true)
-  {
+template<class T>
+void sortRows(TMat<T>& mat, const TVec<int>& key_columns, bool increasing_order=true)
+{
     SelectedIndicesCmp< Array<T> > cmp(key_columns,increasing_order);
     sort(mat.rows_as_arrays_begin(), mat.rows_as_arrays_end(), cmp);
-  }
+}
 
 
-  //! Sorts the elements of vec in place
-  template<class T>
-  inline void sortElements(const TVec<T>& vec) 
-  { sort(vec.begin(),vec.end()); }
+//! Sorts the elements of vec in place
+template<class T>
+inline void sortElements(const TVec<T>& vec) 
+{ sort(vec.begin(),vec.end()); }
 
 
 //! Uses partial_sort.
@@ -125,62 +125,62 @@ public:
 template<class T>
 void partialSortRows(const TMat<T>& mat, int k, int sortk=1, int col=0)
 {
-  vector< pair<T,int> > order(mat.length());
-  typename vector< pair<T,int> >::iterator it = order.begin();
-  T* ptr = mat.data()+col;
-  for(int i=0; i<mat.length(); ++i, ptr+=mat.mod(), ++it)
-  {
-    it->first = *ptr;
-    it->second = i;
-  }
+    vector< pair<T,int> > order(mat.length());
+    typename vector< pair<T,int> >::iterator it = order.begin();
+    T* ptr = mat.data()+col;
+    for(int i=0; i<mat.length(); ++i, ptr+=mat.mod(), ++it)
+    {
+        it->first = *ptr;
+        it->second = i;
+    }
 
-  typename vector< pair<T,int> >::iterator middle = order.begin();
-  for(int i=0; i<k; ++i, ++middle);
+    typename vector< pair<T,int> >::iterator middle = order.begin();
+    for(int i=0; i<k; ++i, ++middle);
 
-  partial_sort(order.begin(),middle,order.end());
+    partial_sort(order.begin(),middle,order.end());
     
-  // Build the new destination position array
-  // (destpos is the inverse map of order.second)
-  vector<int> destpos(mat.length());  
-  for(int i=0; i<mat.length(); ++i)
-    destpos[order[i].second] = i;
+    // Build the new destination position array
+    // (destpos is the inverse map of order.second)
+    vector<int> destpos(mat.length());  
+    for(int i=0; i<mat.length(); ++i)
+        destpos[order[i].second] = i;
 
-  // Put elements wich are in the rows k to mat.length()-1 at their place if
-  // their destpos is in the range 0 to k-1. If not, we leave them there.
-  for(int startpos = mat.length()-1; startpos>=k; startpos--)
-  {
-    int dest = destpos[startpos];
-    if(dest!=-1)
+    // Put elements wich are in the rows k to mat.length()-1 at their place if
+    // their destpos is in the range 0 to k-1. If not, we leave them there.
+    for(int startpos = mat.length()-1; startpos>=k; startpos--)
     {
-      while(dest<k)
-      {
-        mat.swapRows(startpos,dest);
-        int newdest = destpos[dest];
-        destpos[dest] = -1;
-        dest = newdest;
-      }
-      destpos[startpos] = -1;
-    }
-  }
-
-  if(sortk) {
-    // Put the k firsts rows in the right order
-    for(int startpos = 0; startpos<k; startpos++)
-    {
-      int dest = destpos[startpos];      
-      if(dest!=-1)
-      {
-        while(dest!=startpos)
+        int dest = destpos[startpos];
+        if(dest!=-1)
         {
-          mat.swapRows(startpos,dest);
-          int newdest = destpos[dest];
-          destpos[dest] = -1;
-          dest = newdest;
+            while(dest<k)
+            {
+                mat.swapRows(startpos,dest);
+                int newdest = destpos[dest];
+                destpos[dest] = -1;
+                dest = newdest;
+            }
+            destpos[startpos] = -1;
         }
-        destpos[startpos] = -1;
-      }
     }
-  }
+
+    if(sortk) {
+        // Put the k firsts rows in the right order
+        for(int startpos = 0; startpos<k; startpos++)
+        {
+            int dest = destpos[startpos];      
+            if(dest!=-1)
+            {
+                while(dest!=startpos)
+                {
+                    mat.swapRows(startpos,dest);
+                    int newdest = destpos[dest];
+                    destpos[dest] = -1;
+                    dest = newdest;
+                }
+                destpos[startpos] = -1;
+            }
+        }
+    }
 }
 
 //! This implementation should be very efficient,
@@ -191,86 +191,86 @@ void partialSortRows(const TMat<T>& mat, int k, int sortk=1, int col=0)
 //! function).  There is no need to explicitly call stable_sort to achieve
 //! the effect, iff increasing_order=true)
 template<class T>
-  void sortRows(const TMat<T>& mat, int col=0, bool increasing_order=true)
-  {
+void sortRows(const TMat<T>& mat, int col=0, bool increasing_order=true)
+{
     vector< pair<T,int> > order(mat.length());
     typename vector< pair<T,int> >::iterator it = order.begin();
     T* ptr = mat.data()+col;
     for(int i=0; i<mat.length(); ++i, ptr+=mat.mod(), ++it)
     {
-      it->first = *ptr;
-      it->second = i;
+        it->first = *ptr;
+        it->second = i;
     }
 
     if(increasing_order)
-      sort(order.begin(),order.end());
+        sort(order.begin(),order.end());
     else 
-      sort(order.begin(), order.end(), greater< pair<T,int> >() );
+        sort(order.begin(), order.end(), greater< pair<T,int> >() );
 
     // Build the new destination position array
     // (destpos is the inverse map of order.second)
     vector<int> destpos(mat.length());  
     for(int i=0; i<mat.length(); ++i)
-      destpos[order[i].second] = i;
+        destpos[order[i].second] = i;
 
     // Now put the full rows in order...
     for(int startpos = 0; startpos<mat.length(); startpos++)
     {
-      int dest = destpos[startpos];      
-      if(dest!=-1)
-      {
-        while(dest!=startpos)
+        int dest = destpos[startpos];      
+        if(dest!=-1)
         {
-          mat.swapRows(startpos,dest);
-          int newdest = destpos[dest];
-          destpos[dest] = -1;
-          dest = newdest;
+            while(dest!=startpos)
+            {
+                mat.swapRows(startpos,dest);
+                int newdest = destpos[dest];
+                destpos[dest] = -1;
+                dest = newdest;
+            }
+            destpos[startpos] = -1;
         }
-        destpos[startpos] = -1;
-      }
     }
-  }
+}
 
 
 
-  /*   Not taken from Numerical Recipies: This is a quickly written and hihghly unefficient algorithm!   */
-  /*   Sorts the columns of the given matrix, in ascending order of its rownum row's elements   */
+/*   Not taken from Numerical Recipies: This is a quickly written and hihghly unefficient algorithm!   */
+/*   Sorts the columns of the given matrix, in ascending order of its rownum row's elements   */
 template<class T>
-  void sortColumns(const TMat<T>& mat, int rownum)
-  {
+void sortColumns(const TMat<T>& mat, int rownum)
+{
     int j,jj,i;
     T min;
     T tmp;
     int mincol;
   
     if(rownum>=mat.length())
-      PLERROR("In sortColumns: no rownumumn %d in matrix (%dx%d)",rownum,mat.width(),mat.length());
+        PLERROR("In sortColumns: no rownumumn %d in matrix (%dx%d)",rownum,mat.width(),mat.length());
 
     for(j=0; j<mat.width(); j++)
     {
-      // look, starting from col j, for the col with the minimum rownum element
-      mincol = j;
-      min = mat(rownum,j);
-      for(jj=j; jj<mat.width(); jj++)
-      {
-        if(mat(rownum,jj)<min)
+        // look, starting from col j, for the col with the minimum rownum element
+        mincol = j;
+        min = mat(rownum,j);
+        for(jj=j; jj<mat.width(); jj++)
         {
-          min = mat(rownum,jj);
-          mincol = jj;
+            if(mat(rownum,jj)<min)
+            {
+                min = mat(rownum,jj);
+                mincol = jj;
+            }
         }
-      }
-      if(mincol>j) /*   Found a col with inferior value   */
-      {
-        /*   So let's exchange cols j and mincol   */
-        for(i=0; i<mat.length(); i++)
+        if(mincol>j) /*   Found a col with inferior value   */
         {
-          tmp = mat(i,j);
-          mat(i,j) = mat(i,mincol);
-          mat(i,mincol) = tmp;
+            /*   So let's exchange cols j and mincol   */
+            for(i=0; i<mat.length(); i++)
+            {
+                tmp = mat(i,j);
+                mat(i,j) = mat(i,mincol);
+                mat(i,mincol) = tmp;
+            }
         }
-      }
     }
-  }
+}
 
 
 
@@ -280,30 +280,30 @@ template<class T>
 template<class T>
 int binary_search(const TVec<T>& src, T x)
 {
-  const int len = src.length();
+    const int len = src.length();
 
-  if (x < src[0]) return -1;
-  else if (x >= src[len-1]) return len-1;
+    if (x < src[0]) return -1;
+    else if (x >= src[len-1]) return len-1;
 
-  int start = 0;
-  int end = len-1;
-  for (;;) {
-    int k = (start+end)/2;
-    if (x >= src[k]  &&  x < src[k+1]) {
-      if (src[k] == src[k+1]) {
-        start = k;
-        end = k+1;
-        while (start>0  &&  src[start-1]==src[start]) start--;
-        while (end<len-1  &&  src[end]==src[end+1]) end++;
-        k = (start+end)/2;
-      }
-      return k;
+    int start = 0;
+    int end = len-1;
+    for (;;) {
+        int k = (start+end)/2;
+        if (x >= src[k]  &&  x < src[k+1]) {
+            if (src[k] == src[k+1]) {
+                start = k;
+                end = k+1;
+                while (start>0  &&  src[start-1]==src[start]) start--;
+                while (end<len-1  &&  src[end]==src[end+1]) end++;
+                k = (start+end)/2;
+            }
+            return k;
+        }
+        else if (x > src[k])
+            start = k+1;
+        else
+            end = k;
     }
-    else if (x > src[k])
-      start = k+1;
-    else
-      end = k;
-  }
 }
 
 // Binary search according to the given column c of a matrix.  The column
@@ -312,36 +312,49 @@ int binary_search(const TVec<T>& src, T x)
 template <class T>
 int binary_search(const TMat<T>& src, int c, T x)
 {
-  const int len = src.length();
+    const int len = src.length();
 
-  if (x < src(0,c))
-    return -1;
-  else if (x >= src(len-1,c))
-    return len-1;
+    if (x < src(0,c))
+        return -1;
+    else if (x >= src(len-1,c))
+        return len-1;
 
-  int start = 0, end = len-1;
-  for (;;) {
-    int k = (start+end)/2;
-    if (x >= src(k,c) && x < src(k+1,c)) {
-      if (src(k,c) == src(k+1,c)) {
-        start = k;
-        end = k+1;
-        while (start > 0 && src(start-1,c) == src(start,c))
-          --start;
-        while (end < len-1 && src(end,c) == src(end+1,c))
-          ++end;
-        k = (start+end)/2;
-      }
-      return k;
+    int start = 0, end = len-1;
+    for (;;) {
+        int k = (start+end)/2;
+        if (x >= src(k,c) && x < src(k+1,c)) {
+            if (src(k,c) == src(k+1,c)) {
+                start = k;
+                end = k+1;
+                while (start > 0 && src(start-1,c) == src(start,c))
+                    --start;
+                while (end < len-1 && src(end,c) == src(end+1,c))
+                    ++end;
+                k = (start+end)/2;
+            }
+            return k;
+        }
+        else if (x > src(k,c))
+            start = k+1;
+        else
+            end = k;
     }
-    else if (x > src(k,c))
-      start = k+1;
-    else
-      end = k;
-  }
 }
 
 
 } // end of namespace PLearn
  
 #endif // TMat_sort_INC
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

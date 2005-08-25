@@ -36,10 +36,10 @@
 
 
 /* *******************************************************      
-   * $Id: NistDB.h,v 1.3 2004/07/21 16:30:51 chrish42 Exp $
-   * AUTHORS: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file Databases/NistDB.h */
@@ -56,22 +56,22 @@ using namespace std;
 class NistDB: public VMatrix
 {
 protected:
-  mutable ifstream imagef;
-  mutable ifstream labelf;
-  mutable unsigned char buf[28*28];
+    mutable ifstream imagef;
+    mutable ifstream labelf;
+    mutable unsigned char buf[28*28];
 
 public:
 
-  NistDB(bool train);  //!<  Views the train data if train is true, test data otherwise
+    NistDB(bool train);  //!<  Views the train data if train is true, test data otherwise
   
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
+    virtual real get(int i, int j) const;
+    virtual void getSubRow(int i, int j, Vec v) const;
 };
 
 inline void loadMNIST(VMat& training_set, VMat& test_set)
 {
-  training_set = new NistDB(true);
-  test_set = new NistDB(false);
+    training_set = new NistDB(true);
+    test_set = new NistDB(false);
 }
 
 } // end of namespace PLearn
@@ -79,6 +79,15 @@ inline void loadMNIST(VMat& training_set, VMat& test_set)
 
 #endif
 
-
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DisregardRowsVMatrix.h,v 1.1 2005/06/03 12:36:37 dorionc Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christian Dorion
 
@@ -63,78 +63,78 @@ namespace PLearn {
 class DisregardRowsVMatrix: public SelectRowsVMatrix
 {
 private:
-  typedef SelectRowsVMatrix inherited;
+    typedef SelectRowsVMatrix inherited;
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected:
 
-  //! Stores the inspected_fieldnames column indices.
-  TVec<int> _inspected_columns;
+    //! Stores the inspected_fieldnames column indices.
+    TVec<int> _inspected_columns;
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
   
-  //! Fills the inherited::indices vector.
-  virtual void inferIndices( );
+    //! Fills the inherited::indices vector.
+    virtual void inferIndices( );
 
 
 public:
-  // 
-  //  public build options 
-  // 
+    // 
+    //  public build options 
+    // 
   
-  /*!
-    Field names of the source vmat for which a triggering value (see the
-    disregard_values option) cause this vmat to neglect a row.
+    /*!
+      Field names of the source vmat for which a triggering value (see the
+      disregard_values option) cause this vmat to neglect a row.
 
-    If empty, all source's fieldnames are used.
+      If empty, all source's fieldnames are used.
 
-    Default: [].
-  */
-  TVec<string> _inspected_fieldnames;
+      Default: [].
+    */
+    TVec<string> _inspected_fieldnames;
 
-  /*!
-    If any of these values is encountered in any column designated in
-    inspected_fieldnames, the whole row is disregarded.
+    /*!
+      If any of these values is encountered in any column designated in
+      inspected_fieldnames, the whole row is disregarded.
 
-    Default: [ ]
-  */
-  Vec _disregard_values;
+      Default: [ ]
+    */
+    Vec _disregard_values;
   
-  /*!
-    Should missing values cause a row to be neglected.
+    /*!
+      Should missing values cause a row to be neglected.
 
-    Default: 1 (True)
-  */
-  bool _disregard_missings;
+      Default: 1 (True)
+    */
+    bool _disregard_missings;
 
-  /*!
-    If positive, only the last 'maximum_length' rows kept from the source
-    vmat will be considered, all other rows being disregarded.
+    /*!
+      If positive, only the last 'maximum_length' rows kept from the source
+      vmat will be considered, all other rows being disregarded.
 
-    Default: -1. 
-  */
-  int _maximum_length;
+      Default: -1. 
+    */
+    int _maximum_length;
   
 public:
   
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  DisregardRowsVMatrix();
+    //! Default constructor.
+    DisregardRowsVMatrix();
 
-  // Simply calls inherited::build() then build_().
-  virtual void build();
+    // Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(DisregardRowsVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(DisregardRowsVMatrix);
 
 };
 
@@ -143,3 +143,16 @@ DECLARE_OBJECT_PTR(DisregardRowsVMatrix);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

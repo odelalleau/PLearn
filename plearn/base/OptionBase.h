@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/Option.h */
@@ -63,87 +63,87 @@ class PLearnDiff;
 class OptionBase: public PPointable
 {
 public:
-  typedef unsigned int flag_t; // bit field
+    typedef unsigned int flag_t; // bit field
 
-  //! 'buildoption' an option typically specified before calling the initial build 
-  //! (semantically similat to a constructor parameter) ex: the number of hidden units in a neural net
-  static const flag_t buildoption;       
+    //! 'buildoption' an option typically specified before calling the initial build 
+    //! (semantically similat to a constructor parameter) ex: the number of hidden units in a neural net
+    static const flag_t buildoption;       
 
-  //! 'learntoption' a field whose proper value is computed by the class after construction
-  //! (not to be set by the user before build) ex: the weights of a neural net
-  static const flag_t learntoption;
+    //! 'learntoption' a field whose proper value is computed by the class after construction
+    //! (not to be set by the user before build) ex: the weights of a neural net
+    static const flag_t learntoption;
 
-  //! 'tuningoption' an option typically set after the initial build, to tune the object
-  static const flag_t tuningoption;
+    //! 'tuningoption' an option typically set after the initial build, to tune the object
+    static const flag_t tuningoption;
 
-  //! Do not include this option in the objet's serialisation (write method skips it)
-  static const flag_t nosave; 
+    //! Do not include this option in the objet's serialisation (write method skips it)
+    static const flag_t nosave; 
 
 protected:
-  string optionname_;  // the name of the option
-  flag_t flags_; 
-  string optiontype_;  // the datatype of the option ("int" ...)
-  string defaultval_;  // string representation of the default value (will be printed by optionHelp())
-  string description_; // A description of this option
+    string optionname_;  // the name of the option
+    flag_t flags_; 
+    string optiontype_;  // the datatype of the option ("int" ...)
+    string defaultval_;  // string representation of the default value (will be printed by optionHelp())
+    string description_; // A description of this option
 
 public:
 
-  //! Most of these parameters only serve to provide the user 
-  //! with an informative help text. (only optionname and saveit are really important)
-  OptionBase(const string& optionname, flag_t flags,
-             const string& optiontype, const string& defaultval, 
-             const string& description);
+    //! Most of these parameters only serve to provide the user 
+    //! with an informative help text. (only optionname and saveit are really important)
+    OptionBase(const string& optionname, flag_t flags,
+               const string& optiontype, const string& defaultval, 
+               const string& description);
 
-  virtual void read(Object* o, PStream& in) const = 0;
+    virtual void read(Object* o, PStream& in) const = 0;
 
-  //! Should this option be skipped upon reading it? (i.e. don't read it in any variable)
-  virtual bool shouldBeSkipped() const; 
+    //! Should this option be skipped upon reading it? (i.e. don't read it in any variable)
+    virtual bool shouldBeSkipped() const; 
 
-  virtual void read_and_discard(PStream& in) const = 0;
-  virtual void write(const Object* o, PStream& out) const = 0;
+    virtual void read_and_discard(PStream& in) const = 0;
+    virtual void write(const Object* o, PStream& out) const = 0;
 
-  // writes the option into a string instead of a stream
-  // (calls write on a string stream) 
-  string writeIntoString(const Object* o) const;
+    // writes the option into a string instead of a stream
+    // (calls write on a string stream) 
+    string writeIntoString(const Object* o) const;
   
-  virtual Object* getAsObject(Object* o) const = 0;
-  virtual const Object* getAsObject(const Object* o) const = 0;
-  virtual Object *getIndexedObject(Object *o, int i) const = 0;
-  virtual const Object *getIndexedObject(const Object *o, int i) const = 0;    
+    virtual Object* getAsObject(Object* o) const = 0;
+    virtual const Object* getAsObject(const Object* o) const = 0;
+    virtual Object *getIndexedObject(Object *o, int i) const = 0;
+    virtual const Object *getIndexedObject(const Object *o, int i) const = 0;    
 
-  //! Read into index "i" of the object's option; the index
-  //! is a string for generality (i.e. applies to both vectors and maps)
-  virtual void readIntoIndex(Object* o, PStream& in, const string& index);
+    //! Read into index "i" of the object's option; the index
+    //! is a string for generality (i.e. applies to both vectors and maps)
+    virtual void readIntoIndex(Object* o, PStream& in, const string& index);
 
-  //! Write from index "i" of the object's option; the index
-  //! is a string for generality (i.e. applies to both vectors and maps)
-  virtual void writeAtIndex(const Object* o, PStream& out,
-                            const string& index) const;
+    //! Write from index "i" of the object's option; the index
+    //! is a string for generality (i.e. applies to both vectors and maps)
+    virtual void writeAtIndex(const Object* o, PStream& out,
+                              const string& index) const;
   
-  //! Returns the name of the class in to which this field belongs
-  virtual string optionHolderClassName(const Object* o) const = 0;
+    //! Returns the name of the class in to which this field belongs
+    virtual string optionHolderClassName(const Object* o) const = 0;
 
-  //! The name of the option (field)
-  inline const string& optionname() const { return optionname_; }
-  //! Test the option name.
-  //! One cannot use a 'const string&' because it is used by STL.
-  inline bool isOptionNamed(string name) const
+    //! The name of the option (field)
+    inline const string& optionname() const { return optionname_; }
+    //! Test the option name.
+    //! One cannot use a 'const string&' because it is used by STL.
+    inline bool isOptionNamed(string name) const
     { return name == optionname(); }
-  //! Set option name.
-  inline void setOptionName(const string& name)
+    //! Set option name.
+    inline void setOptionName(const string& name)
     { optionname_ = name; }
   
-  inline const string& optiontype() const { return optiontype_; }
-  inline const string& defaultval() const { return defaultval_; }
-  inline const string& description() const { return description_; }
-  inline flag_t flags() const { return flags_; }
+    inline const string& optiontype() const { return optiontype_; }
+    inline const string& defaultval() const { return defaultval_; }
+    inline const string& description() const { return description_; }
+    inline flag_t flags() const { return flags_; }
 
-  //! Change the string representation of the default value.
-  inline void setDefaultVal(const string& newdefaultval)
-  { defaultval_ = newdefaultval; }
+    //! Change the string representation of the default value.
+    inline void setDefaultVal(const string& newdefaultval)
+    { defaultval_ = newdefaultval; }
 
-  //! Comparison between two option values.
-  virtual int diff(const string& refer, const string& other, PLearnDiff* diffs) const = 0;
+    //! Comparison between two option values.
+    virtual int diff(const string& refer, const string& other, PLearnDiff* diffs) const = 0;
 
 };
 
@@ -154,3 +154,16 @@ typedef std::vector< PP<OptionBase> > OptionList;
 } // end of namespace PLearn
 
 #endif //!<  Option_INC
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

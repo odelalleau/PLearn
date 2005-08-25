@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CorrelationKernel.h,v 1.3 2005/05/30 20:17:27 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,106 +54,106 @@ class CorrelationKernel: public Kernel
 
 private:
 
-  typedef Kernel inherited;
+    typedef Kernel inherited;
   
 protected:
 
-  mutable Mat correl;     //!< Used to store the correlations.
-  mutable Mat pvalues;    //!< Used to store the pvalues.
-  Vec mean_vec;           //!< Used to store the mean of each example (variable).
-  Vec var_vec;            //!< Used to store the variance of each example (variable).
-  real min_product_var;   //!< Value used to threshold products of variances.
-  //! VPL program that transforms the similarity measure.
-  PP<VMatLanguage> transform_prg;
-  //! Fields of the VPL program.
-  TVec<string> transform_prg_fields;
-  //! Used to store the similarity measure.
-  Vec result_vec;
-  //! Used to store the similarity measure tranformed by 'transform_prg'.
-  Vec result_transformed_vec;
+    mutable Mat correl;     //!< Used to store the correlations.
+    mutable Mat pvalues;    //!< Used to store the pvalues.
+    Vec mean_vec;           //!< Used to store the mean of each example (variable).
+    Vec var_vec;            //!< Used to store the variance of each example (variable).
+    real min_product_var;   //!< Value used to threshold products of variances.
+    //! VPL program that transforms the similarity measure.
+    PP<VMatLanguage> transform_prg;
+    //! Fields of the VPL program.
+    TVec<string> transform_prg_fields;
+    //! Used to store the similarity measure.
+    Vec result_vec;
+    //! Used to store the similarity measure tranformed by 'transform_prg'.
+    Vec result_transformed_vec;
 
-  // *********************
-  // * Protected options *
-  // *********************
+    // *********************
+    // * Protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
     
 public:
 
-  // ************************
-  // * Public build options *
-  // ************************
+    // ************************
+    // * Public build options *
+    // ************************
 
-  string correlation;
-  string transform;
-  real   var_threshold;
+    string correlation;
+    string transform;
+    real   var_threshold;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  // Make sure the implementation in the .cc initializes all fields to
-  // reasonable default values.
-  CorrelationKernel();
+    //! Default constructor.
+    // Make sure the implementation in the .cc initializes all fields to
+    // reasonable default values.
+    CorrelationKernel();
 
-  // ******************
-  // * Kernel methods *
-  // ******************
+    // ******************
+    // * Kernel methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  // If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
-  PLEARN_DECLARE_OBJECT(CorrelationKernel);
+    // Declares other standard object methods.
+    // If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
+    PLEARN_DECLARE_OBJECT(CorrelationKernel);
 
-  // ************************
-  // **** Kernel methods ****
-  // ************************
+    // ************************
+    // **** Kernel methods ****
+    // ************************
 
-  //! Compute K(x1,x2).
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
+    //! Compute K(x1,x2).
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
-  //! Overridden to precompute 'min_product_var' if necessary.
-  virtual void setDataForKernelMatrix(VMat the_data);
+    //! Overridden to precompute 'min_product_var' if necessary.
+    virtual void setDataForKernelMatrix(VMat the_data);
 
-  // *** SUBCLASS WRITING: ***
-  // While in general not necessary, in case of particular needs 
-  // (efficiency concerns for ex) you may also want to overload
-  // some of the following methods:
-  // virtual real evaluate_i_j(int i, int j) const;
-  // virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
-  // virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
-  // virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
-  // virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
-  // virtual void computeGramMatrix(Mat K) const;
-  // virtual void addDataForKernelMatrix(const Vec& newRow);
-  // virtual void setParameters(Vec paramvec);
-  // virtual Vec getParameters() const;
+    // *** SUBCLASS WRITING: ***
+    // While in general not necessary, in case of particular needs 
+    // (efficiency concerns for ex) you may also want to overload
+    // some of the following methods:
+    // virtual real evaluate_i_j(int i, int j) const;
+    // virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
+    // virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
+    // virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
+    // virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
+    // virtual void computeGramMatrix(Mat K) const;
+    // virtual void addDataForKernelMatrix(const Vec& newRow);
+    // virtual void setParameters(Vec paramvec);
+    // virtual Vec getParameters() const;
   
 
 };
@@ -165,3 +165,15 @@ DECLARE_OBJECT_PTR(CorrelationKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

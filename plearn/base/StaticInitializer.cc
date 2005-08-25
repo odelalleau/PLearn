@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StaticInitializer.cc,v 1.2 2004/02/20 21:11:42 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file StaticInitializer.cc */
 #include "StaticInitializer.h"
@@ -45,8 +45,21 @@ using namespace std;
 
 StaticInitializer::StaticInitializer(VOIDFUNC initialize)
 {
-  (*initialize)();
+    (*initialize)();
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

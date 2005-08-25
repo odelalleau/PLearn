@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: YMDDatedVMatrix.h,v 1.4 2004/04/05 23:12:54 morinf Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -60,80 +60,80 @@ class YMDDatedVMatrix: public DatedVMatrix
     typedef DatedVMatrix inherited;
 
 public:
-  VMat data;
+    VMat data;
 protected:
-  Mat years; //!<  single column of years (e.g. 1987), one year per data row
-  Mat months; //!<  single column of months (between 1 and 12), one month per data row
-  Mat days; //!<  single column of days (between 1 and 31), one day per data row
-  Vec pos_of_ith_year; //!<  row index of first row of i-th year in the data
-  Vec pos_of_ith_month; //!<  row index of first row of i-th month in the data
-  Vec pos_of_ith_day; //!<  row index of first row of i-th month in the data
-  Vec day_of_ith_pos; //!<  inverse map of pos_of_ith_day
-  Array< TMat<int> > pos_of_date; //!<  dates[year-years(0,0)][month-1][day-1] is the 
-                                        //!  position of the absolute (year,month,day) date
+    Mat years; //!<  single column of years (e.g. 1987), one year per data row
+    Mat months; //!<  single column of months (between 1 and 12), one month per data row
+    Mat days; //!<  single column of days (between 1 and 31), one day per data row
+    Vec pos_of_ith_year; //!<  row index of first row of i-th year in the data
+    Vec pos_of_ith_month; //!<  row index of first row of i-th month in the data
+    Vec pos_of_ith_day; //!<  row index of first row of i-th month in the data
+    Vec day_of_ith_pos; //!<  inverse map of pos_of_ith_day
+    Array< TMat<int> > pos_of_date; //!<  dates[year-years(0,0)][month-1][day-1] is the 
+    //!  position of the absolute (year,month,day) date
 
 public:
-  // ******************
-  // *  Constructors  *
-  // ******************
-  YMDDatedVMatrix(); //!<  default constructor (for automatic deserialization)
+    // ******************
+    // *  Constructors  *
+    // ******************
+    YMDDatedVMatrix(); //!<  default constructor (for automatic deserialization)
 
-  //!  THE DATES MUST BE IN INCREASING CHRONOLOGICAL ORDER.
-  //!  Warning: VMFields are NOT YET handled by this constructor
-  YMDDatedVMatrix(VMat data_, Mat years_, Mat months_, Mat days_);
+    //!  THE DATES MUST BE IN INCREASING CHRONOLOGICAL ORDER.
+    //!  Warning: VMFields are NOT YET handled by this constructor
+    YMDDatedVMatrix(VMat data_, Mat years_, Mat months_, Mat days_);
 
-  //!  alternatively, the given matrix has (year, month, day) in the
-  //!  first 3 columns and the rest of the data in the remaining columns.
-  //!  Warning: VMFields are NOT YET handled by this constructor
-  YMDDatedVMatrix(Mat& YMD_and_data);
+    //!  alternatively, the given matrix has (year, month, day) in the
+    //!  first 3 columns and the rest of the data in the remaining columns.
+    //!  Warning: VMFields are NOT YET handled by this constructor
+    YMDDatedVMatrix(Mat& YMD_and_data);
 
-  PLEARN_DECLARE_OBJECT(YMDDatedVMatrix);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(YMDDatedVMatrix);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  //!  return the number of real fields required to specify a date: here 3 for YMD
-  int nDateFields() { return 3; }
+    //!  return the number of real fields required to specify a date: here 3 for YMD
+    int nDateFields() { return 3; }
 
 /*!     this one calls one of subDistrRelative{Years,Months,Days} according
-    to wether units=="years", "months", or "days" (or if the first letter
-    matches, irrespective of upper/lower case distinctions)
+  to wether units=="years", "months", or "days" (or if the first letter
+  matches, irrespective of upper/lower case distinctions)
 */
-  VMat subDistrRelativeDates(int first, int n, const string& units);
-  VMat subDistrRelativeYears(int first_relative_year, int n_years);
-  VMat subDistrRelativeMonths(int first_relative_month, int n_months);
-  VMat subDistrRelativeDays(int first_relative_day, int n_days);
+    VMat subDistrRelativeDates(int first, int n, const string& units);
+    VMat subDistrRelativeYears(int first_relative_year, int n_years);
+    VMat subDistrRelativeMonths(int first_relative_month, int n_months);
+    VMat subDistrRelativeDays(int first_relative_day, int n_days);
 
-  //!  sub-distribution starting at the given date, for the given
-  //!  number of occured years, months or days
-  VMat subDistrAbsoluteYears(int year, int month, int day, int n_years);
-  VMat subDistrAbsoluteMonths(int year, int month, int day, int n_months);
-  VMat subDistrAbsoluteDays(int year, int month, int day, int n_days);
-  VMat subDistrAbsoluteUnits(int year, int month, int day, int n_units, const string& units);
+    //!  sub-distribution starting at the given date, for the given
+    //!  number of occured years, months or days
+    VMat subDistrAbsoluteYears(int year, int month, int day, int n_years);
+    VMat subDistrAbsoluteMonths(int year, int month, int day, int n_months);
+    VMat subDistrAbsoluteDays(int year, int month, int day, int n_days);
+    VMat subDistrAbsoluteUnits(int year, int month, int day, int n_units, const string& units);
 
-  //!  return "size" in the given units (e.g. interval in years, months, etc...)
-  //!  here e.g. the number of different years (if units=="years").
-  int lengthInDates(const string& units);
+    //!  return "size" in the given units (e.g. interval in years, months, etc...)
+    //!  here e.g. the number of different years (if units=="years").
+    int lengthInDates(const string& units);
 
-  //!  return row position of example whose relative date is the first with
-  //!  the given (relative) value, in the given time units
-  int positionOfRelativeDate(int first, const string& units);
+    //!  return row position of example whose relative date is the first with
+    //!  the given (relative) value, in the given time units
+    int positionOfRelativeDate(int first, const string& units);
 
-  //!  return row position associated with first sample whose date
-  //!  is given
-  int positionOfDate(int year, int month, int day);
+    //!  return row position associated with first sample whose date
+    //!  is given
+    int positionOfDate(int year, int month, int day);
 
-  //!  copy the date fields for the relative positions starting at the
-  //!  given row position for the given number of rows, into the given matrix
-  void copyDatesOfRows(int from_row, int n_rows, Mat& dates);
+    //!  copy the date fields for the relative positions starting at the
+    //!  given row position for the given number of rows, into the given matrix
+    void copyDatesOfRows(int from_row, int n_rows, Mat& dates);
   
-  // added by Julien Keable :
-  // returns vector of row at indice 'row'
-  // and associated date trough year, month and day
-  Vec copyRowDataAndDate(int row, int &year, int &month, int &day);
-  void copyDateOfRow(int row, int &year, int &month, int &day);
+    // added by Julien Keable :
+    // returns vector of row at indice 'row'
+    // and associated date trough year, month and day
+    Vec copyRowDataAndDate(int row, int &year, int &month, int &day);
+    void copyDateOfRow(int row, int &year, int &month, int &day);
 
-  virtual void reset_dimensions() { PLERROR("YMDDatedVMatrix::reset_dimensions() not implemented"); }
+    virtual void reset_dimensions() { PLERROR("YMDDatedVMatrix::reset_dimensions() not implemented"); }
 private:
     void build_();
 };
@@ -142,3 +142,16 @@ DECLARE_OBJECT_PTR(YMDDatedVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

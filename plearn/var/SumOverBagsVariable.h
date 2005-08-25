@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.h,v 1.11 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef SumOverBagsVariable_INC
 #define SumOverBagsVariable_INC
@@ -51,33 +51,33 @@ using namespace std;
 
 class SumOverBagsVariable: public NaryVariable
 {
-  typedef NaryVariable inherited;
+    typedef NaryVariable inherited;
 
 public:
 //protected:
-  VMat vmat;
-  Func f;
-  bool average;
-  int max_bag_size;
-  int n_samples;
-  bool transpose;
+    VMat vmat;
+    Func f;
+    bool average;
+    int max_bag_size;
+    int n_samples;
+    bool transpose;
 
-  int curpos; //!<  current pos in VMat 
-  // To avoid allocation/deallocations in fprop/bprop
-  Vec output_value;
-  Mat input_values;
-  Vec bag_size_vec;
-  Vec bag_target_and_bag_signal;
-  Vec bag_target;
-  Vec bag_signal;
-  Vec bag_weight;
-  Array<Vec> f_inputs; // (matrix of bag inputs, the bag size, the bag target, the bag weight)
-  Array<Vec> unused_gradients;
-  Array<Vec> output_av; // Array<Vec>(output_value)
-  Array<Vec> gradient_av; // Array<Vec>(gradient)
-  int bag_size;
+    int curpos; //!<  current pos in VMat 
+    // To avoid allocation/deallocations in fprop/bprop
+    Vec output_value;
+    Mat input_values;
+    Vec bag_size_vec;
+    Vec bag_target_and_bag_signal;
+    Vec bag_target;
+    Vec bag_signal;
+    Vec bag_weight;
+    Array<Vec> f_inputs; // (matrix of bag inputs, the bag size, the bag target, the bag weight)
+    Array<Vec> unused_gradients;
+    Array<Vec> output_av; // Array<Vec>(output_value)
+    Array<Vec> gradient_av; // Array<Vec>(gradient)
+    int bag_size;
 
-  public:
+public:
     //!  protected default constructor for persistence
     SumOverBagsVariable();
     //! Sum_{bags \in vmat} f(inputs and targets in bag)
@@ -112,7 +112,7 @@ public:
 
     static void declareOptions(OptionList& ol);
 
-  protected:
+protected:
     void build_();
 };
 
@@ -125,3 +125,16 @@ inline Var sumOverBags(VMat vmat, Func f, int max_bag_size, int nsamples, bool a
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

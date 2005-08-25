@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.h,v 1.12 2005/06/02 14:00:35 crompb Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -55,133 +55,133 @@ class KernelProjection: public PLearner
 
 private:
 
-  typedef PLearner inherited;
+    typedef PLearner inherited;
 
-  //! Global storage to save memory allocations.
-  mutable Vec k_x_xi;
-  mutable Mat result;
-  mutable Mat used_eigenvectors;
+    //! Global storage to save memory allocations.
+    mutable Vec k_x_xi;
+    mutable Mat result;
+    mutable Mat used_eigenvectors;
   
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  int n_comp_kept;
-  int n_examples;
+    int n_comp_kept;
+    int n_examples;
 
-  // Fields below are not options.
+    // Fields below are not options.
 
-  //! A boolean indicating we haven't performed any output yet.
-  mutable bool first_output;
+    //! A boolean indicating we haven't performed any output yet.
+    mutable bool first_output;
 
-  mutable Vec last_input;   //!< The last input given when computing costs.
-  mutable Vec last_output;  //!< The last output computed when computing costs.
+    mutable Vec last_input;   //!< The last input given when computing costs.
+    mutable Vec last_output;  //!< The last output computed when computing costs.
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  bool compute_costs;
-  bool free_extra_components;
-  int ignore_n_first;
-  Ker kernel;
-  real min_eigenvalue;
-  int n_comp;
-  int n_comp_for_cost;
-  string normalize;
+    bool compute_costs;
+    bool free_extra_components;
+    int ignore_n_first;
+    Ker kernel;
+    real min_eigenvalue;
+    int n_comp;
+    int n_comp_for_cost;
+    string normalize;
   
-  // ************************
-  // * public learnt options *
-  // ************************
+    // ************************
+    // * public learnt options *
+    // ************************
 
-  Vec eigenvalues;
-  Mat eigenvectors;
+    Vec eigenvalues;
+    Mat eigenvectors;
   
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  KernelProjection();
+    //! Default constructor.
+    KernelProjection();
 
-  // ********************
-  // * PLearner methods *
-  // ********************
+    // ********************
+    // * PLearner methods *
+    // ********************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  //! Return the eigenvalues of this learner.
-  virtual Vec getEigenvalues() {return eigenvalues;}
+    //! Return the eigenvalues of this learner.
+    virtual Vec getEigenvalues() {return eigenvalues;}
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(KernelProjection);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(KernelProjection);
 
-  // **************************
-  // **** PLearner methods ****
-  // **************************
+    // **************************
+    // **** PLearner methods ****
+    // **************************
 
-  //! Returns the size of this learner's output, (which typically
-  //! may depend on its inputsize(), targetsize() and set options).
-  virtual int outputsize() const;
+    //! Returns the size of this learner's output, (which typically
+    //! may depend on its inputsize(), targetsize() and set options).
+    virtual int outputsize() const;
 
-  //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
-  //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
-  virtual void forget();
+    //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
+    //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
+    virtual void forget();
 
-  //! The role of the train method is to bring the learner up to stage==nstages,
-  //! updating the train_stats collector with training costs measured on-line in the process.
-  virtual void train();
+    //! The role of the train method is to bring the learner up to stage==nstages,
+    //! updating the train_stats collector with training costs measured on-line in the process.
+    virtual void train();
 
-  //! Computes the output from the input.
-  virtual void computeOutput(const Vec& input, Vec& output) const;
+    //! Computes the output from the input.
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
-  //! Computes the costs from already computed output. 
-  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                       const Vec& target, Vec& costs) const;
+    //! Computes the costs from already computed output. 
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const;
                                 
-  //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
-  virtual TVec<string> getTestCostNames() const;
+    //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
+    virtual TVec<string> getTestCostNames() const;
 
-  //! Returns the names of the objective costs that the train method computes and 
-  //! for which it updates the VecStatsCollector train_stats.
-  virtual TVec<string> getTrainCostNames() const;
+    //! Returns the names of the objective costs that the train method computes and 
+    //! for which it updates the VecStatsCollector train_stats.
+    virtual TVec<string> getTrainCostNames() const;
 
-  //! Overridden to forward to the kernel.
-  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+    //! Overridden to forward to the kernel.
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
-  // *** SUBCLASS WRITING: ***
-  // While in general not necessary, in case of particular needs 
-  // (efficiency concerns for ex) you may also want to overload
-  // some of the following methods:
-  // virtual void computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
-  // virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
-  // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
-  // virtual int nTestCosts() const;
-  // virtual int nTrainCosts() const;
+    // *** SUBCLASS WRITING: ***
+    // While in general not necessary, in case of particular needs 
+    // (efficiency concerns for ex) you may also want to overload
+    // some of the following methods:
+    // virtual void computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
+    // virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
+    // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
+    // virtual int nTestCosts() const;
+    // virtual int nTrainCosts() const;
 
 };
 
@@ -191,3 +191,16 @@ DECLARE_OBJECT_PTR(KernelProjection);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

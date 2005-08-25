@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.h,v 1.10 2005/02/03 16:22:25 crompb Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Norman Casagrande
 
@@ -54,59 +54,72 @@ using namespace std;
 
 class MultiInstanceVMatrix: public RowBufferedVMatrix
 {
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
 protected:
 
-  Mat         data_;
-  PPath      filename_;  // The *.mimat file name
-  vector<int> configs_;
-  vector< pair<string, int> > names_;
-  int source_targetsize; // number of target columns in the mimat file == targetsize()-1
+    Mat         data_;
+    PPath      filename_;  // The *.mimat file name
+    vector<int> configs_;
+    vector< pair<string, int> > names_;
+    int source_targetsize; // number of target columns in the mimat file == targetsize()-1
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  int header_lines_to_skip;
+    int header_lines_to_skip;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor.
-  MultiInstanceVMatrix();
-  //MultiInstanceVMatrix(const string& filename); //!<  opens an existing file
+    // Default constructor.
+    MultiInstanceVMatrix();
+    //MultiInstanceVMatrix(const string& filename); //!<  opens an existing file
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
 
-  static void declareOptions(OptionList& ol);
+    static void declareOptions(OptionList& ol);
 
-  virtual void getNewRow(int i, const Vec& v) const;
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  virtual void build();
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(MultiInstanceVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(MultiInstanceVMatrix);
 
 };
 DECLARE_OBJECT_PTR(MultiInstanceVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

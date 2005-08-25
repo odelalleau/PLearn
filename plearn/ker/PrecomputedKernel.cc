@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: PrecomputedKernel.cc,v 1.7 2004/09/14 16:04:36 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "PrecomputedKernel.h"
 
@@ -63,17 +63,17 @@ void PrecomputedKernel::build_()
 
 void PrecomputedKernel::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 
 
 void PrecomputedKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Kernel::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(ker, copies);
-  deepCopyField(precomputedK, copies);
+    Kernel::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(ker, copies);
+    deepCopyField(precomputedK, copies);
 }
 
 
@@ -103,23 +103,23 @@ void PrecomputedKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 */
 void PrecomputedKernel::setDataForKernelMatrix(VMat the_data)
 {   
-  Kernel::setDataForKernelMatrix(the_data);
-  ker->setDataForKernelMatrix(the_data);
+    Kernel::setDataForKernelMatrix(the_data);
+    ker->setDataForKernelMatrix(the_data);
   
-  int len = data.length();
-  precomputedK.resize(len); //TVec of lines!!!
-  for(int i=0; i < len; i++)
-  {
-    precomputedK[i].resize(len);
-    
-    for(int j=0; j < len; j++)
+    int len = data.length();
+    precomputedK.resize(len); //TVec of lines!!!
+    for(int i=0; i < len; i++)
     {
-      if(is_symmetric && j<i)
-        precomputedK[i][j] = precomputedK[j][i];
-      else
-        precomputedK[i][j] = ker->evaluate_i_j(i,j);
+        precomputedK[i].resize(len);
+    
+        for(int j=0; j < len; j++)
+        {
+            if(is_symmetric && j<i)
+                precomputedK[i][j] = precomputedK[j][i];
+            else
+                precomputedK[i][j] = ker->evaluate_i_j(i,j);
+        }
     }
-  }
 }
 
 
@@ -130,13 +130,13 @@ real PrecomputedKernel::evaluate(const Vec& x1, const Vec& x2) const
 real PrecomputedKernel::evaluate_i_j(int i, int j) const
 { 
 #ifdef BOUNDCHECK
-  if(precomputedK.isNull())
-    PLERROR("In PrecomputedKernel::evaluate_i_j data must first be set with setDataForKernelMatrix");
-  else if(i<0 || j<0 || i>=data.length() || j>=data.length())
-    PLERROR("In PrecomputedKernel::evaluate_i_j i (%d) and j (%d) must be between 0 and data.length() (%d)",
-            i, j, data.length());
+    if(precomputedK.isNull())
+        PLERROR("In PrecomputedKernel::evaluate_i_j data must first be set with setDataForKernelMatrix");
+    else if(i<0 || j<0 || i>=data.length() || j>=data.length())
+        PLERROR("In PrecomputedKernel::evaluate_i_j i (%d) and j (%d) must be between 0 and data.length() (%d)",
+                i, j, data.length());
 #endif
-  return precomputedK[i][j];//[i*data.length()+j];
+    return precomputedK[i][j];//[i*data.length()+j];
 }
 
 
@@ -150,7 +150,7 @@ real PrecomputedKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x
 void PrecomputedKernel::declareOptions(OptionList &ol)
 {
     declareOption(ol, "ker", &PrecomputedKernel::ker, OptionBase::buildoption,
-                   "The underlying kernel.");    
+                  "The underlying kernel.");    
     inherited::declareOptions(ol);
 }
 
@@ -158,3 +158,15 @@ void PrecomputedKernel::declareOptions(OptionList &ol)
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

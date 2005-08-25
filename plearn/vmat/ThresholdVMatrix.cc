@@ -49,25 +49,38 @@ ThresholdVMatrix::ThresholdVMatrix()
 
 ThresholdVMatrix::ThresholdVMatrix(VMat the_underlying_distr, real threshold_, real the_cold_value, real the_hot_value,
                                    bool gt_threshold_)
-  : inherited(the_underlying_distr->length(), the_underlying_distr->width()),
-    underlying_distr(the_underlying_distr), threshold(threshold_), cold_value(the_cold_value),
-    hot_value(the_hot_value), gt_threshold(gt_threshold_)
+    : inherited(the_underlying_distr->length(), the_underlying_distr->width()),
+      underlying_distr(the_underlying_distr), threshold(threshold_), cold_value(the_cold_value),
+      hot_value(the_hot_value), gt_threshold(gt_threshold_)
 {}
 
 void ThresholdVMatrix::getNewRow(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length())
-    PLERROR("In ThresholdVMatrix::getNewRow OUT OF BOUNDS");
-  if(v.length()!=width())
-    PLERROR("In ThresholdVMatrix::getNewRow v.length() must be equal to the VMat's width");
+    if(i<0 || i>=length())
+        PLERROR("In ThresholdVMatrix::getNewRow OUT OF BOUNDS");
+    if(v.length()!=width())
+        PLERROR("In ThresholdVMatrix::getNewRow v.length() must be equal to the VMat's width");
 #endif
-  underlying_distr->getRow(i,v);
-  int p= v.size()-1;
-  if(gt_threshold && v[p] <= threshold || !gt_threshold && v[p] < threshold)
-    v[p]= cold_value;
-  else
-    v[p]= hot_value;
+    underlying_distr->getRow(i,v);
+    int p= v.size()-1;
+    if(gt_threshold && v[p] <= threshold || !gt_threshold && v[p] < threshold)
+        v[p]= cold_value;
+    else
+        v[p]= hot_value;
 }
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

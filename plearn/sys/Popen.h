@@ -34,9 +34,9 @@
 
 
 /* *******************************************************      
-   * $Id: Popen.h,v 1.6 2005/01/21 22:22:36 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 // This file contains useful functions for string manipulation
 // that are used in the PLearn Library
@@ -56,9 +56,9 @@ class PRProcess;
 namespace PLearn {
 using namespace std;
 
-  class Popen: public PPointable
-  {
-  protected:
+class Popen: public PPointable
+{
+protected:
     //! Multi-argument variant: the arguments are passed in a vector.
     void launch(const string& command, const vector<string>&
                 commandoptions);
@@ -71,17 +71,17 @@ using namespace std;
 
     PRProcess *process;
     
-  public:
+public:
     PStream in; //should these be only one I/O PStream? -xsm
     PStream out;
     
     Popen(const string& command, 
 	  bool the_verbose = false) 
-      { verbose = the_verbose; launch(command); }
+    { verbose = the_verbose; launch(command); }
 
     Popen(const string& command, const vector<string>& commandoptions, 
 	  bool the_verbose = false) 
-      { verbose = the_verbose; launch(command,commandoptions); }
+    { verbose = the_verbose; launch(command,commandoptions); }
 
     /** Wait for process termination and return exit value.
         @note This must be called after all output from the program
@@ -90,16 +90,29 @@ using namespace std;
     int wait();
     
     ~Popen();
-  };
+};
 
   
 /*!     Returns the full output of the command as a vector of strings,
-    containing the lines of the answer (with any newline character removed). 
-    The command must not be waiting for input on its standard input 
-    or this call will never return.
+  containing the lines of the answer (with any newline character removed). 
+  The command must not be waiting for input on its standard input 
+  or this call will never return.
 */
-  vector<string> execute(const string& command);
+vector<string> execute(const string& command);
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

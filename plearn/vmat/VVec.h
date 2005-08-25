@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: VVec.h,v 1.13 2005/02/04 15:10:03 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VVec.h */
@@ -53,87 +53,87 @@ namespace PLearn {
 
 class VVec : public Object
 {
-  typedef Object inherited;
+    typedef Object inherited;
 
 public:
-  // We leave the actual representation choice to some
-  // underlying virtual matrix. A VVec simply references a subRow of a VMatrix
-  PP<VMatrix> data;
-  int row_index;
-  int col_index; 
-  int length_;
+    // We leave the actual representation choice to some
+    // underlying virtual matrix. A VVec simply references a subRow of a VMatrix
+    PP<VMatrix> data;
+    int row_index;
+    int col_index; 
+    int length_;
 
-  VVec()
-    :row_index(0), col_index(0), length_(0) {}
+    VVec()
+        :row_index(0), col_index(0), length_(0) {}
 
-  VVec(const PP<VMatrix>& m, int i)
-    :data(m), row_index(i), col_index(0), length_(m->width()) {}
+    VVec(const PP<VMatrix>& m, int i)
+        :data(m), row_index(i), col_index(0), length_(m->width()) {}
 
-  VVec(const PP<VMatrix>& m, int i, int j, int l)
-    :data(m), row_index(i), col_index(j), length_(l) {}
+    VVec(const PP<VMatrix>& m, int i, int j, int l)
+        :data(m), row_index(i), col_index(j), length_(l) {}
 
-  //! constructor from Vec
-  //! Will build a MemoryVMatrix containing a view of v as its single row
-  //! and have the VVec point to it. So data will be shared with v.
-  VVec(const Vec& v);
+    //! constructor from Vec
+    //! Will build a MemoryVMatrix containing a view of v as its single row
+    //! and have the VVec point to it. So data will be shared with v.
+    VVec(const Vec& v);
 
-  inline int length() const { return length_; }
-  inline int size() const { return length_; }
+    inline int length() const { return length_; }
+    inline int size() const { return length_; }
 
-  // to keep compatibility with most current code,
-  // VVec's can be converted to Vec's
-  inline void toVec(const Vec& v) const 
-  { 
+    // to keep compatibility with most current code,
+    // VVec's can be converted to Vec's
+    inline void toVec(const Vec& v) const 
+    { 
 #ifdef BOUNDCHECK
-    if(v.length()!=length_)
-      PLERROR("In VVec::toVec length of Vec and VVec differ!");
+        if(v.length()!=length_)
+            PLERROR("In VVec::toVec length of Vec and VVec differ!");
 #endif
-    data->getSubRow(row_index,col_index,v); 
-  }
-
-  //! copies v into into this VVec 
-  inline void copyFrom(const Vec& v) const 
-  { 
-#ifdef BOUNDCHECK
-    if(v.length()!=length_)
-      PLERROR("In VVec::copyFrom length of Vec and VVec differ!");
-#endif
-    data->putSubRow(row_index,col_index,v); 
-  }
-
-
-  inline VVec subVec(int j, int len)
-  { return VVec(data, row_index, col_index+j, len); }
-
-  //! conversion to Vec 
-  operator Vec() const
-  {
-    Vec v(length_);
-    data->getSubRow(row_index,col_index,v); 
-    return v;
-  }
-
-  virtual void newwrite(PStream& out) const
-  {
-    switch(out.outmode)
-    {
-      case PStream::raw_ascii:
-      case PStream::pretty_ascii:
-        {
-          out << ((Vec)*this) << flush; 
-          break;
-        }
-      default:
-        inherited::newwrite(out);
+        data->getSubRow(row_index,col_index,v); 
     }
-  }
 
-  PLEARN_DECLARE_OBJECT(VVec);
-  static void declareOptions(OptionList &ol);
+    //! copies v into into this VVec 
+    inline void copyFrom(const Vec& v) const 
+    { 
+#ifdef BOUNDCHECK
+        if(v.length()!=length_)
+            PLERROR("In VVec::copyFrom length of Vec and VVec differ!");
+#endif
+        data->putSubRow(row_index,col_index,v); 
+    }
 
-  virtual void build();
+
+    inline VVec subVec(int j, int len)
+    { return VVec(data, row_index, col_index+j, len); }
+
+    //! conversion to Vec 
+    operator Vec() const
+    {
+        Vec v(length_);
+        data->getSubRow(row_index,col_index,v); 
+        return v;
+    }
+
+    virtual void newwrite(PStream& out) const
+    {
+        switch(out.outmode)
+        {
+        case PStream::raw_ascii:
+        case PStream::pretty_ascii:
+        {
+            out << ((Vec)*this) << flush; 
+            break;
+        }
+        default:
+            inherited::newwrite(out);
+        }
+    }
+
+    PLEARN_DECLARE_OBJECT(VVec);
+    static void declareOptions(OptionList &ol);
+
+    virtual void build();
 private:
-  void build_();
+    void build_();
 };
 
 inline void operator>>(const VVec& vv, const Vec& v)
@@ -151,3 +151,16 @@ inline void operator>>(const Vec& v, const VVec& vv)
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

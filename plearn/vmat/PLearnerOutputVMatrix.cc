@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 // Authors: Yoshua Bengio
 
@@ -48,23 +48,23 @@ using namespace std;
 
 
 PLearnerOutputVMatrix::PLearnerOutputVMatrix()
- :inherited(),
-  put_raw_input(false),
-  put_non_input(true),
-  train_learners(false),
-  compute_output_once(false)
-  /* ### Initialize all fields to their default value */
+    :inherited(),
+     put_raw_input(false),
+     put_non_input(true),
+     train_learners(false),
+     compute_output_once(false)
+    /* ### Initialize all fields to their default value */
 {}
 
 PLearnerOutputVMatrix::PLearnerOutputVMatrix
 (VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_, bool train_learners_, bool compute_output_once_, bool put_non_input_) 
-: data(data_),learners(learners_),
-  put_raw_input(put_raw_input_),
-  put_non_input(put_non_input_),
-  train_learners(train_learners_),
-  compute_output_once(compute_output_once_)
+    : data(data_),learners(learners_),
+      put_raw_input(put_raw_input_),
+      put_non_input(put_non_input_),
+      train_learners(train_learners_),
+      compute_output_once(compute_output_once_)
 {
-  build();
+    build();
 }
 
 
@@ -83,50 +83,50 @@ PLEARN_IMPLEMENT_OBJECT(PLearnerOutputVMatrix,
 
 void PLearnerOutputVMatrix::getNewRow(int i, const Vec& v) const
 {
-  int c=0;
-  if (learners_need_train) {
-    // We need to train the learners first.
-    for (int i = 0; i < learners.length(); i++)
-    {
-      PP<VecStatsCollector> stats = new VecStatsCollector();
-      learners[i]->setTrainStatsCollector(stats);
-      learners[i]->train();
-      stats->finalize();
+    int c=0;
+    if (learners_need_train) {
+        // We need to train the learners first.
+        for (int i = 0; i < learners.length(); i++)
+        {
+            PP<VecStatsCollector> stats = new VecStatsCollector();
+            learners[i]->setTrainStatsCollector(stats);
+            learners[i]->train();
+            stats->finalize();
+        }
+        learners_need_train = false;
     }
-    learners_need_train = false;
-  }
-  data->getRow(i,row);
+    data->getRow(i,row);
 
-  if(compute_output_once)  {
-    // Use precomputed outputs
-    for (int j=0;j<learners.length();j++)
-    {
-      v.subVec(c,learners[j]->outputsize()) << complete_learners_output[j](i);
-      c += learners[j]->outputsize();
+    if(compute_output_once)  {
+        // Use precomputed outputs
+        for (int j=0;j<learners.length();j++)
+        {
+            v.subVec(c,learners[j]->outputsize()) << complete_learners_output[j](i);
+            c += learners[j]->outputsize();
+        }
     }
-  }
   
-  else {
-    // Compute output for each learner; now allow each learner to have a
-    // different outputsize.  The variable 'learners_output' is kept for
-    // backwards compatibility, but is no longer strictly necessary
-    for (int j=0;j<learners.length();j++)
-    {
-      int cur_outputsize = learners[j]->outputsize();
-      learners_output[j].resize(cur_outputsize);
-      learners[j]->computeOutput(learner_input, learners_output[j]);
-      v.subVec(c, cur_outputsize) << learners_output[j];
-      c += cur_outputsize;
+    else {
+        // Compute output for each learner; now allow each learner to have a
+        // different outputsize.  The variable 'learners_output' is kept for
+        // backwards compatibility, but is no longer strictly necessary
+        for (int j=0;j<learners.length();j++)
+        {
+            int cur_outputsize = learners[j]->outputsize();
+            learners_output[j].resize(cur_outputsize);
+            learners[j]->computeOutput(learner_input, learners_output[j]);
+            v.subVec(c, cur_outputsize) << learners_output[j];
+            c += cur_outputsize;
+        }
     }
-  }
  
-  if (put_raw_input)
-  {
-    v.subVec(c,learner_input->length()) << learner_input;
-    c+=learner_input->length();
-  }
-  if (put_non_input)
-    v.subVec(c,non_input_part_of_data_row.length()) << non_input_part_of_data_row;
+    if (put_raw_input)
+    {
+        v.subVec(c,learner_input->length()) << learner_input;
+        c+=learner_input->length();
+    }
+    if (put_non_input)
+        v.subVec(c,non_input_part_of_data_row.length()) << non_input_part_of_data_row;
 }
 
 ////////////////////
@@ -134,38 +134,38 @@ void PLearnerOutputVMatrix::getNewRow(int i, const Vec& v) const
 ////////////////////
 void PLearnerOutputVMatrix::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-   declareOption(ol, "data", &PLearnerOutputVMatrix::data, OptionBase::buildoption,
-                 "The original data set (a VMat)");
+    declareOption(ol, "data", &PLearnerOutputVMatrix::data, OptionBase::buildoption,
+                  "The original data set (a VMat)");
 
-   declareOption(ol, "learners", &PLearnerOutputVMatrix::learners, OptionBase::buildoption,
-                 "The vector of PLearners which will be applied to the data set");
+    declareOption(ol, "learners", &PLearnerOutputVMatrix::learners, OptionBase::buildoption,
+                  "The vector of PLearners which will be applied to the data set");
 
-   declareOption(ol, "put_raw_input", &PLearnerOutputVMatrix::put_raw_input, OptionBase::buildoption,
-                 "Whether to include in the input part of this VMatrix the raw data input part");
+    declareOption(ol, "put_raw_input", &PLearnerOutputVMatrix::put_raw_input, OptionBase::buildoption,
+                  "Whether to include in the input part of this VMatrix the raw data input part");
 
-   declareOption(ol, "put_non_input", &PLearnerOutputVMatrix::put_non_input, OptionBase::buildoption,
-                 "Whether to include in this VMatrix the original target and weights.");
+    declareOption(ol, "put_non_input", &PLearnerOutputVMatrix::put_non_input, OptionBase::buildoption,
+                  "Whether to include in this VMatrix the original target and weights.");
 
-   declareOption(ol, "train_learners", &PLearnerOutputVMatrix::train_learners, OptionBase::buildoption,
-                "If set to 1, the learners will be train on 'data' before computing the output");
+    declareOption(ol, "train_learners", &PLearnerOutputVMatrix::train_learners, OptionBase::buildoption,
+                  "If set to 1, the learners will be train on 'data' before computing the output");
 
-   declareOption(ol, "data_train", &PLearnerOutputVMatrix::data_train, OptionBase::buildoption,
-                 "If provided and 'train_learners' is set to 1, the learner will be trained on this dataset.");
+    declareOption(ol, "data_train", &PLearnerOutputVMatrix::data_train, OptionBase::buildoption,
+                  "If provided and 'train_learners' is set to 1, the learner will be trained on this dataset.");
 
-   declareOption(ol, "compute_output_once", &PLearnerOutputVMatrix::compute_output_once, OptionBase::buildoption,
-                "If set to 1, the output of the learners will be computed once and stored");
+    declareOption(ol, "compute_output_once", &PLearnerOutputVMatrix::compute_output_once, OptionBase::buildoption,
+                  "If set to 1, the output of the learners will be computed once and stored");
 
-   declareOption(ol, "fieldinfos_source", &PLearnerOutputVMatrix::fieldinfos_source, OptionBase::buildoption,
-       "If provided, the fieldnames will be copied from this source VMat.");
+    declareOption(ol, "fieldinfos_source", &PLearnerOutputVMatrix::fieldinfos_source, OptionBase::buildoption,
+                  "If provided, the fieldnames will be copied from this source VMat.");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ////////////
@@ -173,97 +173,97 @@ void PLearnerOutputVMatrix::declareOptions(OptionList& ol)
 ////////////
 void PLearnerOutputVMatrix::build_()
 {
-  if (data && learners.length()>0 && learners[0])
-  {
-    learners_need_train = train_learners;
-    row.resize(data->width());
+    if (data && learners.length()>0 && learners[0])
+    {
+        learners_need_train = train_learners;
+        row.resize(data->width());
 
-    if (train_learners) {
-      // Set the learners' training set.
-      for (int i = 0; i < learners.length(); i++) {
-        if (data_train)
-          learners[i]->setTrainingSet(data_train);
-        else
-          learners[i]->setTrainingSet(data);
-      }
+        if (train_learners) {
+            // Set the learners' training set.
+            for (int i = 0; i < learners.length(); i++) {
+                if (data_train)
+                    learners[i]->setTrainingSet(data_train);
+                else
+                    learners[i]->setTrainingSet(data);
+            }
 
-      // Note that the learners will be train only if we actually call getRow().
-      // Hugo: except if compute_output_once is true
-    }
-
-    if(compute_output_once)
-      {
-        complete_learners_output.resize(learners.length());
-        for (int i = 0; i < learners.length(); i++) {
-          if(train_learners)
-          {
-            PP<VecStatsCollector> stats = new VecStatsCollector();
-            learners[i]->setTrainStatsCollector(stats);
-            learners[i]->train();
-            stats->finalize();
-          }
-          complete_learners_output[i].resize(data->length(),learners[i]->outputsize());
+            // Note that the learners will be train only if we actually call getRow().
+            // Hugo: except if compute_output_once is true
         }
-        learners_need_train = false;
 
-        Vec input_row = row.subVec(0,data->inputsize());
-
-        for(int i=0; i<data->length();i++)
+        if(compute_output_once)
         {
-          data->getRow(i,row);
-          for (int j=0;j<learners.length();j++)
-          {
-            Vec out_j = complete_learners_output[j](i);
-            learners[j]->computeOutput(input_row,out_j);
-          }
+            complete_learners_output.resize(learners.length());
+            for (int i = 0; i < learners.length(); i++) {
+                if(train_learners)
+                {
+                    PP<VecStatsCollector> stats = new VecStatsCollector();
+                    learners[i]->setTrainStatsCollector(stats);
+                    learners[i]->train();
+                    stats->finalize();
+                }
+                complete_learners_output[i].resize(data->length(),learners[i]->outputsize());
+            }
+            learners_need_train = false;
+
+            Vec input_row = row.subVec(0,data->inputsize());
+
+            for(int i=0; i<data->length();i++)
+            {
+                data->getRow(i,row);
+                for (int j=0;j<learners.length();j++)
+                {
+                    Vec out_j = complete_learners_output[j](i);
+                    learners[j]->computeOutput(input_row,out_j);
+                }
+            }
         }
-      }
 
-    if (data->inputsize() < 0)
-      PLERROR("In PLearnerOutputVMatrix::build_ - The 'data' matrix has a negative inputsize");
-    if (data->targetsize() < 0)
-      PLERROR("In PLearnerOutputVMatrix::build_ - The 'data' matrix has a negative targetsize");
-    if (data->weightsize() < 0)
-      PLERROR("In PLearnerOutputVMatrix::build_ - The 'data' matrix has a negative weightsize");
+        if (data->inputsize() < 0)
+            PLERROR("In PLearnerOutputVMatrix::build_ - The 'data' matrix has a negative inputsize");
+        if (data->targetsize() < 0)
+            PLERROR("In PLearnerOutputVMatrix::build_ - The 'data' matrix has a negative targetsize");
+        if (data->weightsize() < 0)
+            PLERROR("In PLearnerOutputVMatrix::build_ - The 'data' matrix has a negative weightsize");
 
-    // Some further state variable initializations
-    learner_input = row.subVec(0,data->inputsize());
-    learner_target = row.subVec(data->inputsize(),data->targetsize());
-    non_input_part_of_data_row = row.subVec(data->inputsize(),data->width()-data->inputsize());
-    learners_output.resize(learners->length());
+        // Some further state variable initializations
+        learner_input = row.subVec(0,data->inputsize());
+        learner_target = row.subVec(data->inputsize(),data->targetsize());
+        non_input_part_of_data_row = row.subVec(data->inputsize(),data->width()-data->inputsize());
+        learners_output.resize(learners->length());
 
-    // Compute the total width of the VMatrix and the width of the various
-    // components
-    inputsize_ = 0;
-    for (int i=0;i<learners->length();i++)
-      inputsize_ += learners[i]->outputsize();
-    if (put_raw_input) 
-      inputsize_ += data->inputsize();
-    if (put_non_input) {
-      targetsize_ = data->targetsize();
-      weightsize_ = data->weightsize();
-      width_ = inputsize_ + targetsize_ + weightsize_;
-    }
-    else {
-      targetsize_ = 0;
-      weightsize_ = 0;
-      width_ = inputsize_;
-    }
-    length_ = data->length();
-
-    // Set field info.
-    if (fieldinfos_source) {
-      setFieldInfos(fieldinfos_source->getFieldInfos());
-    } else {
-      fieldinfos.resize(width_);
-      if (put_non_input && data->getFieldInfos().size() >= data->inputsize() + data->targetsize()) {
-        // We can retrieve the information for the target columns.
-        for (int i = 0; i < data->targetsize(); i++) {
-          fieldinfos[i + this->inputsize()] = data->getFieldInfos()[i + data->inputsize()];
+        // Compute the total width of the VMatrix and the width of the various
+        // components
+        inputsize_ = 0;
+        for (int i=0;i<learners->length();i++)
+            inputsize_ += learners[i]->outputsize();
+        if (put_raw_input) 
+            inputsize_ += data->inputsize();
+        if (put_non_input) {
+            targetsize_ = data->targetsize();
+            weightsize_ = data->weightsize();
+            width_ = inputsize_ + targetsize_ + weightsize_;
         }
-      }
+        else {
+            targetsize_ = 0;
+            weightsize_ = 0;
+            width_ = inputsize_;
+        }
+        length_ = data->length();
+
+        // Set field info.
+        if (fieldinfos_source) {
+            setFieldInfos(fieldinfos_source->getFieldInfos());
+        } else {
+            fieldinfos.resize(width_);
+            if (put_non_input && data->getFieldInfos().size() >= data->inputsize() + data->targetsize()) {
+                // We can retrieve the information for the target columns.
+                for (int i = 0; i < data->targetsize(); i++) {
+                    fieldinfos[i + this->inputsize()] = data->getFieldInfos()[i + data->inputsize()];
+                }
+            }
+        }
     }
-  }
 }
 
 ///////////
@@ -271,23 +271,35 @@ void PLearnerOutputVMatrix::build_()
 ///////////
 void PLearnerOutputVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void PLearnerOutputVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(row, copies);
-  deepCopyField(learner_input, copies);
-  deepCopyField(learners_output, copies);
-  deepCopyField(learner_target, copies);
-  deepCopyField(non_input_part_of_data_row, copies);
-  deepCopyField(complete_learners_output, copies);
-  deepCopyField(data, copies);
-  deepCopyField(data_train, copies);
-  deepCopyField(learners, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(row, copies);
+    deepCopyField(learner_input, copies);
+    deepCopyField(learners_output, copies);
+    deepCopyField(learner_target, copies);
+    deepCopyField(non_input_part_of_data_row, copies);
+    deepCopyField(complete_learners_output, copies);
+    deepCopyField(data, copies);
+    deepCopyField(data_train, copies);
+    deepCopyField(learners, copies);
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

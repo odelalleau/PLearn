@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: lexical_cast.h,v 1.2 2005/01/31 15:48:19 ducharme Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christian Dorion
 
@@ -64,27 +64,27 @@ double   todouble  (const string& s);
 bool     tobool    (const string& s);
 
 
-  inline float  tofloat   (const string& s)
-  {
+inline float  tofloat   (const string& s)
+{
     return float(todouble(s));
-  }
+}
   
-  inline int    toint     (const string& s, int base=10)
-  {
+inline int    toint     (const string& s, int base=10)
+{
     return int(tolong(s,base));
-  }
+}
 
 #if    defined(USEFLOAT)
-  inline float  toreal    (const string& s)
-  {
+inline float  toreal    (const string& s)
+{
     return tofloat(s);
-  }
+}
   
 #elif  defined(USEDOUBLE)
-  inline double toreal    (const string& s)
-  {
+inline double toreal    (const string& s)
+{
     return todouble(s);
-  }
+}
 
 #endif 
 
@@ -92,3 +92,16 @@ bool     tobool    (const string& s);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

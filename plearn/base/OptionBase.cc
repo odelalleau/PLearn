@@ -35,10 +35,10 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "OptionBase.h"
 #include "Object.h"
@@ -55,42 +55,55 @@ const OptionBase::flag_t OptionBase::nosave = 1<<4;
 OptionBase::OptionBase(const string& optionname, flag_t flags,
                        const string& optiontype, const string& defaultval, 
                        const string& description)
-  : optionname_(optionname), flags_(flags), 
-    optiontype_(optiontype), defaultval_(defaultval),
-    description_(description)
+    : optionname_(optionname), flags_(flags), 
+      optiontype_(optiontype), defaultval_(defaultval),
+      description_(description)
 {
-  if (optionname.size() > 0 && optionname[0] == '_' )
-    PLERROR("OptionBase::OptionBase: options should not start with an underscore: '%s'",
-            optionname.c_str());
+    if (optionname.size() > 0 && optionname[0] == '_' )
+        PLERROR("OptionBase::OptionBase: options should not start with an underscore: '%s'",
+                optionname.c_str());
 }
 
 bool OptionBase::shouldBeSkipped() const
 {
-  return (flags() & (buildoption | learntoption | tuningoption)) == 0;
+    return (flags() & (buildoption | learntoption | tuningoption)) == 0;
 }
 
 string OptionBase::writeIntoString(const Object* o) const
 {
-  ostrstream out_;
-  PStream out(&out_);
-  write(o, out);
-  char* buf = out_.str();
-  int n = out_.pcount();
-  string s(buf,n);
-  out_.freeze(false); // return ownership to the stream, so that it may free it...
-  return s;
+    ostrstream out_;
+    PStream out(&out_);
+    write(o, out);
+    char* buf = out_.str();
+    int n = out_.pcount();
+    string s(buf,n);
+    out_.freeze(false); // return ownership to the stream, so that it may free it...
+    return s;
 }
 
 void OptionBase::readIntoIndex(Object*, PStream&, const string&)
 {
-  PLERROR("OptionBase::readIntoIndex: indexed reads are not supported for option '%s' "
-          "of type '%s'", optionname().c_str(), optiontype().c_str());
+    PLERROR("OptionBase::readIntoIndex: indexed reads are not supported for option '%s' "
+            "of type '%s'", optionname().c_str(), optiontype().c_str());
 }
 
 void OptionBase::writeAtIndex(const Object*, PStream&, const string&) const
 {
-  PLERROR("OptionBase::writeAtIndex: indexed writes are not supported for option '%s' "
-          "of type '%s'", optionname().c_str(), optiontype().c_str());
+    PLERROR("OptionBase::writeAtIndex: indexed writes are not supported for option '%s' "
+            "of type '%s'", optionname().c_str(), optiontype().c_str());
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

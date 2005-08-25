@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
-   ******************************************************* */
+ * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -53,59 +53,59 @@ class ProcessDatasetVMatrix: public ForwardVMatrix
 
 private:
 
-  typedef ForwardVMatrix inherited;
+    typedef ForwardVMatrix inherited;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  int    max_mbytes_disk;
-  int    max_mbytes_memory;
-  string duplicate;
-  string input_normalization;
-  string precompute;
-  string target_normalization;
-  VMat   source;
+    int    max_mbytes_disk;
+    int    max_mbytes_memory;
+    string duplicate;
+    string input_normalization;
+    string precompute;
+    string target_normalization;
+    VMat   source;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  ProcessDatasetVMatrix();
+    //! Default constructor.
+    ProcessDatasetVMatrix();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // Simply calls inherited::build() then build_().
-  virtual void build();
+    // Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(ProcessDatasetVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(ProcessDatasetVMatrix);
 
 };
 
@@ -114,3 +114,16 @@ DECLARE_OBJECT_PTR(ProcessDatasetVMatrix);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

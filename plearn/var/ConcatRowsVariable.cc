@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ConcatRowsVariable.h"
 #include "SubMatVariable.h"
@@ -92,48 +92,59 @@ void ConcatRowsVariable::recomputeSize(int& l, int& w) const
 
 void ConcatRowsVariable::fprop()
 {
-  int k=0;
-  for (int n=0; n<varray.size(); n++) {
-    Var vn = varray[n];
-    for (int i=0; i<vn->nelems(); i++, k++)
-      valuedata[k] = vn->valuedata[i];
-  }
+    int k=0;
+    for (int n=0; n<varray.size(); n++) {
+        Var vn = varray[n];
+        for (int i=0; i<vn->nelems(); i++, k++)
+            valuedata[k] = vn->valuedata[i];
+    }
 }
 
 
 void ConcatRowsVariable::bprop()
 {
-  int k=0;
-  for (int n=0; n<varray.size(); n++) {
-    Var vn = varray[n];
-    for (int i=0; i<vn->nelems(); i++, k++)
-      vn->gradientdata[i] += gradientdata[k];
-  }
+    int k=0;
+    for (int n=0; n<varray.size(); n++) {
+        Var vn = varray[n];
+        for (int i=0; i<vn->nelems(); i++, k++)
+            vn->gradientdata[i] += gradientdata[k];
+    }
 }
 
 
 void ConcatRowsVariable::symbolicBprop()
 {
-  int k=0;
-  for (int n=0; n<varray.size(); n++) {
-    Var vn = varray[n];
-    vn->accg(new SubMatVariable(g, k, 0, vn->length(), width()));
-    k += vn->length();
-  }
+    int k=0;
+    for (int n=0; n<varray.size(); n++) {
+        Var vn = varray[n];
+        vn->accg(new SubMatVariable(g, k, 0, vn->length(), width()));
+        k += vn->length();
+    }
 }
 
 
 void ConcatRowsVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  int k=0;
-  for (int n=0; n<varray.size(); n++) {
-    Var vn = varray[n];
-    for (int i=0; i<vn->nelems(); i++, k++)
-      rvaluedata[k] = vn->rvaluedata[i];
-  }
+    if (rValue.length()==0) resizeRValue();
+    int k=0;
+    for (int n=0; n<varray.size(); n++) {
+        Var vn = varray[n];
+        for (int i=0; i<vn->nelems(); i++, k++)
+            rvaluedata[k] = vn->rvaluedata[i];
+    }
 }
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -1,4 +1,4 @@
- // -*- C++ -*-
+// -*- C++ -*-
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
@@ -35,9 +35,9 @@
 
 
 /* *******************************************************      
-   * $Id: Mat.h,v 1.7 2004/07/21 16:30:53 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnCore/Mat.h */
 
@@ -50,20 +50,20 @@
 namespace PLearn {
 using namespace std;
 
-  // ********* Functions ***********
+// ********* Functions ***********
 
 
 inline ostream& operator<<(ostream& out, const Vec& v)
 { 
-  v.print(out);
-  return out;
+    v.print(out);
+    return out;
 }
 /*
-inline istream& operator>>(istream& in, const Vec& v)
-{ 
+  inline istream& operator>>(istream& in, const Vec& v)
+  { 
   v.input(in);
   return in;
-}
+  }
 */
 Vec* newVecArray(int n);
 Vec* newVecArray(int n, int the_length);
@@ -71,7 +71,7 @@ Vec* newVecArray(int n, int the_length);
 template<>
 inline void deepCopyField(Vec& field, CopiesMap& copies)
 {
-  field.makeDeepCopyFromShallowCopy(copies);
+    field.makeDeepCopyFromShallowCopy(copies);
 }
 
 Mat* newMatArray(int n);
@@ -102,7 +102,7 @@ Mat operator^(const Mat& m1, const Mat& m2);
 template<>
 inline void deepCopyField(Mat& field, CopiesMap& copies)
 {
-  field.makeDeepCopyFromShallowCopy(copies);
+    field.makeDeepCopyFromShallowCopy(copies);
 }
 
 } // end of namespace PLearn
@@ -113,4 +113,15 @@ void printmat(const PLearn::Mat& m);
 
 #endif
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

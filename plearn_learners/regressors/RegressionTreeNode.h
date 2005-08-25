@@ -35,9 +35,9 @@
 
 
 /* ********************************************************************************    
-   * $Id: RegressionTreeNode.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout     *
-   * This file is part of the PLearn library.                                     *
-   ******************************************************************************** */
+ * $Id: RegressionTreeNode.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout     *
+ * This file is part of the PLearn library.                                     *
+ ******************************************************************************** */
 
 #ifndef RegressionTreeNode_INC
 #define RegressionTreeNode_INC
@@ -50,7 +50,7 @@ using namespace std;
 
 class RegressionTreeNode: public Object
 {
-  typedef Object inherited;
+    typedef Object inherited;
   
 private:
 
@@ -58,78 +58,90 @@ private:
   Build options: they have to be set before building
 */
 
-  int  missing_is_valid;
-  real loss_function_weight;
-  int verbosity; 
-  PP<RegressionTreeLeave> leave_template; 
-  PP<RegressionTreeRegisters> train_set;
-  PP<RegressionTreeLeave> leave;
+    int  missing_is_valid;
+    real loss_function_weight;
+    int verbosity; 
+    PP<RegressionTreeLeave> leave_template; 
+    PP<RegressionTreeRegisters> train_set;
+    PP<RegressionTreeLeave> leave;
  
 /*
   Learnt options: they are sized and initialized if need be, in initNode(...)
 */
  
-  int length;
-  int inputsize;
-  int leave_id;
-  Vec leave_output;
-  Vec leave_error;
-  int split_col;
-  int split_balance;
-  real split_feature_value;
-  real after_split_error;
-  PP<RegressionTreeNode> missing_node;
-  int missing_leave_id;
-  PP<RegressionTreeLeave> missing_leave;
-  Vec missing_output;
-  Vec missing_error;
-  PP<RegressionTreeNode> left_node;
-  int left_leave_id;
-  PP<RegressionTreeLeave> left_leave;
-  Vec left_output;
-  Vec left_error;
-  PP<RegressionTreeNode> right_node;
-  int right_leave_id;
-  PP<RegressionTreeLeave> right_leave;
-  Vec right_output;
-  Vec right_error;
+    int length;
+    int inputsize;
+    int leave_id;
+    Vec leave_output;
+    Vec leave_error;
+    int split_col;
+    int split_balance;
+    real split_feature_value;
+    real after_split_error;
+    PP<RegressionTreeNode> missing_node;
+    int missing_leave_id;
+    PP<RegressionTreeLeave> missing_leave;
+    Vec missing_output;
+    Vec missing_error;
+    PP<RegressionTreeNode> left_node;
+    int left_leave_id;
+    PP<RegressionTreeLeave> left_leave;
+    Vec left_output;
+    Vec left_error;
+    PP<RegressionTreeNode> right_node;
+    int right_leave_id;
+    PP<RegressionTreeLeave> right_leave;
+    Vec right_output;
+    Vec right_error;
  
 /*
   Work fields: they are sized and initialized if need be, at buid time
 */  
 
-  int row;
-  int next_row;
-  int col;  
-  int work_balance;
-  real work_error;    
+    int row;
+    int next_row;
+    int col;  
+    int work_balance;
+    real work_error;    
 
 public:  
-                       RegressionTreeNode();
-  virtual              ~RegressionTreeNode();
+    RegressionTreeNode();
+    virtual              ~RegressionTreeNode();
     
     PLEARN_DECLARE_OBJECT(RegressionTreeNode);
 
-  static  void         declareOptions(OptionList& ol);
-  virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
-  virtual void         build();
-          void         initNode(PP<RegressionTreeRegisters> train_set, PP<RegressionTreeLeave> leave, PP<RegressionTreeLeave> leave_template);
-          void         lookForBestSplit();
-          void         compareSplit(int col, real left_leave_last_feature, real right_leave_first_feature);
-          int          expandNode();
-          int          getSplitBalance();
-          real         getErrorImprovment();
-          TVec< PP<RegressionTreeNode> >  getNodes();
-          void         computeOutput(const Vec& inputv, Vec& outputv);
+    static  void         declareOptions(OptionList& ol);
+    virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
+    virtual void         build();
+    void         initNode(PP<RegressionTreeRegisters> train_set, PP<RegressionTreeLeave> leave, PP<RegressionTreeLeave> leave_template);
+    void         lookForBestSplit();
+    void         compareSplit(int col, real left_leave_last_feature, real right_leave_first_feature);
+    int          expandNode();
+    int          getSplitBalance();
+    real         getErrorImprovment();
+    TVec< PP<RegressionTreeNode> >  getNodes();
+    void         computeOutput(const Vec& inputv, Vec& outputv);
     
 private:
-          void         build_();
-          void         verbose(string msg, int level);
+    void         build_();
+    void         verbose(string msg, int level);
 };
 
-  DECLARE_OBJECT_PTR(RegressionTreeNode);
+DECLARE_OBJECT_PTR(RegressionTreeNode);
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

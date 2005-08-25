@@ -37,9 +37,9 @@
  
 
 /* *******************************************************      
-   * $Id: Var.cc,v 1.7 2004/02/20 21:11:54 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 //#include "general.h"
 #include "Var.h"
@@ -48,19 +48,31 @@ namespace PLearn {
 using namespace std;
 
 /*template <> // not called when compiled in -opt, compiler bug
-void deepCopyField(Var& field, CopiesMap& copies)
-{
+  void deepCopyField(Var& field, CopiesMap& copies)
+  {
   cout << "in deepCopyField(Var,.) for Var at " << (void*)field << endl;
   if (field)
-    field = field->deepCopy(copies);
+  field = field->deepCopy(copies);
   else cout << "empty var!" << endl;
-}*/
+  }*/
 
 void varDeepCopyField(Var& field, CopiesMap& copies)
 {
-  if (field)
-    field = field->deepCopy(copies);
+    if (field)
+        field = field->deepCopy(copies);
 }  
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

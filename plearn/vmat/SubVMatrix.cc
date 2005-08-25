@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.18 2005/02/04 15:10:42 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "SubVMatrix.h"
 
@@ -52,25 +52,25 @@ PLEARN_IMPLEMENT_OBJECT(SubVMatrix, "ONE LINE DESCR", "NO HELP");
 // SubVMatrix //
 ////////////////
 SubVMatrix::SubVMatrix()
-  :istart(0), 
-   jstart(0),
-   fistart(-1),
-   flength(-1)
+    :istart(0), 
+     jstart(0),
+     fistart(-1),
+     flength(-1)
 {}
 
 SubVMatrix::SubVMatrix(VMat the_parent, int the_istart, int the_jstart, int the_length, int the_width)
-  :VMatrix(the_length, the_width), parent(the_parent), istart(the_istart), jstart(the_jstart),
-   fistart(-1), flength(-1)
+    :VMatrix(the_length, the_width), parent(the_parent), istart(the_istart), jstart(the_jstart),
+     fistart(-1), flength(-1)
 {
-  build_();
+    build_();
 }
 
 SubVMatrix::SubVMatrix(VMat the_parent, real the_fistart, int the_jstart, real the_flength, int the_width)
-  : VMatrix(int(the_flength * the_parent->length()), the_width),
-    parent(the_parent), istart(-1), jstart(the_jstart), fistart(the_fistart), flength(the_flength)
+    : VMatrix(int(the_flength * the_parent->length()), the_width),
+      parent(the_parent), istart(-1), jstart(the_jstart), fistart(the_fistart), flength(the_flength)
     // Note that istart will be set to the right value in build_().
 {
-  build_();
+    build_();
 }
 
 ////////////////////
@@ -78,134 +78,134 @@ SubVMatrix::SubVMatrix(VMat the_parent, real the_fistart, int the_jstart, real t
 ////////////////////
 void SubVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "parent", &SubVMatrix::parent, OptionBase::buildoption, "Source VMatrix");
-  declareOption(ol, "istart", &SubVMatrix::istart, OptionBase::buildoption, "Start i coordinate(row wise)");
-  declareOption(ol, "jstart", &SubVMatrix::jstart, OptionBase::buildoption, "Start j coordinate(column wise)");
-  declareOption(ol, "fistart", &SubVMatrix::fistart, OptionBase::buildoption,
-      "If provided, will override istart to fistart * parent.length()");
-  declareOption(ol, "flength", &SubVMatrix::flength, OptionBase::buildoption,
-      "If provided, will override length to flength * parent.length()");
-  inherited::declareOptions(ol);
+    declareOption(ol, "parent", &SubVMatrix::parent, OptionBase::buildoption, "Source VMatrix");
+    declareOption(ol, "istart", &SubVMatrix::istart, OptionBase::buildoption, "Start i coordinate(row wise)");
+    declareOption(ol, "jstart", &SubVMatrix::jstart, OptionBase::buildoption, "Start j coordinate(column wise)");
+    declareOption(ol, "fistart", &SubVMatrix::fistart, OptionBase::buildoption,
+                  "If provided, will override istart to fistart * parent.length()");
+    declareOption(ol, "flength", &SubVMatrix::flength, OptionBase::buildoption,
+                  "If provided, will override length to flength * parent.length()");
+    inherited::declareOptions(ol);
 }
 
 void SubVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void SubVMatrix::build_()
 {
-  int pl = parent.length();
-  if (fistart >= 0) {
-    istart = int(fistart * pl);
-  }
-  if (flength >= 0) {
-    length_ = int(flength * pl);
-  }
-  if(length_<0)
-    length_ = parent->length() - istart;
+    int pl = parent.length();
+    if (fistart >= 0) {
+        istart = int(fistart * pl);
+    }
+    if (flength >= 0) {
+        length_ = int(flength * pl);
+    }
+    if(length_<0)
+        length_ = parent->length() - istart;
 
-  if(width_<0 && parent->width()>=0)
-    width_ = parent->width() - jstart;
+    if(width_<0 && parent->width()>=0)
+        width_ = parent->width() - jstart;
 
-  if(istart+length()>parent->length() || jstart+width()>parent->width())
-    PLERROR("In SubVMatrix constructor OUT OF BOUNDS of parent VMatrix");
+    if(istart+length()>parent->length() || jstart+width()>parent->width())
+        PLERROR("In SubVMatrix constructor OUT OF BOUNDS of parent VMatrix");
 
-  // Copy the parent field names.
-  fieldinfos.resize(width_);
-  if (parent->getFieldInfos().size() > 0)
-    for(int j=0; j<width_; j++)
-      fieldinfos[j] = parent->getFieldInfos()[jstart+j];
+    // Copy the parent field names.
+    fieldinfos.resize(width_);
+    if (parent->getFieldInfos().size() > 0)
+        for(int j=0; j<width_; j++)
+            fieldinfos[j] = parent->getFieldInfos()[jstart+j];
 
-  // Copy the parent string mappings.
-  map_rs.resize(width_);
-  map_sr.resize(width_);
-  for (int j = jstart; j < width_ + jstart; j++) {
-    map_rs[j - jstart] = parent->getRealToStringMapping(j);
-    map_sr[j - jstart] = parent->getStringToRealMapping(j);
-  }
+    // Copy the parent string mappings.
+    map_rs.resize(width_);
+    map_sr.resize(width_);
+    for (int j = jstart; j < width_ + jstart; j++) {
+        map_rs[j - jstart] = parent->getRealToStringMapping(j);
+        map_sr[j - jstart] = parent->getStringToRealMapping(j);
+    }
 
-  if (width_ == parent->width())
-  {
-    if(inputsize_<0) inputsize_ = parent->inputsize();
-    if(targetsize_<0) targetsize_ = parent->targetsize();
-    if(weightsize_<0) weightsize_ = parent->weightsize();
-  } else {
-    // The width has changed: if no sizes are specified,
-    // we assume it's all input and no target.
-    if(targetsize_<0) targetsize_ = 0;
-    if(weightsize_<0) weightsize_ = 0;
-    if(inputsize_<0) inputsize_ = width_ - targetsize_ - weightsize_;
-  }
+    if (width_ == parent->width())
+    {
+        if(inputsize_<0) inputsize_ = parent->inputsize();
+        if(targetsize_<0) targetsize_ = parent->targetsize();
+        if(weightsize_<0) weightsize_ = parent->weightsize();
+    } else {
+        // The width has changed: if no sizes are specified,
+        // we assume it's all input and no target.
+        if(targetsize_<0) targetsize_ = 0;
+        if(weightsize_<0) weightsize_ = 0;
+        if(inputsize_<0) inputsize_ = width_ - targetsize_ - weightsize_;
+    }
 
-  //  cerr << "inputsize: "<<inputsize_ << "  targetsize:"<<targetsize_<<"weightsize:"<<weightsize_<<endl;
+    //  cerr << "inputsize: "<<inputsize_ << "  targetsize:"<<targetsize_<<"weightsize:"<<weightsize_<<endl;
 }
 
 void SubVMatrix::reset_dimensions() 
 { 
-  int delta_length = parent->length()-length_;
-  int delta_width = 0; // parent->width()-width_; HACK
-  parent->reset_dimensions(); 
-  length_=parent->length()-delta_length; 
-  width_=parent->width()-delta_width; 
+    int delta_length = parent->length()-length_;
+    int delta_width = 0; // parent->width()-width_; HACK
+    parent->reset_dimensions(); 
+    length_=parent->length()-delta_length; 
+    width_=parent->width()-delta_width; 
 }
 
 real SubVMatrix::get(int i, int j) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length() || j<0 || j>=width())
-    PLERROR("In SubVMatrix::get(i,j) OUT OF BOUND access");
+    if(i<0 || i>=length() || j<0 || j>=width())
+        PLERROR("In SubVMatrix::get(i,j) OUT OF BOUND access");
 #endif
-  return parent->get(i+istart,j+jstart);
+    return parent->get(i+istart,j+jstart);
 }
 void SubVMatrix::getSubRow(int i, int j, Vec v) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length() || j<0 || j+v.length()>width())
-    PLERROR("In SubVMatrix::getSubRow(i,j,v) OUT OF BOUND access");
+    if(i<0 || i>=length() || j<0 || j+v.length()>width())
+        PLERROR("In SubVMatrix::getSubRow(i,j,v) OUT OF BOUND access");
 #endif
-  parent->getSubRow(i+istart,j+jstart,v);
+    parent->getSubRow(i+istart,j+jstart,v);
 }
 
 void SubVMatrix::getMat(int i, int j, Mat m) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i+m.length()>length() || j<0 || j+m.width()>width())
-    PLERROR("In SubVMatrix::getMat OUT OF BOUND access");
+    if(i<0 || i+m.length()>length() || j<0 || j+m.width()>width())
+        PLERROR("In SubVMatrix::getMat OUT OF BOUND access");
 #endif
-  parent->getMat(i+istart, j+jstart, m);
+    parent->getMat(i+istart, j+jstart, m);
 }
 
 void SubVMatrix::put(int i, int j, real value)
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length() || j<0 || j>=width())
-    PLERROR("In SubVMatrix::put(i,j,value) OUT OF BOUND access");
+    if(i<0 || i>=length() || j<0 || j>=width())
+        PLERROR("In SubVMatrix::put(i,j,value) OUT OF BOUND access");
 #endif
-  return parent->put(i+istart,j+jstart,value);
+    return parent->put(i+istart,j+jstart,value);
 }
 void SubVMatrix::putSubRow(int i, int j, Vec v)
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length() || j<0 || j>=width())
-    PLERROR("In SubVMatrix::putSubRow(i,j,v) OUT OF BOUND access");
+    if(i<0 || i>=length() || j<0 || j>=width())
+        PLERROR("In SubVMatrix::putSubRow(i,j,v) OUT OF BOUND access");
 #endif
-  parent->putSubRow(i+istart,j+jstart,v);
+    parent->putSubRow(i+istart,j+jstart,v);
 }
 
 void SubVMatrix::putMat(int i, int j, Mat m)
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i+m.length()>length() || j<0 || j+m.width()>width())
-    PLERROR("In SubVMatrix::putMat(i,j,m) OUT OF BOUND access");
+    if(i<0 || i+m.length()>length() || j<0 || j+m.width()>width())
+        PLERROR("In SubVMatrix::putMat(i,j,m) OUT OF BOUND access");
 #endif
-  parent->putMat(i+istart, j+jstart, m);
+    parent->putMat(i+istart, j+jstart, m);
 }
 
 VMat SubVMatrix::subMat(int i, int j, int l, int w)
 {
-  return parent->subMat(istart+i,jstart+j,l,w);
+    return parent->subMat(istart+i,jstart+j,l,w);
 }
 
 /////////
@@ -213,53 +213,66 @@ VMat SubVMatrix::subMat(int i, int j, int l, int w)
 /////////
 real SubVMatrix::dot(int i1, int i2, int inputsize) const
 {
-  if(jstart==0)
-    return parent->dot(istart+i1, istart+i2, inputsize);
-  else 
-    return VMatrix::dot(i1,i2,inputsize);
+    if(jstart==0)
+        return parent->dot(istart+i1, istart+i2, inputsize);
+    else 
+        return VMatrix::dot(i1,i2,inputsize);
 }
 
 real SubVMatrix::dot(int i, const Vec& v) const
 {
-  if(jstart==0)
-    return parent->dot(istart+i,v);
-  else
-    return VMatrix::dot(i,v);
+    if(jstart==0)
+        return parent->dot(istart+i,v);
+    else
+        return VMatrix::dot(i,v);
 }
 
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
 void SubVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(parent, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(parent, copies);
 }
 
 int SubVMatrix::getDimension(int row, int col) const
 {
-  #ifdef BOUNDCHECK
-  if(row<0 || row>=length() || col<0 || col>width())
-    PLERROR("In SubVMatrix::getDimension(row,col) OUT OF BOUND access");
+#ifdef BOUNDCHECK
+    if(row<0 || row>=length() || col<0 || col>width())
+        PLERROR("In SubVMatrix::getDimension(row,col) OUT OF BOUND access");
 #endif
-  return parent->getDimension(row+istart,col+jstart);
+    return parent->getDimension(row+istart,col+jstart);
 }
 
 Vec SubVMatrix::getValues(int row, int col) const
 {
-  #ifdef BOUNDCHECK
-  if(row<0 || row>=length() || col<0 || col>width())
-    PLERROR("In SubVMatrix::getValues(row,col) OUT OF BOUND access");
+#ifdef BOUNDCHECK
+    if(row<0 || row>=length() || col<0 || col>width())
+        PLERROR("In SubVMatrix::getValues(row,col) OUT OF BOUND access");
 #endif
-  return parent->getValues(row+istart,col+jstart);
+    return parent->getValues(row+istart,col+jstart);
 }
 
 Vec SubVMatrix::getValues(const Vec& input, int col) const
 {
-  #ifdef BOUNDCHECK
-  if(col<0 || col>width())
-    PLERROR("In SubVMatrix::getValues(row,col) OUT OF BOUND access");
+#ifdef BOUNDCHECK
+    if(col<0 || col>width())
+        PLERROR("In SubVMatrix::getValues(row,col) OUT OF BOUND access");
 #endif
-  return parent->getValues(input.subVec(jstart,input.length()-jstart),col+jstart);
+    return parent->getValues(input.subVec(jstart,input.length()-jstart),col+jstart);
 }
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

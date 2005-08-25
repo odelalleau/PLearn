@@ -32,9 +32,9 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDateTime.h,v 1.5 2005/06/20 15:33:59 chapados Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/PDateTime.h */
@@ -60,97 +60,97 @@ using namespace std;
 class PDateTime
 {
 public:
-  short year; //!<  ex: 1983, 2001, -350, ...
-  unsigned char month; //!<  1..12
-  unsigned char day; //!<  1..31
-  unsigned char hour; //!< 00..23
-  unsigned char min;  //!< 00..59
-  unsigned char sec;  //!< 00..61, allowing for leap seconds (!)
+    short year; //!<  ex: 1983, 2001, -350, ...
+    unsigned char month; //!<  1..12
+    unsigned char day; //!<  1..31
+    unsigned char hour; //!< 00..23
+    unsigned char min;  //!< 00..59
+    unsigned char sec;  //!< 00..61, allowing for leap seconds (!)
 
-  //!  Create a missing date by default
-  PDateTime();
+    //!  Create a missing date by default
+    PDateTime();
 
-  //!  Create a date only, with time assumed to be midnight
-  PDateTime(short the_year, unsigned char the_month, unsigned char the_day)
-    : year(the_year), month(the_month), day(the_day),
-      hour(0), min(0), sec(0) {}
+    //!  Create a date only, with time assumed to be midnight
+    PDateTime(short the_year, unsigned char the_month, unsigned char the_day)
+        : year(the_year), month(the_month), day(the_day),
+          hour(0), min(0), sec(0) {}
 
-  PDateTime(int the_year, int the_month, int the_day)
-    : year(the_year), month(int(the_month)), day(int(the_day)),
-      hour(0), min(0), sec(0) {}
+    PDateTime(int the_year, int the_month, int the_day)
+        : year(the_year), month(int(the_month)), day(int(the_day)),
+          hour(0), min(0), sec(0) {}
 
-  //!  Create a full date/time
-  PDateTime(short the_year, unsigned char the_month, unsigned char the_day,
-            unsigned char the_hour, unsigned char the_min,
-            unsigned char the_sec)
-    : year(the_year), month(the_month), day(the_day),
-      hour(the_hour), min(the_min), sec(the_sec) {}
+    //!  Create a full date/time
+    PDateTime(short the_year, unsigned char the_month, unsigned char the_day,
+              unsigned char the_hour, unsigned char the_min,
+              unsigned char the_sec)
+        : year(the_year), month(the_month), day(the_day),
+          hour(the_hour), min(the_min), sec(the_sec) {}
   
-  PDateTime(int the_year, int the_month, int the_day,
-            int the_hour, int the_min, int the_sec)
-    : year(the_year), month(the_month), day(the_day),
-      hour(the_hour), min(the_min), sec(the_sec) {}
+    PDateTime(int the_year, int the_month, int the_day,
+              int the_hour, int the_min, int the_sec)
+        : year(the_year), month(the_month), day(the_day),
+          hour(the_hour), min(the_min), sec(the_sec) {}
   
-  //!  convert a Julian day into a PDateTime. Day 0 of the Julian calendar
-  //!  is about 6000 years ago...  The julian day is passed as a DOUBLE, to
-  //!  allow specifying hours/minutes/seconds as a FRACTION of days.
-  PDateTime(double julian_day);
+    //!  convert a Julian day into a PDateTime. Day 0 of the Julian calendar
+    //!  is about 6000 years ago...  The julian day is passed as a DOUBLE, to
+    //!  allow specifying hours/minutes/seconds as a FRACTION of days.
+    PDateTime(double julian_day);
 
-  //!  Convert a string in "YYYY/MM/DD" or "YYYY/MM/DD hh:mm:ss" into
-  //!  a PDateTime.  The format has to match exactly.
-  PDateTime(string datetime);
+    //!  Convert a string in "YYYY/MM/DD" or "YYYY/MM/DD hh:mm:ss" into
+    //!  a PDateTime.  The format has to match exactly.
+    PDateTime(string datetime);
   
-  //!  Missing date/time handling
-  bool isMissing() const;
-  void setMissing();
+    //!  Missing date/time handling
+    bool isMissing() const;
+    void setMissing();
 
-  //!<  returns the date in the format yyyy/mm/dd hh:mm:ss
-  string info() const; 
+    //!<  returns the date in the format yyyy/mm/dd hh:mm:ss
+    string info() const; 
 
-  //!  Equality comparison
-  bool operator==(const PDateTime& rhs) const {
-    return year == rhs.year && month == rhs.month && day == rhs.day
-      && hour == rhs.hour && min == rhs.min && sec == rhs.sec;
-  }
+    //!  Equality comparison
+    bool operator==(const PDateTime& rhs) const {
+        return year == rhs.year && month == rhs.month && day == rhs.day
+            && hour == rhs.hour && min == rhs.min && sec == rhs.sec;
+    }
   
-  bool operator!=(const PDateTime& rhs) const {
-    return ! (*this == rhs);
-  }
+    bool operator!=(const PDateTime& rhs) const {
+        return ! (*this == rhs);
+    }
   
-  bool operator<(const PDateTime& rhs) const {
-    double datetime_to_double(const PDateTime& t); // declare the function
-    return datetime_to_double(*this) < datetime_to_double(rhs);
-  }
+    bool operator<(const PDateTime& rhs) const {
+        double datetime_to_double(const PDateTime& t); // declare the function
+        return datetime_to_double(*this) < datetime_to_double(rhs);
+    }
   
-  bool operator<=(const PDateTime& rhs) const {
-    return *this == rhs || *this < rhs;
-  }
+    bool operator<=(const PDateTime& rhs) const {
+        return *this == rhs || *this < rhs;
+    }
   
-  bool operator>(const PDateTime& rhs) const {
-    return ! (*this <= rhs);
-  }
+    bool operator>(const PDateTime& rhs) const {
+        return ! (*this <= rhs);
+    }
   
-  bool operator>=(const PDateTime& rhs) const {
-    return ! (*this < rhs);
-  }
+    bool operator>=(const PDateTime& rhs) const {
+        return ! (*this < rhs);
+    }
 
 /*!     Convert a PDateTime into a Julian day.
-    See http://quasar.as.utexas.edu/BillInfo/JulianDatesG.html
-    (if still existing...) for details.
+  See http://quasar.as.utexas.edu/BillInfo/JulianDatesG.html
+  (if still existing...) for details.
 */
-  double toJulianDay() const;
+    double toJulianDay() const;
 };
 
 //!  subtract two dates, the result being counted in days (+ fractions)
 inline double operator-(const PDateTime& to_date, const PDateTime& from_date)
 {
-  return to_date.toJulianDay() - from_date.toJulianDay();
+    return to_date.toJulianDay() - from_date.toJulianDay();
 }
 
 inline ostream& operator<<(ostream& os, const PDateTime& date)
 {
-  os << date.info();
-  return os;
+    os << date.info();
+    return os;
 }
   
 //! converts date/time to double:
@@ -169,3 +169,16 @@ void double_to_hhmmss(double fraction, int& hh, int& mm, int& ss);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

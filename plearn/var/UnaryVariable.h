@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryVariable.h,v 1.12 2005/02/04 15:10:36 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef UnaryVariable_INC
 #define UnaryVariable_INC
@@ -52,39 +52,39 @@ using namespace std;
 class UnaryVariable: public Variable
 {
 public:
-  typedef Variable inherited;
+    typedef Variable inherited;
 
 protected:
-  //!  Default constructor for persistence
-  UnaryVariable() {}
-  static void declareOptions(OptionList & ol);
+    //!  Default constructor for persistence
+    UnaryVariable() {}
+    static void declareOptions(OptionList & ol);
 
 protected:
-  Var input;
+    Var input;
 
 public:
-  UnaryVariable(Variable* v, int thelength, int thewidth);
+    UnaryVariable(Variable* v, int thelength, int thewidth);
 
-  PLEARN_DECLARE_ABSTRACT_OBJECT(UnaryVariable);
+    PLEARN_DECLARE_ABSTRACT_OBJECT(UnaryVariable);
   
   
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-  virtual bool markPath();
-  virtual void buildPath(VarArray& proppath);
-  virtual VarArray sources();
-  virtual VarArray random_sources();
-  virtual VarArray ancestors();
-  virtual void unmarkAncestors();
-  virtual VarArray parents();
-  void printInfo(bool print_gradient) 
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual bool markPath();
+    virtual void buildPath(VarArray& proppath);
+    virtual VarArray sources();
+    virtual VarArray random_sources();
+    virtual VarArray ancestors();
+    virtual void unmarkAncestors();
+    virtual VarArray parents();
+    void printInfo(bool print_gradient) 
     { 
-      pout << getName() << "[" << (void*)this << "] " << *this
-           << " (" << (void*)input << ") = " << value;
-      if (print_gradient) 
-        pout << " gradient=" << gradient;
-      pout << endl; 
+        pout << getName() << "[" << (void*)this << "] " << *this
+             << " (" << (void*)input << ") = " << value;
+        if (print_gradient) 
+            pout << " gradient=" << gradient;
+        pout << endl; 
     }
-  virtual void resizeRValue();
+    virtual void resizeRValue();
 };
 
 
@@ -92,3 +92,15 @@ public:
 
 #endif 
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

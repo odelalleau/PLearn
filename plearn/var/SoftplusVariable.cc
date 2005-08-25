@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SoftplusVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "SigmoidVariable.h"
 #include "SoftplusVariable.h"
@@ -56,7 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(SoftplusVariable,
                         "NO HELP");
 
 SoftplusVariable::SoftplusVariable(Variable* input) 
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 void SoftplusVariable::recomputeSize(int& l, int& w) const
@@ -70,26 +70,37 @@ void SoftplusVariable::recomputeSize(int& l, int& w) const
 
 void SoftplusVariable::fprop()
 {
-  for(int i=0; i<nelems(); i++)
-    valuedata[i] = softplus(input->valuedata[i]);
+    for(int i=0; i<nelems(); i++)
+        valuedata[i] = softplus(input->valuedata[i]);
 }
 
 
 void SoftplusVariable::bprop()
 {
-  for(int i=0; i<nelems(); i++)
-    input->gradientdata[i] += gradientdata[i] * sigmoid(input->valuedata[i]);
+    for(int i=0; i<nelems(); i++)
+        input->gradientdata[i] += gradientdata[i] * sigmoid(input->valuedata[i]);
 }
 
 
 void SoftplusVariable::symbolicBprop()
 {
-  Var v(this);
-  input->accg(g*sigmoid(input));
+    Var v(this);
+    input->accg(g*sigmoid(input));
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

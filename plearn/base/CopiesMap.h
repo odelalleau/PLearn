@@ -40,54 +40,54 @@ typedef map<double, double> map_double_double;
   
 /*! Support for generic deep copying
     
-    Deep copying is defined for objects in the following manner:
-    + copy constructors should always do a shallow copy.
-    + a public method OBJTYPE* deepCopy(CopiesMap& copies) const 
-      should be defined to allow deepCopying
-    + the deepCopy method should be virtual for classes that are designed to be subclassed
-    Take a close look at the Object class in Object.h to see how this is done.
+Deep copying is defined for objects in the following manner:
++ copy constructors should always do a shallow copy.
++ a public method OBJTYPE* deepCopy(CopiesMap& copies) const 
+should be defined to allow deepCopying
++ the deepCopy method should be virtual for classes that are designed to be subclassed
+Take a close look at the Object class in Object.h to see how this is done.
 */
 
 //! Types that do not require deep copy.
 NODEEPCOPY(double)
-NODEEPCOPY(float)
-NODEEPCOPY(int)
-NODEEPCOPY(bool)
-NODEEPCOPY(map_string_float)
-NODEEPCOPY(map_string_double)
-NODEEPCOPY(map_float_string)
-NODEEPCOPY(map_double_string)
-NODEEPCOPY(map_string_string)
-NODEEPCOPY(map_float_float)
-NODEEPCOPY(map_double_double)
-NODEEPCOPY(string)
-NODEEPCOPY(VMField)
-NODEEPCOPY(VMFieldStat)
+    NODEEPCOPY(float)
+    NODEEPCOPY(int)
+    NODEEPCOPY(bool)
+    NODEEPCOPY(map_string_float)
+    NODEEPCOPY(map_string_double)
+    NODEEPCOPY(map_float_string)
+    NODEEPCOPY(map_double_string)
+    NODEEPCOPY(map_string_string)
+    NODEEPCOPY(map_float_float)
+    NODEEPCOPY(map_double_double)
+    NODEEPCOPY(string)
+    NODEEPCOPY(VMField)
+    NODEEPCOPY(VMFieldStat)
 
 //! Pairs handle deepCopying by distributing it to each element
-template <class T, class U>
+    template <class T, class U>
 inline void deepCopyField(pair<T,U>& p, CopiesMap& copies)
 {
-  deepCopyField(p.first, copies);
-  deepCopyField(p.second, copies);
+    deepCopyField(p.first, copies);
+    deepCopyField(p.second, copies);
 }
   
 //!  Any type not handled below: do nothing
 template <class T>
 inline void deepCopyField(T&, CopiesMap&)
 {
-  /*! no op */
-  PLWARNING(
-      "In CopiesMap.h - deepCopyField not handled for this type. "
-      "If it actually doesn't need deep copy, edit CopiesMap.h and add NODEEPCOPY(your_type) to remove this warning."
-  );
+    /*! no op */
+    PLWARNING(
+        "In CopiesMap.h - deepCopyField not handled for this type. "
+        "If it actually doesn't need deep copy, edit CopiesMap.h and add NODEEPCOPY(your_type) to remove this warning."
+        );
 }
 
 template <class T>
 inline void deepCopyField(T*& field, CopiesMap& copies)
 {
-  if (field)
-    field = field->deepCopy(copies);
+    if (field)
+        field = field->deepCopy(copies);
 }
 
 //!  A simple template function that calls the method
@@ -99,11 +99,24 @@ T* deepCopy(const T* source, CopiesMap& copies)
 template<class T>
 inline T* deepCopy(const T* source)
 { 
-  CopiesMap copies; //!<  create empty map
-  return deepCopy(source, copies);
+    CopiesMap copies; //!<  create empty map
+    return deepCopy(source, copies);
 }
 
 
 }
 
 #endif //ndef CopiesMap_INC
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

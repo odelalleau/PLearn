@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: plerror.h,v 1.7 2005/01/28 17:43:02 plearner Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/plerror.h */
@@ -68,3 +68,16 @@ void exitmsg(const char* msg, ...);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

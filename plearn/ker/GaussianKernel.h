@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.h,v 1.12 2005/06/09 17:29:34 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef GaussianKernel_INC
 #define GaussianKernel_INC
@@ -56,66 +56,66 @@ class GaussianKernel: public Kernel
 
 private:
 
-  typedef Kernel inherited;
+    typedef Kernel inherited;
 		
 public:
 
-  //! Build options below.
-  bool scale_by_sigma;
-  real sigma;
+    //! Build options below.
+    bool scale_by_sigma;
+    real sigma;
 
 protected:
 
-  real minus_one_over_sigmasquare;  //!< -1 / sigma^2
-  real sigmasquare_over_two;        //!<  sigma^2 / 2
+    real minus_one_over_sigmasquare;  //!< -1 / sigma^2
+    real sigmasquare_over_two;        //!<  sigma^2 / 2
 
-  Vec squarednorms; //!<  squarednorms of the rows of the data VMat (data is a member of Kernel)
+    Vec squarednorms; //!<  squarednorms of the rows of the data VMat (data is a member of Kernel)
 	 
- public:
+public:
 
-  //! Default constructor.
-  GaussianKernel();
+    //! Default constructor.
+    GaussianKernel();
   
-  //! Convenient constructor.
-  GaussianKernel(real the_sigma);
+    //! Convenient constructor.
+    GaussianKernel(real the_sigma);
 
-  PLEARN_DECLARE_OBJECT(GaussianKernel);
+    PLEARN_DECLARE_OBJECT(GaussianKernel);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //!  This method precomputes the squared norm for all the data to later speed up evaluate methods
-  virtual void setDataForKernelMatrix(VMat the_data);
+    //!  This method precomputes the squared norm for all the data to later speed up evaluate methods
+    virtual void setDataForKernelMatrix(VMat the_data);
   
-  //! This method appends the newRow squared norm to the squarednorms Vec field
-  virtual void addDataForKernelMatrix(const Vec& newRow);
+    //! This method appends the newRow squared norm to the squarednorms Vec field
+    virtual void addDataForKernelMatrix(const Vec& newRow);
 
-  virtual real evaluate(const Vec& x1, const Vec& x2) const; //!<  returns K(x1,x2) 
-  virtual real evaluate_i_j(int i, int j) const; //!<  returns evaluate(data(i),data(j))
-  virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const; //!<  returns evaluate(data(i),x)
-  virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; //!<  returns evaluate(x,data(i))
+    virtual real evaluate(const Vec& x1, const Vec& x2) const; //!<  returns K(x1,x2) 
+    virtual real evaluate_i_j(int i, int j) const; //!<  returns evaluate(data(i),data(j))
+    virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const; //!<  returns evaluate(data(i),x)
+    virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; //!<  returns evaluate(x,data(i))
 
-  virtual void setParameters(Vec paramvec);
+    virtual void setParameters(Vec paramvec);
 
 protected:
-  static void declareOptions(OptionList& ol);  
+    static void declareOptions(OptionList& ol);  
 
-  //! Return true if estimating the squared difference of two points x1 and x2
-  //! from their squared norms sqn_1 and sqn_2 (and their dot product) might
-  //! lead to unsafe numerical approximations.
-  //! Specifically, it will return true when
-  //! ||x1||^2 > 1e6 and | ||x2||^2 / ||x1||^2 - 1 | < 0.01
-  //! i.e. when the two points have a large similar norm.
-  inline bool isUnsafe(real sqn_1, real sqn_2) const;
+    //! Return true if estimating the squared difference of two points x1 and x2
+    //! from their squared norms sqn_1 and sqn_2 (and their dot product) might
+    //! lead to unsafe numerical approximations.
+    //! Specifically, it will return true when
+    //! ||x1||^2 > 1e6 and | ||x2||^2 / ||x1||^2 - 1 | < 0.01
+    //! i.e. when the two points have a large similar norm.
+    inline bool isUnsafe(real sqn_1, real sqn_2) const;
 
 private:
 
-  inline real evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const;
+    inline real evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const;
 
-  inline real evaluateFromDotAndSquaredNorm(real sqnorm_x1, real dot_x1_x2, real sqnorm_x2) const;
+    inline real evaluateFromDotAndSquaredNorm(real sqnorm_x1, real dot_x1_x2, real sqnorm_x2) const;
 
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(GaussianKernel);
@@ -124,3 +124,15 @@ DECLARE_OBJECT_PTR(GaussianKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

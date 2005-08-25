@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -92,81 +92,81 @@ typedef PP< GenericNearestNeighbors > GenericNN;
 
 class GenericNearestNeighbors: public PLearner
 {
-  typedef PLearner inherited;
+    typedef PLearner inherited;
 
 protected:
-  //! Internal buffer for constructing the output vector
-  mutable Vec currow;
+    //! Internal buffer for constructing the output vector
+    mutable Vec currow;
   
 public:
-  //#####  Public Build Options  ############################################
+    //#####  Public Build Options  ############################################
 
-  //! Number of nearest-neighbors to compute.  This is usually called "K".
-  //! The output vector is simply the concatenation of all found neighbors.
-  int num_neighbors;
+    //! Number of nearest-neighbors to compute.  This is usually called "K".
+    //! The output vector is simply the concatenation of all found neighbors.
+    int num_neighbors;
 
-  //! If true, the output contains a copy of the found input vector(s).
-  //! (Default = false)
-  bool copy_input;
+    //! If true, the output contains a copy of the found input vector(s).
+    //! (Default = false)
+    bool copy_input;
 
-  //! If true, the output contains a copy of the found target vector(s).
-  //! (Default = true)
-  bool copy_target;
+    //! If true, the output contains a copy of the found target vector(s).
+    //! (Default = true)
+    bool copy_target;
 
-  //! If true, the output contains a copy of the found weight.  If no
-  //! weight is present in the training set, a weight of 1.0 is put.
-  //! (Default = true)
-  bool copy_weight;
+    //! If true, the output contains a copy of the found weight.  If no
+    //! weight is present in the training set, a weight of 1.0 is put.
+    //! (Default = true)
+    bool copy_weight;
 
-  //! If true, the output contains the index of the found neighbor
-  //! (as the row number, zero-based, in the training set.)
-  bool copy_index;
+    //! If true, the output contains the index of the found neighbor
+    //! (as the row number, zero-based, in the training set.)
+    bool copy_index;
   
-  //! An optional alternative to the Euclidean distance
-  Ker distance_kernel;
+    //! An optional alternative to the Euclidean distance
+    Ker distance_kernel;
 
 public:
-  //#####  Object Methods  ##################################################
+    //#####  Object Methods  ##################################################
   
-  //! Default constructor.
-  GenericNearestNeighbors();
+    //! Default constructor.
+    GenericNearestNeighbors();
 
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  // If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT.
-  PLEARN_DECLARE_ABSTRACT_OBJECT(GenericNearestNeighbors);
+    // Declares other standard object methods.
+    // If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT.
+    PLEARN_DECLARE_ABSTRACT_OBJECT(GenericNearestNeighbors);
 
 
 public:
-  //#####  PLearner Methods  ################################################
+    //#####  PLearner Methods  ################################################
 
-  //! Returns the size of this learner's output, (which typically
-  //! may depend on its inputsize(), targetsize() and set options).
-  virtual int outputsize() const;
+    //! Returns the size of this learner's output, (which typically
+    //! may depend on its inputsize(), targetsize() and set options).
+    virtual int outputsize() const;
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
-  //! From a vector of indexes into the training set, expand them into
-  //! an output vector for the learner, and take into account all the
-  //! options.  One can pass less than num_neighbors indices, in which
-  //! case the rest of the output vector is filled with missings.
-  //! In addition, one can pass a Mat from which the data will be obtained
-  //! instead of the (virtual matrix) training set. This is faster.
-  void constructOutputVector(const TVec<int>& indices, Vec& output,
-                             const Mat& train_mat_override = Mat()) const;
+    //! From a vector of indexes into the training set, expand them into
+    //! an output vector for the learner, and take into account all the
+    //! options.  One can pass less than num_neighbors indices, in which
+    //! case the rest of the output vector is filled with missings.
+    //! In addition, one can pass a Mat from which the data will be obtained
+    //! instead of the (virtual matrix) training set. This is faster.
+    void constructOutputVector(const TVec<int>& indices, Vec& output,
+                               const Mat& train_mat_override = Mat()) const;
 };
 
 // Declares a few other classes and functions related to this class.
@@ -175,3 +175,16 @@ DECLARE_OBJECT_PTR(GenericNearestNeighbors);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

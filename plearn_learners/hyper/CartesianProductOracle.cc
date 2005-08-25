@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CartesianProductOracle.cc,v 1.1 2005/01/11 23:22:43 plearner Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 /*! \file CartesianProductOracle.cc */
 #include "CartesianProductOracle.h"
@@ -43,22 +43,22 @@ namespace PLearn {
 using namespace std;
 
 CartesianProductOracle::CartesianProductOracle() 
-  :OptionsOracle(), last_combination(false)
+    :OptionsOracle(), last_combination(false)
 /* ### Initialise all fields to their default value */
-  {
-  }
+{
+}
 
-  PLEARN_IMPLEMENT_OBJECT(CartesianProductOracle, 
-                          "This OptionsOracle generates all combinations of values for a set of options", 
-                          "This 'oracle' traverses a fixed list of option values, obtained from a set"
-                          "of values associated with each option of interest. That list is the cartesian"
-                          "product of those sets, i.e. it is the list of all combinations of values."
-                          "The user specifies the names of each option, and for each of them, a list"
-                          "of the values that should be tried."
-                          );
+PLEARN_IMPLEMENT_OBJECT(CartesianProductOracle, 
+                        "This OptionsOracle generates all combinations of values for a set of options", 
+                        "This 'oracle' traverses a fixed list of option values, obtained from a set"
+                        "of values associated with each option of interest. That list is the cartesian"
+                        "product of those sets, i.e. it is the list of all combinations of values."
+                        "The user specifies the names of each option, and for each of them, a list"
+                        "of the values that should be tried."
+    );
 
-  void CartesianProductOracle::declareOptions(OptionList& ol)
-  {
+void CartesianProductOracle::declareOptions(OptionList& ol)
+{
     declareOption(ol, "option_names", &CartesianProductOracle::option_names, OptionBase::buildoption,
                   "name of each of the options to optimize");
 
@@ -66,67 +66,80 @@ CartesianProductOracle::CartesianProductOracle()
                   "A list of lists of options: the top list must have as many elements as there are"
                   "options in the option_names field. Each sub-list contains the values to be tried"
                   "for the corresponding option."
-                  );
+        );
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
+}
 
 TVec<string>  CartesianProductOracle::getOptionNames() const
 { 
-  return option_names; 
+    return option_names; 
 }
 
 TVec<string> CartesianProductOracle::generateNextTrial(const TVec<string>& older_trial, real obtained_objective)
 {
-  if (last_combination)
-    return TVec<string>();
-  else
-  {
-    int n=option_names.length();
-    TVec<string> values(n);
-    // copy current combination
-    for (int i=0;i<n;i++)
-      values[i]=option_values[i][option_values_indices[i]];
-    // increment indices to next combination, in lexicographical order
-    last_combination=true;
-    for (int i=0;i<n;i++)
+    if (last_combination)
+        return TVec<string>();
+    else
     {
-      option_values_indices[i]++;
-      if (option_values_indices[i]<option_values[i].length()) { last_combination=false; break; }
-      else option_values_indices[i]=0;
+        int n=option_names.length();
+        TVec<string> values(n);
+        // copy current combination
+        for (int i=0;i<n;i++)
+            values[i]=option_values[i][option_values_indices[i]];
+        // increment indices to next combination, in lexicographical order
+        last_combination=true;
+        for (int i=0;i<n;i++)
+        {
+            option_values_indices[i]++;
+            if (option_values_indices[i]<option_values[i].length()) { last_combination=false; break; }
+            else option_values_indices[i]=0;
+        }
+        return values;
     }
-    return values;
-  }
 }
 
 void CartesianProductOracle::forget()
 {
-  option_values_indices.clear();
-  last_combination=false;
+    option_values_indices.clear();
+    last_combination=false;
 }
 
 void CartesianProductOracle::build_()
 {
-  int n=option_names.length();
-  option_values_indices.resize(n);
-  forget();
+    int n=option_names.length();
+    option_values_indices.resize(n);
+    forget();
 }
 
 // ### Nothing to add here, simply calls build_
 void CartesianProductOracle::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 
 void CartesianProductOracle::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(option_values_indices, copies);
-  deepCopyField(option_values, copies);
-  deepCopyField(option_names, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(option_values_indices, copies);
+    deepCopyField(option_values, copies);
+    deepCopyField(option_names, copies);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

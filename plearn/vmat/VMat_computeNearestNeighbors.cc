@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_computeNearestNeighbors.cc,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -52,28 +52,41 @@ using namespace std;
 // This is an efficient version of the most basic nearest neighbor search, using a Mat and euclidean distance
 void computeNearestNeighbors(VMat dataset, Vec x, TVec<int>& neighbors, int ignore_row)
 {
-  int K = neighbors.length(); // how many neighbors do we want?
-  BottomNI<real> neighbs(K);
-  Vec row(dataset->width());
-  for(int i=0; i<dataset->length(); i++)
-    if(i!=ignore_row)
+    int K = neighbors.length(); // how many neighbors do we want?
+    BottomNI<real> neighbs(K);
+    Vec row(dataset->width());
+    for(int i=0; i<dataset->length(); i++)
+        if(i!=ignore_row)
+        {
+            dataset->getRow(i,row);
+            neighbs.update(powdistance(row,x), i);
+        }
+    neighbs.sort();
+    TVec< pair<real,int> > indices = neighbs.getBottomN();
+    int nonzero=0;
+    for(int k=0; k<K; k++)
     {
-      dataset->getRow(i,row);
-      neighbs.update(powdistance(row,x), i);
+        if(indices[k].first>0)
+            nonzero++;
+        neighbors[k] = indices[k].second;
     }
-  neighbs.sort();
-  TVec< pair<real,int> > indices = neighbs.getBottomN();
-  int nonzero=0;
-  for(int k=0; k<K; k++)
-  {
-    if(indices[k].first>0)
-      nonzero++;
-    neighbors[k] = indices[k].second;
-  }
-  if(nonzero==0)
-    PLERROR("All neighbors had 0 distance. Use more neighbors. (There were %i other patterns with same values)",neighbs.nZeros());
+    if(nonzero==0)
+        PLERROR("All neighbors had 0 distance. Use more neighbors. (There were %i other patterns with same values)",neighbs.nZeros());
 }
 
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

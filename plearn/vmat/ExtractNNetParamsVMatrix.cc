@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExtractNNetParamsVMatrix.cc,v 1.1 2005/01/11 20:01:06 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -51,25 +51,25 @@ using namespace std;
 // ExtractNNetParamsVMatrix //
 //////////////////////////////
 ExtractNNetParamsVMatrix::ExtractNNetParamsVMatrix()
-: extract_w1(false),
-  extract_w2(false),
-  extract_wdirect(false),
-  extract_wout(false)
+    : extract_w1(false),
+      extract_w2(false),
+      extract_wdirect(false),
+      extract_wout(false)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(ExtractNNetParamsVMatrix,
-    "Extract the (learned) parameters of a Neural Network.",
-    "Currently, it can only extract ONE set of parameters, among w1, w2, wdirect\n"
-    "and wout. In the future, it may be possible to extract simultaneously all\n"
-    "those parameters."
-);
+                        "Extract the (learned) parameters of a Neural Network.",
+                        "Currently, it can only extract ONE set of parameters, among w1, w2, wdirect\n"
+                        "and wout. In the future, it may be possible to extract simultaneously all\n"
+                        "those parameters."
+    );
 
 ///////////////
 // getNewRow //
 ///////////////
 void ExtractNNetParamsVMatrix::getNewRow(int i, const Vec& v) const
 {
-  v << data(i);
+    v << data(i);
 }
 
 ////////////////////
@@ -77,35 +77,35 @@ void ExtractNNetParamsVMatrix::getNewRow(int i, const Vec& v) const
 ////////////////////
 void ExtractNNetParamsVMatrix::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  declareOption(ol, "nnet", &ExtractNNetParamsVMatrix::nnet, OptionBase::buildoption,
-      "The neural network whose parameters are extracted.");
+    declareOption(ol, "nnet", &ExtractNNetParamsVMatrix::nnet, OptionBase::buildoption,
+                  "The neural network whose parameters are extracted.");
 
-  declareOption(ol, "extract_w1", &ExtractNNetParamsVMatrix::extract_w1, OptionBase::buildoption,
-      "Whether to extract w1.");
+    declareOption(ol, "extract_w1", &ExtractNNetParamsVMatrix::extract_w1, OptionBase::buildoption,
+                  "Whether to extract w1.");
 
-  declareOption(ol, "extract_w2", &ExtractNNetParamsVMatrix::extract_w2, OptionBase::buildoption,
-      "Whether to extract w2.");
+    declareOption(ol, "extract_w2", &ExtractNNetParamsVMatrix::extract_w2, OptionBase::buildoption,
+                  "Whether to extract w2.");
 
-  declareOption(ol, "extract_wdirect", &ExtractNNetParamsVMatrix::extract_wdirect, OptionBase::buildoption,
-      "Whether to extract wdirect.");
+    declareOption(ol, "extract_wdirect", &ExtractNNetParamsVMatrix::extract_wdirect, OptionBase::buildoption,
+                  "Whether to extract wdirect.");
 
-  declareOption(ol, "extract_wout", &ExtractNNetParamsVMatrix::extract_wout, OptionBase::buildoption,
-      "Whether to extract wout.");
+    declareOption(ol, "extract_wout", &ExtractNNetParamsVMatrix::extract_wout, OptionBase::buildoption,
+                  "Whether to extract wout.");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 
-  redeclareOption(ol, "length", &ExtractNNetParamsVMatrix::length_, OptionBase::nosave,
-      "Overwritten at build time.");
+    redeclareOption(ol, "length", &ExtractNNetParamsVMatrix::length_, OptionBase::nosave,
+                    "Overwritten at build time.");
 
-  redeclareOption(ol, "width", &ExtractNNetParamsVMatrix::width_, OptionBase::nosave,
-      "Overwritten at build time.");
+    redeclareOption(ol, "width", &ExtractNNetParamsVMatrix::width_, OptionBase::nosave,
+                    "Overwritten at build time.");
 
 }
 
@@ -114,8 +114,8 @@ void ExtractNNetParamsVMatrix::declareOptions(OptionList& ol)
 ////////////
 void ExtractNNetParamsVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -123,21 +123,21 @@ void ExtractNNetParamsVMatrix::build()
 ////////////
 void ExtractNNetParamsVMatrix::build_()
 {
-  if (nnet) {
-    Mat m;
-    if (extract_w1)
-      m = nnet->getW1();
-    else if (extract_w2)
-      m = nnet->getW2();
-    else if (extract_wdirect)
-      m = nnet->getWdirect();
-    else if (extract_wout)
-      m = nnet->getWout();
-    data.resize(m.length(), m.width());
-    data << m;
-    length_ = data.length();
-    width_ = data.width();
-  }
+    if (nnet) {
+        Mat m;
+        if (extract_w1)
+            m = nnet->getW1();
+        else if (extract_w2)
+            m = nnet->getW2();
+        else if (extract_wdirect)
+            m = nnet->getWdirect();
+        else if (extract_wout)
+            m = nnet->getWout();
+        data.resize(m.length(), m.width());
+        data << m;
+        length_ = data.length();
+        width_ = data.width();
+    }
 }
 
 /////////////////////////////////
@@ -145,10 +145,22 @@ void ExtractNNetParamsVMatrix::build_()
 /////////////////////////////////
 void ExtractNNetParamsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  // deepCopyField(trainvec, copies);
-  PLERROR("ExtractNNetParamsVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    // deepCopyField(trainvec, copies);
+    PLERROR("ExtractNNetParamsVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

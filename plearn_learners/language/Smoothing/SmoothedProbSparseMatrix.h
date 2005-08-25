@@ -46,30 +46,30 @@ using namespace std;
 class SmoothedProbSparseMatrix : public ProbSparseMatrix
 {
 protected:
-  // Smoothing Method :
-  // 0 : no smoothing!
-  // 1 : laplace
-  // 2 : discount - backoff
-  // 3 :  discount - backoff non shadowing
-  int smoothingMethod;  
+    // Smoothing Method :
+    // 0 : no smoothing!
+    // 1 : laplace
+    // 2 : discount - backoff
+    // 3 :  discount - backoff non shadowing
+    int smoothingMethod;  
 
-  // Precomputed nomalization sum;
-  Vec normalizationSum;
-  // Backoff distribution
-  Vec backoffDist;
-  Vec backoffNormalization;
-  // Store discounted mass in case of Backoff smoothing
-  Vec discountedMass;
+    // Precomputed nomalization sum;
+    Vec normalizationSum;
+    // Backoff distribution
+    Vec backoffDist;
+    Vec backoffNormalization;
+    // Store discounted mass in case of Backoff smoothing
+    Vec discountedMass;
 public:
 
-  bool checkCondProbIntegrity();
-  SmoothedProbSparseMatrix(int n_rows = 0, int n_cols = 0, string name = "pXY", int mode = ROW_WISE, bool double_access = false);
-  void normalizeCondLaplace(ProbSparseMatrix& nXY, bool clear_nXY = false);
-  void normalizeCondBackoff(ProbSparseMatrix& nXY, real disc, Vec& bDist,bool clear_nXY,bool shadow);
-  string getClassName() const { return "SmoothedProbSparseMatrix"; }
-  real get(int i,int j);
-  void write(PStream& out) const;
-  void read(PStream& in);
+    bool checkCondProbIntegrity();
+    SmoothedProbSparseMatrix(int n_rows = 0, int n_cols = 0, string name = "pXY", int mode = ROW_WISE, bool double_access = false);
+    void normalizeCondLaplace(ProbSparseMatrix& nXY, bool clear_nXY = false);
+    void normalizeCondBackoff(ProbSparseMatrix& nXY, real disc, Vec& bDist,bool clear_nXY,bool shadow);
+    string getClassName() const { return "SmoothedProbSparseMatrix"; }
+    real get(int i,int j);
+    void write(PStream& out) const;
+    void read(PStream& in);
 
 };
 
@@ -78,14 +78,14 @@ class ComplementedProbSparseMatrix : public ProbSparseMatrix
 {
 protected:
 
-  real grandSum;
-  Vec rowSum;
-  Vec columnSum;
+    real grandSum;
+    Vec rowSum;
+    Vec columnSum;
 
 public:
-  void complement(ProbSparseMatrix& nXY, bool clear_nXY = false);
-  real get(int i,int j);
-  bool checkCondProbIntegrity();
+    void complement(ProbSparseMatrix& nXY, bool clear_nXY = false);
+    real get(int i,int j);
+    bool checkCondProbIntegrity();
 };
 
 
@@ -93,3 +93,16 @@ public:
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

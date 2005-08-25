@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: PairsVMatrix.h,v 1.6 2004/07/09 19:42:23 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -59,37 +59,50 @@ using namespace std;
 */
 class PairsVMatrix: public RowBufferedVMatrix
 {
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
- protected:
-  Mat data1;
-  Mat data2;
+protected:
+    Mat data1;
+    Mat data2;
 
- public:
-  // ******************
-  // *  Constructors  *
-  // ******************
-  PairsVMatrix(); //!<  default constructor (for automatic deserialization)
+public:
+    // ******************
+    // *  Constructors  *
+    // ******************
+    PairsVMatrix(); //!<  default constructor (for automatic deserialization)
 
-  PairsVMatrix(Mat the_data1, Mat the_data2);
+    PairsVMatrix(Mat the_data1, Mat the_data2);
 
-  PLEARN_DECLARE_OBJECT(PairsVMatrix);
+    PLEARN_DECLARE_OBJECT(PairsVMatrix);
 
- protected:
+protected:
 
-  static void declareOptions(OptionList &ol);
-  virtual void getNewRow(int ij, const Vec& samplevec) const;
+    static void declareOptions(OptionList &ol);
+    virtual void getNewRow(int ij, const Vec& samplevec) const;
 
- public:
+public:
 
-  virtual void build();
+    virtual void build();
 
-  virtual void reset_dimensions() { PLERROR("PairsVMatrix::reset_dimensions() not implemented"); }
+    virtual void reset_dimensions() { PLERROR("PairsVMatrix::reset_dimensions() not implemented"); }
 private:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(PairsVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SumVariable.cc,v 1.5 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "SumVariable.h"
 
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(SumVariable,
                         "NO HELP");
 
 SumVariable::SumVariable(Variable* input)
-  : inherited(input, 1, 1)
+    : inherited(input, 1, 1)
 {}
 
 void SumVariable::recomputeSize(int& l, int& w) const
@@ -62,39 +62,50 @@ void SumVariable::recomputeSize(int& l, int& w) const
 
 void SumVariable::fprop()
 {
-  real sum = 0.0;
-  for(int k=0; k<input->nelems(); k++)
-    sum += input->valuedata[k];
-  valuedata[0] = sum;
+    real sum = 0.0;
+    for(int k=0; k<input->nelems(); k++)
+        sum += input->valuedata[k];
+    valuedata[0] = sum;
 }
 
 
 void SumVariable::bprop()
 {
-  real grd = gradientdata[0];
-  for(int k=0; k<input->nelems(); k++)
-    input->gradientdata[k] += grd;
+    real grd = gradientdata[0];
+    for(int k=0; k<input->nelems(); k++)
+        input->gradientdata[k] += grd;
 }
 
 
 void SumVariable::symbolicBprop()
 {
-  input->accg(g);
+    input->accg(g);
 }
 
 
 // R(sum_i x_i) = sum_i R(x_i)
 void SumVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  real sum = 0.0;
-  for(int k=0; k<input->nelems(); k++)
-    sum += input->rvaluedata[k];
-  rvaluedata[0] = sum;
+    if (rValue.length()==0) resizeRValue();
+    real sum = 0.0;
+    for(int k=0; k<input->nelems(); k++)
+        sum += input->rvaluedata[k];
+    rvaluedata[0] = sum;
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

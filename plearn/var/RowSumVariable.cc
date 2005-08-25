@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: RowSumVariable.cc,v 1.5 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "RowSumVariable.h"
 
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(RowSumVariable,
                         "NO HELP");
 
 RowSumVariable::RowSumVariable(Variable* input)
-  : inherited(input, input->length(), 1)
+    : inherited(input, input->length(), 1)
 {}
 
 void RowSumVariable::recomputeSize(int& l, int& w) const
@@ -67,30 +67,41 @@ void RowSumVariable::recomputeSize(int& l, int& w) const
 
 void RowSumVariable::fprop()
 {
-  value.clear();
-  int k=0;
-  for(int i=0; i<input->length(); i++)
-    for(int j=0; j<input->width(); j++, k++)
-      valuedata[i] += input->valuedata[k];
+    value.clear();
+    int k=0;
+    for(int i=0; i<input->length(); i++)
+        for(int j=0; j<input->width(); j++, k++)
+            valuedata[i] += input->valuedata[k];
 }
 
 
 void RowSumVariable::bprop()
 {
-  int k=0;
-  for(int i=0; i<input->length(); i++)
-    for(int j=0; j<input->width(); j++, k++)
-      input->gradientdata[k] += gradientdata[i];
+    int k=0;
+    for(int i=0; i<input->length(); i++)
+        for(int j=0; j<input->width(); j++, k++)
+            input->gradientdata[k] += gradientdata[i];
 }
 
 
 void RowSumVariable::symbolicBprop()
 {
-  input->accg(g);
+    input->accg(g);
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

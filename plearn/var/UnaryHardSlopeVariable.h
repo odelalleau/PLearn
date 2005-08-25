@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef UnaryHardSlopeVariable_INC
 #define UnaryHardSlopeVariable_INC
@@ -53,29 +53,29 @@ using namespace std;
 // output is 0 for input < left, 1 for input > right, and linear in between.
 class UnaryHardSlopeVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 protected:
-  real left;
-  real right;
-  real inv_slope; // 1/(right-left)
+    real left;
+    real right;
+    real inv_slope; // 1/(right-left)
 
 public:
-  //!  Default constructor for persistence
-  UnaryHardSlopeVariable();
-  UnaryHardSlopeVariable(Variable* input,real l=-1,real r=1);
+    //!  Default constructor for persistence
+    UnaryHardSlopeVariable();
+    UnaryHardSlopeVariable(Variable* input,real l=-1,real r=1);
 
-  PLEARN_DECLARE_OBJECT(UnaryHardSlopeVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(UnaryHardSlopeVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
 
 protected:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(UnaryHardSlopeVariable);
@@ -86,3 +86,16 @@ inline Var unary_hard_slope(Var v, real l=-1, real r=1)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

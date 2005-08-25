@@ -47,46 +47,46 @@ class ProbSparseMatrix : public DoubleAccessSparseMatrix<real>
 
 public:
 
-  ProbSparseMatrix(int n_rows = 0, int n_cols = 0, string name = "pXY", int mode = ROW_WISE, bool double_access = false);
+    ProbSparseMatrix(int n_rows = 0, int n_cols = 0, string name = "pXY", int mode = ROW_WISE, bool double_access = false);
 
-  void incr(int i, int j, real inc = 1.0, bool warning = true);
+    void incr(int i, int j, real inc = 1.0, bool warning = true);
 
-  void set(int i, int j, real value, bool warning = true);
+    void set(int i, int j, real value, bool warning = true);
 
-  bool checkCondProbIntegrity();
+    bool checkCondProbIntegrity();
 
-  bool checkJointProbIntegrity();
+    bool checkJointProbIntegrity();
 
-  void normalizeCond(ProbSparseMatrix& nXY, bool clear_nXY = false);
+    void normalizeCond(ProbSparseMatrix& nXY, bool clear_nXY = false);
 
-  void normalizeJoint(ProbSparseMatrix& nXY, bool clear_nXY = false);
+    void normalizeJoint(ProbSparseMatrix& nXY, bool clear_nXY = false);
 
-  void normalizeCond();
+    void normalizeCond();
 
-  void normalizeJoint();
+    void normalizeJoint();
 
-  string getClassName() const { return "ProbSparseMatrix"; }
+    string getClassName() const { return "ProbSparseMatrix"; }
 
-  void iterativeProportionalFittingStep( ProbSparseMatrix& p, Vec& lineMarginal, Vec& colMarginal);
+    void iterativeProportionalFittingStep( ProbSparseMatrix& p, Vec& lineMarginal, Vec& colMarginal);
 
-  real euclidianDistance( ProbSparseMatrix &p);
+    real euclidianDistance( ProbSparseMatrix &p);
 
-  void add( ProbSparseMatrix& p, ProbSparseMatrix& q);
+    void add( ProbSparseMatrix& p, ProbSparseMatrix& q);
 
 };
 
 template <class T> 
 inline PStream& operator<<(PStream &out, const ProbSparseMatrix &p)
 { 
-  p.write(out); 
-  return out;
+    p.write(out); 
+    return out;
 }
 
 template <class T> 
 inline PStream& operator>>(PStream &in, ProbSparseMatrix &p)
 { 
-  p.read(in); 
-  return in;
+    p.read(in); 
+    return in;
 }
 
 class PSMat : public PP<ProbSparseMatrix>
@@ -94,12 +94,25 @@ class PSMat : public PP<ProbSparseMatrix>
 
 public:
 
-  PSMat(int n_rows = 0, int n_cols = 0, string name = "pXY", int mode = ROW_WISE, bool double_access = false) : PP<ProbSparseMatrix>(new ProbSparseMatrix(n_rows, n_cols, name, mode, double_access)) {}
+    PSMat(int n_rows = 0, int n_cols = 0, string name = "pXY", int mode = ROW_WISE, bool double_access = false) : PP<ProbSparseMatrix>(new ProbSparseMatrix(n_rows, n_cols, name, mode, double_access)) {}
 
-  PSMat(ProbSparseMatrix* p) : PP<ProbSparseMatrix>(p) {}
+    PSMat(ProbSparseMatrix* p) : PP<ProbSparseMatrix>(p) {}
 
 };
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

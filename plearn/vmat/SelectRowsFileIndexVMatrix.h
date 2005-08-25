@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsFileIndexVMatrix.h,v 1.7 2004/09/27 20:19:27 plearner Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -57,37 +57,37 @@ using namespace std;
 */
 class SelectRowsFileIndexVMatrix: public VMatrix
 {
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
 protected:
-  VMat distr;
-  IntVecFile indices;
-  string index_file;
+    VMat distr;
+    IntVecFile indices;
+    string index_file;
 public:
-  // ******************
-  // *  Constructors  *
-  // ******************
-  SelectRowsFileIndexVMatrix(); //!<  default constructor (for automatic deserialization)
+    // ******************
+    // *  Constructors  *
+    // ******************
+    SelectRowsFileIndexVMatrix(); //!<  default constructor (for automatic deserialization)
 
-  //! Copy the original fieldinfos upon construction
-  SelectRowsFileIndexVMatrix(VMat the_distr, const string& indexfile);
+    //! Copy the original fieldinfos upon construction
+    SelectRowsFileIndexVMatrix(VMat the_distr, const string& indexfile);
 
-  PLEARN_DECLARE_OBJECT(SelectRowsFileIndexVMatrix);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(SelectRowsFileIndexVMatrix);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
-  virtual void getRow(int i, Vec v) const;
-  virtual real getStringVal(int col, const string & str) const;
-  virtual string getValString(int col, real val) const;
-  virtual string getString(int row,int col) const;
-  virtual const map<string,real>& getStringToRealMapping(int col) const;
+    virtual real get(int i, int j) const;
+    virtual void getSubRow(int i, int j, Vec v) const;
+    virtual void getRow(int i, Vec v) const;
+    virtual real getStringVal(int col, const string & str) const;
+    virtual string getValString(int col, real val) const;
+    virtual string getString(int row,int col) const;
+    virtual const map<string,real>& getStringToRealMapping(int col) const;
 
-  virtual real dot(int i1, int i2, int inputsize) const;
-  virtual real dot(int i, const Vec& v) const;
-  virtual void reset_dimensions() { distr->reset_dimensions(); width_=distr->width(); }
+    virtual real dot(int i1, int i2, int inputsize) const;
+    virtual real dot(int i, const Vec& v) const;
+    virtual void reset_dimensions() { distr->reset_dimensions(); width_=distr->width(); }
 private:
     void build_();
 };
@@ -96,3 +96,16 @@ DECLARE_OBJECT_PTR(SelectRowsFileIndexVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

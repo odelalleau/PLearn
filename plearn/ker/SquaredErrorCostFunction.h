@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SquaredErrorCostFunction.h,v 1.5 2004/04/07 23:15:17 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef SquaredErrorCostFunction_INC
 #define SquaredErrorCostFunction_INC
@@ -54,40 +54,40 @@ using namespace std;
 
 class SquaredErrorCostFunction: public Kernel
 {
-  typedef Kernel inherited;
+    typedef Kernel inherited;
 		
 protected:
-  //!  index in target vector of the target value to use to compute the squared error
-  //!  (if -1, sum all the squared errors)
-  int targetindex;
-  bool classification;
-  real hotvalue, coldvalue;
+    //!  index in target vector of the target value to use to compute the squared error
+    //!  (if -1, sum all the squared errors)
+    int targetindex;
+    bool classification;
+    real hotvalue, coldvalue;
 
 public:
-  SquaredErrorCostFunction(int the_targetindex=-1)
-    :targetindex(the_targetindex), classification(false), hotvalue(1), coldvalue(0) {};
+    SquaredErrorCostFunction(int the_targetindex=-1)
+        :targetindex(the_targetindex), classification(false), hotvalue(1), coldvalue(0) {};
 
-  //!  Constructor for classification (target is interpreted as onehot)
-  SquaredErrorCostFunction(real hot_value, real cold_value)
-    : targetindex(-1), classification(true), hotvalue(hot_value), coldvalue(cold_value) {};
+    //!  Constructor for classification (target is interpreted as onehot)
+    SquaredErrorCostFunction(real hot_value, real cold_value)
+        : targetindex(-1), classification(true), hotvalue(hot_value), coldvalue(cold_value) {};
 
-  PLEARN_DECLARE_OBJECT(SquaredErrorCostFunction);
+    PLEARN_DECLARE_OBJECT(SquaredErrorCostFunction);
 
-  virtual string info() const
-        { return "squared_error"; }
+    virtual string info() const
+    { return "squared_error"; }
 
-  virtual real evaluate(const Vec& output, const Vec& target) const; 
+    virtual real evaluate(const Vec& output, const Vec& target) const; 
 
 protected:
-  //!  recognized option is "targetindex"  
-  static void declareOptions(OptionList &ol);
+    //!  recognized option is "targetindex"  
+    static void declareOptions(OptionList &ol);
 };
 
 DECLARE_OBJECT_PTR(SquaredErrorCostFunction);
 
 inline CostFunc squared_classification_error(real hot_value=0.8, real cold_value=0.2)
 {
-  return new SquaredErrorCostFunction(hot_value, cold_value);
+    return new SquaredErrorCostFunction(hot_value, cold_value);
 }
 
 inline CostFunc squared_error(int singleoutputindex=-1);
@@ -96,3 +96,15 @@ inline CostFunc squared_error(int singleoutputindex=-1);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

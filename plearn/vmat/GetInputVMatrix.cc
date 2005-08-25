@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GetInputVMatrix.cc,v 1.4 2005/03/09 14:08:32 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,27 +54,27 @@ GetInputVMatrix::GetInputVMatrix()
 }
 
 GetInputVMatrix::GetInputVMatrix(VMat the_source) {
-  this->source = the_source;
-  build_();
+    this->source = the_source;
+    build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(GetInputVMatrix,
-    "This VMatrix only sees the input part of its source VMatrix.",
-    ""
-);
+                        "This VMatrix only sees the input part of its source VMatrix.",
+                        ""
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void GetInputVMatrix::declareOptions(OptionList& ol)
 {
-  // ### ex:
-  // declareOption(ol, "myoption", &GetInputVMatrix::myoption, OptionBase::buildoption,
-  //               "Help text describing this option");
-  // ...
+    // ### ex:
+    // declareOption(ol, "myoption", &GetInputVMatrix::myoption, OptionBase::buildoption,
+    //               "Help text describing this option");
+    // ...
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ///////////
@@ -82,8 +82,8 @@ void GetInputVMatrix::declareOptions(OptionList& ol)
 ///////////
 void GetInputVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -91,20 +91,20 @@ void GetInputVMatrix::build()
 ////////////
 void GetInputVMatrix::build_()
 {
-  targetsize_ = 0;
-  weightsize_ = 0;
-  if (source) {
-    inputsize_ = source->inputsize();
-    if (inputsize_ < 0) {
-      PLERROR("In GetInputVMatrix::build_ - The source VMatrix doesn't have an inputsize defined");
+    targetsize_ = 0;
+    weightsize_ = 0;
+    if (source) {
+        inputsize_ = source->inputsize();
+        if (inputsize_ < 0) {
+            PLERROR("In GetInputVMatrix::build_ - The source VMatrix doesn't have an inputsize defined");
+        }
+        indices.resize(inputsize_);
+        for (int i = 0; i < inputsize_; i++) {
+            indices[i] = i;
+        }
     }
-    indices.resize(inputsize_);
-    for (int i = 0; i < inputsize_; i++) {
-      indices[i] = i;
-    }
-  }
-  // We need to rebuild the SelectColumnsVMatrix.
-  inherited::build();
+    // We need to rebuild the SelectColumnsVMatrix.
+    inherited::build();
 }
 
 /////////////////////////////////
@@ -112,7 +112,20 @@ void GetInputVMatrix::build_()
 /////////////////////////////////
 void GetInputVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: RemapLastColumnVMatrix.h,v 1.6 2004/07/07 17:30:48 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -54,22 +54,22 @@ class RemapLastColumnVMatrix: public RowBufferedVMatrix
 {
     typedef RowBufferedVMatrix inherited;
 
- protected:
+protected:
     VMat underlying_distr;
 
     //!  If this is not empty, then it represents the mapping to apply
     Mat mapping;
 
 /*!       These are used only if mapping is an empty Mat, in which case the
-      value in the last column will be replaced by 'then_val' if it is
-      equal to 'if_equals_val', otherwise it will be replaced by
-      'else_val'
+  value in the last column will be replaced by 'then_val' if it is
+  equal to 'if_equals_val', otherwise it will be replaced by
+  'else_val'
 */
     real if_equals_val;
     real then_val;
     real else_val;
 
-  public:
+public:
     // ******************
     // *  Constructors  *
     // ******************
@@ -91,9 +91,9 @@ class RemapLastColumnVMatrix: public RowBufferedVMatrix
     virtual void getNewRow(int i, const Vec& samplevec) const;
     virtual void reset_dimensions() 
     { 
-      underlying_distr->reset_dimensions(); 
-      width_=underlying_distr->width(); 
-      length_=underlying_distr->length(); 
+        underlying_distr->reset_dimensions(); 
+        width_=underlying_distr->width(); 
+        length_=underlying_distr->length(); 
     }
 private:
     void build_();
@@ -109,3 +109,16 @@ DECLARE_OBJECT_PTR(RemapLastColumnVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

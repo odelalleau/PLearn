@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christian Dorion
 
@@ -51,23 +51,23 @@ using namespace std;
 //////////////////
 DisregardRowsVMatrix::
 DisregardRowsVMatrix():
-  inherited(),
-  _disregard_missings(true),
-  _maximum_length(-1)
+    inherited(),
+    _disregard_missings(true),
+    _maximum_length(-1)
 {
 }
 
 PLEARN_IMPLEMENT_OBJECT(
-  DisregardRowsVMatrix,
-  "A vmat that disregard rows containing any specified values.\n",
-  "Typically, this vmat is used to select the rows of the source vmat which\n"
-  "do not contain missing values. However, this behaviour can be changed by\n"
-  "setting the 'disregard_missings' flag to false and by providing any\n"
-  "real value list through 'disregard_values'.\n"
-  "\n"
-  "The default behavior of the class is to inspect all columns of the\n"
-  "underlying vmat, but one may specify a subset of the source's fieldnames\n"
-  "to restrict the inspection." );
+    DisregardRowsVMatrix,
+    "A vmat that disregard rows containing any specified values.\n",
+    "Typically, this vmat is used to select the rows of the source vmat which\n"
+    "do not contain missing values. However, this behaviour can be changed by\n"
+    "setting the 'disregard_missings' flag to false and by providing any\n"
+    "real value list through 'disregard_values'.\n"
+    "\n"
+    "The default behavior of the class is to inspect all columns of the\n"
+    "underlying vmat, but one may specify a subset of the source's fieldnames\n"
+    "to restrict the inspection." );
   
 ////////////////////
 // declareOptions //
@@ -76,41 +76,41 @@ void
 DisregardRowsVMatrix::
 declareOptions(OptionList& ol)
 {
-  declareOption(
-    ol, "inspected_fieldnames", &DisregardRowsVMatrix::_inspected_fieldnames,
-    OptionBase::buildoption,
-    "Field names of the source vmat for which a triggering value (see the\n"
-    "disregard_values option) cause this vmat to neglect a row.\n"
-    "\n"
-    "If empty, all source's fieldnames are used.\n"
-    "\n"
-    "Default: []." );
+    declareOption(
+        ol, "inspected_fieldnames", &DisregardRowsVMatrix::_inspected_fieldnames,
+        OptionBase::buildoption,
+        "Field names of the source vmat for which a triggering value (see the\n"
+        "disregard_values option) cause this vmat to neglect a row.\n"
+        "\n"
+        "If empty, all source's fieldnames are used.\n"
+        "\n"
+        "Default: []." );
 
-  declareOption(
-    ol, "disregard_missings", &DisregardRowsVMatrix::_disregard_missings,
-    OptionBase::buildoption,
-    "Should missing values cause a row to be neglected.\n"
-    "\n"
-    "Default: 1 (True)" );  
+    declareOption(
+        ol, "disregard_missings", &DisregardRowsVMatrix::_disregard_missings,
+        OptionBase::buildoption,
+        "Should missing values cause a row to be neglected.\n"
+        "\n"
+        "Default: 1 (True)" );  
   
-  declareOption(
-    ol, "disregard_values", &DisregardRowsVMatrix::_disregard_values,
-    OptionBase::buildoption,
-    "If any of these values is encountered in any column designated in\n"
-    "inspected_fieldnames, the whole row is disregarded.\n"
-    "\n"
-    "Default: [ ]" );  
+    declareOption(
+        ol, "disregard_values", &DisregardRowsVMatrix::_disregard_values,
+        OptionBase::buildoption,
+        "If any of these values is encountered in any column designated in\n"
+        "inspected_fieldnames, the whole row is disregarded.\n"
+        "\n"
+        "Default: [ ]" );  
   
-  declareOption(
-    ol, "maximum_length", &DisregardRowsVMatrix::_maximum_length,
-    OptionBase::buildoption,
-    "If positive, only the last 'maximum_length' rows kept from the source\n"
-    "vmat will be considered, all other rows being disregarded.\n"
-    "\n"
-    "Default: -1. " );
+    declareOption(
+        ol, "maximum_length", &DisregardRowsVMatrix::_maximum_length,
+        OptionBase::buildoption,
+        "If positive, only the last 'maximum_length' rows kept from the source\n"
+        "vmat will be considered, all other rows being disregarded.\n"
+        "\n"
+        "Default: -1. " );
   
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ///////////
@@ -120,8 +120,8 @@ void
 DisregardRowsVMatrix::
 build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -131,61 +131,61 @@ void
 DisregardRowsVMatrix::
 build_()
 {
-  if ( !source )
-    return;
+    if ( !source )
+        return;
 
-  /* Option: inspected_fieldnames */
+    /* Option: inspected_fieldnames */
   
-  // Default: All fields are inspected.
-  if ( _inspected_fieldnames.isEmpty() )
-  {
-    _inspected_columns.resize( width() );
-    for ( int c=0; c < width(); c++ )
-      _inspected_columns[c] = c;   
-  }
+    // Default: All fields are inspected.
+    if ( _inspected_fieldnames.isEmpty() )
+    {
+        _inspected_columns.resize( width() );
+        for ( int c=0; c < width(); c++ )
+            _inspected_columns[c] = c;   
+    }
 
-  // Get the column indices of the fields to inspect.
-  else
-  {
-    _inspected_columns.resize( _inspected_fieldnames.length() );
-    for ( int f=0; f < _inspected_fieldnames.length(); f++ )
-      _inspected_columns[f] = 
-        source->fieldIndex( _inspected_fieldnames[f] );
-  }
+    // Get the column indices of the fields to inspect.
+    else
+    {
+        _inspected_columns.resize( _inspected_fieldnames.length() );
+        for ( int f=0; f < _inspected_fieldnames.length(); f++ )
+            _inspected_columns[f] = 
+                source->fieldIndex( _inspected_fieldnames[f] );
+    }
 
-  inferIndices();
+    inferIndices();
   
-  // Calls back the inherited build now that the row indices are known
-  inherited::build();
+    // Calls back the inherited build now that the row indices are known
+    inherited::build();
 }
 
 void
 DisregardRowsVMatrix::
 inferIndices( )
 {
-  if ( !source )
-    return;
+    if ( !source )
+        return;
   
-  indices.resize( 0, source.length() );
-  for ( int r=0; r < source.length(); r++ )
-  {
-    bool disregard_row = false;
-    for ( int inspected=0;
-          inspected < _inspected_columns.length() && !disregard_row;
-          ++inspected )
+    indices.resize( 0, source.length() );
+    for ( int r=0; r < source.length(); r++ )
     {
-      int c = _inspected_columns[ inspected ];      
-      if( (_disregard_missings && is_missing( source(r,c) ))
-          || _disregard_values.contains( source(r,c) ) )
-        disregard_row = true;
+        bool disregard_row = false;
+        for ( int inspected=0;
+              inspected < _inspected_columns.length() && !disregard_row;
+              ++inspected )
+        {
+            int c = _inspected_columns[ inspected ];      
+            if( (_disregard_missings && is_missing( source(r,c) ))
+                || _disregard_values.contains( source(r,c) ) )
+                disregard_row = true;
+        }
+        if ( !disregard_row )
+            indices.append( r );
     }
-    if ( !disregard_row )
-      indices.append( r );
-  }
 
-  if ( _maximum_length > 0 && indices.length() > _maximum_length )
-    indices =
-      indices.subVec( indices.length()-_maximum_length, _maximum_length );
+    if ( _maximum_length > 0 && indices.length() > _maximum_length )
+        indices =
+            indices.subVec( indices.length()-_maximum_length, _maximum_length );
 }
 
 /////////////////////////////////
@@ -195,13 +195,25 @@ void
 DisregardRowsVMatrix::
 makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  deepCopyField( _inspected_columns,    copies );
+    deepCopyField( _inspected_columns,    copies );
                  
-  deepCopyField( _inspected_fieldnames, copies );
-  deepCopyField( _disregard_values,    copies );
+    deepCopyField( _inspected_fieldnames, copies );
+    deepCopyField( _disregard_values,    copies );
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

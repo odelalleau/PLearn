@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -48,124 +48,136 @@ using namespace std;
 
 
 FilteredVMatrix::FilteredVMatrix()
-  : inherited(),
-    build_complete(false),
-    report_progress(true)
+    : inherited(),
+      build_complete(false),
+      report_progress(true)
 {
 }
 
 FilteredVMatrix::FilteredVMatrix( VMat the_source, const string& program_string,
                                   const PPath& the_metadatadir, bool the_report_progress)
-  : SourceVMatrix(the_source),
-    report_progress(the_report_progress),
-    prg(program_string)
+    : SourceVMatrix(the_source),
+      report_progress(the_report_progress),
+      prg(program_string)
 {
-  metadatadir = the_metadatadir;
-  build_();
+    metadatadir = the_metadatadir;
+    build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(FilteredVMatrix, "A filtered view of its source vmatrix", 
-    "The filter is an exression in VPL language.\n"
-    "The filtered indexes are saved in the metadata directory, that NEEDS to\n"
-    "be provided.\n" );
+                        "The filter is an exression in VPL language.\n"
+                        "The filtered indexes are saved in the metadata directory, that NEEDS to\n"
+                        "be provided.\n" );
 
 
 
 void FilteredVMatrix::openIndex()
 {
-  string idxfname = getMetaDataDir() / "filtered.idx";
-  if(!force_mkdir(getMetaDataDir()))
-     PLERROR("In FilteredVMatrix::openIndex could not create directory %s",getMetaDataDir().absolute().c_str());
+    string idxfname = getMetaDataDir() / "filtered.idx";
+    if(!force_mkdir(getMetaDataDir()))
+        PLERROR("In FilteredVMatrix::openIndex could not create directory %s",getMetaDataDir().absolute().c_str());
 
-  if(file_exists(idxfname) && mtime(idxfname)>=getMtime())
-    indexes.open(idxfname);
-  else  // let's (re)create the index
+    if(file_exists(idxfname) && mtime(idxfname)>=getMtime())
+        indexes.open(idxfname);
+    else  // let's (re)create the index
     {
-      rm(idxfname);       // force remove it
-      int l = source.length();
-      Vec result(1);
-      indexes.open(idxfname,true);
-      ProgressBar* pb = 0;
-      if (report_progress)
-        pb = new ProgressBar("Filtering source vmat", l);
-      for(int i=0; i<l; i++)
+        rm(idxfname);       // force remove it
+        int l = source.length();
+        Vec result(1);
+        indexes.open(idxfname,true);
+        ProgressBar* pb = 0;
+        if (report_progress)
+            pb = new ProgressBar("Filtering source vmat", l);
+        for(int i=0; i<l; i++)
         {
-          if (report_progress)
-            pb->update(i);
-          program.run(i,result);
-          if(result[0]!=0)
-            indexes.append(i);
+            if (report_progress)
+                pb->update(i);
+            program.run(i,result);
+            if(result[0]!=0)
+                indexes.append(i);
         }
-      if (pb)
-        delete pb;
-      indexes.close();
-      indexes.open(idxfname);
+        if (pb)
+            delete pb;
+        indexes.close();
+        indexes.open(idxfname);
     }
 
-  length_ = indexes.length();
+    length_ = indexes.length();
 }
 
 void FilteredVMatrix::setMetaDataDir(const PPath& the_metadatadir)
 {
-  inherited::setMetaDataDir(the_metadatadir);
-  if (build_complete) {
-    // Only call openIndex() if the build has been completed,
-    // otherwise the filtering program won't be ready yet.
-    openIndex();
-    // We call 'setMetaInfoFromSource' only after the index file has been
-    // correctly read.
-    setMetaInfoFromSource();
-  }
+    inherited::setMetaDataDir(the_metadatadir);
+    if (build_complete) {
+        // Only call openIndex() if the build has been completed,
+        // otherwise the filtering program won't be ready yet.
+        openIndex();
+        // We call 'setMetaInfoFromSource' only after the index file has been
+        // correctly read.
+        setMetaInfoFromSource();
+    }
 }
 
 void FilteredVMatrix::getNewRow(int i, const Vec& v) const
 {
-  if (indexes.length() == -1)
-    PLERROR("In FilteredVMatrix::getNewRow - The filtered indexes are not set, make sure you provided a metadatadir");
-  source->getRow(indexes[i],v);
+    if (indexes.length() == -1)
+        PLERROR("In FilteredVMatrix::getNewRow - The filtered indexes are not set, make sure you provided a metadatadir");
+    source->getRow(indexes[i],v);
 }
 
 void FilteredVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "prg", &FilteredVMatrix::prg, OptionBase::buildoption,
-                "The VPL code that should produce a single scalar, indicating whether \n"
-                "we should keep the line (if the produced scalar is non zero) or throw it away (if it's zero)");
+    declareOption(ol, "prg", &FilteredVMatrix::prg, OptionBase::buildoption,
+                  "The VPL code that should produce a single scalar, indicating whether \n"
+                  "we should keep the line (if the produced scalar is non zero) or throw it away (if it's zero)");
 
-  declareOption(ol, "report_progress", &FilteredVMatrix::report_progress, OptionBase::buildoption,
-      "Whether to report the filtering progress or not.");
+    declareOption(ol, "report_progress", &FilteredVMatrix::report_progress, OptionBase::buildoption,
+                  "Whether to report the filtering progress or not.");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void FilteredVMatrix::build_()
 {
-  if (source) {
-    vector<string> fieldnames;
-    program.setSource(source);
-    program.compileString(prg,fieldnames); 
-    build_complete = true;
-    if (hasMetaDataDir())
-      setMetaDataDir(getMetaDataDir());
-    else
-      // Ensure we do not retain a previous value for length and width.
-      length_ = width_ = -1;
-  } else
-    length_ = width_ = 0;
+    if (source) {
+        vector<string> fieldnames;
+        program.setSource(source);
+        program.compileString(prg,fieldnames); 
+        build_complete = true;
+        if (hasMetaDataDir())
+            setMetaDataDir(getMetaDataDir());
+        else
+            // Ensure we do not retain a previous value for length and width.
+            length_ = width_ = -1;
+    } else
+        length_ = width_ = 0;
 }
 
 // ### Nothing to add here, simply calls build_
 void FilteredVMatrix::build()
 {
-  build_complete = false;
-  inherited::build();
-  build_();
+    build_complete = false;
+    inherited::build();
+    build_();
 }
 
 void FilteredVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

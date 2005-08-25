@@ -34,7 +34,7 @@
 
 
 /* *******************************************************
- * * $Id: ArrayAllocatorTrivial.h,v 1.4 2004/02/20 21:11:42 chrish42 Exp $
+ * * $Id$
  * ******************************************************* */
 
 
@@ -87,7 +87,7 @@ public:
     //!  Change the maximum number of objects
     void resize(size_type newMaxObjs);
     size_type max_size() const {
-      return arr.size();
+        return arr.size();
     }
 
     //!  Interchange two allocators
@@ -116,29 +116,29 @@ ArrayAllocatorTrivial<T,SizeBits>::ArrayAllocatorTrivial(unsigned numberObjects)
 template <class T, unsigned SizeBits>
 void ArrayAllocatorTrivial<T,SizeBits>::resize(size_type newMaxObjs)
 {
-  arr.resize(newMaxObjs);
-  free_point = max(1, min(free_point, arr.size()));
+    arr.resize(newMaxObjs);
+    free_point = max(1, min(free_point, arr.size()));
 }
 
 
 template <class T, unsigned SizeBits>
 T* ArrayAllocatorTrivial<T,SizeBits>::allocate(size_t n)
 {
-  if(free_point + n > arr.size()) {
-    PLERROR("Size of memory pool exceeded (%d objects)", arr.size());
-    return 0;
-  }
-  T* p = &arr[free_point];
-  free_point += n;
-  return p;
+    if(free_point + n > arr.size()) {
+        PLERROR("Size of memory pool exceeded (%d objects)", arr.size());
+        return 0;
+    }
+    T* p = &arr[free_point];
+    free_point += n;
+    return p;
 }
 
 
 template <class T, unsigned SizeBits>
 void ArrayAllocatorTrivial<T,SizeBits>::swap(self& other)
 {
-  arr.swap(other);
-  swap(free_point, other.free_point);
+    arr.swap(other);
+    swap(free_point, other.free_point);
 }
 
 
@@ -147,10 +147,10 @@ inline
 typename ArrayAllocatorTrivial<T,SizeBits>::index_type
 ArrayAllocatorTrivial<T,SizeBits>::toIndex(pointer p, size_type n)
 {
-  if (p)
-    return index_type(p-&arr[0], n);
-  else
-    return index_type(0,0);
+    if (p)
+        return index_type(p-&arr[0], n);
+    else
+        return index_type(0,0);
 }
 
 
@@ -159,13 +159,26 @@ inline
 typename ArrayAllocatorTrivial<T,SizeBits>::pointer
 ArrayAllocatorTrivial<T,SizeBits>::toPointer(index_type i)
 {
-  if (i.isNull())
-    return 0;
-  else
-    return &arr[0] + i.index;
+    if (i.isNull())
+        return 0;
+    else
+        return &arr[0] + i.index;
 }
 
 } // end of namespace PLearn
 
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

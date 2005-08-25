@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file VecStatsCollector.h */
 #ifndef VecStatsCollector_INC
@@ -53,206 +53,219 @@ using namespace std;
 class VecStatsCollector: public Object
 {    
 private:
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
-  //! Map from fieldnames to fieldnumbers, to really speed up getFieldNum
-  //! which can be a speed bottleneck in some experiments
-  map<string,int> fieldnames_num;
+    //! Map from fieldnames to fieldnumbers, to really speed up getFieldNum
+    //! which can be a speed bottleneck in some experiments
+    map<string,int> fieldnames_num;
   
-  //! Names of the fields of the update vector;
-  //! now protected: use setFieldNames to set them!
-  TVec<string> fieldnames;
+    //! Names of the fields of the update vector;
+    //! now protected: use setFieldNames to set them!
+    TVec<string> fieldnames;
 
 public:
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  //! maximum number of different values to keep track of for each element
-  //! (default: 0, meaning we only keep track of global statistics)
-  int maxnvalues; 
+    //! maximum number of different values to keep track of for each element
+    //! (default: 0, meaning we only keep track of global statistics)
+    int maxnvalues; 
 
-  /**
-   * If the remove_observation mecanism is used and the removed
-   * value is equal to one of first_, last_, min_ or max_, the default
-   * behavior is to warn the user.
-   * 
-   * If one want to disable this feature, he may set
-   * no_removal_warnings to true.
-   *
-   * Default: false (0).
-   */
-  bool no_removal_warnings;
+    /**
+     * If the remove_observation mecanism is used and the removed
+     * value is equal to one of first_, last_, min_ or max_, the default
+     * behavior is to warn the user.
+     * 
+     * If one want to disable this feature, he may set
+     * no_removal_warnings to true.
+     *
+     * Default: false (0).
+     */
+    bool no_removal_warnings;
 
-  //! Should we compute and keep X'.X ?  (default false)
-  bool compute_covariance;
+    //! Should we compute and keep X'.X ?  (default false)
+    bool compute_covariance;
 
-  //! See .cc for help.
-  double epsilon;
+    //! See .cc for help.
+    double epsilon;
 
-  // ******************
-  // * learnt options *
-  // ******************
+    // ******************
+    // * learnt options *
+    // ******************
 
-  //! the stats for each element
-  TVec<StatsCollector> stats;
+    //! the stats for each element
+    TVec<StatsCollector> stats;
 
-  //! See .cc for help.
-  Mat cov; 
+    //! See .cc for help.
+    Mat cov; 
 
-  Mat sum_cross;
-  Mat sum_cross_weights;
-  Mat sum_cross_square_weights;
-  real sum_non_missing_weights;
-  real sum_non_missing_square_weights;
+    Mat sum_cross;
+    Mat sum_cross_weights;
+    Mat sum_cross_square_weights;
+    real sum_non_missing_weights;
+    real sum_non_missing_square_weights;
   
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  VecStatsCollector();
+    VecStatsCollector();
 
   
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
 public:
   
-  int length() const { return stats.length(); }
-  int size() const { return length(); }
+    int length() const { return stats.length(); }
+    int size() const { return length(); }
 
-  //! simply calls inherited::build() then build_()
-  virtual void build();
+    //! simply calls inherited::build() then build_()
+    virtual void build();
 
-  //! clears all previously accumulated statistics
-  virtual void forget();
+    //! clears all previously accumulated statistics
+    virtual void forget();
 
-  //! updates the statistics when seeing x
-  //! The weight applies to all elements of x
-  virtual void update(const Vec& x, real weight = 1.0);
+    //! updates the statistics when seeing x
+    //! The weight applies to all elements of x
+    virtual void update(const Vec& x, real weight = 1.0);
 
-  /*! 
-   * Update statistics as if the vectorial observation x
-   * was removed of the observation sequence.
-   */
-  virtual void remove_observation(const Vec& x, real weight = 1.0);
+    /*! 
+     * Update statistics as if the vectorial observation x
+     * was removed of the observation sequence.
+     */
+    virtual void remove_observation(const Vec& x, real weight = 1.0);
   
-  //! Declares names for the columns of the vector passed to update
-  void setFieldNames(TVec<string> the_fieldnames);
+    //! Declares names for the columns of the vector passed to update
+    void setFieldNames(TVec<string> the_fieldnames);
   
-  //! Returns the declared names
-  TVec<string> getFieldNames() const
-  { return fieldnames; }
+    //! Returns the declared names
+    TVec<string> getFieldNames() const
+    { return fieldnames; }
 
-  //! Returns the index corresponding to a fieldname or to the fieldnum passed as a string.
-  //! returns -1 if not found
-  int getFieldNum(const string& fieldname_or_num) const;
+    //! Returns the index corresponding to a fieldname or to the fieldnum passed as a string.
+    //! returns -1 if not found
+    int getFieldNum(const string& fieldname_or_num) const;
 
-  //! Returns a particular statistic.
-  /*! Standard statistics specifications are of the form ex: STAT[fieldname]
-    or STAT[fieldnum] where STAT is one of the statistics names understood by
-    StatsCollector::getStat. fieldnum start at 0, and fieldnames must have been
-    registered with setFieldNames.
-  Subclasses may overload this to handle more exotic statistics than the few 
-  standard ones. */
-  virtual double getStat(const string& statspec);
+    //! Returns a particular statistic.
+    /*! Standard statistics specifications are of the form ex: STAT[fieldname]
+      or STAT[fieldnum] where STAT is one of the statistics names understood by
+      StatsCollector::getStat. fieldnum start at 0, and fieldnames must have been
+      registered with setFieldNames.
+      Subclasses may overload this to handle more exotic statistics than the few 
+      standard ones. */
+    virtual double getStat(const string& statspec);
 
-  //! calls update on all rows of m; weight assumed to be 1.0 for all roes
-  void update(const Mat& m);
+    //! calls update on all rows of m; weight assumed to be 1.0 for all roes
+    void update(const Mat& m);
 
-  //! calls update on all rows of m;
-  //! vector of weights given, weighting each row
-  void update(const Mat& m, const Vec& weights);
+    //! calls update on all rows of m;
+    //! vector of weights given, weighting each row
+    void update(const Mat& m, const Vec& weights);
 
-  //! finishes whatever computation are needed after all updates have been made
-  virtual void finalize();
+    //! finishes whatever computation are needed after all updates have been made
+    virtual void finalize();
 
-  //! returns statistics for element i
-  const StatsCollector& getStats(int i) const 
-  { return stats[i]; }
+    //! returns statistics for element i
+    const StatsCollector& getStats(int i) const 
+    { return stats[i]; }
 
-  //! returns the empirical mean (sample average) vec
-  Vec getMean() const {
-    Vec mean;
-    getMean(mean);
-    return mean;
-  }
+    //! returns the empirical mean (sample average) vec
+    Vec getMean() const {
+        Vec mean;
+        getMean(mean);
+        return mean;
+    }
   
-  //! Store the empirical mean in the given vec (which is resized)
-  void getMean(Vec& mean) const;
+    //! Store the empirical mean in the given vec (which is resized)
+    void getMean(Vec& mean) const;
   
-  //! returns the empirical variance vec
-  Vec getVariance() const;
+    //! returns the empirical variance vec
+    Vec getVariance() const;
 
-  //! returns the empirical standard deviation vec
-  Vec getStdDev() const;
+    //! returns the empirical standard deviation vec
+    Vec getStdDev() const;
 
-  //! returns the empirical standard deviation vec
-  Vec getStdError() const;
+    //! returns the empirical standard deviation vec
+    Vec getStdError() const;
 
-  //! Return X'X (note that this matrix is weighted, and the weight might be
-  //! different for each element if there were missing values observed).
-  const Mat& getXtX() const
-  { return cov; }
+    //! Return X'X (note that this matrix is weighted, and the weight might be
+    //! different for each element if there were missing values observed).
+    const Mat& getXtX() const
+    { return cov; }
 
-  //! Covariance matrix computation.
-  //! Note that the covariance is computed in order to give an unbiased
-  //! estimator (under the i.i.d. assumption), so that the normalization
-  //! coefficient is not exactly the sum of weights.
-  void getCovariance(Mat& covar) const;
-  Mat getCovariance() const;
+    //! Covariance matrix computation.
+    //! Note that the covariance is computed in order to give an unbiased
+    //! estimator (under the i.i.d. assumption), so that the normalization
+    //! coefficient is not exactly the sum of weights.
+    void getCovariance(Mat& covar) const;
+    Mat getCovariance() const;
   
-  //! returns correlation matrix
-  Mat getCorrelation() const;
+    //! returns correlation matrix
+    Mat getCorrelation() const;
 
-  //! Fills vector st with [mean, variance, stddev, min, max] (after resizing it if it had a size of 0)
-  //! However the order and number may change in future versions, so it's better to
-  //! first call getIndexInAllStats to get the index of a given stat.
-  Vec getAllStats(Vec& st) const;
+    //! Fills vector st with [mean, variance, stddev, min, max] (after resizing it if it had a size of 0)
+    //! However the order and number may change in future versions, so it's better to
+    //! first call getIndexInAllStats to get the index of a given stat.
+    Vec getAllStats(Vec& st) const;
 
-  //! Call getStat() with the given statname on all the statscollectors
-  Vec getAllStats(const string& statname) const;
+    //! Call getStat() with the given statname on all the statscollectors
+    Vec getAllStats(const string& statname) const;
 
-  //! Call getStat() with the given statname on all the statscollectors,
-  //! and put result in given Vec.  The vector is resized as necessary.
-  void getAllStats(const string& statname, Vec& result) const;
+    //! Call getStat() with the given statname on all the statscollectors,
+    //! and put result in given Vec.  The vector is resized as necessary.
+    void getAllStats(const string& statname, Vec& result) const;
   
-  //! Returns the index in the vector returned by getAllStats of the stat with the given name.
-  //! Currently available names are E (mean) V (variance) STDDEV MIN MAX
-  //! Will throw an exception if statname is invalid
-  int getIndexInAllStats(int fieldindex, const string& statname) const;
+    //! Returns the index in the vector returned by getAllStats of the stat with the given name.
+    //! Currently available names are E (mean) V (variance) STDDEV MIN MAX
+    //! Will throw an exception if statname is invalid
+    int getIndexInAllStats(int fieldindex, const string& statname) const;
 
-  //! A little magic function that appends all the StatsCollectors of an
-  //! existing VecStatsCollector into this one.  A fieldname prefix can
-  //! be specified, in which case the prefix is contatenated to the
-  //! existing fieldnames.  Otherwise, a vector of new fieldnames can be
-  //! specified (overrides the prefix).  If compute_covariance=true,
-  //! a block-diagonal covariance matrix is computed.
-  void append(const VecStatsCollector& vsc, const string fieldname_prefix="",
-              const TVec<string>& new_fieldnames = TVec<string>() );
+    //! A little magic function that appends all the StatsCollectors of an
+    //! existing VecStatsCollector into this one.  A fieldname prefix can
+    //! be specified, in which case the prefix is contatenated to the
+    //! existing fieldnames.  Otherwise, a vector of new fieldnames can be
+    //! specified (overrides the prefix).  If compute_covariance=true,
+    //! a block-diagonal covariance matrix is computed.
+    void append(const VecStatsCollector& vsc, const string fieldname_prefix="",
+                const TVec<string>& new_fieldnames = TVec<string>() );
   
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(VecStatsCollector);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(VecStatsCollector);
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(VecStatsCollector);
+DECLARE_OBJECT_PTR(VecStatsCollector);
 
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

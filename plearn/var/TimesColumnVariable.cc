@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: TimesColumnVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "RowSumVariable.h"
 #include "TimesColumnVariable.h"
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(TimesColumnVariable,
                         "NO HELP");
 
 TimesColumnVariable::TimesColumnVariable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, input1->length(), input1->width())
+    : inherited(input1, input2, input1->length(), input1->width())
 {
     build_();
 }
@@ -90,44 +90,55 @@ void TimesColumnVariable::recomputeSize(int& l, int& w) const
 
 void TimesColumnVariable::fprop()
 {
-  int k=0;
-  for(int i=0; i<length(); i++)
-    for(int j=0; j<width(); j++, k++)
-      valuedata[k] = input1->valuedata[k] * input2->valuedata[i];
+    int k=0;
+    for(int i=0; i<length(); i++)
+        for(int j=0; j<width(); j++, k++)
+            valuedata[k] = input1->valuedata[k] * input2->valuedata[i];
 }
 
 
 void TimesColumnVariable::bprop()
 {
-  int k=0;
-  for(int i=0; i<length(); i++)
-    for(int j=0; j<width(); j++, k++)
-      {
-        input1->gradientdata[k] += input2->valuedata[i]*gradientdata[k];
-        input2->gradientdata[i] += input1->valuedata[k]*gradientdata[k];
-      }
+    int k=0;
+    for(int i=0; i<length(); i++)
+        for(int j=0; j<width(); j++, k++)
+        {
+            input1->gradientdata[k] += input2->valuedata[i]*gradientdata[k];
+            input2->gradientdata[i] += input1->valuedata[k]*gradientdata[k];
+        }
 }
 
 
 void TimesColumnVariable::symbolicBprop()
 {
-  input1->accg(g*input2);
-  input2->accg(rowSum(g*input1));
+    input1->accg(g*input2);
+    input2->accg(rowSum(g*input1));
 }
 
 
 //???
 void TimesColumnVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  int k=0;
-  for(int i=0; i<length(); i++)
-    for(int j=0; j<width(); j++, k++)
-      rvaluedata[k] = input1->valuedata[k]*input2->rvaluedata[i] + input1->rvaluedata[k]*input2->valuedata[i];
+    if (rValue.length()==0) resizeRValue();
+    int k=0;
+    for(int i=0; i<length(); i++)
+        for(int j=0; j<width(); j++, k++)
+            rvaluedata[k] = input1->valuedata[k]*input2->rvaluedata[i] + input1->rvaluedata[k]*input2->valuedata[i];
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

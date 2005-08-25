@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: NegLogProbCostFunction.h,v 1.4 2004/04/07 23:15:17 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef NegLogProbCostFunction_INC
 #define NegLogProbCostFunction_INC
@@ -56,7 +56,7 @@ using namespace std;
   conditional probabilities P(Y=i|X) for class i (i=0 to n_classes-1),
   or if n_classes=2, the output could be a vector of length 1
   containing P(Y=1|X). The cost is
-     - log P(Y=target|X).
+  - log P(Y=target|X).
 */
 
 class NegLogProbCostFunction: public Kernel
@@ -83,7 +83,7 @@ public:
     PLEARN_DECLARE_OBJECT(NegLogProbCostFunction);
 
     virtual string info() const
-        { return "negative_log_probability"; }
+    { return "negative_log_probability"; }
 
     virtual real evaluate(const Vec& output, const Vec& target) const;
 
@@ -108,3 +108,15 @@ inline CostFunc condprob_cost(bool normalize=false, bool smooth_map_outputs=fals
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

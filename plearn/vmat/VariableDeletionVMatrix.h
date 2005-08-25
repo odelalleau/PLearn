@@ -36,8 +36,8 @@
 
 
 /* ******************************************************************** 
-   * $Id: VariableDeletionVMatrix.h 3658 2005-07-06 20:30:15  Godbout $
-   ******************************************************************** */
+ * $Id: VariableDeletionVMatrix.h 3658 2005-07-06 20:30:15  Godbout $
+ ******************************************************************** */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -55,50 +55,50 @@ using namespace std;
 
 class VariableDeletionVMatrix: public SourceVMatrix
 {
-  typedef SourceVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 private:
 
-  bool obtained_inputsize_from_source;
-  bool obtained_targetsize_from_source;
-  bool obtained_weightsize_from_source;
+    bool obtained_inputsize_from_source;
+    bool obtained_targetsize_from_source;
+    bool obtained_weightsize_from_source;
   
 public:
 
-  VMat       complete_dataset;
-  real       deletion_threshold;
-  bool       remove_columns_with_constant_value;
-  real       number_of_train_samples;
+    VMat       complete_dataset;
+    real       deletion_threshold;
+    bool       remove_columns_with_constant_value;
+    real       number_of_train_samples;
 
 public:
 
-                       VariableDeletionVMatrix();
-                       VariableDeletionVMatrix(VMat the_complete_dataset, real the_threshold, bool the_remove_columns_with_constant_value, real the_number_of_train_samples);
+    VariableDeletionVMatrix();
+    VariableDeletionVMatrix(VMat the_complete_dataset, real the_threshold, bool the_remove_columns_with_constant_value, real the_number_of_train_samples);
 
-  static void declareOptions(OptionList &ol);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void build();
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 public:
 
-  virtual void getExample(int i, Vec& input, Vec& target, real& weight);
-  virtual real get(int i, int j) const;
-  virtual void put(int i, int j, real value);
-  virtual void getSubRow(int i, int j, Vec v) const;
-  virtual void putSubRow(int i, int j, Vec v);
-  virtual void appendRow(Vec v);
-  virtual void insertRow(int i, Vec v);  
-  virtual void getRow(int i, Vec v) const;
-  virtual void putRow(int i, Vec v);
-  virtual void getColumn(int i, Vec v) const;
+    virtual void getExample(int i, Vec& input, Vec& target, real& weight);
+    virtual real get(int i, int j) const;
+    virtual void put(int i, int j, real value);
+    virtual void getSubRow(int i, int j, Vec v) const;
+    virtual void putSubRow(int i, int j, Vec v);
+    virtual void appendRow(Vec v);
+    virtual void insertRow(int i, Vec v);  
+    virtual void getRow(int i, Vec v) const;
+    virtual void putRow(int i, Vec v);
+    virtual void getColumn(int i, Vec v) const;
 
 private:
 
-  void build_();
-  void buildIndices();  
+    void build_();
+    void buildIndices();  
   
-  PLEARN_DECLARE_OBJECT(VariableDeletionVMatrix);
+    PLEARN_DECLARE_OBJECT(VariableDeletionVMatrix);
 
 };
 
@@ -106,3 +106,16 @@ DECLARE_OBJECT_PTR(VariableDeletionVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.h,v 1.11 2004/09/14 16:04:39 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file Splitter.h */
 #ifndef Splitter_INC
@@ -49,55 +49,55 @@ using namespace std;
 
 /*!
 
-  This class is an abstract base class for mechanisms allowing to "split" a
-  dataset into one or several partitions (or "splits").
+This class is an abstract base class for mechanisms allowing to "split" a
+dataset into one or several partitions (or "splits").
 
-  Thus for instance a subclass can be used to implement k-fold splits (for
-  k-fold cross validation), where each of the k splits returned by
-  getSplit(i=0..k-1) would be an 2-element array containing the
-  corresponding training-set and test-set.
+Thus for instance a subclass can be used to implement k-fold splits (for
+k-fold cross validation), where each of the k splits returned by
+getSplit(i=0..k-1) would be an 2-element array containing the
+corresponding training-set and test-set.
 
-  A splitter is an essential part of a PTester.
+A splitter is an essential part of a PTester.
 */
 
 class Splitter: public Object
 {
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
     VMat dataset;
     
 public:
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  PLEARN_DECLARE_ABSTRACT_OBJECT(Splitter);
+    PLEARN_DECLARE_ABSTRACT_OBJECT(Splitter);
 
-  Splitter() {};
+    Splitter() {};
 
-  //! Sets the dataset on which the splits are to be based
-  virtual void setDataSet(VMat the_dataset);
+    //! Sets the dataset on which the splits are to be based
+    virtual void setDataSet(VMat the_dataset);
 
-  //! Returns the dataset given with setDataSet
-  VMat getDataSet()
-  { return dataset; }
+    //! Returns the dataset given with setDataSet
+    VMat getDataSet()
+    { return dataset; }
 
-  //! Returns the number of available different "splits"
-  virtual int nsplits() const = 0;
+    //! Returns the number of available different "splits"
+    virtual int nsplits() const = 0;
 
-  //! Returns the number of sets per split
-  virtual int nSetsPerSplit() const = 0;
+    //! Returns the number of sets per split
+    virtual int nSetsPerSplit() const = 0;
 
-  //! Returns split number i
-  virtual TVec<VMat> getSplit(int i=0) = 0;
+    //! Returns split number i
+    virtual TVec<VMat> getSplit(int i=0) = 0;
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 
@@ -136,3 +136,16 @@ void randomSplit(VMat d, real validation_fraction, real test_fraction, VMat& tra
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

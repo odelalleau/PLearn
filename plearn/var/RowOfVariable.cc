@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "RowOfVariable.h"
 #include <plearn/sys/PLMPI.h>
@@ -56,7 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(RowOfVariable,
                         "");
 
 RowOfVariable::RowOfVariable(VMat the_distr, Var the_index)
-  : inherited(the_index,the_distr->width(),1), distr(the_distr)
+    : inherited(the_index,the_distr->width(),1), distr(the_distr)
 {
     build_();
 }
@@ -84,24 +84,24 @@ RowOfVariable::declareOptions(OptionList &ol)
 void RowOfVariable::recomputeSize(int& l, int& w) const
 {
     if (input && distr) {
-      w = distr->width();
-      l = input->nelems();
+        w = distr->width();
+        l = input->nelems();
     } else
-      l = w = 0;
+        l = w = 0;
 }
 
 
 void RowOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  UnaryVariable::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(distr, copies);
+    UnaryVariable::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(distr, copies);
 }
 
 
 void RowOfVariable::fprop()
 {
-  for(int i=0; i<input->nelems(); i++)
-    distr->getRow((int)input->valuedata[i],matValue(i));
+    for(int i=0; i<input->nelems(); i++)
+        distr->getRow((int)input->valuedata[i],matValue(i));
 }
 
 
@@ -121,4 +121,15 @@ void RowOfVariable::rfprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

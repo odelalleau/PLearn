@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLE.h,v 1.5 2004/09/14 16:04:59 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -55,71 +55,71 @@ class LLE: public KernelProjection
 
 private:
 
-  typedef KernelProjection inherited;
+    typedef KernelProjection inherited;
   
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  PP<LLEKernel> lle_kernel;
+    PP<LLEKernel> lle_kernel;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  bool classical_induction;
-  int knn;
-  real reconstruct_coeff;
-  real regularizer;
+    bool classical_induction;
+    int knn;
+    real reconstruct_coeff;
+    real regularizer;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  LLE();
+    //! Default constructor.
+    LLE();
 
 
-  // ****************************
-  // * KernelProjection methods *
-  // ****************************
+    // ****************************
+    // * KernelProjection methods *
+    // ****************************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(LLE);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(LLE);
 
 
-  // **********************************
-  // **** KernelProjection methods ****
-  // **********************************
+    // **********************************
+    // **** KernelProjection methods ****
+    // **********************************
 
-  //! (Re-)initializes the PLearner in its fresh state.
-  virtual void forget();
+    //! (Re-)initializes the PLearner in its fresh state.
+    virtual void forget();
 
 };
 
@@ -129,3 +129,16 @@ DECLARE_OBJECT_PTR(LLE);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

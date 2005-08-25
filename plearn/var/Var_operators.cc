@@ -37,9 +37,9 @@
 
 
 /* *******************************************************      
-   * $Id: Var_operators.cc,v 1.2 2004/02/20 21:11:54 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "Var_operators.h"
 
@@ -80,49 +80,49 @@ Var operator-(Var v, real cte)
 
 Var operator+(Var v1, Var v2)
 { 
-  if(v2->isScalar())
-    return new PlusScalarVariable(v1,v2);
-  else if(v1->isScalar())
-    return new PlusScalarVariable(v2,v1);
-  else if(v2->isRowVec())
-    return new PlusRowVariable(v1,v2);
-  else if(v1->isRowVec())
-    return new PlusRowVariable(v2,v1);
-  else if(v2->isColumnVec())
-    return new PlusColumnVariable(v1,v2);
-  else if(v1->isColumnVec())
-    return new PlusColumnVariable(v2,v1);
-  else
-    return new PlusVariable(v1,v2);
+    if(v2->isScalar())
+        return new PlusScalarVariable(v1,v2);
+    else if(v1->isScalar())
+        return new PlusScalarVariable(v2,v1);
+    else if(v2->isRowVec())
+        return new PlusRowVariable(v1,v2);
+    else if(v1->isRowVec())
+        return new PlusRowVariable(v2,v1);
+    else if(v2->isColumnVec())
+        return new PlusColumnVariable(v1,v2);
+    else if(v1->isColumnVec())
+        return new PlusColumnVariable(v2,v1);
+    else
+        return new PlusVariable(v1,v2);
 }
 
 void operator+=(Var& v1, const Var& v2)
 {
-  if (!v2.isNull())
-  {
-    if (v1.isNull())
-      v1 = v2;
-    else 
-      v1 = v1 + v2;
-  }
+    if (!v2.isNull())
+    {
+        if (v1.isNull())
+            v1 = v2;
+        else 
+            v1 = v1 + v2;
+    }
 }
 
 Var operator-(Var v1, Var v2)
 { 
-  if(v2->isScalar())
-    return new MinusScalarVariable(v1,v2);
-  else if(v1->isScalar())
-    return new PlusScalarVariable(new NegateElementsVariable(v2), v1);
-  else if(v2->isRowVec())
-    return new MinusRowVariable(v1,v2);
-  else if(v1->isRowVec())
-    return new NegateElementsVariable(new MinusRowVariable(v2,v1));
-  else if(v2->isColumnVec())
-    return new MinusColumnVariable(v1,v2);
-  else if(v1->isColumnVec())
-    return new PlusColumnVariable(new NegateElementsVariable(v2), v1);
-  else
-    return new MinusVariable(v1,v2);
+    if(v2->isScalar())
+        return new MinusScalarVariable(v1,v2);
+    else if(v1->isScalar())
+        return new PlusScalarVariable(new NegateElementsVariable(v2), v1);
+    else if(v2->isRowVec())
+        return new MinusRowVariable(v1,v2);
+    else if(v1->isRowVec())
+        return new NegateElementsVariable(new MinusRowVariable(v2,v1));
+    else if(v2->isColumnVec())
+        return new MinusColumnVariable(v1,v2);
+    else if(v1->isColumnVec())
+        return new PlusColumnVariable(new NegateElementsVariable(v2), v1);
+    else
+        return new MinusVariable(v1,v2);
 }
 
 Var operator-(Var v)
@@ -130,13 +130,13 @@ Var operator-(Var v)
 
 void operator-=(Var& v1, const Var& v2)
 {
-  if (!v2.isNull())
-  {
-    if (v1.isNull())
-      v1 = -v2;
-    else
-      v1 = v1 - v2;
-  }
+    if (!v2.isNull())
+    {
+        if (v1.isNull())
+            v1 = -v2;
+        else
+            v1 = v1 - v2;
+    }
 }
 
 Var operator-(real cte, Var v)
@@ -154,20 +154,20 @@ Var operator*(real cte, Var v)
 //!  element-wise multiplications
 Var operator*(Var v1, Var v2)
 { 
-  if(v2->isScalar())
-    return new TimesScalarVariable(v1,v2);
-  else if(v1->isScalar())
-    return new TimesScalarVariable(v2,v1);
-  else if(v2->isColumnVec())
-    return new TimesColumnVariable(v1,v2);
-  else if(v1->isColumnVec())
-    return new TimesColumnVariable(v2,v1);
-  else if(v2->isRowVec())
-    return new TimesRowVariable(v1,v2);
-  else if(v1->isRowVec())
-    return new TimesRowVariable(v2,v1);
-  else //!<  v1 and v2 must have the same dimensions (it is checked by the constructor of TimesVariable)
-    return new TimesVariable(v1,v2); 
+    if(v2->isScalar())
+        return new TimesScalarVariable(v1,v2);
+    else if(v1->isScalar())
+        return new TimesScalarVariable(v2,v1);
+    else if(v2->isColumnVec())
+        return new TimesColumnVariable(v1,v2);
+    else if(v1->isColumnVec())
+        return new TimesColumnVariable(v2,v1);
+    else if(v2->isRowVec())
+        return new TimesRowVariable(v1,v2);
+    else if(v1->isRowVec())
+        return new TimesRowVariable(v2,v1);
+    else //!<  v1 and v2 must have the same dimensions (it is checked by the constructor of TimesVariable)
+        return new TimesVariable(v1,v2); 
 }
 
 Var operator/(Var v, real cte)
@@ -175,18 +175,18 @@ Var operator/(Var v, real cte)
 
 Var operator/(real cte, Var v)
 {
-  if(cte==1.0)
-    return invertElements(v);
-  else
-    return cte*invertElements(v);
+    if(cte==1.0)
+        return invertElements(v);
+    else
+        return cte*invertElements(v);
 }
 
 Var operator/(Var v1, Var v2)
 {
-  if(v1->length()==v2->length() && v1->width()==v2->width())
-    return new DivVariable(v1,v2);
-  else
-    return v1*invertElements(v2);
+    if(v1->length()==v2->length() && v1->width()==v2->width())
+        return new DivVariable(v1,v2);
+    else
+        return v1*invertElements(v2);
 }
 
 Var operator==(Var v1, Var v2)
@@ -201,3 +201,15 @@ Var isdifferent(Var v1, Var v2)
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

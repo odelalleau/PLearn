@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: TopNI.h,v 1.3 2004/07/21 16:30:53 chrish42 Exp $
-   * AUTHORS: Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/TopNI.h */
@@ -55,19 +55,19 @@ namespace PLearn {
 using namespace std;
 
 /*!     This is a very simple class, that allows you to keep track of the top
-    N values encountered among many and their associated integer index (or corresponding position).
-    For keeping track of the bottom N values, see the companion class BottomNI.
+  N values encountered among many and their associated integer index (or corresponding position).
+  For keeping track of the bottom N values, see the companion class BottomNI.
 */
-  template <class T>
-  class TopNI
-  {
-  protected:
+template <class T>
+class TopNI
+{
+protected:
     int N;
     TVec< pair<T,int> > topn;
     pair<T,int>* topnptr; //!<  topn.data()
     pair<T,int>* minpair;
   
-  public:
+public:
 
     //!  Default constructor, you must then call init.
     TopNI()
@@ -79,10 +79,10 @@ using namespace std;
     //!  N is the number of (value,point) pairs to remember.
     void init(int the_N)
     {
-      N = the_N;
-      topn.resize(N); //!<  reserve space for N elements
-      topn.resize(0); //!<  set length back to 0
-      topnptr = topn.data(); //!<  ptr for faster access
+        N = the_N;
+        topn.resize(N); //!<  reserve space for N elements
+        topn.resize(0); //!<  set length back to 0
+        topnptr = topn.data(); //!<  ptr for faster access
     }
 
     void reset() { init(N); }
@@ -90,26 +90,26 @@ using namespace std;
     //!  call this for each new value seen
     void update(T value, int index)
     {
-      int l=topn.length();
-      if(l<N)
+        int l=topn.length();
+        if(l<N)
         {
-          topn.append( pair<T,int>(value,index) );
-          if (l==0 || value<minpair->first)
-            minpair = &topnptr[l];
+            topn.append( pair<T,int>(value,index) );
+            if (l==0 || value<minpair->first)
+                minpair = &topnptr[l];
         }
-      else if(value>minpair->first)
+        else if(value>minpair->first)
         {
-          minpair->first = value;
-          minpair->second = index;
+            minpair->first = value;
+            minpair->second = index;
 
-          //!  find the new minimum:
-          pair<T,int>* it = topnptr;
-          int n = N;
-          while(n--)
+            //!  find the new minimum:
+            pair<T,int>* it = topnptr;
+            int n = N;
+            while(n--)
             {
-              if(it->first<minpair->first)
-                minpair = it;
-              ++it;
+                if(it->first<minpair->first)
+                    minpair = it;
+                ++it;
             }
         }
     }
@@ -119,13 +119,21 @@ using namespace std;
 
     //!  call this at the end to get the the smallest N values with associated integer index
     const TVec< pair<T,int> >& getTopN() { return topn; }
-  };
+};
 
 } // end of namespace PLearn
 
 #endif
 
-
-
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

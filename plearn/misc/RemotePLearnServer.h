@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RemotePLearnServer.h,v 1.1 2005/06/10 15:45:11 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -52,15 +52,15 @@
 namespace PLearn {
 
 
-  class RemotePLearnServer: public PPointable
-  {    
-  private:
+class RemotePLearnServer: public PPointable
+{    
+private:
     friend class PLearnService;
 
     PStream io; // io communication channel with remote PLearnServer
     RemotePLearnServer(const PStream& serverio);
 
-  public:
+public:
     
     //! Builds an object based on the given model on the remote server,
     //! assigning it the given id.
@@ -83,21 +83,21 @@ namespace PLearn {
     //! Users generally won't have to call this, but rather one of the callFunction methods.
     inline void sendFunctionCallHeader(const string& function_name, int nargs)
     { 
-      clearMaps();
-      io.write("!F "); io << function_name << nargs; 
+        clearMaps();
+        io.write("!F "); io << function_name << nargs; 
     }
 
     //! Users generally won't have to call this, but rather one of the callMethod methods.
     inline void sendMethodCallHeader(int objid, const string& method_name, int nargs)
     { 
-      clearMaps();
-      io.write("!M "); io << objid << method_name << nargs; 
+        clearMaps();
+        io.write("!M "); io << objid << method_name << nargs; 
     }
     
     //! Users generally won't have to call this, but rather one of the getResults methods.
     /*! Reads a 'R' (return) command (expecting to read 'R nargs_expected')
-     If it gets a 'E' (error or exception command) it will thow a PLearnException.
-    If the returned nargs differs from nargs_expected, it will also throw a PLearnException.
+      If it gets a 'E' (error or exception command) it will thow a PLearnException.
+      If the returned nargs differs from nargs_expected, it will also throw a PLearnException.
     */
     void expectResults(int nargs_expected);
 
@@ -255,9 +255,22 @@ namespace PLearn {
 
     ~RemotePLearnServer();
     
-  };
+};
 
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

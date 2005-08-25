@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: EntropyContrastLearner.h,v 1.3 2004/10/01 19:47:35 mariusmuja Exp $ 
+ * $Id$ 
  ******************************************************* */
 
 // Authors: Marius Muja
@@ -53,164 +53,164 @@ using namespace std;
 
 class EntropyContrastLearner: public PLearner
 {
-    private:
+private:
 
-        typedef PLearner inherited;
+    typedef PLearner inherited;
 
-    protected:
+protected:
 
-        // *********************
-        // * protected options *
-        // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-        Var x;
-        Var x_hat;
-        VarArray V;
-        VarArray W;
-        VarArray V_b;
-        VarArray W_b;
+    Var x;
+    Var x_hat;
+    VarArray V;
+    VarArray W;
+    VarArray V_b;
+    VarArray W_b;
 
-        Vec V_save;
-        Vec V_b_save;
-        Vec W_save;
-        Vec W_b_save;
+    Vec V_save;
+    Vec V_b_save;
+    Vec W_save;
+    Vec W_b_save;
         
-        VarArray g;
-        Var mu, sigma;
-        Var mu_hat, sigma_hat;
-        Var training_cost;
-        VarArray costs;
-        Var f;
-        Var f_hat;
+    VarArray g;
+    Var mu, sigma;
+    Var mu_hat, sigma_hat;
+    Var training_cost;
+    VarArray costs;
+    Var f;
+    Var f_hat;
 
-        VarArray params; 
+    VarArray params; 
 
-        Func f_output;
+    Func f_output;
 
-    public:
+public:
 
-        // ************************
-        // * public build options *
-        // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-        string distribution;
-        int nconstraints; //! The number of constraints  
-        int nhidden; //! The number of constraints  
-        PP<Optimizer> optimizer; // the optimizer to use (no default)
-        real weight_real;
-        real weight_generated;
-        real weight_extra;
-        real weight_decay_hidden;
-        real weight_decay_output;
-        bool normalize_constraints;
-        bool save_best_params;
-        real sigma_generated;
-        real sigma_min_threshold;
-        real eps;
-        Vec gradient_scaling;
-        bool save_x_hat;
-        string gen_method;
-        bool use_sigma_min_threshold;
+    string distribution;
+    int nconstraints; //! The number of constraints  
+    int nhidden; //! The number of constraints  
+    PP<Optimizer> optimizer; // the optimizer to use (no default)
+    real weight_real;
+    real weight_generated;
+    real weight_extra;
+    real weight_decay_hidden;
+    real weight_decay_output;
+    bool normalize_constraints;
+    bool save_best_params;
+    real sigma_generated;
+    real sigma_min_threshold;
+    real eps;
+    Vec gradient_scaling;
+    bool save_x_hat;
+    string gen_method;
+    bool use_sigma_min_threshold;
 
-        // ****************
-        // * Constructors *
-        // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-        //! Default constructor.
-        // (Make sure the implementation in the .cc
-        // initializes all fields to reasonable default values)
-        EntropyContrastLearner();
-
-
-        // ********************
-        // * PLearner methods *
-        // ********************
-
-    private: 
-
-        //! This does the actual building. 
-        // (Please implement in .cc)
-        void build_();
-
-    protected: 
-
-        //! Declares this class' options.
-        // (Please implement in .cc)
-        static void declareOptions(OptionList& ol);
-
-    public:
-
-        // ************************
-        // **** Object methods ****
-        // ************************
-
-        //! Simply calls inherited::build() then build_().
-        virtual void build();
-
-        //! Transforms a shallow copy into a deep copy.
-        virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-
-        // Declares other standard object methods.
-        // If your class is not instantiatable (it has pure virtual methods)
-        // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT.
-        PLEARN_DECLARE_OBJECT(EntropyContrastLearner);
+    //! Default constructor.
+    // (Make sure the implementation in the .cc
+    // initializes all fields to reasonable default values)
+    EntropyContrastLearner();
 
 
-        // **************************
-        // **** PLearner methods ****
-        // **************************
+    // ********************
+    // * PLearner methods *
+    // ********************
+
+private: 
+
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
+
+protected: 
+
+    //! Declares this class' options.
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
+
+public:
+
+    // ************************
+    // **** Object methods ****
+    // ************************
+
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
+
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+
+    // Declares other standard object methods.
+    // If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT.
+    PLEARN_DECLARE_OBJECT(EntropyContrastLearner);
 
 
-        virtual void initializeParams();
-
-        //! Returns the size of this learner's output, (which typically
-        //! may depend on its inputsize(), targetsize() and set options).
-        // (PLEASE IMPLEMENT IN .cc)
-        virtual int outputsize() const;
-
-        //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
-        //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
-        // (PLEASE IMPLEMENT IN .cc)
-        virtual void forget();
+    // **************************
+    // **** PLearner methods ****
+    // **************************
 
 
-        //! The role of the train method is to bring the learner up to stage==nstages,
-        //! updating the train_stats collector with training costs measured on-line in the process.
-        // (PLEASE IMPLEMENT IN .cc)
-        virtual void train();
+    virtual void initializeParams();
+
+    //! Returns the size of this learner's output, (which typically
+    //! may depend on its inputsize(), targetsize() and set options).
+    // (PLEASE IMPLEMENT IN .cc)
+    virtual int outputsize() const;
+
+    //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
+    //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
+    // (PLEASE IMPLEMENT IN .cc)
+    virtual void forget();
 
 
-        //! Computes the output from the input.
-        // (PLEASE IMPLEMENT IN .cc)
-        virtual void computeOutput(const Vec& input, Vec& output) const;
-
-        //! Computes the costs from already computed output. 
-        // (PLEASE IMPLEMENT IN .cc)
-        virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                const Vec& target, Vec& costs) const;
+    //! The role of the train method is to bring the learner up to stage==nstages,
+    //! updating the train_stats collector with training costs measured on-line in the process.
+    // (PLEASE IMPLEMENT IN .cc)
+    virtual void train();
 
 
-        //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
-        // (PLEASE IMPLEMENT IN .cc)
-        virtual TVec<string> getTestCostNames() const;
+    //! Computes the output from the input.
+    // (PLEASE IMPLEMENT IN .cc)
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
-        //! Returns the names of the objective costs that the train method computes and 
-        //! for which it updates the VecStatsCollector train_stats.
-        // (PLEASE IMPLEMENT IN .cc)
-        virtual TVec<string> getTrainCostNames() const;
+    //! Computes the costs from already computed output. 
+    // (PLEASE IMPLEMENT IN .cc)
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const;
 
 
-        // *** SUBCLASS WRITING: ***
-        // While in general not necessary, in case of particular needs 
-        // (efficiency concerns for ex) you may also want to overload
-        // some of the following methods:
-        // virtual void computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
-        // virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
-        // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
-        // virtual int nTestCosts() const;
-        // virtual int nTrainCosts() const;
-        // virtual void resetInternalState();
-        // virtual bool isStatefulLearner() const;
+    //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
+    // (PLEASE IMPLEMENT IN .cc)
+    virtual TVec<string> getTestCostNames() const;
+
+    //! Returns the names of the objective costs that the train method computes and 
+    //! for which it updates the VecStatsCollector train_stats.
+    // (PLEASE IMPLEMENT IN .cc)
+    virtual TVec<string> getTrainCostNames() const;
+
+
+    // *** SUBCLASS WRITING: ***
+    // While in general not necessary, in case of particular needs 
+    // (efficiency concerns for ex) you may also want to overload
+    // some of the following methods:
+    // virtual void computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
+    // virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
+    // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
+    // virtual int nTestCosts() const;
+    // virtual int nTrainCosts() const;
+    // virtual void resetInternalState();
+    // virtual bool isStatefulLearner() const;
 
 };
 
@@ -220,3 +220,16 @@ DECLARE_OBJECT_PTR(EntropyContrastLearner);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

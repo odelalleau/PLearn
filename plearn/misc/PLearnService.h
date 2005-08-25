@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -55,60 +55,73 @@
 
 namespace PLearn {
 
-  //  class RemotePLearnServer;
+//  class RemotePLearnServer;
 
 class PLearnService: public PPointable
 {
 private:
-  PLearnService();
+    PLearnService();
 
-  // TVec<PStream> serversio; 
-  // TVec<int> available_servers;
-  // std::map<RemotePLearnServer*,int> reserved_servers;
+    // TVec<PStream> serversio; 
+    // TVec<int> available_servers;
+    // std::map<RemotePLearnServer*,int> reserved_servers;
 
-  TVec< PP<RemotePLearnServer> > available_servers;
-  std::set< PP<RemotePLearnServer> > reserved_servers;
+    TVec< PP<RemotePLearnServer> > available_servers;
+    std::set< PP<RemotePLearnServer> > reserved_servers;
 
 public:
-  friend class RemotePLearnServer;
+    friend class RemotePLearnServer;
 
-  //  static void remoteLaunchServers(PPath serverfile, int nservers, int tcpport, const string& launch_command);
+    //  static void remoteLaunchServers(PPath serverfile, int nservers, int tcpport, const string& launch_command);
 
-  // Returns the unique static instance of class PLearnService
-  static PLearnService& instance();
+    // Returns the unique static instance of class PLearnService
+    static PLearnService& instance();
 
-  //! Will establish a TCP connection to all hostname,port in given list
-  void connectToServers(TVec< pair<string,int> > server_names_and_port);
+    //! Will establish a TCP connection to all hostname,port in given list
+    void connectToServers(TVec< pair<string,int> > server_names_and_port);
   
-  //! Will get the list of hostname, pid, port from the serversfile
-  //! and establish a TCP connection to those
-  void connectToServers(PPath serversfile);
+    //! Will get the list of hostname, pid, port from the serversfile
+    //! and establish a TCP connection to those
+    void connectToServers(PPath serversfile);
 
-  void disconnectFromServers();
+    void disconnectFromServers();
 
-  //! returns the number of available processing ressources
-  int availableServers() const;
+    //! returns the number of available processing ressources
+    int availableServers() const;
 
-  //! Reserves a remote processing ressource from the pool of servers.
-  //! If sucessful returns a pointer to a new RemotePLearnServer
-  //! If no server is available, returns 0.
-  PP<RemotePLearnServer> reserveServer(); 
+    //! Reserves a remote processing ressource from the pool of servers.
+    //! If sucessful returns a pointer to a new RemotePLearnServer
+    //! If no server is available, returns 0.
+    PP<RemotePLearnServer> reserveServer(); 
 
-  //! Reserves up to nservers servers
-  TVec< PP<RemotePLearnServer> > reserveServers(int nservers);
+    //! Reserves up to nservers servers
+    TVec< PP<RemotePLearnServer> > reserveServers(int nservers);
 
-  //! Frees a previously reserved servers.
-  //! Putting it back into the list of available_servers
-  void freeServer(PP<RemotePLearnServer> server);
+    //! Frees a previously reserved servers.
+    //! Putting it back into the list of available_servers
+    void freeServer(PP<RemotePLearnServer> server);
     
-  //! Frees all the servers in the list
-  void freeServers(TVec< PP<RemotePLearnServer> > servers);
+    //! Frees all the servers in the list
+    void freeServers(TVec< PP<RemotePLearnServer> > servers);
 
-  int watchServers(TVec< PP<RemotePLearnServer> > servers, int timeout=0);
+    int watchServers(TVec< PP<RemotePLearnServer> > servers, int timeout=0);
 
-  ~PLearnService();
+    ~PLearnService();
 };
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

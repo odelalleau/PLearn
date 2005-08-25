@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef SoftSlopeIntegralVariable_INC
 #define SoftSlopeIntegralVariable_INC
@@ -54,34 +54,47 @@ using namespace std;
 // Integral wrt x, from a to b, of SoftSlopeVariable(x,smoothness,left,right)
 class SoftSlopeIntegralVariable: public NaryVariable
 {
-  typedef NaryVariable inherited;
+    typedef NaryVariable inherited;
 
 public:
 //protected:
-  real a,b;
-  bool tabulated;
+    real a,b;
+    bool tabulated;
 
 public:
-  //!  Default constructor for persistence
-  SoftSlopeIntegralVariable();
-  SoftSlopeIntegralVariable(Variable* smoothness, Variable* left, Variable* right, real a_=0, real b_=1, bool tabulated=true);
+    //!  Default constructor for persistence
+    SoftSlopeIntegralVariable();
+    SoftSlopeIntegralVariable(Variable* smoothness, Variable* left, Variable* right, real a_=0, real b_=1, bool tabulated=true);
 
-  PLEARN_DECLARE_OBJECT(SoftSlopeIntegralVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(SoftSlopeIntegralVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 };
 
 DECLARE_OBJECT_PTR(SoftSlopeIntegralVariable);
 
 inline Var soft_slope_integral(Var smoothness, Var left, Var right, real a=0, real b=1)
 {
-  return new SoftSlopeIntegralVariable(smoothness,left,right,a,b);
+    return new SoftSlopeIntegralVariable(smoothness,left,right,a,b);
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

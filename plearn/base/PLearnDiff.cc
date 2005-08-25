@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
-   ******************************************************* */
+ * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -49,24 +49,24 @@ using namespace std;
 
 PLearnDiff::PLearnDiff() 
 {
-  build_();
-  forget();
+    build_();
+    forget();
 }
 
 PLEARN_IMPLEMENT_OBJECT(PLearnDiff,
-    "Object that represents settings and results of a diff between two PLearn objects",
-    ""
-);
+                        "Object that represents settings and results of a diff between two PLearn objects",
+                        ""
+    );
 
 void PLearnDiff::declareOptions(OptionList& ol)
 {
-  // ### ex:
-  // declareOption(ol, "myoption", &PLearnDiff::myoption, OptionBase::buildoption,
-  //               "Help text describing this option");
-  // ...
+    // ### ex:
+    // declareOption(ol, "myoption", &PLearnDiff::myoption, OptionBase::buildoption,
+    //               "Help text describing this option");
+    // ...
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ////////////
@@ -74,7 +74,7 @@ void PLearnDiff::declareOptions(OptionList& ol)
 ////////////
 void PLearnDiff::build_()
 {
-  diffs.resize(diffs.length(), 3);
+    diffs.resize(diffs.length(), 3);
 }
 
 ///////////
@@ -82,8 +82,8 @@ void PLearnDiff::build_()
 ///////////
 void PLearnDiff::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ///////////////////
@@ -91,16 +91,16 @@ void PLearnDiff::build()
 ///////////////////
 void PLearnDiff::addDiffPrefix(const string& prefix, int n)
 {
-  assert( n >= 0 && n <= diffs.length() );
-  int l = diffs.length() - 1;
-  for (int j = 0; j < n; j++)
-    diffs(l - j, 0) = prefix + diffs(l - j, 0);
+    assert( n >= 0 && n <= diffs.length() );
+    int l = diffs.length() - 1;
+    for (int j = 0; j < n; j++)
+        diffs(l - j, 0) = prefix + diffs(l - j, 0);
 }
 
 void addDiffPrefix(PLearnDiff* diffs, const string& prefix, int n)
 {
-  assert( diffs );
-  diffs->addDiffPrefix(prefix, n);
+    assert( diffs );
+    diffs->addDiffPrefix(prefix, n);
 }
 
 //////////
@@ -108,22 +108,22 @@ void addDiffPrefix(PLearnDiff* diffs, const string& prefix, int n)
 //////////
 int PLearnDiff::diff(const string& refer, const string& other, const string& name)
 {
-  static TVec<string> diff_row;
-  diff_row.resize(3);
-  if (refer != other) {
-    diff_row[0] = name;
-    diff_row[1] = refer;
-    diff_row[2] = other;
-    diffs.appendRow(diff_row);
-    return 1;
-  } else
-    return 0;
+    static TVec<string> diff_row;
+    diff_row.resize(3);
+    if (refer != other) {
+        diff_row[0] = name;
+        diff_row[1] = refer;
+        diff_row[2] = other;
+        diffs.appendRow(diff_row);
+        return 1;
+    } else
+        return 0;
 }
 
 int diff(PLearnDiff* diffs, const string& refer, const string& other, const string& name)
 {
-  assert( diffs );
-  return diffs->diff(refer, other, name);
+    assert( diffs );
+    return diffs->diff(refer, other, name);
 }
 
 ////////////
@@ -131,7 +131,7 @@ int diff(PLearnDiff* diffs, const string& refer, const string& other, const stri
 ////////////
 void PLearnDiff::forget()
 {
-  diffs.resize(0, diffs.width());
+    diffs.resize(0, diffs.width());
 }
 
 /////////////////////////////////
@@ -139,16 +139,16 @@ void PLearnDiff::forget()
 /////////////////////////////////
 void PLearnDiff::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("PLearnDiff::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("PLearnDiff::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 ////////////////
@@ -156,10 +156,23 @@ void PLearnDiff::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////
 void PLearnDiff::printDiffs(PStream& out)
 {
-  int n = nDiffs();
-  for (int i = 0; i < n; i++)
-    out << diffs(i, 0) << ": " << diffs(i, 1) << " != " << diffs(i, 2) << endl;
+    int n = nDiffs();
+    for (int i = 0; i < n; i++)
+        out << diffs(i, 0) << ": " << diffs(i, 1) << " != " << diffs(i, 2) << endl;
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -39,15 +39,15 @@ namespace PLearn {
 using namespace std;
 
 
-  class EmpiricalDistribution: public Distribution
-  {
-  protected:
+class EmpiricalDistribution: public Distribution
+{
+protected:
 
     VMat data;
     
     typedef Distribution inherited;
     
-  public:
+public:
 
     EmpiricalDistribution();
     
@@ -93,13 +93,26 @@ using namespace std;
     mutable int current_sample_y;
     mutable bool flip;
     
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 
-  };
+};
 
-  DECLARE_OBJECT_PTR(EmpiricalDistribution);
+DECLARE_OBJECT_PTR(EmpiricalDistribution);
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVMatrix.cc,v 1.7 2004/10/12 17:34:37 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "OneHotVMatrix.h"
 
@@ -55,64 +55,77 @@ OneHotVMatrix::OneHotVMatrix()
 
 OneHotVMatrix::OneHotVMatrix(VMat the_underlying_distr, int the_nclasses, real the_cold_value,
                              real the_hot_value)
-  : inherited(the_underlying_distr->length(), the_underlying_distr->width()+the_nclasses-1),
-    underlying_distr(the_underlying_distr), nclasses(the_nclasses),
-    cold_value(the_cold_value), hot_value(the_hot_value)
+    : inherited(the_underlying_distr->length(), the_underlying_distr->width()+the_nclasses-1),
+      underlying_distr(the_underlying_distr), nclasses(the_nclasses),
+      cold_value(the_cold_value), hot_value(the_hot_value)
 {
 }
 
 void
 OneHotVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void
 OneHotVMatrix::build_()
 {
-  length_ = underlying_distr->length();
-  width_ = underlying_distr->width() - 1 + nclasses;
-  inputsize_ = underlying_distr->inputsize();
-  targetsize_ = nclasses;
-  weightsize_ = 0;
-  if (underlying_distr->weightsize() > 0)
-    PLWARNING("In OneHotVMatrix::build_ - Not sure a positive weightsize is supported");
+    length_ = underlying_distr->length();
+    width_ = underlying_distr->width() - 1 + nclasses;
+    inputsize_ = underlying_distr->inputsize();
+    targetsize_ = nclasses;
+    weightsize_ = 0;
+    if (underlying_distr->weightsize() > 0)
+        PLWARNING("In OneHotVMatrix::build_ - Not sure a positive weightsize is supported");
 }
 
 void
 OneHotVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "underlying_distr", &OneHotVMatrix::underlying_distr, OptionBase::buildoption, "");
-  declareOption(ol, "nclasses", &OneHotVMatrix::nclasses, OptionBase::buildoption, "");
-  declareOption(ol, "cold_value", &OneHotVMatrix::cold_value, OptionBase::buildoption, "");
-  declareOption(ol, "hot_value", &OneHotVMatrix::hot_value, OptionBase::buildoption, "");
-  inherited::declareOptions(ol);
+    declareOption(ol, "underlying_distr", &OneHotVMatrix::underlying_distr, OptionBase::buildoption, "");
+    declareOption(ol, "nclasses", &OneHotVMatrix::nclasses, OptionBase::buildoption, "");
+    declareOption(ol, "cold_value", &OneHotVMatrix::cold_value, OptionBase::buildoption, "");
+    declareOption(ol, "hot_value", &OneHotVMatrix::hot_value, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
 }
 
 void OneHotVMatrix::getNewRow(int i, const Vec& samplevec) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length())
-    PLERROR("In OneHotVMatrix::getNewRow OUT OF BOUNDS");
-  if(samplevec.length()!=width())
-    PLERROR("In OneHotVMatrix::getNewRow samplevec.length() must be equal to the VMat's width");
+    if(i<0 || i>=length())
+        PLERROR("In OneHotVMatrix::getNewRow OUT OF BOUNDS");
+    if(samplevec.length()!=width())
+        PLERROR("In OneHotVMatrix::getNewRow samplevec.length() must be equal to the VMat's width");
 #endif
-  Vec input = samplevec.subVec(0,width()-nclasses);
-  Vec target = samplevec.subVec(width()-nclasses,nclasses);
-  underlying_distr->getSubRow(i,0,input);
-  int classnum = int(underlying_distr->get(i,underlying_distr->width()-1));
-  fill_one_hot(target,classnum,cold_value,hot_value);
+    Vec input = samplevec.subVec(0,width()-nclasses);
+    Vec target = samplevec.subVec(width()-nclasses,nclasses);
+    underlying_distr->getSubRow(i,0,input);
+    int classnum = int(underlying_distr->get(i,underlying_distr->width()-1));
+    fill_one_hot(target,classnum,cold_value,hot_value);
 }
 
 real OneHotVMatrix::dot(int i1, int i2, int inputsize) const
 {
-  return underlying_distr->dot(i1,i2,inputsize);
+    return underlying_distr->dot(i1,i2,inputsize);
 }
 
 real OneHotVMatrix::dot(int i, const Vec& v) const
 {
-  return underlying_distr->dot(i,v);
+    return underlying_distr->dot(i,v);
 }
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

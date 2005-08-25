@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_computeConditionalStats.cc,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -47,23 +47,36 @@
 namespace PLearn {
 using namespace std;
 
-  //! returns the cooccurence statistics conditioned on the given field
+//! returns the cooccurence statistics conditioned on the given field
 PP<ConditionalStatsCollector> computeConditionalStats(VMat m, int condfield, TVec<RealMapping> ranges)
 {
-  PP<ConditionalStatsCollector> condst = new ConditionalStatsCollector;
-  condst->setBinMappingsAndCondvar(ranges, condfield);
-  int l = m.length();
-  int w = m.width();
-  Vec v(w);
-  for(int i=0; i<l; i++)
+    PP<ConditionalStatsCollector> condst = new ConditionalStatsCollector;
+    condst->setBinMappingsAndCondvar(ranges, condfield);
+    int l = m.length();
+    int w = m.width();
+    Vec v(w);
+    for(int i=0; i<l; i++)
     {
-      if(i%10000==0)
-        cerr << "computeConditionalStats: row " << i << " of " << l << endl;
-      m->getRow(i,v);
-      condst->update(v);
+        if(i%10000==0)
+            cerr << "computeConditionalStats: row " << i << " of " << l << endl;
+        m->getRow(i,v);
+        condst->update(v);
     }
-  return condst;
+    return condst;
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

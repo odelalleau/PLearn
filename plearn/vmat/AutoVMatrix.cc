@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: AutoVMatrix.cc,v 1.15 2005/02/03 17:13:41 ducharme Exp $
+ * $Id$
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -50,56 +50,68 @@ namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(AutoVMatrix,
-    "Automatically builds an appropriate VMat given its specification.",
-    "AutoVMatrix tries to interpret the given 'specification' (it will call getDataSet) and\n"
-    "will be a wrapper around the appropriate VMatrix type, simply forwarding calls to it.\n"
-    "AutoVMatrix can be used to access the UCI databases.\n");
+                        "Automatically builds an appropriate VMat given its specification.",
+                        "AutoVMatrix tries to interpret the given 'specification' (it will call getDataSet) and\n"
+                        "will be a wrapper around the appropriate VMatrix type, simply forwarding calls to it.\n"
+                        "AutoVMatrix can be used to access the UCI databases.\n");
 
 AutoVMatrix::AutoVMatrix(const PPath& the_specification, bool load_in_memory)
-  :specification(the_specification), load_data_in_memory(load_in_memory)
+    :specification(the_specification), load_data_in_memory(load_in_memory)
 { build_(); }
 
 void AutoVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "specification", &AutoVMatrix::specification, OptionBase::buildoption,
-                "This is any string understood by getDataSet. Typically a file or directory path.\n"
-                 + loadUCIDatasetsHelp());
-  declareOption(ol, "load_in_memory", &AutoVMatrix::load_data_in_memory, OptionBase::buildoption,
-                "Boolean value to specify if we want to store data in memory (in a MemoryVMatrix)."
-                "Default=false.\n");
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    declareOption(ol, "specification", &AutoVMatrix::specification, OptionBase::buildoption,
+                  "This is any string understood by getDataSet. Typically a file or directory path.\n"
+                  + loadUCIDatasetsHelp());
+    declareOption(ol, "load_in_memory", &AutoVMatrix::load_data_in_memory, OptionBase::buildoption,
+                  "Boolean value to specify if we want to store data in memory (in a MemoryVMatrix)."
+                  "Default=false.\n");
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 
-  // Hide the 'vm' option, that is overwritten at build time anyway.
-  redeclareOption(ol, "vm", &AutoVMatrix::vm, OptionBase::nosave, "");
+    // Hide the 'vm' option, that is overwritten at build time anyway.
+    redeclareOption(ol, "vm", &AutoVMatrix::vm, OptionBase::nosave, "");
 }
 
 void AutoVMatrix::build_()
 {
-  if(specification=="")
-    setVMat(VMat());
-  else if (load_data_in_memory)
-  {
-    VMat data = getDataSet(specification);
-    VMat memdata = new MemoryVMatrix(data);
-    setVMat(memdata);
-  }
-  else
-    setVMat(getDataSet(specification));
+    if(specification=="")
+        setVMat(VMat());
+    else if (load_data_in_memory)
+    {
+        VMat data = getDataSet(specification);
+        VMat memdata = new MemoryVMatrix(data);
+        setVMat(memdata);
+    }
+    else
+        setVMat(getDataSet(specification));
 }
 
 void AutoVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
  
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
 void AutoVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 } 
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

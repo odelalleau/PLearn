@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: GaussianProcessRegressor.h,v 1.11 2004/09/14 16:04:55 chrish42 Exp $
+ * $Id$
  ******************************************************* */
 
 
@@ -72,7 +72,7 @@ using namespace std;
 class GaussianProcessRegressor: public PConditionalDistribution
 {
 
-  public:
+public:
     typedef PConditionalDistribution inherited;  
     // Build options
 
@@ -102,7 +102,7 @@ class GaussianProcessRegressor: public PConditionalDistribution
     Vec meanK; // meanK[j]=mean_i(K_{ij})
     real mean_allK;
 
-  public:
+public:
 
     GaussianProcessRegressor();
     virtual ~GaussianProcessRegressor();
@@ -127,10 +127,10 @@ class GaussianProcessRegressor: public PConditionalDistribution
     virtual Mat variance() const;
     virtual void variance(Vec diag_variances) const;
 
-  private:
+private:
     void build_();
     
-  public:
+public:
     virtual void build();
 
     virtual void forget();
@@ -179,7 +179,7 @@ class GaussianProcessRegressor: public PConditionalDistribution
     //! returns the index of the given cost in the vector of traincosts (objectives) (returns -1 if not found)
     int getTrainCostIndex(const string& costname) const;
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 
     // covariance = K + sigma^2 I
@@ -200,7 +200,7 @@ class GaussianProcessRegressor: public PConditionalDistribution
     //! training data.
     real BayesianCost();
 
-  public:
+public:
     PLEARN_DECLARE_OBJECT(GaussianProcessRegressor);
 
 };
@@ -211,7 +211,15 @@ DECLARE_OBJECT_PTR(GaussianProcessRegressor);
 
 #endif
 
-
-
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

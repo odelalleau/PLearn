@@ -35,8 +35,8 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperCommand.cc,v 1.2 2005/02/08 21:42:56 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file HyperCommand.cc */
 
@@ -48,8 +48,8 @@ namespace PLearn {
 using namespace std;
 
 HyperCommand::HyperCommand() 
-  {
-  }
+{
+}
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(HyperCommand, 
                                  "HyperCommand is the base class for hyper-optimization " 
@@ -58,24 +58,24 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(HyperCommand,
 
 void HyperCommand::setExperimentDirectory(const PPath& the_expdir) 
 { 
-  if(the_expdir=="")
-    expdir = "";
-  else
+    if(the_expdir=="")
+        expdir = "";
+    else
     {
-      if(!force_mkdir(the_expdir))
-        PLERROR("In PLearner::setExperimentDirectory Could not create experiment directory %s",the_expdir.c_str());
-      expdir = the_expdir.absolute();
+        if(!force_mkdir(the_expdir))
+            PLERROR("In PLearner::setExperimentDirectory Could not create experiment directory %s",the_expdir.c_str());
+        expdir = the_expdir.absolute();
     }
 }
 
-  void HyperCommand::declareOptions(OptionList& ol)
-  {
+void HyperCommand::declareOptions(OptionList& ol)
+{
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
+}
 
-  void HyperCommand::build_()
-  {
+void HyperCommand::build_()
+{
     // ### This method should do the real building of the object,
     // ### according to set 'options', in *any* situation. 
     // ### Typical situations include:
@@ -83,19 +83,32 @@ void HyperCommand::setExperimentDirectory(const PPath& the_expdir)
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
-  }
+}
 
-  // ### Nothing to add here, simply calls build_
-  void HyperCommand::build()
-  {
+// ### Nothing to add here, simply calls build_
+void HyperCommand::build()
+{
     inherited::build();
     build_();
-  }
+}
 
-  void HyperCommand::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-  {
+void HyperCommand::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(hlearner, copies);
-  }
+}
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

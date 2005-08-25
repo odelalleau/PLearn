@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NearestNeighborPredictionCost.h,v 1.2 2004/09/14 16:04:37 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Martin Monperrus
 
@@ -56,74 +56,87 @@ class NearestNeighborPredictionCost: public Object
 
 private:
   
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
-  PP<PLearner> learner;
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
+    PP<PLearner> learner;
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // build options)
-  int knn;
-  VMat test_set;
-  string learner_spec;
+    // build options)
+    int knn;
+    VMat test_set;
+    string learner_spec;
 
-  // Others
-  Vec cost;
-  VMat computed_outputs;
-  // ****************
-  // * Constructors *
-  // ****************
+    // Others
+    Vec cost;
+    VMat computed_outputs;
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  // ### Make sure the implementation in the .cc
-  // ### initializes all fields to reasonable default values.
-  NearestNeighborPredictionCost();
+    //! Default constructor.
+    // ### Make sure the implementation in the .cc
+    // ### initializes all fields to reasonable default values.
+    NearestNeighborPredictionCost();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (PLEASE IMPLEMENT IN .cc)
-  void build_();
+    //! This does the actual building. 
+    // (PLEASE IMPLEMENT IN .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options.
-  // (PLEASE IMPLEMENT IN .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    // (PLEASE IMPLEMENT IN .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  // Declares other standard object methods.
-  // ### If your class is not instantiatable (it has pure virtual methods)
-  // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
-  PLEARN_DECLARE_OBJECT(NearestNeighborPredictionCost);
+    // Declares other standard object methods.
+    // ### If your class is not instantiatable (it has pure virtual methods)
+    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+    PLEARN_DECLARE_OBJECT(NearestNeighborPredictionCost);
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
   
-  void run();
+    void run();
 
-  //! Transforms a shallow copy into a deep copy
-  // (PLEASE IMPLEMENT IN .cc)
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    // (PLEASE IMPLEMENT IN .cc)
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(NearestNeighborPredictionCost);
+DECLARE_OBJECT_PTR(NearestNeighborPredictionCost);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

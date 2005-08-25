@@ -39,8 +39,8 @@
  
 
 /* *******************************************************      
-   * $Id$
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnAlgo/Learner.h */
@@ -59,19 +59,19 @@ namespace PLearn {
 using namespace std;
 
 /*!     The base class for learning algorithms, which
-    should be the main "products" of PLearn.
+  should be the main "products" of PLearn.
     
-    The main thing that a Learner can do are:
-       void train(VMat training_set); <  get trained
-       void use(const Vec& input, Vec& output); <  compute output given input
-       Vec test(VMat test_set); <  compute some performance statistics on a test set
-       <  compute outputs and costs when applying trained model on data
-       void applyAndComputeCosts(const VMat& data, VMat outputs, VMat costs);
+  The main thing that a Learner can do are:
+  void train(VMat training_set); <  get trained
+  void use(const Vec& input, Vec& output); <  compute output given input
+  Vec test(VMat test_set); <  compute some performance statistics on a test set
+  <  compute outputs and costs when applying trained model on data
+  void applyAndComputeCosts(const VMat& data, VMat outputs, VMat costs);
     
 */
-  class Learner: public Object, public Measurer//, public TimeMeasurer
-  {
-  protected:
+class Learner: public Object, public Measurer//, public TimeMeasurer
+{
+protected:
 
     Vec tmpvec; // for temporary storage.
 
@@ -79,7 +79,7 @@ using namespace std;
     ofstream* train_objective_stream; //!< file stream where to save objecties and costs during training 
     Array<ofstream*> test_results_streams; //!< opened streams where to save test results
 
-  private:
+private:
 
     static Vec tmp_input; // temporary input vec
     static Vec tmp_target; // temporary target vec
@@ -87,7 +87,7 @@ using namespace std;
     static Vec tmp_output; // temporary output vec
     static Vec tmp_costs; // temporary costs vec
 
-  protected:
+protected:
 
     //! opens the train.objective file for appending in the expdir
     void openTrainObjectiveStream();
@@ -109,7 +109,7 @@ using namespace std;
     //! output a test result line to a file
     void outputResultLineToFile(const string & filename, const Vec& results,bool append,const string& names);
 
-  protected:
+protected:
     //! the directory in which to save files related to this model (see setExperimentDirectory())
     //! You may assume that it ends with a slash (setExperimentDirectory(...) ensures this).
     string expdir; 
@@ -123,7 +123,7 @@ using namespace std;
     bool distributed_;
 
 
-  public:
+public:
 
     //! returns expdir+train_set->getAlias()  (if train_set is indeed defined and has an alias...)
     string basename() const;
@@ -150,8 +150,8 @@ using namespace std;
     int minibatch_size; //!< test by blocks of this size using apply rather than use
 
 /*!       report test progress in vlog (see below) every that many iterations
-      For each nth test sample, this will print a "Test sample #n" line in
-      vlog (where n is the value in report_test_progress_every)
+  For each nth test sample, this will print a "Test sample #n" line in
+  vlog (where n is the value in report_test_progress_every)
 */
     int report_test_progress_every;
 
@@ -173,16 +173,16 @@ using namespace std;
     bool save_objective; //!< whether to save in basename()+".objective" the cost after each measure (e.g. after each epoch)
     int best_step; //!<  the step (usually epoch) at which validation cost was best
 
-  protected:
+protected:
     //!  temporary values relevant for early stopping
     real earlystop_previousval;
-  public:
+public:
     real earlystop_minval;
 
     // DPERECATED. Please use the expdir system from now on, through setExperimentDirectory
     string experiment_name;
 
-  protected:
+protected:
     //strstream earlystop_best_model; //!<  string stream where the currently best model is saved
     
     //!  array of measurers:
@@ -191,7 +191,7 @@ using namespace std;
     bool measure_cpu_time_first; // the first el. in measure(..) will be cpu time instead of courant step
 
     bool each_cpu_saves_its_errors;
-  public:
+public:
     Array<CostFunc> test_costfuncs;
     StatsItArray test_statistics;
 
@@ -208,10 +208,10 @@ using namespace std;
     PStream objectiveout; //!<  The log stream to use to record the objective function during training
 
 /*!       **** SUBCLASS WRITING: ****
-      All subclasses of Learner should implement this form of constructor
-      Constructors should simply set all build options (member variables)
-      to acceptable values and call build() that will do the actual job of
-      constructing the object.
+  All subclasses of Learner should implement this form of constructor
+  Constructors should simply set all build options (member variables)
+  to acceptable values and call build() that will do the actual job of
+  constructing the object.
 */
     Learner(int the_inputsize=0, int the_targetsize=0, int the_outputsize=0);
 
@@ -233,7 +233,7 @@ using namespace std;
     PLEARN_DECLARE_ABSTRACT_OBJECT(Learner);
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  private:
+private:
     /*!       **** SUBCLASS WRITING: ****
       The build_ and build methods should be redefined in subclasses
       build_ should do the actual building of the Learner according
@@ -245,7 +245,7 @@ using namespace std;
     */
     void build_();
     
-  public:
+public:
     //!  **** SUBCLASS WRITING: ****
     //! This method should be redefined in subclasses, to just call inherited::build() and then build_()
     virtual void build();
@@ -255,10 +255,10 @@ using namespace std;
     inline VMat getTrainingSet() { return train_set; }
 
 /*!       *** SUBCLASS WRITING: ***
-      Does the actual training. Subclasses must implement this method.  
-      The method should upon entry, call setTrainingSet(training_set);
-      Make sure that a if(measure(step, objective_value)) is done after each
-      training step, and that training is stopped if it returned true
+  Does the actual training. Subclasses must implement this method.  
+  The method should upon entry, call setTrainingSet(training_set);
+  Make sure that a if(measure(step, objective_value)) is done after each
+  training step, and that training is stopped if it returned true
 */
     virtual void train(VMat training_set) =0; 
 
@@ -286,27 +286,27 @@ using namespace std;
     */
 
 /*!       *** SUBCLASS WRITING: ***
-      Does the actual training.
-      Permit to train from a sampling of a training set.
+  Does the actual training.
+  Permit to train from a sampling of a training set.
 */
     virtual void train(VMat training_set, VMat accept_prob,
-        real max_accept_prob=1.0, VMat weights=VMat())
+                       real max_accept_prob=1.0, VMat weights=VMat())
     { PLERROR("This method is not implemented for this learner"); }
 
 /*!       *** SUBCLASS WRITING: ***
-      Uses a trained decider on input, filling output.
-      If the cost should also be computed, then the user
-      should call useAndCost instead of this method.
+  Uses a trained decider on input, filling output.
+  If the cost should also be computed, then the user
+  should call useAndCost instead of this method.
 */
     virtual void use(const Vec& input, Vec& output) =0;
     virtual void use(const Mat& inputs, Mat outputs) 
     { 
-      for (int i=0;i<inputs.length();i++) 
-      {
-        Vec input = inputs(i);
-        Vec output = outputs(i);
-        use(input,output);
-      }
+        for (int i=0;i<inputs.length();i++) 
+        {
+            Vec input = inputs(i);
+            Vec output = outputs(i);
+            use(input,output);
+        }
     }
 
     //! **Next generation** learners allow inputs to be anything, not just Vec
@@ -342,51 +342,51 @@ using namespace std;
     
 
 /*!       ** DEPRECATED ** Do not use! 
-      use the setOption and build methods instead
+  use the setOption and build methods instead
 */
     virtual void setModel(const Vec& new_options);
 
 /*!       *** SUBCLASS WRITING: ***
-      This method should be called AFTER or inside the build method,
-      e.g. in order to re-initialize parameters. It should
-      put the Learner in a 'fresh' state, not being influenced
-      by any past call to train (everything learned is forgotten!).
+  This method should be called AFTER or inside the build method,
+  e.g. in order to re-initialize parameters. It should
+  put the Learner in a 'fresh' state, not being influenced
+  by any past call to train (everything learned is forgotten!).
 */
     virtual void forget();
 
 /*!       **** SUBCLASS WRITING:
-      * This method should be called by iterative training algorithm's
-      train method after each training step (meaning of training step is
-      learner-dependent) passing it the current step number and the costs
-      relevant for the training process.
-      * Training must be stopped if the returned value is true: it
-      indicates early-stopping criterion has been met.
-      * Default version writes step and costs to objectiveout stream at
-      each step
-      * Default version also performs the tests specified by
-      setTestDuringTrain every 'test_every' steps and decides upon
-      early-stopping as specified by setEarlyStopping.
-      * Default version also calls the measure method of all measurers 
-      that have been declared for addition with appendMeasurer
+ * This method should be called by iterative training algorithm's
+ train method after each training step (meaning of training step is
+ learner-dependent) passing it the current step number and the costs
+ relevant for the training process.
+ * Training must be stopped if the returned value is true: it
+ indicates early-stopping criterion has been met.
+ * Default version writes step and costs to objectiveout stream at
+ each step
+ * Default version also performs the tests specified by
+ setTestDuringTrain every 'test_every' steps and decides upon
+ early-stopping as specified by setEarlyStopping.
+ * Default version also calls the measure method of all measurers 
+ that have been declared for addition with appendMeasurer
       
-      This is the measure method from Measurer.
-      You may override this method if you wish to measure 
-      other things during the training.
-      In this case your method will probably want to call this default
-      version (Learner::measure) as part of it. 
+ This is the measure method from Measurer.
+ You may override this method if you wish to measure 
+ other things during the training.
+ In this case your method will probably want to call this default
+ version (Learner::measure) as part of it. 
 */
     virtual bool measure(int step, const Vec& costs);
 
 /*!       *** SUBCLASS WRITING: ***
-      This matched pair of Object functions needs to be 
-      redefined by sub-classes. They are used for saving/loading
-      a model to memory or to file. However, subclasses can call this
-      one to deal with the saving/loading of the following data fields:
-      the current options and the early stopping parameters.
+  This matched pair of Object functions needs to be 
+  redefined by sub-classes. They are used for saving/loading
+  a model to memory or to file. However, subclasses can call this
+  one to deal with the saving/loading of the following data fields:
+  the current options and the early stopping parameters.
 */
     virtual void oldwrite(ostream& out) const;
     /* TODO Remove (deprecated)
-    virtual void oldread(istream& in);
+       virtual void oldread(istream& in);
     */
 
     //! DEPRECATED. Call PLearn::save(filename, object) instead
@@ -415,17 +415,17 @@ using namespace std;
     //!  Call this method to define what cost functions are computed by default
     //!  (these are generic cost functions which compare the output with the target)
     void setTestCostFunctions(Array<CostFunc> costfunctions)
-      { test_costfuncs = costfunctions; }
+    { test_costfuncs = costfunctions; }
 
     //!  This method defines what statistics are computed on the costs
     //!  (which compute a vector of statistics that depend on all the test costs)
     void setTestStatistics(StatsItArray statistics)
-      { test_statistics = statistics; }
+    { test_statistics = statistics; }
 
     //!  testout: the stream where the test results are to be written
     //!  every: how often (number of iterations) the tests should be performed
     virtual void setTestDuringTrain(ostream& testout, int every,
-                            Array<VMat> testsets);
+                                    Array<VMat> testsets);
 
     //! 
     virtual void setTestDuringTrain(Array<VMat> testsets);
@@ -433,25 +433,25 @@ using namespace std;
 
     //!  return the test sets that are used during training
     const Array<VMat>& getTestDuringTrain() const {
-      return test_sets;
+        return test_sets;
     }
       
 
 /*!       which_testset and which_testresult select the appropriate testset and
-      costfunction to base early-stopping on from those that were specified
-      in setTestDuringTrain 
-      * degradation is the difference between the current value and the
-      smallest value ever attained, training will be stopped if it grows
-      beyond max_degradation 
-      * training will be stopped if current value goes below min_value
-      * training will be stopped if difference between previous value and
-      current value is below min_improvement
-      * if (relative_changes) is true then max_degradation is relative to
-      the smallest value ever attained, and min_improvement is relative
-      to the previous value.
-      * if (save_best) then save the lowest validation error model
-       (with the write method, to memory), and if early stopping occurs
-       reload this saved model (with the read method).
+  costfunction to base early-stopping on from those that were specified
+  in setTestDuringTrain 
+  * degradation is the difference between the current value and the
+  smallest value ever attained, training will be stopped if it grows
+  beyond max_degradation 
+  * training will be stopped if current value goes below min_value
+  * training will be stopped if difference between previous value and
+  current value is below min_improvement
+  * if (relative_changes) is true then max_degradation is relative to
+  the smallest value ever attained, and min_improvement is relative
+  to the previous value.
+  * if (save_best) then save the lowest validation error model
+  (with the write method, to memory), and if early stopping occurs
+  reload this saved model (with the read method).
 */
     void setEarlyStopping(int which_testset, int which_testresult, 
                           real max_degradation, real min_value=-FLT_MAX, 
@@ -480,16 +480,16 @@ using namespace std;
     virtual void useAndCostOnTestVec(const VMat& test_set, int i, const Vec& output, const Vec& cost);
 
 /*!       Calls the 'use' method many times on the first inputsize() elements of
-      each row of a 'data' VMat, and put the
-      machine's 'outputs' in a writable VMat (e.g. maybe a file, or a matrix).
-      Note: if one wants to compute costs as well, then the
-      method applyAndComputeCosts should be called instead.
+  each row of a 'data' VMat, and put the
+  machine's 'outputs' in a writable VMat (e.g. maybe a file, or a matrix).
+  Note: if one wants to compute costs as well, then the
+  method applyAndComputeCosts should be called instead.
 */
     virtual void apply(const VMat& data, VMat outputs);
 
 /*!       This method calls useAndCost repetitively on all the rows of data,
-      putting all the resulting output and cost vectors in the outputs and
-      costs VMat's.
+  putting all the resulting output and cost vectors in the outputs and
+  costs VMat's.
 */
     virtual void applyAndComputeCosts(const VMat& data, VMat outputs, VMat costs);
 
@@ -500,8 +500,8 @@ using namespace std;
                                                const Mat& cost_block);
 
 /*!       This method calls useAndCost repetitively on all the rows of data,
-      throwing away the resulting output vectors but putting all the cost vectors
-      in the costs VMat.
+  throwing away the resulting output vectors but putting all the cost vectors
+  in the costs VMat.
 */
     virtual void computeCosts(const VMat& data, VMat costs);
 
@@ -510,35 +510,35 @@ using namespace std;
     virtual void computeLeaveOneOutCosts(const VMat& data, VMat costs);
 
 /*!       Same as above, except a single cost passed as argument is computed,
-      rather than all the Learner's costs setTestCostFunctions (and its
-      possible additional internal cost).
+  rather than all the Learner's costs setTestCostFunctions (and its
+  possible additional internal cost).
 */
     virtual void computeLeaveOneOutCosts(const VMat& data, VMat costsmat, CostFunc costf);
 
 /*!       Given a VMat of costs as computed for example with computeCosts
-      or with applyAndComputeCosts, compute and the test statistics over
-      those costs. This is the concatenation of the statistics computed
-      for each of the columns (cost functions) of costs.
+  or with applyAndComputeCosts, compute and the test statistics over
+  those costs. This is the concatenation of the statistics computed
+  for each of the columns (cost functions) of costs.
 */
     Vec computeTestStatistics(const VMat& costs);
 
 /*!       Return statistics computed by test_statistics on the test_costfuncs.
-	      If (save_test_outputs) then the test outputs are saved in the given file,
-      and similary if (save_test_costs).
+  If (save_test_outputs) then the test outputs are saved in the given file,
+  and similary if (save_test_costs).
 */
     virtual Vec test(VMat test_set, const string& save_test_outputs="", 
                      const string& save_test_costs="");
 
 /*!       returns an Array of strings for the names of the components of the
-      cost.  Default version returns the info() strings of the cost
-      functions in test_costfuncs
+  cost.  Default version returns the info() strings of the cost
+  functions in test_costfuncs
 */
     virtual Array<string> costNames() const;
 
 /*!       returns an Array of strings for the names of the cost statistics
-      returned by methods test and computeTestStatistics. Default
-      version returns a cross product between the info() strings of
-      test_statistics and the cost names returned by costNames()
+  returned by methods test and computeTestStatistics. Default
+  version returns a cross product between the info() strings of
+  test_statistics and the cost names returned by costNames()
 */
     virtual Array<string> testResultsNames() const;
 
@@ -548,39 +548,47 @@ using namespace std;
     virtual Array<string> trainObjectiveNames() const;
 
 /*!       Declare a new measurer whose measure method will be called
-      when the measure method of this learner is called (in particular
-      after each training epoch).
+  when the measure method of this learner is called (in particular
+  after each training epoch).
 */
     void appendMeasurer(Measurer& measurer)
-      { measurers.append(&measurer); }
+    { measurers.append(&measurer); }
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 
-      void setTrainCost(Vec &cost)
-          { train_cost.resize(cost.length()); train_cost << cost; };
-      Vec train_cost;
-  public:
-      Vec getTrainCost() { return train_cost; };
-  };
+    void setTrainCost(Vec &cost)
+    { train_cost.resize(cost.length()); train_cost << cost; };
+    Vec train_cost;
+public:
+    Vec getTrainCost() { return train_cost; };
+};
 
-  DECLARE_OBJECT_PTR(Learner);
+DECLARE_OBJECT_PTR(Learner);
 
-  typedef PP<Learner> PPLearner;
+typedef PP<Learner> PPLearner;
 	
-  inline void prettyprint_test_results(ostream& out, const Learner& learner, const Vec& results)
-  {
+inline void prettyprint_test_results(ostream& out, const Learner& learner, const Vec& results)
+{
     Array<string> names = learner.testResultsNames();
     for (int i=0; i<names.size(); i++)
-      out << names[i] << ": " << results[i] << endl;
-  }
+        out << names[i] << ": " << results[i] << endl;
+}
   
 
 } // end of namespace PLearn
 
 #endif
 
-
-
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

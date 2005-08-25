@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: RightPseudoInverseVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef RightPseudoInverseVariable_INC
 #define RightPseudoInverseVariable_INC
@@ -51,21 +51,21 @@ using namespace std;
 
 class RightPseudoInverseVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  RightPseudoInverseVariable() {}
-  RightPseudoInverseVariable(Variable* input);
+    //!  Default constructor for persistence
+    RightPseudoInverseVariable() {}
+    RightPseudoInverseVariable(Variable* input);
 
-  PLEARN_DECLARE_OBJECT(RightPseudoInverseVariable);
+    PLEARN_DECLARE_OBJECT(RightPseudoInverseVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
     void build_();
@@ -75,9 +75,22 @@ DECLARE_OBJECT_PTR(RightPseudoInverseVariable);
 
 inline Var rightPseudoInverse(Var v)
 {
-  return new RightPseudoInverseVariable(v);
+    return new RightPseudoInverseVariable(v);
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

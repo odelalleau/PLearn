@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Ker_VMat_utils.h,v 1.1 2004/09/27 20:19:27 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -51,46 +51,59 @@
 namespace PLearn {
 using namespace std;
 
-  class Ker;
-  class VMat;
+class Ker;
+class VMat;
 
 /*!     The following methods can be used in a straightforward manner to compute a variety of useful things:
-    Dot products between this vmat and a vector, find the K nearest neighbours to a vector, etc...
-    Most methods take an optional last parameter ignore_this_row which may contain the index of a row that
-    is to be excluded from the computation (this can be seful for leave-one-out evaluations for instance).
+  Dot products between this vmat and a vector, find the K nearest neighbours to a vector, etc...
+  Most methods take an optional last parameter ignore_this_row which may contain the index of a row that
+  is to be excluded from the computation (this can be seful for leave-one-out evaluations for instance).
 */
 
 /*!     This will compute for this vmat m a result vector (whose length must be tha same as m's)
-    s.t. result[i] = ker( m(i).subVec(v1_startcol,v1_ncols) , v2) 
-    i.e. the kernel value betweeen each (sub)row of m and v2
+  s.t. result[i] = ker( m(i).subVec(v1_startcol,v1_ncols) , v2) 
+  i.e. the kernel value betweeen each (sub)row of m and v2
 */
- void evaluateKernel(Ker ker, VMat vm, int v1_startcol, int v1_ncols, 
-                              const Vec& v2, const Vec& result, int startrow=0, int nrows=-1);
+void evaluateKernel(Ker ker, VMat vm, int v1_startcol, int v1_ncols, 
+                    const Vec& v2, const Vec& result, int startrow=0, int nrows=-1);
 
-  //!   returns sum_i [ ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
- real evaluateKernelSum(Ker ker, VMat vm, int v1_startcol, int v1_ncols, 
-                                 const Vec& v2, int startrow=0, int nrows=-1, int ignore_this_row=-1);
+//!   returns sum_i [ ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
+real evaluateKernelSum(Ker ker, VMat vm, int v1_startcol, int v1_ncols, 
+                       const Vec& v2, int startrow=0, int nrows=-1, int ignore_this_row=-1);
 
-  //!  targetsum := sum_i [ m(i).subVec(t_startcol,t_ncols) * ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
-  //!  and returns sum_i [ ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
- real evaluateKernelWeightedTargetSum(Ker ker, VMat vm, int v1_startcol, int v1_ncols, const Vec& v2, 
-                                               int t_startcol, int t_ncols, Vec& targetsum, int startrow=0, int nrows=-1, int ignore_this_row=-1);
+//!  targetsum := sum_i [ m(i).subVec(t_startcol,t_ncols) * ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
+//!  and returns sum_i [ ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
+real evaluateKernelWeightedTargetSum(Ker ker, VMat vm, int v1_startcol, int v1_ncols, const Vec& v2, 
+                                     int t_startcol, int t_ncols, Vec& targetsum, int startrow=0, int nrows=-1, int ignore_this_row=-1);
   
    
 /*!     This will return the Top N kernel evaluated values (between vmat (sub)rows and v2) and their associated row_index.
-    Result is returned as a vector of length N of pairs (kernel_value,row_index)
-    Results are sorted with largest kernel value first
+  Result is returned as a vector of length N of pairs (kernel_value,row_index)
+  Results are sorted with largest kernel value first
 */
- TVec< pair<real,int> > evaluateKernelTopN(int N, Ker ker, VMat vm, int v1_startcol, int v1_ncols, 
-                                                    const Vec& v2, int startrow=0, int nrows=-1, int ignore_this_row=-1);
+TVec< pair<real,int> > evaluateKernelTopN(int N, Ker ker, VMat vm, int v1_startcol, int v1_ncols, 
+                                          const Vec& v2, int startrow=0, int nrows=-1, int ignore_this_row=-1);
 
-  //!  same as evaluateKernelTopN but will look for the N smallest values instead of top values.
-  //!  results are sorted with smallest kernel value first
- TVec< pair<real,int> > evaluateKernelBottomN(int N, Ker ker, VMat vm, int v1_startcol, int v1_ncols, 
-                                                       const Vec& v2, int startrow=0, int nrows=-1, int ignore_this_row=-1);
+//!  same as evaluateKernelTopN but will look for the N smallest values instead of top values.
+//!  results are sorted with smallest kernel value first
+TVec< pair<real,int> > evaluateKernelBottomN(int N, Ker ker, VMat vm, int v1_startcol, int v1_ncols, 
+                                             const Vec& v2, int startrow=0, int nrows=-1, int ignore_this_row=-1);
 
 
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

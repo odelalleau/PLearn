@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christian Hudon
 
@@ -48,49 +48,62 @@
 namespace PLearn {
 using namespace std;
 
-  PrPStreamBuf::PrPStreamBuf(PRFileDesc* in_, PRFileDesc* out_,
-                             bool own_in_, bool own_out_)
+PrPStreamBuf::PrPStreamBuf(PRFileDesc* in_, PRFileDesc* out_,
+                           bool own_in_, bool own_out_)
     : PStreamBuf(in_ != 0, out_ != 0, 4096, 4096, default_ungetsize), 
       in(in_), out(out_), own_in(own_in_), own_out(own_out_)
-  {}
+{}
 
-  PrPStreamBuf::~PrPStreamBuf()
-  {
+PrPStreamBuf::~PrPStreamBuf()
+{
     const bool in_and_out_equal = (in == out);
     
     try {
-      flush();
+        flush();
     }
     catch(...)
-      {
+    {
         fprintf(stderr,"Could not properly clean up (flush) in destructor of PrPStreamBuf\n");
-      }
+    }
     if (in && own_in)
-      {
+    {
         PR_Close(in);
         in = 0;
-      }
+    }
     if (out && own_out)
-      {
+    {
         // If "in" and "out" were pointing to the same PRFileDesc,
         // don't close it a second time.
         if (!in_and_out_equal)
-          PR_Close(out);
+            PR_Close(out);
         out = 0;
-      }
-  }
+    }
+}
 
-  PrPStreamBuf::streamsize PrPStreamBuf::read_(char* p, streamsize n)
-  {
+PrPStreamBuf::streamsize PrPStreamBuf::read_(char* p, streamsize n)
+{
     return PR_Read(in, p, n);
-  }
+}
 
-  //! writes exactly n characters from p (unbuffered, must flush)
-  void PrPStreamBuf::write_(const char* p, streamsize n)
-  {
+//! writes exactly n characters from p (unbuffered, must flush)
+void PrPStreamBuf::write_(const char* p, streamsize n)
+{
     streamsize nwritten = ::PR_Write(out, p, n);
     if (nwritten != n)
-      PLERROR("In PrPStreamBuf::write_ failed to write the requested number of bytes: wrote %d instead of %d",nwritten,n);
-  }
+        PLERROR("In PrPStreamBuf::write_ failed to write the requested number of bytes: wrote %d instead of %d",nwritten,n);
+}
   
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

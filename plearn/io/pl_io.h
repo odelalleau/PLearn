@@ -38,9 +38,9 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.h,v 1.14 2004/10/14 21:23:55 ducharme Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/pl_io.h */
@@ -62,20 +62,20 @@ using std::ostream;
 template <class Key, class Value>
 ostream& operator<<(ostream& out, const map<Key, Value>& m)
 {
-  out << "{" << flush;
-  typename map<Key,Value>::const_iterator it  = m.begin();
+    out << "{" << flush;
+    typename map<Key,Value>::const_iterator it  = m.begin();
 
-  if ( m.size() > 0 )
-  {
-    for ( unsigned int elem = 0; elem < m.size()-1; elem++, it++ ) 
-      out << it->first << " : " << it->second << ", " << flush;
+    if ( m.size() > 0 )
+    {
+        for ( unsigned int elem = 0; elem < m.size()-1; elem++, it++ ) 
+            out << it->first << " : " << it->second << ", " << flush;
 
-    assert( it != m.end() );
-    out << it->first << " : " << it->second << flush;
-  }
+        assert( it != m.end() );
+        out << it->first << " : " << it->second << flush;
+    }
   
-  out << "}" << flush;
-  return out;
+    out << "}" << flush;
+    return out;
 }
 
 
@@ -100,63 +100,63 @@ inline void binread(istream& in, pair<A,B>& x)
 { binread(in,x.first); binread(in,x.second); }
 
 
-  //!  binwrite and binread for a few basic types
-  inline void binwrite(ostream& out, char x) { out.put(x); }
-  inline void binread(istream& in, char& x) { in.get(x); }
-  inline void binwrite(ostream& out, unsigned char x) { out.put(x); }
-  inline void binread(istream& in, unsigned char& x) { in.get((char&)x); }
-  inline void binwrite(ostream& out, int x) { out.write((char*)&x,sizeof(int)); }
-  inline void binread(istream& in, int& x) { in.read((char*)&x,sizeof(int));  }
-  inline void binwrite(ostream& out, unsigned int x) { out.write((char*)&x,sizeof(unsigned int)); }
-  inline void binread(istream& in, unsigned int& x) { in.read((char*)&x,sizeof(unsigned int));  }
-  inline void binwrite(ostream& out, short x) { out.write((char*)&x,sizeof(short)); }
-  inline void binread(istream& in, short& x) { in.read((char*)&x,sizeof(short));  }
-  inline void binwrite(ostream& out, unsigned short x) { out.write((char*)&x,sizeof(unsigned short)); }
-  inline void binread(istream& in, unsigned short& x) { in.read((char*)&x,sizeof(unsigned short));  }
-  //!  note that bool are saved as unsigned short
-  inline void binwrite(ostream& out, bool x) { binwrite(out,(unsigned short)x); }
+//!  binwrite and binread for a few basic types
+inline void binwrite(ostream& out, char x) { out.put(x); }
+inline void binread(istream& in, char& x) { in.get(x); }
+inline void binwrite(ostream& out, unsigned char x) { out.put(x); }
+inline void binread(istream& in, unsigned char& x) { in.get((char&)x); }
+inline void binwrite(ostream& out, int x) { out.write((char*)&x,sizeof(int)); }
+inline void binread(istream& in, int& x) { in.read((char*)&x,sizeof(int));  }
+inline void binwrite(ostream& out, unsigned int x) { out.write((char*)&x,sizeof(unsigned int)); }
+inline void binread(istream& in, unsigned int& x) { in.read((char*)&x,sizeof(unsigned int));  }
+inline void binwrite(ostream& out, short x) { out.write((char*)&x,sizeof(short)); }
+inline void binread(istream& in, short& x) { in.read((char*)&x,sizeof(short));  }
+inline void binwrite(ostream& out, unsigned short x) { out.write((char*)&x,sizeof(unsigned short)); }
+inline void binread(istream& in, unsigned short& x) { in.read((char*)&x,sizeof(unsigned short));  }
+//!  note that bool are saved as unsigned short
+inline void binwrite(ostream& out, bool x) { binwrite(out,(unsigned short)x); }
 
-  // norman: usigned short to boolean?? Performance hit!!
-  //inline void binread(istream& in, bool& x) { unsigned short u; binread(in,u); x=u; }
-  inline void binread(istream& in, bool& x) { 
-	  unsigned short u; binread(in,u); 
-	  u == 0 ? x = false : x = true;
-  }
+// norman: usigned short to boolean?? Performance hit!!
+//inline void binread(istream& in, bool& x) { unsigned short u; binread(in,u); x=u; }
+inline void binread(istream& in, bool& x) { 
+    unsigned short u; binread(in,u); 
+    u == 0 ? x = false : x = true;
+}
 
 // The following read/write floats (4 bytes) on disk, regardless of whether the memory-elements are float or double
-  inline void binwrite(ostream& out, float x) { out.write((char*)&x,sizeof(float)); }
-  inline void binread(istream& in, float& x) { in.read((char*)&x,sizeof(float));  }
-  inline void binwrite(ostream& out, double x) { binwrite(out, float(x)); }
-  inline void binread(istream& in, double& x) { float f; binread(in,f); x = double(f); }
+inline void binwrite(ostream& out, float x) { out.write((char*)&x,sizeof(float)); }
+inline void binread(istream& in, float& x) { in.read((char*)&x,sizeof(float));  }
+inline void binwrite(ostream& out, double x) { binwrite(out, float(x)); }
+inline void binread(istream& in, double& x) { float f; binread(in,f); x = double(f); }
 
 // The following read/write doubles (8 bytes) on disk, regardless of whether the memory-elements are float or double
-  inline void binwrite_double(ostream& out, double x) { out.write((char*)&x,sizeof(double)); }
-  inline void binread_double(istream& in, double& x) { in.read((char*)&x,sizeof(double));  }
-  inline void binwrite_double(ostream& out, float x) { binwrite_double(out, double(x)); }
-  inline void binread_double(istream& in, float& x) { double d; binread_double(in,d); x = float(d); }
+inline void binwrite_double(ostream& out, double x) { out.write((char*)&x,sizeof(double)); }
+inline void binread_double(istream& in, double& x) { in.read((char*)&x,sizeof(double));  }
+inline void binwrite_double(ostream& out, float x) { binwrite_double(out, double(x)); }
+inline void binread_double(istream& in, float& x) { double d; binread_double(in,d); x = float(d); }
 
 
-  //!  multi-element versions, giving address and number of elements
-  inline void binwrite(ostream& out, const int* x, int n) { out.write((char*)x, n*sizeof(int)); }
-  inline void binread(istream& in, int* x, int n) { in.read((char*)x, n*sizeof(int));  }
-  inline void binwrite(ostream& out, const unsigned int* x, int n) { out.write((char*)x, n*sizeof(unsigned int)); }
-  inline void binread(istream& in, unsigned int* x, int n)  { in.read((char*)x, n*sizeof(unsigned int));  }
-  inline void binwrite(ostream& out, const short* x, int n) { out.write((char*)x, n*sizeof(short)); }
-  inline void binread(istream& in, short* x, int n) { in.read((char*)x, n*sizeof(short));  }
-  inline void binwrite(ostream& out, const unsigned short* x, int n) { out.write((char*)x, n*sizeof(unsigned short)); }
-  inline void binread(istream& in, unsigned short* x, int n) { in.read((char*)x, n*sizeof(unsigned short));  }
+//!  multi-element versions, giving address and number of elements
+inline void binwrite(ostream& out, const int* x, int n) { out.write((char*)x, n*sizeof(int)); }
+inline void binread(istream& in, int* x, int n) { in.read((char*)x, n*sizeof(int));  }
+inline void binwrite(ostream& out, const unsigned int* x, int n) { out.write((char*)x, n*sizeof(unsigned int)); }
+inline void binread(istream& in, unsigned int* x, int n)  { in.read((char*)x, n*sizeof(unsigned int));  }
+inline void binwrite(ostream& out, const short* x, int n) { out.write((char*)x, n*sizeof(short)); }
+inline void binread(istream& in, short* x, int n) { in.read((char*)x, n*sizeof(short));  }
+inline void binwrite(ostream& out, const unsigned short* x, int n) { out.write((char*)x, n*sizeof(unsigned short)); }
+inline void binread(istream& in, unsigned short* x, int n) { in.read((char*)x, n*sizeof(unsigned short));  }
 
 // The followind read/write 4-byte-floats on disk (whether we pass them a float* or a double*)
-  inline void binwrite(ostream& out, const float *x, int n) { out.write((char*)x, n*sizeof(float)); }
-  inline void binread(istream& in, float* x, int n) { in.read((char*)x, n*sizeof(float));  }
-  inline void binwrite(ostream& out, const double* x, int n) { for(int i=0; i<n; i++) binwrite(out,x[i]); }
-  inline void binread(istream& in, double* x, int n) { for(int i=0; i<n; i++) binread(in,x[i]); }
+inline void binwrite(ostream& out, const float *x, int n) { out.write((char*)x, n*sizeof(float)); }
+inline void binread(istream& in, float* x, int n) { in.read((char*)x, n*sizeof(float));  }
+inline void binwrite(ostream& out, const double* x, int n) { for(int i=0; i<n; i++) binwrite(out,x[i]); }
+inline void binread(istream& in, double* x, int n) { for(int i=0; i<n; i++) binread(in,x[i]); }
 
 // The followind read/write 8-byte-doubles on disk (whether we pass them a float* or a double*)
-  inline void binwrite_double(ostream& out, const double *x, int n) { out.write((char*)x, n*sizeof(double)); }
-  inline void binread_double(istream& in, double* x, int n) { in.read((char*)x, n*sizeof(double));  }
-  inline void binwrite_double(ostream& out, const float* x, int n) { for(int i=0; i<n; i++) binwrite(out,x[i]); }
-  inline void binread_double(istream& in, float* x, int n) { for(int i=0; i<n; i++) binread(in,x[i]); }
+inline void binwrite_double(ostream& out, const double *x, int n) { out.write((char*)x, n*sizeof(double)); }
+inline void binread_double(istream& in, double* x, int n) { in.read((char*)x, n*sizeof(double));  }
+inline void binwrite_double(ostream& out, const float* x, int n) { for(int i=0; i<n; i++) binwrite(out,x[i]); }
+inline void binread_double(istream& in, float* x, int n) { for(int i=0; i<n; i++) binread(in,x[i]); }
 
 //! version for compressed array (efficient for sparse data, and small integer values)
 //! (format is detailed in .cc, see write_compr_mode_and_size function in general.cc)
@@ -187,62 +187,62 @@ inline void binread(FILE* in, pair<A,B>& x)
 { binread(in,x.first); binread(in,x.second); }
 
 
-  //!  binwrite and binread for a few basic types
-  inline void binwrite(FILE* out, char x) { putc((unsigned char)x, out); }
-  inline void binread(FILE* in, char& x) { x = (char)getc(in); }
-  inline void binwrite(FILE* out, unsigned char x) { putc(x,out); }
-  inline void binread(FILE* in, unsigned char& x) { x = (unsigned char)getc(in); }
-  inline void binwrite(FILE* out, int x) { fwrite(&x,sizeof(int),1,out); }
-  inline void binread(FILE* in, int& x) { fread(&x,sizeof(int),1,in);  }
-  inline void binwrite(FILE* out, unsigned int x) { fwrite(&x,sizeof(unsigned int),1,out); }
-  inline void binread(FILE* in, unsigned int& x) { fread(&x,sizeof(unsigned int),1,in);  }
-  inline void binwrite(FILE* out, short x) { fwrite(&x,sizeof(short),1,out); }
-  inline void binread(FILE* in, short& x) { fread(&x,sizeof(short),1,in);  }
-  inline void binwrite(FILE* out, unsigned short x) { fwrite(&x,sizeof(unsigned short),1,out); }
-  inline void binread(FILE* in, unsigned short& x) { fread(&x,sizeof(unsigned short),1,in);  }
-  //!  note that bool are saved as unsigned short
-  inline void binwrite(FILE* out, bool x) { binwrite(out,(unsigned short)x); }
-  // norman: usigned short to boolean?? At least use a cast
-  //inline void binread(FILE* in, bool& x) { unsigned short u; binread(in,u); x=u; }
-  inline void binread(FILE* in, bool& x) { 
-	  unsigned short u; binread(in,u); 
-	  u == 0 ? x = false : x = true;
-  }
+//!  binwrite and binread for a few basic types
+inline void binwrite(FILE* out, char x) { putc((unsigned char)x, out); }
+inline void binread(FILE* in, char& x) { x = (char)getc(in); }
+inline void binwrite(FILE* out, unsigned char x) { putc(x,out); }
+inline void binread(FILE* in, unsigned char& x) { x = (unsigned char)getc(in); }
+inline void binwrite(FILE* out, int x) { fwrite(&x,sizeof(int),1,out); }
+inline void binread(FILE* in, int& x) { fread(&x,sizeof(int),1,in);  }
+inline void binwrite(FILE* out, unsigned int x) { fwrite(&x,sizeof(unsigned int),1,out); }
+inline void binread(FILE* in, unsigned int& x) { fread(&x,sizeof(unsigned int),1,in);  }
+inline void binwrite(FILE* out, short x) { fwrite(&x,sizeof(short),1,out); }
+inline void binread(FILE* in, short& x) { fread(&x,sizeof(short),1,in);  }
+inline void binwrite(FILE* out, unsigned short x) { fwrite(&x,sizeof(unsigned short),1,out); }
+inline void binread(FILE* in, unsigned short& x) { fread(&x,sizeof(unsigned short),1,in);  }
+//!  note that bool are saved as unsigned short
+inline void binwrite(FILE* out, bool x) { binwrite(out,(unsigned short)x); }
+// norman: usigned short to boolean?? At least use a cast
+//inline void binread(FILE* in, bool& x) { unsigned short u; binread(in,u); x=u; }
+inline void binread(FILE* in, bool& x) { 
+    unsigned short u; binread(in,u); 
+    u == 0 ? x = false : x = true;
+}
 
 // The following read/write floats (4 bytes) on disk, regardless of whether the memory-elements are float or double
-  inline void binwrite(FILE* out, float x) { fwrite(&x,sizeof(float),1,out); }
-  inline void binread(FILE* in, float& x) { fread(&x,sizeof(float),1,in);  }
-  inline void binwrite(FILE* out, double x) { binwrite(out, float(x)); }
-  inline void binread(FILE* in, double& x) { float f; binread(in,f); x = double(f); }
+inline void binwrite(FILE* out, float x) { fwrite(&x,sizeof(float),1,out); }
+inline void binread(FILE* in, float& x) { fread(&x,sizeof(float),1,in);  }
+inline void binwrite(FILE* out, double x) { binwrite(out, float(x)); }
+inline void binread(FILE* in, double& x) { float f; binread(in,f); x = double(f); }
 
 // The following read/write doubles (8 bytes) on disk, regardless of whether the memory-elements are float or double
-  inline void binwrite_double(FILE* out, double x) { fwrite(&x,sizeof(double),1,out); }
-  inline void binread_double(FILE* in, double& x) { fread(&x,sizeof(double),1,in);  }
-  inline void binwrite_double(FILE* out, float x) { binwrite_double(out, double(x)); }
-  inline void binread_double(FILE* in, float& x) { double d; binread_double(in,d); x = float(d); }
+inline void binwrite_double(FILE* out, double x) { fwrite(&x,sizeof(double),1,out); }
+inline void binread_double(FILE* in, double& x) { fread(&x,sizeof(double),1,in);  }
+inline void binwrite_double(FILE* out, float x) { binwrite_double(out, double(x)); }
+inline void binread_double(FILE* in, float& x) { double d; binread_double(in,d); x = float(d); }
 
 
-  //!  multi-element versions, giving address and number of elements
-  inline void binwrite(FILE* out, const int* x, int n) { fwrite(x, sizeof(int),n,out); }
-  inline void binread(FILE* in, int* x, int n) { fread(x, sizeof(int),n,in);  }
-  inline void binwrite(FILE* out, const unsigned int* x, int n) { fwrite(x, sizeof(unsigned int),n,out); }
-  inline void binread(FILE* in, unsigned int* x, int n)  { fread(x, sizeof(unsigned int),n,in);  }
-  inline void binwrite(FILE* out, const short* x, int n) { fwrite(x, sizeof(short),n,out); }
-  inline void binread(FILE* in, short* x, int n) { fread(x, sizeof(short),n,in);  }
-  inline void binwrite(FILE* out, const unsigned short* x, int n) { fwrite(x, sizeof(unsigned short),n,out); }
-  inline void binread(FILE* in, unsigned short* x, int n) { fread(x, sizeof(unsigned short),n,in);  }
+//!  multi-element versions, giving address and number of elements
+inline void binwrite(FILE* out, const int* x, int n) { fwrite(x, sizeof(int),n,out); }
+inline void binread(FILE* in, int* x, int n) { fread(x, sizeof(int),n,in);  }
+inline void binwrite(FILE* out, const unsigned int* x, int n) { fwrite(x, sizeof(unsigned int),n,out); }
+inline void binread(FILE* in, unsigned int* x, int n)  { fread(x, sizeof(unsigned int),n,in);  }
+inline void binwrite(FILE* out, const short* x, int n) { fwrite(x, sizeof(short),n,out); }
+inline void binread(FILE* in, short* x, int n) { fread(x, sizeof(short),n,in);  }
+inline void binwrite(FILE* out, const unsigned short* x, int n) { fwrite(x, sizeof(unsigned short),n,out); }
+inline void binread(FILE* in, unsigned short* x, int n) { fread(x, sizeof(unsigned short),n,in);  }
 
 // The followind read/write 4-byte-floats on disk (whether we pass them a float* or a double*)
-  inline void binwrite(FILE* out, const float *x, int n) { fwrite(x, sizeof(float),n,out); }
-  inline void binread(FILE* in, float* x, int n) { fread(x, sizeof(float),n,in);  }
-  inline void binwrite(FILE* out, const double* x, int n) { for(int i=0; i<n; i++) binwrite(out,x[i]); }
-  inline void binread(FILE* in, double* x, int n) { for(int i=0; i<n; i++) binread(in,x[i]); }
+inline void binwrite(FILE* out, const float *x, int n) { fwrite(x, sizeof(float),n,out); }
+inline void binread(FILE* in, float* x, int n) { fread(x, sizeof(float),n,in);  }
+inline void binwrite(FILE* out, const double* x, int n) { for(int i=0; i<n; i++) binwrite(out,x[i]); }
+inline void binread(FILE* in, double* x, int n) { for(int i=0; i<n; i++) binread(in,x[i]); }
 
 // The followind read/write 8-byte-doubles on disk (whether we pass them a float* or a double*)
-  inline void binwrite_double(FILE* out, const double *x, int n) { fwrite(x, sizeof(double),n,out); }
-  inline void binread_double(FILE* in, double* x, int n) { fread(x, sizeof(double),n,in);  }
-  inline void binwrite_double(FILE* out, const float* x, int n) { for(int i=0; i<n; i++) binwrite(out,x[i]); }
-  inline void binread_double(FILE* in, float* x, int n) { for(int i=0; i<n; i++) binread(in,x[i]); }
+inline void binwrite_double(FILE* out, const double *x, int n) { fwrite(x, sizeof(double),n,out); }
+inline void binread_double(FILE* in, double* x, int n) { fread(x, sizeof(double),n,in);  }
+inline void binwrite_double(FILE* out, const float* x, int n) { for(int i=0; i<n; i++) binwrite(out,x[i]); }
+inline void binread_double(FILE* in, float* x, int n) { for(int i=0; i<n; i++) binread(in,x[i]); }
 
 void binwrite_compressed(FILE* out, const double* data, int l);
 void binread_compressed(FILE* in, double* data, int l);
@@ -276,3 +276,16 @@ size_t new_read_compressed(FILE* in, real* vec, int l, bool swap_endians=false);
 
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

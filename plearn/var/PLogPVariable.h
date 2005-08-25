@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: PLogPVariable.h,v 1.5 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef PLogPVariable_INC
 #define PLogPVariable_INC
@@ -53,19 +53,19 @@ using namespace std;
 //!  This can be used to compute the Entropy for instance
 class PLogPVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  PLogPVariable() {}
-  PLogPVariable(Variable* input);
+    //!  Default constructor for persistence
+    PLogPVariable() {}
+    PLogPVariable(Variable* input);
 
-  PLEARN_DECLARE_OBJECT(PLogPVariable);
+    PLEARN_DECLARE_OBJECT(PLogPVariable);
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 };
 
 DECLARE_OBJECT_PTR(PLogPVariable);
@@ -77,3 +77,16 @@ inline Var plogp(Var v)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

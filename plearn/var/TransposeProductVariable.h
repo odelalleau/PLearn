@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: TransposeProductVariable.h,v 1.6 2004/09/07 20:52:20 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef TransposeProductVariable_INC
 #define TransposeProductVariable_INC
@@ -52,35 +52,48 @@ using namespace std;
 //!  Matrix product between transpose of matrix1 and matrix2
 class TransposeProductVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  TransposeProductVariable() {}
-  TransposeProductVariable(Variable* matrix1, Variable* matrix2);
+    //!  Default constructor for persistence
+    TransposeProductVariable() {}
+    TransposeProductVariable(Variable* matrix1, Variable* matrix2);
 
-  PLEARN_DECLARE_OBJECT(TransposeProductVariable);
+    PLEARN_DECLARE_OBJECT(TransposeProductVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void bbprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void bbprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 
 protected:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(TransposeProductVariable);
 
 inline Var transposeProduct(const Var& m1, const Var& m2)
 {
-  return new TransposeProductVariable(m1, m2);
+    return new TransposeProductVariable(m1, m2);
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: PlusRowVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ColumnSumVariable.h"
 #include "PlusRowVariable.h"
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(PlusRowVariable,
                         "NO HELP");
 
 PlusRowVariable::PlusRowVariable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, input1->length(), input1->width())
+    : inherited(input1, input2, input1->length(), input1->width())
 {
     build_();
 }
@@ -91,59 +91,70 @@ void PlusRowVariable::recomputeSize(int& l, int& w) const
 
 void PlusRowVariable::fprop()
 {
-  int k=0;
-  for(int i=0; i<length(); i++)
-    for(int j=0; j<width(); j++, k++)
-      valuedata[k] = input1->valuedata[k] + input2->valuedata[j];
+    int k=0;
+    for(int i=0; i<length(); i++)
+        for(int j=0; j<width(); j++, k++)
+            valuedata[k] = input1->valuedata[k] + input2->valuedata[j];
 }
 
 
 void PlusRowVariable::bprop()
 {
-  int k=0;
-  for(int i=0; i<length(); i++)
-    for(int j=0; j<width(); j++, k++)
-      {
-        input1->gradientdata[k] += gradientdata[k];
-        input2->gradientdata[j] += gradientdata[k];
-      }
+    int k=0;
+    for(int i=0; i<length(); i++)
+        for(int j=0; j<width(); j++, k++)
+        {
+            input1->gradientdata[k] += gradientdata[k];
+            input2->gradientdata[j] += gradientdata[k];
+        }
 }
 
 
 void PlusRowVariable::bbprop()
 {
-  if (input1->diaghessian.length()==0)
-    input1->resizeDiagHessian();
-  if (input2->diaghessian.length()==0)
-    input2->resizeDiagHessian();
-  int k=0;
-  for(int i=0; i<length(); i++)
-    for(int j=0; j<width(); j++, k++)
-      {
-        input1->diaghessiandata[k] += diaghessiandata[k];
-        input2->diaghessiandata[j] += diaghessiandata[k];
-      }
+    if (input1->diaghessian.length()==0)
+        input1->resizeDiagHessian();
+    if (input2->diaghessian.length()==0)
+        input2->resizeDiagHessian();
+    int k=0;
+    for(int i=0; i<length(); i++)
+        for(int j=0; j<width(); j++, k++)
+        {
+            input1->diaghessiandata[k] += diaghessiandata[k];
+            input2->diaghessiandata[j] += diaghessiandata[k];
+        }
 }
 
 
 void PlusRowVariable::symbolicBprop()
 {
-  input1->accg(g);
-  input2->accg(columnSum(g));
+    input1->accg(g);
+    input2->accg(columnSum(g));
 }
 
 
 void PlusRowVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  int k=0;
-  for(int i=0; i<length(); i++)
-    for(int j=0; j<width(); j++, k++)
-      rvaluedata[k] = input1->rvaluedata[k] + input2->rvaluedata[j];
+    if (rValue.length()==0) resizeRValue();
+    int k=0;
+    for(int i=0; i<length(); i++)
+        for(int j=0; j<width(); j++, k++)
+            rvaluedata[k] = input1->rvaluedata[k] + input2->rvaluedata[j];
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

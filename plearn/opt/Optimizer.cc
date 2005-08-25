@@ -37,9 +37,9 @@
  
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "Optimizer.h"
 //#define DEBUGCG
@@ -52,132 +52,132 @@ using namespace std;
 
 
 Optimizer::Optimizer(int n_updates, const string& file_name, int every_iterations)
-  :nupdates(n_updates), nstages(0), filename(file_name),
-  every(every_iterations)
+    :nupdates(n_updates), nstages(0), filename(file_name),
+     every(every_iterations)
 {}
 
 Optimizer::Optimizer(VarArray the_params, Var the_cost, int n_updates,
                      const string& file_name, int every_iterations)
-  :params(the_params),cost(the_cost), nupdates(n_updates), 
-  filename(file_name), every(every_iterations)
+    :params(the_params),cost(the_cost), nupdates(n_updates), 
+     filename(file_name), every(every_iterations)
 {}
 
 Optimizer::Optimizer(VarArray the_params, Var the_cost, VarArray the_update_for_measure,
                      int n_updates, const string& file_name, 
                      int every_iterations)
-  :params(the_params), cost(the_cost), nupdates(n_updates),
-   update_for_measure(the_update_for_measure),
-   filename(file_name), every(every_iterations)
+    :params(the_params), cost(the_cost), nupdates(n_updates),
+     update_for_measure(the_update_for_measure),
+     filename(file_name), every(every_iterations)
 {}
 
 void Optimizer::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void Optimizer::build_()
 {
-  if (update_for_measure.length()==0) // normal propagation path
-  {
-    // JS - dans la premiere version, ces deux lignes etaient seulement la pour le second constructeur (dans init())
-    early_stop=false;
-    early_stop_i=0;
-    proppath = propagationPath(params, cost);
-  }
-  else
-    proppath = propagationPath(params, update_for_measure & (VarArray) cost);
-  VarArray path_from_all_sources_to_direct_parents = propagationPathToParentsOfPath(params, cost);
-  path_from_all_sources_to_direct_parents.fprop();
-  int n = params.nelems();
-  if (n > 0) {
-    temp_grad.resize(params.nelems());
+    if (update_for_measure.length()==0) // normal propagation path
+    {
+        // JS - dans la premiere version, ces deux lignes etaient seulement la pour le second constructeur (dans init())
+        early_stop=false;
+        early_stop_i=0;
+        proppath = propagationPath(params, cost);
+    }
+    else
+        proppath = propagationPath(params, update_for_measure & (VarArray) cost);
+    VarArray path_from_all_sources_to_direct_parents = propagationPathToParentsOfPath(params, cost);
+    path_from_all_sources_to_direct_parents.fprop();
+    int n = params.nelems();
+    if (n > 0) {
+        temp_grad.resize(params.nelems());
 /*    same_sign.resize(params.nelems());
-    same_sign.clear();*/
-  }
-  //  stage = 0;  // Pose probleme. Peut-etre faudrait-il une methode reset plutot
+      same_sign.clear();*/
+    }
+    //  stage = 0;  // Pose probleme. Peut-etre faudrait-il une methode reset plutot
 }
 
 void Optimizer::reset()
 {
-  stage = 0;
+    stage = 0;
 }
 
 void Optimizer::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "n_updates", &Optimizer::nupdates, OptionBase::buildoption, 
-                "Deprecated - maximum number of parameter-updates\n"
-                "  to be performed by the optimizer\n");
+    declareOption(ol, "n_updates", &Optimizer::nupdates, OptionBase::buildoption, 
+                  "Deprecated - maximum number of parameter-updates\n"
+                  "  to be performed by the optimizer\n");
 
-  declareOption(ol, "every_iterations", &Optimizer::every,
-                OptionBase::buildoption, 
-                "Deprecated - call measure() method every that many updates \n");
+    declareOption(ol, "every_iterations", &Optimizer::every,
+                  OptionBase::buildoption, 
+                  "Deprecated - call measure() method every that many updates \n");
 
-  declareOption(ol, "filename", &Optimizer::filename, OptionBase::buildoption, 
-                "call measure <every> <nupdates> iterations\n"
-                "  saving the results in the <filename>. \n");
+    declareOption(ol, "filename", &Optimizer::filename, OptionBase::buildoption, 
+                  "call measure <every> <nupdates> iterations\n"
+                  "  saving the results in the <filename>. \n");
 
-  declareOption(ol, "nstages", &Optimizer::nstages, OptionBase::buildoption, 
-                "  number of iterations to perform on the next ""optimizeN"" call\n");
+    declareOption(ol, "nstages", &Optimizer::nstages, OptionBase::buildoption, 
+                  "  number of iterations to perform on the next ""optimizeN"" call\n");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 void Optimizer::oldwrite(ostream& out) const
 {
-  writeHeader(out, "Optimizer", 0);
-  writeField(out, "n_updates", nupdates);
-  writeField(out, "every_iterations", every);
-  writeFooter(out, "Optimizer");
+    writeHeader(out, "Optimizer", 0);
+    writeField(out, "n_updates", nupdates);
+    writeField(out, "every_iterations", every);
+    writeFooter(out, "Optimizer");
 }
 
 /* TODO Remove (deprecated)
-void Optimizer::oldread(istream& in)
-{
-  int ver = readHeader(in, "Optimizer");
-  if(ver!=0)
-    PLERROR("In Optimizer::read version number %d not supported",ver);
-  readField(in, "n_updates", nupdates);
-  readField(in, "every_iterations", every);
-  readFooter(in, "Optimizer");
-}
+   void Optimizer::oldread(istream& in)
+   {
+   int ver = readHeader(in, "Optimizer");
+   if(ver!=0)
+   PLERROR("In Optimizer::read version number %d not supported",ver);
+   readField(in, "n_updates", nupdates);
+   readField(in, "every_iterations", every);
+   readFooter(in, "Optimizer");
+   }
 */
 
 void Optimizer::setToOptimize(VarArray the_params, Var the_cost)
 {
 //  if(the_cost->length()!=1)
 //    PLERROR("IN Optimizer::setToOptimize, cost must be a scalar variable (length 1)");
-  params = the_params;//displayVarGraph(params, true, 333, "p1", false);
-  cost = the_cost;//displayVarGraph(cost[0], true, 333, "c1", false);
-  proppath = propagationPath(params,cost);//displayVarGraph(proppath, true, 333, "x1", false);
-  VarArray path_from_all_sources_to_direct_parents = propagationPathToParentsOfPath(params, cost);
-  path_from_all_sources_to_direct_parents.fprop();//displayVarGraph(path_from_all_sources_to_direct_parents, true, 333, "x1", false);
+    params = the_params;//displayVarGraph(params, true, 333, "p1", false);
+    cost = the_cost;//displayVarGraph(cost[0], true, 333, "c1", false);
+    proppath = propagationPath(params,cost);//displayVarGraph(proppath, true, 333, "x1", false);
+    VarArray path_from_all_sources_to_direct_parents = propagationPathToParentsOfPath(params, cost);
+    path_from_all_sources_to_direct_parents.fprop();//displayVarGraph(path_from_all_sources_to_direct_parents, true, 333, "x1", false);
 }
 
 void Optimizer::setVarArrayOption(const string& optionname, VarArray value)
 {
-  if (optionname=="params") setToOptimize(value, cost);
-  else if (optionname=="update_for_measure") update_for_measure = value;
-  else PLERROR("In Optimizer::setVarArrayOption(const string& optionname, VarArray value): option not recognized (%s).",optionname.c_str());
+    if (optionname=="params") setToOptimize(value, cost);
+    else if (optionname=="update_for_measure") update_for_measure = value;
+    else PLERROR("In Optimizer::setVarArrayOption(const string& optionname, VarArray value): option not recognized (%s).",optionname.c_str());
 }
 
 void Optimizer::setVarOption(const string& optionname, Var value)
 {
-  if (optionname=="cost") setToOptimize(params, value);
-  else PLERROR("In Optimizer::setVarOption(const string& optionname, VarArray value): option not recognized (%s).",optionname.c_str());
+    if (optionname=="cost") setToOptimize(params, value);
+    else PLERROR("In Optimizer::setVarOption(const string& optionname, VarArray value): option not recognized (%s).",optionname.c_str());
 }
 
 void Optimizer::setVMatOption(const string& optionname, VMat value)
 {
-  PLERROR("In Optimizer::setVMatOption(const string& optionname, VarArray value): option not recognized (%s).",optionname.c_str());
+    PLERROR("In Optimizer::setVMatOption(const string& optionname, VarArray value): option not recognized (%s).",optionname.c_str());
 }
 
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
-  Optimizer,
-  "Base class for Optimization algorithms",
-  "In the PLearn context, these optimizers operate on graph of Variable objects,\n"
-  "mostly expressed in VarArray form.");
+    Optimizer,
+    "Base class for Optimization algorithms",
+    "In the PLearn context, these optimizers operate on graph of Variable objects,\n"
+    "mostly expressed in VarArray form.");
 
 //! To use varDeepCopyField.
 #ifdef __INTEL_COMPILER
@@ -195,50 +195,50 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 /////////////////////////////////
 void Optimizer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  varDeepCopyField(cost, copies);
-  deepCopyField(params, copies);
-  deepCopyField(update_for_measure, copies);
-  deepCopyField(temp_grad, copies);
-  // We can't deep copy measurers, because deepCopy is not implemented for
-  // the Measurer class. However, since nobody should be using measurers
-  // anymore, this probably isn't a real issue.
-  // deepCopyField(measurers, copies);
-  if (measurers.size() > 0) {
-    PLWARNING(
-        "In Optimizer::makeDeepCopyFromShallowCopy - The 'measurers' field "
-        "won't be deep copied, since the deepCopy method is not currently "
-        "implemented in the class Measurer."
-        );
-  }
-  build();
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    varDeepCopyField(cost, copies);
+    deepCopyField(params, copies);
+    deepCopyField(update_for_measure, copies);
+    deepCopyField(temp_grad, copies);
+    // We can't deep copy measurers, because deepCopy is not implemented for
+    // the Measurer class. However, since nobody should be using measurers
+    // anymore, this probably isn't a real issue.
+    // deepCopyField(measurers, copies);
+    if (measurers.size() > 0) {
+        PLWARNING(
+            "In Optimizer::makeDeepCopyFromShallowCopy - The 'measurers' field "
+            "won't be deep copied, since the deepCopy method is not currently "
+            "implemented in the class Measurer."
+            );
+    }
+    build();
 }
 
 void Optimizer::addMeasurer(Measurer& measurer)
 { 
-  measurers.appendIfNotThereAlready(&measurer); 
+    measurers.appendIfNotThereAlready(&measurer); 
 }
 
 bool Optimizer::measure(int t, const Vec& costs)
 {
-  bool stop=false;
-  for(int i=0; i<measurers.size(); i++)
-    stop = stop || measurers[i]->measure(t,costs);
-  return stop;
+    bool stop=false;
+    for(int i=0; i<measurers.size(); i++)
+        stop = stop || measurers[i]->measure(t,costs);
+    return stop;
 }
 
 void Optimizer::verifyGradient(real minval, real maxval, real step)
 {
-  Func f(params,cost);
-  f->verifyGradient(minval, maxval, step);
+    Func f(params,cost);
+    f->verifyGradient(minval, maxval, step);
 }
 
 void Optimizer::verifyGradient(real step)
 {
-  Func f(params,cost);
-  Vec p(params.nelems());
-  params >> p;
-  f->verifyGradient(p, step);
+    Func f(params,cost);
+    Vec p(params.nelems());
+    params >> p;
+    f->verifyGradient(p, step);
 }
 
 Optimizer::~Optimizer()
@@ -250,24 +250,24 @@ Optimizer::~Optimizer()
 void Optimizer::computeRepartition(
     Vec v, int n, real mini, real maxi, 
     Vec res, int& noutliers) {
-  res.clear();
-  noutliers = 0;
-  for (int i=0; i<v.length(); i++) {
-    real k = (v[i] - mini) / (maxi - mini);
-    int j = int(k*n);
-    if (j >= n) {
-      noutliers++;
-      j = n-1;
+    res.clear();
+    noutliers = 0;
+    for (int i=0; i<v.length(); i++) {
+        real k = (v[i] - mini) / (maxi - mini);
+        int j = int(k*n);
+        if (j >= n) {
+            noutliers++;
+            j = n-1;
+        }
+        if (j < 0) {
+            noutliers++;
+            j = 0;
+        }
+        res[j]++;
     }
-    if (j < 0) {
-      noutliers++;
-      j = 0;
+    for (int i = 0; i<n; i++) {
+        res[i] /= v.length();
     }
-    res[j]++;
-  }
-  for (int i = 0; i<n; i++) {
-    res[i] /= v.length();
-  }
 }
 
 /////////////////////
@@ -276,12 +276,12 @@ void Optimizer::computeRepartition(
 void Optimizer::computeGradient(
     Optimizer* opt,
     const Vec& gradient) {
-  // Clear all what's left from previous computations
-  opt->proppath.clearGradient();
-  opt->params.clearGradient();
-  opt->cost->gradient[0] = 1;
-  opt->proppath.fbprop();
-  opt->params.copyGradientTo(gradient);
+    // Clear all what's left from previous computations
+    opt->proppath.clearGradient();
+    opt->params.clearGradient();
+    opt->cost->gradient[0] = 1;
+    opt->proppath.fbprop();
+    opt->params.copyGradientTo(gradient);
 }
 
 #ifdef DEBUGCG
@@ -294,18 +294,31 @@ extern GhostScript* gs;
 void Optimizer::computeOppositeGradient(
     Optimizer* opt,
     const Vec& gradient) {
-  // Clear all what's left from previous computations
-  opt->proppath.clearGradient();
-  opt->params.clearGradient();
-  // We want the opposite of the gradient, thus the -1
-  opt->cost->gradient[0] = -1;
-  opt->proppath.fbprop();
-  opt->params.copyGradientTo(gradient);
+    // Clear all what's left from previous computations
+    opt->proppath.clearGradient();
+    opt->params.clearGradient();
+    // We want the opposite of the gradient, thus the -1
+    opt->cost->gradient[0] = -1;
+    opt->proppath.fbprop();
+    opt->params.copyGradientTo(gradient);
 #ifdef DEBUGCG
-  gs->setcolor("blue");
-  gs->drawCircle(opt->params[0]->value[0],opt->params[0]->value[1],0.02);
+    gs->setcolor("blue");
+    gs->drawCircle(opt->params[0]->value[0],opt->params[0]->value[1],0.02);
 #endif
 
 }
   
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,8 +36,8 @@
 
 
 /* *******************************************************      
-   * $Id: TemporalHorizonVMatrix.cc,v 1.5 2004/09/14 16:04:39 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "TemporalHorizonVMatrix.h"
 
@@ -50,15 +50,15 @@ PLEARN_IMPLEMENT_OBJECT(TemporalHorizonVMatrix, "ONE LINE DESCR",
                         "    VMat class that delay the last entries of an underlying VMat by a certain horizon.\n");
 
 TemporalHorizonVMatrix::TemporalHorizonVMatrix(VMat the_distr, int the_horizon, int target_size)
-  : inherited(the_distr.length()-the_horizon, the_distr->width()),
-    distr(the_distr), horizon(the_horizon), targetsize(target_size)
+    : inherited(the_distr.length()-the_horizon, the_distr->width()),
+      distr(the_distr), horizon(the_horizon), targetsize(target_size)
 {
-  fieldinfos = distr->fieldinfos;
-  row_delay.resize(width());
-  for (int i=0; i<width(); i++)
-    row_delay[i] = i<width()-targetsize ? 0 : horizon;
+    fieldinfos = distr->fieldinfos;
+    row_delay.resize(width());
+    for (int i=0; i<width(); i++)
+        row_delay[i] = i<width()-targetsize ? 0 : horizon;
 
-  defineSizes(distr->inputsize(), distr->targetsize(), distr->weightsize());
+    defineSizes(distr->inputsize(), distr->targetsize(), distr->weightsize());
 }
 
 real TemporalHorizonVMatrix::get(int i, int j) const
@@ -69,18 +69,18 @@ void TemporalHorizonVMatrix::put(int i, int j, real value)
 
 real TemporalHorizonVMatrix::dot(int i1, int i2, int inputsize) const
 {
-  real res = 0.;
-  for(int k=0; k<inputsize; k++)
-    res += distr->get(i1+row_delay[k],k)*distr->get(i2+row_delay[k],k);
-  return res;
+    real res = 0.;
+    for(int k=0; k<inputsize; k++)
+        res += distr->get(i1+row_delay[k],k)*distr->get(i2+row_delay[k],k);
+    return res;
 }
 
 real TemporalHorizonVMatrix::dot(int i, const Vec& v) const
 {
-  real res = 0.;
-  for(int k=0; k<v.length(); k++)
-    res += distr->get(i+row_delay[k],k)*v[k];
-  return res;
+    real res = 0.;
+    for(int k=0; k<v.length(); k++)
+        res += distr->get(i+row_delay[k],k)*v[k];
+    return res;
 }
 
 real TemporalHorizonVMatrix::getStringVal(int col, const string & str) const
@@ -101,18 +101,18 @@ const map<real,string>& TemporalHorizonVMatrix::getRealToStringMapping(int col) 
 void TemporalHorizonVMatrix::declareOptions(OptionList &ol)
 {
     declareOption(ol, "distr", &TemporalHorizonVMatrix::distr, OptionBase::buildoption,
-        "    The matrix viewed by the TemporalHorizonVMatrix");
+                  "    The matrix viewed by the TemporalHorizonVMatrix");
     declareOption(ol, "horizon", &TemporalHorizonVMatrix::horizon, OptionBase::buildoption, 
-        "    The temporal value by which to delay the VMat");
+                  "    The temporal value by which to delay the VMat");
     declareOption(ol, "targetsize", &TemporalHorizonVMatrix::targetsize, OptionBase::buildoption, 
-        "    The number of last entries to delay");
+                  "    The number of last entries to delay");
     inherited::declareOptions(ol);
 }
 
 void TemporalHorizonVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(distr, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(distr, copies);
 }
 
 ///////////
@@ -120,8 +120,8 @@ void TemporalHorizonVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ///////////
 void TemporalHorizonVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -129,17 +129,30 @@ void TemporalHorizonVMatrix::build()
 ////////////
 void TemporalHorizonVMatrix::build_()
 {
-  if (distr) {
-    length_ = distr->length()-horizon;
-    width_ = distr->width();
-    fieldinfos = distr->fieldinfos;
+    if (distr) {
+        length_ = distr->length()-horizon;
+        width_ = distr->width();
+        fieldinfos = distr->fieldinfos;
 
-    row_delay.resize(width());
-    for (int i=0; i<width(); i++)
-        row_delay[i] = i<width()-targetsize ? 0 : horizon;
+        row_delay.resize(width());
+        for (int i=0; i<width(); i++)
+            row_delay[i] = i<width()-targetsize ? 0 : horizon;
 
-    defineSizes(distr->inputsize(), distr->targetsize(), distr->weightsize());
-  }
+        defineSizes(distr->inputsize(), distr->targetsize(), distr->weightsize());
+    }
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

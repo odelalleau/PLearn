@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: VarArrayElementVariable.h,v 1.4 2004/04/27 16:04:13 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef VarArrayElementVariable_INC
 #define VarArrayElementVariable_INC
@@ -54,21 +54,21 @@ using namespace std;
 //!  by the input2 variable 
 class VarArrayElementVariable: public NaryVariable
 {
-  typedef NaryVariable inherited;
+    typedef NaryVariable inherited;
 
 public:
-  //!  protected default constructor for persistence
-  VarArrayElementVariable() {}
-  VarArrayElementVariable(VarArray& input1, const Var& input2);
+    //!  protected default constructor for persistence
+    VarArrayElementVariable() {}
+    VarArrayElementVariable(VarArray& input1, const Var& input2);
 
-  PLEARN_DECLARE_OBJECT(VarArrayElementVariable);
+    PLEARN_DECLARE_OBJECT(VarArrayElementVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
     void build_();
@@ -79,3 +79,16 @@ DECLARE_OBJECT_PTR(VarArrayElementVariable);
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

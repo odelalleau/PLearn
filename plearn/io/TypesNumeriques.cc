@@ -33,10 +33,10 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TypesNumeriques.cc,v 1.2 2004/07/12 13:39:30 tihocan Exp $
-   * AUTHORS: Steven Pigeon & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Steven Pigeon & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include <cstdlib>
 #include <cstring>
@@ -53,13 +53,13 @@ const char *ORDINALS[] = {"d","nd","th","st",0}; // 3d, 2nd, 12th, 1st
 
 //////////////////////////////////////////////////
 const char *eNumericTypeNames(int a)
- {
-  static char retour[128];
+{
+    static char retour[128];
 
-  // all that applies
-  if (a==NT_NOT_NUMERIC)
-       return "not numeric";
-  else {
+    // all that applies
+    if (a==NT_NOT_NUMERIC)
+        return "not numeric";
+    else {
         retour[0]=0;
         if (a & NT_ORDINAL)  strcat(retour,"ordinal ");
         if (a & NT_CARDINAL) strcat(retour,"cardinal ");
@@ -72,179 +72,179 @@ const char *eNumericTypeNames(int a)
         if (a & NT_CODE)     strcat(retour,"code ");
         if (a & NT_UNKNOWN_NUMERIC_TYPE) strcat(retour," ??? ");
         return retour;
-       }
- }
+    }
+}
 
 //////////////////////////////////////////////////
 bool containsChar(const char *s, const char *symbols)
- {
-  bool found = false;
-  int  i=0;
-  while (!found && symbols[i])
-   {
-    found = (bool)strchr(s,symbols[i]);
-    i++;
-   }
-  return found;
- }
+{
+    bool found = false;
+    int  i=0;
+    while (!found && symbols[i])
+    {
+        found = (bool)strchr(s,symbols[i]);
+        i++;
+    }
+    return found;
+}
 
 
 //////////////////////////////////////////////////
 char * stringPos(const char *s, const char *strings[])
- {
-  char *t = 0;
-  int  i=0;
-  while (!t && strings[i])
-   {
-    t = strstr(s,strings[i]);
-    i++;
-   }
-  return t;
- }
+{
+    char *t = 0;
+    int  i=0;
+    while (!t && strings[i])
+    {
+        t = strstr(s,strings[i]);
+        i++;
+    }
+    return t;
+}
 
 
 //////////////////////////////////////////////////
 bool looksNumeric(const char *s)
- {
-  return containsChar(s,DIGITsymbols);
- }
+{
+    return containsChar(s,DIGITsymbols);
+}
 
 //////////////////////////////////////////////////
 bool elementOf(const char *s, const char t)
- {
-  return (bool)strchr(s,t);
- }
+{
+    return (bool)strchr(s,t);
+}
 
 //////////////////////////////////////////////////
 void compactRepresentationTranslate(char *t)
- {
-  int d=0;
-  int s=0;
+{
+    int d=0;
+    int s=0;
 
-  while (t[s])
-   { 
-    if (elementOf(DIGITsymbols,t[s]))
-         {
-          t[d++]='n';
-          // skip to the next non-digit
-          do { s++; } while (t[s] && (elementOf(DIGITsymbols,t[s]) || (t[s]==',')) );
-         }
-    else if (elementOf(ALPHAsymbols,t[s]))
-              {
-               if ( (stringPos(&t[s],ORDINALS)==&t[s]) // starts here
-                    && (t[d-1]=='n') ) // and the previous run was composed of digits
-                    t[d++]='o';
-               else t[d++]='a';
-               // skip to the next non-alpha
-               do { s++; } while (t[s] && elementOf(ALPHAsymbols,t[s]));
-              }
-         else t[d++]=t[s++];
-   }
-  t[d]=0;
+    while (t[s])
+    { 
+        if (elementOf(DIGITsymbols,t[s]))
+        {
+            t[d++]='n';
+            // skip to the next non-digit
+            do { s++; } while (t[s] && (elementOf(DIGITsymbols,t[s]) || (t[s]==',')) );
+        }
+        else if (elementOf(ALPHAsymbols,t[s]))
+        {
+            if ( (stringPos(&t[s],ORDINALS)==&t[s]) // starts here
+                 && (t[d-1]=='n') ) // and the previous run was composed of digits
+                t[d++]='o';
+            else t[d++]='a';
+            // skip to the next non-alpha
+            do { s++; } while (t[s] && elementOf(ALPHAsymbols,t[s]));
+        }
+        else t[d++]=t[s++];
+    }
+    t[d]=0;
 
- }
+}
 
 //////////////////////////////////////////////////
 void compactRepresentationShrinkNum(char *t)
- {
-  // remplace n.n ou .n par n, 
-  // mais laisse les constructions du genre n.n.n intactes
-  int d=0;
-  int s=0;
+{
+    // remplace n.n ou .n par n, 
+    // mais laisse les constructions du genre n.n.n intactes
+    int d=0;
+    int s=0;
 
-  while (t[s])
-   {
-    if ( (strstr(&t[s],"n.n") == &t[s]) && 
-         (t[s+3]!='.') && 
-         ( (s-1<0) || (t[s-1]!='.') )
-         )
-         {
-          t[d++]='n';
-          s+=3;
-         }
-    else if ( (strstr(&t[s],".n") == &t[s]) &&
-              (t[s+2]!='.') &&
-              ( (s-1<0) || t[s-1]!='n')) 
-              {
-               t[d++]='n';
-               s+=2;
-              }
-         else t[d++]=t[s++];
-   }
-  t[d]=0;
- }
+    while (t[s])
+    {
+        if ( (strstr(&t[s],"n.n") == &t[s]) && 
+             (t[s+3]!='.') && 
+             ( (s-1<0) || (t[s-1]!='.') )
+            )
+        {
+            t[d++]='n';
+            s+=3;
+        }
+        else if ( (strstr(&t[s],".n") == &t[s]) &&
+                  (t[s+2]!='.') &&
+                  ( (s-1<0) || t[s-1]!='n')) 
+        {
+            t[d++]='n';
+            s+=2;
+        }
+        else t[d++]=t[s++];
+    }
+    t[d]=0;
+}
 
 //////////////////////////////////////////////////
 void compactRepresentationRangesAndOrdinals(char *t)
- {
-  // remplace n-n par r et no par o
-  int d=0;
-  int s=0;
+{
+    // remplace n-n par r et no par o
+    int d=0;
+    int s=0;
 
-  while (t[s])
-   {
-    if ( strstr(&t[s],"n-n") == &t[s])
-         {
-          t[d++]='r';
-          s+=3;
-         }
-    else if ( strstr(&t[s],"no") == &t[s])
-              {
-               t[d++]='o';
-               s+=2;
-              }
-         else t[d++]=t[s++];
-   }
-  t[d]=0;
- }
+    while (t[s])
+    {
+        if ( strstr(&t[s],"n-n") == &t[s])
+        {
+            t[d++]='r';
+            s+=3;
+        }
+        else if ( strstr(&t[s],"no") == &t[s])
+        {
+            t[d++]='o';
+            s+=2;
+        }
+        else t[d++]=t[s++];
+    }
+    t[d]=0;
+}
 
 //////////////////////////////////////////////////
 void compactRepresentation(char *t)
- {
-  compactRepresentationTranslate(t); // remplace les lettres et chiffres par des codes.
-  compactRepresentationShrinkNum(t); // replace n.n par n, etc.
-  compactRepresentationRangesAndOrdinals(t); // remplace n-n par r et no par o
+{
+    compactRepresentationTranslate(t); // remplace les lettres et chiffres par des codes.
+    compactRepresentationShrinkNum(t); // replace n.n par n, etc.
+    compactRepresentationRangesAndOrdinals(t); // remplace n-n par r et no par o
 
-  int s=0;
-  int d=0;
+    int s=0;
+    int d=0;
 
-  // strip les tirets -  
-  while (t[s]) 
-   if (t[s]!='-') 
-        t[d++]=t[s++]; 
-   else s++;
+    // strip les tirets -  
+    while (t[s]) 
+        if (t[s]!='-') 
+            t[d++]=t[s++]; 
+        else s++;
 
-  t[d]=0;
+    t[d]=0;
 
-  // copie une seule instance du meme symbole.
-  s=0;
-  d=0;
-  while (t[s])
-   {
-    t[d++]=t[s++];
-    while (t[s] && (t[s]==t[d-1])) s++;
-   }
+    // copie une seule instance du meme symbole.
+    s=0;
+    d=0;
+    while (t[s])
+    {
+        t[d++]=t[s++];
+        while (t[s] && (t[s]==t[d-1])) s++;
+    }
 
-  if (t[d-1]=='.') d--; // trailing .
-  t[d]=0;
+    if (t[d-1]=='.') d--; // trailing .
+    t[d]=0;
 
-  char c = '#';
-  d=0;
-  do 
-   {
-    char tt = t[d];
-    t[d]=c;
-    c=tt;
-    d++;
-   } while (c);
-  t[d]=0;
- }
+    char c = '#';
+    d=0;
+    do 
+    {
+        char tt = t[d];
+        t[d]=c;
+        c=tt;
+        d++;
+    } while (c);
+    t[d]=0;
+}
 
 //////////////////////////////////////////////////
 int numericType(const char *mot)
- {
-  if (looksNumeric(mot))
-       {
+{
+    if (looksNumeric(mot))
+    {
         int classe=0;
         char t[128];
         bool pourcent=false;
@@ -255,18 +255,31 @@ int numericType(const char *mot)
         // skips the # in the begining
 
         if (char *tt= strchr(t,'%')) 
-         *tt=0, pourcent = true; // delete trailing %
+            *tt=0, pourcent = true; // delete trailing %
 
         for (int i=0; (rules[i].pattern[0]) && (!classe); i++)
-         if (strcmp(rules[i].pattern,t)==0) classe = rules[i].attributs;
+            if (strcmp(rules[i].pattern,t)==0) classe = rules[i].attributs;
 
         if (pourcent) classe += NT_PERCENT;
 
         return classe ?  classe : NT_UNKNOWN_NUMERIC_TYPE;
-       }
-  else return NT_NOT_NUMERIC;
- }
+    }
+    else return NT_NOT_NUMERIC;
+}
 
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

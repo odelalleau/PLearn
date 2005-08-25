@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.cc,v 1.13 2005/02/21 15:26:05 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -52,7 +52,7 @@ using namespace std;
 
 
 PrecomputedVMatrix::PrecomputedVMatrix()
-  :precomp_type("dmat")
+    :precomp_type("dmat")
 {
 }
 
@@ -64,9 +64,9 @@ PLEARN_IMPLEMENT_OBJECT(PrecomputedVMatrix,
 
 void PrecomputedVMatrix::getNewRow(int i, const Vec& v) const
 {
-  if(precomp_source.isNull())
-    PLERROR("Source has not been precomputed. Did you properly set the MetaDataDir?");
-  precomp_source->getRow(i,v);
+    if(precomp_source.isNull())
+        PLERROR("Source has not been precomputed. Did you properly set the MetaDataDir?");
+    precomp_source->getRow(i,v);
 }
 
 ////////////////////
@@ -74,115 +74,127 @@ void PrecomputedVMatrix::getNewRow(int i, const Vec& v) const
 ////////////////////
 void PrecomputedVMatrix::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  // ### ex:
-  declareOption(ol, "precomp_type", &PrecomputedVMatrix::precomp_type, OptionBase::buildoption,
-                "The type of vmatrix to be used for the cached precomputed version of the source.\n"
-                "Currently supported are: dmat, pmat");
-  // ...
+    // ### ex:
+    declareOption(ol, "precomp_type", &PrecomputedVMatrix::precomp_type, OptionBase::buildoption,
+                  "The type of vmatrix to be used for the cached precomputed version of the source.\n"
+                  "Currently supported are: dmat, pmat");
+    // ...
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 
-  // Hide useless options.
-  redeclareOption(ol, "writable", &PrecomputedVMatrix::writable, OptionBase::nosave,
-      "Unused option.");
-  redeclareOption(ol, "length", &PrecomputedVMatrix::length_, OptionBase::nosave,
-      "Unused option.");
-  redeclareOption(ol, "width", &PrecomputedVMatrix::width_, OptionBase::nosave,
-      "Unused option.");
-  redeclareOption(ol, "inputsize", &PrecomputedVMatrix::inputsize_, OptionBase::nosave,
-      "Unused option.");
-  redeclareOption(ol, "targetsize", &PrecomputedVMatrix::targetsize_, OptionBase::nosave,
-      "Unused option.");
-  redeclareOption(ol, "weightsize", &PrecomputedVMatrix::weightsize_, OptionBase::nosave,
-      "Unused option.");
+    // Hide useless options.
+    redeclareOption(ol, "writable", &PrecomputedVMatrix::writable, OptionBase::nosave,
+                    "Unused option.");
+    redeclareOption(ol, "length", &PrecomputedVMatrix::length_, OptionBase::nosave,
+                    "Unused option.");
+    redeclareOption(ol, "width", &PrecomputedVMatrix::width_, OptionBase::nosave,
+                    "Unused option.");
+    redeclareOption(ol, "inputsize", &PrecomputedVMatrix::inputsize_, OptionBase::nosave,
+                    "Unused option.");
+    redeclareOption(ol, "targetsize", &PrecomputedVMatrix::targetsize_, OptionBase::nosave,
+                    "Unused option.");
+    redeclareOption(ol, "weightsize", &PrecomputedVMatrix::weightsize_, OptionBase::nosave,
+                    "Unused option.");
 }
 
 void PrecomputedVMatrix::setMetaDataDir(const PPath& the_metadatadir)
 {
-  inherited::setMetaDataDir(the_metadatadir);
-  if ( hasMetaDataDir() ) // don't do anything if the meta-data-dir is not yet set.
-    usePrecomputed();
+    inherited::setMetaDataDir(the_metadatadir);
+    if ( hasMetaDataDir() ) // don't do anything if the meta-data-dir is not yet set.
+        usePrecomputed();
 }
 
 void PrecomputedVMatrix::usePrecomputed()
 {
-  PPath mdir = getMetaDataDir();
+    PPath mdir = getMetaDataDir();
   
-  if ( precomp_type == "dmat" )
-  {
-    PPath dmatdir  = mdir / "precomp.dmat";
-    bool recompute = true;
+    if ( precomp_type == "dmat" )
+    {
+        PPath dmatdir  = mdir / "precomp.dmat";
+        bool recompute = true;
     
-    if ( isdir(dmatdir) )
-    {
-      precomp_source = new DiskVMatrix(dmatdir);
-      if(precomp_source->getMtime() >= source->getMtime())
-        recompute = false;
+        if ( isdir(dmatdir) )
+        {
+            precomp_source = new DiskVMatrix(dmatdir);
+            if(precomp_source->getMtime() >= source->getMtime())
+                recompute = false;
+        }
+
+        if(recompute)
+        {
+            force_rmdir(dmatdir);
+            source->saveDMAT(dmatdir);
+            precomp_source = new DiskVMatrix(dmatdir);
+        }
+        length_ = precomp_source->length();
     }
 
-    if(recompute)
+    else if ( precomp_type == "pmat" )
     {
-      force_rmdir(dmatdir);
-      source->saveDMAT(dmatdir);
-      precomp_source = new DiskVMatrix(dmatdir);
-    }
-    length_ = precomp_source->length();
-  }
+        PPath pmatfile = mdir / "precomp.pmat";
+        bool recompute = true;
 
-  else if ( precomp_type == "pmat" )
-  {
-    PPath pmatfile = mdir / "precomp.pmat";
-    bool recompute = true;
+        if ( isfile(pmatfile) )
+        {
+            precomp_source = new FileVMatrix(pmatfile);
+            if(precomp_source->getMtime() >= source->getMtime())
+                recompute = false;
+        }
 
-    if ( isfile(pmatfile) )
-    {
-      precomp_source = new FileVMatrix(pmatfile);
-      if(precomp_source->getMtime() >= source->getMtime())
-        recompute = false;
+        if(recompute)
+        {
+            rm(pmatfile);
+            source->savePMAT(pmatfile);
+            precomp_source = new FileVMatrix(pmatfile);
+        }
+        length_ = precomp_source->length();
     }
-
-    if(recompute)
-    {
-      rm(pmatfile);
-      source->savePMAT(pmatfile);
-      precomp_source = new FileVMatrix(pmatfile);
-    }
-    length_ = precomp_source->length();
-  }
   
-  else
-    PLERROR("Invalid precomp_type=%s. Must be one of: dmat, pmat.",precomp_type.c_str());
+    else
+        PLERROR("Invalid precomp_type=%s. Must be one of: dmat, pmat.",precomp_type.c_str());
 }
 
 void PrecomputedVMatrix::build_()
 {
-  setMetaInfoFromSource();
+    setMetaInfoFromSource();
 }
 
 // ### Nothing to add here, simply calls build_
 void PrecomputedVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void PrecomputedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  deepCopyField(precomp_source, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    deepCopyField(precomp_source, copies);
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

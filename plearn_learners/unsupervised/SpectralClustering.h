@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpectralClustering.h,v 1.2 2004/09/14 16:04:59 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,68 +54,68 @@ class SpectralClustering: public KernelProjection
 
 private:
 
-  typedef KernelProjection inherited;
+    typedef KernelProjection inherited;
   
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  Ker sc_kernel;
+    Ker sc_kernel;
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  bool remove_bias;
+    bool remove_bias;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  SpectralClustering();
+    //! Default constructor.
+    SpectralClustering();
 
 
-  // ****************************
-  // * KernelProjection methods *
-  // ****************************
+    // ****************************
+    // * KernelProjection methods *
+    // ****************************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(SpectralClustering);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(SpectralClustering);
 
 
-  // **********************************
-  // **** KernelProjection methods ****
-  // **********************************
+    // **********************************
+    // **** KernelProjection methods ****
+    // **********************************
 
-  //! (Re-)initializes the PLearner in its fresh state.
-  virtual void forget();
+    //! (Re-)initializes the PLearner in its fresh state.
+    virtual void forget();
 
 };
 
@@ -125,3 +125,16 @@ DECLARE_OBJECT_PTR(SpectralClustering);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

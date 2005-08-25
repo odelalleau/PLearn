@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConcatSetsSplitter.h,v 1.1 2004/11/01 14:07:18 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -53,69 +53,69 @@ class ConcatSetsSplitter: public Splitter
 
 private:
 
-  typedef Splitter inherited;
+    typedef Splitter inherited;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  TVec< PP<Splitter> > splitters;
+    TVec< PP<Splitter> > splitters;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  ConcatSetsSplitter();
+    //! Default constructor.
+    ConcatSetsSplitter();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(ConcatSetsSplitter);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(ConcatSetsSplitter);
 
-  // ********************************
-  // *        Splitter methods      *
-  // ********************************
+    // ********************************
+    // *        Splitter methods      *
+    // ********************************
 
-  //! Returns the number of available different "splits"
-  virtual int nsplits() const;
+    //! Returns the number of available different "splits"
+    virtual int nsplits() const;
 
-  //! Returns the number of sets per split
-  virtual int nSetsPerSplit() const;
+    //! Returns the number of sets per split
+    virtual int nSetsPerSplit() const;
 
-  //! Returns split number i
-  virtual TVec<VMat> getSplit(int i=0);
+    //! Returns split number i
+    virtual TVec<VMat> getSplit(int i=0);
 
-  //! Sets the dataset on which the splits are to be based.
-  virtual void setDataSet(VMat the_dataset);
+    //! Sets the dataset on which the splits are to be based.
+    virtual void setDataSet(VMat the_dataset);
 
 };
 
@@ -125,3 +125,16 @@ DECLARE_OBJECT_PTR(ConcatSetsSplitter);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatKernel.h,v 1.2 2005/05/26 21:08:49 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Benoit Cromp
 
@@ -54,93 +54,93 @@ class VMatKernel: public Kernel
 
 private:
 
-  typedef Kernel inherited;
+    typedef Kernel inherited;
   
 protected:
 
-  // *********************
-  // * Protected options *
-  // *********************
+    // *********************
+    // * Protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
     
 public:
 
-  // ************************
-  // * Public build options *
-  // ************************ 
+    // ************************
+    // * Public build options *
+    // ************************ 
 
-  VMat source;
+    VMat source;
 
-  // ### declare public option fields (such as build options) here
-  // ...
+    // ### declare public option fields (such as build options) here
+    // ...
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  // Make sure the implementation in the .cc initializes all fields to
-  // reasonable default values.
-  VMatKernel();
+    //! Default constructor.
+    // Make sure the implementation in the .cc initializes all fields to
+    // reasonable default values.
+    VMatKernel();
 
-  // ******************
-  // * Kernel methods *
-  // ******************
+    // ******************
+    // * Kernel methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  // If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
-  PLEARN_DECLARE_OBJECT(VMatKernel);
+    // Declares other standard object methods.
+    // If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
+    PLEARN_DECLARE_OBJECT(VMatKernel);
 
-  // ************************
-  // **** Kernel methods ****
-  // ************************
+    // ************************
+    // **** Kernel methods ****
+    // ************************
 
-  //! Compute K(x1,x2).
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
+    //! Compute K(x1,x2).
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
-  //! Overridden for efficiency.
-  virtual real evaluate_i_j(int i, int j) const;
-  virtual void computeGramMatrix(Mat K) const;
+    //! Overridden for efficiency.
+    virtual real evaluate_i_j(int i, int j) const;
+    virtual void computeGramMatrix(Mat K) const;
 
-  // *** SUBCLASS WRITING: ***
-  // While in general not necessary, in case of particular needs 
-  // (efficiency concerns for ex) you may also want to overload
-  // some of the following methods:
-  // virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
-  // virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
-  // virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
-  // virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
-  // virtual void setDataForKernelMatrix(VMat the_data);
-  // virtual void addDataForKernelMatrix(const Vec& newRow);
-  // virtual void setParameters(Vec paramvec);
-  // virtual Vec getParameters() const;
+    // *** SUBCLASS WRITING: ***
+    // While in general not necessary, in case of particular needs 
+    // (efficiency concerns for ex) you may also want to overload
+    // some of the following methods:
+    // virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
+    // virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
+    // virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
+    // virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
+    // virtual void setDataForKernelMatrix(VMat the_data);
+    // virtual void addDataForKernelMatrix(const Vec& newRow);
+    // virtual void setParameters(Vec paramvec);
+    // virtual Vec getParameters() const;
   
 
 };
@@ -152,3 +152,15 @@ DECLARE_OBJECT_PTR(VMatKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

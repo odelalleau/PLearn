@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SoftmaxVariable.cc,v 1.5 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "SoftmaxVariable.h"
 
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(SoftmaxVariable,
                         "NO HELP");
 
 SoftmaxVariable::SoftmaxVariable(Variable* input) 
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 void SoftmaxVariable::recomputeSize(int& l, int& w) const
@@ -67,51 +67,62 @@ void SoftmaxVariable::recomputeSize(int& l, int& w) const
 
 void SoftmaxVariable::fprop()
 {
-  softmax(input->value,value);
+    softmax(input->value,value);
 }
 
 
 void SoftmaxVariable::bprop()
 {
-  for(int i=0; i<input->nelems(); i++)
-  {
-    real vali = valuedata[i];
-    for(int k=0; k<nelems(); k++)
+    for(int i=0; i<input->nelems(); i++)
     {
-      if(k!=i)
-        input->gradientdata[i] -= gradientdata[k]*vali*valuedata[k];
-      else
-        input->gradientdata[i] += gradientdata[i]*vali*(1.-vali);        
+        real vali = valuedata[i];
+        for(int k=0; k<nelems(); k++)
+        {
+            if(k!=i)
+                input->gradientdata[i] -= gradientdata[k]*vali*valuedata[k];
+            else
+                input->gradientdata[i] += gradientdata[i]*vali*(1.-vali);        
+        }
     }
-  }
 }
 
 
 void SoftmaxVariable::bbprop()
 {
-  PLERROR("SofmaxVariable::bbprop() not implemented");
+    PLERROR("SofmaxVariable::bbprop() not implemented");
 }
 
 
 void SoftmaxVariable::symbolicBprop()
 {
-  PLERROR("SofmaxVariable::symbolicBprop() not implemented");
+    PLERROR("SofmaxVariable::symbolicBprop() not implemented");
 }
 
 
 // R{ s_i = exp(x_i) / sum_j exp(x_j) }   = (s_i(1-s_i) - sum_{k!=i} s_i s_k) R(s_i) = s_i ((1-s_i) - sum_{k!=i} s_k) R(s_i)
 void SoftmaxVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  for(int i=0; i<input->nelems(); i++)
-  {
-    real vali = valuedata[i];
-    rvaluedata[i] = vali * (1 - vali) * input->rvaluedata[i];
-  }
+    if (rValue.length()==0) resizeRValue();
+    for(int i=0; i<input->nelems(); i++)
+    {
+        real vali = valuedata[i];
+        rvaluedata[i] = vali * (1 - vali) * input->rvaluedata[i];
+    }
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

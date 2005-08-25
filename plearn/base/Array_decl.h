@@ -37,9 +37,9 @@
  
 
 /* *******************************************************      
-   * $Id: Array_decl.h,v 1.8 2004/10/25 05:57:48 chapados Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/Array.h */
@@ -61,7 +61,7 @@ using std::vector;
 template <class T> 
 class Array: public TVec<T>
 {
-  public:
+public:
 
     // norman: added scope for dependent name to resolve lookup
     //         See chap. 9.4.2 of C++ Templates, The Complete Guide 
@@ -76,41 +76,41 @@ class Array: public TVec<T>
     typedef T* iterator;
 
     explicit Array<T>(int the_size=0, int extra_space = 10)
-      : TVec<T>(the_size+extra_space)
-      { length_ = the_size; }
+        : TVec<T>(the_size+extra_space)
+    { length_ = the_size; }
 
     Array<T>(const T& elem1)
-      : TVec<T>(1)
-      { (*this)[0] = elem1; }
+        : TVec<T>(1)
+    { (*this)[0] = elem1; }
 
     Array<T>(const T& elem1, const T& elem2)
-      : TVec<T>(2)
-      {
+        : TVec<T>(2)
+    {
         (*this)[0] = elem1;
         (*this)[1] = elem2;
-      }
+    }
 
     Array<T>(const Array<T>& other)
-      : TVec<T>(other.length())
-      {
+        : TVec<T>(other.length())
+    {
         length_ = other.size();
         offset_ = other.offset();
         iterator array = data();
         for(int i=0; i<length_; i++)
-          array[i] = other[i];
-      }
+            array[i] = other[i];
+    }
 
     Array<T>(const TVec<T>& other)
-      : TVec<T>(other.copy())
-      {}
+        : TVec<T>(other.copy())
+    {}
 
     Array<T>(const vector<T> &other)
-      : TVec<T>(other.size())
-      {
+        : TVec<T>(other.size())
+    {
         iterator array = data();
         for (int i = 0; i < length_; ++i)
-          array[i] = other[i];
-      }
+            array[i] = other[i];
+    }
 
     //!  To allow if(v) statements
     operator bool() const
@@ -122,14 +122,14 @@ class Array: public TVec<T>
 
     Array<T> subArray(int start, int len)
     {
-      if (start+len>length_)
-        PLERROR("Array::subArray start(%d)+len(%d)>size(%d)", start,len,length_);
-      Array<T> newarray(len);
-      iterator new_ar = newarray.data();
-      iterator array = data();
-      for (int i=0;i<len;i++)
-        new_ar[i] = array[start+i];
-      return newarray;
+        if (start+len>length_)
+            PLERROR("Array::subArray start(%d)+len(%d)>size(%d)", start,len,length_);
+        Array<T> newarray(len);
+        iterator new_ar = newarray.data();
+        iterator array = data();
+        for (int i=0;i<len;i++)
+            new_ar[i] = array[start+i];
+        return newarray;
     }
 
     void clear()
@@ -137,33 +137,33 @@ class Array: public TVec<T>
 
     void operator=(const Array<T>& other)
     {
-      resize(other.size());
-      iterator array = data();
-      for(int i=0; i<length_; i++)
-        array[i] = other[i];
+        resize(other.size());
+        iterator array = data();
+        for(int i=0; i<length_; i++)
+            array[i] = other[i];
     }
 
     void operator=(const TVec<T>& other)
     {
-      resize(other.size());
-      iterator array = data();
-      for(int i=0; i<length_; i++)
-        array[i] = other[i];
+        resize(other.size());
+        iterator array = data();
+        for(int i=0; i<length_; i++)
+            array[i] = other[i];
     }
 
     void operator=(const vector<T> &other)
     {
-      resize(other.size());
-      iterator array = data();
-      for(int i = 0; i < length_; ++i)
-        array[i] = other[i];
+        resize(other.size());
+        iterator array = data();
+        for(int i = 0; i < length_; ++i)
+            array[i] = other[i];
     }
 
-  //! Makes this array a shared view of the given TVec
-  void view(const TVec<T>& other)
-  {
-    TVec<T>::operator=(other);
-  }
+    //! Makes this array a shared view of the given TVec
+    void view(const TVec<T>& other)
+    {
+        TVec<T>::operator=(other);
+    }
 
 // EXPERIMENTALLY: PUT THOSE IN COMMENTS AND USE VERSION INHERITED FROM TVEC
 // 
@@ -242,17 +242,17 @@ class Array: public TVec<T>
 
     void print(ostream& out) const
     {
-      iterator array = data();
-      for(int i=0; i<length_; i++)
-        out << array[i] << endl;
+        iterator array = data();
+        for(int i=0; i<length_; i++)
+            out << array[i] << endl;
     }
 
     int findFirstOccurence(const T& elem)
     {
-      for(int i=0;i<this->array_size;i++)
-        if(elem==this->array[i])
-          return i;
-      return -1;
+        for(int i=0;i<this->array_size;i++)
+            if(elem==this->array[i])
+                return i;
+        return -1;
     }
 
     //! Deep copy of an array is not the same as for a TVec, because
@@ -263,8 +263,8 @@ class Array: public TVec<T>
     // DEPRECATED! Call PStream& << arr instead (This is for backward compatibility only)
     void write(ostream &out_) const
     {
-      PStream out(&out_);
-      out << *this;
+        PStream out(&out_);
+        out << *this;
     }
 
     /*
@@ -279,27 +279,27 @@ class Array: public TVec<T>
     // DEPRECATED! Call PStream& >> arr instead (This is for backward compatibility only)
     void read(istream &in_)
     {
-      PStream in(&in_);
-      in >> *this;
+        PStream in(&in_);
+        in >> *this;
     }
 
-  //!  used by Hash  (VERY DIRTY: TO BE REMOVED [Pascal])
-  inline operator char*() const { if(this->isNull()) return 0; else return (char*)data(); }
+    //!  used by Hash  (VERY DIRTY: TO BE REMOVED [Pascal])
+    inline operator char*() const { if(this->isNull()) return 0; else return (char*)data(); }
 
-  // norman: removed const. With inline is useless (and .NET doesn't like it)
-  // Old code:
-  //inline const size_t byteLength() const { return length()*sizeof(T); }
-  inline size_t byteLength() const { return this->size()*sizeof(T); }
+    // norman: removed const. With inline is useless (and .NET doesn't like it)
+    // Old code:
+    //inline const size_t byteLength() const { return length()*sizeof(T); }
+    inline size_t byteLength() const { return this->size()*sizeof(T); }
 
 /*  PAS UTILISE
     void increaseCapacity(int increase = 10)
     {
-      T* newarray = new T[array_capacity+increase];
-      for(int i=0; i<length_; i++)
-        newarray[i] = array[i];
-      delete[] array;
-      array = newarray;
-      array_capacity += increase;
+    T* newarray = new T[array_capacity+increase];
+    for(int i=0; i<length_; i++)
+    newarray[i] = array[i];
+    delete[] array;
+    array = newarray;
+    array_capacity += increase;
     }
 */
 
@@ -309,14 +309,14 @@ template<class T>
 class TypeTraits< Array<T> >
 {
 public:
-  static inline string name()
-  { return string("Array< ") + TypeTraits<T>::name()+" >"; }
+    static inline string name()
+    { return string("Array< ") + TypeTraits<T>::name()+" >"; }
 
-  static inline unsigned char little_endian_typecode()
-  { return 0xFF; }
+    static inline unsigned char little_endian_typecode()
+    { return 0xFF; }
 
-  static inline unsigned char big_endian_typecode()
-  { return 0xFF; }
+    static inline unsigned char big_endian_typecode()
+    { return 0xFF; }
 
 };
 
@@ -325,18 +325,18 @@ template <class T>
 class Array2ArrayMap : public PPointable
 {
 public:
-  multimap<Array<T>,Array<T> > map;
+    multimap<Array<T>,Array<T> > map;
 };
 
 /*template <class T> 
-struct hash_to_multimapArray {
+  struct hash_to_multimapArray {
   size_t operator()(const PP<multimap<Array<T>,Array<T> > > m) const
   {
-    if (a)
-      return hashbytes((char*)a->data(),a->size()*sizeof(T));
-    return 0;
+  if (a)
+  return hashbytes((char*)a->data(),a->size()*sizeof(T));
+  return 0;
   }
-};
+  };
 */
 
 
@@ -355,3 +355,16 @@ SET_HASH_FUNCTION(PLearn::Array<T>, T, a, PLearn::hashbytes((char*)a.data(),a.si
 //};
 
 #endif
+
+    
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

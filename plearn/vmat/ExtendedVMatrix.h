@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVMatrix.h,v 1.7 2005/06/01 21:11:59 dorionc Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -59,56 +59,69 @@ using namespace std;
 */
 class ExtendedVMatrix: public RowBufferedVMatrix
 {
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
 public:
-  VMat distr;
-  int top_extent;
-  int bottom_extent;
-  int left_extent;
-  int right_extent;
-  real fill_value; 
+    VMat distr;
+    int top_extent;
+    int bottom_extent;
+    int left_extent;
+    int right_extent;
+    real fill_value; 
 
-  /*!
-    The fieldnames to use for the added fields. Length must be equal to
-    left_extent+right_extent.
+    /*!
+      The fieldnames to use for the added fields. Length must be equal to
+      left_extent+right_extent.
     
-    Default: [], i.e all are set to "extended".
-  */
-  TVec<string> extfieldnames;
+      Default: [], i.e all are set to "extended".
+    */
+    TVec<string> extfieldnames;
   
-  // ******************
-  // *  Constructors  *
-  // ******************
-  ExtendedVMatrix(); //!<  default constructor (for automatic deserialization)
+    // ******************
+    // *  Constructors  *
+    // ******************
+    ExtendedVMatrix(); //!<  default constructor (for automatic deserialization)
 
-  //!  Warning: VMFields are NOT YET handled by this constructor
-  ExtendedVMatrix(VMat the_distr, 
-                  int the_top_extent, int the_bottom_extent, 
-                  int the_left_extent, int the_right_extent, 
-                  real the_fill_value);
+    //!  Warning: VMFields are NOT YET handled by this constructor
+    ExtendedVMatrix(VMat the_distr, 
+                    int the_top_extent, int the_bottom_extent, 
+                    int the_left_extent, int the_right_extent, 
+                    real the_fill_value);
 
-  PLEARN_DECLARE_OBJECT(ExtendedVMatrix);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(ExtendedVMatrix);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void reset_dimensions() 
+    virtual void reset_dimensions() 
     { 
-      distr->reset_dimensions(); 
-      width_=distr->width()+left_extent+right_extent; 
-      length_=distr->length()+top_extent+bottom_extent;
+        distr->reset_dimensions(); 
+        width_=distr->width()+left_extent+right_extent; 
+        length_=distr->length()+top_extent+bottom_extent;
     }
 
 protected:
 
-  virtual void getNewRow(int i, const Vec& v) const;
+    virtual void getNewRow(int i, const Vec& v) const;
 
 private:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(ExtendedVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

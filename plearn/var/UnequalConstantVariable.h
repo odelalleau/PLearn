@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: UnequalConstantVariable.h,v 1.6 2004/07/21 16:30:54 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef UnequalConstantVariable_INC
 #define UnequalConstantVariable_INC
@@ -53,26 +53,26 @@ using namespace std;
 //!  A scalar var;  equal 1 if input1!=c, 0 otherwise
 class UnequalConstantVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 protected:
-  real c;
+    real c;
 
 public:
-  //!  Default constructor for persistence
-  UnequalConstantVariable() : c() {}
-  UnequalConstantVariable(Variable* input1, real c);
+    //!  Default constructor for persistence
+    UnequalConstantVariable() : c() {}
+    UnequalConstantVariable(Variable* input1, real c);
 
-  PLEARN_DECLARE_OBJECT(UnequalConstantVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(UnequalConstantVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual string info() const
+    virtual string info() const
     { return string("EqualConstantVariable (!= ")+tostring(c)+")"; }
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 };
 
 DECLARE_OBJECT_PTR(UnequalConstantVariable);
@@ -89,3 +89,16 @@ inline Var operator!=(real cte, Var v1)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

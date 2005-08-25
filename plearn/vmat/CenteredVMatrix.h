@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CenteredVMatrix.h,v 1.5 2004/09/14 16:04:38 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,66 +54,66 @@ class CenteredVMatrix: public SourceVMatrix
 
 private:
 
-  typedef SourceVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // Fields below are not options.
+    // Fields below are not options.
 
-  //! The sample mean.
-  Vec mu;
+    //! The sample mean.
+    Vec mu;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  CenteredVMatrix();
+    //! Default constructor.
+    CenteredVMatrix();
 
-  //! Constructed from an existing source matrix.
-  CenteredVMatrix(VMat the_source);
+    //! Constructed from an existing source matrix.
+    CenteredVMatrix(VMat the_source);
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
-  //! This is the only method requiring implementation.
-  virtual void getNewRow(int i, const Vec& v) const;
+    //! This is the only method requiring implementation.
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  //! Return the mean sample mu.
-  Vec getMu() const;
+    //! Return the mean sample mu.
+    Vec getMu() const;
 
-  // Simply calls inherited::build() then build_().
-  virtual void build();
+    // Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(CenteredVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(CenteredVMatrix);
 
 };
 
@@ -122,3 +122,16 @@ DECLARE_OBJECT_PTR(CenteredVMatrix);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

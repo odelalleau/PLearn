@@ -33,84 +33,84 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Profiler.cc,v 1.2 2004/02/20 21:11:49 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "Profiler.h"
 #include <time.h>
 namespace PLearn {
 using namespace std;
 
-  // initialize static variables
-  map<string,Profiler::Stats> Profiler::codes_statistics;
-  struct tms Profiler::t;
-  bool Profiler::active  = false;
+// initialize static variables
+map<string,Profiler::Stats> Profiler::codes_statistics;
+struct tms Profiler::t;
+bool Profiler::active  = false;
 
 #ifdef PROFILE
-  // start recording time for named piece of code
-  void Profiler::start(const string& name_of_piece_of_code)
+// start recording time for named piece of code
+void Profiler::start(const string& name_of_piece_of_code)
+{
+    if (active)
     {
-      if (active)
-        {
-          map<string,Profiler::Stats>::iterator it = 
+        map<string,Profiler::Stats>::iterator it = 
             codes_statistics.find(name_of_piece_of_code);
-          if (it == codes_statistics.end())
-            {
-              Stats stats;
-              stats.on_going = true;
-              stats.time_of_last_start = times(&t);
-              codes_statistics[name_of_piece_of_code] = stats;
-            }
-          else
-            {
-              Profiler::Stats& stats = it->second;
-              if (stats.on_going)
+        if (it == codes_statistics.end())
+        {
+            Stats stats;
+            stats.on_going = true;
+            stats.time_of_last_start = times(&t);
+            codes_statistics[name_of_piece_of_code] = stats;
+        }
+        else
+        {
+            Profiler::Stats& stats = it->second;
+            if (stats.on_going)
                 PLERROR("Profiler::start(%s) called while previous start had not ended",
-                      name_of_piece_of_code.c_str());
-              stats.on_going = true;
-              stats.time_of_last_start = times(&t);
-            }
+                        name_of_piece_of_code.c_str());
+            stats.on_going = true;
+            stats.time_of_last_start = times(&t);
         }
     }
+}
 
   
 
-  // end recording time for named piece of code, and increment
-  // frequency of occurence and total duration of this piece of code.
-  void Profiler::end(const string& name_of_piece_of_code)
+// end recording time for named piece of code, and increment
+// frequency of occurence and total duration of this piece of code.
+void Profiler::end(const string& name_of_piece_of_code)
+{
+    if (active)
     {
-      if (active)
-        {
-          clock_t end_time = times(&t);
-          map<string,Profiler::Stats>::iterator it = 
+        clock_t end_time = times(&t);
+        map<string,Profiler::Stats>::iterator it = 
             codes_statistics.find(name_of_piece_of_code);
-          if (it == codes_statistics.end())
+        if (it == codes_statistics.end())
             PLERROR("Profiler::end(%s) called before any call to start(%s)",
-                  name_of_piece_of_code.c_str(),name_of_piece_of_code.c_str());
-          Profiler::Stats& stats = it->second;
-          if (!stats.on_going)
+                    name_of_piece_of_code.c_str(),name_of_piece_of_code.c_str());
+        Profiler::Stats& stats = it->second;
+        if (!stats.on_going)
             PLERROR("Profiler::end(%s) called before previous start was called",
-                  name_of_piece_of_code.c_str());
-          stats.on_going = false;
-          stats.frequency_of_occurence++;
-          int duration = end_time - stats.time_of_last_start;
-          if (end_time < stats.time_of_last_start)
-            { duration=1; PLWARNING("Profiler: negative duration measured with times!"); }
-          stats.total_duration += duration;
-        }
+                    name_of_piece_of_code.c_str());
+        stats.on_going = false;
+        stats.frequency_of_occurence++;
+        int duration = end_time - stats.time_of_last_start;
+        if (end_time < stats.time_of_last_start)
+        { duration=1; PLWARNING("Profiler: negative duration measured with times!"); }
+        stats.total_duration += duration;
     }
+}
 #endif
   
-    // output a report on the output stream, giving
-    // the statistics recorded for each of the named pieces of codes.
-  void Profiler::report(ostream& out)
-    {
-      map<string,Profiler::Stats>::iterator it =  
+// output a report on the output stream, giving
+// the statistics recorded for each of the named pieces of codes.
+void Profiler::report(ostream& out)
+{
+    map<string,Profiler::Stats>::iterator it =  
         codes_statistics.begin(), end =  codes_statistics.end();
 
-      for (;it!=end; ++it)
-      {
+    for (;it!=end; ++it)
+    {
         out << " Ticks per second : " << sysconf(_SC_CLK_TCK)<<endl;
         out << "For " << it->first << " :" << endl;
         Profiler::Stats& stats = it->second;
@@ -119,9 +119,22 @@ using namespace std;
         double avg_duration = (double)stats.total_duration/stats.frequency_of_occurence;
         out << "Average duration = " << avg_duration << endl;
         out << endl;
-      }
     }
+}
 
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

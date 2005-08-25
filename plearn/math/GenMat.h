@@ -37,11 +37,11 @@
  
 
 /* *******************************************************      
-   * $Id: GenMat.h,v 1.2 2004/02/20 21:11:46 chrish42 Exp $
-   * Generic Matrix (template) operations
-   * AUTHORS: Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * Generic Matrix (template) operations
+ * AUTHORS: Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/Mat_maths.h */
@@ -56,10 +56,10 @@ using namespace std;
 /*!   represents A*A procedurally, where A is a square matrix 
   represented by any "standard" matrix type, i.e., which has the
   the following operations:
-     void product(const Vec& x, Vec& y); <  y = A * x
-     void diagonalOfSquare(Vec& d); <  d[i] = |A[i]|^2 where A[i] could either be i-th row or col
-     int length();
-     int width();
+  void product(const Vec& x, Vec& y); <  y = A * x
+  void diagonalOfSquare(Vec& d); <  d[i] = |A[i]|^2 where A[i] could either be i-th row or col
+  int length();
+  int width();
   This class also assumes that A is symmetric
   in its implementation of the diag method.
 */
@@ -67,74 +67,74 @@ template<class MatT>
 class SquaredSymmMatT 
 {
 protected:
-  MatT& A_;
-  Vec Ax;
+    MatT& A_;
+    Vec Ax;
 public:
-  SquaredSymmMatT(MatT& A) : A_(A), Ax(A.length()) 
-  { 
-    if (A.length() != A.width()) 
-      PLERROR("SquaredSymmMatT expects a square symmetric matrix"); 
-  }
-  int length() const { return A_.length(); }
-  int width() const { return A_.width(); }
-  //!  y = A * A * x
-  void product(const Vec& x, Vec& y)
-  {
-    product(A_, x,Ax);
-    product(A_, Ax,y);
-  }
+    SquaredSymmMatT(MatT& A) : A_(A), Ax(A.length()) 
+    { 
+        if (A.length() != A.width()) 
+            PLERROR("SquaredSymmMatT expects a square symmetric matrix"); 
+    }
+    int length() const { return A_.length(); }
+    int width() const { return A_.width(); }
+    //!  y = A * A * x
+    void product(const Vec& x, Vec& y)
+    {
+        product(A_, x,Ax);
+        product(A_, Ax,y);
+    }
 
-  void diag(Vec& d) { diagonalOfSquare(A_, d); }
-  void diagonalOfSquare(Vec& d) 
-  { PLERROR("SquaredSymmMatT::diagonalOfSquare not implemented"); }
+    void diag(Vec& d) { diagonalOfSquare(A_, d); }
+    void diagonalOfSquare(Vec& d) 
+    { PLERROR("SquaredSymmMatT::diagonalOfSquare not implemented"); }
 
 };
 
 /*!   represents (alpha*I-A) procedurally, where A is a square matrix 
   represented by any "standard" matrix type, i.e., which has the
   the following operations:
-     void product(const Vec& x, Vec& y); <  y = A * x
-     void diagonalOfSquare(Vec& d); <  d[i] = |A[i]|^2 where A[i] could either be i-th row or col
-     void diag(Vec& d); <  d[i] = A[i,i]
-     int length();
-     int width();
+  void product(const Vec& x, Vec& y); <  y = A * x
+  void diagonalOfSquare(Vec& d); <  d[i] = |A[i]|^2 where A[i] could either be i-th row or col
+  void diag(Vec& d); <  d[i] = A[i,i]
+  int length();
+  int width();
 */
 template<class MatT>
 class ReverseMatT 
 {
 protected:
-  MatT& A_;
-  real alpha_;
+    MatT& A_;
+    real alpha_;
 public:
-  ReverseMatT(MatT& A, real alpha) : A_(A), alpha_(alpha)
-  { 
-    if (A.length() != A.width()) 
-      PLERROR("ReverseMatT expects a square symmetric matrix"); 
-  }
-  int length() const { return A_.length(); }
-  int width() const { return A_.width(); }
-  //!  y = alpha * x - A * x
-  void product(const Vec& x, Vec& y)
-  {
-    product(A_, x,y);
-    y*=-1;
-    multiplyAcc(y, x,alpha_);
-  }
+    ReverseMatT(MatT& A, real alpha) : A_(A), alpha_(alpha)
+    { 
+        if (A.length() != A.width()) 
+            PLERROR("ReverseMatT expects a square symmetric matrix"); 
+    }
+    int length() const { return A_.length(); }
+    int width() const { return A_.width(); }
+    //!  y = alpha * x - A * x
+    void product(const Vec& x, Vec& y)
+    {
+        product(A_, x,y);
+        y*=-1;
+        multiplyAcc(y, x,alpha_);
+    }
 
-  void diag(Vec& d) 
-  { 
-    diag(A_, d); 
-    diag*=-1;
-    diag+=alpha_;
-  }
-  void diagonalOfSquare(Vec& d) 
-  {
-    Vec diag_A(A_.length());
-    diag(A_, diag_A);
-    diagonalOfSquare(A_, d);
-    multiplyAcc(d, diag_A,-2*alpha_);
-    d+=alpha_*alpha_;
-  }
+    void diag(Vec& d) 
+    { 
+        diag(A_, d); 
+        diag*=-1;
+        diag+=alpha_;
+    }
+    void diagonalOfSquare(Vec& d) 
+    {
+        Vec diag_A(A_.length());
+        diag(A_, diag_A);
+        diagonalOfSquare(A_, d);
+        multiplyAcc(d, diag_A,-2*alpha_);
+        d+=alpha_*alpha_;
+    }
 
 };
 
@@ -143,213 +143,213 @@ public:
   and performing the matrix vector product with A v + sum_t x_t (x_t . v)
   The generic matrix A must have the following operations:
   
-     void product(const Vec& x, Vec& y); <  y = A * x
-     void diagonalOfSquare(Vec& d); <  d[i] = |A[i]|^2 where A[i] could either be i-th row or col
-     void diag(Vec& d); <  d[i] = A[i,i]
-     int length();
-     int width();
+  void product(const Vec& x, Vec& y); <  y = A * x
+  void diagonalOfSquare(Vec& d); <  d[i] = |A[i]|^2 where A[i] could either be i-th row or col
+  void diag(Vec& d); <  d[i] = A[i,i]
+  int length();
+  int width();
 */
 template<class MatT>
 class MatTPlusSumSquaredVec
 {
 public:
-  MatT& A_;
-  Mat X_; //!<  the rows of X are the above x_t's
+    MatT& A_;
+    Mat X_; //!<  the rows of X are the above x_t's
 public:
-  MatTPlusSumSquaredVec(MatT& A, int alloc_n_vectors) : A_(A), X_(alloc_n_vectors,A.length())
-  { X_.resize(0,A.length()); }
-  MatTPlusSumSquaredVec(MatT& A, Mat& X) : A_(A), X_(X) 
-  { 
-    if (X.width()!=A.length() || A.length()!=A.width()) 
-      PLERROR("MatTPlusSumSquaredVec(MatT,Mat) arguments don't match"); 
-  }
-  void squaredVecAcc(Vec& x)
-  {
-    X_.resize(X_.length()+1,X_.width());
-    X_(X_.length()-1) << x;
-  }
-  int length() const { return A_.length(); }
-  int width() const { return A_.width(); }
-  //!  y = A + sum_t x_t x_t' x
-  void product(const Vec& x, Vec& y)
-  {
-    product(A_, x,y);
-    for (int t=0;t<X_.length();t++)
-    {
-      Vec x_t = X_(t);
-      multiplyAcc(y, x_t,dot(x_t,x));
+    MatTPlusSumSquaredVec(MatT& A, int alloc_n_vectors) : A_(A), X_(alloc_n_vectors,A.length())
+    { X_.resize(0,A.length()); }
+    MatTPlusSumSquaredVec(MatT& A, Mat& X) : A_(A), X_(X) 
+    { 
+        if (X.width()!=A.length() || A.length()!=A.width()) 
+            PLERROR("MatTPlusSumSquaredVec(MatT,Mat) arguments don't match"); 
     }
-  }
+    void squaredVecAcc(Vec& x)
+    {
+        X_.resize(X_.length()+1,X_.width());
+        X_(X_.length()-1) << x;
+    }
+    int length() const { return A_.length(); }
+    int width() const { return A_.width(); }
+    //!  y = A + sum_t x_t x_t' x
+    void product(const Vec& x, Vec& y)
+    {
+        product(A_, x,y);
+        for (int t=0;t<X_.length();t++)
+        {
+            Vec x_t = X_(t);
+            multiplyAcc(y, x_t,dot(x_t,x));
+        }
+    }
 
-  void diag(Vec& d) 
-  { 
-    diag(A_, d); 
-    for (int t=0;t<X_.length();t++)
-      squareAcc(d, X_(t));
-  }
-  void diagonalOfSquare(Vec& d) 
-  { PLERROR("MatTPlusSumSquaredVec::diagonalOfSquare not implemented"); }
+    void diag(Vec& d) 
+    { 
+        diag(A_, d); 
+        for (int t=0;t<X_.length();t++)
+            squareAcc(d, X_(t));
+    }
+    void diagonalOfSquare(Vec& d) 
+    { PLERROR("MatTPlusSumSquaredVec::diagonalOfSquare not implemented"); }
 };
 
 
-  //!  for debugging
+//!  for debugging
 #if 0
 // for debugging
 #define MatT Mat
 inline bool SolveLinearSymmSystemByCG(MatT A, Vec x, const Vec& b, int& max_iter, real& tol, real lambda)
 {
-  real resid;
-  int n=A.nrows();
-  Vec p(n), z(n), q(n), invdiag(n);
-  real alpha, beta, rho, previous_rho;
-  real normb = norm(b);
+    real resid;
+    int n=A.nrows();
+    Vec p(n), z(n), q(n), invdiag(n);
+    real alpha, beta, rho, previous_rho;
+    real normb = norm(b);
 
-  // inverse diagonal of A, for preconditionning
-  diag(A, invdiag);
-  if (lambda>0)
-    invdiag+=lambda;
-  invertElements(invdiag);
+    // inverse diagonal of A, for preconditionning
+    diag(A, invdiag);
+    if (lambda>0)
+        invdiag+=lambda;
+    invertElements(invdiag);
 
-  Vec r(n);
-  // r = b - (A+lambda*I)*x;
-  product(A, x,r);
-  if (lambda>0)
-    multiplyAcc(r, x,lambda);
-  r*=-1;
-  r+=b;
+    Vec r(n);
+    // r = b - (A+lambda*I)*x;
+    product(A, x,r);
+    if (lambda>0)
+        multiplyAcc(r, x,lambda);
+    r*=-1;
+    r+=b;
 
-  if (normb == 0.0) 
-    normb = 1;
+    if (normb == 0.0) 
+        normb = 1;
   
-  resid = norm(r);
-  //cout << "at 0, |r| = " << resid << endl;
-  if ((resid / normb) <= tol) {
-    tol = resid;
-    max_iter = 0;
-    return true;
-  }
-
-  for (int i = 1; i <= max_iter; i++) {
-    // z = M.solve(r); i.e. solve M z = r, i.e. diag(A+lambda I) z = r
-    // i.e. z_i = r_i / (A_{i,i} + lambda)
-    multiply(r,invdiag,z);
-
-    rho = dot(r, z);
-    
-    if (i == 1)
-      p << z;
-    else {
-      beta = rho / previous_rho;
-      // p = z + beta * p;
-      multiplyAdd(z,p,beta,p);
-    }
-    
-    // q = (A+lambda I)*p;
-    product(A, p,q);
-    multiplyAcc(q, p,lambda);
-
-    alpha = rho / dot(p, q);
-
-    // x += alpha * p;
-    multiplyAcc(x, p,alpha);
-    // r -= alpha * q;
-    multiplyAcc(r, q,-alpha);
     resid = norm(r);
-    // cout << "at " << i << ", |r| = " << resid << endl;
+    //cout << "at 0, |r| = " << resid << endl;
     if ((resid / normb) <= tol) {
-      tol = resid;
-      max_iter = i;
-      return true;     
+        tol = resid;
+        max_iter = 0;
+        return true;
     }
 
-    previous_rho = rho;
-  }
+    for (int i = 1; i <= max_iter; i++) {
+        // z = M.solve(r); i.e. solve M z = r, i.e. diag(A+lambda I) z = r
+        // i.e. z_i = r_i / (A_{i,i} + lambda)
+        multiply(r,invdiag,z);
+
+        rho = dot(r, z);
+    
+        if (i == 1)
+            p << z;
+        else {
+            beta = rho / previous_rho;
+            // p = z + beta * p;
+            multiplyAdd(z,p,beta,p);
+        }
+    
+        // q = (A+lambda I)*p;
+        product(A, p,q);
+        multiplyAcc(q, p,lambda);
+
+        alpha = rho / dot(p, q);
+
+        // x += alpha * p;
+        multiplyAcc(x, p,alpha);
+        // r -= alpha * q;
+        multiplyAcc(r, q,-alpha);
+        resid = norm(r);
+        // cout << "at " << i << ", |r| = " << resid << endl;
+        if ((resid / normb) <= tol) {
+            tol = resid;
+            max_iter = i;
+            return true;     
+        }
+
+        previous_rho = rho;
+    }
   
-  tol = resid;
-  return false;
+    tol = resid;
+    return false;
 }
 #undef MatT
 #else
-  //!  general purpose but non-debuggable with current gdb...
+//!  general purpose but non-debuggable with current gdb...
 template <class MatT>
 bool SolveLinearSymmSystemByCG(MatT A, Vec x, const Vec& b, int& max_iter, real& tol, real lambda)
 {
-  real resid;
-  int n=A.length();
-  Vec p(n), z(n), q(n), invdiag(n);
-  real alpha, beta, rho, previous_rho;
-  real normb = norm(b);
+    real resid;
+    int n=A.length();
+    Vec p(n), z(n), q(n), invdiag(n);
+    real alpha, beta, rho, previous_rho;
+    real normb = norm(b);
 
-  //!  inverse diagonal of A, for preconditionning
-  diag(A, invdiag);
-  if (lambda>0)
-    invdiag+=lambda;
-  invertElements(invdiag);
+    //!  inverse diagonal of A, for preconditionning
+    diag(A, invdiag);
+    if (lambda>0)
+        invdiag+=lambda;
+    invertElements(invdiag);
 
-  Vec r(n);
-  //!  r = b - (A+lambda*I)*x;
-  product(A, x,r);
-  if (lambda>0)
-    multiplyAcc(r, x,lambda);
-  r*=-1;
-  r+=b;
+    Vec r(n);
+    //!  r = b - (A+lambda*I)*x;
+    product(A, x,r);
+    if (lambda>0)
+        multiplyAcc(r, x,lambda);
+    r*=-1;
+    r+=b;
 
-  if (normb == 0.0) 
-    normb = 1;
+    if (normb == 0.0) 
+        normb = 1;
   
-  resid = norm(r);
-  //cout << "at 0, |r| = " << resid << endl;
-  if ((resid / normb) <= tol) {
-    tol = resid;
-    max_iter = 0;
-    return true;
-  }
-
-  for (int i = 1; i <= max_iter; i++) {
-    //!  z = M.solve(r); i.e. solve M z = r, i.e. diag(A+lambda I) z = r
-    //!  i.e. z_i = r_i / (A_{i,i} + lambda)
-    multiply(r,invdiag,z);
-
-    rho = dot(r, z);
-    
-    if (i == 1)
-      p << z;
-    else {
-      beta = rho / previous_rho;
-      //!  p = z + beta * p;
-      multiplyAdd(z,p,beta,p);
-    }
-    
-    //!  q = (A+lambda I)*p;
-    product(A, p,q);
-    multiplyAcc(q, p,lambda);
-
-    alpha = rho / dot(p, q);
-
-    //!  x += alpha * p;
-    multiplyAcc(x, p,alpha);
-    //!  r -= alpha * q;
-    multiplyAcc(r, q,-alpha);
     resid = norm(r);
-    //!  cout << "at " << i << ", |r| = " << resid << endl;
+    //cout << "at 0, |r| = " << resid << endl;
     if ((resid / normb) <= tol) {
-      tol = resid;
-      max_iter = i;
-      return true;     
+        tol = resid;
+        max_iter = 0;
+        return true;
     }
 
-    previous_rho = rho;
-  }
+    for (int i = 1; i <= max_iter; i++) {
+        //!  z = M.solve(r); i.e. solve M z = r, i.e. diag(A+lambda I) z = r
+        //!  i.e. z_i = r_i / (A_{i,i} + lambda)
+        multiply(r,invdiag,z);
+
+        rho = dot(r, z);
+    
+        if (i == 1)
+            p << z;
+        else {
+            beta = rho / previous_rho;
+            //!  p = z + beta * p;
+            multiplyAdd(z,p,beta,p);
+        }
+    
+        //!  q = (A+lambda I)*p;
+        product(A, p,q);
+        multiplyAcc(q, p,lambda);
+
+        alpha = rho / dot(p, q);
+
+        //!  x += alpha * p;
+        multiplyAcc(x, p,alpha);
+        //!  r -= alpha * q;
+        multiplyAcc(r, q,-alpha);
+        resid = norm(r);
+        //!  cout << "at " << i << ", |r| = " << resid << endl;
+        if ((resid / normb) <= tol) {
+            tol = resid;
+            max_iter = i;
+            return true;     
+        }
+
+        previous_rho = rho;
+    }
   
-  tol = resid;
-  return false;
+    tol = resid;
+    return false;
 }
 #endif
 
 /*!   Perform the "power iteration" algorithm to find the maximum eigen-pair
   of a generic matrix A, until convergence of the
   "eigenvalue" as estimated by the Rayleigh quotient x'Ax/(x'x).
-    x_t = A x_{t-1} / norm(A x_{t-1})
+  x_t = A x_{t-1} / norm(A x_{t-1})
   The Rayleigh quotient tolerance is the required fraction of increase of x_t'Ax_t.
   The algorithm would also stop if the given number of iterations is reached.
   Upon return the actual number of iterations is set in n_iterations.
@@ -365,45 +365,45 @@ bool SolveLinearSymmSystemByCG(MatT A, Vec x, const Vec& b, int& max_iter, real&
 #if 0
 #define MatT Mat
 inline real PowerIteration(MatT& A, Vec x0, int& n_iterations, 
-                    real RayleighQuotientTolerance, Mat final_vectors, 
-                    int& final_offset)
+                           real RayleighQuotientTolerance, Mat final_vectors, 
+                           int& final_offset)
 {
-  int N=final_vectors.length();
-  if (N<3) PLERROR("PowerIteration: final_vectors.length_ = %d should be >= 3",N);
-  Vec previous=final_vectors(0);
-  Vec current=final_vectors(1);
-  Vec next=final_vectors(2);
-  previous << x0; 
-  product(A, previous,current);
-  real current_norm=norm(current), next_norm, current_Rq, previous_Rq=0;
-  current/=current_norm;
-  for (int it=1;it<=n_iterations;it++)
-  {
-    product(A, current,next);
-    // check Rayleigh quotient (note that norm(current)=1)
-    current_Rq = dot(current,next);
-    // normalize
-    next_norm = norm(next);
-    next/=next_norm;
-    cout << "at iteration " << it << ", R(A,x) = " << current_Rq << ", |Ax|/|x| = " 
-         << next_norm << endl;
-    if (current_Rq < previous_Rq)
-      PLWARNING("PowerIteration: something strange, x'Ax/x'x is decreasing %g->%g",
-              previous_Rq, current_Rq);
-    if (it>=N && current_Rq / previous_Rq - 1 < RayleighQuotientTolerance)
+    int N=final_vectors.length();
+    if (N<3) PLERROR("PowerIteration: final_vectors.length_ = %d should be >= 3",N);
+    Vec previous=final_vectors(0);
+    Vec current=final_vectors(1);
+    Vec next=final_vectors(2);
+    previous << x0; 
+    product(A, previous,current);
+    real current_norm=norm(current), next_norm, current_Rq, previous_Rq=0;
+    current/=current_norm;
+    for (int it=1;it<=n_iterations;it++)
     {
-      // stop
-      n_iterations = it;
-      final_offset = it%N;
-      return current_Rq;
+        product(A, current,next);
+        // check Rayleigh quotient (note that norm(current)=1)
+        current_Rq = dot(current,next);
+        // normalize
+        next_norm = norm(next);
+        next/=next_norm;
+        cout << "at iteration " << it << ", R(A,x) = " << current_Rq << ", |Ax|/|x| = " 
+             << next_norm << endl;
+        if (current_Rq < previous_Rq)
+            PLWARNING("PowerIteration: something strange, x'Ax/x'x is decreasing %g->%g",
+                      previous_Rq, current_Rq);
+        if (it>=N && current_Rq / previous_Rq - 1 < RayleighQuotientTolerance)
+        {
+            // stop
+            n_iterations = it;
+            final_offset = it%N;
+            return current_Rq;
+        }
+        // iterate
+        previous_Rq = current_Rq;
+        current_norm = next_norm;
+        previous = current;
+        current = next;
+        next = final_vectors((it+2)%N);
     }
-    // iterate
-    previous_Rq = current_Rq;
-    current_norm = next_norm;
-    previous = current;
-    current = next;
-    next = final_vectors((it+2)%N);
-  }
 }
 #undef MatT
 #else
@@ -413,65 +413,65 @@ real PowerIteration(MatT& A, Vec x0, int& n_iterations,
                     real RayleighQuotientTolerance, Mat final_vectors, 
                     int& final_offset)
 {
-  int N=final_vectors.length();
-  if (N<3) PLERROR("PowerIteration: final_vectors.length_ = %d should be >= 3",N);
-  Vec previous=final_vectors(0);
-  Vec current=final_vectors(1);
-  Vec next=final_vectors(2);
-  previous << x0; 
-  product(A, previous,current);
-  real current_norm=norm(current), next_norm, current_Rq, previous_Rq=0;
-  current/=current_norm;
-  for (int it=1;it<=n_iterations;it++)
-  {
-    product(A, current,next);
-    //!  check Rayleigh quotient (note that norm(current)=1)
-    current_Rq = dot(current,next);
-    //!  normalize
-    next_norm = norm(next);
-    next/=next_norm;
-    //cout << "at iteration " << it << ", R(A,x) = " << current_Rq << ", |Ax|/|x| = " 
-    //!      << next_norm << endl;
-    if (current_Rq < previous_Rq)
-      PLWARNING("PowerIteration: something strange, x'Ax/x'x is decreasing %g->%g",
-              previous_Rq, current_Rq);
-    if (it>=N && current_Rq / previous_Rq - 1 < RayleighQuotientTolerance)
+    int N=final_vectors.length();
+    if (N<3) PLERROR("PowerIteration: final_vectors.length_ = %d should be >= 3",N);
+    Vec previous=final_vectors(0);
+    Vec current=final_vectors(1);
+    Vec next=final_vectors(2);
+    previous << x0; 
+    product(A, previous,current);
+    real current_norm=norm(current), next_norm, current_Rq, previous_Rq=0;
+    current/=current_norm;
+    for (int it=1;it<=n_iterations;it++)
     {
-      //!  stop
-      n_iterations = it;
-      final_offset = it%N;
-      return next_norm;
+        product(A, current,next);
+        //!  check Rayleigh quotient (note that norm(current)=1)
+        current_Rq = dot(current,next);
+        //!  normalize
+        next_norm = norm(next);
+        next/=next_norm;
+        //cout << "at iteration " << it << ", R(A,x) = " << current_Rq << ", |Ax|/|x| = " 
+        //!      << next_norm << endl;
+        if (current_Rq < previous_Rq)
+            PLWARNING("PowerIteration: something strange, x'Ax/x'x is decreasing %g->%g",
+                      previous_Rq, current_Rq);
+        if (it>=N && current_Rq / previous_Rq - 1 < RayleighQuotientTolerance)
+        {
+            //!  stop
+            n_iterations = it;
+            final_offset = it%N;
+            return next_norm;
+        }
+        //!  iterate
+        previous_Rq = current_Rq;
+        current_norm = next_norm;
+        previous = current;
+        current = next;
+        next = final_vectors((it+2)%N);
     }
-    //!  iterate
-    previous_Rq = current_Rq;
-    current_norm = next_norm;
-    previous = current;
-    current = next;
-    next = final_vectors((it+2)%N);
-  }
 }
 #endif
 
 /*!     Orthonormalize in-place the rows of the given matrix, using successive
-    projections on the orthogonal subspace of the previously found
-    basis. The resulting matrix has the following properties:
-     - its rows spans the same space as A
-     - its rows are orthogonal (dot product = 0)
-     - its rows are of norm 1
-    However, it may happen that the original rows of A were not linearly
-    independent. In that case the, algorithm returns the number of rows
-    that were successfully obtained (and the user should probably 
-    then do A = A.subMatRows(0,result) to obtain the basis).
-    The tolerance argument is the minimum value of the norm
-    of a row when projected orthogonal to the previous ones for this row
-    to contribute to the basis.
+  projections on the orthogonal subspace of the previously found
+  basis. The resulting matrix has the following properties:
+  - its rows spans the same space as A
+  - its rows are orthogonal (dot product = 0)
+  - its rows are of norm 1
+  However, it may happen that the original rows of A were not linearly
+  independent. In that case the, algorithm returns the number of rows
+  that were successfully obtained (and the user should probably 
+  then do A = A.subMatRows(0,result) to obtain the basis).
+  The tolerance argument is the minimum value of the norm
+  of a row when projected orthogonal to the previous ones for this row
+  to contribute to the basis.
 */
-  int GramSchmidtOrthogonalization(Mat A, real tolerance=1e-6);
+int GramSchmidtOrthogonalization(Mat A, real tolerance=1e-6);
 
 /*!   Perform a power iteration to find the largest eigen-pairs of a
   generic (square) matrix A (i.e. quasi-eigenvectors whose eigenvalues
   are the largest in magnitude). The algorithm essentially iterates
-      x_t = A x_{t-1}
+  x_t = A x_{t-1}
   where x0 is provided in argument. The user specifies the
   maximum number of iterations in n_iterations (and upon return
   this variable contains the actual number of iterations taken).
@@ -491,65 +491,65 @@ real PowerIteration(MatT A, Vec x0, int& n_iterations,
                     real RayleighQuotientTolerance, Mat final_vectors, 
                     int& final_offset, bool verbose=false)
 {
-  int N=final_vectors.length();
-  if (N<3) PLERROR("PowerIteration: final_vectors.length_ = %d should be >= 3",N);
-  Vec previous=final_vectors(0);
-  Vec current=final_vectors(1);
-  Vec next=final_vectors(2);
-  previous << x0; 
-  real max_x = max(previous);
-  if (max_x<0) previous*=-1;
-  product(A, previous,current);
-  real current_norm=norm(current), next_norm, current_Rq, previous_Rq=0;
-  max_x = max(current);
-  if (max_x<0) current*=-1;
-  current/=current_norm;
-  int it=1;
-  for (;it<=n_iterations;it++)
-  {
-    product(A, current,next);
-    //!  check Rayleigh quotient (note that norm(current)=1)
-    current_Rq = dot(current,next);
-    //!  normalize
-    next_norm = norm(next);
-    next/=next_norm;
-    max_x = max(next);
-    if (max_x<0) next*=-1;
+    int N=final_vectors.length();
+    if (N<3) PLERROR("PowerIteration: final_vectors.length_ = %d should be >= 3",N);
+    Vec previous=final_vectors(0);
+    Vec current=final_vectors(1);
+    Vec next=final_vectors(2);
+    previous << x0; 
+    real max_x = max(previous);
+    if (max_x<0) previous*=-1;
+    product(A, previous,current);
+    real current_norm=norm(current), next_norm, current_Rq, previous_Rq=0;
+    max_x = max(current);
+    if (max_x<0) current*=-1;
+    current/=current_norm;
+    int it=1;
+    for (;it<=n_iterations;it++)
+    {
+        product(A, current,next);
+        //!  check Rayleigh quotient (note that norm(current)=1)
+        current_Rq = dot(current,next);
+        //!  normalize
+        next_norm = norm(next);
+        next/=next_norm;
+        max_x = max(next);
+        if (max_x<0) next*=-1;
+        if (verbose)
+        {
+            cout << "at iteration " << it << ", R(A,x) = " << current_Rq << ", |Ax|/|x| = " 
+                 << next_norm << endl;
+        }
+        if (current_Rq < previous_Rq)
+            PLWARNING("PowerIteration: something strange, x'Ax/x'x is decreasing %g->%g",
+                      previous_Rq, current_Rq);
+        if (it>=N && current_Rq / previous_Rq - 1 < RayleighQuotientTolerance)
+        {
+            //!  stop
+            n_iterations = it;
+            final_offset = it%N;
+            if (verbose)
+                cout << "power iteration finishes with |Ax|/|x| = " << next_norm << endl;
+            return next_norm;
+        }
+        //!  iterate
+        previous_Rq = current_Rq;
+        current_norm = next_norm;
+        previous = current;
+        current = next;
+        next = final_vectors((it+2)%N);
+    }
+    final_offset = it%N;
     if (verbose)
-    {
-      cout << "at iteration " << it << ", R(A,x) = " << current_Rq << ", |Ax|/|x| = " 
-           << next_norm << endl;
-    }
-    if (current_Rq < previous_Rq)
-      PLWARNING("PowerIteration: something strange, x'Ax/x'x is decreasing %g->%g",
-              previous_Rq, current_Rq);
-    if (it>=N && current_Rq / previous_Rq - 1 < RayleighQuotientTolerance)
-    {
-      //!  stop
-      n_iterations = it;
-      final_offset = it%N;
-      if (verbose)
-        cout << "power iteration finishes with |Ax|/|x| = " << next_norm << endl;
-      return next_norm;
-    }
-    //!  iterate
-    previous_Rq = current_Rq;
-    current_norm = next_norm;
-    previous = current;
-    current = next;
-    next = final_vectors((it+2)%N);
-  }
-  final_offset = it%N;
-  if (verbose)
-    cout << "power iteration finishes FAILING with |Ax|/|x| = " << next_norm << endl;
-  return next_norm;
+        cout << "power iteration finishes FAILING with |Ax|/|x| = " << next_norm << endl;
+    return next_norm;
 }
 
 /*!   Perform an inverse power iteration to find the smallest eigen-pairs of a
   generic (square and symmetric positive semi-definite) matrix A 
   (i.e. quasi-eigenvectors whose eigenvalues
   are the smallest in magnitude). The algorithm essentially iterates
-      SOLVE x_t FOR A x_t = x_{t-1}
+  SOLVE x_t FOR A x_t = x_{t-1}
   using conjugate gradients (the SolveLinearSymmSystemByCG function) to solve,
   and where x0 is provided in argument. The user specifies the
   maximum number of iterations in n_iterations (and upon return
@@ -575,71 +575,71 @@ real InversePowerIteration(MatT A, Vec x0, int& n_iterations,
 			   real RTolerance, Mat final_vectors, 
 			   int& final_offset, real regularizer, bool verbose=false)
 {
-  int N=final_vectors.length();
-  if (N<2) PLERROR("PowerIteration: final_vectors.length_ = %d should be >= 2",N);
-  Vec previous=final_vectors(0);
-  Vec current=final_vectors(1);
-  previous << x0; 
-  real max_x = max(previous);
-  if (max_x<0) previous*=-1;
-  real current_Rq, previous_Rq=0;
-  max_x = max(current);
-  if (max_x<0) current*=-1;
-  normalize(previous);
-  int it=1;
-  Vec Ax = x0; //!<  save memory but destroy argument
-  real current_error =0;
-  for (;it<=n_iterations;it++)
-  {
-    int CGniter = max_n_cg_iter;
-    real residue = RTolerance;
-    current << previous;
-    bool success=SolveLinearSymmSystemByCG(A, current, previous, CGniter, residue, regularizer);
-    if (verbose)
-    {
-      if (success)
-        cout << "done CG in " << CGniter << " iterations with residue = " << residue << endl;
-      else
-        cout << "done incomplete CG in " << CGniter << " iterations with residue = " << residue << endl;
-    }
+    int N=final_vectors.length();
+    if (N<2) PLERROR("PowerIteration: final_vectors.length_ = %d should be >= 2",N);
+    Vec previous=final_vectors(0);
+    Vec current=final_vectors(1);
+    previous << x0; 
+    real max_x = max(previous);
+    if (max_x<0) previous*=-1;
+    real current_Rq, previous_Rq=0;
     max_x = max(current);
     if (max_x<0) current*=-1;
-    normalize(current);
-    //!  check Rayleigh quotient (note that norm(current)=1)
-    product(A, current,Ax);
-    current_Rq = dot(current,Ax);
-    current_error = norm(Ax);
-    if (verbose)
-      cout << "at iteration " << it << ", R(A,x) = " << current_Rq << ", |Ax|/|x| = " 
-           << current_error << endl;
-    if (verbose && current_Rq > (1+RTolerance)*previous_Rq)
-      PLWARNING("InversePowerIteration: something strange, x'Ax/x'x is decreasing %g->%g",
-              previous_Rq, current_Rq);
-    if (it>=N && 1 - current_Rq / previous_Rq  < RTolerance)
+    normalize(previous);
+    int it=1;
+    Vec Ax = x0; //!<  save memory but destroy argument
+    real current_error =0;
+    for (;it<=n_iterations;it++)
     {
-      //!  stop
-      n_iterations = it;
-      final_offset = it%N;
-      if (verbose)
-        cout << "inverse power iteration finishes with |Ax|/|x| = " << current_error << endl;
-      return current_error;
+        int CGniter = max_n_cg_iter;
+        real residue = RTolerance;
+        current << previous;
+        bool success=SolveLinearSymmSystemByCG(A, current, previous, CGniter, residue, regularizer);
+        if (verbose)
+        {
+            if (success)
+                cout << "done CG in " << CGniter << " iterations with residue = " << residue << endl;
+            else
+                cout << "done incomplete CG in " << CGniter << " iterations with residue = " << residue << endl;
+        }
+        max_x = max(current);
+        if (max_x<0) current*=-1;
+        normalize(current);
+        //!  check Rayleigh quotient (note that norm(current)=1)
+        product(A, current,Ax);
+        current_Rq = dot(current,Ax);
+        current_error = norm(Ax);
+        if (verbose)
+            cout << "at iteration " << it << ", R(A,x) = " << current_Rq << ", |Ax|/|x| = " 
+                 << current_error << endl;
+        if (verbose && current_Rq > (1+RTolerance)*previous_Rq)
+            PLWARNING("InversePowerIteration: something strange, x'Ax/x'x is decreasing %g->%g",
+                      previous_Rq, current_Rq);
+        if (it>=N && 1 - current_Rq / previous_Rq  < RTolerance)
+        {
+            //!  stop
+            n_iterations = it;
+            final_offset = it%N;
+            if (verbose)
+                cout << "inverse power iteration finishes with |Ax|/|x| = " << current_error << endl;
+            return current_error;
+        }
+        //!  iterate
+        previous_Rq = current_Rq;
+        previous = current;
+        current = final_vectors((it+1)%N);
     }
-    //!  iterate
-    previous_Rq = current_Rq;
-    previous = current;
-    current = final_vectors((it+1)%N);
-  }
-  final_offset = it%N;
-  if (verbose)
-    cout << "power iteration finishes FAILING with |Ax|/|x| = " << current_error << endl;
-  return current_error;
+    final_offset = it%N;
+    if (verbose)
+        cout << "power iteration finishes FAILING with |Ax|/|x| = " << current_error << endl;
+    return current_error;
 }
 
 /*!   Tries to find the smallest magnitude eigen-value / eigen-vector pair
   of a generic symmetric matrix A, i.e., the smallest lambda
   and corresponding x such that
-     A x = lambda x
-     |x|=1
+  A x = lambda x
+  |x|=1
   The argument x is the initial tentative solution (and also where
   the solution is stored upon return). The algorithm proceeds
   iteratively with a call to InversePowerIteration in the inner loop,
@@ -660,62 +660,62 @@ real findSmallestEigenPairOfSymmMat(MatT& A, Vec x,
                                     int max_n_cg_iter=0, 
                                     int max_n_power_iter=0, bool verbose=false)
 {
-  int n=A.length();
-  int n_try=5;
+    int n=A.length();
+    int n_try=5;
 
-  if (max_n_cg_iter==0)
-    max_n_cg_iter = 5+int(pow(double(n),0.3));
-  if (max_n_power_iter==0)
-    max_n_power_iter = 5+int(log(n));
+    if (max_n_cg_iter==0)
+        max_n_cg_iter = 5+int(pow(double(n),0.3));
+    if (max_n_power_iter==0)
+        max_n_power_iter = 5+int(log(n));
 
-  Mat try_solutions(n_try,n);
-  Mat kernel_solutions = x.toMat(1,n);
-  Vec Ax(n);
+    Mat try_solutions(n_try,n);
+    Mat kernel_solutions = x.toMat(1,n);
+    Vec Ax(n);
 
-  int max_iter = int(sqrt(max_n_power_iter));
-  real err=1e30, prev_err=1e30;
-  int nrepeat=0;
-  do {
-    int n_iter=max_iter;
-    int offs=0;
-    real l0 = InversePowerIteration(A,x,n_iter,max_n_cg_iter,
-                                    improvement_tolerance,
-                                    try_solutions,offs,error_tolerance,verbose);
-    if (verbose)
-      cout << "got smallest eigenvalue = " << l0
-           << " in " << n_iter << " iterations" << endl;
+    int max_iter = int(sqrt(max_n_power_iter));
+    real err=1e30, prev_err=1e30;
+    int nrepeat=0;
+    do {
+        int n_iter=max_iter;
+        int offs=0;
+        real l0 = InversePowerIteration(A,x,n_iter,max_n_cg_iter,
+                                        improvement_tolerance,
+                                        try_solutions,offs,error_tolerance,verbose);
+        if (verbose)
+            cout << "got smallest eigenvalue = " << l0
+                 << " in " << n_iter << " iterations" << endl;
 
-    if (verbose)
-    {
-      //!  let's see if this is really a good solution
-      //!  Vec y = try_solutions(offs);
-      n_try = try_solutions.length();
-      for (int i=0;i<n_try;i++)
+        if (verbose)
         {
-          cout << "for solution " << i << endl;
-          Vec y = try_solutions(i);
-          normalize(y);
-          product(A, y,Ax);
-          prev_err=err;
-          err = norm(Ax);
-          cout << "|A y| = " << err << endl;
-          cout << "y. A y = " << dot(y,Ax) << endl;
+            //!  let's see if this is really a good solution
+            //!  Vec y = try_solutions(offs);
+            n_try = try_solutions.length();
+            for (int i=0;i<n_try;i++)
+            {
+                cout << "for solution " << i << endl;
+                Vec y = try_solutions(i);
+                normalize(y);
+                product(A, y,Ax);
+                prev_err=err;
+                err = norm(Ax);
+                cout << "|A y| = " << err << endl;
+                cout << "y. A y = " << dot(y,Ax) << endl;
+            }
         }
-    }
-    //!  diagonalize the subspace found by the trial solutions
+        //!  diagonalize the subspace found by the trial solutions
 
-    Vec evalues(n_try);
-    Mat evectors(n_try,n_try);
-    diagonalizeSubspace(A, try_solutions, Ax, kernel_solutions, evalues, evectors);
-    product(A, x,Ax);
-    err = norm(Ax);
+        Vec evalues(n_try);
+        Mat evectors(n_try,n_try);
+        diagonalizeSubspace(A, try_solutions, Ax, kernel_solutions, evalues, evectors);
+        product(A, x,Ax);
+        err = norm(Ax);
+        if (verbose)
+            cout << "after diagonalization, err = " << err << endl;
+        nrepeat++;
+    } while (err > error_tolerance && n_try>=2 && 
+             prev_err/err-1>improvement_tolerance && nrepeat<max_iter);
     if (verbose)
-      cout << "after diagonalization, err = " << err << endl;
-    nrepeat++;
-  } while (err > error_tolerance && n_try>=2 && 
-           prev_err/err-1>improvement_tolerance && nrepeat<max_iter);
-  if (verbose)
-    cout << "return from findSmallestEigenPairOfSymmMat with err=" << err << endl;
+        cout << "return from findSmallestEigenPairOfSymmMat with err=" << err << endl;
 }
 
 
@@ -747,67 +747,67 @@ int SymmMatNullSpaceByInversePowerIteration(MatT &A, Mat solutions,
                                             int max_n_power_iter=0, bool verbose=false)
 
 {  
-  int n=A.length();
-  int n_soln=normsAx.length();
-  solutions.resize(n_soln,n);
-  if (max_n_cg_iter==0)
-    max_n_cg_iter = 5+int(pow(double(n),0.3));
-  if (max_n_power_iter==0)
-    max_n_power_iter = 5+int(log(n));
-  Vec Ax(n);
+    int n=A.length();
+    int n_soln=normsAx.length();
+    solutions.resize(n_soln,n);
+    if (max_n_cg_iter==0)
+        max_n_cg_iter = 5+int(pow(double(n),0.3));
+    if (max_n_power_iter==0)
+        max_n_power_iter = 5+int(log(n));
+    Vec Ax(n);
 
-  MatTPlusSumSquaredVec<MatT> B(A,n_soln);
-  Vec sy(n);
-  fill_random_uniform(sy);
-  Mat largest_evecs(3,n);
-  int offs;
-  int n_iter = MIN(max_n_power_iter,20);
-  real largest_evalue = PowerIteration(A, sy, n_iter ,1e-3,
-                                       largest_evecs, offs,verbose);
-  if (verbose)
-    cout << "largest evalue(B) = " << largest_evalue << endl;
-  for (int i=0;i<n_soln;i++)
-  {
-    Vec y = solutions(i);
-    if (i==0)
-      y.fill(1);
-    else
-      fill_random_uniform(y,0.1,0.5);
-    real residue=findSmallestEigenPairOfSymmMat(B, y, 
-                                                error_tolerance,
-                                                improvement_tolerance,
-                                                max_n_cg_iter,
-                                                max_n_power_iter,verbose);
+    MatTPlusSumSquaredVec<MatT> B(A,n_soln);
+    Vec sy(n);
+    fill_random_uniform(sy);
+    Mat largest_evecs(3,n);
+    int offs;
+    int n_iter = MIN(max_n_power_iter,20);
+    real largest_evalue = PowerIteration(A, sy, n_iter ,1e-3,
+                                         largest_evecs, offs,verbose);
     if (verbose)
+        cout << "largest evalue(B) = " << largest_evalue << endl;
+    for (int i=0;i<n_soln;i++)
     {
-      cout << "found vector with |B y| = " << residue << endl;
-      cout << "|y| = " << norm(y) << endl;
-      product(A, y,Ax);
-      cout << "****** |A y| = " << norm(Ax) << endl;
+        Vec y = solutions(i);
+        if (i==0)
+            y.fill(1);
+        else
+            fill_random_uniform(y,0.1,0.5);
+        real residue=findSmallestEigenPairOfSymmMat(B, y, 
+                                                    error_tolerance,
+                                                    improvement_tolerance,
+                                                    max_n_cg_iter,
+                                                    max_n_power_iter,verbose);
+        if (verbose)
+        {
+            cout << "found vector with |B y| = " << residue << endl;
+            cout << "|y| = " << norm(y) << endl;
+            product(A, y,Ax);
+            cout << "****** |A y| = " << norm(Ax) << endl;
+        }
+        multiply(y,largest_evalue,sy);
+        B.squaredVecAcc(sy);
     }
-    multiply(y,largest_evalue,sy);
-    B.squaredVecAcc(sy);
-  }
 
-  int n_s=GramSchmidtOrthogonalization(solutions);
-  solutions = solutions.subMatRows(0,n_s);
-  if (n_s<n_soln && verbose)
-    cout << "found only " << n_s << " independent solutions out of " 
-         << n_soln << " requested" << endl;
-  for (int i=0;i<n_s;i++)
-  {
-    Vec xi = solutions(i);
-    //!  check x'Ax and norm of |Ax|
-    product(A, xi,Ax);
-    real err = dot(xi,Ax);
-    real normAx = norm(Ax);
-    normsAx[i]=normAx;
-    xAx[i]=err;
-    if (verbose)
-      cout << "for " << i << "-th solution x: x'Ax = " << err << ", |Ax|/|x|= "
-           << normAx << endl;
-  }
-  return n_s;
+    int n_s=GramSchmidtOrthogonalization(solutions);
+    solutions = solutions.subMatRows(0,n_s);
+    if (n_s<n_soln && verbose)
+        cout << "found only " << n_s << " independent solutions out of " 
+             << n_soln << " requested" << endl;
+    for (int i=0;i<n_s;i++)
+    {
+        Vec xi = solutions(i);
+        //!  check x'Ax and norm of |Ax|
+        product(A, xi,Ax);
+        real err = dot(xi,Ax);
+        real normAx = norm(Ax);
+        normsAx[i]=normAx;
+        xAx[i]=err;
+        if (verbose)
+            cout << "for " << i << "-th solution x: x'Ax = " << err << ", |Ax|/|x|= "
+                 << normAx << endl;
+    }
+    return n_s;
 }
 
 /*!   Find small (ideally the smallest) eigen-pairs of a positive
@@ -849,104 +849,104 @@ int SymmMatNullSpaceByInversePowerIteration(MatT &A, Mat solutions,
 */
 template<class MatT>
 int GDFindSmallEigenPairs(MatT& A,Mat X,
-                           bool diagonalize_in_the_end=true,
-                           real tolerance=1e-6,
-                           int n_epochs=0,
-                           real learning_rate=0,
-                           int normalize_every=0,
-                           real decrease_factor=0,
-                           bool verbose=false)
+                          bool diagonalize_in_the_end=true,
+                          real tolerance=1e-6,
+                          int n_epochs=0,
+                          real learning_rate=0,
+                          int normalize_every=0,
+                          real decrease_factor=0,
+                          bool verbose=false)
 {
-  int n=A.length();
-  int m=X.length();
-  if (n_epochs==0)
-    n_epochs = 1000+10*int(sqrt(n));
-  Vec Ax(n);
-  real err_tolerance, sum_norms, actual_err;
-  if (learning_rate==0)
-  {
-    //!  initialize learning rate using a power iteration
-    fill_random_uniform(Ax,-1,1);
-    Mat large_vectors(3,n);
-    int offs;
-    int n_iter = 10+int(sqrt(log(double(n))));
-    real max_eigen_value = 
-      PowerIteration(A, Ax, n_iter,1e-3,large_vectors,offs,verbose);
-    learning_rate = 2.0/max_eigen_value;
-    if (verbose)
+    int n=A.length();
+    int m=X.length();
+    if (n_epochs==0)
+        n_epochs = 1000+10*int(sqrt(n));
+    Vec Ax(n);
+    real err_tolerance, sum_norms, actual_err;
+    if (learning_rate==0)
     {
-      cout << "setting initial learning rate = 2/max_eigen_value = 2/" 
-           << max_eigen_value << " = " << learning_rate << endl;
+        //!  initialize learning rate using a power iteration
+        fill_random_uniform(Ax,-1,1);
+        Mat large_vectors(3,n);
+        int offs;
+        int n_iter = 10+int(sqrt(log(double(n))));
+        real max_eigen_value = 
+            PowerIteration(A, Ax, n_iter,1e-3,large_vectors,offs,verbose);
+        learning_rate = 2.0/max_eigen_value;
+        if (verbose)
+        {
+            cout << "setting initial learning rate = 2/max_eigen_value = 2/" 
+                 << max_eigen_value << " = " << learning_rate << endl;
+        }
+        err_tolerance = tolerance * max_eigen_value;
     }
-    err_tolerance = tolerance * max_eigen_value;
-  }
-  else err_tolerance = tolerance;
-  real prev_err=1e30;
-  int it=0;
-  for (;it<n_epochs;it++)
-  {
-    real learning_rate = learning_rate / (1+it*decrease_factor);
-    real err=0;
-    for (int i=0;i<n;i++)
+    else err_tolerance = tolerance;
+    real prev_err=1e30;
+    int it=0;
+    for (;it<n_epochs;it++)
     {
-      real* xi = &X(0,i);
-      for (int d=0;d<m;d++, xi+=n)
-      {
-        //!  stochastic gradient descent step
-        real gradient = matRowDotVec(A, i,X(d));
-        *xi -= learning_rate * gradient;
-        err += gradient * *xi;
-      }
+        real learning_rate = learning_rate / (1+it*decrease_factor);
+        real err=0;
+        for (int i=0;i<n;i++)
+        {
+            real* xi = &X(0,i);
+            for (int d=0;d<m;d++, xi+=n)
+            {
+                //!  stochastic gradient descent step
+                real gradient = matRowDotVec(A, i,X(d));
+                *xi -= learning_rate * gradient;
+                err += gradient * *xi;
+            }
+        }
+        if (verbose)
+        {
+            cout << "at iteration " << it << " of gradient descent, est. err.= " << err << endl;
+            cout << "lrate = " << learning_rate << endl;
+        }
+        if (tolerance>0)
+        {
+            sum_norms = 0;
+            for (int d=0;d<m;d++)
+                sum_norms += norm(X(d));
+            actual_err = err / (m*sum_norms);
+            if (actual_err<err_tolerance) break;
+        }
+        if (err>prev_err)
+            cout << "at iteration " << it << " of gradient descent, est. err.= " << err 
+                 << " > previous error = " << prev_err << " ; lrate = " << learning_rate << endl;
+        //!  cout << normalize_every << " " << normalize_every>0?:it%normalize_every:0 << endl;
+        if (verbose)
+            for (int d=0;d<m;d++)
+                cout << "norm(x[" << d << "])=" << norm(X(d)) << endl;
+        if (normalize_every!=0 && it%normalize_every==0)
+        {
+            int new_m=GramSchmidtOrthogonalization(X,1e-9);
+            for (int e=new_m;e<m;e++)
+                fill_random_uniform(X(e)); //!<  RESET LINEARLY DEPENDENT FEATURES RANDOMLY
+            if (verbose)
+            {
+                //!  debug
+                real C=0;
+                for (int d=0;d<m;d++)
+                {
+                    Vec xd = X(d);
+                    product(A, xd,Ax);
+                    C += dot(xd,Ax);
+                    cout << "for " << d << ", |Ax|/|x| = " << norm(Ax) << endl;
+                }
+                cout << "actual cost = " << 0.5*C << endl;
+            }
+        }
     }
-    if (verbose)
+    if (diagonalize_in_the_end)
     {
-      cout << "at iteration " << it << " of gradient descent, est. err.= " << err << endl;
-      cout << "lrate = " << learning_rate << endl;
+        Mat diagonalized_solutions(m,n);
+        Mat subspace_evectors(m,m);
+        Vec subspace_evalues(m);
+        diagonalizeSubspace(A,X,Ax,diagonalized_solutions,subspace_evalues,subspace_evectors);
+        X << diagonalized_solutions;
     }
-    if (tolerance>0)
-    {
-      sum_norms = 0;
-      for (int d=0;d<m;d++)
-        sum_norms += norm(X(d));
-      actual_err = err / (m*sum_norms);
-      if (actual_err<err_tolerance) break;
-    }
-    if (err>prev_err)
-      cout << "at iteration " << it << " of gradient descent, est. err.= " << err 
-           << " > previous error = " << prev_err << " ; lrate = " << learning_rate << endl;
-    //!  cout << normalize_every << " " << normalize_every>0?:it%normalize_every:0 << endl;
-    if (verbose)
-      for (int d=0;d<m;d++)
-        cout << "norm(x[" << d << "])=" << norm(X(d)) << endl;
-    if (normalize_every!=0 && it%normalize_every==0)
-    {
-      int new_m=GramSchmidtOrthogonalization(X,1e-9);
-      for (int e=new_m;e<m;e++)
-        fill_random_uniform(X(e)); //!<  RESET LINEARLY DEPENDENT FEATURES RANDOMLY
-      if (verbose)
-      {
-        //!  debug
-        real C=0;
-        for (int d=0;d<m;d++)
-          {
-            Vec xd = X(d);
-            product(A, xd,Ax);
-            C += dot(xd,Ax);
-            cout << "for " << d << ", |Ax|/|x| = " << norm(Ax) << endl;
-          }
-        cout << "actual cost = " << 0.5*C << endl;
-      }
-    }
-  }
-  if (diagonalize_in_the_end)
-  {
-    Mat diagonalized_solutions(m,n);
-    Mat subspace_evectors(m,m);
-    Vec subspace_evalues(m);
-    diagonalizeSubspace(A,X,Ax,diagonalized_solutions,subspace_evalues,subspace_evectors);
-    X << diagonalized_solutions;
-  }
-  return it;
+    return it;
 }
 
 /*!   Apply the metric multi-dimensional scaling (MDS) algorithm to a possibly sparse
@@ -960,53 +960,66 @@ int GDFindSmallEigenPairs(MatT& A,Mat X,
 template<class MatT>
 int metricMultiDimensionalScaling(MatT& square_distances,Mat embedding, int max_n_eigen_iter=300)
 {
-  int n=square_distances.length();
-  long int m=embedding.width();
-  if (embedding.length()!=n)
-    PLERROR("MetricMultiDimensionalScaling: expected embedding.length()==square_distances.length(), got %d!=%d",
-	  embedding.length(),n);
-  if (square_distances.width()!=n)
-    PLERROR("MetricMultiDimensionalScaling: expected square_distances a square matrix, got %d x %d",
-	  n,square_distances.width());
-  if (square_distances.size()!=n*n)
-    PLWARNING("MetricMultiDimensionalScaling: current implementation does not seem to work well for sparse distance matrices!");  
-  //!  double-centering of the distances to get dot products
-  Vec avg_across_rows(n), avg_across_columns(n);
-  //!  average the non-zero elements across rows and columns
-  averageAcrossRowsAndColumns(square_distances, avg_across_rows, avg_across_columns, true);
-  real overall_avg=mean(avg_across_rows);
-  avg_across_rows *= -1; //!<  this is a row
-  avg_across_columns *= -1; //!<  this is a column
-  addToRows(square_distances, avg_across_rows,true); //!<  only to non-zero elements
-  addToColumns(square_distances, avg_across_rows,true); //!<  only to non-zero elements ******** LOUCHE! (yoshua) *******
-  square_distances.add(overall_avg,true);
-  square_distances*=-0.5;
-  //!  now "square_distances" are actually pseudo dot-products
+    int n=square_distances.length();
+    long int m=embedding.width();
+    if (embedding.length()!=n)
+        PLERROR("MetricMultiDimensionalScaling: expected embedding.length()==square_distances.length(), got %d!=%d",
+                embedding.length(),n);
+    if (square_distances.width()!=n)
+        PLERROR("MetricMultiDimensionalScaling: expected square_distances a square matrix, got %d x %d",
+                n,square_distances.width());
+    if (square_distances.size()!=n*n)
+        PLWARNING("MetricMultiDimensionalScaling: current implementation does not seem to work well for sparse distance matrices!");  
+    //!  double-centering of the distances to get dot products
+    Vec avg_across_rows(n), avg_across_columns(n);
+    //!  average the non-zero elements across rows and columns
+    averageAcrossRowsAndColumns(square_distances, avg_across_rows, avg_across_columns, true);
+    real overall_avg=mean(avg_across_rows);
+    avg_across_rows *= -1; //!<  this is a row
+    avg_across_columns *= -1; //!<  this is a column
+    addToRows(square_distances, avg_across_rows,true); //!<  only to non-zero elements
+    addToColumns(square_distances, avg_across_rows,true); //!<  only to non-zero elements ******** LOUCHE! (yoshua) *******
+    square_distances.add(overall_avg,true);
+    square_distances*=-0.5;
+    //!  now "square_distances" are actually pseudo dot-products
 
-  //!  do a partial SVD (which is the same as an eigen-decomposition since 
-  //!  the matrix is symmetric) to find the largest eigen-pairs
-  Vec e_values(m);
-  Mat e_vectors(m,n);
-  int err=eigenSparseSymmMat(square_distances, e_values, 
-                             e_vectors, m, max_n_eigen_iter);
-  if (err!=0)
-    return err;
-  //!  extract the embedding:
-  //!    embedding(object i, feature j) = e_vectors(j,i)*sqrt(e_values[j])
-  for (int j=0;j<m;j++)
-  {
-    real eval_j = e_values[j];
-    if (eval_j<0)
-      PLERROR("metricMultiDimensionalScaling::the matrix of dot-products is not positive-definite!, evalue=%g",eval_j);
-    real scale = sqrt(eval_j);
-    Vec feature_j = e_vectors(j);
-    feature_j *= scale;
-    embedding.column(j) << feature_j;
-  }
-  return 0;
+    //!  do a partial SVD (which is the same as an eigen-decomposition since 
+    //!  the matrix is symmetric) to find the largest eigen-pairs
+    Vec e_values(m);
+    Mat e_vectors(m,n);
+    int err=eigenSparseSymmMat(square_distances, e_values, 
+                               e_vectors, m, max_n_eigen_iter);
+    if (err!=0)
+        return err;
+    //!  extract the embedding:
+    //!    embedding(object i, feature j) = e_vectors(j,i)*sqrt(e_values[j])
+    for (int j=0;j<m;j++)
+    {
+        real eval_j = e_values[j];
+        if (eval_j<0)
+            PLERROR("metricMultiDimensionalScaling::the matrix of dot-products is not positive-definite!, evalue=%g",eval_j);
+        real scale = sqrt(eval_j);
+        Vec feature_j = e_vectors(j);
+        feature_j *= scale;
+        embedding.column(j) << feature_j;
+    }
+    return 0;
 }
 
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: NoBpropVariable.h,v 1.1 2004/08/21 14:42:05 yoshua Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef NoBpropVariable_INC
 #define NoBpropVariable_INC
@@ -54,32 +54,32 @@ using namespace std;
 /*!   Variable that copies its unique input, and can completely
   block the flow of gradient backward, or optionally let if flow
   partially (with an optional coefficient), i.e.
-    fprop: output = input
-    bprop: dC/dinput = gradient_scaling_factor * dC/doutput
+  fprop: output = input
+  bprop: dC/dinput = gradient_scaling_factor * dC/doutput
 
 */
 class NoBpropVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 public:
-  real gradient_scaling_factor;
+    real gradient_scaling_factor;
 
 public:
-  //!  Default constructor for persistence
-  NoBpropVariable()
-    : gradient_scaling_factor(0)
+    //!  Default constructor for persistence
+    NoBpropVariable()
+        : gradient_scaling_factor(0)
     {}
-  NoBpropVariable(Variable* input, real the_gradient_scaling_factor=0.0);
+    NoBpropVariable(Variable* input, real the_gradient_scaling_factor=0.0);
 
-  PLEARN_DECLARE_OBJECT(NoBpropVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(NoBpropVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;  
-  virtual void fprop();
-  virtual void bprop();
+    virtual void recomputeSize(int& l, int& w) const;  
+    virtual void fprop();
+    virtual void bprop();
 
 protected:
     void build_();
@@ -94,3 +94,16 @@ inline Var no_bprop(Var v, real gradient_scaling_factor=0.0)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

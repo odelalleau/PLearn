@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ThresholdBpropVariable.h,v 1.1 2005/05/12 15:55:53 larocheh Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ThresholdBpropVariable_INC
 #define ThresholdBpropVariable_INC
@@ -54,32 +54,32 @@ using namespace std;
 /*!   Variable that copies its unique input, and can completely
   block the flow of gradient backward, or optionally let if flow
   partially (with an optional coefficient), i.e.
-    fprop: output = input
-    bprop: dC/dinput = sign(dC/doutput) min(abs(input*gradient_threshold_factor),abs(dC/doutput))
+  fprop: output = input
+  bprop: dC/dinput = sign(dC/doutput) min(abs(input*gradient_threshold_factor),abs(dC/doutput))
 
 */
 class ThresholdBpropVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 public:
-  real gradient_threshold_factor;
+    real gradient_threshold_factor;
 
 public:
-  //!  Default constructor for persistence
-  ThresholdBpropVariable()
-    : gradient_threshold_factor(0)
+    //!  Default constructor for persistence
+    ThresholdBpropVariable()
+        : gradient_threshold_factor(0)
     {}
-  ThresholdBpropVariable(Variable* input, real the_gradient_threshold_factor=0.0);
+    ThresholdBpropVariable(Variable* input, real the_gradient_threshold_factor=0.0);
 
-  PLEARN_DECLARE_OBJECT(ThresholdBpropVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(ThresholdBpropVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;  
-  virtual void fprop();
-  virtual void bprop();
+    virtual void recomputeSize(int& l, int& w) const;  
+    virtual void fprop();
+    virtual void bprop();
 
 protected:
     void build_();
@@ -94,3 +94,16 @@ inline Var threshold_bprop(Var v, real gradient_threshold_factor=0.0)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

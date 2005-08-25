@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ShuffleColumnsVMatrix.cc,v 1.1 2004/10/18 23:40:21 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -51,34 +51,34 @@ using namespace std;
 // ShuffleColumnsVMatrix //
 ///////////////////////////
 ShuffleColumnsVMatrix::ShuffleColumnsVMatrix()
-: only_shuffle_inputs(true),
-  seed(0)
+    : only_shuffle_inputs(true),
+      seed(0)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(ShuffleColumnsVMatrix,
-    "Shuffle the columns of its source VMatrix.",
-    ""
-);
+                        "Shuffle the columns of its source VMatrix.",
+                        ""
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void ShuffleColumnsVMatrix::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  declareOption(ol, "only_shuffle_inputs", &ShuffleColumnsVMatrix::only_shuffle_inputs, OptionBase::buildoption,
-      "Whether we should only shuffle the input part, or also shuffle the target and weight parts.");
+    declareOption(ol, "only_shuffle_inputs", &ShuffleColumnsVMatrix::only_shuffle_inputs, OptionBase::buildoption,
+                  "Whether we should only shuffle the input part, or also shuffle the target and weight parts.");
 
-  declareOption(ol, "seed", &ShuffleColumnsVMatrix::seed, OptionBase::buildoption,
-      "The random generator seed (-1 = initialized from clock, 0 = no initialization).");
+    declareOption(ol, "seed", &ShuffleColumnsVMatrix::seed, OptionBase::buildoption,
+                  "The random generator seed (-1 = initialized from clock, 0 = no initialization).");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ///////////
@@ -86,9 +86,9 @@ void ShuffleColumnsVMatrix::declareOptions(OptionList& ol)
 ///////////
 void ShuffleColumnsVMatrix::build()
 {
-  // ### Nothing to add here, simply calls build_
-  inherited::build();
-  build_();
+    // ### Nothing to add here, simply calls build_
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -96,26 +96,26 @@ void ShuffleColumnsVMatrix::build()
 ////////////
 void ShuffleColumnsVMatrix::build_()
 {
-  if (source) {
-    int n_shuffle = source->width();
-    if (only_shuffle_inputs) {
-      if (source->inputsize() < 0)
-        PLERROR("In ShuffleColumnsVMatrix::build_ - Cannot find out the source inputsize");
-      n_shuffle = source->inputsize();
+    if (source) {
+        int n_shuffle = source->width();
+        if (only_shuffle_inputs) {
+            if (source->inputsize() < 0)
+                PLERROR("In ShuffleColumnsVMatrix::build_ - Cannot find out the source inputsize");
+            n_shuffle = source->inputsize();
+        }
+        indices = TVec<int>(0, n_shuffle - 1, 1);
+        if (seed == -1)
+            PLearn::seed();
+        else if (seed > 0)
+            manual_seed(seed);
+        else if (seed != 0)
+            PLERROR("In ShuffleColumnsVMatrix::build_ - The seed must be either -1 or >= 0");
+        shuffleElements(indices);
+        for (int i = 0; i < source->width() - n_shuffle; i++) {
+            indices.append(i + n_shuffle);
+        }
     }
-    indices = TVec<int>(0, n_shuffle - 1, 1);
-    if (seed == -1)
-      PLearn::seed();
-    else if (seed > 0)
-      manual_seed(seed);
-    else if (seed != 0)
-      PLERROR("In ShuffleColumnsVMatrix::build_ - The seed must be either -1 or >= 0");
-    shuffleElements(indices);
-    for (int i = 0; i < source->width() - n_shuffle; i++) {
-      indices.append(i + n_shuffle);
-    }
-  }
-  inherited::build();
+    inherited::build();
 }
 
 /////////////////////////////////
@@ -123,17 +123,29 @@ void ShuffleColumnsVMatrix::build_()
 /////////////////////////////////
 void ShuffleColumnsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("ShuffleColumnsVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("ShuffleColumnsVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

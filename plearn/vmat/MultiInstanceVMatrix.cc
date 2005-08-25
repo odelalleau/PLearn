@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.18 2005/02/08 21:40:08 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Norman Casagrande
 
@@ -53,11 +53,11 @@ namespace PLearn {
 using namespace std;
 
 MultiInstanceVMatrix::MultiInstanceVMatrix()
-  :inherited(), data_(Mat()), source_targetsize(1),
-   header_lines_to_skip(0)
+    :inherited(), data_(Mat()), source_targetsize(1),
+     header_lines_to_skip(0)
 {
-  // ### You may or may not want to call build_() to finish building the object
-  //build_();
+    // ### You may or may not want to call build_() to finish building the object
+    //build_();
 }
 
 //MultiInstanceVMatrix::MultiInstanceVMatrix(const string& filename) 
@@ -82,192 +82,204 @@ PLEARN_IMPLEMENT_OBJECT(MultiInstanceVMatrix, "Virtual Matrix for a multi instan
                         "     0 is for intermediate instances.\n"
                         "The targetsize of the VMatrix is automatically set to source_targetsize+1\n"
                         "since the bag_signal is included (appended) in the target vector\n"
-                        );
+    );
 
 void MultiInstanceVMatrix::getNewRow(int i, const Vec& v) const
 {
-  v << data_(i);
+    v << data_(i);
 }
 
 void MultiInstanceVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "source_targetsize", &MultiInstanceVMatrix::source_targetsize, OptionBase::buildoption,
-      "The source targetsize");
+    declareOption(ol, "source_targetsize", &MultiInstanceVMatrix::source_targetsize, OptionBase::buildoption,
+                  "The source targetsize");
 
-  declareOption(ol, "filename", &MultiInstanceVMatrix::filename_, OptionBase::buildoption,
-                "This is the name of the ascii 'mimat' format filename. It is a supervised learning dataset\n"
-                "in which each input object can come in several instances (e.g. conformations) and the target is given to the\n"
-                "whole bag of these instances, not to individual instances. The expected format is the following:\n"
-                "Each row contains:\n"
-                "  - the object name (a string without white space)\n"
-                "  - the instance number (a non-negative integer)\n"
-                "  - the inputsize features for that instance (numeric, white-separated)\n"
-                "  - the source_targetsize target values for the bag (repeated on each row).\n"
-                "If the inputsize option is not specified it is inferred from the text file.\n"
-                );
+    declareOption(ol, "filename", &MultiInstanceVMatrix::filename_, OptionBase::buildoption,
+                  "This is the name of the ascii 'mimat' format filename. It is a supervised learning dataset\n"
+                  "in which each input object can come in several instances (e.g. conformations) and the target is given to the\n"
+                  "whole bag of these instances, not to individual instances. The expected format is the following:\n"
+                  "Each row contains:\n"
+                  "  - the object name (a string without white space)\n"
+                  "  - the instance number (a non-negative integer)\n"
+                  "  - the inputsize features for that instance (numeric, white-separated)\n"
+                  "  - the source_targetsize target values for the bag (repeated on each row).\n"
+                  "If the inputsize option is not specified it is inferred from the text file.\n"
+        );
 
-  declareOption(ol, "header_lines_to_skip", &MultiInstanceVMatrix::header_lines_to_skip, OptionBase::buildoption,
-      "The number of lines to skip at the beginning of the file (they may be garbage, or \n"
-      "a header for a TextFilesVMatrix for instance).");
+    declareOption(ol, "header_lines_to_skip", &MultiInstanceVMatrix::header_lines_to_skip, OptionBase::buildoption,
+                  "The number of lines to skip at the beginning of the file (they may be garbage, or \n"
+                  "a header for a TextFilesVMatrix for instance).");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void MultiInstanceVMatrix::build_()
 {
-  //this->setMetaDataDir(filename_ + ".metadata"); 
+    //this->setMetaDataDir(filename_ + ".metadata"); 
 
-  // To be used in the end.. it is about 5 secs slower in debug
-  //int nRows = countNonBlankLinesOfFile(filename_);
+    // To be used in the end.. it is about 5 secs slower in debug
+    //int nRows = countNonBlankLinesOfFile(filename_);
 
-  PStream inFile = openFile(filename_, PStream::raw_ascii, "r");
+    PStream inFile = openFile(filename_, PStream::raw_ascii, "r");
 //    PStream inFile = openFile(filename_, PStream::raw_ascii, "r");
 
-  // inFile.seekg(0); TODO See if it still works without this.
-  skipBlanksAndComments(inFile);
+    // inFile.seekg(0); TODO See if it still works without this.
+    skipBlanksAndComments(inFile);
 
-  string lastName = "";
-  string newName;
-  string aLine;
-  string inp_element;
-  int configNum, bagType;
-  int nComp = 0;
+    string lastName = "";
+    string newName;
+    string aLine;
+    string inp_element;
+    int configNum, bagType;
+    int nComp = 0;
 	
-	int i;
+    int i;
 
-  real* mat_i = NULL;
+    real* mat_i = NULL;
 
-  // one more column for the bag signal 
-  targetsize_ = source_targetsize + 1;
+    // one more column for the bag signal 
+    targetsize_ = source_targetsize + 1;
 
- // Check the number of columns
-  for (i = 0; i < header_lines_to_skip; i++) {
-    inFile.getline(aLine, '\n');
-  }
-  inFile.getline(aLine, '\n');
-  vector<string> entries = split(aLine);
-  int nFields = (int)entries.size();
-  if (inputsize_>=0)
-  {
-    if ( (nFields-2) != inputsize_ + source_targetsize) // 2 for the object name and the instance number
-    {
-      PLERROR("Either inputsize or source_targetsize are inconsistent with the specified file!\n"
-              " Got %d+%d (inputsize+source_targetsize) = %d, and found %d! If unsure about inputsize, don't specify it or set to -1.", 
-              inputsize_, source_targetsize, inputsize_+source_targetsize, nFields - 2);
+    // Check the number of columns
+    for (i = 0; i < header_lines_to_skip; i++) {
+        inFile.getline(aLine, '\n');
     }
-  } else inputsize_ = nFields-2-source_targetsize;
-
-  int lastColumn = inputsize_ + source_targetsize; 
-
-  inFile = openFile(filename_, PStream::raw_ascii, "r");
-  // inFile.seekg(0); // TODO See if it still works without this.
-  skipBlanksAndComments(inFile);
-  for (i = 0; i < header_lines_to_skip; i++) {
     inFile.getline(aLine, '\n');
-  }
-  skipBlanksAndComments(inFile);
-
-  int nRows = inFile.count('\n');
-  /* TODO Make sure it works like the old code:
-  int nRows = count(istreambuf_iterator<char>(inFile),
-                    istreambuf_iterator<char>(), '\n');
-                    */
-
-  inFile = openFile(filename_, PStream::raw_ascii, "r");
-  // inFile.seekg(0); // TODO See if it still works without this.
-  skipBlanksAndComments(inFile);
-  for (i = 0; i < header_lines_to_skip; i++) {
-    inFile.getline(aLine, '\n');
-  }
-  skipBlanksAndComments(inFile);
-
-  data_.resize(nRows, inputsize_ + targetsize_);
-
-  width_ = inputsize_ + targetsize_;
-  length_ = nRows;
-
-  for (int lineNum = 0; !inFile.eof() && lineNum < nRows; ++lineNum)
-  {
-    // first column: name of the compound
-    inFile >> newName;
-    if (newName != lastName)
+    vector<string> entries = split(aLine);
+    int nFields = (int)entries.size();
+    if (inputsize_>=0)
     {
-      lastName = newName;
-      names_.push_back( make_pair(newName, lineNum) );
-      bagType = SumOverBagsVariable::TARGET_COLUMN_FIRST;
+        if ( (nFields-2) != inputsize_ + source_targetsize) // 2 for the object name and the instance number
+        {
+            PLERROR("Either inputsize or source_targetsize are inconsistent with the specified file!\n"
+                    " Got %d+%d (inputsize+source_targetsize) = %d, and found %d! If unsure about inputsize, don't specify it or set to -1.", 
+                    inputsize_, source_targetsize, inputsize_+source_targetsize, nFields - 2);
+        }
+    } else inputsize_ = nFields-2-source_targetsize;
 
-      if (mat_i != NULL)
-      {
-        if (nComp > 1)
-          mat_i[lastColumn] = SumOverBagsVariable::TARGET_COLUMN_LAST;
+    int lastColumn = inputsize_ + source_targetsize; 
+
+    inFile = openFile(filename_, PStream::raw_ascii, "r");
+    // inFile.seekg(0); // TODO See if it still works without this.
+    skipBlanksAndComments(inFile);
+    for (i = 0; i < header_lines_to_skip; i++) {
+        inFile.getline(aLine, '\n');
+    }
+    skipBlanksAndComments(inFile);
+
+    int nRows = inFile.count('\n');
+    /* TODO Make sure it works like the old code:
+       int nRows = count(istreambuf_iterator<char>(inFile),
+       istreambuf_iterator<char>(), '\n');
+    */
+
+    inFile = openFile(filename_, PStream::raw_ascii, "r");
+    // inFile.seekg(0); // TODO See if it still works without this.
+    skipBlanksAndComments(inFile);
+    for (i = 0; i < header_lines_to_skip; i++) {
+        inFile.getline(aLine, '\n');
+    }
+    skipBlanksAndComments(inFile);
+
+    data_.resize(nRows, inputsize_ + targetsize_);
+
+    width_ = inputsize_ + targetsize_;
+    length_ = nRows;
+
+    for (int lineNum = 0; !inFile.eof() && lineNum < nRows; ++lineNum)
+    {
+        // first column: name of the compound
+        inFile >> newName;
+        if (newName != lastName)
+        {
+            lastName = newName;
+            names_.push_back( make_pair(newName, lineNum) );
+            bagType = SumOverBagsVariable::TARGET_COLUMN_FIRST;
+
+            if (mat_i != NULL)
+            {
+                if (nComp > 1)
+                    mat_i[lastColumn] = SumOverBagsVariable::TARGET_COLUMN_LAST;
+                else
+                    mat_i[lastColumn] = SumOverBagsVariable::TARGET_COLUMN_SINGLE;
+            }
+            nComp = 0;
+        }
         else
-          mat_i[lastColumn] = SumOverBagsVariable::TARGET_COLUMN_SINGLE;
-      }
-      nComp = 0;
-    }
-    else
-    {
-      bagType = SumOverBagsVariable::TARGET_COLUMN_INTERMEDIATE;
-    }
-    nComp++;
+        {
+            bagType = SumOverBagsVariable::TARGET_COLUMN_INTERMEDIATE;
+        }
+        nComp++;
 
-    // get next column: the number of the compound
-    inFile >> configNum;
+        // get next column: the number of the compound
+        inFile >> configNum;
 
-    configs_.push_back(configNum);
+        configs_.push_back(configNum);
     
-	 // get the actual data columns + the target
-    mat_i = data_[lineNum];
-    for(int i = 0; i < inputsize_ + source_targetsize; i++)
-    {
-      inFile >> inp_element;
-      mat_i[i] = strtod(inp_element.c_str(), 0);
-    }
+        // get the actual data columns + the target
+        mat_i = data_[lineNum];
+        for(int i = 0; i < inputsize_ + source_targetsize; i++)
+        {
+            inFile >> inp_element;
+            mat_i[i] = strtod(inp_element.c_str(), 0);
+        }
 
-	 // close the last bag if necessary
-    if (lineNum+1==nRows)
-      {
-        if (nComp > 1)
-          mat_i[lastColumn] = SumOverBagsVariable::TARGET_COLUMN_LAST;
+        // close the last bag if necessary
+        if (lineNum+1==nRows)
+        {
+            if (nComp > 1)
+                mat_i[lastColumn] = SumOverBagsVariable::TARGET_COLUMN_LAST;
+            else
+                mat_i[lastColumn] = SumOverBagsVariable::TARGET_COLUMN_SINGLE;
+        }
         else
-          mat_i[lastColumn] = SumOverBagsVariable::TARGET_COLUMN_SINGLE;
-      }
-    else
-      mat_i[lastColumn] = bagType;
-  }
+            mat_i[lastColumn] = bagType;
+    }
   
 
-  //ofstream test("g:/test.txt");
-  //test << data_;
-  //test.close();
+    //ofstream test("g:/test.txt");
+    //test << data_;
+    //test.close();
 
-  this->setMtime(mtime(filename_));
+    this->setMtime(mtime(filename_));
 }
 
 // ### Nothing to add here, simply calls build_
 void MultiInstanceVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void MultiInstanceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
 
-  deepCopyField(data_, copies);
+    deepCopyField(data_, copies);
 
-  // TODO: Copy also the other features
+    // TODO: Copy also the other features
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("MultiInstanceVMatrix::makeDeepCopyFromShallowCopy not fully implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("MultiInstanceVMatrix::makeDeepCopyFromShallowCopy not fully implemented yet!");
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

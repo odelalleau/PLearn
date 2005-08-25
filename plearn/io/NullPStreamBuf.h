@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NullPStreamBuf.h,v 1.1 2005/03/01 19:18:43 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -55,26 +55,39 @@ class NullPStreamBuf: public PStreamBuf
 
 private:
   
-  typedef PStreamBuf inherited;
+    typedef PStreamBuf inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
   
 public:
 
-  NullPStreamBuf();
+    NullPStreamBuf();
 
 protected:
 
-  virtual streamsize read_(char* p, streamsize n);
+    virtual streamsize read_(char* p, streamsize n);
 
-  //! writes exactly n characters from p (unbuffered, must flush)
-  virtual void write_(const char* p, streamsize n);
+    //! writes exactly n characters from p (unbuffered, must flush)
+    virtual void write_(const char* p, streamsize n);
 
 };
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

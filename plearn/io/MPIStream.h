@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: MPIStream.h,v 1.4 2004/07/21 16:30:51 chrish42 Exp $
-   * AUTHORS: Pascal Vincent 
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent 
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/MPIStream.h */
@@ -56,26 +56,26 @@
 namespace PLearn {
 using namespace std;
 
-  class MPIStreambuf : public streambuf
-  {
-  protected:
+class MPIStreambuf : public streambuf
+{
+protected:
     int tag; //!<  the tag used for all MPI send/receive
     int peerrank; //!<  rank number of peer processor in the COMM_WORLD (the to/from which to send/receive)
   
     char* inbuf;
     int inbuf_capacity;
   
-  protected:
+protected:
 
     //!  inline for efficiency
     inline void reserveInputBuffer(int buflen)
     {
-      if(buflen>inbuf_capacity)
+        if(buflen>inbuf_capacity)
         {
-          if(inbuf)
-            delete[] inbuf;
-          inbuf = new char[buflen];
-          inbuf_capacity = buflen;
+            if(inbuf)
+                delete[] inbuf;
+            inbuf = new char[buflen];
+            inbuf_capacity = buflen;
         }
     }
 
@@ -92,42 +92,42 @@ using namespace std;
     virtual streambuf* setbuf(char* p, int len);
     virtual int sync();
 
-  public:
+public:
     MPIStreambuf(int the_peerrank, int inbufsize);
     virtual ~MPIStreambuf();
 
-  };
+};
   
-  class MPIStream: public iostream
-  {
-  protected:
+class MPIStream: public iostream
+{
+protected:
     char* outbuffer;
 
-  public:
+public:
 
     MPIStream()
-      :iostream(0), outbuffer(0)
+        :iostream(0), outbuffer(0)
     {}
 
     //!  The peer number of the other node, and initial size of input-buffer and output buffers
     MPIStream(int the_peerrank, int inbufsize=200, int outbufsize=200)
-      :iostream(0), outbuffer(0)
+        :iostream(0), outbuffer(0)
     { init(the_peerrank, inbufsize, outbufsize); }
 
     //!  This function may be called only once, if the stream was built with the default constructor.
     void init(int the_peerrank, int inbufsize= 0, int outbufsize= 0);
 
     ~MPIStream();
-  };
+};
 
 
-  // implements an "array" with streams open to all nodes
-  class MPIStreams
-  {
-  protected:
+// implements an "array" with streams open to all nodes
+class MPIStreams
+{
+protected:
     MPIStream* mpistreams;
 
-  public:
+public:
     MPIStreams(int inbufsize=200, int outbufsize=200);
 
     int size() const { return PLMPI::size; } 
@@ -136,15 +136,15 @@ using namespace std;
     iostream& operator[](int i)
     {
 #ifdef BOUNDCHECK
-      if(i<0 || i>=PLMPI::size)
-        PLERROR("In MPIStreams OUT OF BOUND ACCESS");
+        if(i<0 || i>=PLMPI::size)
+            PLERROR("In MPIStreams OUT OF BOUND ACCESS");
 #endif      
-      return mpistreams[i];
+        return mpistreams[i];
     }
 
     ~MPIStreams() 
     { if(mpistreams) delete[] mpistreams; }
-  };
+};
 
 } // end of namespace PLearn
 
@@ -154,3 +154,15 @@ using namespace std;
 //!  end of #ifndef MPIStream_INC
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

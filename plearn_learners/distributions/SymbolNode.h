@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SymbolNode.h,v 1.3 2004/10/13 18:59:24 larocheh Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle
 
@@ -55,85 +55,85 @@ class SymbolNode: public Object
 
 private:
   
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  //! Normalisation factor
-  int frequence;
+    //! Normalisation factor
+    int frequence;
 
-  //! Children and their frequences
-  map<int,PP<SymbolNode> > children;
-  map<int,int> frequencies;
+    //! Children and their frequences
+    map<int,PP<SymbolNode> > children;
+    map<int,int> frequencies;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  int symbol;
+    int symbol;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-   SymbolNode();
+    //! Default constructor.
+    SymbolNode();
 
-  SymbolNode(int symbol_);
+    SymbolNode(int symbol_);
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(SymbolNode);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(SymbolNode);
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Adds a child to this node
-  PP<SymbolNode> add(int child_);
+    //! Adds a child to this node
+    PP<SymbolNode> add(int child_);
   
-  //! Increments the node's frequency (normalization factor)
-  void incr(){frequence++;}
+    //! Increments the node's frequency (normalization factor)
+    void incr(){frequence++;}
 
-  //! Increments the given symbol's frequency in frequencies map
-  void incr(int symbol);
+    //! Increments the given symbol's frequency in frequencies map
+    void incr(int symbol);
 
-  //! Gives frequency of the node (normalization factor)
-  int freq(){return frequence;}
+    //! Gives frequency of the node (normalization factor)
+    int freq(){return frequence;}
 
-  //! Gives frequence of a given symbol at that node
-  int freq(int symbol);
+    //! Gives frequence of a given symbol at that node
+    int freq(int symbol);
 
-  //! Gives the number of children
-  int n_children(){return children.size();}
+    //! Gives the number of children
+    int n_children(){return children.size();}
 
-  //! Gives the number of different symbol in frequencies map
-  int n_freq(){return frequencies.size();}
+    //! Gives the number of different symbol in frequencies map
+    int n_freq(){return frequencies.size();}
 
-  //! Gives the corresponding SymbolNode child, or 0 if nonexistant
-  PP<SymbolNode> child(int child_);
+    //! Gives the corresponding SymbolNode child, or 0 if nonexistant
+    PP<SymbolNode> child(int child_);
 
-  //! Gives all children of current node
-  TVec<PP<SymbolNode> > getChildren();
+    //! Gives all children of current node
+    TVec<PP<SymbolNode> > getChildren();
   
 };
 
@@ -143,3 +143,16 @@ DECLARE_OBJECT_PTR(SymbolNode);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

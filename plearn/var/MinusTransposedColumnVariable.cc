@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MinusTransposedColumnVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ColumnSumVariable.h"
 #include "MinusTransposedColumnVariable.h"
@@ -56,7 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(MinusTransposedColumnVariable,
                         "NO HELP");
 
 MinusTransposedColumnVariable::MinusTransposedColumnVariable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, input1->length(), input1->width())
+    : inherited(input1, input2, input1->length(), input1->width())
 {
     build_();
 }
@@ -90,35 +90,46 @@ void MinusTransposedColumnVariable::recomputeSize(int& l, int& w) const
 
 void MinusTransposedColumnVariable::fprop()
 {
-  int k=0;
-  real* i2 = input2->valuedata;
-  real* i1 = input1->valuedata;
-  for(int i=0; i<length(); i++)
-    for(int j=0; j<width(); j++, k++)
-      valuedata[k] = i1[k] - i2[j];
+    int k=0;
+    real* i2 = input2->valuedata;
+    real* i1 = input1->valuedata;
+    for(int i=0; i<length(); i++)
+        for(int j=0; j<width(); j++, k++)
+            valuedata[k] = i1[k] - i2[j];
 }
 
 
 void MinusTransposedColumnVariable::bprop()
 {
-  int k=0;
-  real* i2g = input2->gradientdata;
-  real* i1g = input1->gradientdata;
-  for(int i=0; i<length(); i++)
-    for(int j=0; j<width(); j++, k++)
-      {
-        i1g[k] += gradientdata[k];
-        i2g[j] -= gradientdata[k];
-      }
+    int k=0;
+    real* i2g = input2->gradientdata;
+    real* i1g = input1->gradientdata;
+    for(int i=0; i<length(); i++)
+        for(int j=0; j<width(); j++, k++)
+        {
+            i1g[k] += gradientdata[k];
+            i2g[j] -= gradientdata[k];
+        }
 }
 
 
 void MinusTransposedColumnVariable::symbolicBprop()
 {
-  input1->accg(g);
-  input2->accg(-columnSum(g));
+    input1->accg(g);
+    input2->accg(-columnSum(g));
 }
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

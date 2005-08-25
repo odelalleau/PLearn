@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: TanhVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "TanhVariable.h"
 #include "Var_operators.h"
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(TanhVariable,
                         "NO HELP");
 
 TanhVariable::TanhVariable(Variable* input) 
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 void TanhVariable::recomputeSize(int& l, int& w) const
@@ -68,59 +68,70 @@ void TanhVariable::recomputeSize(int& l, int& w) const
 
 void TanhVariable::fprop()
 {
-  int l = nelems();
-  real* inputptr = input->valuedata;
-  real* ptr = valuedata;
-  for(int i=0; i<l; i++)
-    *ptr++ = tanh(*inputptr++);
+    int l = nelems();
+    real* inputptr = input->valuedata;
+    real* ptr = valuedata;
+    for(int i=0; i<l; i++)
+        *ptr++ = tanh(*inputptr++);
 }
 
 
 void TanhVariable::bprop()
 {
-  int l = nelems();
-  real* inputgradientptr = input->gradientdata;
-  real* gradientptr = gradientdata;
-  real* valueptr = valuedata;
-  for(int i=0; i<l; i++)
-    *inputgradientptr++ += *gradientptr++ * (1.0-square(*valueptr++));
+    int l = nelems();
+    real* inputgradientptr = input->gradientdata;
+    real* gradientptr = gradientdata;
+    real* valueptr = valuedata;
+    for(int i=0; i<l; i++)
+        *inputgradientptr++ += *gradientptr++ * (1.0-square(*valueptr++));
 }
 
 
 void TanhVariable::bbprop()
 {
-  if (input->diaghessian.length()==0)
-    input->resizeDiagHessian();
-  for(int i=0; i<nelems(); i++)
+    if (input->diaghessian.length()==0)
+        input->resizeDiagHessian();
+    for(int i=0; i<nelems(); i++)
     {
-      real yi=valuedata[i];
-      real fprime=(1-yi*yi);
-      input->diaghessiandata[i] += diaghessiandata[i] * fprime * fprime;
+        real yi=valuedata[i];
+        real fprime=(1-yi*yi);
+        input->diaghessiandata[i] += diaghessiandata[i] * fprime * fprime;
     }
 }
 
 
 void TanhVariable::symbolicBprop()
 {
-  Var v(this);
-  input->accg(g * (1. - square(v)));
+    Var v(this);
+    input->accg(g * (1. - square(v)));
 }
 
 
 // R(tanh(x)) = (1-tanh(x)^2)R(x)
 void TanhVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  int l = nelems();
-  real* inputptr = input->rvaluedata;
-  real* valueptr = valuedata;
-  real* ptr = rvaluedata;
-  for(int i=0; i<l; i++)
-    *ptr++ = *inputptr++ * (1.0 - square(*valueptr++));
+    if (rValue.length()==0) resizeRValue();
+    int l = nelems();
+    real* inputptr = input->rvaluedata;
+    real* valueptr = valuedata;
+    real* ptr = rvaluedata;
+    for(int i=0; i<l; i++)
+        *ptr++ = *inputptr++ * (1.0 - square(*valueptr++));
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

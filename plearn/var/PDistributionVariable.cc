@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: PDistributionVariable.cc,v 1.2 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "PDistributionVariable.h"
 #include "Var_operators.h"
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(PDistributionVariable, "Variable that represents a rando
                         "");
 
 PDistributionVariable::PDistributionVariable(Variable* no_noise_var, PP<PDistribution> this_dist)
-  : inherited(no_noise_var,no_noise_var->length(), no_noise_var->width()), dist(this_dist)
+    : inherited(no_noise_var,no_noise_var->length(), no_noise_var->width()), dist(this_dist)
 {}
 
 void PDistributionVariable::recomputeSize(int& l, int& w) const
@@ -71,10 +71,10 @@ void PDistributionVariable::recomputeSize(int& l, int& w) const
 ////////////////////
 void PDistributionVariable::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "dist", &PDistributionVariable::dist, OptionBase::buildoption, 
-                "PDistribution source of the variable.\n");
+    declareOption(ol, "dist", &PDistributionVariable::dist, OptionBase::buildoption, 
+                  "PDistribution source of the variable.\n");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 ///////////
@@ -82,25 +82,25 @@ void PDistributionVariable::declareOptions(OptionList& ol)
 ///////////
 void PDistributionVariable::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void PDistributionVariable::build_()
 {
-  dist->train();
+    dist->train();
 }
 
 void PDistributionVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Variable::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(dist, copies);
+    Variable::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(dist, copies);
 }
 
 
 void PDistributionVariable::fprop() 
 {
-  dist->generate(value);
+    dist->generate(value);
 }
 
 void PDistributionVariable::bprop() {} // No input: nothing to bprop
@@ -111,4 +111,15 @@ void PDistributionVariable::symbolicBprop() {} // No input: nothing to bprop
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * * $Id: ArrayAllocator.h,v 1.3 2004/02/20 21:11:42 chrish42 Exp $
+ * * $Id$
  * ******************************************************* */
 
 #ifndef ARRAYALLOCATOR_H
@@ -66,15 +66,15 @@ public:
     
 public:
     Option(const T& defaultValue, Enclosing* encl)
-      : optionValue(defaultValue), enclosing(encl)
-      {}
+        : optionValue(defaultValue), enclosing(encl)
+    {}
 
     Enclosing& operator()(const T& newValue) {
-      optionValue = newValue;
-      return *enclosing;
+        optionValue = newValue;
+        return *enclosing;
     }
     const T& operator()() const {
-      return optionValue;
+        return optionValue;
     }
     
 private:
@@ -90,8 +90,8 @@ class ArrayAllocatorOptions
 public:
     //!  Default values
     ArrayAllocatorOptions()
-      : numObjs(100,this),
-    deallocatorType(DeallocatorUnsorted,this)
+        : numObjs(100,this),
+          deallocatorType(DeallocatorUnsorted,this)
     { }
     
     //!  Set number of objects in the array
@@ -99,9 +99,9 @@ public:
 
     //!  Set the type of deallocator to use
     enum DeallocatorType {
-      DeallocatorNull = 0,
-      DeallocatorUnsorted = 1,
-      DeallocatorSorted = 2
+        DeallocatorNull = 0,
+        DeallocatorUnsorted = 1,
+        DeallocatorSorted = 2
     };
     Option<DeallocatorType, self> deallocatorType;
 };
@@ -162,7 +162,7 @@ public:
 
     void resize(size_type NewMaxObjs);
     size_type max_size() const {
-      return arr.size();
+        return arr.size();
     }
     
 public:
@@ -176,10 +176,10 @@ public:
 private:
     //!  Small utility
     index_type& derefIndex(index_type i) {
-      return (index_type&)arr[i.index];
+        return (index_type&)arr[i.index];
     }
     index_type& derefIndex(unsigned i) {
-      return (index_type&)arr[i];
+        return (index_type&)arr[i];
     }
     
 private:
@@ -196,7 +196,7 @@ template <class T, unsigned SizeBits>
 ArrayAllocator<T,SizeBits>::ArrayAllocator(const ArrayAllocatorOptions& opt)
     : arr(0), free_root(0,0), options(opt)
 {
-  resize(options.numObjs());
+    resize(options.numObjs());
 }
 
 
@@ -204,31 +204,31 @@ template <class T, unsigned SizeBits>
 void ArrayAllocator<T,SizeBits>::resize(size_type new_max_objs)
 {
 /*!       Since the maximum block size is limited to SizeBits, we cannot
-      create a single big new free region with the new objects; instead,
-      we must create several free regions of maximum size and link them
-      together in the free list.
+  create a single big new free region with the new objects; instead,
+  we must create several free regions of maximum size and link them
+  together in the free list.
 */
 
-  size_t next_free_block = arr.size();
-  if (new_max_objs <= next_free_block)
-    return;
+    size_t next_free_block = arr.size();
+    if (new_max_objs <= next_free_block)
+        return;
 
-  //!  zero is not a valid starting index
-  next_free_block = max(1,int(next_free_block));
+    //!  zero is not a valid starting index
+    next_free_block = max(1,int(next_free_block));
 
-  arr.resize(new_max_objs);
-  index_type dummy(unsigned(-1), unsigned(-1));
-  size_t max_block_size = dummy.size;
+    arr.resize(new_max_objs);
+    index_type dummy(unsigned(-1), unsigned(-1));
+    size_t max_block_size = dummy.size;
     
-  while (next_free_block < new_max_objs) {
-    size_t block_size = min(max_block_size, new_max_objs - next_free_block);
+    while (next_free_block < new_max_objs) {
+        size_t block_size = min(max_block_size, new_max_objs - next_free_block);
 
-    index_type new_index(free_root.index, block_size);
-    derefIndex(next_free_block) = new_index;
-    free_root = index_type(next_free_block,0);
+        index_type new_index(free_root.index, block_size);
+        derefIndex(next_free_block) = new_index;
+        free_root = index_type(next_free_block,0);
 
-    next_free_block += block_size;
-  }
+        next_free_block += block_size;
+    }
 }
 
 
@@ -236,70 +236,70 @@ template <class T, unsigned SizeBits>
 ArrayAllocator<T,SizeBits>::pointer
 ArrayAllocator<T,SizeBits>::allocate(size_t n)
 {
-  index_type *free_pointer = &free_root;
+    index_type *free_pointer = &free_root;
 
 /*!       Take a look at the block pointed to by free_pointer, and if it's big
-      enough, take a chunk from the BEGINNING, and modify *free_pointer to
-      point to the next correct free block
+  enough, take a chunk from the BEGINNING, and modify *free_pointer to
+  point to the next correct free block
 */
-  while (free_pointer && !free_pointer->isNull()) {
-    unsigned size = derefIndex(*free_pointer).size;
+    while (free_pointer && !free_pointer->isNull()) {
+        unsigned size = derefIndex(*free_pointer).size;
 
-    if (size < n)
-      free_pointer = &derefIndex(*free_pointer);
-    else
-      if (size == n) {
-        pointer p = toPointer(*free_pointer);
-        *free_pointer = index_type(derefIndex(*free_pointer).index,
-            free_pointer->size);
-        return p;
-      }
-      else {
-        pointer p = toPointer(*free_pointer);
-        derefIndex(free_pointer->index + n) =
-          index_type(derefIndex(*free_pointer).index, size - n);
-        *free_pointer = index_type(free_pointer->index + n,
-            free_pointer->size);
-        return p;
-      }
-  }
-  PLERROR("Could not allocate; size of memory pool exhausted\n%s\n",
-      (typeid(*this).name()));
-  return 0;				     //!<  could not allocate
+        if (size < n)
+            free_pointer = &derefIndex(*free_pointer);
+        else
+            if (size == n) {
+                pointer p = toPointer(*free_pointer);
+                *free_pointer = index_type(derefIndex(*free_pointer).index,
+                                           free_pointer->size);
+                return p;
+            }
+            else {
+                pointer p = toPointer(*free_pointer);
+                derefIndex(free_pointer->index + n) =
+                    index_type(derefIndex(*free_pointer).index, size - n);
+                *free_pointer = index_type(free_pointer->index + n,
+                                           free_pointer->size);
+                return p;
+            }
+    }
+    PLERROR("Could not allocate; size of memory pool exhausted\n%s\n",
+            (typeid(*this).name()));
+    return 0;				     //!<  could not allocate
 }
 
 
 template <class T, unsigned SizeBits>
 void ArrayAllocator<T,SizeBits>::deallocate(pointer p, size_type n)
 {
-  deallocate(index_type(p,n));
+    deallocate(index_type(p,n));
 }
 
 
 template <class T, unsigned SizeBits>
 void ArrayAllocator<T,SizeBits>::deallocate(index_type i)
 {
-  //!  The current code is frankly not too object-oriented...
-  switch(options.deallocatorType()) {
+    //!  The current code is frankly not too object-oriented...
+    switch(options.deallocatorType()) {
     case ArrayAllocatorOptions::DeallocatorNull :
-      //!  Null deallocator: do nothing
-      break;
+        //!  Null deallocator: do nothing
+        break;
 
     case ArrayAllocatorOptions::DeallocatorUnsorted :
-      //!  Unsorted deallocator: just add block to free list; don't
-      //!  collapse adjacent free blocks
-      if (! i.isNull()) {
-        derefIndex(i) = index_type(free_root.index, i.size);
-        free_root.index = i.index;
-      }
-      break;
+        //!  Unsorted deallocator: just add block to free list; don't
+        //!  collapse adjacent free blocks
+        if (! i.isNull()) {
+            derefIndex(i) = index_type(free_root.index, i.size);
+            free_root.index = i.index;
+        }
+        break;
 
     case ArrayAllocatorOptions::DeallocatorSorted :
-      //!  Not implemented yet...
-      PLERROR("ArrayAllocator: the sorted deallocator is not currently "
-          "implemented");
-      break;
-  }
+        //!  Not implemented yet...
+        PLERROR("ArrayAllocator: the sorted deallocator is not currently "
+                "implemented");
+        break;
+    }
 }
 
 
@@ -307,10 +307,10 @@ template <class T, unsigned SizeBits>
 inline ArrayAllocator<T,SizeBits>::index_type
 ArrayAllocator<T,SizeBits>::toIndex(pointer p, size_type n)
 {
-  if (p)
-    return index_type(p-&arr[0], n);
-  else
-    return index_type(0,0);
+    if (p)
+        return index_type(p-&arr[0], n);
+    else
+        return index_type(0,0);
 }
 
 
@@ -318,21 +318,34 @@ template <class T, unsigned SizeBits>
 inline ArrayAllocator<T,SizeBits>::pointer
 ArrayAllocator<T,SizeBits>::toPointer(index_type i)
 {
-  if (i.isNull())
-    return 0;
-  else
-    return &arr[0] + i.index;
+    if (i.isNull())
+        return 0;
+    else
+        return &arr[0] + i.index;
 }
 
 
 template <class T, unsigned SizeBits>
 void ArrayAllocator<T,SizeBits>::swap(self_type& other)
 {
-  swap(arr, other.arr);
-  swap(free_root, other.free_root);
+    swap(arr, other.arr);
+    swap(free_root, other.free_root);
 }
 
 } // end of namespace PLearn
 
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

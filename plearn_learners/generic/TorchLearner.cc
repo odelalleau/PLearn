@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TorchLearner.cc,v 1.4 2005/02/24 15:35:22 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -53,50 +53,50 @@ using namespace std;
 // TorchLearner //
 //////////////////
 TorchLearner::TorchLearner() 
-: outputsize_(-1)
+    : outputsize_(-1)
 {
-  allocator = new Torch::Allocator;
-  inputs = 0;
+    allocator = new Torch::Allocator;
+    inputs = 0;
 }
 
 PLEARN_IMPLEMENT_OBJECT(TorchLearner,
-    "A generic learner that can use Torch learning algorithms.",
-    ""
-);
+                        "A generic learner that can use Torch learning algorithms.",
+                        ""
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void TorchLearner::declareOptions(OptionList& ol)
 {
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  // Build options.
+    // Build options.
 
-  declareOption(ol, "machine", &TorchLearner::machine, OptionBase::buildoption,
-      "The Torch learning machine.");
+    declareOption(ol, "machine", &TorchLearner::machine, OptionBase::buildoption,
+                  "The Torch learning machine.");
 
-  declareOption(ol, "trainer", &TorchLearner::trainer, OptionBase::buildoption,
-      "The Torch trainer, responsible for training the machine.");
+    declareOption(ol, "trainer", &TorchLearner::trainer, OptionBase::buildoption,
+                  "The Torch trainer, responsible for training the machine.");
 
-  // Learnt options.
+    // Learnt options.
 
-  declareOption(ol, "outputsize", &TorchLearner::outputsize_, OptionBase::learntoption,
-      "Saves the output size of this learner for faster access.");
+    declareOption(ol, "outputsize", &TorchLearner::outputsize_, OptionBase::learntoption,
+                  "Saves the output size of this learner for faster access.");
 
-  // Now call the parent class' declareOptions.
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions.
+    inherited::declareOptions(ol);
 
-  // Hide unused parent's options.
+    // Hide unused parent's options.
 
-  redeclareOption(ol, "seed", &TorchLearner::seed_, OptionBase::nosave,
-      "Torch learners in general will not use the PLearn seed.");
+    redeclareOption(ol, "seed", &TorchLearner::seed_, OptionBase::nosave,
+                    "Torch learners in general will not use the PLearn seed.");
 
-  redeclareOption(ol, "nstages", &TorchLearner::nstages, OptionBase::nosave,
-      "A Torch learner is usually only trained on one stage.");
+    redeclareOption(ol, "nstages", &TorchLearner::nstages, OptionBase::nosave,
+                    "A Torch learner is usually only trained on one stage.");
 
 }
 
@@ -105,8 +105,8 @@ void TorchLearner::declareOptions(OptionList& ol)
 ///////////
 void TorchLearner::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -114,20 +114,20 @@ void TorchLearner::build()
 ////////////
 void TorchLearner::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
-  if (machine && machine->machine->outputs)
-    outputsize_ = machine->machine->outputs->frame_size;
-  // Initialize the inputs sequence.
-  if (inputsize_ >= 0 && (!inputs || inputs->frame_size != inputsize_)) {
-    allocator->free(inputs); // Free old input sequence.
-    inputs = new(allocator) Torch::Sequence(1, inputsize_);
-  }
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation. 
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+    // ### You should assume that the parent class' build_() has already been called.
+    if (machine && machine->machine->outputs)
+        outputsize_ = machine->machine->outputs->frame_size;
+    // Initialize the inputs sequence.
+    if (inputsize_ >= 0 && (!inputs || inputs->frame_size != inputsize_)) {
+        allocator->free(inputs); // Free old input sequence.
+        inputs = new(allocator) Torch::Sequence(1, inputsize_);
+    }
 }
 
 /////////////////////////////
@@ -136,7 +136,7 @@ void TorchLearner::build_()
 void TorchLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                            const Vec& target, Vec& costs) const
 {
-  // No cost computed for now.
+    // No cost computed for now.
 }                                
 
 ///////////////////
@@ -144,11 +144,11 @@ void TorchLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
 ///////////////////
 void TorchLearner::computeOutput(const Vec& input, Vec& output) const
 {
-  assert( outputsize_ >= 0);
-  output.resize(outputsize_);
-  inputs->copyFrom(input.data());
-  machine->forward(inputs);
-  machine->machine->outputs->copyTo(output.data());
+    assert( outputsize_ >= 0);
+    output.resize(outputsize_);
+    inputs->copyFrom(input.data());
+    machine->forward(inputs);
+    machine->machine->outputs->copyTo(output.data());
 }    
 
 ////////////
@@ -156,10 +156,10 @@ void TorchLearner::computeOutput(const Vec& input, Vec& output) const
 ////////////
 void TorchLearner::forget()
 {
-  stage = 0;
-  outputsize_ = -1;
-  if (machine)
-    machine->reset();
+    stage = 0;
+    outputsize_ = -1;
+    if (machine)
+        machine->reset();
 }
     
 //////////////////////
@@ -167,8 +167,8 @@ void TorchLearner::forget()
 //////////////////////
 TVec<string> TorchLearner::getTestCostNames() const
 {
-  // No cost computed for now.
-  return TVec<string>();
+    // No cost computed for now.
+    return TVec<string>();
 }
 
 ///////////////////////
@@ -176,8 +176,8 @@ TVec<string> TorchLearner::getTestCostNames() const
 ///////////////////////
 TVec<string> TorchLearner::getTrainCostNames() const
 {
-  // No cost computed for now.
-  return TVec<string>();
+    // No cost computed for now.
+    return TVec<string>();
 }
 
 /////////////////////////////////
@@ -185,13 +185,13 @@ TVec<string> TorchLearner::getTrainCostNames() const
 /////////////////////////////////
 void TorchLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("TorchLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("TorchLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 ////////////////
@@ -199,23 +199,23 @@ void TorchLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////
 int TorchLearner::outputsize() const
 {
-  // Compute and return the size of this learner's output, (which typically
-  // may depend on its inputsize(), targetsize() and set options).
-  assert( machine );
-  assert( outputsize_ >= 0 || machine->machine->outputs );
-  if (outputsize_ >=0)
-    return outputsize_;
-  return machine->machine->outputs->frame_size;
+    // Compute and return the size of this learner's output, (which typically
+    // may depend on its inputsize(), targetsize() and set options).
+    assert( machine );
+    assert( outputsize_ >= 0 || machine->machine->outputs );
+    if (outputsize_ >=0)
+        return outputsize_;
+    return machine->machine->outputs->frame_size;
 }
 
 ////////////////////
 // setTrainingSet //
 ////////////////////
 void TorchLearner::setTrainingSet(VMat training_set, bool call_forget) {
-  inherited::setTrainingSet(training_set, call_forget);
-  torch_train_set = new TTorchDataSetFromVMat(training_set);
-  allocator->free(inputs); // Free old input sequence.
-  inputs = new(allocator) Torch::Sequence(1, training_set->inputsize());
+    inherited::setTrainingSet(training_set, call_forget);
+    torch_train_set = new TTorchDataSetFromVMat(training_set);
+    allocator->free(inputs); // Free old input sequence.
+    inputs = new(allocator) Torch::Sequence(1, training_set->inputsize());
 }
 
 ///////////
@@ -223,25 +223,38 @@ void TorchLearner::setTrainingSet(VMat training_set, bool call_forget) {
 ///////////
 void TorchLearner::train()
 {
-  if (stage >= nstages) {
-    PLWARNING("In TorchLearner::train - Learner has already been trained, skipping training");
-    return;
-  }
-  if (!trainer || !machine)
-    PLERROR("In TorchLearner::train - You must set both the 'trainer' and 'machine' options "
-            "before calling train()");
-  trainer->train((TTorchDataSetFromVMat*) torch_train_set);
-  if (machine->machine->outputs)
-    // Update outputsize_
-    outputsize_ = machine->machine->outputs->frame_size;
-  stage = 1;
+    if (stage >= nstages) {
+        PLWARNING("In TorchLearner::train - Learner has already been trained, skipping training");
+        return;
+    }
+    if (!trainer || !machine)
+        PLERROR("In TorchLearner::train - You must set both the 'trainer' and 'machine' options "
+                "before calling train()");
+    trainer->train((TTorchDataSetFromVMat*) torch_train_set);
+    if (machine->machine->outputs)
+        // Update outputsize_
+        outputsize_ = machine->machine->outputs->frame_size;
+    stage = 1;
 }
 
 ///////////////////
 // ~TorchLearner //
 ///////////////////
 TorchLearner::~TorchLearner() {
-  delete allocator;
+    delete allocator;
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

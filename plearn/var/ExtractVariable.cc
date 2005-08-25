@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ExtractVariable.cc,v 1.2 2005/01/11 20:02:34 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ExtendedVariable.h"
 #include "ExtractVariable.h"
@@ -55,10 +55,10 @@ PLEARN_IMPLEMENT_OBJECT(ExtractVariable,
                         "NO HELP");
 
 ExtractVariable::ExtractVariable(Variable* v, int the_offset, int the_length, int the_width)
-: inherited(v, the_length, the_width),
-  offset_(the_offset),
-  length_(the_length),
-  width_(the_width)
+    : inherited(v, the_length, the_width),
+      offset_(the_offset),
+      length_(the_length),
+      width_(the_width)
 {
     build_();
 }
@@ -106,7 +106,7 @@ void ExtractVariable::bprop()
 
 void ExtractVariable::bbprop()
 {
-     PLERROR("In SVDVariable::bbprop: feature not implemented");
+    PLERROR("In SVDVariable::bbprop: feature not implemented");
 }
 
 void ExtractVariable::symbolicBprop()
@@ -122,3 +122,15 @@ void ExtractVariable::rfprop()
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

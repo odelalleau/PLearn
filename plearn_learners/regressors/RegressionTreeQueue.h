@@ -35,9 +35,9 @@
 
 
 /* ********************************************************************************    
-   * $Id: RegressionTreeQueue.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout     *
-   * This file is part of the PLearn library.                                     *
-   ******************************************************************************** */
+ * $Id: RegressionTreeQueue.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout     *
+ * This file is part of the PLearn library.                                     *
+ ******************************************************************************** */
 
 #ifndef RegressionTreeQueue_INC
 #define RegressionTreeQueue_INC
@@ -49,7 +49,7 @@ using namespace std;
 
 class RegressionTreeQueue: public Object
 {
-  typedef Object inherited;
+    typedef Object inherited;
   
 private:
 
@@ -57,41 +57,53 @@ private:
   Build options: they have to be set before training
 */
 
-  int verbosity;
-  int maximum_number_of_nodes;
+    int verbosity;
+    int maximum_number_of_nodes;
   
 /*
   Learnt options: they are sized and initialized if need be, in initHeap()
 */
 
-  int next_available_node;
-  TVec< PP<RegressionTreeNode> > nodes;
+    int next_available_node;
+    TVec< PP<RegressionTreeNode> > nodes;
   
 public:
   
-                       RegressionTreeQueue();
-  virtual              ~RegressionTreeQueue();
+    RegressionTreeQueue();
+    virtual              ~RegressionTreeQueue();
     PLEARN_DECLARE_OBJECT(RegressionTreeQueue);
 
-  static  void         declareOptions(OptionList& ol);
-  virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
-  virtual void         build();
-          void         initHeap();
-          void         addHeap(PP<RegressionTreeNode> new_node);
-          PP<RegressionTreeNode>   popHeap();
-          PP<RegressionTreeNode>   upHeap(PP<RegressionTreeNode> new_node, int node_ind);
-          PP<RegressionTreeNode>   downHeap(PP<RegressionTreeNode> new_node, int node_ind);
-          int          isEmpty();
-          int          compareNode(PP<RegressionTreeNode> node1, PP<RegressionTreeNode> node2);
+    static  void         declareOptions(OptionList& ol);
+    virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
+    virtual void         build();
+    void         initHeap();
+    void         addHeap(PP<RegressionTreeNode> new_node);
+    PP<RegressionTreeNode>   popHeap();
+    PP<RegressionTreeNode>   upHeap(PP<RegressionTreeNode> new_node, int node_ind);
+    PP<RegressionTreeNode>   downHeap(PP<RegressionTreeNode> new_node, int node_ind);
+    int          isEmpty();
+    int          compareNode(PP<RegressionTreeNode> node1, PP<RegressionTreeNode> node2);
   
 private:
-          void         build_();
-          void         verbose(string msg, int level);
+    void         build_();
+    void         verbose(string msg, int level);
 };
 
-  DECLARE_OBJECT_PTR(RegressionTreeQueue);
+DECLARE_OBJECT_PTR(RegressionTreeQueue);
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: CrossEntropyVariable.cc,v 1.10 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "CrossEntropyVariable.h"
 
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(CrossEntropyVariable,
                         "NO HELP");
 
 CrossEntropyVariable::CrossEntropyVariable(Variable* netout, Variable* target)
-  : inherited(netout,target,1,1)
+    : inherited(netout,target,1,1)
 {
     build_();
 }
@@ -81,39 +81,50 @@ void CrossEntropyVariable::recomputeSize(int& l, int& w) const
 
 void CrossEntropyVariable::fprop()
 {
-  real cost = 0.0;
-  for (int i=0; i<input1->size(); i++)
-  {
-    real output = input1->valuedata[i];
-    real target = input2->valuedata[i];
-    if ((output == 0.0 && target != 0) || (output == 1.0 && target != 1))
-      PLERROR("CrossEntropyVariable::fprop: model output is either exactly "
-              "0.0 or 1.0; cannot compute cost function");
-    if (output != 0 && output != 1) {
-      cost += target*log(output) + (1.0-target)*log(1.0-output);
+    real cost = 0.0;
+    for (int i=0; i<input1->size(); i++)
+    {
+        real output = input1->valuedata[i];
+        real target = input2->valuedata[i];
+        if ((output == 0.0 && target != 0) || (output == 1.0 && target != 1))
+            PLERROR("CrossEntropyVariable::fprop: model output is either exactly "
+                    "0.0 or 1.0; cannot compute cost function");
+        if (output != 0 && output != 1) {
+            cost += target*log(output) + (1.0-target)*log(1.0-output);
+        }
     }
-  }
-  valuedata[0] = -cost;
+    valuedata[0] = -cost;
 }
 
 
 void CrossEntropyVariable::bprop()
 {
-  real gr = *gradientdata;
-  for (int i=0; i<input1->size(); i++)
-  {
-    real output = input1->valuedata[i];
-    real target = input2->valuedata[i];
+    real gr = *gradientdata;
+    for (int i=0; i<input1->size(); i++)
+    {
+        real output = input1->valuedata[i];
+        real target = input2->valuedata[i];
 #ifdef BOUNDCHECK
-    if (output == target)
-      PLERROR("CrossEntropyVariable::bprop: model output is either exactly "
-              "0.0 or 1.0; cannot compute bprop");
+        if (output == target)
+            PLERROR("CrossEntropyVariable::bprop: model output is either exactly "
+                    "0.0 or 1.0; cannot compute bprop");
 #endif
-    input1->gradientdata[i] += gr*(-target/output + (1.0-target)/(1.0-output));
-  }
+        input1->gradientdata[i] += gr*(-target/output + (1.0-target)/(1.0-output));
+    }
 }
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

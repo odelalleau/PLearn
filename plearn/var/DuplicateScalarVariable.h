@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateScalarVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef DuplicateScalarVariable_INC
 #define DuplicateScalarVariable_INC
@@ -55,22 +55,22 @@ class DuplicateScalarVariable: public UnaryVariable
     typedef UnaryVariable inherited;
 
 protected:
-  int length_, width_;
+    int length_, width_;
 
 public:
-  //!  Default constructor for persistence
-  DuplicateScalarVariable() {}
-  DuplicateScalarVariable(Variable* input, int thelength, int thewidth);
+    //!  Default constructor for persistence
+    DuplicateScalarVariable() {}
+    DuplicateScalarVariable(Variable* input, int thelength, int thewidth);
 
-  PLEARN_DECLARE_OBJECT(DuplicateScalarVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(DuplicateScalarVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;    
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;    
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
     void build_();
@@ -80,14 +80,27 @@ DECLARE_OBJECT_PTR(DuplicateScalarVariable);
 
 inline Var duplicateScalar(Var v, int the_length, int the_width)
 { 
-  if(!v->isScalar())
-    PLERROR("In duplicateScalar: v is not a scalar var");
-  if(the_length*the_width==1)
-    return v;
-  else
-    return new DuplicateScalarVariable(v,the_length,the_width); 
+    if(!v->isScalar())
+        PLERROR("In duplicateScalar: v is not a scalar var");
+    if(the_length*the_width==1)
+        return v;
+    else
+        return new DuplicateScalarVariable(v,the_length,the_width); 
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

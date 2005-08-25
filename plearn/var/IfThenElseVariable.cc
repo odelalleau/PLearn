@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: IfThenElseVariable.cc,v 1.7 2004/09/27 20:19:27 plearner Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "IfThenElseVariable.h"
 #include "Var_utils.h"
@@ -89,29 +89,29 @@ void IfThenElseVariable::recomputeSize(int& l, int& w) const
 
 void IfThenElseVariable::fprop()
 {
-  if(If()->isScalar())
+    if(If()->isScalar())
     {
-      //bool test = (bool)If()->valuedata[0];
-	    // norman: replaced a bad cast with a better boolean conversion
-	    bool test = If()->valuedata[0] == 0 ? false : true;
-      if (test)
-        value << Then()->value;
-      else
-        value << Else()->value;
+        //bool test = (bool)If()->valuedata[0];
+        // norman: replaced a bad cast with a better boolean conversion
+        bool test = If()->valuedata[0] == 0 ? false : true;
+        if (test)
+            value << Then()->value;
+        else
+            value << Else()->value;
     }
-  else
+    else
     {
-      real* ifv = If()->valuedata;
-      real* thenv = Then()->valuedata;
-      real* elsev = Else()->valuedata;
-      for (int k=0;k<nelems();k++)
+        real* ifv = If()->valuedata;
+        real* thenv = Then()->valuedata;
+        real* elsev = Else()->valuedata;
+        for (int k=0;k<nelems();k++)
         {
-          //if ((bool)ifv[k])
-          // norman: replaced a bad cast with a better boolean conversion
-          if ( ifv[k] == 0 ? false:true )
-            valuedata[k]=thenv[k];
-          else
-            valuedata[k]=elsev[k];
+            //if ((bool)ifv[k])
+            // norman: replaced a bad cast with a better boolean conversion
+            if ( ifv[k] == 0 ? false:true )
+                valuedata[k]=thenv[k];
+            else
+                valuedata[k]=elsev[k];
         }
     }
 }
@@ -119,29 +119,29 @@ void IfThenElseVariable::fprop()
 
 void IfThenElseVariable::bprop()
 {
-  if(If()->isScalar())
+    if(If()->isScalar())
     {
-      // bool test = (bool)If()->valuedata[0];
-	  // norman: replaced a bad cast with a better boolean conversion
-	  bool test = If()->valuedata[0] == 0 ? false : true;
-      if (test)
-        Then()->gradient += gradient;
-      else
-        Else()->gradient += gradient;
+        // bool test = (bool)If()->valuedata[0];
+        // norman: replaced a bad cast with a better boolean conversion
+        bool test = If()->valuedata[0] == 0 ? false : true;
+        if (test)
+            Then()->gradient += gradient;
+        else
+            Else()->gradient += gradient;
     }
-  else
+    else
     {
-      real* ifv = If()->valuedata;
-      real* theng = Then()->gradientdata;
-      real* elseg = Else()->gradientdata;
-      for (int k=0;k<nelems();k++)
+        real* ifv = If()->valuedata;
+        real* theng = Then()->gradientdata;
+        real* elseg = Else()->gradientdata;
+        for (int k=0;k<nelems();k++)
         {
-          //if ((bool)ifv[k])
-          // norman: replaced a bad cast with a better boolean conversion
-          if ( ifv[k] == 0 ? false:true )
-            theng[k] += gradientdata[k];
-          else
-            elseg[k] += gradientdata[k];
+            //if ((bool)ifv[k])
+            // norman: replaced a bad cast with a better boolean conversion
+            if ( ifv[k] == 0 ? false:true )
+                theng[k] += gradientdata[k];
+            else
+                elseg[k] += gradientdata[k];
         }
     }
 }
@@ -149,38 +149,38 @@ void IfThenElseVariable::bprop()
 
 void IfThenElseVariable::symbolicBprop()
 {
-  Var zero(length(), width());
-  Then()->accg(ifThenElse(If(), g, zero));
-  Else()->accg(ifThenElse(If(), zero, g));
+    Var zero(length(), width());
+    Then()->accg(ifThenElse(If(), g, zero));
+    Else()->accg(ifThenElse(If(), zero, g));
 }
 
 
 void IfThenElseVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  if(If()->isScalar())
+    if (rValue.length()==0) resizeRValue();
+    if(If()->isScalar())
     {
-		  //bool test = (bool)If()->valuedata[0];
-		  // norman: replaced a bad cast to a better boolean conversion
-	    bool test = If()->valuedata[0] == 0 ? false : true;
-      if (test)
-        rValue << Then()->rValue;
-      else
-        rValue << Else()->rValue;
+        //bool test = (bool)If()->valuedata[0];
+        // norman: replaced a bad cast to a better boolean conversion
+        bool test = If()->valuedata[0] == 0 ? false : true;
+        if (test)
+            rValue << Then()->rValue;
+        else
+            rValue << Else()->rValue;
     }
-  else
+    else
     {
-      real* ifv = If()->valuedata;
-      real* rthenv = Then()->rvaluedata;
-      real* relsev = Else()->rvaluedata;
-      for (int k=0;k<nelems();k++)
+        real* ifv = If()->valuedata;
+        real* rthenv = Then()->rvaluedata;
+        real* relsev = Else()->rvaluedata;
+        for (int k=0;k<nelems();k++)
         {
-          //if ((bool)ifv[k])
-          // norman: replaced a bad cast with a better boolean conversion
-          if ( ifv[k] == 0 ? false:true )
-            rvaluedata[k]=rthenv[k];
-          else
-            rvaluedata[k]=relsev[k];
+            //if ((bool)ifv[k])
+            // norman: replaced a bad cast with a better boolean conversion
+            if ( ifv[k] == 0 ? false:true )
+                rvaluedata[k]=rthenv[k];
+            else
+                rvaluedata[k]=relsev[k];
         }
     }
 }
@@ -189,4 +189,15 @@ void IfThenElseVariable::rfprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

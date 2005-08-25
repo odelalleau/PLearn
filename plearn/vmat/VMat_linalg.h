@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_linalg.h,v 1.4 2005/05/25 21:12:32 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -50,7 +50,7 @@
 namespace PLearn {
 using namespace std;
 
-  class VMat;
+class VMat;
 
 //!  computes M1'.M2
 Mat transposeProduct(VMat m1, VMat m2);
@@ -79,7 +79,7 @@ VMat transpose(VMat m1);
   XtY(n,m)
   This regression is made with no added bias. If you want a bias, 
   add it yourself with passing 
-      inputs_w_bias = new ExtendedVMatrix(inputs,0,0,1,0,1.0)
+  inputs_w_bias = new ExtendedVMatrix(inputs,0,0,1,0,1.0)
   If use_precomputed_XtX_XtY is false, then they are computed. Otherwise
   they are used as they are (typically passed precomputed from a previous
   call made with a possibly different weight_decay).
@@ -91,11 +91,11 @@ VMat transpose(VMat m1);
   Returns average of squared loss.
 */
 real linearRegression(
-  VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
-  bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY,
-  real& sum_squared_Y, Vec& outputwise_sum_squared_Y,
-  bool return_squared_loss=false, int verbose_computation_every=0,
-  bool cholesky = true, int apply_decay_from = 1);
+    VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
+    bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY,
+    real& sum_squared_Y, Vec& outputwise_sum_squared_Y,
+    bool return_squared_loss=false, int verbose_computation_every=0,
+    bool cholesky = true, int apply_decay_from = 1);
                       
 
 //! Version that does all the memory allocations of XtX, XtY and theta_t.
@@ -109,12 +109,12 @@ Mat linearRegression(VMat inputs, VMat outputs, real weight_decay, bool include_
 //!  add it yourself with passing 
 //!      inputs_w_bias = new ExtendedVMatrix(inputs,0,0,1,0,1.0)
 real weightedLinearRegression(
-  VMat inputs, VMat outputs, VMat gammas,
-  real weight_decay, Mat theta_t, bool use_precomputed_XtX_XtY, Mat XtX,
-  Mat XtY, real& sum_squared_Y, Vec& outputwise_sum_squared_Y,
-  real& sum_gammas, bool return_squared_loss=false, 
-  int verbose_computation_every=0, bool cholesky = true,
-  int apply_decay_from = 1);
+    VMat inputs, VMat outputs, VMat gammas,
+    real weight_decay, Mat theta_t, bool use_precomputed_XtX_XtY, Mat XtX,
+    Mat XtY, real& sum_squared_Y, Vec& outputwise_sum_squared_Y,
+    real& sum_gammas, bool return_squared_loss=false, 
+    int verbose_computation_every=0, bool cholesky = true,
+    int apply_decay_from = 1);
 
 //! Version that does all the memory allocations of XtX, XtY and theta_t. 
 //! Returns theta_t
@@ -125,3 +125,16 @@ Mat weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas,
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

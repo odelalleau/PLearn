@@ -33,8 +33,8 @@
 
 
 /* *******************************************************      
-   * $Id: IndexedVMatrix.h,v 1.8 2004/09/14 16:04:39 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 #ifndef IndexedVMatrix_INC
@@ -51,28 +51,28 @@ using namespace std;
 //! matrix.
 class IndexedVMatrix: public VMatrix
 {
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
 public:
-  //! Public build options
-  VMat m;
+    //! Public build options
+    VMat m;
 
 
-  IndexedVMatrix() {}
+    IndexedVMatrix() {}
 
-  PLEARN_DECLARE_OBJECT(IndexedVMatrix);
+    PLEARN_DECLARE_OBJECT(IndexedVMatrix);
 
-  static void declareOptions(OptionList& ol);
+    static void declareOptions(OptionList& ol);
     
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-  virtual void build();
-  virtual real get(int i, int j) const;
-  virtual void put(int i, int j, real value);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void build();
+    virtual real get(int i, int j) const;
+    virtual void put(int i, int j, real value);
 
 private:
 
-  void build_();
+    void build_();
 
 };
 
@@ -80,3 +80,16 @@ DECLARE_OBJECT_PTR(IndexedVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,8 +36,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SequentialSplitter.h,v 1.8 2004/05/06 21:22:12 ducharme Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file SequentialSplitter.h */
 #ifndef SequentialSplitter_INC
@@ -69,9 +69,9 @@ public:
     // initializes all fields to reasonable default values.
     SequentialSplitter(int horizon_=1, int init_train_size_=1, bool return_entire_vmat_=true);
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
     //! This does the actual building. 
@@ -99,8 +99,8 @@ public:
     //! Returns the number of available different "splits"
     virtual int nsplits() const;
 
-  //! Returns the number of sets per split
-  virtual int nSetsPerSplit() const;
+    //! Returns the number of sets per split
+    virtual int nSetsPerSplit() const;
 
     //! Returns split number i
     virtual TVec<VMat> getSplit(int i=0);
@@ -113,3 +113,16 @@ DECLARE_OBJECT_PTR(SequentialSplitter);
 } // end of namespace PLearn
 
 #endif // SequentialSplitter_INC
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

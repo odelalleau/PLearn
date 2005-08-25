@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ProductTransposeVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ProductTransposeVariable_INC
 #define ProductTransposeVariable_INC
@@ -52,23 +52,23 @@ using namespace std;
 //!  Matrix product between matrix1 and transpose of matrix2
 class ProductTransposeVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  ProductTransposeVariable() {}
-  ProductTransposeVariable(Variable* matrix1, Variable* matrix2);
+    //!  Default constructor for persistence
+    ProductTransposeVariable() {}
+    ProductTransposeVariable(Variable* matrix1, Variable* matrix2);
 
-  PLEARN_DECLARE_OBJECT(ProductTransposeVariable);
+    PLEARN_DECLARE_OBJECT(ProductTransposeVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void bbprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void bbprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 
 protected:
     void build_();
@@ -78,9 +78,22 @@ DECLARE_OBJECT_PTR(ProductTransposeVariable);
 
 inline Var productTranspose(Var& m1, Var& m2)
 {
-  return new ProductTransposeVariable(m1, m2);
+    return new ProductTransposeVariable(m1, m2);
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

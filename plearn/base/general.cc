@@ -37,9 +37,9 @@
  
 
 /* *******************************************************      
-   * $Id: general.cc,v 1.8 2004/02/28 17:58:51 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "general.h"
 #include <sys/stat.h>
@@ -63,7 +63,7 @@ static PLearnInit _plearn_init_;
 
 PLearnInit::PLearnInit()
 {
-  umask(002);
+    umask(002);
 }
 
 PLearnInit::~PLearnInit(){}
@@ -71,87 +71,87 @@ PLearnInit::~PLearnInit(){}
 int  file_size(const string& filename)
 {
 #ifdef _MSC_VER
-  struct _stat buf;
-  if (_stat(filename.c_str(),&buf)==0)
+    struct _stat buf;
+    if (_stat(filename.c_str(),&buf)==0)
 #else
-  struct stat buf;
-  if (stat(filename.c_str(),&buf)==0)
+        struct stat buf;
+    if (stat(filename.c_str(),&buf)==0)
 #endif
   
-    return buf.st_size;
-  else
-    return -1;
+        return buf.st_size;
+    else
+        return -1;
 }
 
 
 char* strcopy(char* s)
 {
-  if (!s) return 0;
-  char* ss=new char[strlen(s)+1];
-  strcpy(ss,s);
-  return ss;
+    if (!s) return 0;
+    char* ss=new char[strlen(s)+1];
+    strcpy(ss,s);
+    return ss;
 }
 
 // print a number without unnecessary trailing zero's, into buffer
 void pretty_print_number(char* buffer, real number)
 {
-  char* t;
-  char* s;
-  double dnum = double(number);
-  sprintf(buffer,"%.15g",dnum);
-  for (s=buffer; *s!='\0'; s++)
-    if (*s == '.') break;
-  if (*s == '.')
+    char* t;
+    char* s;
+    double dnum = double(number);
+    sprintf(buffer,"%.15g",dnum);
+    for (s=buffer; *s!='\0'; s++)
+        if (*s == '.') break;
+    if (*s == '.')
     {
-      for (t = s + 1; isdigit(*t); t++)
-      if (*t != '0')
-        s = t + 1;
-      for (;*t != '\0';) *s++ = *t++;
-      *s = '\0';
+        for (t = s + 1; isdigit(*t); t++)
+            if (*t != '0')
+                s = t + 1;
+        for (;*t != '\0';) *s++ = *t++;
+        *s = '\0';
     }   
 }
 
 bool file_exists(const string& filename)
 {
-  FILE* fp = fopen(filename.c_str(),"r");
-  if (fp)
+    FILE* fp = fopen(filename.c_str(),"r");
+    if (fp)
     {
-      fclose(fp);
-      return true;
+        fclose(fp);
+        return true;
     }
-  return false;
+    return false;
 }
 
 
 bool isMapKeysAreInt(map<real,int>& m)
 {
-  map<real,int>::iterator it;
-  for (it = m.begin(); it!= m.end(); ++it)
-  {
-    real key_rvalue = it->first;
-    int key_ivalue = int(key_rvalue);
-    if (key_rvalue != key_ivalue) return false;
-  }
-  return true;
+    map<real,int>::iterator it;
+    for (it = m.begin(); it!= m.end(); ++it)
+    {
+        real key_rvalue = it->first;
+        int key_ivalue = int(key_rvalue);
+        if (key_rvalue != key_ivalue) return false;
+    }
+    return true;
 }
 
 
 string hostname()
 {
-  char* h = getenv("HOSTNAME");
-  if (!h)
-    h = getenv("HOST");
-  if (!h)
-    PLERROR("hostname: could not find $HOSTNAME nor $HOST in environment!");
-  return h;
+    char* h = getenv("HOSTNAME");
+    if (!h)
+        h = getenv("HOST");
+    if (!h)
+        PLERROR("hostname: could not find $HOSTNAME nor $HOST in environment!");
+    return h;
 }
 
 string prgname(const string& setname)
 {
-  static string prgname_ = "plearn";
-  if(setname!="")
-    prgname_ = setname;
-  return prgname_;
+    static string prgname_ = "plearn";
+    if(setname!="")
+        prgname_ = setname;
+    return prgname_;
 }
 
 #ifdef WIN32
@@ -159,4 +159,15 @@ string prgname(const string& setname)
 #endif 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

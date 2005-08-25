@@ -35,9 +35,9 @@
 
 
 /* *********************************************************************************    
-   * $Id: RegressionTreeRegisters.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout *
-   * This file is part of the PLearn library.                                      *
-   ********************************************************************************* */
+ * $Id: RegressionTreeRegisters.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout *
+ * This file is part of the PLearn library.                                      *
+ ********************************************************************************* */
 
 #ifndef RegressionTreeRegisters_INC
 #define RegressionTreeRegisters_INC
@@ -52,7 +52,7 @@ using namespace std;
 
 class RegressionTreeRegisters: public Object
 {
-  typedef Object inherited;
+    typedef Object inherited;
   
 private:
 
@@ -60,70 +60,82 @@ private:
   Build options: they have to be set before training
 */
 
-  int  report_progress;
-  int  verbosity;
-  VMat train_set;
+    int  report_progress;
+    int  verbosity;
+    VMat train_set;
   
 /*
   Learnt options: they are sized and initialized if need be, at initRegisters(...) or reinitRegisters()
 */
 
-  int       next_id;
-  int       length;
-  int       width;
-  int       inputsize;
-  int       targetsize;
-  int       weightsize;  
-  TMat<int> sorted_row;
-  TMat<int> inverted_sorted_row;
-  TVec<int> leave_register;
-  TVec<int> leave_candidate;
+    int       next_id;
+    int       length;
+    int       width;
+    int       inputsize;
+    int       targetsize;
+    int       weightsize;  
+    TMat<int> sorted_row;
+    TMat<int> inverted_sorted_row;
+    TVec<int> leave_register;
+    TVec<int> leave_candidate;
  
 /*
   Work fields: they are sized and initialized if need be, at buid time
 */  
  
-  int  each_train_sample_index;
-  int  next_train_sample_index;
-  int  saved_index;
-  int  sample_dim;
-  real sample_feature;
+    int  each_train_sample_index;
+    int  next_train_sample_index;
+    int  saved_index;
+    int  sample_dim;
+    real sample_feature;
   
 public:
-                       RegressionTreeRegisters();
-  virtual              ~RegressionTreeRegisters();
+    RegressionTreeRegisters();
+    virtual              ~RegressionTreeRegisters();
     
     PLEARN_DECLARE_OBJECT(RegressionTreeRegisters);
 
-  static  void         declareOptions(OptionList& ol);
-  virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
-  virtual void         build();
-          void         initRegisters(VMat train_set);
-          void         reinitRegisters();
-          void         applyForRow(int leave_id, int row);
-          void         registerLeave(int leave_id, int row);
-          real         getFeature(int row, int col);
-          real         getTarget(int row);
-          real         getWeight(int row);
-          int          getLength();
-          int          getNextId();
-          int          getInputsize();
-          int          getNextRegisteredRow(int leave_id, int col, int previous_row);
-          int          getNextCandidateRow(int leave_id, int col, int previous_row);
-          void         sortRows();
-          void         printRegisters();
+    static  void         declareOptions(OptionList& ol);
+    virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
+    virtual void         build();
+    void         initRegisters(VMat train_set);
+    void         reinitRegisters();
+    void         applyForRow(int leave_id, int row);
+    void         registerLeave(int leave_id, int row);
+    real         getFeature(int row, int col);
+    real         getTarget(int row);
+    real         getWeight(int row);
+    int          getLength();
+    int          getNextId();
+    int          getInputsize();
+    int          getNextRegisteredRow(int leave_id, int col, int previous_row);
+    int          getNextCandidateRow(int leave_id, int col, int previous_row);
+    void         sortRows();
+    void         printRegisters();
 private:
-          void         build_();
-          void         sortEachDim(int dim);
-          void         sortSmallSubArray(int start_index, int end_index, int dim);
-          void         swapIndex(int index_i, int index_j, int dim);
-          real         compare(real field1, real field2);
-          void         verbose(string msg, int level);
+    void         build_();
+    void         sortEachDim(int dim);
+    void         sortSmallSubArray(int start_index, int end_index, int dim);
+    void         swapIndex(int index_i, int index_j, int dim);
+    real         compare(real field1, real field2);
+    void         verbose(string msg, int level);
 };
 
-  DECLARE_OBJECT_PTR(RegressionTreeRegisters);
+DECLARE_OBJECT_PTR(RegressionTreeRegisters);
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

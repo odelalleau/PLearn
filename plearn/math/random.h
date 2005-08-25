@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.h,v 1.11 2005/03/11 19:15:54 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #ifndef RANDOM_H
 #define RANDOM_H
@@ -45,11 +45,11 @@
 namespace PLearn {
 using namespace std;
 
-  /*
+/*
 
-  Special functions.
-  -----------------
-  */
+Special functions.
+-----------------
+*/
 
 /*!   returns the natural logarithm of the gamma function   */
 real  log_gamma(real x);
@@ -65,99 +65,99 @@ real incomplete_beta(real z, real x, real y);
 /*! Student-t cumulative distribution function */
 real student_t_cdf(real t, int nb_degrees_of_freedom);
 
-  /*!   
+/*!   
   Utilities for random numbers generation. 
   ---------------------------------------
-  */
+*/
 
-  /*!   initializes the random number generator with the cpu time   */
-  void  seed();
-  /*!   initialzes the random number generator with the given long "x"   */
-  void  manual_seed(long x);
-  /*!   returns the current seed used by the random number generator   */
-  long  get_seed();
+/*!   initializes the random number generator with the cpu time   */
+void  seed();
+/*!   initialzes the random number generator with the given long "x"   */
+void  manual_seed(long x);
+/*!   returns the current seed used by the random number generator   */
+long  get_seed();
 
-  /*!   returns a random number uniformly distributed between 0 and 1   */
-  real  uniform_sample();
-  /*!   returns a random number uniformly distributed between a and b   */
-  real  bounded_uniform(real a,real b);
+/*!   returns a random number uniformly distributed between 0 and 1   */
+real  uniform_sample();
+/*!   returns a random number uniformly distributed between a and b   */
+real  bounded_uniform(real a,real b);
 
-  /*!   returns an exponential distributed random number   */
-  real  expdev();
-  /*!   returns a random number gaussian with mean 0 and standard deviation 1   */
-  real  gaussian_01();
-  inline real normal_sample() { return gaussian_01(); }
+/*!   returns an exponential distributed random number   */
+real  expdev();
+/*!   returns a random number gaussian with mean 0 and standard deviation 1   */
+real  gaussian_01();
+inline real normal_sample() { return gaussian_01(); }
 
-  /*!   returns a random number gaussian with mean "mu" and standard dev "sigma"   */
-  real  gaussian_mu_sigma(real mu, real sigma);
+/*!   returns a random number gaussian with mean "mu" and standard dev "sigma"   */
+real  gaussian_mu_sigma(real mu, real sigma);
 
-  /*!   returns a random number with mixture of gaussians, "w" is the mixture
-     (must be positive numbers summing to 1), "mu" and "sigma" are the vectors
-     of means and standard deviations for each gaussian   */
-  real  gaussian_mixture_mu_sigma(Vec& w, const Vec& mu, const Vec& sigma);
+/*!   returns a random number with mixture of gaussians, "w" is the mixture
+  (must be positive numbers summing to 1), "mu" and "sigma" are the vectors
+  of means and standard deviations for each gaussian   */
+real  gaussian_mixture_mu_sigma(Vec& w, const Vec& mu, const Vec& sigma);
 
-  /*!   returns a gamma distributed random number   */
-  real  gamdev(int ia);
-  /*!   returns a poisson random number with lambda = "xm"   */
-  real  poidev(real xm);
-  /*!   returns a binomial random number with probability = 'pp' and trials number = 'n'   */
-  real  bnldev(real pp, int n=1);
-  //!  alias
-  inline real binomial_sample(real prob1) { return bnldev(prob1); }
+/*!   returns a gamma distributed random number   */
+real  gamdev(int ia);
+/*!   returns a poisson random number with lambda = "xm"   */
+real  poidev(real xm);
+/*!   returns a binomial random number with probability = 'pp' and trials number = 'n'   */
+real  bnldev(real pp, int n=1);
+//!  alias
+inline real binomial_sample(real prob1) { return bnldev(prob1); }
 
-  /*!   returns a random deviate from a discrete distribution given explicitely by 'distribution'   */
-  int  multinomial_sample(const Vec& distribution);
+/*!   returns a random deviate from a discrete distribution given explicitely by 'distribution'   */
+int  multinomial_sample(const Vec& distribution);
 
-  //! return an integer between 0 and N-1 with equal probabilities 
-  int uniform_multinomial_sample(int N);
+//! return an integer between 0 and N-1 with equal probabilities 
+int uniform_multinomial_sample(int N);
 
-  //! sample with replacement the rows of source and put them in destination.
-  template <class T>
-  void bootstrap_rows(const TMat<T>& source, TMat<T> destination)
-  {
+//! sample with replacement the rows of source and put them in destination.
+template <class T>
+void bootstrap_rows(const TMat<T>& source, TMat<T> destination)
+{
     int N=source.length();
     destination.resize(N,source.width());
     for (int i=0;i<N;i++)
     {
-      int j = uniform_multinomial_sample(N);
-      destination(i) << source(j);
+        int j = uniform_multinomial_sample(N);
+        destination(i) << source(j);
     }
-  }
+}
 
-  //!  sample each element from uniform distribution U[minval,maxval]
-  void fill_random_uniform(const Vec& dest, real minval=0, real maxval=1);
+//!  sample each element from uniform distribution U[minval,maxval]
+void fill_random_uniform(const Vec& dest, real minval=0, real maxval=1);
 
-  //!  sample each element from the given set
-  void fill_random_discrete(const Vec& dest, const Vec& set);
+//!  sample each element from the given set
+void fill_random_discrete(const Vec& dest, const Vec& set);
 
-  //!  sample each element from Normal(mean,sdev^2) distribution
-  void fill_random_normal(const Vec& dest, real mean=0, real stdev=1);
+//!  sample each element from Normal(mean,sdev^2) distribution
+void fill_random_normal(const Vec& dest, real mean=0, real stdev=1);
 
-  //!  sample each element from multivariate Normal(mean,diag(sdev^2)) distribution
-  void fill_random_normal(const Vec& dest, const Vec& mean, const Vec& stdev);
+//!  sample each element from multivariate Normal(mean,diag(sdev^2)) distribution
+void fill_random_normal(const Vec& dest, const Vec& mean, const Vec& stdev);
 
-  void fill_random_uniform(const Mat& dest, real minval=0, real maxval=1);
-  void fill_random_normal(const Mat& dest, real mean=0, real sdev=1);
+void fill_random_uniform(const Mat& dest, real minval=0, real maxval=1);
+void fill_random_normal(const Mat& dest, real mean=0, real sdev=1);
 
-  //! Fill dest with dest.length() unique indices of entries in (0,1,...n-1), chosen uniformly
-  //! i.e. sample multinomially but without replacement, so that each entry in (0...n-1) can occur 0 or once.
-  //! This method is not very efficient as it performs memory allocation of size n.
-  void random_subset_indices(const TVec<int>& dest, int n);
+//! Fill dest with dest.length() unique indices of entries in (0,1,...n-1), chosen uniformly
+//! i.e. sample multinomially but without replacement, so that each entry in (0...n-1) can occur 0 or once.
+//! This method is not very efficient as it performs memory allocation of size n.
+void random_subset_indices(const TVec<int>& dest, int n);
 
 //!  randomly shuffle the entries of the TVector
 template<class T>
 void shuffleElements(const TVec<T>& vec)
 {
-  T* v = vec.data();
-  for(int i=0; i<vec.length(); i++)
+    T* v = vec.data();
+    for(int i=0; i<vec.length(); i++)
     {
-      int j = i+(int)(uniform_sample()*(vec.length()-i));
-      // int j=(int)floor(i+uniform_sample()*(length()-i-1e-5));
-      if(j!=i)
+        int j = i+(int)(uniform_sample()*(vec.length()-i));
+        // int j=(int)floor(i+uniform_sample()*(length()-i-1e-5));
+        if(j!=i)
         {
-          T tmp = v[i];
-          v[i] = v[j];
-          v[j] = tmp;
+            T tmp = v[i];
+            v[i] = v[j];
+            v[j] = tmp;
         }
     }
 }
@@ -167,10 +167,10 @@ void shuffleElements(const TVec<T>& vec)
 template<class T>
 void shuffleRows(const TMat<T>& mat)
 {
-  for(int i=0; i<mat.length(); i++)
+    for(int i=0; i<mat.length(); i++)
     {
-      int j = i+int(uniform_sample()*(mat.length()-i));
-      mat.swapRows(i,j);
+        int j = i+int(uniform_sample()*(mat.length()-i));
+        mat.swapRows(i,j);
     }
 }
 
@@ -185,59 +185,71 @@ void shuffleRows(const TMat<T>& mat)
 template<class T>
 TVec<int> computeRanks(const TMat<T>& mat, TMat<T>& ranks, bool ignore_missing = false)
 {
-  TVec<int> result;
-  int width=mat.width();
-  int n=mat.length();
-  ranks.resize(n,width);
-  TVec<Mat> sorted(width); 
-  // Sort all the y's.
-  for (int j=0;j<width;j++)
-    sorted[j].resize(n,2);
-  if (ignore_missing) {
-    // We do not know in advance how many non-missing values there are.
-    for (int j = 0; j < width; j++)
-      sorted[j].resize(0,2);
-    Vec val(2);
-    for (int i = 0; i < n; i++)
-      for (int j = 0; j < width; j++) {
-        val[0] = mat(i,j);
-        if (!is_missing(val[0])) {
-          val[1] = i;
-          sorted[j].appendRow(val);
-        }
-      }
-    result.resize(width);
-    for (int j = 0; j < width; j++)
-      result[j] = sorted[j].length();
-  } else {
-    for (int i=0;i<n;i++)
-    {
-      for (int j=0;j<width;j++)
-      {
-        sorted[j](i,0)=mat(i,j);
+    TVec<int> result;
+    int width=mat.width();
+    int n=mat.length();
+    ranks.resize(n,width);
+    TVec<Mat> sorted(width); 
+    // Sort all the y's.
+    for (int j=0;j<width;j++)
+        sorted[j].resize(n,2);
+    if (ignore_missing) {
+        // We do not know in advance how many non-missing values there are.
+        for (int j = 0; j < width; j++)
+            sorted[j].resize(0,2);
+        Vec val(2);
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < width; j++) {
+                val[0] = mat(i,j);
+                if (!is_missing(val[0])) {
+                    val[1] = i;
+                    sorted[j].appendRow(val);
+                }
+            }
+        result.resize(width);
+        for (int j = 0; j < width; j++)
+            result[j] = sorted[j].length();
+    } else {
+        for (int i=0;i<n;i++)
+        {
+            for (int j=0;j<width;j++)
+            {
+                sorted[j](i,0)=mat(i,j);
 #ifdef BOUNDCHECK
-        if (is_missing(sorted[j](i,0)))
-          PLERROR("In computeRanks - Found a missing value, but 'ignore_missing' is false");
+                if (is_missing(sorted[j](i,0)))
+                    PLERROR("In computeRanks - Found a missing value, but 'ignore_missing' is false");
 #endif
-        sorted[j](i,1)=i;
-      }
+                sorted[j](i,1)=i;
+            }
+        }
     }
-  }
-  for (int j=0;j<width;j++)
-  {
-    shuffleRows(sorted[j]); // To randomly permute the order of elements which have the same value, i.e. their rank within their category
-    sortRows(sorted[j]);
-  }
-  // Compute the ranks.
-  if (ignore_missing)
-    ranks.fill(-1);
-  for (int j=0;j<width;j++)
-    for (int i=0;i<sorted[j].length();i++)
-      ranks(int(sorted[j](i,1)),j) = i;
-  return result;
+    for (int j=0;j<width;j++)
+    {
+        shuffleRows(sorted[j]); // To randomly permute the order of elements which have the same value, i.e. their rank within their category
+        sortRows(sorted[j]);
+    }
+    // Compute the ranks.
+    if (ignore_missing)
+        ranks.fill(-1);
+    for (int j=0;j<width;j++)
+        for (int i=0;i<sorted[j].length();i++)
+            ranks(int(sorted[j](i,1)),j) = i;
+    return result;
 }
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

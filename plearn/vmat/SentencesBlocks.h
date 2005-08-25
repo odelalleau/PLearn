@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: SentencesBlocks.h,v 1.4 2004/07/21 16:30:55 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -60,8 +60,21 @@ using namespace std;
 class SentencesBlocks : public TVec<VMat>
 {
 public:
-  SentencesBlocks(int n_blocks, VMat d, Vec separator);
+    SentencesBlocks(int n_blocks, VMat d, Vec separator);
 };
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

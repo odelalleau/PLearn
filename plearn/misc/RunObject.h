@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunObject.h,v 1.4 2004/10/08 18:11:13 kermorvc Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,68 +54,81 @@ class RunObject: public Object
 
 private:
   
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  PP<Object> underlying_object;
+    PP<Object> underlying_object;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  RunObject();
+    //! Default constructor.
+    RunObject();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
-  string save_object_name;
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
+    string save_object_name;
 public:
 
-  // Declares other standard object methods
-  //  If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
-  PLEARN_DECLARE_OBJECT(RunObject);
+    // Declares other standard object methods
+    //  If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+    PLEARN_DECLARE_OBJECT(RunObject);
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  // (PLEASE IMPLEMENT IN .cc)
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    // (PLEASE IMPLEMENT IN .cc)
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Does nothing, but does not raise an error.
-  virtual void run();
+    //! Does nothing, but does not raise an error.
+    virtual void run();
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(RunObject);
+DECLARE_OBJECT_PTR(RunObject);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

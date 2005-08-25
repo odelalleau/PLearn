@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: TMatElementIterator_decl.h,v 1.1 2004/04/17 00:44:55 plearner Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/TMat.h */
@@ -55,61 +55,74 @@ template<class T>
 class TMatElementIterator
 {
 private:
-  int width;
-  int mod_minus_width;
-  T* ptr; // current element pointer
-  T* rowend; // after-last element of current row
+    int width;
+    int mod_minus_width;
+    T* ptr; // current element pointer
+    T* rowend; // after-last element of current row
 
 public:
 
-  typedef forward_iterator_tag iterator_category;
-  typedef T value_type;
-  typedef int size_type;
-  typedef ptrdiff_t difference_type;
-  typedef T* pointer;
-  typedef T& reference;
+    typedef forward_iterator_tag iterator_category;
+    typedef T value_type;
+    typedef int size_type;
+    typedef ptrdiff_t difference_type;
+    typedef T* pointer;
+    typedef T& reference;
 
-  inline TMatElementIterator(T* begin, int width, int mod)
-    :width(width), mod_minus_width(mod-width), ptr(begin), rowend(begin+width)
-  {}
+    inline TMatElementIterator(T* begin, int width, int mod)
+        :width(width), mod_minus_width(mod-width), ptr(begin), rowend(begin+width)
+    {}
 
-  inline TMatElementIterator<T>& operator++()
-  { 
-    ++ptr;
-    if(ptr==rowend)
-    {
-      ptr += mod_minus_width;
-      rowend = ptr+width; 
+    inline TMatElementIterator<T>& operator++()
+    { 
+        ++ptr;
+        if(ptr==rowend)
+        {
+            ptr += mod_minus_width;
+            rowend = ptr+width; 
+        }
+        return *this;
     }
-    return *this;
-  }
 
-  inline TMatElementIterator<T> operator++(int)
-  { 
-    TMatElementIterator<T> prev(*this);
-    ++ptr;
-    if(ptr==rowend)
-    {
-      ptr += mod_minus_width;
-      rowend = ptr+width; 
+    inline TMatElementIterator<T> operator++(int)
+    { 
+        TMatElementIterator<T> prev(*this);
+        ++ptr;
+        if(ptr==rowend)
+        {
+            ptr += mod_minus_width;
+            rowend = ptr+width; 
+        }
+        return prev;
     }
-    return prev;
-  }
 
-  inline T* operator->() const
-  { return ptr; }
+    inline T* operator->() const
+    { return ptr; }
   
-  inline T& operator*() const
-  { return *ptr; }
+    inline T& operator*() const
+    { return *ptr; }
 
-  inline bool operator==(const TMatElementIterator& other)
-  { return ptr==other.ptr; }
+    inline bool operator==(const TMatElementIterator& other)
+    { return ptr==other.ptr; }
 
-  inline bool operator!=(const TMatElementIterator& other)
-  { return ptr!=other.ptr; }
+    inline bool operator!=(const TMatElementIterator& other)
+    { return ptr!=other.ptr; }
 
 };
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

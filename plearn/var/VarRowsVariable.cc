@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: VarRowsVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "VarRowsVariable.h"
 
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(VarRowsVariable,
                         "NO HELP");
 
 VarRowsVariable::VarRowsVariable(Variable *input1, Variable *input2)
-  : inherited(input1, input2, input2->length(), input1->width())
+    : inherited(input1, input2, input2->length(), input1->width())
 {
     build_();
 }
@@ -85,28 +85,39 @@ void VarRowsVariable::recomputeSize(int& l, int& w) const
 
 void VarRowsVariable::fprop()
 {
-  matValue << input1->matValue.rows(input2->value);
+    matValue << input1->matValue.rows(input2->value);
 }
 
 
 void VarRowsVariable::bprop()
 {
-  for (int i = 0; i < input2->length(); ++i)
-  {
-    int r=int(input2->value[i]);
-    input1->matGradient.row(r) += matGradient.row(i);
-    input1->updateRow(r);
-  }
+    for (int i = 0; i < input2->length(); ++i)
+    {
+        int r=int(input2->value[i]);
+        input1->matGradient.row(r) += matGradient.row(i);
+        input1->updateRow(r);
+    }
 }
 
 
 void VarRowsVariable::symbolicBprop()
 {
-  PLERROR("VarRowsVariable::symbolicBprop() not implemented");
+    PLERROR("VarRowsVariable::symbolicBprop() not implemented");
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

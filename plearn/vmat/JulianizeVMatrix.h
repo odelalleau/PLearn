@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.h,v 1.11 2004/09/14 16:04:39 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file JulianizeVMatrix.h */
 #ifndef JulianizeVMatrix_INC
@@ -67,93 +67,106 @@ using namespace std;
  */
 class JulianizeVMatrix : public RowBufferedVMatrix
 {
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
 public:
-  //! This specifies the how the dates are coded in the underlying VMatrix;
-  //! for now only two formats are allowed.
-  enum DateCode {
-    Date = 0,                                //!< (YYYY, MM, DD)
-    DateTime = 1                             //!< (YYYY, MM, DD, HH, MM, SS)
-  };
+    //! This specifies the how the dates are coded in the underlying VMatrix;
+    //! for now only two formats are allowed.
+    enum DateCode {
+        Date = 0,                                //!< (YYYY, MM, DD)
+        DateTime = 1                             //!< (YYYY, MM, DD, HH, MM, SS)
+    };
 
-  //! Return the number of columns taken by each date code
-  static int dateCodeWidth(DateCode dc) {
-    switch(dc) {
-    case Date: return 3;
-    case DateTime: return 6;
+    //! Return the number of columns taken by each date code
+    static int dateCodeWidth(DateCode dc) {
+        switch(dc) {
+        case Date: return 3;
+        case DateTime: return 6;
+        }
+        PLERROR("JulianizeVMatrix::dateCodeWidth: unknown date code");
+        return 0;
     }
-    PLERROR("JulianizeVMatrix::dateCodeWidth: unknown date code");
-    return 0;
-  }
   
 protected:
-  VMat underlying_;                          //!< underlying vmat
-  vector< pair<int,DateCode> > cols_codes_;  //!< all columns/date codes
-  mutable Vec und_row_;                      //!< buffer for underlying row
+    VMat underlying_;                          //!< underlying vmat
+    vector< pair<int,DateCode> > cols_codes_;  //!< all columns/date codes
+    mutable Vec und_row_;                      //!< buffer for underlying row
 
 public:
 
   
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // ### declare public option fields (such as build options) here
-  // ...
+    // ### declare public option fields (such as build options) here
+    // ...
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor, the implementation in the .cc
-  //! initializes all fields to reasonable default values.
-  JulianizeVMatrix();
+    //! Default constructor, the implementation in the .cc
+    //! initializes all fields to reasonable default values.
+    JulianizeVMatrix();
 
-  //! Simple constructor: takes as input only the date code and the starting
-  //! column for a single date.  Starting columns are zero-based.
-  JulianizeVMatrix(VMat underlying,
-                   DateCode date_code = Date,
-                   int starting_column = 0);
+    //! Simple constructor: takes as input only the date code and the starting
+    //! column for a single date.  Starting columns are zero-based.
+    JulianizeVMatrix(VMat underlying,
+                     DateCode date_code = Date,
+                     int starting_column = 0);
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
-  //! Declares this class' options.  No options are currently supported
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.  No options are currently supported
+    static void declareOptions(OptionList& ol);
 
-  //!  Implement the base class abstract member function
-  virtual void getNewRow(int i, const Vec& v) const;
+    //!  Implement the base class abstract member function
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(JulianizeVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(JulianizeVMatrix);
 
 protected:
-  // Return the new number of columns
-  static int newWidth(VMat und, DateCode dc) {
-    return und->width() - dateCodeWidth(dc) + 1;
-  }
+    // Return the new number of columns
+    static int newWidth(VMat und, DateCode dc) {
+        return und->width() - dateCodeWidth(dc) + 1;
+    }
 
-  // Set the VMFields in this VMatrix from the underlying field names.  All
-  // "date" fields are named "Date", and "date-time" are named "DateTime".
-  void setVMFields();
+    // Set the VMFields in this VMatrix from the underlying field names.  All
+    // "date" fields are named "Date", and "date-time" are named "DateTime".
+    void setVMFields();
 };
 
 DECLARE_OBJECT_PTR(JulianizeVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

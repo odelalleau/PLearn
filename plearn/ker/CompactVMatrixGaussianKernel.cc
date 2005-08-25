@@ -35,9 +35,9 @@
  
 
 /* *******************************************************      
-   * $Id: CompactVMatrixGaussianKernel.cc,v 1.4 2004/04/07 23:15:58 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "CompactVMatrixGaussianKernel.h"
 
@@ -50,29 +50,29 @@ PLEARN_IMPLEMENT_OBJECT(CompactVMatrixGaussianKernel, "ONE LINE DESCR", "NO HELP
 
 real CompactVMatrixGaussianKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
-  // return exp(-powdistance(x1, x2, 2.0)/(sigma*sigma)); 
-  real sqdiff=0;
-  if (m)
-  {
-    sqdiff=m->squareDifference(int(x1[0]),int(x2[0]));
+    // return exp(-powdistance(x1, x2, 2.0)/(sigma*sigma)); 
+    real sqdiff=0;
+    if (m)
+    {
+        sqdiff=m->squareDifference(int(x1[0]),int(x2[0]));
 /*
-#ifdef BOUNDCHECK
-    m->setNormalMode();
-    int actual_n_inputs = m->width()-1;
-    Vec actual_x1(actual_n_inputs);
-    Vec actual_x2(actual_n_inputs);
-    m->getRow(int(x1[0]),actual_x1);
-    m->getRow(int(x2[0]),actual_x2);
-    m->setIndicesMode();
-    real actual_sqdiff= powdistance(actual_x1, actual_x2, 2.0);
-    if (fabs(sqdiff-actual_sqdiff)>0.1)
-      PLWARNING("something wrong in CompactVMatrixGaussianKernel");
-#endif
+  #ifdef BOUNDCHECK
+  m->setNormalMode();
+  int actual_n_inputs = m->width()-1;
+  Vec actual_x1(actual_n_inputs);
+  Vec actual_x2(actual_n_inputs);
+  m->getRow(int(x1[0]),actual_x1);
+  m->getRow(int(x2[0]),actual_x2);
+  m->setIndicesMode();
+  real actual_sqdiff= powdistance(actual_x1, actual_x2, 2.0);
+  if (fabs(sqdiff-actual_sqdiff)>0.1)
+  PLWARNING("something wrong in CompactVMatrixGaussianKernel");
+  #endif
 */
-  }
-  else
-    sqdiff= powdistance(x1, x2, real(2.0));
-  return exp(-sqdiff/(sigma*sigma));
+    }
+    else
+        sqdiff= powdistance(x1, x2, real(2.0));
+    return exp(-sqdiff/(sigma*sigma));
   
 }
 
@@ -89,3 +89,16 @@ void CompactVMatrixGaussianKernel::declareOptions(OptionList &ol)
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

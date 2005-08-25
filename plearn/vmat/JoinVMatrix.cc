@@ -33,9 +33,9 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: JoinVMatrix.cc,v 1.11 2004/09/27 20:19:27 plearner Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "JoinVMatrix.h"
 #include <plearn/base/stringutils.h>
@@ -48,7 +48,7 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(JoinVMatrix, "ONE LINE DESCR", "NO HELP");
 
 JoinVMatrix::JoinVMatrix(VMat mas,VMat sla,TVec<int> mi,TVec<int> si)
-  : inherited(mas.length(),mas.width()),master(mas),slave(sla),master_idx(mi),slave_idx(si)
+    : inherited(mas.length(),mas.width()),master(mas),slave(sla),master_idx(mi),slave_idx(si)
 {
     build();
 }
@@ -63,23 +63,23 @@ JoinVMatrix::build()
 void
 JoinVMatrix::build_()
 {
-  if (master && slave) {
-    if(master_idx.size()!=slave_idx.size())
-      PLERROR("JoinVMatrix : master and slave field correspondance don't have same dimensions ");
+    if (master && slave) {
+        if(master_idx.size()!=slave_idx.size())
+            PLERROR("JoinVMatrix : master and slave field correspondance don't have same dimensions ");
 
-    for(int j=0;j<width();j++)
-      declareField(j, master->fieldName(j), VMField::UnknownType);
+        for(int j=0;j<width();j++)
+            declareField(j, master->fieldName(j), VMField::UnknownType);
 
-    temp.resize(slave.width());
-    tempkey.resize(master_idx.size());
+        temp.resize(slave.width());
+        tempkey.resize(master_idx.size());
   
-    for(int i=0;i<slave.length();i++) {
-      slave->getRow(i,temp);
-      for(int j=0;j<slave_idx.size();j++)
-        tempkey[j]=temp[slave_idx[j]];
-      mp.insert(make_pair(tempkey,i));
+        for(int i=0;i<slave.length();i++) {
+            slave->getRow(i,temp);
+            for(int j=0;j<slave_idx.size();j++)
+                tempkey[j]=temp[slave_idx[j]];
+            mp.insert(make_pair(tempkey,i));
+        }
     }
-  }
 }
 
 void
@@ -94,113 +94,113 @@ JoinVMatrix::declareOptions(OptionList &ol)
 
 void JoinVMatrix::addStatField(const string & statis,const string & namefrom,const string & nameto)
 {
-  width_++;
-  int from=slave->fieldIndex(namefrom),to=width()-1;
-  if(from==-1)
-    PLERROR("Unknown field in JOIN operation : %s",namefrom.c_str());
-  declareField(to, nameto, VMField::UnknownType);
+    width_++;
+    int from=slave->fieldIndex(namefrom),to=width()-1;
+    if(from==-1)
+        PLERROR("Unknown field in JOIN operation : %s",namefrom.c_str());
+    declareField(to, nameto, VMField::UnknownType);
   
-  if(statis=="COUNT")
-    fld.push_back(JoinFieldStat(from,to,JoinFieldStat::COUNT));
-  else if(statis=="NMISSING")
-    fld.push_back(JoinFieldStat(from,to,JoinFieldStat::NMISSING));
-  else if(statis=="NNONMISSING")
-    fld.push_back(JoinFieldStat(from,to,JoinFieldStat::NNONMISSING));
-  else if(statis=="SUM")
-    fld.push_back(JoinFieldStat(from,to,JoinFieldStat::SUM));
-  else if(statis=="SUMSQUARE")
-    fld.push_back(JoinFieldStat(from,to,JoinFieldStat::SUMSQUARE));
-  else if(statis=="MEAN")
-    fld.push_back(JoinFieldStat(from,to,JoinFieldStat::MEAN));
-  else if(statis=="VARIANCE")
-    fld.push_back(JoinFieldStat(from,to,JoinFieldStat::VARIANCE));
-  else if(statis=="MIN")
-    fld.push_back(JoinFieldStat(from,to,JoinFieldStat::MIN));
-  else if(statis=="MAX")
-    fld.push_back(JoinFieldStat(from,to,JoinFieldStat::MAX));
-  else if(statis=="STDDEV")
-    fld.push_back(JoinFieldStat(from,to,JoinFieldStat::STDDEV));
-  else if(statis=="STDERR")
-    fld.push_back(JoinFieldStat(from,to,JoinFieldStat::STDERR));
-  else PLERROR("Unknown statistic in JOIN operation : %s",statis.c_str());
+    if(statis=="COUNT")
+        fld.push_back(JoinFieldStat(from,to,JoinFieldStat::COUNT));
+    else if(statis=="NMISSING")
+        fld.push_back(JoinFieldStat(from,to,JoinFieldStat::NMISSING));
+    else if(statis=="NNONMISSING")
+        fld.push_back(JoinFieldStat(from,to,JoinFieldStat::NNONMISSING));
+    else if(statis=="SUM")
+        fld.push_back(JoinFieldStat(from,to,JoinFieldStat::SUM));
+    else if(statis=="SUMSQUARE")
+        fld.push_back(JoinFieldStat(from,to,JoinFieldStat::SUMSQUARE));
+    else if(statis=="MEAN")
+        fld.push_back(JoinFieldStat(from,to,JoinFieldStat::MEAN));
+    else if(statis=="VARIANCE")
+        fld.push_back(JoinFieldStat(from,to,JoinFieldStat::VARIANCE));
+    else if(statis=="MIN")
+        fld.push_back(JoinFieldStat(from,to,JoinFieldStat::MIN));
+    else if(statis=="MAX")
+        fld.push_back(JoinFieldStat(from,to,JoinFieldStat::MAX));
+    else if(statis=="STDDEV")
+        fld.push_back(JoinFieldStat(from,to,JoinFieldStat::STDDEV));
+    else if(statis=="STDERR")
+        fld.push_back(JoinFieldStat(from,to,JoinFieldStat::STDERR));
+    else PLERROR("Unknown statistic in JOIN operation : %s",statis.c_str());
 }
 
 void JoinVMatrix::getNewRow(int idx, const Vec& v) const
 {
-  real nonmiss;
-  master->getRow(idx,v.subVec(0,master.width()));
+    real nonmiss;
+    master->getRow(idx,v.subVec(0,master.width()));
   
-  // build a key used to search in the slave matrix
-  for(int j=0;j<master_idx.size();j++)
-    tempkey[j]=v[master_idx[j]];
-  Maptype::const_iterator it,low,upp; 
-  pair<Maptype::const_iterator,Maptype::const_iterator> tit=mp.equal_range(tempkey);
-  low=tit.first;
-  upp=tit.second;
+    // build a key used to search in the slave matrix
+    for(int j=0;j<master_idx.size();j++)
+        tempkey[j]=v[master_idx[j]];
+    Maptype::const_iterator it,low,upp; 
+    pair<Maptype::const_iterator,Maptype::const_iterator> tit=mp.equal_range(tempkey);
+    low=tit.first;
+    upp=tit.second;
   
-  Vec popo(v.subVec(master.width(),width()-master.width()));
+    Vec popo(v.subVec(master.width(),width()-master.width()));
 
-  int sz=(int)fld.size();
-  Vec count(sz,0.0),nmissing(sz,0.0),sum(sz,0.0),sumsquare(sz,0.0),min(sz,FLT_MAX),max(sz,-FLT_MAX);
-  real val;  
-  if(low!=mp.end())
+    int sz=(int)fld.size();
+    Vec count(sz,0.0),nmissing(sz,0.0),sum(sz,0.0),sumsquare(sz,0.0),min(sz,FLT_MAX),max(sz,-FLT_MAX);
+    real val;  
+    if(low!=mp.end())
     {
-      for(it=low;it!=upp;++it)
+        for(it=low;it!=upp;++it)
         {  
-          slave->getRow(it->second,temp);
-          for(int i=0;i<sz;i++)
+            slave->getRow(it->second,temp);
+            for(int i=0;i<sz;i++)
             {
-              val=temp[fld[i].from];
-              count[i]++;
-              if(is_missing(val))nmissing[i]++;
-              else
+                val=temp[fld[i].from];
+                count[i]++;
+                if(is_missing(val))nmissing[i]++;
+                else
                 {
-                  sum[i]+=val;
-                  sumsquare[i]+=val*val;
-                  if(min[i]>val)min[i]=val;
-                  if(max[i]<val)max[i]=val;
+                    sum[i]+=val;
+                    sumsquare[i]+=val*val;
+                    if(min[i]>val)min[i]=val;
+                    if(max[i]<val)max[i]=val;
                 }
             }
         }
     }
-  for(int i=0;i<sz;i++)
+    for(int i=0;i<sz;i++)
     {
-      nonmiss=count[i]-nmissing[i];
-      switch(fld[i].stat)
+        nonmiss=count[i]-nmissing[i];
+        switch(fld[i].stat)
         {
         case JoinFieldStat::COUNT:
-          popo[i]=count[i];
-          break;
+            popo[i]=count[i];
+            break;
         case JoinFieldStat::NMISSING:
-          popo[i]=nmissing[i];
-          break;
+            popo[i]=nmissing[i];
+            break;
         case JoinFieldStat::NNONMISSING:
-          popo[i]=nonmiss;
-          break;
+            popo[i]=nonmiss;
+            break;
         case JoinFieldStat::SUM:
-          popo[i]=sum[i];
-          break;
+            popo[i]=sum[i];
+            break;
         case JoinFieldStat::SUMSQUARE:
-          popo[i]=sumsquare[i];
-          break;
+            popo[i]=sumsquare[i];
+            break;
         case JoinFieldStat::MEAN:
-          popo[i]=sum[i]/count[i];
-          break;
+            popo[i]=sum[i]/count[i];
+            break;
         case JoinFieldStat::VARIANCE:
-          popo[i]=(sumsquare[i] - sum[i]*sum[i]/nonmiss)/(nonmiss-1); 
-          break;
+            popo[i]=(sumsquare[i] - sum[i]*sum[i]/nonmiss)/(nonmiss-1); 
+            break;
         case JoinFieldStat::STDDEV:
-          popo[i]=sqrt((sumsquare[i] - sum[i]*sum[i]/nonmiss)/(nonmiss-1));
-          break;
+            popo[i]=sqrt((sumsquare[i] - sum[i]*sum[i]/nonmiss)/(nonmiss-1));
+            break;
         case JoinFieldStat::STDERR:
-          popo[i]=sqrt((sumsquare[i] - sum[i]*sum[i]/nonmiss)/(nonmiss-1)/nonmiss);
-          break;
+            popo[i]=sqrt((sumsquare[i] - sum[i]*sum[i]/nonmiss)/(nonmiss-1)/nonmiss);
+            break;
         case JoinFieldStat::MIN:
-          popo[i]=min[i];
-          break;
+            popo[i]=min[i];
+            break;
         case JoinFieldStat::MAX:
-          popo[i]=max[i];
-          break;
+            popo[i]=max[i];
+            break;
         default:PLERROR("Unknown statistic in JoinVMatrix!");
         }
     }
@@ -208,44 +208,57 @@ void JoinVMatrix::getNewRow(int idx, const Vec& v) const
 
 string JoinVMatrix::getValString(int col, real val) const
 {
-  if(col<master.width())
-    return master->getValString(col,val);
-  else 
-    return slave->getValString(col,val);
+    if(col<master.width())
+        return master->getValString(col,val);
+    else 
+        return slave->getValString(col,val);
 }
 
 real JoinVMatrix::getStringVal(int col, const string & str) const
 {
-  if(col<master.width())
-    return master->getStringVal(col,str);
-  else 
-    return slave->getStringVal(col,str);
+    if(col<master.width())
+        return master->getStringVal(col,str);
+    else 
+        return slave->getStringVal(col,str);
 }
 
 const map<string,real>& JoinVMatrix::getStringToRealMapping(int col) const
 {
-  if(col<master.width())
-    return master->getStringToRealMapping(col);
-  else 
-    return slave->getStringToRealMapping(col);
+    if(col<master.width())
+        return master->getStringToRealMapping(col);
+    else 
+        return slave->getStringToRealMapping(col);
 
 }
 
 const map<real,string>& JoinVMatrix::getRealToStringMapping(int col) const
 {
-  if(col<master.width())
-    return master->getRealToStringMapping(col);
-  else 
-    return slave->getRealToStringMapping(col);
+    if(col<master.width())
+        return master->getRealToStringMapping(col);
+    else 
+        return slave->getRealToStringMapping(col);
 }
 
 
 string JoinVMatrix::getString(int row,int col) const
 {
-  if(col<master.width())
-    return master->getString(row,col);
-  else 
-    return slave->getString(row,col);
+    if(col<master.width())
+        return master->getString(row,col);
+    else 
+        return slave->getString(row,col);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -46,59 +46,72 @@ class PConditionalDistribution: public PDistribution
 
 private:
 
-  typedef PDistribution inherited;  
+    typedef PDistribution inherited;  
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
     
 public:
 
-  // the part of the PLearner's inputsize() that corresponds to the size
-  // of the conditioning variable. It should be < inputsize().
-  int input_part_size;
+    // the part of the PLearner's inputsize() that corresponds to the size
+    // of the conditioning variable. It should be < inputsize().
+    int input_part_size;
 
 private: 
 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  PConditionalDistribution();
+    //! Default constructor.
+    PConditionalDistribution();
 
-  //! Simply calls inherited::build() then build_() 
-  virtual void build();
+    //! Simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Set the input part before using the inherited methods.
-  virtual void setInput(const Vec& input) const;
+    //! Set the input part before using the inherited methods.
+    virtual void setInput(const Vec& input) const;
 
-  virtual void computeOutput(const Vec& input, Vec& output) const;
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
-  // Declares a few other classes and functions related to this class
-  PLEARN_DECLARE_OBJECT(PConditionalDistribution);
+    // Declares a few other classes and functions related to this class
+    PLEARN_DECLARE_OBJECT(PConditionalDistribution);
 };
 
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

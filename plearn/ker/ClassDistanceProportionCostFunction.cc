@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ClassDistanceProportionCostFunction.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ClassDistanceProportionCostFunction.h"
 
@@ -50,22 +50,34 @@ PLEARN_IMPLEMENT_OBJECT(ClassDistanceProportionCostFunction, "ONE LINE DESCR", "
 
 real ClassDistanceProportionCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
-  if (output.length()==1)
-    PLERROR("In ClassDistanceProportionCostFunction::evaluate, output should be multiclass and contain negative distances to each class");
+    if (output.length()==1)
+        PLERROR("In ClassDistanceProportionCostFunction::evaluate, output should be multiclass and contain negative distances to each class");
 
-  int trueclass;
-  if (target.length()==1)
-    trueclass = int(target[0]);
-  else
-    trueclass = argmax(target);
+    int trueclass;
+    if (target.length()==1)
+        trueclass = int(target[0]);
+    else
+        trueclass = argmax(target);
     
-  real trueclass_score = output[trueclass];
-  output[trueclass] = -FLT_MAX;
-  real otherclass_score = max(output);
-  output[trueclass] = trueclass_score;
-  return trueclass_score/(trueclass_score+otherclass_score);
+    real trueclass_score = output[trueclass];
+    output[trueclass] = -FLT_MAX;
+    real otherclass_score = max(output);
+    output[trueclass] = trueclass_score;
+    return trueclass_score/(trueclass_score+otherclass_score);
 }
 
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

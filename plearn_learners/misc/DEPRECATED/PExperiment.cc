@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file PTester.cc */
 #include <plearn_learners/testers/PTester.h>
@@ -48,49 +48,49 @@ using namespace std;
 
 TVec<string> addprepostfix(const string& prefix, const TVec<string>& names, const string& postfix)
 {
-  TVec<string> newnames(names.size());
-  TVec<string>::const_iterator it = names.begin();
-  TVec<string>::iterator newit = newnames.begin();
-  while(it!=names.end())
+    TVec<string> newnames(names.size());
+    TVec<string>::const_iterator it = names.begin();
+    TVec<string>::iterator newit = newnames.begin();
+    while(it!=names.end())
     {
-      *newit = prefix + *it + postfix;
-      ++it;
-      ++newit;
+        *newit = prefix + *it + postfix;
+        ++it;
+        ++newit;
     }
-  return newnames;
+    return newnames;
 }
 
 template<class T> TVec<T> operator&(const T& x, const TVec<T>& v)
 {
-  int l = v.size();
-  TVec<T> res(1+l);
-  res[0] = x;
-  res.subVec(1,l) << v;
-  return res;
+    int l = v.size();
+    TVec<T> res(1+l);
+    res[0] = x;
+    res.subVec(1,l) << v;
+    return res;
 }
 
 PTester::PTester() 
-  : report_stats(true),
-    save_initial_experiment(true),
-    save_stat_collectors(true),
-    save_learners(true),
-    save_initial_learners(false),
-    save_data_sets(false),
-    save_test_outputs(false),
-    save_test_costs(false),
-    provide_learner_expdir(false)
+    : report_stats(true),
+      save_initial_experiment(true),
+      save_stat_collectors(true),
+      save_learners(true),
+      save_initial_learners(false),
+      save_data_sets(false),
+      save_test_outputs(false),
+      save_test_costs(false),
+      provide_learner_expdir(false)
 {}
 
-  PLEARN_IMPLEMENT_OBJECT(PTester, "Evaluates the performance of a PLearner", 
-      "The PTester class allows you to describe a typical learning experiment that you wish to perform, \n"
-      "as a training/testing of a learning algorithm on a particular dataset.\n"
-      "The splitter is used to obtain one or several (such as for k-fold) splits of the dataset \n"
-      "and training/testing is performed on each split. \n"
-      "Requested statistics are computed, and all requested results are written in an appropriate \n"
-      "file inside the specified experiment directory. \n");
+PLEARN_IMPLEMENT_OBJECT(PTester, "Evaluates the performance of a PLearner", 
+                        "The PTester class allows you to describe a typical learning experiment that you wish to perform, \n"
+                        "as a training/testing of a learning algorithm on a particular dataset.\n"
+                        "The splitter is used to obtain one or several (such as for k-fold) splits of the dataset \n"
+                        "and training/testing is performed on each split. \n"
+                        "Requested statistics are computed, and all requested results are written in an appropriate \n"
+                        "file inside the specified experiment directory. \n");
 
-  void PTester::declareOptions(OptionList& ol)
-  {
+void PTester::declareOptions(OptionList& ol)
+{
     declareOption(ol, "expdir", &PTester::expdir, OptionBase::buildoption,
                   "Path of this experiment's directory in which to save all experiment results.\n"
                   "The directory will be created if it does not already exist.\n"
@@ -133,30 +133,30 @@ PTester::PTester()
     declareOption(ol, "provide_learner_expdir", &PTester::provide_learner_expdir, OptionBase::buildoption,
                   "If true, each learner to be trained will have its experiment directory set to Split#k/LearnerExpdir/");
     inherited::declareOptions(ol);
-  }
+}
 
 void PTester::build_()
 {
-  if(expdir!="")
+    if(expdir!="")
     {
-      if(pathexists(expdir))
-        PLERROR("Directory (or file) %s already exists. First move it out of the way.",expdir.c_str());
-      if(!force_mkdir(expdir))
-        PLERROR("In PTester Could not create experiment directory %s",expdir.c_str());
-      expdir = abspath(expdir);
+        if(pathexists(expdir))
+            PLERROR("Directory (or file) %s already exists. First move it out of the way.",expdir.c_str());
+        if(!force_mkdir(expdir))
+            PLERROR("In PTester Could not create experiment directory %s",expdir.c_str());
+        expdir = abspath(expdir);
     }
 }
 
-  // ### Nothing to add here, simply calls build_
-  void PTester::build()
-  {
+// ### Nothing to add here, simply calls build_
+void PTester::build()
+{
     inherited::build();
     build_();
-  }
+}
 
 void PTester::run()
 {
-  perform(false);
+    perform(false);
 }
 
 
@@ -165,238 +165,251 @@ void PTester::run()
 class StatSpec
 {
 public:
-  string extstat;  //! "external" stat, to be computed over splits
-  string intstat;  //! "internal" stat to be computed over examples the given a train or test set of a split
-  string setname;  //! "train" or "test1" or "test2" ...
-  int setnum;      //! data set on which to compute stat: 0 :train, 1: test1, ...
-  string costname; //! the name of the cost we are interested in.
-  int costindex; // index of cost in vector of train costs (if setnum==0) or test costs (if setnum==1) computed by the learner.
+    string extstat;  //! "external" stat, to be computed over splits
+    string intstat;  //! "internal" stat to be computed over examples the given a train or test set of a split
+    string setname;  //! "train" or "test1" or "test2" ...
+    int setnum;      //! data set on which to compute stat: 0 :train, 1: test1, ...
+    string costname; //! the name of the cost we are interested in.
+    int costindex; // index of cost in vector of train costs (if setnum==0) or test costs (if setnum==1) computed by the learner.
 
-  StatSpec()
-    : setnum(-1), costindex(-1)
-  {}
+    StatSpec()
+        : setnum(-1), costindex(-1)
+    {}
 
-  void init(const string& statname, PP<PLearner> learner);
+    void init(const string& statname, PP<PLearner> learner);
 
-  string intStatName()
-  { return intstat + "[" + setname + "." + costname + "]"; }
+    string intStatName()
+    { return intstat + "[" + setname + "." + costname + "]"; }
 
   
-  string statName()
-  { return extstat + "[" + intStatName() + "]"; }
+    string statName()
+    { return extstat + "[" + intStatName() + "]"; }
   
 
 private:
 
-  //! will determine extstat, intstat, setnum and costname from statname 
-  void parseStatname(const string& statname);
+    //! will determine extstat, intstat, setnum and costname from statname 
+    void parseStatname(const string& statname);
 
 };
 
 
 void StatSpec::init(const string& statname, PP<PLearner> learner)
-  {
+{
     parseStatname(statname);
     if(setnum==0)
-      costindex = learner->getTrainCostIndex(costname);
+        costindex = learner->getTrainCostIndex(costname);
     else
-      costindex = learner->getTestCostIndex(costname);
-  }
+        costindex = learner->getTestCostIndex(costname);
+}
 
 void StatSpec::parseStatname(const string& statname)
 {
-  vector<string> tokens = split(removeallblanks(statname), "[]");
-  string set_and_cost;
+    vector<string> tokens = split(removeallblanks(statname), "[]");
+    string set_and_cost;
   
-  if(tokens.size()==2)
+    if(tokens.size()==2)
     {
-      extstat = "E";
-      intstat = tokens[0];
-      set_and_cost = tokens[1];
+        extstat = "E";
+        intstat = tokens[0];
+        set_and_cost = tokens[1];
     }
-  else if(tokens.size()==3)
+    else if(tokens.size()==3)
     {
-      extstat = tokens[0];
-      intstat = tokens[1];
-      set_and_cost = tokens[2];
+        extstat = tokens[0];
+        intstat = tokens[1];
+        set_and_cost = tokens[2];
     }
-  else
-    PLERROR("In parse_statname: parse error for %s",statname.c_str());
+    else
+        PLERROR("In parse_statname: parse error for %s",statname.c_str());
 
-  if(set_and_cost.length()<5)
-    PLERROR("In parse_statname: parse error for %s",statname.c_str());
+    if(set_and_cost.length()<5)
+        PLERROR("In parse_statname: parse error for %s",statname.c_str());
 
-  split_on_first(set_and_cost,".", setname, costname);
+    split_on_first(set_and_cost,".", setname, costname);
   
-  if(setname=="train")
- setnum = 0;
-  else if(setname=="test")
-    setnum = 1;
-  else if(setname.substr(0,4)=="test")
+    if(setname=="train")
+        setnum = 0;
+    else if(setname=="test")
+        setnum = 1;
+    else if(setname.substr(0,4)=="test")
     {
-      setnum = toint(setname.substr(4));
-      if(setnum==0)
-        PLERROR("In parse_statname: use the name train instead of test0.\n"
-                "The first set of a split is the training set. The following are test sets named test1 test2 ..."); 
-      if(setnum<=0)
-        PLERROR("In parse_statname: parse error for %s",statname.c_str());        
+        setnum = toint(setname.substr(4));
+        if(setnum==0)
+            PLERROR("In parse_statname: use the name train instead of test0.\n"
+                    "The first set of a split is the training set. The following are test sets named test1 test2 ..."); 
+        if(setnum<=0)
+            PLERROR("In parse_statname: parse error for %s",statname.c_str());        
     }
-  else
-    PLERROR("In parse_statname: parse error for %s",statname.c_str());
+    else
+        PLERROR("In parse_statname: parse error for %s",statname.c_str());
 }
 
 
 void PTester::setExperimentDirectory(const PPath& the_expdir) 
 { 
-  if(the_expdir=="")
-    expdir = "";
-  else
+    if(the_expdir=="")
+        expdir = "";
+    else
     {
-      if(!force_mkdir(the_expdir))
-        PLERROR("In PTester::setExperimentDirectory Could not create experiment directory %s",the_expdir.c_str());
-      expdir = abspath(the_expdir);
+        if(!force_mkdir(the_expdir))
+            PLERROR("In PTester::setExperimentDirectory Could not create experiment directory %s",the_expdir.c_str());
+        expdir = abspath(the_expdir);
     }
 }
 
 Vec PTester::perform(bool dont_set_training_set)
 {
-  if(!learner)
-    PLERROR("No learner specified for PTester.");
-  if(!splitter)
-    PLERROR("No splitter specified for PTester");
+    if(!learner)
+        PLERROR("No learner specified for PTester.");
+    if(!splitter)
+        PLERROR("No splitter specified for PTester");
 
-  // get initial data set.
-  VMat dataset = learner->getTrainingSet();
+    // get initial data set.
+    VMat dataset = learner->getTrainingSet();
 
-  if(expdir!="")
+    if(expdir!="")
     {
-      // Save this experiment description in the expdir (buildoptions only)
-      if(save_initial_experiment)
-        PLearn::save(append_slash(expdir)+"experiment.psave", *this, OptionBase::buildoption);
+        // Save this experiment description in the expdir (buildoptions only)
+        if(save_initial_experiment)
+            PLearn::save(append_slash(expdir)+"experiment.psave", *this, OptionBase::buildoption);
     }
 
-  splitter->setDataSet(dataset);
+    splitter->setDataSet(dataset);
 
-  int nsplits = splitter->nsplits();
-  TVec<string> testcostnames = learner->getTestCostNames();
-  TVec<string> traincostnames = learner->getTrainCostNames();
+    int nsplits = splitter->nsplits();
+    TVec<string> testcostnames = learner->getTestCostNames();
+    TVec<string> traincostnames = learner->getTrainCostNames();
 
-  int nsets = splitter->nSetsPerSplit();
-  int nstats = statnames.length();
+    int nsets = splitter->nSetsPerSplit();
+    int nstats = statnames.length();
 
-  // Stats collectors for individual sets of a split:
-  TVec< PP<VecStatsCollector> > stcol(nsets);
-  for(int setnum=0; setnum<nsets; setnum++)
-    stcol[setnum] = new VecStatsCollector();
-  PP<VecStatsCollector> train_stats = stcol[0];
-  learner->setTrainStatsCollector(train_stats);
+    // Stats collectors for individual sets of a split:
+    TVec< PP<VecStatsCollector> > stcol(nsets);
+    for(int setnum=0; setnum<nsets; setnum++)
+        stcol[setnum] = new VecStatsCollector();
+    PP<VecStatsCollector> train_stats = stcol[0];
+    learner->setTrainStatsCollector(train_stats);
 
-  // Global stats collector
-  PP<VecStatsCollector> global_statscol = new VecStatsCollector();
+    // Global stats collector
+    PP<VecStatsCollector> global_statscol = new VecStatsCollector();
 
-  // Stat specs
-  TVec<StatSpec> statspecs(nstats);
-  for(int k=0; k<nstats; k++)
-    statspecs[k].init(statnames[k],learner);
+    // Stat specs
+    TVec<StatSpec> statspecs(nstats);
+    for(int k=0; k<nstats; k++)
+        statspecs[k].init(statnames[k],learner);
   
-  // int traincostsize = traincostnames.size();
-  int testcostsize = testcostnames.size();
-  int outputsize = learner->outputsize();
+    // int traincostsize = traincostnames.size();
+    int testcostsize = testcostnames.size();
+    int outputsize = learner->outputsize();
 
-  VMat global_stats_vm;    // the vmat in which to save global result stats specified in statnames
-  VMat split_stats_vm;   // the vmat in which to save per split result stats
-  if(expdir!="" && report_stats)
+    VMat global_stats_vm;    // the vmat in which to save global result stats specified in statnames
+    VMat split_stats_vm;   // the vmat in which to save per split result stats
+    if(expdir!="" && report_stats)
     {
-      saveStringInFile(expdir+slash+"train_cost_names.txt", join(traincostnames,"\n")+"\n"); 
-      saveStringInFile(expdir+slash+"test_cost_names.txt", join(testcostnames,"\n")+"\n"); 
+        saveStringInFile(expdir+slash+"train_cost_names.txt", join(traincostnames,"\n")+"\n"); 
+        saveStringInFile(expdir+slash+"test_cost_names.txt", join(testcostnames,"\n")+"\n"); 
 
-      global_stats_vm = new FileVMatrix(expdir+slash+"global_stats.pmat", 1, nstats);
-      for(int k=0; k<nstats; k++)
-        global_stats_vm->declareField(k,statspecs[k].statName());
-      global_stats_vm->saveFieldInfos();
+        global_stats_vm = new FileVMatrix(expdir+slash+"global_stats.pmat", 1, nstats);
+        for(int k=0; k<nstats; k++)
+            global_stats_vm->declareField(k,statspecs[k].statName());
+        global_stats_vm->saveFieldInfos();
 
-      split_stats_vm = new FileVMatrix(expdir+slash+"split_stats.pmat", nsplits, 1+nstats);
-      split_stats_vm->declareField(0,"splitnum");
-      for(int k=0; k<nstats; k++)
-        split_stats_vm->declareField(k+1,statspecs[k].intStatName());
-      split_stats_vm->saveFieldInfos();
+        split_stats_vm = new FileVMatrix(expdir+slash+"split_stats.pmat", nsplits, 1+nstats);
+        split_stats_vm->declareField(0,"splitnum");
+        for(int k=0; k<nstats; k++)
+            split_stats_vm->declareField(k+1,statspecs[k].intStatName());
+        split_stats_vm->saveFieldInfos();
     }
 
-  for(int splitnum=0; splitnum<nsplits; splitnum++)
+    for(int splitnum=0; splitnum<nsplits; splitnum++)
     {
-      string splitdir;
-      if(expdir!="")
-        splitdir = append_slash(expdir)+"Split"+tostring(splitnum)+slash;
+        string splitdir;
+        if(expdir!="")
+            splitdir = append_slash(expdir)+"Split"+tostring(splitnum)+slash;
 
-      TVec<VMat> dsets = splitter->getSplit(splitnum);
-      VMat trainset = dsets[0];
-      if(splitdir!="" && save_data_sets)
-        PLearn::save(splitdir+"training_set.psave",trainset);
+        TVec<VMat> dsets = splitter->getSplit(splitnum);
+        VMat trainset = dsets[0];
+        if(splitdir!="" && save_data_sets)
+            PLearn::save(splitdir+"training_set.psave",trainset);
 
-      if(splitdir!="" && provide_learner_expdir)
-        learner->setExperimentDirectory(splitdir+"LearnerExpdir"+slash);
+        if(splitdir!="" && provide_learner_expdir)
+            learner->setExperimentDirectory(splitdir+"LearnerExpdir"+slash);
 
-      if(!dont_set_training_set || nsplits>1)
-        learner->setTrainingSet(trainset);  // also calls forget...
+        if(!dont_set_training_set || nsplits>1)
+            learner->setTrainingSet(trainset);  // also calls forget...
 
-      if(splitdir!="" && save_initial_learners)
-        PLearn::save(splitdir+"initial_learner.psave",learner);
+        if(splitdir!="" && save_initial_learners)
+            PLearn::save(splitdir+"initial_learner.psave",learner);
       
-      train_stats->forget();
-      learner->train();
-      train_stats->finalize();
-      if(save_stat_collectors)
-        PLearn::save(splitdir+"train_stats.psave",train_stats);
-      if(save_learners)
-        PLearn::save(splitdir+"final_learner.psave",learner);
+        train_stats->forget();
+        learner->train();
+        train_stats->finalize();
+        if(save_stat_collectors)
+            PLearn::save(splitdir+"train_stats.psave",train_stats);
+        if(save_learners)
+            PLearn::save(splitdir+"final_learner.psave",learner);
 
-      for(int setnum=1; setnum<dsets.length(); setnum++)
+        for(int setnum=1; setnum<dsets.length(); setnum++)
         {
-          VMat testset = dsets[setnum];
-          PP<VecStatsCollector> test_stats = stcol[setnum];
-          string setname = "test"+tostring(setnum);
-          if(splitdir!="" && save_data_sets)
-            PLearn::save(splitdir+setname+"_set.psave",testset);
-          VMat test_outputs;
-          VMat test_costs;
-          if(save_test_outputs)
-            test_outputs = new FileVMatrix(splitdir+setname+"_outputs.pmat",0,outputsize);
-          if(save_test_costs)
-            test_costs = new FileVMatrix(splitdir+setname+"_costs.pmat",0,testcostsize);
+            VMat testset = dsets[setnum];
+            PP<VecStatsCollector> test_stats = stcol[setnum];
+            string setname = "test"+tostring(setnum);
+            if(splitdir!="" && save_data_sets)
+                PLearn::save(splitdir+setname+"_set.psave",testset);
+            VMat test_outputs;
+            VMat test_costs;
+            if(save_test_outputs)
+                test_outputs = new FileVMatrix(splitdir+setname+"_outputs.pmat",0,outputsize);
+            if(save_test_costs)
+                test_costs = new FileVMatrix(splitdir+setname+"_costs.pmat",0,testcostsize);
 
-          test_stats->forget();
-          learner->test(testset, test_stats, test_outputs, test_costs);      
-          test_stats->finalize();
-          if(save_stat_collectors)
-            PLearn::save(splitdir+setname+"_stats.psave",test_stats);
+            test_stats->forget();
+            learner->test(testset, test_stats, test_outputs, test_costs);      
+            test_stats->finalize();
+            if(save_stat_collectors)
+                PLearn::save(splitdir+setname+"_stats.psave",test_stats);
         }
    
-      Vec splitres(1+nstats);
-      splitres[0] = splitnum;
+        Vec splitres(1+nstats);
+        splitres[0] = splitnum;
 
-      for(int k=0; k<nstats; k++)
+        for(int k=0; k<nstats; k++)
         {
-          StatSpec& sp = statspecs[k];
-          splitres[k+1] = stcol[sp.setnum]->getStats(sp.costindex).getStat(sp.intstat);
+            StatSpec& sp = statspecs[k];
+            splitres[k+1] = stcol[sp.setnum]->getStats(sp.costindex).getStat(sp.intstat);
         }
 
-      if(split_stats_vm)
-        split_stats_vm->appendRow(splitres);
+        if(split_stats_vm)
+            split_stats_vm->appendRow(splitres);
 
-      global_statscol->update(splitres.subVec(1,nstats));
+        global_statscol->update(splitres.subVec(1,nstats));
     }
 
 
-  Vec global_result(nstats);
+    Vec global_result(nstats);
 
-  global_statscol->finalize();
-  for(int k=0; k<nstats; k++)
-    global_result[k] = global_statscol->getStats(k).getStat(statspecs[k].extstat);
+    global_statscol->finalize();
+    for(int k=0; k<nstats; k++)
+        global_result[k] = global_statscol->getStats(k).getStat(statspecs[k].extstat);
   
-  if(global_stats_vm)
-    global_stats_vm->appendRow(global_result);
+    if(global_stats_vm)
+        global_stats_vm->appendRow(global_result);
 
-  return global_result;
+    return global_result;
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

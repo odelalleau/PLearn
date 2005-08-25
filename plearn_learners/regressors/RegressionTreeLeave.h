@@ -35,9 +35,9 @@
 
 
 /* *********************************************************************************   
-   * $Id: RegressionTreeLeave.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout     *
-   * This file is part of the PLearn library.                                      *
-   ********************************************************************************* */
+ * $Id: RegressionTreeLeave.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout     *
+ * This file is part of the PLearn library.                                      *
+ ********************************************************************************* */
 
 #ifndef RegressionTreeLeave_INC
 #define RegressionTreeLeave_INC
@@ -49,7 +49,7 @@ using namespace std;
 
 class RegressionTreeLeave: public Object
 {
-  typedef Object inherited;
+    typedef Object inherited;
   
 protected:
 
@@ -57,63 +57,75 @@ protected:
   Build options: they have to be set before building
 */
 
-  int  id;
-  int  missing_leave;
-  real loss_function_weight;
-  int  verbosity;
-  PP<RegressionTreeRegisters> train_set;
+    int  id;
+    int  missing_leave;
+    real loss_function_weight;
+    int  verbosity;
+    PP<RegressionTreeRegisters> train_set;
  
 /*
   Learnt options: they are sized and initialized if need be, in initLeave(...)
 */
 
-  int  length;
-  Vec  output;
-  Vec  error;
-  real weights_sum;
-  real targets_sum;
-  real squared_targets_sum;
-  real weighted_targets_sum;
-  real weighted_squared_targets_sum;
-  real loss_function_factor;
+    int  length;
+    Vec  output;
+    Vec  error;
+    real weights_sum;
+    real targets_sum;
+    real squared_targets_sum;
+    real weighted_targets_sum;
+    real weighted_squared_targets_sum;
+    real loss_function_factor;
  
 /*
   Work fields: they are sized and initialized if need be, at buid time
 */  
  
-  real weight;
-  real target;
-  real squared_target;
+    real weight;
+    real target;
+    real squared_target;
   
   
 public:
-                       RegressionTreeLeave();
-  virtual              ~RegressionTreeLeave();
+    RegressionTreeLeave();
+    virtual              ~RegressionTreeLeave();
     PLEARN_DECLARE_OBJECT(RegressionTreeLeave);
 
-  static  void         declareOptions(OptionList& ol);
-  virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
-  virtual void         build();
-          void         initLeave(PP<RegressionTreeRegisters> the_train_set);
-  virtual void         initStats();
-  virtual void         addRow(int row, Vec outputv, Vec errorv);
-  virtual void         removeRow(int row, Vec outputv, Vec errorv);
-  virtual void         computeOutputAndError();
-          void         registerRow(int row);
-          int          getId();
-          int          getLength();
-          void         getError(Vec errorv);
-          void         getOutput(Vec outputv);
-  virtual void         printStats();
+    static  void         declareOptions(OptionList& ol);
+    virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
+    virtual void         build();
+    void         initLeave(PP<RegressionTreeRegisters> the_train_set);
+    virtual void         initStats();
+    virtual void         addRow(int row, Vec outputv, Vec errorv);
+    virtual void         removeRow(int row, Vec outputv, Vec errorv);
+    virtual void         computeOutputAndError();
+    void         registerRow(int row);
+    int          getId();
+    int          getLength();
+    void         getError(Vec errorv);
+    void         getOutput(Vec outputv);
+    virtual void         printStats();
   
 private:
-          void         build_();
-          void         verbose(string msg, int level);
+    void         build_();
+    void         verbose(string msg, int level);
 };
 
-  DECLARE_OBJECT_PTR(RegressionTreeLeave);
+DECLARE_OBJECT_PTR(RegressionTreeLeave);
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

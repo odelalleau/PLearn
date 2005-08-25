@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ConvolveVariable.cc,v 1.5 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ConvolveVariable.h"
 
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(ConvolveVariable,
                         "NO HELP");
 
 ConvolveVariable::ConvolveVariable(Variable* input, Variable* mask)
-  : inherited(input, mask, input->length()-mask->length()+1, input->width()-mask->width()+1)
+    : inherited(input, mask, input->length()-mask->length()+1, input->width()-mask->width()+1)
 {}
 
 
@@ -69,31 +69,31 @@ void ConvolveVariable::recomputeSize(int& l, int& w) const
 
 void ConvolveVariable::fprop()
 {
-  convolve(input1->matValue, input2->matValue, matValue);
+    convolve(input1->matValue, input2->matValue, matValue);
 }
 
 
 void ConvolveVariable::bprop()
 {
-  for(int i=0; i<length(); i++) // size of matGradient
-    for(int j=0; j<width(); j++)
-      {
-        real* input1valueptr = input1->matValue[i]+j;
-        real* input2valueptr = input2->matValue.data();
+    for(int i=0; i<length(); i++) // size of matGradient
+        for(int j=0; j<width(); j++)
+        {
+            real* input1valueptr = input1->matValue[i]+j;
+            real* input2valueptr = input2->matValue.data();
         
-        real thisgradient = matGradient(i,j);
-        real* input1gradientptr = input1->matGradient[i]+j;
-        real* input2gradientptr = input2->matGradient.data();
+            real thisgradient = matGradient(i,j);
+            real* input1gradientptr = input1->matGradient[i]+j;
+            real* input2gradientptr = input2->matGradient.data();
         
-        for(int l=0; l<input2->length(); l++,
-              input1valueptr += input1->matValue.mod(), input2valueptr += input2->matValue.mod(),
-              input1gradientptr += input1->matGradient.mod(), input2gradientptr += input2->matGradient.mod())
-          for(int c=0; c<input2->width(); c++)
-            {
-              input1gradientptr[c] += thisgradient * input2valueptr[c];
-              input2gradientptr[c] += thisgradient * input1valueptr[c];
-            }
-      }
+            for(int l=0; l<input2->length(); l++,
+                    input1valueptr += input1->matValue.mod(), input2valueptr += input2->matValue.mod(),
+                    input1gradientptr += input1->matGradient.mod(), input2gradientptr += input2->matGradient.mod())
+                for(int c=0; c<input2->width(); c++)
+                {
+                    input1gradientptr[c] += thisgradient * input2valueptr[c];
+                    input2gradientptr[c] += thisgradient * input1valueptr[c];
+                }
+        }
 }
 
 
@@ -104,4 +104,15 @@ void ConvolveVariable::symbolicBprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_computeStats_VecStatsCollector.cc,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -50,24 +50,37 @@ using namespace std;
 
 void computeStats(VMat m, VecStatsCollector& st, bool report_progress)
 {
-  st.forget();
-  st.setFieldNames(m->fieldNames());
-  Vec v(m.width());
-  int l = m.length();
-  ProgressBar* pbar = 0;
-  if (report_progress)
-    pbar = new ProgressBar("Computing statistics", l);
-  for(int i=0; i<l; i++)
+    st.forget();
+    st.setFieldNames(m->fieldNames());
+    Vec v(m.width());
+    int l = m.length();
+    ProgressBar* pbar = 0;
+    if (report_progress)
+        pbar = new ProgressBar("Computing statistics", l);
+    for(int i=0; i<l; i++)
     {
-      m->getRow(i,v);
-      st.update(v);
-      if (report_progress)
-        pbar->update(i);
+        m->getRow(i,v);
+        st.update(v);
+        if (report_progress)
+            pbar->update(i);
     }
-  if (pbar)
-    delete pbar;
-  st.finalize();
+    if (pbar)
+        delete pbar;
+    st.finalize();
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

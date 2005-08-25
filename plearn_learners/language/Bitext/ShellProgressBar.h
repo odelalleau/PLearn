@@ -32,8 +32,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: ShellProgressBar.h,v 1.4 2004/07/21 16:30:56 chrish42 Exp $
-******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 #ifndef ShellProgressBar_H
@@ -76,34 +76,34 @@ class ShellProgressBar
 
 public:
 
-  ShellProgressBar() : min(0), max(0), caption(""), width(10) {}
-  ShellProgressBar(int min, int max, string caption = "", int width = 10);
+    ShellProgressBar() : min(0), max(0), caption(""), width(10) {}
+    ShellProgressBar(int min, int max, string caption = "", int width = 10);
 
-  void init();
-  void draw(bool simple_mode = false); // must be called before any update;
-                                       // simple mode can be used when outputting in file,
-                                       // or when using 'gdb', for instance 
-                                       // (it simply won't perform the positional trick on the cursor)
-  bool update(int value);
-  void reset();
-  void set(int min, int max, string caption = "", int w = 10) { setMin(min); setMax(max); setCaption(caption); width = w; }
-  void setCaption(string caption);
-  void setMin(int min);
-  void setMax(int max);
-  void done();
-  static string getTime();
-  static int getAsciiFileLineCount(string file); // stupid version!
-  static int getWcAsciiFileLineCount(string file); // this is just for convenience : it is a bit risky!
+    void init();
+    void draw(bool simple_mode = false); // must be called before any update;
+    // simple mode can be used when outputting in file,
+    // or when using 'gdb', for instance 
+    // (it simply won't perform the positional trick on the cursor)
+    bool update(int value);
+    void reset();
+    void set(int min, int max, string caption = "", int w = 10) { setMin(min); setMax(max); setCaption(caption); width = w; }
+    void setCaption(string caption);
+    void setMin(int min);
+    void setMax(int max);
+    void done();
+    static string getTime();
+    static int getAsciiFileLineCount(string file); // stupid version!
+    static int getWcAsciiFileLineCount(string file); // this is just for convenience : it is a bit risky!
 
 private:
 
-  int min;
-  int max;
-  real blockwidth;
-  int pos;
-  string caption;
-  int width;
-  bool max_reached;
+    int min;
+    int max;
+    real blockwidth;
+    int pos;
+    string caption;
+    int width;
+    bool max_reached;
 
 };
 
@@ -111,3 +111,15 @@ private:
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

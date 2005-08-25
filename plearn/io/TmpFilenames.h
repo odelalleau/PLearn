@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: TmpFilenames.h,v 1.5 2004/07/21 16:30:51 chrish42 Exp $
-   * AUTHORS: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnUtil/TmpFilenames.h */
@@ -57,22 +57,35 @@ namespace PLearn {
 using namespace std;
 
 
-  class TmpFilenames: public TVec<string>, public PPointable
-  {
-    public:
+class TmpFilenames: public TVec<string>, public PPointable
+{
+public:
       
-      TmpFilenames(int nfiles=0, const string directory="/tmp/", const string prefix="");
+    TmpFilenames(int nfiles=0, const string directory="/tmp/", const string prefix="");
 			
-			TmpFilenames(const TmpFilenames& other);
-      void operator=(const TmpFilenames& other);
+    TmpFilenames(const TmpFilenames& other);
+    void operator=(const TmpFilenames& other);
       
-      //!  Creates a new file and appends its name to the TmpFilenames.
-      string addFilename(const string directory="/tmp/", const string prefix="");
+    //!  Creates a new file and appends its name to the TmpFilenames.
+    string addFilename(const string directory="/tmp/", const string prefix="");
       
-      //!  DEPRECATED : please use above method instead (addFilename)
-      char* newFile(const string directory="/tmp/", const string prefix="");
-  };
+    //!  DEPRECATED : please use above method instead (addFilename)
+    char* newFile(const string directory="/tmp/", const string prefix="");
+};
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

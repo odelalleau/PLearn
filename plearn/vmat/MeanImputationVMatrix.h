@@ -36,8 +36,8 @@
 
 
 /* ******************************************************************      
-   * $Id: MeanImputationVMatrix.h 3658 2005-07-06 20:30:15  Godbout $
-   ****************************************************************** */
+ * $Id: MeanImputationVMatrix.h 3658 2005-07-06 20:30:15  Godbout $
+ ****************************************************************** */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -54,51 +54,51 @@ using namespace std;
 
 class MeanImputationVMatrix: public SourceVMatrix
 {
-  typedef SourceVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 private:
 
-  bool obtained_inputsize_from_source;
-  bool obtained_targetsize_from_source;
-  bool obtained_weightsize_from_source;
+    bool obtained_inputsize_from_source;
+    bool obtained_targetsize_from_source;
+    bool obtained_weightsize_from_source;
   
 public:
 
-  TVec<real> variable_mean;
-  TVec<int>  variable_present_count;
-  real       number_of_train_samples;
+    TVec<real> variable_mean;
+    TVec<int>  variable_present_count;
+    real       number_of_train_samples;
 
 public:
 
-                     MeanImputationVMatrix();
-                     MeanImputationVMatrix(VMat the_source, real the_number_of_train_samples = 0.0);
-  virtual            ~MeanImputationVMatrix();
+    MeanImputationVMatrix();
+    MeanImputationVMatrix(VMat the_source, real the_number_of_train_samples = 0.0);
+    virtual            ~MeanImputationVMatrix();
 
-  static void        declareOptions(OptionList &ol);
+    static void        declareOptions(OptionList &ol);
 
-  virtual void       build();
-  virtual void       makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void       build();
+    virtual void       makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 public:
 
-  virtual void       getExample(int i, Vec& input, Vec& target, real& weight);
-  virtual real       get(int i, int j) const;
-  virtual void       put(int i, int j, real value);
-  virtual void       getSubRow(int i, int j, Vec v) const;
-  virtual void       putSubRow(int i, int j, Vec v);
-  virtual void       appendRow(Vec v);
-  virtual void       insertRow(int i, Vec v);  
-  virtual void       getRow(int i, Vec v) const;
-  virtual void       putRow(int i, Vec v);
-  virtual void       getColumn(int i, Vec v) const;
-          TVec<real> getMeanVector();
+    virtual void       getExample(int i, Vec& input, Vec& target, real& weight);
+    virtual real       get(int i, int j) const;
+    virtual void       put(int i, int j, real value);
+    virtual void       getSubRow(int i, int j, Vec v) const;
+    virtual void       putSubRow(int i, int j, Vec v);
+    virtual void       appendRow(Vec v);
+    virtual void       insertRow(int i, Vec v);  
+    virtual void       getRow(int i, Vec v) const;
+    virtual void       putRow(int i, Vec v);
+    virtual void       getColumn(int i, Vec v) const;
+    TVec<real> getMeanVector();
 
 private:
 
-          void       build_();
-          void       computeMeanVector();  
+    void       build_();
+    void       computeMeanVector();  
   
-  PLEARN_DECLARE_OBJECT(MeanImputationVMatrix);
+    PLEARN_DECLARE_OBJECT(MeanImputationVMatrix);
 
 };
 
@@ -106,3 +106,16 @@ DECLARE_OBJECT_PTR(MeanImputationVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

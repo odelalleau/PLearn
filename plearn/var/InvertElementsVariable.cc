@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: InvertElementsVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "InvertElementsVariable.h"
 #include "Var_operators.h"
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(InvertElementsVariable,
                         "NO HELP");
 
 InvertElementsVariable::InvertElementsVariable(Variable* input)
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 
@@ -69,36 +69,36 @@ void InvertElementsVariable::recomputeSize(int& l, int& w) const
 
 void InvertElementsVariable::fprop()
 {
-  for(int k=0; k<nelems(); k++)
-    valuedata[k] = 1.0/input->valuedata[k];
+    for(int k=0; k<nelems(); k++)
+        valuedata[k] = 1.0/input->valuedata[k];
 }
 
 
 void InvertElementsVariable::bprop()
 {
-  for(int k=0; k<nelems(); k++)
+    for(int k=0; k<nelems(); k++)
     {
-      real inputvalue_k = input->valuedata[k];
-      input->gradientdata[k] -= gradientdata[k]/(inputvalue_k*inputvalue_k);
+        real inputvalue_k = input->valuedata[k];
+        input->gradientdata[k] -= gradientdata[k]/(inputvalue_k*inputvalue_k);
     }
 }
 
 
 void InvertElementsVariable::symbolicBprop()
 {
-  Var v = input * input;
-  input->accg(-g/v);
+    Var v = input * input;
+    input->accg(-g/v);
 }
 
 
 // R(1/x) = -1/(x^2) R(x)
 void InvertElementsVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  for(int k=0; k<nelems(); k++)
+    if (rValue.length()==0) resizeRValue();
+    for(int k=0; k<nelems(); k++)
     {
-    real value_k = valuedata[k];
-    rvaluedata[k] = - input->rvaluedata[k] * value_k * value_k;
+        real value_k = valuedata[k];
+        rvaluedata[k] = - input->rvaluedata[k] * value_k * value_k;
     }
 }
 
@@ -106,4 +106,15 @@ void InvertElementsVariable::rfprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

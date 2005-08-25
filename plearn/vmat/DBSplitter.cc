@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DBSplitter.cc,v 1.3 2004/09/14 16:04:39 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Marius Muja
 
@@ -48,23 +48,23 @@ namespace PLearn {
 using namespace std;
 
 DBSplitter::DBSplitter() 
-  :Splitter(),
-  databases(0)
+    :Splitter(),
+     databases(0)
 {
 }
 
 PLEARN_IMPLEMENT_OBJECT(DBSplitter, 
-    "A Splitter that contains several databases.", 
-    "The databases to be used can be specified with the 'databases' option. ");
+                        "A Splitter that contains several databases.", 
+                        "The databases to be used can be specified with the 'databases' option. ");
 
 void DBSplitter::declareOptions(OptionList& ol)
 {
 
-  declareOption(ol, "databases", &DBSplitter::databases, OptionBase::buildoption,
-                 "Vector with the specifications of the databases to be used.");
+    declareOption(ol, "databases", &DBSplitter::databases, OptionBase::buildoption,
+                  "Vector with the specifications of the databases to be used.");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void DBSplitter::build_()
@@ -74,41 +74,54 @@ void DBSplitter::build_()
 // ### Nothing to add here, simply calls build_
 void DBSplitter::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void DBSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Splitter::makeDeepCopyFromShallowCopy(copies);
+    Splitter::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("DBSplitter::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("DBSplitter::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 int DBSplitter::nsplits() const
 {
-  return databases.size();
+    return databases.size();
 }
 
 int DBSplitter::nSetsPerSplit() const
 {
-  return 1;
+    return 1;
 }
 
 TVec<VMat> DBSplitter::getSplit(int k)
 {
-  TVec<VMat> result;
-  result.append(PLearn::getDataSet(databases[k]));
+    TVec<VMat> result;
+    result.append(PLearn::getDataSet(databases[k]));
 
-  return result;
+    return result;
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

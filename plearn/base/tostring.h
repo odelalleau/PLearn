@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: tostring.h,v 1.2 2005/02/04 17:42:04 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christian Dorion
 
@@ -66,36 +66,49 @@ string tostring(const double& x);
 string tostring(const float& x);
 
 
-  template<class T> string tostring2(const T& x, 
-                                     PStream::mode_t io_formatting = PStream::raw_ascii)
-  {
+template<class T> string tostring2(const T& x, 
+                                   PStream::mode_t io_formatting = PStream::raw_ascii)
+{
     string s;
     PStream out = openString(s, io_formatting, "w");
     out << x << flush;
     return s;
-  }
+}
   
 /*! ******************
-    * Implementation *
-    ******************
-*/
+ * Implementation *
+ ******************
+ */
     
-  template<class T> string tostring(const T& x)
-    {
-      ostringstream out;
-      out << x;
-      return out.str();
-    }
+template<class T> string tostring(const T& x)
+{
+    ostringstream out;
+    out << x;
+    return out.str();
+}
 
-  template<class K, class V, class C, class A>
-  string tostring(const map<K, V, C, A>& x)
-    {
-      ostringstream out;
-      PStream pout(&out);
-      pout << x;
-      return out.str();
-    }
+template<class K, class V, class C, class A>
+string tostring(const map<K, V, C, A>& x)
+{
+    ostringstream out;
+    PStream pout(&out);
+    pout << x;
+    return out.str();
+}
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

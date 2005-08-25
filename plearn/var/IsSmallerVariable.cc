@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: IsSmallerVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "IsSmallerVariable.h"
 
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(IsSmallerVariable,
                         "NO HELP");
 
 IsSmallerVariable::IsSmallerVariable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, input1->length(), input2->width())
+    : inherited(input1, input2, input1->length(), input2->width())
 {
     build_();
 }
@@ -86,8 +86,8 @@ void IsSmallerVariable::recomputeSize(int& l, int& w) const
 
 void IsSmallerVariable::fprop()
 {
-  for(int i = 0; i<nelems(); i++)
-    valuedata[i] = input1->valuedata[i] < input2->valuedata[i];
+    for(int i = 0; i<nelems(); i++)
+        valuedata[i] = input1->valuedata[i] < input2->valuedata[i];
 }
 
 
@@ -97,3 +97,16 @@ void IsSmallerVariable::bprop() {}
 void IsSmallerVariable::symbolicBprop() {}
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

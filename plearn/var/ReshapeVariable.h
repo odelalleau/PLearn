@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ReshapeVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ReshapeVariable_INC
 #define ReshapeVariable_INC
@@ -54,25 +54,25 @@ using namespace std;
 //!  (the only restriction being that length()*width() remain the same)
 class ReshapeVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 protected:
-  int length_, width_;
+    int length_, width_;
 
 public:
-  //!  Default constructor for persistence
-  ReshapeVariable() {}
-  ReshapeVariable(Variable* v, int the_length, int the_width);
+    //!  Default constructor for persistence
+    ReshapeVariable() {}
+    ReshapeVariable(Variable* v, int the_length, int the_width);
 
-  PLEARN_DECLARE_OBJECT(ReshapeVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(ReshapeVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
     void build_();
@@ -87,3 +87,16 @@ inline Var reshape(Var v, int newlength, int newwidth)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

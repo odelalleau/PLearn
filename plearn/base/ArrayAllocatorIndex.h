@@ -34,7 +34,7 @@
 
 
 /* *******************************************************
- * * $Id: ArrayAllocatorIndex.h,v 1.3 2004/02/20 21:11:42 chrish42 Exp $
+ * * $Id$
  * ******************************************************* */
 
 
@@ -59,20 +59,20 @@ public:
     unsigned size : SizeBits;
 
     ArrayAllocatorIndex(unsigned the_index, unsigned the_size=0)
-      : index(the_index), size(the_size) {}
+        : index(the_index), size(the_size) {}
     
     bool operator==(index_type other) const {
-      return index == other.index;     //!<  don't consider block size
+        return index == other.index;     //!<  don't consider block size
     }
     bool operator!=(index_type other) const {
-      return index != other.index;     //!<  don't consider block size
+        return index != other.index;     //!<  don't consider block size
     }
     bool isNull() const {
-      return index == 0;
+        return index == 0;
     }
     void swap(index_type& other) {
-      std::swap(index, other.index);
-      std::swap(size,  other.size);
+        std::swap(index, other.index);
+        std::swap(size,  other.size);
     }
 };
 
@@ -80,3 +80,16 @@ public:
 
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

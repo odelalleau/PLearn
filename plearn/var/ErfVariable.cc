@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ErfVariable.cc,v 1.7 2004/07/21 16:30:54 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ErfVariable.h"
 #include "ExpVariable.h"
@@ -57,7 +57,7 @@ PLEARN_IMPLEMENT_OBJECT(ErfVariable,
                         "NO HELP");
 
 ErfVariable::ErfVariable(Variable* input) 
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 void ErfVariable::recomputeSize(int& l, int& w) const
@@ -71,26 +71,37 @@ void ErfVariable::recomputeSize(int& l, int& w) const
 
 void ErfVariable::fprop()
 {
-  for(int i=0; i<nelems(); i++)
-    valuedata[i] = pl_erf(input->valuedata[i]);
+    for(int i=0; i<nelems(); i++)
+        valuedata[i] = pl_erf(input->valuedata[i]);
 }
 
 
 void ErfVariable::bprop()
 {
-  real cst = 2.0/sqrt(Pi);
-  for(int i=0; i<nelems(); i++)
-    input->gradientdata[i] += gradientdata[i] * cst*exp(input->valuedata[i]*input->valuedata[i]);
+    real cst = 2.0/sqrt(Pi);
+    for(int i=0; i<nelems(); i++)
+        input->gradientdata[i] += gradientdata[i] * cst*exp(input->valuedata[i]*input->valuedata[i]);
 }
 
 
 void ErfVariable::symbolicBprop()
 {
-  Var v(this);
-  input->accg(g * 2.0/sqrt(Pi)*exp(square(input)));
+    Var v(this);
+    input->accg(g * 2.0/sqrt(Pi)*exp(square(input)));
 }
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

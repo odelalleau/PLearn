@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedPython.cc,v 1.1 2004/11/30 09:38:21 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -51,20 +51,33 @@ static int num_python_instances = 0;
 
 PythonEmbedder::PythonEmbedder()
 {
-  if (num_python_instances == 0) {
-    Py_Initialize();
-  }
+    if (num_python_instances == 0) {
+        Py_Initialize();
+    }
 
-  num_python_instances++;
+    num_python_instances++;
 }
 
 PythonEmbedder::~PythonEmbedder()
 {
-  if (num_python_instances > 0) {
-    --num_python_instances;
-    if (num_python_instances == 0)
-      Py_Finalize();
-  }
+    if (num_python_instances > 0) {
+        --num_python_instances;
+        if (num_python_instances == 0)
+            Py_Finalize();
+    }
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

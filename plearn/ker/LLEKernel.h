@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLEKernel.h,v 1.6 2004/09/14 16:04:36 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -55,103 +55,103 @@ class LLEKernel: public Kernel
 
 private:
 
-  typedef Kernel inherited;
+    typedef Kernel inherited;
 
-  //! True iff build() has been called but build_() has not been called yet.
-  bool build_in_progress;
+    //! True iff build() has been called but build_() has not been called yet.
+    bool build_in_progress;
   
-  //! Used in 'evaluate_i_x_again' to remember whether x is a training point
-  //! or not.
-  mutable bool x_is_training_point;
+    //! Used in 'evaluate_i_x_again' to remember whether x is a training point
+    //! or not.
+    mutable bool x_is_training_point;
 
-  //! Used in 'evaluate_i_x_again' to remember the index of x when it is a
-  //! training point.
-  mutable int x_index;
+    //! Used in 'evaluate_i_x_again' to remember the index of x when it is a
+    //! training point.
+    mutable int x_index;
     
 protected:
 
-  // *********************
-  // * Protected options *
-  // *********************
+    // *********************
+    // * Protected options *
+    // *********************
 
-  // Fields below are not options.
+    // Fields below are not options.
 
-  //! The kernel used to compute the reconstruction weights.
-  PP<ReconstructionWeightsKernel> reconstruct_ker;
+    //! The kernel used to compute the reconstruction weights.
+    PP<ReconstructionWeightsKernel> reconstruct_ker;
 
 public:
 
-  // ************************
-  // * Public build options *
-  // ************************
+    // ************************
+    // * Public build options *
+    // ************************
 
-  int knn;
-  real reconstruct_coeff;
-  real regularizer;
+    int knn;
+    real reconstruct_coeff;
+    real regularizer;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  LLEKernel();
+    //! Default constructor.
+    LLEKernel();
 
-  // ******************
-  // * Kernel methods *
-  // ******************
+    // ******************
+    // * Kernel methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(LLEKernel);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(LLEKernel);
 
-  // **************************
-  // **** Kernel methods ****
-  // **************************
+    // **************************
+    // **** Kernel methods ****
+    // **************************
 
-  //! Overridden for efficiency purpose.
-  virtual void computeGramMatrix(Mat K) const;
+    //! Overridden for efficiency purpose.
+    virtual void computeGramMatrix(Mat K) const;
 
-  //! Compute K(x1,x2).
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
+    //! Compute K(x1,x2).
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
-  virtual real evaluate_i_j(int i, int j) const;
+    virtual real evaluate_i_j(int i, int j) const;
 
-  virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
+    virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
 
-  virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
+    virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
 
-  virtual void setDataForKernelMatrix(VMat the_data);
+    virtual void setDataForKernelMatrix(VMat the_data);
 
-  // *** SUBCLASS WRITING: ***
-  // While in general not necessary, in case of particular needs 
-  // (efficiency concerns for ex) you may also want to overload
-  // some of the following methods:
-  // virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
-  // virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
-  // virtual void addDataForKernelMatrix(const Vec& newRow);
-  // virtual void setParameters(Vec paramvec);
-  // virtual Vec getParameters() const;
+    // *** SUBCLASS WRITING: ***
+    // While in general not necessary, in case of particular needs 
+    // (efficiency concerns for ex) you may also want to overload
+    // some of the following methods:
+    // virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
+    // virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
+    // virtual void addDataForKernelMatrix(const Vec& newRow);
+    // virtual void setParameters(Vec paramvec);
+    // virtual Vec getParameters() const;
   
 
 };
@@ -163,3 +163,15 @@ DECLARE_OBJECT_PTR(LLEKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

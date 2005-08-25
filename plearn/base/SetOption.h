@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SetOption.h,v 1.6 2004/09/14 16:04:35 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file SetOption.h */
 #ifndef SetOption_INC
@@ -48,70 +48,83 @@ using namespace std;
 class SetOption: public Object
 {
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
     
 public:
 
-  typedef Object inherited;
+    typedef Object inherited;
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  string name; // name of option
-  string value; // value of option (as a string)
+    string name; // name of option
+    string value; // value of option (as a string)
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  SetOption();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    SetOption();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Will call obj->setOption(name, value)
-  inline void apply(PP<Object> obj)
-  { obj->setOption(name, value); }
+    //! Will call obj->setOption(name, value)
+    inline void apply(PP<Object> obj)
+    { obj->setOption(name, value); }
 
-  //! Will call obj->setOption(name, value); or if name is a key in aliases,
-  //! it will call obj->setOption(aliases[name], value)
-  void apply(PP<Object> obj, const map<string, string>& aliases);
+    //! Will call obj->setOption(name, value); or if name is a key in aliases,
+    //! it will call obj->setOption(aliases[name], value)
+    void apply(PP<Object> obj, const map<string, string>& aliases);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(SetOption);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(SetOption);
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(SetOption);
+DECLARE_OBJECT_PTR(SetOption);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

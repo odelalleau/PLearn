@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExtractNNetParamsVMatrix.h,v 1.1 2005/01/11 20:01:06 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,68 +54,68 @@ class ExtractNNetParamsVMatrix: public RowBufferedVMatrix
 
 private:
 
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // Fields below are not options.
+    // Fields below are not options.
 
-  //! Used to store the precomputed parameters.
-  Mat data;
+    //! Used to store the precomputed parameters.
+    Mat data;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  PP<NNet> nnet;
-  bool extract_w1;
-  bool extract_w2;
-  bool extract_wdirect;
-  bool extract_wout;
+    PP<NNet> nnet;
+    bool extract_w1;
+    bool extract_w2;
+    bool extract_wdirect;
+    bool extract_wout;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  ExtractNNetParamsVMatrix();
+    //! Default constructor.
+    ExtractNNetParamsVMatrix();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
-  //! Fill the vector 'v' with the content of the i-th row.
-  //! v is assumed to be the right size.
-  virtual void getNewRow(int i, const Vec& v) const;
+    //! Fill the vector 'v' with the content of the i-th row.
+    //! v is assumed to be the right size.
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  // Simply call inherited::build() then build_().
-  virtual void build();
+    // Simply call inherited::build() then build_().
+    virtual void build();
 
-  //! Transform a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transform a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declare name and deepCopy methods.
-  PLEARN_DECLARE_OBJECT(ExtractNNetParamsVMatrix);
+    //! Declare name and deepCopy methods.
+    PLEARN_DECLARE_OBJECT(ExtractNNetParamsVMatrix);
 
 };
 
@@ -123,3 +123,16 @@ DECLARE_OBJECT_PTR(ExtractNNetParamsVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

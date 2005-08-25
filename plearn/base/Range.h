@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: Range.h,v 1.2 2004/02/20 21:11:42 chrish42 Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 // See Mat.h for a description the PLearn native binary file format for matrices and vectors (.pmat .pvec)
 
@@ -53,33 +53,46 @@
 namespace PLearn {
 using namespace std;
 
-  class Range
-  {
-    public:
-      int start; //!<  index of first element
-      int length; //!<  number of elements
+class Range
+{
+public:
+    int start; //!<  index of first element
+    int length; //!<  number of elements
       
-      Range(int the_start=0, int the_length=0)
+    Range(int the_start=0, int the_length=0)
         :start(the_start), length(the_length) {}
       
-      bool isEmpty() { return length<=0; }
+    bool isEmpty() { return length<=0; }
 
-      bool operator==(Range r) const
-      { return start==r.start && length==r.length; }
+    bool operator==(Range r) const
+    { return start==r.start && length==r.length; }
 
-      bool operator<(Range r) const
-      { return start<r.start || (start==r.start && length<r.length); }
+    bool operator<(Range r) const
+    { return start<r.start || (start==r.start && length<r.length); }
 
-      //!  to allow if(range) statements (safer than operator bool, according to Nicolas.)
-      operator void*() { return (length>0 ? this : 0); }
-  };
+    //!  to allow if(range) statements (safer than operator bool, according to Nicolas.)
+    operator void*() { return (length>0 ? this : 0); }
+};
   
-  inline ostream& operator<<(ostream& out, Range r)
-  { 
+inline ostream& operator<<(ostream& out, Range r)
+{ 
     out << "[" << r.start << "," << r.start+r.length-1 << "]"; 
     return out;
-  }
+}
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

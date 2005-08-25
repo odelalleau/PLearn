@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixAffineTransformVariable.cc,v 1.4 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "MatrixAffineTransformVariable.h"
 #include "SubMatVariable.h"
@@ -68,7 +68,7 @@ void MatrixAffineTransformVariable::fprop()
     Mat lintransform = input2->matValue.subMatRows(1,input2->length()-1);
     for (int i = 0; i < length(); i++)
         for (int j = 0; j < width(); j++)
-             matValue[i][j] = input2->matValue[0][i];
+            matValue[i][j] = input2->matValue[0][i];
     transposeProductAcc(matValue,lintransform, input1->matValue);
 }
 
@@ -85,11 +85,11 @@ void MatrixAffineTransformVariable::bprop()
 
     for (int i = 0; i < length(); i++)
         for (int j = 0; j < width(); j++)
-            {
+        {
             bias_g[i] += matGradient[i][j];
-            }
+        }
     if(!input1->dont_bprop_here)      
-      productAcc(input1->matGradient, lintr, matGradient);
+        productAcc(input1->matGradient, lintr, matGradient);
     productTransposeAcc(lintr_g, input1->matValue, matGradient);
 }
 
@@ -100,7 +100,7 @@ void MatrixAffineTransformVariable::symbolicBprop()
     //Var bias = new SubMatVariable(input2,length()-1,0,1,width());
 
     if(!input1->dont_bprop_here)
-      input1->accg(new ProductVariable(lintr,g));
+        input1->accg(new ProductVariable(lintr,g));
     input2->accg(new MatrixAffineTransformFeedbackVariable(input1,g));
 }
 
@@ -108,4 +108,15 @@ void MatrixAffineTransformVariable::symbolicBprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

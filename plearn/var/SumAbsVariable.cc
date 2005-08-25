@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SumAbsVariable.cc,v 1.4 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "AbsVariable.h"
 #include "SumAbsVariable.h"
@@ -56,38 +56,49 @@ PLEARN_IMPLEMENT_OBJECT(SumAbsVariable,
                         "NO HELP");
 
 SumAbsVariable::SumAbsVariable(Variable* input)
-  : inherited(input, 1, 1) {}
+    : inherited(input, 1, 1) {}
 
 void SumAbsVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
 
 void SumAbsVariable::fprop()
 {
-  int n=input->nelems();
-  *valuedata= 0;
-  for(int i=0; i<n; i++)
-    *valuedata+= fabs(input->valuedata[i]);
+    int n=input->nelems();
+    *valuedata= 0;
+    for(int i=0; i<n; i++)
+        *valuedata+= fabs(input->valuedata[i]);
 }
 
 
 void SumAbsVariable::bprop()
 {
-  int n=input->nelems();
-  for(int i=0; i<n; i++)
-    if (input->valuedata[i]>0)
-      input->gradientdata[i]+= *gradientdata;
-    else if (input->valuedata[i]<0)
-      input->gradientdata[i]-= *gradientdata;
+    int n=input->nelems();
+    for(int i=0; i<n; i++)
+        if (input->valuedata[i]>0)
+            input->gradientdata[i]+= *gradientdata;
+        else if (input->valuedata[i]<0)
+            input->gradientdata[i]-= *gradientdata;
 }
 
 
 void SumAbsVariable::symbolicBprop()
 {
-  input->accg(g*abs(input));
+    input->accg(g*abs(input));
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

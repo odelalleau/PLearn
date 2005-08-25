@@ -37,9 +37,9 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.22 2005/02/08 21:38:59 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/Optimizer.h */
@@ -63,110 +63,110 @@ using namespace std;
 
 //typedef void (*OptimizerCallback)(int t);
 
-  class Optimizer : public Object
-  {
-      typedef Object inherited;
+class Optimizer : public Object
+{
+    typedef Object inherited;
       
-    public:
-      VarArray params;
-      Var cost;
-      VarArray proppath; //forward and/or backward
-      int nupdates; // deprecated  TODO Remove ?
-      int nstages; //!< number of steps to perform when calling optimizeN
-      int stage;   //!< current number of steps performed
+public:
+    VarArray params;
+    Var cost;
+    VarArray proppath; //forward and/or backward
+    int nupdates; // deprecated  TODO Remove ?
+    int nstages; //!< number of steps to perform when calling optimizeN
+    int stage;   //!< current number of steps performed
 
-      bool early_stop;
-      int early_stop_i;// number of epoch before early stopping
+    bool early_stop;
+    int early_stop_i;// number of epoch before early stopping
 
-      VarArray update_for_measure; // not used if length()==0
-      //OptimizerCallback callback; //!<  callback function
+    VarArray update_for_measure; // not used if length()==0
+    //OptimizerCallback callback; //!<  callback function
 
-      //oassignstream vlog;
-      PStream vlog;
-      // TODO Looks like this PStream is never used!
+    //oassignstream vlog;
+    PStream vlog;
+    // TODO Looks like this PStream is never used!
       
-    private:
-      Vec temp_grad;  //!< used to store temp stuff for gradient stats
+private:
+    Vec temp_grad;  //!< used to store temp stuff for gradient stats
 /*      Vec same_sign;  //!< number of consecutive updates in same direction */
 
-    protected:
+protected:
 
-      Array<Measurer*> measurers;
+    Array<Measurer*> measurers;
 
-      //!  call measure <every> <nupdates> iterations
-      //!  saving the results in the <filename>.
-      string filename; // JS - that was const...
+    //!  call measure <every> <nupdates> iterations
+    //!  saving the results in the <filename>.
+    string filename; // JS - that was const...
       
-  public:
-      int every; //!<  if = 0 don't print or measure anything
+public:
+    int every; //!<  if = 0 don't print or measure anything
 
-    public:
-      Optimizer(int n_updates=1, const string& file_name="",
-                int every_iterations=1);
-      Optimizer(VarArray the_params, Var the_cost,
-                int n_updates=1, const string& file_name="",
-                int every_iterations=1);
-      Optimizer(VarArray the_params, Var the_cost, 
-                VarArray the_update_for_measure,
-                int n_updates=1, const string& file_name="",
-                int every_iterations=1);
+public:
+    Optimizer(int n_updates=1, const string& file_name="",
+              int every_iterations=1);
+    Optimizer(VarArray the_params, Var the_cost,
+              int n_updates=1, const string& file_name="",
+              int every_iterations=1);
+    Optimizer(VarArray the_params, Var the_cost, 
+              VarArray the_update_for_measure,
+              int n_updates=1, const string& file_name="",
+              int every_iterations=1);
       
-      virtual void init() { build(); } // DEPRECATED : use build() instead
-      virtual void build();
+    virtual void init() { build(); } // DEPRECATED : use build() instead
+    virtual void build();
 
-  private:
-      void build_();
+private:
+    void build_();
 
-  public:
+public:
 
-      virtual void reset(); 
+    virtual void reset(); 
 
-      virtual void setToOptimize(VarArray the_params, Var the_cost);
+    virtual void setToOptimize(VarArray the_params, Var the_cost);
       
-      virtual void setVarArrayOption(const string& optionname, VarArray value);
-      virtual void setVarOption(const string& optionname, Var value);
-      virtual void setVMatOption(const string& optionname, VMat value);
+    virtual void setVarArrayOption(const string& optionname, VarArray value);
+    virtual void setVarOption(const string& optionname, Var value);
+    virtual void setVMatOption(const string& optionname, VMat value);
       
-      PLEARN_DECLARE_ABSTRACT_OBJECT(Optimizer);
-      virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    PLEARN_DECLARE_ABSTRACT_OBJECT(Optimizer);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
       
-      void addMeasurer(Measurer& measurer);
+    void addMeasurer(Measurer& measurer);
       
-      virtual bool measure(int t, const Vec& costs);
+    virtual bool measure(int t, const Vec& costs);
       
-      //!  sub-classes should define this, which is the main method
-      virtual real optimize() = 0;
+    //!  sub-classes should define this, which is the main method
+    virtual real optimize() = 0;
 
-      //!  sub-classes should define this, which is the new main method
-      virtual bool optimizeN(VecStatsCollector& stats_coll) =0;
-      /* while (stage < stage_init + nstages) {
-       *   params.update(..)
-       *   stats_coll.update(cost)
-       *   stage++
-       *   if finished return is_finished
-       * }
-       * return false
-       */
+    //!  sub-classes should define this, which is the new main method
+    virtual bool optimizeN(VecStatsCollector& stats_coll) =0;
+    /* while (stage < stage_init + nstages) {
+     *   params.update(..)
+     *   stats_coll.update(cost)
+     *   stage++
+     *   if finished return is_finished
+     * }
+     * return false
+     */
       
-      //!  verify gradient with uniform random initialization of parameters
-      //!  using step for the finite difference approximation of the gradient
-      void verifyGradient(real minval, real maxval, real step);
+    //!  verify gradient with uniform random initialization of parameters
+    //!  using step for the finite difference approximation of the gradient
+    void verifyGradient(real minval, real maxval, real step);
       
-      //!  verify gradient at the current value of the parameters
-      //!  using step for the finite difference approximation of the gradient
-      void verifyGradient(real step);
+    //!  verify gradient at the current value of the parameters
+    //!  using step for the finite difference approximation of the gradient
+    void verifyGradient(real step);
 
     virtual void oldwrite(ostream& out) const;
     /* TODO Remove (deprecated)
-    virtual void oldread(istream& in);
+       virtual void oldread(istream& in);
     */
       
     virtual ~Optimizer();
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 
-  public:
+public:
 
     //--------------------------- UTILITY FUNCTIONS ----------------------------
 
@@ -191,7 +191,7 @@ using namespace std;
         Optimizer* opt,
         const Vec& gradient);
 
-  };
+};
 
 DECLARE_OBJECT_PTR(Optimizer);
 
@@ -199,3 +199,15 @@ DECLARE_OBJECT_PTR(Optimizer);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

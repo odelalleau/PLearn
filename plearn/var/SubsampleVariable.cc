@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SubsampleVariable.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "SubsampleVariable.h"
 
@@ -53,8 +53,8 @@ PLEARN_IMPLEMENT_OBJECT(SubsampleVariable,
                         "NO HELP");
 
 SubsampleVariable::SubsampleVariable(Variable* input, int the_subsamplefactor) 
-  : inherited(input, input->length()/the_subsamplefactor, input->width()/the_subsamplefactor), 
-    subsamplefactor(the_subsamplefactor) 
+    : inherited(input, input->length()/the_subsamplefactor, input->width()/the_subsamplefactor), 
+      subsamplefactor(the_subsamplefactor) 
 {
     build_();
 }
@@ -93,24 +93,24 @@ void SubsampleVariable::recomputeSize(int& l, int& w) const
 
 void SubsampleVariable::fprop()
 {
-  subsample(input->matValue, subsamplefactor, matValue);
+    subsample(input->matValue, subsamplefactor, matValue);
 }
 
 
 void SubsampleVariable::bprop()
 {
-  int norm = subsamplefactor * subsamplefactor;
-  for(int i=0; i<length(); i++)
-    for(int j=0; j<width(); j++)
-      {
-        real* inputgradientptr = input->matGradient[subsamplefactor*i]+subsamplefactor*j;
-        real thisgradient = matGradient(i,j);
-        for(int l=0; l<subsamplefactor; l++, inputgradientptr += input->matGradient.mod())
-          for(int c=0; c<subsamplefactor; c++)
-            {
-              inputgradientptr[c] = thisgradient/norm;
-            }
-      }
+    int norm = subsamplefactor * subsamplefactor;
+    for(int i=0; i<length(); i++)
+        for(int j=0; j<width(); j++)
+        {
+            real* inputgradientptr = input->matGradient[subsamplefactor*i]+subsamplefactor*j;
+            real thisgradient = matGradient(i,j);
+            for(int l=0; l<subsamplefactor; l++, inputgradientptr += input->matGradient.mod())
+                for(int c=0; c<subsamplefactor; c++)
+                {
+                    inputgradientptr[c] = thisgradient/norm;
+                }
+        }
 }
 
 
@@ -121,4 +121,15 @@ void SubsampleVariable::symbolicBprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

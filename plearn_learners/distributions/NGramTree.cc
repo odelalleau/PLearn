@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NGramTree.cc,v 1.3 2004/10/13 18:59:24 larocheh Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle
 
@@ -48,12 +48,12 @@ using namespace std;
 
 NGramTree::NGramTree()
 {
-  forget();
+    forget();
 }
 
 NGramTree::NGramTree(PP<SymbolNode> root_)
 {
-  setRoot(root_);
+    setRoot(root_);
 }
 
 PLEARN_IMPLEMENT_OBJECT(NGramTree,
@@ -64,16 +64,16 @@ PLEARN_IMPLEMENT_OBJECT(NGramTree,
 
 void NGramTree::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  declareOption(ol, "root", &NGramTree::root, OptionBase::learntoption,
-                 "root of the NGramTree");
+    declareOption(ol, "root", &NGramTree::root, OptionBase::learntoption,
+                  "root of the NGramTree");
   
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 void NGramTree::build_(){}
@@ -81,144 +81,157 @@ void NGramTree::build_(){}
 // ### Nothing to add here, simply calls build_
 void NGramTree::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void NGramTree::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  //PLERROR("NGramTree::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    //PLERROR("NGramTree::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 void NGramTree::add(TVec<int> ngram)
 {
-  if(ngram.length() == 0)
-    return;
-  PP<SymbolNode> it = root;
-  it->incr(ngram[ngram.length()-1]);
-  for(int i=ngram.length()-2; i>=0; i--)
-  {
-    it = it->add(ngram[i]);
+    if(ngram.length() == 0)
+        return;
+    PP<SymbolNode> it = root;
     it->incr(ngram[ngram.length()-1]);
-  }
+    for(int i=ngram.length()-2; i>=0; i--)
+    {
+        it = it->add(ngram[i]);
+        it->incr(ngram[ngram.length()-1]);
+    }
 }
 
 TVec<int> NGramTree::freq(TVec<int> ngram)
 {
-  TVec<int> ret(ngram.length());
-  ret.fill(0);
-  ret[0] = root->freq(ngram[ngram.length()-1]);
+    TVec<int> ret(ngram.length());
+    ret.fill(0);
+    ret[0] = root->freq(ngram[ngram.length()-1]);
   
-  int n=1;
-  PP<SymbolNode> it = root;
-  for(int i=ngram.length()-2; i>=0; i--)
-  {
-    it = it->child(ngram[i]);
-    if(!it)
-      break;
-    ret[n] = it->freq(ngram[ngram.length()-1]);
-    n++;
-  }
-  return ret;
+    int n=1;
+    PP<SymbolNode> it = root;
+    for(int i=ngram.length()-2; i>=0; i--)
+    {
+        it = it->child(ngram[i]);
+        if(!it)
+            break;
+        ret[n] = it->freq(ngram[ngram.length()-1]);
+        n++;
+    }
+    return ret;
 }
 
 TVec<int> NGramTree::normalization(TVec<int> ngram)
 {
-  TVec<int> ret(ngram.length());
-  ret.fill(0);
-  ret[0] = root->freq();
+    TVec<int> ret(ngram.length());
+    ret.fill(0);
+    ret[0] = root->freq();
   
-  int n=1;
-  PP<SymbolNode> it = root;
-  for(int i=ngram.length()-2; i>=0; i--)
-  {
-    it = it->child(ngram[i]);
-    if(!it)
-      break;
-    ret[n] = it->freq();
-    n++;
-  }
-  return ret;
+    int n=1;
+    PP<SymbolNode> it = root;
+    for(int i=ngram.length()-2; i>=0; i--)
+    {
+        it = it->child(ngram[i]);
+        if(!it)
+            break;
+        ret[n] = it->freq();
+        n++;
+    }
+    return ret;
 }
 
 int NGramTree::n_children(TVec<int> sequence)
 { 
-  if(sequence.length()==0)
-    return 0;
+    if(sequence.length()==0)
+        return 0;
   
-  PP<SymbolNode> it = root;
-  for(int i=sequence.length()-2; i>=0; i--)
-  {
-    it = it->child(sequence[i]);
-    if(!it)
-      return 0;
-  }
+    PP<SymbolNode> it = root;
+    for(int i=sequence.length()-2; i>=0; i--)
+    {
+        it = it->child(sequence[i]);
+        if(!it)
+            return 0;
+    }
 
-  return it->n_children();;
+    return it->n_children();;
 }
 
 TVec<int> NGramTree::n_freq(TVec<int> sequence)
 { 
-  TVec<int> ret(0);
-  if(sequence.length()==0)
-    return ret;
+    TVec<int> ret(0);
+    if(sequence.length()==0)
+        return ret;
 
-  ret.resize(sequence.length());
-  ret.fill(0);
+    ret.resize(sequence.length());
+    ret.fill(0);
 
-  PP<SymbolNode> it = root;
-  int n=0;
-  ret[n++] = it->n_freq();
-  for(int i=sequence.length()-2; i>=0; i--)
-  {
-    it = it->child(sequence[i]);
-    if(!it)
-      return ret;
+    PP<SymbolNode> it = root;
+    int n=0;
     ret[n++] = it->n_freq();
-  }
-  return ret;
+    for(int i=sequence.length()-2; i>=0; i--)
+    {
+        it = it->child(sequence[i]);
+        if(!it)
+            return ret;
+        ret[n++] = it->n_freq();
+    }
+    return ret;
 }
 /*
-TVec<PP<NGramTree> > NGramTree::getSubTrees(TVec<int> sequence)
-{ 
+  TVec<PP<NGramTree> > NGramTree::getSubTrees(TVec<int> sequence)
+  { 
   PP<SymbolNode> it = root;
 
   TVec<PP<NGramTree> > ret(0);
 
   if(sequence.length()==0)
   {
-    ret.resize(it->n_children());
-    TVec<PP<SymbolNode> > nodes = it->getChildren();
-    for(int j=0; j<nodes.length(); j++)
-      ret[j] = new NGramTree(nodes[j]);
-    return ret;
+  ret.resize(it->n_children());
+  TVec<PP<SymbolNode> > nodes = it->getChildren();
+  for(int j=0; j<nodes.length(); j++)
+  ret[j] = new NGramTree(nodes[j]);
+  return ret;
   }
   
   for(int i=sequence.length()-1; i>=0; i--)
   {
-    it = it->child(sequence[i]);
-    if(!it)
-      break;
-    if(i==0)
-    {
-      ret.resize(it->n_children());
-      TVec<PP<SymbolNode> > nodes = it->getChildren();
-      for(int j=0; j<nodes.length(); j++)
-      {
-        ret[j] = new NGramTree(nodes[j]);
-      }
-      return ret;
-    }
+  it = it->child(sequence[i]);
+  if(!it)
+  break;
+  if(i==0)
+  {
+  ret.resize(it->n_children());
+  TVec<PP<SymbolNode> > nodes = it->getChildren();
+  for(int j=0; j<nodes.length(); j++)
+  {
+  ret[j] = new NGramTree(nodes[j]);
   }
   return ret;
-}
+  }
+  }
+  return ret;
+  }
 */
 
 void NGramTree::forget()
 { 
-  root = new SymbolNode();
+    root = new SymbolNode();
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

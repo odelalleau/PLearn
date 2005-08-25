@@ -43,151 +43,164 @@ using namespace std;
 //#####  TypeFactory  #########################################################
 
 void TypeFactory::register_type(const string& type_name, 
-                            const string& parent_class, 
-                            NEW_OBJECT constructor, 
-                            GETOPTIONLIST_METHOD getoptionlist_method,
-                            ISA_METHOD isa_method,
-                            const string& one_line_descr,
-                            const string& multi_line_help)
+                                const string& parent_class, 
+                                NEW_OBJECT constructor, 
+                                GETOPTIONLIST_METHOD getoptionlist_method,
+                                ISA_METHOD isa_method,
+                                const string& one_line_descr,
+                                const string& multi_line_help)
 {
-  TypeMapEntry entry(type_name, 
-                     parent_class, 
-                     constructor, 
-                     getoptionlist_method,
-                     isa_method,
-                     one_line_descr,
-                     multi_line_help);
+    TypeMapEntry entry(type_name, 
+                       parent_class, 
+                       constructor, 
+                       getoptionlist_method,
+                       isa_method,
+                       one_line_descr,
+                       multi_line_help);
 
-  instance().registerType(entry);
+    instance().registerType(entry);
 }
 
 void TypeFactory::registerType(const TypeMapEntry& entry)
 {
-  type_map_.insert( pair<string,TypeMapEntry>(entry.type_name, entry) );
-  //cout << "register type " << type_name << endl;
+    type_map_.insert( pair<string,TypeMapEntry>(entry.type_name, entry) );
+    //cout << "register type " << type_name << endl;
 }
 
 void TypeFactory::unregisterType(string type_name)
 {
-  type_map_.erase(type_name);                // ok even if does not exist
+    type_map_.erase(type_name);                // ok even if does not exist
 }
 
 bool TypeFactory::isRegistered(string type_name) const
 {
-  return type_map_.find(type_name)!=type_map_.end();
+    return type_map_.find(type_name)!=type_map_.end();
 }
 
 Object* TypeFactory::newObject(string type_name) const
 {
-  TypeMap::const_iterator it = type_map_.find(type_name);
-  if (it == type_map_.end())
-    PLERROR("In TypeFactory::newObject(\"%s\"): %s not registered in type map.", type_name.c_str(), type_name.c_str());
-  if (!(*it->second.constructor))
-    PLERROR("In TypeFactory::newObject(\"%s\"): %s does not have a factory constructor!", type_name.c_str(), type_name.c_str());
-  return (*it->second.constructor)();
+    TypeMap::const_iterator it = type_map_.find(type_name);
+    if (it == type_map_.end())
+        PLERROR("In TypeFactory::newObject(\"%s\"): %s not registered in type map.", type_name.c_str(), type_name.c_str());
+    if (!(*it->second.constructor))
+        PLERROR("In TypeFactory::newObject(\"%s\"): %s does not have a factory constructor!", type_name.c_str(), type_name.c_str());
+    return (*it->second.constructor)();
 }
 
 bool TypeFactory::isAbstract(string type_name) const
 {
-  TypeMap::const_iterator it = type_map_.find(type_name);
-  if (it == type_map_.end())
-    PLERROR("In TypeFactory: %s not registered in type map.", type_name.c_str(), type_name.c_str());
-  return it->second.constructor == 0;
+    TypeMap::const_iterator it = type_map_.find(type_name);
+    if (it == type_map_.end())
+        PLERROR("In TypeFactory: %s not registered in type map.", type_name.c_str(), type_name.c_str());
+    return it->second.constructor == 0;
 }
 
 TypeFactory& TypeFactory::instance()
 {
-  static TypeFactory instance_;
-  return instance_;
+    static TypeFactory instance_;
+    return instance_;
 }
 
 
 void displayObjectHelp(ostream& out, const string& classname)
 {
-  const TypeMap& type_map = TypeFactory::instance().getTypeMap();
-  TypeMap::const_iterator it = type_map.find(classname);
-  TypeMap::const_iterator itend = type_map.end();
+    const TypeMap& type_map = TypeFactory::instance().getTypeMap();
+    TypeMap::const_iterator it = type_map.find(classname);
+    TypeMap::const_iterator itend = type_map.end();
 
-  if(it==itend)
-    PLERROR("Object type %s unknown.\n"
-            "Did you #include it, does it call the IMPLEMENT_NAME_AND_DEEPCOPY macro?\n"
-            "and has it indeed been linked with your program?", classname.c_str());
+    if(it==itend)
+        PLERROR("Object type %s unknown.\n"
+                "Did you #include it, does it call the IMPLEMENT_NAME_AND_DEEPCOPY macro?\n"
+                "and has it indeed been linked with your program?", classname.c_str());
 
-  const TypeMapEntry& entry = it->second;
-  Object* obj = 0;
+    const TypeMapEntry& entry = it->second;
+    Object* obj = 0;
 
-  out << "****************************************************************** \n"
-      << "** " << classname << "\n"
-      << "****************************************************************** \n" << endl;
+    out << "****************************************************************** \n"
+        << "** " << classname << "\n"
+        << "****************************************************************** \n" << endl;
 
-  // Display basic help
-  out << entry.one_line_descr << endl << endl;
-  out << entry.multi_line_help << endl << endl;
+    // Display basic help
+    out << entry.one_line_descr << endl << endl;
+    out << entry.multi_line_help << endl << endl;
 
-  if(entry.constructor) // it's an instantiable class
-    obj = (*entry.constructor)();
-  else
-    out << "Note: " << classname << " is a base-class with pure virtual methods that cannot be instantiated directly.\n" 
-        << "(default values for build options can only be displayed for instantiable classes, \n"
-        << " so you'll only see question marks here.)\n" << endl;
+    if(entry.constructor) // it's an instantiable class
+        obj = (*entry.constructor)();
+    else
+        out << "Note: " << classname << " is a base-class with pure virtual methods that cannot be instantiated directly.\n" 
+            << "(default values for build options can only be displayed for instantiable classes, \n"
+            << " so you'll only see question marks here.)\n" << endl;
       
-  out << "****************************************************************** \n"
-      << "**                         Build Options                        ** \n"
-      << "** (including those inherited from parent and ancestor classes) ** \n"
-      << "****************************************************************** \n" << endl;
+    out << "****************************************************************** \n"
+        << "**                         Build Options                        ** \n"
+        << "** (including those inherited from parent and ancestor classes) ** \n"
+        << "****************************************************************** \n" << endl;
 
-  out << classname + "( \n";
-  OptionList& options = (*entry.getoptionlist_method)();    
+    out << classname + "( \n";
+    OptionList& options = (*entry.getoptionlist_method)();    
 
-  for( OptionList::iterator olIt = options.begin(); olIt!=options.end(); ++olIt )
+    for( OptionList::iterator olIt = options.begin(); olIt!=options.end(); ++olIt )
     {
-      OptionBase::flag_t flags = (*olIt)->flags();
-      if(flags & OptionBase::buildoption)
+        OptionBase::flag_t flags = (*olIt)->flags();
+        if(flags & OptionBase::buildoption)
         {
-          string descr = (*olIt)->description();
-          string optname = (*olIt)->optionname();
-          string opttype = (*olIt)->optiontype();
-          string defaultval = "?";
-          if(obj) // it's an instantiable class
+            string descr = (*olIt)->description();
+            string optname = (*olIt)->optionname();
+            string opttype = (*olIt)->optiontype();
+            string defaultval = "?";
+            if(obj) // it's an instantiable class
             {
-              defaultval = (*olIt)->defaultval(); 
-              if(defaultval=="")
-                defaultval = (*olIt)->writeIntoString(obj);
+                defaultval = (*olIt)->defaultval(); 
+                if(defaultval=="")
+                    defaultval = (*olIt)->writeIntoString(obj);
             }
-          // string holderclass = (*olIt)->optionHolderClassName(this);
-          out << addprefix("# ", opttype + ": " + descr);
-          out << optname + " = " + defaultval + " ;\n\n";
+            // string holderclass = (*olIt)->optionHolderClassName(this);
+            out << addprefix("# ", opttype + ": " + descr);
+            out << optname + " = " + defaultval + " ;\n\n";
         }
     }
-  out << ");\n\n";
+    out << ");\n\n";
 
-  if(obj)
-    delete obj;
+    if(obj)
+        delete obj;
 
-  out << "****************************************************************** \n"
-      << "** Subclasses of " << classname << " \n"
-      << "** (only those that can be instantiated) \n"
-      << "****************************************************************** \n" << endl;
-  for(it = type_map.begin(); it!=itend; ++it)
+    out << "****************************************************************** \n"
+        << "** Subclasses of " << classname << " \n"
+        << "** (only those that can be instantiated) \n"
+        << "****************************************************************** \n" << endl;
+    for(it = type_map.begin(); it!=itend; ++it)
     {
-      // cerr << "Attempting to instantiate: " << it->first << endl;
-      const TypeMapEntry& e = it->second;
-      if(e.constructor && it->first!=classname)
+        // cerr << "Attempting to instantiate: " << it->first << endl;
+        const TypeMapEntry& e = it->second;
+        if(e.constructor && it->first!=classname)
         {
-          Object* o = (*e.constructor)();
-          if( (*entry.isa_method)(o) ) {
-            out.width(30);
-            out << it->first << " - " << e.one_line_descr << endl;
-          }
-          if(o)
-            delete o;
+            Object* o = (*e.constructor)();
+            if( (*entry.isa_method)(o) ) {
+                out.width(30);
+                out << it->first << " - " << e.one_line_descr << endl;
+            }
+            if(o)
+                delete o;
         }
     }
 
-  out << "\n\n------------------------------------------------------------------ \n" << endl;
+    out << "\n\n------------------------------------------------------------------ \n" << endl;
 
 }
 
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

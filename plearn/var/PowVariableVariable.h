@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: PowVariableVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef PowVariableVariable_INC
 #define PowVariableVariable_INC
@@ -65,21 +65,21 @@ class NegLogSoftmaxLoss: public BinaryVariable
 */
 class PowVariableVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  PowVariableVariable() {}
-  PowVariableVariable(Variable* input, Variable* power);
+    //!  Default constructor for persistence
+    PowVariableVariable() {}
+    PowVariableVariable(Variable* input, Variable* power);
 
-  PLEARN_DECLARE_OBJECT(PowVariableVariable);
+    PLEARN_DECLARE_OBJECT(PowVariableVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
     void build_();
@@ -94,3 +94,16 @@ inline Var pow(Var v, Var power)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -57,20 +57,20 @@ class PLearnServer
 {
 private:
 
-  void callFunction(const string& name, int nargs);
-  void printHelp();
+    void callFunction(const string& name, int nargs);
+    void printHelp();
 
 
 protected:
-  typedef map<int, PP<Object> > ObjMap;
+    typedef map<int, PP<Object> > ObjMap;
 
-  PStream io;
-  bool clear_maps;
-  ObjMap objmap;
+    PStream io;
+    bool clear_maps;
+    ObjMap objmap;
 public:
-  PLearnServer(const PStream& input_output);
+    PLearnServer(const PStream& input_output);
   
-  bool run();
+    bool run();
 
 };
 
@@ -78,3 +78,16 @@ public:
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

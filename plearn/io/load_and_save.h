@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: load_and_save.h,v 1.5 2005/02/08 21:33:18 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -61,8 +61,8 @@ template <class T>
 inline void load(const PPath& filepath, T &x)
 {
 #if STREAMBUFVER == 1
-  PStream in = openFile( filepath, PStream::plearn_ascii, "r" );
-  in >> x;
+    PStream in = openFile( filepath, PStream::plearn_ascii, "r" );
+    in >> x;
 #else
     ifstream in_( filepath.absolute().c_str() );
     if (!in_)
@@ -76,17 +76,17 @@ inline void load(const PPath& filepath, T &x)
 template<class T> 
 inline void save(const PPath& filepath, const T& x, PStream::mode_t io_formatting=PStream::plearn_ascii)
 { 
-  force_mkdir_for_file(filepath);
+    force_mkdir_for_file(filepath);
 #if STREAMBUF == 1
-  PStream out = openFile( filepath, io_formatting, "w" );
-  out << x;
+    PStream out = openFile( filepath, io_formatting, "w" );
+    out << x;
 #else
-  ofstream out_( filepath.absolute().c_str() ); 
-  if(!out_)
-    PLERROR( "Could not open file %s for writing", filepath.c_str() );  
-  PStream out(&out_);
-  out.setMode(io_formatting);
-  out << x;
+    ofstream out_( filepath.absolute().c_str() ); 
+    if(!out_)
+        PLERROR( "Could not open file %s for writing", filepath.c_str() );  
+    PStream out(&out_);
+    out.setMode(io_formatting);
+    out << x;
 #endif
 }
 
@@ -95,3 +95,16 @@ inline void save(const PPath& filepath, const T& x, PStream::mode_t io_formattin
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

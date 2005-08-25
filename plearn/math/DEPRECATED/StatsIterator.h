@@ -35,9 +35,9 @@
  
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/StatsIterator.h */
@@ -60,73 +60,73 @@ class StatsIterator: public Object
     typedef Object inherited;
     
 protected:
-  Vec result;
+    Vec result;
 
 public:
 
-  //!  Should return true if several passes are required
-  //!  (default version returns false)
-  virtual bool requiresMultiplePasses();
+    //!  Should return true if several passes are required
+    //!  (default version returns false)
+    virtual bool requiresMultiplePasses();
 
-  //!  Call this method once with the correct inputsize
-  virtual void init(int inputsize)=0;
+    //!  Call this method once with the correct inputsize
+    virtual void init(int inputsize)=0;
 
-  //!  Then iterate over the data set and call this method for each row
-  virtual void update(const Vec& input)=0;
-  virtual void update(const Mat& inputs) 
-  { 
-    for (int i=0;inputs.length();i++)
-    {
-      Vec input = inputs(i);
-      update(input);
+    //!  Then iterate over the data set and call this method for each row
+    virtual void update(const Vec& input)=0;
+    virtual void update(const Mat& inputs) 
+    { 
+        for (int i=0;inputs.length();i++)
+        {
+            Vec input = inputs(i);
+            update(input);
+        }
     }
-  }
 
 /*!     Call this method when all the data has been shown (through update)
-    If the method returns false, then a further pass through the data
-    is required.
+  If the method returns false, then a further pass through the data
+  is required.
 */
-  virtual bool finish()=0;
+    virtual bool finish()=0;
 
-  //!  You can call this method after finish has returned true
-  virtual Vec getResult();
+    //!  You can call this method after finish has returned true
+    virtual Vec getResult();
     
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-  PLEARN_DECLARE_ABSTRACT_OBJECT(StatsIterator);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    PLEARN_DECLARE_ABSTRACT_OBJECT(StatsIterator);
     
     virtual void build() {}
     virtual void oldwrite(ostream& out) const;
     /* TODO Remove (deprecate)
-    virtual void oldread(istream& in);
+       virtual void oldread(istream& in);
     */
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 
 };
 
-  DECLARE_OBJECT_PTR(StatsIterator);
+DECLARE_OBJECT_PTR(StatsIterator);
 
 class MeanStatsIterator: public StatsIterator
 {
     typedef StatsIterator inherited;
 
-  protected:
-  TVec<int> nsamples;
+protected:
+    TVec<int> nsamples;
 
 public:
-  virtual string info() const { return "mean"; }
-  virtual void init(int inputsize);
-  virtual void update(const Vec& input);
-  virtual bool finish();
-  PLEARN_DECLARE_OBJECT(MeanStatsIterator);
+    virtual string info() const { return "mean"; }
+    virtual void init(int inputsize);
+    virtual void update(const Vec& input);
+    virtual bool finish();
+    PLEARN_DECLARE_OBJECT(MeanStatsIterator);
 
     virtual void oldwrite(ostream& out) const;
     /* TODO Remove (deprecated)
-    virtual void oldread(istream& in);
+       virtual void oldread(istream& in);
     */
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 
 };
@@ -137,23 +137,23 @@ class ExpMeanStatsIterator: public StatsIterator
 {
     typedef StatsIterator inherited;
 
-  protected:
-  TVec<int> nsamples;
+protected:
+    TVec<int> nsamples;
 
 public:
-  virtual string info() const { return "exp_mean"; }
+    virtual string info() const { return "exp_mean"; }
 
-  virtual void init(int inputsize);
-  virtual void update(const Vec& input);
-  virtual bool finish();
-  PLEARN_DECLARE_OBJECT(ExpMeanStatsIterator);
+    virtual void init(int inputsize);
+    virtual void update(const Vec& input);
+    virtual bool finish();
+    PLEARN_DECLARE_OBJECT(ExpMeanStatsIterator);
 
     virtual void oldwrite(ostream& out) const;
     /* TODO Remove (deprecated)
-    virtual void oldread(istream& in);
+       virtual void oldread(istream& in);
     */
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 
 };
@@ -162,27 +162,27 @@ DECLARE_OBJECT_PTR(ExpMeanStatsIterator);
 
 class StddevStatsIterator: public StatsIterator
 {
-  typedef StatsIterator inherited;
+    typedef StatsIterator inherited;
     
 protected:
-  Vec meansquared;
-  Vec mean;
-  TVec<int> nsamples;
+    Vec meansquared;
+    Vec mean;
+    TVec<int> nsamples;
 
 public:
-  virtual string info() const { return "std_dev"; }
-  virtual void init(int inputsize);
-  virtual void update(const Vec& input);
-  virtual bool finish();
-  PLEARN_DECLARE_OBJECT(StddevStatsIterator);
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual string info() const { return "std_dev"; }
+    virtual void init(int inputsize);
+    virtual void update(const Vec& input);
+    virtual bool finish();
+    PLEARN_DECLARE_OBJECT(StddevStatsIterator);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  virtual void oldwrite(ostream& out) const;
-  /* TODO Remove (deprecated)
-  virtual void oldread(istream& in);
-  */
+    virtual void oldwrite(ostream& out) const;
+    /* TODO Remove (deprecated)
+       virtual void oldread(istream& in);
+    */
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 
 };
@@ -191,27 +191,27 @@ DECLARE_OBJECT_PTR(StddevStatsIterator);
 
 class StderrStatsIterator: public StatsIterator
 {
-  typedef StatsIterator inherited;
+    typedef StatsIterator inherited;
     
 protected:
-  Vec meansquared;
-  Vec mean;
-  TVec<int> nsamples;
+    Vec meansquared;
+    Vec mean;
+    TVec<int> nsamples;
 
 public:
-  virtual string info() const { return "std_err"; }
-  virtual void init(int inputsize);
-  virtual void update(const Vec& input);
-  virtual bool finish();
-  PLEARN_DECLARE_OBJECT(StderrStatsIterator);
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual string info() const { return "std_err"; }
+    virtual void init(int inputsize);
+    virtual void update(const Vec& input);
+    virtual bool finish();
+    PLEARN_DECLARE_OBJECT(StderrStatsIterator);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  virtual void oldwrite(ostream& out) const;
-  /* TODO Remove (deprecated)
-  virtual void oldread(istream& in);
-  */
+    virtual void oldwrite(ostream& out) const;
+    /* TODO Remove (deprecated)
+       virtual void oldread(istream& in);
+    */
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 
 };
@@ -226,27 +226,27 @@ DECLARE_OBJECT_PTR(StderrStatsIterator);
 */
 class SharpeRatioStatsIterator: public StatsIterator
 {
-  typedef StatsIterator inherited;
+    typedef StatsIterator inherited;
     
 protected:
-  Vec nnonzero;
-  Vec meansquared;
-  Vec mean;
+    Vec nnonzero;
+    Vec meansquared;
+    Vec mean;
 
 public:
-  virtual string info() const { return "sharpe_ratio"; }
-  virtual void init(int inputsize);
-  virtual void update(const Vec& input);
-  virtual bool finish();
-  PLEARN_DECLARE_OBJECT(SharpeRatioStatsIterator);
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual string info() const { return "sharpe_ratio"; }
+    virtual void init(int inputsize);
+    virtual void update(const Vec& input);
+    virtual bool finish();
+    PLEARN_DECLARE_OBJECT(SharpeRatioStatsIterator);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  virtual void oldwrite(ostream& out) const;
-  /* TODO Remove (deprecated)
-  virtual void oldread(istream& in);
-  */
+    virtual void oldwrite(ostream& out) const;
+    /* TODO Remove (deprecated)
+       virtual void oldread(istream& in);
+    */
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 
 };
@@ -258,18 +258,18 @@ class MinStatsIterator: public StatsIterator
     typedef StatsIterator inherited;
     
 public:
-  virtual string info() const { return "min"; }
-  virtual void init(int inputsize);
-  virtual void update(const Vec& input);
-  virtual bool finish();
-  PLEARN_DECLARE_OBJECT(MinStatsIterator);
+    virtual string info() const { return "min"; }
+    virtual void init(int inputsize);
+    virtual void update(const Vec& input);
+    virtual bool finish();
+    PLEARN_DECLARE_OBJECT(MinStatsIterator);
 
     virtual void oldwrite(ostream& out) const;
     /* TODO Remove (deprecated)
-    virtual void oldread(istream& in);
+       virtual void oldread(istream& in);
     */
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 
 };
@@ -281,18 +281,18 @@ class MaxStatsIterator: public StatsIterator
     typedef StatsIterator inherited;
     
 public:
-  virtual string info() const { return "max"; }
-  virtual void init(int inputsize);
-  virtual void update(const Vec& input);
-  virtual bool finish();
-  PLEARN_DECLARE_OBJECT(MaxStatsIterator);
+    virtual string info() const { return "max"; }
+    virtual void init(int inputsize);
+    virtual void update(const Vec& input);
+    virtual bool finish();
+    PLEARN_DECLARE_OBJECT(MaxStatsIterator);
 
     virtual void oldwrite(ostream& out) const;
     /* TODO Remove (deprecated)
-    virtual void oldread(istream& in);
+       virtual void oldread(istream& in);
     */
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 
 };
@@ -300,8 +300,8 @@ public:
 DECLARE_OBJECT_PTR(MaxStatsIterator);
 
 /*!   result Vec has size 2:
-    result[0] = lift
-    result[1] = lift/lift_maximum
+  result[0] = lift
+  result[1] = lift/lift_maximum
   
 */
 class LiftStatsIterator: public StatsIterator
@@ -309,28 +309,28 @@ class LiftStatsIterator: public StatsIterator
     typedef StatsIterator inherited;
     
 protected:
-  int nsamples;
-  int lift_index;
-  real lift_fraction;
-  Mat output_and_pos;
-  Vec targets;
+    int nsamples;
+    int lift_index;
+    real lift_fraction;
+    Mat output_and_pos;
+    Vec targets;
 
 public:
-  virtual string info() const { return "lift"; }
-  virtual void init(int inputsize);
-  virtual void update(const Vec& input);
-  virtual bool finish();
+    virtual string info() const { return "lift"; }
+    virtual void init(int inputsize);
+    virtual void update(const Vec& input);
+    virtual bool finish();
 
-  LiftStatsIterator(int the_index=0, real the_fraction=0.1);
-  PLEARN_DECLARE_OBJECT(LiftStatsIterator);
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    LiftStatsIterator(int the_index=0, real the_fraction=0.1);
+    PLEARN_DECLARE_OBJECT(LiftStatsIterator);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void oldwrite(ostream& out) const;
     /* TODO Remove (deprecated)
-    virtual void oldread(istream& in);
+       virtual void oldread(istream& in);
     */
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 
 };
@@ -338,19 +338,19 @@ public:
 DECLARE_OBJECT_PTR(LiftStatsIterator);
 
 /*!  result Vec has size N: the value of the observed variable
-     at the N given quantiles.
+  at the N given quantiles.
 */
 
 class QuantilesStatsIterator: public StatsIterator
 {
     typedef StatsIterator inherited;
     
-  protected:
+protected:
     int nsamples;
     Vec quantiles;
     Array<Vec> data;
 
-  public:
+public:
     virtual string info() const { return "quantiles(" + tostring(quantiles) + ")"; }
     virtual void init(int inputsize);
     virtual void update(const Vec& input);
@@ -362,10 +362,10 @@ class QuantilesStatsIterator: public StatsIterator
 
     virtual void oldwrite(ostream& out) const;
     /* TODO Remove (deprecated)
-    virtual void oldread(istream& in);
+       virtual void oldread(istream& in);
     */
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 };
 
@@ -378,35 +378,35 @@ typedef PP<StatsIterator> StatsIt;
 class StatsItArray: public Array<StatsIt>
 {
 public:
-  StatsItArray();
-  StatsItArray(const StatsIt& statsit);
-  StatsItArray(const StatsIt& statsit1, const StatsIt& statsit2);
+    StatsItArray();
+    StatsItArray(const StatsIt& statsit);
+    StatsItArray(const StatsIt& statsit1, const StatsIt& statsit2);
 
-  StatsItArray(const Array<StatsIt>& va): Array<StatsIt>(va) {}
-  StatsItArray(Array<StatsIt>& va): Array<StatsIt>(va) {}
-  StatsItArray(const StatsItArray& va): Array<StatsIt>(va) {}
-  StatsItArray& operator&=(const StatsIt& v) 
-  { PLearn::operator&=(*this,v); return *this;}
-  StatsItArray& operator&=(const StatsItArray& va) 
-  { PLearn::operator&=(*this,va); return *this; }
-  StatsItArray operator&(const StatsIt& v) const 
-  { return PLearn::operator&(*this,v); }
-  StatsItArray operator&(const StatsItArray& va) const 
-  { return PLearn::operator&(*this,va); }
+    StatsItArray(const Array<StatsIt>& va): Array<StatsIt>(va) {}
+    StatsItArray(Array<StatsIt>& va): Array<StatsIt>(va) {}
+    StatsItArray(const StatsItArray& va): Array<StatsIt>(va) {}
+    StatsItArray& operator&=(const StatsIt& v) 
+    { PLearn::operator&=(*this,v); return *this;}
+    StatsItArray& operator&=(const StatsItArray& va) 
+    { PLearn::operator&=(*this,va); return *this; }
+    StatsItArray operator&(const StatsIt& v) const 
+    { return PLearn::operator&(*this,v); }
+    StatsItArray operator&(const StatsItArray& va) const 
+    { return PLearn::operator&(*this,va); }
 
-  void init(int inputsize);
-  void update(const Vec& input);
-  void update(const Mat& inputs);
+    void init(int inputsize);
+    void update(const Vec& input);
+    void update(const Mat& inputs);
 
-  //!  returns true if any of the StatsIterator in the array requires more than one pass through the data
-  bool requiresMultiplePasses();
+    //!  returns true if any of the StatsIterator in the array requires more than one pass through the data
+    bool requiresMultiplePasses();
 
-  //!  returns an array of those that are not yet finished
-  StatsItArray finish();
+    //!  returns an array of those that are not yet finished
+    StatsItArray finish();
 
-  Array<Vec> getResults();
+    Array<Vec> getResults();
 
-  Array<Vec> computeStats(VMat data);
+    Array<Vec> computeStats(VMat data);
 };
 
 DECLARE_TYPE_TRAITS(StatsItArray);
@@ -442,6 +442,15 @@ inline StatsIt exp_mean_stats() { return new ExpMeanStatsIterator(); }
 
 #endif
 
-
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

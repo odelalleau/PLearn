@@ -37,9 +37,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "GradientAdaboostCostVariable.h"
 
@@ -49,16 +49,16 @@ using namespace std;
 /** GradientAdaboostCostVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(
-  GradientAdaboostCostVariable,
-  "Compute sigmoid of its first input, and then computes the negative "
-  "cross-entropy cost",
-  "NO HELP");
+    GradientAdaboostCostVariable,
+    "Compute sigmoid of its first input, and then computes the negative "
+    "cross-entropy cost",
+    "NO HELP");
 
 ////////////////////////////////////
 // GradientAdaboostCostVariable //
 ////////////////////////////////////
 GradientAdaboostCostVariable::GradientAdaboostCostVariable(Variable* output, Variable* target)
-  : inherited(output,target,output->size(),1)
+    : inherited(output,target,output->size(),1)
 {
     build_();
 }
@@ -80,7 +80,7 @@ GradientAdaboostCostVariable::build_()
 void
 GradientAdaboostCostVariable::declareOptions(OptionList &ol)
 {
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 ///////////////////
@@ -94,8 +94,8 @@ void GradientAdaboostCostVariable::recomputeSize(int& l, int& w) const
 ///////////
 void GradientAdaboostCostVariable::fprop()
 {
-  for(int i=0; i<length(); i++)
-    valuedata[i] = -1*(2*input1->valuedata[i]-1)*(2*input2->valuedata[i]-1);
+    for(int i=0; i<length(); i++)
+        valuedata[i] = -1*(2*input1->valuedata[i]-1)*(2*input2->valuedata[i]-1);
 }
 
 ///////////
@@ -103,8 +103,21 @@ void GradientAdaboostCostVariable::fprop()
 ///////////
 void GradientAdaboostCostVariable::bprop()
 {
-  for(int i=0; i<length(); i++)
-    input1->gradientdata[i] += (gradientdata[i])*-2*(2*input2->valuedata[i]-1);
+    for(int i=0; i<length(); i++)
+        input1->gradientdata[i] += (gradientdata[i])*-2*(2*input2->valuedata[i]-1);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

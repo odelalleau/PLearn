@@ -51,33 +51,33 @@ PLEARN_IMPLEMENT_OBJECT(ManifoldParzen2,
                         "Parzen Window algorithm, where the covariance matrices of the gaussians are\n"
                         "computed using a knn kernel estimate. Also, only the ncomponents principal\n"
                         "eigen vector and eigen values of the covariance matrices are stored.\n"
-);
+    );
 
 /////////////////////
 // ManifoldParzen2 //
 /////////////////////
 ManifoldParzen2::ManifoldParzen2()
-  : nneighbors(4),
-  ncomponents(1),
-  use_last_eigenval(true),
-  scale_factor(1),
-  learn_mu(false)
+    : nneighbors(4),
+      ncomponents(1),
+      use_last_eigenval(true),
+      scale_factor(1),
+      learn_mu(false)
 {
-  type = "general";
-  nstages = 1;
+    type = "general";
+    nstages = 1;
 }
 
 ManifoldParzen2::ManifoldParzen2(int the_nneighbors, int the_ncomponents, bool use_last_eigenvalue, real the_scale_factor)
-  : nneighbors(the_nneighbors),ncomponents(the_ncomponents),use_last_eigenval(true),scale_factor(the_scale_factor)
+    : nneighbors(the_nneighbors),ncomponents(the_ncomponents),use_last_eigenval(true),scale_factor(the_scale_factor)
 {
-  type = "general";
-  nstages = 1;
+    type = "general";
+    nstages = 1;
 }
 
 void ManifoldParzen2::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////////////
@@ -85,44 +85,44 @@ void ManifoldParzen2::build()
 ////////////////////
 void ManifoldParzen2::declareOptions(OptionList& ol)
 {
-  declareOption(ol,"nneighbors", &ManifoldParzen2::nneighbors, OptionBase::buildoption,
-                "Number of neighbors for covariance matrix estimation.");
+    declareOption(ol,"nneighbors", &ManifoldParzen2::nneighbors, OptionBase::buildoption,
+                  "Number of neighbors for covariance matrix estimation.");
   
-  declareOption(ol,"ncomponents", &ManifoldParzen2::ncomponents, OptionBase::buildoption,
-                "Number of components to store from the PCA.");
+    declareOption(ol,"ncomponents", &ManifoldParzen2::ncomponents, OptionBase::buildoption,
+                  "Number of components to store from the PCA.");
   
-  declareOption(ol,"use_last_eigenval", &ManifoldParzen2::use_last_eigenval, OptionBase::buildoption,
-                "Indication that the last eigenvalue should be used for the remaining directions' variance.");
+    declareOption(ol,"use_last_eigenval", &ManifoldParzen2::use_last_eigenval, OptionBase::buildoption,
+                  "Indication that the last eigenvalue should be used for the remaining directions' variance.");
 
-  declareOption(ol,"learn_mu", &ManifoldParzen2::learn_mu, OptionBase::buildoption,
-                "Indication that the difference vector between the training points and the gaussians should be learned.\n"
-                "By default, the gaussians are centered at the training points.");
+    declareOption(ol,"learn_mu", &ManifoldParzen2::learn_mu, OptionBase::buildoption,
+                  "Indication that the difference vector between the training points and the gaussians should be learned.\n"
+                  "By default, the gaussians are centered at the training points.");
 
-  declareOption(ol,"global_lambda0", &ManifoldParzen2::global_lambda0, OptionBase::buildoption,
-                "If use_last_eigenvalue is false, used value for the minimum variance in all directions");
+    declareOption(ol,"global_lambda0", &ManifoldParzen2::global_lambda0, OptionBase::buildoption,
+                  "If use_last_eigenvalue is false, used value for the minimum variance in all directions");
   
-  declareOption(ol,"scale_factor", &ManifoldParzen2::scale_factor, OptionBase::buildoption,
-                "Scale factor");
+    declareOption(ol,"scale_factor", &ManifoldParzen2::scale_factor, OptionBase::buildoption,
+                  "Scale factor");
 
-   // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 
-  // Redeclare some parent's options.
+    // Redeclare some parent's options.
 
-  redeclareOption(ol,"L", &ManifoldParzen2::L, OptionBase::learntoption,
-      "Automatically set (to train_set->length()).");
+    redeclareOption(ol,"L", &ManifoldParzen2::L, OptionBase::learntoption,
+                    "Automatically set (to train_set->length()).");
 
-  redeclareOption(ol,"n_eigen", &ManifoldParzen2::n_eigen, OptionBase::learntoption,
-      "Automatically set during training.");
+    redeclareOption(ol,"n_eigen", &ManifoldParzen2::n_eigen, OptionBase::learntoption,
+                    "Automatically set during training.");
 
-  redeclareOption(ol,"type", &ManifoldParzen2::type, OptionBase::nosave,
-      "Automatically set (to 'general').");
+    redeclareOption(ol,"type", &ManifoldParzen2::type, OptionBase::nosave,
+                    "Automatically set (to 'general').");
 
-  redeclareOption(ol,"alpha_min", &ManifoldParzen2::alpha_min, OptionBase::nosave,
-      "Not used.");
+    redeclareOption(ol,"alpha_min", &ManifoldParzen2::alpha_min, OptionBase::nosave,
+                    "Not used.");
 
-  redeclareOption(ol,"kmeans_iterations", &ManifoldParzen2::kmeans_iterations, OptionBase::nosave,
-      "Not used.");
+    redeclareOption(ol,"kmeans_iterations", &ManifoldParzen2::kmeans_iterations, OptionBase::nosave,
+                    "Not used.");
 
 }
 
@@ -131,37 +131,37 @@ void ManifoldParzen2::build_()
 
 void ManifoldParzen2::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  //PLERROR("ManifoldParzen2::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    //PLERROR("ManifoldParzen2::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 // This is an efficient version of the most basic nearest neighbor search, using a Mat and euclidean distance
 void computeNearestNeighbors(Mat dataset, Vec x, Mat& neighbors, int ignore_row=-1)
 {
-  int K = neighbors.length(); // how many neighbors do we want?
-  BottomNI<real> neighbs(K);
-  for(int i=0; i<dataset.length(); i++)
-    if(i!=ignore_row)
-      neighbs.update(powdistance(dataset(i),x), i);
-  neighbs.sort();
-  TVec< pair<real,int> > indices = neighbs.getBottomN();
-  int nonzero=0;
-  for(int k=0; k<K; k++)
-  {
-    if(indices[k].first>0)
-      nonzero++;
-    neighbors(k) << dataset(indices[k].second);
-  }
-  if(nonzero==0)
-    PLERROR("All neighbors had 0 distance. Use more neighbors. (There were %i other patterns with same values)",neighbs.nZeros());
+    int K = neighbors.length(); // how many neighbors do we want?
+    BottomNI<real> neighbs(K);
+    for(int i=0; i<dataset.length(); i++)
+        if(i!=ignore_row)
+            neighbs.update(powdistance(dataset(i),x), i);
+    neighbs.sort();
+    TVec< pair<real,int> > indices = neighbs.getBottomN();
+    int nonzero=0;
+    for(int k=0; k<K; k++)
+    {
+        if(indices[k].first>0)
+            nonzero++;
+        neighbors(k) << dataset(indices[k].second);
+    }
+    if(nonzero==0)
+        PLERROR("All neighbors had 0 distance. Use more neighbors. (There were %i other patterns with same values)",neighbs.nZeros());
 }
 
 // computes the first components.length() principal components of the rows of datset.
@@ -171,191 +171,191 @@ void computeNearestNeighbors(Mat dataset, Vec x, Mat& neighbors, int ignore_row=
 void computePrincipalComponents(Mat dataset, Vec& eig_values, Mat& eig_vectors, real global_lambda0)
 {
 #ifdef BOUNDCHECK
-  if(eig_vectors.width()!=dataset.width())
-    PLERROR("In computePrincipalComponents eig_vectors and dataset must have same width");    
-  if(eig_values.length() != eig_vectors.length())
-    PLERROR("In computePrincipalComponents eig_values vec and eig_vectors mat must have same length");
+    if(eig_vectors.width()!=dataset.width())
+        PLERROR("In computePrincipalComponents eig_vectors and dataset must have same width");    
+    if(eig_values.length() != eig_vectors.length())
+        PLERROR("In computePrincipalComponents eig_values vec and eig_vectors mat must have same length");
 #endif
 
-  static Mat covar;
-  int ncomp = eig_values.length(); // number of components we want
-  covar.resize(dataset.width(), dataset.width());
-  transposeProduct(covar, dataset,dataset);
-  eigenVecOfSymmMat(covar, ncomp,  eig_values, eig_vectors); 
-  for (int i=0;i<eig_values.length();i++)
-  {
-    if (eig_values[i]<0)
-      eig_values[i] = 0;
-    eig_values[i] = eig_values[i]/dataset.length() + global_lambda0;
-  }
+    static Mat covar;
+    int ncomp = eig_values.length(); // number of components we want
+    covar.resize(dataset.width(), dataset.width());
+    transposeProduct(covar, dataset,dataset);
+    eigenVecOfSymmMat(covar, ncomp,  eig_values, eig_vectors); 
+    for (int i=0;i<eig_values.length();i++)
+    {
+        if (eig_values[i]<0)
+            eig_values[i] = 0;
+        eig_values[i] = eig_values[i]/dataset.length() + global_lambda0;
+    }
 }
 
 void computeLocalPrincipalComponents(Mat& dataset, int which_pattern, Mat& delta_neighbors, Vec& eig_values, Mat& eig_vectors, Vec& mean, bool learn_mu=false,real global_lambda0=0)
 {
-  Vec center = dataset(which_pattern);
-  if (center.hasMissing())
-    PLERROR("dataset row %d has missing values!", which_pattern);
-  computeNearestNeighbors(dataset, center, delta_neighbors, which_pattern);
-  if(learn_mu)
-  {
-    mean.resize(delta_neighbors.width());  // Hugo: the mean should be the current point...
-    columnMean(delta_neighbors, mean);
-  }
-  delta_neighbors -= mean;
-  computePrincipalComponents(delta_neighbors, eig_values, eig_vectors,global_lambda0);
+    Vec center = dataset(which_pattern);
+    if (center.hasMissing())
+        PLERROR("dataset row %d has missing values!", which_pattern);
+    computeNearestNeighbors(dataset, center, delta_neighbors, which_pattern);
+    if(learn_mu)
+    {
+        mean.resize(delta_neighbors.width());  // Hugo: the mean should be the current point...
+        columnMean(delta_neighbors, mean);
+    }
+    delta_neighbors -= mean;
+    computePrincipalComponents(delta_neighbors, eig_values, eig_vectors,global_lambda0);
 }
 
 void ManifoldParzen2::train()
 {
-  Mat trainset(train_set);
-  int l = train_set.length();
-  int w = train_set.width();
-  eigenval_copy.resize(ncomponents+1);
-  row.resize(w);
+    Mat trainset(train_set);
+    int l = train_set.length();
+    int w = train_set.width();
+    eigenval_copy.resize(ncomponents+1);
+    row.resize(w);
 
-  L = l;
-  D = ncomponents;
-  n_eigen = ncomponents;
-  GaussMix::build();
-  resizeStuffBeforeTraining();
+    L = l;
+    D = ncomponents;
+    n_eigen = ncomponents;
+    GaussMix::build();
+    resizeStuffBeforeTraining();
 //  setMixtureTypeGeneral(l, ncomponents, w); // TODO Remove this line when it works.
 
-  // storage for neighbors
-  Mat delta_neighbors(nneighbors, w);
-  Vec eigvals(ncomponents+1);
-  Mat components_eigenvecs(ncomponents+1,w);
-  for(int i=0; i<l; i++)
-  {
-    if(i%100==0)
-      cerr << "[SEQUENTIAL TRAIN: processing pattern #" << i << "/" << l << "]\n";
+    // storage for neighbors
+    Mat delta_neighbors(nneighbors, w);
+    Vec eigvals(ncomponents+1);
+    Mat components_eigenvecs(ncomponents+1,w);
+    for(int i=0; i<l; i++)
+    {
+        if(i%100==0)
+            cerr << "[SEQUENTIAL TRAIN: processing pattern #" << i << "/" << l << "]\n";
       
-    // center is sample
-    mu(i) << trainset(i);
+        // center is sample
+        mu(i) << trainset(i);
     
-    Vec center(mu.width());
-    center << trainset(i);
-    if(use_last_eigenval)
-      computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs, center,learn_mu);
-    else
-      computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs, center,learn_mu,global_lambda0);
+        Vec center(mu.width());
+        center << trainset(i);
+        if(use_last_eigenval)
+            computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs, center,learn_mu);
+        else
+            computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs, center,learn_mu,global_lambda0);
 
-    eigvals *= scale_factor;
+        eigvals *= scale_factor;
 
 //    cout<<delta_neighbors<<endl;
     
-    real d=0;
-    for(int k=0;k<delta_neighbors.length();k++)
-      d+=dist(delta_neighbors(k),Vec(D,0.0),2);
-    d/=delta_neighbors.length();
+        real d=0;
+        for(int k=0;k<delta_neighbors.length();k++)
+            d+=dist(delta_neighbors(k),Vec(D,0.0),2);
+        d/=delta_neighbors.length();
 
-    // find out eigenvalue (a.k.a lambda0) that will be used for all D-K directions
-    real lambda0;
-    if(use_last_eigenval)
-    {
-      // take last (smallest) eigenvalue as a variance in the non-principal directions
-      // (but if it is 0 because of linear dependencies in the data, take the
-      // last, i.e. smallest, non-zero eigenvalue).
-      int last=ncomponents;
-      lambda0 = eigvals[last];
-      while (lambda0==0 && last>0)
-        lambda0 = eigvals[--last];
-      // the sigma-square for all remaining dimensions
-      if (lambda0 == 0)
-        PLERROR("All (%i) principal components have zero variance!?",eigvals.length());
-    }
-    else lambda0 = global_lambda0;
+        // find out eigenvalue (a.k.a lambda0) that will be used for all D-K directions
+        real lambda0;
+        if(use_last_eigenval)
+        {
+            // take last (smallest) eigenvalue as a variance in the non-principal directions
+            // (but if it is 0 because of linear dependencies in the data, take the
+            // last, i.e. smallest, non-zero eigenvalue).
+            int last=ncomponents;
+            lambda0 = eigvals[last];
+            while (lambda0==0 && last>0)
+                lambda0 = eigvals[--last];
+            // the sigma-square for all remaining dimensions
+            if (lambda0 == 0)
+                PLERROR("All (%i) principal components have zero variance!?",eigvals.length());
+        }
+        else lambda0 = global_lambda0;
 
-    alpha[i] = 1.0 / l;
-    n_eigen = eigvals.length() - 1;
-    //GaussMix::build();
-    //resizeStuffBeforeTraining();
-    if(learn_mu)
-      mu(i) << center;   // Hugo: the mean should be current point... 
-    eigenvalues(i) << eigvals;
-    eigenvalues(i, n_eigen_computed - 1) = lambda0;
-    eigenvectors[i] << components_eigenvecs;
+        alpha[i] = 1.0 / l;
+        n_eigen = eigvals.length() - 1;
+        //GaussMix::build();
+        //resizeStuffBeforeTraining();
+        if(learn_mu)
+            mu(i) << center;   // Hugo: the mean should be current point... 
+        eigenvalues(i) << eigvals;
+        eigenvalues(i, n_eigen_computed - 1) = lambda0;
+        eigenvectors[i] << components_eigenvecs;
 //    setGaussianGeneral(i, 1.0/l, center, eigvals.subVec(0,eigvals.length()-1), components_eigenvecs.subMatRows(0,eigvals.length()-1), lambda0);
-  }
-  stage = 1;
-  precomputeStuff();
-  build();
+    }
+    stage = 1;
+    precomputeStuff();
+    build();
 }
 
 int ManifoldParzen2::find_nearest_neighbor(VMat data, Vec x) const
 {
-  int ret = -1;
-  real distance = MISSING_VALUE;
-  real temp;
-  for(int i=0; i<data->length(); i++)
-  {
-    data->getRow(i,row);
-    temp = dist(row,x,2);
-    if(is_missing(distance) || temp<distance)
+    int ret = -1;
+    real distance = MISSING_VALUE;
+    real temp;
+    for(int i=0; i<data->length(); i++)
     {
-      distance = temp;
-      ret = i;
+        data->getRow(i,row);
+        temp = dist(row,x,2);
+        if(is_missing(distance) || temp<distance)
+        {
+            distance = temp;
+            ret = i;
+        }
     }
-  }
-  return ret;
+    return ret;
 }
 
 real ManifoldParzen2::evaluate(Vec x1,Vec x2,real scale)
 {
-  real ret;
-  int i = find_nearest_neighbor(train_set,x2);  
+    real ret;
+    int i = find_nearest_neighbor(train_set,x2);  
   
-  if(scale == 1)
-    ret = computeLogLikelihood(x1,i);
-  else
-  {
-    eigenval_copy << eigenvalues(i);
-    eigenvalues(i) *= scale;
+    if(scale == 1)
+        ret = computeLogLikelihood(x1,i);
+    else
+    {
+        eigenval_copy << eigenvalues(i);
+        eigenvalues(i) *= scale;
 
-    // Maybe sigma_min should be adjusted!
+        // Maybe sigma_min should be adjusted!
 
-    ret = computeLogLikelihood(x1,i);
+        ret = computeLogLikelihood(x1,i);
 
-    eigenvalues(i) << eigenval_copy;
-  }
-  return exp(ret);
+        eigenvalues(i) << eigenval_copy;
+    }
+    return exp(ret);
   
-  /*
-  row = x1 - mu(i);
-  ret = 0.5 * scale * pownorm(row)/eigenvalues(i,n_eigen_computed - 1);
-  for (int k = 0; k < n_eigen_computed - 1; k++) {
-    ret += 0.5 * scale * (1.0 / eigenvalues(i,k) - 1.0/eigenvalues(i,n_eigen_computed-1)) * square(dot(eigenvectors[i](k), row));
-  }
-  return ret;
-  */
+    /*
+      row = x1 - mu(i);
+      ret = 0.5 * scale * pownorm(row)/eigenvalues(i,n_eigen_computed - 1);
+      for (int k = 0; k < n_eigen_computed - 1; k++) {
+      ret += 0.5 * scale * (1.0 / eigenvalues(i,k) - 1.0/eigenvalues(i,n_eigen_computed-1)) * square(dot(eigenvectors[i](k), row));
+      }
+      return ret;
+    */
 }
 
 real ManifoldParzen2::evaluate_i_j(int i,int j,real scale)
 {
-  real ret;
+    real ret;
   
-  if(scale == 1)
-    ret = computeLogLikelihood(mu(i),j);
-  else
-  {
-    eigenval_copy << eigenvalues(j);
-    eigenvalues(j) *= scale;
+    if(scale == 1)
+        ret = computeLogLikelihood(mu(i),j);
+    else
+    {
+        eigenval_copy << eigenvalues(j);
+        eigenvalues(j) *= scale;
 
-    // Maybe sigma_min should be adjusted!
+        // Maybe sigma_min should be adjusted!
 
-    ret = computeLogLikelihood(mu(i),j);
+        ret = computeLogLikelihood(mu(i),j);
 
-    eigenvalues(j) << eigenval_copy;
-  }
-  return exp(ret);
+        eigenvalues(j) << eigenval_copy;
+    }
+    return exp(ret);
   
-  /*
-  row = mu(i) - mu(j);
-  ret = scale * pownorm(row)/eigenvalues(j,n_eigen_computed - 1);
-  for (int k = 0; k < n_eigen_computed - 1; k++) {
-    ret += scale * (1.0 / eigenvalues(j,k) - 1.0/eigenvalues(j,n_eigen_computed-1)) * square(dot(eigenvectors[j](k), row));
-  }
-  return ret;
-  */
+    /*
+      row = mu(i) - mu(j);
+      ret = scale * pownorm(row)/eigenvalues(j,n_eigen_computed - 1);
+      for (int k = 0; k < n_eigen_computed - 1; k++) {
+      ret += scale * (1.0 / eigenvalues(j,k) - 1.0/eigenvalues(j,n_eigen_computed-1)) * square(dot(eigenvectors[j](k), row));
+      }
+      return ret;
+    */
 }
 
 
@@ -365,49 +365,49 @@ real ManifoldParzen2::evaluate_i_j(int i,int j,real scale)
 ///////////////////
 void ManifoldParzen2::computeOutput(const Vec& input, Vec& output) const
 {
-  switch(outputs_def[0])
-  {
-  case 'r':
-  {
-    int i, last_i=-1;
-    int nstep = 100000;
-    real step = 0.001;
-    int save_every = 100;
-    string fsave = "";
-    string musave = "";
-    VMat temp;
-    t_row.resize(input.length());
-    row.resize(input.length());
-    t_row << input;
-    mu_temp.resize(mu.length(),mu.width());
-    temp_eigv.resize(input.length());
-    mu_temp << mu;
-    for(int s=0; s<nstep;s++)
+    switch(outputs_def[0])
     {
-      i = find_nearest_neighbor(new MemoryVMatrix(mu_temp),t_row);  
+    case 'r':
+    {
+        int i, last_i=-1;
+        int nstep = 100000;
+        real step = 0.001;
+        int save_every = 100;
+        string fsave = "";
+        string musave = "";
+        VMat temp;
+        t_row.resize(input.length());
+        row.resize(input.length());
+        t_row << input;
+        mu_temp.resize(mu.length(),mu.width());
+        temp_eigv.resize(input.length());
+        mu_temp << mu;
+        for(int s=0; s<nstep;s++)
+        {
+            i = find_nearest_neighbor(new MemoryVMatrix(mu_temp),t_row);  
   
-      if(s % save_every == 0)
-      {
-        fsave = "mp_walk_" + tostring(s) + ".amat";
-        temp = new MemoryVMatrix(t_row.toMat(1,t_row.length()));
-        temp->saveAMAT(fsave,false,true);
+            if(s % save_every == 0)
+            {
+                fsave = "mp_walk_" + tostring(s) + ".amat";
+                temp = new MemoryVMatrix(t_row.toMat(1,t_row.length()));
+                temp->saveAMAT(fsave,false,true);
 
-        musave = "mp_mu_" + tostring(s) + ".amat";
-        temp = new MemoryVMatrix(mu_temp(i).toMat(1,mu_temp(i).length()));
-        temp->saveAMAT(musave,false,true);
+                musave = "mp_mu_" + tostring(s) + ".amat";
+                temp = new MemoryVMatrix(mu_temp(i).toMat(1,mu_temp(i).length()));
+                temp->saveAMAT(musave,false,true);
 
-      }
-      temp_eigv << eigenvectors[i](0);
-      real sign = (last_i == -1 || dot(eigenvectors[i](0),eigenvectors[last_i](0)) >= 0 ? 1 : -1);
-      t_row += step*sign*temp_eigv ;
-      last_i = i;
+            }
+            temp_eigv << eigenvectors[i](0);
+            real sign = (last_i == -1 || dot(eigenvectors[i](0),eigenvectors[last_i](0)) >= 0 ? 1 : -1);
+            t_row += step*sign*temp_eigv ;
+            last_i = i;
+        }
+        output << t_row;
+        break;
     }
-    output << t_row;
-    break;
-  }
-  default:
-    inherited::computeOutput(input,output);
-  }
+    default:
+        inherited::computeOutput(input,output);
+    }
 }
 
 ////////////////
@@ -415,13 +415,26 @@ void ManifoldParzen2::computeOutput(const Vec& input, Vec& output) const
 ////////////////
 int ManifoldParzen2::outputsize() const
 {
-  switch(outputs_def[0])
-  {
-  case 'r':
-    return eigenvectors[0].width();
-  default:
-    return inherited::outputsize();
-  }
+    switch(outputs_def[0])
+    {
+    case 'r':
+        return eigenvectors[0].width();
+    default:
+        return inherited::outputsize();
+    }
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

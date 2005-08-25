@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.h,v 1.14 2005/02/04 15:10:42 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -54,58 +54,58 @@ class SubVMatrix: public VMatrix
 
 private:
 
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
 public:
   
-  //! Build options.
-  VMat parent;
-  int istart;
-  int jstart;
-  real fistart;
-  real flength;
+    //! Build options.
+    VMat parent;
+    int istart;
+    int jstart;
+    real fistart;
+    real flength;
   
-  //! The appropriate VMFields of the parent VMat are copied upon
-  //! construction
-  SubVMatrix();
-  SubVMatrix(VMat the_parent, int the_istart, int the_jstart, int the_length, int the_width);
-  SubVMatrix(VMat the_parent, real the_fistart, int the_jstart, real the_flength, int the_width);
+    //! The appropriate VMFields of the parent VMat are copied upon
+    //! construction
+    SubVMatrix();
+    SubVMatrix(VMat the_parent, int the_istart, int the_jstart, int the_length, int the_width);
+    SubVMatrix(VMat the_parent, real the_fistart, int the_jstart, real the_flength, int the_width);
 
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
-  virtual void getMat(int i, int j, Mat m) const;
-  virtual void put(int i, int j, real value);
-  virtual void putSubRow(int i, int j, Vec v);
-  virtual void putMat(int i, int j, Mat m);
-  virtual VMat subMat(int i, int j, int l, int w);
+    virtual real get(int i, int j) const;
+    virtual void getSubRow(int i, int j, Vec v) const;
+    virtual void getMat(int i, int j, Mat m) const;
+    virtual void put(int i, int j, real value);
+    virtual void putSubRow(int i, int j, Vec v);
+    virtual void putMat(int i, int j, Mat m);
+    virtual VMat subMat(int i, int j, int l, int w);
 
-  virtual real dot(int i1, int i2, int inputsize) const;
-  virtual real dot(int i, const Vec& v) const;
+    virtual real dot(int i1, int i2, int inputsize) const;
+    virtual real dot(int i, const Vec& v) const;
 
-  virtual void reset_dimensions();
+    virtual void reset_dimensions();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  PLEARN_DECLARE_OBJECT(SubVMatrix);
-  virtual void build();
+    PLEARN_DECLARE_OBJECT(SubVMatrix);
+    virtual void build();
 
-  //! Return the dimension of the values for a certain field, -1 if continuous   
-  virtual int getDimension(int row, int col) const;
+    //! Return the dimension of the values for a certain field, -1 if continuous   
+    virtual int getDimension(int row, int col) const;
 
-  //! Returns the possible values for a certain field in the VMatrix
-  virtual Vec getValues(int row, int col) const;
+    //! Returns the possible values for a certain field in the VMatrix
+    virtual Vec getValues(int row, int col) const;
 
-  //! Gives the possible values of a certain field (column) given the input
-  virtual Vec getValues(const Vec& input, int col) const;
+    //! Gives the possible values of a certain field (column) given the input
+    virtual Vec getValues(const Vec& input, int col) const;
 
 protected:
 
-  static void declareOptions(OptionList &ol);
+    static void declareOptions(OptionList &ol);
 
 private:
 
-  void build_();
+    void build_();
 
 };
 
@@ -113,3 +113,16 @@ DECLARE_OBJECT_PTR(SubVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

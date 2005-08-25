@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.h,v 1.13 2004/11/23 21:31:16 tihocan Exp $
+ * $Id$
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -54,115 +54,115 @@ class LiftStatsCollector: public VecStatsCollector
 
 private:
 
-  typedef VecStatsCollector inherited;
+    typedef VecStatsCollector inherited;
 
 protected:
 
-  // Protected options.
+    // Protected options.
   
-  int count_fin;
-  Vec roc_values;
+    int count_fin;
+    Vec roc_values;
 
-  // Fields below are not options.
+    // Fields below are not options.
 
-  //! Matrix storing the output and target of the samples with highest output,
-  //! as well as all the other data retrieved since the last call to finalize.
-  Mat n_first_updates;
+    //! Matrix storing the output and target of the samples with highest output,
+    //! as well as all the other data retrieved since the last call to finalize.
+    Mat n_first_updates;
 
-  //! Set to true after each call to finalize().
-  bool is_finalized;
+    //! Set to true after each call to finalize().
+    bool is_finalized;
 
-  //! Number of examples stored in the n_first_updates matrix.
-  int nstored;
+    //! Number of examples stored in the n_first_updates matrix.
+    int nstored;
 
-  //! Number of samples seen.
-  int nsamples;
+    //! Number of samples seen.
+    int nsamples;
 
-  //! Number of positive examples that are not retained in the ones with the
-  //! highest output (that is to say the ones in n_first_updates).
-  int npos;
+    //! Number of positive examples that are not retained in the ones with the
+    //! highest output (that is to say the ones in n_first_updates).
+    int npos;
 
-  //! Number of examples to keep (nsamples * lift_fraction).
-  int n_samples_to_keep;
+    //! Number of examples to keep (nsamples * lift_fraction).
+    int n_samples_to_keep;
 
-  //! Index of the output column.
-  int output_column_index;
+    //! Index of the output column.
+    int output_column_index;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  string lift_file;
-  real lift_fraction;
-  bool opposite_lift;
-  string output_column;
-  string roc_file;
-  Vec roc_fractions;
-  int sign_trick;
-  int target_column;
-  int verbosity;
+    string lift_file;
+    real lift_fraction;
+    bool opposite_lift;
+    string output_column;
+    string roc_file;
+    Vec roc_fractions;
+    int sign_trick;
+    int target_column;
+    int verbosity;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  LiftStatsCollector();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    LiftStatsCollector();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
-  // A few overrides to properly save the accumulated information
-  virtual void forget();
-  virtual void update(const Vec& x, real weight = 1.0);
+    // A few overrides to properly save the accumulated information
+    virtual void forget();
+    virtual void update(const Vec& x, real weight = 1.0);
 
-  //! This finalize override makes sure only the n_samples_to_keep samples
-  //! from the matrix n_first_updates with the highest output are left.
-  virtual void finalize();
+    //! This finalize override makes sure only the n_samples_to_keep samples
+    //! from the matrix n_first_updates with the highest output are left.
+    virtual void finalize();
 
-  //! In addition to the regular VecStatsCollector statistics, we
-  //! understand specific lift statistics (see the .cc).
-  virtual double getStat(const string& statspec);
+    //! In addition to the regular VecStatsCollector statistics, we
+    //! understand specific lift statistics (see the .cc).
+    virtual double getStat(const string& statspec);
 
-  //! Overridden because it is not supported in this VecStatsCollector.
-  virtual void remove_observation(const Vec& x, real weight = 1.0);
+    //! Overridden because it is not supported in this VecStatsCollector.
+    virtual void remove_observation(const Vec& x, real weight = 1.0);
 
 protected:
 
-  //! Return the AUC statistic.
-  real computeAUC();
+    //! Return the AUC statistic.
+    real computeAUC();
 
-  //! Return the LIFT statistic.
-  real computeLift();
+    //! Return the LIFT statistic.
+    real computeLift();
   
-  //! Return the LIFT_MAX statistic.
-  real computeLiftMax();
+    //! Return the LIFT_MAX statistic.
+    real computeLiftMax();
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // Declares other standard object methods
-  PLEARN_DECLARE_OBJECT(LiftStatsCollector);
+    // Declares other standard object methods
+    PLEARN_DECLARE_OBJECT(LiftStatsCollector);
 
-  // simply calls inherited::build() then build_().
-  virtual void build();
+    // simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 
@@ -172,3 +172,16 @@ DECLARE_OBJECT_PTR(LiftStatsCollector);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

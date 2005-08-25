@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id$
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
 
@@ -54,167 +54,167 @@ class NNet: public PLearner
 
 private:
 
-  typedef PLearner inherited;
+    typedef PLearner inherited;
 
 protected:
 
-  Var rbf_centers; // n_classes (or n_classes-1) x rbf_layer_size = mu_i of RBF gaussians
-  Var rbf_sigmas; // n_classes (or n_classes-1) entries (sigma's of the RBFs)
-  Var junk_prob; // scalar background (junk) probability, if first_class_is_junk
-  Var alpha_adaboost;
-  Var output;
-  Var predicted_input;
-  VarArray costs; // all costs of interest
-  VarArray penalties;
-  Var training_cost; // weighted scalar costs[0] including penalties
-  Var test_costs; // hconcat(costs)
-  VarArray invars;
-  VarArray params;  // all arameter input vars
+    Var rbf_centers; // n_classes (or n_classes-1) x rbf_layer_size = mu_i of RBF gaussians
+    Var rbf_sigmas; // n_classes (or n_classes-1) entries (sigma's of the RBFs)
+    Var junk_prob; // scalar background (junk) probability, if first_class_is_junk
+    Var alpha_adaboost;
+    Var output;
+    Var predicted_input;
+    VarArray costs; // all costs of interest
+    VarArray penalties;
+    Var training_cost; // weighted scalar costs[0] including penalties
+    Var test_costs; // hconcat(costs)
+    VarArray invars;
+    VarArray params;  // all arameter input vars
 
 // to put back later -- blip  Vec paramsvalues; // values of all parameters
 
 public: // to set these values instead of getting them by training
-  Vec paramsvalues; // values of all parameters
-  Var input;  // Var(inputsize())
-  Var target; // Var(targetsize()-weightsize())
-  Var sampleweight; // Var(1) if train_set->hasWeights()
+    Vec paramsvalues; // values of all parameters
+    Var input;  // Var(inputsize())
+    Var target; // Var(targetsize()-weightsize())
+    Var sampleweight; // Var(1) if train_set->hasWeights()
 
-  Var w1; // bias and weights of first hidden layer
-  Var w2; // bias and weights of second hidden layer
-  Var wout; // bias and weights of output layer
-  Var outbias; // bias used only if fixed_output_weights
-  Var wdirect; // bias and weights for direct in-to-out connection
-  Var wrec; // input reconstruction weights (optional), from hidden layer to predicted input
+    Var w1; // bias and weights of first hidden layer
+    Var w2; // bias and weights of second hidden layer
+    Var wout; // bias and weights of output layer
+    Var outbias; // bias used only if fixed_output_weights
+    Var wdirect; // bias and weights for direct in-to-out connection
+    Var wrec; // input reconstruction weights (optional), from hidden layer to predicted input
 
-  // first hidden layer
-  Var hidden_layer;
-
-public:
-
-  mutable Func f; // input -> output
-  mutable Func test_costf; // input & target -> output & test_costs
-  mutable Func output_and_target_to_cost; // output & target -> cost
+    // first hidden layer
+    Var hidden_layer;
 
 public:
 
-  // Build options inherited from learner:
-  // inputsize, outputszie, targetsize, experiment_name, save_at_every_epoch 
+    mutable Func f; // input -> output
+    mutable Func test_costf; // input & target -> output & test_costs
+    mutable Func output_and_target_to_cost; // output & target -> cost
 
-  // Build options:    
-  int nhidden;    // number of hidden units in first hidden layer (default:0)
-  int nhidden2;   // number of hidden units in second hidden layer (default:0)
-  int noutputs;   // number of output units (outputsize)
+public:
 
-  real weight_decay; // default: 0
-  real bias_decay;   // default: 0 
-  real layer1_weight_decay; // default: MISSING_VALUE
-  real layer1_bias_decay;   // default: MISSING_VALUE
-  real layer2_weight_decay; // default: MISSING_VALUE
-  real layer2_bias_decay;   // default: MISSING_VALUE
-  real output_layer_weight_decay; // default: MISSING_VALUE
-  real output_layer_bias_decay;   // default: MISSING_VALUE
-  real direct_in_to_out_weight_decay; // default: MISSING_VALUE
-  real classification_regularizer; // default: 0
-  real margin; // default: 1, used with margin_perceptron_cost
-  bool fixed_output_weights;
+    // Build options inherited from learner:
+    // inputsize, outputszie, targetsize, experiment_name, save_at_every_epoch 
 
-  int rbf_layer_size; // number of representation units when adding an rbf layer in output
-  bool first_class_is_junk;
+    // Build options:    
+    int nhidden;    // number of hidden units in first hidden layer (default:0)
+    int nhidden2;   // number of hidden units in second hidden layer (default:0)
+    int noutputs;   // number of output units (outputsize)
 
-  string penalty_type; // default: "L2_square"
-  bool L1_penalty; // default: false - deprecated, set "penalty_type" to "L1"
+    real weight_decay; // default: 0
+    real bias_decay;   // default: 0 
+    real layer1_weight_decay; // default: MISSING_VALUE
+    real layer1_bias_decay;   // default: MISSING_VALUE
+    real layer2_weight_decay; // default: MISSING_VALUE
+    real layer2_bias_decay;   // default: MISSING_VALUE
+    real output_layer_weight_decay; // default: MISSING_VALUE
+    real output_layer_bias_decay;   // default: MISSING_VALUE
+    real direct_in_to_out_weight_decay; // default: MISSING_VALUE
+    real classification_regularizer; // default: 0
+    real margin; // default: 1, used with margin_perceptron_cost
+    bool fixed_output_weights;
 
-  real input_reconstruction_penalty; // default = 0
-  bool direct_in_to_out; // should we include direct input to output connecitons? default: false
-  string output_transfer_func; // tanh, sigmoid, softplus, softmax, etc...  (default: "" means no transfer function)
-  string hidden_transfer_func; // tanh, sigmoid, softplus, softmax, etc...  (default: "tanh" means no transfer function)
-  real interval_minval, interval_maxval; // if output_transfer_func = interval(minval,maxval), these are the interval bounds
+    int rbf_layer_size; // number of representation units when adding an rbf layer in output
+    bool first_class_is_junk;
 
-  bool do_not_change_params;
+    string penalty_type; // default: "L2_square"
+    bool L1_penalty; // default: false - deprecated, set "penalty_type" to "L1"
 
-  Var first_hidden_layer;
+    real input_reconstruction_penalty; // default = 0
+    bool direct_in_to_out; // should we include direct input to output connecitons? default: false
+    string output_transfer_func; // tanh, sigmoid, softplus, softmax, etc...  (default: "" means no transfer function)
+    string hidden_transfer_func; // tanh, sigmoid, softplus, softmax, etc...  (default: "tanh" means no transfer function)
+    real interval_minval, interval_maxval; // if output_transfer_func = interval(minval,maxval), these are the interval bounds
 
-  //! Cost functions.
-  TVec<string> cost_funcs;  
+    bool do_not_change_params;
 
-  // Build options related to the optimization:
-  PP<Optimizer> optimizer; // the optimizer to use (no default)
+    Var first_hidden_layer;
 
-  int batch_size; // how many samples to use to estimate gradient before an update
-  // 0 means the whole training set (default: 1)
+    //! Cost functions.
+    TVec<string> cost_funcs;  
 
-  string initialization_method;
+    // Build options related to the optimization:
+    PP<Optimizer> optimizer; // the optimizer to use (no default)
+
+    int batch_size; // how many samples to use to estimate gradient before an update
+    // 0 means the whole training set (default: 1)
+
+    string initialization_method;
 
 
 private:
-  void build_();
+    void build_();
 
 public:
 
-  NNet();
-  virtual ~NNet();
-  PLEARN_DECLARE_OBJECT(NNet);
+    NNet();
+    virtual ~NNet();
+    PLEARN_DECLARE_OBJECT(NNet);
 
-  virtual void build();
-  virtual void forget(); // simply calls initializeParams()
+    virtual void build();
+    virtual void forget(); // simply calls initializeParams()
 
-  virtual int outputsize() const;
-  virtual TVec<string> getTrainCostNames() const;
-  virtual TVec<string> getTestCostNames() const;
+    virtual int outputsize() const;
+    virtual TVec<string> getTrainCostNames() const;
+    virtual TVec<string> getTestCostNames() const;
 
-  virtual void train();
+    virtual void train();
 
-  virtual void computeOutput(const Vec& input, Vec& output) const;
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
-  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-                                     Vec& output, Vec& costs) const;
+    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                       Vec& output, Vec& costs) const;
 
-  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                       const Vec& target, Vec& costs) const;
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const;
 
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap &copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap &copies);
 
-  //! Methods to get the network's (learned) parameters.
-  virtual Mat getW1() {return w1->matValue;}
-  virtual Mat getW2() {return w2->matValue;}
-  virtual Mat getWdirect() {return wdirect->matValue;}
-  virtual Mat getWout() {return wout->matValue;}
+    //! Methods to get the network's (learned) parameters.
+    virtual Mat getW1() {return w1->matValue;}
+    virtual Mat getW2() {return w2->matValue;}
+    virtual Mat getWdirect() {return wdirect->matValue;}
+    virtual Mat getWout() {return wout->matValue;}
 
 protected:
-  static void declareOptions(OptionList& ol);
+    static void declareOptions(OptionList& ol);
 
-  //! Initialize the parameters. If 'set_seed' is set to false, the seed
-  //! will not be set in this method (it will be assumed to be already
-  //! initialized according to the 'seed' option).
-  virtual void initializeParams(bool set_seed = true);
+    //! Initialize the parameters. If 'set_seed' is set to false, the seed
+    //! will not be set in this method (it will be assumed to be already
+    //! initialized according to the 'seed' option).
+    virtual void initializeParams(bool set_seed = true);
 
-  //! Return a variable that is the hidden layer corresponding to given
-  //! input and weights. If the 'default' transfer_func is used, we use the
-  //! hidden_transfer_func option.
-  Var hiddenLayer(const Var& input, const Var& weights, string transfer_func = "default");
+    //! Return a variable that is the hidden layer corresponding to given
+    //! input and weights. If the 'default' transfer_func is used, we use the
+    //! hidden_transfer_func option.
+    Var hiddenLayer(const Var& input, const Var& weights, string transfer_func = "default");
 
-  //! Build the output of the neural network, from the given input.
-  //! The hidden layer is also made available in the 'hidden_layer' parameter.
-  //! The output before the transfer function is applied is also made
-  //! available in the 'before_transfer_func' parameter.
-  void buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& before_transfer_func);
+    //! Build the output of the neural network, from the given input.
+    //! The hidden layer is also made available in the 'hidden_layer' parameter.
+    //! The output before the transfer function is applied is also made
+    //! available in the 'before_transfer_func' parameter.
+    void buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& before_transfer_func);
 
-  //! Builds the target and sampleweight variables.
-  void buildTargetAndWeight();
+    //! Builds the target and sampleweight variables.
+    void buildTargetAndWeight();
 
-  //! Build the costs variable from other variables.
-  void buildCosts(const Var& output, const Var& target, const Var& hidden_layer, const Var& before_transfer_func);
+    //! Build the costs variable from other variables.
+    void buildCosts(const Var& output, const Var& target, const Var& hidden_layer, const Var& before_transfer_func);
 
-  //! Build the various functions used in the network.
-  void buildFuncs(const Var& the_input, const Var& the_output, const Var& the_target, const Var& the_sampleweight);
+    //! Build the various functions used in the network.
+    void buildFuncs(const Var& the_input, const Var& the_output, const Var& the_target, const Var& the_sampleweight);
 
-  //! Fill a matrix of weights according to the 'initialization_method' specified.
-  //! The 'clear_first_row' boolean indicates whether we should fill the first
-  //! row with zeros.
-  void fillWeights(const Var& weights, bool clear_first_row);
+    //! Fill a matrix of weights according to the 'initialization_method' specified.
+    //! The 'clear_first_row' boolean indicates whether we should fill the first
+    //! row with zeros.
+    void fillWeights(const Var& weights, bool clear_first_row);
 
-  //! Fill the costs penalties.
-  virtual void buildPenalties(const Var& hidden_layer);
+    //! Fill the costs penalties.
+    virtual void buildPenalties(const Var& hidden_layer);
 
 };
 
@@ -224,3 +224,15 @@ DECLARE_OBJECT_PTR(NNet);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: Max2Variable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "Max2Variable.h"
 #include "Var_operators.h"
@@ -56,7 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(Max2Variable,
                         "NO HELP");
 
 Max2Variable::Max2Variable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, input1->length(), input1->width())
+    : inherited(input1, input2, input1->length(), input1->width())
 {
     build_();
 }
@@ -89,41 +89,52 @@ void Max2Variable::recomputeSize(int& l, int& w) const
 
 void Max2Variable::fprop()
 {
-  int n=input1->value.length();
-  real* v1=input1->value.data();
-  real* v2=input2->value.data();
-  real* v=value.data();
-  for (int i=0;i<n;i++)
-    v[i] = std::max(v1[i],v2[i]);
+    int n=input1->value.length();
+    real* v1=input1->value.data();
+    real* v2=input2->value.data();
+    real* v=value.data();
+    for (int i=0;i<n;i++)
+        v[i] = std::max(v1[i],v2[i]);
 }
 
 
 void Max2Variable::bprop()
 {
-  int n=input1->value.length();
-  real* v1=input1->value.data();
-  real* v2=input2->value.data();
-  real* grad1=input1->gradient.data();
-  real* grad2=input2->gradient.data();
-  real* grad=gradient.data();
-  for (int i=0;i<n;i++)
-  {
-    if (v2[i]<v1[i])
-      grad1[i] += grad[i];
-    if (v1[i]<v2[i])
-      grad2[i] += grad[i];
-  }
+    int n=input1->value.length();
+    real* v1=input1->value.data();
+    real* v2=input2->value.data();
+    real* grad1=input1->gradient.data();
+    real* grad2=input2->gradient.data();
+    real* grad=gradient.data();
+    for (int i=0;i<n;i++)
+    {
+        if (v2[i]<v1[i])
+            grad1[i] += grad[i];
+        if (v1[i]<v2[i])
+            grad2[i] += grad[i];
+    }
 }
 
 
 void Max2Variable::symbolicBprop()
 {
-  input1->accg((input2<input1)*g);
-  input2->accg((input1<input2)*g);
+    input1->accg((input2<input1)*g);
+    input2->accg((input1<input2)*g);
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

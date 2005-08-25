@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: GeneralizedDistanceRBFKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "GeneralizedDistanceRBFKernel.h"
 
@@ -51,14 +51,14 @@ PLEARN_IMPLEMENT_OBJECT(GeneralizedDistanceRBFKernel, "ONE LINE DESCR", "NO HELP
 real GeneralizedDistanceRBFKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
 #ifdef BOUNDCHECK
-  if(x1.length()!=x2.length())
-    PLERROR("IN GeneralizedDistanceRBFKernel::evaluate x1 and x2 must have the same length");
+    if(x1.length()!=x2.length())
+        PLERROR("IN GeneralizedDistanceRBFKernel::evaluate x1 and x2 must have the same length");
 #endif
 
-  real summ = 0.0;
-  for(int i=0; i<x1.length(); i++)
-    summ += pow(fabs(pow(x1[i],(real)a)-pow(x2[i],(real)a)), (real)b);
-  return exp(-phi*pow(summ,c));
+    real summ = 0.0;
+    for(int i=0; i<x1.length(); i++)
+        summ += pow(fabs(pow(x1[i],(real)a)-pow(x2[i],(real)a)), (real)b);
+    return exp(-phi*pow(summ,c));
 }
 
 
@@ -78,3 +78,15 @@ void GeneralizedDistanceRBFKernel::declareOptions(OptionList &ol)
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

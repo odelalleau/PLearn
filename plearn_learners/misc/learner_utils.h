@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: learner_utils.h,v 1.3 2004/07/21 16:30:57 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file learner_utils.h */
 #ifndef learner_utils_INC
@@ -76,10 +76,23 @@ void DX_save_2D_data(const string& filename, const string& basename, Mat data);
 //! data must have nx*ny rows and must corresponds to values associated with the 2D
 //! positions of the grid (typically learner outputs on that grid)
 void DX_save_2D_data_for_grid(const string& filename, const string& basename, 
-                               int nx, int ny, real x0, real y0, real deltax, real deltay,
-                               Mat data);
+                              int nx, int ny, real x0, real y0, real deltax, real deltay,
+                              Mat data);
 
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

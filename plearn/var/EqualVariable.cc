@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: EqualVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "EqualVariable.h"
 #include "EqualScalarVariable.h"
@@ -56,7 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(EqualVariable,
                         "NO HELP");
 
 EqualVariable::EqualVariable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, 1,1)
+    : inherited(input1, input2, 1,1)
 {
     build_();
 }
@@ -83,10 +83,10 @@ void EqualVariable::recomputeSize(int& l, int& w) const
 
 void EqualVariable::fprop()
 {
-  bool equal=true;
-  for (int i=0; i<nelems(); i++)
-    equal = equal && (input1->valuedata[i] == input2->valuedata[i]);
-  valuedata[0]=equal;
+    bool equal=true;
+    for (int i=0; i<nelems(); i++)
+        equal = equal && (input1->valuedata[i] == input2->valuedata[i]);
+    valuedata[0]=equal;
 }
 
 
@@ -97,15 +97,26 @@ void EqualVariable::symbolicBprop() {}
 
 Var isequal(Var v1, Var v2)
 {
-  if(v2->isScalar())
-    return new EqualScalarVariable(v1,v2);
-  else if(v1->isScalar())
-    return new EqualScalarVariable(v2,v1);
-  else
-    return new EqualVariable(v1,v2);
+    if(v2->isScalar())
+        return new EqualScalarVariable(v1,v2);
+    else if(v1->isScalar())
+        return new EqualScalarVariable(v2,v1);
+    else
+        return new EqualVariable(v1,v2);
 }
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

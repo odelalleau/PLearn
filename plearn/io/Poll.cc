@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Poll.cc,v 1.1 2005/01/28 22:36:29 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christian Hudon
 
@@ -48,46 +48,59 @@
 namespace PLearn {
 using namespace std;
 
-  void Poll::setStreamsToWatch(const vector<PStream>& streams) {
+void Poll::setStreamsToWatch(const vector<PStream>& streams) {
     m_streams_to_watch.clear();
     m_poll_descriptors.resize(streams.size());
 
     int i = 0;
     for (vector<PStream>::const_iterator it = streams.begin();
          it != streams.end(); ++it, ++i) {
-      PStreamBuf* st = *it;
-      PrPStreamBuf* pr_st = dynamic_cast<PrPStreamBuf*>(st);
-      if (!pr_st)
-        PLERROR("Poll::setStreamsToWatch: only PrPStreamBuf streams supported!");
+        PStreamBuf* st = *it;
+        PrPStreamBuf* pr_st = dynamic_cast<PrPStreamBuf*>(st);
+        if (!pr_st)
+            PLERROR("Poll::setStreamsToWatch: only PrPStreamBuf streams supported!");
 
-      m_streams_to_watch.push_back(*it);
-      m_poll_descriptors[i].fd = pr_st->out;
-      m_poll_descriptors[i].in_flags = PR_POLL_READ;
+        m_streams_to_watch.push_back(*it);
+        m_poll_descriptors[i].fd = pr_st->out;
+        m_poll_descriptors[i].in_flags = PR_POLL_READ;
     }
-  }
+}
 
-  int Poll::waitForEvents(int timeout) {
+int Poll::waitForEvents(int timeout) {
     if (m_poll_descriptors.size() == 0)
-      PLERROR("Poll::waitforEvents: called with no streams to watch.");
+        PLERROR("Poll::waitforEvents: called with no streams to watch.");
     
     m_next_unexamined_event = 0;
     return PR_Poll(&m_poll_descriptors[0], m_poll_descriptors.size(),
                    timeout);
-  }
+}
 
-  PStream Poll::getNextPendingEvent() {
+PStream Poll::getNextPendingEvent() {
     while (m_next_unexamined_event < m_poll_descriptors.size()) {
-      const int i = m_next_unexamined_event++;
-      if (m_poll_descriptors[i].out_flags & PR_POLL_READ) {
-        return m_streams_to_watch[i];
-      }
+        const int i = m_next_unexamined_event++;
+        if (m_poll_descriptors[i].out_flags & PR_POLL_READ) {
+            return m_streams_to_watch[i];
+        }
     }
 
     PLERROR("Poll::getNextPendingEvent: called with no more pending events!");
     // We never reach this because of the PLERROR. Used to silence
     // a gcc warning.
     return PStream();
-  }
+}
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

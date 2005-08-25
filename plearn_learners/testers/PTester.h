@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.22 2005/03/02 20:56:52 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file PTester.h */
 #ifndef PTester_INC
@@ -53,120 +53,120 @@ class PTester: public Object
 
 private:
 
-  typedef Object inherited;
+    typedef Object inherited;
 
-  //! The original statnames option.
-  //! It is private because it is safer to access stats from getStatNames,
-  //! since the 'statmask' option may modify the stats.
-  TVec<string> statnames;
+    //! The original statnames option.
+    //! It is private because it is safer to access stats from getStatNames,
+    //! since the 'statmask' option may modify the stats.
+    TVec<string> statnames;
 
 protected:
 
-  //! The 'real' statnames: these are obtained from 'statnames' by a
-  //! processing at build time, taking into account the 'statmask' option.
-  TVec<string> statnames_processed;
+    //! The 'real' statnames: these are obtained from 'statnames' by a
+    //! processing at build time, taking into account the 'statmask' option.
+    TVec<string> statnames_processed;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
   
-  // See declareOptions method in .cc for the role of these options.
+    // See declareOptions method in .cc for the role of these options.
 
-  //! Path of this tester's experiment directory in which to save all tester results (will be created if it does not already exist)
-  VMat dataset;
-  PPath expdir;  
-  TVec<string> final_commands;
-  PP<VecStatsCollector> global_template_stats_collector;
-  PP<PLearner> learner;
-  bool provide_learner_expdir;
-  bool report_stats;
-  bool save_data_sets;
-  bool save_initial_learners;
-  bool save_initial_tester;
-  bool save_learners;
-  bool save_stat_collectors;
-  bool save_test_costs;
-  bool save_test_outputs;
-  PP<Splitter> splitter;
-  TVec<TVec<string> > statmask;
-  PP<VecStatsCollector> template_stats_collector;
+    //! Path of this tester's experiment directory in which to save all tester results (will be created if it does not already exist)
+    VMat dataset;
+    PPath expdir;  
+    TVec<string> final_commands;
+    PP<VecStatsCollector> global_template_stats_collector;
+    PP<PLearner> learner;
+    bool provide_learner_expdir;
+    bool report_stats;
+    bool save_data_sets;
+    bool save_initial_learners;
+    bool save_initial_tester;
+    bool save_learners;
+    bool save_stat_collectors;
+    bool save_test_costs;
+    bool save_test_outputs;
+    PP<Splitter> splitter;
+    TVec<TVec<string> > statmask;
+    PP<VecStatsCollector> template_stats_collector;
 
-  //! Whether to save 95% confidence intervals for the test outputs;
-  //! make sense mostly if 'save_test_outputs' is also true.  The
-  //! intervals are saved in a file SETNAME_confidence.pmat (default=false)
-  bool save_test_confidence;
+    //! Whether to save 95% confidence intervals for the test outputs;
+    //! make sense mostly if 'save_test_outputs' is also true.  The
+    //! intervals are saved in a file SETNAME_confidence.pmat (default=false)
+    bool save_test_confidence;
   
-  //! whether or not to train or just test
-  bool train; 
+    //! whether or not to train or just test
+    bool train; 
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor
-  PTester();
+    // Default constructor
+    PTester();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
-  //! Utility function to compute confidence intervals over a test set
-  //! and save results in VMat
-  void computeConfidence(VMat test_set, VMat confidence);
+    //! Utility function to compute confidence intervals over a test set
+    //! and save results in VMat
+    void computeConfidence(VMat test_set, VMat confidence);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(PTester);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(PTester);
 
-  //! The experiment directory is the directory in which files 
-  //! related to this model are to be saved.     
-  //! If it is an empty string, it is understood to mean that the 
-  //! user doesn't want any file created by this learner.
-  void setExperimentDirectory(const PPath& the_expdir);
+    //! The experiment directory is the directory in which files 
+    //! related to this model are to be saved.     
+    //! If it is an empty string, it is understood to mean that the 
+    //! user doesn't want any file created by this learner.
+    void setExperimentDirectory(const PPath& the_expdir);
   
-  //! This returns the currently set expdir (see setExperimentDirectory)
-  PPath getExperimentDirectory() const { return expdir; }
+    //! This returns the currently set expdir (see setExperimentDirectory)
+    PPath getExperimentDirectory() const { return expdir; }
 
 
-  //! Return the statnames (potentially modified by statmask, if provided).
-  TVec<string> getStatNames();
+    //! Return the statnames (potentially modified by statmask, if provided).
+    TVec<string> getStatNames();
 
-  //! runs the tester
-  virtual void run();
+    //! runs the tester
+    virtual void run();
 
-  //! performs the test, and returns the global stats specified in statnames
-  //! If call_forget is set to false then the call to setTrainingSet() 
-  //! won't call forget and build.
-  //! This is useful for continuation of an incremental  training
-  //! (such as after increasing the number of epochs (nstages) ),
-  //! or generally when trying different option values that don't require
-  //! the learning to be restarted from scratch.
-  //! However call_forget will be forced to true (even if passed as false)
-  //! if the splitter returns more than one split.
-  //! Returns a vector of test statistics corresponding to the requested statnames
-  Vec perform(bool call_forget=true);
+    //! performs the test, and returns the global stats specified in statnames
+    //! If call_forget is set to false then the call to setTrainingSet() 
+    //! won't call forget and build.
+    //! This is useful for continuation of an incremental  training
+    //! (such as after increasing the number of epochs (nstages) ),
+    //! or generally when trying different option values that don't require
+    //! the learning to be restarted from scratch.
+    //! However call_forget will be forced to true (even if passed as false)
+    //! if the splitter returns more than one split.
+    //! Returns a vector of test statistics corresponding to the requested statnames
+    Vec perform(bool call_forget=true);
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Support for remote method invocation
-  virtual void call(const string& methodname, int nargs, PStream& io);
+    //! Support for remote method invocation
+    virtual void call(const string& methodname, int nargs, PStream& io);
 
 };
 
@@ -178,27 +178,40 @@ DECLARE_OBJECT_PTR(PTester);
 class StatSpec
 {
 public:
-  string extstat;  //! "external" stat, to be computed over splits
-  string setname;  //! "train" or "test1" or "test2" ...
-  int setnum;      //! data set on which to compute stat: 0 :train, 1: test1, ...
+    string extstat;  //! "external" stat, to be computed over splits
+    string setname;  //! "train" or "test1" or "test2" ...
+    int setnum;      //! data set on which to compute stat: 0 :train, 1: test1, ...
 
-  //! "internal" stat to be computed over examples the given a train or test set of a split. Ex.: "E[costname]"
-  //! This string will at some point be used to call the VecStatsCollector's getStat(...) method.
-  string intstatname;  
+    //! "internal" stat to be computed over examples the given a train or test set of a split. Ex.: "E[costname]"
+    //! This string will at some point be used to call the VecStatsCollector's getStat(...) method.
+    string intstatname;  
 
-  StatSpec() : setnum(-1) {}
+    StatSpec() : setnum(-1) {}
 
-  void init(const string& statname);
+    void init(const string& statname);
 
-  string statName()
-   { return extstat + "[" + setname + "." + intstatname + "]"; }
+    string statName()
+    { return extstat + "[" + setname + "." + intstatname + "]"; }
 
 private:
 
-  //! will determine extstat, intstat, setnum and costname from statname 
-  void parseStatname(const string& statname);
+    //! will determine extstat, intstat, setnum and costname from statname 
+    void parseStatname(const string& statname);
 };
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

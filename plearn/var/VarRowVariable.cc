@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: VarRowVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "VarRowVariable.h"
 #include "RowAtPositionVariable.h"
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(VarRowVariable,
                         "NO HELP");
 
 VarRowVariable::VarRowVariable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, 1, input1->width())
+    : inherited(input1, input2, 1, input1->width())
 {
     build_();
 }
@@ -87,35 +87,46 @@ void VarRowVariable::recomputeSize(int& l, int& w) const
 
 void VarRowVariable::fprop()
 {
-  int i = int(input2->valuedata[0]);
-  value << input1->matValue(i);
+    int i = int(input2->valuedata[0]);
+    value << input1->matValue(i);
 }
 
 
 void VarRowVariable::bprop()
 {
-  int i = int(input2->valuedata[0]);
-  Vec input1_gradient_i = input1->matGradient(i);
-  input1_gradient_i += gradient;
-  input1->updateRow(i);
+    int i = int(input2->valuedata[0]);
+    Vec input1_gradient_i = input1->matGradient(i);
+    input1_gradient_i += gradient;
+    input1->updateRow(i);
 }
 
 
 void VarRowVariable::symbolicBprop()
 {
-  input1->accg(new RowAtPositionVariable(g,input2,input1->length()));
+    input1->accg(new RowAtPositionVariable(g,input2,input1->length()));
 }
 
 
 void VarRowVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue(); 
-  int i = int(input2->valuedata[0]);
-  rValue << input1->matRValue(i);
+    if (rValue.length()==0) resizeRValue(); 
+    int i = int(input2->valuedata[0]);
+    rValue << input1->matRValue(i);
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -46,66 +46,66 @@ class ParzenWindow : public GaussMix
 
 private:
 
-  typedef GaussMix inherited;
+    typedef GaussMix inherited;
 
 public:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
 
-  real sigma_square;
+    real sigma_square;
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // ### declare public option fields (such as build options) here
-  // ...
+    // ### declare public option fields (such as build options) here
+    // ...
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  ParzenWindow();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    ParzenWindow();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
-  ParzenWindow(real sigma_square);
+    ParzenWindow(real sigma_square);
 
 protected:
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
   
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(ParzenWindow);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(ParzenWindow);
 
-  // *******************
-  // * Learner methods *
-  // *******************
+    // *******************
+    // * Learner methods *
+    // *******************
 
-  //! trains the model
-  // NOTE : the function assumes that the training_set has only input columns ! (width = dimension of feature space)
-  virtual void train(); 
+    //! trains the model
+    // NOTE : the function assumes that the training_set has only input columns ! (width = dimension of feature space)
+    virtual void train(); 
 
 };
 
@@ -115,3 +115,16 @@ DECLARE_OBJECT_PTR(ParzenWindow);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -45,51 +45,64 @@ using namespace std;
 
 class NllGeneralGaussianVariable: public NaryVariable
 {
-  typedef NaryVariable inherited;
+    typedef NaryVariable inherited;
   
 public:
-  bool use_noise;
-  int n; // dimension of the vectors
-  real min_diff; // minimum difference between sigma_noise and the sigma_manifolds
-  real log_L; 
-  int ncomponents; // nb of vectors in f
-  int nneighbors; // nb of neighbors
-  int mu_nneighbors; // nb of neighbors to learn mu
-  real tr_inv_Sigma;
-  Vec mu, sm_svd, sn, S,mu_noisy,noise_var;
-  Vec uk, fk, uk2, inv_sigma_zj,inv_sigma_zj_noisy, zj,zj_noisy, inv_sigma_fk;
-  Vec temp_ncomp;
-  Mat F,F_copy, diff_y_x, z, U, Ut, V, inv_Sigma_F,inv_Sigma_z, inv_Sigma_z_noisy;
+    bool use_noise;
+    int n; // dimension of the vectors
+    real min_diff; // minimum difference between sigma_noise and the sigma_manifolds
+    real log_L; 
+    int ncomponents; // nb of vectors in f
+    int nneighbors; // nb of neighbors
+    int mu_nneighbors; // nb of neighbors to learn mu
+    real tr_inv_Sigma;
+    Vec mu, sm_svd, sn, S,mu_noisy,noise_var;
+    Vec uk, fk, uk2, inv_sigma_zj,inv_sigma_zj_noisy, zj,zj_noisy, inv_sigma_fk;
+    Vec temp_ncomp;
+    Mat F,F_copy, diff_y_x, z, U, Ut, V, inv_Sigma_F,inv_Sigma_z, inv_Sigma_z_noisy;
 
-  //!  Default constructor for persistence
-  NllGeneralGaussianVariable() {}
-  NllGeneralGaussianVariable(const VarArray& the_varray, real thelogL, int mu_nneighbors);
+    //!  Default constructor for persistence
+    NllGeneralGaussianVariable() {}
+    NllGeneralGaussianVariable(const VarArray& the_varray, real thelogL, int mu_nneighbors);
 
-  PLEARN_DECLARE_OBJECT(NllGeneralGaussianVariable);
+    PLEARN_DECLARE_OBJECT(NllGeneralGaussianVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
     void build_();
 };
 
-  DECLARE_OBJECT_PTR(NllGeneralGaussianVariable);
+DECLARE_OBJECT_PTR(NllGeneralGaussianVariable);
 
-  inline Var nll_general_gaussian(Var tangent_plane_var, Var mu_var, Var sn_var, Var neighbors_dist_var, 
-                                                 real log_L, int mu_nneighbors, Var noise_var=0, Var mu_noisy=0)
-  {
+inline Var nll_general_gaussian(Var tangent_plane_var, Var mu_var, Var sn_var, Var neighbors_dist_var, 
+                                real log_L, int mu_nneighbors, Var noise_var=0, Var mu_noisy=0)
+{
     if(!noise_var)
-      return new NllGeneralGaussianVariable(tangent_plane_var & mu_var & sn_var & neighbors_dist_var,log_L, mu_nneighbors);
+        return new NllGeneralGaussianVariable(tangent_plane_var & mu_var & sn_var & neighbors_dist_var,log_L, mu_nneighbors);
     else
-      return new NllGeneralGaussianVariable(tangent_plane_var & mu_var & sn_var & neighbors_dist_var & noise_var & mu_noisy,log_L, mu_nneighbors);
-  }
+        return new NllGeneralGaussianVariable(tangent_plane_var & mu_var & sn_var & neighbors_dist_var & noise_var & mu_noisy,log_L, mu_nneighbors);
+}
 
                             
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

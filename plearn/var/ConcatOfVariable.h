@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatOfVariable.h,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ConcatOfVariable_INC
 #define ConcatOfVariable_INC
@@ -52,34 +52,34 @@ using namespace std;
 
 class ConcatOfVariable: public NaryVariable
 {
-  typedef NaryVariable inherited;
+    typedef NaryVariable inherited;
 
 protected:
-  VMat distr;
-  Func f;
+    VMat distr;
+    Func f;
 
-  Vec input_value;  //!<  Vec to hold one input sample
-  Vec input_gradient; //!<  //!<  Vec to hold the gradient for one input sample
+    Vec input_value;  //!<  Vec to hold one input sample
+    Vec input_gradient; //!<  //!<  Vec to hold the gradient for one input sample
 
 public:
-  //!  Default constructor for persistence
-  ConcatOfVariable() {}
-  ConcatOfVariable(VMat the_distr, Func the_f);
+    //!  Default constructor for persistence
+    ConcatOfVariable() {}
+    ConcatOfVariable(VMat the_distr, Func the_f);
 
-  PLEARN_DECLARE_OBJECT(ConcatOfVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(ConcatOfVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  virtual void fprop();
-  virtual void bprop();
-  virtual void fbprop();
+    virtual void fprop();
+    virtual void bprop();
+    virtual void fbprop();
 
 private:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(ConcatOfVariable);
@@ -96,3 +96,16 @@ inline Var concatOf(Var output, const VarArray& inputs, VMat distr, int nsamples
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

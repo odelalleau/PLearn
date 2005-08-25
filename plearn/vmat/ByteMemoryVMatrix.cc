@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: ByteMemoryVMatrix.cc,v 1.4 2004/04/05 22:48:12 morinf Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "ByteMemoryVMatrix.h"
 
@@ -48,49 +48,62 @@ PLEARN_IMPLEMENT_OBJECT(ByteMemoryVMatrix, "ONE_LINE_DESCR", "ONE LINE HELP");
 /** ByteMemoryVMatrix **/
 
 ByteMemoryVMatrix::ByteMemoryVMatrix()
-  : data(0)
+    : data(0)
 {
 }
 
 ByteMemoryVMatrix::ByteMemoryVMatrix(unsigned char* the_data,int the_length,int the_width, Vec the_scale)
-  :inherited(the_length, the_width), data(the_data), scale(the_scale), offset_(the_scale.length())
+    :inherited(the_length, the_width), data(the_data), scale(the_scale), offset_(the_scale.length())
 {
-  if (the_scale.length() != width_)
-    PLERROR("ByteMemoryVMatrix: inconsistent arguments (scale(%d),n_col(%d))",
-          the_scale.length(), width_);
+    if (the_scale.length() != width_)
+        PLERROR("ByteMemoryVMatrix: inconsistent arguments (scale(%d),n_col(%d))",
+                the_scale.length(), width_);
 }
 
 ByteMemoryVMatrix::
 ByteMemoryVMatrix(unsigned char* the_data,int the_length,int the_width, 
-                          Vec the_scale, Vec the_offset)
-  :VMatrix(the_length, the_width), data(the_data), 
-   scale(the_scale), offset_(the_offset)
+                  Vec the_scale, Vec the_offset)
+    :VMatrix(the_length, the_width), data(the_data), 
+     scale(the_scale), offset_(the_offset)
 {
-  if (the_scale.length() != width_ || the_offset.length()!=width_)
-    PLERROR("ByteMemoryVMatrix: inconsistent arguments (scale(%d),offset(%d),n_col(%d))",
-          the_scale.length(), the_offset.length(), width_);
+    if (the_scale.length() != width_ || the_offset.length()!=width_)
+        PLERROR("ByteMemoryVMatrix: inconsistent arguments (scale(%d),offset(%d),n_col(%d))",
+                the_scale.length(), the_offset.length(), width_);
 }
 
 ByteMemoryVMatrix::ByteMemoryVMatrix(unsigned char* the_data,int the_length,int the_width,
-                            double the_scaling_factor,double the_offset)
-  : VMatrix(the_length, the_width), data(the_data), 
-   scale(the_width, the_scaling_factor), offset_(the_width, the_offset)
+                                     double the_scaling_factor,double the_offset)
+    : VMatrix(the_length, the_width), data(the_data), 
+      scale(the_width, the_scaling_factor), offset_(the_width, the_offset)
 {
 }
 
 real ByteMemoryVMatrix::get(int i, int j) const
 {
-  return ( data[i*width()+j] + offset_[j] ) * scale[j];
+    return ( data[i*width()+j] + offset_[j] ) * scale[j];
 }
 
 void ByteMemoryVMatrix::getSubRow(int i, int j, Vec samplevec) const
 {
-  unsigned char* p = &data[i*width_];
-  real *v = samplevec.data();
-  real *s = scale.data();
-  real *o = offset_.data();
-  for (int jj=0; jj<samplevec.length(); jj++)
-    v[jj] = s[j+jj] * (p[j+jj] + o[j+jj]);
+    unsigned char* p = &data[i*width_];
+    real *v = samplevec.data();
+    real *s = scale.data();
+    real *o = offset_.data();
+    for (int jj=0; jj<samplevec.length(); jj++)
+        v[jj] = s[j+jj] * (p[j+jj] + o[j+jj]);
 }
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

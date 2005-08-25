@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef DistanceKernel_INC
 #define DistanceKernel_INC
@@ -73,7 +73,7 @@ public:
     PLEARN_DECLARE_OBJECT(DistanceKernel);
 
     virtual string info() const
-        { return "L"+tostring(n); }
+    { return "L"+tostring(n); }
 
     virtual real evaluate(const Vec& x1, const Vec& x2) const;
     virtual real evaluate_i_j(int i, int j) const;
@@ -94,3 +94,15 @@ inline CostFunc absolute_deviation(int singleoutputindex=-1);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

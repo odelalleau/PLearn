@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: PLogPVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "LogVariable.h"
 #include "PLogPVariable.h"
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(PLogPVariable,
                         "NO HELP");
 
 PLogPVariable::PLogPVariable(Variable* input)
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 
@@ -70,35 +70,46 @@ void PLogPVariable::recomputeSize(int& l, int& w) const
 
 void PLogPVariable::fprop()
 {
-  for(int i=0; i<nelems(); i++)
+    for(int i=0; i<nelems(); i++)
     {
-      real p = input->valuedata[i];
-      if(p<1e-10)
-        p = 1e-10;
-      valuedata[i] = p*safeflog(p);
+        real p = input->valuedata[i];
+        if(p<1e-10)
+            p = 1e-10;
+        valuedata[i] = p*safeflog(p);
     }
 }
 
 
 void PLogPVariable::bprop()
 {
-  for(int i=0; i<nelems(); i++)
+    for(int i=0; i<nelems(); i++)
     {
-      real p = input->valuedata[i];
-      if(p<1e-10)
-        p = 1e-10;
-      input->gradientdata[i] += gradientdata[i]*(1.0+safeflog(p));
+        real p = input->valuedata[i];
+        if(p<1e-10)
+            p = 1e-10;
+        input->gradientdata[i] += gradientdata[i]*(1.0+safeflog(p));
     }
 }
 
 
 void PLogPVariable::symbolicBprop()
 {
-  input->accg(g * (1.+log(input)));
+    input->accg(g * (1.+log(input)));
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

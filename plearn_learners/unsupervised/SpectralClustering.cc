@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpectralClustering.cc,v 1.4 2004/09/14 16:04:59 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -50,40 +50,40 @@ using namespace std;
 // SpectralClustering //
 //////////////////
 SpectralClustering::SpectralClustering() 
-: remove_bias(false)
+    : remove_bias(false)
 {
-  // Usually, one will want only positive eigenvalues.
-  min_eigenvalue = 0;
+    // Usually, one will want only positive eigenvalues.
+    min_eigenvalue = 0;
 }
 
 PLEARN_IMPLEMENT_OBJECT(SpectralClustering,
-    "Spectral Clustering dimensionality reduction.",
-    "The current code only performs dimensionality reduction, and does not do\n"
-    "clustering."
-);
+                        "Spectral Clustering dimensionality reduction.",
+                        "The current code only performs dimensionality reduction, and does not do\n"
+                        "clustering."
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void SpectralClustering::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "remove_bias", &SpectralClustering::remove_bias, OptionBase::buildoption,
-      "If set to 1, the (divisively) normalized kernel will not take into account terms\n"
-      "of the form K(x_i,x_i), in order to remove bias induced by those terms.");
+    declareOption(ol, "remove_bias", &SpectralClustering::remove_bias, OptionBase::buildoption,
+                  "If set to 1, the (divisively) normalized kernel will not take into account terms\n"
+                  "of the form K(x_i,x_i), in order to remove bias induced by those terms.");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 
-  // Redirect the 'kernel' option toward sc_kernel.
-  redeclareOption(ol, "kernel", &SpectralClustering::sc_kernel, OptionBase::buildoption,
-      "The kernel used to (implicitly) project the data in feature space.");
+    // Redirect the 'kernel' option toward sc_kernel.
+    redeclareOption(ol, "kernel", &SpectralClustering::sc_kernel, OptionBase::buildoption,
+                    "The kernel used to (implicitly) project the data in feature space.");
 
-  redeclareOption(ol, "ignore_n_first", &SpectralClustering::ignore_n_first, OptionBase::nosave,
-      "In Spectral clustering, no eigenvector is ignored.");
+    redeclareOption(ol, "ignore_n_first", &SpectralClustering::ignore_n_first, OptionBase::nosave,
+                    "In Spectral clustering, no eigenvector is ignored.");
 
-  // And declare the normalized kernel so that it can be saved.
-  declareOption(ol, "normalized_kernel", &KernelProjection::kernel, OptionBase::learntoption,
-      "The normalized kernel.");
+    // And declare the normalized kernel so that it can be saved.
+    declareOption(ol, "normalized_kernel", &KernelProjection::kernel, OptionBase::learntoption,
+                  "The normalized kernel.");
 }
 
 ///////////
@@ -91,8 +91,8 @@ void SpectralClustering::declareOptions(OptionList& ol)
 ///////////
 void SpectralClustering::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -100,19 +100,19 @@ void SpectralClustering::build()
 ////////////
 void SpectralClustering::build_()
 {
-  // Obtain the "real" kernel by divisive normalization of 'sc_kernel'.
-  // We have to do this iff:
-  // 1. A 'sc_kernel' is provided, and
-  // 2. either:
-  //    2.a. the 'kernel' option is not set, or
-  //    2.b. the 'kernel' option is not a DivisiveNormalizationKernel acting on 'sc_kernel'.
-  // This is to ensure that a loaded 'kernel' won't be overwritten.
-  if (sc_kernel &&
-      (!kernel ||
-       (dynamic_cast<DivisiveNormalizationKernel*>((Kernel*) kernel))->source_kernel != sc_kernel)) {
-    this->kernel = new DivisiveNormalizationKernel
-      (sc_kernel, remove_bias);
-  }
+    // Obtain the "real" kernel by divisive normalization of 'sc_kernel'.
+    // We have to do this iff:
+    // 1. A 'sc_kernel' is provided, and
+    // 2. either:
+    //    2.a. the 'kernel' option is not set, or
+    //    2.b. the 'kernel' option is not a DivisiveNormalizationKernel acting on 'sc_kernel'.
+    // This is to ensure that a loaded 'kernel' won't be overwritten.
+    if (sc_kernel &&
+        (!kernel ||
+         (dynamic_cast<DivisiveNormalizationKernel*>((Kernel*) kernel))->source_kernel != sc_kernel)) {
+        this->kernel = new DivisiveNormalizationKernel
+            (sc_kernel, remove_bias);
+    }
 }
 
 ////////////
@@ -120,7 +120,7 @@ void SpectralClustering::build_()
 ////////////
 void SpectralClustering::forget()
 {
-  inherited::forget();
+    inherited::forget();
 }
     
 /////////////////////////////////
@@ -128,17 +128,29 @@ void SpectralClustering::forget()
 /////////////////////////////////
 void SpectralClustering::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("SpectralClustering::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("SpectralClustering::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

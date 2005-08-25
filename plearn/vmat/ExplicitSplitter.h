@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExplicitSplitter.h,v 1.8 2004/09/14 16:04:39 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file ExplicitSplitter.h */
 #ifndef ExplicitSplitter_INC
@@ -47,66 +47,66 @@ using namespace std;
 
 class ExplicitSplitter: public Splitter
 {
-  typedef Splitter inherited;
+    typedef Splitter inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
 public:
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  //! The datasets of the split
-  TMat <VMat> splitsets;
+    //! The datasets of the split
+    TMat <VMat> splitsets;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  ExplicitSplitter();
+    ExplicitSplitter();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(ExplicitSplitter);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(ExplicitSplitter);
 
 
-  // ********************************
-  // *        Splitter methods      *
-  // * (must be implemented in .cc) *
-  // ********************************
+    // ********************************
+    // *        Splitter methods      *
+    // * (must be implemented in .cc) *
+    // ********************************
 
-  //! Returns the number of available different "splits"
-  virtual int nsplits() const;
+    //! Returns the number of available different "splits"
+    virtual int nsplits() const;
 
-  //! Returns the number of sets per split
-  virtual int nSetsPerSplit() const;
+    //! Returns the number of sets per split
+    virtual int nSetsPerSplit() const;
 
-  //! Returns split number i
-  virtual TVec<VMat> getSplit(int i=0);
+    //! Returns split number i
+    virtual TVec<VMat> getSplit(int i=0);
 
 };
 
@@ -116,3 +116,16 @@ DECLARE_OBJECT_PTR(ExplicitSplitter);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

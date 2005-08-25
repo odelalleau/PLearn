@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrixSplitter.cc,v 1.5 2005/05/13 19:24:12 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -50,38 +50,38 @@ using namespace std;
 // SourceVMatrixSplitter //
 ///////////////////////////
 SourceVMatrixSplitter::SourceVMatrixSplitter() 
-: to_apply(0)
+    : to_apply(0)
 {
 }
 
 PLEARN_IMPLEMENT_OBJECT(SourceVMatrixSplitter,
-    "Returns the splits of an underlying splitter, seen by a SourceVMatrix.",
-    "Not all sets have to be modified: the 'sets_to_modify' option allows one\n"
-    "to choose on which sets we apply the SourceVMatrix, which will be deep-copied\n"
-    "on each set.\n"
-    "Note that the provided SourceVMatrix may be modified in the process.\n"
-);
+                        "Returns the splits of an underlying splitter, seen by a SourceVMatrix.",
+                        "Not all sets have to be modified: the 'sets_to_modify' option allows one\n"
+                        "to choose on which sets we apply the SourceVMatrix, which will be deep-copied\n"
+                        "on each set.\n"
+                        "Note that the provided SourceVMatrix may be modified in the process.\n"
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void SourceVMatrixSplitter::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "source_vm", &SourceVMatrixSplitter::source_vm, OptionBase::buildoption,
-      "The VMatrix to apply.");
+    declareOption(ol, "source_vm", &SourceVMatrixSplitter::source_vm, OptionBase::buildoption,
+                  "The VMatrix to apply.");
 
-  declareOption(ol, "source_splitter", &SourceVMatrixSplitter::source_splitter, OptionBase::buildoption,
-      "The underlying splitter.");
+    declareOption(ol, "source_splitter", &SourceVMatrixSplitter::source_splitter, OptionBase::buildoption,
+                  "The underlying splitter.");
 
-  declareOption(ol, "to_apply", &SourceVMatrixSplitter::to_apply, OptionBase::buildoption,
-      "Deprecated: the index of the returned set where we apply source_vm.");
+    declareOption(ol, "to_apply", &SourceVMatrixSplitter::to_apply, OptionBase::buildoption,
+                  "Deprecated: the index of the returned set where we apply source_vm.");
 
-  declareOption(ol, "sets_to_modify", &SourceVMatrixSplitter::sets_to_modify, OptionBase::buildoption,
-      "The indices of the returned sets on which we apply source_vm ([-1] means all sets).\n"
-      "This option will override 'to_apply' if it is also provided.");
+    declareOption(ol, "sets_to_modify", &SourceVMatrixSplitter::sets_to_modify, OptionBase::buildoption,
+                  "The indices of the returned sets on which we apply source_vm ([-1] means all sets).\n"
+                  "This option will override 'to_apply' if it is also provided.");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ////////////
@@ -89,10 +89,10 @@ void SourceVMatrixSplitter::declareOptions(OptionList& ol)
 ////////////
 void SourceVMatrixSplitter::build_()
 {
-  if (to_apply != 0)
-    // This deprecated option is being used.
-    PLDEPRECATED("In SourceVMatrixSplitter::build_ - Use 'sets_to_modify' instead of the deprecated "
-                 "'to_apply' option.");
+    if (to_apply != 0)
+        // This deprecated option is being used.
+        PLDEPRECATED("In SourceVMatrixSplitter::build_ - Use 'sets_to_modify' instead of the deprecated "
+                     "'to_apply' option.");
 }
 
 ///////////
@@ -100,8 +100,8 @@ void SourceVMatrixSplitter::build_()
 ///////////
 void SourceVMatrixSplitter::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 /////////////////////////////////
@@ -109,16 +109,16 @@ void SourceVMatrixSplitter::build()
 /////////////////////////////////
 void SourceVMatrixSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Splitter::makeDeepCopyFromShallowCopy(copies);
+    Splitter::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("SourceVMatrixSplitter::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("SourceVMatrixSplitter::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 /////////////
@@ -126,7 +126,7 @@ void SourceVMatrixSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 /////////////
 int SourceVMatrixSplitter::nsplits() const
 {
-  return source_splitter->nsplits();
+    return source_splitter->nsplits();
 }
 
 ///////////////////
@@ -134,7 +134,7 @@ int SourceVMatrixSplitter::nsplits() const
 ///////////////////
 int SourceVMatrixSplitter::nSetsPerSplit() const
 {
-  return source_splitter->nSetsPerSplit();
+    return source_splitter->nSetsPerSplit();
 }
 
 //////////////
@@ -142,42 +142,54 @@ int SourceVMatrixSplitter::nSetsPerSplit() const
 //////////////
 TVec<VMat> SourceVMatrixSplitter::getSplit(int k)
 {
-  TVec<VMat> result = source_splitter->getSplit(k);
-  if (sets_to_modify.isEmpty()) {
-    // Old code, to remove when the deprecated option 'to_apply' is removed.
-    PLDEPRECATED("In SourceVMatrixSplitter::getSplit - Use 'sets_to_modify' instead of the deprecated "
-                 "'to_apply' option.");
-    source_vm->source = result[to_apply];
-    source_vm->build();
-    VMat the_vm = static_cast<SourceVMatrix*>(source_vm);
-    result[to_apply] = the_vm;
-  } else {
-    TVec<int> sets_indices = sets_to_modify;
-    if (sets_indices.length() == 1 && sets_indices[0] == -1) {
-      // -1 means we apply it on all sets.
-      sets_indices = TVec<int>(0, source_splitter->nSetsPerSplit() - 1, 1);
+    TVec<VMat> result = source_splitter->getSplit(k);
+    if (sets_to_modify.isEmpty()) {
+        // Old code, to remove when the deprecated option 'to_apply' is removed.
+        PLDEPRECATED("In SourceVMatrixSplitter::getSplit - Use 'sets_to_modify' instead of the deprecated "
+                     "'to_apply' option.");
+        source_vm->source = result[to_apply];
+        source_vm->build();
+        VMat the_vm = static_cast<SourceVMatrix*>(source_vm);
+        result[to_apply] = the_vm;
+    } else {
+        TVec<int> sets_indices = sets_to_modify;
+        if (sets_indices.length() == 1 && sets_indices[0] == -1) {
+            // -1 means we apply it on all sets.
+            sets_indices = TVec<int>(0, source_splitter->nSetsPerSplit() - 1, 1);
+        }
+        for (int i = 0; i < sets_indices.length(); i++) {
+            int set = sets_indices[i];
+            // Clear the source of 'source_vm' since we do not want to deep-copy it.
+            source_vm->source = 0;
+            // Copy 'source_vm' and fill 'result' accordingly.
+            PP<SourceVMatrix> vm_copy = PLearn::deepCopy(source_vm);
+            vm_copy->source = result[set];
+            vm_copy->build();
+            result[set] = (SourceVMatrix*) vm_copy;
+        }
     }
-    for (int i = 0; i < sets_indices.length(); i++) {
-      int set = sets_indices[i];
-      // Clear the source of 'source_vm' since we do not want to deep-copy it.
-      source_vm->source = 0;
-      // Copy 'source_vm' and fill 'result' accordingly.
-      PP<SourceVMatrix> vm_copy = PLearn::deepCopy(source_vm);
-      vm_copy->source = result[set];
-      vm_copy->build();
-      result[set] = (SourceVMatrix*) vm_copy;
-    }
-  }
-  return result;
+    return result;
 }
 
 ////////////////
 // setDataSet //
 ////////////////
 void SourceVMatrixSplitter::setDataSet(VMat the_dataset) {
-  inherited::setDataSet(the_dataset);
-  source_splitter->setDataSet(the_dataset);
+    inherited::setDataSet(the_dataset);
+    source_splitter->setDataSet(the_dataset);
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

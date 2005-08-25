@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: Func.h,v 1.12 2004/09/14 16:04:38 chrish42 Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/Func.h */
@@ -63,144 +63,144 @@ class Function;
 class Func: public PP<Function>
 {
 public:
-  Func();
+    Func();
 
-  Func(Function* f);
+    Func(Function* f);
  
-  Func(const VarArray& the_inputs, const VarArray& the_outputs);
+    Func(const VarArray& the_inputs, const VarArray& the_outputs);
 
-  Func(const VarArray& the_inputs, const VarArray& parameters_to_optimize,const VarArray& the_outputs);
+    Func(const VarArray& the_inputs, const VarArray& parameters_to_optimize,const VarArray& the_outputs);
 
-  Vec operator()(const Vec& input) const;
+    Vec operator()(const Vec& input) const;
 
-  real operator()(const Vec& input1, const Vec& input2) const;
+    real operator()(const Vec& input1, const Vec& input2) const;
 
 /*!     builds a whole new Var graph modeled after the current one
-    but starting from new_inputs (instead of inputs) 
-    the resulting new_outputs var array is returned by the call
+  but starting from new_inputs (instead of inputs) 
+  the resulting new_outputs var array is returned by the call
 */
-  VarArray operator()(const VarArray& new_inputs) const;
+    VarArray operator()(const VarArray& new_inputs) const;
 };
 
 class Function: public Object
 {
 public:
 
-  // Build options:
-  mutable VarArray inputs;
-  mutable VarArray parameters;  //!< nonInputSources
-  mutable VarArray outputs;
+    // Build options:
+    mutable VarArray inputs;
+    mutable VarArray parameters;  //!< nonInputSources
+    mutable VarArray outputs;
 
-  // Other variables
-  int inputsize;
-  int outputsize;
-  mutable VarArray fproppath;
-  VarArray bproppath;
-  VarArray parentspath; //!<  path on which to do a fprop to update the values of all the non-input direct parents on the fproppath (this will be called by method recomputeParents() )
+    // Other variables
+    int inputsize;
+    int outputsize;
+    mutable VarArray fproppath;
+    VarArray bproppath;
+    VarArray parentspath; //!<  path on which to do a fprop to update the values of all the non-input direct parents on the fproppath (this will be called by method recomputeParents() )
 
-  Func df; //!<  remembers the symbolic derivative
+    Func df; //!<  remembers the symbolic derivative
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 
- public:
-  Function();
-  Function(const VarArray& the_inputs, const VarArray& the_outputs);
-  Function(const VarArray& the_inputs, const VarArray& parameters_to_optimize,const VarArray& the_outputs);
-  //void bprop(VarArray& parameters_to_optimize);
+public:
+    Function();
+    Function(const VarArray& the_inputs, const VarArray& the_outputs);
+    Function(const VarArray& the_inputs, const VarArray& parameters_to_optimize,const VarArray& the_outputs);
+    //void bprop(VarArray& parameters_to_optimize);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! simply calls inherited::build() then build_() 
-  virtual void build();
+    //! simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods
-  //  If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
-  typedef Object inherited;
-  PLEARN_DECLARE_OBJECT(Function);
+    // Declares other standard object methods
+    //  If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+    typedef Object inherited;
+    PLEARN_DECLARE_OBJECT(Function);
 
   
-  // **************************
-  // **** Function methods ****
-  // **************************
+    // **************************
+    // **** Function methods ****
+    // **************************
 
-  void fprop(const Vec& in, const Vec& out) const;
-  void fprop(const Array<Vec>& in, const Array<Vec>& out) const;
+    void fprop(const Vec& in, const Vec& out) const;
+    void fprop(const Array<Vec>& in, const Array<Vec>& out) const;
 
 /*!   when put_gradient_on_first_element_only, a gradient of 1 is put
-      in only the first element of the output gradient this is a hack
-      that is useful for having a SumOfVariable computing several
-      costs in parallel, but backpropagating only through the first
+  in only the first element of the output gradient this is a hack
+  that is useful for having a SumOfVariable computing several
+  costs in parallel, but backpropagating only through the first
 */
-  void fbprop(const Vec& in, const Vec& out, const Vec& input_gradient, const Vec& output_gradient);
-  void fbprop(const Array<Vec>& in, const Array<Vec>& out, 
-              const Array<Vec>& input_gradient, const Array<Vec>& output_gradient);
+    void fbprop(const Vec& in, const Vec& out, const Vec& input_gradient, const Vec& output_gradient);
+    void fbprop(const Array<Vec>& in, const Array<Vec>& out, 
+                const Array<Vec>& input_gradient, const Array<Vec>& output_gradient);
 
-  //!  given input, compute output, gradient (=doutput/dinput) and hessian (=d^2output/dinput^2)
-  void fbbprop(const Vec& in, const Vec& out, const Vec& gradient, const Mat& hessian);
-  //!  same thing but accumulate output, gradient and hessian
-  void fbbpropAcc(const Vec& in, const Vec& out, const Vec& gradient, const Mat& hessian);
+    //!  given input, compute output, gradient (=doutput/dinput) and hessian (=d^2output/dinput^2)
+    void fbbprop(const Vec& in, const Vec& out, const Vec& gradient, const Mat& hessian);
+    //!  same thing but accumulate output, gradient and hessian
+    void fbbpropAcc(const Vec& in, const Vec& out, const Vec& gradient, const Mat& hessian);
   
-  void rfprop(const Vec& in, const Vec& out, const Vec& input_rvalue, const Vec& output_rvalue, bool do_fprop=true);
+    void rfprop(const Vec& in, const Vec& out, const Vec& input_rvalue, const Vec& output_rvalue, bool do_fprop=true);
   
-  void recomputeParents(); //!<  recomputes the value of all the vars that influence the output but do not depend on the declared inputs (shared parameters for instance...)
+    void recomputeParents(); //!<  recomputes the value of all the vars that influence the output but do not depend on the declared inputs (shared parameters for instance...)
 
 /*!     Returns a Func that will compute the derivative of this function's output 
-    (expected to be a scalar) relative to the given input (of length inputsize)
-    The computed derivative has (logically) also a length of inputsize. 
-    (This call uses symbolic gradient computation)
+  (expected to be a scalar) relative to the given input (of length inputsize)
+  The computed derivative has (logically) also a length of inputsize. 
+  (This call uses symbolic gradient computation)
 */
-  Func differentiate();
+    Func differentiate();
 
-  Vec operator()(const Vec& input) const;
-  real operator()(const Vec& input1, const Vec& input2) const;
+    Vec operator()(const Vec& input) const;
+    real operator()(const Vec& input1, const Vec& input2) const;
 
 /*!       builds a whole new Var graph modeled after the current one but
-      starting from new_inputs (instead of inputs) the resulting
-      new_outputs var array is returned by the call All variables on the
-      direct path from inputs to outputs are cloned but the parents of the
-      cloned variables are the same as the originals (parents of the
-      variables in the path are shared).
+  starting from new_inputs (instead of inputs) the resulting
+  new_outputs var array is returned by the call All variables on the
+  direct path from inputs to outputs are cloned but the parents of the
+  cloned variables are the same as the originals (parents of the
+  variables in the path are shared).
 */
 
-  VarArray operator()(const VarArray& new_inputs) const;
+    VarArray operator()(const VarArray& new_inputs) const;
 
-  //!  take the values given in the in Vec
-  void verifyGradient(const Vec& in, real step=0.01);
+    //!  take the values given in the in Vec
+    void verifyGradient(const Vec& in, real step=0.01);
 
-  void verifyHessian(const Vec& in, real step=0.01);
+    void verifyHessian(const Vec& in, real step=0.01);
 
-  //!  take the values randomly between minval and maxval
-  void verifyGradient(real minval, real maxval, real step=0.01);
+    //!  take the values randomly between minval and maxval
+    void verifyGradient(real minval, real maxval, real step=0.01);
 
-  //!  take the current values of the inputs variables
-  void verifyGradient(real step=0.01);  
+    //!  take the current values of the inputs variables
+    void verifyGradient(real step=0.01);  
 
 /*!     Checks that the gradient computed by a bprop on the function 
-    and the gradient computed by a fprop on the symbolic derivative
-    of the function give the same results
+  and the gradient computed by a fprop on the symbolic derivative
+  of the function give the same results
 */
-  void verifySymbolicGradient(const Vec& in);
+    void verifySymbolicGradient(const Vec& in);
 
-  // This is developed to make sure that the code of rfprop is correct.
-  // The value of H * r computed by rfprop or Hessian should be the same.
-  void verifyrfprop(const Vec& in, real step=0.01);
+    // This is developed to make sure that the code of rfprop is correct.
+    // The value of H * r computed by rfprop or Hessian should be the same.
+    void verifyrfprop(const Vec& in, real step=0.01);
 };
 
 DECLARE_OBJECT_PTR(Function);
@@ -214,3 +214,15 @@ template <> void deepCopyField(Func& field, CopiesMap& copies);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

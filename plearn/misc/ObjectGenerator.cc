@@ -32,8 +32,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ObjectGenerator.cc,v 1.4 2004/06/22 20:13:27 ducharme Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "ObjectGenerator.h"
 
@@ -41,53 +41,65 @@ namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(ObjectGenerator,
-    "ObjectGenerator is the base class for implementing object-generation techniques.",
-    "The OptionGenerator takes a template Object, and from a list of options,\n"
-    "it will generate another Object (or a complete list).\n");
+                                 "ObjectGenerator is the base class for implementing object-generation techniques.",
+                                 "The OptionGenerator takes a template Object, and from a list of options,\n"
+                                 "it will generate another Object (or a complete list).\n");
 
 ObjectGenerator::ObjectGenerator() : generation_began(false)
 {}
 
 void ObjectGenerator::build_()
 {
-  if (template_object.isNull())
-    PLERROR("An ObjectGenerator MUST contain a template Object");
+    if (template_object.isNull())
+        PLERROR("An ObjectGenerator MUST contain a template Object");
 }
 
 void ObjectGenerator::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void ObjectGenerator::forget()
 {
-  generation_began = false;
+    generation_began = false;
 }
 
 void ObjectGenerator::declareOptions(OptionList& ol)
 {
-   declareOption(ol, "template_object", &ObjectGenerator::template_object,
-       OptionBase::buildoption, "The template Object from which all the others will be built. \n");
+    declareOption(ol, "template_object", &ObjectGenerator::template_object,
+                  OptionBase::buildoption, "The template Object from which all the others will be built. \n");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 TVec< PP<Object> > ObjectGenerator::generateAllObjects()
 {
-  TVec< PP<Object> > all_objs;
+    TVec< PP<Object> > all_objs;
 
-  forget();
-  while (true)
-  {
-    PP<Object> next_obj = generateNextObject();
-    if (next_obj.isNull()) break; // no new Object
-    all_objs.append(next_obj);
-  }
-  generation_began = true;
+    forget();
+    while (true)
+    {
+        PP<Object> next_obj = generateNextObject();
+        if (next_obj.isNull()) break; // no new Object
+        all_objs.append(next_obj);
+    }
+    generation_began = true;
 
-  return all_objs;
+    return all_objs;
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

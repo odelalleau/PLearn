@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ReshapeVariable.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ReshapeVariable.h"
 
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(ReshapeVariable,
                         "NO HELP");
 
 ReshapeVariable::ReshapeVariable(Variable* v, int the_length, int the_width)
-  : inherited(v, the_length, the_width), length_(the_length), width_(the_width)
+    : inherited(v, the_length, the_width), length_(the_length), width_(the_width)
 {
     build_();
 }
@@ -88,25 +88,36 @@ void ReshapeVariable::recomputeSize(int& l, int& w) const
 
 void ReshapeVariable::fprop()
 {
-  for(int k=0; k<nelems(); k++)
-    valuedata[k] = input->valuedata[k];
+    for(int k=0; k<nelems(); k++)
+        valuedata[k] = input->valuedata[k];
 }
 
 
 void ReshapeVariable::bprop()
 {
-  for(int k=0; k<nelems(); k++)
-    input->gradientdata[k] += gradientdata[k];
+    for(int k=0; k<nelems(); k++)
+        input->gradientdata[k] += gradientdata[k];
 }
 
 
 void ReshapeVariable::symbolicBprop()
 {
-  input->accg(new ReshapeVariable(g,input->length(),input->width()));
+    input->accg(new ReshapeVariable(g,input->length(),input->width()));
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

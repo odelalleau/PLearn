@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.18 2005/06/02 16:46:45 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
 #ifndef EmbeddedLearner_INC
@@ -50,128 +50,128 @@ using namespace std;
 
 class EmbeddedLearner: public PLearner
 {
-  typedef PLearner inherited;
+    typedef PLearner inherited;
 
 public:
 
-  //! Inner learner which is embedded into the current learner
-  PP<PLearner> learner_;
+    //! Inner learner which is embedded into the current learner
+    PP<PLearner> learner_;
 
-  //! A string which should be appended to the expdir for the inner learner
-  string expdir_append;
+    //! A string which should be appended to the expdir for the inner learner
+    string expdir_append;
 
-  bool provide_learner_expdir;
+    bool provide_learner_expdir;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  EmbeddedLearner(string expdir_append = "");
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    EmbeddedLearner(string expdir_append = "");
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(EmbeddedLearner);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(EmbeddedLearner);
 
-  // *******************
-  // * PLearner methods *
-  // *******************
+    // *******************
+    // * PLearner methods *
+    // *******************
 
-  //! Forwarded to inner learner
-  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+    //! Forwarded to inner learner
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
-  //! Forwarded to inner learner
-  virtual void setValidationSet(VMat validset);
+    //! Forwarded to inner learner
+    virtual void setValidationSet(VMat validset);
 
-  //! Forwarded to inner learner
-  virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol);
+    //! Forwarded to inner learner
+    virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol);
 
-  //! Forwarded to inner learner; takes into account expdir_append
-  virtual void setExperimentDirectory(const PPath& the_expdir);
+    //! Forwarded to inner learner; takes into account expdir_append
+    virtual void setExperimentDirectory(const PPath& the_expdir);
 
-  //! Forwarded to inner learner
-  virtual int inputsize() const;
+    //! Forwarded to inner learner
+    virtual int inputsize() const;
   
-  //! Forwarded to inner learner
-  virtual int targetsize() const; 
+    //! Forwarded to inner learner
+    virtual int targetsize() const; 
   
-  //! Forwarded to inner learner
-  virtual int outputsize() const;
+    //! Forwarded to inner learner
+    virtual int outputsize() const;
 
-  //! Forwarded to inner learner
-  virtual void forget();
+    //! Forwarded to inner learner
+    virtual void forget();
 
-  //! Forwarded to inner learner
-  virtual void train();
+    //! Forwarded to inner learner
+    virtual void train();
 
-  //! Forwarded to inner learner
-  virtual void computeOutput(const Vec& input, Vec& output) const;
+    //! Forwarded to inner learner
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
-  //! Forwarded to inner learner
-  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                       const Vec& target, Vec& costs) const;
+    //! Forwarded to inner learner
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const;
                               
-  //! Forwarded to inner learner
-  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-                                     Vec& output, Vec& costs) const;
+    //! Forwarded to inner learner
+    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                       Vec& output, Vec& costs) const;
 
-  //! Forwarded to inner learner
-  virtual
-  bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
-                                   real probability,
-                                   TVec< pair<real,real> >& intervals) const;
+    //! Forwarded to inner learner
+    virtual
+    bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
+                                     real probability,
+                                     TVec< pair<real,real> >& intervals) const;
   
-  // NOT forwarded by default
-  // virtual void computeCostsOnly(const Vec& input, const Vec& target,
-  //                               Vec& costs) const;
+    // NOT forwarded by default
+    // virtual void computeCostsOnly(const Vec& input, const Vec& target,
+    //                               Vec& costs) const;
 
-  // NOT forwarded by default
-  // virtual void use(VMat testset, VMat outputs) const;
+    // NOT forwarded by default
+    // virtual void use(VMat testset, VMat outputs) const;
 
-  // NOT forwarded by default
-  // virtual void useOnTrain(Mat& outputs) const;  
+    // NOT forwarded by default
+    // virtual void useOnTrain(Mat& outputs) const;  
   
-  // NOT forwarded by default
-  // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
-  //                   VMat testoutputs=0, VMat testcosts=0) const;
+    // NOT forwarded by default
+    // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
+    //                   VMat testoutputs=0, VMat testcosts=0) const;
 
-  //! Forwarded to inner learner
-  virtual TVec<string> getTestCostNames() const;
+    //! Forwarded to inner learner
+    virtual TVec<string> getTestCostNames() const;
 
-  //! Forwarded to inner learner
-  virtual TVec<string> getTrainCostNames() const;
+    //! Forwarded to inner learner
+    virtual TVec<string> getTrainCostNames() const;
 
-  //! NOT forwarded by default
-  // virtual int nTestCosts() const;
+    //! NOT forwarded by default
+    // virtual int nTestCosts() const;
 
-  //! NOT forwarded by default
-  // virtual int nTrainCosts() const;
+    //! NOT forwarded by default
+    // virtual int nTrainCosts() const;
 
-  //! Forwarded to inner learner
-  virtual void resetInternalState();
+    //! Forwarded to inner learner
+    virtual void resetInternalState();
 
-  //! Forwarded to inner learner
-  virtual bool isStatefulLearner() const;
+    //! Forwarded to inner learner
+    virtual bool isStatefulLearner() const;
 };
 
 // Declares a few other classes and functions related to this class
@@ -180,3 +180,16 @@ DECLARE_OBJECT_PTR(EmbeddedLearner);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

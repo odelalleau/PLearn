@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SelectedOutputCostFunction.cc,v 1.5 2004/09/14 16:04:36 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "SelectedOutputCostFunction.h"
 
@@ -51,8 +51,8 @@ PLEARN_IMPLEMENT_OBJECT(SelectedOutputCostFunction, "ONE LINE DESCR", "NO HELP")
 
 void SelectedOutputCostFunction::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Kernel::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(costfunc, copies);
+    Kernel::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(costfunc, copies);
 }
 
 real SelectedOutputCostFunction::evaluate(const Vec& output, const Vec& target) const
@@ -68,3 +68,15 @@ void SelectedOutputCostFunction::declareOptions(OptionList &ol)
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

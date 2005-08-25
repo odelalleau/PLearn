@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: WeightedSumSquareVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef WeightedSumSquareVariable_INC
 #define WeightedSumSquareVariable_INC
@@ -55,24 +55,24 @@ using namespace std;
 
 class WeightedSumSquareVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  WeightedSumSquareVariable() {}
-  WeightedSumSquareVariable(Variable* input, Variable* weights);
+    //!  Default constructor for persistence
+    WeightedSumSquareVariable() {}
+    WeightedSumSquareVariable(Variable* input, Variable* weights);
 
-  PLEARN_DECLARE_OBJECT(WeightedSumSquareVariable);
+    PLEARN_DECLARE_OBJECT(WeightedSumSquareVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(WeightedSumSquareVariable);
@@ -83,3 +83,16 @@ inline Var weighted_sumsquare(Var v, Var w)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

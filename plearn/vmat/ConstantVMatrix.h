@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
-   ******************************************************* */
+ * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -54,59 +54,59 @@ namespace PLearn {
  */
 class ConstantVMatrix: public VMatrix
 {
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
 public:
-  //#####  Public Options  ##################################################
+    //#####  Public Options  ##################################################
   
-  //! The constant output to return
-  real constant_output;
+    //! The constant output to return
+    real constant_output;
 
 
-  //#####  Object Methods  ##################################################
+    //#####  Object Methods  ##################################################
   
-  //! Default constructor (default return value is missing value)
-  ConstantVMatrix();
+    //! Default constructor (default return value is missing value)
+    ConstantVMatrix();
 
-  //! Initialize with a given size
-  ConstantVMatrix(int the_length, int the_width,
-                  real constant_output = MISSING_VALUE);
+    //! Initialize with a given size
+    ConstantVMatrix(int the_length, int the_width,
+                    real constant_output = MISSING_VALUE);
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  //! Simply calls inherited::build() then build_()
-  virtual void build();
+    //! Simply calls inherited::build() then build_()
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods
-  //  If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
-  PLEARN_DECLARE_OBJECT(ConstantVMatrix);
+    // Declares other standard object methods
+    //  If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+    PLEARN_DECLARE_OBJECT(ConstantVMatrix);
 
 
-  //#####  VMatrix Methods  #################################################
+    //#####  VMatrix Methods  #################################################
 
-  //! Get element at i-th row, j-th column
-  //  (Please implement in .cc)
-  virtual real get(int i, int j) const;
+    //! Get element at i-th row, j-th column
+    //  (Please implement in .cc)
+    virtual real get(int i, int j) const;
 
-  //! Get part or all of the i-th, starting at the j-th column,
-  //! with v.length() elements; these elements are put in v.
-  //  (Please implement in .cc)
-  //  (default version repeatedly calls get(i,j) which may have a significant overhead)
-  virtual void getSubRow(int i, int j, Vec v) const;
+    //! Get part or all of the i-th, starting at the j-th column,
+    //! with v.length() elements; these elements are put in v.
+    //  (Please implement in .cc)
+    //  (default version repeatedly calls get(i,j) which may have a significant overhead)
+    virtual void getSubRow(int i, int j, Vec v) const;
 
 };
 
@@ -116,3 +116,16 @@ DECLARE_OBJECT_PTR(ConstantVMatrix);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

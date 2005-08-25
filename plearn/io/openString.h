@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openString.h,v 1.3 2005/01/14 23:27:18 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -49,13 +49,26 @@
 
 namespace PLearn {
 
-  PStream openString(std::string& s, 
-                     PStream::mode_t io_formatting,
-                     const std::string& openmode = "r");
+PStream openString(std::string& s, 
+                   PStream::mode_t io_formatting,
+                   const std::string& openmode = "r");
 
-  PStream openString(const std::string& s, 
-                     PStream::mode_t io_formatting);
+PStream openString(const std::string& s, 
+                   PStream::mode_t io_formatting);
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

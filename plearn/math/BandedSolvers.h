@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BandedSolvers.h,v 1.2 2004/10/08 15:48:01 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -77,65 +77,78 @@ template <class T>
 void PentadiagonalSolveInPlace(const TVec<T>& y, const TVec<T>& a,
                                const TVec<T>& b, const TVec<T>& c)
 {
-  int n = a.size();
-  int m = y.size();
-  int o = b.size();
-  int p = c.size();
+    int n = a.size();
+    int m = y.size();
+    int o = b.size();
+    int p = c.size();
 
-  // Limitation of this routine for now
-  if (m < 2)
-    PLERROR("PentadiagonalSolve: vectors must have length at least two");
+    // Limitation of this routine for now
+    if (m < 2)
+        PLERROR("PentadiagonalSolve: vectors must have length at least two");
   
-  if (n != m || n != o || n != p)
-    PLERROR("PentadiagonalSolve: vector dimensions don't agree; they must "
-            "all have the same length.");
+    if (n != m || n != o || n != p)
+        PLERROR("PentadiagonalSolve: vector dimensions don't agree; they must "
+                "all have the same length.");
 
-  c[m-1] = 0;
-  c[m-2] = 0;
-  b[m-1] = 0;
+    c[m-1] = 0;
+    c[m-2] = 0;
+    b[m-1] = 0;
 
-  T h1=0;
-  T h2=0;
-  T h3=0;
-  T h4=0;
-  T h5=0;
-  T hh1=0;
-  T hh2=0;
-  T hh3=0;
-  T hh5=0;
-  T z=0;
-  T hb=0;
-  T hc=0;
+    T h1=0;
+    T h2=0;
+    T h3=0;
+    T h4=0;
+    T h5=0;
+    T hh1=0;
+    T hh2=0;
+    T hh3=0;
+    T hh5=0;
+    T z=0;
+    T hb=0;
+    T hc=0;
 
-  for (int i=0 ; i<m ; ++i) {
-    z=a[i]-h4*h1-hh5*hh2;
-    hb=b[i];
-    hh1=h1;
-    h1=(hb-h4*h2)/z;
-    b[i]=h1;
-    hc=c[i];
-    hh2=h2;
-    h2=hc/z;
-    c[i]=h2;
-    a[i]=(y[i]-hh3*hh5-h3*h4)/z;
-    hh3=h3;
-    h3=a[i];
-    h4=hb-h5*hh1;
-    hh5=h5;
-    h5=hc;
-  }
+    for (int i=0 ; i<m ; ++i) {
+        z=a[i]-h4*h1-hh5*hh2;
+        hb=b[i];
+        hh1=h1;
+        h1=(hb-h4*h2)/z;
+        b[i]=h1;
+        hc=c[i];
+        hh2=h2;
+        h2=hc/z;
+        c[i]=h2;
+        a[i]=(y[i]-hh3*hh5-h3*h4)/z;
+        hh3=h3;
+        h3=a[i];
+        h4=hb-h5*hh1;
+        hh5=h5;
+        h5=hc;
+    }
 
-  h2=0;
-  h1=a[m-1];
-  y[m-1]=h1;
+    h2=0;
+    h1=a[m-1];
+    y[m-1]=h1;
 
-  for (int i=m-1 ; i>=0 ; --i) {
-    y[i]=a[i]-b[i]*h1-c[i]*h2;
-    h2=h1;
-    h1=y[i];
-  }
+    for (int i=m-1 ; i>=0 ; --i) {
+        y[i]=a[i]-b[i]*h1-c[i]*h2;
+        h2=h1;
+        h1=y[i];
+    }
 }
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

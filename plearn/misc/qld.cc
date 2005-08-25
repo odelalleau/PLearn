@@ -2,36 +2,36 @@
 /* ************************************************************/
 
 /*  -- translated by f2c (version of 22 July 1992  22:54:52).
-*/
+ */
 
 /* umd
-Must include math.h before f2c.h - f2c does a #define abs.
-(Thanks go to Martin Wauchope for providing this correction)
-We manually included AT&T's f2c.h in this source file, i.e.
-it does not have to be present separately in order to compile.
+   Must include math.h before f2c.h - f2c does a #define abs.
+   (Thanks go to Martin Wauchope for providing this correction)
+   We manually included AT&T's f2c.h in this source file, i.e.
+   it does not have to be present separately in order to compile.
 */
 #include <math.h>
 
 /* CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-                     !!!! NOTICE !!!! 
+   !!!! NOTICE !!!! 
 
-1. The routines contained in this file are due to Prof. K.Schittkowski 
-    of the University of Bayreuth, Germany (modification of routines
-    due to Prof. MJD Powell at the University of Cambridge).  They can 
-    be freely distributed.
+   1. The routines contained in this file are due to Prof. K.Schittkowski 
+   of the University of Bayreuth, Germany (modification of routines
+   due to Prof. MJD Powell at the University of Cambridge).  They can 
+   be freely distributed.
 
-2. A few minor modifications were performed at the University of
-    Maryland. They are marked in the code by "umd".
+   2. A few minor modifications were performed at the University of
+   Maryland. They are marked in the code by "umd".
 
-                                      A.L. Tits, J.L. Zhou, and
-				      Craig Lawrence
-                                      University of Maryland
+   A.L. Tits, J.L. Zhou, and
+   Craig Lawrence
+   University of Maryland
 
- ***********************************************************************
+   ***********************************************************************
 
 
 
-             SOLUTION OF QUADRATIC PROGRAMMING PROBLEMS
+   SOLUTION OF QUADRATIC PROGRAMMING PROBLEMS
 
 
 
@@ -39,23 +39,23 @@ it does not have to be present separately in order to compile.
 
    MINIMIZE        .5*X'*C*X + D'*X 
    SUBJECT TO      A(J)*X  +  B(J)   =  0  ,  J=1,...,ME
-                   A(J)*X  +  B(J)  >=  0  ,  J=ME+1,...,M
-                   XL  <=  X  <=  XU
+   A(J)*X  +  B(J)  >=  0  ,  J=ME+1,...,M
+   XL  <=  X  <=  XU
 
-HERE C MUST BE AN N BY N SYMMETRIC AND POSITIVE MATRIX, D AN N-DIMENSIONAL
-VECTOR, A AN M BY N MATRIX AND B AN M-DIMENSIONAL VECTOR. THE ABOVE 
-SITUATION IS INDICATED BY IWAR(1)=1. ALTERNATIVELY, I.E. IF IWAR(1)=0,
-THE OBJECTIVE FUNCTION MATRIX CAN ALSO BE PROVIDED IN FACTORIZED FORM.
-IN THIS CASE, C IS AN UPPER TRIANGULAR MATRIX.
+   HERE C MUST BE AN N BY N SYMMETRIC AND POSITIVE MATRIX, D AN N-DIMENSIONAL
+   VECTOR, A AN M BY N MATRIX AND B AN M-DIMENSIONAL VECTOR. THE ABOVE 
+   SITUATION IS INDICATED BY IWAR(1)=1. ALTERNATIVELY, I.E. IF IWAR(1)=0,
+   THE OBJECTIVE FUNCTION MATRIX CAN ALSO BE PROVIDED IN FACTORIZED FORM.
+   IN THIS CASE, C IS AN UPPER TRIANGULAR MATRIX.
 
-THE SUBROUTINE REORGANIZES SOME DATA SO THAT THE PROBLEM CAN BE SOLVED
-BY A MODIFICATION OF AN ALGORITHM PROPOSED BY POWELL (1983).
+   THE SUBROUTINE REORGANIZES SOME DATA SO THAT THE PROBLEM CAN BE SOLVED
+   BY A MODIFICATION OF AN ALGORITHM PROPOSED BY POWELL (1983).
 
 
-USAGE:
+   USAGE:
 
-      QL0001(M,ME,MMAX,N,NMAX,MNN,C,D,A,B,XL,XU,X,U,IOUT,IFAIL,IPRINT, 
-             WAR,LWAR,IWAR,LIWAR) 
+   QL0001(M,ME,MMAX,N,NMAX,MNN,C,D,A,B,XL,XU,X,U,IOUT,IFAIL,IPRINT, 
+   WAR,LWAR,IWAR,LIWAR) 
 
 
    DEFINITION OF THE PARAMETERS: 
@@ -63,58 +63,58 @@ USAGE:
    M :        TOTAL NUMBER OF CONSTRAINTS. 
    ME :       NUMBER OF EQUALITY CONSTRAINTS.
    MMAX :     ROW DIMENSION OF A. MMAX MUST BE AT LEAST ONE AND GREATER 
-              THAN M.
+   THAN M.
    N :        NUMBER OF VARIABLES.
    NMAX :     ROW DIMENSION OF C. NMAX MUST BE GREATER OR EQUAL TO N.
    MNN :      MUST BE EQUAL TO M + N + N. 
    C(NMAX,NMAX): OBJECTIVE FUNCTION MATRIX WHICH SHOULD BE SYMMETRIC AND
-              POSITIVE DEFINITE. IF IWAR(1) = 0, C IS SUPPOSED TO BE THE
-              CHOLESKEY-FACTOR OF ANOTHER MATRIX, I.E. C IS UPPER
-              TRIANGULAR.
+   POSITIVE DEFINITE. IF IWAR(1) = 0, C IS SUPPOSED TO BE THE
+   CHOLESKEY-FACTOR OF ANOTHER MATRIX, I.E. C IS UPPER
+   TRIANGULAR.
    D(NMAX) :  CONTAINS THE CONSTANT VECTOR OF THE OBJECTIVE FUNCTION.
    A(MMAX,NMAX): CONTAINS THE DATA MATRIX OF THE LINEAR CONSTRAINTS. 
    B(MMAX) :  CONTAINS THE CONSTANT DATA OF THE LINEAR CONSTRAINTS. 
    XL(N),XU(N): CONTAIN THE LOWER AND UPPER BOUNDS FOR THE VARIABLES.
    X(N) :     ON RETURN, X CONTAINS THE OPTIMAL SOLUTION VECTOR.
    U(MNN) :   ON RETURN, U CONTAINS THE LAGRANGE MULTIPLIERS. THE FIRST 
-              M POSITIONS ARE RESERVED FOR THE MULTIPLIERS OF THE M
-              LINEAR CONSTRAINTS AND THE SUBSEQUENT ONES FOR THE
-              MULTIPLIERS OF THE LOWER AND UPPER BOUNDS. ON SUCCESSFUL 
-              TERMINATION, ALL VALUES OF U WITH RESPECT TO INEQUALITIES 
-              AND BOUNDS SHOULD BE GREATER OR EQUAL TO ZERO.
+   M POSITIONS ARE RESERVED FOR THE MULTIPLIERS OF THE M
+   LINEAR CONSTRAINTS AND THE SUBSEQUENT ONES FOR THE
+   MULTIPLIERS OF THE LOWER AND UPPER BOUNDS. ON SUCCESSFUL 
+   TERMINATION, ALL VALUES OF U WITH RESPECT TO INEQUALITIES 
+   AND BOUNDS SHOULD BE GREATER OR EQUAL TO ZERO.
    IOUT :     INTEGER INDICATING THE DESIRED OUTPUT UNIT NUMBER, I.E.
-              ALL WRITE-STATEMENTS START WITH 'WRITE(IOUT,... '.
+   ALL WRITE-STATEMENTS START WITH 'WRITE(IOUT,... '.
    IFAIL :    SHOWS THE TERMINATION REASON.
-      IFAIL = 0 :   SUCCESSFUL RETURN.
-      IFAIL = 1 :   TOO MANY ITERATIONS (MORE THAN 40*(N+M)).
-      IFAIL = 2 :   ACCURACY INSUFFICIENT TO SATISFY CONVERGENCE
-                    CRITERION.
-      IFAIL = 5 :   LENGTH OF A WORKING ARRAY IS TOO SHORT.
-      IFAIL > 10 :  THE CONSTRAINTS ARE INCONSISTENT.
+   IFAIL = 0 :   SUCCESSFUL RETURN.
+   IFAIL = 1 :   TOO MANY ITERATIONS (MORE THAN 40*(N+M)).
+   IFAIL = 2 :   ACCURACY INSUFFICIENT TO SATISFY CONVERGENCE
+   CRITERION.
+   IFAIL = 5 :   LENGTH OF A WORKING ARRAY IS TOO SHORT.
+   IFAIL > 10 :  THE CONSTRAINTS ARE INCONSISTENT.
    IPRINT :   OUTPUT CONTROL.
-      IPRINT = 0 :  NO OUTPUT OF QL0001.
-      IPRINT > 0 :  BRIEF OUTPUT IN ERROR CASES.
+   IPRINT = 0 :  NO OUTPUT OF QL0001.
+   IPRINT > 0 :  BRIEF OUTPUT IN ERROR CASES.
    WAR(LWAR) : REAL WORKING ARRAY. THE LENGTH LWAR SHOULD BE GRATER THAN
-               3*NMAX*NMAX/2 + 10*NMAX + 2*MMAX.
+   3*NMAX*NMAX/2 + 10*NMAX + 2*MMAX.
    IWAR(LIWAR): INTEGER WORKING ARRAY. THE LENGTH LIWAR SHOULD BE AT
-              LEAST N.
-              IF IWAR(1)=0 INITIALLY, THEN THE CHOLESKY DECOMPOSITION
-              WHICH IS REQUIRED BY THE DUAL ALGORITHM TO GET THE FIRST 
-              UNCONSTRAINED MINIMUM OF THE OBJECTIVE FUNCTION, IS
-              PERFORMED INTERNALLY. OTHERWISE, I.E. IF IWAR(1)=1, THEN 
-              IT IS ASSUMED THAT THE USER PROVIDES THE INITIAL FAC-
-              TORIZATION BY HIMSELF AND STORES IT IN THE UPPER TRIAN-
-              GULAR PART OF THE ARRAY C.
+   LEAST N.
+   IF IWAR(1)=0 INITIALLY, THEN THE CHOLESKY DECOMPOSITION
+   WHICH IS REQUIRED BY THE DUAL ALGORITHM TO GET THE FIRST 
+   UNCONSTRAINED MINIMUM OF THE OBJECTIVE FUNCTION, IS
+   PERFORMED INTERNALLY. OTHERWISE, I.E. IF IWAR(1)=1, THEN 
+   IT IS ASSUMED THAT THE USER PROVIDES THE INITIAL FAC-
+   TORIZATION BY HIMSELF AND STORES IT IN THE UPPER TRIAN-
+   GULAR PART OF THE ARRAY C.
 
    A NAMED COMMON-BLOCK  /CMACHE/EPS   MUST BE PROVIDED BY THE USER,
    WHERE EPS DEFINES A GUESS FOR THE UNDERLYING MACHINE PRECISION.
 
 
    AUTHOR:    K. SCHITTKOWSKI,
-              MATHEMATISCHES INSTITUT,
-              UNIVERSITAET BAYREUTH,
-              8580 BAYREUTH,
-              GERMANY, F.R.
+   MATHEMATISCHES INSTITUT,
+   UNIVERSITAET BAYREUTH,
+   8580 BAYREUTH,
+   GERMANY, F.R.
 
 
    VERSION:   1.4  (MARCH, 1987)
@@ -123,7 +123,7 @@ USAGE:
 
 /**  barf  [ba:rf]  2.  "He suggested using FORTRAN, and everybody barfed."
 
-	- From The Shogakukan DICTIONARY OF NEW ENGLISH (Second edition) */
+- From The Shogakukan DICTIONARY OF NEW ENGLISH (Second edition) */
 
 #ifndef F2C_INCLUDE
 #define F2C_INCLUDE
@@ -162,106 +162,106 @@ typedef long ftnint;
 /*external read, write*/
 typedef struct
 {	flag cierr;
-	ftnint ciunit;
-	flag ciend;
-	char *cifmt;
-	ftnint cirec;
+    ftnint ciunit;
+    flag ciend;
+    char *cifmt;
+    ftnint cirec;
 } cilist;
 
 /*internal read, write*/
 typedef struct
 {	flag icierr;
-	char *iciunit;
-	flag iciend;
-	char *icifmt;
-	ftnint icirlen;
-	ftnint icirnum;
+    char *iciunit;
+    flag iciend;
+    char *icifmt;
+    ftnint icirlen;
+    ftnint icirnum;
 } icilist;
 
 /*open*/
 typedef struct
 {	flag oerr;
-	ftnint ounit;
-	char *ofnm;
-	ftnlen ofnmlen;
-	char *osta;
-	char *oacc;
-	char *ofm;
-	ftnint orl;
-	char *oblnk;
+    ftnint ounit;
+    char *ofnm;
+    ftnlen ofnmlen;
+    char *osta;
+    char *oacc;
+    char *ofm;
+    ftnint orl;
+    char *oblnk;
 } olist;
 
 /*close*/
 typedef struct
 {	flag cerr;
-	ftnint cunit;
-	char *csta;
+    ftnint cunit;
+    char *csta;
 } cllist;
 
 /*rewind, backspace, endfile*/
 typedef struct
 {	flag aerr;
-	ftnint aunit;
+    ftnint aunit;
 } alist;
 
 /* inquire */
 typedef struct
 {	flag inerr;
-	ftnint inunit;
-	char *infile;
-	ftnlen infilen;
-	ftnint	*inex;	/*parameters in standard's order*/
-	ftnint	*inopen;
-	ftnint	*innum;
-	ftnint	*innamed;
-	char	*inname;
-	ftnlen	innamlen;
-	char	*inacc;
-	ftnlen	inacclen;
-	char	*inseq;
-	ftnlen	inseqlen;
-	char 	*indir;
-	ftnlen	indirlen;
-	char	*infmt;
-	ftnlen	infmtlen;
-	char	*inform;
-	ftnint	informlen;
-	char	*inunf;
-	ftnlen	inunflen;
-	ftnint	*inrecl;
-	ftnint	*innrec;
-	char	*inblank;
-	ftnlen	inblanklen;
+    ftnint inunit;
+    char *infile;
+    ftnlen infilen;
+    ftnint	*inex;	/*parameters in standard's order*/
+    ftnint	*inopen;
+    ftnint	*innum;
+    ftnint	*innamed;
+    char	*inname;
+    ftnlen	innamlen;
+    char	*inacc;
+    ftnlen	inacclen;
+    char	*inseq;
+    ftnlen	inseqlen;
+    char 	*indir;
+    ftnlen	indirlen;
+    char	*infmt;
+    ftnlen	infmtlen;
+    char	*inform;
+    ftnint	informlen;
+    char	*inunf;
+    ftnlen	inunflen;
+    ftnint	*inrecl;
+    ftnint	*innrec;
+    char	*inblank;
+    ftnlen	inblanklen;
 } inlist;
 
 #define VOID void
 
 union Multitype {	/* for multiple entry points */
-	shortint h;
-	integer i;
-	real r;
-	doublereal d;
-	complex c;
-	doublecomplex z;
-	};
+    shortint h;
+    integer i;
+    real r;
+    doublereal d;
+    complex c;
+    doublecomplex z;
+};
 
 typedef union Multitype Multitype;
 
 typedef long Long;
 
 struct Vardesc {	/* for Namelist */
-	char *name;
-	char *addr;
-	Long *dims;
-	int  type;
-	};
+    char *name;
+    char *addr;
+    Long *dims;
+    int  type;
+};
 typedef struct Vardesc Vardesc;
 
 struct Namelist {
-	char *name;
-	Vardesc **vars;
-	int nvars;
-	};
+    char *name;
+    Vardesc **vars;
+    int nvars;
+};
 typedef struct Namelist Namelist;
 
 #define abs(x) ((x) >= 0 ? (x) : -(x))
@@ -345,8 +345,8 @@ static integer c__1 = 1;
 
 /* umd */
 /*
-ql0002_ is declared here to provide ANSI C compliance.
-(Thanks got to Martin Wauchope for providing this correction)
+  ql0002_ is declared here to provide ANSI C compliance.
+  (Thanks got to Martin Wauchope for providing this correction)
 */
 #ifdef __STDC__
 
@@ -365,14 +365,14 @@ int ql0002_();
 #endif
 /* umd */
 /*
-When the fortran code was f2c converted, the use of fortran COMMON
-blocks was no longer available. Thus an additional variable, eps1,
-was added to the parameter list to account for this.
+  When the fortran code was f2c converted, the use of fortran COMMON
+  blocks was no longer available. Thus an additional variable, eps1,
+  was added to the parameter list to account for this.
 */
 /* umd */
 /* 
-Two alternative definitions are provided in order to give ANSI
-compliance.
+   Two alternative definitions are provided in order to give ANSI
+   compliance.
 */
 #ifdef __STDC__
 int ql0001_(int *m,int *me,int *mmax,int *n,int *nmax,int *mnn,
@@ -382,9 +382,9 @@ int ql0001_(int *m,int *me,int *mmax,int *n,int *nmax,int *mnn,
             double *eps1)
 #else
 /* Subroutine */ 
-int ql0001_(m, me, mmax, n, nmax, mnn, c, d, a, b, xl, xu, x,
-	 u, iout, ifail, iprint, war, lwar, iwar, liwar, eps1)
-integer *m, *me, *mmax, *n, *nmax, *mnn;
+    int ql0001_(m, me, mmax, n, nmax, mnn, c, d, a, b, xl, xu, x,
+                u, iout, ifail, iprint, war, lwar, iwar, liwar, eps1)
+    integer *m, *me, *mmax, *n, *nmax, *mnn;
 doublereal *c, *d, *a, *b, *xl, *xu, *x, *u;
 integer *iout, *ifail, *iprint;
 doublereal *war;
@@ -495,7 +495,7 @@ N CONVERGENCE\002)";
 /* L10: */
 	++in;
     }
-L20:
+ L20:
     lw = *nmax * 3 * *nmax / 2 + *nmax * 10 + *m;
     if (inw2 + lw > *lwar) {
 	goto L80;
@@ -528,12 +528,12 @@ L20:
 	idiag = (integer) diag;
     }
 /*
-    if (*iprint > 0 && idiag > 0) {
-	io___16.ciunit = *iout;
-	s_wsfe(&io___16);
-	do_fio(&c__1, (char *)&idiag, (ftnlen)sizeof(integer));
-	e_wsfe();
-    }
+  if (*iprint > 0 && idiag > 0) {
+  io___16.ciunit = *iout;
+  s_wsfe(&io___16);
+  do_fio(&c__1, (char *)&idiag, (ftnlen)sizeof(integer));
+  e_wsfe();
+  }
 */
     if (info < 0) {
 	goto L70;
@@ -556,76 +556,76 @@ L20:
 	u[j] = war[in + i];
 /* L60: */
     }
-L30:
+ L30:
     return 0;
 
 /*     ERROR MESSAGES */
 
-L70:
+ L70:
     *ifail = -info + 10;
 /*
-    if (*iprint > 0 && nact > 0) {
-	io___18.ciunit = *iout;
-	s_wsfe(&io___18);
-	i__1 = -info;
-	do_fio(&c__1, (char *)&i__1, (ftnlen)sizeof(integer));
-	i__2 = nact;
-	for (i = 1; i <= i__2; ++i) {
-	    do_fio(&c__1, (char *)&iwar[i], (ftnlen)sizeof(integer));
-	}
-	e_wsfe();
-    }
+  if (*iprint > 0 && nact > 0) {
+  io___18.ciunit = *iout;
+  s_wsfe(&io___18);
+  i__1 = -info;
+  do_fio(&c__1, (char *)&i__1, (ftnlen)sizeof(integer));
+  i__2 = nact;
+  for (i = 1; i <= i__2; ++i) {
+  do_fio(&c__1, (char *)&iwar[i], (ftnlen)sizeof(integer));
+  }
+  e_wsfe();
+  }
 */
     return 0;
-L80:
+ L80:
     *ifail = 5;
 /*
-    if (*iprint > 0) {
-	io___19.ciunit = *iout;
-	s_wsfe(&io___19);
-	e_wsfe();
-    }
+  if (*iprint > 0) {
+  io___19.ciunit = *iout;
+  s_wsfe(&io___19);
+  e_wsfe();
+  }
 */
     return 0;
-L81:
+ L81:
     *ifail = 5;
 /*
-    if (*iprint > 0) {
-	io___20.ciunit = *iout;
-	s_wsfe(&io___20);
-	e_wsfe();
-    }
+  if (*iprint > 0) {
+  io___20.ciunit = *iout;
+  s_wsfe(&io___20);
+  e_wsfe();
+  }
 */
     return 0;
-L82:
+ L82:
     *ifail = 5;
 /*
-    if (*iprint > 0) {
-	io___21.ciunit = *iout;
-	s_wsfe(&io___21);
-	e_wsfe();
-    }
+  if (*iprint > 0) {
+  io___21.ciunit = *iout;
+  s_wsfe(&io___21);
+  e_wsfe();
+  }
 */
     return 0;
-L40:
+ L40:
     *ifail = 1;
 /*
-    if (*iprint > 0) {
-	io___22.ciunit = *iout;
-	s_wsfe(&io___22);
-	do_fio(&c__1, (char *)&maxit, (ftnlen)sizeof(integer));
-	e_wsfe();
-    }
+  if (*iprint > 0) {
+  io___22.ciunit = *iout;
+  s_wsfe(&io___22);
+  do_fio(&c__1, (char *)&maxit, (ftnlen)sizeof(integer));
+  e_wsfe();
+  }
 */
     return 0;
-L90:
+ L90:
     *ifail = 2;
 /*
-    if (*iprint > 0) {
-	io___23.ciunit = *iout;
-	s_wsfe(&io___23);
-	e_wsfe();
-    }
+  if (*iprint > 0) {
+  io___23.ciunit = *iout;
+  s_wsfe(&io___23);
+  e_wsfe();
+  }
 */
     return 0;
 
@@ -635,9 +635,9 @@ L90:
 
 
 /* umd
-Two alternative definitions are provided in order to give ANSI
-compliance.
-(Thanks got to Martin Wauchope for providing this correction)
+   Two alternative definitions are provided in order to give ANSI
+   compliance.
+   (Thanks got to Martin Wauchope for providing this correction)
 */
 #ifdef __STDC__
 int ql0002_(integer *n,integer *m,integer *meq,integer *mmax,
@@ -651,9 +651,9 @@ int ql0002_(integer *n,integer *m,integer *meq,integer *mmax,
             doublereal *diag, doublereal *w,
             integer *lw)
 #else
-/* Subroutine */ int ql0002_(n, m, meq, mmax, mn, mnn, nmax, lql, a, b, grad, 
-	g, xl, xu, x, nact, iact, maxit, vsmall, info, diag, w, lw)
-integer *n, *m, *meq, *mmax, *mn, *mnn, *nmax;
+    /* Subroutine */ int ql0002_(n, m, meq, mmax, mn, mnn, nmax, lql, a, b, grad, 
+                                 g, xl, xu, x, nact, iact, maxit, vsmall, info, diag, w, lw)
+    integer *n, *m, *meq, *mmax, *mn, *mnn, *nmax;
 logical *lql;
 doublereal *a, *b, *grad, *g, *xl, *xu, *x;
 integer *nact, *iact, *maxit;
@@ -728,7 +728,7 @@ integer *lw;
 
 
 /************************************************************************
-***/
+ ***/
 
 
 /*   INTRINSIC FUNCTIONS:   DMAX1,DSQRT,DABS,DMIN1 */
@@ -813,14 +813,14 @@ integer *lw;
 	} else {
 	    goto L730;
 	}
-L20:
+    L20:
 	sum = one / sqrt(sum);
-L30:
+    L30:
 	ia = iwa + k;
 /* L40: */
 	w[ia] = sum;
     }
-L45:
+ L45:
     i__1 = *n;
     for (k = 1; k <= i__1; ++k) {
 	ia = iwa + *m + k;
@@ -851,7 +851,7 @@ L45:
 	    d__1 = w[id], d__2 = g[j + j * g_dim1];
 	    ga = -min(d__1,d__2);
 	    gb = (d__1 = w[id] - g[j + j * g_dim1], abs(d__1)) + (d__2 = g[i 
-		    + j * g_dim1], abs(d__2));
+                                                                           + j * g_dim1], abs(d__2));
 	    if (gb > zero) {
 /* Computing 2nd power */
 		d__1 = g[i + j * g_dim1];
@@ -860,13 +860,13 @@ L45:
 /* L55: */
 	    *diag = max(*diag,ga);
 	}
-L60:
+    L60:
 	;
     }
     if (*diag <= zero) {
 	goto L90;
     }
-L70:
+ L70:
     *diag = diagr * *diag;
     i__1 = *n;
     for (i = 1; i <= i__1; ++i) {
@@ -878,7 +878,7 @@ L70:
 /*     FORM THE CHOLESKY FACTORISATION OF G. THE TRANSPOSE */
 /*     OF THE FACTOR WILL BE PLACED IN THE R-PARTITION OF W. */
 
-L90:
+ L90:
     ir = iwr;
     i__1 = *n;
     for (j = 1; j <= i__1; ++j) {
@@ -896,7 +896,7 @@ L90:
 /* L100: */
 		temp -= w[k] * w[ira];
 	    }
-L110:
+        L110:
 	    ++ir;
 	    ++ira;
 	    if (i < j) {
@@ -914,11 +914,11 @@ L110:
 
 /*     INCREASE FURTHER THE DIAGONAL ELEMENT OF G. */
 
-L140:
+ L140:
     w[j] = one;
     sumx = one;
     k = j;
-L150:
+ L150:
     sum = zero;
     ira = ir - 1;
     i__1 = j;
@@ -942,7 +942,7 @@ L150:
 /*     STORE THE CHOLESKY FACTORISATION IN THE R-PARTITION */
 /*     OF W. */
 
-L165:
+ L165:
     ir = iwr;
     i__1 = *n;
     for (i = 1; i <= i__1; ++i) {
@@ -956,7 +956,7 @@ L165:
 
 /*     SET Z THE INVERSE OF THE MATRIX IN R. */
 
-L170:
+ L170:
     nm = *n - 1;
     i__2 = *n;
     for (i = 1; i <= i__2; ++i) {
@@ -970,7 +970,7 @@ L170:
 /* L180: */
 	    iz += *n;
 	}
-L190:
+    L190:
 	ir = iwr + (i + i * i) / 2;
 	w[iz] = one / w[ir];
 	if (i == *n) {
@@ -992,7 +992,7 @@ L190:
 /* L210: */
 	    w[iz] = -sum / w[ir];
 	}
-L220:
+    L220:
 	;
     }
 
@@ -1008,7 +1008,7 @@ L220:
 /*     SET X TO ZERO AND SET THE CORRESPONDING RESIDUALS OF THE */
 /*     KUHN-TUCKER CONDITIONS. */
 
-L230:
+ L230:
     iflag = 1;
     iws = iww - *n;
     i__2 = *n;
@@ -1031,13 +1031,13 @@ L230:
 	k1 = k - *m;
 	w[is] = xl[k1];
 	goto L240;
-L234:
+    L234:
 	k1 = k - *mn;
 	w[is] = -xu[k1];
 	goto L240;
-L235:
+    L235:
 	w[is] = b[k];
-L240:
+    L240:
 	;
     }
     xmag = zero;
@@ -1050,7 +1050,7 @@ L240:
 
 /*     SET THE RESIDUALS OF THE KUHN-TUCKER CONDITIONS FOR GENERAL X. */
 
-L250:
+ L250:
     iflag = 2;
     iws = iww - *n;
     i__2 = *n;
@@ -1074,13 +1074,13 @@ L250:
 	    w[iw] += g[j + i * g_dim1] * w[id];
 	}
 	goto L260;
-L259:
+    L259:
 	i__1 = *n;
 	for (j = 1; j <= i__1; ++j) {
 /* L261: */
 	    w[iw] += g[i + j * g_dim1] * x[j];
 	}
-L260:
+    L260:
 	;
     }
     if (*nact == 0) {
@@ -1102,7 +1102,7 @@ L260:
 	    w[is] -= x[i] * a[kk + i * a_dim1];
 	}
 	goto L270;
-L265:
+    L265:
 	if (kk > *mn) {
 	    goto L266;
 	}
@@ -1111,19 +1111,19 @@ L265:
 	w[iw] -= w[k];
 	w[is] = xl[k1] - x[k1];
 	goto L270;
-L266:
+    L266:
 	k1 = kk - *mn;
 	iw = iww + k1;
 	w[iw] += w[k];
 	w[is] = -xu[k1] + x[k1];
-L270:
+    L270:
 	;
     }
 
 /*     PRE-MULTIPLY THE VECTOR IN THE S-PARTITION OF W BY THE */
 /*     INVERS OF R TRANSPOSE. */
 
-L280:
+ L280:
     ir = iwr;
     ip = iww + 1;
     ipp = iww + *n;
@@ -1142,7 +1142,7 @@ L280:
 /* L290: */
 	    sum += w[ir] * w[j];
 	}
-L300:
+    L300:
 	++ir;
 /* L310: */
 	w[i] = (w[i] - sum) / w[ir];
@@ -1180,24 +1180,24 @@ L300:
 	    w[iw] += g[j + i * g_dim1] * w[id];
 	}
 	goto L330;
-L329:
+    L329:
 	i__1 = *n;
 	for (j = 1; j <= i__1; ++j) {
 	    iw = iww + j;
 /* L331: */
 	    w[iw] += sum * g[i + j * g_dim1];
 	}
-L330:
+    L330:
 	;
     }
 
 /*     FORM THE SCALAR PRODUCT OF THE CURRENT GRADIENT RESIDUALS */
 /*     WITH EACH COLUMN OF Z. */
 
-L340:
+ L340:
     kflag = 1;
     goto L930;
-L350:
+ L350:
     if (*nact == *n) {
 	goto L380;
     }
@@ -1227,10 +1227,10 @@ L350:
 
 /*     UPDATE THE LAGRANGE MULTIPLIERS. */
 
-L380:
+ L380:
     lflag = 3;
     goto L740;
-L390:
+ L390:
     i__2 = *nact;
     for (k = 1; k <= i__2; ++k) {
 	iw = iww + k;
@@ -1241,10 +1241,10 @@ L390:
 /*     REVISE THE VALUES OF XMAG. */
 /*     BRANCH IF ITERATIVE REFINEMENT IS REQUIRED. */
 
-L410:
+ L410:
     jflag = 1;
     goto L910;
-L420:
+ L420:
     if (iflag == itref) {
 	goto L250;
     }
@@ -1254,7 +1254,7 @@ L420:
 
     kdrop = 0;
     goto L440;
-L430:
+ L430:
     ++kdrop;
     if (w[kdrop] >= zero) {
 	goto L440;
@@ -1265,7 +1265,7 @@ L430:
     nu = *nact;
     mflag = 1;
     goto L800;
-L440:
+ L440:
     if (kdrop < *nact) {
 	goto L430;
     }
@@ -1274,7 +1274,7 @@ L440:
 
 /*     ANY THAT MAY BE DUE TO COMPUTER ROUNDING ERRORS. */
 
-L450:
+ L450:
     cvmax = zero;
     if (*m <= 0) {
 	goto L481;
@@ -1315,10 +1315,10 @@ L450:
 	cvmax = sumx;
 	res = sum;
 	knext = k;
-L480:
+    L480:
 	;
     }
-L481:
+ L481:
     i__2 = *n;
     for (k = 1; k <= i__2; ++k) {
 	lower = TRUE_;
@@ -1334,10 +1334,10 @@ L481:
 	} else {
 	    goto L483;
 	}
-L482:
+    L482:
 	sum = x[k] - xu[k];
 	lower = FALSE_;
-L483:
+    L483:
 	if (sum <= cvmax) {
 	    goto L485;
 	}
@@ -1348,7 +1348,7 @@ L483:
 	    goto L485;
 	}
 	knext = k + *mn;
-L485:
+    L485:
 	;
     }
 
@@ -1395,7 +1395,7 @@ L485:
 	    sumx += abs(temp);
 	}
 	goto L495;
-L489:
+    L489:
 	i__1 = *n;
 	for (j = 1; j <= i__1; ++j) {
 	    ix = iwx + j;
@@ -1404,7 +1404,7 @@ L489:
 /* L490: */
 	    sumx += abs(temp);
 	}
-L495:
+    L495:
 	ix = iwx + i;
 	fdiff += sum * (x[i] - w[ix]);
 /* L500: */
@@ -1421,7 +1421,7 @@ L495:
     }
     jfinc = 0;
     *info = 0;
-L510:
+ L510:
     i__2 = *n;
     for (i = 1; i <= i__2; ++i) {
 	ix = iwx + i;
@@ -1433,14 +1433,14 @@ L510:
 /*     COLUMN OF Z. PARNEW WILL BECOME THE LAGRANGE MULTIPLIER OF */
 /*     THE NEW CONSTRAINT. */
 
-L530:
+ L530:
     ++iterc;
     if (iterc <= *maxit) {
 	goto L531;
     }
     *info = 1;
     goto L710;
-L531:
+ L531:
     iws = iwr + (*nact + *nact * *nact) / 2;
     if (knext > *m) {
 	goto L541;
@@ -1452,7 +1452,7 @@ L531:
 	w[iw] = a[knext + i * a_dim1];
     }
     goto L549;
-L541:
+ L541:
     i__2 = *n;
     for (i = 1; i <= i__2; ++i) {
 	iw = iww + i;
@@ -1474,7 +1474,7 @@ L541:
 	iz += *n;
     }
     goto L550;
-L545:
+ L545:
     k1 = knext - *mn;
     iw = iww + k1;
     w[iw] = -one;
@@ -1487,10 +1487,10 @@ L545:
 	iz += *n;
     }
     goto L550;
-L549:
+ L549:
     kflag = 2;
     goto L930;
-L550:
+ L550:
     parnew = zero;
 
 /*     APPLY GIVENS ROTATIONS TO MAKE THE LAST (N-NACT-2) SCALAR */
@@ -1505,7 +1505,7 @@ L550:
 
 /*     BRANCH IF THERE IS NO NEED TO DELETE A CONSTRAINT. */
 
-L560:
+ L560:
     is = iws + *nact;
     if (*nact == 0) {
 	goto L640;
@@ -1537,7 +1537,7 @@ L560:
 	goto L5;
     }
     goto L570;
-L5:
+ L5:
     sumc = sqrt(sumc);
     ia = iwa + knext;
     if (knext <= *m) {
@@ -1557,16 +1557,16 @@ L5:
 /*     EXPRESSED IN TERMS OF THE ACTIVE CONSTRAINT NORMALS. */
 /*     THEN WORK OUT WHICH CONTRAINT TO DROP. */
 
-L567:
+ L567:
     lflag = 4;
     goto L740;
-L570:
+ L570:
     lflag = 1;
     goto L740;
 
 /*     COMPLETE THE TEST FOR LINEARLY DEPENDENT CONSTRAINTS. */
 
-L571:
+ L571:
     if (knext > *m) {
 	goto L574;
     }
@@ -1593,15 +1593,15 @@ L571:
 		temp = -w[iww + kk];
 	    }
 	    goto L569;
-L568:
+        L568:
 	    iw = iww + k;
 	    temp = w[iw] * a[kk + i * a_dim1];
-L569:
+        L569:
 	    suma -= temp;
 /* L572: */
 	    sumb += abs(temp);
 	}
-L581:
+    L581:
 	if (suma <= *vsmall) {
 	    goto L573;
 	}
@@ -1614,12 +1614,12 @@ L581:
 	    goto L573;
 	}
 	goto L630;
-L573:
+    L573:
 	;
     }
     lflag = 1;
     goto L775;
-L574:
+ L574:
     k1 = knext - *m;
     if (k1 > *n) {
 	k1 -= *n;
@@ -1634,7 +1634,7 @@ L574:
 	if (knext > *mn) {
 	    suma = -one;
 	}
-L575:
+    L575:
 	sumb = abs(suma);
 	if (*nact == 0) {
 	    goto L582;
@@ -1655,15 +1655,15 @@ L575:
 		temp = -w[iww + kk];
 	    }
 	    goto L576;
-L579:
+        L579:
 	    iw = iww + k;
 	    temp = w[iw] * a[kk + i * a_dim1];
-L576:
+        L576:
 	    suma -= temp;
 /* L577: */
 	    sumb += abs(temp);
 	}
-L582:
+    L582:
 	temp = sumb + abs(suma) * .1;
 	tempa = sumb + abs(suma) * .2;
 	if (temp <= sumb) {
@@ -1673,7 +1673,7 @@ L582:
 	    goto L578;
 	}
 	goto L630;
-L578:
+    L578:
 	;
     }
     lflag = 1;
@@ -1681,7 +1681,7 @@ L578:
 
 /*     BRANCH IF THE CONTRAINTS ARE INCONSISTENT. */
 
-L580:
+ L580:
     *info = -knext;
     if (kdrop == 0) {
 	goto L700;
@@ -1691,7 +1691,7 @@ L580:
 
 /*     REVISE THE LAGRANGE MULTIPLIERS OF THE ACTIVE CONSTRAINTS. */
 
-L590:
+ L590:
     if (*nact == 0) {
 	goto L601;
     }
@@ -1706,7 +1706,7 @@ L590:
 	}
 /* L600: */
     }
-L601:
+ L601:
     if (kdrop == 0) {
 	goto L680;
     }
@@ -1718,7 +1718,7 @@ L601:
     nu = *nact + 1;
     mflag = 2;
     goto L800;
-L610:
+ L610:
     iws = iws - *nact - 1;
     nu = min(*n,nu);
     i__2 = nu;
@@ -1733,9 +1733,9 @@ L610:
 
 /*     CALCULATE THE STEP TO THE VIOLATED CONSTRAINT. */
 
-L630:
+ L630:
     is = iws + *nact;
-L640:
+ L640:
     sumy = w[is + 1];
     step = -res / sumy;
     parinc = step / sumy;
@@ -1748,7 +1748,7 @@ L640:
 
     lflag = 2;
     goto L740;
-L650:
+ L650:
     if (kdrop == 0) {
 	goto L660;
     }
@@ -1766,7 +1766,7 @@ L650:
 /*     UPDATE X AND THE LAGRANGE MULTIPIERS. */
 /*     DROP A CONSTRAINT IF THE FULL STEP IS NOT TAKEN. */
 
-L660:
+ L660:
     iwy = iwz + *nact * *n;
     i__2 = *n;
     for (i = 1; i <= i__2; ++i) {
@@ -1781,7 +1781,7 @@ L660:
 
 /*     ADD THE NEW CONSTRAINT TO THE ACTIVE SET. */
 
-L680:
+ L680:
     ++(*nact);
     w[*nact] = parnew;
     iact[*nact] = knext;
@@ -1796,7 +1796,7 @@ L680:
 
     jflag = 2;
     goto L910;
-L690:
+ L690:
     if (sum < xmagr * xmag) {
 	goto L230;
     }
@@ -1809,7 +1809,7 @@ L690:
 /*     INITIATE ITERATIVE REFINEMENT IF IT HAS NOT YET BEEN USED, */
 /*     OR RETURN AFTER RESTORING THE DIAGONAL ELEMENTS OF G. */
 
-L700:
+ L700:
     if (iterc == 0) {
 	goto L710;
     }
@@ -1818,7 +1818,7 @@ L700:
     if (itref == 1) {
 	goto L250;
     }
-L710:
+ L710:
     if (! (*lql)) {
 	return 0;
     }
@@ -1828,7 +1828,7 @@ L710:
 /* L720: */
 	g[i + i * g_dim1] = w[id];
     }
-L730:
+ L730:
     return 0;
 
 
@@ -1842,12 +1842,12 @@ L730:
 /*     CALCULATE THE LAGRANGE MULTIPLIERS BY PRE-MULTIPLYING THE */
 /*     VECTOR IN THE S-PARTITION OF W BY THE INVERSE OF R. */
 
-L740:
+ L740:
     ir = iwr + (*nact + *nact * *nact) / 2;
     i = *nact;
     sum = zero;
     goto L770;
-L750:
+ L750:
     ira = ir - 1;
     sum = zero;
     if (*nact == 0) {
@@ -1860,10 +1860,10 @@ L750:
 /* L760: */
 	ira += j;
     }
-L761:
+ L761:
     ir -= i;
     --i;
-L770:
+ L770:
     iw = iww + i;
     is = iws + i;
     w[iw] = (w[is] - sum) / w[ir];
@@ -1879,7 +1879,7 @@ L770:
 
 /*     CALCULATE THE NEXT CONSTRAINT TO DROP. */
 
-L775:
+ L775:
     ip = iww + 1;
     ipp = iww + *nact;
     kdrop = 0;
@@ -1902,16 +1902,16 @@ L775:
 	if (abs(temp) >= abs(ratio)) {
 	    goto L790;
 	}
-L780:
+    L780:
 	kdrop = k;
 	ratio = temp;
-L790:
+    L790:
 	;
     }
-L791:
+ L791:
     switch ((int)lflag) {
-	case 1:  goto L580;
-	case 2:  goto L650;
+    case 1:  goto L580;
+    case 2:  goto L650;
     }
 
 
@@ -1921,7 +1921,7 @@ L791:
 
 /*     DROP THE CONSTRAINT IN POSITION KDROP IN THE ACTIVE SET. */
 
-L800:
+ L800:
     ia = iwa + iact[kdrop];
     if (iact[kdrop] > *mn) {
 	ia -= *n;
@@ -1936,7 +1936,7 @@ L800:
 
     iz = iwz + kdrop * *n;
     ir = iwr + (kdrop + kdrop * kdrop) / 2;
-L810:
+ L810:
     ira = ir;
     ir = ir + kdrop + 1;
 /* Computing MAX */
@@ -1995,11 +1995,11 @@ L810:
     if (kdrop < *nact) {
 	goto L810;
     }
-L850:
+ L850:
     --(*nact);
     switch ((int)mflag) {
-	case 1:  goto L250;
-	case 2:  goto L610;
+    case 1:  goto L250;
+    case 2:  goto L610;
     }
 
 
@@ -2010,11 +2010,11 @@ L850:
 /*     APPLY GIVENS ROTATION TO REDUCE SOME OF THE SCALAR */
 /*     PRODUCTS IN THE S-PARTITION OF W TO ZERO. */
 
-L860:
+ L860:
     iz = iwz + nu * *n;
-L870:
+ L870:
     iz -= *n;
-L880:
+ L880:
     is = iws + nu;
     --nu;
     if (nu == *nact) {
@@ -2044,10 +2044,10 @@ L880:
 	--iz;
     }
     goto L880;
-L900:
+ L900:
     switch ((int)nflag) {
-	case 1:  goto L560;
-	case 2:  goto L630;
+    case 1:  goto L560;
+    case 2:  goto L630;
     }
 
 
@@ -2057,12 +2057,12 @@ L900:
 
 /*     CALCULATE THE MAGNITUDE OF X AN REVISE XMAG. */
 
-L910:
+ L910:
     sum = zero;
     i__2 = *n;
     for (i = 1; i <= i__2; ++i) {
 	sum += (d__1 = x[i], abs(d__1)) * vfact * ((d__2 = grad[i], abs(d__2))
-		 + (d__3 = g[i + i * g_dim1] * x[i], abs(d__3)));
+                                                   + (d__3 = g[i + i * g_dim1] * x[i], abs(d__3)));
 	if (*lql) {
 	    goto L920;
 	}
@@ -2072,14 +2072,14 @@ L910:
 	vfact *= 1e-10;
 	sum *= 1e-10;
 	xmag *= 1e-10;
-L920:
+    L920:
 	;
     }
 /* L925: */
     xmag = max(xmag,sum);
     switch ((int)jflag) {
-	case 1:  goto L420;
-	case 2:  goto L690;
+    case 1:  goto L420;
+    case 2:  goto L690;
     }
 
 
@@ -2089,7 +2089,7 @@ L920:
 
 /*     PRE-MULTIPLY THE VECTOR IN THE W-PARTITION OF W BY Z TRANSPOSE. */
 
-L930:
+ L930:
     jl = iww + 1;
     iz = iwz;
     i__2 = *n;
@@ -2105,16 +2105,27 @@ L930:
 	}
     }
     switch ((int)kflag) {
-	case 1:  goto L350;
-	case 2:  goto L550;
+    case 1:  goto L350;
+    case 2:  goto L550;
     }
     return 0;
 } /* ql0002_ */
 
 #ifdef uNdEfInEd
 comments from the converter:  (stderr from f2c)
-   ql0001:
-   ql0002:
+    ql0001:
+ql0002:
 #endif
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

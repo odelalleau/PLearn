@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.cc,v 1.14 2005/05/09 20:14:31 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "ConcatColumnsVMatrix.h"
 #include <plearn/base/tostring.h>
@@ -49,104 +49,104 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(ConcatColumnsVMatrix, "ONE LINE DESCR", "NO HELP");
 
 ConcatColumnsVMatrix::ConcatColumnsVMatrix(Array<VMat> the_array)
-: array(the_array),
-  no_duplicate_fieldnames(false)
+    : array(the_array),
+      no_duplicate_fieldnames(false)
 { if (array.size()) build_(); }
 
 ConcatColumnsVMatrix::ConcatColumnsVMatrix(VMat d1, VMat d2)
-: array(d1, d2),
-  no_duplicate_fieldnames(false)
+    : array(d1, d2),
+      no_duplicate_fieldnames(false)
 { build_(); }
 
 
 void ConcatColumnsVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "array", &ConcatColumnsVMatrix::array, OptionBase::buildoption, "Array of VMatrices");
-  declareOption(ol, "no_duplicate_fieldnames", &ConcatColumnsVMatrix::no_duplicate_fieldnames, OptionBase::buildoption,
-      "If set to 1, will ensure no fieldnames are duplicated by adding numerical values '.1', '.2', ...");
-  inherited::declareOptions(ol);
+    declareOption(ol, "array", &ConcatColumnsVMatrix::array, OptionBase::buildoption, "Array of VMatrices");
+    declareOption(ol, "no_duplicate_fieldnames", &ConcatColumnsVMatrix::no_duplicate_fieldnames, OptionBase::buildoption,
+                  "If set to 1, will ensure no fieldnames are duplicated by adding numerical values '.1', '.2', ...");
+    inherited::declareOptions(ol);
 }
 
 void ConcatColumnsVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void ConcatColumnsVMatrix::build_()
 {
-  length_ = width_ = 0;
-  if(array.size())
-    length_ = array[0]->length();
+    length_ = width_ = 0;
+    if(array.size())
+        length_ = array[0]->length();
 //   else
 //     PLERROR("ConcatColumnsVMatrix expects >= 1 underlying-array, got 0");
 
-  for(int i=0; i<array.size(); i++)
+    for(int i=0; i<array.size(); i++)
     {
-      if(array[i]->length()!=length_)
-        PLERROR("ConcatColumnsVMatrix: Problem concatenating to VMatrices with different lengths");
-      if(array[i]->width() == -1)
-        PLERROR("In ConcatColumnsVMatrix constructor. Non-fixed width distribution not supported");
-      width_ += array[i]->width();
+        if(array[i]->length()!=length_)
+            PLERROR("ConcatColumnsVMatrix: Problem concatenating to VMatrices with different lengths");
+        if(array[i]->width() == -1)
+            PLERROR("In ConcatColumnsVMatrix constructor. Non-fixed width distribution not supported");
+        width_ += array[i]->width();
     }
 
-  // Copy the original fieldinfos.  Be careful if only some of the
-  // matrices have fieldinfos
-  fieldinfos.resize(width_);
-  TVec<string> names;
-  int fieldindex = 0;
-  init_map_sr();
-  for (int i=0; i<array.size(); ++i) 
+    // Copy the original fieldinfos.  Be careful if only some of the
+    // matrices have fieldinfos
+    fieldinfos.resize(width_);
+    TVec<string> names;
+    int fieldindex = 0;
+    init_map_sr();
+    for (int i=0; i<array.size(); ++i) 
     {
-      int len = array[i]->getFieldInfos().size();
-      if (len > 0) // infos exist for this VMat
+        int len = array[i]->getFieldInfos().size();
+        if (len > 0) // infos exist for this VMat
         {
-          for (int j=0; j<len; ++j) {
-            map<string,real> map = array[i]->getStringToRealMapping(j);
-            if (!map.empty())
-              setStringMapping(fieldindex, map);
-            fieldinfos[fieldindex++] = array[i]->getFieldInfos()[j];
-          }
+            for (int j=0; j<len; ++j) {
+                map<string,real> map = array[i]->getStringToRealMapping(j);
+                if (!map.empty())
+                    setStringMapping(fieldindex, map);
+                fieldinfos[fieldindex++] = array[i]->getFieldInfos()[j];
+            }
         }
-      else // infos don't exist for this VMat, use the index as the name for those fields.
+        else // infos don't exist for this VMat, use the index as the name for those fields.
         {
-          len = array[i]->width();
-          for(int j=0; j<len; ++j) {
-            map<string,real> map = array[i]->getStringToRealMapping(j);
-            if (!map.empty())
-              setStringMapping(fieldindex, map);
-            fieldinfos[fieldindex++] = VMField(tostring(fieldindex));
-          }
+            len = array[i]->width();
+            for(int j=0; j<len; ++j) {
+                map<string,real> map = array[i]->getStringToRealMapping(j);
+                if (!map.empty())
+                    setStringMapping(fieldindex, map);
+                fieldinfos[fieldindex++] = VMField(tostring(fieldindex));
+            }
         }
     }
-  if (no_duplicate_fieldnames) {
-    unduplicateFieldNames();
-  }
+    if (no_duplicate_fieldnames) {
+        unduplicateFieldNames();
+    }
 }
 
 void ConcatColumnsVMatrix::getNewRow(int i, const Vec& samplevec) const
 {
-  if (length_==-1)
-    PLERROR("In ConcatColumnsVMatrix::getNewRow(int i, Vec samplevec) not supported for distributions with different (or infinite) lengths\nCall sample without index instead");
-  int pos = 0;
-  for(int n=0; n<array.size(); n++)
+    if (length_==-1)
+        PLERROR("In ConcatColumnsVMatrix::getNewRow(int i, Vec samplevec) not supported for distributions with different (or infinite) lengths\nCall sample without index instead");
+    int pos = 0;
+    for(int n=0; n<array.size(); n++)
     {
-      int nvars = array[n]->width();
-      Vec samplesubvec = samplevec.subVec(pos, nvars);
-      array[n]->getRow(i,samplesubvec);
-      pos += nvars;
+        int nvars = array[n]->width();
+        Vec samplesubvec = samplevec.subVec(pos, nvars);
+        array[n]->getRow(i,samplesubvec);
+        pos += nvars;
     }
 }
 
 real ConcatColumnsVMatrix::getStringVal(int col, const string & str) const
 {
-  if(col>=width_)
-    PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
-  int pos=0,k=0;
-  while(col>=pos+array[k]->width())
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+    int pos=0,k=0;
+    while(col>=pos+array[k]->width())
     {
-      pos += array[k]->width();
-      k++;
+        pos += array[k]->width();
+        k++;
     }
 //  return array[k]->getStringVal(pos+col,str);
     return array[k]->getStringVal(col-pos,str);
@@ -154,87 +154,100 @@ real ConcatColumnsVMatrix::getStringVal(int col, const string & str) const
 
 string ConcatColumnsVMatrix::getValString(int col, real val) const
 {
-  if(col>=width_)
-    PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
-  int pos=0,k=0;
-  while(col>=pos+array[k]->width())
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+    int pos=0,k=0;
+    while(col>=pos+array[k]->width())
     {
-      pos += array[k]->width();
-      k++;
+        pos += array[k]->width();
+        k++;
     }
 //  return array[k]->getValString(pos+col,val);
-  return array[k]->getValString(col-pos,val);
+    return array[k]->getValString(col-pos,val);
 }
 
 const map<string,real>& ConcatColumnsVMatrix::getStringMapping(int col) const
 {
-  if(col>=width_)
-    PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
-  int pos=0,k=0;
-  while(col>=pos+array[k]->width())
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+    int pos=0,k=0;
+    while(col>=pos+array[k]->width())
     {
-      pos += array[k]->width();
-      k++;
+        pos += array[k]->width();
+        k++;
     }
 //  return array[k]->getStringToRealMapping(pos+col);
-  return array[k]->getStringToRealMapping(col-pos);
+    return array[k]->getStringToRealMapping(col-pos);
 }
 
 string ConcatColumnsVMatrix::getString(int row, int col) const
 {
-  if(col>=width_)
-    PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
-  int pos=0,k=0;
-  while(col>=pos+array[k]->width())
+    if(col>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+    int pos=0,k=0;
+    while(col>=pos+array[k]->width())
     {
-      pos += array[k]->width();
-      k++;
+        pos += array[k]->width();
+        k++;
     }
 //  return array[k]->getString(row,pos+col);
-  return array[k]->getString(row,col-pos);
+    return array[k]->getString(row,col-pos);
 }
 
 
 
 real ConcatColumnsVMatrix::dot(int i1, int i2, int inputsize) const
 {
-  real res = 0.;
-  for(int k=0; ;k++)
+    real res = 0.;
+    for(int k=0; ;k++)
     {
-      const VMat& vm = array[k];
-      int vmwidth = vm.width();
-      if(inputsize<=vmwidth)
+        const VMat& vm = array[k];
+        int vmwidth = vm.width();
+        if(inputsize<=vmwidth)
         {
-          res += vm->dot(i1,i2,inputsize);
-          break;
+            res += vm->dot(i1,i2,inputsize);
+            break;
         }
-      else
+        else
         {
-          res += vm->dot(i1,i2,vmwidth);
-          inputsize -= vmwidth;
+            res += vm->dot(i1,i2,vmwidth);
+            inputsize -= vmwidth;
         }
     }
-  return res;
+    return res;
 }
 
 real ConcatColumnsVMatrix::dot(int i, const Vec& v) const
 {
-  if (length_==-1)
-    PLERROR("In ConcatColumnsVMatrix::getRow(int i, Vec samplevec) not supported for distributions with different (or infinite) lengths\nCall sample without index instead");
+    if (length_==-1)
+        PLERROR("In ConcatColumnsVMatrix::getRow(int i, Vec samplevec) not supported for distributions with different (or infinite) lengths\nCall sample without index instead");
 
-  real res = 0.;
-  int pos = 0;
-  for(int n=0; n<array.size(); n++)
+    real res = 0.;
+    int pos = 0;
+    for(int n=0; n<array.size(); n++)
     {
-      int nvars = std::min(array[n]->width(),v.length()-pos);
-      if(nvars<=0)
-        break;
-      Vec subv = v.subVec(pos, nvars);
-      res += array[n]->dot(i,subv);
-      pos += nvars;
+        int nvars = std::min(array[n]->width(),v.length()-pos);
+        if(nvars<=0)
+            break;
+        Vec subv = v.subVec(pos, nvars);
+        res += array[n]->dot(i,subv);
+        pos += nvars;
     }
-  return res;
+    return res;
 }
 
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

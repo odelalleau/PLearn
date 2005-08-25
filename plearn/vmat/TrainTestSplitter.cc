@@ -37,8 +37,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.cc,v 1.13 2005/04/12 15:10:04 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file TrainTestSplitter.cc */
 
@@ -48,11 +48,11 @@ namespace PLearn {
 using namespace std;
 
 TrainTestSplitter::TrainTestSplitter(real the_test_fraction)
-  : append_train(0), test_fraction(the_test_fraction), calc_with_pct(true), test_fraction_abs(0)
+    : append_train(0), test_fraction(the_test_fraction), calc_with_pct(true), test_fraction_abs(0)
 {}
 
 TrainTestSplitter::TrainTestSplitter(int the_test_fraction_abs)
-  : append_train(0), test_fraction(0.0), calc_with_pct(false), test_fraction_abs(the_test_fraction_abs)
+    : append_train(0), test_fraction(0.0), calc_with_pct(false), test_fraction_abs(the_test_fraction_abs)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(TrainTestSplitter, "ONE LINE DESCR",
@@ -60,18 +60,18 @@ PLEARN_IMPLEMENT_OBJECT(TrainTestSplitter, "ONE LINE DESCR",
 
 void TrainTestSplitter::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "append_train", &TrainTestSplitter::append_train, OptionBase::buildoption,
-      "if set to 1, the trainset will be appended after the test set (thus each split"
-      " will contain three sets)");
+    declareOption(ol, "append_train", &TrainTestSplitter::append_train, OptionBase::buildoption,
+                  "if set to 1, the trainset will be appended after the test set (thus each split"
+                  " will contain three sets)");
 
-  declareOption(ol, "calc_with_pct", &TrainTestSplitter::calc_with_pct, OptionBase::buildoption,
-                "Boolean value : if it's true it will compute the examples in the test set with the test_fraction value");
-  declareOption(ol, "test_fraction", &TrainTestSplitter::test_fraction, OptionBase::buildoption,
-                "the fraction of the dataset reserved to the test set");
-  declareOption(ol, "test_fraction_abs", &TrainTestSplitter::test_fraction_abs, OptionBase::buildoption,
-                "the number of example of the dataset reserved to the test set");
+    declareOption(ol, "calc_with_pct", &TrainTestSplitter::calc_with_pct, OptionBase::buildoption,
+                  "Boolean value : if it's true it will compute the examples in the test set with the test_fraction value");
+    declareOption(ol, "test_fraction", &TrainTestSplitter::test_fraction, OptionBase::buildoption,
+                  "the fraction of the dataset reserved to the test set");
+    declareOption(ol, "test_fraction_abs", &TrainTestSplitter::test_fraction_abs, OptionBase::buildoption,
+                  "the number of example of the dataset reserved to the test set");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 void TrainTestSplitter::build_()
@@ -81,41 +81,54 @@ void TrainTestSplitter::build_()
 // ### Nothing to add here, simply calls build_
 void TrainTestSplitter::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 int TrainTestSplitter::nsplits() const
 {
-  return 1; // only one split
+    return 1; // only one split
 }
 
 int TrainTestSplitter::nSetsPerSplit() const
 {
-  if (append_train)
-    return 3;
-  else
-    return 2;
+    if (append_train)
+        return 3;
+    else
+        return 2;
 }
 
 TVec<VMat> TrainTestSplitter::getSplit(int k)
 {
-  if (k)
-    PLERROR("TrainTestSplitter::getSplit() - k cannot be greater than 0");
+    if (k)
+        PLERROR("TrainTestSplitter::getSplit() - k cannot be greater than 0");
   
-  TVec<VMat> split_(2);
+    TVec<VMat> split_(2);
   
-  int l = dataset->length();
-  int test_length = calc_with_pct ? int(test_fraction*l) : test_fraction_abs;
-  int train_length = l - test_length;
+    int l = dataset->length();
+    int test_length = calc_with_pct ? int(test_fraction*l) : test_fraction_abs;
+    int train_length = l - test_length;
 
-  split_[0] = dataset.subMatRows(0, train_length);
-  split_[1] = dataset.subMatRows(train_length, test_length);
-  if (append_train) {
-    split_.resize(3);
-    split_[2] = split_[0];
-  }
-  return split_;
+    split_[0] = dataset.subMatRows(0, train_length);
+    split_[1] = dataset.subMatRows(train_length, test_length);
+    if (append_train) {
+        split_.resize(3);
+        split_[2] = split_[0];
+    }
+    return split_;
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

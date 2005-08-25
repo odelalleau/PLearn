@@ -53,9 +53,9 @@ using namespace std;
 inline char byte_order()
 {
 #ifdef BIGENDIAN
-  return BIG_ENDIAN_ORDER; 
+    return BIG_ENDIAN_ORDER; 
 #else
-  return LITTLE_ENDIAN_ORDER;
+    return LITTLE_ENDIAN_ORDER;
 #endif
 }
 
@@ -85,3 +85,16 @@ inline void endianswap(double* ptr, int n=1) { endianswap8(ptr,n); }
 }
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

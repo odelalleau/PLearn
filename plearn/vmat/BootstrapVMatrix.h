@@ -33,8 +33,8 @@
 
 
 /* *******************************************************      
-   * $Id$
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -50,45 +50,45 @@ using namespace std;
  
 class BootstrapVMatrix: public SelectRowsVMatrix
 {
-  typedef SelectRowsVMatrix inherited;
+    typedef SelectRowsVMatrix inherited;
 
 protected:
 
-  //! Random number generator for shuffling the data.
-  PP<PRandom> rgen;
+    //! Random number generator for shuffling the data.
+    PP<PRandom> rgen;
 
 public:
 
-  //! Public build options
-  real frac;
-  int n_elems;
-  long own_seed;
-  long seed;
-  bool shuffle;
+    //! Public build options
+    real frac;
+    int n_elems;
+    long own_seed;
+    long seed;
+    bool shuffle;
 
 public:
 
-  //! Default constructor.
-  BootstrapVMatrix();
+    //! Default constructor.
+    BootstrapVMatrix();
   
-  //! Construct a boostrap of another VMatrix.
-  //! Note: 'the_seed' sets the new 'own_seed' option, not the old 'seed' one.
-  BootstrapVMatrix(VMat m, real frac, bool shuffle = false, long the_seed = -2);
+    //! Construct a boostrap of another VMatrix.
+    //! Note: 'the_seed' sets the new 'own_seed' option, not the old 'seed' one.
+    BootstrapVMatrix(VMat m, real frac, bool shuffle = false, long the_seed = -2);
 
-  PLEARN_DECLARE_OBJECT(BootstrapVMatrix);
+    PLEARN_DECLARE_OBJECT(BootstrapVMatrix);
 
-  virtual void build();
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
 
-  static void declareOptions(OptionList &ol);
+    static void declareOptions(OptionList &ol);
 
 private:
 
-  void build_();
+    void build_();
 
 };
 
@@ -97,3 +97,15 @@ DECLARE_OBJECT_PTR(BootstrapVMatrix);
 } // end of namespcae PLearn
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

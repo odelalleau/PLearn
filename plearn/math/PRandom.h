@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
-   ******************************************************* */
+ * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -65,198 +65,198 @@ class PRandom: public Object
 
 private:
   
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
 
-  //! The underlying Boost random number generator used.
-  boost::mt19937 rgen;
+    //! The underlying Boost random number generator used.
+    boost::mt19937 rgen;
 
-  //! The underlying Boost distribution for exponential sampling.
-  boost::exponential_distribution<>* exponential_distribution;
+    //! The underlying Boost distribution for exponential sampling.
+    boost::exponential_distribution<>* exponential_distribution;
 
-  //! The underlying Boost distribution for normal sampling.
-  boost::normal_distribution<>* normal_distribution;
+    //! The underlying Boost distribution for normal sampling.
+    boost::normal_distribution<>* normal_distribution;
 
-  //! The underlying Boost distribution for uniform sampling.
-  boost::uniform_01<boost::mt19937>* uniform_01;
+    //! The underlying Boost distribution for uniform sampling.
+    boost::uniform_01<boost::mt19937>* uniform_01;
 
-  //! The actual seed used by the random number generator.
-  uint32_t the_seed;
+    //! The actual seed used by the random number generator.
+    uint32_t the_seed;
     
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  long fixed_seed;
+    long fixed_seed;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  long seed_;
+    long seed_;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Constructor from a given seed.
-  PRandom(long seed = -1);
+    //! Constructor from a given seed.
+    PRandom(long seed = -1);
 
-  //! Copy constructor.
-  //! This constructor ensures that no deep-copy is needed. All fields are
-  //! properly [deep-]copied in this constructor.
-  PRandom(const PRandom& rhs);
+    //! Copy constructor.
+    //! This constructor ensures that no deep-copy is needed. All fields are
+    //! properly [deep-]copied in this constructor.
+    PRandom(const PRandom& rhs);
 
-  //! Destructor to free memory.
-  virtual ~PRandom();
+    //! Destructor to free memory.
+    virtual ~PRandom();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
-  //! Accessors.
-  const boost::mt19937*                     get_rgen()                     const
-                                              { return &rgen; }
-  boost::exponential_distribution<>*        get_exponential_distribution() const
-                                              { return exponential_distribution; }
-  boost::normal_distribution<>*             get_normal_distribution()      const
-                                              { return normal_distribution; }
-  boost::uniform_01<boost::mt19937>*        get_uniform_01()               const
-                                              { return uniform_01; }
-  uint32_t get_the_seed()   const { return the_seed; }
-  long     get_fixed_seed() const { return fixed_seed; }
-  long     get_seed()       const { return seed_; }
+    //! Accessors.
+    const boost::mt19937*                     get_rgen()                     const
+    { return &rgen; }
+    boost::exponential_distribution<>*        get_exponential_distribution() const
+    { return exponential_distribution; }
+    boost::normal_distribution<>*             get_normal_distribution()      const
+    { return normal_distribution; }
+    boost::uniform_01<boost::mt19937>*        get_uniform_01()               const
+    { return uniform_01; }
+    uint32_t get_the_seed()   const { return the_seed; }
+    long     get_fixed_seed() const { return fixed_seed; }
+    long     get_seed()       const { return seed_; }
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
-  //! Initialize the random number generator with the CPU time.
-  //! This is an internal method that does not update the 'seed' option.
-  void time_seed_();
+    //! Initialize the random number generator with the CPU time.
+    //! This is an internal method that does not update the 'seed' option.
+    void time_seed_();
 
-  //! Initialize the random number generator with the given long 'x'.
-  //! This is an internal method that does not update the 'seed' option.
-  void manual_seed_(long x);
+    //! Initialize the random number generator with the given long 'x'.
+    //! This is an internal method that does not update the 'seed' option.
+    void manual_seed_(long x);
 
-  //! Ensure the 'uniform_01' member is correctly initialized.
-  //! This method is called in build(), so it should not be needed to call it
-  //! from anywhere else.
-  inline void ensure_uniform_01() {
-    if (!uniform_01)
-      uniform_01 = new boost::uniform_01<boost::mt19937>(rgen);
-  }
+    //! Ensure the 'uniform_01' member is correctly initialized.
+    //! This method is called in build(), so it should not be needed to call it
+    //! from anywhere else.
+    inline void ensure_uniform_01() {
+        if (!uniform_01)
+            uniform_01 = new boost::uniform_01<boost::mt19937>(rgen);
+    }
 
-  //! Ensure the 'normal_distribution' member is correctly initialized.
-  //! This method should be called before using the 'normal_distribution'
-  //! member, as its presence is not always guaranteed.
-  inline void ensure_normal_distribution() {
-    if (!normal_distribution)
-      normal_distribution = new boost::normal_distribution<>();
-  }
+    //! Ensure the 'normal_distribution' member is correctly initialized.
+    //! This method should be called before using the 'normal_distribution'
+    //! member, as its presence is not always guaranteed.
+    inline void ensure_normal_distribution() {
+        if (!normal_distribution)
+            normal_distribution = new boost::normal_distribution<>();
+    }
 
-  //! Ensure the 'exponential_distribution' member is correctly initialized.
-  //! This method should be called before using the 'exponential_distribution'
-  //! member, as its presence is not always guaranteed.
-  inline void ensure_exponential_distribution() {
-    if (!exponential_distribution)
-      exponential_distribution = new boost::exponential_distribution<>();
-  }
+    //! Ensure the 'exponential_distribution' member is correctly initialized.
+    //! This method should be called before using the 'exponential_distribution'
+    //! member, as its presence is not always guaranteed.
+    inline void ensure_exponential_distribution() {
+        if (!exponential_distribution)
+            exponential_distribution = new boost::exponential_distribution<>();
+    }
 
 public:
 
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(PRandom);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(PRandom);
 
-  //! Build object.
-  //! Note: one should not have to call build() on a PRandom object, as it is
-  //! called directly in the constructor and in the time_seed() and manual_seed()
-  //! methods. Don't forget that calling build() will re-initialize the random
-  //! number generator.
-  virtual void build();
+    //! Build object.
+    //! Note: one should not have to call build() on a PRandom object, as it is
+    //! called directly in the constructor and in the time_seed() and manual_seed()
+    //! methods. Don't forget that calling build() will re-initialize the random
+    //! number generator.
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Set the 'seed' option to 'x' and reset the random number generator
-  //! accordingly.
-  //! 'x' may be -1 to initialize from the current CPU time, or 0 to make
-  //! no initialization.
-  void manual_seed(long x);
+    //! Set the 'seed' option to 'x' and reset the random number generator
+    //! accordingly.
+    //! 'x' may be -1 to initialize from the current CPU time, or 0 to make
+    //! no initialization.
+    void manual_seed(long x);
 
-  //! Initialize the random number generator with the CPU time.
-  inline void time_seed() { manual_seed(-1); }
+    //! Initialize the random number generator with the CPU time.
+    inline void time_seed() { manual_seed(-1); }
 
-  //! Return a random number uniformly distributed between 0 and 1.
-  real uniform_sample();
-  //! Return a random number uniformly distributed between a and b.
-  real bounded_uniform(real a, real b);
+    //! Return a random number uniformly distributed between 0 and 1.
+    real uniform_sample();
+    //! Return a random number uniformly distributed between a and b.
+    real bounded_uniform(real a, real b);
 
-  //! Return a random number generated from a Gaussian with mean 0 and stddev 1.
-  real gaussian_01();
-  inline real normal_sample() { return this->gaussian_01(); }
-  //! Return a random number generated from a Gaussian with mean mu and stddev sigma.
-  real gaussian_mu_sigma(real mu, real sigma);
+    //! Return a random number generated from a Gaussian with mean 0 and stddev 1.
+    real gaussian_01();
+    inline real normal_sample() { return this->gaussian_01(); }
+    //! Return a random number generated from a Gaussian with mean mu and stddev sigma.
+    real gaussian_mu_sigma(real mu, real sigma);
 
-  //! Fill vector 'dest' with sample generated from a normal distribution
-  //! with mean 'mean' and standard deviation 'stddev'.
-  void fill_random_normal(const Vec& dest, real mean = 0, real stddev = 1);
+    //! Fill vector 'dest' with sample generated from a normal distribution
+    //! with mean 'mean' and standard deviation 'stddev'.
+    void fill_random_normal(const Vec& dest, real mean = 0, real stddev = 1);
 
-  //! Return a random number generated from an exponential distribution with
-  //! parameter lambda = 1.
-  real exp_sample();
+    //! Return a random number generated from an exponential distribution with
+    //! parameter lambda = 1.
+    real exp_sample();
 
-  /* TODO Implement.
-  //! Return a random number generated from a gamma distribution.
-  real gamma_sample(int ia);
-  //! Return a random number generated from a Poisson distribution.
-  real poisson_sample(real xm);
-  //! Return a random number generated from a binomial distribution with
-  //! probability 'pp' and 'n' trials.
-  real binom_sample(real pp, int n = 1);
-  */
+    /* TODO Implement.
+    //! Return a random number generated from a gamma distribution.
+    real gamma_sample(int ia);
+    //! Return a random number generated from a Poisson distribution.
+    real poisson_sample(real xm);
+    //! Return a random number generated from a binomial distribution with
+    //! probability 'pp' and 'n' trials.
+    real binom_sample(real pp, int n = 1);
+    */
 
-  //! Return a random deviate from a discrete distribution given explicitely in the
-  //! 'distribution' vector. The returned value is an index in 'distribution'.
-  //! Elements of 'distribution' must sum to 1.
-  int multinomial_sample(const Vec& distribution);
-  //! Return an integer between 0 and n-1 with equal probabilities.
-  inline int uniform_multinomial_sample(int n)
+    //! Return a random deviate from a discrete distribution given explicitely in the
+    //! 'distribution' vector. The returned value is an index in 'distribution'.
+    //! Elements of 'distribution' must sum to 1.
+    int multinomial_sample(const Vec& distribution);
+    //! Return an integer between 0 and n-1 with equal probabilities.
+    inline int uniform_multinomial_sample(int n)
     { return int(n * this->uniform_sample()); }
 
-  //! Randomly shuffle the entries of a vector.
-  template<class T>
-  void shuffleElements(const TVec<T>& vec) {
-    T* v = vec.data();
-    T tmp;
-    int n = vec.length();
-    for (int i = 0; i < vec.length(); i++) {
-      int j = i + this->uniform_multinomial_sample(n - i);
-      tmp = v[i];
-      v[i] = v[j];
-      v[j] = tmp;
+    //! Randomly shuffle the entries of a vector.
+    template<class T>
+    void shuffleElements(const TVec<T>& vec) {
+        T* v = vec.data();
+        T tmp;
+        int n = vec.length();
+        for (int i = 0; i < vec.length(); i++) {
+            int j = i + this->uniform_multinomial_sample(n - i);
+            tmp = v[i];
+            v[i] = v[j];
+            v[j] = tmp;
+        }
     }
-  }
 
-  /*** Static methods ***/
+    /*** Static methods ***/
 
-  //! Return a pointer to a common PRandom object accessible from any PLearn
-  //! code.
-  //! There are two common PRandom objects: one whose seed was given by the CPU
-  //! time (no argument, or 'random_seed' set to true), and another whose seed
-  //! is fixed at compilation time ('random_seed' set to false).
-  //! The latter can be useful to get reproducible results.
-  //! For safety, it is not possible to change their seed.
-  static PP<PRandom> common(bool random_seed = true);
+    //! Return a pointer to a common PRandom object accessible from any PLearn
+    //! code.
+    //! There are two common PRandom objects: one whose seed was given by the CPU
+    //! time (no argument, or 'random_seed' set to true), and another whose seed
+    //! is fixed at compilation time ('random_seed' set to false).
+    //! The latter can be useful to get reproducible results.
+    //! For safety, it is not possible to change their seed.
+    static PP<PRandom> common(bool random_seed = true);
 
 };
 
@@ -266,3 +266,16 @@ DECLARE_OBJECT_PTR(PRandom);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

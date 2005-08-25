@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: LiftBinaryCostFunction.h,v 1.4 2004/04/07 23:15:17 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef LiftBinaryCostFunction_INC
 #define LiftBinaryCostFunction_INC
@@ -55,16 +55,16 @@ using namespace std;
   to be represented by a single cost (the method evaluate returns only a
   real), we will use a trick.
   cost =  output[class#1], if target = 1
-       = -output[class#1], if target = 0
+  = -output[class#1], if target = 0
   or, if the make_positive_output flag is true:
   cost =  sigmoid(output[class#1]), if target = 1
-       = -sigmoid(output[class#1]), if target = 0
+  = -sigmoid(output[class#1]), if target = 0
 */
 class LiftBinaryCostFunction: public Kernel
 {
     typedef Kernel inherited;
 
- protected:
+protected:
     bool make_positive_output;
 
 public:
@@ -74,7 +74,7 @@ public:
     PLEARN_DECLARE_OBJECT(LiftBinaryCostFunction);
 
     virtual string info() const
-        { return "lift_binary_function"; }
+    { return "lift_binary_function"; }
            
     virtual real evaluate(const Vec& output, const Vec& target) const;
 
@@ -91,3 +91,15 @@ inline CostFunc class_lift(bool make_positive=false)
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

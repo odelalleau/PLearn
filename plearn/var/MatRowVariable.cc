@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MatRowVariable.cc,v 1.7 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "MatRowVariable.h"
 
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(MatRowVariable,
                         "NO HELP");
 
 MatRowVariable::MatRowVariable(const Mat& mat, Variable* input)
-  : inherited(input, mat.width(), 1), m(mat)
+    : inherited(input, mat.width(), 1), m(mat)
 {
     build_();
 }
@@ -97,8 +97,8 @@ MatRowVariable::recomputeSize(int& l, int& w) const
 
 void MatRowVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  UnaryVariable::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(m, copies);
+    UnaryVariable::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(m, copies);
 }
 
 
@@ -115,4 +115,15 @@ void MatRowVariable::symbolicBprop() {}
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

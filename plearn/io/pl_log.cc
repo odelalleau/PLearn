@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados, Christian Dorion
 
@@ -49,25 +49,25 @@ namespace PLearn {
 using namespace std;
 
 PL_Log::PL_Log( )
-  : runtime_verbosity(VLEVEL_NORMAL),
-    output_stream(get_perr()),
-    null_stream(get_pnull()),
-    logger_count(0)
+    : runtime_verbosity(VLEVEL_NORMAL),
+      output_stream(get_perr()),
+      null_stream(get_pnull()),
+      logger_count(0)
 {}
 
 PStream& PL_Log::logger(int requested_verbosity)
 {
-  logger_count++;
-  if (requested_verbosity <= runtime_verbosity)
-    return output_stream;
-  else
-    return null_stream;
+    logger_count++;
+    if (requested_verbosity <= runtime_verbosity)
+        return output_stream;
+    else
+        return null_stream;
 }
 
 PL_Log& PL_Log::instance()
 {
-  static PL_Log global_logger;
-  return global_logger;
+    static PL_Log global_logger;
+    return global_logger;
 }
 
 /**
@@ -76,37 +76,50 @@ PL_Log& PL_Log::instance()
  */
 VerbosityLevel PL_Log::vlevel_from_string(const string& v)
 {
-  static map<string, VerbosityLevel> _vlevels;
-  if ( _vlevels.size() == 0 )
-  {
-    _vlevels["VLEVEL_MAND"]    = VLEVEL_MAND;
-    _vlevels["VLEVEL_IMP"]     = VLEVEL_IMP;
-    _vlevels["VLEVEL_NORMAL"]  = VLEVEL_NORMAL ;
-    _vlevels["VLEVEL_DBG"]     = VLEVEL_DBG    ;
-    _vlevels["VLEVEL_EXTREME"] = VLEVEL_EXTREME;
-  }
+    static map<string, VerbosityLevel> _vlevels;
+    if ( _vlevels.size() == 0 )
+    {
+        _vlevels["VLEVEL_MAND"]    = VLEVEL_MAND;
+        _vlevels["VLEVEL_IMP"]     = VLEVEL_IMP;
+        _vlevels["VLEVEL_NORMAL"]  = VLEVEL_NORMAL ;
+        _vlevels["VLEVEL_DBG"]     = VLEVEL_DBG    ;
+        _vlevels["VLEVEL_EXTREME"] = VLEVEL_EXTREME;
+    }
   
-  map<string, VerbosityLevel>::iterator it = _vlevels.find(v);
-  if ( it != _vlevels.end() )
-    return it->second;
-  return (VerbosityLevel)toint(v);
+    map<string, VerbosityLevel>::iterator it = _vlevels.find(v);
+    if ( it != _vlevels.end() )
+        return it->second;
+    return (VerbosityLevel)toint(v);
 }
 
 
 PStream& plsep(PStream& p)
 {
-  return p << plhead("");
+    return p << plhead("");
 }
 
 PStream& operator<<(PStream& p, PL_Log::Heading heading)
 {
-  // The loggerCount is likely to change in test even if nothing more is
-  // printed... PyTest dislikes. 
-  //   string msg = "#####  " + tostring(PL_Log::instance().loggerCount())
-  //     + (heading.h.size() > 0? (": "+heading.h) : string("")) + "  ";
-  string msg = "#####  " + (heading.h.size() > 0? (heading.h + "  ") : string(""));
-  string rest(max(75-int(msg.size()),5),'#');
-  return p << endl << (msg + rest) << endl;
+    // The loggerCount is likely to change in test even if nothing more is
+    // printed... PyTest dislikes. 
+    //   string msg = "#####  " + tostring(PL_Log::instance().loggerCount())
+    //     + (heading.h.size() > 0? (": "+heading.h) : string("")) + "  ";
+    string msg = "#####  " + (heading.h.size() > 0? (heading.h + "  ") : string(""));
+    string rest(max(75-int(msg.size()),5),'#');
+    return p << endl << (msg + rest) << endl;
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

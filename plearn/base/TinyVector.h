@@ -69,92 +69,95 @@ template < class T, unsigned N, class TTrait = TinyVectorTrait<T> >
 class TinyVector
 {
 public:
-  //!  Typedefs
-  typedef T value_type;
-  typedef size_t size_type;
-  typedef ptrdiff_t difference_type;
+    //!  Typedefs
+    typedef T value_type;
+    typedef size_t size_type;
+    typedef ptrdiff_t difference_type;
 
-  typedef T* iterator;
-  typedef const T* const_iterator;
+    typedef T* iterator;
+    typedef const T* const_iterator;
 	
-  typedef T* pointer;
-  typedef const T* const_pointer;
-  typedef T& reference;
-  typedef const T& const_reference;
+    typedef T* pointer;
+    typedef const T* const_pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
 
 public:
-  //!  Iterators
-  inline iterator begin();
-  inline const_iterator begin() const;
-  inline iterator end();
-  inline const_iterator end() const;
+    //!  Iterators
+    inline iterator begin();
+    inline const_iterator begin() const;
+    inline iterator end();
+    inline const_iterator end() const;
 
 public:
-  //!  Unchecked element access
-  inline reference operator[](size_type n);
-  inline const_reference operator[](size_type n) const;
+    //!  Unchecked element access
+    inline reference operator[](size_type n);
+    inline const_reference operator[](size_type n) const;
 
-  //!  Checked element access
-  reference at(size_type n);
-  const_reference at(size_type n) const;
+    //!  Checked element access
+    reference at(size_type n);
+    const_reference at(size_type n) const;
 
-  inline reference front();	     //!<  first element
-  inline const_reference front() const;
-  inline reference back();	     //!<  last element
-  inline const_reference back() const;
+    inline reference front();	     //!<  first element
+    inline const_reference front() const;
+    inline reference back();	     //!<  last element
+    inline const_reference back() const;
 
 public:
-  //!  Constructors, etc.
-  inline TinyVector();
-  inline explicit TinyVector(size_type n, const T& val=T());
-  //!  Use default copy constructor, destructor, assignment operator
+    //!  Constructors, etc.
+    inline TinyVector();
+    inline explicit TinyVector(size_type n, const T& val=T());
+    //!  Use default copy constructor, destructor, assignment operator
 
-  // (Disabled for now; too many ambiguities)
-  // //!  Construct/Copy from Input iterator
-  // template <class In>
-  // TinyVector(In first, In last)  { assign(first, last); }
+    // (Disabled for now; too many ambiguities)
+    // //!  Construct/Copy from Input iterator
+    // template <class In>
+    // TinyVector(In first, In last)  { assign(first, last); }
 	
-  template <class In>
-  void assign(In first, In last) {
-    //!  could not define it out-of-line; bug in gcc?
-    resize(last-first);
-    for (size_type i=0; first != last && i < N; ++i, ++first)
-      arr[i] = *first;
-  }
+    template <class In>
+    void assign(In first, In last) {
+        //!  could not define it out-of-line; bug in gcc?
+        resize(last-first);
+        for (size_type i=0; first != last && i < N; ++i, ++first)
+            arr[i] = *first;
+    }
 	
-  inline void assign(size_type n, const T& val);	//!<  n copies of val
+    inline void assign(size_type n, const T& val);	//!<  n copies of val
 
 public:
-  //!  Stack operations 
-  void push_back(const T& x);	     //!<  add to end
-  void pop_back();		     //!<  remove last element
+    //!  Stack operations 
+    void push_back(const T& x);	     //!<  add to end
+    void pop_back();		     //!<  remove last element
 
 public:
-  //!  (list operations are NOT provided at the moment)
+    //!  (list operations are NOT provided at the moment)
 
 public:
-  //!  Size and capacity operations
-  size_type size() const;		     //!<  number of elements
-  bool empty() const {
-    return size() == 0;
-  }
-  size_type max_size() {
-    return N;
-  }
-  void resize(size_type sz, const T& val=T()); //!<  added elts init by val
-  void reserve(size_type n);	     //!<  make room for total of n elts
+    //!  Size and capacity operations
+    size_type size() const;		     //!<  number of elements
+    bool empty() const {
+        return size() == 0;
+    }
+    size_type max_size() {
+        return N;
+    }
+    void resize(size_type sz, const T& val=T()); //!<  added elts init by val
+    void reserve(size_type n);	     //!<  make room for total of n elts
 
 public:
-  //  Other functions
+    //  Other functions
 
-  //! Swap this with the argument
-  void swap(TinyVector&);
+    //! Swap this with the argument
+    void swap(TinyVector&);
 
-  //! Fill with a constant (keeping the size constant)
-  void fill(const T&);
+    //! Fill with a constant (keeping the size constant)
+    void fill(const T&);
+
+    //! For compatibility with TVec, copy() simply returns a copy of ourselves
+    TinyVector copy() const { return *this; }
 	
 private:
-  T arr[N];
+    T arr[N];
 };
 
 
@@ -174,28 +177,28 @@ template <class T, unsigned N, class TTrait>
 inline bool operator!=(const TinyVector<T,N,TTrait>& x,
                        const TinyVector<T,N,TTrait>& y)
 {
-  return !(x == y);
+    return !(x == y);
 }
 
 template <class T, unsigned N, class TTrait>
 inline bool operator> (const TinyVector<T,N,TTrait>& x,
                        const TinyVector<T,N,TTrait>& y)
 {
-  return y < x;
+    return y < x;
 }
 
 template <class T, unsigned N, class TTrait>
 inline bool operator<=(const TinyVector<T,N,TTrait>& x,
                        const TinyVector<T,N,TTrait>& y)
 {
-  return !(y < x);
+    return !(y < x);
 }
 
 template <class T, unsigned N, class TTrait>
 inline bool operator>=(const TinyVector<T,N,TTrait>& x,
                        const TinyVector<T,N,TTrait>& y)
 {
-  return !(x < y);
+    return !(x < y);
 }
 
 //! To emulate PLearn TVecs, operator<< implements a copy
@@ -203,7 +206,7 @@ template <class T, unsigned N, class TTrait>
 inline void operator<<(TinyVector<T,N,TTrait>& x,
                        const TinyVector<T,N,TTrait>& y)
 {
-  x = y;
+    x = y;
 }
 
 
@@ -219,37 +222,37 @@ template <typename T> class TinyVectorTrait {};
 
 template <> class TinyVectorTrait<unsigned char> {
 public:
-  static const unsigned char Missing = UCHAR_MAX;
+    static const unsigned char Missing = UCHAR_MAX;
 };
 
 template <> class TinyVectorTrait<signed char> {
 public:
-  static const signed char Missing = CHAR_MAX;
+    static const signed char Missing = CHAR_MAX;
 };
 
 template <> class TinyVectorTrait<char> {
 public:
-  static const char Missing = CHAR_MAX;
+    static const char Missing = CHAR_MAX;
 };
 
 template <> class TinyVectorTrait<unsigned short> {
 public:
-  static const unsigned short Missing = USHRT_MAX;
+    static const unsigned short Missing = USHRT_MAX;
 };
 
 template <> class TinyVectorTrait<short> {
 public:
-  static const short Missing = SHRT_MAX;
+    static const short Missing = SHRT_MAX;
 };
 
 template <> class TinyVectorTrait<unsigned int> {
 public:
-  static const unsigned int Missing = UINT_MAX;
+    static const unsigned int Missing = UINT_MAX;
 };
 
 template <> class TinyVectorTrait<int> {
 public:
-  static const int Missing = INT_MAX;
+    static const int Missing = INT_MAX;
 };
 
   
@@ -259,30 +262,30 @@ template <class T, unsigned N, class TTrait>
 typename TinyVector<T,N,TTrait>::iterator
 TinyVector<T,N,TTrait>::begin()
 {
-  //!  This is always correct, even for zero-size vectors
-  return &arr[0];
+    //!  This is always correct, even for zero-size vectors
+    return &arr[0];
 }
 
 template <class T, unsigned N, class TTrait>
 typename TinyVector<T,N,TTrait>::const_iterator
 TinyVector<T,N,TTrait>::begin() const
 {
-  //!  This is always correct, even for zero-size vectors
-  return &arr[0];
+    //!  This is always correct, even for zero-size vectors
+    return &arr[0];
 }
 
 template <class T, unsigned N, class TTrait>
 typename TinyVector<T,N,TTrait>::iterator
 TinyVector<T,N,TTrait>::end()
 {
-  return &arr[0] + size();
+    return &arr[0] + size();
 }
 
 template <class T, unsigned N, class TTrait>
 typename TinyVector<T,N,TTrait>::const_iterator
 TinyVector<T,N,TTrait>::end() const
 {
-  return &arr[0] + size();
+    return &arr[0] + size();
 }
 
 
@@ -293,10 +296,10 @@ typename TinyVector<T,N,TTrait>::reference
 TinyVector<T,N,TTrait>::operator[](size_type n)
 {
 #ifdef BOUNDCHECK
-  if (n >= size())
-    PLERROR("%s: out-of-range.",typeid(*this).name());
+    if (n >= size())
+        PLERROR("%s: out-of-range.",typeid(*this).name());
 #endif
-  return arr[n];
+    return arr[n];
 }
     
 template <class T, unsigned N, class TTrait>
@@ -304,72 +307,72 @@ typename TinyVector<T,N,TTrait>::const_reference
 TinyVector<T,N,TTrait>::operator[](size_type n) const
 {
 #ifdef BOUNDCHECK
-  if (n >= size())
-    PLERROR("%s: out-of-range.",typeid(*this).name());
+    if (n >= size())
+        PLERROR("%s: out-of-range.",typeid(*this).name());
 #endif
-  return arr[n];
+    return arr[n];
 }
     
 template <class T, unsigned N, class TTrait>
 typename TinyVector<T,N,TTrait>::reference
 TinyVector<T,N,TTrait>::at(size_type n)
 {
-  //!  n cannot be less than zero, because size_type is usually unsigned
-  if (n >= size())
-    PLERROR("%s: out-of-range.",typeid(*this).name());
+    //!  n cannot be less than zero, because size_type is usually unsigned
+    if (n >= size())
+        PLERROR("%s: out-of-range.",typeid(*this).name());
 	
-  return arr[n];
+    return arr[n];
 }
     
 template <class T, unsigned N, class TTrait>
 typename TinyVector<T,N,TTrait>::const_reference
 TinyVector<T,N,TTrait>::at(size_type n) const
 {
-  //!  n cannot be less than zero, because size_type is usually unsigned
-  if (n >= size())
-    PLERROR("%s: out-of-range.",typeid(*this).name());
+    //!  n cannot be less than zero, because size_type is usually unsigned
+    if (n >= size())
+        PLERROR("%s: out-of-range.",typeid(*this).name());
 	
-  return arr[n];
+    return arr[n];
 }
     
 template <class T, unsigned N, class TTrait>
 typename TinyVector<T,N,TTrait>::reference
 TinyVector<T,N,TTrait>::front()
 {
-  if (empty())
-    PLERROR("%s: out-of-range.",typeid(*this).name());
+    if (empty())
+        PLERROR("%s: out-of-range.",typeid(*this).name());
 	
-  return arr[0];
+    return arr[0];
 }
     
 template <class T, unsigned N, class TTrait>
 typename TinyVector<T,N,TTrait>::const_reference
 TinyVector<T,N,TTrait>::front() const
 {
-  if (empty())
-    PLERROR("%s: out-of-range.",typeid(*this).name());
+    if (empty())
+        PLERROR("%s: out-of-range.",typeid(*this).name());
 	
-  return arr[0];
+    return arr[0];
 }
     
 template <class T, unsigned N, class TTrait>
 typename TinyVector<T,N,TTrait>::reference
 TinyVector<T,N,TTrait>::back()
 {
-  if (empty())
-    PLERROR("%s: out-of-range.",typeid(*this).name());
+    if (empty())
+        PLERROR("%s: out-of-range.",typeid(*this).name());
 	
-  return *(end()-1);
+    return *(end()-1);
 }
     
 template <class T, unsigned N, class TTrait>
 typename TinyVector<T,N,TTrait>::const_reference
 TinyVector<T,N,TTrait>::back() const
 {
-  if (empty())
-    PLERROR("%s: out-of-range.",typeid(*this).name());
+    if (empty())
+        PLERROR("%s: out-of-range.",typeid(*this).name());
 	
-  return *(end()-1);
+    return *(end()-1);
 }
     
     
@@ -378,28 +381,28 @@ TinyVector<T,N,TTrait>::back() const
 template <class T, unsigned N, class TTrait>
 void TinyVector<T,N,TTrait>::assign(size_type n, const T& val)
 {
-  if (n > N)
-    PLERROR("%s: out-of-range.",typeid(*this).name());
+    if (n > N)
+        PLERROR("%s: out-of-range.",typeid(*this).name());
 
-  resize(n);
-  for (size_type i=0; i<n; ++i)
-    arr[i] = val;
+    resize(n);
+    for (size_type i=0; i<n; ++i)
+        arr[i] = val;
 }
 
 template <class T, unsigned N, class TTrait>
 TinyVector<T,N,TTrait>::TinyVector()
 {
-  assign(static_cast<size_type>(N), 
-         static_cast<const T&>(TTrait::Missing));
+    assign(static_cast<size_type>(N), 
+           static_cast<const T&>(TTrait::Missing));
 }
 
 template <class T, unsigned N, class TTrait>
 TinyVector<T,N,TTrait>::TinyVector(size_type n, const T& val)
 {
-  assign(n, val);
-  if (n<N)
-    for (size_type i=n; i<N; ++i)
-      arr[i] = TTrait::Missing;
+    assign(n, val);
+    if (n<N)
+        for (size_type i=n; i<N; ++i)
+            arr[i] = TTrait::Missing;
 }
 
 
@@ -408,21 +411,21 @@ TinyVector<T,N,TTrait>::TinyVector(size_type n, const T& val)
 template <class T, unsigned N, class TTrait>
 void TinyVector<T,N,TTrait>::push_back(const T& x)
 {
-  size_type s = size();
-  if (s >= N)
-    PLERROR("%s: out-of-range.",typeid(*this).name());
+    size_type s = size();
+    if (s >= N)
+        PLERROR("%s: out-of-range.",typeid(*this).name());
 	
-  arr[s] = x;
+    arr[s] = x;
 }
 
 template <class T, unsigned N, class TTrait>
 void TinyVector<T,N,TTrait>::pop_back()
 {
-  size_type s = size();
-  if (s == 0)
-    PLERROR("%s: out-of-range.",typeid(*this).name());
+    size_type s = size();
+    if (s == 0)
+        PLERROR("%s: out-of-range.",typeid(*this).name());
 	
-  arr[s-1] = TTrait::Missing;
+    arr[s-1] = TTrait::Missing;
 }
 
     
@@ -432,31 +435,31 @@ template <class T, unsigned N, class TTrait>
 typename TinyVector<T,N,TTrait>::size_type
 TinyVector<T,N,TTrait>::size() const
 {
-  difference_type p = N-1;
+    difference_type p = N-1;
 
-  while (p >= 0 && arr[p] == static_cast<T>(TTrait::Missing))
-    p--;
-  return p+1;
+    while (p >= 0 && arr[p] == static_cast<T>(TTrait::Missing))
+        p--;
+    return p+1;
 }
 
 template <class T, unsigned N, class TTrait>
 void TinyVector<T,N,TTrait>::resize(size_type sz, const T& val)
 {
-  if (sz > max_size())
-    PLERROR("%s: out-of-range.",typeid(*this).name());
+    if (sz > max_size())
+        PLERROR("%s: out-of-range.",typeid(*this).name());
 	
-  size_type s = size();
-  while (s < sz)
-    arr[s++] = val;
-  while (sz < N)
-    arr[sz++] = TTrait::Missing;
+    size_type s = size();
+    while (s < sz)
+        arr[s++] = val;
+    while (sz < N)
+        arr[sz++] = TTrait::Missing;
 }
     
 template <class T, unsigned N, class TTrait>
 void TinyVector<T,N,TTrait>::reserve(size_type n)
 {
-  if (n > max_size())
-    PLERROR("%s: out-of-range.",typeid(*this).name());
+    if (n > max_size())
+        PLERROR("%s: out-of-range.",typeid(*this).name());
 	
 }
     
@@ -466,41 +469,54 @@ void TinyVector<T,N,TTrait>::reserve(size_type n)
 template <class T, unsigned N, class TTrait>
 void TinyVector<T,N,TTrait>::swap(TinyVector<T,N,TTrait>& other)
 {
-  using namespace std;		     //!<  if necessary for swap;
+    using namespace std;		     //!<  if necessary for swap;
 					     //!  otherwise uses Koenig lookup
-  for (size_type i=0; i<N; ++i)
-    swap(arr[i], other.arr[i]);
+    for (size_type i=0; i<N; ++i)
+        swap(arr[i], other.arr[i]);
 }
 
 template <class T, unsigned N, class TTrait>
 void TinyVector<T,N,TTrait>::fill(const T& value)
 {
-  for (int i=0, n=size() ; i<n ; ++i)
-    arr[i] = value;
+    for (int i=0, n=size() ; i<n ; ++i)
+        arr[i] = value;
 }
 
 template <class T, unsigned N, class TTrait>
 bool operator==(const TinyVector<T,N,TTrait>& x,
                 const TinyVector<T,N,TTrait>& y)
 {
-  bool equal = true;
-  typename TinyVector<T,N,TTrait>::const_iterator
-    xit=x.begin(), xend=x.end(), yit=y.begin(), yend=y.end();
-  if (xend-xit != yend-yit)
-    return false;
-  for ( ; equal && xit != xend && yit != yend ; ++xit, ++yit)
-    equal = (*xit == *yit);
-  return equal;
+    bool equal = true;
+    typename TinyVector<T,N,TTrait>::const_iterator
+        xit=x.begin(), xend=x.end(), yit=y.begin(), yend=y.end();
+    if (xend-xit != yend-yit)
+        return false;
+    for ( ; equal && xit != xend && yit != yend ; ++xit, ++yit)
+        equal = (*xit == *yit);
+    return equal;
 }
 
 template <class T, unsigned N, class TTrait>
 bool operator<(const TinyVector<T,N,TTrait>& x,
                const TinyVector<T,N,TTrait>& y)
 {
-  return std::lexicographical_compare(x.begin(), x.end(),
-                                      y.begin(), y.end());
+    return std::lexicographical_compare(x.begin(), x.end(),
+                                        y.begin(), y.end());
 }
     
 } // end of namespace PLearn
 
 #endif // TINYVECTOR_H_INC
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

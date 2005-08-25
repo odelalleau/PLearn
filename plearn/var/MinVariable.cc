@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MinVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ArgminVariable.h"
 #include "ElementAtPositionVariable.h"
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(MinVariable,
                         "NO HELP");
 
 MinVariable::MinVariable(Variable* input)
-  : inherited(input, 1, 1) {}
+    : inherited(input, 1, 1) {}
 
 
 void MinVariable::recomputeSize(int& l, int& w) const
@@ -63,35 +63,46 @@ void MinVariable::recomputeSize(int& l, int& w) const
 
 void MinVariable::fprop()
 {
-  real minval = input->valuedata[0];
-  for(int i=1; i<input->nelems(); i++)
+    real minval = input->valuedata[0];
+    for(int i=1; i<input->nelems(); i++)
     {
-      real val = input->valuedata[i];
-      if(val<minval)
-        minval = val;
+        real val = input->valuedata[i];
+        if(val<minval)
+            minval = val;
     }
-  valuedata[0] = minval;
+    valuedata[0] = minval;
 }
 
 
 void MinVariable::bprop()
 {
-  real minval = valuedata[0];
-  for(int i=0; i<input->nelems(); i++)
+    real minval = valuedata[0];
+    for(int i=0; i<input->nelems(); i++)
     {
-      if(input->valuedata[i]==minval)
-        input->gradientdata[i] += gradientdata[0];
+        if(input->valuedata[i]==minval)
+            input->gradientdata[i] += gradientdata[0];
     }
 }
 
 
 void MinVariable::symbolicBprop()
 {
-  input->accg(new ElementAtPositionVariable(g, argmin(input), input->length(), input->width()));
+    input->accg(new ElementAtPositionVariable(g, argmin(input), input->length(), input->width()));
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

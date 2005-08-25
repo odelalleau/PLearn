@@ -34,9 +34,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearn/plearn/opt/TestMethod.h */
@@ -60,29 +60,29 @@ class TestMethod : public Object
     typedef Object inherited;
 
 private:
-  void build_();
+    void build_();
 
 protected:
-  TMat<string> requested_stats; //! a n by 4 matrix of parsed statnames 
+    TMat<string> requested_stats; //! a n by 4 matrix of parsed statnames 
 
 public:
 
-  // ** Build Options **
-  PP<Splitter> splitter;
-  TVec<string> statnames; //!< a list of n statistics name of the form ex: "E[E[train.class_error]]"
-  bool forget_learner; //!< should we call forget on the learner prior to every train?
+    // ** Build Options **
+    PP<Splitter> splitter;
+    TVec<string> statnames; //!< a list of n statistics name of the form ex: "E[E[train.class_error]]"
+    bool forget_learner; //!< should we call forget on the learner prior to every train?
 
-  // Constructor
-  TestMethod() :forget_learner(true) {}
+    // Constructor
+    TestMethod() :forget_learner(true) {}
 
-  //! Train/Tests the given learner against the given dataset
-  //! And returns a Vec with the computed statistics corresponding to the requested statnames 
-  //  virtual Vec test(PP<Learner> learner, const VMat &dataset);
+    //! Train/Tests the given learner against the given dataset
+    //! And returns a Vec with the computed statistics corresponding to the requested statnames 
+    //  virtual Vec test(PP<Learner> learner, const VMat &dataset);
 
-  PLEARN_DECLARE_OBJECT(TestMethod);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(TestMethod);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
     
 }; // class TestMethod
 
@@ -93,3 +93,15 @@ DECLARE_OBJECT_PTR(TestMethod);
 
 #endif // TestMethod_INC
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

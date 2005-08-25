@@ -36,8 +36,8 @@
 
 
 /* *******************************************************      
-   * $Id$
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -57,64 +57,64 @@ class SelectRowsVMatrix: public SourceVMatrix
 
 private:
 
-  typedef SourceVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 protected:
 
-  //! Protected learnt options.
-  bool obtained_inputsize_from_source;
-  bool obtained_targetsize_from_source;
-  bool obtained_weightsize_from_source;
+    //! Protected learnt options.
+    bool obtained_inputsize_from_source;
+    bool obtained_targetsize_from_source;
+    bool obtained_weightsize_from_source;
 
 public:
 
-  //! Public build options
-  TVec<int> indices;
+    //! Public build options
+    TVec<int> indices;
 
-  VMat indices_vmat;
+    VMat indices_vmat;
 
 public:
-  // ******************
-  // *  Constructors  *
-  // ******************
-  SelectRowsVMatrix();
+    // ******************
+    // *  Constructors  *
+    // ******************
+    SelectRowsVMatrix();
 
-  //! Also copies the original fieldinfos upon construction
-  //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
-  SelectRowsVMatrix(VMat the_source, TVec<int> the_indices);
+    //! Also copies the original fieldinfos upon construction
+    //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
+    SelectRowsVMatrix(VMat the_source, TVec<int> the_indices);
   
-  //! Here the indices will be copied locally into an integer vector
-  SelectRowsVMatrix(VMat the_source, Vec the_indices);
+    //! Here the indices will be copied locally into an integer vector
+    SelectRowsVMatrix(VMat the_source, Vec the_indices);
   
-  PLEARN_DECLARE_OBJECT(SelectRowsVMatrix);
+    PLEARN_DECLARE_OBJECT(SelectRowsVMatrix);
 
-  static void declareOptions(OptionList &ol);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void build();
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
 
-  void getNewRow(int i, const Vec& v) const { getSubRow(i, 0, v); }
+    void getNewRow(int i, const Vec& v) const { getSubRow(i, 0, v); }
 
 public:
 
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
-  virtual real getStringVal(int col, const string & str) const;
-  virtual string getValString(int col, real val) const;
-  virtual string getString(int row,int col) const;
-  //! returns the whole string->value mapping
-  virtual const map<string,real>& getStringToRealMapping(int col) const;
-  virtual const map<real,string>& getRealToStringMapping(int col) const;
+    virtual real get(int i, int j) const;
+    virtual void getSubRow(int i, int j, Vec v) const;
+    virtual real getStringVal(int col, const string & str) const;
+    virtual string getValString(int col, real val) const;
+    virtual string getString(int row,int col) const;
+    //! returns the whole string->value mapping
+    virtual const map<string,real>& getStringToRealMapping(int col) const;
+    virtual const map<real,string>& getRealToStringMapping(int col) const;
 
-  virtual void reset_dimensions() { source->reset_dimensions(); width_=source->width(); }
-  virtual real dot(int i1, int i2, int inputsize) const;
-  virtual real dot(int i, const Vec& v) const;
+    virtual void reset_dimensions() { source->reset_dimensions(); width_=source->width(); }
+    virtual real dot(int i1, int i2, int inputsize) const;
+    virtual real dot(int i, const Vec& v) const;
 
 private:
 
-  void build_();
+    void build_();
 
 };
 
@@ -122,3 +122,16 @@ DECLARE_OBJECT_PTR(SelectRowsVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

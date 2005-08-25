@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: DatedVMatrix.h,v 1.4 2004/04/05 22:51:58 morinf Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -58,50 +58,50 @@ using namespace std;
 */
 class DatedVMatrix: public VMatrix
 {
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
 public:
-  // ******************
-  // *  Constructors  *
-  // ******************
-  DatedVMatrix() {}; //!<  default constructor (for automatic deserialization)
+    // ******************
+    // *  Constructors  *
+    // ******************
+    DatedVMatrix() {}; //!<  default constructor (for automatic deserialization)
 
-  DatedVMatrix(int width, int length) : inherited(width,length) {}
-
-/*!     this one calls one of subDistrRelative{Years,Months,Days} according
-    to wether units=="years", "months", or "days" (or if the first letter
-    matches, irrespective of upper/lower case distinctions)
-*/
-  virtual VMat subDistrRelativeDates(int first, int n, const string& units) = 0;
+    DatedVMatrix(int width, int length) : inherited(width,length) {}
 
 /*!     this one calls one of subDistrRelative{Years,Months,Days} according
-    to wether units=="years", "months", or "days" (or if the first letter
-    matches, irrespective of upper/lower case distinctions)
+  to wether units=="years", "months", or "days" (or if the first letter
+  matches, irrespective of upper/lower case distinctions)
 */
-  virtual VMat subDistrAbsoluteUnits(int year, int month, int day, int n_units,
-      const string& units) = 0;
+    virtual VMat subDistrRelativeDates(int first, int n, const string& units) = 0;
 
-  //!  return "size" in the given units (e.g. interval in years, months, etc...)
-  virtual int lengthInDates(const string& units) = 0;
+/*!     this one calls one of subDistrRelative{Years,Months,Days} according
+  to wether units=="years", "months", or "days" (or if the first letter
+  matches, irrespective of upper/lower case distinctions)
+*/
+    virtual VMat subDistrAbsoluteUnits(int year, int month, int day, int n_units,
+                                       const string& units) = 0;
 
-  //!  return row position of example whose relative date is the first with
-  //!  the given (relative) value, in the given time units
-  virtual int positionOfRelativeDate(int first, const string& units) = 0;
+    //!  return "size" in the given units (e.g. interval in years, months, etc...)
+    virtual int lengthInDates(const string& units) = 0;
 
-  //!  return the number of real fields required to specify a date 
-  virtual int nDateFields() = 0;
+    //!  return row position of example whose relative date is the first with
+    //!  the given (relative) value, in the given time units
+    virtual int positionOfRelativeDate(int first, const string& units) = 0;
 
-  //!  copy the date fields for the relative positions starting at the
-  //!  given row position for the given number of rows, into the given matrix
-  virtual void copyDatesOfRows(int from_row, int n_rows, Mat& dates) = 0;
+    //!  return the number of real fields required to specify a date 
+    virtual int nDateFields() = 0;
+
+    //!  copy the date fields for the relative positions starting at the
+    //!  given row position for the given number of rows, into the given matrix
+    virtual void copyDatesOfRows(int from_row, int n_rows, Mat& dates) = 0;
   
-  // added by Julien Keable :
-  // returns vector of row at indice 'row'
-  // and associated date trough year, month and day
-  virtual Vec copyRowDataAndDate(int row, int &year, int &month, int &day)=0;
-  virtual void copyDateOfRow(int row, int &year, int &month, int &day)=0;
+    // added by Julien Keable :
+    // returns vector of row at indice 'row'
+    // and associated date trough year, month and day
+    virtual Vec copyRowDataAndDate(int row, int &year, int &month, int &day)=0;
+    virtual void copyDateOfRow(int row, int &year, int &month, int &day)=0;
 
-  PLEARN_DECLARE_ABSTRACT_OBJECT(DatedVMatrix);
+    PLEARN_DECLARE_ABSTRACT_OBJECT(DatedVMatrix);
 
     static void declareOptions(OptionList &ol);
     virtual void build();
@@ -113,3 +113,16 @@ DECLARE_OBJECT_PTR(DatedVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

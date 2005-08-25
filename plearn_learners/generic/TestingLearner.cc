@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestingLearner.cc,v 1.5 2005/03/17 21:50:18 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Marius Muja
 
@@ -48,33 +48,33 @@ using namespace std;
 
 TestingLearner::TestingLearner() 
 {
-  // ...
+    // ...
 
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
+    // ### You may or may not want to call build_() to finish building the object
+    // build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(TestingLearner,
-    "This learner can be used to perform a given experiment on different datasets.",
-    "The experiment's costs are returned in this learner's training costs.\n"
-    "You do not need to specify the underlying PTester's experiment directory,\n"
-    "nor its dataset, as they will be set by this learner.\n"
-);
+                        "This learner can be used to perform a given experiment on different datasets.",
+                        "The experiment's costs are returned in this learner's training costs.\n"
+                        "You do not need to specify the underlying PTester's experiment directory,\n"
+                        "nor its dataset, as they will be set by this learner.\n"
+    );
 
 void TestingLearner::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
  
-  declareOption(ol, "tester", &TestingLearner::tester, OptionBase::buildoption,
-                 "The tester used by the TestingLearner.");
+    declareOption(ol, "tester", &TestingLearner::tester, OptionBase::buildoption,
+                  "The tester used by the TestingLearner.");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void TestingLearner::build_()
@@ -84,55 +84,55 @@ void TestingLearner::build_()
 // ### Nothing to add here, simply calls build_
 void TestingLearner::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 
 void TestingLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("TestingLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("TestingLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 
 int TestingLearner::outputsize() const
 {
-  return 0;
+    return 0;
 }
 
 void TestingLearner::forget()
 {
-  stage = 0;
+    stage = 0;
 }
     
 void TestingLearner::train()
 {
-  if (stage > 0) {
-    PLWARNING("In TestingLearner::train - Learner has already been trained");
-    return;
-  }
-  train_stats->update(tester->perform(true));
-  train_stats->setFieldNames(tester->getStatNames());
-  stage = 1;
+    if (stage > 0) {
+        PLWARNING("In TestingLearner::train - Learner has already been trained");
+        return;
+    }
+    train_stats->update(tester->perform(true));
+    train_stats->setFieldNames(tester->getStatNames());
+    stage = 1;
 }
 
 
 void TestingLearner::computeOutput(const Vec& input, Vec& output) const
 {
-  output.resize(0);
+    output.resize(0);
 }    
 
 void TestingLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                           const Vec& target, Vec& costs) const
+                                             const Vec& target, Vec& costs) const
 {
 // Compute the costs from *already* computed output. 
 // ...
@@ -140,25 +140,37 @@ void TestingLearner::computeCostsFromOutputs(const Vec& input, const Vec& output
 
 TVec<string> TestingLearner::getTestCostNames() const
 {
-  static TVec<string> no_cost;
-  return no_cost;
+    static TVec<string> no_cost;
+    return no_cost;
 }
 
 TVec<string> TestingLearner::getTrainCostNames() const
 {
-  return tester->getStatNames();
+    return tester->getStatNames();
 }
 
 void TestingLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
-  inherited::setTrainingSet(training_set, call_forget);
-  tester->dataset = training_set;
+    inherited::setTrainingSet(training_set, call_forget);
+    tester->dataset = training_set;
 }
 
 void TestingLearner::setExperimentDirectory(const PPath& the_expdir)
 {
-  tester->setExperimentDirectory(the_expdir);
+    tester->setExperimentDirectory(the_expdir);
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

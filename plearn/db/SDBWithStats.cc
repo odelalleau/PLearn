@@ -37,40 +37,40 @@
  
 
 /* *******************************************************      
-   * $Id: SDBWithStats.cc,v 1.2 2004/02/20 21:11:43 chrish42 Exp $
-   * AUTHORS: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "SDBWithStats.h"
 
 namespace PLearn {
 using namespace std;
 
-  int FieldStat::max_nsymbols = 400;
+int FieldStat::max_nsymbols = 400;
 
-  void FieldStat::updateString(const string& sym)
-  {
+void FieldStat::updateString(const string& sym)
+{
     ++nonmissing_;
     if(nsymbols()<max_nsymbols)
-      symbolcount[sym]++;
-  }
+        symbolcount[sym]++;
+}
 
-  void FieldStat::updateNumber(double d)
-  {
+void FieldStat::updateNumber(double d)
+{
     ++nonmissing_;
     if(nsymbols()<max_nsymbols)
-      symbolcount[tostring(d)]++;
+        symbolcount[tostring(d)]++;
     sum_ += d;
     sumsquare_ += d*d;
     if(d<min_)
-      min_ = d;
+        min_ = d;
     if(d>max_)
-      max_ = d;
-  }
+        max_ = d;
+}
 
-  void FieldStat::clear()
-  {
+void FieldStat::clear()
+{
     nonmissing_ = 0;
     missing_ = 0; 
     sum_ = 0;
@@ -81,104 +81,104 @@ using namespace std;
     stddev_ = 0;
     symbolcount.clear();
     symbolid.clear();
-  }
+}
 
-  void FieldStat::finalize()
-  {
+void FieldStat::finalize()
+{
     mean_ = sum_/nonmissing_;
     double meansquare_ = sumsquare_/nonmissing_;
     stddev_ = sqrt( meansquare_ - square(mean_) );
     if(nsymbols()>=max_nsymbols) // too many different values: ignore it (not really symbolic)
     {
-      symbolcount.clear();
-      symbolid.clear();
+        symbolcount.clear();
+        symbolid.clear();
     }
-  }
+}
 
-  SDBWithStats::SDBWithStats(string basename, string path, AccessType access, bool verbose)
+SDBWithStats::SDBWithStats(string basename, string path, AccessType access, bool verbose)
     :SDB(basename,path,access,verbose)
-  { 
+{ 
     fieldstat.resize(getSchema().size());
     if(hasStats())
-      loadStats();
-  }
+        loadStats();
+}
 
-  void SDBWithStats::forgetStats()
-  {
+void SDBWithStats::forgetStats()
+{
     for(int j=0; j<width(); j++)
-      getStat(j).clear();
-  }
+        getStat(j).clear();
+}
 
-  void SDBWithStats::computeStats(unsigned int nrows)
-  {
+void SDBWithStats::computeStats(unsigned int nrows)
+{
     forgetStats();
     const Schema& sc = getSchema();
     Row row(&sc);
 
     for(SDB::RowNumber i=0; i<nrows;i++) 
     {
-      getInRow(i, row);
-      Row::const_iterator it = row.begin();
-      if (nrows>100000 && i%100000==0) 
-        cout << "SDBWithStats::computeStats processing row " << i << " of " << nrows << endl;
+        getInRow(i, row);
+        Row::const_iterator it = row.begin();
+        if (nrows>100000 && i%100000==0) 
+            cout << "SDBWithStats::computeStats processing row " << i << " of " << nrows << endl;
 
-      for (int j=0; j<nfields(); ++j, ++it) 
-      {
-        if(it.isMissing())
-          fieldstat[j].updateMissing();
-        else
+        for (int j=0; j<nfields(); ++j, ++it) 
         {
-          switch(it.getFieldType())
-          {
-            case StringType: 
-            case CharacterType:
-              fieldstat[j].updateString(tostring(it));
-              break;
-            case SignedCharType:
-            case ShortType:
-            case IntType:
-            case FloatType:
-            case DoubleType:
-            case DateType:
-              fieldstat[j].updateNumber(todouble(it));
-              break;
-            default: 
-              PLERROR("Unknown field type");
-          }
+            if(it.isMissing())
+                fieldstat[j].updateMissing();
+            else
+            {
+                switch(it.getFieldType())
+                {
+                case StringType: 
+                case CharacterType:
+                    fieldstat[j].updateString(tostring(it));
+                    break;
+                case SignedCharType:
+                case ShortType:
+                case IntType:
+                case FloatType:
+                case DoubleType:
+                case DateType:
+                    fieldstat[j].updateNumber(todouble(it));
+                    break;
+                default: 
+                    PLERROR("Unknown field type");
+                }
+            }
         }
-      }
     }    
     cout << "boucle terminee" << endl;
     for (int j=0; j<nfields(); ++j)
-      fieldstat[j].finalize();
+        fieldstat[j].finalize();
     cout << "fini computestats" << endl;
-  }
+}
 
-  bool SDBWithStats::hasStats()
-  {
+bool SDBWithStats::hasStats()
+{
     string numstatsfile = getPath()+getName()+".stats"; 
     string symstatsfile = getPath()+getName()+".symbols";
     return file_exists(numstatsfile.c_str()) && file_exists(symstatsfile.c_str());
-  }
+}
 
-  void SDBWithStats::saveStats()
-  {
+void SDBWithStats::saveStats()
+{
     string numstatsfile = getPath()+getName()+".stats"; 
     string symstatsfile = getPath()+getName()+".symbols";
     
     ofstream numstats(numstatsfile.c_str());
     if(!numstats)
-      PLERROR("could not open file %s for writing",numstatsfile.c_str());
+        PLERROR("could not open file %s for writing",numstatsfile.c_str());
 
     ofstream symstats(symstatsfile.c_str());
     if(!symstats)
-      PLERROR("could not open file %s for writing",symstatsfile.c_str());
+        PLERROR("could not open file %s for writing",symstatsfile.c_str());
       
     numstats.precision(8);
     symstats.precision(8);
 
     for(unsigned int j=0; j<fieldstat.size(); j++)
-      {
+    {
         FieldStat& s = fieldstat[j];
         numstats << fieldname(j) << ' ' << s.nonmissing() << ' ' << s.missing() << ' ' 
                  << s.mean() << ' ' << s.stddev() << ' ' << s.min() << ' ' << s.max() << endl;
@@ -187,23 +187,23 @@ using namespace std;
         symstats << s.nsymbols() << "     ";
         map<string,int>::iterator it;
         for(it = s.symbolcount.begin(); it!= s.symbolcount.end(); ++it)
-          symstats << it->first << ' ' << it->second << "   ";
+            symstats << it->first << ' ' << it->second << "   ";
         symstats << endl;
-      }
-  }
+    }
+}
 
-  void SDBWithStats::loadStats()
-  {
+void SDBWithStats::loadStats()
+{
     forgetStats();
     string numstatsfile = getPath()+getName()+".stats"; 
     string symstatsfile = getPath()+getName()+".symbols";
     ifstream numstats(numstatsfile.c_str());
     if(!numstats)
-      PLERROR("could not open file %s for reading",numstatsfile.c_str());
+        PLERROR("could not open file %s for reading",numstatsfile.c_str());
 
     ifstream symstats(symstatsfile.c_str());
     if(!symstats)
-      PLERROR("could not open file %s for reading",symstatsfile.c_str());
+        PLERROR("could not open file %s for reading",symstatsfile.c_str());
       
     for(unsigned int j=0; j<fieldstat.size(); j++)
     {
@@ -214,7 +214,7 @@ using namespace std;
 
         //cout<<"field : "<<j<<" name:"<<name<<" fieldname(j):"<<fieldname(j)<<endl;
         if(name!=fieldname(j))
-          PLERROR("Row number %d of file %s does not correpond to field number %d: %s",j,numstatsfile.c_str(),j,fieldname(j).c_str()); 
+            PLERROR("Row number %d of file %s does not correpond to field number %d: %s",j,numstatsfile.c_str(),j,fieldname(j).c_str()); 
 
         // **** we use strings as intermediate type to handle nans (julien)
         numstats >> str_nonmissing_ >> str_missing_ >> str_mean_ >> str_stddev_ >> str_min_ >> str_max_;
@@ -235,51 +235,64 @@ using namespace std;
                 
         symstats >> name;
         if(name!=fieldname(j))
-          PLERROR("Row number %d of file %s does not correpond to field number %d: %s",j,symstatsfile.c_str(),j,fieldname(j).c_str()); 
+            PLERROR("Row number %d of file %s does not correpond to field number %d: %s",j,symstatsfile.c_str(),j,fieldname(j).c_str()); 
 
         int nsymbols;
         symstats >> nsymbols;
         string sym;
         int symcount;
         for(int k=0; k<nsymbols; k++)
-          {
+        {
             symstats >> sym >> symcount;
             s.symbolcount[sym] = symcount;
             s.symbolid[sym]=k;
-          }
-      }
+        }
+    }
     
-  }
+}
 
-  FieldStat& SDBWithStats::getStat(int i) 
-  {
+FieldStat& SDBWithStats::getStat(int i) 
+{
     if(i<0 || i>=width())
-      PLERROR("Out of bounds");
+        PLERROR("Out of bounds");
     return fieldstat[i]; 
-  }
+}
 
-  const FieldStat& SDBWithStats::getStat(int i) const
-  {
+const FieldStat& SDBWithStats::getStat(int i) const
+{
     if(i<0 || i>=width())
-      PLERROR("Out of bounds");
+        PLERROR("Out of bounds");
     return fieldstat[i]; 
-  }
+}
 
-  FieldStat& SDBWithStats::getStat(const string& fieldname) 
-  { 
+FieldStat& SDBWithStats::getStat(const string& fieldname) 
+{ 
     int pos = indexOfField(fieldname);
     if(pos<0)
-      PLERROR("No field named %s",fieldname.c_str());
+        PLERROR("No field named %s",fieldname.c_str());
     return getStat(pos); 
-  }
+}
 
-  const FieldStat& SDBWithStats::getStat(const string& fieldname) const
-  { 
+const FieldStat& SDBWithStats::getStat(const string& fieldname) const
+{ 
     int pos = indexOfField(fieldname);
     if(pos<0)
-      PLERROR("No field named %s",fieldname.c_str());
+        PLERROR("No field named %s",fieldname.c_str());
     return getStat(pos); 
-  }
+}
 
   
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: qld_interface.h,v 1.3 2005/04/20 19:31:47 lamblin Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -164,22 +164,35 @@ using namespace std;
 
 //! Low-Level PLearn Interface for QLD  
 void qld_interface(
-  Mat A,                       //!< linear constraints data matrix
-  Vec B,                       //!< linear constraints constants
-  int ME,                      //!< number of equality constraints
-  Mat C,                       //!< objective function matrix (SPD)
-  Vec D,                       //!< objective function constants
-  Vec XL,                      //!< lower bounds for the variables
-  Vec XU,                      //!< upper bounds for the variables
-  int& iout,                   //!< desired output unit number (e.g. 1)
-  int& ifail,                  //!< termination reason
-  int& iprint,                 //!< output control (0=no output)
-  Vec& X,                      //!< optimal solution on return (resized)
-  Vec& U,                      //!< lagrange multipliers on return (resized)
-  Vec WAR = Vec(),             //!< real working array; resized automatically
-  TVec<int> IWAR = TVec<int>() //!< int working array; resized automatically
-  );                     
+    Mat A,                       //!< linear constraints data matrix
+    Vec B,                       //!< linear constraints constants
+    int ME,                      //!< number of equality constraints
+    Mat C,                       //!< objective function matrix (SPD)
+    Vec D,                       //!< objective function constants
+    Vec XL,                      //!< lower bounds for the variables
+    Vec XU,                      //!< upper bounds for the variables
+    int& iout,                   //!< desired output unit number (e.g. 1)
+    int& ifail,                  //!< termination reason
+    int& iprint,                 //!< output control (0=no output)
+    Vec& X,                      //!< optimal solution on return (resized)
+    Vec& U,                      //!< lagrange multipliers on return (resized)
+    Vec WAR = Vec(),             //!< real working array; resized automatically
+    TVec<int> IWAR = TVec<int>() //!< int working array; resized automatically
+    );                     
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

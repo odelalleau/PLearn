@@ -48,38 +48,51 @@ namespace PLearn{
 using namespace std;
 
 /* 
-This class implements a MRU-type (most recently used) list of a maximum of 1000 opened ofstreams,
-(so that on each call to 'getFile(string fname)', the file 'fname' is moved to the top of the list.)
-If you try to open more than that, the least recently used file is closed beforehand
+   This class implements a MRU-type (most recently used) list of a maximum of 1000 opened ofstreams,
+   (so that on each call to 'getFile(string fname)', the file 'fname' is moved to the top of the list.)
+   If you try to open more than that, the least recently used file is closed beforehand
 
-Typically, after contructing the object, user will only need to call getFile(...), and check errorMsg()
-when the function returns NULL.
+   Typically, after contructing the object, user will only need to call getFile(...), and check errorMsg()
+   when the function returns NULL.
 */
 
 class MRUFileList
 {
 public:
 
-  typedef list<pair<string,ofstream*> > list_typ;
+    typedef list<pair<string,ofstream*> > list_typ;
 
-  MRUFileList(int _max_opened_files=1000, ios_base::openmode _mode = ios_base::out | ios_base::app);
-  ~MRUFileList();
+    MRUFileList(int _max_opened_files=1000, ios_base::openmode _mode = ios_base::out | ios_base::app);
+    ~MRUFileList();
 
-  ofstream * getFile(string fname);
+    ofstream * getFile(string fname);
 
-  string errorMsg(){return error;}
-  void clearError(){error="";}
+    string errorMsg(){return error;}
+    void clearError(){error="";}
   
-  // return the cache miss percentage (the % of times the wanted file is not already opened)
-  float misses(){return 100.0f * (float)tot_miss/(float)tot_access;}
+    // return the cache miss percentage (the % of times the wanted file is not already opened)
+    float misses(){return 100.0f * (float)tot_miss/(float)tot_access;}
 
 protected:
-  int max_opened_files;
-  string error;
-  list_typ mru_list;
-  int tot_miss,tot_access;
-  ios_base::openmode mode;
+    int max_opened_files;
+    string error;
+    list_typ mru_list;
+    int tot_miss,tot_access;
+    ios_base::openmode mode;
 };
 
 } // end of namespace PLearn  
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

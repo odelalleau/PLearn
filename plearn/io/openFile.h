@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openFile.h,v 1.4 2005/01/26 16:32:26 dorionc Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -51,10 +51,23 @@
 namespace PLearn {
 using namespace std;
 
-  PStream openFile(const PPath& filepath_, 
-                   PStream::mode_t io_formatting,
-                   const string& openmode = "r"); 
+PStream openFile(const PPath& filepath_, 
+                 PStream::mode_t io_formatting,
+                 const string& openmode = "r"); 
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

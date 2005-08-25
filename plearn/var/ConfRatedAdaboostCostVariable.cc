@@ -37,9 +37,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ConfRatedAdaboostCostVariable.h"
 
@@ -49,15 +49,15 @@ using namespace std;
 /** ConfRatedAdaboostCostVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(
-  ConfRatedAdaboostCostVariable,
-  "Cost used for confidence-rated Adaboost ",
-  "NO HELP");
+    ConfRatedAdaboostCostVariable,
+    "Cost used for confidence-rated Adaboost ",
+    "NO HELP");
 
 ////////////////////////////////////
 // ConfRatedAdaboostCostVariable //
 ////////////////////////////////////
 ConfRatedAdaboostCostVariable::ConfRatedAdaboostCostVariable(Variable* output, Variable* target, Variable* alpha)
-  : inherited(VarArray(output,target) & Var(alpha),output->size(),1)
+    : inherited(VarArray(output,target) & Var(alpha),output->size(),1)
 {
     build_();
 }
@@ -97,12 +97,12 @@ void ConfRatedAdaboostCostVariable::recomputeSize(int& l, int& w) const
 void ConfRatedAdaboostCostVariable::fprop()
 {
   
-  int signed_target;
-  for(int i=0; i<length(); i++)
-  {
-    signed_target = 2*int(varray[1]->valuedata[i])-1;  
-    valuedata[i] = exp(-1*varray[2]->valuedata[0]*signed_target*(2*varray[0]->valuedata[i]-1));
-  }
+    int signed_target;
+    for(int i=0; i<length(); i++)
+    {
+        signed_target = 2*int(varray[1]->valuedata[i])-1;  
+        valuedata[i] = exp(-1*varray[2]->valuedata[0]*signed_target*(2*varray[0]->valuedata[i]-1));
+    }
 }
 
 ///////////
@@ -110,16 +110,29 @@ void ConfRatedAdaboostCostVariable::fprop()
 ///////////
 void ConfRatedAdaboostCostVariable::bprop()
 {
-  for(int i=0; i<length(); i++)
-  {
-    varray[0]->gradientdata[i] += -2*gradientdata[i]*valuedata[i]*varray[2]->valuedata[0]*(2*int(varray[1]->valuedata[i])-1);  
-    varray[2]->gradientdata[0] += -gradientdata[i]*valuedata[i]*(2*varray[0]->valuedata[i]-1)*(2*int(varray[1]->valuedata[i])-1);  
-  }
+    for(int i=0; i<length(); i++)
+    {
+        varray[0]->gradientdata[i] += -2*gradientdata[i]*valuedata[i]*varray[2]->valuedata[0]*(2*int(varray[1]->valuedata[i])-1);  
+        varray[2]->gradientdata[0] += -gradientdata[i]*valuedata[i]*(2*varray[0]->valuedata[i]-1)*(2*int(varray[1]->valuedata[i])-1);  
+    }
 }
 
 void ConfRatedAdaboostCostVariable::symbolicBprop()
 {
-  PLERROR("ConfRatedAdaboostCostVariable::symbolicBprop() not implemented");
+    PLERROR("ConfRatedAdaboostCostVariable::symbolicBprop() not implemented");
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

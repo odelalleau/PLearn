@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id$
-   * AUTHORS: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "stringutils.h"
 #include "general.h"
@@ -54,156 +54,156 @@ using namespace std;
 
 
 string left(const string& s, size_t width, char padding)
-  { 
+{ 
     if(s.length()>width)
-      return s;
+        return s;
     else
-      return s+string(width-s.length(),padding);
-  }
+        return s+string(width-s.length(),padding);
+}
 
 string right(const string& s, size_t width, char padding)
-  {
+{
     if(s.length()>width)
-      return s;
+        return s;
     else
-      return string(width-s.length(),padding)+s;
-  }
+        return string(width-s.length(),padding)+s;
+}
 
 string center(const string& s, size_t width, char padding)
-  {
+{
     if(s.length()>width)
-      return s;
+        return s;
     else
-      return string((width-s.length())/2,padding) + s +
-	  string((width-s.length()+1)/2,padding);
-  }
+        return string((width-s.length())/2,padding) + s +
+            string((width-s.length()+1)/2,padding);
+}
 
 
-  string extract_filename(const string& filepath)
-  {
+string extract_filename(const string& filepath)
+{
     size_t p = filepath.rfind(slash);
     if (p != string::npos)
-      return filepath.substr(p+1,filepath.length()-(p+1));
+        return filepath.substr(p+1,filepath.length()-(p+1));
     else
-      return filepath;
-  }
+        return filepath;
+}
 
-  string extract_directory(const string& filepath)
-  {
+string extract_directory(const string& filepath)
+{
     size_t p = filepath.rfind(slash);
     if (p != string::npos)
-      return filepath.substr(0,p+1);
+        return filepath.substr(0,p+1);
     else
     {
-      string dot = ".";
-      return dot+slash;
+        string dot = ".";
+        return dot+slash;
     }
-  }
+}
   
-  string extract_extension(const string& filepath)
-  {
+string extract_extension(const string& filepath)
+{
     string filename = extract_filename(filepath);
     size_t p = filename.rfind(".");
     if (p != string::npos)
-      return filename.substr(p,filename.length()-p);
+        return filename.substr(p,filename.length()-p);
     else
-      return "";
-  }
+        return "";
+}
 
-  string extract_filename_without_extension(const string& filepath)
-  {
+string extract_filename_without_extension(const string& filepath)
+{
     string filename = extract_filename(filepath);
     size_t p = filename.rfind(".");
     if (p != string::npos)
-      return filename.substr(0,p);
+        return filename.substr(0,p);
     else
-      return filename;
-  }
+        return filename;
+}
 
-  string remove_extension(const string& filename)
-  {
+string remove_extension(const string& filename)
+{
     size_t p = filename.rfind(".");
     if (p != string::npos)
-      return filename.substr(0,p);
+        return filename.substr(0,p);
     else
-      return filename;
-  }
+        return filename;
+}
 
 string* data_filename_2_filenames(const string& filename, int& nb_files)
 {
-  ifstream in(filename.c_str());
-  if (!in)
-    PLERROR("In data_filename_2_filenames: couldn't open file %s",
-      filename.c_str());
+    ifstream in(filename.c_str());
+    if (!in)
+        PLERROR("In data_filename_2_filenames: couldn't open file %s",
+                filename.c_str());
  
-  const int buffersize = 100;
-  string* filenames = new string[buffersize];
-  nb_files = 0;
-  string fname;
-  while (getline(in, fname, '\n'))
-    filenames[nb_files++] = fname;
+    const int buffersize = 100;
+    string* filenames = new string[buffersize];
+    nb_files = 0;
+    string fname;
+    while (getline(in, fname, '\n'))
+        filenames[nb_files++] = fname;
  
-  return filenames;
+    return filenames;
 }
 
 string removeblanks(const string& s)
 {
-  size_t start=0;
-  size_t end=0;
-  size_t i;
-  int j;
-  for(i=0; i<s.length(); i++)
-    if(s[i]!=' ' && s[i]!='\t' && s[i]!='\n' && s[i]!='\r')
-      break;
+    size_t start=0;
+    size_t end=0;
+    size_t i;
+    int j;
+    for(i=0; i<s.length(); i++)
+        if(s[i]!=' ' && s[i]!='\t' && s[i]!='\n' && s[i]!='\r')
+            break;
   
-  if(i==s.length())
-    return string("");
-  else
-    start = i;
+    if(i==s.length())
+        return string("");
+    else
+        start = i;
 
-  for(j=s.length()-1; j>=0; j--)
-    if(s[j]!=' ' && s[j]!='\t' && s[j]!='\n' && s[j]!='\r')
-      break;
-  end = size_t(j);
-  return s.substr(start,end-start+1);
+    for(j=s.length()-1; j>=0; j--)
+        if(s[j]!=' ' && s[j]!='\t' && s[j]!='\n' && s[j]!='\r')
+            break;
+    end = size_t(j);
+    return s.substr(start,end-start+1);
 }
 
 string removeallblanks(const string& s)
 {
-  string res;
-  size_t l = s.length();
-  for(size_t i=0; i<l; i++)
+    string res;
+    size_t l = s.length();
+    for(size_t i=0; i<l; i++)
     {
-      char c = s[i];
-      if(c!=' ' && c!='\t' && c!='\n' && c!='\r')
-        res += c;
+        char c = s[i];
+        if(c!=' ' && c!='\t' && c!='\n' && c!='\r')
+            res += c;
     }
-  return res;
+    return res;
 }
 
 string removenewline(const string& s)
 {
-  int pos = s.length()-1;
-  while(pos>=0 && (s[pos]=='\r' || s[pos]=='\n'))
-    pos--;
-  return s.substr(0,pos+1);
+    int pos = s.length()-1;
+    while(pos>=0 && (s[pos]=='\r' || s[pos]=='\n'))
+        pos--;
+    return s.substr(0,pos+1);
 }
 
 string remove_trailing_slash(const string& s)
 {
-  int pos = s.length()-1;
-  while(pos >= 0 && s[pos]==slash_char)
-    pos--;
-  return s.substr(0,pos+1);
+    int pos = s.length()-1;
+    while(pos >= 0 && s[pos]==slash_char)
+        pos--;
+    return s.substr(0,pos+1);
 }
 
 string append_slash(const string& path)
 {
-  size_t l = path.length();
-  if(l>0 && path[l-1]!=slash_char)
-    return path+slash;
-  else
-    return path;
+    size_t l = path.length();
+    if(l>0 && path[l-1]!=slash_char)
+        return path+slash;
+    else
+        return path;
 }
 
 string lowerstring(const string& ss)
@@ -215,8 +215,8 @@ string lowerstring(const string& ss)
     // problems when compiling in optimized mode, so we do this
     for (; it != end; ++it)
     {
-      if(*it>='A' && *it<='Z')
-        *it += 'a'-'A';
+        if(*it>='A' && *it<='Z')
+            *it += 'a'-'A';
     }
     return s;
 }
@@ -230,319 +230,319 @@ string upperstring(const string& ss)
     // problems when compiling in optimized mode, so we do this
     for (; it != end; ++it)
     {
-      if(*it>='a' && *it<='z')
-        *it -= 'a'-'A';
+        if(*it>='a' && *it<='z')
+            *it -= 'a'-'A';
     }
     return s;
 }
 
 string pgetline(istream& in)
 {
-  string line;
-  getline(in,line);
-  return removenewline(line);
+    string line;
+    getline(in,line);
+    return removenewline(line);
 }
 
 string pgetline(PStream& in)
 {
-  string line;
-  in.getline(line);
-  return removenewline(line);
+    string line;
+    in.getline(line);
+    return removenewline(line);
 }
 
 bool isBlank(const string& s)
 {
-  int l = (int)s.length();
-  for(int i=0; i<l; i++)
+    int l = (int)s.length();
+    for(int i=0; i<l; i++)
     {
-      char c = s[i];
-      if(c=='#' || c=='\n' || c=='\r')
-        return true;
-      else if(c!=' ' && c!='\t')
-        return false;
+        char c = s[i];
+        if(c=='#' || c=='\n' || c=='\r')
+            return true;
+        else if(c!=' ' && c!='\t')
+            return false;
     }
-  return true; // empty line
+    return true; // empty line
 }
 
 
 bool isParagraphBlank(const string& s)
 {
-  int l = (int)s.length();
-  bool in_comment=false;
-  for(int i=0; i<l; i++)
+    int l = (int)s.length();
+    bool in_comment=false;
+    for(int i=0; i<l; i++)
     {
-      char c = s[i];
-      if(c=='#')
-        in_comment=true;
-      else if(c=='\n' || c=='\r')
-        in_comment=false;
-      else if(c!=' ' && c!='\t' && !in_comment)
-        return false;
+        char c = s[i];
+        if(c=='#')
+            in_comment=true;
+        else if(c=='\n' || c=='\r')
+            in_comment=false;
+        else if(c!=' ' && c!='\t' && !in_comment)
+            return false;
     }
-  return true; // empty line
+    return true; // empty line
 }
 
 string space_to_underscore(string str)
 {
-  for(size_t i=0; i<str.size(); i++)
+    for(size_t i=0; i<str.size(); i++)
     {
-      if(str[i]<=' ')
-        str[i] = '_';
+        if(str[i]<=' ')
+            str[i] = '_';
     }
-  return str;
+    return str;
 }
 
 string underscore_to_space(string str)
 {
-  for(size_t i=0; i<str.size(); i++)
+    for(size_t i=0; i<str.size(); i++)
     {
-      if(str[i]=='_')
-        str[i] = ' ';
+        if(str[i]=='_')
+            str[i] = ' ';
     }
-  return str;
+    return str;
 }
 
 string backslash_to_slash(string str)
 {
-  for(size_t i=0; i<str.size(); i++)
+    for(size_t i=0; i<str.size(); i++)
     {
-      if(str[i]=='\\')
-        str[i] = '/';
+        if(str[i]=='\\')
+            str[i] = '/';
     }
-  return str;
+    return str;
 }
 
 
 int search_replace(string& text, const string& searchstr, const string& replacestr)
 {
-  int n = 0;
-  size_t startpos = text.find(searchstr, 0);
-  while(startpos!=string::npos)
+    int n = 0;
+    size_t startpos = text.find(searchstr, 0);
+    while(startpos!=string::npos)
     {
-      text.replace(startpos, searchstr.length(), replacestr);
-      ++n;
-      startpos = text.find(searchstr, startpos+replacestr.length());
+        text.replace(startpos, searchstr.length(), replacestr);
+        ++n;
+        startpos = text.find(searchstr, startpos+replacestr.length());
     }
-  return n;
+    return n;
 }
 
 
 vector<string> split(const string& s, char delimiter)
 {
-  vector<string> res;
-  int l = (int)s.length();
-  int beg = 0;
-  int end = 0;
+    vector<string> res;
+    int l = (int)s.length();
+    int beg = 0;
+    int end = 0;
   
-  while(end<=l)
+    while(end<=l)
     {
-      while(end<l && s[end]!=delimiter)
+        while(end<l && s[end]!=delimiter)
+            ++end;
+        res.push_back(s.substr(beg,end-beg));
         ++end;
-      res.push_back(s.substr(beg,end-beg));
-      ++end;
-      beg = end;
+        beg = end;
     }
 
-  return res;
+    return res;
 }
 
 vector<string> split(const string& s, const string& delimiters, bool keep_delimiters)
 {
-  vector<string> result;
+    vector<string> result;
 
-  size_t startpos = 0;
-  size_t endpos = 0;
+    size_t startpos = 0;
+    size_t endpos = 0;
 
-  for(;;)
+    for(;;)
     {
-      startpos = endpos;
-      endpos = s.find_first_not_of(delimiters,startpos);
-      if(endpos==string::npos)
+        startpos = endpos;
+        endpos = s.find_first_not_of(delimiters,startpos);
+        if(endpos==string::npos)
         {
-          if(keep_delimiters)
-            result.push_back(s.substr(startpos));
-          break;
+            if(keep_delimiters)
+                result.push_back(s.substr(startpos));
+            break;
         }
-      if(keep_delimiters && endpos>startpos)
-        result.push_back(s.substr(startpos,endpos-startpos));
+        if(keep_delimiters && endpos>startpos)
+            result.push_back(s.substr(startpos,endpos-startpos));
 
-      startpos = endpos;
-      endpos = s.find_first_of(delimiters,startpos);
-      if(endpos==string::npos)
+        startpos = endpos;
+        endpos = s.find_first_of(delimiters,startpos);
+        if(endpos==string::npos)
         {
-          result.push_back(s.substr(startpos));
-          break;
+            result.push_back(s.substr(startpos));
+            break;
         }
-      result.push_back(s.substr(startpos,endpos-startpos));
+        result.push_back(s.substr(startpos,endpos-startpos));
     }
 
-  return result;
+    return result;
 }
 
 
 void split_on_first(const string& s,
                     const string& delimiters, string& left, string& right)
 {
-  size_t pos = s.find_first_of(delimiters);
-  if (pos != string::npos)
+    size_t pos = s.find_first_of(delimiters);
+    if (pos != string::npos)
     {
-      left = s.substr(0,pos);
-      right = s.substr(pos+1);
+        left = s.substr(0,pos);
+        right = s.substr(pos+1);
     }
-  else
+    else
     {
-      left = s;
-      right = "";
+        left = s;
+        right = "";
     }
 }
 
 pair<string,string> split_on_first(const string& s,
                                    const string& delimiters)
 {
-  string left, right;
-  split_on_first(s, delimiters, left, right);
-  return make_pair(left,right);
+    string left, right;
+    split_on_first(s, delimiters, left, right);
+    return make_pair(left,right);
 }
 
 
 void remove_comments(string& text, const string& commentstart)
 {
-  size_t startpos=0;
-  size_t endpos=0;
-  while(endpos!=string::npos)
+    size_t startpos=0;
+    size_t endpos=0;
+    while(endpos!=string::npos)
     {
-      startpos = text.find(commentstart,startpos);
-      if(startpos==string::npos)
-        break;
-      endpos = text.find_first_of("\n\r",startpos);
-      text.erase(startpos, endpos-startpos);
+        startpos = text.find(commentstart,startpos);
+        if(startpos==string::npos)
+            break;
+        endpos = text.find_first_of("\n\r",startpos);
+        text.erase(startpos, endpos-startpos);
     }
 }
 
 
 string join(const vector<string>& s, const string& separator)
 {
-  string result;
-  vector<string>::const_iterator it = s.begin();
-  if(it!=s.end())
+    string result;
+    vector<string>::const_iterator it = s.begin();
+    if(it!=s.end())
     {
-      for(;;)
+        for(;;)
         {
-          result += *it;
-          ++it;
-          if(it==s.end())
-            break;
-          result += separator;
+            result += *it;
+            ++it;
+            if(it==s.end())
+                break;
+            result += separator;
         }
     }
-  return result;
+    return result;
 }
 
 vector<string> remove(const vector<string> &v, string element)
 {
-  vector<string> res;
-  for (size_t i=0;i<v.size();i++)
-    if (v[i]!=element) res.push_back(v[i]);
-  return res;
+    vector<string> res;
+    for (size_t i=0;i<v.size();i++)
+        if (v[i]!=element) res.push_back(v[i]);
+    return res;
 }
 
 int findpos(const vector<string> &v, string element)
 {
-  for (size_t i=0;i<v.size();i++)
-    if (v[i]==element) return (int)i;
-  return -1;
+    for (size_t i=0;i<v.size();i++)
+        if (v[i]==element) return (int)i;
+    return -1;
 }
 
 vector<string> addprepostfix(const string& prefix, const vector<string>& names, const string& postfix)
 {
-  vector<string> newnames(names.size());
-  vector<string>::const_iterator it = names.begin();
-  vector<string>::iterator newit = newnames.begin();
-  while(it!=names.end())
+    vector<string> newnames(names.size());
+    vector<string>::const_iterator it = names.begin();
+    vector<string>::iterator newit = newnames.begin();
+    while(it!=names.end())
     {
-      *newit = prefix + *it + postfix;
-      ++it;
-      ++newit;
+        *newit = prefix + *it + postfix;
+        ++it;
+        ++newit;
     }
-  return newnames;
+    return newnames;
 }
 
 string addprepostfix(const string& prefix, const string& text, const string& postfix)
 {
-  size_t startpos = 0;
-  size_t endpos = 0;
-  string txt = removenewline(text);
-  string res;
-  while(endpos!=string::npos)
+    size_t startpos = 0;
+    size_t endpos = 0;
+    string txt = removenewline(text);
+    string res;
+    while(endpos!=string::npos)
     {
-      endpos = txt.find_first_of("\n",startpos);
-      if(endpos!=string::npos)
-        res += prefix + txt.substr(startpos, endpos-startpos) + postfix + "\n";
-      else
-        res += prefix + txt.substr(startpos) + postfix + "\n";
-      startpos = endpos + 1;
+        endpos = txt.find_first_of("\n",startpos);
+        if(endpos!=string::npos)
+            res += prefix + txt.substr(startpos, endpos-startpos) + postfix + "\n";
+        else
+            res += prefix + txt.substr(startpos) + postfix + "\n";
+        startpos = endpos + 1;
     }
-  return res;
+    return res;
 }
 
 vector<string> stringvector(int argc, char** argv)
 {
-  if(argc>0)
+    if(argc>0)
     {
-      vector<string> result(argc);
-      for(int i=0; i<argc; i++)
-        result[i] = string(argv[i]);
-      return result;
+        vector<string> result(argc);
+        for(int i=0; i<argc; i++)
+            result[i] = string(argv[i]);
+        return result;
     }
-  else
-    return vector<string>();
+    else
+        return vector<string>();
 }
 
 string get_option(const vector<string> &command_line, 
                   const string& option, const string& default_value)
 {
-  int n=(int)command_line.size();
-  for (int i=0;i<n;i++)
-    if (command_line[i]==option && i+1<n) return command_line[i+1];
-  return default_value;
+    int n=(int)command_line.size();
+    for (int i=0;i<n;i++)
+        if (command_line[i]==option && i+1<n) return command_line[i+1];
+    return default_value;
 }
 
 bool find(const vector<string> &command_line, const string& option)
 {
-  int n=(int)command_line.size();
-  for (int i=0;i<n;i++)
-    if (command_line[i]==option) return true;
-  return false;
+    int n=(int)command_line.size();
+    for (int i=0;i<n;i++)
+        if (command_line[i]==option) return true;
+    return false;
 }
 
 vector<string> getNonBlankLines(const string & in)
 {
-  vector<string> lines;
-  vector<string> nblines;
+    vector<string> lines;
+    vector<string> nblines;
 
-  char sep[3]={10,13,0};
-  lines= split(in,sep);
-  for(size_t i=0;i<lines.size();i++)
-    if(!isBlank(lines[i]))
-      nblines.push_back(lines[i]);
-  return nblines;
+    char sep[3]={10,13,0};
+    lines= split(in,sep);
+    for(size_t i=0;i<lines.size();i++)
+        if(!isBlank(lines[i]))
+            nblines.push_back(lines[i]);
+    return nblines;
 }
 
 
 ostream& operator<<(ostream& out, const vector<string>& vs)
 {
-  vector<string>::const_iterator it = vs.begin();
-  if(it!=vs.end())
+    vector<string>::const_iterator it = vs.begin();
+    if(it!=vs.end())
     {
-      out << *it;
-      ++it;
+        out << *it;
+        ++it;
     }
-  while(it!=vs.end())
+    while(it!=vs.end())
     {
-      out << ", " << *it;
-      ++it;
+        out << ", " << *it;
+        ++it;
     }
-  return out;
+    return out;
 }
 
 ///////////////////////
@@ -550,20 +550,20 @@ ostream& operator<<(ostream& out, const vector<string>& vs)
 ///////////////////////
 vector<string> split_from_string(const string& s, const string& delimiter)
 {
-  vector<string> res;
-  string::size_type pos_of_delim;
-  string::size_type pos_of_start = 0;
-  string::size_type size_of_delim = delimiter.size();
-  do {
-    pos_of_delim = s.find(delimiter, pos_of_start);
-    if (pos_of_delim == string::npos)
-      res.push_back(s.substr(pos_of_start));
-    else {
-      res.push_back(s.substr(pos_of_start, pos_of_delim - pos_of_start));
-      pos_of_start = pos_of_delim + size_of_delim;
-    }
-  } while (pos_of_delim != string::npos);
-  return res;
+    vector<string> res;
+    string::size_type pos_of_delim;
+    string::size_type pos_of_start = 0;
+    string::size_type size_of_delim = delimiter.size();
+    do {
+        pos_of_delim = s.find(delimiter, pos_of_start);
+        if (pos_of_delim == string::npos)
+            res.push_back(s.substr(pos_of_start));
+        else {
+            res.push_back(s.substr(pos_of_start, pos_of_delim - pos_of_start));
+            pos_of_start = pos_of_delim + size_of_delim;
+        }
+    } while (pos_of_delim != string::npos);
+    return res;
 }
 
 ////////////////////////////
@@ -575,30 +575,42 @@ void parseBaseAndParameters(const string& s, string& base,
                             map<string, string>* backup,
                             const string& delimiter)
 {
-  vector<string> splits = split_from_string(s, delimiter);
-  base = splits[0];
-  string name, value;
-  map<string, string>::const_iterator it;
-  if (backup)
-    backup->clear();
-  if (added)
-    added->clear();
-  for (vector<string>::size_type i = 1; i < splits.size(); i++) {
-    const string& str = splits[i];
-    if (str.find('=') == string::npos)
-      PLERROR("In parseBaseAndParameters - Could not find the '=' character when parsing "
-              "parameter '%s'", str.c_str());
-    split_on_first(str, "=", name, value);
-    if (name.empty())
-      PLERROR("In parseBaseAndParameters - Read an empty parameter name in string '%s'"
-              , s.c_str());
-    if (backup && (it = params.find(name)) != params.end())
-      (*backup)[name] = it->second;
-    params[name] = value;
+    vector<string> splits = split_from_string(s, delimiter);
+    base = splits[0];
+    string name, value;
+    map<string, string>::const_iterator it;
+    if (backup)
+        backup->clear();
     if (added)
-      (*added)[name] = value;
-  }
+        added->clear();
+    for (vector<string>::size_type i = 1; i < splits.size(); i++) {
+        const string& str = splits[i];
+        if (str.find('=') == string::npos)
+            PLERROR("In parseBaseAndParameters - Could not find the '=' character when parsing "
+                    "parameter '%s'", str.c_str());
+        split_on_first(str, "=", name, value);
+        if (name.empty())
+            PLERROR("In parseBaseAndParameters - Read an empty parameter name in string '%s'"
+                    , s.c_str());
+        if (backup && (it = params.find(name)) != params.end())
+            (*backup)[name] = it->second;
+        params[name] = value;
+        if (added)
+            (*added)[name] = value;
+    }
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

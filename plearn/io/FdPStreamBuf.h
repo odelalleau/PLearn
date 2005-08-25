@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FdPStreamBuf.h,v 1.6 2005/02/19 22:09:53 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -59,29 +59,29 @@ class FdPStreamBuf: public PStreamBuf
 
 private:
   
-  typedef PStreamBuf inherited;
+    typedef PStreamBuf inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  int in;   //!< input unix file descriptor (-1 if no input)
-  int out;  //!< output unix file descriptor (-1 if no output)
-  bool own_in, own_out; //!< true if {pin|pout} should be closed by this object upon destruction.
+    int in;   //!< input unix file descriptor (-1 if no input)
+    int out;  //!< output unix file descriptor (-1 if no output)
+    bool own_in, own_out; //!< true if {pin|pout} should be closed by this object upon destruction.
 
 public:
 
-  FdPStreamBuf(int in_fd=-1, int out_fd=-1,
-               bool own_in_=false, bool own_out_=false);
-  virtual ~FdPStreamBuf();
+    FdPStreamBuf(int in_fd=-1, int out_fd=-1,
+                 bool own_in_=false, bool own_out_=false);
+    virtual ~FdPStreamBuf();
 
 protected:
 
-  virtual streamsize read_(char* p, streamsize n);
+    virtual streamsize read_(char* p, streamsize n);
 
-  //! writes exactly n characters from p (unbuffered, must flush)
-  virtual void write_(const char* p, streamsize n);
+    //! writes exactly n characters from p (unbuffered, must flush)
+    virtual void write_(const char* p, streamsize n);
 
 };
 
@@ -89,3 +89,16 @@ protected:
 
 #endif // WIN32 vs POSIX
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

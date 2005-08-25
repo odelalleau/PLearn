@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: SparseVMatrix.h,v 1.8 2005/02/01 14:43:11 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -59,7 +59,7 @@ using namespace std;
 
 class SparseVMatrixRow
 {
-  public:
+public:
     int nelements; //!<  number of non zero elements in row 
     int row_startpos; //!<  index of first element of this row in both the positions and the values arrays
     SparseVMatrixRow(): nelements(0), row_startpos(0) {}
@@ -70,48 +70,48 @@ class SparseVMatrix : public RowBufferedVMatrix
     typedef RowBufferedVMatrix inherited;
 
 protected:
-  int nelements; //!<  total number of non-zero elements in the VMatrix  
-  unsigned short* positions;
-  float* values;
+    int nelements; //!<  total number of non-zero elements in the VMatrix  
+    unsigned short* positions;
+    float* values;
   
-  SparseVMatrixRow* rows;
+    SparseVMatrixRow* rows;
 
 public:
 
-  SparseVMatrix():
-    nelements(0),
-    positions(0),
-    values(0),
-    rows(0)
-  {}
+    SparseVMatrix():
+        nelements(0),
+        positions(0),
+        values(0),
+        rows(0)
+    {}
 
-  //!  This builds a sparse representation in memory of the VMat m passed
-  //!  as argument.  The original fieldinfos are copied as-is.
-  SparseVMatrix(VMat m);
+    //!  This builds a sparse representation in memory of the VMat m passed
+    //!  as argument.  The original fieldinfos are copied as-is.
+    SparseVMatrix(VMat m);
     
-  //!  This reloads a previously saved sparse VMatrix
-  SparseVMatrix(const string& filename);
+    //!  This reloads a previously saved sparse VMatrix
+    SparseVMatrix(const string& filename);
 
-  PLEARN_DECLARE_OBJECT(SparseVMatrix);
+    PLEARN_DECLARE_OBJECT(SparseVMatrix);
 
 protected:
 
-  static void declareOptions(OptionList &ol);
-  virtual void getNewRow(int i, const Vec& v) const;
+    static void declareOptions(OptionList &ol);
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  virtual void build();
+    virtual void build();
 
-  virtual real dot(int i1, int i2, int inputsize) const;
-  virtual real dot(int i, const Vec& v) const;
+    virtual real dot(int i1, int i2, int inputsize) const;
+    virtual real dot(int i, const Vec& v) const;
 
-  virtual void save(const PPath& filename) const
-  { Object::save(filename); } //!<  calls write
+    virtual void save(const PPath& filename) const
+    { Object::save(filename); } //!<  calls write
     //virtual void write(ostream& out) const;
     //virtual void oldread(istream& in);
   	
-  virtual ~SparseVMatrix();
+    virtual ~SparseVMatrix();
 private:
     void build_();
 };
@@ -120,3 +120,16 @@ DECLARE_OBJECT_PTR(SparseVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

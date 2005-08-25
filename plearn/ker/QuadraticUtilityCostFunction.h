@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: QuadraticUtilityCostFunction.h,v 1.4 2004/04/07 23:17:33 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef QuadraticUtilityCostFunction_INC
 #define QuadraticUtilityCostFunction_INC
@@ -54,7 +54,7 @@ using namespace std;
 */
 class QuadraticUtilityCostFunction : public Kernel
 {
-  typedef Kernel inherited;
+    typedef Kernel inherited;
 		
 protected:
     real risk_aversion;
@@ -62,20 +62,20 @@ protected:
 public:
     QuadraticUtilityCostFunction(){}
     QuadraticUtilityCostFunction(real the_risk_aversion, CostFunc the_profit)
-      : risk_aversion(the_risk_aversion), profit_function(the_profit)
+        : risk_aversion(the_risk_aversion), profit_function(the_profit)
     {}
 
     PLEARN_DECLARE_OBJECT(QuadraticUtilityCostFunction);
     
     virtual string info() const
-        { return "quadratic_risk"; }
+    { return "quadratic_risk"; }
 
     virtual real evaluate(const Vec& output, const Vec& target) const; 
 
 protected:
 /*!       Recognized option: "risk_aversion".
-      ALSO: options of the form "profit_function.XXX" are passed to the
-      profit_function kernel as "XXX".
+  ALSO: options of the form "profit_function.XXX" are passed to the
+  profit_function kernel as "XXX".
 */
     static void declareOptions(OptionList &ol);    
 };
@@ -84,10 +84,22 @@ DECLARE_OBJECT_PTR(QuadraticUtilityCostFunction);
 
 inline CostFunc quadratic_risk(real risk_aversion, CostFunc profit_function)
 {
-  return new QuadraticUtilityCostFunction(risk_aversion, profit_function);
+    return new QuadraticUtilityCostFunction(risk_aversion, profit_function);
 }
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

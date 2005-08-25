@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openSocket.cc,v 1.4 2005/01/14 21:47:25 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christian Hudon
 
@@ -71,36 +71,49 @@ PStream openSocket(const string& hostname, int port,
                    PStream::mode_t io_formatting,
                    const int timeout)
 {
-  PStream st;
-  st.setMode(io_formatting);
+    PStream st;
+    st.setMode(io_formatting);
   
-  PRFileDesc* socket = PR_NewTCPSocket();
-  if (!socket)
-    PLERROR("openSocket: socket creation failed! (Maybe you ran out of file descriptors?)");
+    PRFileDesc* socket = PR_NewTCPSocket();
+    if (!socket)
+        PLERROR("openSocket: socket creation failed! (Maybe you ran out of file descriptors?)");
 
-  // Look up the host name.
-  PRHostEnt host;
-  char buf[PR_NETDB_BUF_SIZE];
-  if (PR_GetHostByName(hostname.c_str(), buf, sizeof(buf), &host) != PR_SUCCESS)
-    PLERROR("openSocket(%s, %d) failed during host name lookup: %s",
-            hostname.c_str(), port, getPrErrorString().c_str());
+    // Look up the host name.
+    PRHostEnt host;
+    char buf[PR_NETDB_BUF_SIZE];
+    if (PR_GetHostByName(hostname.c_str(), buf, sizeof(buf), &host) != PR_SUCCESS)
+        PLERROR("openSocket(%s, %d) failed during host name lookup: %s",
+                hostname.c_str(), port, getPrErrorString().c_str());
 
-  // Iterate on every address for the host, until we can connect to one.
-  int host_entry_index = 0;
-  PRNetAddr address;
-  while ((host_entry_index = PR_EnumerateHostEnt(host_entry_index, &host,
-                                                 port, &address)) != 0)
+    // Iterate on every address for the host, until we can connect to one.
+    int host_entry_index = 0;
+    PRNetAddr address;
+    while ((host_entry_index = PR_EnumerateHostEnt(host_entry_index, &host,
+                                                   port, &address)) != 0)
     {
-      if (PR_Connect(socket, &address, timeout) == PR_SUCCESS)
+        if (PR_Connect(socket, &address, timeout) == PR_SUCCESS)
         {
-          st = new PrPStreamBuf(socket, socket, true, true);
-          return st;
+            st = new PrPStreamBuf(socket, socket, true, true);
+            return st;
         }
     }
 
-  PLERROR("openSocket(%s, %d) failed while trying to connect: %s",
-          hostname.c_str(), port, getPrErrorString().c_str());
-  return st;
+    PLERROR("openSocket(%s, %d) failed while trying to connect: %s",
+            hostname.c_str(), port, getPrErrorString().c_str());
+    return st;
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -37,9 +37,9 @@
  
 
 /* *******************************************************      
-   * $Id: Array_impl.h,v 1.5 2004/10/14 21:23:27 ducharme Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/Array.h */
@@ -55,19 +55,19 @@ using std::string;
 template <class T>
 void swap(Array<T>& a1, Array<T>& a2)
 {
-  T* a1d = a1.data();
-  T* a2d = a2.data();
-  T tmp;
+    T* a1d = a1.data();
+    T* a2d = a2.data();
+    T tmp;
 #ifdef BOUNDCHECK
-  if (a1.size()!=a2.size())
-    PLERROR("Array::swap expects two same-size arguments");
+    if (a1.size()!=a2.size())
+        PLERROR("Array::swap expects two same-size arguments");
 #endif
-  for(int i=0; i<a1.size(); i++)
-  {
-    tmp = a1d[i];
-    a1d[i]=a2d[i];
-    a2d[i]=tmp;
-  }
+    for(int i=0; i<a1.size(); i++)
+    {
+        tmp = a1d[i];
+        a1d[i]=a2d[i];
+        a2d[i]=tmp;
+    }
 }
 
 template <class T>
@@ -105,40 +105,40 @@ Array<T>& operator&=(Array<T>& a, const vector<T> &ar)
 template<class T>
 Array<T> operator&(const Array<T>& a, const T& elem)
 {
-  Array<T> newarray(a.size(), a.size()+1);
-  newarray = a;
-  newarray.append(elem);
-  return newarray;
+    Array<T> newarray(a.size(), a.size()+1);
+    newarray = a;
+    newarray.append(elem);
+    return newarray;
 }
 
 template<class T>
 Array<T> operator&(const Array<T>& a, const Array<T>& ar)
 {
-  Array<T> newarray(a.size(), a.size()+ar.size());
-  newarray = a;
-  newarray.append(ar);
-  return newarray;
+    Array<T> newarray(a.size(), a.size()+ar.size());
+    newarray = a;
+    newarray.append(ar);
+    return newarray;
 }
 
 template<class T>
 Array<T> operator&(const Array<T>& a, const vector<T> &ar)
 {
-  Array<T> newarray(a.size(), a.size() + ar.size());
-  newarray = a;
-  newarray.append(ar);
-  return newarray;
+    Array<T> newarray(a.size(), a.size() + ar.size());
+    newarray = a;
+    newarray.append(ar);
+    return newarray;
 }
 
 inline string join(const Array<string>& s, const string& separator)
 {
-  string result;
-  for(int i=0; i<s.size(); i++)
-  {
-    result += s[i];
-    if(i<s.size()-1)
-      result += separator;
-  }
-  return result;
+    string result;
+    for(int i=0; i<s.size(); i++)
+    {
+        result += s[i];
+        if(i<s.size()-1)
+            result += separator;
+    }
+    return result;
 }
 
 //!  This will allow a convenient way of building arrays of Matrices by writing ex: m1&m2&m3
@@ -148,63 +148,63 @@ inline Array< TVec<T> > operator&(const TVec<T>& m1, const TVec<T>& m2) { return
 template<class T>
 TVec<T> concat(const Array< TVec<T> >& varray)
 {
-  int l = 0;
-  for(int k=0; k<varray.size(); k++)
-    l += varray[k].length();
+    int l = 0;
+    for(int k=0; k<varray.size(); k++)
+        l += varray[k].length();
  
-  TVec<T> result(l);
-  real* resdata = result.data();
-  for(int k=0; k<varray.size(); k++)
-  {
-    const TVec<T>& v = varray[k];
-    real* vdata = varray[k].data();
-    for(int i=0; i<v.length(); i++)
-      resdata[i] = vdata[i];
-    resdata += v.length();
-  }
-  return result;
+    TVec<T> result(l);
+    real* resdata = result.data();
+    for(int k=0; k<varray.size(); k++)
+    {
+        const TVec<T>& v = varray[k];
+        real* vdata = varray[k].data();
+        for(int i=0; i<v.length(); i++)
+            resdata[i] = vdata[i];
+        resdata += v.length();
+    }
+    return result;
 }
 
 template<class T>
 TMat<T> vconcat(const Array< TMat<T> >& ar)
 {
-  int l = 0;
-  int w = ar[0].width();
-  for(int n=0; n<ar.size(); n++)
-  {
-    if(ar[n].width() != w)
-      PLERROR("In Mat vconcat(Array<Mat> ar) all Mats do not have the same width()!");
-    l += ar[n].length();
-  }
-  TMat<T> result(l, w);
-  int pos = 0;
-  for(int n=0; n<ar.size(); n++)
-  {
-    result.subMatRows(pos, ar[n].length()) << ar[n];
-    pos+=ar[n].length();  // do not put this line after the n++ in the for loop, or it will cause a bug!
-  }
-  return result;
+    int l = 0;
+    int w = ar[0].width();
+    for(int n=0; n<ar.size(); n++)
+    {
+        if(ar[n].width() != w)
+            PLERROR("In Mat vconcat(Array<Mat> ar) all Mats do not have the same width()!");
+        l += ar[n].length();
+    }
+    TMat<T> result(l, w);
+    int pos = 0;
+    for(int n=0; n<ar.size(); n++)
+    {
+        result.subMatRows(pos, ar[n].length()) << ar[n];
+        pos+=ar[n].length();  // do not put this line after the n++ in the for loop, or it will cause a bug!
+    }
+    return result;
 }
 
 template<class T>
 TMat<T> hconcat(const Array< TMat<T> >& ar)
 {
-  int w = 0;
-  int l = ar[0].length();
-  for(int n=0; n<ar.size(); n++)
-  {
-    if(ar[n].length() != l)
-      PLERROR("In Mat hconcat(Array<Mat> ar) all Mats do not have the same length()!");
-    w += ar[n].width();
-  }
-  TMat<T> result(l, w);
-  int pos = 0;
-  for(int n=0; n<ar.size(); n++)
-  {
-    result.subMatColumns(pos, ar[n].width()) << ar[n];
-    pos+=ar[n].width(); // do not put this line after the n++ in the for loop, or it will cause a bug!
-  }
-  return result;
+    int w = 0;
+    int l = ar[0].length();
+    for(int n=0; n<ar.size(); n++)
+    {
+        if(ar[n].length() != l)
+            PLERROR("In Mat hconcat(Array<Mat> ar) all Mats do not have the same length()!");
+        w += ar[n].width();
+    }
+    TMat<T> result(l, w);
+    int pos = 0;
+    for(int n=0; n<ar.size(); n++)
+    {
+        result.subMatColumns(pos, ar[n].width()) << ar[n];
+        pos+=ar[n].width(); // do not put this line after the n++ in the for loop, or it will cause a bug!
+    }
+    return result;
 }
 
 template<class T>
@@ -221,15 +221,28 @@ inline Array< TMat<T> > operator&(const TMat<T>& m1, const TMat<T>& m2) { return
 template<class T>
 void Array<T>::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  // Shallow copy of an array, contrarily to TVec, already makes a shallow copy of the elements, so we
-  // don't want to call deepCopyField(storage, copies) as TVec does, but simply deepCopyField()
-  // of each of the storage's elements.
-  if (storage.isNotNull())
-    for (int i = 0; i < storage->size(); i++)
-        deepCopyField(storage->data[i], copies);
+    // Shallow copy of an array, contrarily to TVec, already makes a shallow copy of the elements, so we
+    // don't want to call deepCopyField(storage, copies) as TVec does, but simply deepCopyField()
+    // of each of the storage's elements.
+    if (storage.isNotNull())
+        for (int i = 0; i < storage->size(); i++)
+            deepCopyField(storage->data[i], copies);
 }
 
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

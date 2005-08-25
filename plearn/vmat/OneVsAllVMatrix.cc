@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: .pyskeleton_header,v 1.1 2003/09/01 00:05:31 plearner Exp $ 
-   ******************************************************* */
+ * $Id: .pyskeleton_header,v 1.1 2003/09/01 00:05:31 plearner Exp $ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle
 
@@ -50,32 +50,32 @@ using namespace std;
 // OneVsAllVMatrix //
 //////////////////
 OneVsAllVMatrix::OneVsAllVMatrix()
-  : inherited(),
-  target_class(0)
+    : inherited(),
+      target_class(0)
 {
 
 }
 
 OneVsAllVMatrix::OneVsAllVMatrix(VMat the_source,int the_target_class)
-  : inherited(the_source),
-  target_class(the_target_class)
+    : inherited(the_source),
+      target_class(the_target_class)
 {
-  build();
+    build();
 }
 
 
 PLEARN_IMPLEMENT_OBJECT(OneVsAllVMatrix,
-    "Changes the target so that it is 1 if the target is equal to target_class, 0 if not",
-    ""
-);
+                        "Changes the target so that it is 1 if the target is equal to target_class, 0 if not",
+                        ""
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void OneVsAllVMatrix::declareOptions(OptionList& ol)
 {
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ///////////
@@ -83,8 +83,8 @@ void OneVsAllVMatrix::declareOptions(OptionList& ol)
 ///////////
 void OneVsAllVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -92,18 +92,18 @@ void OneVsAllVMatrix::build()
 ////////////
 void OneVsAllVMatrix::build_()
 {
-  if(source)
-  {
-    inputsize_ = source->inputsize();
-    targetsize_ = source->targetsize();
-    weightsize_ = source->weightsize();
-    //fieldinfos = source->fieldinfos;
-    length_ = source.length();
-    width_ = inputsize_+targetsize_+weightsize_;
-    sourcerow.resize(source->width());
-    if(targetsize_ != 1)
-      PLERROR("OneVsAllVMatrix::build_(): targetsize_ should be 1");
-  }
+    if(source)
+    {
+        inputsize_ = source->inputsize();
+        targetsize_ = source->targetsize();
+        weightsize_ = source->weightsize();
+        //fieldinfos = source->fieldinfos;
+        length_ = source.length();
+        width_ = inputsize_+targetsize_+weightsize_;
+        sourcerow.resize(source->width());
+        if(targetsize_ != 1)
+            PLERROR("OneVsAllVMatrix::build_(): targetsize_ should be 1");
+    }
 }
 
 ///////////////
@@ -111,8 +111,8 @@ void OneVsAllVMatrix::build_()
 ///////////////
 void OneVsAllVMatrix::getNewRow(int i, const Vec& v) const
 {
-  source->getRow(i,v);
-  v[inputsize_] = int(v[inputsize_]) == target_class;
+    source->getRow(i,v);
+    v[inputsize_] = int(v[inputsize_]) == target_class;
 }
 
 /////////////////////////////////
@@ -120,10 +120,22 @@ void OneVsAllVMatrix::getNewRow(int i, const Vec& v) const
 /////////////////////////////////
 void OneVsAllVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  //PLERROR("OneVsAllVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    //PLERROR("OneVsAllVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

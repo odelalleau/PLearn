@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: ProgressBar.cc,v 1.9 2004/07/21 16:30:50 chrish42 Exp $
-   * AUTHORS: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 //#include <iomanip>
 #include "ProgressBar.h"
@@ -54,78 +54,78 @@ namespace PLearn {
 using namespace std;
 
 
-  PP<ProgressBarPlugin> ProgressBar::plugin; // = new TextProgressBarPlugin(cerr);
+PP<ProgressBarPlugin> ProgressBar::plugin; // = new TextProgressBarPlugin(cerr);
 
 PP<ProgressBarPlugin> ProgressBar::getCurrentPlugin() 
 { 
-  if (plugin == NULL)
-    plugin = new TextProgressBarPlugin(cerr);
-  return plugin; 
+    if (plugin == NULL)
+        plugin = new TextProgressBarPlugin(cerr);
+    return plugin; 
 }
 
 ProgressBar::ProgressBar(string _title, unsigned long the_maxpos)
-  :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
+    :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
 {
-  if (plugin == NULL)
-    plugin = new TextProgressBarPlugin(cerr);
+    if (plugin == NULL)
+        plugin = new TextProgressBarPlugin(cerr);
     
-  plugin->addProgressBar(this);
+    plugin->addProgressBar(this);
 }
 
 ProgressBar::ProgressBar(ostream& _out, string _title, unsigned long the_maxpos)
-  :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
+    :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
 {
-  if (plugin == NULL)
-    plugin = new TextProgressBarPlugin(cerr);
+    if (plugin == NULL)
+        plugin = new TextProgressBarPlugin(cerr);
 
-  plugin->addProgressBar(this);
+    plugin->addProgressBar(this);
 }
 ProgressBar::ProgressBar(PStream& _out, string _title, unsigned long the_maxpos)
-  :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
+    :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
 {
-  if (plugin == NULL)
-    plugin = new TextProgressBarPlugin(cerr);
+    if (plugin == NULL)
+        plugin = new TextProgressBarPlugin(cerr);
 
-  plugin->addProgressBar(this);
+    plugin->addProgressBar(this);
 }
 
 ProgressBar::~ProgressBar() 
 {
-  close();
+    close();
 }
 
 void ProgressBar::close()
 { 
-  if(closed)
-    return;
-  closed=true;
-  if(currentpos<maxpos)
-    operator()(maxpos); 
-  plugin->killProgressBar(this);
+    if(closed)
+        return;
+    closed=true;
+    if(currentpos<maxpos)
+        operator()(maxpos); 
+    plugin->killProgressBar(this);
 }              
 
 TextProgressBarPlugin::TextProgressBarPlugin(ostream& _out)
-  :out(&_out)
+    :out(&_out)
 {
-  out.outmode=PStream::raw_ascii;
+    out.outmode=PStream::raw_ascii;
 }
 
 TextProgressBarPlugin::TextProgressBarPlugin(PStream& _out)
-  :out(_out)
+    :out(_out)
 {
 }
 
 void TextProgressBarPlugin::addProgressBar(ProgressBar * pb)
 {
 #if USING_MPI
-  if(PLMPI::rank==0)
-  {
+    if(PLMPI::rank==0)
+    {
 #endif
-    string fulltitle = string(" ") + pb->title + " (" + tostring(pb->maxpos) + ") ";
-    out << "[" + center(fulltitle,100,'-') + "]\n[";
-    out.flush();
+        string fulltitle = string(" ") + pb->title + " (" + tostring(pb->maxpos) + ") ";
+        out << "[" + center(fulltitle,100,'-') + "]\n[";
+        out.flush();
 #if USING_MPI
-  }
+    }
 #endif
 }
 
@@ -133,39 +133,48 @@ void TextProgressBarPlugin::update(ProgressBar * pb,unsigned long newpos)
 {
 #if USING_MPI
     if(PLMPI::rank==0)
-      {
+    {
 #endif
         // this handles the case where we reuse the same progress bar
         if(newpos < pb->currentpos)
         {
-          pb->currentpos=0;
-          string fulltitle = string(" ") + pb->title + " (" + tostring(pb->maxpos) + ") ";
-          out << "\n[" + center(fulltitle,100,'-') + "]\n[";
-          out.flush();
+            pb->currentpos=0;
+            string fulltitle = string(" ") + pb->title + " (" + tostring(pb->maxpos) + ") ";
+            out << "\n[" + center(fulltitle,100,'-') + "]\n[";
+            out.flush();
         }
 
         if(!pb->maxpos || newpos>pb->maxpos)
-          return;
+            return;
         int ndots = int(newpos / (double(pb->maxpos) / 100)) - int(pb->currentpos / (double(pb->maxpos) / 100));
         if (ndots < 0)
-          PLERROR("In TextProgressBarPlugin::update - Trying to plot an infinite number of dots");
+            PLERROR("In TextProgressBarPlugin::update - Trying to plot an infinite number of dots");
         while(ndots--)
-          out << '.';
+            out << '.';
         out.flush();
         pb->currentpos = newpos;
         if(pb->currentpos==pb->maxpos)
-          {
+        {
             out << "]";
             out << endl;
-          }
+        }
 #if USING_MPI
-      }
+    }
 #endif
 }
 
 
 } // end of namespace PLearn
 
-
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

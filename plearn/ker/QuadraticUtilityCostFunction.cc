@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: QuadraticUtilityCostFunction.cc,v 1.4 2004/04/07 23:17:33 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "QuadraticUtilityCostFunction.h"
 
@@ -49,8 +49,8 @@ PLEARN_IMPLEMENT_OBJECT(QuadraticUtilityCostFunction, "ONE LINE DESCR", "NO HELP
 
 real QuadraticUtilityCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
-  real profit = profit_function(output,target);
-  return  -profit + risk_aversion*profit*profit;
+    real profit = profit_function(output,target);
+    return  -profit + risk_aversion*profit*profit;
 }
 
 void QuadraticUtilityCostFunction::declareOptions(OptionList &ol)
@@ -63,3 +63,15 @@ void QuadraticUtilityCostFunction::declareOptions(OptionList &ol)
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

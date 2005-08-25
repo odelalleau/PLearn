@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerProcessedVMatrix.h,v 1.10 2004/09/14 16:04:39 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file LearnerProcessedVMatrix.h */
 #ifndef LearnerProcessedVMatrix_INC
@@ -49,69 +49,82 @@ using namespace std;
 
 class LearnerProcessedVMatrix: public RowBufferedVMatrix
 {
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  //! The source vmatrix whose inputs wil be porcessed by the learner
-  //! If present, the target and weight columns will be appended to the processed input in the resulting matrix.
-  VMat source; 
+    //! The source vmatrix whose inputs wil be porcessed by the learner
+    //! If present, the target and weight columns will be appended to the processed input in the resulting matrix.
+    VMat source; 
 
-  //! The learner used to process the VMat's input.
-  PP<PLearner> learner;
+    //! The learner used to process the VMat's input.
+    PP<PLearner> learner;
 
-  //! Indicates if the learner should be trained on the source, and on what part
-  //! '0': don't train
-  //! 'S': supervised training using input and target (possibly weighted if weight is  present)
-  //! 'U': unsupervised training using only input part (possibly weighted if weight is present). 
-  char train_learner; 
+    //! Indicates if the learner should be trained on the source, and on what part
+    //! '0': don't train
+    //! 'S': supervised training using input and target (possibly weighted if weight is  present)
+    //! 'U': unsupervised training using only input part (possibly weighted if weight is present). 
+    char train_learner; 
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  LearnerProcessedVMatrix();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    LearnerProcessedVMatrix();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
-  //!  This is the only method requiring implementation
-  virtual void getNewRow(int i, const Vec& v) const;
+    //!  This is the only method requiring implementation
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(LearnerProcessedVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(LearnerProcessedVMatrix);
 };
 
 DECLARE_OBJECT_PTR(LearnerProcessedVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

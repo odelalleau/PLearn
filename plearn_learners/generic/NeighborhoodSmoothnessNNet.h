@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.h,v 1.11 2005/06/15 14:40:39 lamblin Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/NeighborhoodSmoothnessNNet.h */
 
@@ -53,7 +53,7 @@ using namespace std;
 class NeighborhoodSmoothnessNNet: public PLearner
 {
 
-  protected:
+protected:
 
     Var input;  // Var(inputsize())
     Var target; // Var(targetsize()-weightsize())
@@ -81,14 +81,14 @@ class NeighborhoodSmoothnessNNet: public PLearner
 
     Var p_ij;       // The probabilities p_ij on the inputs.
 
-  public:
+public:
 
     mutable Func f; // input -> output
     Func f_input_to_hidden; // input -> hidden
     mutable Func test_costf; // input & target -> output & test_costs
     mutable Func output_and_target_to_cost; // output & target -> cost
 
-  public:
+public:
     
     typedef PLearner inherited;
 
@@ -133,11 +133,11 @@ class NeighborhoodSmoothnessNNet: public PLearner
     int batch_size; // how many samples to use to estimate gradient before an update
                     // 0 means the whole training set (default: 1)
 
-  private:
+private:
 
     void build_();
 
-  public:
+public:
 
     NeighborhoodSmoothnessNNet();
     virtual ~NeighborhoodSmoothnessNNet();
@@ -164,15 +164,27 @@ class NeighborhoodSmoothnessNNet: public PLearner
 
     virtual void makeDeepCopyFromShallowCopy(CopiesMap &copies);
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
     void initializeParams();
 
-  };
+};
 
-  DECLARE_OBJECT_PTR(NeighborhoodSmoothnessNNet);
+DECLARE_OBJECT_PTR(NeighborhoodSmoothnessNNet);
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

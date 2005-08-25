@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id$
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "RowBufferedVMatrix.h"
 #include <plearn/math/TMat_maths.h>
@@ -47,132 +47,132 @@ using namespace std;
 /** RowBufferedVMatrix **/
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(RowBufferedVMatrix,
-    "A base class for VMatrices that keep the last row(s) in a buffer for faster access.",
-    "");
+                                 "A base class for VMatrices that keep the last row(s) in a buffer for faster access.",
+                                 "");
 
 RowBufferedVMatrix::RowBufferedVMatrix(int the_length, int the_width)
-  :VMatrix(the_length, the_width), 
-  current_row_index(-1), current_row(the_width), 
-  other_row_index(-1), other_row(the_width) 
+    :VMatrix(the_length, the_width), 
+     current_row_index(-1), current_row(the_width), 
+     other_row_index(-1), other_row(the_width) 
 {}
 
 RowBufferedVMatrix::RowBufferedVMatrix()
-  :current_row_index(-1), other_row_index(-1)
+    :current_row_index(-1), other_row_index(-1)
 {}
 
 
 void RowBufferedVMatrix::invalidateBuffer() const
 {
-  current_row_index = -1;
-  other_row_index = -1;
+    current_row_index = -1;
+    other_row_index = -1;
 }
 
 
 real RowBufferedVMatrix::get(int i, int j) const
 {
-  if(current_row_index!=i)
+    if(current_row_index!=i)
     {
 #ifdef BOUNDCHECK
-      if (i < 0 || i >= length())
-        PLERROR("In RowBufferedVMatrix::get: row index (%d) outside valid range [%d,%d]", i, 0, length_-1);
-      if (j < 0 || j >= width())
-        PLERROR("In RowBufferedVMatrix::get: column index (%d) outside valid range [%d,%d]", i, 0, width_-1);        
+        if (i < 0 || i >= length())
+            PLERROR("In RowBufferedVMatrix::get: row index (%d) outside valid range [%d,%d]", i, 0, length_-1);
+        if (j < 0 || j >= width())
+            PLERROR("In RowBufferedVMatrix::get: column index (%d) outside valid range [%d,%d]", i, 0, width_-1);        
 #endif
-      current_row.resize(width_);
-      getNewRow(i, current_row);
-      current_row_index = i;
+        current_row.resize(width_);
+        getNewRow(i, current_row);
+        current_row_index = i;
     }
-  return current_row[j];
+    return current_row[j];
 }
 
 
 void RowBufferedVMatrix::getRow(int i, Vec v) const {
-  if (current_row_index != i) {
+    if (current_row_index != i) {
 #ifdef BOUNDCHECK
-      if (i < 0 || i >= length())
-        PLERROR("In RowBufferedVMatrix::getRow: row index (%d) outside valid range [%d,%d]", i, 0, length_-1);
+        if (i < 0 || i >= length())
+            PLERROR("In RowBufferedVMatrix::getRow: row index (%d) outside valid range [%d,%d]", i, 0, length_-1);
 #endif
-    current_row.resize(width_);
-    getNewRow(i, current_row);
-    current_row_index = i;
-  }
-  if (width_ > 0)
-    v.copyFrom(current_row.data(), width_);
+        current_row.resize(width_);
+        getNewRow(i, current_row);
+        current_row_index = i;
+    }
+    if (width_ > 0)
+        v.copyFrom(current_row.data(), width_);
 }
 
 
 void RowBufferedVMatrix::getSubRow(int i, int j, Vec v) const
 {
-  if(current_row_index!=i)
+    if(current_row_index!=i)
     {
 #ifdef BOUNDCHECK
-      if (i < 0 || i >= length())
-        PLERROR("In RowBufferedVMatrix::getSubRow: row index (%d) outside valid range [%d,%d]", i, 0, length_-1);
-      if (j < 0 || j >= width())
-        PLERROR("In RowBufferedVMatrix::getSubRow: column index (%d) outside valid range [%d,%d]", i, 0, width_-1);        
+        if (i < 0 || i >= length())
+            PLERROR("In RowBufferedVMatrix::getSubRow: row index (%d) outside valid range [%d,%d]", i, 0, length_-1);
+        if (j < 0 || j >= width())
+            PLERROR("In RowBufferedVMatrix::getSubRow: column index (%d) outside valid range [%d,%d]", i, 0, width_-1);        
 #endif
-      current_row.resize(width_);
-      getNewRow(i,current_row);
-      current_row_index = i;
+        current_row.resize(width_);
+        getNewRow(i,current_row);
+        current_row_index = i;
     }
-  if (v.length() > 0)
-    v.copyFrom(current_row.data()+j, v.length());
+    if (v.length() > 0)
+        v.copyFrom(current_row.data()+j, v.length());
 }
 
 
 real RowBufferedVMatrix::dot(int i1, int i2, int inputsize) const
 {
 #ifdef BOUNDCHECK
-      if (i1 < 0 || i1 >= length())
+    if (i1 < 0 || i1 >= length())
         PLERROR("In RowBufferedVMatrix::dot: first row index (%d) outside valid range [%d,%d]", i1, 0, length_-1);
-      if (i2 < 0 || i2 >= length())
+    if (i2 < 0 || i2 >= length())
         PLERROR("In RowBufferedVMatrix::dot: second row index (%d) outside valid range [%d,%d]", i2, 0, length_-1);
 #endif
-  int w = width_;
-  current_row.resize(w);
-  other_row.resize(w);
+    int w = width_;
+    current_row.resize(w);
+    other_row.resize(w);
 
-  if(i1==current_row_index)
+    if(i1==current_row_index)
     {
-      if(i2==i1)
-        return pownorm(current_row.subVec(0,inputsize));
-      if(i2!=other_row_index)
+        if(i2==i1)
+            return pownorm(current_row.subVec(0,inputsize));
+        if(i2!=other_row_index)
         {
-          getNewRow(i2,other_row);
-          other_row_index = i2;
+            getNewRow(i2,other_row);
+            other_row_index = i2;
         }
     }
-  else if(i1==other_row_index)
+    else if(i1==other_row_index)
     {
-      if(i2==i1)
-        return pownorm(other_row.subVec(0,inputsize));
-      if(i2!=current_row_index)
+        if(i2==i1)
+            return pownorm(other_row.subVec(0,inputsize));
+        if(i2!=current_row_index)
         {
-          getNewRow(i2,current_row);
-          current_row_index = i2;
+            getNewRow(i2,current_row);
+            current_row_index = i2;
         }
     }
-  else // i1 not cached
+    else // i1 not cached
     {
-      if(i2==current_row_index)
+        if(i2==current_row_index)
         {
-          getNewRow(i1,other_row);
-          other_row_index = i1;
+            getNewRow(i1,other_row);
+            other_row_index = i1;
         }
-      else if(i2==other_row_index)
+        else if(i2==other_row_index)
         {
-          getNewRow(i1,current_row);
-          current_row_index = i1;
+            getNewRow(i1,current_row);
+            current_row_index = i1;
         }
-      else // neither i1 nor i2 are cached
+        else // neither i1 nor i2 are cached
         {
-          getNewRow(i1,current_row);
-          getNewRow(i2,other_row);
-          current_row_index = i1;
-          other_row_index = i2;
+            getNewRow(i1,current_row);
+            getNewRow(i2,other_row);
+            current_row_index = i1;
+            other_row_index = i2;
         }
     }
-  return PLearn::dot(current_row.subVec(0,inputsize), other_row.subVec(0,inputsize));
+    return PLearn::dot(current_row.subVec(0,inputsize), other_row.subVec(0,inputsize));
 }
  
 /////////
@@ -180,26 +180,39 @@ real RowBufferedVMatrix::dot(int i1, int i2, int inputsize) const
 /////////
 real RowBufferedVMatrix::dot(int i, const Vec& v) const
 {
-  if(i!=current_row_index)
+    if(i!=current_row_index)
     {
 #ifdef BOUNDCHECK
-      if (i < 0 || i >= length())
-        PLERROR("In RowBufferedVMatrix::dot: row index (%d) outside valid range [%d,%d]", i, 0, length_-1);
+        if (i < 0 || i >= length())
+            PLERROR("In RowBufferedVMatrix::dot: row index (%d) outside valid range [%d,%d]", i, 0, length_-1);
 #endif
-      current_row.resize(width_);
-      getNewRow(i,current_row);
-      current_row_index = i;
+        current_row.resize(width_);
+        getNewRow(i,current_row);
+        current_row_index = i;
     }
-  return PLearn::dot(current_row.subVec(0,v.length()),v);
+    return PLearn::dot(current_row.subVec(0,v.length()),v);
 }
 
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
 void RowBufferedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(current_row, copies);
-  deepCopyField(other_row, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(current_row, copies);
+    deepCopyField(other_row, copies);
 }
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

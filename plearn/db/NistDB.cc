@@ -36,10 +36,10 @@
 
 
 /* *******************************************************      
-   * $Id: NistDB.cc,v 1.3 2004/02/26 06:39:03 nova77 Exp $
-   * AUTHORS: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "NistDB.h"
 
@@ -50,47 +50,47 @@ using namespace std;
 #define DO_RESCALE
 
 NistDB::NistDB(bool train)
-  :VMatrix(60000, 28*28+1)
+    :VMatrix(60000, 28*28+1)
 {
-  if(train)
+    if(train)
     {
-      imagef.open("/u/lisa/Database/MNIST/train-images-idx3-ubyte");
-      labelf.open("/u/lisa/Database/MNIST/train-labels-idx1-ubyte");
-      length_ = 60000;
+        imagef.open("/u/lisa/Database/MNIST/train-images-idx3-ubyte");
+        labelf.open("/u/lisa/Database/MNIST/train-labels-idx1-ubyte");
+        length_ = 60000;
     }
-  else
+    else
     {
-      //      imagef.open("/u/lisa/Database/MNIST/test-images.idx3-ubyte");
-      //      labelf.open("/u/lisa/Database/MNIST/test-labels.idx1-ubyte");
-      //      length_ = 60000;
-      imagef.open("/u/lisa/Database/MNIST/t10k-images-idx3-ubyte");
-      labelf.open("/u/lisa/Database/MNIST/t10k-labels-idx1-ubyte");
-      length_ = 10000;
+        //      imagef.open("/u/lisa/Database/MNIST/test-images.idx3-ubyte");
+        //      labelf.open("/u/lisa/Database/MNIST/test-labels.idx1-ubyte");
+        //      length_ = 60000;
+        imagef.open("/u/lisa/Database/MNIST/t10k-images-idx3-ubyte");
+        labelf.open("/u/lisa/Database/MNIST/t10k-labels-idx1-ubyte");
+        length_ = 10000;
     }
-  if(!imagef)
-    PLERROR("In NistDB constructor could not open imagefile for reading");
-  if(!labelf)
-    PLERROR("In NistDB constructor could not open labelfile for reading");
+    if(!imagef)
+        PLERROR("In NistDB constructor could not open imagefile for reading");
+    if(!labelf)
+        PLERROR("In NistDB constructor could not open labelfile for reading");
 }
   
 real NistDB::get(int i, int j) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length() || j<0 || j>=width())
-    PLERROR("In NistDB::get OUT OF BOUNDS");
+    if(i<0 || i>=length() || j<0 || j>=width())
+        PLERROR("In NistDB::get OUT OF BOUNDS");
 #endif
-  if(j==width()-1) // then read from labelf
+    if(j==width()-1) // then read from labelf
     {
-      labelf.seekg(8+i);
-      return real(labelf.get());
+        labelf.seekg(8+i);
+        return real(labelf.get());
     }
-  else // read from imagef
+    else // read from imagef
     {
-      imagef.seekg(16+i*(28*28)+j);
+        imagef.seekg(16+i*(28*28)+j);
 #ifdef DO_RESCALE
-      return real(imagef.get())/255.0;
+        return real(imagef.get())/255.0;
 #else
-      return real(imagef.get());
+        return real(imagef.get());
 #endif
     }
 }
@@ -98,32 +98,32 @@ real NistDB::get(int i, int j) const
 void NistDB::getSubRow(int i, int j, Vec v) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length() || j<0 || j+v.length()>width())
-    PLERROR("In NistDB::getSubRow OUT OF BOUNDS");
+    if(i<0 || i>=length() || j<0 || j+v.length()>width())
+        PLERROR("In NistDB::getSubRow OUT OF BOUNDS");
 #endif
   
-  int npixelstoread = v.length();
-  if(j+v.length()==width())
+    int npixelstoread = v.length();
+    if(j+v.length()==width())
     {
-      labelf.seekg(8+i);
-      v[v.length()-1] = real(labelf.get());
-      npixelstoread--;
+        labelf.seekg(8+i);
+        v[v.length()-1] = real(labelf.get());
+        npixelstoread--;
     }
 
-  if(j<width()-1)
+    if(j<width()-1)
     {
-      imagef.seekg(16+i*(28*28)+j);
+        imagef.seekg(16+i*(28*28)+j);
 #if __GNUC__ < 3 && !defined(WIN32)
-      imagef.read(buf, npixelstoread);
+        imagef.read(buf, npixelstoread);
 #else
-      imagef.read(reinterpret_cast<char*>(buf), npixelstoread);
+        imagef.read(reinterpret_cast<char*>(buf), npixelstoread);
 #endif
-      for(int k=0; k<npixelstoread; k++)
+        for(int k=0; k<npixelstoread; k++)
         {
 #ifdef DO_RESCALE
-          v[k] = real(buf[k])/255.0;
+            v[k] = real(buf[k])/255.0;
 #else
-          v[k] = real(buf[k]);
+            v[k] = real(buf[k]);
 #endif
         }
     }
@@ -138,3 +138,16 @@ void NistDB::getSubRow(int i, int j, Vec v) const
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

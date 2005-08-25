@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: LogAddVariable.cc,v 1.8 2004/11/24 18:25:56 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ExpVariable.h"
 #include "LogAddVariable.h"
@@ -61,7 +61,7 @@ PLEARN_IMPLEMENT_OBJECT(LogAddVariable,
                         "NO HELP");
 
 LogAddVariable::LogAddVariable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, input1->length(), input1->width())
+    : inherited(input1, input2, input1->length(), input1->width())
 {
     build_();
 }
@@ -93,35 +93,46 @@ void LogAddVariable::recomputeSize(int& l, int& w) const
 
 void LogAddVariable::fprop()
 {
-  // Ugly hack to make it compile with ICC.
+    // Ugly hack to make it compile with ICC.
 #ifdef __INTEL_COMPILER
-  PLearn::apply(input1->value,input2->value,value, logadd_for_icc);
+    PLearn::apply(input1->value,input2->value,value, logadd_for_icc);
 #else
-  PLearn::apply(input1->value,input2->value,value, logadd);
+    PLearn::apply(input1->value,input2->value,value, logadd);
 #endif
 }
 
 void LogAddVariable::bprop()
 {
-  Vec grad1(nelems());
-  grad1 = input1->value - value;
-  apply(grad1, grad1, safeexp);
-  input1->gradient += grad1%gradient;
+    Vec grad1(nelems());
+    grad1 = input1->value - value;
+    apply(grad1, grad1, safeexp);
+    input1->gradient += grad1%gradient;
 
-  Vec grad2(nelems());
-  grad2 = input2->value - value;
-  apply(grad2, grad2, safeexp);
-  input2->gradient += grad2%gradient;
+    Vec grad2(nelems());
+    grad2 = input2->value - value;
+    apply(grad2, grad2, safeexp);
+    input2->gradient += grad2%gradient;
 }
 
 void LogAddVariable::symbolicBprop()
 {
-  input1->accg(g * (exp(input1)/(exp(input1)+exp(input2))));
-  input2->accg(g * (exp(input2)/(exp(input1)+exp(input2))));
+    input1->accg(g * (exp(input1)/(exp(input1)+exp(input2))));
+    input2->accg(g * (exp(input2)/(exp(input1)+exp(input2))));
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

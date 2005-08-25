@@ -18,24 +18,37 @@ using namespace PLearn;
 
 int main()
 {
-  vector<real> data(n);
-  for (int i=0; i<n; ++i)
-    data[i] = gaussian_01();
-  make_heap(data.begin(), data.end());
+    vector<real> data(n);
+    for (int i=0; i<n; ++i)
+        data[i] = gaussian_01();
+    make_heap(data.begin(), data.end());
 
-  assert(is_valid_heap(data.begin(), data.end()));
+    assert(is_valid_heap(data.begin(), data.end()));
 
-  // Destroy heap and reconstruct it
-  for (int i=0; i<m; ++i) {
-    int j = int(bounded_uniform(0,n));
-    assert(j>=0 && j<n);
+    // Destroy heap and reconstruct it
+    for (int i=0; i<m; ++i) {
+        int j = int(bounded_uniform(0,n));
+        assert(j>=0 && j<n);
 
-    data[j] = gaussian_01();
-    if (! is_valid_heap(data.begin(), data.end())) {
-      update_heap(data.begin(), data.end(), data.begin()+j);
-      assert(is_valid_heap(data.begin(), data.end()));
+        data[j] = gaussian_01();
+        if (! is_valid_heap(data.begin(), data.end())) {
+            update_heap(data.begin(), data.end(), data.begin()+j);
+            assert(is_valid_heap(data.begin(), data.end()));
+        }
     }
-  }
 
-  cout << "Heap condition successfully restored" << endl;
+    cout << "Heap condition successfully restored" << endl;
 }
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

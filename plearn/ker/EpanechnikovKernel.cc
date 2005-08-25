@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EpanechnikovKernel.cc,v 1.3 2004/12/25 08:02:03 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -47,25 +47,25 @@ namespace PLearn {
 using namespace std;
 
 EpanechnikovKernel::EpanechnikovKernel()
-  : gamma(1)
+    : gamma(1)
 {
 }
 
 PLEARN_IMPLEMENT_OBJECT(
-  EpanechnikovKernel,
-  "Classical Epanechnikov kernel for local regression",
-  "The Epanechnikov kernel is very appropriate for locally-weighted regression\n"
-  "and nearest-neighbors problems.  It is designed to have finite support, unlike\n"
-  "the GaussianKernel, and integrates to 1. \n"
-  "(For examples of use, see KNNRegressor, KNNClassifier, and\n"
-  "classes derived from GenericNearestNeighbors.)\n"
-  "\n"
-  "In each dimension, the Epanechnikov kernel is defined as follows:\n"
-  "    K_gamma(x0,x) = D(|x-x0|/gamma) \n"
-  "where\n"
-  "    D(t) = 3/4 (1-t^2),   if |t| <= 1;\n"
-  "         = 0          ,   otherwise,\n"
-  "with the user-specified gamma a smoothing parameter.\n");
+    EpanechnikovKernel,
+    "Classical Epanechnikov kernel for local regression",
+    "The Epanechnikov kernel is very appropriate for locally-weighted regression\n"
+    "and nearest-neighbors problems.  It is designed to have finite support, unlike\n"
+    "the GaussianKernel, and integrates to 1. \n"
+    "(For examples of use, see KNNRegressor, KNNClassifier, and\n"
+    "classes derived from GenericNearestNeighbors.)\n"
+    "\n"
+    "In each dimension, the Epanechnikov kernel is defined as follows:\n"
+    "    K_gamma(x0,x) = D(|x-x0|/gamma) \n"
+    "where\n"
+    "    D(t) = 3/4 (1-t^2),   if |t| <= 1;\n"
+    "         = 0          ,   otherwise,\n"
+    "with the user-specified gamma a smoothing parameter.\n");
 
 
 ////////////////////
@@ -73,12 +73,12 @@ PLEARN_IMPLEMENT_OBJECT(
 ////////////////////
 void EpanechnikovKernel::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "gamma", &EpanechnikovKernel::gamma,
-                OptionBase::buildoption,
-                "Smoothing parameter for the Epanechnikov kernel (default=1.0)");
+    declareOption(ol, "gamma", &EpanechnikovKernel::gamma,
+                  OptionBase::buildoption,
+                  "Smoothing parameter for the Epanechnikov kernel (default=1.0)");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ///////////
@@ -86,9 +86,9 @@ void EpanechnikovKernel::declareOptions(OptionList& ol)
 ///////////
 void EpanechnikovKernel::build()
 {
-  // ### Nothing to add here, simply calls build_
-  inherited::build();
-  build_();
+    // ### Nothing to add here, simply calls build_
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -96,8 +96,8 @@ void EpanechnikovKernel::build()
 ////////////
 void EpanechnikovKernel::build_()
 {
-  if (gamma <= 0.0)
-    PLERROR("EpanechnikovKernel::build_: the 'gamma' option must be strictly positive");
+    if (gamma <= 0.0)
+        PLERROR("EpanechnikovKernel::build_: the 'gamma' option must be strictly positive");
 }
 
 //////////////
@@ -105,10 +105,10 @@ void EpanechnikovKernel::build_()
 //////////////
 real EpanechnikovKernel::evaluate(const Vec& x1, const Vec& x2) const
 {
-  real t = L2distance(x1,x2) / gamma;
-  if (t <= 1.0)
-    return 3 * (1-t*t) / 4;
-  return 0;
+    real t = L2distance(x1,x2) / gamma;
+    if (t <= 1.0)
+        return 3 * (1-t*t) / 4;
+    return 0;
 }
 
 /////////////////////////////////
@@ -116,7 +116,20 @@ real EpanechnikovKernel::evaluate(const Vec& x1, const Vec& x2) const
 /////////////////////////////////
 void EpanechnikovKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

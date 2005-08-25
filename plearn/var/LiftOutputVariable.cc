@@ -33,9 +33,9 @@
 
 
 /* *******************************************************      
-   * $Id: LiftOutputVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "LiftOutputVariable.h"
 
@@ -45,18 +45,18 @@ using namespace std;
 /** LiftOutputVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(
-  LiftOutputVariable,
-  "The result is the output if the target is 1, and the opposite of the output "
-  "otherwise. This variable is to be used with a LiftStatsCollector, in a"
-  "stochastic gradient descent.",
-  "NO HELP"
-);
+    LiftOutputVariable,
+    "The result is the output if the target is 1, and the opposite of the output "
+    "otherwise. This variable is to be used with a LiftStatsCollector, in a"
+    "stochastic gradient descent.",
+    "NO HELP"
+    );
 
 ////////////////////////
 // LiftOutputVariable //
 ////////////////////////
 LiftOutputVariable::LiftOutputVariable(Variable* netout, Variable* target)
-  : inherited(netout,target,1,1)
+    : inherited(netout,target,1,1)
 {
     build_();
 }
@@ -89,29 +89,42 @@ void LiftOutputVariable::recomputeSize(int& l, int& w) const
 ///////////
 void LiftOutputVariable::fprop()
 {
-  real output = input1->valuedata[0];
-  real target = input2->valuedata[0];
-  if (target == 1.0) {
-    if (output == 0.0) {
-      // We need to make sure the output is positive.
-      output = 1e-10;
+    real output = input1->valuedata[0];
+    real target = input2->valuedata[0];
+    if (target == 1.0) {
+        if (output == 0.0) {
+            // We need to make sure the output is positive.
+            output = 1e-10;
+        }
+        valuedata[0] = output;
+    } else {
+        valuedata[0] = -output;
     }
-    valuedata[0] = output;
-  } else {
-    valuedata[0] = -output;
-  }
 }
 
 void LiftOutputVariable::bprop()
 {
-  // TODO Not really sure what to do here, bprop shouldn't be used anyway.
-  // Actually it IS called, should investigate why and what it does.
-  // PLWARNING("In LiftOutputVariable::bprop - You should not backprop on a LiftOutputVariable");
-  real gr = *gradientdata;
-  for (int i=0; i<input1->size(); i++)
-  {
-    input1->gradientdata[i] += gr;
-  }
+    // TODO Not really sure what to do here, bprop shouldn't be used anyway.
+    // Actually it IS called, should investigate why and what it does.
+    // PLWARNING("In LiftOutputVariable::bprop - You should not backprop on a LiftOutputVariable");
+    real gr = *gradientdata;
+    for (int i=0; i<input1->size(); i++)
+    {
+        input1->gradientdata[i] += gr;
+    }
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

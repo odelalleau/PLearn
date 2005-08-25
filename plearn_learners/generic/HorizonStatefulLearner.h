@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HorizonStatefulLearner.h,v 1.1 2004/10/18 14:05:35 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -69,37 +69,37 @@ using namespace std;
  */  
 class HorizonStatefulLearner: public StatefulLearner
 {
-  typedef StatefulLearner inherited;
+    typedef StatefulLearner inherited;
 
 public:
-  //#####  Public Options  ###################################################
+    //#####  Public Options  ###################################################
 
-  //! Forecasting horizon for the learner; see detailed class help for
-  //! interpretation.  (Default value = 0)
-  int horizon;
+    //! Forecasting horizon for the learner; see detailed class help for
+    //! interpretation.  (Default value = 0)
+    int horizon;
   
 public:
-  //#####  Object Methods  ###################################################
+    //#####  Object Methods  ###################################################
 
-  //! Default constructor.
-  HorizonStatefulLearner();
+    //! Default constructor.
+    HorizonStatefulLearner();
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  PLEARN_DECLARE_ABSTRACT_OBJECT(HorizonStatefulLearner);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_ABSTRACT_OBJECT(HorizonStatefulLearner);
 
 protected:   
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 };
 
 // Declares a few other classes and functions related to this class.
@@ -108,3 +108,16 @@ DECLARE_OBJECT_PTR(HorizonStatefulLearner);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

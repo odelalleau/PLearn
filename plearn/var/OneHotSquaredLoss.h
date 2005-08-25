@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef OneHotSquaredLoss_INC
 #define OneHotSquaredLoss_INC
@@ -58,26 +58,26 @@ using namespace std;
 //! of network outputs, and classnum is the target class number.
 class OneHotSquaredLoss: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 protected:
-  real coldval_, hotval_;
+    real coldval_, hotval_;
 
 public:
-  //!  Default constructor for persistence
-  OneHotSquaredLoss();
-  OneHotSquaredLoss(Variable* netout, Variable* classnum, real coldval=0., real hotval=1.);
+    //!  Default constructor for persistence
+    OneHotSquaredLoss();
+    OneHotSquaredLoss(Variable* netout, Variable* classnum, real coldval=0., real hotval=1.);
 
-  PLEARN_DECLARE_OBJECT(OneHotSquaredLoss);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(OneHotSquaredLoss);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 
 protected:
     void build_();
@@ -87,11 +87,24 @@ DECLARE_OBJECT_PTR(OneHotSquaredLoss);
 
 inline Var onehot_squared_loss(Var network_output, Var classnum, real coldval=0., real hotval=1.)
 { 
-  if (network_output->isVec())  
-  return new OneHotSquaredLoss(network_output, classnum, coldval, hotval);
-  else return new MatrixOneHotSquaredLoss(network_output, classnum, coldval, hotval);
+    if (network_output->isVec())  
+        return new OneHotSquaredLoss(network_output, classnum, coldval, hotval);
+    else return new MatrixOneHotSquaredLoss(network_output, classnum, coldval, hotval);
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

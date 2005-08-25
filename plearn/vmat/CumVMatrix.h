@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CumVMatrix.h,v 1.6 2004/09/14 16:04:39 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Yoshua Bengio
 
@@ -51,65 +51,78 @@ using namespace std;
 
 class CumVMatrix: public SourceVMatrix
 {
-  typedef SourceVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  Mat accumulated_columns;
-  Vec row;
-  Vec previous_sourcerow;
-  TVec<int> columns;
-  bool average;
+    Mat accumulated_columns;
+    Vec row;
+    Vec previous_sourcerow;
+    TVec<int> columns;
+    bool average;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // ### declare public option fields (such as build options) here
-  TVec<string> columns_to_accumulate;
+    // ### declare public option fields (such as build options) here
+    TVec<string> columns_to_accumulate;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  CumVMatrix();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    CumVMatrix();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
-  //!  This is the only method requiring implementation
-  virtual void getNewRow(int i, const Vec& v) const;
+    //!  This is the only method requiring implementation
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(CumVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(CumVMatrix);
 
 };
 DECLARE_OBJECT_PTR(CumVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

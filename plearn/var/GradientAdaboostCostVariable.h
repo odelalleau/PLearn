@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef GradientAdaboostCostVariable_INC
 #define GradientAdaboostCostVariable_INC
@@ -48,44 +48,57 @@
 namespace PLearn {
 using namespace std;
 
-  // cost[i] = -1*signed_target[i]*signe_output[i]
-  // where cost is a column vector and
-  // where signed_target and signed_output is inferred from target as follows.
-  // target must be in (0,1).
-  // signed_target[i] = target[i]*2-1 and
-  // signed_output[i] = output*[i]2-1
+// cost[i] = -1*signed_target[i]*signe_output[i]
+// where cost is a column vector and
+// where signed_target and signed_output is inferred from target as follows.
+// target must be in (0,1).
+// signed_target[i] = target[i]*2-1 and
+// signed_output[i] = output*[i]2-1
 class GradientAdaboostCostVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 protected:  
-  real margin;
+    real margin;
   
 public:
-  //!  Default constructor for persistence
-  GradientAdaboostCostVariable() {}
-  GradientAdaboostCostVariable(Variable* output, Variable* target);
+    //!  Default constructor for persistence
+    GradientAdaboostCostVariable() {}
+    GradientAdaboostCostVariable(Variable* output, Variable* target);
 
-  PLEARN_DECLARE_OBJECT(GradientAdaboostCostVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(GradientAdaboostCostVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
 
 protected:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(GradientAdaboostCostVariable);
 
 inline Var gradient_adaboost_cost(Var output, Var target)
 {
-  return new GradientAdaboostCostVariable(output, target);
+    return new GradientAdaboostCostVariable(output, target);
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

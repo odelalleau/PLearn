@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UniformizeLearner.cc,v 1.1 2005/01/12 19:39:15 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -46,21 +46,21 @@ namespace PLearn {
 using namespace std;
 
 UniformizeLearner::UniformizeLearner() 
-  :nquantiles(200)
-  {
+    :nquantiles(200)
+{
     // ...
 
     // ### You may or may not want to call build_() to finish building the object
     // build_();
-  }
+}
 
-  PLEARN_IMPLEMENT_OBJECT(UniformizeLearner, "Uniformizes selected input fields", 
-                          "For each specified field, the full training set column will be read,\n"
-                          "then sorted, and we'll store up to nquantiles and their mapping to [0,1] rank (as well as min and max)\n"
-                          "Uniformization maps to [0,1]. It is a piecewise linear interpolation between the remembered quantiles\n");
+PLEARN_IMPLEMENT_OBJECT(UniformizeLearner, "Uniformizes selected input fields", 
+                        "For each specified field, the full training set column will be read,\n"
+                        "then sorted, and we'll store up to nquantiles and their mapping to [0,1] rank (as well as min and max)\n"
+                        "Uniformization maps to [0,1]. It is a piecewise linear interpolation between the remembered quantiles\n");
 
-  void UniformizeLearner::declareOptions(OptionList& ol)
-  {
+void UniformizeLearner::declareOptions(OptionList& ol)
+{
     // ### Declare all of this object's options here
     // ### For the "flags" of each option, you should typically specify  
     // ### one of OptionBase::buildoption, OptionBase::learntoption or 
@@ -83,22 +83,22 @@ UniformizeLearner::UniformizeLearner()
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
+}
 
-  void UniformizeLearner::build_()
-  {
-  }
+void UniformizeLearner::build_()
+{
+}
 
-  // ### Nothing to add here, simply calls build_
-  void UniformizeLearner::build()
-  {
+// ### Nothing to add here, simply calls build_
+void UniformizeLearner::build()
+{
     inherited::build();
     build_();
-  }
+}
 
 
-  void UniformizeLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-  {
+void UniformizeLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     // ### Call deepCopyField on all "pointer-like" fields 
@@ -109,17 +109,17 @@ UniformizeLearner::UniformizeLearner()
 
     // ### Remove this line when you have fully implemented this method.
     PLERROR("UniformizeLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-  }
+}
 
 
 int UniformizeLearner::outputsize() const
 {
-  return inputsize();
+    return inputsize();
 }
 
 void UniformizeLearner::forget()
 {
-  stage = 0; // untrained
+    stage = 0; // untrained
 }
     
 void UniformizeLearner::train()
@@ -128,121 +128,134 @@ void UniformizeLearner::train()
     // updating train_stats with training costs measured on-line in the process.
 
     /* TYPICAL CODE:      
-      static Vec input  // static so we don't reallocate/deallocate memory each time...
-      static Vec target
-      input.resize(inputsize())    // the train_set's inputsize()
-      target.resize(targetsize())  // the train_set's targetsize()
-      real weight
+       static Vec input  // static so we don't reallocate/deallocate memory each time...
+       static Vec target
+       input.resize(inputsize())    // the train_set's inputsize()
+       target.resize(targetsize())  // the train_set's targetsize()
+       real weight
 
-      if(!train_stats)  // make a default stats collector, in case there's none
-         train_stats = new VecStatsCollector()
+       if(!train_stats)  // make a default stats collector, in case there's none
+       train_stats = new VecStatsCollector()
 
-      if(nstages<stage) // asking to revert to a previous stage!
-         forget()  // reset the learner to stage=0
+       if(nstages<stage) // asking to revert to a previous stage!
+       forget()  // reset the learner to stage=0
 
-      while(stage<nstages)
-        {
-          // clear statistics of previous epoch
-          train_stats->forget() 
+       while(stage<nstages)
+       {
+       // clear statistics of previous epoch
+       train_stats->forget() 
           
-          //... train for 1 stage, and update train_stats,
-          // using train_set->getSample(input, target, weight)
-          // and train_stats->update(train_costs)
+       //... train for 1 stage, and update train_stats,
+       // using train_set->getSample(input, target, weight)
+       // and train_stats->update(train_costs)
           
-          ++stage
-          train_stats->finalize() // finalize statistics for this epoch
-        }
+       ++stage
+       train_stats->finalize() // finalize statistics for this epoch
+       }
     */
 
-  if(stage==0) // untrained
+    if(stage==0) // untrained
     {
-      int nk = which_fieldnames.length();
-      if(nk==0)
-        nk = which_fieldnums.size();
-      else
+        int nk = which_fieldnames.length();
+        if(nk==0)
+            nk = which_fieldnums.size();
+        else
         {
-          which_fieldnums.resize(nk);
-          for(int k=0; k<nk; k++)
-            which_fieldnums[k] = train_set->getFieldIndex(which_fieldnames[k]);
+            which_fieldnums.resize(nk);
+            for(int k=0; k<nk; k++)
+                which_fieldnums[k] = train_set->getFieldIndex(which_fieldnames[k]);
         }
 
-      int l = train_set->length();
-      static Vec colv;
-      colv.resize(l);
+        int l = train_set->length();
+        static Vec colv;
+        colv.resize(l);
       
-      val_to_rank.resize(nk);
-      for(int k=0; k<nk; k++)
+        val_to_rank.resize(nk);
+        for(int k=0; k<nk; k++)
         {
-          train_set->getColumn(which_fieldnums[k],colv);
-          computeRankMap(colv, nquantiles, val_to_rank[k]);
+            train_set->getColumn(which_fieldnums[k],colv);
+            computeRankMap(colv, nquantiles, val_to_rank[k]);
         }
-      stage = 1; // trained
+        stage = 1; // trained
     }
 }
 
 void UniformizeLearner::computeRankMap(Vec v, int nquantiles, map<real,real>& rankmap)
 {
-  rankmap.clear();
-  int l = v.length();
-  sortElements(v);
-  rankmap[v[0]] = 0;
-  rankmap[v[l-1]] = 1;
-  for(int k=1; k<nquantiles; k++)
+    rankmap.clear();
+    int l = v.length();
+    sortElements(v);
+    rankmap[v[0]] = 0;
+    rankmap[v[l-1]] = 1;
+    for(int k=1; k<nquantiles; k++)
     {
-      real rank = real(k)/real(nquantiles);
-      // int pos = l*k/nquantiles;
-      int pos = int(0.5+l*rank);
-      real val = v[pos];
-      if(rankmap.find(val)==rankmap.end())
-        rankmap[val] = rank;
+        real rank = real(k)/real(nquantiles);
+        // int pos = l*k/nquantiles;
+        int pos = int(0.5+l*rank);
+        real val = v[pos];
+        if(rankmap.find(val)==rankmap.end())
+            rankmap[val] = rank;
     }
 }
 
 real UniformizeLearner::mapToRank(real val, const map<real,real>& rankmap)
 {
-  real minv = rankmap.begin()->first;
-  if(val<=minv)
-    return 0;
-  real maxv = rankmap.rbegin()->first;
-  if(val>=maxv)
-    return 1;
-  map<real,real>::const_iterator high = rankmap.upper_bound(val);
-  map<real,real>::const_iterator low = high; --low;
+    real minv = rankmap.begin()->first;
+    if(val<=minv)
+        return 0;
+    real maxv = rankmap.rbegin()->first;
+    if(val>=maxv)
+        return 1;
+    map<real,real>::const_iterator high = rankmap.upper_bound(val);
+    map<real,real>::const_iterator low = high; --low;
 
-  real rank = low->second + (val-low->first)*(high->second-low->second)/(high->first-low->first);
-  return rank;
+    real rank = low->second + (val-low->first)*(high->second-low->second)/(high->first-low->first);
+    return rank;
 }
 
 void UniformizeLearner::computeOutput(const Vec& input, Vec& output) const
 {
-  int nout = outputsize();
-  output.resize(nout);
-  output << input;
-  for(int k=0; k<which_fieldnums.size(); k++)
+    int nout = outputsize();
+    output.resize(nout);
+    output << input;
+    for(int k=0; k<which_fieldnums.size(); k++)
     {
-      int fieldnum = which_fieldnums[k];
-      output[fieldnum] = mapToRank(output[fieldnum], val_to_rank[k]);
+        int fieldnum = which_fieldnums[k];
+        output[fieldnum] = mapToRank(output[fieldnum], val_to_rank[k]);
     }
 }    
 
 void UniformizeLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                           const Vec& target, Vec& costs) const
+                                                const Vec& target, Vec& costs) const
 {
-  costs.resize(0);
+    costs.resize(0);
 }                                
 
 TVec<string> UniformizeLearner::getTestCostNames() const
 {
-  TVec<string> nocosts;
-  return nocosts;
+    TVec<string> nocosts;
+    return nocosts;
 }
 
 TVec<string> UniformizeLearner::getTrainCostNames() const
 {
-  TVec<string> nocosts;
-  return nocosts;
+    TVec<string> nocosts;
+    return nocosts;
 }
 
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: LogAddVariable.h,v 1.7 2004/11/24 18:25:56 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef LogAddVariable_INC
 #define LogAddVariable_INC
@@ -51,7 +51,7 @@ using namespace std;
 #ifdef __INTEL_COMPILER
 //! ICC has trouble finding the right logadd function, thus we give it a hint.
 inline real logadd_for_icc(real a, real b) {
-  return logadd(a, b);
+    return logadd(a, b);
 }
 #endif
 
@@ -59,21 +59,21 @@ inline real logadd_for_icc(real a, real b) {
 //!  computed in such a way as to preserve precision
 class LogAddVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  LogAddVariable() {}
-  LogAddVariable(Variable* input1, Variable* input2);
+    //!  Default constructor for persistence
+    LogAddVariable() {}
+    LogAddVariable(Variable* input1, Variable* input2);
 
-  PLEARN_DECLARE_OBJECT(LogAddVariable);
+    PLEARN_DECLARE_OBJECT(LogAddVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;  
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;  
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
     void build_();
@@ -87,3 +87,16 @@ inline Var logadd(Var& input1, Var& input2)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

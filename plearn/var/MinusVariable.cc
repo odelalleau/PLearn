@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MinusVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "MinusVariable.h"
 #include "NegateElementsVariable.h"
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(MinusVariable,
                         "NO HELP");
 
 MinusVariable::MinusVariable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, input1->length(), input1->width())
+    : inherited(input1, input2, input1->length(), input1->width())
 {
     build_();
 }
@@ -87,42 +87,53 @@ void MinusVariable::recomputeSize(int& l, int& w) const
 
 void MinusVariable::fprop()
 {
-  for(int k=0; k<nelems(); k++)
-    valuedata[k] = input1->valuedata[k]-input2->valuedata[k];
+    for(int k=0; k<nelems(); k++)
+        valuedata[k] = input1->valuedata[k]-input2->valuedata[k];
 }
 
 
 void MinusVariable::bprop()
 {
-  for(int k=0; k<nelems(); k++)
+    for(int k=0; k<nelems(); k++)
     {
-      input1->gradientdata[k] += gradientdata[k];
-      input2->gradientdata[k] -= gradientdata[k];
+        input1->gradientdata[k] += gradientdata[k];
+        input2->gradientdata[k] -= gradientdata[k];
     }
 }
 
 
 void MinusVariable::bbprop()
 {
-  if (input1->diaghessian.length()==0)
-    input1->resizeDiagHessian();
-  if (input2->diaghessian.length()==0)
-    input2->resizeDiagHessian();
-  for(int k=0; k<nelems(); k++)
+    if (input1->diaghessian.length()==0)
+        input1->resizeDiagHessian();
+    if (input2->diaghessian.length()==0)
+        input2->resizeDiagHessian();
+    for(int k=0; k<nelems(); k++)
     {
-      input1->diaghessiandata[k] += diaghessiandata[k];
-      input2->diaghessiandata[k] -= diaghessiandata[k];
+        input1->diaghessiandata[k] += diaghessiandata[k];
+        input2->diaghessiandata[k] -= diaghessiandata[k];
     }
 }
 
 
 void MinusVariable::symbolicBprop()
 {
-  input1->accg(g);
-  input2->accg(new NegateElementsVariable(g));
+    input1->accg(g);
+    input2->accg(new NegateElementsVariable(g));
 }
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CompareLearner.cc,v 1.3 2005/06/15 16:01:16 larocheh Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle
 
@@ -48,9 +48,9 @@ namespace PLearn {
 using namespace std;
 
 CompareLearner::CompareLearner() 
-  : learners(0)
+    : learners(0)
 {
-  build_();
+    build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(CompareLearner, "Learner that trains and compares different learners ", 
@@ -64,209 +64,222 @@ PLEARN_IMPLEMENT_OBJECT(CompareLearner, "Learner that trains and compares differ
                         "abs_difference_[COST]_[LEARNER1]_VS_[LEARNER2] are the difference and \n"
                         "absolute difference of [COST]::[LEARNER1] and [COST]::[LEARNER2]. Note that \n"
                         "[LEARNER1] must appear before [LEARNER2] in the learner_names vector."
-  );
+    );
 void CompareLearner::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "learners", &CompareLearner::learners, OptionBase::buildoption,
-                "learners to compare");
-  declareOption(ol, "common_costs", &CompareLearner::common_costs, OptionBase::buildoption,
-                "common costs of the learners to compare");
-  declareOption(ol, "learner_names", &CompareLearner::learner_names, OptionBase::buildoption,
-                "names of the learners");
+    declareOption(ol, "learners", &CompareLearner::learners, OptionBase::buildoption,
+                  "learners to compare");
+    declareOption(ol, "common_costs", &CompareLearner::common_costs, OptionBase::buildoption,
+                  "common costs of the learners to compare");
+    declareOption(ol, "learner_names", &CompareLearner::learner_names, OptionBase::buildoption,
+                  "names of the learners");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 void CompareLearner::build_()
 {
-  n_learners = learners.length();
-  if(n_learners > 0)
-  {
-    learners_outputsize = learners[0]->outputsize();
-    if(learner_names.length() != n_learners) PLERROR("Number of learner names is different from number of learners");
-    costs_indexes.resize(n_learners,common_costs.length());
-    TVec<string> test_costs;
-    for(int i=0; i<n_learners; i++)
+    n_learners = learners.length();
+    if(n_learners > 0)
     {
-      learners[i]->build();
-      test_costs = learners[i]->getTestCostNames();
-      for(int c=0; c<common_costs.length(); c++)
-      {
-        costs_indexes(i,c) = test_costs.find(common_costs[c]);
-      }
+        learners_outputsize = learners[0]->outputsize();
+        if(learner_names.length() != n_learners) PLERROR("Number of learner names is different from number of learners");
+        costs_indexes.resize(n_learners,common_costs.length());
+        TVec<string> test_costs;
+        for(int i=0; i<n_learners; i++)
+        {
+            learners[i]->build();
+            test_costs = learners[i]->getTestCostNames();
+            for(int c=0; c<common_costs.length(); c++)
+            {
+                costs_indexes(i,c) = test_costs.find(common_costs[c]);
+            }
+        }
     }
-  }
 }
 
 void CompareLearner::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 
 void CompareLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  deepCopyField(learners, copies);
-  deepCopyField(learner_names, copies);
-  deepCopyField(common_costs, copies);
-  deepCopyField(costs_indexes, copies);
+    deepCopyField(learners, copies);
+    deepCopyField(learner_names, copies);
+    deepCopyField(common_costs, copies);
+    deepCopyField(costs_indexes, copies);
 
-  //PLERROR("CompareLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    //PLERROR("CompareLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 
 int CompareLearner::outputsize() const
 {
-  if(n_learners == 0) return 0;
-  else return n_learners * learners_outputsize;
+    if(n_learners == 0) return 0;
+    else return n_learners * learners_outputsize;
 }
 
 void CompareLearner::forget()
 {
-  for(int i=0; i<learners.length(); i++)
-    learners[i]->forget();
+    for(int i=0; i<learners.length(); i++)
+        learners[i]->forget();
 }
     
 void CompareLearner::train()
 {
-  for(int i=0; i<n_learners; i++)
-    learners[i]->train();
+    for(int i=0; i<n_learners; i++)
+        learners[i]->train();
 }
 
 
 void CompareLearner::computeOutput(const Vec& input, Vec& output) const
 {
-  output.resize(outputsize());
-  Vec output_i;
-  for(int i=0; i<n_learners; i++)
-  {
-    output_i = output.subVec(i*learners_outputsize,learners_outputsize);
-    learners[i]->computeOutput(input,output_i);
-  }
+    output.resize(outputsize());
+    Vec output_i;
+    for(int i=0; i<n_learners; i++)
+    {
+        output_i = output.subVec(i*learners_outputsize,learners_outputsize);
+        learners[i]->computeOutput(input,output_i);
+    }
 }    
 
 void CompareLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                           const Vec& target, Vec& costs) const
+                                             const Vec& target, Vec& costs) const
 {
-  Vec one_learner_costs;   
-  costs.resize(0);
-  Vec output_i;
-  for(int i=0; i<n_learners; i++)
-  {
-    one_learner_costs.resize(learners[i]->getTestCostNames().length());
-    output_i = output.subVec(i*learners_outputsize,learners_outputsize);
-    learners[i]->computeCostsFromOutputs(input, output_i,target,one_learner_costs);
-    for(int c=0; c<common_costs.length(); c++)
+    Vec one_learner_costs;   
+    costs.resize(0);
+    Vec output_i;
+    for(int i=0; i<n_learners; i++)
     {
-      if(costs_indexes(i,c) == -1)
-        costs.append(MISSING_VALUE);
-      else
-        costs.append(one_learner_costs[costs_indexes(i,c)]);
+        one_learner_costs.resize(learners[i]->getTestCostNames().length());
+        output_i = output.subVec(i*learners_outputsize,learners_outputsize);
+        learners[i]->computeCostsFromOutputs(input, output_i,target,one_learner_costs);
+        for(int c=0; c<common_costs.length(); c++)
+        {
+            if(costs_indexes(i,c) == -1)
+                costs.append(MISSING_VALUE);
+            else
+                costs.append(one_learner_costs[costs_indexes(i,c)]);
       
+        }
     }
-  }
 
-  for ( int m1=0; m1 < n_learners; m1++ )
-    for ( int m2=(m1+1); m2 < n_learners; m2++ )
-      for ( int cc=0; cc < common_costs.length(); cc++ )
-      {
-        real diff = costs[m1*common_costs.length()+cc]-costs[m2*common_costs.length()+cc];
-        costs.append(diff);
-        costs.append(fabs(diff));
-      }
+    for ( int m1=0; m1 < n_learners; m1++ )
+        for ( int m2=(m1+1); m2 < n_learners; m2++ )
+            for ( int cc=0; cc < common_costs.length(); cc++ )
+            {
+                real diff = costs[m1*common_costs.length()+cc]-costs[m2*common_costs.length()+cc];
+                costs.append(diff);
+                costs.append(fabs(diff));
+            }
 }                                
 
 TVec<string> CompareLearner::getTestCostNames() const
 {
-  TVec<string> cost_names(0);
+    TVec<string> cost_names(0);
 
-  for(int i=0; i<n_learners; i++)
-  {
-    for(int c=0; c<common_costs.length(); c++)
+    for(int i=0; i<n_learners; i++)
     {
-      cost_names.append(learner_names[i] + "::" + common_costs[c]);
+        for(int c=0; c<common_costs.length(); c++)
+        {
+            cost_names.append(learner_names[i] + "::" + common_costs[c]);
+        }
     }
-  }
 
-  for ( int m1=0; m1 < n_learners; m1++ )
-    for ( int m2=(m1+1); m2 < n_learners; m2++ )
-      for ( int cc=0; cc < common_costs.length(); cc++ )
-      {
-        string postfix = common_costs[cc] + "_" + learner_names[m1] + "_VS_" + learner_names[m2];        
-        cost_names.append( "difference_" + postfix );
-        cost_names.append( "abs_difference_" + postfix );
-      }
+    for ( int m1=0; m1 < n_learners; m1++ )
+        for ( int m2=(m1+1); m2 < n_learners; m2++ )
+            for ( int cc=0; cc < common_costs.length(); cc++ )
+            {
+                string postfix = common_costs[cc] + "_" + learner_names[m1] + "_VS_" + learner_names[m2];        
+                cost_names.append( "difference_" + postfix );
+                cost_names.append( "abs_difference_" + postfix );
+            }
 
-  return cost_names;
+    return cost_names;
 }
 
 TVec<string> CompareLearner::getTrainCostNames() const
 {
-  TVec<string> cost_names(0);
-  TVec<string> cost_names_i;
-  for(int i=0; i<n_learners; i++)
-  {
-    cost_names_i = learners[i]->getTrainCostNames();
-    for(int c=0; c<cost_names_i.length(); c++)
-      cost_names.append(learner_names[i] + "::" + cost_names_i[c]);
-  }
+    TVec<string> cost_names(0);
+    TVec<string> cost_names_i;
+    for(int i=0; i<n_learners; i++)
+    {
+        cost_names_i = learners[i]->getTrainCostNames();
+        for(int c=0; c<cost_names_i.length(); c++)
+            cost_names.append(learner_names[i] + "::" + cost_names_i[c]);
+    }
 
-  return cost_names;
+    return cost_names;
 }
 
 void CompareLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
 { 
-  PP<VecStatsCollector> stat_i;
-  for(int i=0; i<n_learners; i++)
-  {
-    stat_i = new VecStatsCollector();
-    learners[i]->setTrainStatsCollector(stat_i); 
-  }
+    PP<VecStatsCollector> stat_i;
+    for(int i=0; i<n_learners; i++)
+    {
+        stat_i = new VecStatsCollector();
+        learners[i]->setTrainStatsCollector(stat_i); 
+    }
 }
 
 void CompareLearner::setTrainingSet(VMat training_set, bool call_forget)
 { 
-  for(int i=0; i<n_learners; i++)
-  {
-    learners[i]->setTrainingSet(training_set,call_forget);
-  }
-  if (call_forget)
-    forget();
+    for(int i=0; i<n_learners; i++)
+    {
+        learners[i]->setTrainingSet(training_set,call_forget);
+    }
+    if (call_forget)
+        forget();
 }
 
 void CompareLearner::setValidationSet(VMat validset)
 { 
-  for(int i=0; i<n_learners; i++)
-  {
-    learners[i]->setValidationSet(validset);
-  }
+    for(int i=0; i<n_learners; i++)
+    {
+        learners[i]->setValidationSet(validset);
+    }
 }
 
 void CompareLearner::setExperimentDirectory(const PPath& the_expdir) 
 { 
-  if(the_expdir=="")
-  {
-    expdir = "";
-    for(int i=0; i<n_learners; i++)
+    if(the_expdir=="")
     {
-      learners[i]->setExperimentDirectory(the_expdir);
+        expdir = "";
+        for(int i=0; i<n_learners; i++)
+        {
+            learners[i]->setExperimentDirectory(the_expdir);
+        }
     }
-  }
-  else
+    else
     {
-      if(!force_mkdir(the_expdir))
-        PLERROR("In PLearner::setExperimentDirectory Could not create experiment directory %s",the_expdir.c_str());
-      expdir = the_expdir.absolute();
-      string learner_expdir;
-      for(int i=0; i<n_learners; i++)
-      {
-        learner_expdir = the_expdir.absolute() + "_" + learner_names[i];
-        learners[i]->setExperimentDirectory(learner_expdir); 
-      }
+        if(!force_mkdir(the_expdir))
+            PLERROR("In PLearner::setExperimentDirectory Could not create experiment directory %s",the_expdir.c_str());
+        expdir = the_expdir.absolute();
+        string learner_expdir;
+        for(int i=0; i<n_learners; i++)
+        {
+            learner_expdir = the_expdir.absolute() + "_" + learner_names[i];
+            learners[i]->setExperimentDirectory(learner_expdir); 
+        }
     }
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

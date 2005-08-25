@@ -36,9 +36,9 @@
 
  
 /*
-* $Id: VMField.cc,v 1.5 2005/02/04 15:10:46 tihocan Exp $
-* This file is part of the PLearn library.
-******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 #include "VMField.h"
 
 namespace PLearn {
@@ -47,93 +47,106 @@ using namespace std;
 /** VMField **/
 
 VMField::VMField(const string& the_name, FieldType the_fieldtype)
-  : name(the_name), fieldtype(the_fieldtype) {}
+    : name(the_name), fieldtype(the_fieldtype) {}
 
 bool VMField::operator==(const VMField& other) const
 {
-  return (name==other.name && fieldtype==other.fieldtype);
+    return (name==other.name && fieldtype==other.fieldtype);
 }
 
 bool VMField::operator!=(const VMField& other) const
 {
-  return !((*this)==other);
+    return !((*this)==other);
 }
 
 
 /** VMFieldStat **/
 
 VMFieldStat::VMFieldStat(int the_maxndiscrete)
-  : nmissing_(0), nnonmissing_(0), npositive_(0), nnegative_(0), sum_(0.),
-  sumsquare_(0.), min_(FLT_MAX), max_(-FLT_MAX),
-  maxndiscrete(the_maxndiscrete) {}
+    : nmissing_(0), nnonmissing_(0), npositive_(0), nnegative_(0), sum_(0.),
+      sumsquare_(0.), min_(FLT_MAX), max_(-FLT_MAX),
+      maxndiscrete(the_maxndiscrete) {}
 
 void VMFieldStat::update(real val)
 {
-  if(is_missing(val))
-    nmissing_++;
-  else
-  {
-    nnonmissing_++;
-    sum_ += val;
-    sumsquare_ += val*val;
-    if(val>0.)
-      npositive_++;
-    else if(val<0.)
-      nnegative_++;
-    if(val<min_)
-      min_ = val;
-    if(val>max_)
-      max_ = val;
-    if(maxndiscrete>0)
+    if(is_missing(val))
+        nmissing_++;
+    else
     {
-      if(int(counts.size())<maxndiscrete)
-        counts[val]++;
-      else // reached maxndiscrete. Stop counting and reset counts.
-      {
-        maxndiscrete = -1;
-        counts.clear();
-      }
-    }          
-  }
+        nnonmissing_++;
+        sum_ += val;
+        sumsquare_ += val*val;
+        if(val>0.)
+            npositive_++;
+        else if(val<0.)
+            nnegative_++;
+        if(val<min_)
+            min_ = val;
+        if(val>max_)
+            max_ = val;
+        if(maxndiscrete>0)
+        {
+            if(int(counts.size())<maxndiscrete)
+                counts[val]++;
+            else // reached maxndiscrete. Stop counting and reset counts.
+            {
+                maxndiscrete = -1;
+                counts.clear();
+            }
+        }          
+    }
 }                           
 
 void VMFieldStat::write(PStream& out) const
 {
-  out << nmissing_ << ' ' 
-    << nnonmissing_ << ' '
-    << npositive_ << ' '
-    << nnegative_ << ' '
-    << sum_ << ' '
-    << sumsquare_ << ' '
-    << min_ << ' '
-    << max_ << "    ";
+    out << nmissing_ << ' ' 
+        << nnonmissing_ << ' '
+        << npositive_ << ' '
+        << nnegative_ << ' '
+        << sum_ << ' '
+        << sumsquare_ << ' '
+        << min_ << ' '
+        << max_ << "    ";
 
-  out << counts.size() << "  ";
+    out << counts.size() << "  ";
 
-  map<real,int>::const_iterator it = counts.begin();
-  map<real,int>::const_iterator countsend = counts.end();
-  while(it!=countsend)
-  {
-    out << it->first << ' ' << it->second << "  "; 
-    ++it;
-  }
+    map<real,int>::const_iterator it = counts.begin();
+    map<real,int>::const_iterator countsend = counts.end();
+    while(it!=countsend)
+    {
+        out << it->first << ' ' << it->second << "  "; 
+        ++it;
+    }
 }
 
 void VMFieldStat::read(PStream& in)
 {
-  in >> nmissing_ >> nnonmissing_ >> npositive_ >> nnegative_ 
-    >> sum_ >> sumsquare_ >> min_ >> max_ ;
+    in >> nmissing_ >> nnonmissing_ >> npositive_ >> nnegative_ 
+       >> sum_ >> sumsquare_ >> min_ >> max_ ;
   
-  int ndiscrete;
-  real value;
-  int count;
-  counts.clear();
-  in >> ndiscrete;
-  for(int k=0; k<ndiscrete; k++)
-  {
-    in >> value >> count;
-    counts[value] = count;
-  }
+    int ndiscrete;
+    real value;
+    int count;
+    counts.clear();
+    in >> ndiscrete;
+    for(int k=0; k<ndiscrete; k++)
+    {
+        in >> value >> count;
+        counts[value] = count;
+    }
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

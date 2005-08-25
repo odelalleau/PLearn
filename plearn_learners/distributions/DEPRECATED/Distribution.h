@@ -37,8 +37,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file Distribution.h */
 #ifndef Distribution_INC
@@ -56,95 +56,95 @@ using namespace std;
 class Distribution: public Learner
 {
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
     
 public:
 
-  typedef Learner inherited;
+    typedef Learner inherited;
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  //! A string where the characters have the following meaning:
-  //! 'l'->log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn, 'e' -> expectation, 'v' -> variance
-  string use_returns_what;
+    //! A string where the characters have the following meaning:
+    //! 'l'->log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn, 'e' -> expectation, 'v' -> variance
+    string use_returns_what;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  Distribution();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    Distribution();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(Distribution);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(Distribution);
 
-  // *******************
-  // * Learner methods *
-  // *******************
+    // *******************
+    // * Learner methods *
+    // *******************
 
-  //! trains the model
-  virtual void train(VMat training_set); 
+    //! trains the model
+    virtual void train(VMat training_set); 
 
-  //! computes the ouptu of a trained model
-  virtual void use(const Vec& input, Vec& output);
+    //! computes the ouptu of a trained model
+    virtual void use(const Vec& input, Vec& output);
 
 
-  //! return log of probability density log(p(x))
-  virtual double log_density(const Vec& x) const;
+    //! return log of probability density log(p(x))
+    virtual double log_density(const Vec& x) const;
 
-  //! return probability density p(x)
-  //! [ default version returns exp(log_density(x)) ]
-  virtual double density(const Vec& x) const;
+    //! return probability density p(x)
+    //! [ default version returns exp(log_density(x)) ]
+    virtual double density(const Vec& x) const;
   
-  //! return survival fn = P(X>x)
-  virtual double survival_fn(const Vec& x) const;
+    //! return survival fn = P(X>x)
+    virtual double survival_fn(const Vec& x) const;
 
-  //! return survival fn = P(X<x)
-  virtual double cdf(const Vec& x) const;
+    //! return survival fn = P(X<x)
+    virtual double cdf(const Vec& x) const;
 
-  //! return E[X] 
-  virtual Vec expectation() const;
+    //! return E[X] 
+    virtual Vec expectation() const;
 
-  //! return Var[X]
-  virtual Mat variance() const;
+    //! return Var[X]
+    virtual Mat variance() const;
 
-  //! return a pseudo-random sample generated from the distribution.
-  virtual void generate(Vec& x) const;
+    //! return a pseudo-random sample generated from the distribution.
+    virtual void generate(Vec& x) const;
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(Distribution);
+DECLARE_OBJECT_PTR(Distribution);
   
 } // end of namespace PLearn
 
@@ -153,3 +153,16 @@ public:
 #endif
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

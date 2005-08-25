@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "AffineTransformVariable.h"
 
@@ -85,35 +85,46 @@ void AffineTransformVariable::recomputeSize(int& l, int& w) const
 
 void AffineTransformVariable::fprop()
 {
-  value << input2->matValue.firstRow();
-  Mat lintransform = input2->matValue.subMatRows(1,input2->length()-1);
-  transposeProductAcc(value, lintransform, input1->value);
+    value << input2->matValue.firstRow();
+    Mat lintransform = input2->matValue.subMatRows(1,input2->length()-1);
+    transposeProductAcc(value, lintransform, input1->value);
 }
 
 
 void AffineTransformVariable::bprop()
 {
-  Mat&  afftr = input2->matValue;
-  int l = afftr.length();
-  // Vec bias = afftr.firstRow();
-  Mat lintr = afftr.subMatRows(1,l-1);
+    Mat&  afftr = input2->matValue;
+    int l = afftr.length();
+    // Vec bias = afftr.firstRow();
+    Mat lintr = afftr.subMatRows(1,l-1);
 
-  Mat& afftr_g = input2->matGradient;
-  Vec bias_g = afftr_g.firstRow();
-  Mat lintr_g = afftr_g.subMatRows(1,l-1);
+    Mat& afftr_g = input2->matGradient;
+    Vec bias_g = afftr_g.firstRow();
+    Mat lintr_g = afftr_g.subMatRows(1,l-1);
 
-  bias_g += gradient;    
-  if(!input1->dont_bprop_here)      
-    productAcc(input1->gradient, lintr, gradient);
-  externalProductAcc(lintr_g, input1->value, gradient);
+    bias_g += gradient;    
+    if(!input1->dont_bprop_here)      
+        productAcc(input1->gradient, lintr, gradient);
+    externalProductAcc(lintr_g, input1->value, gradient);
 }
 
 
 void AffineTransformVariable::symbolicBprop()
 {
-  PLERROR("AffineTransformVariable::symbolicBprop() not implemented");
+    PLERROR("AffineTransformVariable::symbolicBprop() not implemented");
 }
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

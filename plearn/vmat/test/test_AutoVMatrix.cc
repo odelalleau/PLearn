@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: test_AutoVMatrix.cc,v 1.1 2005/01/23 22:11:29 dorionc Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christian Dorion
 
@@ -51,15 +51,15 @@ void save_load_compare( const AutoVMatrix& vm,
                         const PPath& base,
                         const string& ext, int dot )
 {
-  PPath save_to = prefix + PPath(base).replace(dot, base.length(), ext);
-  if ( ext == ".amat" )
-    vm.saveAMAT( save_to );
-  else if ( ext == ".pmat" )
-    vm.savePMAT( save_to );
-  else if ( ext == ".dmat" )
-    vm.saveDMAT( save_to );
-  else
-    PLERROR("!!!");
+    PPath save_to = prefix + PPath(base).replace(dot, base.length(), ext);
+    if ( ext == ".amat" )
+        vm.saveAMAT( save_to );
+    else if ( ext == ".pmat" )
+        vm.savePMAT( save_to );
+    else if ( ext == ".dmat" )
+        vm.saveDMAT( save_to );
+    else
+        PLERROR("!!!");
   
 //!<   AutoVMatrix reloaded( save_to );
 //!<   bool success = ( vm.toMat() == reloaded.toMat() ); 
@@ -71,56 +71,69 @@ void save_load_compare( const AutoVMatrix& vm,
 
 void unitTest(const PPath& path)
 {
-  AutoVMatrix vm(path);
-  MAND_LOG << vm << endl;
+    AutoVMatrix vm(path);
+    MAND_LOG << vm << endl;
 
-  Mat m(vm);  
-  MAND_LOG << m << endl;
+    Mat m(vm);  
+    MAND_LOG << m << endl;
 
-  PPath base       = path.basename();
-  unsigned int dot = base.rfind('.');
-  base[dot]        = '_';
-  PPath prefix     = base + "__to__";
+    PPath base       = path.basename();
+    unsigned int dot = base.rfind('.');
+    base[dot]        = '_';
+    PPath prefix     = base + "__to__";
 
-  save_load_compare( vm, prefix, base, ".amat", dot );
-  save_load_compare( vm, prefix, base, ".pmat", dot );
-  save_load_compare( vm, prefix, base, ".dmat", dot );
+    save_load_compare( vm, prefix, base, ".amat", dot );
+    save_load_compare( vm, prefix, base, ".pmat", dot );
+    save_load_compare( vm, prefix, base, ".dmat", dot );
 }
 
 inline void UNIT_TEST(const string& argument)
 {
-  MAND_LOG << plhead(argument) << endl;
-  try {
-    unitTest(argument);
-    MAND_LOG << endl;
-  }
-  catch(const PLearnError& e)
-  {
-    cerr << "FATAL ERROR: " << e.message() << endl << endl;
-  }
-  catch (...)
-  {
-    cerr << "FATAL ERROR: uncaught unknown exception" << endl << endl;
-  }
+    MAND_LOG << plhead(argument) << endl;
+    try {
+        unitTest(argument);
+        MAND_LOG << endl;
+    }
+    catch(const PLearnError& e)
+    {
+        cerr << "FATAL ERROR: " << e.message() << endl << endl;
+    }
+    catch (...)
+    {
+        cerr << "FATAL ERROR: uncaught unknown exception" << endl << endl;
+    }
 }
 
 int main()
 {
-  try {
-    PL_Log::instance().verbosity(VLEVEL_NORMAL);
+    try {
+        PL_Log::instance().verbosity(VLEVEL_NORMAL);
     
-    UNIT_TEST("data.amat");
-    UNIT_TEST("data.pmat");
-    UNIT_TEST("PLEARNDIR:test_suite/data/eslt_mixture/data_train.amat");
-  }
-  catch(const PLearnError& e)
-  {
-    cerr << "FATAL ERROR: " << e.message() << endl << endl;
-  }
-  catch (...)
-  {
-    cerr << "FATAL ERROR: uncaught unknown exception" << endl << endl;
-  }
+        UNIT_TEST("data.amat");
+        UNIT_TEST("data.pmat");
+        UNIT_TEST("PLEARNDIR:test_suite/data/eslt_mixture/data_train.amat");
+    }
+    catch(const PLearnError& e)
+    {
+        cerr << "FATAL ERROR: " << e.message() << endl << endl;
+    }
+    catch (...)
+    {
+        cerr << "FATAL ERROR: uncaught unknown exception" << endl << endl;
+    }
   
-  return 0;
+    return 0;
 }
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

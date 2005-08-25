@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PRange.h,v 1.1 2005/05/24 18:37:46 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Jean-Sébastien Senécal
 
@@ -57,102 +57,102 @@ template<class T>
 class PRange
 {
 private:
-  // Lower bound.
-  T lower_;
+    // Lower bound.
+    T lower_;
 
-  // Upper bound.
-  T upper_;
+    // Upper bound.
+    T upper_;
 
 public:
-  //! Creates an empty range [-1,0].
-  PRange() : lower_(0), upper_(-1) { }
+    //! Creates an empty range [-1,0].
+    PRange() : lower_(0), upper_(-1) { }
 
-  //! Creates a range with one element : [val,val]
-  PRange(const T& val) : lower_(val), upper_(val) { }
+    //! Creates a range with one element : [val,val]
+    PRange(const T& val) : lower_(val), upper_(val) { }
 
-  //! Creates the range [lower, upper].
-  PRange(const T& lower, const T& upper)
-  { setBounds(lower,upper); }
+    //! Creates the range [lower, upper].
+    PRange(const T& lower, const T& upper)
+    { setBounds(lower,upper); }
 
-  //! Returns true iff "val" is inside range.
-  bool contains(const T& val) const
-  { return (lower_ <= val && val <= upper_); }
+    //! Returns true iff "val" is inside range.
+    bool contains(const T& val) const
+    { return (lower_ <= val && val <= upper_); }
 
-  //! Returns true iff the range is empty.
-  bool isEmpty() const { return (lower_ > upper_); }
+    //! Returns true iff the range is empty.
+    bool isEmpty() const { return (lower_ > upper_); }
 
-  //! Returns the lower bound.
-  T lower() const { return lower_; }
+    //! Returns the lower bound.
+    T lower() const { return lower_; }
 
-  //! Returns the upper bound.
-  T upper() const { return upper_; }
+    //! Returns the upper bound.
+    T upper() const { return upper_; }
 
 
-  //! Sets to the empty range.
-  void clear() { lower_ = 0; upper_ = -1; }
+    //! Sets to the empty range.
+    void clear() { lower_ = 0; upper_ = -1; }
 
-  //! Sets to the one-element range [val,val].
-  void setValue(const T& val) { lower_ = upper_ = val; }
+    //! Sets to the one-element range [val,val].
+    void setValue(const T& val) { lower_ = upper_ = val; }
 
-  //! Changes the bounds.
-  void setBounds(const T& lower, const T& upper)
-  {
-    if (lower > upper)
-    { lower_ = 0; upper_ = -1; }
-    else
-    { lower_ = lower; upper_ = upper; }
-  }
-
-  //! Moves the bounds jointly.
-  void translate(const T& offset)
-  {
-    lower_ += offset;
-    upper_ += offset;
-  }
-
-  //! Move the upper bound only
-  void translateUpper(const T& offset) { upper_ += offset; }
-
-  //! Move the lower bound only
-  void translateLower(const T& offset) { lower_ += offset; }
-
-  //! Returns the distance (always positive).
-  T distance() const { return (max(0,upper_ - lower_ + 1)); }
-
-  //! Returns true iff both ranges are empty or have the same bounds.
-  bool operator==(const PRange<T>& r)
-  { return (r.lower() == lower_ && r.upper() == upper_); }
-
-  //! Returns true iff the ranges are not equal.
-  bool operator!=(const PRange<T>& r) const
-  { return (r.lower() != lower_ || r.upper() != upper_); }
-
-  //! Union-assignment operator.
-  PRange& operator|=(const PRange<T>& r)
-  {
-    if (isEmpty())
-      return operator=(r);
-    else if (!r.isEmpty())
+    //! Changes the bounds.
+    void setBounds(const T& lower, const T& upper)
     {
-      lower_ = min(lower_, r.lower());
-      upper_ = max(upper_, r.upper());
+        if (lower > upper)
+        { lower_ = 0; upper_ = -1; }
+        else
+        { lower_ = lower; upper_ = upper; }
     }
-    return (*this);
-  }
 
-  //! Intersection-assignment operator.
-  PRange& operator&=(const PRange<T>& r)
-  {
-    if (! isEmpty())
-      if (! r.isEmpty()) {
-        lower_ = max(lower_, r.lower());
-        upper_ = min(upper_, r.upper());
-      }
-      else
-        clear();
+    //! Moves the bounds jointly.
+    void translate(const T& offset)
+    {
+        lower_ += offset;
+        upper_ += offset;
+    }
+
+    //! Move the upper bound only
+    void translateUpper(const T& offset) { upper_ += offset; }
+
+    //! Move the lower bound only
+    void translateLower(const T& offset) { lower_ += offset; }
+
+    //! Returns the distance (always positive).
+    T distance() const { return (max(0,upper_ - lower_ + 1)); }
+
+    //! Returns true iff both ranges are empty or have the same bounds.
+    bool operator==(const PRange<T>& r)
+    { return (r.lower() == lower_ && r.upper() == upper_); }
+
+    //! Returns true iff the ranges are not equal.
+    bool operator!=(const PRange<T>& r) const
+    { return (r.lower() != lower_ || r.upper() != upper_); }
+
+    //! Union-assignment operator.
+    PRange& operator|=(const PRange<T>& r)
+    {
+        if (isEmpty())
+            return operator=(r);
+        else if (!r.isEmpty())
+        {
+            lower_ = min(lower_, r.lower());
+            upper_ = max(upper_, r.upper());
+        }
+        return (*this);
+    }
+
+    //! Intersection-assignment operator.
+    PRange& operator&=(const PRange<T>& r)
+    {
+        if (! isEmpty())
+            if (! r.isEmpty()) {
+                lower_ = max(lower_, r.lower());
+                upper_ = min(upper_, r.upper());
+            }
+            else
+                clear();
     
-    return (*this);
-  }
+        return (*this);
+    }
   
 };
 
@@ -160,24 +160,37 @@ public:
 template<class T>
 PRange<T> operator|(const PRange<T>& r1, const PRange<T>& r2)
 {
-  if (r1.isEmpty())
-    return r2;
-  else if (r2.isEmpty())
-    return r1;
-  else
-    return PRange<T>( min(r1.lower(), r2.lower()), max(r1.upper(), r2.upper()) );
+    if (r1.isEmpty())
+        return r2;
+    else if (r2.isEmpty())
+        return r1;
+    else
+        return PRange<T>( min(r1.lower(), r2.lower()), max(r1.upper(), r2.upper()) );
 }
 
 //! Intersection operator.
 template<class T>
 PRange<T> operator&(const PRange<T>& r1, const PRange<T>& r2)
 {
-  if ( r1.isEmpty() || r2.isEmpty() )
-    return PRange<T>();                      // empty range
-  else
-    return PRange<T>( max(r1.lower(), r2.lower()), min(r1.upper(), r2.upper()) );
+    if ( r1.isEmpty() || r2.isEmpty() )
+        return PRange<T>();                      // empty range
+    else
+        return PRange<T>( max(r1.lower(), r2.lower()), min(r1.upper(), r2.upper()) );
 }
   
 }
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

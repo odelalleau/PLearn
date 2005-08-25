@@ -35,8 +35,8 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperCommand.h,v 1.6 2005/02/19 22:10:15 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file HyperCommand.h */
 #ifndef HyperCommand_INC
@@ -57,66 +57,79 @@ class HyperCommand: public Object
 
 private:
 
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
 
-  HyperLearner* hlearner;   //!< A 'real' pointer to avoid cycles (and memory leaks)
-  PPath expdir; //!< where to report results
+    HyperLearner* hlearner;   //!< A 'real' pointer to avoid cycles (and memory leaks)
+    PPath expdir; //!< where to report results
 
 public:
 
-  PLEARN_DECLARE_ABSTRACT_OBJECT(HyperCommand);
+    PLEARN_DECLARE_ABSTRACT_OBJECT(HyperCommand);
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  HyperCommand();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    HyperCommand();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  void setHyperLearner(HyperLearner* the_hlearner)
-  { hlearner = the_hlearner; }
+    void setHyperLearner(HyperLearner* the_hlearner)
+    { hlearner = the_hlearner; }
 
-  virtual void setExperimentDirectory(const PPath& the_expdir);
+    virtual void setExperimentDirectory(const PPath& the_expdir);
 
-  PPath getExperimentDirectory() const
-  { return expdir; }
+    PPath getExperimentDirectory() const
+    { return expdir; }
 
-  //! Executes the command, returning the resulting costvec of its optimization 
-  //! (or an empty vec if it didn't do any testng).
-  virtual Vec optimize() =0;
+    //! Executes the command, returning the resulting costvec of its optimization 
+    //! (or an empty vec if it didn't do any testng).
+    virtual Vec optimize() =0;
 
-  //! Returns the names of the results returned by the optimize() method
-  virtual TVec<string> getResultNames() const =0;
+    //! Returns the names of the results returned by the optimize() method
+    virtual TVec<string> getResultNames() const =0;
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(HyperCommand);
+DECLARE_OBJECT_PTR(HyperCommand);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

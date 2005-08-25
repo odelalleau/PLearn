@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: WordNetSenseDictionary.h,v 1.4 2004/10/06 21:27:47 kermorvc Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
 
@@ -65,84 +65,84 @@ class WordNetSenseDictionary: public Dictionary
 
 private:
   
-  typedef Dictionary inherited;
+    typedef Dictionary inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  //! WordNet ontology of the dictionary
-  WordNetOntology *wno;
+    //! WordNet ontology of the dictionary
+    WordNetOntology *wno;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
-  //! Stem word before including in dictionary STEM/NO_STEM (ontology only)
-  bool stem_mode;
-  //! path to ontology
-  string ontology_file_name;
+    // ************************
+    // * public build options *
+    // ************************
+    //! Stem word before including in dictionary STEM/NO_STEM (ontology only)
+    bool stem_mode;
+    //! path to ontology
+    string ontology_file_name;
   
-  // ### declare public option fields (such as build options) here
-  // ...
+    // ### declare public option fields (such as build options) here
+    // ...
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  WordNetSenseDictionary();
+    //! Default constructor.
+    WordNetSenseDictionary();
 
-  //! Destructor
-  ~WordNetSenseDictionary();
+    //! Destructor
+    ~WordNetSenseDictionary();
 
-  //! Constructor
-  /*!
-    \param 
-    \param up_mode update mode : NO_UPDATE, UPDATE
-  */
-  WordNetSenseDictionary(string ontology_name,bool up_mode=DEFAULT_UPDATE);
+    //! Constructor
+    /*!
+      \param 
+      \param up_mode update mode : NO_UPDATE, UPDATE
+    */
+    WordNetSenseDictionary(string ontology_name,bool up_mode=DEFAULT_UPDATE);
   
   
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
-  //! Set stem mode NO_STEM/STEM
-  void setStemMode(bool stem);
+    //! Set stem mode NO_STEM/STEM
+    void setStemMode(bool stem);
 
 
 protected: 
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(WordNetSenseDictionary);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(WordNetSenseDictionary);
 
-  //! Gives the id of a symbol in the dictionary
-  //! If the symbol is not in the dictionary, 
-  //! returns index of OOV_TAG if update_mode = NO_UPDATE
-  //! insert the new word otherwise and return its index
-  int getId(string symbol, TVec<string> options = TVec<string>(0));
+    //! Gives the id of a symbol in the dictionary
+    //! If the symbol is not in the dictionary, 
+    //! returns index of OOV_TAG if update_mode = NO_UPDATE
+    //! insert the new word otherwise and return its index
+    int getId(string symbol, TVec<string> options = TVec<string>(0));
 
-  //! Const version. Do not insert unknown words
-  int getId(string symbol, TVec<string> options = TVec<string>(0))const;
+    //! Const version. Do not insert unknown words
+    int getId(string symbol, TVec<string> options = TVec<string>(0))const;
   
-  //! Gives the symbol from an id of the dictionary
-  string getSymbol(int id, TVec<string> options = TVec<string>(0))const;
+    //! Gives the symbol from an id of the dictionary
+    string getSymbol(int id, TVec<string> options = TVec<string>(0))const;
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 
@@ -152,3 +152,16 @@ DECLARE_OBJECT_PTR(WordNetSenseDictionary);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

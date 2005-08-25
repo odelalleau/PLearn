@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.h,v 1.8 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef UnfoldedFuncVariable_INC
 #define UnfoldedFuncVariable_INC
@@ -51,38 +51,38 @@ using namespace std;
 
 class UnfoldedFuncVariable: public NaryVariable
 {
-  typedef NaryVariable inherited;
+    typedef NaryVariable inherited;
 
 public:
 //protected:
-  Var input_matrix;
-  Func f;
-  bool transpose;
+    Var input_matrix;
+    Func f;
+    bool transpose;
 
-  TVec<VarArray> inputs; // all the input Var's
-  TVec<Var> outputs; // and the corresponding output Var's, 
-  TVec<VarArray> f_paths; // the duplicates of f prop. path for each input/output pair: inputs[i]->outputs[i]
+    TVec<VarArray> inputs; // all the input Var's
+    TVec<Var> outputs; // and the corresponding output Var's, 
+    TVec<VarArray> f_paths; // the duplicates of f prop. path for each input/output pair: inputs[i]->outputs[i]
 
 public:
-  //!  protected default constructor for persistence
-  UnfoldedFuncVariable();
-  //! concatenate_{i=0 to n_unfold} f(i-th row of input_matrix)
-  UnfoldedFuncVariable(Var inputmatrix, Func the_f, bool transpose);
+    //!  protected default constructor for persistence
+    UnfoldedFuncVariable();
+    //! concatenate_{i=0 to n_unfold} f(i-th row of input_matrix)
+    UnfoldedFuncVariable(Var inputmatrix, Func the_f, bool transpose);
     
-  PLEARN_DECLARE_OBJECT(UnfoldedFuncVariable);
-  static void declareOptions(OptionList& ol);
+    PLEARN_DECLARE_OBJECT(UnfoldedFuncVariable);
+    static void declareOptions(OptionList& ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-  virtual void fprop();
-  virtual void bprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void fprop();
+    virtual void bprop();
     
-  void printInfo(bool print_gradient);
+    void printInfo(bool print_gradient);
 
 protected:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(UnfoldedFuncVariable);
@@ -93,3 +93,16 @@ inline Var unfoldedFunc(Var input_matrix, Func f, bool transpose = false)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

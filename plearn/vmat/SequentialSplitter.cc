@@ -36,8 +36,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SequentialSplitter.cc,v 1.7 2004/05/06 21:22:12 ducharme Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
 #include "SequentialSplitter.h"
@@ -54,16 +54,16 @@ PLEARN_IMPLEMENT_OBJECT(SequentialSplitter, "ONE LINE DESCR",
 
 void SequentialSplitter::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "horizon", &SequentialSplitter::horizon, OptionBase::buildoption,
-      "How far in the future is the test set (split[1])");
+    declareOption(ol, "horizon", &SequentialSplitter::horizon, OptionBase::buildoption,
+                  "How far in the future is the test set (split[1])");
 
-  declareOption(ol, "init_train_size", &SequentialSplitter::init_train_size, OptionBase::buildoption,
-      "Initial length of the train set (split[0])");
+    declareOption(ol, "init_train_size", &SequentialSplitter::init_train_size, OptionBase::buildoption,
+                  "Initial length of the train set (split[0])");
 
-  declareOption(ol, "return_entire_vmat", &SequentialSplitter::return_entire_vmat, OptionBase::buildoption,
-      "If true, the test split (split[1]) will start at t=0.");
+    declareOption(ol, "return_entire_vmat", &SequentialSplitter::return_entire_vmat, OptionBase::buildoption,
+                  "If true, the test split (split[1]) will start at t=0.");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 void SequentialSplitter::build_()
@@ -73,50 +73,63 @@ void SequentialSplitter::build_()
 // ### Nothing to add here, simply calls build_
 void SequentialSplitter::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 int SequentialSplitter::nSetsPerSplit() const
 {
-  return 2;
+    return 2;
 }
 
 int SequentialSplitter::nsplits() const
 {
-  if (dataset.isNull())
-    PLERROR("SequentialSplitter::nsplits() - Must call setDataSet()");
-  if (init_train_size < 1)
-    PLERROR("SequentialSplitter::nsplits() - init_train_size must be stricktly positive (%d)", init_train_size);
-  if (horizon < 1)
-    PLERROR("SequentialSplitter::nsplits() - horizon must be stricktly positive (%d)", horizon);
+    if (dataset.isNull())
+        PLERROR("SequentialSplitter::nsplits() - Must call setDataSet()");
+    if (init_train_size < 1)
+        PLERROR("SequentialSplitter::nsplits() - init_train_size must be stricktly positive (%d)", init_train_size);
+    if (horizon < 1)
+        PLERROR("SequentialSplitter::nsplits() - horizon must be stricktly positive (%d)", horizon);
 
-  return dataset.length() - init_train_size - horizon + 1;
+    return dataset.length() - init_train_size - horizon + 1;
 }
 
 TVec<VMat> SequentialSplitter::getSplit(int k)
 {
-  if (dataset.isNull())
-    PLERROR("SequentialSplitter::getSplit() - Must call setDataSet()");
+    if (dataset.isNull())
+        PLERROR("SequentialSplitter::getSplit() - Must call setDataSet()");
 
-  int n_splits = nsplits();
-  if (k >= n_splits)
-    PLERROR("SequentialSplitter::getSplit() - k (%d) cannot be greater than K (%d)", k, n_splits);
+    int n_splits = nsplits();
+    if (k >= n_splits)
+        PLERROR("SequentialSplitter::getSplit() - k (%d) cannot be greater than K (%d)", k, n_splits);
 
-  int seq_length = dataset.length();
-  if (init_train_size >= seq_length)
-    PLERROR("SequentialSplitter::getSplit() - init_train_size (%d) >= dataset.length() (%d)", init_train_size, seq_length);
+    int seq_length = dataset.length();
+    if (init_train_size >= seq_length)
+        PLERROR("SequentialSplitter::getSplit() - init_train_size (%d) >= dataset.length() (%d)", init_train_size, seq_length);
 
-  int t = init_train_size + k;
-  int start_test_t = return_entire_vmat ? 0 : t;
-  int n_test = t + horizon - start_test_t;
+    int t = init_train_size + k;
+    int start_test_t = return_entire_vmat ? 0 : t;
+    int n_test = t + horizon - start_test_t;
 
-  TVec<VMat> split_(2);
-  split_[0] = dataset.subMatRows(0, t);
-  split_[1] = dataset.subMatRows(start_test_t, n_test);
+    TVec<VMat> split_(2);
+    split_[0] = dataset.subMatRows(0, t);
+    split_[1] = dataset.subMatRows(start_test_t, n_test);
 
-  return split_;
+    return split_;
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

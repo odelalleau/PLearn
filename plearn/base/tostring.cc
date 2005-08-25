@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: tostring.cc,v 1.1 2005/01/20 20:07:30 dorionc Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christian Dorion
 
@@ -48,28 +48,41 @@ using namespace std;
 
 string tostring(const double& x)
 {
-  ostringstream out;
-  int ix = (int)x;
-  if (ix == x)
-    out << ix;
-  else {
-    out.precision(12);
-    out << x;
-  }
-  return out.str();
+    ostringstream out;
+    int ix = (int)x;
+    if (ix == x)
+        out << ix;
+    else {
+        out.precision(12);
+        out << x;
+    }
+    return out.str();
 }
 
 string tostring(const float& x)
 {
-  ostringstream out;
-  int ix = (int)x;
-  if (ix == x)
-    out << ix;
-  else {
-    out.precision(8);
-    out << x;
-  }
-  return out.str();
+    ostringstream out;
+    int ix = (int)x;
+    if (ix == x)
+        out << ix;
+    else {
+        out.precision(8);
+        out << x;
+    }
+    return out.str();
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -34,8 +34,8 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperLearner.cc,v 1.8 2005/06/02 16:47:09 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 // Author: Pascal Vincent
 
 #include "HyperLearner.h"
@@ -49,25 +49,25 @@ namespace PLearn {
 // ###### HyperLearner ########################################################
 
 PLEARN_IMPLEMENT_OBJECT(
-  HyperLearner,
-  "Learner which optimizes a set of hyper-parameters.",
-  "");
+    HyperLearner,
+    "Learner which optimizes a set of hyper-parameters.",
+    "");
 
 
 TVec<string> HyperLearner::getTrainCostNames() const
 {
-  if (strategy.size() > 0)
-    return strategy.lastElement()->getResultNames();
-  else
-    return TVec<string>();
+    if (strategy.size() > 0)
+        return strategy.lastElement()->getResultNames();
+    else
+        return TVec<string>();
 }
 
 HyperLearner::HyperLearner()
-  : provide_strategy_expdir(true), save_final_learner(true)
+    : provide_strategy_expdir(true), save_final_learner(true)
 {
-  // The default behavior is to let the PTester decide whether or not
-  // to provide the underlying learner with an experiment directory.
-  provide_learner_expdir = false;
+    // The default behavior is to let the PTester decide whether or not
+    // to provide the underlying learner with an experiment directory.
+    provide_learner_expdir = false;
 }
 
 void
@@ -116,141 +116,154 @@ HyperLearner::declareOptions(OptionList &ol)
     // Hide some unused options.
 
     redeclareOption(ol, "seed", &HyperLearner::seed_, OptionBase::nosave,
-        "Not used.");
+                    "Not used.");
     
 }
 
 void HyperLearner::setLearnerOptions(const TVec<string>& option_names,
                                      const TVec<string>& option_vals)
 {
-  // This function has been modified to call changeOptions on the learner
-  // rather than a sequence of setOptions.  Learner options are accumulated
-  // into a map suitable for calling changeOptions.  TESTER options are
-  // still handled as a set of discrete setOptions.
+    // This function has been modified to call changeOptions on the learner
+    // rather than a sequence of setOptions.  Learner options are accumulated
+    // into a map suitable for calling changeOptions.  TESTER options are
+    // still handled as a set of discrete setOptions.
 
-  map<string,string> new_learner_options;
-  int l = option_names.length();
-  bool do_restart = false;
-  for(int i=0; i<l; i++) {
-    string optname = option_names[i];
-    string newval = option_vals[i];
+    map<string,string> new_learner_options;
+    int l = option_names.length();
+    bool do_restart = false;
+    for(int i=0; i<l; i++) {
+        string optname = option_names[i];
+        string newval = option_vals[i];
 
-    // Decide if we should perform build after setting the options
-    do_restart = do_restart ||
-      ! dont_restart_upon_change.contains(optname);
+        // Decide if we should perform build after setting the options
+        do_restart = do_restart ||
+            ! dont_restart_upon_change.contains(optname);
 
-    // Here, we incorporate the capability to change an option in the
-    // tester (rather than the embedded learner) by prefixing the option
-    // name with the special keyword TESTER.
-    if (optname.substr(0,7) == "TESTER.") {
-      // This is the old control flow for banging tester only
-      optname = optname.substr(7);
-      if (tester->getOption(optname) != newval)
-        tester->setOption(optname, newval);
+        // Here, we incorporate the capability to change an option in the
+        // tester (rather than the embedded learner) by prefixing the option
+        // name with the special keyword TESTER.
+        if (optname.substr(0,7) == "TESTER.") {
+            // This is the old control flow for banging tester only
+            optname = optname.substr(7);
+            if (tester->getOption(optname) != newval)
+                tester->setOption(optname, newval);
+        }
+        else {
+            // New control flow: accumulate changes into the map
+            if (learner_->getOption(optname) != newval)
+                new_learner_options[optname] = newval;
+        }
     }
-    else {
-      // New control flow: accumulate changes into the map
-      if (learner_->getOption(optname) != newval)
-        new_learner_options[optname] = newval;
-    }
-  }
-  learner_->changeOptions(new_learner_options);
-  if(do_restart)
+    learner_->changeOptions(new_learner_options);
+    if(do_restart)
     {
-      learner_->build();
-      learner_->forget();
+        learner_->build();
+        learner_->forget();
     }
 }
 
 void HyperLearner::setTrainingSet(VMat training_set, bool call_forget)
 { 
-  train_set = training_set;
+    train_set = training_set;
   
-  // no need to forget a second time
-  learner_->setTrainingSet(training_set,false); // just to make sure the underlying learner knows the targetsize
-  if (call_forget)
-  {
-    build();
-    forget();
-  }
+    // no need to forget a second time
+    learner_->setTrainingSet(training_set,false); // just to make sure the underlying learner knows the targetsize
+    if (call_forget)
+    {
+        build();
+        forget();
+    }
 }
 
 void HyperLearner::train()
 {
-  tester->dataset = getTrainingSet();  
-  Vec results;
+    tester->dataset = getTrainingSet();  
+    Vec results;
 
-  if (!train_stats)
-    setTrainStatsCollector(new VecStatsCollector()); // set a dummy one if
-                                                     // none is set...
+    if (!train_stats)
+        setTrainStatsCollector(new VecStatsCollector()); // set a dummy one if
+    // none is set...
 
-  if(stage==0 && nstages>0)
+    if(stage==0 && nstages>0)
     {
-      for(int commandnum=0; commandnum<strategy.length(); commandnum++)
+        for(int commandnum=0; commandnum<strategy.length(); commandnum++)
         {
-          if(provide_strategy_expdir)
-          {
-            if(expdir!="")
-              strategy[commandnum]->setExperimentDirectory( expdir / ("Strat"+tostring(commandnum)) );
-            else
-              strategy[commandnum]->setExperimentDirectory("");
-          }
+            if(provide_strategy_expdir)
+            {
+                if(expdir!="")
+                    strategy[commandnum]->setExperimentDirectory( expdir / ("Strat"+tostring(commandnum)) );
+                else
+                    strategy[commandnum]->setExperimentDirectory("");
+            }
             
-          results = strategy[commandnum]->optimize();
+            results = strategy[commandnum]->optimize();
         }
 
-      train_stats->update(results);
+        train_stats->update(results);
 
-      if(save_final_learner)
+        if(save_final_learner)
         {
-          if(expdir=="")
-            PLERROR("Cannot save final model: no experiment directory has been set");
-          PLearn::save(expdir+"final_learner.psave",*getLearner());
+            if(expdir=="")
+                PLERROR("Cannot save final model: no experiment directory has been set");
+            PLearn::save(expdir+"final_learner.psave",*getLearner());
         }
 
-      stage = 1;
+        stage = 1;
     }
 }
 
 void HyperLearner::forget()
 {
-  learner_->forget();
-  stage = 0;
+    learner_->forget();
+    stage = 0;
 }
 
 void HyperLearner::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation. 
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+    // ### You should assume that the parent class' build_() has already been called.
 
-  // Set the Tester's learner to point to the same as the HyperLearner's learner
-  tester->learner = learner_;
+    // Set the Tester's learner to point to the same as the HyperLearner's learner
+    tester->learner = learner_;
 
-  for(int commandnum=0; commandnum<strategy.length(); commandnum++)
-    strategy[commandnum]->setHyperLearner(this);
+    for(int commandnum=0; commandnum<strategy.length(); commandnum++)
+        strategy[commandnum]->setHyperLearner(this);
 }
 
 // ### Nothing to add here, simply calls build_
 void HyperLearner::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 
 void HyperLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
   
-  deepCopyField(tester, copies);
-  deepCopyField(option_fields, copies);
-  deepCopyField(dont_restart_upon_change, copies);
-  deepCopyField(strategy, copies);
+    deepCopyField(tester, copies);
+    deepCopyField(option_fields, copies);
+    deepCopyField(dont_restart_upon_change, copies);
+    deepCopyField(strategy, copies);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

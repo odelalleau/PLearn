@@ -33,9 +33,9 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: VarMeasurer.cc,v 1.3 2004/02/20 21:11:54 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "VarMeasurer.h"
 
@@ -44,29 +44,37 @@ using namespace std;
 
 bool VarMeasurer::measure(int t, const Vec& costs)
 {
-  if (t%every == 0)
-  {
-    if (out)
+    if (t%every == 0)
     {
-      out << t << ' ';
-      for (int i=0; i<v->length(); i++)
-        out << v->value[i] << ' ';
-      out << endl;
+        if (out)
+        {
+            out << t << ' ';
+            for (int i=0; i<v->length(); i++)
+                out << v->value[i] << ' ';
+            out << endl;
+        }
+        if (onscreen_prompt.size() != 0)
+        {
+            cout << t << ": " << onscreen_prompt << " ";
+            for (int i=0; i<v->length(); i++)
+                cout << v->value[i] << ' ';
+            cout << endl;
+        }
     }
-    if (onscreen_prompt.size() != 0)
-    {
-      cout << t << ": " << onscreen_prompt << " ";
-      for (int i=0; i<v->length(); i++)
-        cout << v->value[i] << ' ';
-      cout << endl;
-    }
-  }
-  return false;
+    return false;
 }
 
 } // end of namespace PLearn
 
-
-
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

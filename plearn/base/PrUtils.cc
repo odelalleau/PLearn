@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrUtils.cc,v 1.4 2005/04/01 17:27:01 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christian Hudon
 
@@ -52,13 +52,26 @@ using namespace std;
  */
 string getPrErrorString()
 {
-  // We hardcode the language to English because PR_ErrorToString()
-  // is defined as returning a UTF-8 string. If we restrict ourselves
-  // to ASCII, UTF-8 is the same as ASCII, so by asking for English
-  // messages (which will not use accented letters, etc.) we don't
-  // need to convert the UTF-8 to Latin-1 or something before displaying it.
-  return PR_ErrorToString(PR_GetError(), PR_LANGUAGE_EN);
+    // We hardcode the language to English because PR_ErrorToString()
+    // is defined as returning a UTF-8 string. If we restrict ourselves
+    // to ASCII, UTF-8 is the same as ASCII, so by asking for English
+    // messages (which will not use accented letters, etc.) we don't
+    // need to convert the UTF-8 to Latin-1 or something before displaying it.
+    return PR_ErrorToString(PR_GetError(), PR_LANGUAGE_EN);
 } 
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

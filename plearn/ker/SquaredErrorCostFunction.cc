@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SquaredErrorCostFunction.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "SelectedOutputCostFunction.h"
 #include "SquaredErrorCostFunction.h"
@@ -52,32 +52,32 @@ PLEARN_IMPLEMENT_OBJECT(SquaredErrorCostFunction, "ONE LINE DESCR", "NO HELP");
 real SquaredErrorCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
 #ifdef BOUNDCHECK
-  if(target.length()!=output.length() && classification==false)
-    PLERROR("In SquaredErrorCostFunction::evaluate target.length() %d should be equal to output.length() %d",target.length(),output.length());
+    if(target.length()!=output.length() && classification==false)
+        PLERROR("In SquaredErrorCostFunction::evaluate target.length() %d should be equal to output.length() %d",target.length(),output.length());
 #endif
 
-  real result = 0.0;
-  if (targetindex>=0)
-    result = square(output[targetindex]-target[targetindex]);
-  else
+    real result = 0.0;
+    if (targetindex>=0)
+        result = square(output[targetindex]-target[targetindex]);
+    else
     {
-      real* outputdata = output.data();
-      real* targetdata = target.data();
-      if (classification) {
-	if (target.length() != 1)
-	  PLERROR("In SquaredErrorCostFunction::evaluate target.length() %s should be 1", target.length());
+        real* outputdata = output.data();
+        real* targetdata = target.data();
+        if (classification) {
+            if (target.length() != 1)
+                PLERROR("In SquaredErrorCostFunction::evaluate target.length() %s should be 1", target.length());
 
-	for (int i = 0; i < output.length(); ++i)
-	  if (i == targetdata[0])
-	    result += square(outputdata[i] - hotvalue);
-	  else
-	    result += square(outputdata[i] - coldvalue);
-      } else {
-	for(int i=0; i<output.length(); i++)
-	  result += square(outputdata[i]-targetdata[i]);
-      }
+            for (int i = 0; i < output.length(); ++i)
+                if (i == targetdata[0])
+                    result += square(outputdata[i] - hotvalue);
+                else
+                    result += square(outputdata[i] - coldvalue);
+        } else {
+            for(int i=0; i<output.length(); i++)
+                result += square(outputdata[i]-targetdata[i]);
+        }
     }
-  return result;
+    return result;
 }
 
 void SquaredErrorCostFunction::declareOptions(OptionList &ol)
@@ -91,11 +91,23 @@ void SquaredErrorCostFunction::declareOptions(OptionList &ol)
 
 CostFunc squared_error(int singleoutputindex)
 { 
-  if(singleoutputindex>=0)
-    return new SelectedOutputCostFunction(new SquaredErrorCostFunction(),singleoutputindex); 
-  else
-    return new SquaredErrorCostFunction();
+    if(singleoutputindex>=0)
+        return new SelectedOutputCostFunction(new SquaredErrorCostFunction(),singleoutputindex); 
+    else
+        return new SquaredErrorCostFunction();
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

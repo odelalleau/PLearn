@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: LeftPseudoInverseVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "LeftPseudoInverseVariable.h"
 #include "Var_utils.h"
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(LeftPseudoInverseVariable,
                         "NO HELP");
 
 LeftPseudoInverseVariable::LeftPseudoInverseVariable(Variable* input)
-  : inherited(input, input->length(), input->width()) 
+    : inherited(input, input->length(), input->width()) 
 {
     build_();
 }
@@ -87,23 +87,34 @@ void LeftPseudoInverseVariable::recomputeSize(int& l, int& w) const
 
 void LeftPseudoInverseVariable::fprop()
 {
-  leftPseudoInverse(input->matValue,matValue);
+    leftPseudoInverse(input->matValue,matValue);
 }
 
 
 void LeftPseudoInverseVariable::bprop()
 {
-  PLERROR("LeftPseudoInverseVariable: bprop not implemented yet");
+    PLERROR("LeftPseudoInverseVariable: bprop not implemented yet");
 }
 
 
 void LeftPseudoInverseVariable::symbolicBprop()
 {
-  PLERROR("LeftPseudoInverseVariable: symbolicBprop not implemented yet");
+    PLERROR("LeftPseudoInverseVariable: symbolicBprop not implemented yet");
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -32,9 +32,9 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDateTime.cc,v 1.7 2004/07/21 19:55:18 chapados Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 //#include <limits.h>                 // from stdc
 #include "stringutils.h"            // For tostring.
@@ -46,139 +46,151 @@ using namespace std;
 
 PDateTime::PDateTime()
 {
-  setMissing();
+    setMissing();
 }
 
 PDateTime::PDateTime(double julian_day)
 {
-  int jw = (int)((julian_day - 1867216.25)/36524.25);
-  int jx = (int)(jw/4);
-  int ja = (int)(julian_day + 1 + jw - jx);
-  int jb = ja + 1524;
-  int jc = (int)((jb - 122.1)/365.25);
-  int jd = (int)(365.25*jc);
-  int je = (int)((jb - jd)/30.6001);
-  int jf = (int)(30.6001*je);
+    int jw = (int)((julian_day - 1867216.25)/36524.25);
+    int jx = (int)(jw/4);
+    int ja = (int)(julian_day + 1 + jw - jx);
+    int jb = ja + 1524;
+    int jc = (int)((jb - 122.1)/365.25);
+    int jd = (int)(365.25*jc);
+    int je = (int)((jb - jd)/30.6001);
+    int jf = (int)(30.6001*je);
 
-  day = jb - jd - jf;
-  month = (je>13) ? je-13 : je-1;
-  year = (month>2) ? jc-4716 : jc-4715;
+    day = jb - jd - jf;
+    month = (je>13) ? je-13 : je-1;
+    year = (month>2) ? jc-4716 : jc-4715;
 
-  double fraction = julian_day - floor(julian_day);
-  int hh,mm,ss;
-  double_to_hhmmss(fraction,hh,mm,ss);
-  hour = hh;
-  min = mm;
-  sec = ss;
+    double fraction = julian_day - floor(julian_day);
+    int hh,mm,ss;
+    double_to_hhmmss(fraction,hh,mm,ss);
+    hour = hh;
+    min = mm;
+    sec = ss;
 }
 
 PDateTime::PDateTime(string date)
 {
-  // Parse either "YYYY/MM/DD" or "YYYY/MM/DD hh:mm:ss" format
-  if ((date.size() == 10 || date.size() == 19) &&
-      date[4] == '/' && date[7] == '/' &&
-      (date.size() == 19? date[13] == ':' && date[16] == ':' : true)) {
-    year = toint(date.substr(0,4));
-    month = toint(date.substr(5,2));
-    day = toint(date.substr(8,2));
-    if (date.size() == 10)
-      hour = min = sec = 0;
-    else {
-      hour = toint(date.substr(11,2));
-      min  = toint(date.substr(14,2));
-      sec  = toint(date.substr(17,2));
+    // Parse either "YYYY/MM/DD" or "YYYY/MM/DD hh:mm:ss" format
+    if ((date.size() == 10 || date.size() == 19) &&
+        date[4] == '/' && date[7] == '/' &&
+        (date.size() == 19? date[13] == ':' && date[16] == ':' : true)) {
+        year = toint(date.substr(0,4));
+        month = toint(date.substr(5,2));
+        day = toint(date.substr(8,2));
+        if (date.size() == 10)
+            hour = min = sec = 0;
+        else {
+            hour = toint(date.substr(11,2));
+            min  = toint(date.substr(14,2));
+            sec  = toint(date.substr(17,2));
+        }
     }
-  }
-  else
-    PLERROR("PDateTime::PDateTime: the passed date-time string is not in "
-            "\"YYYY/MM/DD\" or \"YYYY/MM/DD hh:mm:ss\" format");
+    else
+        PLERROR("PDateTime::PDateTime: the passed date-time string is not in "
+                "\"YYYY/MM/DD\" or \"YYYY/MM/DD hh:mm:ss\" format");
 }
 
 bool PDateTime::isMissing() const
 {
-  return year == SHRT_MIN && month == 0 && day == 0;
+    return year == SHRT_MIN && month == 0 && day == 0;
 }
 
 void PDateTime::setMissing()
 {
-  year = SHRT_MIN;
-  month = 0;
-  day = 0;
+    year = SHRT_MIN;
+    month = 0;
+    day = 0;
 }  
   
 string PDateTime::info() const
 {
-  return tostring(year)+ slash+
-    right(tostring(int(month)), 2, '0') + slash+
-    right(tostring(int(day)),   2, '0') + " "+
-    right(tostring(int(hour)),  2, '0') + ":"+
-    right(tostring(int(min)),   2, '0') + ":"+
-    right(tostring(int(sec)),   2, '0');
+    return tostring(year)+ slash+
+        right(tostring(int(month)), 2, '0') + slash+
+        right(tostring(int(day)),   2, '0') + " "+
+        right(tostring(int(hour)),  2, '0') + ":"+
+        right(tostring(int(min)),   2, '0') + ":"+
+        right(tostring(int(sec)),   2, '0');
 }
 
 double PDateTime::toJulianDay() const
 {
-  if (year < 1582)
-    PLERROR("toJulianDay works safely only for year > 1581 (%d)", year);
+    if (year < 1582)
+        PLERROR("toJulianDay works safely only for year > 1581 (%d)", year);
 
-  double fraction = hhmmss_to_double(hour,min,sec);
+    double fraction = hhmmss_to_double(hour,min,sec);
   
-  int jy = (month>2) ? year : year-1;
-  int jm = (month>2) ? month : month+12;
-  int ja = (int)(jy/100);
-  int jb = (int)(ja/4);
-  int jc = 2 - ja + jb;
-  int je = (int)(365.25*(jy + 4716));
-  int jf = (int)(30.6001*(jm + 1));
+    int jy = (month>2) ? year : year-1;
+    int jm = (month>2) ? month : month+12;
+    int ja = (int)(jy/100);
+    int jb = (int)(ja/4);
+    int jc = 2 - ja + jb;
+    int je = (int)(365.25*(jy + 4716));
+    int jf = (int)(30.6001*(jm + 1));
 
-  return jc + day + je + jf - 1524 + fraction;
+    return jc + day + je + jf - 1524 + fraction;
 }
 
 double datetime_to_double(const PDateTime& t)
 {
-  if (t.isMissing())
-    return MISSING_VALUE;
-  else
-    return double((t.year-1900)*10000 + t.month*100 + t.day) +
-      hhmmss_to_double(t.hour,t.min,t.sec);
+    if (t.isMissing())
+        return MISSING_VALUE;
+    else
+        return double((t.year-1900)*10000 + t.month*100 + t.day) +
+            hhmmss_to_double(t.hour,t.min,t.sec);
 }
 
 PDateTime double_to_datetime(double f)
 {
-  PDateTime date;                     // missing by default
-  if (! is_missing(f)) {
-    long d = long(f);
-    double fraction = f-d;
-    date.year = 1900 + d/10000;
-    d %= 10000;
-    date.month = d/100;
-    date.day = d%100;
+    PDateTime date;                     // missing by default
+    if (! is_missing(f)) {
+        long d = long(f);
+        double fraction = f-d;
+        date.year = 1900 + d/10000;
+        d %= 10000;
+        date.month = d/100;
+        date.day = d%100;
 
-    int hh,mm,ss;
-    double_to_hhmmss(fraction,hh,mm,ss);
-    date.hour = hh;
-    date.min  = mm;
-    date.sec  = ss;
-  }
-  return date;
+        int hh,mm,ss;
+        double_to_hhmmss(fraction,hh,mm,ss);
+        date.hour = hh;
+        date.min  = mm;
+        date.sec  = ss;
+    }
+    return date;
 }
 
 double hhmmss_to_double(int hh, int mm, int ss)
 {
-  // There are 1440 minutes in a day.
-  // There are 86400 seconds in a day.
-  return double(hh)/24. + double(mm)/1440. + double(ss)/86400;
+    // There are 1440 minutes in a day.
+    // There are 86400 seconds in a day.
+    return double(hh)/24. + double(mm)/1440. + double(ss)/86400;
 }
 
 void double_to_hhmmss(double fraction, int& hh, int& mm, int& ss)
 {
-  hh = int(fraction *= 24);
-  fraction -= hh;
-  mm = int(fraction *= 60);
-  fraction -= mm;
-  ss = int(fraction * 60);
+    hh = int(fraction *= 24);
+    fraction -= hh;
+    mm = int(fraction *= 60);
+    fraction -= mm;
+    ss = int(fraction * 60);
 }
 
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

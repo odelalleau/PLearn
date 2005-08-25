@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Grapher.h,v 1.6 2004/09/14 16:04:57 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file Grapher.h */
 #ifndef GenerateDecisionPlot_INC
@@ -50,82 +50,95 @@ using namespace std;
 class Grapher: public Object
 {
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
     
 public:
 
-  typedef Object inherited;
+    typedef Object inherited;
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  string basename;
-  string task;
-  real class1_threshold;
-  PP<PLearner> learner;
-  VMat trainset;
-  TVec<int> griddim;
-  TVec< pair<real,real> > gridrange;
-  real radius;
-  bool bw;
+    string basename;
+    string task;
+    real class1_threshold;
+    PP<PLearner> learner;
+    VMat trainset;
+    TVec<int> griddim;
+    TVec< pair<real,real> > gridrange;
+    real radius;
+    bool bw;
   
-  string save_learner_as;
+    string save_learner_as;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  Grapher();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    Grapher();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
   
-  void computeAutoGridrange();
+    void computeAutoGridrange();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  //! Overload this for runnable objects (default method issues a runtime error)
-  virtual void run();
+    //! Overload this for runnable objects (default method issues a runtime error)
+    virtual void run();
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(Grapher);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(Grapher);
 
-  static void plot_2D_classification(string epsfname, VMat trainset, 
-                                     TVec<int> griddim, TVec< pair<real,real> > gridrange,
-                                     VMat gridoutputs, real radius, bool bw=false);
+    static void plot_2D_classification(string epsfname, VMat trainset, 
+                                       TVec<int> griddim, TVec< pair<real,real> > gridrange,
+                                       VMat gridoutputs, real radius, bool bw=false);
 
-  static void plot_1D_regression(string basename, VMat trainset, 
-                   TVec<int> griddim, TVec< pair<real,real> > gridrange, 
-                   VMat gridoutputs, VMat trainoutputs, bool bw=false);
+    static void plot_1D_regression(string basename, VMat trainset, 
+                                   TVec<int> griddim, TVec< pair<real,real> > gridrange, 
+                                   VMat gridoutputs, VMat trainoutputs, bool bw=false);
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(Grapher);
+DECLARE_OBJECT_PTR(Grapher);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

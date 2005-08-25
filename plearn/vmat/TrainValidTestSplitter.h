@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainValidTestSplitter.h,v 1.5 2004/09/14 16:04:40 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -51,89 +51,89 @@ using namespace std;
 
 class TrainValidTestSplitter: public Splitter
 {
-  typedef Splitter inherited;
+    typedef Splitter inherited;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
 
-  // Fields below are not options.
+    // Fields below are not options.
 
-  //! The first n_train samples of the dataset.
-  VMat train_set;
+    //! The first n_train samples of the dataset.
+    VMat train_set;
 
-  //! Matrix containing the indices of the validation samples.
-  TMat<int> valid_indices;
+    //! Matrix containing the indices of the validation samples.
+    TMat<int> valid_indices;
 
-  //! Matrix containing the indices of the test samples.
-  TMat<int> test_indices;
+    //! Matrix containing the indices of the test samples.
+    TMat<int> test_indices;
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  bool append_train;
-  bool append_valid;
-  int n_splits;
-  int n_train;
-  int n_valid;
-  bool shuffle_valid_and_test;
+    bool append_train;
+    bool append_valid;
+    int n_splits;
+    int n_train;
+    int n_valid;
+    bool shuffle_valid_and_test;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  TrainValidTestSplitter();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    TrainValidTestSplitter();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(TrainValidTestSplitter);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(TrainValidTestSplitter);
 
 
-  // ********************************
-  // *        Splitter methods      *
-  // ********************************
+    // ********************************
+    // *        Splitter methods      *
+    // ********************************
 
-  //! Sets the dataset on which the splits are to be based
-  //! (overridden because build() needs to be called).
-  virtual void setDataSet(VMat the_dataset);
+    //! Sets the dataset on which the splits are to be based
+    //! (overridden because build() needs to be called).
+    virtual void setDataSet(VMat the_dataset);
   
-  //! Returns the number of available different "splits"
-  virtual int nsplits() const;
+    //! Returns the number of available different "splits"
+    virtual int nsplits() const;
 
-  //! Returns the number of sets per split
-  virtual int nSetsPerSplit() const;
+    //! Returns the number of sets per split
+    virtual int nSetsPerSplit() const;
 
-  //! Returns split number i
-  virtual TVec<VMat> getSplit(int i=0);
+    //! Returns split number i
+    virtual TVec<VMat> getSplit(int i=0);
 
 };
 
@@ -143,3 +143,16 @@ DECLARE_OBJECT_PTR(TrainValidTestSplitter);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

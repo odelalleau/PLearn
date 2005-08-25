@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: stl_utilities.h,v 1.1 2005/01/17 21:56:27 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -54,14 +54,27 @@ namespace PLearn {
 template<class In, class Out, class Pred>
 Out copy_if(In first, In last, Out res, Pred p)
 {
-  while (first != last) {
-    if (p(*first))
-      *res++ = *first;
-    ++first;
-  }
-  return res;
+    while (first != last) {
+        if (p(*first))
+            *res++ = *first;
+        ++first;
+    }
+    return res;
 }
   
 } // end namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

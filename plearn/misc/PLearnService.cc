@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -52,32 +52,32 @@ namespace PLearn {
 using namespace std;
 
 
-  /*
+/*
   void PLearnService::remoteLaunchServers(int nservers, int tcpport, const string& launch_command)
   {
-    string full_command = launch_command+'--tcp '+tostring2(tcpport);
-    for(int k=0; k<nservers; k++)
-      {
-        PP<Popen> p = new Popen(full_command);
-      }
-    reserved_servers.add()
-  }
-  */
-
-  PLearnService& PLearnService::instance()
+  string full_command = launch_command+'--tcp '+tostring2(tcpport);
+  for(int k=0; k<nservers; k++)
   {
+  PP<Popen> p = new Popen(full_command);
+  }
+  reserved_servers.add()
+  }
+*/
+
+PLearnService& PLearnService::instance()
+{
     static PP<PLearnService> inst;
     if(inst.isNull())
-      inst = new PLearnService();
+        inst = new PLearnService();
     return *inst;
-  }
+}
   
-  PLearnService::PLearnService()
-  {}
+PLearnService::PLearnService()
+{}
 
 
-  void PLearnService::connectToServers(PPath serversfile)
-  {
+void PLearnService::connectToServers(PPath serversfile)
+{
     PStream in = openFile(serversfile, PStream::raw_ascii, "r");
 
     string hostname;
@@ -87,23 +87,23 @@ using namespace std;
     TVec< pair<string,int> > hostname_and_port;
 
     while(in)
-      {
+    {
         in.skipBlanksAndComments();
         if(!in)
-          break;
+            break;
         in >> hostname >> tcpport >> pid;
         if(in)
-          hostname_and_port.append(pair<string,int>(hostname,tcpport));
-      }
+            hostname_and_port.append(pair<string,int>(hostname,tcpport));
+    }
     connectToServers(hostname_and_port);
-  }
+}
 
-  void PLearnService::connectToServers(TVec< pair<string,int> > hostname_and_port)
-  {
+void PLearnService::connectToServers(TVec< pair<string,int> > hostname_and_port)
+{
     if(available_servers.size()>0)
-      disconnectFromServers();
+        disconnectFromServers();
     for(int k=0; k<hostname_and_port.length(); k++)
-      {
+    {
         pair<string, int> host_port = hostname_and_port[k];
         PStream servio = openSocket(host_port.first, host_port.second, PStream::plearn_binary);
         // PStream servio = openSocket(host_port.first, host_port.second, PStream::plearn_ascii);
@@ -113,112 +113,125 @@ using namespace std;
         available_servers.push(serv);
         //serversio.append(servio);
         //available_servers.push(k);
-      }
-  }
+    }
+}
 
-  void PLearnService::disconnectFromServers()
-  {
+void PLearnService::disconnectFromServers()
+{
     available_servers = TVec< PP<RemotePLearnServer> >();
-  }
+}
 
 
-  int PLearnService::availableServers() const
-  {    
+int PLearnService::availableServers() const
+{    
     return available_servers.size();
-  }
+}
 
-  /*
+/*
   RemotePLearnServer* PLearnService::OLD_reserveServer()
   {
-    RemotePLearnServer* serv = 0;
-    if(available_servers.size()>0)
-      {
-        int servnum = available_servers.pop();
-        serv = new RemotePLearnServer(serversio[servnum]);
-        reserved_servers[serv] = servnum;
-      }
-    return serv;
-  }
-  */
-
-  PP<RemotePLearnServer> PLearnService::reserveServer()
+  RemotePLearnServer* serv = 0;
+  if(available_servers.size()>0)
   {
+  int servnum = available_servers.pop();
+  serv = new RemotePLearnServer(serversio[servnum]);
+  reserved_servers[serv] = servnum;
+  }
+  return serv;
+  }
+*/
+
+PP<RemotePLearnServer> PLearnService::reserveServer()
+{
     if(available_servers.size()==0)
-      return 0;
+        return 0;
     PP<RemotePLearnServer> serv = available_servers.pop();
     reserved_servers.insert(serv);
     return serv;
-  }
+}
 
-  TVec< PP<RemotePLearnServer> > PLearnService::reserveServers(int nservers)
-  {
+TVec< PP<RemotePLearnServer> > PLearnService::reserveServers(int nservers)
+{
     TVec< PP<RemotePLearnServer> > servers;
     while(servers.length()<nservers)
-      {
+    {
         PP<RemotePLearnServer> serv = reserveServer();          
         if(serv.isNull())
-          break;
+            break;
         servers.append(serv);
-      }
+    }
     return servers;
-  }
+}
 
-  void PLearnService::freeServer(PP<RemotePLearnServer> server)
-  {
+void PLearnService::freeServer(PP<RemotePLearnServer> server)
+{
     DBG_LOG << "PLearnService::freeServer(...)" << endl;
     server->clearMaps();
     server->deleteAllObjects();
     if(reserved_servers.erase(server)!=1)
-      PLERROR("Problem in PLearnService::freeServer are you sure this server had been properly reserved?");
+        PLERROR("Problem in PLearnService::freeServer are you sure this server had been properly reserved?");
     available_servers.push(server);
-  }
+}
     
-  void PLearnService::freeServers(TVec< PP<RemotePLearnServer> > servers)
-  {
+void PLearnService::freeServers(TVec< PP<RemotePLearnServer> > servers)
+{
     for(int k=0; k<servers.length(); k++)
-      freeServer(servers[k]);
-  }
+        freeServer(servers[k]);
+}
 
-  int PLearnService::watchServers(TVec< PP<RemotePLearnServer> > servers, int timeout)
-  {
+int PLearnService::watchServers(TVec< PP<RemotePLearnServer> > servers, int timeout)
+{
     Poll p;
     int n = servers.size();
     vector<PStream> streams(n);
     for(int k=0; k<n; k++)
-      streams[k] = servers[k]->io;
+        streams[k] = servers[k]->io;
     p.setStreamsToWatch(streams);
 
     PRInt32 npending = p.waitForEvents(timeout);
     if(npending<=0)
-      return -1;
+        return -1;
     
     PStream io = p.getNextPendingEvent();    
     for(int k=0; k<n; k++)
-      if(streams[k] == io)
-        return k;
+        if(streams[k] == io)
+            return k;
     PLERROR("stream returned by NextPendingEvent is none of the servers' io field. This should not happen!");
     return -1;  // To make the compiler happy (never reached).
-  }
+}
 
-  /*
+/*
   void PLearnService::freeServer(RemotePLearnServer* remoteserv)
   {
-    DBG_LOG << "PLearnService::freeServer(" << (unsigned long) remoteserv << ")" << endl;
-    remoteserv->clearMaps();
-    remoteserv->deleteAllObjects();
-    std::map<RemotePLearnServer*,int>::iterator it = reserved_servers.find(remoteserv);
-    if(it==reserved_servers.end())
-      PLERROR("Strange bug in PLearnService::freeServer Nothing known about this remoteserv. This should never happen!");
-    // put servernum back in available servers    
-    available_servers.push(it->second);
-    // erase servernum from reserved_servers
-    reserved_servers.erase(it);
+  DBG_LOG << "PLearnService::freeServer(" << (unsigned long) remoteserv << ")" << endl;
+  remoteserv->clearMaps();
+  remoteserv->deleteAllObjects();
+  std::map<RemotePLearnServer*,int>::iterator it = reserved_servers.find(remoteserv);
+  if(it==reserved_servers.end())
+  PLERROR("Strange bug in PLearnService::freeServer Nothing known about this remoteserv. This should never happen!");
+  // put servernum back in available servers    
+  available_servers.push(it->second);
+  // erase servernum from reserved_servers
+  reserved_servers.erase(it);
   }
-  */
+*/
 
-  PLearnService::~PLearnService()
-  {
+PLearnService::~PLearnService()
+{
     disconnectFromServers();
-  }
+}
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.h,v 1.10 2004/07/21 16:30:56 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
 
@@ -50,9 +50,9 @@
 namespace PLearn {
 using namespace std;
 
-  class NeuralNet: public Learner
-  {
-  protected:
+class NeuralNet: public Learner
+{
+protected:
     Var input;  // Var(inputsize())
     Var target; // Var(targetsize()-weightsize())
     Var costweights; // Var(weightsize())
@@ -71,12 +71,12 @@ using namespace std;
     Vec paramsvalues; // values of all parameters
     Vec initial_paramsvalues;
 
-  public:
+public:
     Func f; // input -> output
     Func costf; // input & target -> output & cost
     Func output_and_target_to_cost; // output & target -> cost
 
-  public:
+public:
 
     typedef Learner inherited;
 
@@ -121,10 +121,10 @@ using namespace std;
     string saveparams; // where to optionally save params after training
 
     Array<Vec> normalization;
-  private:
+private:
     void build_();
 
-  public:
+public:
 
     NeuralNet();
     virtual ~NeuralNet();
@@ -148,14 +148,26 @@ using namespace std;
                      const Vec& outputvec, const Vec& costvec);
 
     virtual void makeDeepCopyFromShallowCopy(CopiesMap &copies);
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 
-  };
+};
 
-  DECLARE_OBJECT_PTR(NeuralNet);
+DECLARE_OBJECT_PTR(NeuralNet);
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

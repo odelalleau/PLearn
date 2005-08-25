@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UniformDistribution.cc,v 1.7 2004/11/12 16:33:53 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -50,44 +50,44 @@ using namespace std;
 // UniformDistribution //
 /////////////////////////
 UniformDistribution::UniformDistribution() 
-: counter(0),
-  mesh_size(-1)
+    : counter(0),
+      mesh_size(-1)
 {
-  // Default = generate points uniformly in [0,1].
-  min.resize(1);
-  max.resize(1);
-  min[0] = 0;
-  max[0] = 1;
+    // Default = generate points uniformly in [0,1].
+    min.resize(1);
+    max.resize(1);
+    min[0] = 0;
+    max[0] = 1;
 }
 
 PLEARN_IMPLEMENT_OBJECT(UniformDistribution,
-    "Implements uniform distribution over intervals.",
-    "Currently, only very few methods are implemented.\n"
-    "For example, to sample points in 2D in [a,b] x [c,d], use\n"
-    " min = [a c]\n"
-    " max = [b d]\n"
-);
+                        "Implements uniform distribution over intervals.",
+                        "Currently, only very few methods are implemented.\n"
+                        "For example, to sample points in 2D in [a,b] x [c,d], use\n"
+                        " min = [a c]\n"
+                        " max = [b d]\n"
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void UniformDistribution::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "min", &UniformDistribution::min, OptionBase::buildoption,
-      "The inferior bound for all intervals.");
+    declareOption(ol, "min", &UniformDistribution::min, OptionBase::buildoption,
+                  "The inferior bound for all intervals.");
 
-  declareOption(ol, "max", &UniformDistribution::max, OptionBase::buildoption,
-      "The superior bound for all intervals.");
+    declareOption(ol, "max", &UniformDistribution::max, OptionBase::buildoption,
+                  "The superior bound for all intervals.");
 
-  declareOption(ol, "mesh_size", &UniformDistribution::mesh_size, OptionBase::buildoption,
-      "If set to a value > 0, this distribution will generate points deterministically\n"
-      "so as to form a mesh of 'mesh_size'^d points equally spaced.");
+    declareOption(ol, "mesh_size", &UniformDistribution::mesh_size, OptionBase::buildoption,
+                  "If set to a value > 0, this distribution will generate points deterministically\n"
+                  "so as to form a mesh of 'mesh_size'^d points equally spaced.");
 
-  declareOption(ol, "counter", &UniformDistribution::counter, OptionBase::learntoption,
-      "Counts the number of points generated (necessary when 'mesh_size' is used).");
+    declareOption(ol, "counter", &UniformDistribution::counter, OptionBase::learntoption,
+                  "Counts the number of points generated (necessary when 'mesh_size' is used).");
 
-  // Now call the parent class' declareOptions().
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions().
+    inherited::declareOptions(ol);
 }
 
 ///////////
@@ -95,8 +95,8 @@ void UniformDistribution::declareOptions(OptionList& ol)
 ///////////
 void UniformDistribution::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -104,24 +104,24 @@ void UniformDistribution::build()
 ////////////
 void UniformDistribution::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation. 
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+    // ### You should assume that the parent class' build_() has already been called.
 
-  // Check consistency of intervals.
-  if (min.length() != max.length()) {
-    PLERROR("In UniformDistribution::build_ - 'min' and 'max' should have the same size");
-  }
-  n_dim = min.length();
-  for (int i = 0; i < n_dim; i++) {
-    if (min[i] > max[i]) {
-      PLERROR("In UniformDistribution::build_ - 'min' should be always <= 'max'");
+    // Check consistency of intervals.
+    if (min.length() != max.length()) {
+        PLERROR("In UniformDistribution::build_ - 'min' and 'max' should have the same size");
     }
-  }
+    n_dim = min.length();
+    for (int i = 0; i < n_dim; i++) {
+        if (min[i] > max[i]) {
+            PLERROR("In UniformDistribution::build_ - 'min' should be always <= 'max'");
+        }
+    }
 }
 
 /////////
@@ -129,7 +129,7 @@ void UniformDistribution::build_()
 /////////
 real UniformDistribution::cdf(const Vec& x) const
 {
-  PLERROR("cdf not implemented for UniformDistribution"); return 0;
+    PLERROR("cdf not implemented for UniformDistribution"); return 0;
 }
 
 /////////////////
@@ -137,7 +137,7 @@ real UniformDistribution::cdf(const Vec& x) const
 /////////////////
 void UniformDistribution::expectation(Vec& mu) const
 {
-  PLERROR("expectation not implemented for UniformDistribution");
+    PLERROR("expectation not implemented for UniformDistribution");
 }
 
 //////////////
@@ -145,28 +145,28 @@ void UniformDistribution::expectation(Vec& mu) const
 //////////////
 void UniformDistribution::generate(Vec& x) const
 {
-  x.resize(n_dim);
-  if (mesh_size > 0) {
-    int val = counter;
-    int coord;
-    for (int i = 0; i < n_dim; i++) {
-      coord = val % mesh_size;
-      val /= mesh_size;
-      x[i] = min[i] + (max[i] - min[i]) * coord / real(mesh_size) + (max[i] - min[i]) / (2 * real(mesh_size));
+    x.resize(n_dim);
+    if (mesh_size > 0) {
+        int val = counter;
+        int coord;
+        for (int i = 0; i < n_dim; i++) {
+            coord = val % mesh_size;
+            val /= mesh_size;
+            x[i] = min[i] + (max[i] - min[i]) * coord / real(mesh_size) + (max[i] - min[i]) / (2 * real(mesh_size));
+        }
+        counter++;
+    } else {
+        for (int i = 0; i < n_dim; i++) {
+            x[i] = bounded_uniform(min[i], max[i]);
+        }
     }
-    counter++;
-  } else {
-    for (int i = 0; i < n_dim; i++) {
-      x[i] = bounded_uniform(min[i], max[i]);
-    }
-  }
 }
 
 ///////////////
 // inputsize //
 ///////////////
 int UniformDistribution::inputsize() const {
-  return min.length();
+    return min.length();
 }
 
 /////////////////
@@ -174,7 +174,7 @@ int UniformDistribution::inputsize() const {
 /////////////////
 real UniformDistribution::log_density(const Vec& x) const
 {
-  PLERROR("density not implemented for UniformDistribution"); return 0; 
+    PLERROR("density not implemented for UniformDistribution"); return 0; 
 }
 
 /////////////////////////////////
@@ -182,16 +182,16 @@ real UniformDistribution::log_density(const Vec& x) const
 /////////////////////////////////
 void UniformDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("UniformDistribution::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("UniformDistribution::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 ////////////////////
@@ -199,8 +199,8 @@ void UniformDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////////
 void UniformDistribution::resetGenerator(long g_seed) const
 {
-  manual_seed(g_seed);
-  counter = 0;
+    manual_seed(g_seed);
+    counter = 0;
 }
 
 /////////////////
@@ -208,7 +208,7 @@ void UniformDistribution::resetGenerator(long g_seed) const
 /////////////////
 real UniformDistribution::survival_fn(const Vec& x) const
 {
-  PLERROR("survival_fn not implemented for UniformDistribution"); return 0;
+    PLERROR("survival_fn not implemented for UniformDistribution"); return 0;
 }
 
 //////////////
@@ -216,8 +216,20 @@ real UniformDistribution::survival_fn(const Vec& x) const
 //////////////
 void UniformDistribution::variance(Mat& covar) const
 {
-  PLERROR("variance not implemented for UniformDistribution");
+    PLERROR("variance not implemented for UniformDistribution");
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

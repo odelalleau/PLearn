@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsSubVMatrix.h,v 1.4 2004/04/05 22:49:56 morinf Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -61,7 +61,7 @@ class ConcatRowsSubVMatrix: public VMatrix
 {
     typedef VMatrix inherited;
 
- protected:
+protected:
     VMat distr;
     TVec<int> start;
     TVec<int> len;
@@ -72,7 +72,7 @@ class ConcatRowsSubVMatrix: public VMatrix
     //!  number in this VMat that correspond to row i in the ConcatRowsVMat
     void getpositions(int i, int& whichvm, int& rowofvm) const; 
 
-  public:
+public:
     // ******************
     // *  Constructors  *
     // ******************
@@ -91,11 +91,11 @@ class ConcatRowsSubVMatrix: public VMatrix
     virtual void getSubRow(int i, int j, Vec v) const;
     virtual void reset_dimensions() 
     { 
-      distr->reset_dimensions();
-      width_=distr->width();
-      length_=0;
-      for (int i=0;i<len.length();i++) 
-        length_ += len[i];
+        distr->reset_dimensions();
+        width_=distr->width();
+        length_=0;
+        for (int i=0;i<len.length();i++) 
+            length_ += len[i];
     }
     virtual real dot(int i1, int i2, int inputsize) const;
     virtual real dot(int i, const Vec& v) const;
@@ -107,3 +107,16 @@ DECLARE_OBJECT_PTR(ConcatRowsSubVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

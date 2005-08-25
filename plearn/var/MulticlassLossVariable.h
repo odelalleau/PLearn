@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MulticlassLossVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef MulticlassLossVariable_INC
 #define MulticlassLossVariable_INC
@@ -56,21 +56,21 @@ using namespace std;
 
 class MulticlassLossVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  MulticlassLossVariable() {}
-  MulticlassLossVariable(Variable* netout, Variable* target);
+    //!  Default constructor for persistence
+    MulticlassLossVariable() {}
+    MulticlassLossVariable(Variable* netout, Variable* target);
 
-  PLEARN_DECLARE_OBJECT(MulticlassLossVariable);
+    PLEARN_DECLARE_OBJECT(MulticlassLossVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  //! can't bprop through a hard classification error...
-  virtual void bprop() {}
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    //! can't bprop through a hard classification error...
+    virtual void bprop() {}
 
 protected:
     void build_();
@@ -84,3 +84,16 @@ inline Var multiclass_loss(Var network_output, Var targets)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

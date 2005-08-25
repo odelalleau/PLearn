@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: NaryVariable.cc,v 1.10 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "NaryVariable.h"
 
@@ -50,25 +50,25 @@ using namespace std;
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(NaryVariable, "ONE LINE DESCR", "NO HELP");
 
 NaryVariable::NaryVariable(const VarArray& the_varray, int thelength, int thewidth)
-  :Variable(thelength,thewidth), varray(the_varray) {}
+    :Variable(thelength,thewidth), varray(the_varray) {}
 
 
 
 void NaryVariable::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "varray", &NaryVariable::varray, OptionBase::buildoption, 
-                "The array of parent variables that this one depends on\n");
+    declareOption(ol, "varray", &NaryVariable::varray, OptionBase::buildoption, 
+                  "The array of parent variables that this one depends on\n");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 
 void NaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Variable::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(varray, copies);
-  //for(int i=0; i<varray.size(); i++)
-  //  deepCopyField(varray[i], copies);
+    Variable::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(varray, copies);
+    //for(int i=0; i<varray.size(); i++)
+    //  deepCopyField(varray[i], copies);
 }
 
 
@@ -80,104 +80,115 @@ void NaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 bool NaryVariable::markPath()
 {
-  if(!marked)
+    if(!marked)
     {
-      for(int i=0; i<varray.size(); i++)
-        if (!varray[i].isNull())
-          marked |= varray[i]->markPath();
+        for(int i=0; i<varray.size(); i++)
+            if (!varray[i].isNull())
+                marked |= varray[i]->markPath();
     }
-  return marked;
+    return marked;
 }
 
 
 void NaryVariable::buildPath(VarArray& proppath)
 {
-  if(marked)
+    if(marked)
     {
-      for(int i=0; i<varray.size(); i++)
-        if (!varray[i].isNull())
-          varray[i]->buildPath(proppath);
-      proppath &= Var(this);
-      clearMark();
+        for(int i=0; i<varray.size(); i++)
+            if (!varray[i].isNull())
+                varray[i]->buildPath(proppath);
+        proppath &= Var(this);
+        clearMark();
     }
 }
 
 
 VarArray NaryVariable::sources()
 {
-  VarArray a(0,0);
-  if (!marked)
+    VarArray a(0,0);
+    if (!marked)
     {
-      marked = true;
-      for(int i=0; i<varray.size(); i++)
-        if (!varray[i].isNull())
-          a &= varray[i]->sources();
-      if (a.size()==0)
-        a &= Var(this);
+        marked = true;
+        for(int i=0; i<varray.size(); i++)
+            if (!varray[i].isNull())
+                a &= varray[i]->sources();
+        if (a.size()==0)
+            a &= Var(this);
     }
-  return a;
+    return a;
 }
 
 
 VarArray NaryVariable::random_sources()
 {
-  VarArray a(0,0);
-  if (!marked)
+    VarArray a(0,0);
+    if (!marked)
     {
-      marked = true;
-      for(int i=0; i<varray.size(); i++)
-        if (!varray[i].isNull())
-          a &= varray[i]->random_sources();
+        marked = true;
+        for(int i=0; i<varray.size(); i++)
+            if (!varray[i].isNull())
+                a &= varray[i]->random_sources();
     }
-  return a;
+    return a;
 }
 
 
 VarArray NaryVariable::ancestors() 
 { 
-  VarArray a(0,0);
-  if (marked)
+    VarArray a(0,0);
+    if (marked)
+        return a;
+    marked = true;
+    for(int i=0; i<varray.size(); i++)
+        if (!varray[i].isNull())
+            a &= varray[i]->ancestors();
+    a &= Var(this);
     return a;
-  marked = true;
-  for(int i=0; i<varray.size(); i++)
-    if (!varray[i].isNull())
-      a &= varray[i]->ancestors();
-  a &= Var(this);
-  return a;
 }
 
 
 void NaryVariable::unmarkAncestors()
 {
-  if (marked)
+    if (marked)
     {
-      marked = false;
-      for(int i=0; i<varray.size(); i++)
-        if (!varray[i].isNull())
-          varray[i]->unmarkAncestors();
+        marked = false;
+        for(int i=0; i<varray.size(); i++)
+            if (!varray[i].isNull())
+                varray[i]->unmarkAncestors();
     }
 }
 
 
 VarArray NaryVariable::parents()
 {
-  VarArray unmarked_parents;
-  for(int i=0; i<varray.size(); i++)
-    if (!varray[i].isNull() && !varray[i]->marked)
-      unmarked_parents.append(varray[i]);
-  return unmarked_parents;
+    VarArray unmarked_parents;
+    for(int i=0; i<varray.size(); i++)
+        if (!varray[i].isNull() && !varray[i]->marked)
+            unmarked_parents.append(varray[i]);
+    return unmarked_parents;
 }
 
 
 void NaryVariable::resizeRValue()
 {
-  inherited::resizeRValue();
-  for (int i=0; i<varray.size(); i++)
-    if (!varray[i]->rvaluedata) varray[i]->resizeRValue();
+    inherited::resizeRValue();
+    for (int i=0; i<varray.size(); i++)
+        if (!varray[i]->rvaluedata) varray[i]->resizeRValue();
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

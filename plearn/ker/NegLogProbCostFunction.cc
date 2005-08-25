@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: NegLogProbCostFunction.cc,v 1.7 2005/03/03 20:24:06 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "NegLogProbCostFunction.h"
 #include <plearn/sys/PLMPI.h>
@@ -55,76 +55,76 @@ PLEARN_IMPLEMENT_OBJECT(NegLogProbCostFunction, "ONE LINE DESCR", "NO HELP");
 #define smoothmap sigmoid
 real NegLogProbCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
-  real prob = 0.;
-  int desired_class = int(target[0]);
-  if (desired_class == -1) desired_class=0;
-  if(output.length()==1) // we assume output[0] gives the probability of having class 1 
-  {
-    prob = output[0];
-    if(smooth_map_outputs)
-      prob = smoothmap(prob);
-    if(desired_class==0)
-      prob = 1-prob;
-  }
-  else 
-  {
-    if(!normalize) // we assume output gives a real probability for each class
+    real prob = 0.;
+    int desired_class = int(target[0]);
+    if (desired_class == -1) desired_class=0;
+    if(output.length()==1) // we assume output[0] gives the probability of having class 1 
+    {
+        prob = output[0];
+        if(smooth_map_outputs)
+            prob = smoothmap(prob);
+        if(desired_class==0)
+            prob = 1-prob;
+    }
+    else 
+    {
+        if(!normalize) // we assume output gives a real probability for each class
 #if USING_MPI      
 #define SEND_PROB_TAG 981
-    {
-      // EACH CPU ONLY CARRIES THE CORRECT outputs IN THE INTERVAL
-      // GIVEN BY [out_start,out_end).
-      // THE RESULT WILL BE THAT CPU 0 WILL HAVE
-      // THE PROBABILITY OF desired_class IN prob
-      // (and the other CPUs will have some dummy value)
-      if (PLMPI::size>1 && out_end>=0)
-      {
-        if (desired_class>=out_start && desired_class<out_end)
         {
-          prob = output[desired_class];
-          if (PLMPI::rank>0) // send it to CPU 0
-          {
-            MPI_Send(&prob,1,PLMPI_REAL,0,SEND_PROB_TAG,MPI_COMM_WORLD);
-          }
+            // EACH CPU ONLY CARRIES THE CORRECT outputs IN THE INTERVAL
+            // GIVEN BY [out_start,out_end).
+            // THE RESULT WILL BE THAT CPU 0 WILL HAVE
+            // THE PROBABILITY OF desired_class IN prob
+            // (and the other CPUs will have some dummy value)
+            if (PLMPI::size>1 && out_end>=0)
+            {
+                if (desired_class>=out_start && desired_class<out_end)
+                {
+                    prob = output[desired_class];
+                    if (PLMPI::rank>0) // send it to CPU 0
+                    {
+                        MPI_Send(&prob,1,PLMPI_REAL,0,SEND_PROB_TAG,MPI_COMM_WORLD);
+                    }
+                }
+                else
+                {
+                    if (PLMPI::rank==0)
+                    {
+                        MPI_Status status;
+                        MPI_Recv(&prob,1,PLMPI_REAL,MPI_ANY_SOURCE,SEND_PROB_TAG,MPI_COMM_WORLD,&status);
+                    }
+                    else 
+                    {
+                        prob = 1; // dummy value (whose log exists)
+                    }
+                }
+            }
+            else
+                prob = output[desired_class];
         }
-        else
-        {
-          if (PLMPI::rank==0)
-          {
-            MPI_Status status;
-            MPI_Recv(&prob,1,PLMPI_REAL,MPI_ANY_SOURCE,SEND_PROB_TAG,MPI_COMM_WORLD,&status);
-          }
-          else 
-          {
-            prob = 1; // dummy value (whose log exists)
-          }
-        }
-      }
-      else
-        prob = output[desired_class];
-    }
 #else
-      prob = output[desired_class];
+        prob = output[desired_class];
 #endif
-    else // outputs may not sum to 1, so we'll normalize them
-    {
+        else // outputs may not sum to 1, so we'll normalize them
+        {
 #if USING_MPI      
-      if (PLMPI::size>1 && out_end>=0)
-        PLERROR("condprob used in parallel mode: normalize not implemented");
+            if (PLMPI::size>1 && out_end>=0)
+                PLERROR("condprob used in parallel mode: normalize not implemented");
 #endif
-      real* outputdata = output.data();
-      if(smooth_map_outputs) // outputs may be slightly smaller than 0 or slightly larger than 1
-      {                      // so we'll smooth-map them to fit in range [0,1] before normalizing 
-        real outputsum = 0.0;
-        for(int i=0; i<output.length(); i++)
-          outputsum += smoothmap(outputdata[i]);
-        prob = smoothmap(outputdata[desired_class])/outputsum;
-      }
-      else
-        prob = output[desired_class]/sum(output, false);
+            real* outputdata = output.data();
+            if(smooth_map_outputs) // outputs may be slightly smaller than 0 or slightly larger than 1
+            {                      // so we'll smooth-map them to fit in range [0,1] before normalizing 
+                real outputsum = 0.0;
+                for(int i=0; i<output.length(); i++)
+                    outputsum += smoothmap(outputdata[i]);
+                prob = smoothmap(outputdata[desired_class])/outputsum;
+            }
+            else
+                prob = output[desired_class]/sum(output, false);
+        }
     }
-  }
-  return -safeflog(prob);
+    return -safeflog(prob);
 }
 
 void NegLogProbCostFunction::declareOptions(OptionList &ol)
@@ -138,3 +138,15 @@ void NegLogProbCostFunction::declareOptions(OptionList &ol)
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

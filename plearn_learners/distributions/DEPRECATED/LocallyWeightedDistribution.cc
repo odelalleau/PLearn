@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.cc */
 #include "LocallyWeightedDistribution.h"
@@ -44,13 +44,13 @@ namespace PLearn {
 using namespace std;
 
 LocallyWeightedDistribution::LocallyWeightedDistribution() 
-  {}
+{}
 
 
-  PLEARN_IMPLEMENT_OBJECT(LocallyWeightedDistribution, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(LocallyWeightedDistribution, "ONE LINE DESCR", "NO HELP");
 
-  void LocallyWeightedDistribution::declareOptions(OptionList& ol)
-  {
+void LocallyWeightedDistribution::declareOptions(OptionList& ol)
+{
     declareOption(ol, "weighting_kernel", &LocallyWeightedDistribution::weighting_kernel, OptionBase::buildoption,
                   "The kernel that will be used to locally weigh the samples");
 
@@ -59,10 +59,10 @@ LocallyWeightedDistribution::LocallyWeightedDistribution()
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
+}
 
-  void LocallyWeightedDistribution::build_()
-  {
+void LocallyWeightedDistribution::build_()
+{
     // ### This method should do the real building of the object,
     // ### according to set 'options', in *any* situation. 
     // ### Typical situations include:
@@ -72,31 +72,31 @@ LocallyWeightedDistribution::LocallyWeightedDistribution()
     // ### You should assume that the parent class' build_() has already been called.
 
     if(weightsize()!=0 && weightsize()!=1)
-      PLERROR("In LocallyWeightedDistribution::build_, weightsize must be 0 or 1");
+        PLERROR("In LocallyWeightedDistribution::build_, weightsize must be 0 or 1");
 
     localdistr->inputsize_ = inputsize_;
     localdistr->weightsize_ = 1;
     localdistr->build();
-  }
+}
 
-  // ### Nothing to add here, simply calls build_
+// ### Nothing to add here, simply calls build_
 void LocallyWeightedDistribution::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 
-  void LocallyWeightedDistribution::train(VMat training_set)
-  { 
+void LocallyWeightedDistribution::train(VMat training_set)
+{ 
     if(training_set.width() != inputsize()+weightsize())
-      PLERROR("In LocallyWeightedDistribution::train width of training set is different from inputsize()+weightsize()");
+        PLERROR("In LocallyWeightedDistribution::train width of training set is different from inputsize()+weightsize()");
     setTrainingSet(training_set);
-  }
+}
 
 
-  void LocallyWeightedDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-  {
+void LocallyWeightedDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
     Distribution::makeDeepCopyFromShallowCopy(copies);
 
     // ### Call deepCopyField on all "pointer-like" fields 
@@ -107,39 +107,52 @@ void LocallyWeightedDistribution::build()
 
     // ### Remove this line when you have fully implemented this method.
     PLERROR("LocallyWeightedDistribution::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-  }
+}
 
 
 double LocallyWeightedDistribution::log_density(const Vec& x) const
 {
-  int l = train_set.length();
-  int w = inputsize();
-  weights.resize(l);
-  // 'weights' will contain the "localization" weights for the current test point.
-  trainsample.resize(w+weightsize());
-  Vec input = trainsample.subVec(0,w);
+    int l = train_set.length();
+    int w = inputsize();
+    weights.resize(l);
+    // 'weights' will contain the "localization" weights for the current test point.
+    trainsample.resize(w+weightsize());
+    Vec input = trainsample.subVec(0,w);
 
-  for(int i=0; i<l; i++)
+    for(int i=0; i<l; i++)
     {
-      train_set->getRow(i,trainsample);
-      real weight = weighting_kernel(x,input);
-      if(weightsize()==1)
-        weight *= trainsample[w];
-      weights[i] = weight;
+        train_set->getRow(i,trainsample);
+        real weight = weighting_kernel(x,input);
+        if(weightsize()==1)
+            weight *= trainsample[w];
+        weights[i] = weight;
     }
   
-  VMat weight_column(columnmatrix(weights));
+    VMat weight_column(columnmatrix(weights));
 
-  VMat weighted_trainset;
-  if(weightsize()==0) // append weight column    
-    weighted_trainset = hconcat(train_set, weight_column);
-  else // replace last column by weight column
-    weighted_trainset = hconcat(train_set.subMatColumns(0,inputsize()), weight_column);
+    VMat weighted_trainset;
+    if(weightsize()==0) // append weight column    
+        weighted_trainset = hconcat(train_set, weight_column);
+    else // replace last column by weight column
+        weighted_trainset = hconcat(train_set.subMatColumns(0,inputsize()), weight_column);
 
-  localdistr->forget();
-  localdistr->train(weighted_trainset);
-  return localdistr->log_density(x);
+    localdistr->forget();
+    localdistr->train(weighted_trainset);
+    return localdistr->log_density(x);
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

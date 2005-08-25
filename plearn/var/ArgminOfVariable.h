@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ArgminOfVariable.h,v 1.5 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ArgminOfVariable_INC
 #define ArgminOfVariable_INC
@@ -50,42 +50,55 @@ using namespace std;
 
 
 /*! returns the value of v within the_values_of_v that gives the lowest
-   value of expression (which may depend on inputs). */
+  value of expression (which may depend on inputs). */
 class ArgminOfVariable: public NaryVariable
 {
 protected:
-  //!  protected default constructor for persistence
-  ArgminOfVariable() : inputs(), expression(), values_of_v(), v(),
-                       index_of_argmin(), vv_path(), e_path(), v_path() {}
+    //!  protected default constructor for persistence
+    ArgminOfVariable() : inputs(), expression(), values_of_v(), v(),
+                         index_of_argmin(), vv_path(), e_path(), v_path() {}
 
 protected:
-  VarArray inputs;
-  Var expression;
-  Var values_of_v;
-  Var v;
-  int index_of_argmin;
+    VarArray inputs;
+    Var expression;
+    Var values_of_v;
+    Var v;
+    int index_of_argmin;
 
-  VarArray vv_path; //!<  values_of_v(inputs)
-  VarArray e_path; //!<  expression(v&inputs)
-  VarArray v_path; //!<  expression(v) 
+    VarArray vv_path; //!<  values_of_v(inputs)
+    VarArray e_path; //!<  expression(v&inputs)
+    VarArray v_path; //!<  expression(v) 
 
 public:
-  ArgminOfVariable(Variable* the_v,
-                   Variable* the_expression,
-                   Variable* the_values_of_v,
-                   const VarArray& the_inputs);
-  PLEARN_DECLARE_OBJECT(ArgminOfVariable);
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-  virtual void fprop();
-  virtual void bprop();
+    ArgminOfVariable(Variable* the_v,
+                     Variable* the_expression,
+                     Variable* the_values_of_v,
+                     const VarArray& the_inputs);
+    PLEARN_DECLARE_OBJECT(ArgminOfVariable);
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void fprop();
+    virtual void bprop();
 };
 
 /*! returns the value of v within the_values_of_v that gives the lowest
-   value of expression (which may depend on inputs). */
+  value of expression (which may depend on inputs). */
 inline Var argminOf(Var v, Var expression, Var values_of_v, VarArray inputs)
 { return new ArgminOfVariable(v, expression, values_of_v, inputs); }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

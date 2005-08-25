@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ArgminVariable.cc,v 1.5 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ArgminVariable.h"
 
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(ArgminVariable,
                         "NO HELP");
 
 ArgminVariable::ArgminVariable(Variable* input)
-  : inherited(input, input->isVec()?1:2, 1)
+    : inherited(input, input->isVec()?1:2, 1)
 {}
 
 void ArgminVariable::recomputeSize(int& l, int& w) const
@@ -65,39 +65,39 @@ void ArgminVariable::recomputeSize(int& l, int& w) const
 
 void ArgminVariable::fprop()
 {
-  real minval = input->valuedata[0];
-  if (input->isVec())
+    real minval = input->valuedata[0];
+    if (input->isVec())
     {
-      int argmin = 0;
-      for(int i=1; i<input->nelems(); i++)
+        int argmin = 0;
+        for(int i=1; i<input->nelems(); i++)
         {
-          real val = input->valuedata[i];
-          if(val<minval)
+            real val = input->valuedata[i];
+            if(val<minval)
             {
-              minval = val;
-              argmin = i;
+                minval = val;
+                argmin = i;
             }
         }
-      valuedata[0] = argmin;
+        valuedata[0] = argmin;
     }
-  else
+    else
     {
-      int k = 0;
-      int argmin_i = 0;
-      int argmin_j = 0;
-      for(int i=0; i<input->length(); i++)
-        for(int j=0; j<input->width(); j++, k++)
-          {
-            real val = input->valuedata[k];
-            if(val<minval)
-              {
-                minval = val;
-                argmin_i = i;
-                argmin_j = j;
-              }
-          }
-      valuedata[0] = argmin_i;
-      valuedata[1] = argmin_j;
+        int k = 0;
+        int argmin_i = 0;
+        int argmin_j = 0;
+        for(int i=0; i<input->length(); i++)
+            for(int j=0; j<input->width(); j++, k++)
+            {
+                real val = input->valuedata[k];
+                if(val<minval)
+                {
+                    minval = val;
+                    argmin_i = i;
+                    argmin_j = j;
+                }
+            }
+        valuedata[0] = argmin_i;
+        valuedata[1] = argmin_j;
     }
 }
 
@@ -110,4 +110,15 @@ void ArgminVariable::symbolicBprop() {}
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

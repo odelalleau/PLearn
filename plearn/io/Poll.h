@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Poll.h,v 1.1 2005/01/28 22:36:30 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christian Hudon
 
@@ -50,22 +50,22 @@
 
 
 namespace PLearn {
-  using namespace std;
+using namespace std;
 
 
-  /** A class for polled IO with PStreams. Currently supports only
-   *  PrPStreamBufs.
-   */
-  class Poll {
+/** A class for polled IO with PStreams. Currently supports only
+ *  PrPStreamBufs.
+ */
+class Poll {
     
-  public:
+public:
     void setStreamsToWatch(const vector<PStream>& streams);
 
     int waitForEvents(int timeout = 0);
 
     PStream getNextPendingEvent();
 
-  protected:
+protected:
     /// The PStream's to watch for IO.
     vector<PStream> m_streams_to_watch;
 
@@ -76,8 +76,21 @@ namespace PLearn {
     /** Counter used to iterate through the m_poll_descriptors
         in getNextPendingEvent */
     unsigned int m_next_unexamined_event;
-  };
+};
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

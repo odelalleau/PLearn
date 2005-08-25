@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: VecExtendedVMatrix.h,v 1.6 2004/07/09 19:42:23 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -61,43 +61,56 @@ using namespace std;
 
 class VecExtendedVMatrix : public RowBufferedVMatrix
 {
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
 public:
-  // ******************
-  // *  Constructors  *
-  // ******************
-  VecExtendedVMatrix(); //!<  default constructor (for automatic deserialization)
+    // ******************
+    // *  Constructors  *
+    // ******************
+    VecExtendedVMatrix(); //!<  default constructor (for automatic deserialization)
 
-  //! The fieldinfos of the underlying are copied, the extension fieldinfos
-  //! are left empty (fill them yourself)
-  VecExtendedVMatrix(VMat underlying, Vec extend_data);
+    //! The fieldinfos of the underlying are copied, the extension fieldinfos
+    //! are left empty (fill them yourself)
+    VecExtendedVMatrix(VMat underlying, Vec extend_data);
 
-  PLEARN_DECLARE_OBJECT(VecExtendedVMatrix);
+    PLEARN_DECLARE_OBJECT(VecExtendedVMatrix);
 
 protected:
 
-  static void declareOptions(OptionList &ol);
-  virtual void getNewRow(int i, const Vec& v) const;
+    static void declareOptions(OptionList &ol);
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  virtual void build();
+    virtual void build();
 
-  virtual void reset_dimensions() {
-    underlying_->reset_dimensions();
-    width_ = underlying_.width() + extend_data_.length();
-    length_ = underlying_.length();
-  }
+    virtual void reset_dimensions() {
+        underlying_->reset_dimensions();
+        width_ = underlying_.width() + extend_data_.length();
+        length_ = underlying_.length();
+    }
 
 protected:
-  VMat underlying_;
-  Vec extend_data_;
+    VMat underlying_;
+    Vec extend_data_;
 private:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(VecExtendedVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

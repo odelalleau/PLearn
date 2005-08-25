@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SubInputVMatrix.cc,v 1.6 2005/03/29 19:52:56 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -49,31 +49,31 @@ using namespace std;
 // SubInputVMatrix //
 //////////////////
 SubInputVMatrix::SubInputVMatrix()
-: inherited(),
-  j_start(0),
-  n_inputs(-1)
+    : inherited(),
+      j_start(0),
+      n_inputs(-1)
 {
 }
 
 PLEARN_IMPLEMENT_OBJECT(SubInputVMatrix, 
-    "A VMat that only takes part of the input of its source VMat.", 
-    "This can be useful for instance to only take the first k components\n"
-    "after applying some dimensionality reduction method."
-);
+                        "A VMat that only takes part of the input of its source VMat.", 
+                        "This can be useful for instance to only take the first k components\n"
+                        "after applying some dimensionality reduction method."
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void SubInputVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "j_start", &SubInputVMatrix::j_start, OptionBase::buildoption,
-      "The column we start at.");
+    declareOption(ol, "j_start", &SubInputVMatrix::j_start, OptionBase::buildoption,
+                  "The column we start at.");
 
-  declareOption(ol, "n_inputs", &SubInputVMatrix::n_inputs, OptionBase::buildoption,
-      "The number of inputs to keep (-1 means we keep them all, from j_start).");
+    declareOption(ol, "n_inputs", &SubInputVMatrix::n_inputs, OptionBase::buildoption,
+                  "The number of inputs to keep (-1 means we keep them all, from j_start).");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ///////////
@@ -81,8 +81,8 @@ void SubInputVMatrix::declareOptions(OptionList& ol)
 ///////////
 void SubInputVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -90,29 +90,29 @@ void SubInputVMatrix::build()
 ////////////
 void SubInputVMatrix::build_()
 {
-  if (source) {
-    if (source->inputsize() < 0)
-      PLERROR("In SubInputVMatrix::build_ - The source's inputsize must be set");
-    if (n_inputs == -1) {
-      // Default value: we keep all inputs.
-      n_inputs = source->inputsize() - j_start;
+    if (source) {
+        if (source->inputsize() < 0)
+            PLERROR("In SubInputVMatrix::build_ - The source's inputsize must be set");
+        if (n_inputs == -1) {
+            // Default value: we keep all inputs.
+            n_inputs = source->inputsize() - j_start;
+        }
+        if (n_inputs < 0 || n_inputs + j_start > source->inputsize()) {
+            PLERROR("In SubInputVMatrix::build_ - Source VMatrix hasn't enough inputs");
+        }
+        int n_removed = source->inputsize() - n_inputs;
+        inputsize_ = n_inputs;
+        width_ = source->width() - n_removed;
+        // Set field infos.
+        Array<VMField>& source_infos = source->getFieldInfos();
+        TVec<VMField> finfos(width_);
+        finfos.subVec(0, inputsize_) << source_infos.subVec(0, inputsize_);
+        finfos.subVec(inputsize_, finfos.length() - inputsize_)
+            << source_infos.subVec(source->inputsize(), source_infos.length() - source->inputsize());
+        setFieldInfos(finfos);
+        // Set other meta information.
+        setMetaInfoFromSource();
     }
-    if (n_inputs < 0 || n_inputs + j_start > source->inputsize()) {
-      PLERROR("In SubInputVMatrix::build_ - Source VMatrix hasn't enough inputs");
-    }
-    int n_removed = source->inputsize() - n_inputs;
-    inputsize_ = n_inputs;
-    width_ = source->width() - n_removed;
-    // Set field infos.
-    Array<VMField>& source_infos = source->getFieldInfos();
-    TVec<VMField> finfos(width_);
-    finfos.subVec(0, inputsize_) << source_infos.subVec(0, inputsize_);
-    finfos.subVec(inputsize_, finfos.length() - inputsize_)
-      << source_infos.subVec(source->inputsize(), source_infos.length() - source->inputsize());
-    setFieldInfos(finfos);
-    // Set other meta information.
-    setMetaInfoFromSource();
-  }
 }
 
 ///////////////
@@ -120,13 +120,13 @@ void SubInputVMatrix::build_()
 ///////////////
 void SubInputVMatrix::getNewRow(int i, const Vec& v) const
 {
-  // First fill the input part.
-  source->getSubRow(i, j_start, v.subVec(0, n_inputs));
-  // Then the rest (target + weight).
-  source->getSubRow(
-      i,
-      source->inputsize(),
-      v.subVec(n_inputs, v.length() - n_inputs));
+    // First fill the input part.
+    source->getSubRow(i, j_start, v.subVec(0, n_inputs));
+    // Then the rest (target + weight).
+    source->getSubRow(
+        i,
+        source->inputsize(),
+        v.subVec(n_inputs, v.length() - n_inputs));
 }
 
 /////////////////////////////////
@@ -134,8 +134,20 @@ void SubInputVMatrix::getNewRow(int i, const Vec& v) const
 /////////////////////////////////
 void SubInputVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

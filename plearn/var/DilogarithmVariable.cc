@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DilogarithmVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "DilogarithmVariable.h"
 
@@ -56,7 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(DilogarithmVariable,
                         "and primitive(softplus)(x) = -dilogarithm(-e^x)\n");
 
 DilogarithmVariable::DilogarithmVariable(Variable* input) 
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 
@@ -71,33 +71,44 @@ void DilogarithmVariable::recomputeSize(int& l, int& w) const
 
 void DilogarithmVariable::fprop()
 {
-  for(int i=0; i<nelems(); i++)
-  {
-    valuedata[i] = dilogarithm(input->valuedata[i]);
+    for(int i=0; i<nelems(); i++)
+    {
+        valuedata[i] = dilogarithm(input->valuedata[i]);
 #ifdef BOUNDCHECK
-    if (is_missing(valuedata[i]))
-        PLWARNING("dilogarithm returned NaN");
+        if (is_missing(valuedata[i]))
+            PLWARNING("dilogarithm returned NaN");
 #endif
-  }
+    }
 }
 
 
 void DilogarithmVariable::bprop()
 {
-  for(int i=0; i<nelems(); i++)
-  {
-    real xi = input->valuedata[i];
-    if (xi!=0)
-      input->gradientdata[i] -= gradientdata[i] * log1p(-xi)/xi;
-  }
+    for(int i=0; i<nelems(); i++)
+    {
+        real xi = input->valuedata[i];
+        if (xi!=0)
+            input->gradientdata[i] -= gradientdata[i] * log1p(-xi)/xi;
+    }
 }
 
 
 void DilogarithmVariable::symbolicBprop()
 {
-  PLERROR("DilogarithmVariable::symbolicBprop() not implemented");
+    PLERROR("DilogarithmVariable::symbolicBprop() not implemented");
 }
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

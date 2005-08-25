@@ -36,10 +36,10 @@
 
  
 /* *******************************************************      
-   * $Id: TMatRowsAsArraysIterator_decl.h,v 1.2 2004/07/21 16:30:53 chrish42 Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/TMat.h */
@@ -61,101 +61,101 @@ template <class T>
 class TMatRowsAsArraysIterator
 {
 public:
-  //! Some useful typedefs
-  typedef random_access_iterator_tag iterator_category;
-  typedef Array<T>                    value_type;
-  typedef ptrdiff_t                  difference_type;
-  typedef Array<T>*                   pointer;
-  typedef Array<T>&                   reference;
+    //! Some useful typedefs
+    typedef random_access_iterator_tag iterator_category;
+    typedef Array<T>                    value_type;
+    typedef ptrdiff_t                  difference_type;
+    typedef Array<T>*                   pointer;
+    typedef Array<T>&                   reference;
   
 private:
-  T* ptr;                                    //!< current row pointer
-  int width;                                 //!< vector width
-  int mod;                                   //!< mod in underlying matrix
-  Array<T> v;
+    T* ptr;                                    //!< current row pointer
+    int width;                                 //!< vector width
+    int mod;                                   //!< mod in underlying matrix
+    Array<T> v;
 
 public:
-  TMatRowsAsArraysIterator()
-    : ptr(), width(), mod() {}
+    TMatRowsAsArraysIterator()
+        : ptr(), width(), mod() {}
 
-  TMatRowsAsArraysIterator(T* p, int w, int m)
-    : ptr(p), width(w), mod(m) {}
+    TMatRowsAsArraysIterator(T* p, int w, int m)
+        : ptr(p), width(w), mod(m) {}
 
-  // Implement trivial iterator functions
-  bool operator==(const TMatRowsAsArraysIterator& other) const {
-    return ptr == other.ptr && width == other.width && mod == other.mod;
-  }
+    // Implement trivial iterator functions
+    bool operator==(const TMatRowsAsArraysIterator& other) const {
+        return ptr == other.ptr && width == other.width && mod == other.mod;
+    }
 
-  bool operator!=(const TMatRowsAsArraysIterator& y)
-  { return !operator==(y); }
+    bool operator!=(const TMatRowsAsArraysIterator& y)
+    { return !operator==(y); }
 
-  Array<T>& operator*() 
-  {
-    v.view(TVec<T>(width, ptr));
-    return v;
-  }
+    Array<T>& operator*() 
+    {
+        v.view(TVec<T>(width, ptr));
+        return v;
+    }
 
-  // cannot define operator-> here since we cannot return a pointer to a
-  // temporary (e.g. stack-based) vector and expect this to work properly...
+    // cannot define operator-> here since we cannot return a pointer to a
+    // temporary (e.g. stack-based) vector and expect this to work properly...
   
-  // Implement forward iterator functions
-  TMatRowsAsArraysIterator& operator++() {
-    ptr += mod;
-    return *this;
-  }
+    // Implement forward iterator functions
+    TMatRowsAsArraysIterator& operator++() {
+        ptr += mod;
+        return *this;
+    }
 
-  TMatRowsAsArraysIterator operator++(int) {
-    TMatRowsAsArraysIterator r(*this);
-    ptr += mod;
-    return r;
-  }
+    TMatRowsAsArraysIterator operator++(int) {
+        TMatRowsAsArraysIterator r(*this);
+        ptr += mod;
+        return r;
+    }
 
-  // Implement bidirectional iterator functions
-  TMatRowsAsArraysIterator& operator--() {
-    ptr -= mod;
-    return *this;
-  }
+    // Implement bidirectional iterator functions
+    TMatRowsAsArraysIterator& operator--() {
+        ptr -= mod;
+        return *this;
+    }
 
-  TMatRowsAsArraysIterator operator--(int) {
-    TMatRowsAsArraysIterator r(*this);
-    ptr -= mod;
-    return r;
-  }
+    TMatRowsAsArraysIterator operator--(int) {
+        TMatRowsAsArraysIterator r(*this);
+        ptr -= mod;
+        return r;
+    }
 
-  // Implement random access iterator functions
-  TMatRowsAsArraysIterator& operator+=(difference_type n) {
-    ptr += n*mod;
-    return *this;
-  }
+    // Implement random access iterator functions
+    TMatRowsAsArraysIterator& operator+=(difference_type n) {
+        ptr += n*mod;
+        return *this;
+    }
 
-  TMatRowsAsArraysIterator operator+(difference_type n) {
-    TMatRowsAsArraysIterator r(*this);
-    r += n;
-    return r;
-  }
+    TMatRowsAsArraysIterator operator+(difference_type n) {
+        TMatRowsAsArraysIterator r(*this);
+        r += n;
+        return r;
+    }
   
-  TMatRowsAsArraysIterator& operator-=(difference_type n) {
-    ptr -= n*mod;
-    return *this;
-  }
+    TMatRowsAsArraysIterator& operator-=(difference_type n) {
+        ptr -= n*mod;
+        return *this;
+    }
 
-  TMatRowsAsArraysIterator operator-(difference_type n) {
-    TMatRowsAsArraysIterator r(*this);
-    r -= n;
-    return r;
-  }
+    TMatRowsAsArraysIterator operator-(difference_type n) {
+        TMatRowsAsArraysIterator r(*this);
+        r -= n;
+        return r;
+    }
 
-  difference_type operator-(const TMatRowsAsArraysIterator& y) {
-    return (ptr - y.ptr) / mod;
-  }
+    difference_type operator-(const TMatRowsAsArraysIterator& y) {
+        return (ptr - y.ptr) / mod;
+    }
   
-  value_type operator[](difference_type n) {
-    return TVec<T>(width, ptr + n*mod);
-  }
+    value_type operator[](difference_type n) {
+        return TVec<T>(width, ptr + n*mod);
+    }
 
-  bool operator<(const TMatRowsAsArraysIterator& y) {
-    return ptr < y.ptr;
-  }
+    bool operator<(const TMatRowsAsArraysIterator& y) {
+        return ptr < y.ptr;
+    }
 
 };
 
@@ -164,3 +164,16 @@ public:
 } // end of namesapce PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

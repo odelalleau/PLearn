@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatKernel.cc,v 1.2 2005/05/26 21:08:49 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Benoit Cromp
 
@@ -52,39 +52,39 @@ using namespace std;
 VMatKernel::VMatKernel() 
 /* ### Initialize all fields to their default value here */
 {
-  // ...
+    // ...
 
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
+    // ### You may or may not want to call build_() to finish building the object
+    // build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(VMatKernel,
-    "Kernel that is given its Gram matrix.",
-    "This kernel can only be applied on examples that are integers, and that\n"
-    "correspond to indices in the matrix.\n"
-);
+                        "Kernel that is given its Gram matrix.",
+                        "This kernel can only be applied on examples that are integers, and that\n"
+                        "correspond to indices in the matrix.\n"
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void VMatKernel::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  // ### ex:
-  // declareOption(ol, "myoption", &VMatKernel::myoption, OptionBase::buildoption,
-  //               "Help text describing this option");
-  // ...
+    // ### ex:
+    // declareOption(ol, "myoption", &VMatKernel::myoption, OptionBase::buildoption,
+    //               "Help text describing this option");
+    // ...
 
-  declareOption(ol,"source",&VMatKernel::source,OptionBase::buildoption,
-      "Gram matrix");
+    declareOption(ol,"source",&VMatKernel::source,OptionBase::buildoption,
+                  "Gram matrix");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ///////////
@@ -92,9 +92,9 @@ void VMatKernel::declareOptions(OptionList& ol)
 ///////////
 void VMatKernel::build()
 {
-  // ### Nothing to add here, simply calls build_
-  inherited::build();
-  build_();
+    // ### Nothing to add here, simply calls build_
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -102,28 +102,28 @@ void VMatKernel::build()
 ////////////
 void VMatKernel::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation. 
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+    // ### You should assume that the parent class' build_() has already been called.
 }
 
 //////////////
 // evaluate //
 //////////////
 real VMatKernel::evaluate(const Vec& x1, const Vec& x2) const {
-  assert( source );
-  assert( x1.size()==1 && x2.size()==1 );
-  return source->get(int(x1[0]),int(x2[0]));
+    assert( source );
+    assert( x1.size()==1 && x2.size()==1 );
+    return source->get(int(x1[0]),int(x2[0]));
 }
 
 void VMatKernel::computeGramMatrix(Mat K) const
 {
-  assert( source );
-  K << source->toMat();
+    assert( source );
+    K << source->toMat();
 }
 
 
@@ -131,8 +131,8 @@ void VMatKernel::computeGramMatrix(Mat K) const
 // evaluate_i_j //
 //////////////////
 real VMatKernel::evaluate_i_j(int i, int j) const {
-  assert( source );
-  return source->get(i,j);
+    assert( source );
+    return source->get(i,j);
 }
 
 /////////////////////////////////
@@ -140,16 +140,16 @@ real VMatKernel::evaluate_i_j(int i, int j) const {
 /////////////////////////////////
 void VMatKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("VMatKernel::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("VMatKernel::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 /* ### This method will be overridden if computations need to be done,
@@ -164,3 +164,16 @@ void VMatKernel::setDataForKernelMatrix(VMat the_data) {
 */
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

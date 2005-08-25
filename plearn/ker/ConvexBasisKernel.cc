@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ConvexBasisKernel.cc,v 1.4 2004/04/07 23:15:58 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ConvexBasisKernel.h"
 
@@ -50,13 +50,13 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(ConvexBasisKernel, "ONE LINE DESCR", "NO HELP");
 real ConvexBasisKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
-  real p=1;
-  real* x1i=x1.data();
-  real* x2i=x2.data();
-  int n=x1.length();
-  for (int i=0;i<n;i++)
-    p *= log(1+exp(c*(x1i[i]-x2i[i])));
-  return p;
+    real p=1;
+    real* x1i=x1.data();
+    real* x2i=x2.data();
+    int n=x1.length();
+    for (int i=0;i<n;i++)
+        p *= log(1+exp(c*(x1i[i]-x2i[i])));
+    return p;
 }
 
 void ConvexBasisKernel::declareOptions(OptionList &ol)
@@ -70,3 +70,15 @@ void ConvexBasisKernel::declareOptions(OptionList &ol)
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

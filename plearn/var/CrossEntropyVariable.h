@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: CrossEntropyVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef CrossEntropyVariable_INC
 #define CrossEntropyVariable_INC
@@ -52,20 +52,20 @@ using namespace std;
 //! cost = - sum_i {target_i * log(output_i) + (1-target_i) * log(1-output_i)}
 class CrossEntropyVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  CrossEntropyVariable() {}
-  CrossEntropyVariable(Variable* netout, Variable* target);
+    //!  Default constructor for persistence
+    CrossEntropyVariable() {}
+    CrossEntropyVariable(Variable* netout, Variable* target);
 
-  PLEARN_DECLARE_OBJECT(CrossEntropyVariable);
+    PLEARN_DECLARE_OBJECT(CrossEntropyVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
 
 protected:
     void build_();
@@ -79,3 +79,16 @@ inline Var cross_entropy(Var network_output, Var targets)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

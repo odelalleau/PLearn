@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsFileIndexVMatrix.cc,v 1.6 2004/04/05 23:03:57 morinf Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "SelectRowsFileIndexVMatrix.h"
 
@@ -67,15 +67,15 @@ SelectRowsFileIndexVMatrix::build()
 void
 SelectRowsFileIndexVMatrix::build_()
 {
-  if (distr) {
-    fieldinfos = distr->fieldinfos;
-    length_ = indices.length();
-    if (length_ == -1) {
-      indices.open(index_file);
-      length_ = indices.length();
+    if (distr) {
+        fieldinfos = distr->fieldinfos;
+        length_ = indices.length();
+        if (length_ == -1) {
+            indices.open(index_file);
+            length_ = indices.length();
+        }
+        defineSizes(distr->inputsize(), distr->targetsize(), distr->weightsize());
     }
-    defineSizes(distr->inputsize(), distr->targetsize(), distr->weightsize());
-  }
 }
 
 void
@@ -114,3 +114,16 @@ const map<string,real>& SelectRowsFileIndexVMatrix::getStringToRealMapping(int c
 { return distr->getStringToRealMapping(col);}
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SumSquareVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "SumSquareVariable.h"
 #include "Var_operators.h"
@@ -55,35 +55,46 @@ PLEARN_IMPLEMENT_OBJECT(SumSquareVariable,
                         "NO HELP");
 
 SumSquareVariable::SumSquareVariable(Variable* input)
-  : inherited(input, 1, 1) {}
+    : inherited(input, 1, 1) {}
 
 void SumSquareVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
 
 void SumSquareVariable::fprop()
 {
-  int n=input->nelems();
-  *valuedata= 0;
-  for(int i=0; i<n; i++)
-    *valuedata+= input->valuedata[i]*input->valuedata[i];
+    int n=input->nelems();
+    *valuedata= 0;
+    for(int i=0; i<n; i++)
+        *valuedata+= input->valuedata[i]*input->valuedata[i];
 }
 
 
 void SumSquareVariable::bprop()
 {
-  int n=input->nelems();
-  for(int i=0; i<n; i++)
-    input->gradientdata[i]+= 2.0 * input->valuedata[i] * *gradientdata;
+    int n=input->nelems();
+    for(int i=0; i<n; i++)
+        input->gradientdata[i]+= 2.0 * input->valuedata[i] * *gradientdata;
 }
 
 
 void SumSquareVariable::symbolicBprop()
 {
-  input->accg(2.0 * (g*input));
+    input->accg(2.0 * (g*input));
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

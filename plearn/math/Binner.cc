@@ -37,8 +37,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.cc,v 1.9 2004/10/29 21:21:11 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file Binner.cc */
 
@@ -50,61 +50,61 @@ namespace PLearn {
 using namespace std;
 
 Binner::Binner() 
-:Object()
+    :Object()
 {}
 
 PLEARN_IMPLEMENT_OBJECT(Binner,
-    "Divides a range into bins.",
-    "");
+                        "Divides a range into bins.",
+                        "");
 
 void Binner::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  // ### ex:
-  // declareOption(ol, "myoption", &Binner::myoption, OptionBase::buildoption,
-  //               "Help text describing this option");
-  // ...
+    // ### ex:
+    // declareOption(ol, "myoption", &Binner::myoption, OptionBase::buildoption,
+    //               "Help text describing this option");
+    // ...
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void Binner::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation. 
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+    // ### You should assume that the parent class' build_() has already been called.
 }
 
 // ### Nothing to add here, simply calls build_
 void Binner::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 
 void Binner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Object::makeDeepCopyFromShallowCopy(copies);
+    Object::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("Binner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("Binner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 ////////////////
@@ -117,23 +117,35 @@ PP<RealMapping> Binner::getBinning(VMat v) const
 // getBins //
 /////////////
 TVec< TVec<int> > Binner::getBins(const Vec& v) const {
-  PLWARNING("In Binner::getBins - This method has not been tested yet, remove this warning if it works fine");
-  VMat col = new MemoryVMatrix(columnmatrix(v));
-  PP<RealMapping> mapping = getBinning(col);
-  TVec< TVec<int> > bins(mapping->length());
-  for (int i = 0; i < v.length(); i++) {
-    bins[mapping->binnumber(v[i])].append(i);
-  }
-  return bins;
+    PLWARNING("In Binner::getBins - This method has not been tested yet, remove this warning if it works fine");
+    VMat col = new MemoryVMatrix(columnmatrix(v));
+    PP<RealMapping> mapping = getBinning(col);
+    TVec< TVec<int> > bins(mapping->length());
+    for (int i = 0; i < v.length(); i++) {
+        bins[mapping->binnumber(v[i])].append(i);
+    }
+    return bins;
 }
 
 ///////////
 // nBins //
 ///////////
 int Binner::nBins() const {
-  PLERROR("In Binner::nBins - The nBins() method is not available for this Binner.");
-  return 0;
+    PLERROR("In Binner::nBins - The nBins() method is not available for this Binner.");
+    return 0;
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

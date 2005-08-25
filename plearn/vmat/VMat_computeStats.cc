@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_computeStats.cc,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -50,25 +50,38 @@ using namespace std;
 
 TVec<StatsCollector> computeStats(VMat m, int maxnvalues, bool report_progress)
 {
-  int w = m.width();
-  int l = m.length();
-  TVec<StatsCollector> stats(w, StatsCollector(maxnvalues));
-  Vec v(w);
-  ProgressBar* pbar = 0;
-  if (report_progress)
-    pbar = new ProgressBar("Computing statistics", l);
-  for(int i=0; i<l; i++)
+    int w = m.width();
+    int l = m.length();
+    TVec<StatsCollector> stats(w, StatsCollector(maxnvalues));
+    Vec v(w);
+    ProgressBar* pbar = 0;
+    if (report_progress)
+        pbar = new ProgressBar("Computing statistics", l);
+    for(int i=0; i<l; i++)
     {
-      m->getRow(i,v);
-      for(int j=0; j<w; j++)
-        stats[j].update(v[j]);
-      if (report_progress)
-        pbar->update(i);
+        m->getRow(i,v);
+        for(int j=0; j<w; j++)
+            stats[j].update(v[j]);
+        if (report_progress)
+            pbar->update(i);
     }
-  if (pbar)
-    delete pbar;
-  return stats;
+    if (pbar)
+        delete pbar;
+    return stats;
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

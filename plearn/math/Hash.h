@@ -1,4 +1,4 @@
- // -*- C++ -*-
+// -*- C++ -*-
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
@@ -35,9 +35,9 @@
 
 
 /* *******************************************************      
-   * $Id: Hash.h,v 1.5 2004/07/21 16:30:53 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 /*! DEPRECATED!!!  Use <hash_map> instead.  */
 
@@ -55,12 +55,12 @@ using namespace std;
 
 
 /*!   KeyType must have 
-    a (char *) type cast operator that returns a pointer to its usefull region
-    since the key can be any object (therefore, the usefull part of the 
-    object does not necessarily starts a offset_0) 
-    const size_t byteLength() const  that returns the byte-size of its usefull region,
-    new, delete and a copy constructor 
-    ==, != 
+  a (char *) type cast operator that returns a pointer to its usefull region
+  since the key can be any object (therefore, the usefull part of the 
+  object does not necessarily starts a offset_0) 
+  const size_t byteLength() const  that returns the byte-size of its usefull region,
+  new, delete and a copy constructor 
+  ==, != 
 */
 
 //!  DataType must have new, delete and copy constructor
@@ -74,12 +74,12 @@ template <class KeyType, class DataType>
 class HashKeyDataPair
 {
 public:
-  KeyType  *key;
-  DataType *data;
+    KeyType  *key;
+    DataType *data;
 
-  HashKeyDataPair();
-  HashKeyDataPair(const KeyType &the_key, const DataType &the_data);
-  ~HashKeyDataPair();
+    HashKeyDataPair();
+    HashKeyDataPair(const KeyType &the_key, const DataType &the_data);
+    ~HashKeyDataPair();
 };
 
 
@@ -88,64 +88,64 @@ template <class KeyType, class DataType>
 class Hash : public PPointable
 {
 private:  
-  HashKeyDataPair<KeyType,DataType> **table;  //!<  a pointer to a table of <key,data>
-  unsigned int tableSize;                     //!<  total number of slots 
-  unsigned int elements;                      //!<  number of used slots
-  unsigned int pace;                          //!<  used by the secondary hash function
-  unsigned int jumps;                         //!<  number of probes in last operation
+    HashKeyDataPair<KeyType,DataType> **table;  //!<  a pointer to a table of <key,data>
+    unsigned int tableSize;                     //!<  total number of slots 
+    unsigned int elements;                      //!<  number of used slots
+    unsigned int pace;                          //!<  used by the secondary hash function
+    unsigned int jumps;                         //!<  number of probes in last operation
 
-  unsigned int hashKey(const KeyType &) const; //!<  computes the primary hash function on the string (length=0 says to look for \0 in bytes to determine length)
-  void computePace();                         //!<  computes the magic number used by the secondary hash function
-  unsigned int pgcd(unsigned int, unsigned int) const;
+    unsigned int hashKey(const KeyType &) const; //!<  computes the primary hash function on the string (length=0 says to look for \0 in bytes to determine length)
+    void computePace();                         //!<  computes the magic number used by the secondary hash function
+    unsigned int pgcd(unsigned int, unsigned int) const;
 
-  unsigned int find(const KeyType &);         //!<  returns either an empty slot or the slot with the key in it
-  unsigned int findGap(const KeyType &);      //!<  returns the first empty slot it finds
+    unsigned int find(const KeyType &);         //!<  returns either an empty slot or the slot with the key in it
+    unsigned int findGap(const KeyType &);      //!<  returns the first empty slot it finds
 
-  //!  the following field are only used in static mode
-  bool static_tables_initialized;             //!<  true when the tables are initialized
-  KeyType *key_table;
-  DataType *data_table;
-  HashKeyDataPair<KeyType,DataType> *hash_table;
-  unsigned int next_free_slot;                //!<  the next free slot in the 3 tables
+    //!  the following field are only used in static mode
+    bool static_tables_initialized;             //!<  true when the tables are initialized
+    KeyType *key_table;
+    DataType *data_table;
+    HashKeyDataPair<KeyType,DataType> *hash_table;
+    unsigned int next_free_slot;                //!<  the next free slot in the 3 tables
 
 public:   
-  bool isStatic;                              //!<  static or dynamic memory allocation
+    bool isStatic;                              //!<  static or dynamic memory allocation
 
-  bool add(const KeyType &, const DataType &);  //!<  returns false if table is full
-  void addAndResize(const KeyType &, const DataType &);  //!<  add() and resize() if resizeTime()
-  bool element(const KeyType &);
-  bool del(const KeyType &);
+    bool add(const KeyType &, const DataType &);  //!<  returns false if table is full
+    void addAndResize(const KeyType &, const DataType &);  //!<  add() and resize() if resizeTime()
+    bool element(const KeyType &);
+    bool del(const KeyType &);
 
-  unsigned int hashAddress(const KeyType &);  //!<  returns Hash_UNUSED_TAG (-1) if not in table
+    unsigned int hashAddress(const KeyType &);  //!<  returns Hash_UNUSED_TAG (-1) if not in table
 
-  DataType * operator[](unsigned int addr) const; //!<  data at hashAddress (or 0 if none have been put)
-  KeyType * operator()(unsigned int addr) const;  //!<  key at hashAddress (or 0 if none have been put)
-  HashKeyDataPair<KeyType,DataType>** getTable() const { return table; }
+    DataType * operator[](unsigned int addr) const; //!<  data at hashAddress (or 0 if none have been put)
+    KeyType * operator()(unsigned int addr) const;  //!<  key at hashAddress (or 0 if none have been put)
+    HashKeyDataPair<KeyType,DataType>** getTable() const { return table; }
 
-  unsigned int size() const;                  //!<  returns tableSize;
-  unsigned int cardinal() const;              //!<  returns number of elements
+    unsigned int size() const;                  //!<  returns tableSize;
+    unsigned int cardinal() const;              //!<  returns number of elements
 
-  void flush();                               //!<  cleans the table without resizing it
+    void flush();                               //!<  cleans the table without resizing it
 
-  void initializeTable(unsigned int size);    //!<  initialize the static tables
+    void initializeTable(unsigned int size);    //!<  initialize the static tables
 
-  //!  diagnostics
+    //!  diagnostics
 
-  bool full() const;                          //!<  is the table full?
-  bool resizeTime() const;                    //!<  is it time to resize the table?
-  void resize(int newsize = -1);              //!<  resizes the table to maintain a good sparseness
-                                              //!  (default=-1 quadruples the table size)
-  void cleanup();                             //!<  cleanup the table to maintain efficiency
-  unsigned int probes() const;                //!<  returns the number of probe generate by last query
-  void diagnostics(unsigned int & clusters,   //!<  ...and average cluster size is cardinal()/clusters
-  unsigned int & maxCluster) const;
+    bool full() const;                          //!<  is the table full?
+    bool resizeTime() const;                    //!<  is it time to resize the table?
+    void resize(int newsize = -1);              //!<  resizes the table to maintain a good sparseness
+    //!  (default=-1 quadruples the table size)
+    void cleanup();                             //!<  cleanup the table to maintain efficiency
+    unsigned int probes() const;                //!<  returns the number of probe generate by last query
+    void diagnostics(unsigned int & clusters,   //!<  ...and average cluster size is cardinal()/clusters
+                     unsigned int & maxCluster) const;
 
 
-  Hash(unsigned int size=10000, bool static_allocation=false);
-  ~Hash();
+    Hash(unsigned int size=10000, bool static_allocation=false);
+    ~Hash();
 private:
-  Hash(const Hash& obj) {}  //!<  The copy constructor is not yet defined...
-  void operator=(const Hash& obj) {} //!<  not permitted...
+    Hash(const Hash& obj) {}  //!<  The copy constructor is not yet defined...
+    void operator=(const Hash& obj) {} //!<  not permitted...
 };
 
 ////////////!<  implementation of HashKeyDataPair ////////////////////////////////////!<  
@@ -159,15 +159,15 @@ HashKeyDataPair<KeyType, DataType>::HashKeyDataPair()
 template <class KeyType, class DataType> 
 HashKeyDataPair<KeyType, DataType>::HashKeyDataPair(const KeyType &the_key, const DataType &the_data)
 {
-  key = new KeyType(the_key);
-  data = new DataType(the_data);
+    key = new KeyType(the_key);
+    data = new DataType(the_data);
 }
 
 template <class KeyType, class DataType> 
 HashKeyDataPair<KeyType, DataType>::~HashKeyDataPair()
 {
-  delete key;
-  delete data;
+    delete key;
+    delete data;
 }
 
 
@@ -185,31 +185,31 @@ extern const unsigned int Hash_NOMBRES_MAGIQUES[256];
 template <class KeyType, class DataType> 
 unsigned int Hash<KeyType,DataType>::hashKey(const KeyType & key) const
 {
-  int l = key.byteLength();
-  unsigned int hashKey=0u;
-  unsigned char *pKey = l>0?((unsigned char *)(char *)key):(unsigned char*)0;
+    int l = key.byteLength();
+    unsigned int hashKey=0u;
+    unsigned char *pKey = l>0?((unsigned char *)(char *)key):(unsigned char*)0;
   
-  for (int i=0;i<l;i++)
+    for (int i=0;i<l;i++)
     {
-      unsigned char t = (hashKey >> 24);
-      hashKey = (hashKey << 8) + pKey[i];
-      hashKey ^= Hash_NOMBRES_MAGIQUES[t];
+        unsigned char t = (hashKey >> 24);
+        hashKey = (hashKey << 8) + pKey[i];
+        hashKey ^= Hash_NOMBRES_MAGIQUES[t];
     }
 
-  return hashKey % tableSize;
+    return hashKey % tableSize;
 }
 
 ///////////////////////////////////!<  
 template <class KeyType, class DataType> 
 unsigned int Hash<KeyType,DataType>::pgcd(unsigned int a, unsigned int b) const
 {
-  while (b)
+    while (b)
     {
-      unsigned int r=(a % b);
-      a=b;
-      b=r;
+        unsigned int r=(a % b);
+        a=b;
+        b=r;
     }
-  return a;
+    return a;
 }
 
 ///////////////////////////////////!<  
@@ -221,9 +221,9 @@ unsigned int Hash<KeyType,DataType>::pgcd(unsigned int a, unsigned int b) const
 template <class KeyType, class DataType> 
 void Hash<KeyType,DataType>::computePace()
 {
-  unsigned int t = (tableSize * 6) / 10;
-  while (pgcd(tableSize,t)!=1) t--;
-  pace = t;
+    unsigned int t = (tableSize * 6) / 10;
+    while (pgcd(tableSize,t)!=1) t--;
+    pace = t;
 }
 
 ///////////////////////////////////!<  
@@ -235,23 +235,23 @@ void Hash<KeyType,DataType>::computePace()
 template <class KeyType, class DataType> 
 unsigned int Hash<KeyType,DataType>::find(const KeyType & key)
 {
-  unsigned int h = hashKey(key);
+    unsigned int h = hashKey(key);
 /*!     PROBLEME GRAVE ICI: 
-    si key->h mais h est occupe, donc key-> jump to h'
-    ensuite si table[h] a ete delete
-    un find(key) donnera h (qui contient "Hash_DELETED_SLOT") plutot que h'
+  si key->h mais h est occupe, donc key-> jump to h'
+  ensuite si table[h] a ete delete
+  un find(key) donnera h (qui contient "Hash_DELETED_SLOT") plutot que h'
     
 */
-  jumps=0;
-  //!  while ( (table[h]>Hash_DELETED_SLOT) &&  //!<  FIX ABOVE PROBLEM
-  while ( (table[h]) && (jumps<tableSize) && 
-    ((table[h]==Hash_DELETED_SLOT) || (*table[h]->key!=key) ) )
+    jumps=0;
+    //!  while ( (table[h]>Hash_DELETED_SLOT) &&  //!<  FIX ABOVE PROBLEM
+    while ( (table[h]) && (jumps<tableSize) && 
+            ((table[h]==Hash_DELETED_SLOT) || (*table[h]->key!=key) ) )
     {
-      h = (h+pace) % tableSize;
-      jumps++;
+        h = (h+pace) % tableSize;
+        jumps++;
     }
 
-  return h;
+    return h;
 }
 
 ///////////////////////////////////!<  
@@ -263,16 +263,16 @@ unsigned int Hash<KeyType,DataType>::find(const KeyType & key)
 template <class KeyType, class DataType> 
 unsigned int Hash<KeyType,DataType>::findGap(const KeyType & key)
 {
-  unsigned int h = hashKey(key);
+    unsigned int h = hashKey(key);
 
-  jumps=0;
-  while ((table[h]>Hash_DELETED_SLOT) && (jumps<tableSize))
+    jumps=0;
+    while ((table[h]>Hash_DELETED_SLOT) && (jumps<tableSize))
     {
-      h = (h+pace) % tableSize;
-      jumps++;
+        h = (h+pace) % tableSize;
+        jumps++;
     }
 
-  return h;
+    return h;
 }
 
 
@@ -285,35 +285,35 @@ unsigned int Hash<KeyType,DataType>::findGap(const KeyType & key)
 template <class KeyType, class DataType> 
 bool Hash<KeyType,DataType>::add(const KeyType & key, const DataType & data)
 {
-  unsigned int h = findGap(key);
-  //!  if already element delete it
-  if ((table[h]>Hash_DELETED_SLOT) && (*table[h]->key==key))
+    unsigned int h = findGap(key);
+    //!  if already element delete it
+    if ((table[h]>Hash_DELETED_SLOT) && (*table[h]->key==key))
     {
-      if (!isStatic)
-        delete table[h];
-      table[h]=0;
-      elements--;
-    }
-  if ((table[h]==0) || (table[h]==Hash_DELETED_SLOT))
-      {
         if (!isStatic)
-          table[h] = new HashKeyDataPair<KeyType,DataType>(key, data);
+            delete table[h];
+        table[h]=0;
+        elements--;
+    }
+    if ((table[h]==0) || (table[h]==Hash_DELETED_SLOT))
+    {
+        if (!isStatic)
+            table[h] = new HashKeyDataPair<KeyType,DataType>(key, data);
         else {
-          if (static_tables_initialized==false)
-            PLERROR("You must initialized the static table before using the add method");
-          if (next_free_slot == tableSize)
-            return false; //!<  no slot found (bummer!)
-          table[h] = &hash_table[next_free_slot];
-          table[h]->key  = &key_table[next_free_slot];
-          table[h]->data = &data_table[next_free_slot];
-          key_table[next_free_slot] = key;
-          data_table[next_free_slot] = data;
-          next_free_slot++;
+            if (static_tables_initialized==false)
+                PLERROR("You must initialized the static table before using the add method");
+            if (next_free_slot == tableSize)
+                return false; //!<  no slot found (bummer!)
+            table[h] = &hash_table[next_free_slot];
+            table[h]->key  = &key_table[next_free_slot];
+            table[h]->data = &data_table[next_free_slot];
+            key_table[next_free_slot] = key;
+            data_table[next_free_slot] = data;
+            next_free_slot++;
         }
         elements++;
         return true;
-      }
-  else return false; //!<  no slot found (bummer!)
+    }
+    else return false; //!<  no slot found (bummer!)
 }
 
 ///////////////////////////////////!<  
@@ -324,8 +324,8 @@ bool Hash<KeyType,DataType>::add(const KeyType & key, const DataType & data)
 template <class KeyType, class DataType> 
 void Hash<KeyType,DataType>::addAndResize(const KeyType & key, const DataType & data)
 {
-  if (resizeTime()) resize();
-  add(key,data);
+    if (resizeTime()) resize();
+    add(key,data);
 }
 
 ///////////////////////////////////!<  
@@ -336,17 +336,17 @@ void Hash<KeyType,DataType>::addAndResize(const KeyType & key, const DataType & 
 template <class KeyType, class DataType> 
 bool Hash<KeyType,DataType>::del(const KeyType & key)
 { 
-  unsigned int h = find(key);
+    unsigned int h = find(key);
 
-  if (table[h]>Hash_DELETED_SLOT) 
+    if (table[h]>Hash_DELETED_SLOT) 
     {
-      if (!isStatic)
-        delete table[h];
-      table[h] = (HashKeyDataPair<KeyType,DataType> *)Hash_DELETED_SLOT;
-      elements--;
-      return true;
+        if (!isStatic)
+            delete table[h];
+        table[h] = (HashKeyDataPair<KeyType,DataType> *)Hash_DELETED_SLOT;
+        elements--;
+        return true;
     }
-  else return false;
+    else return false;
 }
 
 ///////////////////////////////////!<  
@@ -357,8 +357,8 @@ bool Hash<KeyType,DataType>::del(const KeyType & key)
 template <class KeyType, class DataType> 
 bool Hash<KeyType,DataType>::element(const KeyType & key)
 {
-  unsigned int h = find(key);
-  return (table[h]>Hash_DELETED_SLOT) && (*table[h]->key==key);
+    unsigned int h = find(key);
+    return (table[h]>Hash_DELETED_SLOT) && (*table[h]->key==key);
 }
 
 ///////////////////////////////////!<  
@@ -370,11 +370,11 @@ bool Hash<KeyType,DataType>::element(const KeyType & key)
 template <class KeyType, class DataType> 
 unsigned int Hash<KeyType,DataType>::hashAddress(const KeyType & key)
 {
-  unsigned int h = find(key);
+    unsigned int h = find(key);
 
-  if ( (table[h]>Hash_DELETED_SLOT) && (*table[h]->key==key) )
-    return h;
-  else return Hash_UNUSED_TAG;
+    if ( (table[h]>Hash_DELETED_SLOT) && (*table[h]->key==key) )
+        return h;
+    else return Hash_UNUSED_TAG;
 }
 
 
@@ -384,7 +384,7 @@ unsigned int Hash<KeyType,DataType>::hashAddress(const KeyType & key)
 template <class KeyType, class DataType> 
 unsigned int Hash<KeyType,DataType>::size() const
 { 
-  return tableSize;
+    return tableSize;
 }
 
 ///////////////////////////////////!<  
@@ -393,7 +393,7 @@ unsigned int Hash<KeyType,DataType>::size() const
 template <class KeyType, class DataType> 
 unsigned int Hash<KeyType,DataType>::cardinal() const
 { 
-  return elements;
+    return elements;
 }
 
 
@@ -405,7 +405,7 @@ unsigned int Hash<KeyType,DataType>::cardinal() const
 template <class KeyType, class DataType> 
 bool Hash<KeyType,DataType>::resizeTime() const
 {
-  return (elements > (tableSize * 7) / 10);
+    return (elements > (tableSize * 7) / 10);
 }
 
 ///////////////////////////////////!<  
@@ -416,7 +416,7 @@ bool Hash<KeyType,DataType>::resizeTime() const
 template <class KeyType, class DataType> 
 bool Hash<KeyType,DataType>::full() const
 {
-  return elements == tableSize;
+    return elements == tableSize;
 }
 
 
@@ -428,25 +428,25 @@ bool Hash<KeyType,DataType>::full() const
 template <class KeyType, class DataType> 
 void Hash<KeyType,DataType>::resize(int newsize)
 { 
-  //PLWARNING("You are resizing the Hash table in static mode");
+    //PLWARNING("You are resizing the Hash table in static mode");
 
-  if (newsize<0) newsize=tableSize*4;
-  if (newsize<=(int)tableSize) return;
-  Hash t(newsize);
-  cout << "Resize Hash table to " << newsize << endl;
-  for (unsigned int i=0;i<tableSize;i++)
-    if (table[i] > Hash_DELETED_SLOT)
-      t.add(*table[i]->key,*table[i]->data);
+    if (newsize<0) newsize=tableSize*4;
+    if (newsize<=(int)tableSize) return;
+    Hash t(newsize);
+    cout << "Resize Hash table to " << newsize << endl;
+    for (unsigned int i=0;i<tableSize;i++)
+        if (table[i] > Hash_DELETED_SLOT)
+            t.add(*table[i]->key,*table[i]->data);
 
-  flush();
-  delete[] table;
+    flush();
+    delete[] table;
 
-  table = t.table;
-  t.table = 0; //!<  dont deallocate t's table
-  tableSize = t.tableSize;
-  elements = t.elements;
-  pace = t.pace;
-  t.table= 0;
+    table = t.table;
+    t.table = 0; //!<  dont deallocate t's table
+    tableSize = t.tableSize;
+    elements = t.elements;
+    pace = t.pace;
+    t.table= 0;
 }
 
 ///////////////////////////////////!<  
@@ -457,21 +457,21 @@ void Hash<KeyType,DataType>::resize(int newsize)
 template <class KeyType, class DataType> 
 void Hash<KeyType,DataType>::cleanup()
 { 
-  Hash t(tableSize);
+    Hash t(tableSize);
 
-  for (unsigned int i=0;i<tableSize;i++)
-    if (table[i] > Hash_DELETED_SLOT)
-      t.add(*table[i]->key,*table[i]->data);
+    for (unsigned int i=0;i<tableSize;i++)
+        if (table[i] > Hash_DELETED_SLOT)
+            t.add(*table[i]->key,*table[i]->data);
 
-  flush();
-  delete[] table;
+    flush();
+    delete[] table;
 
-  table = t.table;
-  t.table = 0; //!<  dont deallocate t's table
-  tableSize = t.tableSize;
-  elements = t.elements;
-  pace = t.pace;
-  t.table=0;
+    table = t.table;
+    t.table = 0; //!<  dont deallocate t's table
+    tableSize = t.tableSize;
+    elements = t.elements;
+    pace = t.pace;
+    t.table=0;
 }
 
 
@@ -481,9 +481,9 @@ void Hash<KeyType,DataType>::cleanup()
 template <class KeyType, class DataType> 
 DataType * Hash<KeyType,DataType>::operator[](unsigned int addr) const
 {
-  if ((addr<tableSize) && (table[addr]>Hash_DELETED_SLOT))
-    return table[addr]->data;
-  else return 0;
+    if ((addr<tableSize) && (table[addr]>Hash_DELETED_SLOT))
+        return table[addr]->data;
+    else return 0;
 }
 
 
@@ -493,9 +493,9 @@ DataType * Hash<KeyType,DataType>::operator[](unsigned int addr) const
 template <class KeyType, class DataType> 
 KeyType * Hash<KeyType,DataType>::operator()(unsigned int addr) const
 {
-  if ((addr<tableSize) && (table[addr]>Hash_DELETED_SLOT))
-    return table[addr]->key;
-  else return 0;
+    if ((addr<tableSize) && (table[addr]>Hash_DELETED_SLOT))
+        return table[addr]->key;
+    else return 0;
 }
 
 
@@ -508,16 +508,16 @@ KeyType * Hash<KeyType,DataType>::operator()(unsigned int addr) const
 template <class KeyType, class DataType> 
 void Hash<KeyType,DataType>::flush()
 {
-  if (table)
+    if (table)
     {
-      for (unsigned int i=0;i<tableSize;i++)
-        if (table[i]>Hash_DELETED_SLOT) 
-          {
-            if (!isStatic)
-              delete table[i];
-            table[i]=0;
-          }
-      elements=0;
+        for (unsigned int i=0;i<tableSize;i++)
+            if (table[i]>Hash_DELETED_SLOT) 
+            {
+                if (!isStatic)
+                    delete table[i];
+                table[i]=0;
+            }
+        elements=0;
     }
 }
 
@@ -528,18 +528,18 @@ void Hash<KeyType,DataType>::flush()
 template <class KeyType, class DataType> 
 void Hash<KeyType, DataType>::initializeTable(unsigned int size)
 {
-  if (!isStatic)
-    PLERROR("The static tables can be initialized only in static mode");
+    if (!isStatic)
+        PLERROR("The static tables can be initialized only in static mode");
 
-  if (static_tables_initialized==false) {
-    key_table = new KeyType[size];
-    data_table = new DataType[size];
-    hash_table = new HashKeyDataPair<KeyType,DataType>[size];
-  }
-  else
-    PLWARNING("The static tables are already initialized");
+    if (static_tables_initialized==false) {
+        key_table = new KeyType[size];
+        data_table = new DataType[size];
+        hash_table = new HashKeyDataPair<KeyType,DataType>[size];
+    }
+    else
+        PLWARNING("The static tables are already initialized");
 
-  static_tables_initialized = true;
+    static_tables_initialized = true;
 }
 
 
@@ -548,17 +548,17 @@ void Hash<KeyType, DataType>::initializeTable(unsigned int size)
 //!  Creates the table with size entries
 template <class KeyType, class DataType> 
 Hash<KeyType, DataType>::Hash(unsigned int size, bool static_allocation) 
-  : tableSize(size), elements(0), static_tables_initialized(false),
-    next_free_slot(0), isStatic(static_allocation)
+    : tableSize(size), elements(0), static_tables_initialized(false),
+      next_free_slot(0), isStatic(static_allocation)
 {
-  //!  allocates a table of 0s
-  //table = (HashKeyDataPair<KeyType,DataType> **)calloc(size, sizeof(HashKeyDataPair<KeyType,DataType> *));
-  assert (size > 0);
-  typedef HashKeyDataPair<KeyType,DataType>* hash_key_data_table;
-  table = new hash_key_data_table[size];
-  for (unsigned int i=0; i<size; i++) table[i]=0;
+    //!  allocates a table of 0s
+    //table = (HashKeyDataPair<KeyType,DataType> **)calloc(size, sizeof(HashKeyDataPair<KeyType,DataType> *));
+    assert (size > 0);
+    typedef HashKeyDataPair<KeyType,DataType>* hash_key_data_table;
+    table = new hash_key_data_table[size];
+    for (unsigned int i=0; i<size; i++) table[i]=0;
 
-  computePace();
+    computePace();
 }
 
 
@@ -566,35 +566,35 @@ Hash<KeyType, DataType>::Hash(unsigned int size, bool static_allocation)
 template <class KeyType, class DataType> 
 Hash<KeyType,DataType>::~Hash()
 {
-  if (table)
+    if (table)
     {
-      flush();
-      delete[] table;
+        flush();
+        delete[] table;
     }
-  if (isStatic) {
+    if (isStatic) {
 /*!         before really deleting the hash_table, we set to zero the key and
-        data pointers in the elements of this array, to ensure that they
-        don't get deleted by the delete[] hash_table (since those pointers
-        are not dynamically allocated but rather point into key_table and
-        data_table respectively).
+  data pointers in the elements of this array, to ensure that they
+  don't get deleted by the delete[] hash_table (since those pointers
+  are not dynamically allocated but rather point into key_table and
+  data_table respectively).
 */
-      long i, maxi=tableSize;
-      for (i=0; i<maxi; ++i) {
-	  hash_table[i].key = 0;
-	  hash_table[i].data = 0;
-      }
+        long i, maxi=tableSize;
+        for (i=0; i<maxi; ++i) {
+            hash_table[i].key = 0;
+            hash_table[i].data = 0;
+        }
       
-      delete[] key_table;
-      delete[] data_table;
-      delete[] hash_table;
-  }
+        delete[] key_table;
+        delete[] data_table;
+        delete[] hash_table;
+    }
 }
 
 ///////////////////////////////////!<  
 template <class KeyType, class DataType> 
 unsigned int Hash<KeyType,DataType>::probes() const
 {
-  return jumps+1;
+    return jumps+1;
 }
 
 ///////////////////////////////////!<  
@@ -606,19 +606,19 @@ unsigned int Hash<KeyType,DataType>::probes() const
 template <class KeyType, class DataType> 
 void Hash<KeyType,DataType>::diagnostics(unsigned int & clusters, unsigned int & maxCluster) const
 {
-  clusters=0;
-  maxCluster=0;
+    clusters=0;
+    maxCluster=0;
 
-  unsigned int d=0;
-  while (d<tableSize)
+    unsigned int d=0;
+    while (d<tableSize)
     {
-      while ((d<tableSize) && (table[d]==0)) d++;
-      if (d<tableSize)
+        while ((d<tableSize) && (table[d]==0)) d++;
+        if (d<tableSize)
         { 
-          clusters++;
-          unsigned int c=0;
-          while ((d<tableSize) && (table[d])) c++,d++;
-          maxCluster=__max(maxCluster,c);
+            clusters++;
+            unsigned int c=0;
+            while ((d<tableSize) && (table[d])) c++,d++;
+            maxCluster=__max(maxCluster,c);
         }
     }
 }
@@ -629,17 +629,17 @@ void Hash<KeyType,DataType>::diagnostics(unsigned int & clusters, unsigned int &
 */
 struct Symbol
 {
-  int s;
-  Symbol(int symbol=0) : s(symbol) {}
-  Symbol(const Symbol& b) : s(b.s) { }
-  operator char*() const { return (char*)(&s); }
-  // norman: removed useless const
-  size_t byteLength() const { return sizeof(int); }
-  operator int() { return s; }
-  bool operator==(const Symbol& o) const { return o.s==s; }
-  bool operator!=(const Symbol& o) const { return o.s!=s; }
-  Symbol operator++(int) { return ++s; } //!<  postfix
-  Symbol operator++()    { return ++s; } //!<  prefix
+    int s;
+    Symbol(int symbol=0) : s(symbol) {}
+    Symbol(const Symbol& b) : s(b.s) { }
+    operator char*() const { return (char*)(&s); }
+    // norman: removed useless const
+    size_t byteLength() const { return sizeof(int); }
+    operator int() { return s; }
+    bool operator==(const Symbol& o) const { return o.s==s; }
+    bool operator!=(const Symbol& o) const { return o.s!=s; }
+    Symbol operator++(int) { return ++s; } //!<  postfix
+    Symbol operator++()    { return ++s; } //!<  prefix
 };
 
 #ifdef __maxredefined
@@ -650,19 +650,19 @@ struct Symbol
 
 class IntPair {
 public:
-  int i0;
-  int i1;
+    int i0;
+    int i1;
   
-  IntPair() { i0=i1=0; }
-  IntPair(int j0, int j1) : i0(j0), i1(j1) {}
-  IntPair(const IntPair& b) : i0(b.i0), i1(b.i1) { }
-  operator char*() const { return (char*)(&i0); }
-  int size() const { return 2; }
-  // norman: removed useless const
-  size_t byteLength() const { return 2*sizeof(int); }
-  bool operator!=(const IntPair& b) const { return (i0!=b.i0 || i1!=b.i1); }
-  bool operator==(const IntPair& b) const { return (i0==b.i0 && i1==b.i1); }
-  int& operator[](int i) { if (i==0) return i0; else return i1; }
+    IntPair() { i0=i1=0; }
+    IntPair(int j0, int j1) : i0(j0), i1(j1) {}
+    IntPair(const IntPair& b) : i0(b.i0), i1(b.i1) { }
+    operator char*() const { return (char*)(&i0); }
+    int size() const { return 2; }
+    // norman: removed useless const
+    size_t byteLength() const { return 2*sizeof(int); }
+    bool operator!=(const IntPair& b) const { return (i0!=b.i0 || i1!=b.i1); }
+    bool operator==(const IntPair& b) const { return (i0==b.i0 && i1==b.i1); }
+    int& operator[](int i) { if (i==0) return i0; else return i1; }
 };
 
 
@@ -670,3 +670,15 @@ public:
 
 #endif //!<  MODULE_HASH
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -85,110 +85,110 @@ namespace PLearn {
  */
 class KNNRegressor: public PLearner
 {
-  typedef PLearner inherited;
+    typedef PLearner inherited;
 
 protected:
-  //! Internal use: temporary buffer for knn output
-  mutable Vec knn_output;
+    //! Internal use: temporary buffer for knn output
+    mutable Vec knn_output;
 
-  //! Internal use: temporary buffer for knn costs
-  mutable Vec knn_costs;
+    //! Internal use: temporary buffer for knn costs
+    mutable Vec knn_costs;
   
 public:
-  //#####  Public Build Options  ############################################
+    //#####  Public Build Options  ############################################
 
-  //! The K-nearest-neighbors finder to use (default is an
-  //! ExhaustiveNearestNeighbors with an EpanechnikovKernel, lambda=1)
-  PP<GenericNearestNeighbors> knn;
+    //! The K-nearest-neighbors finder to use (default is an
+    //! ExhaustiveNearestNeighbors with an EpanechnikovKernel, lambda=1)
+    PP<GenericNearestNeighbors> knn;
 
-  //! Minimum number of neighbors to use (default=5)
-  int kmin;
+    //! Minimum number of neighbors to use (default=5)
+    int kmin;
 
-  //! Multiplicative factor on n^kpow to determine number of neighbors to
-  //! use (default=0)
-  real kmult;
+    //! Multiplicative factor on n^kpow to determine number of neighbors to
+    //! use (default=0)
+    real kmult;
 
-  //! Power of the number of training examples to determine number of
-  //! neighbors (default=0.5)
-  real kpow;
+    //! Power of the number of training examples to determine number of
+    //! neighbors (default=0.5)
+    real kpow;
 
-  //! Whether to weigh each of the K neighbors by the kernel evaluations,
-  //! obtained from the costs coming out of the 'knn' object (default=true)
-  bool use_knn_costs_as_weights;
+    //! Whether to weigh each of the K neighbors by the kernel evaluations,
+    //! obtained from the costs coming out of the 'knn' object (default=true)
+    bool use_knn_costs_as_weights;
 
-  //! Disregard the 'use_knn_costs_as_weights' option, and use this kernel
-  //! to weight the observations.  If this object is not specified
-  //! (default), and the 'use_knn_costs_as_weights' is false, the
-  //! rectangular kernel is used.
-  Ker kernel;
+    //! Disregard the 'use_knn_costs_as_weights' option, and use this kernel
+    //! to weight the observations.  If this object is not specified
+    //! (default), and the 'use_knn_costs_as_weights' is false, the
+    //! rectangular kernel is used.
+    Ker kernel;
 
-  //! Train a local regression model from the K neighbors, weighted by
-  //! the kernel evaluations.  This is carried out at each test point.
-  PP<PLearner> local_model;
-
-public:
-  //#####  Object Methods  ##################################################
-
-  //! Default constructor.
-  KNNRegressor();
-
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
-
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-
-  // Declares other standard object methods.
-  // If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT.
-  PLEARN_DECLARE_OBJECT(KNNRegressor);
+    //! Train a local regression model from the K neighbors, weighted by
+    //! the kernel evaluations.  This is carried out at each test point.
+    PP<PLearner> local_model;
 
 public:
-  //#####  PLearner Methods  ####################################################
+    //#####  Object Methods  ##################################################
 
-  //! Overridden to call knn->setTrainingSet
-  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+    //! Default constructor.
+    KNNRegressor();
 
-  //! Returns the size of this learner's output, (which typically
-  //! may depend on its inputsize(), targetsize() and set options).
-  virtual int outputsize() const;
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Forwarded to knn
-  virtual void forget();
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+    // Declares other standard object methods.
+    // If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT.
+    PLEARN_DECLARE_OBJECT(KNNRegressor);
+
+public:
+    //#####  PLearner Methods  ####################################################
+
+    //! Overridden to call knn->setTrainingSet
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+
+    //! Returns the size of this learner's output, (which typically
+    //! may depend on its inputsize(), targetsize() and set options).
+    virtual int outputsize() const;
+
+    //! Forwarded to knn
+    virtual void forget();
     
-  //! Forwarded to knn
-  virtual void train();
+    //! Forwarded to knn
+    virtual void train();
 
-  //! Computes the output from the input.
-  virtual void computeOutput(const Vec& input, Vec& output) const;
+    //! Computes the output from the input.
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
-  //! Computes the costs from already computed output. 
-  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                       const Vec& target, Vec& costs) const;
+    //! Computes the costs from already computed output. 
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const;
 
-  //! Delegate to local model if one is specified; not implemented
-  //! otherwise (although one could easily return the standard error
-  //! of the mean, weighted by the kernel measure; -- to do).
-  virtual
-  bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
-                                   real probability,
-                                   TVec< pair<real,real> >& intervals) const;
+    //! Delegate to local model if one is specified; not implemented
+    //! otherwise (although one could easily return the standard error
+    //! of the mean, weighted by the kernel measure; -- to do).
+    virtual
+    bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
+                                     real probability,
+                                     TVec< pair<real,real> >& intervals) const;
   
-  //! Returns the names of the costs computed by computeCostsFromOutpus
-  //! (and thus the test method).
-  virtual TVec<std::string> getTestCostNames() const;
+    //! Returns the names of the costs computed by computeCostsFromOutpus
+    //! (and thus the test method).
+    virtual TVec<std::string> getTestCostNames() const;
 
-  //! Returns the names of the objective costs that the train method computes and 
-  //! for which it updates the VecStatsCollector train_stats.
-  virtual TVec<std::string> getTrainCostNames() const;
+    //! Returns the names of the objective costs that the train method computes and 
+    //! for which it updates the VecStatsCollector train_stats.
+    virtual TVec<std::string> getTrainCostNames() const;
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 };
 
 // Declares a few other classes and functions related to this class.
@@ -197,3 +197,16 @@ DECLARE_OBJECT_PTR(KNNRegressor);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

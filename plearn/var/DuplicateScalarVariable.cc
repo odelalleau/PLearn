@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateScalarVariable.cc,v 1.6 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "DuplicateScalarVariable.h"
 #include "SumVariable.h"
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(DuplicateScalarVariable,
                         "NO HELP");
 
 DuplicateScalarVariable::DuplicateScalarVariable(Variable* input, int thelength, int thewidth)
-  : inherited(input, thelength, thewidth), length_(thelength), width_(thewidth)
+    : inherited(input, thelength, thewidth), length_(thelength), width_(thewidth)
 {
     build_();
 }
@@ -88,27 +88,38 @@ void DuplicateScalarVariable::recomputeSize(int& l, int& w) const
 
 void DuplicateScalarVariable::fprop()
 {
-  real val = input->valuedata[0];
-  for(int k=0; k<nelems(); k++)
-    valuedata[k] = val;
+    real val = input->valuedata[0];
+    for(int k=0; k<nelems(); k++)
+        valuedata[k] = val;
 }
 
 
 void DuplicateScalarVariable::bprop()
 {
-  real& inputgrad = input->gradientdata[0];
-  for(int k=0; k<nelems(); k++)
-    inputgrad += gradientdata[k];
+    real& inputgrad = input->gradientdata[0];
+    for(int k=0; k<nelems(); k++)
+        inputgrad += gradientdata[k];
 }
 
 
 void DuplicateScalarVariable::symbolicBprop()
 {
-  input->accg(sum(g));
+    input->accg(sum(g));
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

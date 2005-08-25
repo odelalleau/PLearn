@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVMatrix.h,v 1.6 2004/07/09 19:42:23 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -63,45 +63,45 @@ using namespace std;
 */
 class OneHotVMatrix: public RowBufferedVMatrix
 {
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
- protected:
-  VMat underlying_distr;
-  int nclasses;
-  real cold_value;
-  real hot_value;
+protected:
+    VMat underlying_distr;
+    int nclasses;
+    real cold_value;
+    real hot_value;
 
- public:
-  // ******************
-  // *  Constructors  *
-  // ******************
-  OneHotVMatrix(); //!<  default constructor (for automatic deserialization)
+public:
+    // ******************
+    // *  Constructors  *
+    // ******************
+    OneHotVMatrix(); //!<  default constructor (for automatic deserialization)
 
-  //!  (see special case when nclasses==1 desribed above)
-  //!  Warning: VMFields are NOT YET handled by this constructor
-  OneHotVMatrix(VMat the_underlying_distr, int the_nclasses, real the_cold_value=0.0, real the_host_value=1.0);
+    //!  (see special case when nclasses==1 desribed above)
+    //!  Warning: VMFields are NOT YET handled by this constructor
+    OneHotVMatrix(VMat the_underlying_distr, int the_nclasses, real the_cold_value=0.0, real the_host_value=1.0);
 
-  PLEARN_DECLARE_OBJECT(OneHotVMatrix);
+    PLEARN_DECLARE_OBJECT(OneHotVMatrix);
 
- protected: 
+protected: 
 
-  virtual void getNewRow(int i, const Vec& samplevec) const;
-  static void declareOptions(OptionList &ol);
+    virtual void getNewRow(int i, const Vec& samplevec) const;
+    static void declareOptions(OptionList &ol);
 
- public:
+public:
 
-  virtual void build();
+    virtual void build();
 
-  virtual void reset_dimensions() 
+    virtual void reset_dimensions() 
     { 
-      underlying_distr->reset_dimensions(); 
-      width_=underlying_distr->width(); 
-      length_=underlying_distr->length(); 
+        underlying_distr->reset_dimensions(); 
+        width_=underlying_distr->width(); 
+        length_=underlying_distr->length(); 
     }
-  virtual real dot(int i1, int i2, int inputsize) const;
-  virtual real dot(int i, const Vec& v) const;
+    virtual real dot(int i1, int i2, int inputsize) const;
+    virtual real dot(int i, const Vec& v) const;
 private:
-  void build_();
+    void build_();
 };
 
 inline VMat onehot(VMat d, int nclasses, real cold_value=0.0, real hot_value=1.0)
@@ -111,3 +111,16 @@ DECLARE_OBJECT_PTR(OneHotVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

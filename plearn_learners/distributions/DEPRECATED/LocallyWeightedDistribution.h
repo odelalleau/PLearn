@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.h */
 #ifndef LocallyWeightedDistribution_INC
@@ -54,71 +54,71 @@ class LocallyWeightedDistribution: public Distribution
 
 private:
 
-  typedef Distribution inherited;
+    typedef Distribution inherited;
 
-  //! Global storage to save memory allocations.
-  mutable Vec trainsample, weights;
+    //! Global storage to save memory allocations.
+    mutable Vec trainsample, weights;
 
 public:
 
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  //! The kernel that will be used to locally weigh the samples
-  Ker weighting_kernel;
+    //! The kernel that will be used to locally weigh the samples
+    Ker weighting_kernel;
 
-  //! The distribution that will be trained with local weights
-  PP<Distribution> localdistr; 
+    //! The distribution that will be trained with local weights
+    PP<Distribution> localdistr; 
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  LocallyWeightedDistribution();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    LocallyWeightedDistribution();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(LocallyWeightedDistribution);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(LocallyWeightedDistribution);
 
-  // *******************
-  // * Distribution methods *
-  // *******************
+    // *******************
+    // * Distribution methods *
+    // *******************
 
-  //! trains the model
-  virtual void train(VMat training_set); 
+    //! trains the model
+    virtual void train(VMat training_set); 
 
-  //! return log of probability density log(p(x))
-  virtual double log_density(const Vec& x) const;
+    //! return log of probability density log(p(x))
+    virtual double log_density(const Vec& x) const;
    
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(LocallyWeightedDistribution);
+DECLARE_OBJECT_PTR(LocallyWeightedDistribution);
   
 } // end of namespace PLearn
 
@@ -127,3 +127,16 @@ public:
 #endif
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

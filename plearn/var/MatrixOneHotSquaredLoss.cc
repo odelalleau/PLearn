@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "MatrixOneHotSquaredLoss.h"
 
@@ -53,11 +53,11 @@ PLEARN_IMPLEMENT_OBJECT(MatrixOneHotSquaredLoss,
                         "NO HELP");
 
 MatrixOneHotSquaredLoss::MatrixOneHotSquaredLoss()
-  : coldval_(0.0), hotval_(0.0)
+    : coldval_(0.0), hotval_(0.0)
 { }
   
 MatrixOneHotSquaredLoss::MatrixOneHotSquaredLoss(Variable* input1, Variable* input2, real coldval, real hotval)
-  : inherited(input1,input2,input2->length(),input2->width()), coldval_(coldval), hotval_(hotval)
+    : inherited(input1,input2,input2->length(),input2->width()), coldval_(coldval), hotval_(hotval)
 {
     build_();
 }
@@ -95,47 +95,58 @@ void MatrixOneHotSquaredLoss::recomputeSize(int& l, int& w) const
 
 void MatrixOneHotSquaredLoss::fprop()
 {
-  int n = input1->length();
-  for (int k=0; k<length(); k++)
-   {
-    int classnum = (int) input2->valuedata[k];
-    real res = 0.;
-    for(int i=0; i<n; i++)
-        res += square(input1->matValue[i][k] - (i==classnum ? hotval_ : coldval_));
-    valuedata[k] = res;
+    int n = input1->length();
+    for (int k=0; k<length(); k++)
+    {
+        int classnum = (int) input2->valuedata[k];
+        real res = 0.;
+        for(int i=0; i<n; i++)
+            res += square(input1->matValue[i][k] - (i==classnum ? hotval_ : coldval_));
+        valuedata[k] = res;
     }
 }
 
 
 void MatrixOneHotSquaredLoss::bprop()
 {
-  int n = input1->length();
-  for(int k=0; k<length(); k++)
-     {
-     real gr = gradientdata[k];
-     int classnum = (int) input2->valuedata[k];
-     if (gr!=1.)
+    int n = input1->length();
+    for(int k=0; k<length(); k++)
+    {
+        real gr = gradientdata[k];
+        int classnum = (int) input2->valuedata[k];
+        if (gr!=1.)
         {
-        gr = gr+gr;
-        for (int i=0; i<n; i++)
-           input1->matGradient[i][k] += gr*(input1->matValue[i][k] - (i==classnum ? hotval_ : coldval_));
+            gr = gr+gr;
+            for (int i=0; i<n; i++)
+                input1->matGradient[i][k] += gr*(input1->matValue[i][k] - (i==classnum ? hotval_ : coldval_));
         }
         else // specialised version for gr==1
-           {
-           for (int i=0; i<n; i++)
-               input1->matGradient[i][k] += two(input1->matValue[i][k] - (i==classnum ? hotval_ : coldval_));
-           }
-     }
+        {
+            for (int i=0; i<n; i++)
+                input1->matGradient[i][k] += two(input1->matValue[i][k] - (i==classnum ? hotval_ : coldval_));
+        }
+    }
 }
 
 
 void MatrixOneHotSquaredLoss::symbolicBprop()
 {
-  PLERROR("MatrixOneHotSquaredLoss::symbolicBprop not implemented.");
+    PLERROR("MatrixOneHotSquaredLoss::symbolicBprop not implemented.");
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

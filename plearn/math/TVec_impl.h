@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: TVec_impl.h,v 1.6 2005/03/02 22:41:14 chapados Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/TMat.h */
@@ -63,37 +63,37 @@ using namespace std;
 template<class T>
 void TVec<T>::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  deepCopyField(storage, copies);
+    deepCopyField(storage, copies);
 }
 
 template<class T>
 TVec<T> TVec<T>::deepCopy(CopiesMap& copies) const
 {
-  // First do a shallow copy
-  TVec<T> deep_copy = *this;
-  // Transform the shallow copy into a deep copy
-  deep_copy.makeDeepCopyFromShallowCopy(copies);
-  // return the completed deep_copy
-  return deep_copy;
+    // First do a shallow copy
+    TVec<T> deep_copy = *this;
+    // Transform the shallow copy into a deep copy
+    deep_copy.makeDeepCopyFromShallowCopy(copies);
+    // return the completed deep_copy
+    return deep_copy;
 }
 
 template <class T>
 inline TVec<T> deepCopy(const TVec<T>& source)
 { 
-  CopiesMap copies; //!<  create empty map
-  return deepCopy(source, copies);
+    CopiesMap copies; //!<  create empty map
+    return deepCopy(source, copies);
 }
 
 template <class T>
 inline TVec<T> deepCopy(const TVec<T>& source, CopiesMap& copies)
 { 
-  return source.deepCopy(copies);
+    return source.deepCopy(copies);
 }
 
 template <class T>
 inline void deepCopyField(TVec<T>& field, CopiesMap& copies)
 {
-  field.makeDeepCopyFromShallowCopy(copies);
+    field.makeDeepCopyFromShallowCopy(copies);
 }
 
 
@@ -106,11 +106,11 @@ template<class T>
 inline void operator<<(const TVec<T>& m1, const TVec<T>& m2)
 {
 #ifdef BOUNDCHECK
-  if(m1.size()!=m2.size())
-    PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements (%d != %d)", m1.size(), m2.size());
+    if(m1.size()!=m2.size())
+        PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements (%d != %d)", m1.size(), m2.size());
 #endif
-  if (m1.isNotEmpty())
-    copy(m2.begin(), m2.end(), m1.begin());
+    if (m1.isNotEmpty())
+        copy(m2.begin(), m2.end(), m1.begin());
 }
 
 //! copy TVec << TVec  (different types)
@@ -118,11 +118,11 @@ template<class T, class U>
 void operator<<(const TVec<T>& m1, const TVec<U>& m2)
 {
 #ifdef BOUNDCHECK
-  if(m1.size()!=m2.size())
-    PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements (%d != %d)", m1.size(), m2.size());
+    if(m1.size()!=m2.size())
+        PLERROR("In operator<<(m1,m2) the 2 matrices must have the same number of elements (%d != %d)", m1.size(), m2.size());
 #endif
-  if (m1.isNotEmpty())
-    copy_cast(m2.begin(), m2.end(), m1.begin());
+    if (m1.isNotEmpty())
+        copy_cast(m2.begin(), m2.end(), m1.begin());
 }
 
 //! copy TVec >> TVec
@@ -147,77 +147,77 @@ void loadPVec(const string& filename, TVec<float>& vec)
 template <class T> inline PStream &
 operator<<(PStream &out, const TVec<T> &v)
 { 
-  v.write(out); 
-  return out;
+    v.write(out); 
+    return out;
 }
 
 template <class T> 
 PStream & operator>>(PStream &in, TVec<T> &v)
 {
-  v.read(in);
-  return in;
+    v.read(in);
+    return in;
 }
 
 
 template<class T>      
 void binwrite(ostream& out, const TVec<T>& v)
 {
-  int l = v.length();
-  PLearn::binwrite(out,l);
-  if (l<200000)
-    PLearn::binwrite(out,v.data(),l);
-  else for (int i=0;i<l;i+=200000)
-    PLearn::binwrite(out,&v[i],std::min(200000,l-i));
+    int l = v.length();
+    PLearn::binwrite(out,l);
+    if (l<200000)
+        PLearn::binwrite(out,v.data(),l);
+    else for (int i=0;i<l;i+=200000)
+        PLearn::binwrite(out,&v[i],std::min(200000,l-i));
 }
 
 template<class T>
 void binread(istream& in, TVec<T>& v)
 {
-  int l;
-  PLearn::binread(in,l);
-  v.resize(l);
-  if (l<200000)
-    PLearn::binread(in,v.data(),l);
-  else for (int i=0;i<l;i+=200000)
-    PLearn::binread(in,&v[i],std::min(200000,l-i));
+    int l;
+    PLearn::binread(in,l);
+    v.resize(l);
+    if (l<200000)
+        PLearn::binread(in,v.data(),l);
+    else for (int i=0;i<l;i+=200000)
+        PLearn::binread(in,&v[i],std::min(200000,l-i));
 }
 
 template<class T>      
 void binwrite_double(ostream& out, const TVec<T>& v)
 {
-  int l = v.length();
-  PLearn::binwrite(out,l);
-  if (l<200000)
-    PLearn::binwrite_double(out,v.data(),l);
-  else for (int i=0;i<l;i+=200000)
-    PLearn::binwrite_double(out,&v[i],std::min(200000,l-i));
+    int l = v.length();
+    PLearn::binwrite(out,l);
+    if (l<200000)
+        PLearn::binwrite_double(out,v.data(),l);
+    else for (int i=0;i<l;i+=200000)
+        PLearn::binwrite_double(out,&v[i],std::min(200000,l-i));
 }
 
 template<class T>
 void binread_double(istream& in, TVec<T>& v)
 {
-  int l;
-  PLearn::binread(in,l);
-  v.resize(l);
-  if (l<200000)
-    PLearn::binread_double(in,v.data(),l);
-  else for (int i=0;i<l;i+=200000)
-    PLearn::binread_double(in,&v[i],std::min(200000,l-i));
+    int l;
+    PLearn::binread(in,l);
+    v.resize(l);
+    if (l<200000)
+        PLearn::binread_double(in,v.data(),l);
+    else for (int i=0;i<l;i+=200000)
+        PLearn::binread_double(in,&v[i],std::min(200000,l-i));
 }
 
 
 template<class T>
 inline ostream& operator<<(ostream& out, const TVec<T>& v)
 { 
-  v.print(out);
-  return out;
+    v.print(out);
+    return out;
 }
 
 template<class T>
 inline istream& operator>>(istream& in, const TVec<T>& v)
 { 
-  v.input(in);
-  return in;
+    v.input(in);
+    return in;
 }
 
 
@@ -250,63 +250,76 @@ TVec<T> removeElement(const TVec<T>& v, int elemnum);
 template <class T>
 bool operator<=(const TVec<T>& left, const TVec<T>& right)
 {
-  if (left.size() != right.size())
-    PLERROR("Left and right vectors must have the same size in operator<=");
-  return std::inner_product(left.begin(), left.end(), right.begin(),
-                            true, std::logical_and<bool>(),
-                            std::less_equal<T>());
+    if (left.size() != right.size())
+        PLERROR("Left and right vectors must have the same size in operator<=");
+    return std::inner_product(left.begin(), left.end(), right.begin(),
+                              true, std::logical_and<bool>(),
+                              std::less_equal<T>());
 }
 
 template <class T>
 bool operator>=(const TVec<T>& left, const TVec<T>& right)
 {
-  if (left.size() != right.size())
-    PLERROR("Left and right vectors must have the same size in operator>=");
-  return std::inner_product(left.begin(), left.end(), right.begin(),
-                            true, std::logical_and<bool>(),
-                            std::greater_equal<T>());
+    if (left.size() != right.size())
+        PLERROR("Left and right vectors must have the same size in operator>=");
+    return std::inner_product(left.begin(), left.end(), right.begin(),
+                              true, std::logical_and<bool>(),
+                              std::greater_equal<T>());
 }
 
 // This is a lexicographical definition for operator<
 template <class T>
 bool operator<(const TVec<T>& left, const TVec<T>& right)
 {
-  if (left.size() != right.size())
-    PLERROR("Left and right vectors must have the same size in operator<");
-  int size = left.size();
-  const T* ldata = left.data();
-  const T* rdata = right.data();
-  for ( ; size ; ++ldata, ++rdata, --size) {
-    if (*ldata < *rdata)
-      return true;
-    if (*ldata > *rdata)
-      return false;
-    // Continue loop if both are equal
-  }
-  return false;                              // both vectors are equal at
-                                             // this point; cannot be <
+    if (left.size() != right.size())
+        PLERROR("Left and right vectors must have the same size in operator<");
+    int size = left.size();
+    const T* ldata = left.data();
+    const T* rdata = right.data();
+    for ( ; size ; ++ldata, ++rdata, --size) {
+        if (*ldata < *rdata)
+            return true;
+        if (*ldata > *rdata)
+            return false;
+        // Continue loop if both are equal
+    }
+    return false;                              // both vectors are equal at
+    // this point; cannot be <
 }
 
 // This is a lexicographical definition for operator>
 template <class T>
 bool operator>(const TVec<T>& left, const TVec<T>& right)
 {
-  if (left.size() != right.size())
-    PLERROR("Left and right vectors must have the same size in operator>");
-  int size = left.size();
-  const T* ldata = left.data();
-  const T* rdata = right.data();
-  for ( ; size ; ++ldata, ++rdata, --size) {
-    if (*ldata < *rdata)
-      return false;
-    if (*ldata > *rdata)
-      return true;
-    // Continue loop if both are equal
-  }
-  return false;                              // both vectors are equal at
-                                             // this point; cannot be >
+    if (left.size() != right.size())
+        PLERROR("Left and right vectors must have the same size in operator>");
+    int size = left.size();
+    const T* ldata = left.data();
+    const T* rdata = right.data();
+    for ( ; size ; ++ldata, ++rdata, --size) {
+        if (*ldata < *rdata)
+            return false;
+        if (*ldata > *rdata)
+            return true;
+        // Continue loop if both are equal
+    }
+    return false;                              // both vectors are equal at
+    // this point; cannot be >
 }
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

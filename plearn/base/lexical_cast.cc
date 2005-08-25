@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: lexical_cast.cc,v 1.1 2005/01/20 20:07:30 dorionc Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christian Dorion
 
@@ -55,56 +55,69 @@ using namespace std;
 // as well as Nans. String can have trailing whitespaces on both sides
 bool pl_isnumber(const string& str, double* dbl)
 {
-  double d;
-  string s=removeblanks(str);
-  char* l;
-  d = strtod(s.c_str(),&l);
-  if(s=="")d=MISSING_VALUE;
-  if(dbl!=NULL)*dbl=d;
-  return ((unsigned char)(l-s.c_str())==s.length());
+    double d;
+    string s=removeblanks(str);
+    char* l;
+    d = strtod(s.c_str(),&l);
+    if(s=="")d=MISSING_VALUE;
+    if(dbl!=NULL)*dbl=d;
+    return ((unsigned char)(l-s.c_str())==s.length());
 }
 
 // norman: there is no strtof in .NET
 #ifndef WIN32
 bool pl_isnumber(const string& str, float* dbl) {
-  float d;
-  string s=removeblanks(str);
-  char* l;
-  d = strtof(s.c_str(),&l);
-  if(s=="")d=MISSING_VALUE;
-  if(dbl!=NULL)*dbl=d;
-  return ((unsigned char)(l-s.c_str())==s.length());
+    float d;
+    string s=removeblanks(str);
+    char* l;
+    d = strtof(s.c_str(),&l);
+    if(s=="")d=MISSING_VALUE;
+    if(dbl!=NULL)*dbl=d;
+    return ((unsigned char)(l-s.c_str())==s.length());
 }
 #endif // WIN32
   
 long tolong(const string& s, int base)
 {
-  const char* nptr = s.c_str();
-  char* endptr;
-  long result = strtol(nptr,&endptr,base);
-  if(endptr==nptr) { // no character to be read
-    string err = string("in toint string is not an int: ") + s;
-    PLERROR(err.c_str());
-  }
-  return result;
+    const char* nptr = s.c_str();
+    char* endptr;
+    long result = strtol(nptr,&endptr,base);
+    if(endptr==nptr) { // no character to be read
+        string err = string("in toint string is not an int: ") + s;
+        PLERROR(err.c_str());
+    }
+    return result;
 }
 
 double todouble(const string& s)
 {
-  const char* nptr = s.c_str();
-  char* endptr;
-  double result = strtod(nptr,&endptr);
-  if(endptr==nptr) // no character to be read
-    result = MISSING_VALUE;
-  return result;
+    const char* nptr = s.c_str();
+    char* endptr;
+    double result = strtod(nptr,&endptr);
+    if(endptr==nptr) // no character to be read
+        result = MISSING_VALUE;
+    return result;
 }
 
 bool tobool(const string& s)
 {
-  if (s=="true" || s=="1") return true;
-  if (s=="false" || s=="0") return false;
-  PLERROR("tobool: can't convert string %s into a boolean",s.c_str());
-  return false;
+    if (s=="true" || s=="1") return true;
+    if (s=="false" || s=="0") return false;
+    PLERROR("tobool: can't convert string %s into a boolean",s.c_str());
+    return false;
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,10 +36,10 @@
  
 
 /* *******************************************************      
-   * $Id$
-   * AUTHORS: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 // Win32 specific declarations
 #ifdef WIN32
@@ -90,13 +90,13 @@ using namespace std;
 static PRStatus PR_GetFileInfo64_NoWildcards(const char *fn, 
                                              PRFileInfo64 *info)
 {
-  PRFileDesc* f = PR_Open(fn, PR_RDONLY, 0);
-  if (!f)
-    return PR_FAILURE;
+    PRFileDesc* f = PR_Open(fn, PR_RDONLY, 0);
+    if (!f)
+        return PR_FAILURE;
 
-  PRStatus status = PR_GetOpenFileInfo64(f, info);
-  PR_Close(f);
-  return status;
+    PRStatus status = PR_GetOpenFileInfo64(f, info);
+    PR_Close(f);
+    return status;
 }
   
 ///////////
@@ -104,10 +104,10 @@ static PRStatus PR_GetFileInfo64_NoWildcards(const char *fn,
 ///////////
 int chdir(const PPath& path) 
 { 
-  int status = ::chdir(path.absolute().c_str()); 
-  if (status!=0)
-    PLERROR("Could not chdir to %s.",path.absolute().c_str());
-  return status;
+    int status = ::chdir(path.absolute().c_str()); 
+    if (status!=0)
+        PLERROR("Could not chdir to %s.",path.absolute().c_str());
+    return status;
 }
 
 ////////////////
@@ -115,12 +115,12 @@ int chdir(const PPath& path)
 ////////////////
 bool pathexists(const PPath& path)
 {
-  PRFileInfo64 fi;
+    PRFileInfo64 fi;
 
-  if (PR_GetFileInfo64(path.absolute().c_str(), &fi) != PR_SUCCESS)
-    return false;
-  else
-    return fi.type == PR_FILE_FILE || fi.type == PR_FILE_DIRECTORY;
+    if (PR_GetFileInfo64(path.absolute().c_str(), &fi) != PR_SUCCESS)
+        return false;
+    else
+        return fi.type == PR_FILE_FILE || fi.type == PR_FILE_DIRECTORY;
 }
 
 ///////////
@@ -128,12 +128,12 @@ bool pathexists(const PPath& path)
 ///////////
 bool isdir(const PPath& path)
 {
-  PRFileInfo64 fi;
+    PRFileInfo64 fi;
 
-  if (PR_GetFileInfo64(path.absolute().c_str(), &fi) != PR_SUCCESS)
-    return false;
-  else
-    return fi.type == PR_FILE_DIRECTORY;
+    if (PR_GetFileInfo64(path.absolute().c_str(), &fi) != PR_SUCCESS)
+        return false;
+    else
+        return fi.type == PR_FILE_DIRECTORY;
 }
 
 ////////////
@@ -141,12 +141,12 @@ bool isdir(const PPath& path)
 ////////////
 bool isfile(const PPath& path)
 {
-  PRFileInfo64 fi;
+    PRFileInfo64 fi;
 
-  if (PR_GetFileInfo64(path.absolute().c_str(), &fi) != PR_SUCCESS)
-    return false;
-  else
-    return fi.type == PR_FILE_FILE;
+    if (PR_GetFileInfo64(path.absolute().c_str(), &fi) != PR_SUCCESS)
+        return false;
+    else
+        return fi.type == PR_FILE_FILE;
 }
 
 ///////////
@@ -154,20 +154,20 @@ bool isfile(const PPath& path)
 ///////////
 time_t mtime(const PPath& path)
 {
-  PRFileInfo64 fi;
+    PRFileInfo64 fi;
 
-  if (PR_GetFileInfo64_NoWildcards(path.absolute().c_str(), &fi) != PR_SUCCESS)
-    return 0;
-  else {
-    // The NSPR PRTime is number of microseconds since the epoch, while
-    // time_t is the number of seconds since the (same) epoch.
-    // Translate from the former to the later by dividing by 1e6, using
-    // NSPR long long manipulation macros to be extra safe.
-    PRInt64 time_t_compatible_value;
-    PRInt64 one_million = LL_INIT(0, 1000000);
-    LL_DIV(time_t_compatible_value, fi.modifyTime, one_million);
-    return (time_t)time_t_compatible_value;
-  }
+    if (PR_GetFileInfo64_NoWildcards(path.absolute().c_str(), &fi) != PR_SUCCESS)
+        return 0;
+    else {
+        // The NSPR PRTime is number of microseconds since the epoch, while
+        // time_t is the number of seconds since the (same) epoch.
+        // Translate from the former to the later by dividing by 1e6, using
+        // NSPR long long manipulation macros to be extra safe.
+        PRInt64 time_t_compatible_value;
+        PRInt64 one_million = LL_INIT(0, 1000000);
+        LL_DIV(time_t_compatible_value, fi.modifyTime, one_million);
+        return (time_t)time_t_compatible_value;
+    }
 }
 
 ///////////
@@ -175,34 +175,34 @@ time_t mtime(const PPath& path)
 ///////////
 vector<string> lsdir(const PPath& dirpath)
 {
-  vector<string> list;
+    vector<string> list;
 
-  PRDir* d = PR_OpenDir(dirpath.absolute().c_str());
-  if (!d)
-    PLERROR("In lsdir: could not open directory %s",dirpath.absolute().c_str());
+    PRDir* d = PR_OpenDir(dirpath.absolute().c_str());
+    if (!d)
+        PLERROR("In lsdir: could not open directory %s",dirpath.absolute().c_str());
 
-  PRDirEntry* dirent = PR_ReadDir(d, PR_SKIP_BOTH);
-  while (dirent) {
-    list.push_back(dirent->name);
-    dirent = PR_ReadDir(d, PR_SKIP_BOTH);
-  }
+    PRDirEntry* dirent = PR_ReadDir(d, PR_SKIP_BOTH);
+    while (dirent) {
+        list.push_back(dirent->name);
+        dirent = PR_ReadDir(d, PR_SKIP_BOTH);
+    }
 
-  PRErrorCode e = PR_GetError();
-  if (e != PR_NO_MORE_FILES_ERROR
+    PRErrorCode e = PR_GetError();
+    if (e != PR_NO_MORE_FILES_ERROR
 #if 1 // Workaround for NSPR bug
-      && e != 0
-      && e != PR_FILE_NOT_FOUND_ERROR
-      && e != PR_NOT_DIRECTORY_ERROR
+        && e != 0
+        && e != PR_FILE_NOT_FOUND_ERROR
+        && e != PR_NOT_DIRECTORY_ERROR
 #endif
-     )
-    PLERROR("In lsdir: error while listing directory: %s.",
-        getPrErrorString().c_str());
+        )
+        PLERROR("In lsdir: error while listing directory: %s.",
+                getPrErrorString().c_str());
 
-  if (PR_CloseDir(d) != PR_SUCCESS)
-    PLERROR("In lsdir: error while closing directory: %s.",
-        getPrErrorString().c_str());
+    if (PR_CloseDir(d) != PR_SUCCESS)
+        PLERROR("In lsdir: error while closing directory: %s.",
+                getPrErrorString().c_str());
 
-  return list;
+    return list;
 }
 
 ////////////////////
@@ -210,18 +210,18 @@ vector<string> lsdir(const PPath& dirpath)
 ////////////////////
 vector<PPath> lsdir_fullpath(const PPath& dirpath)
 {
-  // TODO Somewhat a copy of addprefix, not really elegant. Do better ?
-  vector<string> without_path = lsdir(dirpath);
-  vector<PPath> with_path(without_path.size());
-  PPath prefix = dirpath;
-  vector<string>::const_iterator it = without_path.begin();
-  vector<PPath>::iterator newit = with_path.begin();
-  while (it != without_path.end()) {
-    *newit = prefix / *it;
-    ++it;
-    ++newit;
-  }
-  return with_path;
+    // TODO Somewhat a copy of addprefix, not really elegant. Do better ?
+    vector<string> without_path = lsdir(dirpath);
+    vector<PPath> with_path(without_path.size());
+    PPath prefix = dirpath;
+    vector<string>::const_iterator it = without_path.begin();
+    vector<PPath>::iterator newit = with_path.begin();
+    while (it != without_path.end()) {
+        *newit = prefix / *it;
+        ++it;
+        ++newit;
+    }
+    return with_path;
 }
 
 
@@ -230,26 +230,26 @@ vector<PPath> lsdir_fullpath(const PPath& dirpath)
 /////////////////
 bool force_mkdir(const PPath& dirname)
 {
-  // TODO Should be able to rewrite it better with PPath.
-  if(isdir(dirname))
-    return true;
-  string path = dirname.absolute();
-  string pathpart;
-  for (size_t pos = 1; pos != string::npos;) {
-    // Keep ++pos here!
-    ++pos;
-    pos = path.find(slash, pos);
-    if (pos != string::npos)
-      pathpart = path.substr(0, pos);
-    else
-      pathpart = path;
+    // TODO Should be able to rewrite it better with PPath.
+    if(isdir(dirname))
+        return true;
+    string path = dirname.absolute();
+    string pathpart;
+    for (size_t pos = 1; pos != string::npos;) {
+        // Keep ++pos here!
+        ++pos;
+        pos = path.find(slash, pos);
+        if (pos != string::npos)
+            pathpart = path.substr(0, pos);
+        else
+            pathpart = path;
 
-    if(!isdir(pathpart)) {
-      if (PR_MkDir(pathpart.c_str(), 0775) != PR_SUCCESS)
-        return false;
+        if(!isdir(pathpart)) {
+            if (PR_MkDir(pathpart.c_str(), 0775) != PR_SUCCESS)
+                return false;
+        }
     }
-  }
-  return true;
+    return true;
 }
 
 //////////////////////////
@@ -257,9 +257,9 @@ bool force_mkdir(const PPath& dirname)
 //////////////////////////
 void force_mkdir_for_file(const PPath& filepath)
 {
-  PPath dirpath = filepath.dirname();
-  if (!force_mkdir(dirpath))
-    PLERROR("force_mkdir(%s) failed",dirpath.absolute().c_str());
+    PPath dirpath = filepath.dirname();
+    if (!force_mkdir(dirpath))
+        PLERROR("force_mkdir(%s) failed",dirpath.absolute().c_str());
 }
 
 /////////////////
@@ -267,23 +267,23 @@ void force_mkdir_for_file(const PPath& filepath)
 /////////////////
 bool force_rmdir(const PPath& dirname)
 {
-  if (!isdir(dirname))
-    return false;
-
-  const vector<PPath> entries = lsdir_fullpath(dirname);
-  for (vector<PPath>::const_iterator it = entries.begin();
-      it != entries.end(); ++it) {
-    if (isdir(*it)) {
-      if (!force_rmdir(*it))
+    if (!isdir(dirname))
         return false;
-    }
-    else {
-      if (PR_Delete(it->absolute().c_str()) != PR_SUCCESS)
-        return false;
-    }
-  }
 
-  return PR_RmDir(dirname.absolute().c_str()) == PR_SUCCESS;
+    const vector<PPath> entries = lsdir_fullpath(dirname);
+    for (vector<PPath>::const_iterator it = entries.begin();
+         it != entries.end(); ++it) {
+        if (isdir(*it)) {
+            if (!force_rmdir(*it))
+                return false;
+        }
+        else {
+            if (PR_Delete(it->absolute().c_str()) != PR_SUCCESS)
+                return false;
+        }
+    }
+
+    return PR_RmDir(dirname.absolute().c_str()) == PR_SUCCESS;
 }
 
 //////////////
@@ -291,11 +291,11 @@ bool force_rmdir(const PPath& dirname)
 //////////////
 long filesize(const PPath& filename)
 {
-  PRFileInfo64 inf;
-  if (PR_GetFileInfo64_NoWildcards(filename.absolute().c_str(), &inf) != PR_SUCCESS)
-    PLERROR("In filesize: error getting file info for %s: %s.",
-        filename.absolute().c_str(), getPrErrorString().c_str());
-  return inf.size;
+    PRFileInfo64 inf;
+    if (PR_GetFileInfo64_NoWildcards(filename.absolute().c_str(), &inf) != PR_SUCCESS)
+        PLERROR("In filesize: error getting file info for %s: %s.",
+                filename.absolute().c_str(), getPrErrorString().c_str());
+    return inf.size;
 }
 
 //////////////////////
@@ -303,12 +303,12 @@ long filesize(const PPath& filename)
 //////////////////////
 string loadFileAsString(const PPath& filepath)
 {
-  PStream in = openFile(filepath, PStream::raw_ascii, "r");
-  long n = filesize(filepath);
+    PStream in = openFile(filepath, PStream::raw_ascii, "r");
+    long n = filesize(filepath);
 
-  string result;
-  in.read(result, n);
-  return result;
+    string result;
+    in.read(result, n);
+    return result;
 }
 
 //////////////////////
@@ -316,9 +316,9 @@ string loadFileAsString(const PPath& filepath)
 //////////////////////
 void saveStringInFile(const PPath& filepath, const string& text)
 {
-  force_mkdir_for_file(filepath);
-  PStream out = openFile(filepath, PStream::raw_ascii, "w");
-  out << text;
+    force_mkdir_for_file(filepath);
+    PStream out = openFile(filepath, PStream::raw_ascii, "w");
+    out << text;
 }
 
 ////////
@@ -326,9 +326,9 @@ void saveStringInFile(const PPath& filepath, const string& text)
 ////////
 void cp(const PPath& srcpath, const PPath& destpath)
 {
-  // TODO Cross-platform version ?
-  string command = "\\cp -R " + srcpath.absolute() + " " + destpath.absolute();
-  system(command.c_str());
+    // TODO Cross-platform version ?
+    string command = "\\cp -R " + srcpath.absolute() + " " + destpath.absolute();
+    system(command.c_str());
 }
 
 ////////
@@ -336,28 +336,28 @@ void cp(const PPath& srcpath, const PPath& destpath)
 ////////
 void rm(const PPath& file)
 {
-  // TODO Better cross-platform version ?
+    // TODO Better cross-platform version ?
 #ifdef WIN32
-  // For the moment works ONLY with files!!!
-  if ( !DeleteFile(file.absolute().c_str()) )
-  {
-    DWORD errorCode = GetLastError(); 
-    LPVOID lpMsgBuf;
-    FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER |
-        FORMAT_MESSAGE_FROM_SYSTEM,
-        NULL, errorCode,
-        MAKELANGID(LANG_NEUTRAL,
-          SUBLANG_DEFAULT),
-        (LPTSTR) &lpMsgBuf, 0,
-        NULL );
+    // For the moment works ONLY with files!!!
+    if ( !DeleteFile(file.absolute().c_str()) )
+    {
+        DWORD errorCode = GetLastError(); 
+        LPVOID lpMsgBuf;
+        FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                       FORMAT_MESSAGE_FROM_SYSTEM,
+                       NULL, errorCode,
+                       MAKELANGID(LANG_NEUTRAL,
+                                  SUBLANG_DEFAULT),
+                       (LPTSTR) &lpMsgBuf, 0,
+                       NULL );
 
-    // Comment because it works only with files..
-    //PLERROR("Cannot delete file %s. %s", file.c_str(), lpMsgBuf);
-    LocalFree( lpMsgBuf );
-  }
+        // Comment because it works only with files..
+        //PLERROR("Cannot delete file %s. %s", file.c_str(), lpMsgBuf);
+        LocalFree( lpMsgBuf );
+    }
 #else
-  string command = "\\rm -rf " + file.absolute();
-  system(command.c_str());
+    string command = "\\rm -rf " + file.absolute();
+    system(command.c_str());
 #endif
 }
 
@@ -366,9 +366,9 @@ void rm(const PPath& file)
 ////////
 void mv(const PPath& source, const PPath& destination)
 {
-  // TODO Cross-platform
-  string command = "\\mv " + source.absolute() + " " + destination.absolute();
-  system(command.c_str());
+    // TODO Cross-platform
+    string command = "\\mv " + source.absolute() + " " + destination.absolute();
+    system(command.c_str());
 }
 
 /////////////
@@ -376,8 +376,8 @@ void mv(const PPath& source, const PPath& destination)
 /////////////
 void mvforce(const PPath& source, const PPath& destination)
 {
-  string command = "\\mv -f " + source.absolute() + " " + destination.absolute();
-  system(command.c_str());
+    string command = "\\mv -f " + source.absolute() + " " + destination.absolute();
+    system(command.c_str());
 }
 
 
@@ -385,24 +385,24 @@ void mvforce(const PPath& source, const PPath& destination)
 // readWhileMatches //
 //////////////////////
 void readWhileMatches(PStream& in, const string& s){
-  int i = 0;
-  int c;
-  c = in.get();
-  int n = (int) s.length();
-  while(c!=EOF)
-  {
-    if(s[i]!=c)
-    {
-      in.unget(); // Match failed, unget that last character.
-      PLERROR("In readWhileMatches. Failure while matching %s: "
-          "at position %d expected a '%c', but read a '%c'",s.c_str(),i,s[i],c);
-    }
-    ++i;
-    if(i==n) // passed through the whole string 
-      return;
+    int i = 0;
+    int c;
     c = in.get();
-  }
-  PLERROR("In readWhileMatches, met EOF while matching %s", s.c_str());
+    int n = (int) s.length();
+    while(c!=EOF)
+    {
+        if(s[i]!=c)
+        {
+            in.unget(); // Match failed, unget that last character.
+            PLERROR("In readWhileMatches. Failure while matching %s: "
+                    "at position %d expected a '%c', but read a '%c'",s.c_str(),i,s[i],c);
+        }
+        ++i;
+        if(i==n) // passed through the whole string 
+            return;
+        c = in.get();
+    }
+    PLERROR("In readWhileMatches, met EOF while matching %s", s.c_str());
 }
 
 ////////////////////
@@ -410,9 +410,9 @@ void readWhileMatches(PStream& in, const string& s){
 ////////////////////
 void skipRestOfLine(PStream& in)
 {
-  int c = in.get();
-  while (c!='\n' && c!=EOF)
-    c = in.get();
+    int c = in.get();
+    while (c!='\n' && c!=EOF)
+        c = in.get();
 }
 
 ///////////////////////////
@@ -420,19 +420,19 @@ void skipRestOfLine(PStream& in)
 ///////////////////////////
 void skipBlanksAndComments(PStream& in)
 {
-  int c = in.get();
-  while(c!=EOF)
-  {
-    if(!isspace(c))
+    int c = in.get();
+    while(c!=EOF)
     {
-      if(c=='#')
-        skipRestOfLine(in);
-      else
-        break;
+        if(!isspace(c))
+        {
+            if(c=='#')
+                skipRestOfLine(in);
+            else
+                break;
+        }
+        c = in.get();
     }
-    c = in.get();
-  }
-  in.unget();
+    in.unget();
 }
 
 /////////////////////////
@@ -440,38 +440,38 @@ void skipBlanksAndComments(PStream& in)
 /////////////////////////
 void getNextNonBlankLine(PStream& in, string& line)
 {
-  while (in) {
-    in.getline(line);
-    size_t l = line.size();
-    bool ok = false;
-    size_t i = 0;
-    while (i < l) {
-      char& c = line[i];
-      if (!isspace(c)) {
-        if (c == '#') {
-          if (!ok)
-            // The first non-blank character is a comment.
-            break;
-          else {
-            // We get rid of the comments.
-            line.resize(i);
-            return;
-          }
-        } else {
-          // We got a non-blank, non-comment character.
-          ok = true;
-          i++;
+    while (in) {
+        in.getline(line);
+        size_t l = line.size();
+        bool ok = false;
+        size_t i = 0;
+        while (i < l) {
+            char& c = line[i];
+            if (!isspace(c)) {
+                if (c == '#') {
+                    if (!ok)
+                        // The first non-blank character is a comment.
+                        break;
+                    else {
+                        // We get rid of the comments.
+                        line.resize(i);
+                        return;
+                    }
+                } else {
+                    // We got a non-blank, non-comment character.
+                    ok = true;
+                    i++;
+                }
+            } else
+                // Read a blank character.
+                i++;
         }
-      } else
-        // Read a blank character.
-        i++;
+        if (ok)
+            // We read a non-blank line with no comment.
+            return;
     }
-    if (ok)
-      // We read a non-blank line with no comment.
-      return;
-  }
-  // Could not find a non-blank line.
-  line = "";
+    // Could not find a non-blank line.
+    line = "";
 }
 
 //////////////////////////////
@@ -479,20 +479,20 @@ void getNextNonBlankLine(PStream& in, string& line)
 //////////////////////////////
 int countNonBlankLinesOfFile(const PPath& filename)
 {
-  PStream in = openFile(filename, PStream::raw_ascii, "r");
-  int count = 0;
-  int c = in.get();
-  while(c!=EOF)
-  {
-    while(c=='\n' || c==' ' || c=='\t' || c=='\r')
-      c = in.get();
-    if(c!='\n' && c!='#' && c!=EOF) // We've found a non-blank, non-comment char.
-      ++count;
-    while(c!='\n' && c!=EOF) // Read until end of line.
-      c = in.get();
-    c = in.get();
-  }
-  return count;  
+    PStream in = openFile(filename, PStream::raw_ascii, "r");
+    int count = 0;
+    int c = in.get();
+    while(c!=EOF)
+    {
+        while(c=='\n' || c==' ' || c=='\t' || c=='\r')
+            c = in.get();
+        if(c!='\n' && c!='#' && c!=EOF) // We've found a non-blank, non-comment char.
+            ++count;
+        while(c!='\n' && c!=EOF) // Read until end of line.
+            c = in.get();
+        c = in.get();
+    }
+    return count;  
 }
 
 /////////////////
@@ -504,27 +504,27 @@ PPath newFilename(const PPath& directory, const string& prefix, bool is_director
     PLERROR("This call is not yet implemented for this platform");
     return "";
 #else
-  // TODO Better implementation with PPath.
-  const string tmpdirname = remove_trailing_slash(directory.absolute());
-  const int length = tmpdirname.length() + 1 + prefix.length() + 6 + 1;
-  char* tmpfilename = new char[length];
-  if (tmpdirname=="") //!<  save in current dir
-    sprintf(tmpfilename,"%sXXXXXX",prefix.c_str());
-  else
-    sprintf(tmpfilename,"%s/%sXXXXXX",tmpdirname.c_str(),prefix.c_str());
-  int fd = mkstemp(tmpfilename);
-  if (fd == -1)
-    PLERROR("In newFilename - Could not create temporary file");
-  // Close the file descriptor, since we are not using it.
-  close(fd);
-  if (is_directory) {
-    // Defeats the purpose of mktemp, but who cares?
-    std::remove(tmpfilename);
-    PR_MkDir(tmpfilename, 0777);
-  }
-  if(!tmpfilename)
-    PLERROR("In newFilename : could not make a new temporary filename");
-  return tmpfilename;
+    // TODO Better implementation with PPath.
+    const string tmpdirname = remove_trailing_slash(directory.absolute());
+    const int length = tmpdirname.length() + 1 + prefix.length() + 6 + 1;
+    char* tmpfilename = new char[length];
+    if (tmpdirname=="") //!<  save in current dir
+        sprintf(tmpfilename,"%sXXXXXX",prefix.c_str());
+    else
+        sprintf(tmpfilename,"%s/%sXXXXXX",tmpdirname.c_str(),prefix.c_str());
+    int fd = mkstemp(tmpfilename);
+    if (fd == -1)
+        PLERROR("In newFilename - Could not create temporary file");
+    // Close the file descriptor, since we are not using it.
+    close(fd);
+    if (is_directory) {
+        // Defeats the purpose of mktemp, but who cares?
+        std::remove(tmpfilename);
+        PR_MkDir(tmpfilename, 0777);
+    }
+    if(!tmpfilename)
+        PLERROR("In newFilename : could not make a new temporary filename");
+    return tmpfilename;
 #endif
 }
 
@@ -533,45 +533,45 @@ PPath newFilename(const PPath& directory, const string& prefix, bool is_director
 ///////////////////////
 PPath makeFileNameValid(const PPath& path)
 {
-  PPath dirname       = path.dirname();
-  PPath filename_full = path.basename();
-  PPath filename      = filename_full.no_extension();
-  string ext          = filename_full.extension(true);
-  PPath ret           = path;
-  if(filename.length() + ext.length() > 256)
-  {
-    // We make a shorter name by encoding the rest into a few numbers.
-    int j = 0;
-    string rest = filename.substr(256-ext.length()-12);
-    do
+    PPath dirname       = path.dirname();
+    PPath filename_full = path.basename();
+    PPath filename      = filename_full.no_extension();
+    string ext          = filename_full.extension(true);
+    PPath ret           = path;
+    if(filename.length() + ext.length() > 256)
     {
-      unsigned int n = j++;
-      for(size_t i = 0; i < rest.length(); ++i)
-      {
-        int m=0;
-        switch(i%4)
+        // We make a shorter name by encoding the rest into a few numbers.
+        int j = 0;
+        string rest = filename.substr(256-ext.length()-12);
+        do
         {
-          case 3: m= 1; break;
-          case 2: m= 256; break;
-          case 1: m= 65536; break;
-          case 0: m= 256*65536; break;
-        }
-        n+= m*(unsigned char)rest[i];
-      }
-      filename.resize(256-ext.length()-12);
-      filename+= "-" + tostring(n);
-    } while(pathexists(dirname / (filename + ext)));
-    PLWARNING("makeFileNameValid: Filename '%s' changed to '%s'.", 
-               path.absolute().c_str(), (dirname / (filename + ext)).c_str());
-    ret = (dirname / (filename + ext));
-  }
+            unsigned int n = j++;
+            for(size_t i = 0; i < rest.length(); ++i)
+            {
+                int m=0;
+                switch(i%4)
+                {
+                case 3: m= 1; break;
+                case 2: m= 256; break;
+                case 1: m= 65536; break;
+                case 0: m= 256*65536; break;
+                }
+                n+= m*(unsigned char)rest[i];
+            }
+            filename.resize(256-ext.length()-12);
+            filename+= "-" + tostring(n);
+        } while(pathexists(dirname / (filename + ext)));
+        PLWARNING("makeFileNameValid: Filename '%s' changed to '%s'.", 
+                  path.absolute().c_str(), (dirname / (filename + ext)).c_str());
+        ret = (dirname / (filename + ext));
+    }
 
-  // Replace illegal characters.
-  string illegal = "*?'\"${}[]@ ,()";
-  for(size_t i=0;i<ret.size();i++)
-    if (illegal.find(ret[i]) != string::npos)
-      ret[i]='_';
-  return ret;
+    // Replace illegal characters.
+    string illegal = "*?'\"${}[]@ ,()";
+    for(size_t i=0;i<ret.size();i++)
+        if (illegal.find(ret[i]) != string::npos)
+            ret[i]='_';
+    return ret;
 }
 
 ///////////
@@ -579,8 +579,8 @@ PPath makeFileNameValid(const PPath& path)
 ///////////
 void touch(const PPath& file)
 {
-  string command = "touch "+ file.absolute();
-  system(command.c_str());
+    string command = "touch "+ file.absolute();
+    system(command.c_str());
 } 
 
 /////////////////////////////
@@ -588,44 +588,44 @@ void touch(const PPath& file)
 /////////////////////////////
 void addFileAndDateVariables(const PPath& filepath, map<string, string>& variables)
 {
-  // Define new local variables
-  variables["HOME"]        = PPath::getenv("HOME");
+    // Define new local variables
+    variables["HOME"]        = PPath::getenv("HOME");
   
-  const PPath fpath        = filepath.absolute();
-  variables["FILEPATH"]    = fpath;
-  variables["DIRPATH"]     = fpath.dirname();
+    const PPath fpath        = filepath.absolute();
+    variables["FILEPATH"]    = fpath;
+    variables["DIRPATH"]     = fpath.dirname();
 
-  const PPath basename     = fpath.basename();
-  variables["FILENAME"]    = basename;
-  variables["FILEBASE"]    = basename.no_extension();
-  variables["FILEEXT"]     = fpath.extension();
+    const PPath basename     = fpath.basename();
+    variables["FILENAME"]    = basename;
+    variables["FILEBASE"]    = basename.no_extension();
+    variables["FILEEXT"]     = fpath.extension();
   
-  // dorionc: This should soon be deprecated...
-  // PyPLearn should provide date(), time() and date_time() functions so
-  // that these could be removed
-  char* date_time_env = getenv("PLEARN_DATE_TIME");
+    // dorionc: This should soon be deprecated...
+    // PyPLearn should provide date(), time() and date_time() functions so
+    // that these could be removed
+    char* date_time_env = getenv("PLEARN_DATE_TIME");
 
-  if ( date_time_env 
-       && string(date_time_env) == "NO" )
-  {
-    variables["DATETIME"]  = "";
-    variables["DATE"]      = "";
-    variables["TIME"]      = "";    
-  }
-  else
-  {
-    // Compute DATE, TIME, and DATETIME variables
-    time_t curtime = time(NULL);
-    struct tm *broken_down_time = localtime(&curtime);
-    const int SIZE = 100;
-    char time_buffer[SIZE];
-    strftime(time_buffer,SIZE,"%Y%m%d:%H%M%S",broken_down_time);
-    variables["DATETIME"] = time_buffer;
-    strftime(time_buffer,SIZE,"%Y%m%d",broken_down_time);
-    variables["DATE"] = time_buffer;
-    strftime(time_buffer,SIZE,"%H%M%S",broken_down_time);
-    variables["TIME"] = time_buffer;
-  }
+    if ( date_time_env 
+         && string(date_time_env) == "NO" )
+    {
+        variables["DATETIME"]  = "";
+        variables["DATE"]      = "";
+        variables["TIME"]      = "";    
+    }
+    else
+    {
+        // Compute DATE, TIME, and DATETIME variables
+        time_t curtime = time(NULL);
+        struct tm *broken_down_time = localtime(&curtime);
+        const int SIZE = 100;
+        char time_buffer[SIZE];
+        strftime(time_buffer,SIZE,"%Y%m%d:%H%M%S",broken_down_time);
+        variables["DATETIME"] = time_buffer;
+        strftime(time_buffer,SIZE,"%Y%m%d",broken_down_time);
+        variables["DATE"] = time_buffer;
+        strftime(time_buffer,SIZE,"%H%M%S",broken_down_time);
+        variables["TIME"] = time_buffer;
+    }
 }
 
 /////////////////////////////
@@ -634,62 +634,62 @@ void addFileAndDateVariables(const PPath& filepath, map<string, string>& variabl
 string readFileAndMacroProcess(const PPath& filepath, map<string, string>& variables,
                                bool change_dir)
 {
-  // pout << "Processing file: " << filepath.absolute() << endl;
-  // Save old variables (to allow recursive calls)
-  const char* OldVariables[] = {
-    "FILEPATH", "DIRPATH", "FILENAME", "FILEBASE", "FILEEXT", "DATE", "TIME", "DATETIME"
-  };
-  const int num_old = sizeof(OldVariables) / sizeof(OldVariables[0]);
-  map<string,string> old_vars;
-  for (int i=0; i<num_old; ++i)
-    old_vars[OldVariables[i]] = variables[OldVariables[i]];
-  PPath file(filepath); // Default: file = filepath.
+    // pout << "Processing file: " << filepath.absolute() << endl;
+    // Save old variables (to allow recursive calls)
+    const char* OldVariables[] = {
+        "FILEPATH", "DIRPATH", "FILENAME", "FILEBASE", "FILEEXT", "DATE", "TIME", "DATETIME"
+    };
+    const int num_old = sizeof(OldVariables) / sizeof(OldVariables[0]);
+    map<string,string> old_vars;
+    for (int i=0; i<num_old; ++i)
+        old_vars[OldVariables[i]] = variables[OldVariables[i]];
+    PPath file(filepath); // Default: file = filepath.
 
-  map<string, string>* added = 0;
-  map<string, string>* backup = 0;
-  if (!isfile(file)) {
-    // Parse 'file' for potential additional arguments.
-    added  = new map<string, string>();
-    backup = new map<string, string>();
-    parseBaseAndParameters(file.absolute(), file, variables, added, backup);
-  }
+    map<string, string>* added = 0;
+    map<string, string>* backup = 0;
+    if (!isfile(file)) {
+        // Parse 'file' for potential additional arguments.
+        added  = new map<string, string>();
+        backup = new map<string, string>();
+        parseBaseAndParameters(file.absolute(), file, variables, added, backup);
+    }
 
-  // Possibly change directory.
-  PPath old_dir;
-  if (change_dir) {
-    old_dir = PPath::getcwd();
-    chdir(file.dirname());
-    file = file.basename();
-  }
+    // Possibly change directory.
+    PPath old_dir;
+    if (change_dir) {
+        old_dir = PPath::getcwd();
+        chdir(file.dirname());
+        file = file.basename();
+    }
 
-  // Add the new file and date variables
-  addFileAndDateVariables(file, variables);
+    // Add the new file and date variables
+    addFileAndDateVariables(file, variables);
 
-  // Perform actual parsing and macro processing...
-  PStream in = openFile(file, PStream::plearn_ascii, "r");
-  string text = readAndMacroProcess(in, variables);
+    // Perform actual parsing and macro processing...
+    PStream in = openFile(file, PStream::plearn_ascii, "r");
+    string text = readAndMacroProcess(in, variables);
 
-  // Restore previous variables
-  if (added)
-    for (map<string, string>::const_iterator it = added->begin();
-         it != added->end(); it++)
-      variables.erase(it->first);
-  if (backup)
-    for (map<string, string>::const_iterator it = backup->begin();
-         it != backup->end(); it++)
-      variables[it->first] = it->second;
-  for (int i=0; i<num_old; ++i)
-    variables[OldVariables[i]] = old_vars[OldVariables[i]];
+    // Restore previous variables
+    if (added)
+        for (map<string, string>::const_iterator it = added->begin();
+             it != added->end(); it++)
+            variables.erase(it->first);
+    if (backup)
+        for (map<string, string>::const_iterator it = backup->begin();
+             it != backup->end(); it++)
+            variables[it->first] = it->second;
+    for (int i=0; i<num_old; ++i)
+        variables[OldVariables[i]] = old_vars[OldVariables[i]];
 
-  // Restore previous directory.
-  if (change_dir)
-    chdir(old_dir);
+    // Restore previous directory.
+    if (change_dir)
+        chdir(old_dir);
 
-  // Free memory.
-  if (added)  delete added;
-  if (backup) delete backup;
+    // Free memory.
+    if (added)  delete added;
+    if (backup) delete backup;
 
-  return text;
+    return text;
 }
 
 /////////////////////////
@@ -697,625 +697,625 @@ string readFileAndMacroProcess(const PPath& filepath, map<string, string>& varia
 /////////////////////////
 string readAndMacroProcess(PStream& in, map<string, string>& variables)
 {
-  string text; // the processed text to return
-  bool inside_a_quoted_string=false; // inside a quoted string we don't skip characters following a #
-  int c=EOF,last_c=EOF;
-  while(in)
-  {
-    last_c = c;
-    c = in.get();
-    if (last_c!='\\' && c=='"') // we find either the beginning or end of a quoted string
-      inside_a_quoted_string = !inside_a_quoted_string; // flip status
-
-    if(!inside_a_quoted_string && c=='#')  // It's a comment: skip rest of line
+    string text; // the processed text to return
+    bool inside_a_quoted_string=false; // inside a quoted string we don't skip characters following a #
+    int c=EOF,last_c=EOF;
+    while(in)
     {
-      while(c!=EOF && c!='\n' && c!='\r')
+        last_c = c;
         c = in.get();
-    }
+        if (last_c!='\\' && c=='"') // we find either the beginning or end of a quoted string
+            inside_a_quoted_string = !inside_a_quoted_string; // flip status
 
-    if(c==EOF)
-      break;
-    else if(c!='$')
-      text += c;
-    else  // We have a $ macro command
-    {
-      int c = in.peek();
-      switch(c)
-      {
-        case '{':  // expand a defined variable ${varname}
-          {
-            string varname; // name of a variable
-            in.get(); // skip '{'
-            in.smartReadUntilNext("}", varname, true);
-            // Maybe there are macros to process to obtain the real name of the variable.
-            PStream varname_stream = openString(varname, PStream::raw_ascii);
-            varname = readAndMacroProcess(varname_stream, variables);
-            varname = removeblanks(varname);
-            map<string, string>::const_iterator it = variables.find(varname);
-            if(it==variables.end())
-              PLERROR("Macro variable ${%s} undefined", varname.c_str());
-            PStream varin = openString(it->second, PStream::raw_ascii);
-            text += readAndMacroProcess(varin, variables);
-          }
-          break;
+        if(!inside_a_quoted_string && c=='#')  // It's a comment: skip rest of line
+        {
+            while(c!=EOF && c!='\n' && c!='\r')
+                c = in.get();
+        }
 
-        case 'C': // it's a CHAR{expression}
-          {
-            string expr;
-            readWhileMatches(in, "CHAR");
-            bool syntax_ok = true;
-            int c = in.get();
-            if(c == '{')
-              in.smartReadUntilNext("}", expr, true);
-            else
-              syntax_ok = false;
-            if (!syntax_ok)
-              PLERROR("$CHAR syntax is: $CHAR{expr}");
-            PStream expr_stream = openString(expr, PStream::raw_ascii);
-            char ch = (char) toint(readAndMacroProcess(expr_stream, variables));
-            text += ch;
-          }
-          break;
-
-        case 'D':
-          {
-            int next = in.get();
-            next = in.peek();   // Next character.
-            switch(next) {
-
-              case 'E':   // it's a DEFINE{varname}{expr}
-                {
-                  string varname; // name of a variable
-                  string vardef; // definition of a variable
-                  readWhileMatches(in, "EFINE{");
-                  in.getline(varname, '}');
-                  varname = removeblanks(varname);
-                  skipBlanksAndComments(in);
-                  if(in.get()!='{')
-                    PLERROR("Bad syntax in .plearn DEFINE macro: correct syntax is $DEFINE{name}{definition}");
-                  in.smartReadUntilNext("}", vardef, true);
-                  map<string, string>::const_iterator it = variables.find(varname);
-                  if (it == variables.end())
-                    variables[varname] = vardef;
-                  else
-                    PLERROR("Variable %s is already defined, you need to first $UNDEFINE it "
-                            "if you want to assign it a new value", varname.c_str());
-                }
-                break;
-
-              case 'I': // it's a DIVIDE{expr1}{expr2}
-                {
-                  string expr1, expr2;
-                  readWhileMatches(in, "IVIDE");
-                  bool syntax_ok = true;
-                  int c = in.get();
-                  if (syntax_ok) {
-                    if(c == '{')
-                      in.smartReadUntilNext("}", expr1, true);
-                    else
-                      syntax_ok = false;
-                  }
-                  if (syntax_ok) {
-                    c = in.get();
-                    if(c == '{')
-                      in.smartReadUntilNext("}", expr2, true);
-                    else
-                      syntax_ok = false;
-                  }
-                  if (!syntax_ok)
-                    PLERROR("$DIVIDE syntax is: $DIVIDE{expr1}{expr2}");
-                  PStream expr1_stream = openString(expr1, PStream::raw_ascii);
-                  PStream expr2_stream = openString(expr2, PStream::raw_ascii);
-                  string expr1_eval = readAndMacroProcess(expr1_stream, variables);
-                  string expr2_eval = readAndMacroProcess(expr2_stream, variables);
-                  real e1, e2;
-                  if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
-                    PLERROR("In $DIVIDE{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
-                  }
-                  text += tostring(e1 / e2);
-                }
-                break;
-
+        if(c==EOF)
+            break;
+        else if(c!='$')
+            text += c;
+        else  // We have a $ macro command
+        {
+            int c = in.peek();
+            switch(c)
+            {
+            case '{':  // expand a defined variable ${varname}
+            {
+                string varname; // name of a variable
+                in.get(); // skip '{'
+                in.smartReadUntilNext("}", varname, true);
+                // Maybe there are macros to process to obtain the real name of the variable.
+                PStream varname_stream = openString(varname, PStream::raw_ascii);
+                varname = readAndMacroProcess(varname_stream, variables);
+                varname = removeblanks(varname);
+                map<string, string>::const_iterator it = variables.find(varname);
+                if(it==variables.end())
+                    PLERROR("Macro variable ${%s} undefined", varname.c_str());
+                PStream varin = openString(it->second, PStream::raw_ascii);
+                text += readAndMacroProcess(varin, variables);
             }
             break;
-          }
 
-        case 'E':
-          {
-            int next = in.get();
-            next = in.peek();   // Next character.
-            switch(next) {
-
-              case 'C': // it's an ECHO{expr}
-                {
-                  string expr;
-                  readWhileMatches(in, "CHO");
-                  bool syntax_ok = true;
-                  int c = in.get();
-                  if(c == '{')
+            case 'C': // it's a CHAR{expression}
+            {
+                string expr;
+                readWhileMatches(in, "CHAR");
+                bool syntax_ok = true;
+                int c = in.get();
+                if(c == '{')
                     in.smartReadUntilNext("}", expr, true);
-                  else
+                else
                     syntax_ok = false;
-                  if (!syntax_ok)
-                    PLERROR("$ECHO syntax is: $ECHO{expr}");
-                  PStream expr_stream = openString(expr, PStream::raw_ascii);
-                  pout << readAndMacroProcess(expr_stream, variables) << endl;
+                if (!syntax_ok)
+                    PLERROR("$CHAR syntax is: $CHAR{expr}");
+                PStream expr_stream = openString(expr, PStream::raw_ascii);
+                char ch = (char) toint(readAndMacroProcess(expr_stream, variables));
+                text += ch;
+            }
+            break;
+
+            case 'D':
+            {
+                int next = in.get();
+                next = in.peek();   // Next character.
+                switch(next) {
+
+                case 'E':   // it's a DEFINE{varname}{expr}
+                {
+                    string varname; // name of a variable
+                    string vardef; // definition of a variable
+                    readWhileMatches(in, "EFINE{");
+                    in.getline(varname, '}');
+                    varname = removeblanks(varname);
+                    skipBlanksAndComments(in);
+                    if(in.get()!='{')
+                        PLERROR("Bad syntax in .plearn DEFINE macro: correct syntax is $DEFINE{name}{definition}");
+                    in.smartReadUntilNext("}", vardef, true);
+                    map<string, string>::const_iterator it = variables.find(varname);
+                    if (it == variables.end())
+                        variables[varname] = vardef;
+                    else
+                        PLERROR("Variable %s is already defined, you need to first $UNDEFINE it "
+                                "if you want to assign it a new value", varname.c_str());
                 }
                 break;
 
-              case 'V': // it's an EVALUATE{varname}
+                case 'I': // it's a DIVIDE{expr1}{expr2}
                 {
-                  string expr;
-                  readWhileMatches(in, "VALUATE");
-                  bool syntax_ok = true;
-                  int c = in.get();
-                  if(c == '{')
-                    in.smartReadUntilNext("}", expr, true);
-                  else
-                    syntax_ok = false;
-                  if (!syntax_ok)
-                    PLERROR("$EVALUATE syntax is: $EVALUATE{varname}");
-                  PStream expr_stream = openString(expr, PStream::raw_ascii);
-                  string varname = readAndMacroProcess(expr_stream, variables);
-                  string to_evaluate = variables[varname];
-                  PStream to_evaluate_stream = openString(to_evaluate, PStream::raw_ascii);
-                  string evaluated = readAndMacroProcess(to_evaluate_stream, variables);
-                  variables[varname] = evaluated;
+                    string expr1, expr2;
+                    readWhileMatches(in, "IVIDE");
+                    bool syntax_ok = true;
+                    int c = in.get();
+                    if (syntax_ok) {
+                        if(c == '{')
+                            in.smartReadUntilNext("}", expr1, true);
+                        else
+                            syntax_ok = false;
+                    }
+                    if (syntax_ok) {
+                        c = in.get();
+                        if(c == '{')
+                            in.smartReadUntilNext("}", expr2, true);
+                        else
+                            syntax_ok = false;
+                    }
+                    if (!syntax_ok)
+                        PLERROR("$DIVIDE syntax is: $DIVIDE{expr1}{expr2}");
+                    PStream expr1_stream = openString(expr1, PStream::raw_ascii);
+                    PStream expr2_stream = openString(expr2, PStream::raw_ascii);
+                    string expr1_eval = readAndMacroProcess(expr1_stream, variables);
+                    string expr2_eval = readAndMacroProcess(expr2_stream, variables);
+                    real e1, e2;
+                    if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
+                        PLERROR("In $DIVIDE{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
+                    }
+                    text += tostring(e1 / e2);
+                }
+                break;
+
                 }
                 break;
             }
-            break;
-          }
 
-        case 'G': // it's a GETENV{expression}
-          {
-            string expr;
-            readWhileMatches(in, "GETENV");
-            bool syntax_ok = true;
-            int c = in.get();
-            if(c == '{')
-              in.smartReadUntilNext("}", expr, true);
-            else
-              syntax_ok = false;
-            if (!syntax_ok)
-              PLERROR("$GETENV syntax is: $GETENV{expr}");
-            PStream expr_stream = openString(expr, PStream::raw_ascii);
-            string var_name = readAndMacroProcess(expr_stream, variables);
-            char* var = getenv(var_name.c_str());
-            if (!var)
-              PLERROR("In readAndMacroProcess - The environment variable %s is not defined", var_name.c_str());
-            text += string(var);
-          }
-          break;
+            case 'E':
+            {
+                int next = in.get();
+                next = in.peek();   // Next character.
+                switch(next) {
 
-        case 'I':
-          {
-            int next = in.get();
-            next = in.peek();   // Next character.
-            switch(next) {
-
-              case 'F': // it's an IF{cond}{expr_cond_true}{expr_cond_false}
+                case 'C': // it's an ECHO{expr}
                 {
-                  string cond, expr_cond_true, expr_cond_false, expr_evaluated;
-                  readWhileMatches(in, "F");
-                  bool syntax_ok = true;
-                  int c = in.get();
-                  if(c == '{')
-                    in.smartReadUntilNext("}", cond, true);
-                  else
-                    syntax_ok = false;
-                  if (syntax_ok) {
-                    c = in.get();
+                    string expr;
+                    readWhileMatches(in, "CHO");
+                    bool syntax_ok = true;
+                    int c = in.get();
                     if(c == '{')
-                      in.smartReadUntilNext("}", expr_cond_true, true);
+                        in.smartReadUntilNext("}", expr, true);
                     else
-                      syntax_ok = false;
-                  }
-                  if (syntax_ok) {
-                    c = in.get();
-                    if(c == '{')
-                      in.smartReadUntilNext("}", expr_cond_false, true);
-                    else
-                      syntax_ok = false;
-                  }
-                  if (!syntax_ok)
-                    PLERROR("$IF syntax is: $IF{cond}{expr_cond_true}{expr_cond_false}");
-
-            PStream cond_stream = openString(cond, PStream::raw_ascii);
-                  string evaluate_cond = readAndMacroProcess(cond_stream, variables);
-                  if (evaluate_cond == "1" ) {
-                    expr_evaluated = expr_cond_true;
-                  } else if (evaluate_cond == "0") {
-                    expr_evaluated = expr_cond_false;
-                  } else {
-                    PLERROR("$IF condition should be 0 or 1, but is %s", evaluate_cond.c_str());
-                  }
-                  PStream expr_stream = openString(expr_evaluated, PStream::raw_ascii);
-                  text += readAndMacroProcess(expr_stream, variables);
+                        syntax_ok = false;
+                    if (!syntax_ok)
+                        PLERROR("$ECHO syntax is: $ECHO{expr}");
+                    PStream expr_stream = openString(expr, PStream::raw_ascii);
+                    pout << readAndMacroProcess(expr_stream, variables) << endl;
                 }
                 break;
 
-              case 'N':
+                case 'V': // it's an EVALUATE{varname}
                 {
-                  int next = in.get();
-                  next = in.peek();   // Next character.
-                  switch(next) {
+                    string expr;
+                    readWhileMatches(in, "VALUATE");
+                    bool syntax_ok = true;
+                    int c = in.get();
+                    if(c == '{')
+                        in.smartReadUntilNext("}", expr, true);
+                    else
+                        syntax_ok = false;
+                    if (!syntax_ok)
+                        PLERROR("$EVALUATE syntax is: $EVALUATE{varname}");
+                    PStream expr_stream = openString(expr, PStream::raw_ascii);
+                    string varname = readAndMacroProcess(expr_stream, variables);
+                    string to_evaluate = variables[varname];
+                    PStream to_evaluate_stream = openString(to_evaluate, PStream::raw_ascii);
+                    string evaluated = readAndMacroProcess(to_evaluate_stream, variables);
+                    variables[varname] = evaluated;
+                }
+                break;
+                }
+                break;
+            }
+
+            case 'G': // it's a GETENV{expression}
+            {
+                string expr;
+                readWhileMatches(in, "GETENV");
+                bool syntax_ok = true;
+                int c = in.get();
+                if(c == '{')
+                    in.smartReadUntilNext("}", expr, true);
+                else
+                    syntax_ok = false;
+                if (!syntax_ok)
+                    PLERROR("$GETENV syntax is: $GETENV{expr}");
+                PStream expr_stream = openString(expr, PStream::raw_ascii);
+                string var_name = readAndMacroProcess(expr_stream, variables);
+                char* var = getenv(var_name.c_str());
+                if (!var)
+                    PLERROR("In readAndMacroProcess - The environment variable %s is not defined", var_name.c_str());
+                text += string(var);
+            }
+            break;
+
+            case 'I':
+            {
+                int next = in.get();
+                next = in.peek();   // Next character.
+                switch(next) {
+
+                case 'F': // it's an IF{cond}{expr_cond_true}{expr_cond_false}
+                {
+                    string cond, expr_cond_true, expr_cond_false, expr_evaluated;
+                    readWhileMatches(in, "F");
+                    bool syntax_ok = true;
+                    int c = in.get();
+                    if(c == '{')
+                        in.smartReadUntilNext("}", cond, true);
+                    else
+                        syntax_ok = false;
+                    if (syntax_ok) {
+                        c = in.get();
+                        if(c == '{')
+                            in.smartReadUntilNext("}", expr_cond_true, true);
+                        else
+                            syntax_ok = false;
+                    }
+                    if (syntax_ok) {
+                        c = in.get();
+                        if(c == '{')
+                            in.smartReadUntilNext("}", expr_cond_false, true);
+                        else
+                            syntax_ok = false;
+                    }
+                    if (!syntax_ok)
+                        PLERROR("$IF syntax is: $IF{cond}{expr_cond_true}{expr_cond_false}");
+
+                    PStream cond_stream = openString(cond, PStream::raw_ascii);
+                    string evaluate_cond = readAndMacroProcess(cond_stream, variables);
+                    if (evaluate_cond == "1" ) {
+                        expr_evaluated = expr_cond_true;
+                    } else if (evaluate_cond == "0") {
+                        expr_evaluated = expr_cond_false;
+                    } else {
+                        PLERROR("$IF condition should be 0 or 1, but is %s", evaluate_cond.c_str());
+                    }
+                    PStream expr_stream = openString(expr_evaluated, PStream::raw_ascii);
+                    text += readAndMacroProcess(expr_stream, variables);
+                }
+                break;
+
+                case 'N':
+                {
+                    int next = in.get();
+                    next = in.peek();   // Next character.
+                    switch(next) {
 
                     case 'C': // it's an INCLUDE{filepath}
-                      {
+                    {
                         string raw_includefilepath; // The raw path read from the script.
                         readWhileMatches(in, "CLUDE");
                         int c = in.get();
                         if(c=='<')
-                          in.smartReadUntilNext(">", raw_includefilepath, true);
+                            in.smartReadUntilNext(">", raw_includefilepath, true);
                         else if(c=='{')
-                          in.smartReadUntilNext("}", raw_includefilepath, true);
+                            in.smartReadUntilNext("}", raw_includefilepath, true);
                         else
-                          PLERROR("$INCLUDE must be followed immediately by a { or <");
+                            PLERROR("$INCLUDE must be followed immediately by a { or <");
                         PStream pathin = openString(raw_includefilepath, PStream::raw_ascii);
                         raw_includefilepath = readAndMacroProcess(pathin,variables);
                         raw_includefilepath = removeblanks(raw_includefilepath);
                         // Read file with appropriate variable definitions.
                         text += readFileAndMacroProcess
-                                  (PPath(raw_includefilepath), variables, true);
-                      }
-                      break;
+                            (PPath(raw_includefilepath), variables, true);
+                    }
+                    break;
 
                     case 'T': // it's an INT{val}
-                      {
+                    {
                         string expr;
                         readWhileMatches(in, "T");
                         bool syntax_ok = true;
                         int c = in.get();
                         if(c == '{')
-                          in.smartReadUntilNext("}", expr, true);
+                            in.smartReadUntilNext("}", expr, true);
                         else
-                          syntax_ok = false;
+                            syntax_ok = false;
                         if (!syntax_ok)
-                          PLERROR("$INT syntax is: $INT{expr}");
+                            PLERROR("$INT syntax is: $INT{expr}");
                         PStream expr_stream = openString(expr, PStream::raw_ascii);
                         string expr_eval = readAndMacroProcess(expr_stream, variables);
                         real e;
                         if (!pl_isnumber(expr_eval, &e)) {
-                          PLERROR("In $INT{expr}, 'expr' is not a number");
+                            PLERROR("In $INT{expr}, 'expr' is not a number");
                         }
                         text += tostring(int(e));
-                      }
-                  }
+                    }
+                    }
                 }
                 break;
 
-              case 'S':
+                case 'S':
                 {
 
-                  int next = in.get();
-                  next = in.peek();   // Next character.
-                  switch(next) {
+                    int next = in.get();
+                    next = in.peek();   // Next character.
+                    switch(next) {
 
                     case 'D': // it's an ISDEFINED{expr}
-                      {
+                    {
                         string expr;
                         readWhileMatches(in, "DEFINED");
                         bool syntax_ok = true;
                         int c = in.get();
                         if(c == '{')
-                          in.smartReadUntilNext("}", expr, true);
+                            in.smartReadUntilNext("}", expr, true);
                         else
-                          syntax_ok = false;
+                            syntax_ok = false;
                         if (!syntax_ok)
-                          PLERROR("$ISDEFINED syntax is: $ISDEFINED{expr}");
+                            PLERROR("$ISDEFINED syntax is: $ISDEFINED{expr}");
                         PStream expr_stream = openString(expr, PStream::raw_ascii);
                         string expr_eval = readAndMacroProcess(expr_stream, variables);
                         map<string, string>::const_iterator it = variables.find(expr_eval);
                         if(it==variables.end()) {
-                          // The variable is not defined.
-                          text += "0";
+                            // The variable is not defined.
+                            text += "0";
                         } else {
-                          text += "1";
+                            text += "1";
                         }
-                      }
-                      break;
+                    }
+                    break;
 
                     case 'E': // it's an ISEQUAL{expr1}{expr2}
-                      {
+                    {
                         string expr1, expr2;
                         readWhileMatches(in, "EQUAL");
                         bool syntax_ok = true;
                         int c = in.get();
                         if(c == '{')
-                          in.smartReadUntilNext( "}", expr1, true);
+                            in.smartReadUntilNext( "}", expr1, true);
                         else
-                          syntax_ok = false;
-                        if (syntax_ok) {
-                          c = in.get();
-                          if(c == '{')
-                            in.smartReadUntilNext("}", expr2, true);
-                          else
                             syntax_ok = false;
+                        if (syntax_ok) {
+                            c = in.get();
+                            if(c == '{')
+                                in.smartReadUntilNext("}", expr2, true);
+                            else
+                                syntax_ok = false;
                         }
                         if (!syntax_ok)
-                          PLERROR("$ISEQUAL syntax is: $ISEQUAL{expr1}{expr2}");
+                            PLERROR("$ISEQUAL syntax is: $ISEQUAL{expr1}{expr2}");
                         PStream expr1_stream = openString(expr1, PStream::raw_ascii);
                         PStream expr2_stream = openString(expr2, PStream::raw_ascii);
                         string expr1_eval = readAndMacroProcess(expr1_stream, variables);
                         string expr2_eval = readAndMacroProcess(expr2_stream, variables);
                         if (expr1_eval == expr2_eval) {
-                          text += "1";
+                            text += "1";
                         } else {
-                          text += "0";
+                            text += "0";
                         }
-                      }
-                      break;
+                    }
+                    break;
 
                     case 'H': // it's an ISHIGHER{expr1}{expr2}
-                      {
+                    {
                         string expr1, expr2;
                         readWhileMatches(in, "HIGHER");
                         bool syntax_ok = true;
                         int c = in.get();
                         if(c == '{')
-                          in.smartReadUntilNext("}", expr1, true);
+                            in.smartReadUntilNext("}", expr1, true);
                         else
-                          syntax_ok = false;
-                        if (syntax_ok) {
-                          c = in.get();
-                          if(c == '{')
-                            in.smartReadUntilNext("}", expr2, true);
-                          else
                             syntax_ok = false;
+                        if (syntax_ok) {
+                            c = in.get();
+                            if(c == '{')
+                                in.smartReadUntilNext("}", expr2, true);
+                            else
+                                syntax_ok = false;
                         }
                         if (!syntax_ok)
-                          PLERROR("$ISHIGHER syntax is: $ISHIGHER{expr1}{expr2}");
+                            PLERROR("$ISHIGHER syntax is: $ISHIGHER{expr1}{expr2}");
                         PStream expr1_stream = openString(expr1, PStream::raw_ascii);
                         PStream expr2_stream = openString(expr2, PStream::raw_ascii);
                         string expr1_eval = readAndMacroProcess(expr1_stream, variables);
                         string expr2_eval = readAndMacroProcess(expr2_stream, variables);
                         real e1, e2;
                         if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
-                          PLERROR("In $ISHIGHER{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
+                            PLERROR("In $ISHIGHER{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
                         }
                         if (e1 > e2) {
-                          text += "1";
+                            text += "1";
                         } else {
-                          text += "0";
+                            text += "0";
                         }
-                      }
-                      break;
-                  }
+                    }
+                    break;
+                    }
                 }
                 break;
-            }
-          }
-          break;
-
-        case 'M': // it's a MINUS{expr1}{expr2}
-          {
-            string expr1, expr2;
-            readWhileMatches(in, "MINUS");
-            bool syntax_ok = true;
-            int c = in.get();
-            if (syntax_ok) {
-              if(c == '{')
-                in.smartReadUntilNext("}", expr1,true);
-              else
-                syntax_ok = false;
-            }
-            if (syntax_ok) {
-              c = in.get();
-              if(c == '{')
-                in.smartReadUntilNext("}", expr2,true);
-              else
-                syntax_ok = false;
-            }
-            if (!syntax_ok)
-              PLERROR("$MINUS syntax is: $MINUS{expr1}{expr2}");
-            PStream expr1_stream = openString(expr1, PStream::raw_ascii);
-            PStream expr2_stream = openString(expr2, PStream::raw_ascii);
-            string expr1_eval = readAndMacroProcess(expr1_stream, variables);
-            string expr2_eval = readAndMacroProcess(expr2_stream, variables);
-            real e1, e2;
-            if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
-              PLERROR("In $MINUS{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
-            }
-            text += tostring(e1 - e2);
-          }
-          break;
-
-        case 'O': // it's an OR{expr1}{expr2}
-          {
-            string expr1, expr2;
-            readWhileMatches(in, "OR");
-            bool syntax_ok = true;
-            int c = in.get();
-            if (syntax_ok) {
-              if(c == '{')
-                in.smartReadUntilNext("}", expr1,true);
-              else
-                syntax_ok = false;
-            }
-            if (syntax_ok) {
-              c = in.get();
-              if(c == '{')
-                in.smartReadUntilNext("}", expr2,true);
-              else
-                syntax_ok = false;
-            }
-            if (!syntax_ok)
-              PLERROR("$OR syntax is: $OR{expr1}{expr2}");
-            PStream expr1_stream = openString(expr1, PStream::raw_ascii);
-            PStream expr2_stream = openString(expr2, PStream::raw_ascii);
-            string expr1_eval = readAndMacroProcess(expr1_stream, variables);
-            string expr2_eval = readAndMacroProcess(expr2_stream, variables);
-            real e1, e2;
-            if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
-              PLERROR("In $OR{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
-            }
-            int i1 = toint(expr1_eval);
-            int i2 = toint(expr2_eval);
-            bool is_true = i1 || i2;
-            text += tostring(is_true);
-          }
-          break;
-
-        case 'P': // it's a PLUS{expr1}{expr2}
-          {
-            string expr1, expr2;
-            readWhileMatches(in, "PLUS");
-            bool syntax_ok = true;
-            int c = in.get();
-            if (syntax_ok) {
-              if(c == '{')
-                in.smartReadUntilNext("}", expr1,true);
-              else
-                syntax_ok = false;
-            }
-            if (syntax_ok) {
-              c = in.get();
-              if(c == '{')
-                in.smartReadUntilNext("}", expr2,true);
-              else
-                syntax_ok = false;
-            }
-            if (!syntax_ok)
-              PLERROR("$PLUS syntax is: $PLUS{expr1}{expr2}");
-            PStream expr1_stream = openString(expr1, PStream::raw_ascii);
-            PStream expr2_stream = openString(expr2, PStream::raw_ascii);
-            string expr1_eval = readAndMacroProcess(expr1_stream, variables);
-            string expr2_eval = readAndMacroProcess(expr2_stream, variables);
-            real e1, e2;
-            if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
-              PLERROR("In $PLUS{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
-            }
-            text += tostring(e1 + e2);
-          }
-          break;
-
-        case 'S': // it's a SWITCH{expr}{cond1}{val1}{cond2}{val2}...{valdef}
-          {
-            string expr, valdef;
-            vector<string> comp;
-            vector<string> val;
-            readWhileMatches(in, "SWITCH");
-            bool syntax_ok = true;
-            // First read 'expr'.
-            int c = in.get();
-            if (syntax_ok) {
-              if(c == '{')
-                in.smartReadUntilNext("}", expr, true);
-              else
-                syntax_ok = false;
-            }
-            // Read the pairs {compx}{valx}, then {valdef}
-            bool done_parsing = false;
-            while (syntax_ok && !done_parsing) {
-              c = getAfterSkipBlanksAndComments(in);
-              string tmp_comp, tmp_val;
-              if(c == '{')
-                in.smartReadUntilNext("}", tmp_comp, true);
-              else
-                syntax_ok = false;
-              if (syntax_ok) {
-                c = peekAfterSkipBlanksAndComments(in);
-                if(c == '{') {
-                  c = getAfterSkipBlanksAndComments(in);
-                  in.smartReadUntilNext("}", tmp_val, true);
                 }
-                else {
-                  // We must have read 'valdef' just before.
-                  valdef = tmp_comp;
-                  done_parsing = true;
+            }
+            break;
+
+            case 'M': // it's a MINUS{expr1}{expr2}
+            {
+                string expr1, expr2;
+                readWhileMatches(in, "MINUS");
+                bool syntax_ok = true;
+                int c = in.get();
+                if (syntax_ok) {
+                    if(c == '{')
+                        in.smartReadUntilNext("}", expr1,true);
+                    else
+                        syntax_ok = false;
                 }
-              }
-              if (!done_parsing) {
-                comp.push_back(tmp_comp);
-                val.push_back(tmp_val);
-              }
+                if (syntax_ok) {
+                    c = in.get();
+                    if(c == '{')
+                        in.smartReadUntilNext("}", expr2,true);
+                    else
+                        syntax_ok = false;
+                }
+                if (!syntax_ok)
+                    PLERROR("$MINUS syntax is: $MINUS{expr1}{expr2}");
+                PStream expr1_stream = openString(expr1, PStream::raw_ascii);
+                PStream expr2_stream = openString(expr2, PStream::raw_ascii);
+                string expr1_eval = readAndMacroProcess(expr1_stream, variables);
+                string expr2_eval = readAndMacroProcess(expr2_stream, variables);
+                real e1, e2;
+                if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
+                    PLERROR("In $MINUS{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
+                }
+                text += tostring(e1 - e2);
             }
-            if (!syntax_ok)
-              PLERROR("$SWITCH syntax is: $SWITCH{expr}{comp1}{val1}{comp2}{val2}...{valdef}");
-            PStream expr_stream = openString(expr, PStream::raw_ascii);
-            string expr_eval =  readAndMacroProcess(expr_stream, variables);
-            bool not_done = true;
-            for (size_t i = 0; i < comp.size() && not_done; i++) {
-              PStream comp_stream = openString(comp[i], PStream::raw_ascii);
-              string comp_eval = readAndMacroProcess(comp_stream, variables);
-              if (expr_eval == comp_eval) {
-                not_done = false;
-                PStream val_stream = openString(val[i], PStream::raw_ascii);
-                text += readAndMacroProcess(val_stream, variables);
-              }
-            }
-            if (not_done) {
-              // Default value needed.
-              PStream val_stream = openString(valdef, PStream::raw_ascii);
-              text += readAndMacroProcess(val_stream, variables);
-            }
-          }
-          break;
+            break;
 
-        case 'T': // it's a TIMES{expr1}{expr2}
-          {
-            string expr1, expr2;
-            readWhileMatches(in, "TIMES");
-            bool syntax_ok = true;
-            int c = in.get();
-            if (syntax_ok) {
-              if(c == '{')
-                in.smartReadUntilNext("}", expr1, true);
-              else
-                syntax_ok = false;
+            case 'O': // it's an OR{expr1}{expr2}
+            {
+                string expr1, expr2;
+                readWhileMatches(in, "OR");
+                bool syntax_ok = true;
+                int c = in.get();
+                if (syntax_ok) {
+                    if(c == '{')
+                        in.smartReadUntilNext("}", expr1,true);
+                    else
+                        syntax_ok = false;
+                }
+                if (syntax_ok) {
+                    c = in.get();
+                    if(c == '{')
+                        in.smartReadUntilNext("}", expr2,true);
+                    else
+                        syntax_ok = false;
+                }
+                if (!syntax_ok)
+                    PLERROR("$OR syntax is: $OR{expr1}{expr2}");
+                PStream expr1_stream = openString(expr1, PStream::raw_ascii);
+                PStream expr2_stream = openString(expr2, PStream::raw_ascii);
+                string expr1_eval = readAndMacroProcess(expr1_stream, variables);
+                string expr2_eval = readAndMacroProcess(expr2_stream, variables);
+                real e1, e2;
+                if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
+                    PLERROR("In $OR{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
+                }
+                int i1 = toint(expr1_eval);
+                int i2 = toint(expr2_eval);
+                bool is_true = i1 || i2;
+                text += tostring(is_true);
             }
-            if (syntax_ok) {
-              c = in.get();
-              if(c == '{')
-                in.smartReadUntilNext("}", expr2, true);
-              else
-                syntax_ok = false;
-            }
-            if (!syntax_ok)
-              PLERROR("$TIMES syntax is: $TIMES{expr1}{expr2}");
-            PStream expr1_stream = openString(expr1, PStream::raw_ascii);
-            PStream expr2_stream = openString(expr2, PStream::raw_ascii);
-            string expr1_eval = readAndMacroProcess(expr1_stream, variables);
-            string expr2_eval = readAndMacroProcess(expr2_stream, variables);
-            real e1, e2;
-            if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
-              PLERROR("In $TIMES{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
-            }
-            text += tostring(e1 * e2);
-          }
-          break;
+            break;
 
-        case 'U': // it's an UNDEFINE{varname}
-          {
-            string expr;
-            readWhileMatches(in, "UNDEFINE");
-            bool syntax_ok = true;
-            int c = in.get();
-            if(c == '{')
-              in.smartReadUntilNext("}", expr, true);
-            else
-              syntax_ok = false;
-            if (!syntax_ok)
-              PLERROR("$UNDEFINE syntax is: $UNDEFINE{expr}");
-            PStream expr_stream = openString(expr, PStream::raw_ascii);
-            string varname = readAndMacroProcess(expr_stream, variables);
-            while (variables.count(varname) > 0) {
-              // This loop is probably not necessary, but just in case...
-              variables.erase(varname);
+            case 'P': // it's a PLUS{expr1}{expr2}
+            {
+                string expr1, expr2;
+                readWhileMatches(in, "PLUS");
+                bool syntax_ok = true;
+                int c = in.get();
+                if (syntax_ok) {
+                    if(c == '{')
+                        in.smartReadUntilNext("}", expr1,true);
+                    else
+                        syntax_ok = false;
+                }
+                if (syntax_ok) {
+                    c = in.get();
+                    if(c == '{')
+                        in.smartReadUntilNext("}", expr2,true);
+                    else
+                        syntax_ok = false;
+                }
+                if (!syntax_ok)
+                    PLERROR("$PLUS syntax is: $PLUS{expr1}{expr2}");
+                PStream expr1_stream = openString(expr1, PStream::raw_ascii);
+                PStream expr2_stream = openString(expr2, PStream::raw_ascii);
+                string expr1_eval = readAndMacroProcess(expr1_stream, variables);
+                string expr2_eval = readAndMacroProcess(expr2_stream, variables);
+                real e1, e2;
+                if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
+                    PLERROR("In $PLUS{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
+                }
+                text += tostring(e1 + e2);
             }
-          }
-          break;
+            break;
 
-        default:
-          PLERROR("In readAndMacroProcess: only supported macro commands are \n"
-              "${varname}, $CHAR, $DEFINE, $DIVIDE, $ECHO, $EVALUATE, $GETENV, $IF, $INCLUDE, $INT, $ISDEFINED, $ISEQUAL, $ISHIGHER, $MINUS, $PLUS, $OR, $SWITCH, $TIMES, $UNDEFINE."
-              "But I read $%c !!",c);
-      }
+            case 'S': // it's a SWITCH{expr}{cond1}{val1}{cond2}{val2}...{valdef}
+            {
+                string expr, valdef;
+                vector<string> comp;
+                vector<string> val;
+                readWhileMatches(in, "SWITCH");
+                bool syntax_ok = true;
+                // First read 'expr'.
+                int c = in.get();
+                if (syntax_ok) {
+                    if(c == '{')
+                        in.smartReadUntilNext("}", expr, true);
+                    else
+                        syntax_ok = false;
+                }
+                // Read the pairs {compx}{valx}, then {valdef}
+                bool done_parsing = false;
+                while (syntax_ok && !done_parsing) {
+                    c = getAfterSkipBlanksAndComments(in);
+                    string tmp_comp, tmp_val;
+                    if(c == '{')
+                        in.smartReadUntilNext("}", tmp_comp, true);
+                    else
+                        syntax_ok = false;
+                    if (syntax_ok) {
+                        c = peekAfterSkipBlanksAndComments(in);
+                        if(c == '{') {
+                            c = getAfterSkipBlanksAndComments(in);
+                            in.smartReadUntilNext("}", tmp_val, true);
+                        }
+                        else {
+                            // We must have read 'valdef' just before.
+                            valdef = tmp_comp;
+                            done_parsing = true;
+                        }
+                    }
+                    if (!done_parsing) {
+                        comp.push_back(tmp_comp);
+                        val.push_back(tmp_val);
+                    }
+                }
+                if (!syntax_ok)
+                    PLERROR("$SWITCH syntax is: $SWITCH{expr}{comp1}{val1}{comp2}{val2}...{valdef}");
+                PStream expr_stream = openString(expr, PStream::raw_ascii);
+                string expr_eval =  readAndMacroProcess(expr_stream, variables);
+                bool not_done = true;
+                for (size_t i = 0; i < comp.size() && not_done; i++) {
+                    PStream comp_stream = openString(comp[i], PStream::raw_ascii);
+                    string comp_eval = readAndMacroProcess(comp_stream, variables);
+                    if (expr_eval == comp_eval) {
+                        not_done = false;
+                        PStream val_stream = openString(val[i], PStream::raw_ascii);
+                        text += readAndMacroProcess(val_stream, variables);
+                    }
+                }
+                if (not_done) {
+                    // Default value needed.
+                    PStream val_stream = openString(valdef, PStream::raw_ascii);
+                    text += readAndMacroProcess(val_stream, variables);
+                }
+            }
+            break;
+
+            case 'T': // it's a TIMES{expr1}{expr2}
+            {
+                string expr1, expr2;
+                readWhileMatches(in, "TIMES");
+                bool syntax_ok = true;
+                int c = in.get();
+                if (syntax_ok) {
+                    if(c == '{')
+                        in.smartReadUntilNext("}", expr1, true);
+                    else
+                        syntax_ok = false;
+                }
+                if (syntax_ok) {
+                    c = in.get();
+                    if(c == '{')
+                        in.smartReadUntilNext("}", expr2, true);
+                    else
+                        syntax_ok = false;
+                }
+                if (!syntax_ok)
+                    PLERROR("$TIMES syntax is: $TIMES{expr1}{expr2}");
+                PStream expr1_stream = openString(expr1, PStream::raw_ascii);
+                PStream expr2_stream = openString(expr2, PStream::raw_ascii);
+                string expr1_eval = readAndMacroProcess(expr1_stream, variables);
+                string expr2_eval = readAndMacroProcess(expr2_stream, variables);
+                real e1, e2;
+                if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
+                    PLERROR("In $TIMES{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
+                }
+                text += tostring(e1 * e2);
+            }
+            break;
+
+            case 'U': // it's an UNDEFINE{varname}
+            {
+                string expr;
+                readWhileMatches(in, "UNDEFINE");
+                bool syntax_ok = true;
+                int c = in.get();
+                if(c == '{')
+                    in.smartReadUntilNext("}", expr, true);
+                else
+                    syntax_ok = false;
+                if (!syntax_ok)
+                    PLERROR("$UNDEFINE syntax is: $UNDEFINE{expr}");
+                PStream expr_stream = openString(expr, PStream::raw_ascii);
+                string varname = readAndMacroProcess(expr_stream, variables);
+                while (variables.count(varname) > 0) {
+                    // This loop is probably not necessary, but just in case...
+                    variables.erase(varname);
+                }
+            }
+            break;
+
+            default:
+                PLERROR("In readAndMacroProcess: only supported macro commands are \n"
+                        "${varname}, $CHAR, $DEFINE, $DIVIDE, $ECHO, $EVALUATE, $GETENV, $IF, $INCLUDE, $INT, $ISDEFINED, $ISEQUAL, $ISHIGHER, $MINUS, $PLUS, $OR, $SWITCH, $TIMES, $UNDEFINE."
+                        "But I read $%c !!",c);
+            }
+        }
     }
-  }
 
-  return text;
+    return text;
 }
 
 #ifdef WIN32
@@ -1323,3 +1323,16 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
 #endif
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

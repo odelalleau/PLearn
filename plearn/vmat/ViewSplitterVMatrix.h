@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ViewSplitterVMatrix.h,v 1.1 2005/03/16 15:51:28 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -55,66 +55,66 @@ class ViewSplitterVMatrix: public SourceVMatrix
 
 private:
 
-  typedef SourceVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 protected:
 
-  //! Contains the split given by the splitter.
-  TVec<VMat> sets;
+    //! Contains the split given by the splitter.
+    TVec<VMat> sets;
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  int set;
-  int split;
-  PP<Splitter> splitter;
+    int set;
+    int split;
+    PP<Splitter> splitter;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  // ### Make sure the implementation in the .cc
-  // ### initializes all fields to reasonable default values.
-  ViewSplitterVMatrix();
+    //! Default constructor.
+    // ### Make sure the implementation in the .cc
+    // ### initializes all fields to reasonable default values.
+    ViewSplitterVMatrix();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
-  //! Fill the vector 'v' with the content of the i-th row.
-  //! v is assumed to be the right size.
-  virtual void getNewRow(int i, const Vec& v) const;
+    //! Fill the vector 'v' with the content of the i-th row.
+    //! v is assumed to be the right size.
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  // Simply calls inherited::build() then build_().
-  virtual void build();
+    // Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(ViewSplitterVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(ViewSplitterVMatrix);
 
 };
 
@@ -123,3 +123,16 @@ DECLARE_OBJECT_PTR(ViewSplitterVMatrix);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

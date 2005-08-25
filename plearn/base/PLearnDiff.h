@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
-   ******************************************************* */
+ * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -56,67 +56,67 @@ class PLearnDiff: public Object
 
 private:
   
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  TMat<string> diffs;
+    TMat<string> diffs;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  PLearnDiff();
+    //! Default constructor.
+    PLearnDiff();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(PLearnDiff);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(PLearnDiff);
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! If 'refer' != 'other' return 1 and add the difference 'name' with the
-  //! corresponding reference and other values.
-  //! Otherwise, do nothing and just return 0.
-  int diff(const string& refer, const string& other, const string& name);
+    //! If 'refer' != 'other' return 1 and add the difference 'name' with the
+    //! corresponding reference and other values.
+    //! Otherwise, do nothing and just return 0.
+    int diff(const string& refer, const string& other, const string& name);
 
-  //! Empty the 'diffs' matrix.
-  void forget();
+    //! Empty the 'diffs' matrix.
+    void forget();
 
-  //! Add 'prefix' in front of the last 'n' difference names in 'diffs'.
-  void addDiffPrefix(const string& prefix, int n);
+    //! Add 'prefix' in front of the last 'n' difference names in 'diffs'.
+    void addDiffPrefix(const string& prefix, int n);
 
-  //! Display the differences that were found.
-  void printDiffs(PStream& out = pout);
+    //! Display the differences that were found.
+    void printDiffs(PStream& out = pout);
 
-  //! Return the number of differences found.
-  int nDiffs() { return diffs.length(); }
+    //! Return the number of differences found.
+    int nDiffs() { return diffs.length(); }
 
 };
 
@@ -134,3 +134,16 @@ int diff(PLearnDiff* diffs, const string& refer, const string& other, const stri
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

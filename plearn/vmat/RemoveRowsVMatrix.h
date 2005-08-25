@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: RemoveRowsVMatrix.h,v 1.4 2004/04/05 23:02:40 morinf Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -54,14 +54,14 @@ class RemoveRowsVMatrix: public VMatrix
 {
     typedef VMatrix inherited;
 
-  protected:
+protected:
     VMat distr;
     Vec indices;
 
     //!  returns the row number in distr corresponding to i in this VMat
     int getrownum(int i) const; 
 
-  public:
+public:
     virtual void reset_dimensions() { distr->reset_dimensions(); width_=distr->width(); }
 
     // ******************
@@ -80,20 +80,20 @@ class RemoveRowsVMatrix: public VMatrix
     //!  the given rownum of the underlying distr will also be excluded
     void remove(int rownum)
     { 
-      indices.insertSorted(rownum,true); 
-      length_--;
+        indices.insertSorted(rownum,true); 
+        length_--;
     }
 
-  void unremove(int rownum)
-  {
-    indices.removeSorted(rownum);
-    length_++;
-  }
+    void unremove(int rownum)
+    {
+        indices.removeSorted(rownum);
+        length_++;
+    }
 
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
-  virtual real dot(int i1, int i2, int inputsize) const;
-  virtual real dot(int i, const Vec& v) const;
+    virtual real get(int i, int j) const;
+    virtual void getSubRow(int i, int j, Vec v) const;
+    virtual real dot(int i1, int i2, int inputsize) const;
+    virtual real dot(int i, const Vec& v) const;
 
 private:
     void build_();
@@ -109,3 +109,16 @@ DECLARE_OBJECT_PTR(RemoveRowsVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

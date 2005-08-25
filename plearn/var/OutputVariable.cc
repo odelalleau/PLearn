@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: OutputVariable.cc,v 1.1 2004/10/01 19:42:52 mariusmuja Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "OutputVariable.h"
 #include "Var_operators.h"
@@ -51,10 +51,10 @@ using namespace std;
 /** OutputVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(OutputVariable, "Output var contents to a file.", 
-                                        "Just writes the var contents to a file.\n");
+                        "Just writes the var contents to a file.\n");
 
 OutputVariable::OutputVariable(Variable* input, char* filename)
-  : inherited(input, input->length(),input->width()) 
+    : inherited(input, input->length(),input->width()) 
 {
     output_file = new ofstream(filename);
 }
@@ -107,4 +107,15 @@ void OutputVariable::rfprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

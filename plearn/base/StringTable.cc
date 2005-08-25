@@ -41,57 +41,57 @@ using namespace std;
 
 ostream& operator<<(ostream& out,const StringTable& st)
 {
-  // find out width of each columns
-  TVec<size_t> colsiz(st.width(),(size_t)0);
-  for(int j=0;j<st.length();j++)
+    // find out width of each columns
+    TVec<size_t> colsiz(st.width(),(size_t)0);
+    for(int j=0;j<st.length();j++)
     {
-      TVec<string> row=st.data(j);      
-      for(int i=0;i<st.width();i++)
-        if((size_t)row[i].length() > colsiz[i])
-          colsiz[i]=(size_t)row[i].length();
+        TVec<string> row=st.data(j);      
+        for(int i=0;i<st.width();i++)
+            if((size_t)row[i].length() > colsiz[i])
+                colsiz[i]=(size_t)row[i].length();
     }
-  for(int i=0;i<st.width();i++)
-    if(st.fieldnames[i].length() > colsiz[i])
-      colsiz[i]=(size_t)st.fieldnames[i].length();
+    for(int i=0;i<st.width();i++)
+        if(st.fieldnames[i].length() > colsiz[i])
+            colsiz[i]=(size_t)st.fieldnames[i].length();
 
-  out<<"#: "; 
-  for(int i=0;i<st.width();i++)
-    out<<left(st.fieldnames[i],colsiz[i]+3);    
-  out<<"\n";
+    out<<"#: "; 
+    for(int i=0;i<st.width();i++)
+        out<<left(st.fieldnames[i],colsiz[i]+3);    
+    out<<"\n";
 
     for(int j=0;j<st.length();j++)
     {
-      TVec<string> row=st.data(j);      
-      out<<"   ";
-      for(int i=0;i<st.width();i++)
-        out<<left(row[i],colsiz[i])<<";";
-      out<<"\n";
+        TVec<string> row=st.data(j);      
+        out<<"   ";
+        for(int i=0;i<st.width();i++)
+            out<<left(row[i],colsiz[i])<<";";
+        out<<"\n";
     }
 
-  return out;
+    return out;
 
 }
 
 void StringTable::appendRow(const list<pair<string,string> > &row)
 {
-  vector<string> vec;
-  data.resize(data.length()+1,data.width());
-  int rownum=data.length()-1;
-  for(list<pair<string,string> >::const_iterator it=row.begin();it!=row.end();++it)
+    vector<string> vec;
+    data.resize(data.length()+1,data.width());
+    int rownum=data.length()-1;
+    for(list<pair<string,string> >::const_iterator it=row.begin();it!=row.end();++it)
     {
-      int colnum;
-      map<string,int>::iterator revit=rev_fn.find(it->first);
-      if(revit==rev_fn.end())
+        int colnum;
+        map<string,int>::iterator revit=rev_fn.find(it->first);
+        if(revit==rev_fn.end())
         {
-          colnum=data.width();
-          TMat<string> tmp(data.length(),colnum+1);
-          tmp.subMatColumns(0,colnum)<<data;
-          data=tmp;
-          rev_fn[it->first]=colnum;
-          fieldnames.push_back(it->first);;
+            colnum=data.width();
+            TMat<string> tmp(data.length(),colnum+1);
+            tmp.subMatColumns(0,colnum)<<data;
+            data=tmp;
+            rev_fn[it->first]=colnum;
+            fieldnames.push_back(it->first);;
         }
-      else colnum=rev_fn[it->first];
-      data(rownum,colnum)=it->second;      
+        else colnum=rev_fn[it->first];
+        data(rownum,colnum)=it->second;      
     }
 }
 
@@ -101,14 +101,14 @@ void StringTable::appendRow(const list<pair<string,string> > &row)
 // ** Note : Do not use if the Table has more than 1 row (because resize won't work)
 void StringTable::declareFields(const list<pair<string,string> > & row)
 {
-  for(list<pair<string,string> >::const_iterator it=row.begin();it!=row.end();++it)
+    for(list<pair<string,string> >::const_iterator it=row.begin();it!=row.end();++it)
     {
-      map<string,int>::iterator revit=rev_fn.find(it->first);
-      if(revit==rev_fn.end())
+        map<string,int>::iterator revit=rev_fn.find(it->first);
+        if(revit==rev_fn.end())
         {
-          data.resize(data.length(),data.width()+1);
-          rev_fn[it->first]=data.width()-1;
-          fieldnames.push_back(it->first);;
+            data.resize(data.length(),data.width()+1);
+            rev_fn[it->first]=data.width()-1;
+            fieldnames.push_back(it->first);;
         }
     }
 }
@@ -117,43 +117,56 @@ StringTable::StringTable(){}
 
 StringTable::StringTable(const string & filename)
 {
-  int nrows= countNonBlankLinesOfFile(filename);
-  string str;
-  ifstream in(filename.c_str());
-  in.ignore(2);
-  if(in.peek()==' ')
-    in.ignore(1);
-  getline(in,str);
-  fieldnames=split(str);
-  data.resize(nrows, (int)fieldnames.size());
-  int rnum=0;
-  getline(in,str);
-  while(removeblanks(str)!="")
+    int nrows= countNonBlankLinesOfFile(filename);
+    string str;
+    ifstream in(filename.c_str());
+    in.ignore(2);
+    if(in.peek()==' ')
+        in.ignore(1);
+    getline(in,str);
+    fieldnames=split(str);
+    data.resize(nrows, (int)fieldnames.size());
+    int rnum=0;
+    getline(in,str);
+    while(removeblanks(str)!="")
     {
 /*
-      vector<string> line;
-      size_t pos,lpos=0;
-      while((pos=str.find(";",lpos))!=string::npos)
-      {
-        line.push_back(str.substr(lpos,pos-lpos));
-        lpos=pos+1;
-      }
-      line.push_back(str.substr(lpos,str.size()-lpos));
-      if(line.size()!=fieldnames.size())
-        PLERROR("in row %i : elements (%i)  mismatch number of fields (%i)",rnum,line.size(),fieldnames.size());
+  vector<string> line;
+  size_t pos,lpos=0;
+  while((pos=str.find(";",lpos))!=string::npos)
+  {
+  line.push_back(str.substr(lpos,pos-lpos));
+  lpos=pos+1;
+  }
+  line.push_back(str.substr(lpos,str.size()-lpos));
+  if(line.size()!=fieldnames.size())
+  PLERROR("in row %i : elements (%i)  mismatch number of fields (%i)",rnum,line.size(),fieldnames.size());
 */
-      vector<string> line=split(str,";");  
-      //line.pop_back(); // last string found is garbage *** NO, not true...!
-      if(line.size()!=fieldnames.size())
-        PLERROR("in row %i : elements (%i)  mismatch number of fields (%i)",rnum,line.size(),fieldnames.size());
+        vector<string> line=split(str,";");  
+        //line.pop_back(); // last string found is garbage *** NO, not true...!
+        if(line.size()!=fieldnames.size())
+            PLERROR("in row %i : elements (%i)  mismatch number of fields (%i)",rnum,line.size(),fieldnames.size());
 
-      for(unsigned int i= 0; i < line.size(); ++i)
-        data(rnum,i)= line[i];
-      ++rnum;
-      getline(in,str);
+        for(unsigned int i= 0; i < line.size(); ++i)
+            data(rnum,i)= line[i];
+        ++rnum;
+        getline(in,str);
     }
-  data.resize(rnum, (int)fieldnames.size());
+    data.resize(rnum, (int)fieldnames.size());
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

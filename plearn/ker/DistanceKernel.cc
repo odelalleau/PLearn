@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "DistanceKernel.h"
 #include "SelectedOutputCostFunction.h"
@@ -48,21 +48,21 @@ using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(
-  DistanceKernel,
-  "Implements an Ln distance (defaults to L2 i.e. euclidean distance).",
-  "Output is as follows:\n"
-  "- If option 'pow_distance' = 1,\n"
-  "     k(x1,x2) = \\sum_i |x1[i]-x2[i]|^n\n"
-  "- If option 'pow_distance' = 0,\n"
-  "     k(x1,x2) = (\\sum_i |x1[i]-x2[i]|^2)^(1/n)");
+    DistanceKernel,
+    "Implements an Ln distance (defaults to L2 i.e. euclidean distance).",
+    "Output is as follows:\n"
+    "- If option 'pow_distance' = 1,\n"
+    "     k(x1,x2) = \\sum_i |x1[i]-x2[i]|^n\n"
+    "- If option 'pow_distance' = 0,\n"
+    "     k(x1,x2) = (\\sum_i |x1[i]-x2[i]|^2)^(1/n)");
 
 ////////////////////
 // DistanceKernel //
 ////////////////////
 DistanceKernel::DistanceKernel(real the_Ln, bool pd)
-: n(the_Ln),
-  optimized(false),
-  pow_distance(pd)
+    : n(the_Ln),
+      optimized(false),
+      pow_distance(pd)
 {}
 
 ////////////////////
@@ -71,58 +71,58 @@ DistanceKernel::DistanceKernel(real the_Ln, bool pd)
 void DistanceKernel::declareOptions(OptionList& ol)
 {
 
-  declareOption(ol, "n", &DistanceKernel::n, OptionBase::buildoption, 
-      "This class implements a Ln distance (L2, the default is the usual euclidean distance).");
+    declareOption(ol, "n", &DistanceKernel::n, OptionBase::buildoption, 
+                  "This class implements a Ln distance (L2, the default is the usual euclidean distance).");
 
-  declareOption(ol, "pow_distance", &DistanceKernel::pow_distance, OptionBase::buildoption, 
-      "If set to 1, the distance computed will be elevated to power n.");
+    declareOption(ol, "pow_distance", &DistanceKernel::pow_distance, OptionBase::buildoption, 
+                  "If set to 1, the distance computed will be elevated to power n.");
 
-  declareOption(ol, "optimized", &DistanceKernel::optimized, OptionBase::buildoption, 
-      "If set to 1, the evaluate_i_j method will be faster, at the cost of potential\n"
-      "approximations in the result.");
+    declareOption(ol, "optimized", &DistanceKernel::optimized, OptionBase::buildoption, 
+                  "If set to 1, the evaluate_i_j method will be faster, at the cost of potential\n"
+                  "approximations in the result.");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 //////////////
 // evaluate //
 //////////////
 real DistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
-  if (pow_distance) {
-    return powdistance(x1, x2, n);
-  } else {
-    return dist(x1, x2, n);
-  }
+    if (pow_distance) {
+        return powdistance(x1, x2, n);
+    } else {
+        return dist(x1, x2, n);
+    }
 }
 
 //////////////////
 // evaluate_i_j //
 //////////////////
 real DistanceKernel::evaluate_i_j(int i, int j) const {
-  static real d;
-  if (optimized && n == 2.0) {
-    if (i == j)
-      // The case 'i == j' can cause precision issues because of the optimized
-      // formula below. Thus we make sure we always return 0.
-      return 0;
-    d = squarednorms[i] + squarednorms[j] - 2 * data->dot(i, j, data_inputsize);
-    if (d < 0) {
-      // This can happen (especially when compiled in -opt) if the two points
-      // are the same, and the distance should be zero.
-      if (d < -1e-2)
-        // That should not happen.
-        PLERROR("In DistanceKernel::evaluate_i_j - Found a (significantly) negative distance (%f), "
-            "i = %d, j = %d, squarednorms[i] = %f, squarednorms[j] = %f, dot = %f",
-            d, i, j, squarednorms[i], squarednorms[j], data->dot(i, j, data_inputsize));
-      d = 0;
+    static real d;
+    if (optimized && n == 2.0) {
+        if (i == j)
+            // The case 'i == j' can cause precision issues because of the optimized
+            // formula below. Thus we make sure we always return 0.
+            return 0;
+        d = squarednorms[i] + squarednorms[j] - 2 * data->dot(i, j, data_inputsize);
+        if (d < 0) {
+            // This can happen (especially when compiled in -opt) if the two points
+            // are the same, and the distance should be zero.
+            if (d < -1e-2)
+                // That should not happen.
+                PLERROR("In DistanceKernel::evaluate_i_j - Found a (significantly) negative distance (%f), "
+                        "i = %d, j = %d, squarednorms[i] = %f, squarednorms[j] = %f, dot = %f",
+                        d, i, j, squarednorms[i], squarednorms[j], data->dot(i, j, data_inputsize));
+            d = 0;
+        }
+        if (pow_distance)
+            return d;
+        else
+            return sqrt(d);
+    } else {
+        return inherited::evaluate_i_j(i,j);
     }
-    if (pow_distance)
-      return d;
-    else
-      return sqrt(d);
-  } else {
-    return inherited::evaluate_i_j(i,j);
-  }
 }
 
 ////////////////////////////
@@ -130,13 +130,13 @@ real DistanceKernel::evaluate_i_j(int i, int j) const {
 ////////////////////////////
 void DistanceKernel::setDataForKernelMatrix(VMat the_data)
 {
-  inherited::setDataForKernelMatrix(the_data);
-  if (n == 2.0) {
-    squarednorms.resize(data.length());
-    for(int index=0; index<data.length(); index++) {
-      squarednorms[index] = data->dot(index, index, data_inputsize);
+    inherited::setDataForKernelMatrix(the_data);
+    if (n == 2.0) {
+        squarednorms.resize(data.length());
+        for(int index=0; index<data.length(); index++) {
+            squarednorms[index] = data->dot(index, index, data_inputsize);
+        }
     }
-  }
 }
 
 ////////////////////////
@@ -144,11 +144,23 @@ void DistanceKernel::setDataForKernelMatrix(VMat the_data)
 ////////////////////////
 CostFunc absolute_deviation(int singleoutputindex)
 { 
-  if(singleoutputindex>=0)
-    return new SelectedOutputCostFunction(new DistanceKernel(1.0),singleoutputindex); 
-  else
-    return new DistanceKernel(1.0); 
+    if(singleoutputindex>=0)
+        return new SelectedOutputCostFunction(new DistanceKernel(1.0),singleoutputindex); 
+    else
+        return new DistanceKernel(1.0); 
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

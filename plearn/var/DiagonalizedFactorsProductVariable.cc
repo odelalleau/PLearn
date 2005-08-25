@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DiagonalizedFactorsProductVariable.cc,v 1.1 2004/07/19 22:31:11 yoshua Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "DiagonalizedFactorsProductVariable.h"
 #include "Var_utils.h"
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(DiagonalizedFactorsProductVariable,
                         "The three parents are respectively the left matrix U, the center vector d,\n"
                         "and the right matrix V. Options allow to transpose the matrices.\n"
                         "The output value has elements (i,j) equal to sum_k U_{ik} d_k V_{kj}\n"
-                        );
+    );
 
 DiagonalizedFactorsProductVariable::DiagonalizedFactorsProductVariable(Var left_matrix, 
                                                                        Var center_diagonal, 
@@ -80,92 +80,103 @@ void
 DiagonalizedFactorsProductVariable::build_()
 {
     if (varray.size()) {
-      int nl = transpose_left?leftMatrix()->length():leftMatrix()->width();
-      int nr = transpose_right?rightMatrix()->width():rightMatrix()->length();
-      int nc = centerDiagonal()->size();
-      if (nl != nc || nr != nc)
-        PLERROR("In DiagonalizedFactorsProductVariable: arguments have incompatible sizes!");
+        int nl = transpose_left?leftMatrix()->length():leftMatrix()->width();
+        int nr = transpose_right?rightMatrix()->width():rightMatrix()->length();
+        int nc = centerDiagonal()->size();
+        if (nl != nc || nr != nc)
+            PLERROR("In DiagonalizedFactorsProductVariable: arguments have incompatible sizes!");
     }
 }
 
 void DiagonalizedFactorsProductVariable::recomputeSize(int& l, int& w) const
 {
     if (varray.size()) {
-      l = transpose_left?varray[0]->width():varray[0]->length();
-      w = transpose_right?varray[2]->length():varray[2]->width();
+        l = transpose_left?varray[0]->width():varray[0]->length();
+        w = transpose_right?varray[2]->length():varray[2]->width();
     } else
-      l = w = 0;
+        l = w = 0;
 }
 
 void DiagonalizedFactorsProductVariable::fprop()
 {
-  if (transpose_left)
+    if (transpose_left)
     {
-      if (transpose_right)
-        diagonalizedFactorsTransposeProductTranspose(matValue,leftMatrix()->matValue,centerDiagonal()->value,rightMatrix()->matValue);
-      else
-        diagonalizedFactorsTransposeProduct(matValue,leftMatrix()->matValue,centerDiagonal()->value,rightMatrix()->matValue);
+        if (transpose_right)
+            diagonalizedFactorsTransposeProductTranspose(matValue,leftMatrix()->matValue,centerDiagonal()->value,rightMatrix()->matValue);
+        else
+            diagonalizedFactorsTransposeProduct(matValue,leftMatrix()->matValue,centerDiagonal()->value,rightMatrix()->matValue);
     } else {
-      if (transpose_right)
-        diagonalizedFactorsProductTranspose(matValue,leftMatrix()->matValue,centerDiagonal()->value,rightMatrix()->matValue);
-      else
-        diagonalizedFactorsProduct(matValue,leftMatrix()->matValue,centerDiagonal()->value,rightMatrix()->matValue);
+        if (transpose_right)
+            diagonalizedFactorsProductTranspose(matValue,leftMatrix()->matValue,centerDiagonal()->value,rightMatrix()->matValue);
+        else
+            diagonalizedFactorsProduct(matValue,leftMatrix()->matValue,centerDiagonal()->value,rightMatrix()->matValue);
     }
 }
 
 
 void DiagonalizedFactorsProductVariable::bprop()
 {
-  if (transpose_left)
-  {
-    if (transpose_right)
+    if (transpose_left)
     {
-      // SINCE res[i,j] = sum_k U[k,i] d[k] V[j,k] ==>
-      // dC/dU[k,i] = d_k * sum_j dC/dres[i,j] V[j,k]
-      // dC/dd[k] = sum_{ij} dC/dres[i,j] U[k,i] V[j,k]
-      // dC/dV[j,k] = d_k * sum_i dC/dres[i,j] U[k,i]
-      diagonalizedFactorsTransposeProductTransposeBprop(matGradient,leftMatrix()->matValue,
-                                                        centerDiagonal()->value,rightMatrix()->matValue,
-                                                        leftMatrix()->matGradient,
-                                                        centerDiagonal()->gradient,rightMatrix()->matGradient); 
-    }
-    else
+        if (transpose_right)
+        {
+            // SINCE res[i,j] = sum_k U[k,i] d[k] V[j,k] ==>
+            // dC/dU[k,i] = d_k * sum_j dC/dres[i,j] V[j,k]
+            // dC/dd[k] = sum_{ij} dC/dres[i,j] U[k,i] V[j,k]
+            // dC/dV[j,k] = d_k * sum_i dC/dres[i,j] U[k,i]
+            diagonalizedFactorsTransposeProductTransposeBprop(matGradient,leftMatrix()->matValue,
+                                                              centerDiagonal()->value,rightMatrix()->matValue,
+                                                              leftMatrix()->matGradient,
+                                                              centerDiagonal()->gradient,rightMatrix()->matGradient); 
+        }
+        else
+        {
+            // SINCE res[i,j] = sum_k U[k,i] d[k] V[k,j] ==>
+            // dC/dU[k,i] = d_k * sum_j dC/dres[i,j] V[k,j]
+            // dC/dd[k] = sum_{ij} dC/dres[i,j] U[k,i] V[k,j]
+            // dC/dV[k,j] = d_k sum_i dC/dres[i,j] U[k,i]
+            diagonalizedFactorsTransposeProductBprop(matGradient,leftMatrix()->matValue,centerDiagonal()->value,
+                                                     rightMatrix()->matValue, leftMatrix()->matGradient,
+                                                     centerDiagonal()->gradient,rightMatrix()->matGradient); 
+        }
+    } 
+    else 
     {
-      // SINCE res[i,j] = sum_k U[k,i] d[k] V[k,j] ==>
-      // dC/dU[k,i] = d_k * sum_j dC/dres[i,j] V[k,j]
-      // dC/dd[k] = sum_{ij} dC/dres[i,j] U[k,i] V[k,j]
-      // dC/dV[k,j] = d_k sum_i dC/dres[i,j] U[k,i]
-      diagonalizedFactorsTransposeProductBprop(matGradient,leftMatrix()->matValue,centerDiagonal()->value,
-                                               rightMatrix()->matValue, leftMatrix()->matGradient,
-                                               centerDiagonal()->gradient,rightMatrix()->matGradient); 
+        if (transpose_right)
+        {
+            // SINCE res[i,j] = sum_k U[i,k] d[k] V[j,k] ==>
+            // dC/dU[i,k] = sum_j dC/dres[i,j] d_k V[j,k]
+            // dC/dd[k] = sum_{ij} dC/dres[i,j] U[i,k] V[j,k]
+            // dC/dV[j,k] = sum_i dC/dres[i,j] d_k U[i,k]
+            diagonalizedFactorsProductTransposeBprop(matGradient,leftMatrix()->matValue,centerDiagonal()->value,
+                                                     rightMatrix()->matValue, leftMatrix()->matGradient,
+                                                     centerDiagonal()->gradient,rightMatrix()->matGradient); 
+        }
+        else
+        {    
+            // SINCE res[i,j] = sum_k U[i,k] d[k] V[k,j] ==>
+            // dC/dU[i,k] += sum_j dC/dres[i,j] d_k V[k,j]
+            // dC/dd[k] += sum_{ij} dC/dres[i,j] U[i,k] V[k,j]
+            // dC/dV[k,j] += d_k * sum_i U[i,k] dC/dres[i,j] 
+            diagonalizedFactorsProductBprop(matGradient,leftMatrix()->matValue,centerDiagonal()->value,
+                                            rightMatrix()->matValue,leftMatrix()->matGradient,
+                                            centerDiagonal()->gradient,rightMatrix()->matGradient);
+        }  
     }
-  } 
-  else 
-  {
-    if (transpose_right)
-    {
-      // SINCE res[i,j] = sum_k U[i,k] d[k] V[j,k] ==>
-      // dC/dU[i,k] = sum_j dC/dres[i,j] d_k V[j,k]
-      // dC/dd[k] = sum_{ij} dC/dres[i,j] U[i,k] V[j,k]
-      // dC/dV[j,k] = sum_i dC/dres[i,j] d_k U[i,k]
-      diagonalizedFactorsProductTransposeBprop(matGradient,leftMatrix()->matValue,centerDiagonal()->value,
-                                               rightMatrix()->matValue, leftMatrix()->matGradient,
-                                               centerDiagonal()->gradient,rightMatrix()->matGradient); 
-    }
-    else
-    {    
-      // SINCE res[i,j] = sum_k U[i,k] d[k] V[k,j] ==>
-      // dC/dU[i,k] += sum_j dC/dres[i,j] d_k V[k,j]
-      // dC/dd[k] += sum_{ij} dC/dres[i,j] U[i,k] V[k,j]
-      // dC/dV[k,j] += d_k * sum_i U[i,k] dC/dres[i,j] 
-      diagonalizedFactorsProductBprop(matGradient,leftMatrix()->matValue,centerDiagonal()->value,
-                                      rightMatrix()->matValue,leftMatrix()->matGradient,
-                                      centerDiagonal()->gradient,rightMatrix()->matGradient);
-    }  
-  }
 }
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

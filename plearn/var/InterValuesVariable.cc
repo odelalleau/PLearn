@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: InterValuesVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ConcatRowsVariable.h"
 #include "InterValuesVariable.h"
@@ -58,7 +58,7 @@ PLEARN_IMPLEMENT_OBJECT(InterValuesVariable,
                         "NO HELP");
 
 InterValuesVariable::InterValuesVariable(Variable* values) 
-  : inherited(values,values->length()-1,1) 
+    : inherited(values,values->length()-1,1) 
 {
     build_();
 }
@@ -90,39 +90,50 @@ void InterValuesVariable::recomputeSize(int& l, int& w) const
 
 void InterValuesVariable::fprop()
 {
-  real prev_x = input->valuedata[0];
-  for (int i=0;i<nelems();i++)
+    real prev_x = input->valuedata[0];
+    for (int i=0;i<nelems();i++)
     {
-      real next_x = input->valuedata[i+1];
-      valuedata[i] = 0.5 * (prev_x + next_x);
-      prev_x = next_x;
+        real next_x = input->valuedata[i+1];
+        valuedata[i] = 0.5 * (prev_x + next_x);
+        prev_x = next_x;
     }
 }
 
 
 void InterValuesVariable::bprop()
 {
-  real* prev_dx = &input->gradientdata[0];
-  for (int i=0;i<nelems();i++)
+    real* prev_dx = &input->gradientdata[0];
+    for (int i=0;i<nelems();i++)
     {
-      real* next_dx = &input->gradientdata[i+1];
-      *prev_dx += 0.5 * gradientdata[i];
-      *next_dx += 0.5 * gradientdata[i];
-      prev_dx = next_dx;
+        real* next_dx = &input->gradientdata[i+1];
+        *prev_dx += 0.5 * gradientdata[i];
+        *next_dx += 0.5 * gradientdata[i];
+        prev_dx = next_dx;
     }
 }
 
 
 void InterValuesVariable::symbolicBprop()
 {
-  Var zero(1);
-  Var g1 = new InterValuesVariable(vconcat(zero & g & (VarArray)zero));
+    Var zero(1);
+    Var g1 = new InterValuesVariable(vconcat(zero & g & (VarArray)zero));
 
-  input->accg(g1);
+    input->accg(g1);
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

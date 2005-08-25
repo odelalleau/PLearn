@@ -37,9 +37,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "MarginPerceptronCostVariable.h"
 
@@ -49,21 +49,21 @@ using namespace std;
 /** MarginPerceptronCostVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(
-  MarginPerceptronCostVariable,
-  "Compute sigmoid of its first input, and then computes the negative "
-  "cross-entropy cost",
-  "NO HELP");
+    MarginPerceptronCostVariable,
+    "Compute sigmoid of its first input, and then computes the negative "
+    "cross-entropy cost",
+    "NO HELP");
 
 ////////////////////////////////////
 // MarginPerceptronCostVariable //
 ////////////////////////////////////
 
 MarginPerceptronCostVariable::MarginPerceptronCostVariable()
-  : margin(0.)
+    : margin(0.)
 { }
   
 MarginPerceptronCostVariable::MarginPerceptronCostVariable(Variable* output, Variable* target, real m)
-  : inherited(output,target,1,1),margin(m)
+    : inherited(output,target,1,1),margin(m)
 {
     build_();
 }
@@ -101,17 +101,17 @@ void MarginPerceptronCostVariable::recomputeSize(int& l, int& w) const
 ///////////
 void MarginPerceptronCostVariable::fprop()
 {
-  real cost = 0.0;
-  int target = int(input2->valuedata[0]);
-  for (int i=0; i<input1->size(); i++)
-  {
-    real output = input1->valuedata[i];
-    int signed_target = input1->size()==1?target*2-1:(target==i) - (target!=i);
-    real diff = margin - signed_target * output;
-    if (diff>0)
-      cost += diff;
-  }
-  valuedata[0] = cost;
+    real cost = 0.0;
+    int target = int(input2->valuedata[0]);
+    for (int i=0; i<input1->size(); i++)
+    {
+        real output = input1->valuedata[i];
+        int signed_target = input1->size()==1?target*2-1:(target==i) - (target!=i);
+        real diff = margin - signed_target * output;
+        if (diff>0)
+            cost += diff;
+    }
+    valuedata[0] = cost;
 }
 
 ///////////
@@ -119,16 +119,29 @@ void MarginPerceptronCostVariable::fprop()
 ///////////
 void MarginPerceptronCostVariable::bprop()
 {
-  real gr = *gradientdata;
-  int target = int(input2->valuedata[0]);
-  for (int i=0; i<input1->size(); i++)
-  {
-    real output = input1->valuedata[i];
-    int signed_target = input1->size()==1?target*2-1:(target==i) - (target!=i);
-    real diff = margin - signed_target * output;
-    if (diff>0)
-      input1->gradientdata[i] -= gr*signed_target;
-  }
+    real gr = *gradientdata;
+    int target = int(input2->valuedata[0]);
+    for (int i=0; i<input1->size(); i++)
+    {
+        real output = input1->valuedata[i];
+        int signed_target = input1->size()==1?target*2-1:(target==i) - (target!=i);
+        real diff = margin - signed_target * output;
+        if (diff>0)
+            input1->gradientdata[i] -= gr*signed_target;
+    }
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

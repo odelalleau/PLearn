@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BinaryBallTree.cc,v 1.1 2005/03/04 21:01:58 lamblin Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Lamblin
 
@@ -47,8 +47,8 @@ namespace PLearn {
 using namespace std;
 
 BinaryBallTree::BinaryBallTree() 
-: pivot( Vec() ),
-  radius( 0 )
+    : pivot( Vec() ),
+      radius( 0 )
 {}
 
 PLEARN_IMPLEMENT_OBJECT( BinaryBallTree,
@@ -60,81 +60,94 @@ PLEARN_IMPLEMENT_OBJECT( BinaryBallTree,
 
 void BinaryBallTree::declareOptions( OptionList& ol )
 {
-  declareOption( ol, "pivot", &BinaryBallTree::pivot, OptionBase::buildoption,
-                "Center of the ball" );
+    declareOption( ol, "pivot", &BinaryBallTree::pivot, OptionBase::buildoption,
+                   "Center of the ball" );
 
-  declareOption(ol, "radius", &BinaryBallTree::radius, OptionBase::buildoption,
-                "Radius of the ball" );
+    declareOption(ol, "radius", &BinaryBallTree::radius, OptionBase::buildoption,
+                  "Radius of the ball" );
 
-  declareOption(ol, "point_set", &BinaryBallTree::point_set, OptionBase::buildoption,
-                "List of indices of the points owned by this node (leaf only)" );
+    declareOption(ol, "point_set", &BinaryBallTree::point_set, OptionBase::buildoption,
+                  "List of indices of the points owned by this node (leaf only)" );
 
-  declareOption(ol, "child1", &BinaryBallTree::child1, OptionBase::tuningoption,
-                "Pointer to first child (non-leaf only)" );
+    declareOption(ol, "child1", &BinaryBallTree::child1, OptionBase::tuningoption,
+                  "Pointer to first child (non-leaf only)" );
 
-  declareOption(ol, "child2", &BinaryBallTree::child2, OptionBase::tuningoption,
-                "Pointer to second child (non-leaf only)" );
+    declareOption(ol, "child2", &BinaryBallTree::child2, OptionBase::tuningoption,
+                  "Pointer to second child (non-leaf only)" );
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void BinaryBallTree::build_()
 {
-  if( child1 )
-  { child1->parent = this; }
+    if( child1 )
+    { child1->parent = this; }
 
-  if( child2 )
-  { child2->parent = this; }
+    if( child2 )
+    { child2->parent = this; }
 }
 
 void BinaryBallTree::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void BinaryBallTree::setFirstChild( const BinBallTree& first_child )
 {
-  this->child1 = first_child;
-  if( first_child )
-  {
-    first_child->parent = this;
-  }
+    this->child1 = first_child;
+    if( first_child )
+    {
+        first_child->parent = this;
+    }
 }
 
 void BinaryBallTree::setSecondChild( const BinBallTree& second_child )
 {
-  this->child2 = second_child;
-  if( second_child )
-  {
-    second_child->parent = this;
-  }
+    this->child2 = second_child;
+    if( second_child )
+    {
+        second_child->parent = this;
+    }
 }
 
 BinBallTree BinaryBallTree::getFirstChild()
 {
-  return this->child1;
+    return this->child1;
 }
 
 BinBallTree BinaryBallTree::getSecondChild()
 {
-  return this->child2;
+    return this->child2;
 }
 
 BinaryBallTree* BinaryBallTree::getParent()
 {
-  return this->parent;
+    return this->parent;
 }
 
 void BinaryBallTree::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  deepCopyField( child1, copies );
-  deepCopyField( child2, copies );
-  deepCopyField( pivot, copies );
-  deepCopyField( point_set, copies );
+    deepCopyField( child1, copies );
+    deepCopyField( child2, copies );
+    deepCopyField( pivot, copies );
+    deepCopyField( point_set, copies );
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

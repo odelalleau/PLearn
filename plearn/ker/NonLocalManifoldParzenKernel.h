@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzenKernel.h,v 1.2 2005/05/13 20:47:00 larocheh Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef NonLocalManifoldParzenKernel_INC
 #define NonLocalManifoldParzenKernel_INC
@@ -52,20 +52,20 @@ using namespace std;
 
 
 /*!   Kernel that uses the evaluate method of Non-Local Manifold Parzen
-*/
+ */
 class NonLocalManifoldParzenKernel: public Kernel
 {
     typedef Kernel inherited;
     
- public:
-  //! Scale factor on the eigen values
-  real scale;
+public:
+    //! Scale factor on the eigen values
+    real scale;
   
-  //! NonLocalManifoldParzen distribution
-  PP<NonLocalManifoldParzen> mp;
+    //! NonLocalManifoldParzen distribution
+    PP<NonLocalManifoldParzen> mp;
   
-  //! Indication that the NonLocalManifoldParzen distribution should be trained
-  bool train_mp;
+    //! Indication that the NonLocalManifoldParzen distribution should be trained
+    bool train_mp;
 
     NonLocalManifoldParzenKernel()
         : inherited(true),scale(1.0), mp(0), train_mp(false){}
@@ -86,3 +86,15 @@ DECLARE_OBJECT_PTR(NonLocalManifoldParzenKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

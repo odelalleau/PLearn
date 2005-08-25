@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixSoftmaxVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "MatrixSoftmaxVariable.h"
 
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(MatrixSoftmaxVariable,
                         "NO HELP");
 
 MatrixSoftmaxVariable::MatrixSoftmaxVariable(Variable* input) 
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 void MatrixSoftmaxVariable::recomputeSize(int& l, int& w) const
@@ -68,60 +68,71 @@ void MatrixSoftmaxVariable::recomputeSize(int& l, int& w) const
 
 void MatrixSoftmaxVariable::fprop()
 {
-  Vec column_max(width());
-  columnMax(input->matValue, column_max);
+    Vec column_max(width());
+    columnMax(input->matValue, column_max);
 
-  for(int j=0; j<input->width(); j++)
+    for(int j=0; j<input->width(); j++)
     {
-    real s = 0;
-    real curmax = column_max[j];
-    for(int i=0; i<input->length(); i++)      
-      s += (matValue[i][j] = safeexp(input->matValue[i][j]-curmax));
-    if (s == 0) PLERROR("trying to divide by 0 in softmax");
-    s = 1.0 / s;
-    for(int i=0; i<input->length(); i++)
-      matValue[i][j] *= s;
+        real s = 0;
+        real curmax = column_max[j];
+        for(int i=0; i<input->length(); i++)      
+            s += (matValue[i][j] = safeexp(input->matValue[i][j]-curmax));
+        if (s == 0) PLERROR("trying to divide by 0 in softmax");
+        s = 1.0 / s;
+        for(int i=0; i<input->length(); i++)
+            matValue[i][j] *= s;
     }
 }
 
 
 void MatrixSoftmaxVariable::bprop()
 {
-  for(int i=0; i<input->width(); i++)
-    for(int j=0; j<input->length(); j++)
-      {
-       real vali = matValue[j][i];
-       for(int k=0; k<length(); k++)
-         {
-          if(k!=j)
-            input->matGradient[j][i] -= matGradient[k][i]*vali*matValue[k][i];
-          else
-            input->matGradient[j][i] += matGradient[j][i]*vali*(1.-vali);
-         }
-       }
+    for(int i=0; i<input->width(); i++)
+        for(int j=0; j<input->length(); j++)
+        {
+            real vali = matValue[j][i];
+            for(int k=0; k<length(); k++)
+            {
+                if(k!=j)
+                    input->matGradient[j][i] -= matGradient[k][i]*vali*matValue[k][i];
+                else
+                    input->matGradient[j][i] += matGradient[j][i]*vali*(1.-vali);
+            }
+        }
 }
 
 
 void MatrixSoftmaxVariable::bbprop()
 {
-  PLERROR("MatrixSofmaxVariable::bbprop() not implemented");
+    PLERROR("MatrixSofmaxVariable::bbprop() not implemented");
 }
 
 
 void MatrixSoftmaxVariable::symbolicBprop()
 {
-  PLERROR("MatrixSofmaxVariable::symbolicBprop() not implemented");
+    PLERROR("MatrixSofmaxVariable::symbolicBprop() not implemented");
 }
 
 
 // R{ s_i = exp(x_i) / sum_j exp(x_j) }   = (s_i(1-s_i) - sum_{k!=i} s_i s_k) R(s_i) = s_i ((1-s_i) - sum_{k!=i} s_k) R(s_i)
 void MatrixSoftmaxVariable::rfprop()
 {
-  PLERROR("SofmaxVariable::rfprop() not implemented");
+    PLERROR("SofmaxVariable::rfprop() not implemented");
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

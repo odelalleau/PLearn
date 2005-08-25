@@ -35,10 +35,10 @@
  
 
 /* *******************************************************      
-   * $Id: HyperOptimizer.cc,v 1.5 2004/02/20 21:11:48 chrish42 Exp $
-   * AUTHORS: Pascal Vincent & Frederic Morin
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Frederic Morin
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "HyperOptimizer.h"
 
@@ -186,3 +186,16 @@ HTryCombinations::_build()
 }
 
 }; // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

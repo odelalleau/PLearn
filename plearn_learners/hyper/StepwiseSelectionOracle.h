@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StepwiseSelectionOracle.h,v 1.1 2005/01/11 23:22:44 plearner Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 /*! \file StepwiseSelectionOracle.h */
 #ifndef StepwiseSelectionOracle_INC
@@ -67,78 +67,78 @@ using namespace std;
  */
 class StepwiseSelectionOracle: public OptionsOracle
 {
-  typedef OptionsOracle inherited;
+    typedef OptionsOracle inherited;
 
 public:
-  //#####  Options  #########################################################
+    //#####  Options  #########################################################
   
-  //! Name of option that should contain the returned list of selected
-  //! inputs  (default = 'selected_inputs')
-  string option_name;
+    //! Name of option that should contain the returned list of selected
+    //! inputs  (default = 'selected_inputs')
+    string option_name;
 
-  //! Maximum number of variables that should be permitted in the search
-  int maxvars;
+    //! Maximum number of variables that should be permitted in the search
+    int maxvars;
 
 protected:
-  //! This remembers the current BASE set of selected indexes,
-  //! EXCLUDING the variable we are currently iterating upon
-  TVec<int> base_selected_variables;
+    //! This remembers the current BASE set of selected indexes,
+    //! EXCLUDING the variable we are currently iterating upon
+    TVec<int> base_selected_variables;
 
-  //! This list contains the remaining combinations to generate for the
-  //! current variable.  It consists of a set of strings of FULLY-FORMED
-  //! options, starting with the current base_selected_variables and
-  //! ending with each allowable index for the current variable
-  set<string> current_indexes_searchset;
+    //! This list contains the remaining combinations to generate for the
+    //! current variable.  It consists of a set of strings of FULLY-FORMED
+    //! options, starting with the current base_selected_variables and
+    //! ending with each allowable index for the current variable
+    set<string> current_indexes_searchset;
 
-  //! This remembers the performance of each combination tried in the
-  //! current search set.
-  priority_queue< pair<real,string> > combination_performance;
+    //! This remembers the performance of each combination tried in the
+    //! current search set.
+    priority_queue< pair<real,string> > combination_performance;
 
-  //! To know that we have gone through all combinations
-  bool last_combination;
+    //! To know that we have gone through all combinations
+    bool last_combination;
 
 public:
-  //#####  Object Methods  ##################################################
+    //#####  Object Methods  ##################################################
 
-  // Default constructor
-  StepwiseSelectionOracle();
+    // Default constructor
+    StepwiseSelectionOracle();
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(StepwiseSelectionOracle);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(StepwiseSelectionOracle);
 
 protected: 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 public:
-  //#####  Oracle Methods  ###################################################
+    //#####  Oracle Methods  ###################################################
   
-  //! Returns the set of names of options this generator generates
-  virtual TVec<string> getOptionNames() const;
+    //! Returns the set of names of options this generator generates
+    virtual TVec<string> getOptionNames() const;
 
-  //! Given the objective value returned for a previous trial, generate
-  //! a new trial
-  virtual TVec<string> generateNextTrial(const TVec<string>& older_trial,
-                                         real obtained_objective);
+    //! Given the objective value returned for a previous trial, generate
+    //! a new trial
+    virtual TVec<string> generateNextTrial(const TVec<string>& older_trial,
+                                           real obtained_objective);
 
-  //! Reset the generator's internal state (as having no info about
-  //! previous trials).
-  virtual void forget();
+    //! Reset the generator's internal state (as having no info about
+    //! previous trials).
+    virtual void forget();
 
 protected:
-  //! Generate a new searchset from base_selected_variables and
-  //! combination_performance
-  void generateNewSearchset();
+    //! Generate a new searchset from base_selected_variables and
+    //! combination_performance
+    void generateNewSearchset();
 };
 
 // Declares a few other classes and functions related to this class
@@ -147,3 +147,16 @@ DECLARE_OBJECT_PTR(StepwiseSelectionOracle);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

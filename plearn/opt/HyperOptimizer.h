@@ -34,9 +34,9 @@
 
 
 /* *******************************************************      
-   * $Id: HyperOptimizer.h,v 1.7 2004/07/21 16:30:54 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearn/plearn/opt/HyperOptimizer.h */
@@ -62,9 +62,9 @@ typedef map<string, string> HAliases;
 class HyperOptimizer: public Object
 {
     typedef Object inherited;
- public:
+public:
     HyperOptimizer()
-        {};
+    {};
 
     //! Optimize the learner with respect to the given 
     //! hyperparameters and dataset.
@@ -76,8 +76,8 @@ class HyperOptimizer: public Object
     PLEARN_DECLARE_ABSTRACT_OBJECT(HyperOptimizer);
     static void declareOptions(OptionList &ol);
 
- protected:
- private:
+protected:
+private:
 }; // class HyperOptimizer
 
 DECLARE_OBJECT_PTR(HyperOptimizer);
@@ -93,7 +93,7 @@ class HSetVal: public HyperOptimizer
     typedef HyperOptimizer inherited;
 public:
     HSetVal()
-        {};
+    {};
 
     virtual void optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases);
 
@@ -117,7 +117,7 @@ class HTryAll: public HyperOptimizer
     typedef HyperOptimizer inherited;
 public:
     HTryAll()
-        {};
+    {};
 
     virtual void optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases);
 
@@ -141,7 +141,7 @@ class HCoordinateDescent: public HyperOptimizer
 public:
     HCoordinateDescent()
         : max_iterations(10)
-        {};
+    {};
 
     virtual void optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases);
 
@@ -164,7 +164,7 @@ class HTryCombinations: public HyperOptimizer
     typedef HyperOptimizer inherited;
 public:
     HTryCombinations()
-        {};
+    {};
 
     virtual void optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases);
 
@@ -188,3 +188,16 @@ DECLARE_OBJECT_PTR(HTryCombinations);
 }; // end of namespace PLearn
 
 #endif // HyperOptimizer_INC
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

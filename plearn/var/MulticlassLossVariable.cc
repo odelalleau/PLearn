@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MulticlassLossVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "MulticlassLossVariable.h"
 
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(MulticlassLossVariable,
                         "NO HELP");
 
 MulticlassLossVariable::MulticlassLossVariable(Variable* netout, Variable* target)
-  : inherited(netout,target,1,1)
+    : inherited(netout,target,1,1)
 {
     build_();
 }
@@ -82,18 +82,29 @@ void MulticlassLossVariable::recomputeSize(int& l, int& w) const
 
 void MulticlassLossVariable::fprop()
 {
-  real cost = 0.0;
-  for (int i=0; i<input1->size(); i++)
-  {
-    real output = input1->valuedata[i];
-    real target = input2->valuedata[i];
-    cost += (target==1) ? output<0.5 : output>0.5;
-  }
-  valuedata[0] = cost;
+    real cost = 0.0;
+    for (int i=0; i<input1->size(); i++)
+    {
+        real output = input1->valuedata[i];
+        real target = input2->valuedata[i];
+        cost += (target==1) ? output<0.5 : output>0.5;
+    }
+    valuedata[0] = cost;
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

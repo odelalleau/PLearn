@@ -33,18 +33,18 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.h,v 1.15 2005/02/04 15:10:42 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
 /*! \file SourceVMatrix.h */
 
 /*
-SourceVmatrix is a base class for vmatrices that are defined as a function of 
-another vmatrix (the "source").
+  SourceVmatrix is a base class for vmatrices that are defined as a function of 
+  another vmatrix (the "source").
 
-It has a source buildoption to specify said source.
+  It has a source buildoption to specify said source.
 
 */
 
@@ -63,88 +63,88 @@ class SourceVMatrix: public RowBufferedVMatrix
 
 private:
 
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // Fields below are not options.
+    // Fields below are not options.
 
-  //! To be used in subclasses for convenience.
-  Vec sourcerow;
+    //! To be used in subclasses for convenience.
+    Vec sourcerow;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  VMat source;
+    VMat source;
 
-  //  TVec<string> dependencies; // a list of paths to files that this VMat depends on
+    //  TVec<string> dependencies; // a list of paths to files that this VMat depends on
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  SourceVMatrix();  
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    SourceVMatrix();  
   
-  SourceVMatrix(VMat the_source)
-    :source(the_source) {}
+    SourceVMatrix(VMat the_source)
+        :source(the_source) {}
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
-  //! Call setMetaInfoFrom(source) to get all unset meta info from 'source'.
-  //! This method is mostly to simplify writing subclass' build_ method,
-  //! which may call it after first setting the fields that it doesn't want
-  //! copied from the source.
-  void setMetaInfoFromSource();
+    //! Call setMetaInfoFrom(source) to get all unset meta info from 'source'.
+    //! This method is mostly to simplify writing subclass' build_ method,
+    //! which may call it after first setting the fields that it doesn't want
+    //! copied from the source.
+    void setMetaInfoFromSource();
 
-  //! Must be implemented in subclasses: default version returns an error.
-  virtual void getNewRow(int i, const Vec& v) const;
+    //! Must be implemented in subclasses: default version returns an error.
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  //! Also sets the source's meta-data dir if it's not already set
-  /*! If there are fields that have no corresponding .smap .notes or .binning info files
-    but the source has those files for a field with the same name, then those of
-    the source will be set also for this vmatrix. */
-  virtual void setMetaDataDir(const PPath& the_metadatadir);
+    //! Also sets the source's meta-data dir if it's not already set
+    /*! If there are fields that have no corresponding .smap .notes or .binning info files
+      but the source has those files for a field with the same name, then those of
+      the source will be set also for this vmatrix. */
+    virtual void setMetaDataDir(const PPath& the_metadatadir);
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(SourceVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(SourceVMatrix);
   
-  //! Return the dimension of the values for a certain field, -1 if continuous   
-  virtual int getDimension(int row, int col) const;
+    //! Return the dimension of the values for a certain field, -1 if continuous   
+    virtual int getDimension(int row, int col) const;
 
-  //! Returns the possible values for a certain field in the VMatrix
-  virtual Vec getValues(int row, int col) const;
+    //! Returns the possible values for a certain field in the VMatrix
+    virtual Vec getValues(int row, int col) const;
 
-  //! Returns the possible values of a certain field (column) given the input 
-  virtual Vec getValues(const Vec& input, int col) const;
+    //! Returns the possible values of a certain field (column) given the input 
+    virtual Vec getValues(const Vec& input, int col) const;
 
 };
 
@@ -152,3 +152,16 @@ DECLARE_OBJECT_PTR(SourceVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

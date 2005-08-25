@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: VarColumnsVariable.h,v 1.4 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef VarColumnsVariable_INC
 #define VarColumnsVariable_INC
@@ -55,20 +55,20 @@ using namespace std;
 */
 class VarColumnsVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
- public:
-  //!  Default constructor for persistence
-  VarColumnsVariable() {}
-  VarColumnsVariable(Variable *input1, Variable *input2);
+public:
+    //!  Default constructor for persistence
+    VarColumnsVariable() {}
+    VarColumnsVariable(Variable *input1, Variable *input2);
 
-  PLEARN_DECLARE_OBJECT(VarColumnsVariable);
+    PLEARN_DECLARE_OBJECT(VarColumnsVariable);
 
-  virtual void recomputeSize(int& l, int& w) const;
-  //  virtual void rprop();
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    //  virtual void rprop();
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 };
 
 DECLARE_OBJECT_PTR(VarColumnsVariable);
@@ -76,3 +76,16 @@ DECLARE_OBJECT_PTR(VarColumnsVariable);
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

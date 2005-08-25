@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.h,v 1.10 2004/07/19 13:28:48 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearn/plearn/vmat/ShiftAndRescaleVMatrix.h */
@@ -56,48 +56,48 @@ using namespace std;
 */
 class ShiftAndRescaleVMatrix: public VMatrix
 {
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
 public:
-  //!  x'_i = (x_i+shift_i)*scale_i
-  VMat vm;
-  Vec shift; 
-  Vec scale; 
-  bool automatic; // find shift and scale automatically?
-  int n_train; // when automatic, use the n_train first examples to estimate shift and scale
-  int n_inputs; // when automatic, 
-  bool negate_shift;
-  bool no_scale;
-  bool ignore_missing;
-  int verbosity;
+    //!  x'_i = (x_i+shift_i)*scale_i
+    VMat vm;
+    Vec shift; 
+    Vec scale; 
+    bool automatic; // find shift and scale automatically?
+    int n_train; // when automatic, use the n_train first examples to estimate shift and scale
+    int n_inputs; // when automatic, 
+    bool negate_shift;
+    bool no_scale;
+    bool ignore_missing;
+    int verbosity;
 
-  //! For all constructors, the original VMFields are copied upon construction
-  ShiftAndRescaleVMatrix();
-  ShiftAndRescaleVMatrix(VMat underlying_distr, Vec the_shift, Vec the_scale);
-  ShiftAndRescaleVMatrix(VMat underlying_distr, int n_inputs);
-  ShiftAndRescaleVMatrix(VMat underlying_distr, int n_inputs, int n_train, bool the_ignore_missing = false, bool the_verbosity = 1);
+    //! For all constructors, the original VMFields are copied upon construction
+    ShiftAndRescaleVMatrix();
+    ShiftAndRescaleVMatrix(VMat underlying_distr, Vec the_shift, Vec the_scale);
+    ShiftAndRescaleVMatrix(VMat underlying_distr, int n_inputs);
+    ShiftAndRescaleVMatrix(VMat underlying_distr, int n_inputs, int n_train, bool the_ignore_missing = false, bool the_verbosity = 1);
 
-  PLEARN_DECLARE_OBJECT(ShiftAndRescaleVMatrix);
+    PLEARN_DECLARE_OBJECT(ShiftAndRescaleVMatrix);
 
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
-  virtual void reset_dimensions() 
+    virtual real get(int i, int j) const;
+    virtual void getSubRow(int i, int j, Vec v) const;
+    virtual void reset_dimensions() 
     { 
-      if (width_>0 && width_!=vm->width())
-        PLERROR("ShiftAndRescaleVMatrix: can't change width"); 
-      inherited::reset_dimensions();
+        if (width_>0 && width_!=vm->width())
+            PLERROR("ShiftAndRescaleVMatrix: can't change width"); 
+        inherited::reset_dimensions();
     }
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
 };
 
@@ -106,3 +106,16 @@ DECLARE_OBJECT_PTR(ShiftAndRescaleVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

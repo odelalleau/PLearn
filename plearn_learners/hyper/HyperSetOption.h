@@ -35,8 +35,8 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperSetOption.h,v 1.1 2005/01/11 23:22:44 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file HyperSetOption.h */
 #ifndef HyperSetOption_INC
@@ -53,55 +53,55 @@ class VecStatsCollector;
 class HyperSetOption: public HyperCommand
 {
 public:
-  typedef HyperCommand inherited;
+    typedef HyperCommand inherited;
   
-  PLEARN_DECLARE_OBJECT(HyperSetOption);
+    PLEARN_DECLARE_OBJECT(HyperSetOption);
 
 protected:
-  //! Name of option to set
-  string option_name;
+    //! Name of option to set
+    string option_name;
 
-  //! (Constant) value of option to set
-  string option_value;
+    //! (Constant) value of option to set
+    string option_value;
 
-  //! List of pairs option_name : option_value
-  TVec< pair<string,string> > options;
+    //! List of pairs option_name : option_value
+    TVec< pair<string,string> > options;
   
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  HyperSetOption();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    HyperSetOption();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Executes the command, returning the resulting costvec of its optimization 
-  //! (or an empty vec if it didn't do any testng).
-  virtual Vec optimize();
+    //! Executes the command, returning the resulting costvec of its optimization 
+    //! (or an empty vec if it didn't do any testng).
+    virtual Vec optimize();
 
-  //! Returns the names of the results returned by the optimize() method
-  virtual TVec<string> getResultNames() const;
+    //! Returns the names of the results returned by the optimize() method
+    virtual TVec<string> getResultNames() const;
 
 };
 
@@ -111,3 +111,16 @@ DECLARE_OBJECT_PTR(HyperSetOption);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

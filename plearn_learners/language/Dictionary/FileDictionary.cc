@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FileDictionary.cc,v 1.3 2004/09/14 18:52:56 kermorvc Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
 
@@ -46,64 +46,77 @@
 namespace PLearn {
 using namespace std;
   
-  FileDictionary::FileDictionary():inherited(){}
+FileDictionary::FileDictionary():inherited(){}
 
-  FileDictionary::FileDictionary(string file_name, bool up_mode)
-  {
+FileDictionary::FileDictionary(string file_name, bool up_mode)
+{
     setUpdateMode(up_mode);
     file_name_dict=file_name;
     build_();
-  }
+}
 
 PLEARN_IMPLEMENT_OBJECT(FileDictionary,
-    "Dictionary instantiation from a file",
-    "This class simply permits the instantiation of a Dictionary from a file that contains a list of symbols.\n"
-    "Each line of the file should be a symbol in the dictionary. Blanks are removed at the beginning of every line\n"
-    "The number of the line (starting at 0) is the id of the associated symbol.\n");
+                        "Dictionary instantiation from a file",
+                        "This class simply permits the instantiation of a Dictionary from a file that contains a list of symbols.\n"
+                        "Each line of the file should be a symbol in the dictionary. Blanks are removed at the beginning of every line\n"
+                        "The number of the line (starting at 0) is the id of the associated symbol.\n");
 
 void FileDictionary::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "file_name_dict", &FileDictionary::file_name_dict, OptionBase::buildoption, "file name for the dictionary");
-  inherited::declareOptions(ol);
+    declareOption(ol, "file_name_dict", &FileDictionary::file_name_dict, OptionBase::buildoption, "file name for the dictionary");
+    inherited::declareOptions(ol);
 }
 
 void FileDictionary::build_()
 {
-  //initial building
-  if(string_to_int.size()==0) // Verifying if dictionary is new
-  {
-    // save update mode for later
-    int saved_up_mode=update_mode;
-    // set the dictionary in update mode to insert the words
-    update_mode =  UPDATE;
-    string line;
-    ifstream ifs(file_name_dict.c_str());
-    if (!ifs) PLERROR("Cannot open file %s", file_name_dict.c_str());
-    while(!ifs.eof()){
-      getline(ifs, line, '\n');
-      if(line == "") continue;
-      getId(removeblanks(line));
+    //initial building
+    if(string_to_int.size()==0) // Verifying if dictionary is new
+    {
+        // save update mode for later
+        int saved_up_mode=update_mode;
+        // set the dictionary in update mode to insert the words
+        update_mode =  UPDATE;
+        string line;
+        ifstream ifs(file_name_dict.c_str());
+        if (!ifs) PLERROR("Cannot open file %s", file_name_dict.c_str());
+        while(!ifs.eof()){
+            getline(ifs, line, '\n');
+            if(line == "") continue;
+            getId(removeblanks(line));
+        }
+        ifs.close();
+        if(saved_up_mode==NO_UPDATE){
+            // the dictionary must contain oov
+            getId(OOV_TAG);
+        }
+        // restore update mode;
+        update_mode=saved_up_mode;
     }
-    ifs.close();
-    if(saved_up_mode==NO_UPDATE){
-      // the dictionary must contain oov
-      getId(OOV_TAG);
-    }
-    // restore update mode;
-    update_mode=saved_up_mode;
-  }
 }
 
 // ### Nothing to add here, simply calls build_
 void FileDictionary::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void FileDictionary::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

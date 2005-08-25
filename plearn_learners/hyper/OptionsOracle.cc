@@ -36,8 +36,8 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: OptionsOracle.cc,v 1.1 2005/01/11 23:22:44 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file OptionsOracle.cc */
 #include "OptionsOracle.h"
@@ -46,36 +46,49 @@ namespace PLearn {
 using namespace std;
 
 OptionsOracle::OptionsOracle() 
-  {}
+{}
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(OptionsOracle, "Generates various option combinations to try, to perform hyper-parameter optimisation.", 
-      "OptionsOracle is the base class for implementing hyper-optimization techniques. \n"
-      "An OptionGenerator functions as an oracle, responsible for giving the optimization process \n"
-      "the next combination of hyper-parameters to try out, taking into account the results of all \n"
-      "previous attempts. The HyperOptimize class refers to two OptionsOracle, the first one is responsible for \n"
-      "generating potentially parallelizable hyper-parameter combinations to try out, the second \n"
-      "helps to carry out an optimization that is sequential in nature (such as an early stopping for \n"
-      "some form of incremental learning.) \n");
+                                 "OptionsOracle is the base class for implementing hyper-optimization techniques. \n"
+                                 "An OptionGenerator functions as an oracle, responsible for giving the optimization process \n"
+                                 "the next combination of hyper-parameters to try out, taking into account the results of all \n"
+                                 "previous attempts. The HyperOptimize class refers to two OptionsOracle, the first one is responsible for \n"
+                                 "generating potentially parallelizable hyper-parameter combinations to try out, the second \n"
+                                 "helps to carry out an optimization that is sequential in nature (such as an early stopping for \n"
+                                 "some form of incremental learning.) \n");
 
-  void OptionsOracle::declareOptions(OptionList& ol)
-  {
+void OptionsOracle::declareOptions(OptionList& ol)
+{
     inherited::declareOptions(ol);
-  }
+}
 
-  void OptionsOracle::build_()
-  {}
+void OptionsOracle::build_()
+{}
 
-  // ### Nothing to add here, simply calls build_
-  void OptionsOracle::build()
-  {
+// ### Nothing to add here, simply calls build_
+void OptionsOracle::build()
+{
     inherited::build();
     build_();
-  }
+}
 
 
-  void OptionsOracle::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-  {
+void OptionsOracle::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
     inherited::makeDeepCopyFromShallowCopy(copies);
-  }
+}
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

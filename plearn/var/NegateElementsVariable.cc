@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: NegateElementsVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "NegateElementsVariable.h"
 #include "Var_operators.h"
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(NegateElementsVariable,
                         "NO HELP");
 
 NegateElementsVariable::NegateElementsVariable(Variable* input)
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 
@@ -70,43 +70,54 @@ void NegateElementsVariable::recomputeSize(int& l, int& w) const
 
 void NegateElementsVariable::fprop()
 {
-  for(int k=0; k<nelems(); k++)
-    valuedata[k] = -input->valuedata[k];
+    for(int k=0; k<nelems(); k++)
+        valuedata[k] = -input->valuedata[k];
 }
 
 
 void NegateElementsVariable::bprop()
 {
-  for(int k=0; k<nelems(); k++)
-    input->gradientdata[k] -= gradientdata[k];
+    for(int k=0; k<nelems(); k++)
+        input->gradientdata[k] -= gradientdata[k];
 }
 
 
 void NegateElementsVariable::bbprop()
 {
-  if (input->diaghessian.length()==0)
-    input->resizeDiagHessian();
-  for(int k=0; k<nelems(); k++)
-    input->diaghessiandata[k] -= diaghessiandata[k];
+    if (input->diaghessian.length()==0)
+        input->resizeDiagHessian();
+    for(int k=0; k<nelems(); k++)
+        input->diaghessiandata[k] -= diaghessiandata[k];
 }
 
 
 void NegateElementsVariable::symbolicBprop()
 {
-  input->accg(-g);
+    input->accg(-g);
 }
 
 
 // R(-x) = -R(x)
 void NegateElementsVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  for(int k=0; k<nelems(); k++)
-    rvaluedata[k] = -input->rvaluedata[k];
+    if (rValue.length()==0) resizeRValue();
+    for(int k=0; k<nelems(); k++)
+        rvaluedata[k] = -input->rvaluedata[k];
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: ByteMemoryVMatrix.h,v 1.4 2004/04/05 22:48:12 morinf Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -52,27 +52,27 @@ using namespace std;
 
 class ByteMemoryVMatrix: public VMatrix
 {
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
- protected:
-  unsigned char* data;
-  Vec scale;//!<  sample = (data[i]+offset_[i])*scale[i];
-  Vec offset_;
+protected:
+    unsigned char* data;
+    Vec scale;//!<  sample = (data[i]+offset_[i])*scale[i];
+    Vec offset_;
 
- public:
-  // ******************
-  // *  Constructors  *
-  // ******************
-  ByteMemoryVMatrix(); //!<  default constructor (for automatic deserialization)
+public:
+    // ******************
+    // *  Constructors  *
+    // ******************
+    ByteMemoryVMatrix(); //!<  default constructor (for automatic deserialization)
 
-  ByteMemoryVMatrix(unsigned char* data,int the_length,int the_width, double scaling_factor=1.0, double offset_=0.0);
-  ByteMemoryVMatrix(unsigned char* data,int the_length,int the_width, Vec scale);
-  ByteMemoryVMatrix(unsigned char* data,int the_length,int the_width, Vec scale, Vec offset_);
+    ByteMemoryVMatrix(unsigned char* data,int the_length,int the_width, double scaling_factor=1.0, double offset_=0.0);
+    ByteMemoryVMatrix(unsigned char* data,int the_length,int the_width, Vec scale);
+    ByteMemoryVMatrix(unsigned char* data,int the_length,int the_width, Vec scale, Vec offset_);
 
-  PLEARN_DECLARE_OBJECT(ByteMemoryVMatrix);
+    PLEARN_DECLARE_OBJECT(ByteMemoryVMatrix);
 
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
+    virtual real get(int i, int j) const;
+    virtual void getSubRow(int i, int j, Vec v) const;
 
 private:
 };
@@ -81,3 +81,16 @@ DECLARE_OBJECT_PTR(ByteMemoryVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: CompressedVMatrix.h,v 1.6 2004/07/09 19:42:23 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -60,11 +60,11 @@ using namespace std;
   and matrices containing categorical data (represented by small integers)
   possibly with one hot representations.
 */
-  class CompressedVMatrix: public RowBufferedVMatrix
-  {
+class CompressedVMatrix: public RowBufferedVMatrix
+{
     typedef RowBufferedVMatrix inherited;
 
-  protected:
+protected:
     int max_length; //!<  maximum number of rows that can be appended to the initially empty matrix
 
     signed char* data;
@@ -75,36 +75,36 @@ using namespace std;
     signed char* curpos; 
     
 /*!       This initializes the matrix with a length of 0 (but up to the_max_length rows can be appended)
-      A memory_alloc of length*(2 + 4*width + width/128) should be enough in every case
-      (and much less is needed for matrices containing a lot of 0 or small integers)
+  A memory_alloc of length*(2 + 4*width + width/128) should be enough in every case
+  (and much less is needed for matrices containing a lot of 0 or small integers)
 */
     void init(int the_max_length, int the_width, size_t memory_alloc);
 
-  public:
+public:
     // ******************
     // *  Constructors  *
     // ******************
     CompressedVMatrix(); //!<  default constructor (for automatic deserialization)
     
 /*!       This initializes the matrix with a length of 0 (but up to the_max_length rows can be appended)
-      If no memory_alloc value is given, a sufficient default value will be used initially. 
-      You can always call reallocateCompactMemory() later to use the minimum memory
+  If no memory_alloc value is given, a sufficient default value will be used initially. 
+  You can always call reallocateCompactMemory() later to use the minimum memory
 */
     CompressedVMatrix(int the_max_length, int the_width, size_t memory_alloc=0);
     
 /*!       This initializes a matrix from the data of another. 
-      If no memory_alloc value is given, a sufficient default value will be used initially. 
-      You can always call reallocateCompactMemory() later to use the minimum memory
+  If no memory_alloc value is given, a sufficient default value will be used initially. 
+  You can always call reallocateCompactMemory() later to use the minimum memory
 */
     CompressedVMatrix(VMat v, size_t memory_alloc=0);
 
     PLEARN_DECLARE_OBJECT(CompressedVMatrix);
 
-  protected:
+protected:
     
     virtual void getNewRow(int i, const Vec& v) const;
 
-  public :
+public :
 
     virtual ~CompressedVMatrix();
     virtual void appendRow(Vec v);
@@ -123,3 +123,16 @@ DECLARE_OBJECT_PTR(CompressedVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

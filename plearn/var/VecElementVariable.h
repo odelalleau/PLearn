@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: VecElementVariable.h,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef VecElementVariable_INC
 #define VecElementVariable_INC
@@ -52,29 +52,29 @@ using namespace std;
 //!  Variable that is the element of vector vec indexed by variable input
 class VecElementVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 protected:
-  Vec v;
+    Vec v;
 
 public:
-  //!  Default constructor for persistence
-  VecElementVariable() {}
-  VecElementVariable(const Vec& vec, Variable* input);
+    //!  Default constructor for persistence
+    VecElementVariable() {}
+    VecElementVariable(const Vec& vec, Variable* input);
 
-  PLEARN_DECLARE_OBJECT(VecElementVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(VecElementVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(VecElementVariable);
@@ -85,3 +85,16 @@ inline Var accessElement(const Vec& v, Var index)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

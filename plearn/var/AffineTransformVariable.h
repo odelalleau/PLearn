@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformVariable.h,v 1.9 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef AffineTransformVariable_INC
 #define AffineTransformVariable_INC
@@ -58,24 +58,24 @@ using namespace std;
 //! which is equivalent to b + 
 class AffineTransformVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  AffineTransformVariable() {}
-  AffineTransformVariable(Variable* vec, Variable* transformation);
+    //!  Default constructor for persistence
+    AffineTransformVariable() {}
+    AffineTransformVariable(Variable* vec, Variable* transformation);
 
-  PLEARN_DECLARE_OBJECT(AffineTransformVariable);
+    PLEARN_DECLARE_OBJECT(AffineTransformVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(AffineTransformVariable);
@@ -83,11 +83,24 @@ DECLARE_OBJECT_PTR(AffineTransformVariable);
 //! first row of transformation is the bias.
 inline Var affine_transform(Var vec, Var transformation)
 { 
- if (vec->isVec())
-    return new AffineTransformVariable(vec, transformation); 
+    if (vec->isVec())
+        return new AffineTransformVariable(vec, transformation); 
     else return new MatrixAffineTransformVariable(vec, transformation);
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

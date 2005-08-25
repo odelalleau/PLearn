@@ -36,9 +36,9 @@
 
  
 /* *******************************************************
-* $Id: VMat.cc,v 1.21 2005/04/23 13:19:23 plearner Exp $ *
-* This file is part of the PLearn library.               *
-******************************************************** */
+ * $Id$ *
+ * This file is part of the PLearn library.               *
+ ******************************************************** */
 #include "VMat.h"
 #include <plearn/io/fileutils.h>
 
@@ -65,9 +65,9 @@ VMat::~VMat() {}
 
 VMat VMat::subMatRows(int i, int l) const
 {
-  VMat res = ptr->subMat(i,0,l,width());
-  res->defineSizes(ptr->inputsize(), ptr->targetsize(), ptr->weightsize());
-  return res;
+    VMat res = ptr->subMat(i,0,l,width());
+    res->defineSizes(ptr->inputsize(), ptr->targetsize(), ptr->weightsize());
+    return res;
 }
 
 VMat VMat::rows(TVec<int> rows_indices) const
@@ -89,37 +89,37 @@ VMat VMat::columns(Vec columns_indices) const
 // precompute //
 ////////////////
 void VMat::precompute() {
-  VMat backup = *this;
-  *this = new MemoryVMatrix(Mat(*this));
-  (*this)->setFieldInfos( backup->getFieldInfos() );
+    VMat backup = *this;
+    *this = new MemoryVMatrix(Mat(*this));
+    (*this)->setFieldInfos( backup->getFieldInfos() );
 
-  // We restore the sizes info (lost in the Mat conversion).
-  // Note that there would probably be more info to restore (like
-  // field infos, string mappings, ...).
-  (*this)->copySizesFrom(backup);
+    // We restore the sizes info (lost in the Mat conversion).
+    // Note that there would probably be more info to restore (like
+    // field infos, string mappings, ...).
+    (*this)->copySizesFrom(backup);
   
-  //TODO
-  //(*this)->copyFieldInfosFrom(backup);
+    //TODO
+    //(*this)->copyFieldInfosFrom(backup);
 }
   
 void VMat::precompute(const PPath& pmatfile, bool use_existing_file)
 { 
-  VMat backup = *this;
-  Array<VMField> infos = (*this)->getFieldInfos();
-  if(!use_existing_file || !file_exists(pmatfile))
-    save(pmatfile); 
-  *this = new FileVMatrix(pmatfile); 
-  (*this)->setFieldInfos( infos );
-  (*this)->copySizesFrom(backup);
-  // TODO same as above
+    VMat backup = *this;
+    Array<VMField> infos = (*this)->getFieldInfos();
+    if(!use_existing_file || !file_exists(pmatfile))
+        save(pmatfile); 
+    *this = new FileVMatrix(pmatfile); 
+    (*this)->setFieldInfos( infos );
+    (*this)->copySizesFrom(backup);
+    // TODO same as above
 }
 
 
 template <>
 void deepCopyField(VMat& field, CopiesMap& copies)
 {
-  if (field)
-    field = static_cast<VMatrix*>(field->deepCopy(copies));
+    if (field)
+        field = static_cast<VMatrix*>(field->deepCopy(copies));
 }
 
 /////////////////////
@@ -127,27 +127,40 @@ void deepCopyField(VMat& field, CopiesMap& copies)
 /////////////////////
 VMat loadAsciiAsVMat(const PPath& filename)
 {
-  Mat m;
-  TVec<string> fn;
-  TVec< map<string,real> > map_sr;  // String -> real mappings.
-  int inputsize = -1;
-  int targetsize = -1;
-  int weightsize = -1;
-  loadAscii(filename, m, fn, inputsize, targetsize, weightsize, &map_sr);
-  VMat vm = new MemoryVMatrix(m);
-  if(inputsize>=0)
-    vm->defineSizes(inputsize,targetsize,weightsize);
-  else
-    vm->defineSizes(m.width(),0,0);
+    Mat m;
+    TVec<string> fn;
+    TVec< map<string,real> > map_sr;  // String -> real mappings.
+    int inputsize = -1;
+    int targetsize = -1;
+    int weightsize = -1;
+    loadAscii(filename, m, fn, inputsize, targetsize, weightsize, &map_sr);
+    VMat vm = new MemoryVMatrix(m);
+    if(inputsize>=0)
+        vm->defineSizes(inputsize,targetsize,weightsize);
+    else
+        vm->defineSizes(m.width(),0,0);
 
-  vm->setMtime(mtime(filename));
-  // Set the discovered string -> real mappings.
-  for (int i = 0; i < map_sr.length(); i++) {
-    vm->setStringMapping(i, map_sr[i]);
-  }
-  for(int i=0;i<fn.size();i++)
-    vm->declareField(i, fn[i]);
-  return vm;
+    vm->setMtime(mtime(filename));
+    // Set the discovered string -> real mappings.
+    for (int i = 0; i < map_sr.length(); i++) {
+        vm->setStringMapping(i, map_sr[i]);
+    }
+    for(int i=0;i<fn.size();i++)
+        vm->declareField(i, fn[i]);
+    return vm;
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

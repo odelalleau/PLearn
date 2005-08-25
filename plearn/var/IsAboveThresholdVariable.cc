@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: IsAboveThresholdVariable.cc,v 1.6 2004/04/27 15:59:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "IsAboveThresholdVariable.h"
 
@@ -55,8 +55,8 @@ PLEARN_IMPLEMENT_OBJECT(IsAboveThresholdVariable,
 IsAboveThresholdVariable::IsAboveThresholdVariable(Variable* input, real the_threshold, 
                                                    real the_truevalue, real the_falsevalue,
                                                    bool the_strict)
-  : inherited(input, input->length(), input->width()),
-    threshold(the_threshold), truevalue(the_truevalue), falsevalue(the_falsevalue), strict(the_strict)
+    : inherited(input, input->length(), input->width()),
+      threshold(the_threshold), truevalue(the_truevalue), falsevalue(the_falsevalue), strict(the_strict)
 {}
 
 void
@@ -80,18 +80,18 @@ void IsAboveThresholdVariable::recomputeSize(int& l, int& w) const
 
 void IsAboveThresholdVariable::fprop()
 {
-  if (strict)
-    for(int i=0; i<input->nelems(); i++)
-      if(input->valuedata[i]>threshold)
-        valuedata[i] = truevalue;
-      else
-        valuedata[i] = falsevalue;
-  else
-    for(int i=0; i<input->nelems(); i++)
-      if(input->valuedata[i]>=threshold)
-        valuedata[i] = truevalue;
-      else
-        valuedata[i] = falsevalue;
+    if (strict)
+        for(int i=0; i<input->nelems(); i++)
+            if(input->valuedata[i]>threshold)
+                valuedata[i] = truevalue;
+            else
+                valuedata[i] = falsevalue;
+    else
+        for(int i=0; i<input->nelems(); i++)
+            if(input->valuedata[i]>=threshold)
+                valuedata[i] = truevalue;
+            else
+                valuedata[i] = falsevalue;
 }
 
 
@@ -102,11 +102,22 @@ void IsAboveThresholdVariable::symbolicBprop() {}
 
 void IsAboveThresholdVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
+    if (rValue.length()==0) resizeRValue();
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

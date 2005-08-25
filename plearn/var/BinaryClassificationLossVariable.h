@@ -37,9 +37,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef BinaryClassificationLossVariable_INC
 #define BinaryClassificationLossVariable_INC
@@ -52,32 +52,32 @@ using namespace std;
 
 class BinaryClassificationLossVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
 
-  int class_1, class_2;
-  real threshold;
+    int class_1, class_2;
+    real threshold;
   
-  //!  Default constructor for persistence
-  BinaryClassificationLossVariable();
-  BinaryClassificationLossVariable(Variable* netout, Variable* classnum);
+    //!  Default constructor for persistence
+    BinaryClassificationLossVariable();
+    BinaryClassificationLossVariable(Variable* netout, Variable* classnum);
 
-  PLEARN_DECLARE_OBJECT(BinaryClassificationLossVariable);
+    PLEARN_DECLARE_OBJECT(BinaryClassificationLossVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  //! can't bprop through a hard classification error...
-  virtual void bprop() {}
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    //! can't bprop through a hard classification error...
+    virtual void bprop() {}
 
 private:
-  void build_();
+    void build_();
 
 protected:
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 };
 
@@ -85,15 +85,28 @@ DECLARE_OBJECT_PTR(BinaryClassificationLossVariable);
 
 inline Var binary_classification_loss(Var network_output, Var classnum)
 { 
-  if (classnum->isScalar()) {
-    return new BinaryClassificationLossVariable(network_output, classnum); 
-  } else {
-    PLERROR("In binary_classification_loss : Can only be used with a scalar output");
-    // The line below is just for the compiler to stop complaining.
-    return new BinaryClassificationLossVariable(network_output, classnum);
-  }
+    if (classnum->isScalar()) {
+        return new BinaryClassificationLossVariable(network_output, classnum); 
+    } else {
+        PLERROR("In binary_classification_loss : Can only be used with a scalar output");
+        // The line below is just for the compiler to stop complaining.
+        return new BinaryClassificationLossVariable(network_output, classnum);
+    }
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: OutputVariable.h,v 1.1 2004/10/01 19:42:52 mariusmuja Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef OutputVariable_INC
 #define OutputVariable_INC
@@ -54,25 +54,25 @@ using namespace std;
 
 class OutputVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 public:
   
-  ofstream* output_file;
+    ofstream* output_file;
   
-  //!  Default constructor for persistence
-  OutputVariable() {}
-  OutputVariable(Variable* input,char* filename);
-  ~OutputVariable();
+    //!  Default constructor for persistence
+    OutputVariable() {}
+    OutputVariable(Variable* input,char* filename);
+    ~OutputVariable();
 
-  PLEARN_DECLARE_OBJECT(OutputVariable);
+    PLEARN_DECLARE_OBJECT(OutputVariable);
   
-  virtual void recomputeSize(int& l, int& w) const;  
-  virtual void fprop();
-  virtual void bprop();
-  //virtual void bbprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;  
+    virtual void fprop();
+    virtual void bprop();
+    //virtual void bbprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 };
 
 DECLARE_OBJECT_PTR(OutputVariable);
@@ -83,3 +83,16 @@ inline Var output_var(Var v,char* filename)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

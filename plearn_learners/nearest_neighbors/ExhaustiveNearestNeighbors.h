@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -78,104 +78,104 @@ namespace PLearn {
  */ 
 class ExhaustiveNearestNeighbors: public GenericNearestNeighbors
 {
-  typedef GenericNearestNeighbors inherited;
+    typedef GenericNearestNeighbors inherited;
 
 protected:
-  //! Default kernel is a DistanceKernel; static so as not to introduce
-  //! strong coupling between this .h and that defining DistanceKernel
-  static Ker default_kernel;
+    //! Default kernel is a DistanceKernel; static so as not to introduce
+    //! strong coupling between this .h and that defining DistanceKernel
+    static Ker default_kernel;
   
-  //! Matrixified version of the training set.  Saved.
-  Mat training_mat;
+    //! Matrixified version of the training set.  Saved.
+    Mat training_mat;
 
-  //! Internal vector for storing useless costs
-  mutable Vec costs;
+    //! Internal vector for storing useless costs
+    mutable Vec costs;
 
-  //! Internal vector for storing dummy data.
-  mutable Vec dummy_vec;
+    //! Internal vector for storing dummy data.
+    mutable Vec dummy_vec;
 
-  //! Internal vector for storing computed indices
-  mutable TVec<int> indices;
+    //! Internal vector for storing computed indices
+    mutable TVec<int> indices;
   
 public:
-  //#####  Public Build Options  ############################################
+    //#####  Public Build Options  ############################################
 
-  //! Kernel that must be used to evaluate distances.  Default is a
-  //! DistanceKernel with n=2, which gives an Euclidian distance.
-  Ker kernel;
+    //! Kernel that must be used to evaluate distances.  Default is a
+    //! DistanceKernel with n=2, which gives an Euclidian distance.
+    Ker kernel;
 
-  //! Whether the kernel should be interpreted as a (pseudo-)distance
-  //! measure (true) or a similarity measure (false). Default = true.
-  bool kernel_is_pseudo_distance;
+    //! Whether the kernel should be interpreted as a (pseudo-)distance
+    //! measure (true) or a similarity measure (false). Default = true.
+    bool kernel_is_pseudo_distance;
 
 public:
-  //#####  Object Methods  ##################################################
+    //#####  Object Methods  ##################################################
   
-  //! Default constructor.
-  ExhaustiveNearestNeighbors(Ker kernel = default_kernel,
-                             bool kernel_is_pseudo_distance = true);
+    //! Default constructor.
+    ExhaustiveNearestNeighbors(Ker kernel = default_kernel,
+                               bool kernel_is_pseudo_distance = true);
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  // If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT.
-  PLEARN_DECLARE_OBJECT(ExhaustiveNearestNeighbors);
+    // Declares other standard object methods.
+    // If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT.
+    PLEARN_DECLARE_OBJECT(ExhaustiveNearestNeighbors);
 
 
 public:
-  //#####  PLearner Methods  ################################################
+    //#####  PLearner Methods  ################################################
 
-  //! Overridden to make an in-memory version of the training set
-  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+    //! Overridden to make an in-memory version of the training set
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
-  //! (Re-)initializes the PLearner in its fresh state (that state may
-  //! depend on the 'seed' option)
-  //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
-  virtual void forget();
+    //! (Re-)initializes the PLearner in its fresh state (that state may
+    //! depend on the 'seed' option)
+    //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
+    virtual void forget();
     
-  //! The role of the train method is to bring the learner up to stage==nstages,
-  //! updating the train_stats collector with training costs measured on-line in the process.
-  virtual void train();
+    //! The role of the train method is to bring the learner up to stage==nstages,
+    //! updating the train_stats collector with training costs measured on-line in the process.
+    virtual void train();
 
-  //! Compute the output and cost from the input
-  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-                                     Vec& output, Vec& costs) const;
+    //! Compute the output and cost from the input
+    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                       Vec& output, Vec& costs) const;
   
-  //! Computes the output from the input.
-  virtual void computeOutput(const Vec& input, Vec& output) const;
+    //! Computes the output from the input.
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
-  //! Computes the costs from already computed output. 
-  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                       const Vec& target, Vec& costs) const;
+    //! Computes the costs from already computed output. 
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const;
   
-  //! Returns the names of the costs computed by computeCostsFromOutpus.
-  //! These are always kernel evaluations; there are num_neighbors test costs.
-  virtual TVec<std::string> getTestCostNames() const;
+    //! Returns the names of the costs computed by computeCostsFromOutpus.
+    //! These are always kernel evaluations; there are num_neighbors test costs.
+    virtual TVec<std::string> getTestCostNames() const;
 
-  //! Return num_neighbors
-  virtual int nTestCosts() const;
+    //! Return num_neighbors
+    virtual int nTestCosts() const;
 
-  //! Returns the names of the objective costs that the train method
-  //! computes and for which it updates the VecStatsCollector train_stats.
-  virtual TVec<std::string> getTrainCostNames() const;
+    //! Returns the names of the objective costs that the train method
+    //! computes and for which it updates the VecStatsCollector train_stats.
+    virtual TVec<std::string> getTrainCostNames() const;
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
-  //! Return the top-ranking nearest-neighbors elements as a priority queue
-  //! of (kernel-value,train-set-index) pairs
-  void findNearestNeighbors(const Vec& input,
-                            priority_queue< pair<real,int> >& q) const;
+    //! Return the top-ranking nearest-neighbors elements as a priority queue
+    //! of (kernel-value,train-set-index) pairs
+    void findNearestNeighbors(const Vec& input,
+                              priority_queue< pair<real,int> >& q) const;
 };
 
 // Declares a few other classes and functions related to this class.
@@ -184,3 +184,16 @@ DECLARE_OBJECT_PTR(ExhaustiveNearestNeighbors);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

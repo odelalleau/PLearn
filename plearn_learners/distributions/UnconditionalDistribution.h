@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,68 +54,68 @@ class UnconditionalDistribution: public PDistribution
 
 private:
 
-  typedef PDistribution inherited;  
+    typedef PDistribution inherited;  
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  UnconditionalDistribution();
+    //! Default constructor.
+    UnconditionalDistribution();
 
-  // *************************
-  // * PDistribution methods *
-  // *************************
+    // *************************
+    // * PDistribution methods *
+    // *************************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declare this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declare this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply call inherited::build() then build_().
-  virtual void build();
+    //! Simply call inherited::build() then build_().
+    virtual void build();
 
-  //! Transform a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transform a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declare other standard object methods.
-  PLEARN_DECLARE_OBJECT(UnconditionalDistribution);
+    // Declare other standard object methods.
+    PLEARN_DECLARE_OBJECT(UnconditionalDistribution);
 
-  // *******************************
-  // **** PDistribution methods ****
-  // *******************************
+    // *******************************
+    // **** PDistribution methods ****
+    // *******************************
 
-  //! Return an error (not used in unconditional distributions).
-  void setInput(const Vec& input) const;
-  void updateFromConditionalSorting() const;
+    //! Return an error (not used in unconditional distributions).
+    void setInput(const Vec& input) const;
+    void updateFromConditionalSorting() const;
 
-  //! Overridden to use the default PLearner method instead of the conditional
-  //! distribution version.
-  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+    //! Overridden to use the default PLearner method instead of the conditional
+    //! distribution version.
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
 };
 
@@ -126,3 +126,15 @@ DECLARE_OBJECT_PTR(UnconditionalDistribution);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixAffineTransformFeedbackVariable.h,v 1.4 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef MatrixAffineTransformFeedbackVariable_INC
 #define MatrixAffineTransformFeedbackVariable_INC
@@ -56,20 +56,20 @@ using namespace std;
 //! which is equivalent to b + 
 class MatrixAffineTransformFeedbackVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  MatrixAffineTransformFeedbackVariable() {}
-  MatrixAffineTransformFeedbackVariable(Variable* g, Variable* input)
-      : inherited(g, input, g->length()+1, input->length())
-  {}
+    //!  Default constructor for persistence
+    MatrixAffineTransformFeedbackVariable() {}
+    MatrixAffineTransformFeedbackVariable(Variable* g, Variable* input)
+        : inherited(g, input, g->length()+1, input->length())
+    {}
 
-  PLEARN_DECLARE_OBJECT(MatrixAffineTransformFeedbackVariable);
+    PLEARN_DECLARE_OBJECT(MatrixAffineTransformFeedbackVariable);
 
     //virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop() {};
+    virtual void fprop();
+    virtual void bprop() {};
 };
 
 DECLARE_OBJECT_PTR(MatrixAffineTransformFeedbackVariable);
@@ -77,3 +77,16 @@ DECLARE_OBJECT_PTR(MatrixAffineTransformFeedbackVariable);
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

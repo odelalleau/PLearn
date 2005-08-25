@@ -34,10 +34,10 @@
 
  
 /* *******************************************************      
-   * $Id: TypeTraits.h,v 1.9 2005/05/04 22:07:58 plearner Exp $
-   * AUTHORS: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/TypeTraits.h */
@@ -56,10 +56,10 @@ using std::string;
 /*! TypeTraits<some_type> will deliver the following information on the type:
   - its name() [ returned as a string ]
   - the "typecode", which is the header-byte used to indicate type of an element to follow
-    in plearn_binary serialization. little_endian_typecode() and big_endian_typecode()
-    respectively return the code to designate little-endian or big-endian representation.
-    Only the very basic C++ types have specific typecodes. For all other more complex types,
-    these functions should always return 0xFF
+  in plearn_binary serialization. little_endian_typecode() and big_endian_typecode()
+  respectively return the code to designate little-endian or big-endian representation.
+  Only the very basic C++ types have specific typecodes. For all other more complex types,
+  these functions should always return 0xFF
 */
 
 // The following template defines the TypeTraits for a generic unknown type
@@ -68,14 +68,14 @@ template<class T>
 class TypeTraits
 {
 public:
-  static inline string name()
-  { return "UNKNOWN_TYPE_NAME"; }
+    static inline string name()
+    { return "UNKNOWN_TYPE_NAME"; }
 
-  static inline unsigned char little_endian_typecode()
-  { return 0xFF; }
+    static inline unsigned char little_endian_typecode()
+    { return 0xFF; }
 
-  static inline unsigned char big_endian_typecode()
-  { return 0xFF; }
+    static inline unsigned char big_endian_typecode()
+    { return 0xFF; }
 
 };
 
@@ -85,14 +85,14 @@ template<class T>
 class TypeTraits<T*>
 {
 public:
-  static inline string name() 
-  { return TypeTraits<T>::name()+"*"; }
+    static inline string name() 
+    { return TypeTraits<T>::name()+"*"; }
 
-  static inline unsigned char little_endian_typecode()
-  { return 0xFF; }
+    static inline unsigned char little_endian_typecode()
+    { return 0xFF; }
 
-  static inline unsigned char big_endian_typecode()
-  { return 0xFF; }
+    static inline unsigned char big_endian_typecode()
+    { return 0xFF; }
 };
 
 #define DECLARE_TYPE_TRAITS_FOR_BASETYPE(T,LITTLE_ENDIAN_TYPECODE,BIG_ENDIAN_TYPECODE) \
@@ -145,59 +145,72 @@ template<class T>
 class TypeTraits< std::vector<T> >
 {
 public:
-  static inline string name()
-  { return string("vector< ") + TypeTraits<T>::name()+" >"; }
+    static inline string name()
+    { return string("vector< ") + TypeTraits<T>::name()+" >"; }
 
-  static inline unsigned char little_endian_typecode()
-  { return 0xFF; }
+    static inline unsigned char little_endian_typecode()
+    { return 0xFF; }
 
-  static inline unsigned char big_endian_typecode()
-  { return 0xFF; }
+    static inline unsigned char big_endian_typecode()
+    { return 0xFF; }
 };
 
 template<class T>
 class TypeTraits< std::list<T> >
 {
 public:
-  static inline string name()
-  { return string("list< ") + TypeTraits<T>::name()+" >"; }
+    static inline string name()
+    { return string("list< ") + TypeTraits<T>::name()+" >"; }
 
-  static inline unsigned char little_endian_typecode()
-  { return 0xFF; }
+    static inline unsigned char little_endian_typecode()
+    { return 0xFF; }
 
-  static inline unsigned char big_endian_typecode()
-  { return 0xFF; }
+    static inline unsigned char big_endian_typecode()
+    { return 0xFF; }
 };
 
 template<class T, class U>
 class TypeTraits< std::pair<T,U> >
 {
 public:
-  static inline string name()
-  { return string("pair< ") + TypeTraits<T>::name()+", " + TypeTraits<U>::name()+" >"; }
+    static inline string name()
+    { return string("pair< ") + TypeTraits<T>::name()+", " + TypeTraits<U>::name()+" >"; }
 
-  static inline unsigned char little_endian_typecode()
-  { return 0xFF; }
+    static inline unsigned char little_endian_typecode()
+    { return 0xFF; }
 
-  static inline unsigned char big_endian_typecode()
-  { return 0xFF; }
+    static inline unsigned char big_endian_typecode()
+    { return 0xFF; }
 };
 
 template<class T, class U>
 class TypeTraits< std::map<T,U> >
 {
 public:
-  static inline string name()
-  { return string("map< ") + TypeTraits<T>::name()+", " + TypeTraits<U>::name()+" >"; }
+    static inline string name()
+    { return string("map< ") + TypeTraits<T>::name()+", " + TypeTraits<U>::name()+" >"; }
 
-  static inline unsigned char little_endian_typecode()
-  { return 0xFF; }
+    static inline unsigned char little_endian_typecode()
+    { return 0xFF; }
 
-  static inline unsigned char big_endian_typecode()
-  { return 0xFF; }
+    static inline unsigned char big_endian_typecode()
+    { return 0xFF; }
 };
 
 } // end of namespace PLearn
 
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

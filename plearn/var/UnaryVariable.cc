@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryVariable.cc,v 1.17 2004/11/24 18:26:35 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "UnaryVariable.h"
 
@@ -49,7 +49,7 @@ using namespace std;
 /** UnaryVariable **/
 
 UnaryVariable::UnaryVariable(Variable* v, int thelength, int thewidth)
-  : Variable(thelength,thewidth), input(v) 
+    : Variable(thelength,thewidth), input(v) 
 {}
 
 
@@ -57,10 +57,10 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(UnaryVariable, "ONE LINE DESCR", "NO HELP");
 
 void UnaryVariable::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "input", &UnaryVariable::input, OptionBase::buildoption, 
-                "The parent variable that this one depends on\n");
+    declareOption(ol, "input", &UnaryVariable::input, OptionBase::buildoption, 
+                  "The parent variable that this one depends on\n");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 #ifdef __INTEL_COMPILER
@@ -73,86 +73,97 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
 void UnaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Variable::makeDeepCopyFromShallowCopy(copies);
-  //deepCopyField(input, copies);
-  varDeepCopyField(input, copies); // a cause d'une bug du compilateur
+    Variable::makeDeepCopyFromShallowCopy(copies);
+    //deepCopyField(input, copies);
+    varDeepCopyField(input, copies); // a cause d'une bug du compilateur
 }
 
 
 bool UnaryVariable::markPath()
 {
-  if(!marked)
-    marked = input->markPath();
-  return marked;
+    if(!marked)
+        marked = input->markPath();
+    return marked;
 }
 
 
 void UnaryVariable::buildPath(VarArray& proppath)
 {
-  if(marked)
+    if(marked)
     {
-      input->buildPath(proppath);
-      //cout<<"add :"<<this->getName()<<endl;
-      proppath.append(Var(this));
-      clearMark();
+        input->buildPath(proppath);
+        //cout<<"add :"<<this->getName()<<endl;
+        proppath.append(Var(this));
+        clearMark();
     }
 }
 
 
 VarArray UnaryVariable::sources() 
 { 
-  if (marked)
-    return VarArray(0,0);
-  marked = true;
-  return input->sources(); 
+    if (marked)
+        return VarArray(0,0);
+    marked = true;
+    return input->sources(); 
 }
 
 
 VarArray UnaryVariable::random_sources() 
 { 
-  if (marked)
-    return VarArray(0,0);
-  marked = true;
-  return input->random_sources(); 
+    if (marked)
+        return VarArray(0,0);
+    marked = true;
+    return input->random_sources(); 
 }
 
 
 VarArray UnaryVariable::ancestors() 
 { 
-  if (marked)
-    return VarArray(0,0);
-  marked = true;
-  return input->ancestors() & (VarArray)Var(this);
+    if (marked)
+        return VarArray(0,0);
+    marked = true;
+    return input->ancestors() & (VarArray)Var(this);
 }
 
 
 void UnaryVariable::unmarkAncestors()
 { 
-  if (marked)
+    if (marked)
     {
-      marked = false;
-      input->unmarkAncestors();
+        marked = false;
+        input->unmarkAncestors();
     }
 }
 
 
 VarArray UnaryVariable::parents() 
 { 
-  if (input->marked)
-    return VarArray(0,0);
-  else
-    return input;
+    if (input->marked)
+        return VarArray(0,0);
+    else
+        return input;
 }
 
 
 void UnaryVariable::resizeRValue()
 {
-  inherited::resizeRValue();
-  if (!input->rvaluedata) input->resizeRValue();
+    inherited::resizeRValue();
+    if (!input->rvaluedata) input->resizeRValue();
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

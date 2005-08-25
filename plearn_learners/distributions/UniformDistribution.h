@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UniformDistribution.h,v 1.6 2004/11/12 16:33:53 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,94 +54,94 @@ class UniformDistribution: public UnconditionalDistribution
 
 private:
 
-  typedef UnconditionalDistribution inherited;  
+    typedef UnconditionalDistribution inherited;  
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  mutable int counter;
+    mutable int counter;
   
-  // Fields below are not options.
+    // Fields below are not options.
 
-  //! The dimension of points generated.
-  int n_dim;
+    //! The dimension of points generated.
+    int n_dim;
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  Vec max;
-  Vec min;
-  int mesh_size;
+    Vec max;
+    Vec min;
+    int mesh_size;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  UniformDistribution();
+    //! Default constructor.
+    UniformDistribution();
 
-  // *************************
-  // * PDistribution methods *
-  // *************************
+    // *************************
+    // * PDistribution methods *
+    // *************************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declare this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declare this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply call inherited::build() then build_().
-  virtual void build();
+    //! Simply call inherited::build() then build_().
+    virtual void build();
 
-  //! Transform a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transform a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declare other standard object methods.
-  PLEARN_DECLARE_OBJECT(UniformDistribution);
+    // Declare other standard object methods.
+    PLEARN_DECLARE_OBJECT(UniformDistribution);
 
-  // *******************************
-  // **** PDistribution methods ****
-  // *******************************
+    // *******************************
+    // **** PDistribution methods ****
+    // *******************************
 
-  //! Overridden so that it does not need a training set.
-  virtual int inputsize() const;
+    //! Overridden so that it does not need a training set.
+    virtual int inputsize() const;
 
-  //! Return log of probability density log(p(x)).
-  virtual real log_density(const Vec& x) const;
+    //! Return log of probability density log(p(x)).
+    virtual real log_density(const Vec& x) const;
 
-  //! Return survival fn = P(X>x).
-  virtual real survival_fn(const Vec& x) const;
+    //! Return survival fn = P(X>x).
+    virtual real survival_fn(const Vec& x) const;
 
-  //! Return survival fn = P(X<x).
-  virtual real cdf(const Vec& x) const;
+    //! Return survival fn = P(X<x).
+    virtual real cdf(const Vec& x) const;
 
-  //! Return E[X].
-  virtual void expectation(Vec& mu) const;
+    //! Return E[X].
+    virtual void expectation(Vec& mu) const;
 
-  //! Return Var[X].
-  virtual void variance(Mat& cov) const;
+    //! Return Var[X].
+    virtual void variance(Mat& cov) const;
 
-  //! Reset the random number generator used by generate() using the given seed.
-  virtual void resetGenerator(long g_seed) const;
+    //! Reset the random number generator used by generate() using the given seed.
+    virtual void resetGenerator(long g_seed) const;
 
-  //! Return a pseudo-random sample generated from the distribution.
-  virtual void generate(Vec& x) const;
+    //! Return a pseudo-random sample generated from the distribution.
+    virtual void generate(Vec& x) const;
 
 };
 
@@ -152,3 +152,15 @@ DECLARE_OBJECT_PTR(UniformDistribution);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

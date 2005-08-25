@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: PlusScalarVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "PlusScalarVariable.h"
 #include "SumVariable.h"
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(PlusScalarVariable,
                         "NO HELP");
 
 PlusScalarVariable::PlusScalarVariable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, input1->length(), input1->width())
+    : inherited(input1, input2, input1->length(), input1->width())
 {
     build_();
 }
@@ -86,40 +86,40 @@ void PlusScalarVariable::recomputeSize(int& l, int& w) const
 
 void PlusScalarVariable::fprop()
 {
-  real scal = input2->valuedata[0];
-  for(int k=0; k<nelems(); k++)
-    valuedata[k] = input1->valuedata[k] + scal;
+    real scal = input2->valuedata[0];
+    for(int k=0; k<nelems(); k++)
+        valuedata[k] = input1->valuedata[k] + scal;
 }
 
 
 void PlusScalarVariable::bprop()
 {
-  for(int k=0; k<nelems(); k++)
+    for(int k=0; k<nelems(); k++)
     {
-      input1->gradientdata[k] += gradientdata[k];
-      input2->gradientdata[0] += gradientdata[k];
+        input1->gradientdata[k] += gradientdata[k];
+        input2->gradientdata[0] += gradientdata[k];
     }
 }
 
 
 void PlusScalarVariable::bbprop()
 {
-  if (input1->diaghessian.length()==0)
-    input1->resizeDiagHessian();
-  if (input2->diaghessian.length()==0)
-    input2->resizeDiagHessian();
-  for(int k=0; k<nelems(); k++)
+    if (input1->diaghessian.length()==0)
+        input1->resizeDiagHessian();
+    if (input2->diaghessian.length()==0)
+        input2->resizeDiagHessian();
+    for(int k=0; k<nelems(); k++)
     {
-      input1->diaghessiandata[k] += diaghessiandata[k];
-      input2->diaghessiandata[0] += diaghessiandata[k];
+        input1->diaghessiandata[k] += diaghessiandata[k];
+        input2->diaghessiandata[0] += diaghessiandata[k];
     }
 }
 
 
 void PlusScalarVariable::symbolicBprop()
 {
-  input1->accg(g);
-  input2->accg(sum(g));
+    input1->accg(g);
+    input2->accg(sum(g));
 }
 
 
@@ -127,14 +127,25 @@ void PlusScalarVariable::symbolicBprop()
 // R(x1+x2) = R(x1) + R(x2)
 void PlusScalarVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  real rscal = input2->rvaluedata[0];
-  for(int k=0; k<nelems(); k++)
-    rvaluedata[k] = input1->rvaluedata[k] + rscal;
+    if (rValue.length()==0) resizeRValue();
+    real rscal = input2->rvaluedata[0];
+    for(int k=0; k<nelems(); k++)
+        rvaluedata[k] = input1->rvaluedata[k] + rscal;
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DirectNegativeCostFunction.h,v 1.4 2004/04/07 23:15:17 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef DirectNegativeCostFunction_INC
 #define DirectNegativeCostFunction_INC
@@ -50,16 +50,16 @@ using namespace std;
 
 class DirectNegativeCostFunction: public Kernel
 {
-  typedef Kernel inherited;
+    typedef Kernel inherited;
 		
 public:
     DirectNegativeCostFunction()
-        {}
+    {}
 
     PLEARN_DECLARE_OBJECT(DirectNegativeCostFunction);
 
     virtual string info() const
-        { return "direct_negative_cost_function"; }
+    { return "direct_negative_cost_function"; }
 
     virtual real evaluate(const Vec& output, const Vec& target) const;
 };
@@ -71,3 +71,15 @@ inline CostFunc directnegative_costfunc()
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

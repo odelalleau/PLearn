@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DiagonalizedFactorsProductVariable.h,v 1.1 2004/07/19 22:31:11 yoshua Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef DiagonalizedFactorsProductVariable_INC
 #define DiagonalizedFactorsProductVariable_INC
@@ -50,33 +50,33 @@ using namespace std;
 
 
 /*!   Variable that computes the matrix*diag(vector)*matrix product
-      like the one found in singular value decomposition or eigen-decomposition.
-      It has three parents: left_matrix U, center_diagonal_vector d, and right_matrix V.
-      The output value has elements (i,j) equal to sum_k U_{ik} d_k V_{kj}.
-      Optionally the right_matrix or the left_matrix is transposed before being applied.
+  like the one found in singular value decomposition or eigen-decomposition.
+  It has three parents: left_matrix U, center_diagonal_vector d, and right_matrix V.
+  The output value has elements (i,j) equal to sum_k U_{ik} d_k V_{kj}.
+  Optionally the right_matrix or the left_matrix is transposed before being applied.
 */
 class DiagonalizedFactorsProductVariable: public NaryVariable
 {
     typedef NaryVariable inherited;
 
 public:
-  bool transpose_left, transpose_right;
+    bool transpose_left, transpose_right;
 
-  //!  Default constructor for persistence
-  DiagonalizedFactorsProductVariable() {}
-  DiagonalizedFactorsProductVariable(Var left_matrix, Var center_diagonal, Var right_matrix,
-                                     bool transpose_left=false, bool transpose_right=false);
+    //!  Default constructor for persistence
+    DiagonalizedFactorsProductVariable() {}
+    DiagonalizedFactorsProductVariable(Var left_matrix, Var center_diagonal, Var right_matrix,
+                                       bool transpose_left=false, bool transpose_right=false);
 
-  PLEARN_DECLARE_OBJECT(DiagonalizedFactorsProductVariable);
+    PLEARN_DECLARE_OBJECT(DiagonalizedFactorsProductVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  Var& leftMatrix() { return varray[0]; }
-  Var& centerDiagonal() { return varray[1]; }
-  Var& rightMatrix() { return varray[2]; }
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    Var& leftMatrix() { return varray[0]; }
+    Var& centerDiagonal() { return varray[1]; }
+    Var& rightMatrix() { return varray[2]; }
 
 protected:
     void build_();
@@ -90,3 +90,16 @@ inline Var diagonalized_factors_product(Var left_matrix, Var center_diagonal, Va
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

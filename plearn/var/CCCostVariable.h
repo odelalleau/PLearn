@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: CCCostVariable.h,v 1.1 2004/11/12 20:04:34 larocheh Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef CCCostVariable_INC
 #define CCCostVariable_INC
@@ -51,47 +51,47 @@ using namespace std;
 
 class CCCostVariable: public NaryVariable
 {
-  typedef NaryVariable inherited;
+    typedef NaryVariable inherited;
   
 public:
   
-  VMat distr;
-  Func f_error;
-  Func f_candidate;
-  // To avoid allocation/deallocations in fprop/bprop
-  Vec input_value;
-  Vec input_gradient;
-  Vec error_output_value;
-  Vec candidate_output_value;
-  Vec error_correlations;
-  Vec adjusted_gradient;
+    VMat distr;
+    Func f_error;
+    Func f_candidate;
+    // To avoid allocation/deallocations in fprop/bprop
+    Vec input_value;
+    Vec input_gradient;
+    Vec error_output_value;
+    Vec candidate_output_value;
+    Vec error_correlations;
+    Vec adjusted_gradient;
 private:
-  Vec mean_error;
-  real mean_candidate;
+    Vec mean_error;
+    real mean_candidate;
     
 public:
-  //!  protected default constructor for persistence
-  CCCostVariable() : distr(), f_error(), f_candidate() {}
-  //!  constructor
-  CCCostVariable(VMat the_distr, Func the_f, Func f_candidate);
+    //!  protected default constructor for persistence
+    CCCostVariable() : distr(), f_error(), f_candidate() {}
+    //!  constructor
+    CCCostVariable(VMat the_distr, Func the_f, Func f_candidate);
     
-  PLEARN_DECLARE_OBJECT(CCCostVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(CCCostVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-  virtual void fprop();
-  virtual void bprop();
-  virtual void fbprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void fprop();
+    virtual void bprop();
+    virtual void fbprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
     
-  void printInfo(bool print_gradient);
+    void printInfo(bool print_gradient);
 
 protected:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(CCCostVariable);
@@ -103,3 +103,16 @@ inline Var cccost(VMat distr, Func the_f_error, Func the_f_candidate)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

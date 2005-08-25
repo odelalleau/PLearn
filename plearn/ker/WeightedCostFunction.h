@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: WeightedCostFunction.h,v 1.5 2004/09/14 16:04:36 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef WeightedCostFunction_INC
 #define WeightedCostFunction_INC
@@ -59,15 +59,15 @@ class WeightedCostFunction: public Kernel
 protected:
     Ker costfunc;
 
-  public:
+public:
     WeightedCostFunction() : costfunc() {}
     WeightedCostFunction(Ker the_costfunc)
-      :costfunc(the_costfunc) {}
+        :costfunc(the_costfunc) {}
 
     PLEARN_DECLARE_OBJECT(WeightedCostFunction);
 
     virtual string info() const
-        { return "weighted "+costfunc->info(); }
+    { return "weighted "+costfunc->info(); }
 
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
@@ -87,3 +87,15 @@ inline CostFunc weighted_costfunc(CostFunc costfunc)
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

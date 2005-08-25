@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyMagnifiedDistribution.h,v 1.1 2005/04/23 13:19:23 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -55,98 +55,98 @@ class LocallyMagnifiedDistribution: public PDistribution
 
 private:
 
-  typedef PDistribution inherited;  
+    typedef PDistribution inherited;  
 
-  //! Global storage to save memory allocations.
-  mutable Vec trainsample, weights;
+    //! Global storage to save memory allocations.
+    mutable Vec trainsample, weights;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  PP<GenericNearestNeighbors> NN;
-  Vec emptyvec;
-  mutable Vec NN_outputs;
-  mutable Vec NN_costs;
+    PP<GenericNearestNeighbors> NN;
+    Vec emptyvec;
+    mutable Vec NN_outputs;
+    mutable Vec NN_costs;
 
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  //! The kernel that will be used to locally weigh the samples
-  Ker weighting_kernel;
+    //! The kernel that will be used to locally weigh the samples
+    Ker weighting_kernel;
 
-  //! The distribution that will be trained with local weights
-  PP<PDistribution> localdistr; 
+    //! The distribution that will be trained with local weights
+    PP<PDistribution> localdistr; 
 
-  int mode;
+    int mode;
 
-  int width_neighbor;
-  real width_factor;
-  string width_optionname;
+    int width_neighbor;
+    real width_factor;
+    string width_optionname;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  LocallyMagnifiedDistribution();
+    //! Default constructor.
+    LocallyMagnifiedDistribution();
 
-  // *************************
-  // * PDistribution methods *
-  // *************************
+    // *************************
+    // * PDistribution methods *
+    // *************************
 
 private: 
 
-  //! This does the actual building. 
-  // ### Please implement in .cc.
-  void build_();
+    //! This does the actual building. 
+    // ### Please implement in .cc.
+    void build_();
 
 protected: 
 
-  //! Declare this class' options.
-  // ### Please implement in .cc.
-  static void declareOptions(OptionList& ol);
+    //! Declare this class' options.
+    // ### Please implement in .cc.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply call inherited::build() then build_().
-  virtual void build();
+    //! Simply call inherited::build() then build_().
+    virtual void build();
 
-  //! Transform a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transform a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declare other standard object methods.
-  // ### If your class is not instantiatable (it has pure virtual methods)
-  // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
-  PLEARN_DECLARE_OBJECT(LocallyMagnifiedDistribution);
+    // Declare other standard object methods.
+    // ### If your class is not instantiatable (it has pure virtual methods)
+    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
+    PLEARN_DECLARE_OBJECT(LocallyMagnifiedDistribution);
 
-  // *******************************
-  // **** PDistribution methods ****
-  // *******************************
+    // *******************************
+    // **** PDistribution methods ****
+    // *******************************
 
-  //! Return log of probability density log(p(y | x)).
-  virtual real log_density(const Vec& x) const;
+    //! Return log of probability density log(p(y | x)).
+    virtual real log_density(const Vec& x) const;
 
-  // **************************
-  // **** PLearner methods ****
-  // **************************
+    // **************************
+    // **** PLearner methods ****
+    // **************************
 
-  //! The role of the train method is to bring the learner up to stage == nstages,
-  //! updating the train_stats collector with training costs measured on-line in the process.
-  // ### You may remove this method if your distribution does not implement it.
-  virtual void train();
+    //! The role of the train method is to bring the learner up to stage == nstages,
+    //! updating the train_stats collector with training costs measured on-line in the process.
+    // ### You may remove this method if your distribution does not implement it.
+    virtual void train();
 
-  virtual void forget();
+    virtual void forget();
 
 };
 
@@ -156,3 +156,16 @@ DECLARE_OBJECT_PTR(LocallyMagnifiedDistribution);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: HardSlopeVariable.h,v 1.6 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef HardSlopeVariable_INC
 #define HardSlopeVariable_INC
@@ -55,19 +55,19 @@ using namespace std;
 // is 0 in [-infty,left], linear in [left,right], and 1 in [right,infty].
 class HardSlopeVariable: public NaryVariable
 {
-  typedef NaryVariable inherited;
+    typedef NaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  HardSlopeVariable() {}
-  HardSlopeVariable(Variable* x, Variable* left, Variable* right);
+    //!  Default constructor for persistence
+    HardSlopeVariable() {}
+    HardSlopeVariable(Variable* x, Variable* left, Variable* right);
 
-  PLEARN_DECLARE_OBJECT(HardSlopeVariable);
+    PLEARN_DECLARE_OBJECT(HardSlopeVariable);
 
-  virtual void recomputeSize(int& l, int& w) const;  
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;  
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 };
 
 DECLARE_OBJECT_PTR(HardSlopeVariable);
@@ -78,9 +78,22 @@ inline Var hard_slope(Var x, Var left, Var right)
 // derivative of hard_slope wrt x
 inline Var d_hard_slope(Var x, Var left, Var right)
 {
-  return ifThenElse((x>=left)*(x<=right), invertElements(right-left), var(0.0));
+    return ifThenElse((x>=left)*(x<=right), invertElements(right-left), var(0.0));
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

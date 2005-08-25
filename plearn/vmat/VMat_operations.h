@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_operations.h,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -51,15 +51,15 @@
 namespace PLearn {
 using namespace std;
 
-  class VMat;
+class VMat;
 
 /*!   If exclude==false (the default) 
-    returns a VMat containing only the rows
-    whose column col has a value that belongs 
-    to the given set of authorized values
+  returns a VMat containing only the rows
+  whose column col has a value that belongs 
+  to the given set of authorized values
   If exclude==true
-    returns a VMat with all the other rows 
-    (corresponds to grep -v)
+  returns a VMat with all the other rows 
+  (corresponds to grep -v)
   [MISSING_VALUE is a possible value and is handled correctly]
 */
 VMat grep(VMat d, int col, Vec values, bool exclude=false);
@@ -112,12 +112,25 @@ void fullyRebalance2Classes(VMat inputs, const string& filename, bool save_indic
   on 1 column (YYYYMMDD) or 3 (YYYY, MM and DD).
 */
 VMat temporalThreshold(VMat distr, int threshold_date, bool is_before,
-      int yyyymmdd_col);
+                       int yyyymmdd_col);
 VMat temporalThreshold(VMat distr, int threshold_date, bool is_before,
-      int yyyy_col, int mm_col, int dd_col);
+                       int yyyy_col, int mm_col, int dd_col);
 
 
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

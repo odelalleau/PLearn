@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.h,v 1.13 2004/09/14 16:04:39 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -55,101 +55,114 @@ class KNNVMatrix: public SourceVMatrix
 
 private:
 
-  typedef SourceVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
-  //! Used to store a row of the source VMatrix.
-  mutable Vec source_row;
+    //! Used to store a row of the source VMatrix.
+    mutable Vec source_row;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // Fields below are not options.
+    // Fields below are not options.
 
-  //! Store the nearest neighbours of each point.
-  Mat nn;
+    //! Store the nearest neighbours of each point.
+    Mat nn;
 
-  //! Store the pij weights, if a kernel_pij is provided.
-  Mat pij;
+    //! Store the pij weights, if a kernel_pij is provided.
+    Mat pij;
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  VMat k_nn_mat;
-  Ker kernel_pij;
-  int knn;
-  bool report_progress;
+    VMat k_nn_mat;
+    Ker kernel_pij;
+    int knn;
+    bool report_progress;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  KNNVMatrix();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    KNNVMatrix();
 
-  // ******************
-  // * VMatrix methods *
-  // ******************
+    // ******************
+    // * VMatrix methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
-  //! Return the index in the source matrix of the sample number i in
-  //! this matrix. Also return in i_n the neighbour rank, and in i_ref
-  //! the reference point.
-  inline int getSourceIndexOf(int i, int& i_ref, int& i_n) const;
+    //! Return the index in the source matrix of the sample number i in
+    //! this matrix. Also return in i_n the neighbour rank, and in i_ref
+    //! the reference point.
+    inline int getSourceIndexOf(int i, int& i_ref, int& i_n) const;
 
-  //! Return the tag of the sample number p in a bag:
-  //!   p == 0      => 1
-  //!   p == knn-1  => 2
-  //!   otherwise   => 0  
-  //! (If knn == 1, always return 3).
-  inline int getTag(int p) const;
+    //! Return the tag of the sample number p in a bag:
+    //!   p == 0      => 1
+    //!   p == knn-1  => 2
+    //!   otherwise   => 0  
+    //! (If knn == 1, always return 3).
+    inline int getTag(int p) const;
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! simply calls inherited::build() then build_() 
-  virtual void build();
+    //! simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods
-  //  If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
-  PLEARN_DECLARE_OBJECT(KNNVMatrix);
+    // Declares other standard object methods
+    //  If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+    PLEARN_DECLARE_OBJECT(KNNVMatrix);
 
 
-  // **************************
-  // **** VMatrix methods ****
-  // **************************
+    // **************************
+    // **** VMatrix methods ****
+    // **************************
 
 protected:
 
-  //! Needed because it's a SourceVMatrix.
-  virtual void getNewRow(int i, const Vec& v) const;
+    //! Needed because it's a SourceVMatrix.
+    virtual void getNewRow(int i, const Vec& v) const;
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(KNNVMatrix);
+DECLARE_OBJECT_PTR(KNNVMatrix);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

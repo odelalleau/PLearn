@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: PowVariable.cc,v 1.6 2004/04/27 15:59:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "PowVariable.h"
 #include "Var_operators.h"
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(PowVariable,
                         "NO HELP");
 
 PowVariable::PowVariable(Variable* input, real the_power)
-  : inherited(input, input->length(), input->width()), power(the_power) 
+    : inherited(input, input->length(), input->width()), power(the_power) 
 {}
 
 void
@@ -76,25 +76,36 @@ void PowVariable::recomputeSize(int& l, int& w) const
 
 void PowVariable::fprop()
 {
-  for(int i=0; i<nelems(); i++)
-    valuedata[i] = mypow(input->valuedata[i],power);
+    for(int i=0; i<nelems(); i++)
+        valuedata[i] = mypow(input->valuedata[i],power);
 }
 
 
 void PowVariable::bprop()
 {
-  for(int i=0; i<nelems(); i++)
-    input->gradientdata[i] += power*gradientdata[i]*mypow(input->valuedata[i],power-1.0);
+    for(int i=0; i<nelems(); i++)
+        input->gradientdata[i] += power*gradientdata[i]*mypow(input->valuedata[i],power-1.0);
 }
 
 
 void PowVariable::symbolicBprop()
 {
-  input->accg(g * (power*pow(input, power-1.)));
+    input->accg(g * (power*pow(input, power-1.)));
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: heap_utilities.h,v 1.2 2005/01/06 16:54:34 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -66,28 +66,28 @@ void
 update_heap(RandomAccessIterator first, RandomAccessIterator last,
             RandomAccessIterator damaged, StrictWeakOrdering comp)
 {
-  typedef typename std::iterator_traits<RandomAccessIterator>::difference_type
-    difference_type;
-  difference_type cur = damaged-first;
-  difference_type size = last-first;
-  typename
-    std::iterator_traits<RandomAccessIterator>::value_type value = *damaged;
+    typedef typename std::iterator_traits<RandomAccessIterator>::difference_type
+        difference_type;
+    difference_type cur = damaged-first;
+    difference_type size = last-first;
+    typename
+        std::iterator_traits<RandomAccessIterator>::value_type value = *damaged;
 
-  // Push down as much as possible, then push up
-  difference_type second_child = 2*cur+2;
-  while (second_child < size) {              // there are two children
-    if (comp(first[second_child], first[second_child-1]))
-      second_child--;                        // take larger child
-    first[cur] = first[second_child];        // fill hole
-    cur = second_child;
-    second_child = 2 * (second_child+1);
-  }
-  if (second_child == size) {
-    first[cur] = first[second_child-1];      // hole is in first child
-    cur = second_child-1;
-  }
-  first[cur] = value;
-  push_heap(first,first+cur+1,comp);
+    // Push down as much as possible, then push up
+    difference_type second_child = 2*cur+2;
+    while (second_child < size) {              // there are two children
+        if (comp(first[second_child], first[second_child-1]))
+            second_child--;                        // take larger child
+        first[cur] = first[second_child];        // fill hole
+        cur = second_child;
+        second_child = 2 * (second_child+1);
+    }
+    if (second_child == size) {
+        first[cur] = first[second_child-1];      // hole is in first child
+        cur = second_child-1;
+    }
+    first[cur] = value;
+    push_heap(first,first+cur+1,comp);
 }
 
 
@@ -100,8 +100,8 @@ void
 update_heap(RandomAccessIterator first, RandomAccessIterator last,
             RandomAccessIterator damaged)
 {
-  typedef typename std::iterator_traits<RandomAccessIterator>::value_type value_type;
-  update_heap(first,last,damaged, std::less<value_type>());
+    typedef typename std::iterator_traits<RandomAccessIterator>::value_type value_type;
+    update_heap(first,last,damaged, std::less<value_type>());
 }
 
 
@@ -114,18 +114,18 @@ template <typename RandomAccessIterator, typename StrictWeakOrdering>
 bool is_valid_heap(RandomAccessIterator first, RandomAccessIterator last,
                    StrictWeakOrdering comp)
 {
-  if (first==last)
-    return true;
+    if (first==last)
+        return true;
 
-  RandomAccessIterator parent = first;
-  int i=1;
-  for (RandomAccessIterator it = first+1 ; it < last ; ++it, ++i) {
-    if (comp(*parent, *it))
-      return false;
-    if ((i & 1) == 0)
-      ++parent;
-  }
-  return true;
+    RandomAccessIterator parent = first;
+    int i=1;
+    for (RandomAccessIterator it = first+1 ; it < last ; ++it, ++i) {
+        if (comp(*parent, *it))
+            return false;
+        if ((i & 1) == 0)
+            ++parent;
+    }
+    return true;
 }
 
 
@@ -134,11 +134,24 @@ template <typename RandomAccessIterator>
 inline
 bool is_valid_heap(RandomAccessIterator first, RandomAccessIterator last)
 {
-  typedef typename std::iterator_traits<RandomAccessIterator>::value_type value_type;
-  return is_valid_heap(first,last,std::less<value_type>());
+    typedef typename std::iterator_traits<RandomAccessIterator>::value_type value_type;
+    return is_valid_heap(first,last,std::less<value_type>());
 }
 
 
 } // end namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

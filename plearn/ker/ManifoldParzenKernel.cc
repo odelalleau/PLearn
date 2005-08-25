@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ManifoldParzenKernel.cc,v 1.4 2005/05/14 15:37:51 larocheh Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ManifoldParzenKernel.h"
 
@@ -46,65 +46,77 @@ namespace PLearn {
 using namespace std;
 
 
-  PLEARN_IMPLEMENT_OBJECT(ManifoldParzenKernel, 
-                          "Kernel that uses the evaluate method of Manifold Parzen.", 
-                          "");
+PLEARN_IMPLEMENT_OBJECT(ManifoldParzenKernel, 
+                        "Kernel that uses the evaluate method of Manifold Parzen.", 
+                        "");
 
 real ManifoldParzenKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
-  real ret;
-  if(is_symmetric)
-    ret = mp->evaluate(x1,x2,scale) + mp->evaluate(x2,x1,scale);
-  else
-    ret = mp->evaluate(x1,x2,scale);
+    real ret;
+    if(is_symmetric)
+        ret = mp->evaluate(x1,x2,scale) + mp->evaluate(x2,x1,scale);
+    else
+        ret = mp->evaluate(x1,x2,scale);
   
-  return ret;
+    return ret;
 }
 
 real ManifoldParzenKernel::evaluate_i_j(int i, int j) const
 { 
-  real ret;
-  if(is_symmetric)
-    ret = mp->evaluate_i_j(i,j,scale) + mp->evaluate_i_j(j,i,scale);
-  else
-    ret = mp->evaluate_i_j(i,j,scale);
+    real ret;
+    if(is_symmetric)
+        ret = mp->evaluate_i_j(i,j,scale) + mp->evaluate_i_j(j,i,scale);
+    else
+        ret = mp->evaluate_i_j(i,j,scale);
   
-  return ret;
+    return ret;
 }
 
 void ManifoldParzenKernel::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "scale", &ManifoldParzenKernel::scale, OptionBase::buildoption,
-                "The scale factor of the eigen values");
-  declareOption(ol, "mp", &ManifoldParzenKernel::mp, OptionBase::buildoption,
-                "Manifold Parzen distribution");
-  declareOption(ol, "train_mp", &ManifoldParzenKernel::train_mp, OptionBase::buildoption,
-                "Indication that the ManifoldParzen distribution should be trained");
-  inherited::declareOptions(ol);
+    declareOption(ol, "scale", &ManifoldParzenKernel::scale, OptionBase::buildoption,
+                  "The scale factor of the eigen values");
+    declareOption(ol, "mp", &ManifoldParzenKernel::mp, OptionBase::buildoption,
+                  "Manifold Parzen distribution");
+    declareOption(ol, "train_mp", &ManifoldParzenKernel::train_mp, OptionBase::buildoption,
+                  "Indication that the ManifoldParzen distribution should be trained");
+    inherited::declareOptions(ol);
 }
 
 void ManifoldParzenKernel::setDataForKernelMatrix(VMat the_data)
 {
-  inherited::setDataForKernelMatrix(the_data);
-  if(train_mp && data)
-  {
-    mp->setTrainingSet(data);
-    PP<VecStatsCollector> stats = new VecStatsCollector();
-    mp->setTrainStatsCollector(stats);
-    mp->train();
-    stats->finalize();
-  }
+    inherited::setDataForKernelMatrix(the_data);
+    if(train_mp && data)
+    {
+        mp->setTrainingSet(data);
+        PP<VecStatsCollector> stats = new VecStatsCollector();
+        mp->setTrainStatsCollector(stats);
+        mp->train();
+        stats->finalize();
+    }
   
-  if(!train_mp && data) PLWARNING("ManifoldParzenKernel::setDataForKernelMatrix: data of kernel is possibly different from data of ManifoldParzen distribution.");
+    if(!train_mp && data) PLWARNING("ManifoldParzenKernel::setDataForKernelMatrix: data of kernel is possibly different from data of ManifoldParzen distribution.");
   
 }
 
 void ManifoldParzenKernel::addDataForKernelMatrix(const Vec& newRow)
 {
-  PLERROR("ManifoldParzenKernel::addDataForKernelMatrix: this method is currently not supported.");
+    PLERROR("ManifoldParzenKernel::addDataForKernelMatrix: this method is currently not supported.");
   
 }
 
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

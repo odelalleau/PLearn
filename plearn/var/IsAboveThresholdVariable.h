@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: IsAboveThresholdVariable.h,v 1.6 2004/04/27 15:59:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef IsAboveThresholdVariable_INC
 #define IsAboveThresholdVariable_INC
@@ -54,25 +54,25 @@ using namespace std;
 // according to the 'strict' field.
 class IsAboveThresholdVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 protected:
-  real threshold, truevalue, falsevalue;
-  bool strict;
+    real threshold, truevalue, falsevalue;
+    bool strict;
 
 public:
-  //!  Default constructor for persistence
-  IsAboveThresholdVariable() : threshold(), truevalue(), falsevalue() {}
-  IsAboveThresholdVariable(Variable* input, real the_threshold, real the_truevalue, real the_falsevalue, bool strict=false);
+    //!  Default constructor for persistence
+    IsAboveThresholdVariable() : threshold(), truevalue(), falsevalue() {}
+    IsAboveThresholdVariable(Variable* input, real the_threshold, real the_truevalue, real the_falsevalue, bool strict=false);
 
-  PLEARN_DECLARE_OBJECT(IsAboveThresholdVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(IsAboveThresholdVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 };
 
 DECLARE_OBJECT_PTR(IsAboveThresholdVariable);
@@ -89,3 +89,16 @@ inline Var operator<=(Var v, real threshold)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

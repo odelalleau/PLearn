@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: VecExtendedVMatrix.cc,v 1.7 2004/07/21 16:30:55 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "VecExtendedVMatrix.h"
 #include <plearn/math/TMat.h>
@@ -54,11 +54,11 @@ VecExtendedVMatrix::VecExtendedVMatrix()
 }
 
 VecExtendedVMatrix::VecExtendedVMatrix(VMat underlying, Vec extend_data)
-  : inherited(underlying.length(), underlying.width() +
-              extend_data.length()),
-    underlying_(underlying), extend_data_(extend_data)
+    : inherited(underlying.length(), underlying.width() +
+                extend_data.length()),
+      underlying_(underlying), extend_data_(extend_data)
 {
-  build();
+    build();
 }
 
 void
@@ -86,16 +86,29 @@ VecExtendedVMatrix::declareOptions(OptionList &ol)
 void VecExtendedVMatrix::getNewRow(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length())
-    PLERROR("In VecExtendedVMatrix::getNewRow OUT OF BOUNDS");
-  if(v.length() != width())
-    PLERROR("In VecExtendedVMatrix::getNewRow v.length() must be equal to the VMat's width");
+    if(i<0 || i>=length())
+        PLERROR("In VecExtendedVMatrix::getNewRow OUT OF BOUNDS");
+    if(v.length() != width())
+        PLERROR("In VecExtendedVMatrix::getNewRow v.length() must be equal to the VMat's width");
 #endif
 
-  Vec subv = v.subVec(0,underlying_->width());
-  underlying_->getRow(i,subv);
-  copy(extend_data_.begin(), extend_data_.end(),
-       v.begin() + underlying_->width());
+    Vec subv = v.subVec(0,underlying_->width());
+    underlying_->getRow(i,subv);
+    copy(extend_data_.begin(), extend_data_.end(),
+         v.begin() + underlying_->width());
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

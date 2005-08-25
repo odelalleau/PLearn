@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecDictionary.cc,v 1.3 2004/09/14 18:52:56 kermorvc Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
 
@@ -46,60 +46,73 @@
 namespace PLearn {
 using namespace std;
   
-  VecDictionary::VecDictionary():inherited(){}
+VecDictionary::VecDictionary():inherited(){}
   
-  VecDictionary::VecDictionary(TVec<string> symbols, bool up_mode)
-  {
+VecDictionary::VecDictionary(TVec<string> symbols, bool up_mode)
+{
     setUpdateMode(up_mode);
     vector_dict=symbols;
     build_();
-  }
+}
 
 PLEARN_IMPLEMENT_OBJECT(VecDictionary,
-    "Dictionary instantiation from a TVec<string>",
-    "This class implements a Dictionary instantiated from a TVec<string>.\n" 
-    "Each element of the TVec<string> is a symbol, and its index in the TVec<string> is\n"
-    "its id.\n");
+                        "Dictionary instantiation from a TVec<string>",
+                        "This class implements a Dictionary instantiated from a TVec<string>.\n" 
+                        "Each element of the TVec<string> is a symbol, and its index in the TVec<string> is\n"
+                        "its id.\n");
 
 void VecDictionary::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "vector_dict", &VecDictionary::vector_dict, OptionBase::buildoption, "TVec<string> containing the symbols of the dictionary");
-  inherited::declareOptions(ol);
+    declareOption(ol, "vector_dict", &VecDictionary::vector_dict, OptionBase::buildoption, "TVec<string> containing the symbols of the dictionary");
+    inherited::declareOptions(ol);
 }
 
 void VecDictionary::build_()
 {
-  //initial building
-  if(string_to_int.size()==0)
-  {
-    // save update mode for later
-    int saved_up_mode=update_mode;
-    // set the dictionary in update mode to insert the words
-    update_mode =  UPDATE;
+    //initial building
+    if(string_to_int.size()==0)
+    {
+        // save update mode for later
+        int saved_up_mode=update_mode;
+        // set the dictionary in update mode to insert the words
+        update_mode =  UPDATE;
     
-    for(int i=0; i<vector_dict.size(); i++){
-      getId(vector_dict[i]);
+        for(int i=0; i<vector_dict.size(); i++){
+            getId(vector_dict[i]);
+        }
+        if(saved_up_mode==NO_UPDATE){
+            // the dictionary must contain oov
+            getId(OOV_TAG);
+        }
+        // restore update mode;
+        update_mode=saved_up_mode;
     }
-    if(saved_up_mode==NO_UPDATE){
-      // the dictionary must contain oov
-      getId(OOV_TAG);
-    }
-    // restore update mode;
-    update_mode=saved_up_mode;
-  }
 }
 
 // ### Nothing to add here, simply calls build_
 void VecDictionary::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void VecDictionary::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(vector_dict, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(vector_dict, copies);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

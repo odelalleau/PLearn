@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BootstrapSplitter.h,v 1.5 2004/09/14 16:04:38 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -51,80 +51,80 @@ using namespace std;
 
 class BootstrapSplitter: public Splitter
 {
-  typedef Splitter inherited;
+    typedef Splitter inherited;
 
 protected:
 
-  //! A (n_splits x 1) matrix containing all the splits, constructed at
-  //! build time.
-  TMat<VMat> bootstrapped_sets;
+    //! A (n_splits x 1) matrix containing all the splits, constructed at
+    //! build time.
+    TMat<VMat> bootstrapped_sets;
     
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
+    // ### declare protected option fields (such as learnt parameters) here
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // ### declare public option fields (such as build options) here
-  real frac;
-  int n_splits;
+    // ### declare public option fields (such as build options) here
+    real frac;
+    int n_splits;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  BootstrapSplitter();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    BootstrapSplitter();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(BootstrapSplitter);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(BootstrapSplitter);
 
 
-  // ********************************
-  // *        Splitter methods      *
-  // * (must be implemented in .cc) *
-  // ********************************
+    // ********************************
+    // *        Splitter methods      *
+    // * (must be implemented in .cc) *
+    // ********************************
   
-  //! Sets the dataset on which the splits are to be based
-  virtual void setDataSet(VMat the_dataset);
+    //! Sets the dataset on which the splits are to be based
+    virtual void setDataSet(VMat the_dataset);
 
-  //! Returns the number of available different "splits"
-  virtual int nsplits() const;
+    //! Returns the number of available different "splits"
+    virtual int nsplits() const;
 
-  //! Returns the number of sets per split
-  virtual int nSetsPerSplit() const;
+    //! Returns the number of sets per split
+    virtual int nSetsPerSplit() const;
 
-  //! Returns split number i
-  virtual TVec<VMat> getSplit(int i=0);
+    //! Returns split number i
+    virtual TVec<VMat> getSplit(int i=0);
 
 };
 
@@ -134,3 +134,16 @@ DECLARE_OBJECT_PTR(BootstrapSplitter);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

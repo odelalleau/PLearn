@@ -31,9 +31,9 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef StrTableVMatrix_H
 #define StrTableVMatrix_H
@@ -49,12 +49,12 @@ class StrTableVMatrix: public MemoryVMatrix
     typedef MemoryVMatrix inherited;
 
 public:
-  StrTableVMatrix(const StringTable & st);
-  StrTableVMatrix();
+    StrTableVMatrix(const StringTable & st);
+    StrTableVMatrix();
 
-  virtual void loadAllStringMappings();
+    virtual void loadAllStringMappings();
 
-  PLEARN_DECLARE_OBJECT(StrTableVMatrix);
+    PLEARN_DECLARE_OBJECT(StrTableVMatrix);
 };
 
 DECLARE_OBJECT_PTR(StrTableVMatrix);
@@ -63,3 +63,15 @@ DECLARE_OBJECT_PTR(StrTableVMatrix);
 
 #endif // StrTableVMatrix_H
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

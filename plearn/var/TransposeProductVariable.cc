@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: TransposeProductVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ProductVariable.h"
 #include "ProductTransposeVariable.h"
@@ -57,7 +57,7 @@ PLEARN_IMPLEMENT_OBJECT(TransposeProductVariable,
                         "NO HELP");
 
 TransposeProductVariable::TransposeProductVariable(Variable* m1, Variable* m2)
-  : inherited(m1, m2, m1->width(), m2->width())
+    : inherited(m1, m2, m1->width(), m2->width())
 {
     build_();
 }
@@ -90,52 +90,63 @@ void TransposeProductVariable::recomputeSize(int& l, int& w) const
 
 void TransposeProductVariable::fprop()
 {
-  // m[i,j] = sum_k input1[k,i] * input2[k,j]
-  transposeProduct(matValue, input1->matValue,input2->matValue);
+    // m[i,j] = sum_k input1[k,i] * input2[k,j]
+    transposeProduct(matValue, input1->matValue,input2->matValue);
 }
 
 
 void TransposeProductVariable::bprop()
 {
-  // dC/dinput1[k,i] += sum_j input2[k,j] dC/dm[i,j] 
-  productTransposeAcc(input1->matGradient, input2->matValue,matGradient);
-  // dC/dinput2[k,j] += sum_i input1[k,i] dC/dm[i,j] 
-  productAcc(input2->matGradient, input1->matValue,matGradient);
+    // dC/dinput1[k,i] += sum_j input2[k,j] dC/dm[i,j] 
+    productTransposeAcc(input1->matGradient, input2->matValue,matGradient);
+    // dC/dinput2[k,j] += sum_i input1[k,i] dC/dm[i,j] 
+    productAcc(input2->matGradient, input1->matValue,matGradient);
 }
 
 
 void TransposeProductVariable::bbprop()
 {
-  if (input1->diaghessian.length()==0)
-    input1->resizeDiagHessian();
-  if (input2->diaghessian.length()==0)
-    input2->resizeDiagHessian();
-  // d^2C/dinput1[k,i]^2 += sum_j input2[k,j]^2 dC/dm[i,j] 
-  squareProductTransposeAcc(input1->matGradient, input2->matValue,matGradient);
-  // d^2C/dinput2[k,j]^2 += sum_i input1[k,i]^2 dC/dm[i,j] 
-  squareProductAcc(input2->matGradient, input1->matValue,matGradient);
+    if (input1->diaghessian.length()==0)
+        input1->resizeDiagHessian();
+    if (input2->diaghessian.length()==0)
+        input2->resizeDiagHessian();
+    // d^2C/dinput1[k,i]^2 += sum_j input2[k,j]^2 dC/dm[i,j] 
+    squareProductTransposeAcc(input1->matGradient, input2->matValue,matGradient);
+    // d^2C/dinput2[k,j]^2 += sum_i input1[k,i]^2 dC/dm[i,j] 
+    squareProductAcc(input2->matGradient, input1->matValue,matGradient);
 }
 
 
 void TransposeProductVariable::symbolicBprop()
 {
-  // dC/dinput1[k,i] += sum_j input2[k,j] dC/dm[i,j] 
-  input1->accg(productTranspose(input2,g));
-  // dC/dinput2[k,j] += sum_i input1[k,i] dC/dm[i,j] 
-  input2->accg(product(input1, g));
+    // dC/dinput1[k,i] += sum_j input2[k,j] dC/dm[i,j] 
+    input1->accg(productTranspose(input2,g));
+    // dC/dinput2[k,j] += sum_i input1[k,i] dC/dm[i,j] 
+    input2->accg(product(input1, g));
 }
 
 
 void TransposeProductVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  // m[i,j] = sum_k input1[k,i] * input2[k,j]
-  transposeProduct(matRValue, input1->matRValue,input2->matValue);
-  transposeProductAcc(matRValue, input1->matValue,input2->matRValue);
+    if (rValue.length()==0) resizeRValue();
+    // m[i,j] = sum_k input1[k,i] * input2[k,j]
+    transposeProduct(matRValue, input1->matRValue,input2->matValue);
+    transposeProductAcc(matRValue, input1->matValue,input2->matRValue);
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

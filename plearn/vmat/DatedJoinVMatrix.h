@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.h,v 1.12 2004/09/14 16:04:39 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 // Authors: *Yoshua Bengio*
 
@@ -52,87 +52,100 @@ using namespace std;
 
 class DatedJoinVMatrix: public RowBufferedVMatrix
 {
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
 public:
-  typedef hash_multimap<Array<real>,int > Maptype;
-  //typedef hash_multimap<Array<real>,int> Maptype;
+    typedef hash_multimap<Array<real>,int > Maptype;
+    //typedef hash_multimap<Array<real>,int> Maptype;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  Vec slave_row, master_row;
-  Array<real> key;
-  Maptype mp; // maps a key to a list of row indices in the slave
-  TVec<int> master2slave;  // maps indices in one db to the other 
-  TVec<list<int> > slave2master; // there may be more than one master row per slave row, sum them
-  int n_master_fields, n_slave_fields; // number of fields of master and slave to copy in result
+    Vec slave_row, master_row;
+    Array<real> key;
+    Maptype mp; // maps a key to a list of row indices in the slave
+    TVec<int> master2slave;  // maps indices in one db to the other 
+    TVec<list<int> > slave2master; // there may be more than one master row per slave row, sum them
+    int n_master_fields, n_slave_fields; // number of fields of master and slave to copy in result
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  VMat master, slave;
-  TVec<int> master_key_indices;
-  TVec<int> slave_key_indices;
-  TVec<string> master_key_names;
-  TVec<string> slave_key_names;
-  TVec<int> slave_field_indices;
-  TVec<string> slave_field_names;
-  TVec<int> master_field_indices;
-  TVec<string> master_field_names;
-  int master_date_field_index;
-  string master_date_field_name;
-  int slave_date_interval_start_field_index;
-  int slave_date_interval_end_field_index;
-  string slave_date_interval_start_field_name;
-  string slave_date_interval_end_field_name;
-  int verbosity;
-  bool output_the_slave;
-  bool output_matching_index;
+    VMat master, slave;
+    TVec<int> master_key_indices;
+    TVec<int> slave_key_indices;
+    TVec<string> master_key_names;
+    TVec<string> slave_key_names;
+    TVec<int> slave_field_indices;
+    TVec<string> slave_field_names;
+    TVec<int> master_field_indices;
+    TVec<string> master_field_names;
+    int master_date_field_index;
+    string master_date_field_name;
+    int slave_date_interval_start_field_index;
+    int slave_date_interval_end_field_index;
+    string slave_date_interval_start_field_name;
+    string slave_date_interval_end_field_name;
+    int verbosity;
+    bool output_the_slave;
+    bool output_matching_index;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  DatedJoinVMatrix();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    DatedJoinVMatrix();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
-  //!  This is the only method requiring implementation
-  virtual void getNewRow(int i, const Vec& v) const;
+    //!  This is the only method requiring implementation
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(DatedJoinVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(DatedJoinVMatrix);
 
 };
 DECLARE_OBJECT_PTR(DatedJoinVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

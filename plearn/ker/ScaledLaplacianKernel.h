@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ScaledLaplacianKernel.h,v 1.4 2004/09/14 16:04:36 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ScaledLaplacianKernel_INC
 #define ScaledLaplacianKernel_INC
@@ -62,7 +62,7 @@ public:
         : phi() {}
     ScaledLaplacianKernel(Vec the_phi)
         : phi(the_phi)
-        {}
+    {}
 
     PLEARN_DECLARE_OBJECT(ScaledLaplacianKernel);
 
@@ -76,3 +76,15 @@ DECLARE_OBJECT_PTR(ScaledLaplacianKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

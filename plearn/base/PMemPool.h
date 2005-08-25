@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PMemPool.h,v 1.2 2005/05/22 04:10:56 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -74,52 +74,52 @@ class PMemPool;
  */
 class PMemArena : public PPointable
 {
-  friend class PMemPool;                     //!< access to "storage"
+    friend class PMemPool;                     //!< access to "storage"
   
 protected:
-  void* storage;                             //!< ptr to physical storage
-  void* end_of_storage;                      //!< "one"-past end-of-storage
-  size_t object_size;                        //!< size of each allocated object
-  size_t allocated_objects;                  //!< number of allocated objects
-  char* watermark;                           //!< location of high-watermark
-  void* free_list;                           //!< next free object
+    void* storage;                             //!< ptr to physical storage
+    void* end_of_storage;                      //!< "one"-past end-of-storage
+    size_t object_size;                        //!< size of each allocated object
+    size_t allocated_objects;                  //!< number of allocated objects
+    char* watermark;                           //!< location of high-watermark
+    void* free_list;                           //!< next free object
 
-  //! Utility union to ensure alignment across platforms
-  union Aligner {
-    char a;
-    int b;
-    long c;
-    double d;
-    void* x;
-  };
+    //! Utility union to ensure alignment across platforms
+    union Aligner {
+        char a;
+        int b;
+        long c;
+        double d;
+        void* x;
+    };
 
 public:
-  //! The constructor needs the size of each object (minimum size = sizeof(void*)),
-  //! and how many objects the arena should contain
-  PMemArena(size_t object_size, size_t max_num_objects);
+    //! The constructor needs the size of each object (minimum size = sizeof(void*)),
+    //! and how many objects the arena should contain
+    PMemArena(size_t object_size, size_t max_num_objects);
 
-  //! Free the allocated memory.  Note that since a PMemArena deals with
-  //! RAW STORAGE, no destructors are ever called before freeing memory
-  ~PMemArena();
+    //! Free the allocated memory.  Note that since a PMemArena deals with
+    //! RAW STORAGE, no destructors are ever called before freeing memory
+    ~PMemArena();
   
-  //! Allocate one object from the arena.  Return NULL if cannot allocate anything.
-  inline void* allocate();
+    //! Allocate one object from the arena.  Return NULL if cannot allocate anything.
+    inline void* allocate();
 
-  //! Free one object from the arena
-  void deallocate(void* p);
+    //! Free one object from the arena
+    void deallocate(void* p);
 
-  //! Return true if the pointer corresponds to an object that might have
-  //! been allocated from the arena
-  bool belongsToArena(void* p) const
+    //! Return true if the pointer corresponds to an object that might have
+    //! been allocated from the arena
+    bool belongsToArena(void* p) const
     { return p >= storage && p < end_of_storage; }
 
-  //! Return true if no objects remain allocated within the arena
-  bool empty() const { return allocated_objects == 0; }
+    //! Return true if no objects remain allocated within the arena
+    bool empty() const { return allocated_objects == 0; }
 
 private:
-  //! No copy or assignment
-  PMemArena(const PMemArena&);
-  void operator=(const PMemArena&);
+    //! No copy or assignment
+    PMemArena(const PMemArena&);
+    void operator=(const PMemArena&);
 };
 
 
@@ -145,47 +145,47 @@ private:
 class PMemPool : public PPointable
 {
 protected:
-  std::list< PP<PMemArena> > arenas; //!< list of allocated arenas
-  PMemArena* last_arena;             //!< arena we last allocated from
-  size_t object_size;                //!< size of each allocated object
-  size_t initial_arena_size;         //!< initially, now many objects per arena
-  size_t cur_arena_size;             //!< currently, how many objects per arena
-  float arena_growth_factor;         //!< by how much to grow cur_arena_size
-  map<void*, PMemArena*> stormap;    //!< quick access to arena storage addresses
-  bool fast_deallocate;              //!< whether to use fast deallocator
-  void* free_list;
+    std::list< PP<PMemArena> > arenas; //!< list of allocated arenas
+    PMemArena* last_arena;             //!< arena we last allocated from
+    size_t object_size;                //!< size of each allocated object
+    size_t initial_arena_size;         //!< initially, now many objects per arena
+    size_t cur_arena_size;             //!< currently, how many objects per arena
+    float arena_growth_factor;         //!< by how much to grow cur_arena_size
+    map<void*, PMemArena*> stormap;    //!< quick access to arena storage addresses
+    bool fast_deallocate;              //!< whether to use fast deallocator
+    void* free_list;
 
 public:
-  //! Constructor specifies the size of each object to be allocated from
-  //! the pool, how big (in number of objects) should be the first
-  //! allocated arena, and how should subsequent arenas grow in size
-  PMemPool(size_t object_size, size_t initial_arena_size,
-           float growth_factor = 1.5,
-           bool use_fast_deallocator = true);
+    //! Constructor specifies the size of each object to be allocated from
+    //! the pool, how big (in number of objects) should be the first
+    //! allocated arena, and how should subsequent arenas grow in size
+    PMemPool(size_t object_size, size_t initial_arena_size,
+             float growth_factor = 1.5,
+             bool use_fast_deallocator = true);
 
-  // Default destructor is OK
+    // Default destructor is OK
 
-  //! Allocate one object from the pool. Throws bad_alloc if cannot allocate
-  void* allocate();
+    //! Allocate one object from the pool. Throws bad_alloc if cannot allocate
+    void* allocate();
 
-  //! Free an object from the pool; this is not extremely fast, as the
-  //! arenas must be searched for who contains the address.  If an arena
-  //! becomes completely free, it is destroyed and its memory released.
-  void deallocate(void* p);
+    //! Free an object from the pool; this is not extremely fast, as the
+    //! arenas must be searched for who contains the address.  If an arena
+    //! becomes completely free, it is destroyed and its memory released.
+    void deallocate(void* p);
 
-  //! Return true if no objects remain allocated within the pool
-  bool empty() const { return arenas.size() == 0; }
+    //! Return true if no objects remain allocated within the pool
+    bool empty() const { return arenas.size() == 0; }
 
-  //! Deallocate all memory from the pool
-  void purge_memory();
+    //! Deallocate all memory from the pool
+    void purge_memory();
   
 protected:
-  //! Search the list of arenas for one that contains some storage;
-  //! if found, return it.  last_arena is modified.
-  void* allocateFromArenas();
+    //! Search the list of arenas for one that contains some storage;
+    //! if found, return it.  last_arena is modified.
+    void* allocateFromArenas();
   
-  //! Construct a new arena and return it; it is added to arenas and stormap
-  PMemArena* newArena();
+    //! Construct a new arena and return it; it is added to arenas and stormap
+    PMemArena* newArena();
 };
 
 
@@ -200,21 +200,21 @@ protected:
 template <class T>
 class PObjectPool : public PMemPool
 {
-  typedef PMemPool inherited;
+    typedef PMemPool inherited;
   
 public:
-  PObjectPool(size_t initial_arena_size, float growth_factor = 1.5,
-              bool use_fast_deallocator = true)
-    : inherited(sizeof(T), initial_arena_size, growth_factor,
-                use_fast_deallocator)
+    PObjectPool(size_t initial_arena_size, float growth_factor = 1.5,
+                bool use_fast_deallocator = true)
+        : inherited(sizeof(T), initial_arena_size, growth_factor,
+                    use_fast_deallocator)
     { }
 
-  //! Allocate raw memory for one object. The object is not constructed.
-  T* allocate() { return static_cast<T*>(inherited::allocate()); }
+    //! Allocate raw memory for one object. The object is not constructed.
+    T* allocate() { return static_cast<T*>(inherited::allocate()); }
 
-  //! Deallocate raw memory from the pool. The object must have been
-  //! destroyed prior to calling this function.
-  void deallocate(T* p) { inherited::deallocate(p); }
+    //! Deallocate raw memory from the pool. The object must have been
+    //! destroyed prior to calling this function.
+    void deallocate(T* p) { inherited::deallocate(p); }
 };
 
 
@@ -229,25 +229,38 @@ public:
 
 inline void* PMemArena::allocate()
 {
-  // See if we can allocate from watermark
-  if (watermark > storage) {
-    watermark -= object_size;
-    allocated_objects++;
-    return watermark;
-  }
-  // Otherwise check if we can allocate from free list
-  else if (free_list) {
-    void** to_return = static_cast<void**>(free_list);
-    free_list = *to_return;
-    allocated_objects++;
-    return to_return;
-  }
-  // Otherwise, cannot allocate at all: return NULL
-  else
-    return 0;
+    // See if we can allocate from watermark
+    if (watermark > storage) {
+        watermark -= object_size;
+        allocated_objects++;
+        return watermark;
+    }
+    // Otherwise check if we can allocate from free list
+    else if (free_list) {
+        void** to_return = static_cast<void**>(free_list);
+        free_list = *to_return;
+        allocated_objects++;
+        return to_return;
+    }
+    // Otherwise, cannot allocate at all: return NULL
+    else
+        return 0;
 }
 
 } // end of namespace PLearn
 
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

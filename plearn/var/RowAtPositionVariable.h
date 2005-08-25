@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef RowAtPositionVariable_INC
 #define RowAtPositionVariable_INC
@@ -58,27 +58,27 @@ using namespace std;
 */
 class RowAtPositionVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 protected:
-  int length_;
+    int length_;
 
 public:
-  //!  Default constructor for persistence
-  RowAtPositionVariable();
-  RowAtPositionVariable(Variable* input1, Variable* input2, int the_length);
+    //!  Default constructor for persistence
+    RowAtPositionVariable();
+    RowAtPositionVariable(Variable* input1, Variable* input2, int the_length);
 
-  PLEARN_DECLARE_OBJECT(RowAtPositionVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(RowAtPositionVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  //  virtual void rprop();
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    //  virtual void rprop();
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 
 protected:
     void build_();
@@ -89,3 +89,16 @@ DECLARE_OBJECT_PTR(RowAtPositionVariable);
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

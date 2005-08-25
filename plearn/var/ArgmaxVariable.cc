@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ArgmaxVariable.cc,v 1.5 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ArgmaxVariable.h"
 
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(ArgmaxVariable,
                         "NO HELP");
 
 ArgmaxVariable::ArgmaxVariable(Variable* input)
-  : inherited(input, input->isVec()?1:2, 1)
+    : inherited(input, input->isVec()?1:2, 1)
 {}
 
 
@@ -66,39 +66,39 @@ void ArgmaxVariable::recomputeSize(int& l, int& w) const
 
 void ArgmaxVariable::fprop()
 {
-  real maxval = input->valuedata[0];
-  if (input->isVec())
+    real maxval = input->valuedata[0];
+    if (input->isVec())
     {
-      int argmax = 0;
-      for(int i=1; i<input->nelems(); i++)
+        int argmax = 0;
+        for(int i=1; i<input->nelems(); i++)
         {
-          real val = input->valuedata[i];
-          if(val>maxval)
+            real val = input->valuedata[i];
+            if(val>maxval)
             {
-              maxval = val;
-              argmax = i;
+                maxval = val;
+                argmax = i;
             }
         }
-      valuedata[0] = argmax;
+        valuedata[0] = argmax;
     }
-  else
+    else
     {
-      int k = 0;
-      int argmax_i = 0;
-      int argmax_j = 0;
-      for(int i=0; i<input->length(); i++)
-        for(int j=0; j<input->width(); j++, k++)
-          {
-            real val = input->valuedata[k];
-            if(val>maxval)
-              {
-                maxval = val;
-                argmax_i = i;
-                argmax_j = j;
-              }
-          }
-      valuedata[0] = argmax_i;
-      valuedata[1] = argmax_j;
+        int k = 0;
+        int argmax_i = 0;
+        int argmax_j = 0;
+        for(int i=0; i<input->length(); i++)
+            for(int j=0; j<input->width(); j++, k++)
+            {
+                real val = input->valuedata[k];
+                if(val>maxval)
+                {
+                    maxval = val;
+                    argmax_i = i;
+                    argmax_j = j;
+                }
+            }
+        valuedata[0] = argmax_i;
+        valuedata[1] = argmax_j;
     }
 }
 
@@ -111,4 +111,15 @@ void ArgmaxVariable::symbolicBprop() {}
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

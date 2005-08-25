@@ -40,22 +40,22 @@ namespace PLearn {
 using namespace std;
 
 class IdentityVariable: public UnaryVariable {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  IdentityVariable() {}
-  IdentityVariable(Variable* input);
+    //!  Default constructor for persistence
+    IdentityVariable() {}
+    IdentityVariable(Variable* input);
 
-  PLEARN_DECLARE_OBJECT(IdentityVariable);
+    PLEARN_DECLARE_OBJECT(IdentityVariable);
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void bbprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
-  inline void setInput(Var the_input){ input = the_input;}
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void bbprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
+    inline void setInput(Var the_input){ input = the_input;}
 };
 
 DECLARE_OBJECT_PTR(IdentityVariable);
@@ -66,3 +66,16 @@ inline Var iden(Var v)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

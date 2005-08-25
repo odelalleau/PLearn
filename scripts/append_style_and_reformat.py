@@ -38,7 +38,7 @@ for fname in sys.argv[1:]:
     ## From lines, find "Local Variables" within the last 15 lines of the
     ## file, and delete from thereon starting from start of comment
     if lastpage == 0:
-        lastpage = len(lines)-15
+        lastpage = max(0, len(lines)-15)
         
     stripto = -1
     for i in range(lastpage, len(lines))[::-1] :

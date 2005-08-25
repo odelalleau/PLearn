@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StaticInitializer.h,v 1.4 2004/10/14 21:23:27 ducharme Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file StaticInitializer.h */
 #ifndef StaticInitializer_INC
@@ -61,11 +61,24 @@ typedef void (*VOIDFUNC)();
 class StaticInitializer
 {
 public:
-  // Simply calls the given initialize function upon construction
-  StaticInitializer(VOIDFUNC initialize);
+    // Simply calls the given initialize function upon construction
+    StaticInitializer(VOIDFUNC initialize);
 };
 
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

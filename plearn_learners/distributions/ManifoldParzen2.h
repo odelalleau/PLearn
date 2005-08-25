@@ -46,93 +46,93 @@ class ManifoldParzen2 : public GaussMix
 
 private:
 
-  typedef GaussMix inherited;
+    typedef GaussMix inherited;
  
-  Vec eigenval_copy;
-  mutable Vec row;
-  mutable Vec t_row;
-  mutable VMat reference_set;
-  mutable TMat<real> mu_temp;
-  mutable TVec<real> temp_eigv;
+    Vec eigenval_copy;
+    mutable Vec row;
+    mutable Vec t_row;
+    mutable VMat reference_set;
+    mutable TMat<real> mu_temp;
+    mutable TVec<real> temp_eigv;
 
-  int find_nearest_neighbor(VMat data, Vec x) const;
+    int find_nearest_neighbor(VMat data, Vec x) const;
 
 public:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
 
-  //!  If you change one of these, you must retrain
-  int nneighbors; //!<  how many neighbors should we consider
-  int ncomponents; //!<  how many components do we want to remember from the PCA
+    //!  If you change one of these, you must retrain
+    int nneighbors; //!<  how many neighbors should we consider
+    int ncomponents; //!<  how many components do we want to remember from the PCA
   
-  bool use_last_eigenval;
-  real scale_factor;
-  real global_lambda0;
-  bool learn_mu;
+    bool use_last_eigenval;
+    real scale_factor;
+    real global_lambda0;
+    bool learn_mu;
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // ### declare public option fields (such as build options) here
-  // ...
+    // ### declare public option fields (such as build options) here
+    // ...
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  ManifoldParzen2();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    ManifoldParzen2();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
-  ManifoldParzen2(int the_nneighbors, int the_ncomponents, bool use_last_eigenvalue=true, real scale_factor=1);
+    ManifoldParzen2(int the_nneighbors, int the_ncomponents, bool use_last_eigenvalue=true, real scale_factor=1);
 
 protected:
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
   
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(ManifoldParzen2);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(ManifoldParzen2);
 
-  // *******************
-  // * Learner methods *
-  // *******************
+    // *******************
+    // * Learner methods *
+    // *******************
 
-  //! trains the model
-  // NOTE : the function assumes that the training_set has only input columns ! (width = dimension of feature space)
-  virtual void train(); 
+    //! trains the model
+    // NOTE : the function assumes that the training_set has only input columns ! (width = dimension of feature space)
+    virtual void train(); 
 
     //! Produce outputs according to what is specified in outputs_def.
-  virtual void computeOutput(const Vec& input, Vec& output) const;
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
-  //! Returned value depends on outputs_def.
-  virtual int outputsize() const;
+    //! Returned value depends on outputs_def.
+    virtual int outputsize() const;
 
-  real evaluate(const Vec x1,const Vec x2,real scale=1);
+    real evaluate(const Vec x1,const Vec x2,real scale=1);
   
-  real evaluate_i_j(int i, int j,real scale=1);
+    real evaluate_i_j(int i, int j,real scale=1);
 };
 
 // Declares a few other classes and functions related to this class
@@ -141,3 +141,16 @@ DECLARE_OBJECT_PTR(ManifoldParzen2);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

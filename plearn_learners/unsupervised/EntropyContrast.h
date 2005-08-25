@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: EntropyContrast.h,v 1.5 2004/09/14 16:04:58 chrish42 Exp $ 
+ * $Id$ 
  ******************************************************* */
 
 /*! \file EntropyContrast.h */
@@ -41,7 +41,7 @@
 #define EntropyContrast_INC
 #define PROB_TABLE_LIMIT 10000000
 
-
+#include <plearn/base/stringutils.h>
 #include <plearn_learners/generic/PLearner.h>
 
 //Continuous includes
@@ -55,12 +55,12 @@
 #include <plearn/math/random.h>
 
 namespace PLearn {
-  using namespace std;
+using namespace std;
 
-  class EntropyContrast: public PLearner
-  {
+class EntropyContrast: public PLearner
+{
 
-  private:
+private:
 //COMMON
     typedef PLearner inherited;
     int n ; // an alias for the inputsize() 
@@ -104,11 +104,11 @@ namespace PLearn {
     Mat grad_H_f_x_wrt_v;
     Mat grad_H_f_x_hat_wrt_v ;
 
-  	Vec grad_H_f_x_wrt_bias_output ; 
-  	Vec grad_H_f_x_wrt_bias_hidden ; 
+    Vec grad_H_f_x_wrt_bias_output ; 
+    Vec grad_H_f_x_wrt_bias_hidden ; 
     
-  	Vec grad_H_f_x_hat_wrt_bias_output ; 
-  	Vec grad_H_f_x_hat_wrt_bias_hidden ;
+    Vec grad_H_f_x_hat_wrt_bias_output ; 
+    Vec grad_H_f_x_hat_wrt_bias_hidden ;
 	
     Mat grad_H_g_wrt_w ; 
         
@@ -138,7 +138,7 @@ namespace PLearn {
 
     // Class fields
 
-  public:
+public:
   
     // ************************
     // * public build options *
@@ -174,12 +174,12 @@ namespace PLearn {
     // * PLearner methods *
     // ******************
 
-  private: 
+private: 
     //! This does the actual building. 
     // (Please implement in .cc)
     void build_();
     string getInfo()
-      {
+    {
         time_t tt;
         time(&tt);
         string time_str(ctime(&tt));
@@ -187,7 +187,7 @@ namespace PLearn {
         string info = tokens[3];
         info += "> ";
         return info;
-      }
+    }
 
     // Continuous functions
     void initialize_NNcontinuous();
@@ -200,7 +200,7 @@ namespace PLearn {
     void compute_diversity_cost(const Vec & f_x,const Vec & cost,Vec & grad_C_extra_cost_wrt_f_x );
     void get_grad_log_variance_wrt_f(Vec & grad, const Vec& f_x, const Vec& mu, const Vec& sigma); 
     void set_NNcontinuous_gradient(Vec &grad_C_real_wrt_f_x,Mat &grad_H_f_x_wrt_w, Mat &grad_H_f_x_wrt_v, Vec &z_x, Vec &x,
-		Vec &grad_H_f_x_wrt_bias_output, Vec &grad_H_f_x_wrt_bias_hidden);
+                                   Vec &grad_H_f_x_wrt_bias_output, Vec &grad_H_f_x_wrt_bias_hidden);
     void gen_normal_0_1(Vec &output) ;
     void set_NNcontinuous_gradient_from_extra_cost(Mat &grad_C_wrt_df_dx,const Vec &input );   // TODO:fill in the needed parameters
     void compute_df_dx(Mat &df_dx,const Vec & input) ; 
@@ -209,12 +209,12 @@ namespace PLearn {
     // Discrete functions
 
 
-  protected: 
+protected: 
     //! Declares this class' options
     // (Please implement in .cc)
     static void declareOptions(OptionList& ol);
 
-  public:
+public:
 
     // ************************
     // **** Object methods ****
@@ -275,12 +275,24 @@ namespace PLearn {
     virtual TVec<string> getTrainCostNames() const;
 
 
-  };
+};
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(EntropyContrast);
+DECLARE_OBJECT_PTR(EntropyContrast);
   
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

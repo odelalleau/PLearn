@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyPrecomputedVMatrix.h,v 1.2 2004/12/09 20:08:08 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -53,60 +53,60 @@ class LocallyPrecomputedVMatrix: public PrecomputedVMatrix
 
 private:
 
-  typedef PrecomputedVMatrix inherited;
+    typedef PrecomputedVMatrix inherited;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  string local_dir;
-  int max_wait;
-  bool remove_when_done;
-  bool sequential_access;
-  int verbosity;
+    string local_dir;
+    int max_wait;
+    bool remove_when_done;
+    bool sequential_access;
+    int verbosity;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  LocallyPrecomputedVMatrix();
+    //! Default constructor.
+    LocallyPrecomputedVMatrix();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // Simply calls inherited::build() then build_().
-  virtual void build();
+    // Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Destructor, used to remove the file.
-  virtual ~LocallyPrecomputedVMatrix();
+    //! Destructor, used to remove the file.
+    virtual ~LocallyPrecomputedVMatrix();
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(LocallyPrecomputedVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(LocallyPrecomputedVMatrix);
 
 };
 
@@ -115,3 +115,16 @@ DECLARE_OBJECT_PTR(LocallyPrecomputedVMatrix);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -34,9 +34,9 @@
 
 
 /* *******************************************************      
-   * $Id: Semaphores.cc,v 1.3 2004/07/21 16:30:54 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include <cstring>
 #include <cerrno>
@@ -47,182 +47,195 @@ namespace PLearn {
 using namespace std;
 
 ResourceSemaphore::ResourceSemaphore(int nb_semaphores)
-  : owner(true), n_semaphores(nb_semaphores)
+    : owner(true), n_semaphores(nb_semaphores)
 {
-  // allocate a semaphore 
-  int rv=semget(IPC_PRIVATE, n_semaphores, 0666 | IPC_CREAT);
-  if (rv == -1) 
-    PLERROR("ResourceSemaphore::ResourceSemaphore(%d) semget returns -1, %s",
-          nb_semaphores,strerror(errno));
-  else id.id=rv;
-  cout << "allocated semaphore " << id.id << endl;
-  clearAnyLock(); // sets all the semaphore values to 1
+    // allocate a semaphore 
+    int rv=semget(IPC_PRIVATE, n_semaphores, 0666 | IPC_CREAT);
+    if (rv == -1) 
+        PLERROR("ResourceSemaphore::ResourceSemaphore(%d) semget returns -1, %s",
+                nb_semaphores,strerror(errno));
+    else id.id=rv;
+    cout << "allocated semaphore " << id.id << endl;
+    clearAnyLock(); // sets all the semaphore values to 1
 }
 
 ResourceSemaphore::ResourceSemaphore(SemId semid) : id(semid), owner(false)
 {
-  struct semid_ds buf;
-  semun u;
-  u.buf = &buf;
-  int r=semctl(id.id,0,IPC_STAT,u);
-  if (r == -1)
-    PLERROR("ResourceSemaphore:: slave ResourceSemaphore(%d) semctl returns -1, %s",
-          id.id,strerror(errno));
-  n_semaphores = u.buf->sem_nsems;
+    struct semid_ds buf;
+    semun u;
+    u.buf = &buf;
+    int r=semctl(id.id,0,IPC_STAT,u);
+    if (r == -1)
+        PLERROR("ResourceSemaphore:: slave ResourceSemaphore(%d) semctl returns -1, %s",
+                id.id,strerror(errno));
+    n_semaphores = u.buf->sem_nsems;
 }
 
 void ResourceSemaphore::lock(int resource)
 {
-  struct sembuf op;
-  op.sem_num = resource;
-  op.sem_op = -1;  // wait for value = 1 and then decrement to zero
-  op.sem_flg = 0;
-  int rv=semop(id.id,&op,1);
-  if (rv == -1)
-    PLERROR("ResourceSemaphore::lock(%d) semop failed, %s",
-          resource,strerror(errno));
+    struct sembuf op;
+    op.sem_num = resource;
+    op.sem_op = -1;  // wait for value = 1 and then decrement to zero
+    op.sem_flg = 0;
+    int rv=semop(id.id,&op,1);
+    if (rv == -1)
+        PLERROR("ResourceSemaphore::lock(%d) semop failed, %s",
+                resource,strerror(errno));
 }
 
 void ResourceSemaphore::unlock(int resource)
 {
-  if (!locked(resource))
-    PLERROR("ResourceSemaphore::unlock(%d), trying to unlock an unlocked resource",
-          resource);
-  struct sembuf op;
-  op.sem_num = resource;
-  op.sem_op = 1; // increment value back to 1
-  op.sem_flg = 0;
-  int rv=semop(id.id,&op,1);
-  if (rv == -1)
-    PLERROR("ResourceSemaphore::unlock(%d) semop failed, %s",
-          resource,strerror(errno));
+    if (!locked(resource))
+        PLERROR("ResourceSemaphore::unlock(%d), trying to unlock an unlocked resource",
+                resource);
+    struct sembuf op;
+    op.sem_num = resource;
+    op.sem_op = 1; // increment value back to 1
+    op.sem_flg = 0;
+    int rv=semop(id.id,&op,1);
+    if (rv == -1)
+        PLERROR("ResourceSemaphore::unlock(%d) semop failed, %s",
+                resource,strerror(errno));
 }
 
 bool ResourceSemaphore::locked(int resource)
 {
-  semun v; v.val=0;
-  int value=semctl(id.id,resource,GETVAL,v);
-  return (value==0);
+    semun v; v.val=0;
+    int value=semctl(id.id,resource,GETVAL,v);
+    return (value==0);
 }
 
 void ResourceSemaphore::clearAnyLock()
 {
-  for (int i=0;i<n_semaphores;i++)
-    clearAnyLock(i);
+    for (int i=0;i<n_semaphores;i++)
+        clearAnyLock(i);
 }
 
 void ResourceSemaphore::clearAnyLock(int resource)
 {
-  // set the semaphore values to 1 (meaning they are in "unlocked" state")
-  semun v; v.val=1;
-  int rv=semctl(id.id,resource,SETVAL,v);
-  if (rv == -1)
-    PLERROR("ResourceSemaphore::clearAnyLock(%d) semctl returns -1, %s",
-          resource,strerror(errno));
+    // set the semaphore values to 1 (meaning they are in "unlocked" state")
+    semun v; v.val=1;
+    int rv=semctl(id.id,resource,SETVAL,v);
+    if (rv == -1)
+        PLERROR("ResourceSemaphore::clearAnyLock(%d) semctl returns -1, %s",
+                resource,strerror(errno));
 }
 
 ResourceSemaphore::~ResourceSemaphore()
 {
-  if (owner)
-  {
-    semun v; v.val=0;
-    int rv=semctl(id.id,0,IPC_RMID,v);
-    if (rv == -1)
-      PLERROR("ResourceSemaphore::~ResourceSemaphore semctl failed, %s",
-            strerror(errno));
-    cout << "released semaphore " << id.id << endl;
-  }
+    if (owner)
+    {
+        semun v; v.val=0;
+        int rv=semctl(id.id,0,IPC_RMID,v);
+        if (rv == -1)
+            PLERROR("ResourceSemaphore::~ResourceSemaphore semctl failed, %s",
+                    strerror(errno));
+        cout << "released semaphore " << id.id << endl;
+    }
 }
 
 CountEventsSemaphore::CountEventsSemaphore(int nb_semaphores)
-  : owner(true), n_semaphores(nb_semaphores)
+    : owner(true), n_semaphores(nb_semaphores)
 {
-  // allocate a semaphore 
-  int rv=semget(IPC_PRIVATE, n_semaphores, 0666 | IPC_CREAT);
-  if (rv == -1) 
-    PLERROR("CountEventsSemaphore::CountEventsSemaphore(%d) semget returns -1, %s",
-          nb_semaphores,strerror(errno));
-  else id.id=rv;
+    // allocate a semaphore 
+    int rv=semget(IPC_PRIVATE, n_semaphores, 0666 | IPC_CREAT);
+    if (rv == -1) 
+        PLERROR("CountEventsSemaphore::CountEventsSemaphore(%d) semget returns -1, %s",
+                nb_semaphores,strerror(errno));
+    else id.id=rv;
 
-  cout << "allocated semaphore " << id.id << endl;
+    cout << "allocated semaphore " << id.id << endl;
 
-  // set the semaphore values to 0 (meaning that initially the counters are at 0)
-  semun v; v.val=0;
-  for (int i=0;i<n_semaphores;i++)
+    // set the semaphore values to 0 (meaning that initially the counters are at 0)
+    semun v; v.val=0;
+    for (int i=0;i<n_semaphores;i++)
     {
-      rv=semctl(id.id,i,SETVAL,v);
-      if (rv == -1)
-        PLERROR("CountEventsSemaphore::CountEventsSemaphore(%d) semctl returns -1, %s",
-              nb_semaphores,strerror(errno));
+        rv=semctl(id.id,i,SETVAL,v);
+        if (rv == -1)
+            PLERROR("CountEventsSemaphore::CountEventsSemaphore(%d) semctl returns -1, %s",
+                    nb_semaphores,strerror(errno));
     }
 }
 
 CountEventsSemaphore::CountEventsSemaphore(SemId semid)
-  : id(semid), owner(false)
+    : id(semid), owner(false)
 {
-  struct semid_ds buf;
-  semun u;
-  u.buf = &buf;
-  int r=semctl(id.id,0,IPC_STAT,u);
-  if (r == -1)
-    PLERROR("CountEventsSemaphore:: slave CountEventsSemaphore(%d) semctl returns -1, %s",
-          id.id,strerror(errno));
-  n_semaphores = u.buf->sem_nsems;
+    struct semid_ds buf;
+    semun u;
+    u.buf = &buf;
+    int r=semctl(id.id,0,IPC_STAT,u);
+    if (r == -1)
+        PLERROR("CountEventsSemaphore:: slave CountEventsSemaphore(%d) semctl returns -1, %s",
+                id.id,strerror(errno));
+    n_semaphores = u.buf->sem_nsems;
 }
 
 void CountEventsSemaphore::signal(int type)
 {
-  struct sembuf op;
-  op.sem_num = type;
-  op.sem_op = 1; // increment value 
-  op.sem_flg = 0;
-  int rv=semop(id.id,&op,1);
-  if (rv == -1)
-    PLERROR("CountEventsSemaphore::signal(%d) semop failed, %s",
-          type,strerror(errno));
+    struct sembuf op;
+    op.sem_num = type;
+    op.sem_op = 1; // increment value 
+    op.sem_flg = 0;
+    int rv=semop(id.id,&op,1);
+    if (rv == -1)
+        PLERROR("CountEventsSemaphore::signal(%d) semop failed, %s",
+                type,strerror(errno));
 }
 
 int CountEventsSemaphore::value(int type)
 {
-  semun v; v.val=0;
-  return semctl(id.id,type,GETVAL,v);
+    semun v; v.val=0;
+    return semctl(id.id,type,GETVAL,v);
 }
 
 void CountEventsSemaphore::wait(int n_occurences, int type)
 {
-  struct sembuf op;
-  op.sem_num = type;
-  op.sem_op = -n_occurences; // wait until n_occurences is reached
-  op.sem_flg = 0;
-  int rv=0;
-  do  // this loop is to deal with possible interrupts which
-    rv=semop(id.id,&op,1); // will force return of semop before
-  while (rv==-1 && errno==EINTR);  // the count is reached
-  if (rv == -1) 
-    PLERROR("CountEventsSemaphore::wait(%d,%d) semop failed, %s",
-          n_occurences,type,strerror(errno));
+    struct sembuf op;
+    op.sem_num = type;
+    op.sem_op = -n_occurences; // wait until n_occurences is reached
+    op.sem_flg = 0;
+    int rv=0;
+    do  // this loop is to deal with possible interrupts which
+        rv=semop(id.id,&op,1); // will force return of semop before
+    while (rv==-1 && errno==EINTR);  // the count is reached
+    if (rv == -1) 
+        PLERROR("CountEventsSemaphore::wait(%d,%d) semop failed, %s",
+                n_occurences,type,strerror(errno));
 }
 
 void CountEventsSemaphore::setValue(int value,int resource)
 {
-  semun v; v.val=value;
-  int rv=semctl(id.id,resource,SETVAL,v);
-  if (rv == -1)
-    PLERROR("ResourceSemaphore::setValue(%d,%d) semctl returns -1, %s",
-          value,resource,strerror(errno));
+    semun v; v.val=value;
+    int rv=semctl(id.id,resource,SETVAL,v);
+    if (rv == -1)
+        PLERROR("ResourceSemaphore::setValue(%d,%d) semctl returns -1, %s",
+                value,resource,strerror(errno));
 }
 
 CountEventsSemaphore::~CountEventsSemaphore()
 {
-  if (owner)
-  {
-    semun v; v.val=0;
-    int rv=semctl(id.id,0,IPC_RMID,v);
-    if (rv == -1)
-      PLERROR("CountEventsSemaphore::~CountEventsSemaphore semctl failed, %s",
-            strerror(errno));
-    cout << "released semaphore " << id.id << endl;
-  }
+    if (owner)
+    {
+        semun v; v.val=0;
+        int rv=semctl(id.id,0,IPC_RMID,v);
+        if (rv == -1)
+            PLERROR("CountEventsSemaphore::~CountEventsSemaphore semctl failed, %s",
+                    strerror(errno));
+        cout << "released semaphore " << id.id << endl;
+    }
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

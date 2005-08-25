@@ -34,8 +34,8 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperLearner.h,v 1.2 2005/02/19 22:10:15 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 // Author: Pascal Vincent
 
 
@@ -58,57 +58,57 @@ class HyperLearner: public EmbeddedLearner
     typedef EmbeddedLearner inherited;
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
   
 protected:
 
-  static void declareOptions(OptionList &ol);
+    static void declareOptions(OptionList &ol);
 
 public:
   
-  // Build options
-  PP<PTester> tester; //!< The kind of train/test to perform for each combination of hyper-parameters.
-  TVec<string> option_fields; //!< learner option names to be reported in results table
-  TVec<string> dont_restart_upon_change; //!< list of options that do not require calling build() and forget() upon changing their value.  
+    // Build options
+    PP<PTester> tester; //!< The kind of train/test to perform for each combination of hyper-parameters.
+    TVec<string> option_fields; //!< learner option names to be reported in results table
+    TVec<string> dont_restart_upon_change; //!< list of options that do not require calling build() and forget() upon changing their value.  
 
-  TVec< PP<HyperCommand> > strategy; //!< The strategy to follow to optimize hyper parameters
+    TVec< PP<HyperCommand> > strategy; //!< The strategy to follow to optimize hyper parameters
 
-  bool provide_strategy_expdir; //!< should each strategy step be provided a directory expdir/Step#
-  bool save_final_learner; //!< should final learner be saved in expdir/final_learner.psave
+    bool provide_strategy_expdir; //!< should each strategy step be provided a directory expdir/Step#
+    bool save_final_learner; //!< should final learner be saved in expdir/final_learner.psave
   
-  // HyperLearner methods
+    // HyperLearner methods
 
-  HyperLearner();
+    HyperLearner();
 
-  inline PP<PLearner> getLearner() const
-  { return learner_; }
+    inline PP<PLearner> getLearner() const
+    { return learner_; }
 
-  inline void setLearner(PP<PLearner> learner)
-  { tester->learner = learner; learner_ = learner; }
+    inline void setLearner(PP<PLearner> learner)
+    { tester->learner = learner; learner_ = learner; }
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! sets the specified options to the specified values
-  //! Will also detect if any option that is NOT listed in dont_restart_upon_change
-  //! gets modified. If so, build() and forget() will be called on the learner
-  void setLearnerOptions(const TVec<string>& option_names, const TVec<string>& option_vals);
+    //! sets the specified options to the specified values
+    //! Will also detect if any option that is NOT listed in dont_restart_upon_change
+    //! gets modified. If so, build() and forget() will be called on the learner
+    void setLearnerOptions(const TVec<string>& option_names, const TVec<string>& option_vals);
 
-  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
-  //! Currently train_stats receives a single update, with the returned vector
-  //! of the last strategy command...
-  virtual void train();
+    //! Currently train_stats receives a single update, with the returned vector
+    //! of the last strategy command...
+    virtual void train();
 
-  virtual void forget();
+    virtual void forget();
 
-  //! Returns the getResultNames() of its last strategy command
-  TVec<string> getTrainCostNames() const;
+    //! Returns the getResultNames() of its last strategy command
+    TVec<string> getTrainCostNames() const;
   
-  PLEARN_DECLARE_OBJECT(HyperLearner);
+    PLEARN_DECLARE_OBJECT(HyperLearner);
 
-  void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 }; // class HyperLearner
 
@@ -118,3 +118,16 @@ DECLARE_OBJECT_PTR(HyperLearner);
 } // end of namespace PLearn
 
 #endif // HyperLearner_INC
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

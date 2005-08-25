@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: Measurer.h,v 1.3 2004/07/21 16:30:53 chrish42 Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/Measurer.h */
@@ -58,20 +58,20 @@ class Measurer
 {
 public:
 /*!     This method is called at iteration t of a training
-    algorithm, and it can monitor the cost values given
-    the costs vector. The returned value indicates whether
-    training should be stopped (by default shoudl be false).
+  algorithm, and it can monitor the cost values given
+  the costs vector. The returned value indicates whether
+  training should be stopped (by default shoudl be false).
 */
-  virtual bool measure(int t, const Vec& costs) { return false; }
+    virtual bool measure(int t, const Vec& costs) { return false; }
 
-  //!  this method is kept temporarily during the transition to
-  //!  the above "measure" standard from the old one below
-  virtual void measure(int t)
+    //!  this method is kept temporarily during the transition to
+    //!  the above "measure" standard from the old one below
+    virtual void measure(int t)
     {
-      Vec c;
-      measure(t,c);
+        Vec c;
+        measure(t,c);
     }
-  virtual ~Measurer();
+    virtual ~Measurer();
 };
 
 typedef bool (*MeasurerCallbackFunction)(int t, const Vec& costs);
@@ -79,18 +79,18 @@ typedef bool (*MeasurerCallbackFunction)(int t, const Vec& costs);
 class CallbackMeasurer: public Measurer
 {
 public:
-  MeasurerCallbackFunction callback;
+    MeasurerCallbackFunction callback;
   
-  CallbackMeasurer(MeasurerCallbackFunction the_callback)
-    :callback(the_callback) 
+    CallbackMeasurer(MeasurerCallbackFunction the_callback)
+        :callback(the_callback) 
     {}
 
 /*!     This method is called at iteration t of a training
-    algorithm, and it can monitor the cost values given
-    the costs vector. The returned value indicates whether
-    training should be stopped (by default should be false).
+  algorithm, and it can monitor the cost values given
+  the costs vector. The returned value indicates whether
+  training should be stopped (by default should be false).
 */
-  virtual bool measure(int t, const Vec& costs);
+    virtual bool measure(int t, const Vec& costs);
 
 };
 
@@ -98,4 +98,15 @@ public:
 
 #endif
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

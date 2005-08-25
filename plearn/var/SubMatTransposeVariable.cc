@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SubMatTransposeVariable.cc,v 1.7 2004/05/26 20:14:38 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ExtendedVariable.h"
 #include "SubMatTransposeVariable.h"
@@ -53,12 +53,12 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(SubMatTransposeVariable, "ONE LINE DESCR", "NO HELP");
 
 SubMatTransposeVariable::SubMatTransposeVariable(Variable* v, int i, int j, int the_length, int the_width)
-: inherited(v, the_width, the_length),
-  startk(i*v->length()+j),
-  length_(the_length),
-  width_(the_width),
-  i_(i),
-  j_(j)
+    : inherited(v, the_width, the_length),
+      startk(i*v->length()+j),
+      length_(the_length),
+      width_(the_width),
+      i_(i),
+      j_(j)
 {
     build_();
 }
@@ -95,22 +95,22 @@ void SubMatTransposeVariable::recomputeSize(int& l, int& w) const
 
 void SubMatTransposeVariable::fprop()
 {
-  if(input->length()==1 || input->width()==1) // optimized version for this special case...
+    if(input->length()==1 || input->width()==1) // optimized version for this special case...
     {
-      real* inputdata = input->valuedata+startk;
-      for(int k=0; k<nelems(); k++)
-        valuedata[k] = inputdata[k];
+        real* inputdata = input->valuedata+startk;
+        for(int k=0; k<nelems(); k++)
+            valuedata[k] = inputdata[k];
     }
-  else // general case
+    else // general case
     {
-      real* inputrowdata = input->valuedata+startk;
-      int thiskcolstart = 0; // element index of start of column in this var
-      for(int i=0; i<width(); i++) // the width() of this var is the length() of the submat
+        real* inputrowdata = input->valuedata+startk;
+        int thiskcolstart = 0; // element index of start of column in this var
+        for(int i=0; i<width(); i++) // the width() of this var is the length() of the submat
         {
-          int thisk = thiskcolstart++;
-          for(int j=0; j<length(); j++, thisk+=width()) // the length() of this var is the width() of the submat
-            valuedata[thisk] = inputrowdata[j];
-          inputrowdata += input->width();
+            int thisk = thiskcolstart++;
+            for(int j=0; j<length(); j++, thisk+=width()) // the length() of this var is the width() of the submat
+                valuedata[thisk] = inputrowdata[j];
+            inputrowdata += input->width();
         }
     }
 }
@@ -118,22 +118,22 @@ void SubMatTransposeVariable::fprop()
 
 void SubMatTransposeVariable::bprop()
 {
-  if(input->length()==1 || input->width()==1) // optimized version for this special case...
+    if(input->length()==1 || input->width()==1) // optimized version for this special case...
     {
-      real* inputdata = input->gradientdata+startk;
-      for(int k=0; k<nelems(); k++)
-        inputdata[k] += gradientdata[k];
+        real* inputdata = input->gradientdata+startk;
+        for(int k=0; k<nelems(); k++)
+            inputdata[k] += gradientdata[k];
     }
-  else // general case
+    else // general case
     {
-      real* inputrowdata = input->gradientdata+startk;
-      int thiskcolstart = 0; // element index of start of column in this var
-      for(int i=0; i<width(); i++) // the width() of this var is the length() of the submat
+        real* inputrowdata = input->gradientdata+startk;
+        int thiskcolstart = 0; // element index of start of column in this var
+        for(int i=0; i<width(); i++) // the width() of this var is the length() of the submat
         {
-          int thisk = thiskcolstart++;
-          for(int j=0; j<length(); j++, thisk+=width()) // the length() of this var is the width() of the submat
-            inputrowdata[j] += gradientdata[thisk];
-          inputrowdata += input->width();
+            int thisk = thiskcolstart++;
+            for(int j=0; j<length(); j++, thisk+=width()) // the length() of this var is the width() of the submat
+                inputrowdata[j] += gradientdata[thisk];
+            inputrowdata += input->width();
         }
     }
 }
@@ -141,35 +141,35 @@ void SubMatTransposeVariable::bprop()
 
 void SubMatTransposeVariable::symbolicBprop()
 {
-  int i = startk/input->width();
-  int j = startk%input->width();
-  int topextent = i;
-  int bottomextent = input->length()-(i+width()); // the width() of this var is the length() of the submat
-  int leftextent = j;
-  int rightextent = input->width()-(j+length()); // the length() of this var is the width() of the submat
-  input->accg(extend(transpose(g),topextent,bottomextent,leftextent,rightextent));
+    int i = startk/input->width();
+    int j = startk%input->width();
+    int topextent = i;
+    int bottomextent = input->length()-(i+width()); // the width() of this var is the length() of the submat
+    int leftextent = j;
+    int rightextent = input->width()-(j+length()); // the length() of this var is the width() of the submat
+    input->accg(extend(transpose(g),topextent,bottomextent,leftextent,rightextent));
 }
 
 
 void SubMatTransposeVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  if(input->length()==1 || input->width()==1) // optimized version for this special case...
+    if (rValue.length()==0) resizeRValue();
+    if(input->length()==1 || input->width()==1) // optimized version for this special case...
     {
-      real* inputdata = input->rvaluedata+startk;
-      for(int k=0; k<nelems(); k++)
-        rvaluedata[k] = inputdata[k];
+        real* inputdata = input->rvaluedata+startk;
+        for(int k=0; k<nelems(); k++)
+            rvaluedata[k] = inputdata[k];
     }
-  else // general case
+    else // general case
     {
-      real* inputrowdata = input->rvaluedata+startk;
-      int thiskcolstart = 0; // element index of start of column in this var
-      for(int i=0; i<width(); i++) // the width() of this var is the length() of the submat
+        real* inputrowdata = input->rvaluedata+startk;
+        int thiskcolstart = 0; // element index of start of column in this var
+        for(int i=0; i<width(); i++) // the width() of this var is the length() of the submat
         {
-          int thisk = thiskcolstart++;
-          for(int j=0; j<length(); j++, thisk+=width()) // the length() of this var is the width() of the submat
-            rvaluedata[thisk] = inputrowdata[j];
-          inputrowdata += input->width();
+            int thisk = thiskcolstart++;
+            for(int j=0; j<length(); j++, thisk+=width()) // the length() of this var is the width() of the submat
+                rvaluedata[thisk] = inputrowdata[j];
+            inputrowdata += input->width();
         }
     }
 }
@@ -178,4 +178,15 @@ void SubMatTransposeVariable::rfprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

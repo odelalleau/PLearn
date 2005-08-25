@@ -33,8 +33,8 @@
 
 
 /* *******************************************************      
-   * $Id: IndexedVMatrix.cc,v 1.6 2004/09/14 16:04:39 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "IndexedVMatrix.h"
 
@@ -47,21 +47,21 @@ PLEARN_IMPLEMENT_OBJECT(IndexedVMatrix, "ONE LINE DESCR",
 
 void IndexedVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "m", &IndexedVMatrix::m, OptionBase::buildoption,
-      "    The matrix viewed by the IndexedVMatrix\n");
-  inherited::declareOptions(ol);
+    declareOption(ol, "m", &IndexedVMatrix::m, OptionBase::buildoption,
+                  "    The matrix viewed by the IndexedVMatrix\n");
+    inherited::declareOptions(ol);
 }
 
 void IndexedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(m, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(m, copies);
 }
 
 void IndexedVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -69,45 +69,58 @@ void IndexedVMatrix::build()
 ////////////
 void IndexedVMatrix::build_()
 {
-  if (m) {
-    width_ = 3;
-    length_ = m->length() * m->width();
-    // TODO Get Field Infos ?
-  }
+    if (m) {
+        width_ = 3;
+        length_ = m->length() * m->width();
+        // TODO Get Field Infos ?
+    }
 }
 
 /////////
 // get //
 /////////
 real IndexedVMatrix::get(int i, int j) const {
-  int w = m->width();
-  int i_ = i / w; // the value of the first column at row i
-  int j_ = i % w; // the value of the second column at row i
-  switch (j) {
+    int w = m->width();
+    int i_ = i / w; // the value of the first column at row i
+    int j_ = i % w; // the value of the second column at row i
+    switch (j) {
     case 0:
-      return i_;
+        return i_;
     case 1:
-      return j_;
+        return j_;
     case 2:
-      return m->get(i_, j_);
+        return m->get(i_, j_);
     default:
-      PLERROR("In IndexedVMatrix::get An IndexedVMatrix has only 3 columns\n");
-      return 0;
-  }
+        PLERROR("In IndexedVMatrix::get An IndexedVMatrix has only 3 columns\n");
+        return 0;
+    }
 }
 
 /////////
 // put //
 /////////
 void IndexedVMatrix::put(int i, int j, real value) {
-  if (j != 2) {
-    PLERROR("In IndexedVMatrix::put You can only modify the third column\n");
-  }
-  int w = m->width();
-  int i_ = i / w; // the value of the first column at row i
-  int j_ = i % w; // the value of the second column at row i
-  m->put(i_, j_, value);
+    if (j != 2) {
+        PLERROR("In IndexedVMatrix::put You can only modify the third column\n");
+    }
+    int w = m->width();
+    int i_ = i / w; // the value of the first column at row i
+    int j_ = i % w; // the value of the second column at row i
+    m->put(i_, j_, value);
 }
 
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: NonLocalManifoldParzenKernel.cc,v 1.3 2005/05/14 15:37:51 larocheh Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "NonLocalManifoldParzenKernel.h"
 
@@ -46,47 +46,59 @@ namespace PLearn {
 using namespace std;
 
 
-  PLEARN_IMPLEMENT_OBJECT(NonLocalManifoldParzenKernel, 
-                          "Kernel that uses the evaluate method of Non-Local Manifold Parzen.", 
-                          "");
+PLEARN_IMPLEMENT_OBJECT(NonLocalManifoldParzenKernel, 
+                        "Kernel that uses the evaluate method of Non-Local Manifold Parzen.", 
+                        "");
 
 real NonLocalManifoldParzenKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
-  real ret;
-  if(is_symmetric)
-    ret = mp->evaluate(x1,x2,scale) + mp->evaluate(x2,x1,scale);
-  else
-    ret = mp->evaluate(x1,x2,scale);
+    real ret;
+    if(is_symmetric)
+        ret = mp->evaluate(x1,x2,scale) + mp->evaluate(x2,x1,scale);
+    else
+        ret = mp->evaluate(x1,x2,scale);
   
-  return ret;
+    return ret;
 }
 
 void NonLocalManifoldParzenKernel::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "scale", &NonLocalManifoldParzenKernel::scale, OptionBase::buildoption,
-                "The scale factor of the eigen values");
-  declareOption(ol, "mp", &NonLocalManifoldParzenKernel::mp, OptionBase::buildoption,
-                "Manifold Parzen distribution");
-  declareOption(ol, "train_mp", &NonLocalManifoldParzenKernel::train_mp, OptionBase::buildoption,
-                "Indication that the NonLocalManifoldParzen distribution should be trained");
-  inherited::declareOptions(ol);
+    declareOption(ol, "scale", &NonLocalManifoldParzenKernel::scale, OptionBase::buildoption,
+                  "The scale factor of the eigen values");
+    declareOption(ol, "mp", &NonLocalManifoldParzenKernel::mp, OptionBase::buildoption,
+                  "Manifold Parzen distribution");
+    declareOption(ol, "train_mp", &NonLocalManifoldParzenKernel::train_mp, OptionBase::buildoption,
+                  "Indication that the NonLocalManifoldParzen distribution should be trained");
+    inherited::declareOptions(ol);
 }
 
 void NonLocalManifoldParzenKernel::setDataForKernelMatrix(VMat the_data)
 {
-  inherited::setDataForKernelMatrix(the_data);
-  if(train_mp && data)
-  {
-    mp->setTrainingSet(data);
-    PP<VecStatsCollector> stats = new VecStatsCollector();
-    mp->setTrainStatsCollector(stats);
-    mp->train();
-    stats->finalize();
-  }
+    inherited::setDataForKernelMatrix(the_data);
+    if(train_mp && data)
+    {
+        mp->setTrainingSet(data);
+        PP<VecStatsCollector> stats = new VecStatsCollector();
+        mp->setTrainStatsCollector(stats);
+        mp->train();
+        stats->finalize();
+    }
   
-  if(!train_mp && data) PLWARNING("NonLocalManifoldParzenKernel::setDataForKernelMatrix: data of kernel is possibly different from data of NonLocalManifoldParzen distribution.");
+    if(!train_mp && data) PLWARNING("NonLocalManifoldParzenKernel::setDataForKernelMatrix: data of kernel is possibly different from data of NonLocalManifoldParzen distribution.");
   
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

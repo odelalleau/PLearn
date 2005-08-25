@@ -34,9 +34,9 @@
  
 
 /* *******************************************************      
-   * $Id: AutoVMatrix.h,v 1.11 2005/02/03 17:13:41 ducharme Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -57,42 +57,42 @@ class AutoVMatrix: public ForwardVMatrix
 
 private:
 
-  typedef ForwardVMatrix inherited;
+    typedef ForwardVMatrix inherited;
 
 public:
 
-  PLEARN_DECLARE_OBJECT(AutoVMatrix);
+    PLEARN_DECLARE_OBJECT(AutoVMatrix);
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  PPath specification; // the specification of the vmat (typically a file or directory path)
-  bool load_data_in_memory; // convert VMat in a MemoryVMatrix (default=false);
+    PPath specification; // the specification of the vmat (typically a file or directory path)
+    bool load_data_in_memory; // convert VMat in a MemoryVMatrix (default=false);
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  AutoVMatrix(const PPath& the_specification="", bool load_in_memory=false);
+    AutoVMatrix(const PPath& the_specification="", bool load_in_memory=false);
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected:
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // Simply calls inherited::build() then build_()
-  virtual void build();
+    // Simply calls inherited::build() then build_()
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 
@@ -103,3 +103,15 @@ DECLARE_OBJECT_PTR(AutoVMatrix);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

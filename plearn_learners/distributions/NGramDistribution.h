@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle
 
@@ -60,134 +60,134 @@ class NGramDistribution: public PDistribution
 
 private:
 
-  typedef PDistribution inherited;  
+    typedef PDistribution inherited;  
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  int voc_size;
+    int voc_size;
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  //! Replace nan values with -1 
-  bool nan_replace;
+    //! Replace nan values with -1 
+    bool nan_replace;
 
-  //! A in NGram
-  int n;
+    //! A in NGram
+    int n;
 
-  //! Additive constant for Add-delta smoothing
-  real additive_constant;
+    //! Additive constant for Add-delta smoothing
+    real additive_constant;
 
-  //! Discount constant for absolute discounting smoothing
-  real discount_constant;
+    //! Discount constant for absolute discounting smoothing
+    real discount_constant;
   
-  //! Proportion of the training set used for validation
-  real validation_proportion;
+    //! Proportion of the training set used for validation
+    real validation_proportion;
 
-  //! Smoothing parameter
-  string smoothing;
+    //! Smoothing parameter
+    string smoothing;
 
-  //! Lambda estimation technique
-  string lambda_estimation;
+    //! Lambda estimation technique
+    string lambda_estimation;
 
-  //! Lambdas for Jelinek-Mercer smoothing
-  Vec lambdas;  
+    //! Lambdas for Jelinek-Mercer smoothing
+    Vec lambdas;  
 
-  //! NGram tree
-  PP<NGramTree> tree;
+    //! NGram tree
+    PP<NGramTree> tree;
   
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  NGramDistribution();
+    //! Default constructor.
+    NGramDistribution();
 
-  // *************************
-  // * PDistribution methods *
-  // *************************
+    // *************************
+    // * PDistribution methods *
+    // *************************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
-  //! Takes a row of a VMat and gives the ngram associated
-  void getNGrams(Vec row, TVec<int>& ngram) const;
+    //! Takes a row of a VMat and gives the ngram associated
+    void getNGrams(Vec row, TVec<int>& ngram) const;
 
 protected: 
 
-  //! Declare this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declare this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply call inherited::build() then build_().
-  virtual void build();
+    //! Simply call inherited::build() then build_().
+    virtual void build();
 
-  //! Transform a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transform a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declare other standard object methods.
-  PLEARN_DECLARE_OBJECT(NGramDistribution);
+    // Declare other standard object methods.
+    PLEARN_DECLARE_OBJECT(NGramDistribution);
 
-  // *******************************
-  // **** PDistribution methods ****
-  // *******************************
+    // *******************************
+    // **** PDistribution methods ****
+    // *******************************
 
-  //! Return log of probability density log(p(y | x)).
-  virtual real log_density(const Vec& x) const;
+    //! Return log of probability density log(p(y | x)).
+    virtual real log_density(const Vec& x) const;
 
-  //! Return survival function: P(Y>y | x).
-  virtual real survival_fn(const Vec& y) const;
+    //! Return survival function: P(Y>y | x).
+    virtual real survival_fn(const Vec& y) const;
 
-  //! Return cdf: P(Y<y | x).
-  virtual real cdf(const Vec& y) const;
+    //! Return cdf: P(Y<y | x).
+    virtual real cdf(const Vec& y) const;
 
-  //! Return E[Y | x].
-  virtual void expectation(Vec& mu) const;
+    //! Return E[Y | x].
+    virtual void expectation(Vec& mu) const;
 
-  //! Return Var[Y | x].
-  virtual void variance(Mat& cov) const;
+    //! Return Var[Y | x].
+    virtual void variance(Mat& cov) const;
 
-  //! Return a pseudo-random sample generated from the distribution.
-  virtual void generate(Vec& y) const;
+    //! Return a pseudo-random sample generated from the distribution.
+    virtual void generate(Vec& y) const;
 
-  //! Reset the random number generator used by generate() using the given seed.
-  virtual void resetGenerator(long g_seed) const;
+    //! Reset the random number generator used by generate() using the given seed.
+    virtual void resetGenerator(long g_seed) const;
 
-  //! Set the value for the input part of a conditional probability.
-  virtual void setInput(const Vec& input) const;
+    //! Set the value for the input part of a conditional probability.
+    virtual void setInput(const Vec& input) const;
 
-  //! This method updates the internal data given a new sorting of the variables
-  //! defined by the conditional flags.
-  virtual void updateFromConditionalSorting() const;
+    //! This method updates the internal data given a new sorting of the variables
+    //! defined by the conditional flags.
+    virtual void updateFromConditionalSorting() const;
 
-  //! Return probability density p(y | x)
-  virtual real density(const Vec& y) const;
+    //! Return probability density p(y | x)
+    virtual real density(const Vec& y) const;
 
-  // **************************
-  // **** PLearner methods ****
-  // **************************
+    // **************************
+    // **** PLearner methods ****
+    // **************************
 
-  //! (Re-)initializes the PDistribution in its fresh state (that state may depend on the 'seed' option).
-  //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
-  virtual void forget();
+    //! (Re-)initializes the PDistribution in its fresh state (that state may depend on the 'seed' option).
+    //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
+    virtual void forget();
 
-  //! For this distribution, won't do anything. Just implemented to work with PTester
-  virtual void train();
+    //! For this distribution, won't do anything. Just implemented to work with PTester
+    virtual void train();
 
 };
 
@@ -197,3 +197,16 @@ DECLARE_OBJECT_PTR(NGramDistribution);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

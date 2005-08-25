@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -53,56 +53,68 @@ UCIDataVMatrix::UCIDataVMatrix()
 }
 
 PLEARN_IMPLEMENT_OBJECT(UCIDataVMatrix,
-    "Loads a UCI machine learning dataset.",
-    ""
-);
+                        "Loads a UCI machine learning dataset.",
+                        ""
+    );
 
 void UCIDataVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "uci_spec", &UCIDataVMatrix::uci_spec, OptionBase::buildoption,
-      "Specifications of a UCI dataset.");
+    declareOption(ol, "uci_spec", &UCIDataVMatrix::uci_spec, OptionBase::buildoption,
+                  "Specifications of a UCI dataset.");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 
-  // Hide unused options.
+    // Hide unused options.
 
-  redeclareOption(ol, "vm",          &UCIDataVMatrix::vm,          OptionBase::nosave, "Not used.");
-  redeclareOption(ol, "writable",    &UCIDataVMatrix::writable,    OptionBase::nosave, "Not used.");
-  redeclareOption(ol, "length",      &UCIDataVMatrix::length_,      OptionBase::nosave, "Not used.");
-  redeclareOption(ol, "width",       &UCIDataVMatrix::width_,       OptionBase::nosave, "Not used.");
-  redeclareOption(ol, "inputsize",   &UCIDataVMatrix::inputsize_,   OptionBase::nosave, "Not used.");
-  redeclareOption(ol, "targetsize",  &UCIDataVMatrix::targetsize_,  OptionBase::nosave, "Not used.");
-  redeclareOption(ol, "weightsize",  &UCIDataVMatrix::weightsize_,  OptionBase::nosave, "Not used.");
-  redeclareOption(ol, "metadatadir", &UCIDataVMatrix::metadatadir, OptionBase::nosave, "Not used.");
+    redeclareOption(ol, "vm",          &UCIDataVMatrix::vm,          OptionBase::nosave, "Not used.");
+    redeclareOption(ol, "writable",    &UCIDataVMatrix::writable,    OptionBase::nosave, "Not used.");
+    redeclareOption(ol, "length",      &UCIDataVMatrix::length_,      OptionBase::nosave, "Not used.");
+    redeclareOption(ol, "width",       &UCIDataVMatrix::width_,       OptionBase::nosave, "Not used.");
+    redeclareOption(ol, "inputsize",   &UCIDataVMatrix::inputsize_,   OptionBase::nosave, "Not used.");
+    redeclareOption(ol, "targetsize",  &UCIDataVMatrix::targetsize_,  OptionBase::nosave, "Not used.");
+    redeclareOption(ol, "weightsize",  &UCIDataVMatrix::weightsize_,  OptionBase::nosave, "Not used.");
+    redeclareOption(ol, "metadatadir", &UCIDataVMatrix::metadatadir, OptionBase::nosave, "Not used.");
 }
 
 void UCIDataVMatrix::build_()
 {
-  if (uci_spec)
-    loadUCISet(vm, uci_spec);
-  inherited::build();
+    if (uci_spec)
+        loadUCISet(vm, uci_spec);
+    inherited::build();
 }
 
 void UCIDataVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void UCIDataVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("UCIDataVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("UCIDataVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

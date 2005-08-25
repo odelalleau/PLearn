@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ConfRatedAdaboostCostVariable_INC
 #define ConfRatedAdaboostCostVariable_INC
@@ -48,42 +48,55 @@
 namespace PLearn {
 using namespace std;
 
-  // cost[i] = exp(- alpha*signed_target[i]*signed_output[i])
-  // where cost is a column vector and
-  // where signed_target and signed_output is inferred from target as follows.
-  // target must be in (0,1).
-  // signed_target[i] = target[i]*2-1 and 
-  // signed_output[i] = 2*output[i]-1
+// cost[i] = exp(- alpha*signed_target[i]*signed_output[i])
+// where cost is a column vector and
+// where signed_target and signed_output is inferred from target as follows.
+// target must be in (0,1).
+// signed_target[i] = target[i]*2-1 and 
+// signed_output[i] = 2*output[i]-1
 class ConfRatedAdaboostCostVariable: public NaryVariable
 {
-  typedef NaryVariable inherited;
+    typedef NaryVariable inherited;
   
 public:
-  //!  Default constructor for persistence
-  ConfRatedAdaboostCostVariable() {}
-  ConfRatedAdaboostCostVariable(Variable* output, Variable* target, Variable* alpha);
+    //!  Default constructor for persistence
+    ConfRatedAdaboostCostVariable() {}
+    ConfRatedAdaboostCostVariable(Variable* output, Variable* target, Variable* alpha);
 
-  PLEARN_DECLARE_OBJECT(ConfRatedAdaboostCostVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(ConfRatedAdaboostCostVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(ConfRatedAdaboostCostVariable);
 
 inline Var conf_rated_adaboost_cost(Var output, Var target, Var alpha)
 {
-  return new ConfRatedAdaboostCostVariable(output, target, alpha);
+    return new ConfRatedAdaboostCostVariable(output, target, alpha);
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ViewSplitterVMatrix.cc,v 1.1 2005/03/16 15:51:28 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -51,33 +51,33 @@ using namespace std;
 // ViewSplitterVMatrix //
 /////////////////////////
 ViewSplitterVMatrix::ViewSplitterVMatrix()
-: set(0),
-  split(0)
+    : set(0),
+      split(0)
 {
 }
 
 PLEARN_IMPLEMENT_OBJECT(ViewSplitterVMatrix,
-    "This VMatrix can be used to extract a Splitter's split and set.",
-    "This is especially useful to check the output of a Splitter on a given\n"
-    "source VMat.\n"
-);
+                        "This VMatrix can be used to extract a Splitter's split and set.",
+                        "This is especially useful to check the output of a Splitter on a given\n"
+                        "source VMat.\n"
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void ViewSplitterVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "splitter", &ViewSplitterVMatrix::splitter, OptionBase::buildoption,
-      "The splitter applied on the source VMat.");
+    declareOption(ol, "splitter", &ViewSplitterVMatrix::splitter, OptionBase::buildoption,
+                  "The splitter applied on the source VMat.");
 
-  declareOption(ol, "split", &ViewSplitterVMatrix::split, OptionBase::buildoption,
-      "The index of the wanted split.");
+    declareOption(ol, "split", &ViewSplitterVMatrix::split, OptionBase::buildoption,
+                  "The index of the wanted split.");
 
-  declareOption(ol, "set", &ViewSplitterVMatrix::set, OptionBase::buildoption,
-      "The index of the wanted set.");
+    declareOption(ol, "set", &ViewSplitterVMatrix::set, OptionBase::buildoption,
+                  "The index of the wanted set.");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ///////////
@@ -85,8 +85,8 @@ void ViewSplitterVMatrix::declareOptions(OptionList& ol)
 ///////////
 void ViewSplitterVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -94,9 +94,9 @@ void ViewSplitterVMatrix::build()
 ////////////
 void ViewSplitterVMatrix::build_()
 {
-  splitter->setDataSet(source);
-  sets = splitter->getSplit(split);
-  setMetaInfoFrom(sets[set]);
+    splitter->setDataSet(source);
+    sets = splitter->getSplit(split);
+    setMetaInfoFrom(sets[set]);
 }
 
 ///////////////
@@ -104,7 +104,7 @@ void ViewSplitterVMatrix::build_()
 ///////////////
 void ViewSplitterVMatrix::getNewRow(int i, const Vec& v) const
 {
-  sets[set]->getRow(i, v);
+    sets[set]->getRow(i, v);
 }
 
 /////////////////////////////////
@@ -112,17 +112,29 @@ void ViewSplitterVMatrix::getNewRow(int i, const Vec& v) const
 /////////////////////////////////
 void ViewSplitterVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("ViewSplitterVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("ViewSplitterVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

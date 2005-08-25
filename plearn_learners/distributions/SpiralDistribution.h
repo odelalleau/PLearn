@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.h,v 1.9 2004/09/14 16:04:56 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file SpiralDistribution.h */
 #ifndef SpiralDistribution_INC
@@ -50,103 +50,116 @@ class SpiralDistribution: public UnconditionalDistribution
 {
 public:
 
-  typedef UnconditionalDistribution inherited;
+    typedef UnconditionalDistribution inherited;
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // see implementation of and declareOptions() methods in .cc for description
-  // of these options
-  real lambda;
-  real alpha;
-  real tmin;
-  real tmax;
-  real sigma;
-  real uniformity;
-  bool include_t;
+    // see implementation of and declareOptions() methods in .cc for description
+    // of these options
+    real lambda;
+    real alpha;
+    real tmin;
+    real tmax;
+    real sigma;
+    real uniformity;
+    bool include_t;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  SpiralDistribution();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    SpiralDistribution();
 
-  // ******************
-  // * PDistribution methods *
-  // ******************
+    // ******************
+    // * PDistribution methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! simply calls inherited::build() then build_() 
-  virtual void build();
+    //! simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods
-  //  If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
-  PLEARN_DECLARE_OBJECT(SpiralDistribution);
+    // Declares other standard object methods
+    //  If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+    PLEARN_DECLARE_OBJECT(SpiralDistribution);
 
   
-  // ** specific methods ** 
-  //! computes (x,y) = ( lambda*sin(alpha*t), lambda*cos(alpha*t) )
-  void curve(real t, real& x, real& y) const;
+    // ** specific methods ** 
+    //! computes (x,y) = ( lambda*sin(alpha*t), lambda*cos(alpha*t) )
+    void curve(real t, real& x, real& y) const;
 
-  // **************************
-  // **** PDistribution methods ****
-  // **************************
+    // **************************
+    // **** PDistribution methods ****
+    // **************************
 
-  //! return log of probability density log(p(x))
-  virtual real log_density(const Vec& x) const;
+    //! return log of probability density log(p(x))
+    virtual real log_density(const Vec& x) const;
 
-  //! return survival fn = P(X>x)
-  virtual real survival_fn(const Vec& x) const;
+    //! return survival fn = P(X>x)
+    virtual real survival_fn(const Vec& x) const;
 
-  //! return survival fn = P(X<x)
-  virtual real cdf(const Vec& x) const;
+    //! return survival fn = P(X<x)
+    virtual real cdf(const Vec& x) const;
 
-  //! return E[X] 
-  virtual void expectation(Vec& mu) const;
+    //! return E[X] 
+    virtual void expectation(Vec& mu) const;
 
-  //! return Var[X]
-  virtual void variance(Mat& cov) const;
+    //! return Var[X]
+    virtual void variance(Mat& cov) const;
 
-  //! return a pseudo-random sample generated from the distribution.
-  virtual void generate(Vec& x) const;
+    //! return a pseudo-random sample generated from the distribution.
+    virtual void generate(Vec& x) const;
   
-  // **************************
-  // **** Learner methods ****
-  // **************************
+    // **************************
+    // **** Learner methods ****
+    // **************************
 
-  //! inputsize is 2 (or 3 if include_t is set to true)
-  virtual int inputsize() const;
+    //! inputsize is 2 (or 3 if include_t is set to true)
+    virtual int inputsize() const;
 
-  //! Resets the random number generator used by generate using the given seed
-  virtual void resetGenerator(long g_seed) const;
+    //! Resets the random number generator used by generate using the given seed
+    virtual void resetGenerator(long g_seed) const;
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(SpiralDistribution);
+DECLARE_OBJECT_PTR(SpiralDistribution);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

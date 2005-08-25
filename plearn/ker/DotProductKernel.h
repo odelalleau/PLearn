@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DotProductKernel.h,v 1.3 2004/04/07 23:15:17 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef DotProductKernel_INC
 #define DotProductKernel_INC
@@ -55,15 +55,15 @@ class DotProductKernel: public Kernel
 {
     typedef Kernel inherited;
 
- public:
+public:
     DotProductKernel() {}
 
-  PLEARN_DECLARE_OBJECT(DotProductKernel);
+    PLEARN_DECLARE_OBJECT(DotProductKernel);
 
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;  
-  virtual real evaluate_i_j(int i, int j) const; //!<  returns evaluate(data(i),data(j))
-  virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const; //!<  returns evaluate(data(i),x)
-  virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; //!<  returns evaluate(x,data(i))
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;  
+    virtual real evaluate_i_j(int i, int j) const; //!<  returns evaluate(data(i),data(j))
+    virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const; //!<  returns evaluate(data(i),x)
+    virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; //!<  returns evaluate(x,data(i))
 };
 
 DECLARE_OBJECT_PTR(DotProductKernel);
@@ -72,3 +72,15 @@ DECLARE_OBJECT_PTR(DotProductKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

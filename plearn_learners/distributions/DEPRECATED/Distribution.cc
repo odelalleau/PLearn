@@ -37,8 +37,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file Distribution.cc */
 #include "Distribution.h"
@@ -48,34 +48,34 @@ namespace PLearn {
 using namespace std;
 
 Distribution::Distribution() 
-  :Learner(0,1,1), use_returns_what("l")
+    :Learner(0,1,1), use_returns_what("l")
 {
-  // cost function is -log_density
-  setTestCostFunctions(neg_output_costfunc());
+    // cost function is -log_density
+    setTestCostFunctions(neg_output_costfunc());
 }
 
 PLEARN_IMPLEMENT_OBJECT(Distribution,
-    "This class is deprecated, use PDistribution instead.",
-    "NO HELP");
+                        "This class is deprecated, use PDistribution instead.",
+                        "NO HELP");
 
 void Distribution::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
   
-  declareOption(ol, "use_returns_what", &Distribution::use_returns_what, OptionBase::buildoption,
-                "A string where the characters have the following meaning: \n"
-                "'l'-> log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn, 'e' -> expectation, 'v' -> variance");
+    declareOption(ol, "use_returns_what", &Distribution::use_returns_what, OptionBase::buildoption,
+                  "A string where the characters have the following meaning: \n"
+                  "'l'-> log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn, 'e' -> expectation, 'v' -> variance");
   
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
-  void Distribution::build_()
-  {
+void Distribution::build_()
+{
     // ### This method should do the real building of the object,
     // ### according to set 'options', in *any* situation. 
     // ### Typical situations include:
@@ -85,61 +85,61 @@ void Distribution::declareOptions(OptionList& ol)
     // ### You should assume that the parent class' build_() has already been called.
 
     outputsize_ = use_returns_what.length();
-  }
+}
 
-  // ### Nothing to add here, simply calls build_
-  void Distribution::build()
-  {
+// ### Nothing to add here, simply calls build_
+void Distribution::build()
+{
     inherited::build();
     build_();
-  }
+}
 
 
-  void Distribution::train(VMat training_set)
+void Distribution::train(VMat training_set)
 { 
-  if(training_set->width() != inputsize()+targetsize())
-    PLERROR("In Distribution::train(VMat training_set) training_set->width() != inputsize()+targetsize()");
+    if(training_set->width() != inputsize()+targetsize())
+        PLERROR("In Distribution::train(VMat training_set) training_set->width() != inputsize()+targetsize()");
   
-  setTrainingSet(training_set);
+    setTrainingSet(training_set);
   
-  // ### Please implement the actual training of the model.
-  // ### For models with incremental training, to benefit 
-  // ### from the "testing during training" and early-stopping 
-  // ### mechanisms, you should make sure to call measure at 
-  // ### every "epoch" (whatever epoch means for your algorithm).
-  // ### ex:
-  // if(measure(epoch,costvec)) 
-  //     break; // exit training loop because early-stopping contditions were met
+    // ### Please implement the actual training of the model.
+    // ### For models with incremental training, to benefit 
+    // ### from the "testing during training" and early-stopping 
+    // ### mechanisms, you should make sure to call measure at 
+    // ### every "epoch" (whatever epoch means for your algorithm).
+    // ### ex:
+    // if(measure(epoch,costvec)) 
+    //     break; // exit training loop because early-stopping contditions were met
 }
 
 void Distribution::use(const Vec& input, Vec& output)
 {
-  int l = (int)use_returns_what.length();
-  for(int i=0; i<l; i++)
+    int l = (int)use_returns_what.length();
+    for(int i=0; i<l; i++)
     {
-      switch(use_returns_what[i])
+        switch(use_returns_what[i])
         {
         case 'l':
-          output[i] = (real) log_density(input);
-          break;
+            output[i] = (real) log_density(input);
+            break;
         case 'd':
-          output[i] = (real) density(input);
-          break;
+            output[i] = (real) density(input);
+            break;
         case 'c':
-          output[i] = (real) cdf(input);
-          break;
+            output[i] = (real) cdf(input);
+            break;
         case 's':
-          output[i] = (real) survival_fn(input);
-          break;
+            output[i] = (real) survival_fn(input);
+            break;
         default:
-          PLERROR("In Distribution::use unknown use_returns_what character");
+            PLERROR("In Distribution::use unknown use_returns_what character");
         }
     }
 }
 
 void Distribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Learner::makeDeepCopyFromShallowCopy(copies);
+    Learner::makeDeepCopyFromShallowCopy(copies);
 }
 
 double Distribution::log_density(const Vec& x) const
@@ -165,3 +165,16 @@ void Distribution::generate(Vec& x) const
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

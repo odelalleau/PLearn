@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Ker_VMat_utils.cc,v 1.1 2004/09/27 20:19:27 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -51,102 +51,115 @@
 namespace PLearn {
 using namespace std;
 
-    // This will compute for this vmat m a result vector (whose length must be tha same as m's)
-    // s.t. result[i] = ker( m(i).subVec(v1_startcol,v1_ncols) , v2) 
-    // i.e. the kernel value betweeen each (sub)row of m and v2
+// This will compute for this vmat m a result vector (whose length must be tha same as m's)
+// s.t. result[i] = ker( m(i).subVec(v1_startcol,v1_ncols) , v2) 
+// i.e. the kernel value betweeen each (sub)row of m and v2
 void evaluateKernel(Ker ker, VMat vm, int v1_startcol, int v1_ncols, 
-                             const Vec& v2, const Vec& result, int startrow, int nrows)
+                    const Vec& v2, const Vec& result, int startrow, int nrows)
 {
-  int l = vm->length();
-  int endrow = (nrows>0) ?startrow+nrows :l;
-  if(result.length() != endrow-startrow)
-    PLERROR("In evaluateKernel length of result vector does not match the row range");
+    int l = vm->length();
+    int endrow = (nrows>0) ?startrow+nrows :l;
+    if(result.length() != endrow-startrow)
+        PLERROR("In evaluateKernel length of result vector does not match the row range");
 
-  Vec v1(v1_ncols);
-  for(int i=startrow; i<endrow; i++)
-  {
-    vm->getSubRow(i,v1_startcol,v1);
-    result[i] = ker(v1,v2);
-  }
+    Vec v1(v1_ncols);
+    for(int i=startrow; i<endrow; i++)
+    {
+        vm->getSubRow(i,v1_startcol,v1);
+        result[i] = ker(v1,v2);
+    }
 }
 
-    //  returns sum_i [ ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
+//  returns sum_i [ ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
 real evaluateKernelSum(Ker ker, VMat vm, int v1_startcol, int v1_ncols, 
-                                const Vec& v2, int startrow, int nrows, int ignore_this_row)
+                       const Vec& v2, int startrow, int nrows, int ignore_this_row)
 {
-  int l = vm->length();
-  int endrow = (nrows>0) ?startrow+nrows :l;
-  double result = 0.;
-  Vec v1(v1_ncols);
-  for(int i=startrow; i<endrow; i++)
-    if(i!=ignore_this_row)
-    {
-      vm->getSubRow(i,v1_startcol,v1);
-      result += ker(v1,v2);
-    }
-  return (real)result;
+    int l = vm->length();
+    int endrow = (nrows>0) ?startrow+nrows :l;
+    double result = 0.;
+    Vec v1(v1_ncols);
+    for(int i=startrow; i<endrow; i++)
+        if(i!=ignore_this_row)
+        {
+            vm->getSubRow(i,v1_startcol,v1);
+            result += ker(v1,v2);
+        }
+    return (real)result;
 }
     
-    // targetsum := sum_i [ m(i).subVec(t_startcol,t_ncols) * ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
-    // and returns sum_i [ ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
+// targetsum := sum_i [ m(i).subVec(t_startcol,t_ncols) * ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
+// and returns sum_i [ ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
 real evaluateKernelWeightedTargetSum(Ker ker, VMat vm, int v1_startcol, int v1_ncols, const Vec& v2, 
-                                                 int t_startcol, int t_ncols, Vec& targetsum, int startrow, int nrows, int ignore_this_row)
+                                     int t_startcol, int t_ncols, Vec& targetsum, int startrow, int nrows, int ignore_this_row)
 {
-  int l = vm->length();
-  int endrow = (nrows>0) ?startrow+nrows :l;
-  targetsum.clear();
-  double result = 0.;
-  Vec v1(v1_ncols);
-  Vec target(t_ncols);
-  for(int i=startrow; i<endrow; i++)
-    if(i!=ignore_this_row)
-    {
-      vm->getSubRow(i,v1_startcol,v1);
-      vm->getSubRow(i,t_startcol,target);
-      real kerval = ker(v1,v2);
-      result += kerval;
-      multiplyAcc(targetsum, target, kerval);
-    }
-  return (real)result;
+    int l = vm->length();
+    int endrow = (nrows>0) ?startrow+nrows :l;
+    targetsum.clear();
+    double result = 0.;
+    Vec v1(v1_ncols);
+    Vec target(t_ncols);
+    for(int i=startrow; i<endrow; i++)
+        if(i!=ignore_this_row)
+        {
+            vm->getSubRow(i,v1_startcol,v1);
+            vm->getSubRow(i,t_startcol,target);
+            real kerval = ker(v1,v2);
+            result += kerval;
+            multiplyAcc(targetsum, target, kerval);
+        }
+    return (real)result;
 }
   
 TVec< pair<real,int> > evaluateKernelTopN(int N, Ker ker, VMat vm, int v1_startcol, int v1_ncols, 
-                                                   const Vec& v2, int startrow, int nrows, int ignore_this_row)
+                                          const Vec& v2, int startrow, int nrows, int ignore_this_row)
 {
-  int l = vm->length();
-  int endrow = (nrows>0) ?startrow+nrows :l;
-  TopNI<real> extrema(N);
-  Vec v1(v1_ncols);
-  for(int i=startrow; i<endrow; i++)
-    if(i!=ignore_this_row)
-    {
-      vm->getSubRow(i,v1_startcol,v1);
-      real kerval = ker(v1,v2);
-      extrema.update(kerval,i);
-    }
-  extrema.sort();
-  return extrema.getTopN();
+    int l = vm->length();
+    int endrow = (nrows>0) ?startrow+nrows :l;
+    TopNI<real> extrema(N);
+    Vec v1(v1_ncols);
+    for(int i=startrow; i<endrow; i++)
+        if(i!=ignore_this_row)
+        {
+            vm->getSubRow(i,v1_startcol,v1);
+            real kerval = ker(v1,v2);
+            extrema.update(kerval,i);
+        }
+    extrema.sort();
+    return extrema.getTopN();
 }
 
 TVec< pair<real,int> > evaluateKernelBottomN(int N, Ker ker, VMat vm, int v1_startcol, int v1_ncols, 
-                                                      const Vec& v2, int startrow, int nrows, int ignore_this_row)
+                                             const Vec& v2, int startrow, int nrows, int ignore_this_row)
 {
-  int l = vm->length();
-  int endrow = (nrows>0) ?startrow+nrows :l;
-  BottomNI<real> extrema(N);
-  Vec v1(v1_ncols);
-  for(int i=startrow; i<endrow; i++)
-    if(i!=ignore_this_row)
-    {
-      vm->getSubRow(i,v1_startcol,v1);
-      real kerval = ker(v1,v2);
-      extrema.update(kerval,i);
-    }
-  extrema.sort();
-  return extrema.getBottomN();
+    int l = vm->length();
+    int endrow = (nrows>0) ?startrow+nrows :l;
+    BottomNI<real> extrema(N);
+    Vec v1(v1_ncols);
+    for(int i=startrow; i<endrow; i++)
+        if(i!=ignore_this_row)
+        {
+            vm->getSubRow(i,v1_startcol,v1);
+            real kerval = ker(v1,v2);
+            extrema.update(kerval,i);
+        }
+    extrema.sort();
+    return extrema.getBottomN();
 }
 
 
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

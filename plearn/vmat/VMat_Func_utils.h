@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_Func_utils.h,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -50,15 +50,28 @@
 namespace PLearn {
 using namespace std;
 
-  class Func;
-  class VMat;
+class Func;
+class VMat;
 
 // Put global function declarations here
 
-  //!  compute fprop or fbprop of a sumOf operation
-  void evaluateSumOfFprop(VMat vm, Func f, Vec& output_result, int nsamples=-1);
-  void evaluateSumOfFbprop(VMat vm, Func f, Vec& output_result, Vec& output_gradient, int nsamples=-1);
+//!  compute fprop or fbprop of a sumOf operation
+void evaluateSumOfFprop(VMat vm, Func f, Vec& output_result, int nsamples=-1);
+void evaluateSumOfFbprop(VMat vm, Func f, Vec& output_result, Vec& output_gradient, int nsamples=-1);
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

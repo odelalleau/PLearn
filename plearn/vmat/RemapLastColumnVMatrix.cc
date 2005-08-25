@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: RemapLastColumnVMatrix.cc,v 1.6 2004/07/07 17:30:48 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "RemapLastColumnVMatrix.h"
 
@@ -54,15 +54,15 @@ RemapLastColumnVMatrix::RemapLastColumnVMatrix()
 }
 
 RemapLastColumnVMatrix::RemapLastColumnVMatrix(VMat the_underlying_distr, Mat the_mapping)
-  : inherited (the_underlying_distr->length(), the_underlying_distr->width()+the_mapping.width()-2),
-    underlying_distr(the_underlying_distr), mapping(the_mapping)
+    : inherited (the_underlying_distr->length(), the_underlying_distr->width()+the_mapping.width()-2),
+      underlying_distr(the_underlying_distr), mapping(the_mapping)
 {
 }
 
 RemapLastColumnVMatrix::RemapLastColumnVMatrix(VMat the_underlying_distr, real if_equals_value, real then_value, real else_value)
-  : inherited(the_underlying_distr->length(), the_underlying_distr->width()),
-    underlying_distr(the_underlying_distr), if_equals_val(if_equals_value),
-    then_val(then_value), else_val(else_value)
+    : inherited(the_underlying_distr->length(), the_underlying_distr->width()),
+      underlying_distr(the_underlying_distr), if_equals_val(if_equals_value),
+      then_val(then_value), else_val(else_value)
 {
 }
 
@@ -92,38 +92,51 @@ RemapLastColumnVMatrix::declareOptions(OptionList &ol)
 void RemapLastColumnVMatrix::getNewRow(int i, const Vec& samplevec) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length())
-    PLERROR("In RemapLastColumnVMatrix::getNewRow OUT OF BOUNDS");
-  if(samplevec.length()!=width())
-    PLERROR("In RemapLastColumnVMatrix::getNewRow samplevec.length() must be equal to the VMat's width");
+    if(i<0 || i>=length())
+        PLERROR("In RemapLastColumnVMatrix::getNewRow OUT OF BOUNDS");
+    if(samplevec.length()!=width())
+        PLERROR("In RemapLastColumnVMatrix::getNewRow samplevec.length() must be equal to the VMat's width");
 #endif
-  if(mapping.isEmpty()) // use if-then-else mapping
-  {
-    underlying_distr->getRow(i,samplevec);
-    real& lastelem = samplevec.lastElement();
-    if(lastelem==if_equals_val)
-      lastelem = then_val;
-    else
-      lastelem = else_val;
-  }
-  else // use mapping matrix
-  {
-    int underlying_width = underlying_distr->width();
-    int replacement_width = mapping.width()-1;
-    underlying_distr->getRow(i,samplevec.subVec(0,underlying_width));
-    real val = samplevec[underlying_width-1];
-    int k;
-    for(k=0; k<mapping.length(); k++)
+    if(mapping.isEmpty()) // use if-then-else mapping
     {
-      if(mapping(k,0)==val)
-      {
-        samplevec.subVec(underlying_width-1,replacement_width) << mapping(k).subVec(1,replacement_width);
-        break;
-      }
+        underlying_distr->getRow(i,samplevec);
+        real& lastelem = samplevec.lastElement();
+        if(lastelem==if_equals_val)
+            lastelem = then_val;
+        else
+            lastelem = else_val;
     }
-    if(k>=mapping.length())
-      PLERROR("In RemapLastColumnVMatrix::getRow there is a value in the last column that does not have any defined mapping");
-  }
+    else // use mapping matrix
+    {
+        int underlying_width = underlying_distr->width();
+        int replacement_width = mapping.width()-1;
+        underlying_distr->getRow(i,samplevec.subVec(0,underlying_width));
+        real val = samplevec[underlying_width-1];
+        int k;
+        for(k=0; k<mapping.length(); k++)
+        {
+            if(mapping(k,0)==val)
+            {
+                samplevec.subVec(underlying_width-1,replacement_width) << mapping(k).subVec(1,replacement_width);
+                break;
+            }
+        }
+        if(k>=mapping.length())
+            PLERROR("In RemapLastColumnVMatrix::getRow there is a value in the last column that does not have any defined mapping");
+    }
 }
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

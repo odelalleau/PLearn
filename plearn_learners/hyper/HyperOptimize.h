@@ -36,8 +36,8 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperOptimize.h,v 1.4 2005/03/17 14:38:19 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file HyperOptimize.h */
 #ifndef HyperOptimize_INC
@@ -54,75 +54,88 @@ class HyperOptimize: public HyperCommand
 {
 protected:
 
-  VMat resultsmat;
+    VMat resultsmat;
     
 public:
 
-  typedef HyperCommand inherited;
-  PLEARN_DECLARE_OBJECT(HyperOptimize);
+    typedef HyperCommand inherited;
+    PLEARN_DECLARE_OBJECT(HyperOptimize);
 
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  int which_cost; 
-  int min_n_trials;
-  PP<OptionsOracle> oracle;
-  bool provide_tester_expdir;  // should tester be provided with an expdir for each test run
-  TVec< PP<HyperCommand> > sub_strategy; //!< A possible sub-strategy to optimize other hyper parameters
-  bool rerun_after_sub;
-  bool provide_sub_expdir; // should sub_strategy be provided an expdir
-  PP<Splitter> splitter;  // (if not specified, use default splitter specified in PTester)
+    int which_cost; 
+    int min_n_trials;
+    PP<OptionsOracle> oracle;
+    bool provide_tester_expdir;  // should tester be provided with an expdir for each test run
+    TVec< PP<HyperCommand> > sub_strategy; //!< A possible sub-strategy to optimize other hyper parameters
+    bool rerun_after_sub;
+    bool provide_sub_expdir; // should sub_strategy be provided an expdir
+    PP<Splitter> splitter;  // (if not specified, use default splitter specified in PTester)
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  HyperOptimize();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    HyperOptimize();
 
 
-  // ******************
-  // * HyperCommand methods *
-  // ******************
+    // ******************
+    // * HyperCommand methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
-  void createResultsMat();
-  void reportResult(int trialnum,  const Vec& results);
-  Vec runTest(int trialnum);
+    void createResultsMat();
+    void reportResult(int trialnum,  const Vec& results);
+    Vec runTest(int trialnum);
 
 public:
 
-  //! Sets the expdir and calls createResultsMat.
-  virtual void setExperimentDirectory(const PPath& the_expdir);
+    //! Sets the expdir and calls createResultsMat.
+    virtual void setExperimentDirectory(const PPath& the_expdir);
 
-  //! Returns the names of the results returned by the optimize() method.
-  virtual TVec<string> getResultNames() const;
+    //! Returns the names of the results returned by the optimize() method.
+    virtual TVec<string> getResultNames() const;
 
-  virtual Vec optimize();
+    virtual Vec optimize();
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(HyperOptimize);
+DECLARE_OBJECT_PTR(HyperOptimize);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

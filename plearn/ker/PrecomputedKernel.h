@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: PrecomputedKernel.h,v 1.7 2004/09/14 16:04:36 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef PrecomputedKernel_INC
 #define PrecomputedKernel_INC
@@ -53,47 +53,47 @@ using namespace std;
 //!  A kernel that precomputes the kernel matrix as soon as setDataForKernelMatrix is called.
 class PrecomputedKernel: public Kernel
 {
-  typedef Kernel inherited;
+    typedef Kernel inherited;
   
 protected:
-  Ker ker; //!<  the real underlying kernel
-  TVec<Vec> precomputedK; //!<  the precomputed kernel matrix
+    Ker ker; //!<  the real underlying kernel
+    TVec<Vec> precomputedK; //!<  the precomputed kernel matrix
 
-  /* *******************
-     protected options *
-  **********************/
+    /* *******************
+       protected options *
+    **********************/
 
 private:
-  void build_();
+    void build_();
   
 public:
-  PrecomputedKernel() //: precomputedK(0) 
+    PrecomputedKernel() //: precomputedK(0) 
     {}
 
-  PrecomputedKernel(Ker the_ker): 
-    ker(the_ker) //, precomputedK(0) 
+    PrecomputedKernel(Ker the_ker): 
+        ker(the_ker) //, precomputedK(0) 
     {}
 
-  virtual void build();
-  //virtual ~PrecomputedKernel();
+    virtual void build();
+    //virtual ~PrecomputedKernel();
 
-  PLEARN_DECLARE_OBJECT(PrecomputedKernel);
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    PLEARN_DECLARE_OBJECT(PrecomputedKernel);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //!  This method precomputes and stores all kernel values 
-  virtual void setDataForKernelMatrix(VMat the_data);
+    //!  This method precomputes and stores all kernel values 
+    virtual void setDataForKernelMatrix(VMat the_data);
 
-  virtual void addDataForKernelMatrix(const Vec& newRow)
+    virtual void addDataForKernelMatrix(const Vec& newRow)
     { PLERROR("PrecomputedKernel does not manage size varying data vmat. Use SequentialKernel instead."); }
   
-  //!  simply forwards to underlying kernel  
-  virtual real evaluate(const Vec& x1, const Vec& x2) const; //!<  returns K(x1,x2) 
-  virtual real evaluate_i_j(int i, int j) const; //!<  returns evaluate(data(i),data(j))
-  virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const; //!<  returns evaluate(data(i),x)
-  virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; //!<  returns evaluate(x,data(i))
+    //!  simply forwards to underlying kernel  
+    virtual real evaluate(const Vec& x1, const Vec& x2) const; //!<  returns K(x1,x2) 
+    virtual real evaluate_i_j(int i, int j) const; //!<  returns evaluate(data(i),data(j))
+    virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const; //!<  returns evaluate(data(i),x)
+    virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; //!<  returns evaluate(x,data(i))
 
 protected:
-  static void declareOptions(OptionList &ol);
+    static void declareOptions(OptionList &ol);
 };
 
 DECLARE_OBJECT_PTR(PrecomputedKernel);
@@ -102,3 +102,15 @@ DECLARE_OBJECT_PTR(PrecomputedKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

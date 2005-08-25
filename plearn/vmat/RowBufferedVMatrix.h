@@ -37,9 +37,9 @@
  
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.h,v 1.13 2005/03/17 22:57:40 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -57,42 +57,55 @@ class RowBufferedVMatrix: public VMatrix
 
 private:
 
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
 protected:
 
-  mutable int current_row_index;
-  mutable Vec current_row;
-  mutable int other_row_index; //!<  used by dot
-  mutable Vec other_row;
+    mutable int current_row_index;
+    mutable Vec current_row;
+    mutable int other_row_index; //!<  used by dot
+    mutable Vec other_row;
 
-  //! This is the only method requiring implementation in subclasses.
-  virtual void getNewRow(int i, const Vec& v) const = 0;
+    //! This is the only method requiring implementation in subclasses.
+    virtual void getNewRow(int i, const Vec& v) const = 0;
 
-  //! This method must be called when you modify the VMatrix: mark the buffer as invalid
-  //! so the next call to one of the get* methods will not attempt to use it.
-  virtual void invalidateBuffer() const;
+    //! This method must be called when you modify the VMatrix: mark the buffer as invalid
+    //! so the next call to one of the get* methods will not attempt to use it.
+    virtual void invalidateBuffer() const;
   
 public:
 
-  RowBufferedVMatrix();
-  RowBufferedVMatrix(int the_length, int the_width);
+    RowBufferedVMatrix();
+    RowBufferedVMatrix(int the_length, int the_width);
 
-  //! These methods are implemented by buffering calls to getNewRow.
-  virtual real get(int i, int j) const; //!<  returns element (i,j)
-  virtual void getRow(int i, Vec v) const;
-  virtual void getSubRow(int i, int j, Vec v) const; //!<  fills v with the subrow i laying between columns j (inclusive) and j+v.length() (exclusive)
+    //! These methods are implemented by buffering calls to getNewRow.
+    virtual real get(int i, int j) const; //!<  returns element (i,j)
+    virtual void getRow(int i, Vec v) const;
+    virtual void getSubRow(int i, int j, Vec v) const; //!<  fills v with the subrow i laying between columns j (inclusive) and j+v.length() (exclusive)
 
-  virtual real dot(int i1, int i2, int inputsize) const;
-  virtual real dot(int i, const Vec& v) const;
+    virtual real dot(int i1, int i2, int inputsize) const;
+    virtual real dot(int i, const Vec& v) const;
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  PLEARN_DECLARE_ABSTRACT_OBJECT(RowBufferedVMatrix);
+    PLEARN_DECLARE_ABSTRACT_OBJECT(RowBufferedVMatrix);
 };
 
 DECLARE_OBJECT_PTR(RowBufferedVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

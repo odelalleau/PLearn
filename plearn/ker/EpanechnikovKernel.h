@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EpanechnikovKernel.h,v 1.2 2004/12/25 08:02:03 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -50,63 +50,63 @@ namespace PLearn {
 
 class EpanechnikovKernel: public Kernel
 {
-  typedef Kernel inherited;
+    typedef Kernel inherited;
   
 public:
 
-  // ************************
-  // * Public build options *
-  // ************************
+    // ************************
+    // * Public build options *
+    // ************************
 
-  //! Smoothing parameter for the Epanechnikov kernel (default=1.0)
-  real gamma;
+    //! Smoothing parameter for the Epanechnikov kernel (default=1.0)
+    real gamma;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  EpanechnikovKernel();
+    //! Default constructor.
+    EpanechnikovKernel();
 
-  // ******************
-  // * Kernel methods *
-  // ******************
+    // ******************
+    // * Kernel methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  // If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
-  PLEARN_DECLARE_OBJECT(EpanechnikovKernel);
+    // Declares other standard object methods.
+    // If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
+    PLEARN_DECLARE_OBJECT(EpanechnikovKernel);
 
-  // ************************
-  // **** Kernel methods ****
-  // ************************
+    // ************************
+    // **** Kernel methods ****
+    // ************************
 
-  //! Compute K(x1,x2).
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
+    //! Compute K(x1,x2).
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
 };
 
 // Declares a few other classes and functions related to this class.
@@ -116,3 +116,15 @@ DECLARE_OBJECT_PTR(EpanechnikovKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

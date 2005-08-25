@@ -34,8 +34,8 @@
 
 
 /* *******************************************************      
-   * $Id: VecCompressor.h,v 1.2 2004/02/20 21:11:46 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 #ifndef VecCompressor_INC
@@ -59,42 +59,55 @@ class VecCompressor
 {
 protected:
 
-  static inline bool issmallint(real x)
-  { int intx = int(x); return floor(x)==x && intx<=127 && intx>=-127; }
+    static inline bool issmallint(real x)
+    { int intx = int(x); return floor(x)==x && intx<=127 && intx>=-127; }
 
-  static inline bool is0(real x)
-  { return x==0.; }
+    static inline bool is0(real x)
+    { return x==0.; }
 
-  static inline bool isI(real x)
-  { return x!=0. && issmallint(x); }
+    static inline bool isI(real x)
+    { return x!=0. && issmallint(x); }
 
-  static inline bool isF(real x)
-  { return x!=0. && !issmallint(x); }
+    static inline bool isF(real x)
+    { return x!=0. && !issmallint(x); }
   
 public:
 /*!     writes v in a compressed form in the data buffer passed as argument.
-    (make sure enough memory is allocated in the data buffer)
-    returns a pointer to the one-after-last element written in the data block
+  (make sure enough memory is allocated in the data buffer)
+  returns a pointer to the one-after-last element written in the data block
 */
-  static signed char* compressVec(const Vec& v, signed char* data);
+    static signed char* compressVec(const Vec& v, signed char* data);
 
-  //!  uncompresses the data of a vector compressed with compressVec
-  //!  v must have the correct size.
-  static void uncompressVec(signed char* data, const Vec& v);  
+    //!  uncompresses the data of a vector compressed with compressVec
+    //!  v must have the correct size.
+    static void uncompressVec(signed char* data, const Vec& v);  
 
-  //!  writes v in compressed format to the given stream
-  //!  The written data does not contain size info.
-  static void writeCompressedVec(ostream& out, const Vec& v);
+    //!  writes v in compressed format to the given stream
+    //!  The written data does not contain size info.
+    static void writeCompressedVec(ostream& out, const Vec& v);
 
-  //!  reads data of a compressed vector from the given stream
-  //!  v must have the right size already (this is not checked!)
-  static void readCompressedVec(istream& in, const Vec& v); 
+    //!  reads data of a compressed vector from the given stream
+    //!  v must have the right size already (this is not checked!)
+    static void readCompressedVec(istream& in, const Vec& v); 
 
-  //!  Returns the number of bytes that will be used to encode a vector of 
-  //!  length n in the worst case
-  static size_t worstCaseSize(int n)
-  { return 2+4*n+n/128; }
+    //!  Returns the number of bytes that will be used to encode a vector of 
+    //!  length n in the worst case
+    static size_t worstCaseSize(int n)
+    { return 2+4*n+n/128; }
 };
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

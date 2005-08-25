@@ -56,29 +56,29 @@ typedef bool (*ISA_METHOD)(Object* o);
 class TypeMapEntry
 {
 public:
-  string type_name;
-  string parent_class; // name of parent class
-  NEW_OBJECT constructor;
-  GETOPTIONLIST_METHOD getoptionlist_method;
-  ISA_METHOD isa_method;
-  string one_line_descr;
-  string multi_line_help;
+    string type_name;
+    string parent_class; // name of parent class
+    NEW_OBJECT constructor;
+    GETOPTIONLIST_METHOD getoptionlist_method;
+    ISA_METHOD isa_method;
+    string one_line_descr;
+    string multi_line_help;
   
-  TypeMapEntry(const string& the_type_name, 
-               const string& the_parent_class="", 
-               NEW_OBJECT the_constructor=0, 
-               GETOPTIONLIST_METHOD the_getoptionlist_method=0,
-               ISA_METHOD the_isa_method=0,
-               const string& the_one_line_descr = "",
-               const string& the_multi_line_help = "")
-    :type_name(the_type_name),
-     parent_class(the_parent_class),
-     constructor(the_constructor), 
-     getoptionlist_method(the_getoptionlist_method),
-     isa_method(the_isa_method),
-     one_line_descr(the_one_line_descr),
-     multi_line_help(the_multi_line_help)
-  {}
+    TypeMapEntry(const string& the_type_name, 
+                 const string& the_parent_class="", 
+                 NEW_OBJECT the_constructor=0, 
+                 GETOPTIONLIST_METHOD the_getoptionlist_method=0,
+                 ISA_METHOD the_isa_method=0,
+                 const string& the_one_line_descr = "",
+                 const string& the_multi_line_help = "")
+        :type_name(the_type_name),
+         parent_class(the_parent_class),
+         constructor(the_constructor), 
+         getoptionlist_method(the_getoptionlist_method),
+         isa_method(the_isa_method),
+         one_line_descr(the_one_line_descr),
+         multi_line_help(the_multi_line_help)
+    {}
 };
 
 typedef std::map<string,TypeMapEntry> TypeMap;
@@ -90,42 +90,42 @@ typedef std::map<string,TypeMapEntry> TypeMap;
 class TypeFactory
 {
 protected:
-  TypeMap type_map_;
+    TypeMap type_map_;
 
 public:
-  // Default constructor, destructor, etc.
+    // Default constructor, destructor, etc.
 
-  //!  Register a type
-  static void register_type(const string& type_name, 
-                            const string& parent_class, 
-                            NEW_OBJECT constructor, 
-                            GETOPTIONLIST_METHOD getoptionlist_method,
-                            ISA_METHOD isa_method,
-                            const string& one_line_descr,
-                            const string& multi_line_help);  
+    //!  Register a type
+    static void register_type(const string& type_name, 
+                              const string& parent_class, 
+                              NEW_OBJECT constructor, 
+                              GETOPTIONLIST_METHOD getoptionlist_method,
+                              ISA_METHOD isa_method,
+                              const string& one_line_descr,
+                              const string& multi_line_help);  
 
-  //!  Register a type
-  void registerType(const TypeMapEntry& entry);
+    //!  Register a type
+    void registerType(const TypeMapEntry& entry);
 
-  //!  Unregister a type
-  void unregisterType(string type_name);
+    //!  Unregister a type
+    void unregisterType(string type_name);
 
-  //!  Verify if the type is registered
-  bool isRegistered(string type_name) const;
+    //!  Verify if the type is registered
+    bool isRegistered(string type_name) const;
 
-  //!  Construct a new default-constructed object given its type name
-  //!  Calls PLERROR (throws an exception) if type_name is not registered
-  Object* newObject(string type_name) const;
+    //!  Construct a new default-constructed object given its type name
+    //!  Calls PLERROR (throws an exception) if type_name is not registered
+    Object* newObject(string type_name) const;
 
-  //! Tells if the given object is a virtual base class (with pure virtual methods)
-  //! (This simply checks if it was declared with a constructor or not)
-  bool isAbstract(string type_name) const;
+    //! Tells if the given object is a virtual base class (with pure virtual methods)
+    //! (This simply checks if it was declared with a constructor or not)
+    bool isAbstract(string type_name) const;
 
-  const TypeMap& getTypeMap() const
-  { return type_map_; }
+    const TypeMap& getTypeMap() const
+    { return type_map_; }
 
-  //!  Return the singleton (static) instance of the type factory
-  static TypeFactory& instance();
+    //!  Return the singleton (static) instance of the type factory
+    static TypeFactory& instance();
   
 };
 
@@ -137,3 +137,16 @@ void displayObjectHelp(ostream& out, const string& classname);
 } // end of namespace PLearn
 
 #endif //!<  TYPEFACTORY_H
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DivVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "DivVariable.h"
 #include "InvertElementsVariable.h"
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(DivVariable,
                         "NO HELP");
 
 DivVariable::DivVariable(Variable* input1, Variable* input2)
-  : BinaryVariable(input1, input2, input1->length(), input1->width())
+    : BinaryVariable(input1, input2, input1->length(), input1->width())
 {
     build_();
 }
@@ -87,39 +87,39 @@ DivVariable::build_()
 
 void DivVariable::fprop()
 {
-  for(int k=0; k<nelems(); k++)
-    valuedata[k] = input1->valuedata[k]/input2->valuedata[k];
+    for(int k=0; k<nelems(); k++)
+        valuedata[k] = input1->valuedata[k]/input2->valuedata[k];
 }
 
 
 void DivVariable::bprop()
 {
-  for(int k=0; k<nelems(); k++)
+    for(int k=0; k<nelems(); k++)
     {
-      real iv2k = 1.0/input2->valuedata[k];
-      input1->gradientdata[k] += gradientdata[k] * iv2k;
-      input2->gradientdata[k] -= gradientdata[k] * 
-        input1->valuedata[k] * iv2k * iv2k;
+        real iv2k = 1.0/input2->valuedata[k];
+        input1->gradientdata[k] += gradientdata[k] * iv2k;
+        input2->gradientdata[k] -= gradientdata[k] * 
+            input1->valuedata[k] * iv2k * iv2k;
     }
 }
 
 
 void DivVariable::symbolicBprop()
 {
-  Var iv2 = invertElements(input2);
-  input1->accg(g * iv2);
-  input2->accg(-g * input1 * square(iv2));
+    Var iv2 = invertElements(input2);
+    input1->accg(g * iv2);
+    input2->accg(-g * input1 * square(iv2));
 }
 
 
 void DivVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
+    if (rValue.length()==0) resizeRValue();
   
-  for(int k=0; k<nelems(); k++)
+    for(int k=0; k<nelems(); k++)
     {
-      real iv2k = 1.0/input2->valuedata[k];
-      rvaluedata[k] = input1->rvaluedata[k] * iv2k - input2->rvaluedata[k] * input1->valuedata[k] * iv2k * iv2k;
+        real iv2k = 1.0/input2->valuedata[k];
+        rvaluedata[k] = input1->rvaluedata[k] * iv2k - input2->rvaluedata[k] * input1->valuedata[k] * iv2k * iv2k;
     }
 }
 
@@ -127,4 +127,15 @@ void DivVariable::rfprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

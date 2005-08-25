@@ -56,62 +56,74 @@ const int pl_dftbuflen= 4096;
 class pl_fdstreambuf : public streambuf, public PPointable
 {
 protected:  
-  int fd;  //!< the file descriptor
-  char* inbuf; //!< input buffer
-  int inbuf_capacity; //!< length of inbuf
+    int fd;  //!< the file descriptor
+    char* inbuf; //!< input buffer
+    int inbuf_capacity; //!< length of inbuf
   
 protected:
   
-  //!  inline for efficiency
-  inline void reserveInputBuffer(int buflen)
-  {
-    if(buflen>inbuf_capacity)
-      {
-	if(inbuf)
-	  delete[] inbuf;
-	inbuf = new char[buflen];
-	inbuf_capacity = buflen;
-      }
-  }
+    //!  inline for efficiency
+    inline void reserveInputBuffer(int buflen)
+    {
+        if(buflen>inbuf_capacity)
+        {
+            if(inbuf)
+                delete[] inbuf;
+            inbuf = new char[buflen];
+            inbuf_capacity = buflen;
+        }
+    }
   
-  virtual int overflow(int c=EOF);
-  virtual int underflow();
-  virtual streamsize showmanyc();
-  virtual streamsize xsputn(const char* s, streamsize n);
-  virtual streamsize xsgetn(char* s, streamsize n);
-  virtual streambuf* setbuf(char* p, int len);
-  virtual int sync();
+    virtual int overflow(int c=EOF);
+    virtual int underflow();
+    virtual streamsize showmanyc();
+    virtual streamsize xsputn(const char* s, streamsize n);
+    virtual streamsize xsgetn(char* s, streamsize n);
+    virtual streambuf* setbuf(char* p, int len);
+    virtual int sync();
   
 public:
-  pl_fdstreambuf(int fd_, int inbufsize);
-  virtual ~pl_fdstreambuf();
+    pl_fdstreambuf(int fd_, int inbufsize);
+    virtual ~pl_fdstreambuf();
   
 };
 
 class pl_fdstream: public iostream
 {
 protected:
-  char* outbuffer;
+    char* outbuffer;
   
 public:
   
-  pl_fdstream()
-    :iostream(0), outbuffer(0)
-  {}
+    pl_fdstream()
+        :iostream(0), outbuffer(0)
+    {}
   
-  pl_fdstream(int fd, int inbufsize= pl_dftbuflen, int outbufsize= pl_dftbuflen)
-    :iostream(0), outbuffer(0)
-  { init(fd, inbufsize, outbufsize); }
+    pl_fdstream(int fd, int inbufsize= pl_dftbuflen, int outbufsize= pl_dftbuflen)
+        :iostream(0), outbuffer(0)
+    { init(fd, inbufsize, outbufsize); }
   
-  void init(int fd, int inbufsize= pl_dftbuflen, int outbufsize= pl_dftbuflen);
+    void init(int fd, int inbufsize= pl_dftbuflen, int outbufsize= pl_dftbuflen);
   
-  //! for compatibility with old non-standard stl fstream
-  void attach(int fd);
+    //! for compatibility with old non-standard stl fstream
+    void attach(int fd);
 
-  ~pl_fdstream();
+    ~pl_fdstream();
 };
 
 } // end of namespace PLearn
 
 #endif //ndef pl_fdstream_INC
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

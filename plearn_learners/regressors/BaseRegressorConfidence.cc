@@ -35,9 +35,9 @@
 
 
 /* ********************************************************************************    
-   * $Id: BaseRegressorConfidence.cc, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout        *
-   * This file is part of the PLearn library.                                     *
-   ******************************************************************************** */
+ * $Id: BaseRegressorConfidence.cc, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout        *
+ * This file is part of the PLearn library.                                     *
+ ******************************************************************************** */
 
 #include "BaseRegressorConfidence.h"
 
@@ -47,13 +47,13 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(BaseRegressorConfidence,
                         "A PLearner to provide a confidence function to a generic base regressor.", 
                         "The algorithm computes an outut between 0 and 1 based on a local density function.\n"
-                        );
+    );
 
 BaseRegressorConfidence::BaseRegressorConfidence()     
-  : number_of_neighbors(1),
-    sigma(0.1),
-    raise_confidence(1.0),
-    lower_confidence(0.0)
+    : number_of_neighbors(1),
+      sigma(0.1),
+      raise_confidence(1.0),
+      lower_confidence(0.0)
 {
 }
 
@@ -63,82 +63,82 @@ BaseRegressorConfidence::~BaseRegressorConfidence()
 
 void BaseRegressorConfidence::declareOptions(OptionList& ol)
 { 
-  declareOption(ol, "number_of_neighbors", &BaseRegressorConfidence::number_of_neighbors, OptionBase::buildoption,
-      "The number of nearest neighbors to consider.\n");
-  declareOption(ol, "sigma", &BaseRegressorConfidence::sigma, OptionBase::buildoption,
-      "The variance of the distribution on the target.\n");
-  declareOption(ol, "raise_confidence", &BaseRegressorConfidence::raise_confidence, OptionBase::buildoption,
-      "If the computed confidence is greater or equal to this level, it will be raised to 1.0.\n");
-  declareOption(ol, "lower_confidence", &BaseRegressorConfidence::lower_confidence, OptionBase::buildoption,
-      "If the computed confidence is lower than this level, it will be lowered to 0.0.\n");
+    declareOption(ol, "number_of_neighbors", &BaseRegressorConfidence::number_of_neighbors, OptionBase::buildoption,
+                  "The number of nearest neighbors to consider.\n");
+    declareOption(ol, "sigma", &BaseRegressorConfidence::sigma, OptionBase::buildoption,
+                  "The variance of the distribution on the target.\n");
+    declareOption(ol, "raise_confidence", &BaseRegressorConfidence::raise_confidence, OptionBase::buildoption,
+                  "If the computed confidence is greater or equal to this level, it will be raised to 1.0.\n");
+    declareOption(ol, "lower_confidence", &BaseRegressorConfidence::lower_confidence, OptionBase::buildoption,
+                  "If the computed confidence is lower than this level, it will be lowered to 0.0.\n");
       
-  declareOption(ol, "neighbors", &BaseRegressorConfidence::neighbors, OptionBase::learntoption,
-      "The matrice of indices of nearest neighbors rows from the training set.\n");
-  declareOption(ol, "nearest_neighbbors_target_mean", &BaseRegressorConfidence::nearest_neighbbors_target_mean, OptionBase::learntoption,
-      "The vector of neairest neighborstarget means from the trainingset.\n");;
-  inherited::declareOptions(ol);
+    declareOption(ol, "neighbors", &BaseRegressorConfidence::neighbors, OptionBase::learntoption,
+                  "The matrice of indices of nearest neighbors rows from the training set.\n");
+    declareOption(ol, "nearest_neighbbors_target_mean", &BaseRegressorConfidence::nearest_neighbbors_target_mean, OptionBase::learntoption,
+                  "The vector of neairest neighborstarget means from the trainingset.\n");;
+    inherited::declareOptions(ol);
 }
 
 void BaseRegressorConfidence::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(number_of_neighbors, copies);
-  deepCopyField(sigma, copies);
-  deepCopyField(raise_confidence, copies);
-  deepCopyField(lower_confidence, copies);
-  deepCopyField(neighbors, copies);
-  deepCopyField(nearest_neighbbors_target_mean, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(number_of_neighbors, copies);
+    deepCopyField(sigma, copies);
+    deepCopyField(raise_confidence, copies);
+    deepCopyField(lower_confidence, copies);
+    deepCopyField(neighbors, copies);
+    deepCopyField(nearest_neighbbors_target_mean, copies);
 }
 
 void BaseRegressorConfidence::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void BaseRegressorConfidence::build_()
 {
-  if (train_set)
-  {
-    input_to_search.resize(train_set->inputsize());
-    target_to_search.resize(1);
-    input_to_compare.resize(train_set->inputsize());
-    target_to_compare.resize(1);
-    neighbors.resize(train_set->length(), number_of_neighbors);
-    nearest_neighbbors_target_mean.resize(train_set->length());
-    two_sigma_square = 2.0 * pow(sigma, 2.0);
-    root_two_pi_sigma_square = sigma * 2.506628274631;
-  }
+    if (train_set)
+    {
+        input_to_search.resize(train_set->inputsize());
+        target_to_search.resize(1);
+        input_to_compare.resize(train_set->inputsize());
+        target_to_compare.resize(1);
+        neighbors.resize(train_set->length(), number_of_neighbors);
+        nearest_neighbbors_target_mean.resize(train_set->length());
+        two_sigma_square = 2.0 * pow(sigma, 2.0);
+        root_two_pi_sigma_square = sigma * 2.506628274631;
+    }
 }
 
 void BaseRegressorConfidence::train()
 {
-  for(int row_to_search = 0; row_to_search < train_set.length(); row_to_search++)
-  {
-    BottomNI<real> neighbors_search(number_of_neighbors);
-    nearest_neighbbors_target_mean[row_to_search] = 0.0;
-    train_set->getExample(row_to_search, input_to_search, target_to_search, weight_to_search);
-    for(int row_to_compare = 0; row_to_compare < train_set.length(); row_to_compare++)
+    for(int row_to_search = 0; row_to_search < train_set.length(); row_to_search++)
     {
-      train_set.getExample(row_to_compare, input_to_compare, target_to_compare, weight_to_compare);
-      neighbors_search.update(powdistance(input_to_search, input_to_compare), row_to_compare);
+        BottomNI<real> neighbors_search(number_of_neighbors);
+        nearest_neighbbors_target_mean[row_to_search] = 0.0;
+        train_set->getExample(row_to_search, input_to_search, target_to_search, weight_to_search);
+        for(int row_to_compare = 0; row_to_compare < train_set.length(); row_to_compare++)
+        {
+            train_set.getExample(row_to_compare, input_to_compare, target_to_compare, weight_to_compare);
+            neighbors_search.update(powdistance(input_to_search, input_to_compare), row_to_compare);
+        }
+        neighbors_search.sort();
+        for(int row_to_compare = 0; row_to_compare < number_of_neighbors; row_to_compare++)
+        {
+            TVec< pair<real,int> > indices = neighbors_search.getBottomN();
+            neighbors(row_to_search, row_to_compare) = indices[row_to_compare].second;
+            train_set->getExample(neighbors(row_to_search, row_to_compare), input_to_compare, target_to_compare, weight_to_compare);
+            nearest_neighbbors_target_mean[row_to_search] += target_to_compare[0];
+        }
+        nearest_neighbbors_target_mean[row_to_search] = nearest_neighbbors_target_mean[row_to_search] / number_of_neighbors;
     }
-    neighbors_search.sort();
-    for(int row_to_compare = 0; row_to_compare < number_of_neighbors; row_to_compare++)
-    {
-      TVec< pair<real,int> > indices = neighbors_search.getBottomN();
-      neighbors(row_to_search, row_to_compare) = indices[row_to_compare].second;
-      train_set->getExample(neighbors(row_to_search, row_to_compare), input_to_compare, target_to_compare, weight_to_compare);
-      nearest_neighbbors_target_mean[row_to_search] += target_to_compare[0];
-    }
-    nearest_neighbbors_target_mean[row_to_search] = nearest_neighbbors_target_mean[row_to_search] / number_of_neighbors;
-  }
 }
 
 void BaseRegressorConfidence::verbose(string the_msg, int the_level)
 {
-  if (verbosity >= the_level)
-    cout << the_msg << endl;
+    if (verbosity >= the_level)
+        cout << the_msg << endl;
 }
 
 void BaseRegressorConfidence::forget()
@@ -147,54 +147,67 @@ void BaseRegressorConfidence::forget()
 
 int BaseRegressorConfidence::outputsize() const
 {
-  return 2;
+    return 2;
 }
 
 TVec<string> BaseRegressorConfidence::getTrainCostNames() const
 {
-  TVec<string> return_msg(1);
-  return_msg[0] = "mse";
-  return return_msg;
+    TVec<string> return_msg(1);
+    return_msg[0] = "mse";
+    return return_msg;
 }
 
 TVec<string> BaseRegressorConfidence::getTestCostNames() const
 { 
-  return getTrainCostNames();
+    return getTrainCostNames();
 }
 
 void BaseRegressorConfidence::computeOutput(const Vec& inputv, Vec& outputv) const
 {
-  Vec train_set_inputv;
-  Vec train_set_targetv;
-  real train_set_weight;
-  train_set_inputv.resize(train_set->inputsize());
-  train_set_targetv.resize(1);
-  real distance = -1.0;
-  int nearest_neighbor;
-  for (int row = 0; row < train_set->length(); row++)
-  {
-    train_set->getExample(row, train_set_inputv, train_set_targetv, train_set_weight);
-    if (distance < 0 || powdistance(inputv, train_set_inputv) < distance)
+    Vec train_set_inputv;
+    Vec train_set_targetv;
+    real train_set_weight;
+    train_set_inputv.resize(train_set->inputsize());
+    train_set_targetv.resize(1);
+    real distance = -1.0;
+    int nearest_neighbor;
+    for (int row = 0; row < train_set->length(); row++)
     {
-      distance = powdistance(inputv, train_set_inputv);
-      nearest_neighbor = row;
+        train_set->getExample(row, train_set_inputv, train_set_targetv, train_set_weight);
+        if (distance < 0 || powdistance(inputv, train_set_inputv) < distance)
+        {
+            distance = powdistance(inputv, train_set_inputv);
+            nearest_neighbor = row;
+        }
     }
-  }
-  outputv[1] = exp(-1.0 * pow((outputv[0] - nearest_neighbbors_target_mean[nearest_neighbor]), 2.0) / two_sigma_square); //  / root_two_pi_sigma_square?
-  outputv[0] = nearest_neighbbors_target_mean[nearest_neighbor];
-  if (outputv[1] >= raise_confidence) outputv[1] = 1.0;
-  if (outputv[1] < lower_confidence) outputv[1] = 0.0;
+    outputv[1] = exp(-1.0 * pow((outputv[0] - nearest_neighbbors_target_mean[nearest_neighbor]), 2.0) / two_sigma_square); //  / root_two_pi_sigma_square?
+    outputv[0] = nearest_neighbbors_target_mean[nearest_neighbor];
+    if (outputv[1] >= raise_confidence) outputv[1] = 1.0;
+    if (outputv[1] < lower_confidence) outputv[1] = 0.0;
 }
 
 void BaseRegressorConfidence::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, Vec& outputv, Vec& costsv) const
 {
-  computeOutput(inputv, outputv);
-  computeCostsFromOutputs(inputv, outputv, targetv, costsv);
+    computeOutput(inputv, outputv);
+    computeCostsFromOutputs(inputv, outputv, targetv, costsv);
 }
 
 void BaseRegressorConfidence::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, const Vec& targetv, Vec& costsv) const
 {
-  costsv[0] = pow((outputv[0] - targetv[0]), 2.0);
+    costsv[0] = pow((outputv[0] - targetv[0]), 2.0);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SubsampleVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef SubsampleVariable_INC
 #define SubsampleVariable_INC
@@ -52,25 +52,25 @@ using namespace std;
 //!  A subsample var; equals subrample(input, the_subsamplefactor)
 class SubsampleVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 protected:
-  int subsamplefactor;
+    int subsamplefactor;
 
 public:
-  //!  Default constructor for persistence
-  SubsampleVariable() : subsamplefactor(1) {}
-  SubsampleVariable(Variable* input,int the_subsamplefactor);
+    //!  Default constructor for persistence
+    SubsampleVariable() : subsamplefactor(1) {}
+    SubsampleVariable(Variable* input,int the_subsamplefactor);
 
-  PLEARN_DECLARE_OBJECT(SubsampleVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(SubsampleVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
     void build_();
@@ -85,3 +85,16 @@ inline Var subsample(Var input, int subsample_factor)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

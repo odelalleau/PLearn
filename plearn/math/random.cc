@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 extern "C" {
 #include <ctime>
@@ -49,174 +49,174 @@ using namespace std;
 
 
 /*  
-  The static data to store the seed used by the random number generators.
-  */
+    The static data to store the seed used by the random number generators.
+*/
 
 static long  the_seed=0;
 static int   iset=0;
 static real gset;
 
 /*  
-  Special functions.
-  =================
-  */
+    Special functions.
+    =================
+*/
 
 /*  
-  log_gamma(): 
-  returns the natural logarithm of the gamma function
-  */
+    log_gamma(): 
+    returns the natural logarithm of the gamma function
+*/
 
 real  log_gamma(real xx)
 {
-  double x,y,tmp,ser;
-  static double gamma_coeffs[6]={ 76.18009172947146     ,
-                        -86.50532032941677     ,
-	                 24.01409824083091     ,
-                         -1.231739572450155    ,
-		          0.1208650973866179e-2,
-                         -0.5395239384953e-5   };
-  int j;
+    double x,y,tmp,ser;
+    static double gamma_coeffs[6]={ 76.18009172947146     ,
+                                    -86.50532032941677     ,
+                                    24.01409824083091     ,
+                                    -1.231739572450155    ,
+                                    0.1208650973866179e-2,
+                                    -0.5395239384953e-5   };
+    int j;
 
-  y=x=xx;
-  tmp=x+5.5;
-  tmp -= (x+0.5)*log(tmp);
-  ser=1.000000000190015;
-  for (j=0;j<=5;j++) ser += gamma_coeffs[j]/++y;
-  return -tmp+log(2.5066282746310005*ser/x);
+    y=x=xx;
+    tmp=x+5.5;
+    tmp -= (x+0.5)*log(tmp);
+    ser=1.000000000190015;
+    for (j=0;j<=5;j++) ser += gamma_coeffs[j]/++y;
+    return -tmp+log(2.5066282746310005*ser/x);
 }
 
 /*! returns the natural logarithm of the beta function */
 real log_beta(real x, real y)
 {
-  return log_gamma(x) + log_gamma(y) - log_gamma(x+y);
+    return log_gamma(x) + log_gamma(y) - log_gamma(x+y);
 }
 
 real incomplete_beta_continued_fraction(real z, real x, real y)
 {
-  real x_minus_1 = x-1;
-  real x_plus_1 = x+1;
-  real x_plus_y = x+y;
-  real denom = -z*x_plus_y/x_plus_1+1;
-  if (fabs(denom)<1e-35) {
-    denom=1e-35;
-  }
-  real rat1=1/denom;
-  real rat2=1.0;
-  real frac=rat1;
-  for (int k=1;k<100;k++)
-  {
-    real f=z*k*(y-k)/((x+2*k)*(x_minus_1+2*k));
-    rat2 = f/rat2 + 1;
-    rat1 = rat1*f+1;
-    if (fabs(rat1)<1e-35) {
-      rat1=1e-35;
+    real x_minus_1 = x-1;
+    real x_plus_1 = x+1;
+    real x_plus_y = x+y;
+    real denom = -z*x_plus_y/x_plus_1+1;
+    if (fabs(denom)<1e-35) {
+        denom=1e-35;
     }
-    if (fabs(rat2)<1e-35) {
-      rat2=1e-35;
-    }
-    rat1=1/rat1;
-    frac *= rat1*rat2;
+    real rat1=1/denom;
+    real rat2=1.0;
+    real frac=rat1;
+    for (int k=1;k<100;k++)
+    {
+        real f=z*k*(y-k)/((x+2*k)*(x_minus_1+2*k));
+        rat2 = f/rat2 + 1;
+        rat1 = rat1*f+1;
+        if (fabs(rat1)<1e-35) {
+            rat1=1e-35;
+        }
+        if (fabs(rat2)<1e-35) {
+            rat2=1e-35;
+        }
+        rat1=1/rat1;
+        frac *= rat1*rat2;
 
-    f=-z*(x+k)*(x_plus_y+k)/((x_plus_1+2*k)*(x+2*k));
-    rat2 = f/rat2+ 1;
-    rat1 = rat1*f+1;
-    if (fabs(rat1)<1e-35) {
-      rat1=1e-35;
-    }
-    if (fabs(rat2)<1e-35) {
-      rat2=1e-35;
-    }
-    rat1=1/rat1;
+        f=-z*(x+k)*(x_plus_y+k)/((x_plus_1+2*k)*(x+2*k));
+        rat2 = f/rat2+ 1;
+        rat1 = rat1*f+1;
+        if (fabs(rat1)<1e-35) {
+            rat1=1e-35;
+        }
+        if (fabs(rat2)<1e-35) {
+            rat2=1e-35;
+        }
+        rat1=1/rat1;
 
-    real delta = rat1*rat2;
-    frac *= delta;
-    // stopping criterion
-    if (fabs(1-delta) < 2e-7) {
-      return frac;
+        real delta = rat1*rat2;
+        frac *= delta;
+        // stopping criterion
+        if (fabs(1-delta) < 2e-7) {
+            return frac;
+        }
     }
-  }
-  // If that happens, increase the number of k iterations or increase
-  // the stopping criterion tolerance.
-  PLWARNING("incomplete_beta_continued_fraction: insufficient precision!"); 
-  return frac;
+    // If that happens, increase the number of k iterations or increase
+    // the stopping criterion tolerance.
+    PLWARNING("incomplete_beta_continued_fraction: insufficient precision!"); 
+    return frac;
 }
 
 /*! returns the incomplete beta function B_z(x,y)  */
 /*! Note that z must be in [0,1] */
 real incomplete_beta(real z, real x, real y)
 {
-  if (z>1 || z<0) PLERROR("incomplete_beta(z,x,y): z =%f must be in [0,1]",z);
-  real coeff = 0;
-  if (z>0 && z<1) coeff = exp(x*log(z)+y*log(1.-z)-log_beta(x,y));
-  if (z*(x+y+2)<x+1) {
-    return coeff*incomplete_beta_continued_fraction(z,x,y)/x;
-  }
-  return 1-coeff*incomplete_beta_continued_fraction(1-z,y,x)/y;
+    if (z>1 || z<0) PLERROR("incomplete_beta(z,x,y): z =%f must be in [0,1]",z);
+    real coeff = 0;
+    if (z>0 && z<1) coeff = exp(x*log(z)+y*log(1.-z)-log_beta(x,y));
+    if (z*(x+y+2)<x+1) {
+        return coeff*incomplete_beta_continued_fraction(z,x,y)/x;
+    }
+    return 1-coeff*incomplete_beta_continued_fraction(1-z,y,x)/y;
 }
 
 /*! Student-t cumulative distribution function */
 real student_t_cdf(real t, int nb_degrees_of_freedom)
 {
-  real p_t = 0.5*incomplete_beta(nb_degrees_of_freedom/(nb_degrees_of_freedom+t*t),0.5*nb_degrees_of_freedom,0.5);
-  //real p_t = 0.5*incbet(0.5*nb_degrees_of_freedom,0.5,nb_degrees_of_freedom/(nb_degrees_of_freedom+t*t));
+    real p_t = 0.5*incomplete_beta(nb_degrees_of_freedom/(nb_degrees_of_freedom+t*t),0.5*nb_degrees_of_freedom,0.5);
+    //real p_t = 0.5*incbet(0.5*nb_degrees_of_freedom,0.5,nb_degrees_of_freedom/(nb_degrees_of_freedom+t*t));
 #ifdef BOUNDCHECK
-  if (p_t < 0) {
-    PLERROR("Bug in incomplete_beta : returned a negative p_t !\n- p_t = %f\n- degrees of freedom = %d\n- t = %f",
-        p_t, nb_degrees_of_freedom, t);
-  }
+    if (p_t < 0) {
+        PLERROR("Bug in incomplete_beta : returned a negative p_t !\n- p_t = %f\n- degrees of freedom = %d\n- t = %f",
+                p_t, nb_degrees_of_freedom, t);
+    }
 #endif
-  if (t>0)
-    return 1.0 - p_t;
-  else
-    return p_t;
+    if (t>0)
+        return 1.0 - p_t;
+    else
+        return p_t;
 }
 
 /*   
-  Utilities for random numbers generation. 
-  =======================================
-  */
+     Utilities for random numbers generation. 
+     =======================================
+*/
 
 /*  
-  manual_seed(): gives a seed for random number generators.
+    manual_seed(): gives a seed for random number generators.
 
-  Rem: - The stored value is negative.
-  */
+    Rem: - The stored value is negative.
+*/
 
 void  manual_seed(long x)
 {
-  the_seed = - labs(x);
-  iset     = 0;
+    the_seed = - labs(x);
+    iset     = 0;
 }
 
 /*  
-  seed(): generates a seed for random number generators, using the cpu time.
-  */
+    seed(): generates a seed for random number generators, using the cpu time.
+*/
 
 void  seed()
 {
-  time_t  ltime;
-  struct  tm *today;
-  time(&ltime);
-  today = localtime(&ltime);
-  manual_seed((long)today->tm_sec+
-                    60*today->tm_min+
-                    60*60*today->tm_hour+
-                    60*60*24*today->tm_mday);
+    time_t  ltime;
+    struct  tm *today;
+    time(&ltime);
+    today = localtime(&ltime);
+    manual_seed((long)today->tm_sec+
+                60*today->tm_min+
+                60*60*today->tm_hour+
+                60*60*24*today->tm_mday);
 }
 
 /*  
-  get_seed(): returns the current value of the 'seed'.
-  */
+    get_seed(): returns the current value of the 'seed'.
+*/
 
 long  get_seed()
 {
-  long seed = the_seed;
-  return seed;
+    long seed = the_seed;
+    return seed;
 }
 
 /*  
-  Constants used by the 'numerical recipes' random number generators.
-  */
+    Constants used by the 'numerical recipes' random number generators.
+*/
 
 #define NTAB 32                 /*   needs for ran1 & ran2   */
 #define EPS 1.2e-7              /*   needs for ran1 & ran2   */
@@ -234,61 +234,61 @@ long  get_seed()
 #define NDIV1 (1+IMM1/NTAB)     /*   needs for ran2          */
 
 /*  
-  ran2(): long period ramdom number generator from the 'numerical recipes'.
+    ran2(): long period ramdom number generator from the 'numerical recipes'.
 
-  Rem: - It is a long period (> 2 x 10^18) random number generator of L'Ecuyer
-         with Bays-Durham shuffle and added safeguards.
+    Rem: - It is a long period (> 2 x 10^18) random number generator of L'Ecuyer
+    with Bays-Durham shuffle and added safeguards.
 
-       - Returns a uniform random deviate between 0.0 and 1.0
-         (exclusive of the endpoint values).
+    - Returns a uniform random deviate between 0.0 and 1.0
+    (exclusive of the endpoint values).
 
-       - Initialized with a negative seed.
-  */
+    - Initialized with a negative seed.
+*/
 
 real uniform_sample()  
 {
-  int j;
-  long k;
-  static long idum2=123456789;
-  static long iy=0;
-  static long iv[NTAB];
-  real temp;
+    int j;
+    long k;
+    static long idum2=123456789;
+    static long iy=0;
+    static long iv[NTAB];
+    real temp;
 
-  if (the_seed <= 0) {
-    if (-the_seed < 1) the_seed=1;
-    else the_seed = -the_seed;
-    idum2=the_seed;
-    for (j=NTAB+7;j>=0;j--) {
-      k=the_seed/IQ1;
-      the_seed=IA1*(the_seed-k*IQ1)-k*IR1;
-      if (the_seed < 0) the_seed += IM1;
-      if (j < NTAB) iv[j] = the_seed;
+    if (the_seed <= 0) {
+        if (-the_seed < 1) the_seed=1;
+        else the_seed = -the_seed;
+        idum2=the_seed;
+        for (j=NTAB+7;j>=0;j--) {
+            k=the_seed/IQ1;
+            the_seed=IA1*(the_seed-k*IQ1)-k*IR1;
+            if (the_seed < 0) the_seed += IM1;
+            if (j < NTAB) iv[j] = the_seed;
+        }
+        iy=iv[0];
     }
-    iy=iv[0];
-  }
-  k=the_seed/IQ1;
-  the_seed=IA1*(the_seed-k*IQ1)-k*IR1;
-  if (the_seed < 0) the_seed += IM1;
-  k=idum2/IQ2;
-  idum2=IA2*(idum2-k*IQ2)-k*IR2;
-  if (idum2 < 0) idum2 += IM2;
-  j=iy/NDIV1;
-  iy=iv[j]-idum2;
-  iv[j] = the_seed;
-  if (iy < 1) iy += IMM1;
-  if ((temp=AM1*iy) > RNMX) return RNMX;
-  else return temp;
+    k=the_seed/IQ1;
+    the_seed=IA1*(the_seed-k*IQ1)-k*IR1;
+    if (the_seed < 0) the_seed += IM1;
+    k=idum2/IQ2;
+    idum2=IA2*(idum2-k*IQ2)-k*IR2;
+    if (idum2 < 0) idum2 += IM2;
+    j=iy/NDIV1;
+    iy=iv[j]-idum2;
+    iv[j] = the_seed;
+    if (iy < 1) iy += IMM1;
+    if ((temp=AM1*iy) > RNMX) return RNMX;
+    else return temp;
 }
 
 /*  
-  bounded_uniform(): return an uniform random generator in [a,b].
-  */
+    bounded_uniform(): return an uniform random generator in [a,b].
+*/
 
 real  bounded_uniform(real a,real b)
 {
-  real res = uniform_sample()*(b-a) + a;
-  if (res >= b) return b*RNMX;
-  else return res;
+    real res = uniform_sample()*(b-a) + a;
+    if (res >= b) return b*RNMX;
+    else return res;
 }
 
 #undef NDIV
@@ -307,315 +307,315 @@ real  bounded_uniform(real a,real b)
 #undef NDIV1
 
 /*  
-  TRANSFORMATION METHOD:
-  ---------------------
-  */
+    TRANSFORMATION METHOD:
+    ---------------------
+*/
 
 /*  
-  expdev(): exponential deviate random number from the 'numerical recipes'.
-  */
+    expdev(): exponential deviate random number from the 'numerical recipes'.
+*/
 
 real  expdev()
 {
-  real dum;
+    real dum;
 
-  do
-    dum=uniform_sample();
-  while (dum == 0.0);
-  return -log(dum);
+    do
+        dum=uniform_sample();
+    while (dum == 0.0);
+    return -log(dum);
 }
 
 real gaussian_01() 
 {
-  real fac,rsq,v1,v2;
+    real fac,rsq,v1,v2;
 
-  if(the_seed < 0) iset=0;
-  if (iset == 0) {
-    do {
-      v1=2.0*uniform_sample()-1.0;
-      v2=2.0*uniform_sample()-1.0;
-      rsq=v1*v1+v2*v2;
-    } while (rsq >= 1.0 || rsq == 0.0);
-    fac=sqrt(-2.0*log(rsq)/rsq);
-    gset=v1*fac;
-    iset=1;
-    return v2*fac;
-  } else {
-    iset=0;
-    return gset;
-  }
+    if(the_seed < 0) iset=0;
+    if (iset == 0) {
+        do {
+            v1=2.0*uniform_sample()-1.0;
+            v2=2.0*uniform_sample()-1.0;
+            rsq=v1*v1+v2*v2;
+        } while (rsq >= 1.0 || rsq == 0.0);
+        fac=sqrt(-2.0*log(rsq)/rsq);
+        gset=v1*fac;
+        iset=1;
+        return v2*fac;
+    } else {
+        iset=0;
+        return gset;
+    }
 }
 
 /*  
-  gaussian_mu_sigma(): returns a gaussian distributed random number
-                       with mean 'mu' and standard deviation 'sigma'.
+    gaussian_mu_sigma(): returns a gaussian distributed random number
+    with mean 'mu' and standard deviation 'sigma'.
 
-  Rem: - i.e. N(mu,sigma).
-  */
+    Rem: - i.e. N(mu,sigma).
+*/
 
 real  gaussian_mu_sigma(real mu, real sigma)
 {
-  return gaussian_01() * sigma + mu;
+    return gaussian_01() * sigma + mu;
 }
 
 
 /*  
-  gaussian_misture_mu_sigma(): returns a random number with mixture of gaussians,
-                               'w' is the mixture (must be positive summing to 1).
+    gaussian_misture_mu_sigma(): returns a random number with mixture of gaussians,
+    'w' is the mixture (must be positive summing to 1).
 
-  Rem: - i.e. SUM w[i] * N(mu[i],sigma[i])
-  */
+    Rem: - i.e. SUM w[i] * N(mu[i],sigma[i])
+*/
 
 real  gaussian_mixture_mu_sigma(Vec& w, const Vec& mu, const Vec& sigma)
 {
-  int    i;
-  int    n = w.length();
-  real *p_mu = mu.data();
-  real *p_sigma = sigma.data();
-  real *p_w = w.data();
-  real  res = 0.0;
+    int    i;
+    int    n = w.length();
+    real *p_mu = mu.data();
+    real *p_sigma = sigma.data();
+    real *p_w = w.data();
+    real  res = 0.0;
 
-  for (i=0; i<n; i++, p_mu++, p_sigma++, p_w++)
-    res += *p_w * gaussian_mu_sigma(*p_mu,*p_sigma);
+    for (i=0; i<n; i++, p_mu++, p_sigma++, p_w++)
+        res += *p_w * gaussian_mu_sigma(*p_mu,*p_sigma);
 
-  return res;
+    return res;
 }
 
 /*  
-  REJECTION METHOD:
-  ----------------
-  */
+    REJECTION METHOD:
+    ----------------
+*/
 
 /*  
-  gamdev(): returns a deviate distributed as a gamma distribution from the 'numerical recipes'.
-  */
+    gamdev(): returns a deviate distributed as a gamma distribution from the 'numerical recipes'.
+*/
 
 real  gamdev(int ia)
 {
-  int j;
-  real am,e,s,v1,v2,x,y;
+    int j;
+    real am,e,s,v1,v2,x,y;
 
-  if (ia < 1) PLERROR("Error in routine gamdev");
-  if (ia < 6) {
-    x=1.0;
-    for (j=1;j<=ia;j++) x *= uniform_sample();
-    x = -log(x);
-  } else {
-    do {
-      do {
+    if (ia < 1) PLERROR("Error in routine gamdev");
+    if (ia < 6) {
+        x=1.0;
+        for (j=1;j<=ia;j++) x *= uniform_sample();
+        x = -log(x);
+    } else {
         do {
-	  v1=uniform_sample();
-	  v2=2.0*uniform_sample()-1.0;
-	} while (v1*v1+v2*v2 > 1.0);
-	y=v2/v1;
-	am=ia-1;
-	s=sqrt(2.0*am+1.0);
-	x=s*y+am;
-      } while (x <= 0.0);
-      e=(1.0+y*y)*exp(am*log(x/am)-s*y);
-    } while (uniform_sample() > e);
-  }
-  return x;
+            do {
+                do {
+                    v1=uniform_sample();
+                    v2=2.0*uniform_sample()-1.0;
+                } while (v1*v1+v2*v2 > 1.0);
+                y=v2/v1;
+                am=ia-1;
+                s=sqrt(2.0*am+1.0);
+                x=s*y+am;
+            } while (x <= 0.0);
+            e=(1.0+y*y)*exp(am*log(x/am)-s*y);
+        } while (uniform_sample() > e);
+    }
+    return x;
 }
 
 /*  
-  poidev(): returns a deviate distributed as a poisson distribution of mean (lambda) 'xm'
-            from the 'numerical recipes'.
-  */
+    poidev(): returns a deviate distributed as a poisson distribution of mean (lambda) 'xm'
+    from the 'numerical recipes'.
+*/
 
 real  poidev(real xm)
 {
-  static real sq,alxm,g,oldm=(-1.0);
-  real em,t,y;
+    static real sq,alxm,g,oldm=(-1.0);
+    real em,t,y;
 
-  if (xm < 12.0) {
-    if (xm != oldm) {
-      oldm=xm;
-      g=exp(-xm);
+    if (xm < 12.0) {
+        if (xm != oldm) {
+            oldm=xm;
+            g=exp(-xm);
+        }
+        em = -1;
+        t=1.0;
+        do {
+            ++em;
+            t *= uniform_sample();
+        } while (t > g);
+    } else {
+        if (xm != oldm) {
+            oldm=xm;
+            sq=sqrt(2.0*xm);
+            alxm=log(xm);
+            g=xm*alxm-log_gamma(xm+1.0);
+        }
+        do {
+            do {
+                y=tan(Pi*uniform_sample());
+                em=sq*y+xm;
+            } while (em < 0.0);
+            em=floor(em);
+            t=0.9*(1.0+y*y)*exp(em*alxm-log_gamma(em+1.0)-g);
+        } while (uniform_sample() > t);
     }
-    em = -1;
-    t=1.0;
-    do {
-      ++em;
-      t *= uniform_sample();
-    } while (t > g);
-  } else {
-    if (xm != oldm) {
-      oldm=xm;
-      sq=sqrt(2.0*xm);
-      alxm=log(xm);
-      g=xm*alxm-log_gamma(xm+1.0);
-    }
-    do {
-      do {
-        y=tan(Pi*uniform_sample());
-	em=sq*y+xm;
-      } while (em < 0.0);
-      em=floor(em);
-      t=0.9*(1.0+y*y)*exp(em*alxm-log_gamma(em+1.0)-g);
-    } while (uniform_sample() > t);
-  }
-  return em;
+    return em;
 }
 
 /*  
-  bnldev(): return a random deviate drawn from a binomial distribution of 'n' trials
-            each of probability 'pp', from 'numerical recipes'.
+    bnldev(): return a random deviate drawn from a binomial distribution of 'n' trials
+    each of probability 'pp', from 'numerical recipes'.
 
-  Rem: - The returned type is an real although a binomial random variable is an integer.
-  */
+    Rem: - The returned type is an real although a binomial random variable is an integer.
+*/
 
 real  bnldev(real pp, int n)
 {
-  int j;
-  static int nold=(-1);
-  real am,em,g,angle,p,bnl,sq,t,y;
-  static real pold=(-1.0),pc,plog,pclog,en,oldg;
+    int j;
+    static int nold=(-1);
+    real am,em,g,angle,p,bnl,sq,t,y;
+    static real pold=(-1.0),pc,plog,pclog,en,oldg;
 
-  p=(pp <= 0.5 ? pp : 1.0-pp);
-  am=n*p;
-  if (n < 25) {
-    bnl=0.0;
-    for (j=1;j<=n;j++)
-      if (uniform_sample() < p) ++bnl;
-  } else if (am < 1.0) {
-    g=exp(-am);
-    t=1.0;
-    for (j=0;j<=n;j++) {
-      t *= uniform_sample();
-      if (t < g) break;
+    p=(pp <= 0.5 ? pp : 1.0-pp);
+    am=n*p;
+    if (n < 25) {
+        bnl=0.0;
+        for (j=1;j<=n;j++)
+            if (uniform_sample() < p) ++bnl;
+    } else if (am < 1.0) {
+        g=exp(-am);
+        t=1.0;
+        for (j=0;j<=n;j++) {
+            t *= uniform_sample();
+            if (t < g) break;
+        }
+        bnl=(j <= n ? j : n);
+    } else {
+        if (n != nold) {
+            en=n;
+            oldg=log_gamma(en+1.0);
+            nold=n;
+        } if (p != pold) {
+            pc=1.0-p;
+            plog=log(p);
+            pclog=log(pc);
+            pold=p;
+        }
+        sq=sqrt(2.0*am*pc);
+        do {
+            do {
+                angle=Pi*uniform_sample();
+                y=tan(angle);
+                em=sq*y+am;
+            } while (em < 0.0 || em >= (en+1.0));
+            em=floor(em);
+            t=1.2*sq*(1.0+y*y)*exp(oldg-log_gamma(em+1.0)
+                                   -log_gamma(en-em+1.0)+em*plog+(en-em)*pclog);
+        } while (uniform_sample() > t);
+        bnl=em;
     }
-    bnl=(j <= n ? j : n);
-  } else {
-    if (n != nold) {
-      en=n;
-      oldg=log_gamma(en+1.0);
-      nold=n;
-    } if (p != pold) {
-      pc=1.0-p;
-      plog=log(p);
-      pclog=log(pc);
-      pold=p;
-    }
-    sq=sqrt(2.0*am*pc);
-    do {
-      do {
-        angle=Pi*uniform_sample();
-	y=tan(angle);
-	em=sq*y+am;
-      } while (em < 0.0 || em >= (en+1.0));
-      em=floor(em);
-      t=1.2*sq*(1.0+y*y)*exp(oldg-log_gamma(em+1.0)
-        -log_gamma(en-em+1.0)+em*plog+(en-em)*pclog);
-    } while (uniform_sample() > t);
-    bnl=em;
-  }
-  if (p != pp) bnl=n-bnl;
-  return bnl;
+    if (p != pp) bnl=n-bnl;
+    return bnl;
 }
 
 /*  
-  SOME KIND OF DISCRETE DISTRIBUTIONS:
-  -----------------------------------
-  */
+    SOME KIND OF DISCRETE DISTRIBUTIONS:
+    -----------------------------------
+*/
 
 /*  
-  multinomial_sample(): returns a random deviate from a discrete distribution
-                       given explicitely by 'distribution'.
+    multinomial_sample(): returns a random deviate from a discrete distribution
+    given explicitely by 'distribution'.
 
-  Rem: - So, the vector elements of 'distribution' are probabilities summing to 1.
+    Rem: - So, the vector elements of 'distribution' are probabilities summing to 1.
 
-       - The returned value is a index value of 'distribution' (i.e. in range
-         [0 .. (distribution->lenght)-1] ).
+    - The returned value is a index value of 'distribution' (i.e. in range
+    [0 .. (distribution->lenght)-1] ).
 
-       - The graphical representation of vectors 'distribution' is histogram.
+    - The graphical representation of vectors 'distribution' is histogram.
 
-       - This random deviate is computed by the transformation method.
-  */
+    - This random deviate is computed by the transformation method.
+*/
 
 int  multinomial_sample(const Vec& distribution)
 {
-  real  u  = uniform_sample();
-  real* pi = distribution.data();
-  real  s  = *pi;
-  int    n  = distribution.length();
-  int    i  = 0;
-  while ((i<n) && (s<u)) {
-    i++;
-    pi++;
-    s += *pi;
-  }
-  if (i==n)
-    i = n - 1; /*   improbable but...   */
-  return i;
+    real  u  = uniform_sample();
+    real* pi = distribution.data();
+    real  s  = *pi;
+    int    n  = distribution.length();
+    int    i  = 0;
+    while ((i<n) && (s<u)) {
+        i++;
+        pi++;
+        s += *pi;
+    }
+    if (i==n)
+        i = n - 1; /*   improbable but...   */
+    return i;
 }
 
 int uniform_multinomial_sample(int N)
 {
-  // N.B. uniform_sample() cannot return 1.0
-  return int(N*uniform_sample());
+    // N.B. uniform_sample() cannot return 1.0
+    return int(N*uniform_sample());
 }
 
 //!  sample each element from uniform distribution U[minval,maxval]
 void fill_random_uniform(const Vec& dest, real minval, real maxval)
 {
-  Vec::iterator it = dest.begin();
-  Vec::iterator itend = dest.end();  
-  double scale = maxval-minval;
-  for(; it!=itend; ++it)
-    *it = real(uniform_sample()*scale+minval);
+    Vec::iterator it = dest.begin();
+    Vec::iterator itend = dest.end();  
+    double scale = maxval-minval;
+    for(; it!=itend; ++it)
+        *it = real(uniform_sample()*scale+minval);
 }
 
 //!  sample each element from the given set
 void fill_random_discrete(const Vec& dest, const Vec& set)
 {
-  Vec::iterator it = dest.begin();
-  Vec::iterator itend = dest.end();  
-  int n=set.length();
-  for(; it!=itend; ++it)
-    *it = set[uniform_multinomial_sample(n)];
+    Vec::iterator it = dest.begin();
+    Vec::iterator itend = dest.end();  
+    int n=set.length();
+    for(; it!=itend; ++it)
+        *it = set[uniform_multinomial_sample(n)];
 }
 
 //!  sample each element from Normal(mean,sdev^2) distribution
 void fill_random_normal(const Vec& dest, real mean, real stdev)
 {
-  Vec::iterator it = dest.begin();
-  Vec::iterator itend = dest.end();  
-  for(; it!=itend; ++it)
-    *it = real(gaussian_mu_sigma(mean,stdev));
+    Vec::iterator it = dest.begin();
+    Vec::iterator itend = dest.end();  
+    for(; it!=itend; ++it)
+        *it = real(gaussian_mu_sigma(mean,stdev));
 }
 
 //!  sample each element from multivariate Normal(mean,diag(sdev^2)) distribution
 void fill_random_normal(const Vec& dest, const Vec& mean, const Vec& stdev)
 {
 #ifdef BOUNDCHECK
-  if(mean.length()!=dest.length() || stdev.length()!=dest.length())
-    PLERROR("In fill_random_normal: dest, mean and stdev must have the same length");
+    if(mean.length()!=dest.length() || stdev.length()!=dest.length())
+        PLERROR("In fill_random_normal: dest, mean and stdev must have the same length");
 #endif
-  Vec::iterator it_mean = mean.begin();
-  Vec::iterator it_stdev = stdev.begin();
-  Vec::iterator it = dest.begin();
-  Vec::iterator itend = dest.end();  
-  for(; it!=itend; ++it, ++it_mean, ++it_stdev)
-    *it = real(gaussian_mu_sigma(*it_mean,*it_stdev));
+    Vec::iterator it_mean = mean.begin();
+    Vec::iterator it_stdev = stdev.begin();
+    Vec::iterator it = dest.begin();
+    Vec::iterator itend = dest.end();  
+    for(; it!=itend; ++it, ++it_mean, ++it_stdev)
+        *it = real(gaussian_mu_sigma(*it_mean,*it_stdev));
 }
 
 
 void fill_random_uniform(const Mat& dest, real minval, real maxval)
 { 
-  double scale = maxval-minval;
-  Mat::iterator it = dest.begin();
-  Mat::iterator itend = dest.end();
-  for(; it!=itend; ++it)
-    *it = real(uniform_sample()*scale+minval); 
+    double scale = maxval-minval;
+    Mat::iterator it = dest.begin();
+    Mat::iterator itend = dest.end();
+    for(; it!=itend; ++it)
+        *it = real(uniform_sample()*scale+minval); 
 }
 
 void fill_random_normal(const Mat& dest, real mean, real sdev)
 { 
-  Mat::iterator it = dest.begin();
-  Mat::iterator itend = dest.end();
-  for(; it!=itend; ++it)
-    *it = real(gaussian_mu_sigma(mean,sdev));
+    Mat::iterator it = dest.begin();
+    Mat::iterator itend = dest.end();
+    for(; it!=itend; ++it)
+        *it = real(gaussian_mu_sigma(mean,sdev));
 }
 
 /*							incbet.c
@@ -675,8 +675,8 @@ void fill_random_normal(const Mat& dest, real mean, real sdev)
 
 
 /*
-Cephes Math Library, Release 2.8:  June, 2000
-Copyright 1984, 1995, 2000 by Stephen L. Moshier
+  Cephes Math Library, Release 2.8:  June, 2000
+  Copyright 1984, 1995, 2000 by Stephen L. Moshier
 */
 
 //#include "mconf.h"
@@ -684,21 +684,21 @@ Copyright 1984, 1995, 2000 by Stephen L. Moshier
 #define MAXGAM 171.624376956302725
 
 /*
-extern double MACHEP, MINLOG, MAXLOG;
-#ifdef ANSIPROT
-extern double gamma ( double );
-extern double lgam ( double );
-extern double exp ( double );
-extern double log ( double );
-extern double pow ( double, double );
-extern double fabs ( double );
-static double incbcf(double, double, double);
-static double incbd(double, double, double);
-static double pseries(double, double, double);
-#else
-double gamma(), lgam(), exp(), log(), pow(), fabs();
-static double incbcf(), incbd(), pseries();
-#endif
+  extern double MACHEP, MINLOG, MAXLOG;
+  #ifdef ANSIPROT
+  extern double gamma ( double );
+  extern double lgam ( double );
+  extern double exp ( double );
+  extern double log ( double );
+  extern double pow ( double, double );
+  extern double fabs ( double );
+  static double incbcf(double, double, double);
+  static double incbd(double, double, double);
+  static double pseries(double, double, double);
+  #else
+  double gamma(), lgam(), exp(), log(), pow(), fabs();
+  static double incbcf(), incbd(), pseries();
+  #endif
 
 */
 double MAXLOG =  7.09782712893383996732E2;     /* log(MAXNUM) */
@@ -712,63 +712,63 @@ double biginv =  2.22044604925031308085e-16;
 
 
 /*
-double incbet(double aa, double bb, double xx )
-{
-double a, b, t, x, xc, w, y;
-int flag;
+  double incbet(double aa, double bb, double xx )
+  {
+  double a, b, t, x, xc, w, y;
+  int flag;
 
-if( aa <= 0.0 || bb <= 0.0 )
-	goto domerr;
+  if( aa <= 0.0 || bb <= 0.0 )
+  goto domerr;
 
-if( (xx <= 0.0) || ( xx >= 1.0) )
-	{
-	if( xx == 0.0 )
-		return(0.0);
-	if( xx == 1.0 )
-		return( 1.0 );
-domerr:
+  if( (xx <= 0.0) || ( xx >= 1.0) )
+  {
+  if( xx == 0.0 )
+  return(0.0);
+  if( xx == 1.0 )
+  return( 1.0 );
+  domerr:
   PLERROR("incbet: arguments out of expected domain");
-	return( 0.0 );
-	}
+  return( 0.0 );
+  }
 
-flag = 0;
-if( (bb * xx) <= 1.0 && xx <= 0.95)
-	{
-	t = pseries(aa, bb, xx);
-		goto done;
-	}
+  flag = 0;
+  if( (bb * xx) <= 1.0 && xx <= 0.95)
+  {
+  t = pseries(aa, bb, xx);
+  goto done;
+  }
 
-w = 1.0 - xx;
+  w = 1.0 - xx;
 
 // Reverse a and b if x is greater than the mean.
 if( xx > (aa/(aa+bb)) )
-	{
-	flag = 1;
-	a = bb;
-	b = aa;
-	xc = xx;
-	x = w;
-	}
+{
+flag = 1;
+a = bb;
+b = aa;
+xc = xx;
+x = w;
+}
 else
-	{
-	a = aa;
-	b = bb;
-	xc = w;
-	x = xx;
-	}
+{
+    a = aa;
+    b = bb;
+    xc = w;
+    x = xx;
+}
 
 if( flag == 1 && (b * x) <= 1.0 && x <= 0.95)
-	{
-	t = pseries(a, b, x);
-	goto done;
-	}
+{
+    t = pseries(a, b, x);
+    goto done;
+}
 
 // Choose expansion for better convergence.
 y = x * (a+b-2.0) - (a-1.0);
 if( y < 0.0 )
-	w = incbcf( a, b, x );
+    w = incbcf( a, b, x );
 else
-	w = incbd( a, b, x ) / xc;
+w = incbd( a, b, x ) / xc;
 
 // Multiply w by the factor
 //   a      b   _             _     _
@@ -777,31 +777,31 @@ else
 y = a * log(x);
 t = b * log(xc);
 if( (a+b) < MAXGAM && fabs(y) < MAXLOG && fabs(t) < MAXLOG )
-	{
-	t = pow(xc,b);
-	t *= pow(x,a);
-	t /= a;
-	t *= w;
-	t *= gamma(a+b) / (gamma(a) * gamma(b));
-	goto done;
-	}
+{
+    t = pow(xc,b);
+    t *= pow(x,a);
+    t /= a;
+    t *= w;
+    t *= gamma(a+b) / (gamma(a) * gamma(b));
+    goto done;
+}
 // Resort to logarithms.
 y += t + log_gamma(a+b) - log_gamma(a) - log_gamma(b);
 y += log(w/a);
 if( y < MINLOG )
-	t = 0.0;
+    t = 0.0;
 else
-	t = exp(y);
+t = exp(y);
 
 done:
 
 if( flag == 1 )
-	{
-	if( t <= MACHEP )
-		t = 1.0 - MACHEP;
-	else
-		t = 1.0 - t;
-	}
+{
+    if( t <= MACHEP )
+        t = 1.0 - MACHEP;
+    else
+        t = 1.0 - t;
+}
 return( t );
 }
 */
@@ -810,32 +810,32 @@ return( t );
  * for incomplete beta integral
  */
 
-double incbcf( double a, double b, double x )
+  double incbcf( double a, double b, double x )
 {
-double xk, pk, pkm1, pkm2, qk, qkm1, qkm2;
-double k1, k2, k3, k4, k5, k6, k7, k8;
-double r, t, ans, thresh;
-int n;
+    double xk, pk, pkm1, pkm2, qk, qkm1, qkm2;
+    double k1, k2, k3, k4, k5, k6, k7, k8;
+    double r, t, ans, thresh;
+    int n;
 
-k1 = a;
-k2 = a + b;
-k3 = a;
-k4 = a + 1.0;
-k5 = 1.0;
-k6 = b - 1.0;
-k7 = k4;
-k8 = a + 2.0;
+    k1 = a;
+    k2 = a + b;
+    k3 = a;
+    k4 = a + 1.0;
+    k5 = 1.0;
+    k6 = b - 1.0;
+    k7 = k4;
+    k8 = a + 2.0;
 
-pkm2 = 0.0;
-qkm2 = 1.0;
-pkm1 = 1.0;
-qkm1 = 1.0;
-ans = 1.0;
-r = 1.0;
-n = 0;
-thresh = 3.0 * MACHEP;
-do
-	{
+    pkm2 = 0.0;
+    qkm2 = 1.0;
+    pkm1 = 1.0;
+    qkm1 = 1.0;
+    ans = 1.0;
+    r = 1.0;
+    n = 0;
+    thresh = 3.0 * MACHEP;
+    do
+    {
 	
 	xk = -( x * k1 * k2 )/( k3 * k4 );
 	pk = pkm1 +  pkm2 * xk;
@@ -854,17 +854,17 @@ do
 	qkm1 = qk;
 
 	if( qk != 0 )
-		r = pk/qk;
+            r = pk/qk;
 	if( r != 0 )
-		{
-		t = fabs( (ans - r)/r );
-		ans = r;
-		}
+        {
+            t = fabs( (ans - r)/r );
+            ans = r;
+        }
 	else
-		t = 1.0;
+            t = 1.0;
 
 	if( t < thresh )
-		goto cdone;
+            goto cdone;
 
 	k1 += 1.0;
 	k2 += 1.0;
@@ -876,24 +876,24 @@ do
 	k8 += 2.0;
 
 	if( (fabs(qk) + fabs(pk)) > big )
-		{
-		pkm2 *= biginv;
-		pkm1 *= biginv;
-		qkm2 *= biginv;
-		qkm1 *= biginv;
-		}
+        {
+            pkm2 *= biginv;
+            pkm1 *= biginv;
+            qkm2 *= biginv;
+            qkm1 *= biginv;
+        }
 	if( (fabs(qk) < biginv) || (fabs(pk) < biginv) )
-		{
-		pkm2 *= big;
-		pkm1 *= big;
-		qkm2 *= big;
-		qkm1 *= big;
-		}
-	}
-while( ++n < 300 );
+        {
+            pkm2 *= big;
+            pkm1 *= big;
+            qkm2 *= big;
+            qkm1 *= big;
+        }
+    }
+    while( ++n < 300 );
 
-cdone:
-return(ans);
+ cdone:
+    return(ans);
 }
 
 /* Continued fraction expansion #2
@@ -901,147 +901,159 @@ return(ans);
  */
 
 /* Does not seem to be used anymore.
-double incbd( double a, double b, double x )
-{
-double xk, pk, pkm1, pkm2, qk, qkm1, qkm2;
-double k1, k2, k3, k4, k5, k6, k7, k8;
-double r, t, ans, z, thresh;
-int n;
+   double incbd( double a, double b, double x )
+   {
+   double xk, pk, pkm1, pkm2, qk, qkm1, qkm2;
+   double k1, k2, k3, k4, k5, k6, k7, k8;
+   double r, t, ans, z, thresh;
+   int n;
 
-k1 = a;
-k2 = b - 1.0;
-k3 = a;
-k4 = a + 1.0;
-k5 = 1.0;
-k6 = a + b;
-k7 = a + 1.0;;
-k8 = a + 2.0;
+   k1 = a;
+   k2 = b - 1.0;
+   k3 = a;
+   k4 = a + 1.0;
+   k5 = 1.0;
+   k6 = a + b;
+   k7 = a + 1.0;;
+   k8 = a + 2.0;
 
-pkm2 = 0.0;
-qkm2 = 1.0;
-pkm1 = 1.0;
-qkm1 = 1.0;
-z = x / (1.0-x);
-ans = 1.0;
-r = 1.0;
-n = 0;
-thresh = 3.0 * MACHEP;
-do
-	{
+   pkm2 = 0.0;
+   qkm2 = 1.0;
+   pkm1 = 1.0;
+   qkm1 = 1.0;
+   z = x / (1.0-x);
+   ans = 1.0;
+   r = 1.0;
+   n = 0;
+   thresh = 3.0 * MACHEP;
+   do
+   {
 	
-	xk = -( z * k1 * k2 )/( k3 * k4 );
-	pk = pkm1 +  pkm2 * xk;
-	qk = qkm1 +  qkm2 * xk;
-	pkm2 = pkm1;
-	pkm1 = pk;
-	qkm2 = qkm1;
-	qkm1 = qk;
+   xk = -( z * k1 * k2 )/( k3 * k4 );
+   pk = pkm1 +  pkm2 * xk;
+   qk = qkm1 +  qkm2 * xk;
+   pkm2 = pkm1;
+   pkm1 = pk;
+   qkm2 = qkm1;
+   qkm1 = qk;
 
-	xk = ( z * k5 * k6 )/( k7 * k8 );
-	pk = pkm1 +  pkm2 * xk;
-	qk = qkm1 +  qkm2 * xk;
-	pkm2 = pkm1;
-	pkm1 = pk;
-	qkm2 = qkm1;
-	qkm1 = qk;
+   xk = ( z * k5 * k6 )/( k7 * k8 );
+   pk = pkm1 +  pkm2 * xk;
+   qk = qkm1 +  qkm2 * xk;
+   pkm2 = pkm1;
+   pkm1 = pk;
+   qkm2 = qkm1;
+   qkm1 = qk;
 
-	if( qk != 0 )
-		r = pk/qk;
-	if( r != 0 )
-		{
-		t = fabs( (ans - r)/r );
-		ans = r;
-		}
-	else
-		t = 1.0;
+   if( qk != 0 )
+   r = pk/qk;
+   if( r != 0 )
+   {
+   t = fabs( (ans - r)/r );
+   ans = r;
+   }
+   else
+   t = 1.0;
 
-	if( t < thresh )
-		goto cdone;
+   if( t < thresh )
+   goto cdone;
 
-	k1 += 1.0;
-	k2 -= 1.0;
-	k3 += 2.0;
-	k4 += 2.0;
-	k5 += 1.0;
-	k6 += 1.0;
-	k7 += 2.0;
-	k8 += 2.0;
+   k1 += 1.0;
+   k2 -= 1.0;
+   k3 += 2.0;
+   k4 += 2.0;
+   k5 += 1.0;
+   k6 += 1.0;
+   k7 += 2.0;
+   k8 += 2.0;
 
-	if( (fabs(qk) + fabs(pk)) > big )
-		{
-		pkm2 *= biginv;
-		pkm1 *= biginv;
-		qkm2 *= biginv;
-		qkm1 *= biginv;
-		}
-	if( (fabs(qk) < biginv) || (fabs(pk) < biginv) )
-		{
-		pkm2 *= big;
-		pkm1 *= big;
-		qkm2 *= big;
-		qkm1 *= big;
-		}
-	}
-while( ++n < 300 );
-cdone:
-return(ans);
-}
+   if( (fabs(qk) + fabs(pk)) > big )
+   {
+   pkm2 *= biginv;
+   pkm1 *= biginv;
+   qkm2 *= biginv;
+   qkm1 *= biginv;
+   }
+   if( (fabs(qk) < biginv) || (fabs(pk) < biginv) )
+   {
+   pkm2 *= big;
+   pkm1 *= big;
+   qkm2 *= big;
+   qkm1 *= big;
+   }
+   }
+   while( ++n < 300 );
+   cdone:
+   return(ans);
+   }
 */
 
 /* Power series for incomplete beta integral.
    Use when b*x is small and x not too close to 1.  */
 
 /*
-double pseries( double a, double b, double x )
-{
-double s, t, u, v, n, t1, z, ai;
+  double pseries( double a, double b, double x )
+  {
+  double s, t, u, v, n, t1, z, ai;
 
-ai = 1.0 / a;
-u = (1.0 - b) * x;
-v = u / (a + 1.0);
-t1 = v;
-t = u;
-n = 2.0;
-s = 0.0;
-z = MACHEP * ai;
-while( fabs(v) > z )
-	{
-	u = (n - b) * x / n;
-	t *= u;
-	v = t / (a + n);
-	s += v; 
-	n += 1.0;
-	}
-s += t1;
-s += ai;
+  ai = 1.0 / a;
+  u = (1.0 - b) * x;
+  v = u / (a + 1.0);
+  t1 = v;
+  t = u;
+  n = 2.0;
+  s = 0.0;
+  z = MACHEP * ai;
+  while( fabs(v) > z )
+  {
+  u = (n - b) * x / n;
+  t *= u;
+  v = t / (a + n);
+  s += v; 
+  n += 1.0;
+  }
+  s += t1;
+  s += ai;
 
-u = a * log(x);
-if( (a+b) < MAXGAM && fabs(u) < MAXLOG )
-	{
-	t = gamma(a+b)/(gamma(a)*gamma(b));
-	s = s * t * pow(x,a);
-	}
-else
-	{
-	t = log_gamma(a+b) - log_gamma(a) - log_gamma(b) + u + log(s);
-	if( t < MINLOG )
-		s = 0.0;
-	else
-	s = exp(t);
-	}
-return(s);
-}
+  u = a * log(x);
+  if( (a+b) < MAXGAM && fabs(u) < MAXLOG )
+  {
+  t = gamma(a+b)/(gamma(a)*gamma(b));
+  s = s * t * pow(x,a);
+  }
+  else
+  {
+  t = log_gamma(a+b) - log_gamma(a) - log_gamma(b) + u + log(s);
+  if( t < MINLOG )
+  s = 0.0;
+  else
+  s = exp(t);
+  }
+  return(s);
+  }
 */
 
 void random_subset_indices(const TVec<int>& dest, int n)
 {
-  if (dest.length()>n)
-    PLERROR("random_subset_indices: 1st argument should have length (%d) <= value of 2nd argument (%d)",
-            dest.length(),n);
-  TVec<int> v(0, n-1, 1);
-  shuffleElements(v);
-  dest << v.subVec(0,dest.length());
+    if (dest.length()>n)
+        PLERROR("random_subset_indices: 1st argument should have length (%d) <= value of 2nd argument (%d)",
+                dest.length(),n);
+    TVec<int> v(0, n-1, 1);
+    shuffleElements(v);
+    dest << v.subVec(0,dest.length());
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

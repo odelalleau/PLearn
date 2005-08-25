@@ -35,8 +35,8 @@
 
  
 /*
-* $Id: VVec.cc,v 1.8 2004/04/05 23:11:32 morinf Exp $
-******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 #include "VVec.h"
@@ -47,8 +47,8 @@ namespace PLearn {
 PLEARN_IMPLEMENT_OBJECT(VVec, "ONE LINE DESCR", "NO HELP");
 
 VVec::VVec(const Vec& v)
-  :data(new MemoryVMatrix(rowmatrix(v))),
-   row_index(0), col_index(0), length_(v.length())
+    :data(new MemoryVMatrix(rowmatrix(v))),
+     row_index(0), col_index(0), length_(v.length())
 {}
 
 void
@@ -74,3 +74,16 @@ VVec::declareOptions(OptionList &ol)
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

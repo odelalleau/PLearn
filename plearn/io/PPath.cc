@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christian Dorion
 
@@ -75,30 +75,30 @@ using namespace std;
 //  Stringutils.h         //////////////////////////////
 bool startsWith(const string& str, const char& c) 
 {
-  if (str.empty())
-    return false;
-  return str[0] == c;
+    if (str.empty())
+        return false;
+    return str[0] == c;
 }
 
 bool endsWith  (const string& str, const char& c) 
 {
-  if (str.empty())
-    return false;
-  return str[str.length()-1] == c;
+    if (str.empty())
+        return false;
+    return str[str.length()-1] == c;
 }
 
 bool startsWith(const string& str, const string& s) 
 {
-  if ( s.length() > str.length() )
-    return false;
-  return str.substr(0, s.length()) == s;
+    if ( s.length() > str.length() )
+        return false;
+    return str.substr(0, s.length()) == s;
 }
 
 bool endsWith  (const string& str, const string& s) 
 {
-  if ( s.length() > str.length() )
-    return false;
-  return str.substr(str.length()-s.length()) == s;
+    if ( s.length() > str.length() )
+        return false;
+    return str.substr(str.length()-s.length()) == s;
 }
 ////////////////////////////////////////////////////////
 
@@ -108,13 +108,13 @@ bool endsWith  (const string& str, const string& s)
 #if defined(WIN32)
 string PPath::forbidden_chars()
 {
-  return string();
+    return string();
 }
 
 const string& PPath::_slash()
 {
-  static string s = "\\"; 
-  return s;
+    static string s = "\\"; 
+    return s;
 }
 
 char          PPath::_slash_char()    { return '\\'; }  
@@ -129,13 +129,13 @@ char          PPath::_slash_char()    { return '\\'; }
 // Other chars may be forbidden soon.
 string PPath::forbidden_chars()
 {
-  return "\\";
+    return "\\";
 }
 
 const string& PPath::_slash()
 {
-  static string s = "/"; 
-  return s; 
+    static string s = "/"; 
+    return s; 
 }
 
 char   PPath::_slash_char()    { return '/';  }
@@ -147,42 +147,42 @@ char   PPath::_slash_char()    { return '/';  }
 // In the scope of the PLearn namespace 
 PStream& operator<<(PStream& out, const PPath& path)
 {
-  switch (out.outmode) {
+    switch (out.outmode) {
     case PStream::raw_ascii:
     case PStream::pretty_ascii:
-      {
+    {
         out << path.c_str();
         break;
-      }
+    }
     case PStream::plearn_ascii:
     case PStream::plearn_binary:
-      {
+    {
         out << path.canonical();
         break;
-      }
+    }
     default:
-      PLERROR("This PStream mode is not supported for PPath");
-  }
-  return out;
+        PLERROR("This PStream mode is not supported for PPath");
+    }
+    return out;
 }
 
 PStream& operator>>(PStream& in, PPath& path)
 {
-  string spath;
-  in >> spath;
-  switch (in.inmode) {
-  case PStream::raw_ascii:
-  case PStream::pretty_ascii:
-  case PStream::plearn_ascii:
-  case PStream::plearn_binary:
-      {
+    string spath;
+    in >> spath;
+    switch (in.inmode) {
+    case PStream::raw_ascii:
+    case PStream::pretty_ascii:
+    case PStream::plearn_ascii:
+    case PStream::plearn_binary:
+    {
         path = PPath(spath);
         break;
-      }
+    }
     default:
-      PLERROR("In operator>> - This PStream mode is not supported for PPath");
-  }
-  return in;
+        PLERROR("In operator>> - This PStream mode is not supported for PPath");
+    }
+    return in;
 }
 
 //////////////////////////////////////////////  
@@ -193,9 +193,9 @@ PStream& operator>>(PStream& in, PPath& path)
 //////////
 PPath PPath::home()
 {
-  // Supply a default value so PLearn doesn't crash
-  // when $HOME isn't defined.
-  return PPath::getenv("HOME", PPath("/"));
+    // Supply a default value so PLearn doesn't crash
+    // when $HOME isn't defined.
+    return PPath::getenv("HOME", PPath("/"));
 }
 
 ////////////
@@ -203,15 +203,15 @@ PPath PPath::home()
 ////////////
 PPath PPath::getcwd()
 {
-  // TODO Use a NSPR function when there is one:
-  //      https://bugzilla.mozilla.org/show_bug.cgi?id=280953
-  char buf[2000];
-  if (!SYS_GETCWD(buf, 2000))
-    // Error while reading the current directory. One should probably use a
-    // larger buffer, but it is even easier to crash.
-    PLERROR("In PPath::getcwd - Could not obtain the current working "
-            "directory, a larger buffer may be necessary");
-  return PPath(buf);
+    // TODO Use a NSPR function when there is one:
+    //      https://bugzilla.mozilla.org/show_bug.cgi?id=280953
+    char buf[2000];
+    if (!SYS_GETCWD(buf, 2000))
+        // Error while reading the current directory. One should probably use a
+        // larger buffer, but it is even easier to crash.
+        PLERROR("In PPath::getcwd - Could not obtain the current working "
+                "directory, a larger buffer may be necessary");
+    return PPath(buf);
 }
 
 ////////////
@@ -219,10 +219,10 @@ PPath PPath::getcwd()
 ////////////
 PPath PPath::getenv(const string& var, const PPath& default_)
 {
-  char* env_var = PR_GetEnv(var.c_str());
-  if ( env_var )
-    return PPath( env_var );
-  return default_;
+    char* env_var = PR_GetEnv(var.c_str());
+    if ( env_var )
+        return PPath( env_var );
+    return default_;
 }
 
 
@@ -231,94 +231,94 @@ PPath PPath::getenv(const string& var, const PPath& default_)
 ////////////////////////////
 const map<string, PPath>& PPath::metaprotocolToMetapath()
 {
-  // A map to store the bindings metaprotocol <-> metapath.
-  static  map<string, PPath>  metaprotocol_to_metapath;
-  static  bool                mappings;
+    // A map to store the bindings metaprotocol <-> metapath.
+    static  map<string, PPath>  metaprotocol_to_metapath;
+    static  bool                mappings;
   
-  if ( !mappings )
-  {
-    // Avoiding infinite loop.
-    mappings = true;
-
-    PPath   plearn_configs   = PPath::getenv( "PLEARN_CONFIGS",
-                                               PPath::home() / ".plearn" );    
-
-    PPath   config_file_path = plearn_configs / "ppath.config";
-
-    if (isfile(config_file_path))
+    if ( !mappings )
     {
-      PStream ppath_config     = openFile(config_file_path, PStream::plearn_ascii );
+        // Avoiding infinite loop.
+        mappings = true;
 
-      string  next_metaprotocol;
-      PPath   next_metapath;    
-      while (ppath_config) {
-        ppath_config >> next_metaprotocol >> next_metapath;
-        if (next_metaprotocol.empty())
-          if (ppath_config)
-            PLERROR("In PPath::metaprotocolToMetapath - Error while parsing PPath config file (%s): read "
-                    "a blank line before reaching the end of the file",
-                    config_file_path.absolute().c_str());
-          else
-            // Nothing left to read.
-            break;
-        // Make sure we managed to read the metapath associated with the metaprotocol.
-        if (next_metapath.empty())
-          PLERROR("In PPath::metaprotocolToMetapath - Error in PPath config file (%s): could not read the "
-                  "path associated with '%s'",
-                  config_file_path.absolute().c_str(), next_metaprotocol.c_str());
-        
-        // For the sake of simplicity, we do not allow a metapath to end with
-        // a slash unless it is a root directory.
-        next_metapath.removeTrailingSlash();
-        
-        metaprotocol_to_metapath[ next_metaprotocol  ] = next_metapath;
-      }       
-    }
-    else
-    {
-      if (PR_GetEnv("HOME"))
-      {
-        // Default PPath settings. Defined only if the HOME environment
-        // variable exists.
-        metaprotocol_to_metapath["HOME"] = "${HOME}";
-        metaprotocol_to_metapath["PLEARNDIR"] = "HOME:PLearn";
-        metaprotocol_to_metapath["PLEARN_LIBDIR"] = "PLEARNDIR:external_libs";
-      }
-    }
-  }
+        PPath   plearn_configs   = PPath::getenv( "PLEARN_CONFIGS",
+                                                  PPath::home() / ".plearn" );    
 
-  return metaprotocol_to_metapath;
+        PPath   config_file_path = plearn_configs / "ppath.config";
+
+        if (isfile(config_file_path))
+        {
+            PStream ppath_config     = openFile(config_file_path, PStream::plearn_ascii );
+
+            string  next_metaprotocol;
+            PPath   next_metapath;    
+            while (ppath_config) {
+                ppath_config >> next_metaprotocol >> next_metapath;
+                if (next_metaprotocol.empty())
+                    if (ppath_config)
+                        PLERROR("In PPath::metaprotocolToMetapath - Error while parsing PPath config file (%s): read "
+                                "a blank line before reaching the end of the file",
+                                config_file_path.absolute().c_str());
+                    else
+                        // Nothing left to read.
+                        break;
+                // Make sure we managed to read the metapath associated with the metaprotocol.
+                if (next_metapath.empty())
+                    PLERROR("In PPath::metaprotocolToMetapath - Error in PPath config file (%s): could not read the "
+                            "path associated with '%s'",
+                            config_file_path.absolute().c_str(), next_metaprotocol.c_str());
+        
+                // For the sake of simplicity, we do not allow a metapath to end with
+                // a slash unless it is a root directory.
+                next_metapath.removeTrailingSlash();
+        
+                metaprotocol_to_metapath[ next_metaprotocol  ] = next_metapath;
+            }       
+        }
+        else
+        {
+            if (PR_GetEnv("HOME"))
+            {
+                // Default PPath settings. Defined only if the HOME environment
+                // variable exists.
+                metaprotocol_to_metapath["HOME"] = "${HOME}";
+                metaprotocol_to_metapath["PLEARNDIR"] = "HOME:PLearn";
+                metaprotocol_to_metapath["PLEARN_LIBDIR"] = "PLEARNDIR:external_libs";
+            }
+        }
+    }
+
+    return metaprotocol_to_metapath;
 }
 
 // This method MUST NOT return a path since it would lead to an infinite
 // loop of constructors.
 string PPath::expandEnvVariables(const string& path)
 {
-  string expanded     = path;
-  size_t begvar       = expanded.find( "${" );
-  size_t endvar       = expanded.find(  "}" );
+    string expanded     = path;
+    size_t begvar       = expanded.find( "${" );
+    size_t endvar       = expanded.find(  "}" );
   
-  while ( begvar != npos && endvar != npos  )
-  {
-    size_t start       = begvar+2;
-    size_t len         = endvar - start;
-    string envvar      = expanded.substr(start, len);
-    PPath  envpath     = PPath::getenv(envvar);
+    while ( begvar != npos && endvar != npos  )
+    {
+        size_t start       = begvar+2;
+        size_t len         = endvar - start;
+        string envvar      = expanded.substr(start, len);
+        PPath  envpath     = PPath::getenv(envvar);
 
-    if ( envpath == "" )
-      PLERROR( "Unknown environment variable %s in %s.",
-               envvar.c_str(), path.c_str() );
+        if ( envpath == "" )
+            PLERROR( "Unknown environment variable %s in %s.",
+                     envvar.c_str(), path.c_str() );
 
-    expanded.replace(begvar, len+3, envpath);
+        expanded.replace(begvar, len+3, envpath);
 
-    // Look for other environment variables
-    begvar = expanded.find( "${" );
-    endvar = expanded.find(  "}" );
-  }
+        // Look for other environment variables
+        begvar = expanded.find( "${" );
+        endvar = expanded.find(  "}" );
+    }
 
-  // This method MUST NOT return a path since it would lead to an infinite
-  // loop of ctors.
-  return expanded;
+    // This method MUST NOT return a path since it would lead to an infinite
+    // loop of ctors.
+    return expanded;
 }
 
 //////////////////////////////////////////////  
@@ -330,20 +330,20 @@ string PPath::expandEnvVariables(const string& path)
 // path value in the current instance.
 PPath::PPath(const string& path_)
 {
-  // Empty path.
-  if ( path_.empty() ) 
-    return;
+    // Empty path.
+    if ( path_.empty() ) 
+        return;
     
-  // The path_ argument may contain environment variables that must be
-  // expanded prior to any other processing.
-  string internal =  expandEnvVariables(  path_   );
+    // The path_ argument may contain environment variables that must be
+    // expanded prior to any other processing.
+    string internal =  expandEnvVariables(  path_   );
   
-  // The PPath internal string is set here
-  string::operator=   ( internal );
-  resolveSlashChars   ( );
-  expandMetaprotocols ( );
-  resolveDots         ( );    
-  parseProtocol       ( );
+    // The PPath internal string is set here
+    string::operator=   ( internal );
+    resolveSlashChars   ( );
+    expandMetaprotocols ( );
+    resolveDots         ( );    
+    parseProtocol       ( );
 }
 
 ///////////////////////
@@ -351,35 +351,35 @@ PPath::PPath(const string& path_)
 ///////////////////////
 void PPath::resolveSlashChars( )
 {
-  size_t plen = length();      
-  string resolved;
-  resolved.reserve( plen );
+    size_t plen = length();      
+    string resolved;
+    resolved.reserve( plen );
   
-  bool last_is_slash = false;
-  for ( size_t ch = 0; ch < plen; ch++ )
-  {
-    char char_ch = operator[](ch);
-    if ( forbidden_chars().find(char_ch) != npos )
-      PLERROR( "PPath '%s' cannot contain character '%c' (or any of \"%s\").",
-               c_str(), char_ch, forbidden_chars().c_str() );
-    
-    // Convert the canonic representation '/' to the appropriate
-    // representation given the system (see slash_char instanciation in
-    // PPath.cc). Multiple slash chars are removed.
-    if ( char_ch == PPATH_SLASH || char_ch == _slash_char() )
+    bool last_is_slash = false;
+    for ( size_t ch = 0; ch < plen; ch++ )
     {
-      if( !last_is_slash ) { // Prevents duplicated slash characters.
-        resolved += _slash_char();
-        last_is_slash = true;
-      }
+        char char_ch = operator[](ch);
+        if ( forbidden_chars().find(char_ch) != npos )
+            PLERROR( "PPath '%s' cannot contain character '%c' (or any of \"%s\").",
+                     c_str(), char_ch, forbidden_chars().c_str() );
+    
+        // Convert the canonic representation '/' to the appropriate
+        // representation given the system (see slash_char instanciation in
+        // PPath.cc). Multiple slash chars are removed.
+        if ( char_ch == PPATH_SLASH || char_ch == _slash_char() )
+        {
+            if( !last_is_slash ) { // Prevents duplicated slash characters.
+                resolved += _slash_char();
+                last_is_slash = true;
+            }
+        }
+        else {
+            resolved += char_ch;
+            last_is_slash = false;
+        }
     }
-    else {
-      resolved += char_ch;
-      last_is_slash = false;
-    }
-  }
 
-  string::operator=(resolved);
+    string::operator=(resolved);
 }
 
 /////////////////////////
@@ -387,151 +387,151 @@ void PPath::resolveSlashChars( )
 /////////////////////////
 void PPath::expandMetaprotocols()
 {
-  size_t endmeta = find(':');
-  if ( endmeta != npos )    
-  {
-    string meta = substr(0, endmeta);
+    size_t endmeta = find(':');
+    if ( endmeta != npos )    
+    {
+        string meta = substr(0, endmeta);
 
-    map<string, PPath>::const_iterator it = metaprotocolToMetapath().find(meta);
+        map<string, PPath>::const_iterator it = metaprotocolToMetapath().find(meta);
 
-    if ( it != metaprotocolToMetapath().end() )
-    {      
-      string after_colon = endmeta == length()-1 ? "" : substr(endmeta+1);
-      *this = it->second / after_colon;
+        if ( it != metaprotocolToMetapath().end() )
+        {      
+            string after_colon = endmeta == length()-1 ? "" : substr(endmeta+1);
+            *this = it->second / after_colon;
+        }
     }
-  }
 }
 
 ///////////////////////
 // resolveSingleDots //
 ///////////////////////
 void PPath::resolveSingleDots() {
-  static string ds, sd;
-  static bool initialized = false;
-  if (!initialized) {
-    initialized = true;
-    ds   = "."    + _slash();  // Posix: "./"    DOS: ".\" 
-    sd   = _slash() + ".";     // Posix: "/."    DOS: "\."
-  }
-  // Examples with single dots.
-  // ./foo      -> foo
-  // ./         -> ./
-  // .          -> .
-  // /.         -> /
-  // /./        -> /
-  // /./foo     -> /foo
-  // foo/.      -> foo
-  // foo/./     -> foo/
-  // foo/./bar  -> foo/bar
-  // foo/.bar   -> foo/.bar
-
-  // First deal with "/.":
-  // - when it is followed by a slash, remove it
-  // - when it ends the path, remove the dot, and remove the slash unless
-  //   the resulting directory is a root directory
-  size_t pos_sd = find(sd);
-  size_t next;
-  while (pos_sd != npos) {
-    if (pos_sd + 2 < size()) {
-      if (operator[](pos_sd + 2) == _slash_char()) {
-        // It is followed by a slash.
-        replace(pos_sd, 2, ""); // Remove '/.'
-        next = pos_sd;
-      }
-      else
-        next = pos_sd + 2;      // We ignore this one (e.g. "/.plearn").
-    } else {
-      // It ends the path.
-      resize(size() - 1);       // Remove '.'
-      if (!isRoot())
-        resize(size() - 1);     // Remove '/'
-      next = size();            // We reached the end.
+    static string ds, sd;
+    static bool initialized = false;
+    if (!initialized) {
+        initialized = true;
+        ds   = "."    + _slash();  // Posix: "./"    DOS: ".\" 
+        sd   = _slash() + ".";     // Posix: "/."    DOS: "\."
     }
-    pos_sd = find(sd, next);
-  }
+    // Examples with single dots.
+    // ./foo      -> foo
+    // ./         -> ./
+    // .          -> .
+    // /.         -> /
+    // /./        -> /
+    // /./foo     -> /foo
+    // foo/.      -> foo
+    // foo/./     -> foo/
+    // foo/./bar  -> foo/bar
+    // foo/.bar   -> foo/.bar
 
-  // Now deals with "./". Because we have removed the "/." before, we cannot
-  // have "/./" nor "./.". Thus the only case we have to consider is when it
-  // starts the path (and this can happen only once), in which case we remove
-  // it iff there is something that follows.
-  size_t pos_ds = find(ds);
-  if (pos_ds == 0 && pos_ds + 2 < size())
-    replace(0, 2, "");
+    // First deal with "/.":
+    // - when it is followed by a slash, remove it
+    // - when it ends the path, remove the dot, and remove the slash unless
+    //   the resulting directory is a root directory
+    size_t pos_sd = find(sd);
+    size_t next;
+    while (pos_sd != npos) {
+        if (pos_sd + 2 < size()) {
+            if (operator[](pos_sd + 2) == _slash_char()) {
+                // It is followed by a slash.
+                replace(pos_sd, 2, ""); // Remove '/.'
+                next = pos_sd;
+            }
+            else
+                next = pos_sd + 2;      // We ignore this one (e.g. "/.plearn").
+        } else {
+            // It ends the path.
+            resize(size() - 1);       // Remove '.'
+            if (!isRoot())
+                resize(size() - 1);     // Remove '/'
+            next = size();            // We reached the end.
+        }
+        pos_sd = find(sd, next);
+    }
+
+    // Now deals with "./". Because we have removed the "/." before, we cannot
+    // have "/./" nor "./.". Thus the only case we have to consider is when it
+    // starts the path (and this can happen only once), in which case we remove
+    // it iff there is something that follows.
+    size_t pos_ds = find(ds);
+    if (pos_ds == 0 && pos_ds + 2 < size())
+        replace(0, 2, "");
 }
 
 ///////////////////////
 // resolveDoubleDots //
 ///////////////////////
 void PPath::resolveDoubleDots() {
-  static string sdd;
-  static bool initialized = false;
-  if (!initialized) {
-    initialized = true;
-    sdd  = _slash() + "..";    // Posix: "/.."   DOS: "\.." 
-  }
-  // Examples with double dots.
-  // "/.."         -> PLERROR
-  // "/../foo"     -> PLERROR
-  // "../foo"      -> "../foo"
-  // "foo/.."      -> "."
-  // "foo/../"     -> "./"
-  // "/foo/.."     -> "/"
-  // "/foo/../"    -> "/"
-  // "foo/../bar"  -> "./bar" (call resolveSingleDots() after)
-  // "/foo/../bar" -> "/bar"
-  // "/..foo"      -> "/..foo"
-  // "foo../"      -> "foo../"
-  // "../../../foo"-> "../../../foo"
-  // "foo/../../.."-> "foo/../../.."
-
-  // We only care about "/.." when it is followed by a slash or it ends the path.
-  // The path made of the substring until the '/' must not be a root directory.
-  size_t pos_sdd = find(sdd);
-  size_t next;
-  while (pos_sdd != npos) {
-    if (pos_sdd + 3 < size() && operator[](pos_sdd + 3) != _slash_char()) {
-      // Something like "/..foo", that we ignore.
-      next = pos_sdd + 4;
-    } else {
-      // Look for the slash just before.
-      size_t pos_previous_slash = pos_sdd == 0 ? npos
-                                               : rfind(_slash_char(), pos_sdd - 1);
-      if (pos_previous_slash == npos) {
-        // We need to make sure we are not trying to go up on a root directory.
-        if (PPath(substr(0, pos_sdd + 1)).isRoot())
-          PLERROR("In PPath::resolveDots - '%s' is invalid", c_str());
-        if (   (pos_sdd == 2 && substr(0,2) == "..")
-            || (pos_sdd == 1 && operator[](0) == '.'))
-          // We are in the case "../.." or "./.."
-          next = pos_sdd + 3;
-        else {
-          // We are in the case "foo/.."
-          replace(0, pos_sdd + 3, ".");
-          next = 1;
-        }
-      } else {
-        // There was a slash: "/xxx/..". If "xxx" == "..", we do nothing,
-        // otherwise we get rid of it.
-        if (substr(pos_previous_slash+1, 2) == "..")
-          next = pos_sdd + 3;
-        else {
-          // We must be careful with the special case "/foo/..", where we
-          // need to ensure we keep a final slash.
-          if (   pos_sdd + 3 == size()    // Ends with "/.."
-              && (   pos_previous_slash == 0
-                  || rfind(_slash_char(), pos_previous_slash-1) == npos) // "xxx/foo/.."
-              && PPath(substr(0, pos_previous_slash+1)).isRoot())  // "xxx/" is root
-            replace(pos_previous_slash + 1, pos_sdd-pos_previous_slash+2, "");
-          else
-            replace(pos_previous_slash, pos_sdd-pos_previous_slash+3, "");
-          next = pos_previous_slash;
-        }
-      }
+    static string sdd;
+    static bool initialized = false;
+    if (!initialized) {
+        initialized = true;
+        sdd  = _slash() + "..";    // Posix: "/.."   DOS: "\.." 
     }
-    pos_sdd = find(sdd, next);
-  }
-  // At this point, we may have introduced an extra single dot ("./xxx").
-  resolveSingleDots();
+    // Examples with double dots.
+    // "/.."         -> PLERROR
+    // "/../foo"     -> PLERROR
+    // "../foo"      -> "../foo"
+    // "foo/.."      -> "."
+    // "foo/../"     -> "./"
+    // "/foo/.."     -> "/"
+    // "/foo/../"    -> "/"
+    // "foo/../bar"  -> "./bar" (call resolveSingleDots() after)
+    // "/foo/../bar" -> "/bar"
+    // "/..foo"      -> "/..foo"
+    // "foo../"      -> "foo../"
+    // "../../../foo"-> "../../../foo"
+    // "foo/../../.."-> "foo/../../.."
+
+    // We only care about "/.." when it is followed by a slash or it ends the path.
+    // The path made of the substring until the '/' must not be a root directory.
+    size_t pos_sdd = find(sdd);
+    size_t next;
+    while (pos_sdd != npos) {
+        if (pos_sdd + 3 < size() && operator[](pos_sdd + 3) != _slash_char()) {
+            // Something like "/..foo", that we ignore.
+            next = pos_sdd + 4;
+        } else {
+            // Look for the slash just before.
+            size_t pos_previous_slash = pos_sdd == 0 ? npos
+                : rfind(_slash_char(), pos_sdd - 1);
+            if (pos_previous_slash == npos) {
+                // We need to make sure we are not trying to go up on a root directory.
+                if (PPath(substr(0, pos_sdd + 1)).isRoot())
+                    PLERROR("In PPath::resolveDots - '%s' is invalid", c_str());
+                if (   (pos_sdd == 2 && substr(0,2) == "..")
+                       || (pos_sdd == 1 && operator[](0) == '.'))
+                    // We are in the case "../.." or "./.."
+                    next = pos_sdd + 3;
+                else {
+                    // We are in the case "foo/.."
+                    replace(0, pos_sdd + 3, ".");
+                    next = 1;
+                }
+            } else {
+                // There was a slash: "/xxx/..". If "xxx" == "..", we do nothing,
+                // otherwise we get rid of it.
+                if (substr(pos_previous_slash+1, 2) == "..")
+                    next = pos_sdd + 3;
+                else {
+                    // We must be careful with the special case "/foo/..", where we
+                    // need to ensure we keep a final slash.
+                    if (   pos_sdd + 3 == size()    // Ends with "/.."
+                           && (   pos_previous_slash == 0
+                                  || rfind(_slash_char(), pos_previous_slash-1) == npos) // "xxx/foo/.."
+                           && PPath(substr(0, pos_previous_slash+1)).isRoot())  // "xxx/" is root
+                        replace(pos_previous_slash + 1, pos_sdd-pos_previous_slash+2, "");
+                    else
+                        replace(pos_previous_slash, pos_sdd-pos_previous_slash+3, "");
+                    next = pos_previous_slash;
+                }
+            }
+        }
+        pos_sdd = find(sdd, next);
+    }
+    // At this point, we may have introduced an extra single dot ("./xxx").
+    resolveSingleDots();
 }
 
 /////////////////
@@ -539,16 +539,16 @@ void PPath::resolveDoubleDots() {
 /////////////////
 void PPath::resolveDots()
 {
-  // First remove temporarily the protocol.
-  if (!_protocol.empty())
-    replace(0, _protocol.size() + 1, "");
+    // First remove temporarily the protocol.
+    if (!_protocol.empty())
+        replace(0, _protocol.size() + 1, "");
 
-  resolveSingleDots();
-  resolveDoubleDots();
+    resolveSingleDots();
+    resolveDoubleDots();
 
-  // Put back the protocol.
-  if (!_protocol.empty())
-    insert(0, _protocol + ":");
+    // Put back the protocol.
+    if (!_protocol.empty())
+        insert(0, _protocol + ":");
 }
 
 ///////////////////
@@ -556,42 +556,42 @@ void PPath::resolveDots()
 ///////////////////
 void PPath::parseProtocol()
 {
-  size_t endpr = find(':');
+    size_t endpr = find(':');
   
-  // No specified protocol  
-  if ( endpr == npos )
-  {
-    // Even if the default protocol is considered to be the file protocol,
-    // the _protocol member keeps the exact protocol value in the
-    // string. The protocol() method, however, returns FILE_PROTOCOL if the
-    // protocol was not specified.
-    _protocol = "";
-  }
-
-  // The substring preceeding the ':' delimiter COULD be the protocol.  
-  else
-  {
-    _protocol = substr(0, endpr);
-
-    if ( _protocol == FILE_PROTOCOL ||
-         _protocol == HTTP_PROTOCOL ||
-         _protocol == FTP_PROTOCOL  )
+    // No specified protocol  
+    if ( endpr == npos )
     {
-      // Make sure we do not define a protocol for a relative path.
-      PPath check_filepath_validity = removeProtocol();
-      if ( !check_filepath_validity.isEmpty() &&
-           !check_filepath_validity.isAbsPath() )
-        PLERROR("A PPath should not specify a protocol "
-                "for a relative path (in %s).", c_str());
+        // Even if the default protocol is considered to be the file protocol,
+        // the _protocol member keeps the exact protocol value in the
+        // string. The protocol() method, however, returns FILE_PROTOCOL if the
+        // protocol was not specified.
+        _protocol = "";
     }
 
-    // Nothing prevents a file from containing a ':' char. Under dos, for
-    // instance, a letter preceeding ':' represents the drive. Hence, if
-    // we do not recognize the protocol, we assume the ':' was part of
-    // the file name.
+    // The substring preceeding the ':' delimiter COULD be the protocol.  
     else
-      _protocol = "";
-  }
+    {
+        _protocol = substr(0, endpr);
+
+        if ( _protocol == FILE_PROTOCOL ||
+             _protocol == HTTP_PROTOCOL ||
+             _protocol == FTP_PROTOCOL  )
+        {
+            // Make sure we do not define a protocol for a relative path.
+            PPath check_filepath_validity = removeProtocol();
+            if ( !check_filepath_validity.isEmpty() &&
+                 !check_filepath_validity.isAbsPath() )
+                PLERROR("A PPath should not specify a protocol "
+                        "for a relative path (in %s).", c_str());
+        }
+
+        // Nothing prevents a file from containing a ':' char. Under dos, for
+        // instance, a letter preceeding ':' represents the drive. Hence, if
+        // we do not recognize the protocol, we assume the ':' was part of
+        // the file name.
+        else
+            _protocol = "";
+    }
 }
 
 //////////////
@@ -599,36 +599,36 @@ void PPath::parseProtocol()
 //////////////
 PPath PPath::absolute(bool add_protocol) const
 {
-  if (!add_protocol && protocol() != FILE_PROTOCOL)
-    PLERROR("In PPath::absolute - The absolute() method is only meant for "
-            "the FILE_PROTOCOL protocol when 'add_protocol' is false");
+    if (!add_protocol && protocol() != FILE_PROTOCOL)
+        PLERROR("In PPath::absolute - The absolute() method is only meant for "
+                "the FILE_PROTOCOL protocol when 'add_protocol' is false");
 
-  PPath abspath;
+    PPath abspath;
 
-  // An empty path remains empty when converted to absolute.
-  if ( isEmpty() || isAbsPath() )
-    abspath = PPath( *this );
+    // An empty path remains empty when converted to absolute.
+    if ( isEmpty() || isAbsPath() )
+        abspath = PPath( *this );
 
-  // This is necessarily a file protocol (because other protocols require
-  // an absolute path).
-  // ===> we concatenate the current working directory of the process.
-  else
-  {
-    assert( _protocol.empty() );
-    abspath = PPath::getcwd() / *this;
-  }
+    // This is necessarily a file protocol (because other protocols require
+    // an absolute path).
+    // ===> we concatenate the current working directory of the process.
+    else
+    {
+        assert( _protocol.empty() );
+        abspath = PPath::getcwd() / *this;
+    }
 
-  // Remove useless trailing slash.
-  abspath.removeTrailingSlash();
-  // Add / remove protocol if required.
-  if (add_protocol)
-    abspath = abspath.addProtocol();
-  else
-    // There can be a protocol in abspath only if there is one in *this.
-    if (!_protocol.empty())
-      abspath = abspath.removeProtocol();
+    // Remove useless trailing slash.
+    abspath.removeTrailingSlash();
+    // Add / remove protocol if required.
+    if (add_protocol)
+        abspath = abspath.addProtocol();
+    else
+        // There can be a protocol in abspath only if there is one in *this.
+        if (!_protocol.empty())
+            abspath = abspath.removeProtocol();
 
-  return abspath;
+    return abspath;
 }
 
 ///////////////
@@ -636,95 +636,95 @@ PPath PPath::absolute(bool add_protocol) const
 ///////////////
 string PPath::canonical() const
 {
-  // An empty path does not need to be modified.
-  if (isEmpty())
-    return *this;
+    // An empty path does not need to be modified.
+    if (isEmpty())
+        return *this;
 
-  // We have to replace any special path by its canonic equivalent.
-  // Note that the protocol is kept. This means in particular that
-  // if ppath = "/foo/bar" and the metaprotocol FOO maps to "file:/foo",
-  // then the canonical form of ppath will still be "/foo/bar", and not
-  // "FOO:bar" (we may want to change this behavior in the future).
+    // We have to replace any special path by its canonic equivalent.
+    // Note that the protocol is kept. This means in particular that
+    // if ppath = "/foo/bar" and the metaprotocol FOO maps to "file:/foo",
+    // then the canonical form of ppath will still be "/foo/bar", and not
+    // "FOO:bar" (we may want to change this behavior in the future).
 
-  string canonic_path = *this;
+    string canonic_path = *this;
 #ifdef __INTEL_COMPILER
 #pragma warning(disable:279)  // Get rid of compiler warning.
 #endif
-  DBG_LOG << plhead("canonic_path: "+canonic_path) << endl;
+    DBG_LOG << plhead("canonic_path: "+canonic_path) << endl;
 
-  map<string, PPath>::const_iterator it  = metaprotocolToMetapath().begin();
-  map<string, PPath>::const_iterator end = metaprotocolToMetapath().end();
+    map<string, PPath>::const_iterator it  = metaprotocolToMetapath().begin();
+    map<string, PPath>::const_iterator end = metaprotocolToMetapath().end();
 
-  string metaprotocol;
-  string metapath;      // Used to store the longest metapath found so far.
-  while ( it != end )
-  {      
-    const string& candidate = it->second;
-    if ( candidate.length() < metapath.length() )
-    {
-      // The candidate is shorter, we are not interested.
-      DBG_LOG << "Shorter:\n\t"
-        << it->first << " -> " << candidate.c_str() << endl;
-      ++it;
-      continue;
-    }
-    if ( !startsWith(canonic_path, candidate) ) {
-      // No match.
-      DBG_LOG << "No match:\n\t"
-        << it->first << " -> " << candidate.c_str() << endl;
-      ++it;
-      continue;
-    }
+    string metaprotocol;
+    string metapath;      // Used to store the longest metapath found so far.
+    while ( it != end )
+    {      
+        const string& candidate = it->second;
+        if ( candidate.length() < metapath.length() )
+        {
+            // The candidate is shorter, we are not interested.
+            DBG_LOG << "Shorter:\n\t"
+                    << it->first << " -> " << candidate.c_str() << endl;
+            ++it;
+            continue;
+        }
+        if ( !startsWith(canonic_path, candidate) ) {
+            // No match.
+            DBG_LOG << "No match:\n\t"
+                    << it->first << " -> " << candidate.c_str() << endl;
+            ++it;
+            continue;
+        }
 
-    size_t endpath = candidate.length();
+        size_t endpath = candidate.length();
 
-    // The current candidate is only a subtring of the canonic path.
-    // Ex:
-    //    /home/dorionc/hey
-    // in
-    //    /home/dorionc/heyYou. 
-    // Note that if the canonic path is a root directory, it may end
-    // with a slash, in which case this cannot happen.
-    if ( endpath != canonic_path.length()     &&
-         canonic_path[endpath] != _slash_char() &&
-         !endsWith(candidate, _slash_char()) )
-    {
-      DBG_LOG << "Substring:\n\t" 
-        << it->first << " -> " << it->second.c_str() << endl;
-      ++it;
-      continue;
-    }
+        // The current candidate is only a subtring of the canonic path.
+        // Ex:
+        //    /home/dorionc/hey
+        // in
+        //    /home/dorionc/heyYou. 
+        // Note that if the canonic path is a root directory, it may end
+        // with a slash, in which case this cannot happen.
+        if ( endpath != canonic_path.length()     &&
+             canonic_path[endpath] != _slash_char() &&
+             !endsWith(candidate, _slash_char()) )
+        {
+            DBG_LOG << "Substring:\n\t" 
+                    << it->first << " -> " << it->second.c_str() << endl;
+            ++it;
+            continue;
+        }
 
-    // The current candidate is indeed a subpath of canonic_path.
-    metaprotocol = it->first;
-    metapath     = candidate;
-    DBG_LOG << "Kept:\n\t" 
-      << it->first << " -> " << candidate.c_str() << endl;
+        // The current candidate is indeed a subpath of canonic_path.
+        metaprotocol = it->first;
+        metapath     = candidate;
+        DBG_LOG << "Kept:\n\t" 
+                << it->first << " -> " << candidate.c_str() << endl;
 #ifdef __INTEL_COMPILER
 #pragma warning(default:279)
 #endif
-    ++it; // We iterate to find the longest matching candidate.
-  }
+        ++it; // We iterate to find the longest matching candidate.
+    }
 
-  // If any metapath was found, it must be replaced by its metaprotocol
-  // equivalent.
-  if ( metaprotocol.length() > 0 ) {
-    canonic_path.replace( 0, metapath.length(), metaprotocol+':' );
-    // Remove the slash just after the ':' if there is something following.
-    size_t after_colon = metaprotocol.size() + 1;
-    if (canonic_path.size() > after_colon + 1 &&
-        canonic_path[after_colon] == _slash_char())
-      canonic_path.erase(after_colon, 1);
-  }
+    // If any metapath was found, it must be replaced by its metaprotocol
+    // equivalent.
+    if ( metaprotocol.length() > 0 ) {
+        canonic_path.replace( 0, metapath.length(), metaprotocol+':' );
+        // Remove the slash just after the ':' if there is something following.
+        size_t after_colon = metaprotocol.size() + 1;
+        if (canonic_path.size() > after_colon + 1 &&
+            canonic_path[after_colon] == _slash_char())
+            canonic_path.erase(after_colon, 1);
+    }
 
-  // If necessary, convert slash characters to the canonical slash.
-  if (_slash_char() != PPATH_SLASH) {
-    size_t slash_pos = 0;
-    while ((slash_pos = canonic_path.find(_slash_char(), slash_pos)) != npos)
-      canonic_path[slash_pos] = PPATH_SLASH;
-  }
+    // If necessary, convert slash characters to the canonical slash.
+    if (_slash_char() != PPATH_SLASH) {
+        size_t slash_pos = 0;
+        while ((slash_pos = canonic_path.find(_slash_char(), slash_pos)) != npos)
+            canonic_path[slash_pos] = PPATH_SLASH;
+    }
 
-  return canonic_path;
+    return canonic_path;
 }
 
 /////////////////
@@ -732,13 +732,13 @@ string PPath::canonical() const
 /////////////////
 PPath PPath::addProtocol()  const
 {
-  if ( _protocol.empty()) {
-    if (!isAbsPath())
-      PLERROR("In PPath::addProtocol - A protocol can only be added to an "
-              "absolute path, and '%s' is relative", canonical().c_str());
-    return ( PPath(string(FILE_PROTOCOL) + ':' + string(*this)) );
-  }
-  return PPath( *this );
+    if ( _protocol.empty()) {
+        if (!isAbsPath())
+            PLERROR("In PPath::addProtocol - A protocol can only be added to an "
+                    "absolute path, and '%s' is relative", canonical().c_str());
+        return ( PPath(string(FILE_PROTOCOL) + ':' + string(*this)) );
+    }
+    return PPath( *this );
 }
 
 ////////////////////
@@ -746,12 +746,12 @@ PPath PPath::addProtocol()  const
 ////////////////////
 PPath PPath::removeProtocol()  const
 {
-  if ( _protocol.empty() )
-    return PPath(*this);
-  PPath no_protocol;
-  // Avoid a call to the PPath constructor from a string.
-  no_protocol.assign(substr(_protocol.length()+1));
-  return no_protocol;
+    if ( _protocol.empty() )
+        return PPath(*this);
+    PPath no_protocol;
+    // Avoid a call to the PPath constructor from a string.
+    no_protocol.assign(substr(_protocol.length()+1));
+    return no_protocol;
 }
 
 ///////////////
@@ -759,7 +759,7 @@ PPath PPath::removeProtocol()  const
 ///////////////
 PPath PPath::operator/(const PPath& other) const
 {
-  return ( PPath(*this) /= other );
+    return ( PPath(*this) /= other );
 }
 
 ////////////////
@@ -767,19 +767,19 @@ PPath PPath::operator/(const PPath& other) const
 ////////////////
 PPath& PPath::operator/=(const PPath& other)
 {
-  if (other.isAbsPath())
-    PLERROR("In PPath::operator/= - The concatenated path (%s) cannot be absolute",
-             other.c_str());
-  // Add a slash if needed.
-  // Note that 'other' cannot start with a slash, otherwise it would be an
-  // absolute directory.
-  if ( !isEmpty  ()                  &&
-       !endsWith (*this, _slash_char()) )
-    string::operator+=(_slash_char());
-  string::operator+=(other);
+    if (other.isAbsPath())
+        PLERROR("In PPath::operator/= - The concatenated path (%s) cannot be absolute",
+                other.c_str());
+    // Add a slash if needed.
+    // Note that 'other' cannot start with a slash, otherwise it would be an
+    // absolute directory.
+    if ( !isEmpty  ()                  &&
+         !endsWith (*this, _slash_char()) )
+        string::operator+=(_slash_char());
+    string::operator+=(other);
 
-  resolveDots       ( );
-  return *this;
+    resolveDots       ( );
+    return *this;
 }
 
 ////////////////
@@ -787,18 +787,18 @@ PPath& PPath::operator/=(const PPath& other)
 ////////////////
 bool PPath::operator== (const string& other) const
 {
-  if ( other.empty() )
-    return isEmpty();
-  return operator==( PPath(other) );
+    if ( other.empty() )
+        return isEmpty();
+    return operator==( PPath(other) );
 }
 
 bool PPath::operator==(const PPath& other) const
 {
-  // If they are stricly equal there is no need to go further.
-  // Otherwise they must point to the same absolute file or directory.
-  // Note that the absolute() method already removes the trailing slash.
-  return (   !strcmp(c_str(), other.c_str())
-          || !strcmp(absolute(true).c_str(), other.absolute(true).c_str()));
+    // If they are stricly equal there is no need to go further.
+    // Otherwise they must point to the same absolute file or directory.
+    // Note that the absolute() method already removes the trailing slash.
+    return (   !strcmp(c_str(), other.c_str())
+               || !strcmp(absolute(true).c_str(), other.absolute(true).c_str()));
 }
 
 ////////
@@ -806,10 +806,10 @@ bool PPath::operator==(const PPath& other) const
 ////////
 PPath PPath::up() const
 {
-  if (isEmpty() || isRoot())
-    PLERROR("In PPath::up - Cannot go up on directory '%s'",
-             absolute().c_str());
-  return *this / "..";
+    if (isEmpty() || isRoot())
+        PLERROR("In PPath::up - Cannot go up on directory '%s'",
+                absolute().c_str());
+    return *this / "..";
 }
 
 /////////////
@@ -817,18 +817,18 @@ PPath PPath::up() const
 /////////////
 PPath PPath::dirname() const
 {
-  if (isEmpty() || isRoot())
-    return PPath(*this);
-  size_t slash_pos = rfind(_slash_char());
-  if ( slash_pos == npos )
-    if (_protocol.empty())
-      return ".";  
-    else
-      return _protocol + ":.";
-  PPath result = substr(0, slash_pos + 1);
-  // Remove trailing slash if it is not a root directory.
-  result.removeTrailingSlash();
-  return result;
+    if (isEmpty() || isRoot())
+        return PPath(*this);
+    size_t slash_pos = rfind(_slash_char());
+    if ( slash_pos == npos )
+        if (_protocol.empty())
+            return ".";  
+        else
+            return _protocol + ":.";
+    PPath result = substr(0, slash_pos + 1);
+    // Remove trailing slash if it is not a root directory.
+    result.removeTrailingSlash();
+    return result;
 }
 
 //////////////
@@ -836,10 +836,10 @@ PPath PPath::dirname() const
 //////////////
 PPath PPath::basename() const
 {
-  size_t slash_pos = rfind(_slash_char());
-  if ( slash_pos == npos )
-    return PPath(*this);  
-  return substr(slash_pos+1);
+    size_t slash_pos = rfind(_slash_char());
+    if ( slash_pos == npos )
+        return PPath(*this);  
+    return substr(slash_pos+1);
 }
 
 ///////////////
@@ -847,12 +847,12 @@ PPath PPath::basename() const
 ///////////////
 string PPath::extension(bool with_dot) const
 {
-  PPath base = basename();
-  size_t begext = base.rfind('.');
-  if ( begext == npos            || // Not found.
-       begext == base.length()-1 )  // Filename ending with a dot.
-    return "";
-  return with_dot ? base.substr(begext) : base.substr(begext+1);
+    PPath base = basename();
+    size_t begext = base.rfind('.');
+    if ( begext == npos            || // Not found.
+         begext == base.length()-1 )  // Filename ending with a dot.
+        return "";
+    return with_dot ? base.substr(begext) : base.substr(begext+1);
 }
 
 //////////////////
@@ -860,11 +860,11 @@ string PPath::extension(bool with_dot) const
 //////////////////
 PPath PPath::no_extension() const
 {
-  size_t ext_size = extension().size();
-  PPath copy = *this;
-  if (ext_size > 0)
-    copy.resize(size() - ext_size - 1);  // Remove the extension and the dot.
-  return copy;
+    size_t ext_size = extension().size();
+    PPath copy = *this;
+    if (ext_size > 0)
+        copy.resize(size() - ext_size - 1);  // Remove the extension and the dot.
+    return copy;
 }
 
 // // Returns a ppath shorter than 256 character and exempt of any of the
@@ -925,25 +925,25 @@ PPath PPath::no_extension() const
 #if defined(WIN32)
 PPath PPath::drive() const
 {
-  if ( find(':') == 1 && isalpha( c_str()[0] ) )
-    return PPath(substr(0, 2));
-  return PPath("");
+    if ( find(':') == 1 && isalpha( c_str()[0] ) )
+        return PPath(substr(0, 2));
+    return PPath("");
 }
 
 bool PPath::isabs() const
 {
-  return !drive().isEmpty() || isHttpPath() || isFtpPath() || _protocol == FILE_PROTOCOL;
+    return !drive().isEmpty() || isHttpPath() || isFtpPath() || _protocol == FILE_PROTOCOL;
 }
 
 #else
 PPath PPath::drive() const
 {
-  return PPath("");
+    return PPath("");
 }
 
 bool PPath::isabs() const
 {
-  return startsWith(c_str(), _slash_char()) || isHttpPath() || isFtpPath() || _protocol == FILE_PROTOCOL;
+    return startsWith(c_str(), _slash_char()) || isHttpPath() || isFtpPath() || _protocol == FILE_PROTOCOL;
 }
 // TODO What about file:foo/bar ?
 
@@ -954,11 +954,11 @@ bool PPath::isabs() const
 ////////////
 bool PPath::isRoot() const
 {
-  if (!isAbsPath())
-    return false;
-  PPath no_prot = removeProtocol();
-  PPath drv = no_prot.drive();
-  return string(no_prot) == string(drv) + _slash();
+    if (!isAbsPath())
+        return false;
+    PPath no_prot = removeProtocol();
+    PPath drv = no_prot.drive();
+    return string(no_prot) == string(drv) + _slash();
 }
 
 
@@ -967,41 +967,53 @@ bool PPath::isRoot() const
 ////////////////////////
 void PPath::parseUrlParameters(PPath& base_path, map<string, string>& parameters) const
 {
-  size_t pos = rfind('?');
-  if (pos == string::npos) {
-    base_path = *this;
-    return;
-  }
-  size_t check = rfind('?', pos - 1);
-  if (check != string::npos)
-    PLERROR("In PPath::parseUrlParameters - There can be only one '?' in a PPath");
-  base_path = substr(0, pos);
-  string rest = substr(pos + 1);
-  vector<string> pairs = PLearn::split(rest, '&');
-  string equal = "=";
-  string name, value;
-  vector<string>::const_iterator it = pairs.begin();
-  for (; it != pairs.end(); it++) {
-    PLearn::split_on_first(*it, equal, name, value);
-    if (!name.empty()) {
-      if (value.empty())
-        PLERROR("In PPath::parseUrlParameters - The parameter %s has no value",
-                name.c_str());
-      parameters[name] = value;
-    } else if (!value.empty())
-      PLERROR("In PPath::parseUrlParameters - The value %s has no parameter name",
-              value.c_str());
-  }
+    size_t pos = rfind('?');
+    if (pos == string::npos) {
+        base_path = *this;
+        return;
+    }
+    size_t check = rfind('?', pos - 1);
+    if (check != string::npos)
+        PLERROR("In PPath::parseUrlParameters - There can be only one '?' in a PPath");
+    base_path = substr(0, pos);
+    string rest = substr(pos + 1);
+    vector<string> pairs = PLearn::split(rest, '&');
+    string equal = "=";
+    string name, value;
+    vector<string>::const_iterator it = pairs.begin();
+    for (; it != pairs.end(); it++) {
+        PLearn::split_on_first(*it, equal, name, value);
+        if (!name.empty()) {
+            if (value.empty())
+                PLERROR("In PPath::parseUrlParameters - The parameter %s has no value",
+                        name.c_str());
+            parameters[name] = value;
+        } else if (!value.empty())
+            PLERROR("In PPath::parseUrlParameters - The value %s has no parameter name",
+                    value.c_str());
+    }
 }
 
 /////////////////////////
 // removeTrailingSlash //
 /////////////////////////
 void PPath::removeTrailingSlash() {
-  if (isEmpty() || (*this)[length() - 1] != _slash_char() || isRoot())
-    return;
-  resize(length() - 1);
+    if (isEmpty() || (*this)[length() - 1] != _slash_char() || isRoot())
+        return;
+    resize(length() - 1);
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

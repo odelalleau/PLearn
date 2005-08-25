@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: RangeVMatrix.h,v 1.4 2004/04/05 23:01:00 morinf Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -53,27 +53,27 @@ using namespace std;
 
 class RangeVMatrix: public VMatrix
 {
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
- protected:
-  real start;
-  real end;
-  real step;
+protected:
+    real start;
+    real end;
+    real step;
 
- public:
-  // ******************
-  // *  Constructors  *
-  // ******************
-  RangeVMatrix(); //!<  default constructor (for automatic deserialization)
+public:
+    // ******************
+    // *  Constructors  *
+    // ******************
+    RangeVMatrix(); //!<  default constructor (for automatic deserialization)
 
-  RangeVMatrix(real the_start, real the_end, real the_step=1.0);
+    RangeVMatrix(real the_start, real the_end, real the_step=1.0);
 
-  PLEARN_DECLARE_OBJECT(RangeVMatrix);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(RangeVMatrix);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual real get(int i, int j) const;
+    virtual real get(int i, int j) const;
 private:
     void build_();
 };
@@ -85,3 +85,16 @@ DECLARE_OBJECT_PTR(RangeVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VPLPreprocessedLearner.h,v 1.1 2005/05/12 22:02:56 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -54,138 +54,138 @@ class VPLPreprocessedLearner: public PLearner
 
 private:
 
-  typedef PLearner inherited;
+    typedef PLearner inherited;
   
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  VMatLanguage row_prg;
-  VMatLanguage input_prg;
-  VMatLanguage output_prg;
-  VMatLanguage costs_prg;
+    // ### declare protected option fields (such as learnt parameters) here
+    VMatLanguage row_prg;
+    VMatLanguage input_prg;
+    VMatLanguage output_prg;
+    VMatLanguage costs_prg;
 
-  TVec<string> row_prg_fieldnames; 
-  TVec<string> input_prg_fieldnames;
-  TVec<string> output_prg_fieldnames;
-  TVec<string> costs_prg_fieldnames;
+    TVec<string> row_prg_fieldnames; 
+    TVec<string> input_prg_fieldnames;
+    TVec<string> output_prg_fieldnames;
+    TVec<string> costs_prg_fieldnames;
 
-  mutable Vec row;
-  mutable Vec processed_row;
-  mutable Vec processed_input;
-  mutable Vec pre_output;
-  mutable Vec pre_costs;
+    mutable Vec row;
+    mutable Vec processed_row;
+    mutable Vec processed_input;
+    mutable Vec pre_output;
+    mutable Vec pre_costs;
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  //! Inner learner which is embedded into the current learner
-  PP<PLearner> learner_;
+    //! Inner learner which is embedded into the current learner
+    PP<PLearner> learner_;
 
-  string trainset_preproc; // program string in VPL language to be applied to each row of the training set
-  int newtargetsize;
-  int newweightsize;
+    string trainset_preproc; // program string in VPL language to be applied to each row of the training set
+    int newtargetsize;
+    int newweightsize;
 
-  string input_preproc; // program string in VPL language to be applied to an input 
-  string output_postproc;
-  string costs_postproc;
+    string input_preproc; // program string in VPL language to be applied to an input 
+    string output_postproc;
+    string costs_postproc;
   
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  // (Make sure the implementation in the .cc
-  // initializes all fields to reasonable default values)
-  VPLPreprocessedLearner();
+    //! Default constructor.
+    // (Make sure the implementation in the .cc
+    // initializes all fields to reasonable default values)
+    VPLPreprocessedLearner();
 
 
-  // ********************
-  // * PLearner methods *
-  // ********************
+    // ********************
+    // * PLearner methods *
+    // ********************
 
 private: 
 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  // If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT.
-  PLEARN_DECLARE_OBJECT(VPLPreprocessedLearner);
+    // Declares other standard object methods.
+    // If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT.
+    PLEARN_DECLARE_OBJECT(VPLPreprocessedLearner);
 
 
-  // **************************
-  // **** PLearner methods ****
-  // **************************
+    // **************************
+    // **** PLearner methods ****
+    // **************************
 
-  virtual int outputsize() const;
+    virtual int outputsize() const;
 
     
-  //! Forwarded to inner learner
-  virtual void setValidationSet(VMat validset);
+    //! Forwarded to inner learner
+    virtual void setValidationSet(VMat validset);
 
-  //! Forwarded to inner learner
-  virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol);
+    //! Forwarded to inner learner
+    virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol);
 
-  //! Forwarded to inner learner
-  virtual void setExperimentDirectory(const PPath& the_expdir);
+    //! Forwarded to inner learner
+    virtual void setExperimentDirectory(const PPath& the_expdir);
  
-  //! Forwarded to inner learner
-  virtual void forget();
+    //! Forwarded to inner learner
+    virtual void forget();
 
-  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
-  virtual void train();
+    virtual void train();
 
-  virtual void computeOutput(const Vec& input, Vec& output) const;
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
-  virtual void computeOutputAndCosts(const Vec& input, const Vec& target, 
-                                     Vec& output, Vec& costs) const;
+    virtual void computeOutputAndCosts(const Vec& input, const Vec& target, 
+                                       Vec& output, Vec& costs) const;
 
-  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                       const Vec& target, Vec& costs) const;
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const;
 
-  virtual
-  bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
-                                   real probability,
-                                   TVec< pair<real,real> >& intervals) const;
+    virtual
+    bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
+                                     real probability,
+                                     TVec< pair<real,real> >& intervals) const;
 
-  virtual TVec<std::string> getTestCostNames() const;
+    virtual TVec<std::string> getTestCostNames() const;
 
-  //! Forwarded to inner learner
-  virtual TVec<string> getTrainCostNames() const;
+    //! Forwarded to inner learner
+    virtual TVec<string> getTrainCostNames() const;
 
-  //! Forwarded to inner learner
-  virtual void resetInternalState();
+    //! Forwarded to inner learner
+    virtual void resetInternalState();
 
-  //! Forwarded to inner learner
-  virtual bool isStatefulLearner() const;
+    //! Forwarded to inner learner
+    virtual bool isStatefulLearner() const;
 };
 
 // Declares a few other classes and functions related to this class.
@@ -195,6 +195,15 @@ DECLARE_OBJECT_PTR(VPLPreprocessedLearner);
 
 #endif
 
-
-  
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

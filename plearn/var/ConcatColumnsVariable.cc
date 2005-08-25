@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVariable.cc,v 1.4 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ConcatColumnsVariable.h"
 #include "SubMatVariable.h"
@@ -88,52 +88,63 @@ void ConcatColumnsVariable::recomputeSize(int& l, int& w) const
 
 void ConcatColumnsVariable::fprop()
 {
-  int n_rows = matValue.length();
-  int m_start = 0;
-  int mod = matValue.mod();
-  for (int m=0;m<varray.size();m++)
+    int n_rows = matValue.length();
+    int m_start = 0;
+    int mod = matValue.mod();
+    for (int m=0;m<varray.size();m++)
     {
-      real* mp = varray[m]->valuedata;
-      int n_cols = varray[m]->matValue.width();
-      real* p = &valuedata[m_start];
-      for (int i=0;i<n_rows;i++,p+=mod)
-        for (int j=0;j<n_cols;j++,mp++)
-          p[j] = *mp;
-      m_start+=n_cols;
+        real* mp = varray[m]->valuedata;
+        int n_cols = varray[m]->matValue.width();
+        real* p = &valuedata[m_start];
+        for (int i=0;i<n_rows;i++,p+=mod)
+            for (int j=0;j<n_cols;j++,mp++)
+                p[j] = *mp;
+        m_start+=n_cols;
     }
 }
 
 
 void ConcatColumnsVariable::bprop()
 {
-  int n_rows = matValue.length();
-  int m_start = 0;
-  int mod = matValue.mod();
-  for (int m=0;m<varray.size();m++)
+    int n_rows = matValue.length();
+    int m_start = 0;
+    int mod = matValue.mod();
+    for (int m=0;m<varray.size();m++)
     {
-      real* mp = varray[m]->gradientdata;
-      int n_cols = varray[m]->matGradient.width();
-      real* p = &gradientdata[m_start];
-      for (int i=0;i<n_rows;i++,p+=mod)
-        for (int j=0;j<n_cols;j++,mp++)
-          *mp += p[j];
-      m_start+=n_cols;
+        real* mp = varray[m]->gradientdata;
+        int n_cols = varray[m]->matGradient.width();
+        real* p = &gradientdata[m_start];
+        for (int i=0;i<n_rows;i++,p+=mod)
+            for (int j=0;j<n_cols;j++,mp++)
+                *mp += p[j];
+        m_start+=n_cols;
     }
 }
 
 
 void ConcatColumnsVariable::symbolicBprop()
 {
-  int k=0;
-  for (int n=0; n<varray.size(); n++) {
-    Var vn = varray[n];
-    vn->accg(new SubMatVariable(g, 0, k, length(), vn->width()));
-    k += vn->width();
-  }
+    int k=0;
+    for (int n=0; n<varray.size(); n++) {
+        Var vn = varray[n];
+        vn->accg(new SubMatVariable(g, 0, k, length(), vn->width()));
+        k += vn->width();
+    }
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

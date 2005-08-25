@@ -36,19 +36,19 @@
 
 
 /* *******************************************************      
-   * $Id: KernelVMatrix.cc,v 1.4 2004/09/14 16:04:39 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "KernelVMatrix.h"
 
 // From Old Kernel.cc: all includes are putted in every file.
 // To be revised manually 
 /*#include <cmath>
-#include <plearn/base/stringutils.h>
-#include <plearn/ker/Kernel.h>
-#include <plearn/math/TMat_maths.h>
-#include <plearn/sys/PLMPI.h>*/
+  #include <plearn/base/stringutils.h>
+  #include <plearn/ker/Kernel.h>
+  #include <plearn/math/TMat_maths.h>
+  #include <plearn/sys/PLMPI.h>*/
 //////////////////////////
 namespace PLearn {
 using namespace std;
@@ -65,9 +65,9 @@ KernelVMatrix::KernelVMatrix()
 }
 
 KernelVMatrix::KernelVMatrix(VMat data1, VMat data2, Ker the_ker)
-  : VMatrix(data1->length(), data2->length()), 
-    d1(data1), d2(data2), ker(the_ker), 
-    input1(data1->width()), input2(data2->width())
+    : VMatrix(data1->length(), data2->length()), 
+      d1(data1), d2(data2), ker(the_ker), 
+      input1(data1->width()), input2(data2->width())
 {}
 
 void
@@ -96,43 +96,43 @@ KernelVMatrix::declareOptions(OptionList &ol)
 }
 
 /*
-IMPLEMENT_NAME_AND_DEEPCOPY(KernelVMatrix);
-void KernelVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-{
+  IMPLEMENT_NAME_AND_DEEPCOPY(KernelVMatrix);
+  void KernelVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+  {
   Kernel::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(d1, copies);
   deepCopyField(d2, copies);
   deepCopyField(ker, copies);
   deepCopyField(input1, copies);
   deepCopyField(input2, copies);
-}
+  }
 */
 
 real KernelVMatrix::get(int i, int j) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length() || j<0 || j>=width())
-    PLERROR("In KernelVMatrix::get OUT OF BOUNDS");
+    if(i<0 || i>=length() || j<0 || j>=width())
+        PLERROR("In KernelVMatrix::get OUT OF BOUNDS");
 #endif
 
-  d1->getRow(i,input1);
-  d2->getRow(j,input2);
-  return ker(input1,input2);
+    d1->getRow(i,input1);
+    d2->getRow(j,input2);
+    return ker(input1,input2);
 }
 
 
 void KernelVMatrix::getSubRow(int i, int j, Vec v) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length() || j<0 || j+v.length()>width())
-    PLERROR("In KernelVMatrix::getRow OUT OF BOUNDS");
+    if(i<0 || i>=length() || j<0 || j+v.length()>width())
+        PLERROR("In KernelVMatrix::getRow OUT OF BOUNDS");
 #endif
 
-  d1->getRow(i,input1);
-  for(int jj=0; jj<v.length(); jj++)
+    d1->getRow(i,input1);
+    for(int jj=0; jj<v.length(); jj++)
     {
-      d2->getRow(j+jj,input2);
-      v[jj] = ker(input1,input2);
+        d2->getRow(j+jj,input2);
+        v[jj] = ker(input1,input2);
     }
 }
 
@@ -140,3 +140,15 @@ void KernelVMatrix::getSubRow(int i, int j, Vec v) const
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

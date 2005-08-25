@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: EqualScalarVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "EqualScalarVariable.h"
 
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(EqualScalarVariable,
                         "NO HELP");
 
 EqualScalarVariable::EqualScalarVariable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, input1->length(), input1->width())
+    : inherited(input1, input2, input1->length(), input1->width())
 {
     build_();
 }
@@ -84,9 +84,9 @@ void EqualScalarVariable::recomputeSize(int& l, int& w) const
 
 void EqualScalarVariable::fprop()
 {
-  real eqv = input2->valuedata[0];
-  for(int i=0; i<nelems(); i++)
-    valuedata[i] = (input1->valuedata[i] == eqv);
+    real eqv = input2->valuedata[0];
+    for(int i=0; i<nelems(); i++)
+        valuedata[i] = (input1->valuedata[i] == eqv);
 }
 
 
@@ -98,4 +98,15 @@ void EqualScalarVariable::symbolicBprop() {}
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: PowVariableVariable.cc,v 1.6 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "DotProductVariable.h"
 #include "IfThenElseVariable.h"
@@ -62,7 +62,7 @@ PLEARN_IMPLEMENT_OBJECT(PowVariableVariable,
                         "NO HELP");
 
 PowVariableVariable::PowVariableVariable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, input1->length(), input1->width())
+    : inherited(input1, input2, input1->length(), input1->width())
 {
     build_();
 }
@@ -95,51 +95,51 @@ void PowVariableVariable::recomputeSize(int& l, int& w) const
 
 void PowVariableVariable::fprop()
 {
-  if (input2->isScalar())
+    if (input2->isScalar())
     {
-      real p = input2->valuedata[0];
-      for(int i=0; i<nelems(); i++)
-        if (input1->valuedata[i]>0)
-          valuedata[i] = pow(input1->valuedata[i],p);
-        else
-          valuedata[i] = 0;
+        real p = input2->valuedata[0];
+        for(int i=0; i<nelems(); i++)
+            if (input1->valuedata[i]>0)
+                valuedata[i] = pow(input1->valuedata[i],p);
+            else
+                valuedata[i] = 0;
     }
-  else
-    for(int i=0; i<nelems(); i++)
-      if (input1->valuedata[i]>0)
-        valuedata[i] = pow(input1->valuedata[i],input2->valuedata[i]);
-      else
-        valuedata[i] = 0;
+    else
+        for(int i=0; i<nelems(); i++)
+            if (input1->valuedata[i]>0)
+                valuedata[i] = pow(input1->valuedata[i],input2->valuedata[i]);
+            else
+                valuedata[i] = 0;
 }
 
 
 void PowVariableVariable::bprop()
 {
-  if (input2->isScalar())
+    if (input2->isScalar())
     {
-      real p = input2->valuedata[0];
-      real& dp = input2->gradientdata[0];
-      for(int i=0; i<nelems(); i++)
+        real p = input2->valuedata[0];
+        real& dp = input2->gradientdata[0];
+        for(int i=0; i<nelems(); i++)
         {
-          if (input1->valuedata[i]>0)
+            if (input1->valuedata[i]>0)
             {
-              input1->gradientdata[i] += 
-                gradientdata[i] * valuedata[i] * p / input1->valuedata[i];
-              dp += gradientdata[i] * valuedata[i] * safeflog(input1->valuedata[i]);
+                input1->gradientdata[i] += 
+                    gradientdata[i] * valuedata[i] * p / input1->valuedata[i];
+                dp += gradientdata[i] * valuedata[i] * safeflog(input1->valuedata[i]);
             }
         }
     }
-  else
+    else
     {
-      for(int i=0; i<nelems(); i++)
+        for(int i=0; i<nelems(); i++)
         {
-          if (input1->valuedata[i]>0)
+            if (input1->valuedata[i]>0)
             {
-              input1->gradientdata[i] += 
-                gradientdata[i] * valuedata[i] * input2->valuedata[i] 
-                / input1->valuedata[i];
-              input2->gradientdata[i] += 
-                gradientdata[i] * valuedata[i] * safeflog(input1->valuedata[i]);
+                input1->gradientdata[i] += 
+                    gradientdata[i] * valuedata[i] * input2->valuedata[i] 
+                    / input1->valuedata[i];
+                input2->gradientdata[i] += 
+                    gradientdata[i] * valuedata[i] * safeflog(input1->valuedata[i]);
             }
         }
     }
@@ -148,18 +148,29 @@ void PowVariableVariable::bprop()
 
 void PowVariableVariable::symbolicBprop()
 {
-  Var gv = g * Var(this);
-  Var input1zero = (input1<=0.0);
-  Var zero(length(), width());
-  input1->accg(ifThenElse(input1zero, zero, gv * input2 / input1));
-  if (input2->isScalar())
-    input2->accg(dot(gv,ifThenElse(input1zero, zero, log(input1))));
-  else
-    input2->accg(ifThenElse(input1zero, zero, gv * log(input1)));
+    Var gv = g * Var(this);
+    Var input1zero = (input1<=0.0);
+    Var zero(length(), width());
+    input1->accg(ifThenElse(input1zero, zero, gv * input2 / input1));
+    if (input2->isScalar())
+        input2->accg(dot(gv,ifThenElse(input1zero, zero, log(input1))));
+    else
+        input2->accg(ifThenElse(input1zero, zero, gv * log(input1)));
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,8 +36,8 @@
 
 
 /* *******************************************************      
-   * $Id: TemporalHorizonVMatrix.h,v 1.5 2004/09/14 16:04:39 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 
@@ -53,43 +53,43 @@ using namespace std;
 //!  by a certain horizon
 class TemporalHorizonVMatrix: public VMatrix
 {
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
 protected:
-  VMat distr;  // the underlying VMat
-  int horizon;  // the temporal value by which to delay the VMat
-  int targetsize;  // the number of last entries to delay
-  TVec<int> row_delay;  // delay for the row index
+    VMat distr;  // the underlying VMat
+    int horizon;  // the temporal value by which to delay the VMat
+    int targetsize;  // the number of last entries to delay
+    TVec<int> row_delay;  // delay for the row index
 
 public:
 
-  //! Also copies the original fieldinfos upon construction
-  TemporalHorizonVMatrix() {};
+    //! Also copies the original fieldinfos upon construction
+    TemporalHorizonVMatrix() {};
 
-  TemporalHorizonVMatrix(VMat the_distr, int the_horizon, int target_size);
+    TemporalHorizonVMatrix(VMat the_distr, int the_horizon, int target_size);
 
-  PLEARN_DECLARE_OBJECT(TemporalHorizonVMatrix);
+    PLEARN_DECLARE_OBJECT(TemporalHorizonVMatrix);
 
-  static void declareOptions(OptionList &ol);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void build();
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  virtual real get(int i, int j) const;
-  virtual void put(int i, int j, real value);
-  virtual real getStringVal(int col, const string & str) const;
-  virtual string getValString(int col, real val) const;
-  virtual string getString(int row,int col) const;
-  //! returns the whole string->value mapping
-  virtual const map<string,real>& getStringToRealMapping(int col) const;
-  virtual const map<real,string>& getRealToStringMapping(int col) const;
+    virtual real get(int i, int j) const;
+    virtual void put(int i, int j, real value);
+    virtual real getStringVal(int col, const string & str) const;
+    virtual string getValString(int col, real val) const;
+    virtual string getString(int row,int col) const;
+    //! returns the whole string->value mapping
+    virtual const map<string,real>& getStringToRealMapping(int col) const;
+    virtual const map<real,string>& getRealToStringMapping(int col) const;
 
-  virtual void reset_dimensions() { distr->reset_dimensions(); width_=distr->width(); }
-  virtual real dot(int i1, int i2, int inputsize) const;
-  virtual real dot(int i, const Vec& v) const;
+    virtual void reset_dimensions() { distr->reset_dimensions(); width_=distr->width(); }
+    virtual real dot(int i1, int i2, int inputsize) const;
+    virtual real dot(int i, const Vec& v) const;
 
 private:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(TemporalHorizonVMatrix);
@@ -97,3 +97,16 @@ DECLARE_OBJECT_PTR(TemporalHorizonVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

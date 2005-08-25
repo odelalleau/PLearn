@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: LaplacianKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "LaplacianKernel.h"
 
@@ -51,17 +51,17 @@ PLEARN_IMPLEMENT_OBJECT(LaplacianKernel, "ONE LINE DESCR", "NO HELP");
 real LaplacianKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
 #ifdef BOUNDCHECK
-  if(x1.length()!=x2.length())
-    PLERROR("IN LaplacianKernel::evaluate x1 and x2 must have the same length");
+    if(x1.length()!=x2.length())
+        PLERROR("IN LaplacianKernel::evaluate x1 and x2 must have the same length");
 #endif
 
-  real summ = 0.0;
-  real* v1=x1.data();
-  real* v2=x2.data();
-  int n=x1.length();
-  for(int i=0; i<n; i++)
-    summ += fabs(v1[i]-v2[i]);
-  return exp(-phi*summ);
+    real summ = 0.0;
+    real* v1=x1.data();
+    real* v2=x2.data();
+    int n=x1.length();
+    for(int i=0; i<n; i++)
+        summ += fabs(v1[i]-v2[i]);
+    return exp(-phi*summ);
 }
 
 void LaplacianKernel::declareOptions(OptionList &ol)
@@ -73,3 +73,15 @@ void LaplacianKernel::declareOptions(OptionList &ol)
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

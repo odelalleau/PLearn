@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Calendar.h,v 1.2 2005/05/24 21:56:15 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Jean-Sébastien Senécal
 
@@ -94,187 +94,187 @@ const CTime MIN_CTIME   = INT_MIN;
 typedef PRange<CTime> CTimeRange;
 
 /*!
-   This class encapsulates the concept of a calendar as an ordered
-   finite list of timestamps. The idea is to provide a tool to
-   convert a continuous representation of time (as julian dates)
-   into a discrete one. Not only the calendar time units (CTime) are
-   different, but the time axis may "leap-over" time ranges in
-   the continous time (JTime) axis.
+  This class encapsulates the concept of a calendar as an ordered
+  finite list of timestamps. The idea is to provide a tool to
+  convert a continuous representation of time (as julian dates)
+  into a discrete one. Not only the calendar time units (CTime) are
+  different, but the time axis may "leap-over" time ranges in
+  the continous time (JTime) axis.
    
-   For instance, one may want to represent a conception of time
-   where time is sampled daily but only during business week days
-   (i.e. monday to friday) s.t. when time t is a friday, time (t+1)
-   will be the next monday (and not saturday). Such a calendar would
-   contain, in its internal representation, a list of timestamps that
-   correspond to, say, Midnight of every Mon/Tues/Wednes/Thurs/Fri-days
-   from, say, 1900 to 2099.
+  For instance, one may want to represent a conception of time
+  where time is sampled daily but only during business week days
+  (i.e. monday to friday) s.t. when time t is a friday, time (t+1)
+  will be the next monday (and not saturday). Such a calendar would
+  contain, in its internal representation, a list of timestamps that
+  correspond to, say, Midnight of every Mon/Tues/Wednes/Thurs/Fri-days
+  from, say, 1900 to 2099.
 
-   In addition, the class supports a set of global (static) calendars keyed
-   by a string.  Functions are provided to set/get global calendars
-   associated with string keys.  A Remote-Method interface is provided as
-   well to set global calendars.  Special operators are available in
-   VMatLanguage to access those global calendars.
+  In addition, the class supports a set of global (static) calendars keyed
+  by a string.  Functions are provided to set/get global calendars
+  associated with string keys.  A Remote-Method interface is provided as
+  well to set global calendars.  Special operators are available in
+  VMatLanguage to access those global calendars.
 */
 class Calendar : public Object
 {
 private:
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
-  // Internal use.
+    // Internal use.
 
-  //! Input value to last call to getCalendarTime
-  mutable JTime last_julian_time_;
+    //! Input value to last call to getCalendarTime
+    mutable JTime last_julian_time_;
 
-  //! Value returned by last call to getCalendarTime
-  mutable CTime last_calendar_time_;
+    //! Value returned by last call to getCalendarTime
+    mutable CTime last_calendar_time_;
 
-  //! Last argument used when calling getCalendarTime
-  mutable bool last_use_lower_bound;
+    //! Last argument used when calling getCalendarTime
+    mutable bool last_use_lower_bound;
 
-  //! Internal map containing memoized resamplings for the calendar.
-  //! The interpretation is as follows: for each calendar c in the map,
-  //! we have a vector of integers v_c.  The entry v_c[i] indicates what
-  //! would be the index in calendar c of the index i in this calendar.
-  map< Calendar*, TVec<int> > active_resamplings;
+    //! Internal map containing memoized resamplings for the calendar.
+    //! The interpretation is as follows: for each calendar c in the map,
+    //! we have a vector of integers v_c.  The entry v_c[i] indicates what
+    //! would be the index in calendar c of the index i in this calendar.
+    map< Calendar*, TVec<int> > active_resamplings;
 
-  //! The set of currently-installed global calendars
-  static map<string, PP<Calendar> > global_calendars;
+    //! The set of currently-installed global calendars
+    static map<string, PP<Calendar> > global_calendars;
   
 public:
-  //! The list of julian timestamps that define this calendar.
-  JTimeVec timestamps_;
+    //! The list of julian timestamps that define this calendar.
+    JTimeVec timestamps_;
 
 public:
-  //! Default constructor.
-  Calendar();
+    //! Default constructor.
+    Calendar();
   
-  //! Constructor with specified timestamps (julian dates)
-  Calendar(const JTimeVec& timestamps);
+    //! Constructor with specified timestamps (julian dates)
+    Calendar(const JTimeVec& timestamps);
 
-  //! This returns a calendar from a vector of "dates".  The following
-  //! are supported: YYYYMMDD, CYYMMDD, julian dates.  The format is
-  //! recognized automatically.  The dates need not be sorted; they will
-  //! be sortd automatically.  Note that the storage for the dates vector
-  //! is captured and kept; it should not be modified after calling
-  //! this function.
-  static PCalendar makeCalendar(Vec dates);
+    //! This returns a calendar from a vector of "dates".  The following
+    //! are supported: YYYYMMDD, CYYMMDD, julian dates.  The format is
+    //! recognized automatically.  The dates need not be sorted; they will
+    //! be sortd automatically.  Note that the storage for the dates vector
+    //! is captured and kept; it should not be modified after calling
+    //! this function.
+    static PCalendar makeCalendar(Vec dates);
 
 private:
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected:
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
   
 public:
-  PLEARN_DECLARE_OBJECT(Calendar);
+    PLEARN_DECLARE_OBJECT(Calendar);
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Support for remote method invocation
-  virtual void call(const string& methodname, int nargs, PStream& io);
+    //! Support for remote method invocation
+    virtual void call(const string& methodname, int nargs, PStream& io);
 
 
-  //#####  Calendar-Specific Functions  #####################################
+    //#####  Calendar-Specific Functions  #####################################
   
-  //! Returns true iff this calendar contains no timestamps.
-  bool isEmpty() const { return timestamps_.isEmpty(); }
+    //! Returns true iff this calendar contains no timestamps.
+    bool isEmpty() const { return timestamps_.isEmpty(); }
 
-  //! Returns a reference to the timestamps.
-  const JTimeVec& getTimeStamps() const { return timestamps_; }
+    //! Returns a reference to the timestamps.
+    const JTimeVec& getTimeStamps() const { return timestamps_; }
   
-  //! Returns true iff the calendar have the exact same timestamps.
-  bool operator==(const Calendar& cal)
+    //! Returns true iff the calendar have the exact same timestamps.
+    bool operator==(const Calendar& cal)
     { return (timestamps_ == cal.getTimeStamps()); }
 
-  //! Returns true iff the calendar has different timestamps.
-  bool operator!=(const Calendar& cal)
+    //! Returns true iff the calendar has different timestamps.
+    bool operator!=(const Calendar& cal)
     { return (timestamps_ != cal.getTimeStamps()); }
   
-  //! Returns the number of timestamps.
-  int size() const { return timestamps_.length(); }
+    //! Returns the number of timestamps.
+    int size() const { return timestamps_.length(); }
 
-  //! Returns timestamp corresponding to "calendar_time".
-  inline JTime getTime(CTime calendar_time) const;
-  inline JTime operator[](CTime calendar_time) const;
+    //! Returns timestamp corresponding to "calendar_time".
+    inline JTime getTime(CTime calendar_time) const;
+    inline JTime operator[](CTime calendar_time) const;
 
-  /*!
-    Returns the calendar time corresponding to julian time "julian_time".
-    If not found, returns the index of the first timestamp that is greater
-    or equal to "julian_time", or the last index if "julian_time" is bigger
-    than all of the timestamps. Returns an error if the calendar contains no
-    timestamps.
-  */
-  CTime getCalendarTime(JTime julian_time, bool use_lower_bound = true) const;
+    /*!
+      Returns the calendar time corresponding to julian time "julian_time".
+      If not found, returns the index of the first timestamp that is greater
+      or equal to "julian_time", or the last index if "julian_time" is bigger
+      than all of the timestamps. Returns an error if the calendar contains no
+      timestamps.
+    */
+    CTime getCalendarTime(JTime julian_time, bool use_lower_bound = true) const;
 
-  /*!
-    Returns true iff julian_time is a valid timestamp. If specified,
-    argument calendar_time will be filled with the right value if true and
-    will be left unchanged if not.
-  */
-  bool containsTime(JTime julian_time, CTime *calendar_time = 0) const;
+    /*!
+      Returns true iff julian_time is a valid timestamp. If specified,
+      argument calendar_time will be filled with the right value if true and
+      will be left unchanged if not.
+    */
+    bool containsTime(JTime julian_time, CTime *calendar_time = 0) const;
 
-  //! Return the JTime of the day in the calendar that comes ON OR AFTER
-  //! the specified day, or MAX_TIME if no such day exist.
-  JTime calendarTimeOnOrAfter(JTime julian_time) const;
+    //! Return the JTime of the day in the calendar that comes ON OR AFTER
+    //! the specified day, or MAX_TIME if no such day exist.
+    JTime calendarTimeOnOrAfter(JTime julian_time) const;
 
-  //! Return the JTime of the day in the calendar that comes ON OR BEFORE
-  //! the specified day, or MIN_TIME if no such day exist.
-  JTime calendarTimeOnOrBefore(JTime julian_time) const;  
+    //! Return the JTime of the day in the calendar that comes ON OR BEFORE
+    //! the specified day, or MIN_TIME if no such day exist.
+    JTime calendarTimeOnOrBefore(JTime julian_time) const;  
   
-  //! Return the subset of dates of this calendar that that are between
-  //! the given lower and upper times (both endpoints are included in the
-  //! the subset).
-  PCalendar clamp(JTime lower, JTime upper);
+    //! Return the subset of dates of this calendar that that are between
+    //! the given lower and upper times (both endpoints are included in the
+    //! the subset).
+    PCalendar clamp(JTime lower, JTime upper);
 
 
-  //#####  Resamplings  ######################################################
+    //#####  Resamplings  ######################################################
 
   
-  //! Associate or modify a resampling to another calendar
-  void setResampling(Calendar* other_cal, const TVec<int>& resampling)
+    //! Associate or modify a resampling to another calendar
+    void setResampling(Calendar* other_cal, const TVec<int>& resampling)
     { active_resamplings[other_cal] = resampling; }
 
-  //! Return the resampling to another calendar or an empty vector if
-  //! it does not exist
-  TVec<int> getResampling(Calendar* other_cal)
+    //! Return the resampling to another calendar or an empty vector if
+    //! it does not exist
+    TVec<int> getResampling(Calendar* other_cal)
     { return active_resamplings[other_cal]; }
 
   
-  //#####  Static Calendar Conversion  ######################################
+    //#####  Static Calendar Conversion  ######################################
 
-  //! Converts a calendar
-  static CTime convertCalendarTime(const Calendar& source_calendar,
-                                   const Calendar& dest_calendar,
-                                   CTime source_time,
-                                   bool use_lower_bound = true);
+    //! Converts a calendar
+    static CTime convertCalendarTime(const Calendar& source_calendar,
+                                     const Calendar& dest_calendar,
+                                     CTime source_time,
+                                     bool use_lower_bound = true);
 
-  //! Return the union of a set of calendars
-  static PCalendar unite(const TVec<PCalendar>& calendars);
+    //! Return the union of a set of calendars
+    static PCalendar unite(const TVec<PCalendar>& calendars);
 
-  //! Return the intersection of a set of calendars
-  static PCalendar intersect(const TVec<PCalendar>& calendars);
+    //! Return the intersection of a set of calendars
+    static PCalendar intersect(const TVec<PCalendar>& calendars);
 
-  //! Return a new calendar containing the dates of a starting calendar
-  //! MINUS the dates given in the list
-  static PCalendar calendarDiff(const Calendar* cal, const JTimeVec& to_remove);
+    //! Return a new calendar containing the dates of a starting calendar
+    //! MINUS the dates given in the list
+    static PCalendar calendarDiff(const Calendar* cal, const JTimeVec& to_remove);
 
 
-  //#####  Global Static Calendars  ##########################################
+    //#####  Global Static Calendars  ##########################################
 
-  //! Set a global calendar keyed to the given string
-  static void setGlobalCalendar(const string& calendar_name,
-                                PCalendar calendar);
+    //! Set a global calendar keyed to the given string
+    static void setGlobalCalendar(const string& calendar_name,
+                                  PCalendar calendar);
 
-  //! Return a pointer to the global calendar given the string.
-  //! Return a NULL pointer if the calendar does not exist
-  static const Calendar* getGlobalCalendar(const string& calendar_name);
+    //! Return a pointer to the global calendar given the string.
+    //! Return a NULL pointer if the calendar does not exist
+    static const Calendar* getGlobalCalendar(const string& calendar_name);
 };
 
 // Declares a few other classes and functions related to this class
@@ -282,16 +282,29 @@ DECLARE_OBJECT_PTR(Calendar);
 
 JTime Calendar::getTime(CTime calendar_time) const
 {
-  if (calendar_time < 0 || calendar_time >= timestamps_.length())
-    PLERROR("In Calendar::getTime(), argument calendar_time = %d out of bounds.", calendar_time);
-  return timestamps_[calendar_time];
+    if (calendar_time < 0 || calendar_time >= timestamps_.length())
+        PLERROR("In Calendar::getTime(), argument calendar_time = %d out of bounds.", calendar_time);
+    return timestamps_[calendar_time];
 }
 
 JTime Calendar::operator[](CTime calendar_time) const
 {
-  return getTime(calendar_time);
+    return getTime(calendar_time);
 }
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MiniBatchClassificationLossVariable.h,v 1.4 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef MiniBatchClassificationLossVariable_INC
 #define MiniBatchClassificationLossVariable_INC
@@ -51,22 +51,22 @@ using namespace std;
 
 class MiniBatchClassificationLossVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  MiniBatchClassificationLossVariable() {}
-  MiniBatchClassificationLossVariable(Variable* netout, Variable* classnum);
+    //!  Default constructor for persistence
+    MiniBatchClassificationLossVariable() {}
+    MiniBatchClassificationLossVariable(Variable* netout, Variable* classnum);
 
-  PLEARN_DECLARE_OBJECT(MiniBatchClassificationLossVariable);
+    PLEARN_DECLARE_OBJECT(MiniBatchClassificationLossVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  //! can't bprop through a hard classification error...
-  virtual void bprop() {}  
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    //! can't bprop through a hard classification error...
+    virtual void bprop() {}  
+    virtual void symbolicBprop();
 
 protected:
     void build_();
@@ -77,3 +77,16 @@ DECLARE_OBJECT_PTR(MiniBatchClassificationLossVariable);
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

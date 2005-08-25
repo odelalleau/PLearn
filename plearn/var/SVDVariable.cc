@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SVDVariable.cc,v 1.1 2004/10/01 19:40:59 mariusmuja Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "SVDVariable.h"
 #include "Var_operators.h"
@@ -51,16 +51,16 @@ using namespace std;
 /** SVDVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(SVDVariable, "A SVD decomposition variable.", 
-                                        "This variable does SVD decomposition of the input matrix variable A=U.D.Vt\n"
-                                        "The resulting U,D,Vt of the decomposition are stored in a vector as folows:\n"
-                                        "   - the first MxM elements of the vector are the elements of U\n"
-                                        "   - the following NxN elements are the elemets of Vt\n"
-                                        "   - the remaining min(M,N) elements are the elemets of D\n");
+                        "This variable does SVD decomposition of the input matrix variable A=U.D.Vt\n"
+                        "The resulting U,D,Vt of the decomposition are stored in a vector as folows:\n"
+                        "   - the first MxM elements of the vector are the elements of U\n"
+                        "   - the following NxN elements are the elemets of Vt\n"
+                        "   - the remaining min(M,N) elements are the elemets of D\n");
 
 SVDVariable::SVDVariable(Variable* input)
-  : inherited(input, input->length()*input->length()+input->width()*input->width()+min(input->length(),input->width()),1), 
-    m(input->length()),
-    n(input->width())
+    : inherited(input, input->length()*input->length()+input->width()*input->width()+min(input->length(),input->width()),1), 
+      m(input->length()),
+      n(input->width())
 {
     input_copy.resize(input->length(), input->width());
 }
@@ -104,4 +104,15 @@ void SVDVariable::rfprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

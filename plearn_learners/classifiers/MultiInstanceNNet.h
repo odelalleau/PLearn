@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.h,v 1.15 2005/06/15 14:40:38 lamblin Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/MultiInstanceNNet.h */
 
@@ -54,12 +54,12 @@ class MultiInstanceNNet: public PLearner
 
 private:
 
-  typedef PLearner inherited;
+    typedef PLearner inherited;
 
-  //! Used to store data between calls to computeCostsFromOutput.
-  mutable Vec instance_logP0;
+    //! Used to store data between calls to computeCostsFromOutput.
+    mutable Vec instance_logP0;
 
-  protected:
+protected:
 
     Var input;  // Var(inputsize())
     Var target; // Var(targetsize()-weightsize())
@@ -91,12 +91,12 @@ private:
     int optstage_per_lstage; // number of bags in training set / batch_size (in nb of bags)
     bool training_set_has_changed; // if so, must count nb of bags in training set
 
-  public:
+public:
     mutable Func f; // input -> output
     mutable Func test_costf; // input & target -> output & test_costs
     mutable Func output_and_target_to_cost; // output & target -> cost
 
-  public:
+public:
     
     // Build options inherited from learner:
     // inputsize, outputsize, targetsize, experiment_name, save_at_every_epoch 
@@ -130,10 +130,10 @@ private:
     int batch_size; // how many samples to use to estimate gradient before an update
                     // 0 means the whole training set (default: 1)
 
-  private:
+private:
     void build_();
 
-  public:
+public:
 
     MultiInstanceNNet();
     virtual ~MultiInstanceNNet();
@@ -163,15 +163,27 @@ private:
 
     virtual void makeDeepCopyFromShallowCopy(CopiesMap &copies);
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
     void initializeParams();
 
-  };
+};
 
-  DECLARE_OBJECT_PTR(MultiInstanceNNet);
+DECLARE_OBJECT_PTR(MultiInstanceNNet);
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

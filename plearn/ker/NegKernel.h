@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: NegKernel.h,v 1.4 2004/09/14 16:04:36 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef NegKernel_INC
 #define NegKernel_INC
@@ -54,18 +54,18 @@ class NegKernel: public Kernel
 {
     typedef Kernel inherited;
 
- protected:
-  Ker ker;
- public:
-  NegKernel()
-      : ker() {}
-  NegKernel(const Ker& the_ker)
-      : ker(the_ker) {}
+protected:
+    Ker ker;
+public:
+    NegKernel()
+        : ker() {}
+    NegKernel(const Ker& the_ker)
+        : ker(the_ker) {}
 
-  PLEARN_DECLARE_OBJECT(NegKernel);
+    PLEARN_DECLARE_OBJECT(NegKernel);
 
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
 protected:
     static void declareOptions(OptionList &ol);
@@ -80,3 +80,15 @@ inline Ker operator-(const Ker& k)
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

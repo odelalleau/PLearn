@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatrixFromDistribution.h,v 1.11 2004/09/14 16:04:40 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file VMatrixFromDistribution.h */
 #ifndef VMatrixFromDistribution_INC
@@ -52,78 +52,91 @@ class VMatrixFromDistribution: public VMatrix
   
 private:
   
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
 protected:
   
-  //! Will hold the data sampled from the distribution
-  Mat data;  
+    //! Will hold the data sampled from the distribution
+    Mat data;  
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  PP<PDistribution> distr; // the distribution
-  string mode; // one of "sample" "density" "log_density"
+    PP<PDistribution> distr; // the distribution
+    string mode; // one of "sample" "density" "log_density"
 
-  // for "sample" mode
-  long generator_seed; // the generator_seed to initialize the generator
-  int nsamples; // number of samples to draw
+    // for "sample" mode
+    long generator_seed; // the generator_seed to initialize the generator
+    int nsamples; // number of samples to draw
 
-  // for density mode:
-  Vec mins,maxs; // the min/max for each dimensions
-  int samples_per_dim; // the number of samples per dimensions
+    // for density mode:
+    Vec mins,maxs; // the min/max for each dimensions
+    int samples_per_dim; // the number of samples per dimensions
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  VMatrixFromDistribution();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    VMatrixFromDistribution();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods
-  PLEARN_DECLARE_OBJECT(VMatrixFromDistribution);
+    // Declares other standard object methods
+    PLEARN_DECLARE_OBJECT(VMatrixFromDistribution);
 
-  // ******************
-  // * VMatrix methods *
-  // ******************
+    // ******************
+    // * VMatrix methods *
+    // ******************
 
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
-  virtual void getRow(int i, Vec v) const;
-  virtual void getColumn(int i, Vec v) const;
-  virtual void getMat(int i, int j, Mat m) const;
-  virtual Mat toMat() const;
+    virtual real get(int i, int j) const;
+    virtual void getSubRow(int i, int j, Vec v) const;
+    virtual void getRow(int i, Vec v) const;
+    virtual void getColumn(int i, Vec v) const;
+    virtual void getMat(int i, int j, Mat m) const;
+    virtual Mat toMat() const;
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(VMatrixFromDistribution);
+DECLARE_OBJECT_PTR(VMatrixFromDistribution);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

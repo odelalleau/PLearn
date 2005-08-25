@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: PowDistanceKernel.h,v 1.3 2004/04/07 23:15:17 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef PowDistanceKernel_INC
 #define PowDistanceKernel_INC
@@ -54,10 +54,10 @@ class PowDistanceKernel: public Kernel
 {
     typedef Kernel inherited;
 
- protected:
+protected:
     real n;  //!<  1 for L1, 2 for L2, etc...
 
- public:
+public:
     PowDistanceKernel()
         : n() {}
     PowDistanceKernel(real the_Ln)
@@ -66,7 +66,7 @@ class PowDistanceKernel: public Kernel
     PLEARN_DECLARE_OBJECT(PowDistanceKernel);
 
     virtual string info() const
-        { return "(L"+tostring(n)+")^"+tostring(n); }
+    { return "(L"+tostring(n)+")^"+tostring(n); }
 
     virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
@@ -81,3 +81,15 @@ DECLARE_OBJECT_PTR(PowDistanceKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

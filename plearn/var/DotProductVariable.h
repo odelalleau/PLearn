@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DotProductVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef DotProductVariable_INC
 #define DotProductVariable_INC
@@ -54,23 +54,23 @@ using namespace std;
 //!  Dot product between 2 vectors (or possibly 2 matrices, which are then simply seen as vectors) 
 class DotProductVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  DotProductVariable() {}
-  DotProductVariable(Variable* input1, Variable* input2);
+    //!  Default constructor for persistence
+    DotProductVariable() {}
+    DotProductVariable(Variable* input1, Variable* input2);
 
-  PLEARN_DECLARE_OBJECT(DotProductVariable);
+    PLEARN_DECLARE_OBJECT(DotProductVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;  
-  virtual void fprop();
-  virtual void bprop();
-  virtual void bbprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;  
+    virtual void fprop();
+    virtual void bprop();
+    virtual void bbprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 
 protected:
     void build_();
@@ -85,3 +85,16 @@ inline Var dot(Var v1, Var v2)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

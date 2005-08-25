@@ -56,12 +56,12 @@ const string& raw_wordseparators();
 /*
 //format fags available for PStreams
 enum pl_flags { plf_plain,
-                plf_binary,
-                plf_swap_endian,
-                plf_shorts_as_doubles,
-                plf_doubles_as_shorts,
-		plf_raw
-             };
+plf_binary,
+plf_swap_endian,
+plf_shorts_as_doubles,
+plf_doubles_as_shorts,
+plf_raw
+};
 
 
 // For use in bitset<32> constructor ONLY!
@@ -88,3 +88,16 @@ extern iostream nullinout; //!< a null iostream: reading/writing from/to it does
 }
 
 #endif //ndef PStream_util_INC
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

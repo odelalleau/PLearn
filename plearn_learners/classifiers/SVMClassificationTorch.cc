@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -56,60 +56,60 @@ using namespace std;
 // SVMClassificationTorch //
 ////////////////////////////
 SVMClassificationTorch::SVMClassificationTorch() 
-: C(100),
-  cache_size(50),
-  iter_msg(1000),
-  output_the_class(true)
+    : C(100),
+      cache_size(50),
+      iter_msg(1000),
+      output_the_class(true)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(SVMClassificationTorch,
-    "SVM classification using the Torch library",
-    "Do not do anything that needs this object to be deep-copied, because it\n"
-    "is not possible yet.\n"
-    "Only binary classification is currently supported.\n"
-);
+                        "SVM classification using the Torch library",
+                        "Do not do anything that needs this object to be deep-copied, because it\n"
+                        "is not possible yet.\n"
+                        "Only binary classification is currently supported.\n"
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void SVMClassificationTorch::declareOptions(OptionList& ol)
 {
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  // Build options.
+    // Build options.
 
-  declareOption(ol, "kernel", &SVMClassificationTorch::kernel, OptionBase::buildoption,
-      "The kernel we use.");
+    declareOption(ol, "kernel", &SVMClassificationTorch::kernel, OptionBase::buildoption,
+                  "The kernel we use.");
 
-  declareOption(ol, "C", &SVMClassificationTorch::C, OptionBase::buildoption,
-      "Trade-off margin / error.");
+    declareOption(ol, "C", &SVMClassificationTorch::C, OptionBase::buildoption,
+                  "Trade-off margin / error.");
 
-  declareOption(ol, "output_the_class", &SVMClassificationTorch::output_the_class, OptionBase::buildoption,
-      "If set to 1, the output will be the class, otherwise it will be a real value.");
+    declareOption(ol, "output_the_class", &SVMClassificationTorch::output_the_class, OptionBase::buildoption,
+                  "If set to 1, the output will be the class, otherwise it will be a real value.");
 
-  declareOption(ol, "iter_msg", &SVMClassificationTorch::iter_msg, OptionBase::buildoption,
-      "Number of iterations between each message.");
+    declareOption(ol, "iter_msg", &SVMClassificationTorch::iter_msg, OptionBase::buildoption,
+                  "Number of iterations between each message.");
 
-  declareOption(ol, "cache_size", &SVMClassificationTorch::cache_size, OptionBase::buildoption,
-      "Cache size (in Mb).");
+    declareOption(ol, "cache_size", &SVMClassificationTorch::cache_size, OptionBase::buildoption,
+                  "Cache size (in Mb).");
 
-  // Learnt options.
+    // Learnt options.
 
-  // declareOption(ol, "myoption", &SVMClassificationTorch::myoption, OptionBase::learntoption,
-  //               "Help text describing this option");
+    // declareOption(ol, "myoption", &SVMClassificationTorch::myoption, OptionBase::learntoption,
+    //               "Help text describing this option");
 
-  // Now call the parent class' declareOptions.
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions.
+    inherited::declareOptions(ol);
 
-  // Redeclare some parent's options.
-  redeclareOption(ol, "machine", &SVMClassificationTorch::machine, OptionBase::learntoption,
-      "Constructed at build time and saved to store learnt parameters.");
+    // Redeclare some parent's options.
+    redeclareOption(ol, "machine", &SVMClassificationTorch::machine, OptionBase::learntoption,
+                    "Constructed at build time and saved to store learnt parameters.");
 
-  redeclareOption(ol, "trainer", &SVMClassificationTorch::trainer, OptionBase::nosave,
-      "Constructed at build time (there is no need to save it).");
+    redeclareOption(ol, "trainer", &SVMClassificationTorch::trainer, OptionBase::nosave,
+                    "Constructed at build time (there is no need to save it).");
 
 }
 
@@ -118,8 +118,8 @@ void SVMClassificationTorch::declareOptions(OptionList& ol)
 ///////////
 void SVMClassificationTorch::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -127,34 +127,34 @@ void SVMClassificationTorch::build()
 ////////////
 void SVMClassificationTorch::build_()
 {
-  // Build machine.
-  if (!machine)
-    machine = new TSVMClassification();
-  PP<TSVMClassification> svm_class = (TSVMClassification*) (TMachine*) machine;
-  svm_class->C = this->C;
-  svm_class->cache_size = this->cache_size;
-  svm_class->kernel = new TTorchKernelFromKernel(this->kernel);
-  svm_class->build();
-  // Build trainer.
-  if (!trainer)
-    trainer = new TQCTrainer();
-  PP<TQCTrainer> qc_trainer = (TQCTrainer*) (TTrainer*) this->trainer;
-  qc_trainer->qc_machine = (TQCMachine*) (TMachine*) this->machine;
-  qc_trainer->iter_msg = this->iter_msg;
-  qc_trainer->build();
-  // We can now build the TorchLearner.
-  inherited::build();
+    // Build machine.
+    if (!machine)
+        machine = new TSVMClassification();
+    PP<TSVMClassification> svm_class = (TSVMClassification*) (TMachine*) machine;
+    svm_class->C = this->C;
+    svm_class->cache_size = this->cache_size;
+    svm_class->kernel = new TTorchKernelFromKernel(this->kernel);
+    svm_class->build();
+    // Build trainer.
+    if (!trainer)
+        trainer = new TQCTrainer();
+    PP<TQCTrainer> qc_trainer = (TQCTrainer*) (TTrainer*) this->trainer;
+    qc_trainer->qc_machine = (TQCMachine*) (TMachine*) this->machine;
+    qc_trainer->iter_msg = this->iter_msg;
+    qc_trainer->build();
+    // We can now build the TorchLearner.
+    inherited::build();
 }
 
 /////////////////////////////
 // computeCostsFromOutputs //
 /////////////////////////////
 void SVMClassificationTorch::computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                           const Vec& target, Vec& costs) const
+                                                     const Vec& target, Vec& costs) const
 {
-  // No cost computed.
-  // For safety, we check we are trying to do binary classification with -1 and 1.
-  assert( target.length() == 1 && (target[0] == 1 || target[0] == -1) );
+    // No cost computed.
+    // For safety, we check we are trying to do binary classification with -1 and 1.
+    assert( target.length() == 1 && (target[0] == 1 || target[0] == -1) );
 }                                
 
 ///////////////////
@@ -162,10 +162,10 @@ void SVMClassificationTorch::computeCostsFromOutputs(const Vec& input, const Vec
 ///////////////////
 void SVMClassificationTorch::computeOutput(const Vec& input, Vec& output) const
 {
-  inherited::computeOutput(input, output);
-  if (output_the_class)
-    for (int i = 0; i < output.length(); i++)
-      output[i] = output[i] > 0 ? 1 : -1;
+    inherited::computeOutput(input, output);
+    if (output_the_class)
+        for (int i = 0; i < output.length(); i++)
+            output[i] = output[i] > 0 ? 1 : -1;
 }    
 
 #if 0
@@ -174,13 +174,13 @@ void SVMClassificationTorch::computeOutput(const Vec& input, Vec& output) const
 ////////////
 void SVMClassificationTorch::forget()
 {
-  //! (Re-)initialize the PLearner in its fresh state (that state may depend on the 'seed' option)
-  //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
+    //! (Re-)initialize the PLearner in its fresh state (that state may depend on the 'seed' option)
+    //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
     /*!
       A typical forget() method should do the following:
-         - initialize a random number generator with the seed option
-         - initialize the learner's parameters, using this random generator
-         - stage = 0
+      - initialize a random number generator with the seed option
+      - initialize the learner's parameters, using this random generator
+      - stage = 0
     */
 }
 #endif
@@ -190,7 +190,7 @@ void SVMClassificationTorch::forget()
 //////////////////////
 TVec<string> SVMClassificationTorch::getTestCostNames() const
 {
-  return inherited::getTestCostNames();
+    return inherited::getTestCostNames();
 }
 
 ///////////////////////
@@ -198,7 +198,7 @@ TVec<string> SVMClassificationTorch::getTestCostNames() const
 ///////////////////////
 TVec<string> SVMClassificationTorch::getTrainCostNames() const
 {
-  return inherited::getTrainCostNames();
+    return inherited::getTrainCostNames();
 }
 
 /////////////////////////////////
@@ -206,21 +206,21 @@ TVec<string> SVMClassificationTorch::getTrainCostNames() const
 /////////////////////////////////
 void SVMClassificationTorch::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("SVMClassificationTorch::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("SVMClassificationTorch::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 ////////////////////
 // setTrainingSet //
 ////////////////////
 void SVMClassificationTorch::setTrainingSet(VMat training_set, bool call_forget) {
-  kernel->setDataForKernelMatrix(training_set);
-  inherited::setTrainingSet(training_set, call_forget);
+    kernel->setDataForKernelMatrix(training_set);
+    inherited::setTrainingSet(training_set, call_forget);
 }
 
 #if 0
@@ -229,8 +229,8 @@ void SVMClassificationTorch::setTrainingSet(VMat training_set, bool call_forget)
 ////////////////
 int SVMClassificationTorch::outputsize() const
 {
-  // Compute and return the size of this learner's output, (which typically
-  // may depend on its inputsize(), targetsize() and set options).
+    // Compute and return the size of this learner's output, (which typically
+    // may depend on its inputsize(), targetsize() and set options).
 }
 
 ///////////
@@ -243,37 +243,50 @@ void SVMClassificationTorch::train()
 
     /* TYPICAL CODE:
 
-      static Vec input  // static so we don't reallocate/deallocate memory each time...
-      static Vec target // (but be careful that static means shared!)
-      input.resize(inputsize())    // the train_set's inputsize()
-      target.resize(targetsize())  // the train_set's targetsize()
-      real weight
+    static Vec input  // static so we don't reallocate/deallocate memory each time...
+    static Vec target // (but be careful that static means shared!)
+    input.resize(inputsize())    // the train_set's inputsize()
+    target.resize(targetsize())  // the train_set's targetsize()
+    real weight
 
-      if(!train_stats)  // make a default stats collector, in case there's none
-         train_stats = new VecStatsCollector()
+    if(!train_stats)  // make a default stats collector, in case there's none
+    train_stats = new VecStatsCollector()
 
-      if(nstages<stage) // asking to revert to a previous stage!
-         forget()  // reset the learner to stage=0
+    if(nstages<stage) // asking to revert to a previous stage!
+    forget()  // reset the learner to stage=0
 
-      while(stage<nstages)
-        {
-          // clear statistics of previous epoch
-          train_stats->forget() 
+    while(stage<nstages)
+    {
+    // clear statistics of previous epoch
+    train_stats->forget() 
           
-          //... train for 1 stage, and update train_stats,
-          // using train_set->getSample(input, target, weight)
-          // and train_stats->update(train_costs)
+    //... train for 1 stage, and update train_stats,
+    // using train_set->getSample(input, target, weight)
+    // and train_stats->update(train_costs)
           
-          ++stage
-          train_stats->finalize() // finalize statistics for this epoch
-        }
+    ++stage
+    train_stats->finalize() // finalize statistics for this epoch
+    }
     */
 
-  if (stage >= nstages) {
-    PLWARNING("In SVMClassificationTorch::train - Learner has already been trained, skipping training");
-    return;
-  }
+    if (stage >= nstages) {
+        PLWARNING("In SVMClassificationTorch::train - Learner has already been trained, skipping training");
+        return;
+    }
 }
 #endif
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

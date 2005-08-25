@@ -33,8 +33,8 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.h,v 1.7 2005/01/11 20:05:20 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -54,36 +54,36 @@ class SortRowsVMatrix: public SelectRowsVMatrix
 
 private:
 
-  typedef SelectRowsVMatrix inherited;
+    typedef SelectRowsVMatrix inherited;
 
 public:
 
-  //! Public build options.
-  bool increasing_order;
-  TVec<int> sort_columns;
+    //! Public build options.
+    bool increasing_order;
+    TVec<int> sort_columns;
 
 public:
 
-  SortRowsVMatrix();
+    SortRowsVMatrix();
 
-  PLEARN_DECLARE_OBJECT(SortRowsVMatrix);
+    PLEARN_DECLARE_OBJECT(SortRowsVMatrix);
 
-  static void declareOptions(OptionList &ol);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void build();
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 private:
 
-  void build_();
+    void build_();
 
-  //! This function returns in indices the sorting of the rows of a VMat m,
-  //! according to the columns specified by sort_columns[colstart, ...],
-  //! where m is viewed as ordered by the indices given at calling time.
-  //! Only the samples between istart and iend are considered.
-  static void sortRows(
-      VMat& m, TVec<int>& indices, TVec<int>& sort_columns,
-      int istart, int iend, int colstart, bool increasing_order);
+    //! This function returns in indices the sorting of the rows of a VMat m,
+    //! according to the columns specified by sort_columns[colstart, ...],
+    //! where m is viewed as ordered by the indices given at calling time.
+    //! Only the samples between istart and iend are considered.
+    static void sortRows(
+        VMat& m, TVec<int>& indices, TVec<int>& sort_columns,
+        int istart, int iend, int colstart, bool increasing_order);
 
 };
 
@@ -91,3 +91,16 @@ DECLARE_OBJECT_PTR(SortRowsVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

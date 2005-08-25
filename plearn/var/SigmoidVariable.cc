@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SigmoidVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "SigmoidVariable.h"
 #include "Var_operators.h"
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(SigmoidVariable,
                         "NO HELP");
 
 SigmoidVariable::SigmoidVariable(Variable* input) 
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 void SigmoidVariable::recomputeSize(int& l, int& w) const
@@ -68,61 +68,61 @@ void SigmoidVariable::recomputeSize(int& l, int& w) const
 
 void SigmoidVariable::fprop()
 {
-  int l = nelems();
-  real* valueptr = valuedata;
-  real* inputvalueptr = input->valuedata;
-  for(int i=0; i<l; i++)
-    *valueptr++ = sigmoid(*inputvalueptr++);
+    int l = nelems();
+    real* valueptr = valuedata;
+    real* inputvalueptr = input->valuedata;
+    for(int i=0; i<l; i++)
+        *valueptr++ = sigmoid(*inputvalueptr++);
 }
 
 
 void SigmoidVariable::bprop()
 {
-  int l = nelems();
-  real* inputgradientptr = input->gradientdata;
-  real* gradientptr = gradientdata;
-  real* valueptr = valuedata;
-  for(int i=0; i<l; i++)
+    int l = nelems();
+    real* inputgradientptr = input->gradientdata;
+    real* gradientptr = gradientdata;
+    real* valueptr = valuedata;
+    for(int i=0; i<l; i++)
     {
-      real val = *valueptr++;
-      *inputgradientptr++ += *gradientptr++ * val*(1.0-val);
+        real val = *valueptr++;
+        *inputgradientptr++ += *gradientptr++ * val*(1.0-val);
     }
 }
 
 
 void SigmoidVariable::bbprop()
 {
-  if (input->diaghessian.length()==0)
-    input->resizeDiagHessian();
-  for(int i=0; i<nelems(); i++)
-  {
-    real yi = valuedata[i];
-    real fprime = yi*(1-yi);
-    input->gradientdata[i] += gradientdata[i] * fprime * fprime;
-  }
+    if (input->diaghessian.length()==0)
+        input->resizeDiagHessian();
+    for(int i=0; i<nelems(); i++)
+    {
+        real yi = valuedata[i];
+        real fprime = yi*(1-yi);
+        input->gradientdata[i] += gradientdata[i] * fprime * fprime;
+    }
 }
 
 
 void SigmoidVariable::symbolicBprop()
 {
-  Var v(this);
-  input->accg(g*v*(1. - v));
+    Var v(this);
+    input->accg(g*v*(1. - v));
 }
 
 
 // R{sigmoid(x)} = f(x)(1-f(x))R(x)
 void SigmoidVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  int l = nelems();
-  real* inputptr = input->rvaluedata;
-  real* inputvalueptr = valuedata;
-  real* ptr = rvaluedata;
-  for(int i=0; i<l; i++)
-  {
-    real val = *inputvalueptr++;
-    *ptr++ = *inputptr++ * val * (1.0 - val);
-  }
+    if (rValue.length()==0) resizeRValue();
+    int l = nelems();
+    real* inputptr = input->rvaluedata;
+    real* inputvalueptr = valuedata;
+    real* ptr = rvaluedata;
+    for(int i=0; i<l; i++)
+    {
+        real val = *inputvalueptr++;
+        *ptr++ = *inputptr++ * val * (1.0 - val);
+    }
 }
 
 /*!   a soft version of the ordinary max(x1,x2) mathematical operation
@@ -132,11 +132,22 @@ void SigmoidVariable::rfprop()
 */
 Var softmax(Var x1, Var x2, Var hardness)
 {
-  Var w=sigmoid(hardness*(x1-x2));
-  return x1*w + x2*(1-w);
+    Var w=sigmoid(hardness*(x1-x2));
+    return x1*w + x2*(1-w);
 }
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

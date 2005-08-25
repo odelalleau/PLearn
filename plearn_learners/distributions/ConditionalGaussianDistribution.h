@@ -49,61 +49,74 @@ class ConditionalGaussianDistribution: public ConditionalDistribution
 
 public:
 
-  Vec mean;
-  Mat covariance;
+    Vec mean;
+    Mat covariance;
   
-  typedef ConditionalDistribution inherited;
+    typedef ConditionalDistribution inherited;
 
-  ConditionalGaussianDistribution();
+    ConditionalGaussianDistribution();
 
 
 protected: 
 
-  static void declareOptions(OptionList& ol);
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(ConditionalGaussianDistribution);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(ConditionalGaussianDistribution);
 
 
-  //! trains the model
-  virtual void train(VMat training_set); 
+    //! trains the model
+    virtual void train(VMat training_set); 
 
-  //! return log of probability density log(p(x))
-  virtual double log_density(const Vec& x) const;
+    //! return log of probability density log(p(x))
+    virtual double log_density(const Vec& x) const;
 
-  //! return probability density p(x)
-  //! [ default version returns exp(log_density(x)) ]
-  virtual double density(const Vec& x) const;
+    //! return probability density p(x)
+    //! [ default version returns exp(log_density(x)) ]
+    virtual double density(const Vec& x) const;
   
-  //! return survival fn = P(X>x)
-  virtual double survival_fn(const Vec& x) const;
+    //! return survival fn = P(X>x)
+    virtual double survival_fn(const Vec& x) const;
 
-  //! return survival fn = P(X<x)
-  virtual double cdf(const Vec& x) const;
+    //! return survival fn = P(X<x)
+    virtual double cdf(const Vec& x) const;
 
-  //! return E[X] 
-  virtual Vec expectation() const;
+    //! return E[X] 
+    virtual Vec expectation() const;
 
-  //! return Var[X]
-  virtual Mat variance() const;
+    //! return Var[X]
+    virtual Mat variance() const;
 
-  //! return a pseudo-random sample generated from the distribution.
-  virtual void generate(Vec& x) const;
+    //! return a pseudo-random sample generated from the distribution.
+    virtual void generate(Vec& x) const;
 
-  virtual void setInput(const Vec& input);
+    virtual void setInput(const Vec& input);
   
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(ConditionalGaussianDistribution);
+DECLARE_OBJECT_PTR(ConditionalGaussianDistribution);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -51,133 +51,133 @@ EmbeddedSequentialLearner::EmbeddedSequentialLearner()
 
 void EmbeddedSequentialLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(learner, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(learner, copies);
 } 
 
 void EmbeddedSequentialLearner::build_()
 {
-  if (learner.isNull())
-    PLERROR("EmbeddedSequentialLearner::build()_ - learner attribute is NULL");
+    if (learner.isNull())
+        PLERROR("EmbeddedSequentialLearner::build()_ - learner attribute is NULL");
 
-  learner->build();
+    learner->build();
 
-  forget();
+    forget();
 }
 
 void EmbeddedSequentialLearner::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void EmbeddedSequentialLearner::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "learner", &EmbeddedSequentialLearner::learner,
-    OptionBase::buildoption, "The underlying learner \n");
+    declareOption(ol, "learner", &EmbeddedSequentialLearner::learner,
+                  OptionBase::buildoption, "The underlying learner \n");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 void EmbeddedSequentialLearner::train()
 {
-  // TODO: this code should be moved to overrided setTrainingSet and setTrainStatsCollector (Pascal&Nicolas)
+    // TODO: this code should be moved to overrided setTrainingSet and setTrainStatsCollector (Pascal&Nicolas)
 
-  int t = train_set.length();
-  if (t >= last_train_t+train_step)
-  {
-    VMat aligned_set = new TemporalHorizonVMatrix(train_set, horizon, targetsize()); // last training pair is (t-1-horizon,t-1)
-    int start = (max_train_len<0) ? 0 : max(0,aligned_set.length()-max_train_len);
-    int len = aligned_set.length()-start;
-    TmpFilenames tmpfile;
-    // TODO: Remove the ugly, grotesque, brittle and unnecessay use of an "indexfile" (Nicolas&Pascal)
-    string index_fname = tmpfile.addFilename();
-    VMat aligned_set_non_missing = filter(aligned_set.subMatRows(start,len), index_fname);
-    learner->setTrainingSet(aligned_set_non_missing);
-    learner->setTrainStatsCollector(train_stats);
-    learner->train();
-    last_train_t = t;
-  }
+    int t = train_set.length();
+    if (t >= last_train_t+train_step)
+    {
+        VMat aligned_set = new TemporalHorizonVMatrix(train_set, horizon, targetsize()); // last training pair is (t-1-horizon,t-1)
+        int start = (max_train_len<0) ? 0 : max(0,aligned_set.length()-max_train_len);
+        int len = aligned_set.length()-start;
+        TmpFilenames tmpfile;
+        // TODO: Remove the ugly, grotesque, brittle and unnecessay use of an "indexfile" (Nicolas&Pascal)
+        string index_fname = tmpfile.addFilename();
+        VMat aligned_set_non_missing = filter(aligned_set.subMatRows(start,len), index_fname);
+        learner->setTrainingSet(aligned_set_non_missing);
+        learner->setTrainStatsCollector(train_stats);
+        learner->train();
+        last_train_t = t;
+    }
 
-  // BUG? what about setting last_call_train_t ???
+    // BUG? what about setting last_call_train_t ???
 }
  
 void EmbeddedSequentialLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
-    VMat testoutputs, VMat testcosts) const
+                                     VMat testoutputs, VMat testcosts) const
 {
-  int l = testset.length();
-  Vec input, target;
-  static Vec dummy_input;
-  real weight;
+    int l = testset.length();
+    Vec input, target;
+    static Vec dummy_input;
+    real weight;
  
-  Vec output(testoutputs ?outputsize() :0);
-  Vec costs(nTestCosts());
+    Vec output(testoutputs ?outputsize() :0);
+    Vec costs(nTestCosts());
  
-  //testset->defineSizes(inputsize(),targetsize(),weightsize());
+    //testset->defineSizes(inputsize(),targetsize(),weightsize());
  
-  //test_stats.forget();
+    //test_stats.forget();
  
-  // We DON'T allow in-sample testing; hence, we test either from the end of the
-  // last test, or the end of the training set.  The last_train_t MINUS 1 is because
-  // we allow the last training day to be part of the test set. Example: using
-  // today's price, we can train a model and then use it to make a prediction that
-  // has today's price as input (all that WITHOUT CHEATING or breaking the Criminal
-  // Code.)
-  int start = MAX(last_train_t-1,last_test_t);
-  ProgressBar* pb = NULL;
-  if(report_progress)
-    pb = new ProgressBar("Testing learner",l-start);
-  for (int t=start; t<testset.length(); t++)
-  {
-    testset.getExample(t, input, target, weight);
-    //testset.getSample(t-last_call_train_t+1, input, dummy_target, weight);
-    //testset.getSample(t-last_call_train_t+1+horizon, dummy_input, target, dummy_weight);
-
-    if (!input.hasMissing())
+    // We DON'T allow in-sample testing; hence, we test either from the end of the
+    // last test, or the end of the training set.  The last_train_t MINUS 1 is because
+    // we allow the last training day to be part of the test set. Example: using
+    // today's price, we can train a model and then use it to make a prediction that
+    // has today's price as input (all that WITHOUT CHEATING or breaking the Criminal
+    // Code.)
+    int start = MAX(last_train_t-1,last_test_t);
+    ProgressBar* pb = NULL;
+    if(report_progress)
+        pb = new ProgressBar("Testing learner",l-start);
+    for (int t=start; t<testset.length(); t++)
     {
-      Vec output = predictions(t);
-      learner->computeOutput(input, output);
-      if (testoutputs) testoutputs->appendRow(output);
-    }
-    if (t>=horizon)
-    {
-      Vec output = predictions(t-horizon);
-      if (!target.hasMissing() && !output.hasMissing())
-      {
-        Vec error_t = errors(t);
-        learner->computeCostsFromOutputs(dummy_input, output, target, error_t);
-        if (testcosts) testcosts->appendRow(error_t);
-        test_stats->update(error_t);
-      }
-      //learner->computeOutputAndCosts(input, target, weight, output, costs);
-      //predictions(t) << output;
-      //errors(t+horizon) << costs;
+        testset.getExample(t, input, target, weight);
+        //testset.getSample(t-last_call_train_t+1, input, dummy_target, weight);
+        //testset.getSample(t-last_call_train_t+1+horizon, dummy_input, target, dummy_weight);
 
-      if (pb)
-        pb->update(t-start);
-    }
-  }
-  last_test_t = testset.length();
+        if (!input.hasMissing())
+        {
+            Vec output = predictions(t);
+            learner->computeOutput(input, output);
+            if (testoutputs) testoutputs->appendRow(output);
+        }
+        if (t>=horizon)
+        {
+            Vec output = predictions(t-horizon);
+            if (!target.hasMissing() && !output.hasMissing())
+            {
+                Vec error_t = errors(t);
+                learner->computeCostsFromOutputs(dummy_input, output, target, error_t);
+                if (testcosts) testcosts->appendRow(error_t);
+                test_stats->update(error_t);
+            }
+            //learner->computeOutputAndCosts(input, target, weight, output, costs);
+            //predictions(t) << output;
+            //errors(t+horizon) << costs;
 
-  if (pb)
-    delete pb;
+            if (pb)
+                pb->update(t-start);
+        }
+    }
+    last_test_t = testset.length();
+
+    if (pb)
+        delete pb;
 }
 
 void EmbeddedSequentialLearner::forget()
 {
-  // BUG? call inherited::forget(); ???
-  learner->forget();
+    // BUG? call inherited::forget(); ???
+    learner->forget();
 }
  
 void EmbeddedSequentialLearner::computeOutput(const Vec& input, Vec& output)
 { learner->computeOutput(input, output); }
  
 void EmbeddedSequentialLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
-    const Vec& target, Vec& costs)
+                                                        const Vec& target, Vec& costs)
 { learner->computeCostsFromOutputs(input, output, target, costs); }
  
 void EmbeddedSequentialLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
-    Vec& output, Vec& costs)
+                                                      Vec& output, Vec& costs)
 { learner->computeOutputAndCosts(input, target, output, costs); }
  
 void EmbeddedSequentialLearner::computeCostsOnly(const Vec& input, const Vec& target, Vec& costs)
@@ -192,3 +192,15 @@ TVec<string> EmbeddedSequentialLearner::getTrainCostNames() const
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

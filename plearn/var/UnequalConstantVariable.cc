@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: UnequalConstantVariable.cc,v 1.6 2004/04/27 15:59:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "UnequalConstantVariable.h"
 
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(UnequalConstantVariable,
                         "NO HELP");
 
 UnequalConstantVariable::UnequalConstantVariable(Variable* input1, real c_)
-  : inherited(input1, input1->length(), input1->width()), c(c_)
+    : inherited(input1, input1->length(), input1->width()), c(c_)
 {}
 
 void
@@ -74,8 +74,8 @@ void UnequalConstantVariable::recomputeSize(int& l, int& w) const
 
 void UnequalConstantVariable::fprop()
 {
-  for(int i=0; i<nelems(); i++)
-    valuedata[i] = (input->valuedata[i] != c);
+    for(int i=0; i<nelems(); i++)
+        valuedata[i] = (input->valuedata[i] != c);
 }
 
 
@@ -88,4 +88,15 @@ void UnequalConstantVariable::symbolicBprop() {}
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

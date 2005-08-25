@@ -36,8 +36,8 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.cc,v 1.14 2005/04/06 22:50:49 chapados Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "SelectColumnsVMatrix.h"
 
@@ -47,58 +47,58 @@ using namespace std;
 /** SelectColumnsVMatrix **/
 
 PLEARN_IMPLEMENT_OBJECT(SelectColumnsVMatrix,
-    "Selects variables from a source matrix according to given vector of indices.",
-    "Alternatively, the variables can be given by their names. In this case, if a\n"
-    "field does not exist and the 'extend_with_missing' option is set to 'true',\n"
-    "the field will be added and filled with missing values.\n"
-);
+                        "Selects variables from a source matrix according to given vector of indices.",
+                        "Alternatively, the variables can be given by their names. In this case, if a\n"
+                        "field does not exist and the 'extend_with_missing' option is set to 'true',\n"
+                        "the field will be added and filled with missing values.\n"
+    );
 
 //////////////////////////
 // SelectColumnsVMatrix //
 //////////////////////////
 SelectColumnsVMatrix::SelectColumnsVMatrix()
-: extend_with_missing(false),
-  fields_partial_match(false)
+    : extend_with_missing(false),
+      fields_partial_match(false)
 {}
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, TVec<string> the_fields, bool the_extend_with_missing)
-: extend_with_missing(the_extend_with_missing),
-  fields(the_fields),
-  fields_partial_match(false)
+    : extend_with_missing(the_extend_with_missing),
+      fields(the_fields),
+      fields_partial_match(false)
 {
-  source = the_source;
-  build_();
+    source = the_source;
+    build_();
 }
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, TVec<int> the_indices)
-: extend_with_missing(false),
-  indices(the_indices),
-  fields_partial_match(false)
+    : extend_with_missing(false),
+      indices(the_indices),
+      fields_partial_match(false)
 {
-  source = the_source;
-  build_();
+    source = the_source;
+    build_();
 }
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, Vec the_indices)
-: extend_with_missing(false),
-  fields_partial_match(false)
+    : extend_with_missing(false),
+      fields_partial_match(false)
 {
-  source = the_source;
-  indices.resize(the_indices.length());
-  // copy the real the_indices into the integer indices
-  indices << the_indices;
-  build_();
+    source = the_source;
+    indices.resize(the_indices.length());
+    // copy the real the_indices into the integer indices
+    indices << the_indices;
+    build_();
 }
 
 /////////
 // get //
 /////////
 real SelectColumnsVMatrix::get(int i, int j) const {
-  static int col;
-  col = indices[j];
-  if (col == -1)
-    return MISSING_VALUE;
-  return source->get(i, col);
+    static int col;
+    col = indices[j];
+    if (col == -1)
+        return MISSING_VALUE;
+    return source->get(i, col);
 }
 
 ///////////////
@@ -106,14 +106,14 @@ real SelectColumnsVMatrix::get(int i, int j) const {
 ///////////////
 void SelectColumnsVMatrix::getSubRow(int i, int j, Vec v) const
 {
-  static int col;
-  for(int jj=0; jj<v.length(); jj++) {
-    col = indices[j+jj];
-    if (col == -1)
-      v[jj] = MISSING_VALUE;
-    else
-    v[jj] = source->get(i, col); 
-  }
+    static int col;
+    for(int jj=0; jj<v.length(); jj++) {
+        col = indices[j+jj];
+        if (col == -1)
+            v[jj] = MISSING_VALUE;
+        else
+            v[jj] = source->get(i, col); 
+    }
 }
 
 ////////////////////
@@ -121,21 +121,21 @@ void SelectColumnsVMatrix::getSubRow(int i, int j, Vec v) const
 ////////////////////
 void SelectColumnsVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "fields", &SelectColumnsVMatrix::fields, OptionBase::buildoption,
-      "The names of the fields to extract (will override 'indices' if provided). Can\n"
-      "be a range of the form Field_1-Field_n, if 'extend_with_missing' is false.");
+    declareOption(ol, "fields", &SelectColumnsVMatrix::fields, OptionBase::buildoption,
+                  "The names of the fields to extract (will override 'indices' if provided). Can\n"
+                  "be a range of the form Field_1-Field_n, if 'extend_with_missing' is false.");
 
-  declareOption(ol, "fields_partial_match", &SelectColumnsVMatrix::fields_partial_match, OptionBase::buildoption,
-      "If set to 1, then a field will be kept iff it contains one of the strings from 'fields'.");
+    declareOption(ol, "fields_partial_match", &SelectColumnsVMatrix::fields_partial_match, OptionBase::buildoption,
+                  "If set to 1, then a field will be kept iff it contains one of the strings from 'fields'.");
 
-  declareOption(ol, "indices", &SelectColumnsVMatrix::indices, OptionBase::buildoption,
-      "The array of column indices to extract.");
+    declareOption(ol, "indices", &SelectColumnsVMatrix::indices, OptionBase::buildoption,
+                  "The array of column indices to extract.");
 
-  declareOption(ol, "extend_with_missing", &SelectColumnsVMatrix::extend_with_missing, OptionBase::buildoption,
-      "If set to 1, then fields specified in the 'fields' option that do not exist\n"
-      "in the source VMatrix will be filled with missing values.");
+    declareOption(ol, "extend_with_missing", &SelectColumnsVMatrix::extend_with_missing, OptionBase::buildoption,
+                  "If set to 1, then fields specified in the 'fields' option that do not exist\n"
+                  "in the source VMatrix will be filled with missing values.");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 /////////////////////////////////
@@ -143,9 +143,9 @@ void SelectColumnsVMatrix::declareOptions(OptionList &ol)
 /////////////////////////////////
 void SelectColumnsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(indices, copies);
-  deepCopyField(fields, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(indices, copies);
+    deepCopyField(fields, copies);
 }
 
 ///////////
@@ -153,8 +153,8 @@ void SelectColumnsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ///////////
 void SelectColumnsVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -162,120 +162,133 @@ void SelectColumnsVMatrix::build()
 ////////////
 void SelectColumnsVMatrix::build_()
 {
-  if (source) {
-    if (fields.isNotEmpty()) {
-      // Find out the indices from the fields.
-      indices.resize(0);
-      if (!fields_partial_match) {
-        for (int i = 0; i < fields.length(); i++) {
-          string the_field = fields[i];
-          int the_index = source->fieldIndex(the_field);  // string only
-          if (!extend_with_missing && the_index == -1) {
-            // The_field does not exist AS A STRING in the vmat
-            // It may be of the form FIELD1-FIELDN (a range of fields).
-            size_t pos = the_field.find('-');
-            bool ok = false;
-            if (pos != string::npos) {
-              string field1 = the_field.substr(0, pos);
-              string fieldn = the_field.substr(pos + 1);
-              int the_index1 = source->getFieldIndex(field1);  // either string or number
-              int the_indexn = source->getFieldIndex(fieldn);  // either string or number
-              if (the_index1 >= 0 && the_indexn > the_index1) {
-                // Indeed, this is a range.
-                ok = true;
-                for (int j = the_index1; j <= the_indexn; j++)
-                  indices.append(j);
-              }
+    if (source) {
+        if (fields.isNotEmpty()) {
+            // Find out the indices from the fields.
+            indices.resize(0);
+            if (!fields_partial_match) {
+                for (int i = 0; i < fields.length(); i++) {
+                    string the_field = fields[i];
+                    int the_index = source->fieldIndex(the_field);  // string only
+                    if (!extend_with_missing && the_index == -1) {
+                        // The_field does not exist AS A STRING in the vmat
+                        // It may be of the form FIELD1-FIELDN (a range of fields).
+                        size_t pos = the_field.find('-');
+                        bool ok = false;
+                        if (pos != string::npos) {
+                            string field1 = the_field.substr(0, pos);
+                            string fieldn = the_field.substr(pos + 1);
+                            int the_index1 = source->getFieldIndex(field1);  // either string or number
+                            int the_indexn = source->getFieldIndex(fieldn);  // either string or number
+                            if (the_index1 >= 0 && the_indexn > the_index1) {
+                                // Indeed, this is a range.
+                                ok = true;
+                                for (int j = the_index1; j <= the_indexn; j++)
+                                    indices.append(j);
+                            }
+                        }
+                        // OR it may be a number by itself only
+                        else if ((the_index = source->getFieldIndex(the_field)) != -1) {
+                            ok = true;
+                            indices.append(the_index);
+                        }
+                        if (!ok)
+                            PLERROR("In SelectColumnsVMatrix::build_ - Unknown field (%s) in source VMat "
+                                    "(you may want to use the 'extend_with_missing' option)", the_field.c_str());
+                    } else
+                        indices.append(the_index);
+                }
+            } else {
+                // We need to check whether or not we should add each field.
+                TVec<string> source_fields = source->fieldNames();
+                for (int i = 0; i < source_fields.length(); i++)
+                    for (int j = 0; j < fields.length(); j++)
+                        if (source_fields[i].find(fields[j]) != string::npos) {
+                            // We want to add this field.
+                            indices.append(i);
+                            break;
+                        }
             }
-            // OR it may be a number by itself only
-            else if ((the_index = source->getFieldIndex(the_field)) != -1) {
-              ok = true;
-              indices.append(the_index);
-            }
-            if (!ok)
-              PLERROR("In SelectColumnsVMatrix::build_ - Unknown field (%s) in source VMat "
-                      "(you may want to use the 'extend_with_missing' option)", the_field.c_str());
-          } else
-            indices.append(the_index);
         }
-      } else {
-        // We need to check whether or not we should add each field.
-        TVec<string> source_fields = source->fieldNames();
-        for (int i = 0; i < source_fields.length(); i++)
-          for (int j = 0; j < fields.length(); j++)
-            if (source_fields[i].find(fields[j]) != string::npos) {
-              // We want to add this field.
-              indices.append(i);
-              break;
+        width_ = indices.length();
+        length_ = source->length();
+        // Copy the appropriate VMFields
+        fieldinfos.resize(width());
+        if (source->getFieldInfos().size() > 0) {
+            for (int i=0; i<width(); ++i) {
+                int col = indices[i];
+                if (col == -1) {
+                    if (extend_with_missing)
+                        // This must be because it is a field that did not exist in
+                        // the source VMat.
+                        fieldinfos[i] = VMField(fields[i]);
+                    else
+                        PLERROR("In SelectColumnsVMatrix::build_ - '-1' is not a valid value in indices");
+                } else {
+                    fieldinfos[i] = source->getFieldInfos(col);
+                }
             }
-      }
-    }
-    width_ = indices.length();
-    length_ = source->length();
-    // Copy the appropriate VMFields
-    fieldinfos.resize(width());
-    if (source->getFieldInfos().size() > 0) {
-      for (int i=0; i<width(); ++i) {
-        int col = indices[i];
-        if (col == -1) {
-          if (extend_with_missing)
-            // This must be because it is a field that did not exist in
-            // the source VMat.
-            fieldinfos[i] = VMField(fields[i]);
-          else
-            PLERROR("In SelectColumnsVMatrix::build_ - '-1' is not a valid value in indices");
-        } else {
-          fieldinfos[i] = source->getFieldInfos(col);
         }
-      }
     }
-  }
 }
 
 ////////////////////////////
 // getStringToRealMapping //
 ////////////////////////////
 const map<string,real>& SelectColumnsVMatrix::getStringToRealMapping(int col) const {
-  static int the_col;
-  static map<string, real> empty_mapping;
-  the_col = indices[col];
-  if (the_col == -1)
-    return empty_mapping;
-  return source->getStringToRealMapping(the_col);
+    static int the_col;
+    static map<string, real> empty_mapping;
+    the_col = indices[col];
+    if (the_col == -1)
+        return empty_mapping;
+    return source->getStringToRealMapping(the_col);
 }
 
 //////////////////
 // getStringVal //
 //////////////////
 real SelectColumnsVMatrix::getStringVal(int col, const string & str) const {
-  static int the_col;
-  the_col = indices[col];
-  if (the_col == -1)
-    return MISSING_VALUE;
-  return source->getStringVal(the_col, str);
+    static int the_col;
+    the_col = indices[col];
+    if (the_col == -1)
+        return MISSING_VALUE;
+    return source->getStringVal(the_col, str);
 }
 
 ////////////////////////////
 // getRealToStringMapping //
 ////////////////////////////
 const map<real,string>& SelectColumnsVMatrix::getRealToStringMapping(int col) const {
-  static int the_col;
-  static map<real, string> empty_mapping;
-  the_col = indices[col];
-  if (the_col == -1)
-    return empty_mapping;
-  return source->getRealToStringMapping(the_col);
+    static int the_col;
+    static map<real, string> empty_mapping;
+    the_col = indices[col];
+    if (the_col == -1)
+        return empty_mapping;
+    return source->getRealToStringMapping(the_col);
 }
 
 //////////////////
 // getValString //
 //////////////////
 string SelectColumnsVMatrix::getValString(int col, real val) const {
-  static int the_col;
-  the_col = indices[col];
-  if (the_col == -1)
-    return "";
-  return source->getValString(the_col, val);
+    static int the_col;
+    the_col = indices[col];
+    if (the_col == -1)
+        return "";
+    return source->getValString(the_col, val);
 }
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

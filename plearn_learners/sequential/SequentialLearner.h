@@ -44,130 +44,130 @@ namespace PLearn {
 using namespace std;
 
 /*!
-   We use the following conventions throughout this module:
+  We use the following conventions throughout this module:
   
-     - The last VMat received by the train(...) method is in the range [0,last_train_t-1]
-     - The last VMat received by the test(....) method is in the range [0,last_test_t-1]
-     - All the VMat's in a SequentialLearner have all their informations at row t
-       available at time t.  Hence, for a dataset of length T, there is only T-horizon
-       effective examples, with the (input, target) pairs starting at (0, horizon)
-       and ending at (T-1-horizon, T-1)
+  - The last VMat received by the train(...) method is in the range [0,last_train_t-1]
+  - The last VMat received by the test(....) method is in the range [0,last_test_t-1]
+  - All the VMat's in a SequentialLearner have all their informations at row t
+  available at time t.  Hence, for a dataset of length T, there is only T-horizon
+  effective examples, with the (input, target) pairs starting at (0, horizon)
+  and ending at (T-1-horizon, T-1)
 */
 
 class SequentialLearner: public PLearner
 {
 public:
-  typedef PLearner inherited;
+    typedef PLearner inherited;
 
 protected:  
-  int last_train_t; //! last value of train_set.length() for which training was actually done (<= last_call_train_t)
-  int last_call_train_t; //! last value of train_set.length() for which train() was called (may not have done anything)
-  mutable int last_test_t; //! last value of test_set.length() for which testing was actually done
+    int last_train_t; //! last value of train_set.length() for which training was actually done (<= last_call_train_t)
+    int last_call_train_t; //! last value of train_set.length() for which train() was called (may not have done anything)
+    mutable int last_test_t; //! last value of test_set.length() for which testing was actually done
 
 public:
-  int get_last_train_t(){ return last_train_t; }
-  int get_last_call_train_t(){ return last_call_train_t; }
-  int get_last_test_t(){ return last_test_t; }
+    int get_last_train_t(){ return last_train_t; }
+    int get_last_call_train_t(){ return last_call_train_t; }
+    int get_last_test_t(){ return last_test_t; }
   
 public:
   
-  /*! 
-    Before the length of train_set reaches init_train_size, train doesn't do anything.
-    Default: 1.
-  */
-  int init_train_size;
-  int max_seq_len;    //!< max length of the VMat that train can contain = max de t ci-haut
-  int max_train_len;  //!< max nb of (input,target) pairs actually used for training
-  int train_step;     //!< how often we have to re-train a model, (default = 1 = after every time step)
-  int horizon;        //!< by how much to offset the target columns wrt the input columns (default = 1)
-  int outputsize_;
+    /*! 
+      Before the length of train_set reaches init_train_size, train doesn't do anything.
+      Default: 1.
+    */
+    int init_train_size;
+    int max_seq_len;    //!< max length of the VMat that train can contain = max de t ci-haut
+    int max_train_len;  //!< max nb of (input,target) pairs actually used for training
+    int train_step;     //!< how often we have to re-train a model, (default = 1 = after every time step)
+    int horizon;        //!< by how much to offset the target columns wrt the input columns (default = 1)
+    int outputsize_;
 
-  //! these two fields are used by other classes such as SequentialModelSelector
-  //! and SequentialValidation and they are filled when the method test is called 
-  Mat predictions; //! each element indexed by (time_index, output_index), there are (max_seq_len,outputsize) elements.
-  //! initial values may be 'missing value' 
-  Mat errors; //! each element indexed by (time_index, cost_index), there are (max_seq_len,nCosts) elements.
+    //! these two fields are used by other classes such as SequentialModelSelector
+    //! and SequentialValidation and they are filled when the method test is called 
+    Mat predictions; //! each element indexed by (time_index, output_index), there are (max_seq_len,outputsize) elements.
+    //! initial values may be 'missing value' 
+    Mat errors; //! each element indexed by (time_index, cost_index), there are (max_seq_len,nCosts) elements.
 
 private:
-  //! This does the actual building
-  void build_();
+    //! This does the actual building
+    void build_();
   
 protected:
-  //! Declare this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declare this class' options
+    static void declareOptions(OptionList& ol);
   
-  public:
+public:
   
-  //! Constructor
-  SequentialLearner();
+    //! Constructor
+    SequentialLearner();
   
-  //! simply calls inherited::build() then build_()
-  virtual void build();
+    //! simply calls inherited::build() then build_()
+    virtual void build();
   
-  //! Default behaviour: return train_set->targetsize()
-  virtual int outputsize() const;
+    //! Default behaviour: return train_set->targetsize()
+    virtual int outputsize() const;
 
-  virtual int nTestCosts() const;
+    virtual int nTestCosts() const;
 
-  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
   
 /*!       *** SUBCLASS WRITING: ***
-      Does the actual training. Subclasses must implement this method.
-      The method should upon entry, call setTrainingSet(training_set);
-      The method should:
-        - do nothing if we already called it with this value of train.length
-          or a value between [last_train_t-train_step+1,last_train_t]
-        - if not, train and update the value of last_train_t
-        - in either case, update the value of last_call_train_t
+  Does the actual training. Subclasses must implement this method.
+  The method should upon entry, call setTrainingSet(training_set);
+  The method should:
+  - do nothing if we already called it with this value of train.length
+  or a value between [last_train_t-train_step+1,last_train_t]
+  - if not, train and update the value of last_train_t
+  - in either case, update the value of last_call_train_t
 */
     virtual void train() =0;
  
 /*!       *** SUBCLASS WRITING: ***
-      The method should:
-        - call computeOutputAndCosts on the test set
-        - save the outputs and the costs in the  predictions & errors
-          matrices, beginning at position last_call_train_t
+  The method should:
+  - call computeOutputAndCosts on the test set
+  - save the outputs and the costs in the  predictions & errors
+  matrices, beginning at position last_call_train_t
 */
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
-        VMat testoutputs=0, VMat testcosts=0) const =0;
+                      VMat testoutputs=0, VMat testcosts=0) const =0;
 
     virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-        Vec& output, Vec& costs) const;
+                                       Vec& output, Vec& costs) const;
 
     virtual void computeCostsOnly(const Vec& input, const Vec& target,
-        Vec& costs) const;
+                                  Vec& costs) const;
 
     virtual void computeOutput(const Vec& input, Vec& output) const;
 
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
-        const Vec& target, Vec& costs) const;
+                                         const Vec& target, Vec& costs) const;
 
-  /*!
-    The getCostSequence method returns the sequence of the cost 
-    at index 'cost_index' or named 'cname' 
-    from sequenceStart() with a length of sequenceLength().
+    /*!
+      The getCostSequence method returns the sequence of the cost 
+      at index 'cost_index' or named 'cname' 
+      from sequenceStart() with a length of sequenceLength().
     */
 
-  int sequenceStart() const { return init_train_size; }
-  int sequenceLength() const { return last_test_t - init_train_size + 1; }
-  Vec getCostSequence(int cost_index) const
+    int sequenceStart() const { return init_train_size; }
+    int sequenceLength() const { return last_test_t - init_train_size + 1; }
+    Vec getCostSequence(int cost_index) const
     { return errors.subMat(sequenceStart(), cost_index, sequenceLength(), 1).toVecCopy(); }
-  Vec getCostSequence(string cname) const 
+    Vec getCostSequence(string cname) const 
     { return getCostSequence(getTestCostIndex(cname)); }
 
-  /*!
-    Any SequentialLearner will have the possiblity to save some data in a 
-    matlab 'readable' format. The data will be saved in expdir/matlab_subdir
-    through the global matlabSave function (MatIO.h).
-  */
-  virtual void matlabSave(const string& matlab_subdir);
+    /*!
+      Any SequentialLearner will have the possiblity to save some data in a 
+      matlab 'readable' format. The data will be saved in expdir/matlab_subdir
+      through the global matlabSave function (MatIO.h).
+    */
+    virtual void matlabSave(const string& matlab_subdir);
   
-  virtual void forget();
+    virtual void forget();
 
-  //!  Does the necessary operations to transform a shallow copy (this)
-  //!  into a deep copy by deep-copying all the members that need to be.
-  PLEARN_DECLARE_ABSTRACT_OBJECT(SequentialLearner);
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //!  Does the necessary operations to transform a shallow copy (this)
+    //!  into a deep copy by deep-copying all the members that need to be.
+    PLEARN_DECLARE_ABSTRACT_OBJECT(SequentialLearner);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
 //! Declares a few other classes and functions related to this class
@@ -176,3 +176,16 @@ DECLARE_OBJECT_PTR(SequentialLearner);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

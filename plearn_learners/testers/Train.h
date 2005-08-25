@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Train.h,v 1.2 2004/09/14 16:04:58 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Martin Monperrus
 
@@ -55,72 +55,85 @@ class Train: public Object
 
 private:
   
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
-  PP<PLearner> learner;
-  //string dataset;
-  string psave;
-  VMat trainset;
+    // ************************
+    // * public build options *
+    // ************************
+    PP<PLearner> learner;
+    //string dataset;
+    string psave;
+    VMat trainset;
  
-  void run();
-  // ### declare public option fields (such as build options) here
-  // ...
+    void run();
+    // ### declare public option fields (such as build options) here
+    // ...
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  // ### Make sure the implementation in the .cc
-  // ### initializes all fields to reasonable default values.
-  Train();
+    //! Default constructor.
+    // ### Make sure the implementation in the .cc
+    // ### initializes all fields to reasonable default values.
+    Train();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (PLEASE IMPLEMENT IN .cc)
-  void build_();
+    //! This does the actual building. 
+    // (PLEASE IMPLEMENT IN .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options.
-  // (PLEASE IMPLEMENT IN .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    // (PLEASE IMPLEMENT IN .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  // Declares other standard object methods.
-  // ### If your class is not instantiatable (it has pure virtual methods)
-  // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
-  PLEARN_DECLARE_OBJECT(Train);
+    // Declares other standard object methods.
+    // ### If your class is not instantiatable (it has pure virtual methods)
+    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+    PLEARN_DECLARE_OBJECT(Train);
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  // (PLEASE IMPLEMENT IN .cc)
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    // (PLEASE IMPLEMENT IN .cc)
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(Train);
+DECLARE_OBJECT_PTR(Train);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

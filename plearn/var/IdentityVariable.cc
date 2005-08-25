@@ -45,48 +45,59 @@ PLEARN_IMPLEMENT_OBJECT(IdentityVariable,
                         "NO HELP");
 
 IdentityVariable::IdentityVariable(Variable* input) 
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 void IdentityVariable::recomputeSize(int& l, int& w) const {
-  if (input) {
-    l = input->length();
-    w = input->width();
-  } else
-    l = w = 0;
+    if (input) {
+        l = input->length();
+        w = input->width();
+    } else
+        l = w = 0;
 }
 
 void IdentityVariable::fprop() {
-  int l = nelems();
-  real* inputptr = input->valuedata;
-  real* ptr = valuedata;
-  for(int i=0; i<l; i++)
-    *ptr++ = *inputptr++;
+    int l = nelems();
+    real* inputptr = input->valuedata;
+    real* ptr = valuedata;
+    for(int i=0; i<l; i++)
+        *ptr++ = *inputptr++;
 }
 
 
 void IdentityVariable::bprop() {
-  int l = nelems();
-  real* inputgradientptr = input->gradientdata;
-  real* gradientptr = gradientdata;
+    int l = nelems();
+    real* inputgradientptr = input->gradientdata;
+    real* gradientptr = gradientdata;
 
-  for(int i=0; i<l; i++)
-    *inputgradientptr++ += *gradientptr++ * 1.0;
+    for(int i=0; i<l; i++)
+        *inputgradientptr++ += *gradientptr++ * 1.0;
 }
 
 void IdentityVariable::bbprop() {
-  PLERROR("bbprop is not implemented for IdentityVariable");
+    PLERROR("bbprop is not implemented for IdentityVariable");
 }
 
 
 void IdentityVariable::symbolicBprop() {
-  PLERROR("symbolicBprop is not implemented for IdentityVariable");
+    PLERROR("symbolicBprop is not implemented for IdentityVariable");
 }
 
 void IdentityVariable::rfprop() {
-  PLERROR("rfprop is not implemented for IdentityVariable");
+    PLERROR("rfprop is not implemented for IdentityVariable");
 }
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

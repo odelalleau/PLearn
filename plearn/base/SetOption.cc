@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SetOption.cc,v 1.6 2004/09/14 16:04:35 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file SetOption.cc */
 #include "SetOption.h"
@@ -43,47 +43,60 @@ namespace PLearn {
 using namespace std;
 
 SetOption::SetOption() 
-  :Object()
-  {}
+    :Object()
+{}
 
 
-  PLEARN_IMPLEMENT_OBJECT(SetOption, "Sets the option of another object", 
-      "SetOption is an object containing a name and a value of an option \n"
-      "to be set on another object.");
+PLEARN_IMPLEMENT_OBJECT(SetOption, "Sets the option of another object", 
+                        "SetOption is an object containing a name and a value of an option \n"
+                        "to be set on another object.");
 
-  void SetOption::declareOptions(OptionList& ol)
-  {
+void SetOption::declareOptions(OptionList& ol)
+{
     declareOption(ol, "name", &SetOption::name, OptionBase::buildoption,
                   "name of the option to be set");
     declareOption(ol, "value", &SetOption::value, OptionBase::buildoption,
                   "value of the option to be set");
     inherited::declareOptions(ol);
-  }
+}
 
-  void SetOption::build_()
-  {}
+void SetOption::build_()
+{}
 
-  // ### Nothing to add here, simply calls build_
-  void SetOption::build()
-  {
+// ### Nothing to add here, simply calls build_
+void SetOption::build()
+{
     inherited::build();
     build_();
-  }
+}
 
 
-  void SetOption::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-  {
+void SetOption::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
     Object::makeDeepCopyFromShallowCopy(copies);
-  }
+}
 
 void SetOption::apply(PP<Object> obj, const map<string, string>& aliases)
 {
-  map<string, string>::const_iterator it = aliases.find(name);
-  if(it!=aliases.end())
-    obj->setOption(it->second, value);
-  else 
-    obj->setOption(name, value);    
+    map<string, string>::const_iterator it = aliases.find(name);
+    if(it!=aliases.end())
+        obj->setOption(it->second, value);
+    else 
+        obj->setOption(name, value);    
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

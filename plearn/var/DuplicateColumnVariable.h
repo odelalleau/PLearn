@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateColumnVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef DuplicateColumnVariable_INC
 #define DuplicateColumnVariable_INC
@@ -51,43 +51,56 @@ using namespace std;
 
 class DuplicateColumnVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 protected:
-  int width_;
-  //int n_duplicates;
+    int width_;
+    //int n_duplicates;
 
 public:
-  //!  Default constructor for persistence
-  DuplicateColumnVariable() {}
-  DuplicateColumnVariable(Variable* input, int thewidth);
+    //!  Default constructor for persistence
+    DuplicateColumnVariable() {}
+    DuplicateColumnVariable(Variable* input, int thewidth);
 
-  PLEARN_DECLARE_OBJECT(DuplicateColumnVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(DuplicateColumnVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;    
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;    
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(DuplicateColumnVariable);
 
 inline Var duplicateColumn(Var v, int the_width)
 { 
-  if(!v->isColumnVec())
-    PLERROR("In duplicateColumn: v is not a single-column var");
-  if(the_width==1)
-    return v;
-  else
-    return new DuplicateColumnVariable(v,the_width); 
+    if(!v->isColumnVec())
+        PLERROR("In duplicateColumn: v is not a single-column var");
+    if(the_width==1)
+        return v;
+    else
+        return new DuplicateColumnVariable(v,the_width); 
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

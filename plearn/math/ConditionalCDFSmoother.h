@@ -37,8 +37,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalCDFSmoother.h,v 1.7 2004/09/14 16:04:36 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file ConditionalCDFSmoother.h */
 #ifndef ConditionalCDFSmoother_INC
@@ -53,79 +53,92 @@ using namespace std;
 class ConditionalCDFSmoother: public Smoother
 {
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
     
 public:
 
-  typedef Smoother inherited;
+    typedef Smoother inherited;
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  PP<HistogramDistribution> prior_cdf;
+    PP<HistogramDistribution> prior_cdf;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  ConditionalCDFSmoother();
-  ConditionalCDFSmoother(PP<HistogramDistribution>& prior_cdf_);
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    ConditionalCDFSmoother();
+    ConditionalCDFSmoother(PP<HistogramDistribution>& prior_cdf_);
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(ConditionalCDFSmoother);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(ConditionalCDFSmoother);
 
 
-  /****
-   * ConditionalCDFSmoother methods
-   */
+    /****
+     * ConditionalCDFSmoother methods
+     */
 
- public:
-  // The source function is either f(i) = source_function[i] as a function of i
-  // or if bin_positions is provided (non-zero length), 
-  //    f(x) = source_function[i]
-  //      where i is s.t. bin_positions[i]>x>=bin_positions[i+1]
-  // the optional bin_positions vector has length 0, or 1 more than source_function.
-  // By default (if not provided) the dest_bin_positions are assumed the same as the source bin_positions.
-  // Returns integral(smoothed_function).
-  virtual real smooth(const Vec& source_function, Vec& smoothed_function, 
-		      Vec bin_positions = Vec(), Vec dest_bin_positions = Vec()) const;
+public:
+    // The source function is either f(i) = source_function[i] as a function of i
+    // or if bin_positions is provided (non-zero length), 
+    //    f(x) = source_function[i]
+    //      where i is s.t. bin_positions[i]>x>=bin_positions[i+1]
+    // the optional bin_positions vector has length 0, or 1 more than source_function.
+    // By default (if not provided) the dest_bin_positions are assumed the same as the source bin_positions.
+    // Returns integral(smoothed_function).
+    virtual real smooth(const Vec& source_function, Vec& smoothed_function, 
+                        Vec bin_positions = Vec(), Vec dest_bin_positions = Vec()) const;
 
-  //   real smooth(const HistogramCDF& source_cdf, HistogramCDF& dest_cdf);
+    //   real smooth(const HistogramCDF& source_cdf, HistogramCDF& dest_cdf);
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(ConditionalCDFSmoother);
+DECLARE_OBJECT_PTR(ConditionalCDFSmoother);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

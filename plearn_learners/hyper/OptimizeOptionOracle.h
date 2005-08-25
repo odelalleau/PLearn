@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
-* $Id: OptimizeOptionOracle.h,v 1.2 2005/01/12 14:43:29 tihocan Exp $
-******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -53,74 +53,74 @@ class OptimizeOptionOracle: public OptionsOracle
 
 private:
 
-  typedef OptionsOracle inherited;
+    typedef OptionsOracle inherited;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  string current_direction;
-  real best;
-  real best_objective;
-  real lower_bound;
-  int n_steps;
-  real upper_bound;
+    string current_direction;
+    real best;
+    real best_objective;
+    real lower_bound;
+    int n_steps;
+    real upper_bound;
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  real factor;
-  int max_steps;
-  real max_value;
-  real min_value;
-  real relative_precision;
-  string option;
-  string start_direction;
-  real start_value;
+    real factor;
+    int max_steps;
+    real max_value;
+    real min_value;
+    real relative_precision;
+    string option;
+    string start_direction;
+    real start_value;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  OptimizeOptionOracle();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    OptimizeOptionOracle();
 
 
-  // ******************
-  // * OptionsOracle methods *
-  // ******************
+    // ******************
+    // * OptionsOracle methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  //! Overridden.
-  virtual TVec<string> getOptionNames() const;
-  virtual TVec<string> generateNextTrial(const TVec<string>& older_trial, real obtained_objective);
-  virtual void forget();
+    //! Overridden.
+    virtual TVec<string> getOptionNames() const;
+    virtual TVec<string> generateNextTrial(const TVec<string>& older_trial, real obtained_objective);
+    virtual void forget();
 
-  // Simply calls inherited::build() then build_() 
-  virtual void build();
+    // Simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(OptimizeOptionOracle);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(OptimizeOptionOracle);
 
 };
 
@@ -130,3 +130,16 @@ DECLARE_OBJECT_PTR(OptimizeOptionOracle);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

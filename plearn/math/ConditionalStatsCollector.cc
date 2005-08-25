@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalStatsCollector.cc,v 1.7 2004/09/14 16:04:36 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -47,14 +47,14 @@ namespace PLearn {
 using namespace std;
 
 ConditionalStatsCollector::ConditionalStatsCollector() 
-  : inherited(),
-    condvar(0) 
+    : inherited(),
+      condvar(0) 
 {}
 
-  PLEARN_IMPLEMENT_OBJECT(ConditionalStatsCollector, "ONE LINE DESCRIPTION", "MULTI LINE\nHELP");
+PLEARN_IMPLEMENT_OBJECT(ConditionalStatsCollector, "ONE LINE DESCRIPTION", "MULTI LINE\nHELP");
 
-  void ConditionalStatsCollector::declareOptions(OptionList& ol)
-  {
+void ConditionalStatsCollector::declareOptions(OptionList& ol)
+{
     // ### Declare all of this object's options here
     // ### For the "flags" of each option, you should typically specify  
     // ### one of OptionBase::buildoption, OptionBase::learntoption or 
@@ -118,53 +118,53 @@ ConditionalStatsCollector::ConditionalStatsCollector()
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
+}
 
-  void ConditionalStatsCollector::build_()
-  {
+void ConditionalStatsCollector::build_()
+{
     if(counts.size()==0)
-      forget();
-  }
+        forget();
+}
 
-  // ### Nothing to add here, simply calls build_
-  void ConditionalStatsCollector::build()
-  {
+// ### Nothing to add here, simply calls build_
+void ConditionalStatsCollector::build()
+{
     inherited::build();
     build_();
-  }
+}
 
 void ConditionalStatsCollector::forget()
 {
-  counts.resize(0);
-  sums.resize(0);
-  sumsquares.resize(0);
-  minima.resize(0);
-  maxima.resize(0);
-  sums_condvar.resize(0);
-  sumsquares_condvar.resize(0);
-  minima_condvar.resize(0);
-  maxima_condvar.resize(0);
+    counts.resize(0);
+    sums.resize(0);
+    sumsquares.resize(0);
+    minima.resize(0);
+    maxima.resize(0);
+    sums_condvar.resize(0);
+    sumsquares_condvar.resize(0);
+    minima_condvar.resize(0);
+    maxima_condvar.resize(0);
 }
 
 void ConditionalStatsCollector::setBinMappingsAndCondvar(const TVec<RealMapping>& the_ranges, int the_condvar) 
 { 
-  ranges = the_ranges;
-  condvar = the_condvar;
-  forget();
+    ranges = the_ranges;
+    condvar = the_condvar;
+    forget();
 }
 
 int ConditionalStatsCollector::findrange(int varindex, real val) const
 {
-  RealMapping& r = ranges[varindex];
-  int pos = -1;
-  if(is_missing(val))
-    pos = r.length();
-  else
+    RealMapping& r = ranges[varindex];
+    int pos = -1;
+    if(is_missing(val))
+        pos = r.length();
+    else
     {
-      pos = (int) r.map(val);
-      /*
-      if(pos==-1)
-        {
+        pos = (int) r.map(val);
+        /*
+          if(pos==-1)
+          {
           real minimum = r.begin()->first.low;
           real maximum = (--r.end())->first.high;
 
@@ -172,95 +172,95 @@ int ConditionalStatsCollector::findrange(int varindex, real val) const
           cerr << r << endl;
 
           if(val>maximum && val-maximum<1e-6)
-            pos = r.length()-1;
+          pos = r.length()-1;
           else if(val<minimum && minimum-val<1e-6)
-            pos = 0;
-        }
-      */
+          pos = 0;
+          }
+        */
     }
-  return pos;
+    return pos;
 }
   
 void ConditionalStatsCollector::update(const Vec& v, real weight)
 {
-  int nvars = ranges.length();
-  if(v.length()!=nvars)
-    PLERROR("IN ConditionalStatsCollectos::update length of update vector and nvars differ!");
+    int nvars = ranges.length();
+    if(v.length()!=nvars)
+        PLERROR("IN ConditionalStatsCollectos::update length of update vector and nvars differ!");
 
-  if(counts.length()!=nvars)
+    if(counts.length()!=nvars)
     {
-      counts.resize(nvars);
-      sums.resize(nvars);
-      sums_condvar.resize(nvars);
-      sumsquares.resize(nvars);
-      sumsquares_condvar.resize(nvars);
-      minima.resize(nvars);
-      minima_condvar.resize(nvars);
-      maxima.resize(nvars);
-      maxima_condvar.resize(nvars);
-      int nranges_condvar = ranges[condvar].length()+1; // +1 for missing values
-      for(int k=0; k<nvars; k++)
+        counts.resize(nvars);
+        sums.resize(nvars);
+        sums_condvar.resize(nvars);
+        sumsquares.resize(nvars);
+        sumsquares_condvar.resize(nvars);
+        minima.resize(nvars);
+        minima_condvar.resize(nvars);
+        maxima.resize(nvars);
+        maxima_condvar.resize(nvars);
+        int nranges_condvar = ranges[condvar].length()+1; // +1 for missing values
+        for(int k=0; k<nvars; k++)
         {        
-          int nranges_k = ranges[k].length()+1; // +1 for missing values
-          counts[k].resize(nranges_k, nranges_condvar);
-          counts[k].fill(0);
-          sums[k].resize(nranges_k, nranges_condvar);
-          sums[k].fill(0);
-          sums_condvar[k].resize(nranges_condvar, nranges_k);
-          sums_condvar[k].fill(0);
-          sumsquares[k].resize(nranges_k, nranges_condvar);
-          sumsquares[k].fill(0);
-          sumsquares_condvar[k].resize(nranges_condvar, nranges_k);
-          sumsquares_condvar[k].fill(0);
-          minima[k].resize(nranges_k, nranges_condvar);
-          minima[k].fill(FLT_MAX);
-          minima_condvar[k].resize(nranges_condvar, nranges_k);
-          minima_condvar[k].fill(FLT_MAX);
-          maxima[k].resize(nranges_k, nranges_condvar);
-          maxima[k].fill(-FLT_MAX);
-          maxima_condvar[k].resize(nranges_condvar, nranges_k);
-          maxima_condvar[k].fill(-FLT_MAX);
+            int nranges_k = ranges[k].length()+1; // +1 for missing values
+            counts[k].resize(nranges_k, nranges_condvar);
+            counts[k].fill(0);
+            sums[k].resize(nranges_k, nranges_condvar);
+            sums[k].fill(0);
+            sums_condvar[k].resize(nranges_condvar, nranges_k);
+            sums_condvar[k].fill(0);
+            sumsquares[k].resize(nranges_k, nranges_condvar);
+            sumsquares[k].fill(0);
+            sumsquares_condvar[k].resize(nranges_condvar, nranges_k);
+            sumsquares_condvar[k].fill(0);
+            minima[k].resize(nranges_k, nranges_condvar);
+            minima[k].fill(FLT_MAX);
+            minima_condvar[k].resize(nranges_condvar, nranges_k);
+            minima_condvar[k].fill(FLT_MAX);
+            maxima[k].resize(nranges_k, nranges_condvar);
+            maxima[k].fill(-FLT_MAX);
+            maxima_condvar[k].resize(nranges_condvar, nranges_k);
+            maxima_condvar[k].fill(-FLT_MAX);
         }
     }
 
-  real condvar_val = v[condvar];
-  int j = findrange(condvar, condvar_val);
-  if(j==-1)
-    PLWARNING("In ConditionalStatsCollector::update value of conditioning var in none of the ranges");
-  for(int k=0; k<nvars; k++)
-  {
-    real val = v[k];
-    int i = findrange(k, val);
-    if(i==-1)
-      {
-        PLWARNING("In ConditionalStatsCollector::update value of variable #%d in none of the ranges",k);
-      }
+    real condvar_val = v[condvar];
+    int j = findrange(condvar, condvar_val);
+    if(j==-1)
+        PLWARNING("In ConditionalStatsCollector::update value of conditioning var in none of the ranges");
+    for(int k=0; k<nvars; k++)
+    {
+        real val = v[k];
+        int i = findrange(k, val);
+        if(i==-1)
+        {
+            PLWARNING("In ConditionalStatsCollector::update value of variable #%d in none of the ranges",k);
+        }
 
-    counts[k](i,j)+=weight;
-    if(!is_missing(val))
-      {
-        sums[k](i,j) += weight*val;
-        sumsquares[k](i,j) += weight*square(val);
-        if(val<minima[k](i,j))
-          minima[k](i,j) = val;
-        if(val>maxima[k](i,j))
-          maxima[k](i,j) = val;
-      }
+        counts[k](i,j)+=weight;
+        if(!is_missing(val))
+        {
+            sums[k](i,j) += weight*val;
+            sumsquares[k](i,j) += weight*square(val);
+            if(val<minima[k](i,j))
+                minima[k](i,j) = val;
+            if(val>maxima[k](i,j))
+                maxima[k](i,j) = val;
+        }
 
-    if(!is_missing(condvar_val))
-      {
-        sums_condvar[k](j,i) += weight*condvar_val;
-        sumsquares_condvar[k](j,i) += weight*square(condvar_val);
-        if(condvar_val<minima_condvar[k](j,i))
-          minima_condvar[k](j,i) = condvar_val;
-        if(condvar_val>maxima_condvar[k](j,i))
-          maxima_condvar[k](j,i) = condvar_val;
-      }
-  }
+        if(!is_missing(condvar_val))
+        {
+            sums_condvar[k](j,i) += weight*condvar_val;
+            sumsquares_condvar[k](j,i) += weight*square(condvar_val);
+            if(condvar_val<minima_condvar[k](j,i))
+                minima_condvar[k](j,i) = condvar_val;
+            if(condvar_val>maxima_condvar[k](j,i))
+                maxima_condvar[k](j,i) = condvar_val;
+        }
+    }
 }
 
-  void ConditionalStatsCollector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-  {
+void ConditionalStatsCollector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(ranges, copies); 
@@ -273,6 +273,19 @@ void ConditionalStatsCollector::update(const Vec& v, real weight)
     deepCopyField(sumsquares_condvar, copies);
     deepCopyField(minima_condvar, copies);
     deepCopyField(maxima_condvar, copies);
-  }
+}
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

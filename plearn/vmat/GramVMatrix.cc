@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GramVMatrix.cc,v 1.3 2005/05/20 13:54:01 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -51,46 +51,46 @@ using namespace std;
 // GramVMatrix //
 //////////////////
 GramVMatrix::GramVMatrix() 
-: verbosity(1)
+    : verbosity(1)
 {
 }
 
 PLEARN_IMPLEMENT_OBJECT(GramVMatrix,
-    "Computes the Gram matrix of a given kernel.",
-    "Currently, this class inherits from a MemoryVMatrix, and the Gram matrix\n"
-    "is stored in memory.\n"
-);
+                        "Computes the Gram matrix of a given kernel.",
+                        "Currently, this class inherits from a MemoryVMatrix, and the Gram matrix\n"
+                        "is stored in memory.\n"
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void GramVMatrix::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  declareOption(ol, "kernel", &GramVMatrix::kernel, OptionBase::buildoption,
-      "The kernel whose Gram matrix we want to compute.");
+    declareOption(ol, "kernel", &GramVMatrix::kernel, OptionBase::buildoption,
+                  "The kernel whose Gram matrix we want to compute.");
 
-  declareOption(ol, "verbosity", &GramVMatrix::verbosity, OptionBase::buildoption,
-      "The level of verbosity.");
+    declareOption(ol, "verbosity", &GramVMatrix::verbosity, OptionBase::buildoption,
+                  "The level of verbosity.");
 
-  //               "Help text describing this option");
-  // ...
+    //               "Help text describing this option");
+    // ...
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 
-  // Hide the 'data' and 'data_vm' options of a MemoryVMatrix, that are
-  // not used in this subclass.
-  redeclareOption(ol, "data", &GramVMatrix::data, OptionBase::nosave,
-      "Not needed here.");
+    // Hide the 'data' and 'data_vm' options of a MemoryVMatrix, that are
+    // not used in this subclass.
+    redeclareOption(ol, "data", &GramVMatrix::data, OptionBase::nosave,
+                    "Not needed here.");
 
-  redeclareOption(ol, "data_vm", &GramVMatrix::data_vm, OptionBase::nosave,
-      "Not needed here.");
+    redeclareOption(ol, "data_vm", &GramVMatrix::data_vm, OptionBase::nosave,
+                    "Not needed here.");
 
 }
 
@@ -99,8 +99,8 @@ void GramVMatrix::declareOptions(OptionList& ol)
 ///////////
 void GramVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -108,24 +108,24 @@ void GramVMatrix::build()
 ////////////
 void GramVMatrix::build_()
 {
-  if (kernel) {
-    bool old_report_progress = kernel->report_progress;
-    if (verbosity < 1) {
-      kernel->report_progress = false;
+    if (kernel) {
+        bool old_report_progress = kernel->report_progress;
+        if (verbosity < 1) {
+            kernel->report_progress = false;
+        }
+        int n = kernel->getData()->length();
+        data.resize(n, n);
+        clock_t time_for_gram = clock();
+        kernel->computeGramMatrix(data);
+        time_for_gram = clock() - time_for_gram;
+        real real_time_for_gram = real(time_for_gram) / real(CLOCKS_PER_SEC);
+        if (verbosity >= 2) {
+            cout << "Time to compute the Gram matrix: " << real_time_for_gram << endl;
+        }
+        kernel->report_progress = old_report_progress;
+        length_ = width_ = n;
+        inherited::build();
     }
-    int n = kernel->getData()->length();
-    data.resize(n, n);
-    clock_t time_for_gram = clock();
-    kernel->computeGramMatrix(data);
-    time_for_gram = clock() - time_for_gram;
-    real real_time_for_gram = real(time_for_gram) / real(CLOCKS_PER_SEC);
-    if (verbosity >= 2) {
-      cout << "Time to compute the Gram matrix: " << real_time_for_gram << endl;
-    }
-    kernel->report_progress = old_report_progress;
-    length_ = width_ = n;
-    inherited::build();
-  }
 }
 
 /////////////////////////////////
@@ -133,16 +133,29 @@ void GramVMatrix::build_()
 /////////////////////////////////
 void GramVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("GramVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("GramVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

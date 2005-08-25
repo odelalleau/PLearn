@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BinaryStump.h,v 1.2 2005/04/27 16:17:47 larocheh Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle
 
@@ -54,102 +54,102 @@ class BinaryStump: public PLearner
 
 private:
 
-  typedef PLearner inherited;
-  TVec< pair<int, real> > sf;
+    typedef PLearner inherited;
+    TVec< pair<int, real> > sf;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  int feature;
-  int tag;
-  real threshold;
+    int feature;
+    int tag;
+    real threshold;
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  // (Make sure the implementation in the .cc
-  // initializes all fields to reasonable default values)
-  BinaryStump();
+    //! Default constructor.
+    // (Make sure the implementation in the .cc
+    // initializes all fields to reasonable default values)
+    BinaryStump();
 
 
-  // ********************
-  // * PLearner methods *
-  // ********************
+    // ********************
+    // * PLearner methods *
+    // ********************
 
 private: 
 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  // If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT.
-  PLEARN_DECLARE_OBJECT(BinaryStump);
+    // Declares other standard object methods.
+    // If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT.
+    PLEARN_DECLARE_OBJECT(BinaryStump);
 
 
-  // **************************
-  // **** PLearner methods ****
-  // **************************
+    // **************************
+    // **** PLearner methods ****
+    // **************************
 
-  //! Returns the size of this learner's output, (which typically
-  //! may depend on its inputsize(), targetsize() and set options).
-  virtual int outputsize() const;
+    //! Returns the size of this learner's output, (which typically
+    //! may depend on its inputsize(), targetsize() and set options).
+    virtual int outputsize() const;
 
-  //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
-  //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
-  virtual void forget();
+    //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
+    //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
+    virtual void forget();
 
     
-  //! The role of the train method is to bring the learner up to stage==nstages,
-  //! updating the train_stats collector with training costs measured on-line in the process.
-  virtual void train();
+    //! The role of the train method is to bring the learner up to stage==nstages,
+    //! updating the train_stats collector with training costs measured on-line in the process.
+    virtual void train();
 
 
-  //! Computes the output from the input.
-  virtual void computeOutput(const Vec& input, Vec& output) const;
+    //! Computes the output from the input.
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
-  //! Computes the costs from already computed output. 
-  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                       const Vec& target, Vec& costs) const;
+    //! Computes the costs from already computed output. 
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const;
                                 
 
-  //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
-  virtual TVec<string> getTestCostNames() const;
+    //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
+    virtual TVec<string> getTestCostNames() const;
 
-  //! Returns the names of the objective costs that the train method computes and 
-  //! for which it updates the VecStatsCollector train_stats.
-  virtual TVec<string> getTrainCostNames() const;
+    //! Returns the names of the objective costs that the train method computes and 
+    //! for which it updates the VecStatsCollector train_stats.
+    virtual TVec<string> getTrainCostNames() const;
 
 };
 
@@ -159,3 +159,16 @@ DECLARE_OBJECT_PTR(BinaryStump);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

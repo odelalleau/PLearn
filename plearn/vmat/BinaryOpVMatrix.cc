@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BinaryOpVMatrix.cc,v 1.1 2005/04/27 14:21:11 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -52,84 +52,96 @@ BinaryOpVMatrix::BinaryOpVMatrix()
 }
 
 PLEARN_IMPLEMENT_OBJECT(BinaryOpVMatrix,
-    "This VMat allows simple binary operations on two VMatrix.",
-    "It is assumed that the two matrices are the same size"
-);
+                        "This VMat allows simple binary operations on two VMatrix.",
+                        "It is assumed that the two matrices are the same size"
+    );
 
 void BinaryOpVMatrix::getNewRow(int i, const Vec& v) const
 {
-  assert( vm1 && vm2 );
-  row1.resize(vm1.width());
-  row2.resize(vm2.width());
-  assert( row1.size() == row2.size() );
-  assert( v.size()    == row1.size() );
+    assert( vm1 && vm2 );
+    row1.resize(vm1.width());
+    row2.resize(vm2.width());
+    assert( row1.size() == row2.size() );
+    assert( v.size()    == row1.size() );
 
-  vm1->getRow(i, row1);
-  vm2->getRow(i, row2);
+    vm1->getRow(i, row1);
+    vm2->getRow(i, row2);
   
-  for (int i=0, n=row1.size() ; i<n ; ++i)
-    v[i] = selected_op(row1[i], row2[i]);
+    for (int i=0, n=row1.size() ; i<n ; ++i)
+        v[i] = selected_op(row1[i], row2[i]);
 }
 
 void BinaryOpVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "vm1", &BinaryOpVMatrix::vm1, OptionBase::buildoption,
-                "First VMatrix to operate on");
+    declareOption(ol, "vm1", &BinaryOpVMatrix::vm1, OptionBase::buildoption,
+                  "First VMatrix to operate on");
   
-  declareOption(ol, "vm2", &BinaryOpVMatrix::vm2, OptionBase::buildoption,
-                "Second VMatrix to operate on");
+    declareOption(ol, "vm2", &BinaryOpVMatrix::vm2, OptionBase::buildoption,
+                  "Second VMatrix to operate on");
 
-  declareOption(ol, "op", &BinaryOpVMatrix::op, OptionBase::buildoption,
-                "Operation to perform; may be \"add\", \"sub\", \"mult\", \"div\"");
+    declareOption(ol, "op", &BinaryOpVMatrix::op, OptionBase::buildoption,
+                  "Operation to perform; may be \"add\", \"sub\", \"mult\", \"div\"");
   
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void BinaryOpVMatrix::build_()
 {
-  if (! vm1)
-    PLERROR("BinaryOpVMatrix::build_: vm1 not defined");
-  if (! vm2)
-    PLERROR("BinaryOpVMatrix::build_: vm2 not defined");
-  if (vm1.length() != vm2.length())
-    PLERROR("BinaryOpVMatrix::build_: vm1 has %d rows but vm2 has %d rows; both must "
-            "have the same number of rows.", vm1.length(), vm2.length());
-  if (vm1.width() != vm2.width())
-    PLERROR("BinaryOpVMatrix::build_: vm1 has %d columns but vm2 has %d columns; both must "
-            "have the same number of columns.", vm1.width(), vm2.width());
+    if (! vm1)
+        PLERROR("BinaryOpVMatrix::build_: vm1 not defined");
+    if (! vm2)
+        PLERROR("BinaryOpVMatrix::build_: vm2 not defined");
+    if (vm1.length() != vm2.length())
+        PLERROR("BinaryOpVMatrix::build_: vm1 has %d rows but vm2 has %d rows; both must "
+                "have the same number of rows.", vm1.length(), vm2.length());
+    if (vm1.width() != vm2.width())
+        PLERROR("BinaryOpVMatrix::build_: vm1 has %d columns but vm2 has %d columns; both must "
+                "have the same number of columns.", vm1.width(), vm2.width());
 
-  if (op == "add")
-    selected_op = op_add;
-  else if (op == "sub")
-    selected_op = op_sub;
-  else if (op == "mult")
-    selected_op = op_mul;
-  else if (op == "div")
-    selected_op = op_div;
-  else
-    PLERROR("BinaryOpVMatrix::build_: unknown operation type \"%s\"; supported operatrions "
-            "are \"add\", \"sub\", \"mult\", \"div\"", op.c_str());
+    if (op == "add")
+        selected_op = op_add;
+    else if (op == "sub")
+        selected_op = op_sub;
+    else if (op == "mult")
+        selected_op = op_mul;
+    else if (op == "div")
+        selected_op = op_div;
+    else
+        PLERROR("BinaryOpVMatrix::build_: unknown operation type \"%s\"; supported operatrions "
+                "are \"add\", \"sub\", \"mult\", \"div\"", op.c_str());
 
-  // Copy the metainformation from first VMat
-  setMetaInfoFrom(vm1);
+    // Copy the metainformation from first VMat
+    setMetaInfoFrom(vm1);
 }
 
 // ### Nothing to add here, simply calls build_
 void BinaryOpVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void BinaryOpVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(row1, copies);
-  deepCopyField(row2, copies);
-  deepCopyField(vm1, copies);
-  deepCopyField(vm2, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(row1, copies);
+    deepCopyField(row2, copies);
+    deepCopyField(vm1, copies);
+    deepCopyField(vm2, copies);
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

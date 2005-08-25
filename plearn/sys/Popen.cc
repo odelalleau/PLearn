@@ -36,9 +36,9 @@
  
 
 /* *******************************************************      
-   * $Id: Popen.cc,v 1.9 2005/01/21 22:22:36 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "Popen.h"
 
@@ -56,134 +56,144 @@ using namespace std;
 
 void Popen::launch(const string& program, const vector<string>& arguments)
 {
-  // Create pipes to communicate to/from child process.
-  PRFileDesc* stdout_child;
-  PRFileDesc* stdout_parent;
+    // Create pipes to communicate to/from child process.
+    PRFileDesc* stdout_child;
+    PRFileDesc* stdout_parent;
   
-  if (PR_CreatePipe(&stdout_parent, &stdout_child) != PR_SUCCESS)
-    PLERROR("Popen: error creating first pipe pair. (%s)",
-            getPrErrorString().c_str());
-  PRFileDesc* stdin_child;
-  PRFileDesc* stdin_parent;
+    if (PR_CreatePipe(&stdout_parent, &stdout_child) != PR_SUCCESS)
+        PLERROR("Popen: error creating first pipe pair. (%s)",
+                getPrErrorString().c_str());
+    PRFileDesc* stdin_child;
+    PRFileDesc* stdin_parent;
 
-  if (PR_CreatePipe(&stdin_child, &stdin_parent) != PR_SUCCESS) {
-    PR_Close(stdout_child);
-    PR_Close(stdout_parent);
-    PLERROR("Popen: error creating second pipe pair. (%s)",
-            getPrErrorString().c_str());
-  }
-
-  // Set up redirection of stdin/stdout for the (future) child process.
-  PRProcessAttr* process_attr = PR_NewProcessAttr();
-  PR_ProcessAttrSetStdioRedirect(process_attr, PR_StandardInput, stdin_child);
-  PR_ProcessAttrSetStdioRedirect(process_attr, PR_StandardOutput, stdout_child);
-
-  // Set up argument list for the CreateProcess call. args[0] shoud be the
-  // name of the program. args[1]...arg[n] hold the actual arguments,
-  // arg[n+1] is NULL.
-#if !defined(_MINGW_) && !defined(WIN32)
-  const char** args = new const char*[4];
-  // NSPR doesn't have a way to search through the PATH when creating
-  // a new process. Use /bin/sh for now to spawn the process as a workaround.
-  args[0] = "/bin/sh";
-  args[1] = "-c";
-
-  string concatenated_args = program;
-  for (vector<string>::const_iterator it = arguments.begin(); it != arguments.end();
-       ++it)
-    {
-      concatenated_args += " '";
-      concatenated_args += *it;
-      concatenated_args += "'";
+    if (PR_CreatePipe(&stdin_child, &stdin_parent) != PR_SUCCESS) {
+        PR_Close(stdout_child);
+        PR_Close(stdout_parent);
+        PLERROR("Popen: error creating second pipe pair. (%s)",
+                getPrErrorString().c_str());
     }
-  args[2] = concatenated_args.c_str();
-  args[3] = 0;
+
+    // Set up redirection of stdin/stdout for the (future) child process.
+    PRProcessAttr* process_attr = PR_NewProcessAttr();
+    PR_ProcessAttrSetStdioRedirect(process_attr, PR_StandardInput, stdin_child);
+    PR_ProcessAttrSetStdioRedirect(process_attr, PR_StandardOutput, stdout_child);
+
+    // Set up argument list for the CreateProcess call. args[0] shoud be the
+    // name of the program. args[1]...arg[n] hold the actual arguments,
+    // arg[n+1] is NULL.
+#if !defined(_MINGW_) && !defined(WIN32)
+    const char** args = new const char*[4];
+    // NSPR doesn't have a way to search through the PATH when creating
+    // a new process. Use /bin/sh for now to spawn the process as a workaround.
+    args[0] = "/bin/sh";
+    args[1] = "-c";
+
+    string concatenated_args = program;
+    for (vector<string>::const_iterator it = arguments.begin(); it != arguments.end();
+         ++it)
+    {
+        concatenated_args += " '";
+        concatenated_args += *it;
+        concatenated_args += "'";
+    }
+    args[2] = concatenated_args.c_str();
+    args[3] = 0;
   
-  process = PR_CreateProcess("/bin/sh",
-                             const_cast<char* const *>(args),
-                             NULL, process_attr);
+    process = PR_CreateProcess("/bin/sh",
+                               const_cast<char* const *>(args),
+                               NULL, process_attr);
 #else
-  const char** args = new const char*[arguments.size()+2];
-  // PR_CreateProcess on Windows goes through the PATH.
-  // No workaround needed here.
-  args[0] = program.c_str();
-  int i = 1;
-  for (vector<string>::const_iterator it = arguments.begin(); it != arguments.end();
-       ++it)
-    args[i++] = it->c_str();
-  args[i] = 0;
+    const char** args = new const char*[arguments.size()+2];
+    // PR_CreateProcess on Windows goes through the PATH.
+    // No workaround needed here.
+    args[0] = program.c_str();
+    int i = 1;
+    for (vector<string>::const_iterator it = arguments.begin(); it != arguments.end();
+         ++it)
+        args[i++] = it->c_str();
+    args[i] = 0;
   
-  process = PR_CreateProcess(program.c_str(),
-                             const_cast<char* const *>(args),
-                             NULL, process_attr);  
+    process = PR_CreateProcess(program.c_str(),
+                               const_cast<char* const *>(args),
+                               NULL, process_attr);  
 #endif
 
-  // Important: close unused files in the parent.
-  PR_Close(stdin_child);
-  PR_Close(stdout_child);
+    // Important: close unused files in the parent.
+    PR_Close(stdin_child);
+    PR_Close(stdout_child);
   
-  delete[] args;                        
-  if (!process) {
-    PR_Close(stdin_parent);
-    PR_Close(stdout_parent);
-    PLERROR("Popen: could not create subprocess. (%s)",
-            getPrErrorString().c_str());
-  }
-  process_alive = true;
+    delete[] args;                        
+    if (!process) {
+        PR_Close(stdin_parent);
+        PR_Close(stdout_parent);
+        PLERROR("Popen: could not create subprocess. (%s)",
+                getPrErrorString().c_str());
+    }
+    process_alive = true;
 
-  in = new PrPStreamBuf(stdout_parent, stdin_parent);
-  in.setBufferCapacities(0, 0, 0);
-  out = in;
+    in = new PrPStreamBuf(stdout_parent, stdin_parent);
+    in.setBufferCapacities(0, 0, 0);
+    out = in;
 }
 
 
 void Popen::launch(const string& commandline)
 {
-  // Parse command line into individual argments
-  PStream s = openString(string("[") + commandline + "]",
-                         PStream::plearn_ascii);
+    // Parse command line into individual argments
+    PStream s = openString(string("[") + commandline + "]",
+                           PStream::plearn_ascii);
   
-  vector<string> command_and_args;
-  s >> command_and_args;
-  const string command = command_and_args[0];
-  const vector<string> args(command_and_args.begin()+1,
-                            command_and_args.end());
-  launch(command, args);
+    vector<string> command_and_args;
+    s >> command_and_args;
+    const string command = command_and_args[0];
+    const vector<string> args(command_and_args.begin()+1,
+                              command_and_args.end());
+    launch(command, args);
 }
 
 
 int Popen::wait()
 {
-  int status = 0;
-  if (process_alive)
-    if (PR_WaitProcess(process, &status) != PR_SUCCESS)
-      PLERROR("Popen: error while waiting for subprocess to terminate. (%s)",
-              getPrErrorString().c_str());
-  process_alive = false;
+    int status = 0;
+    if (process_alive)
+        if (PR_WaitProcess(process, &status) != PR_SUCCESS)
+            PLERROR("Popen: error while waiting for subprocess to terminate. (%s)",
+                    getPrErrorString().c_str());
+    process_alive = false;
   
-  return status;
+    return status;
 }
 
 
 Popen::~Popen()
 {
-  wait();
+    wait();
 }
 
   
 vector<string> execute(const string& command)
 {
-  Popen p(command);
-  vector<string> result;
-  while(p.in)
+    Popen p(command);
+    vector<string> result;
+    while(p.in)
     {
-      string line = p.in.getline();
-      result.push_back(line);
+        string line = p.in.getline();
+        result.push_back(line);
     }
-  return result;
+    return result;
 }
 
 } // end of namespace PLearn
 
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.h,v 1.9 2004/07/07 17:30:48 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -53,40 +53,40 @@ using namespace std;
 
 class ConcatColumnsVMatrix: public RowBufferedVMatrix
 {
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
- protected:
-  Array<VMat> array;
+protected:
+    Array<VMat> array;
   
- public:
+public:
 
-  bool no_duplicate_fieldnames;
+    bool no_duplicate_fieldnames;
 
-  //! The lists of VMFields are appended upon construction.  The case where
-  //! some VMat may have some fields and others not is handled properly.
-  ConcatColumnsVMatrix(Array<VMat> the_array=Array<VMat>());
-  ConcatColumnsVMatrix(VMat d1, VMat d2);
+    //! The lists of VMFields are appended upon construction.  The case where
+    //! some VMat may have some fields and others not is handled properly.
+    ConcatColumnsVMatrix(Array<VMat> the_array=Array<VMat>());
+    ConcatColumnsVMatrix(VMat d1, VMat d2);
 
- protected:
+protected:
 
-  static void declareOptions(OptionList &ol);
-  virtual void getNewRow(int i, const Vec& samplevec) const; 
+    static void declareOptions(OptionList &ol);
+    virtual void getNewRow(int i, const Vec& samplevec) const; 
 
- public:
+public:
 
-  virtual real getStringVal(int col, const string & str) const;
-  //! returns the whole string->value mapping
-  const map<string,real>& getStringMapping(int col) const;
-  virtual string getValString(int col, real val) const;
-  virtual string getString(int row,int col) const;
-  virtual void reset_dimensions() { PLERROR("ConcatColumnsVMatrix::reset_dimensions() not implemented"); }
-  virtual real dot(int i1, int i2, int inputsize) const;
-  virtual real dot(int i, const Vec& v) const;
+    virtual real getStringVal(int col, const string & str) const;
+    //! returns the whole string->value mapping
+    const map<string,real>& getStringMapping(int col) const;
+    virtual string getValString(int col, real val) const;
+    virtual string getString(int row,int col) const;
+    virtual void reset_dimensions() { PLERROR("ConcatColumnsVMatrix::reset_dimensions() not implemented"); }
+    virtual real dot(int i1, int i2, int inputsize) const;
+    virtual real dot(int i, const Vec& v) const;
 
-  PLEARN_DECLARE_OBJECT(ConcatColumnsVMatrix);
-  virtual void build();
+    PLEARN_DECLARE_OBJECT(ConcatColumnsVMatrix);
+    virtual void build();
 private:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(ConcatColumnsVMatrix);
@@ -100,3 +100,16 @@ inline VMat hconcat(Array<VMat> ds)
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

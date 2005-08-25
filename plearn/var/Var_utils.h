@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: Var_utils.h,v 1.10 2004/02/20 21:11:54 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef Var_utils_INC
 #define Var_utils_INC
@@ -59,12 +59,12 @@ propagationPath is a function that computes and returns the VarArray correspondi
 
 Several operator overloading and function-like syntaxes allow the use of Vars with the usual intuitive expression notations.
 
- */
+*/
 
 /*! *******************************
-  * user-friendly Var interface *
-  *******************************
-*/
+ * user-friendly Var interface *
+ *******************************
+ */
 
 Var mean(Var v);
 Var neg_log_pi(Var p, Var index);
@@ -79,3 +79,15 @@ Var powdistance(Var input1, Var input2, real n);
 
 #endif 
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

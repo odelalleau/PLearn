@@ -55,48 +55,61 @@ using namespace std;
 
 class NllSemisphericalGaussianVariable: public NaryVariable
 {
-  typedef NaryVariable inherited;
+    typedef NaryVariable inherited;
   
 public:
-  int n; // dimension of the vectors
-  bool use_subspace_distance; // use subspace distance instead of distance to targets
-  bool use_noise;          // Indication that noise on the data should be used to learn the mu parameter
-  real epsilon; // cut-off of singular values to regularize linear system solution
-  real min_p_x;
-  int n_dim; // nb of vectors in f
-  int n_neighbors; // nb of neighbors
-  int mu_n_neighbors; // nb of neighbors to learn mu
-  Vec mu, sm, sn, S, noise, mu_noisy; 
-  Mat F, diff_y_x, z, B, Ut, V, zn, zm, z_noisy, zn_noisy, zm_noisy;
-  Vec p_neighbors, p_target;
-  Mat w; // weights in the above minimization, in each row for each t_j
+    int n; // dimension of the vectors
+    bool use_subspace_distance; // use subspace distance instead of distance to targets
+    bool use_noise;          // Indication that noise on the data should be used to learn the mu parameter
+    real epsilon; // cut-off of singular values to regularize linear system solution
+    real min_p_x;
+    int n_dim; // nb of vectors in f
+    int n_neighbors; // nb of neighbors
+    int mu_n_neighbors; // nb of neighbors to learn mu
+    Vec mu, sm, sn, S, noise, mu_noisy; 
+    Mat F, diff_y_x, z, B, Ut, V, zn, zm, z_noisy, zn_noisy, zm_noisy;
+    Vec p_neighbors, p_target;
+    Mat w; // weights in the above minimization, in each row for each t_j
 
-  //!  Default constructor for persistence
-  NllSemisphericalGaussianVariable() {}
-  NllSemisphericalGaussianVariable(const VarArray& the_varray, bool that_use_noise, real theepsilon, real min_p_x, int mu_n_neighbors);
+    //!  Default constructor for persistence
+    NllSemisphericalGaussianVariable() {}
+    NllSemisphericalGaussianVariable(const VarArray& the_varray, bool that_use_noise, real theepsilon, real min_p_x, int mu_n_neighbors);
 
-  PLEARN_DECLARE_OBJECT(NllSemisphericalGaussianVariable);
+    PLEARN_DECLARE_OBJECT(NllSemisphericalGaussianVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
     void build_();
 };
 
-  DECLARE_OBJECT_PTR(NllSemisphericalGaussianVariable);
+DECLARE_OBJECT_PTR(NllSemisphericalGaussianVariable);
 
-  inline Var nll_semispherical_gaussian(Var tangent_plane_var, Var mu_var, Var sm_var, Var sn_var, Var neighbors_dist_var, 
-                                                 Var p_target_var, Var p_neighbors_var, Var noise, Var mu_noisy, bool use_noise=false, real epsilon=1e-6, real min_p_x=0, int mu_n_neighbors=-1)
-  {
+inline Var nll_semispherical_gaussian(Var tangent_plane_var, Var mu_var, Var sm_var, Var sn_var, Var neighbors_dist_var, 
+                                      Var p_target_var, Var p_neighbors_var, Var noise, Var mu_noisy, bool use_noise=false, real epsilon=1e-6, real min_p_x=0, int mu_n_neighbors=-1)
+{
     return new NllSemisphericalGaussianVariable(tangent_plane_var & mu_var & sm_var & sn_var & neighbors_dist_var & p_target_var & p_neighbors_var & noise & mu_noisy,use_noise, epsilon, min_p_x, mu_n_neighbors);
-  }
+}
 
                             
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

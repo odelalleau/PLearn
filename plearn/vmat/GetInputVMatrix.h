@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GetInputVMatrix.h,v 1.2 2004/09/14 16:04:39 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,60 +54,60 @@ class GetInputVMatrix: public SelectColumnsVMatrix
 
 private:
 
-  typedef SelectColumnsVMatrix inherited;
+    typedef SelectColumnsVMatrix inherited;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  GetInputVMatrix();
+    //! Default constructor.
+    GetInputVMatrix();
 
-  //! Convenient constructor.
-  GetInputVMatrix(VMat the_source);
+    //! Convenient constructor.
+    GetInputVMatrix(VMat the_source);
 
 
-  // ******************
-  // * VMatrix methods *
-  // ******************
+    // ******************
+    // * VMatrix methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_()
-  virtual void build();
+    //! Simply calls inherited::build() then build_()
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods
-  PLEARN_DECLARE_OBJECT(GetInputVMatrix);
+    // Declares other standard object methods
+    PLEARN_DECLARE_OBJECT(GetInputVMatrix);
 
 };
 
@@ -117,3 +117,16 @@ DECLARE_OBJECT_PTR(GetInputVMatrix);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

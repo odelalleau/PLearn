@@ -35,9 +35,9 @@
 
 
 /* ********************************************************************************    
-   * $Id: BaseRegressorWrapper.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout   *
-   * This file is part of the PLearn library.                                     *
-   ******************************************************************************** */
+ * $Id: BaseRegressorWrapper.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout   *
+ * This file is part of the PLearn library.                                     *
+ ******************************************************************************** */
 
 /*! \file PLearnLibrary/PLearnAlgo/BaseRegressorWrapper.h */
 
@@ -55,7 +55,7 @@ using namespace std;
 
 class BaseRegressorWrapper: public PLearner
 {
-  typedef PLearner inherited;
+    typedef PLearner inherited;
   
 private:
 
@@ -63,26 +63,26 @@ private:
   Build options: they have to be set before training
 */
 
-  real loss_function_weight;                                // the hyper parameter to balance the error and the confidence factor
-  int  mean_imputation;                                     // if set to 1, the algorithm will perform mean imputation based on the training set
-  int regression_tree;                                      // indicator to use the tree_regressor_template is set to 1, and the base_regressor_template otherwise
-  int use_confidence_function;                              // indicator to use the confidence_function_template to build a confidence estimate
-  int use_base_regressor_confidence;                        // indicator to use the confidence computed as the second output of the base regressor
-  PP<PLearner> base_regressor_template;                     // template for a generic regressor as the base learner to be boosted 
-  PP<RegressionTree> tree_regressor_template;               // template for a tree regressor to be boosted as the base regressor
-  PP<BaseRegressorConfidence> confidence_function_template; // template for the confidence function to be learnt from the train set 
-  PP<RegressionTreeRegisters> sorted_train_set;             // a sorted train set when using a regression tree
+    real loss_function_weight;                                // the hyper parameter to balance the error and the confidence factor
+    int  mean_imputation;                                     // if set to 1, the algorithm will perform mean imputation based on the training set
+    int regression_tree;                                      // indicator to use the tree_regressor_template is set to 1, and the base_regressor_template otherwise
+    int use_confidence_function;                              // indicator to use the confidence_function_template to build a confidence estimate
+    int use_base_regressor_confidence;                        // indicator to use the confidence computed as the second output of the base regressor
+    PP<PLearner> base_regressor_template;                     // template for a generic regressor as the base learner to be boosted 
+    PP<RegressionTree> tree_regressor_template;               // template for a tree regressor to be boosted as the base regressor
+    PP<BaseRegressorConfidence> confidence_function_template; // template for the confidence function to be learnt from the train set 
+    PP<RegressionTreeRegisters> sorted_train_set;             // a sorted train set when using a regression tree
   
 /*
   Learnt options: they are sized and initialized if need be, at stage 0
 */
 
 
-  PP<PLearner> base_regressor;                              // base regressors built at each boosting stage 
-  PP<RegressionTree> tree_regressor;                        // base regressors built at each boosting stage 
-  PP<BaseRegressorConfidence> confidence_function;          // confidence function learnt from the train set
-  VMat base_regressor_train_set;                            // a train set with the chosen missing value strategies applied for the base regressor
-  TVec<real> variable_means;                                // the vector of variable means when doing mean imputation
+    PP<PLearner> base_regressor;                              // base regressors built at each boosting stage 
+    PP<RegressionTree> tree_regressor;                        // base regressors built at each boosting stage 
+    PP<BaseRegressorConfidence> confidence_function;          // confidence function learnt from the train set
+    VMat base_regressor_train_set;                            // a train set with the chosen missing value strategies applied for the base regressor
+    TVec<real> variable_means;                                // the vector of variable means when doing mean imputation
  
 /*
   Work fields: they are sized and initialized if need be, at buid time
@@ -91,32 +91,44 @@ private:
    
   
 public:
-                       BaseRegressorWrapper();
-  virtual              ~BaseRegressorWrapper();
+    BaseRegressorWrapper();
+    virtual              ~BaseRegressorWrapper();
     
     PLEARN_DECLARE_OBJECT(BaseRegressorWrapper);
 
-  static  void         declareOptions(OptionList& ol);
-  virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
-  virtual void         build();
-  virtual void         train();
-  virtual void         forget();
-  virtual int          outputsize() const;
-  virtual TVec<string> getTrainCostNames() const;
-  virtual TVec<string> getTestCostNames() const;
-  virtual void         computeOutput(const Vec& input, Vec& output) const;
-  virtual void         computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
-  virtual void         computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs) const;
-          void         setSortedTrainSet(PP<RegressionTreeRegisters> the_sorted_train_set);
+    static  void         declareOptions(OptionList& ol);
+    virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
+    virtual void         build();
+    virtual void         train();
+    virtual void         forget();
+    virtual int          outputsize() const;
+    virtual TVec<string> getTrainCostNames() const;
+    virtual TVec<string> getTestCostNames() const;
+    virtual void         computeOutput(const Vec& input, Vec& output) const;
+    virtual void         computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
+    virtual void         computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs) const;
+    void         setSortedTrainSet(PP<RegressionTreeRegisters> the_sorted_train_set);
   
 private:
-          void         build_();
-          void         verbose(string msg, int level);
+    void         build_();
+    void         verbose(string msg, int level);
 };
 
-  DECLARE_OBJECT_PTR(BaseRegressorWrapper);
+DECLARE_OBJECT_PTR(BaseRegressorWrapper);
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

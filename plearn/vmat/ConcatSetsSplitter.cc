@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConcatSetsSplitter.cc,v 1.1 2004/11/01 14:07:18 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,20 +54,20 @@ ConcatSetsSplitter::ConcatSetsSplitter()
 }
 
 PLEARN_IMPLEMENT_OBJECT(ConcatSetsSplitter, 
-    "Concatenates the sets of many splitters.",
-    "The concatenated splitters must have the same number of splits."
-);
+                        "Concatenates the sets of many splitters.",
+                        "The concatenated splitters must have the same number of splits."
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void ConcatSetsSplitter::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "splitters", &ConcatSetsSplitter::splitters, OptionBase::buildoption,
-      "The splitters whose sets we want to concatenate.");
+    declareOption(ol, "splitters", &ConcatSetsSplitter::splitters, OptionBase::buildoption,
+                  "The splitters whose sets we want to concatenate.");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ////////////
@@ -75,12 +75,12 @@ void ConcatSetsSplitter::declareOptions(OptionList& ol)
 ////////////
 void ConcatSetsSplitter::build_()
 {
-  if (splitters.length() > 0) {
-    int nsplits = splitters[0]->nsplits();
-    for (int i = 1; i < splitters.length(); i++)
-      if (splitters[i]->nsplits() != nsplits)
-        PLERROR("In ConcatSetsSplitter::build_ - All concatenated splitters must return the same number of splits");
-  }
+    if (splitters.length() > 0) {
+        int nsplits = splitters[0]->nsplits();
+        for (int i = 1; i < splitters.length(); i++)
+            if (splitters[i]->nsplits() != nsplits)
+                PLERROR("In ConcatSetsSplitter::build_ - All concatenated splitters must return the same number of splits");
+    }
 }
 
 ///////////
@@ -88,22 +88,22 @@ void ConcatSetsSplitter::build_()
 ///////////
 void ConcatSetsSplitter::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void ConcatSetsSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Splitter::makeDeepCopyFromShallowCopy(copies);
+    Splitter::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("ConcatSetsSplitter::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("ConcatSetsSplitter::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 /////////////
@@ -111,7 +111,7 @@ void ConcatSetsSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 /////////////
 int ConcatSetsSplitter::nsplits() const
 {
-  return splitters[0]->nsplits();
+    return splitters[0]->nsplits();
 }
 
 ///////////////////
@@ -119,10 +119,10 @@ int ConcatSetsSplitter::nsplits() const
 ///////////////////
 int ConcatSetsSplitter::nSetsPerSplit() const
 {
-  int count = 0;
-  for (int i = 0; i < splitters.length(); i++)
-    count += splitters[i]->nSetsPerSplit();
-  return count;
+    int count = 0;
+    for (int i = 0; i < splitters.length(); i++)
+        count += splitters[i]->nSetsPerSplit();
+    return count;
 }
 
 //////////////
@@ -130,21 +130,34 @@ int ConcatSetsSplitter::nSetsPerSplit() const
 //////////////
 TVec<VMat> ConcatSetsSplitter::getSplit(int k)
 {
-  TVec<VMat> sets;
-  for (int i = 0; i < splitters.length(); i++) {
-    sets.append(splitters[i]->getSplit(k));
-  }
-  return sets;
+    TVec<VMat> sets;
+    for (int i = 0; i < splitters.length(); i++) {
+        sets.append(splitters[i]->getSplit(k));
+    }
+    return sets;
 }
 
 ////////////////
 // setDataSet //
 ////////////////
 void ConcatSetsSplitter::setDataSet(VMat the_dataset) {
-  inherited::setDataSet(the_dataset);
-  for (int i = 0; i < splitters.length(); i++) {
-    splitters[i]->setDataSet(the_dataset);
-  }
+    inherited::setDataSet(the_dataset);
+    for (int i = 0; i < splitters.length(); i++) {
+        splitters[i]->setDataSet(the_dataset);
+    }
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

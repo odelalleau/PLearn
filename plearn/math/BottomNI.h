@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: BottomNI.h,v 1.4 2004/07/21 16:30:53 chrish42 Exp $
-   * AUTHORS: Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/BottomNI.h */
@@ -55,20 +55,20 @@ namespace PLearn {
 using namespace std;
 
 /*!     This is a very simple class, that allows you to keep track of the bottom
-    N values encountered among many and their associated integer index (or corresponding position).
-    For keeping track of the TOP N values, see the companion class TopNI.
+  N values encountered among many and their associated integer index (or corresponding position).
+  For keeping track of the TOP N values, see the companion class TopNI.
 */
-  template <class T>
-  class BottomNI
-  {
-  protected:
+template <class T>
+class BottomNI
+{
+protected:
     int n_zeros; //!< number of zeros
     int N;
     TVec< pair<T,int> > bottomn;
     pair<T,int>* bottomnptr; //!<  bottomn.data()
     pair<T,int>* maxpair;
   
-  public:
+public:
 
     //!  Default constructor, you must then call init.
     BottomNI()
@@ -80,11 +80,11 @@ using namespace std;
     //!  N is the number of (value,point) pairs to remember.
     void init(int the_N)
     {
-      N = the_N;
-      bottomn.resize(N); //!<  reserve space for N elements
-      bottomn.resize(0); //!<  set length back to 0
-      bottomnptr = bottomn.data(); //!<  ptr for faster access
-      n_zeros=0;
+        N = the_N;
+        bottomn.resize(N); //!<  reserve space for N elements
+        bottomn.resize(0); //!<  set length back to 0
+        bottomnptr = bottomn.data(); //!<  ptr for faster access
+        n_zeros=0;
     }
 
     void reset() { init(N); }
@@ -92,28 +92,28 @@ using namespace std;
     //!  call this for each new value seen
     void update(T value, int index)
     {
-      int l=bottomn.length();
-      if(value==0)
-        n_zeros++;
-      if(l<N)
+        int l=bottomn.length();
+        if(value==0)
+            n_zeros++;
+        if(l<N)
         {
-          bottomn.append( pair<T,int>(value,index) );
-          if (l==0 || value>maxpair->first)
-            maxpair = &bottomnptr[l];
+            bottomn.append( pair<T,int>(value,index) );
+            if (l==0 || value>maxpair->first)
+                maxpair = &bottomnptr[l];
         }
-      else if(value<maxpair->first)
+        else if(value<maxpair->first)
         {
-          maxpair->first = value;
-          maxpair->second = index;
+            maxpair->first = value;
+            maxpair->second = index;
 
-          //!  find the new maximum:
-          pair<T,int>* it = bottomnptr;
-          int n = N;
-          while(n--)
+            //!  find the new maximum:
+            pair<T,int>* it = bottomnptr;
+            int n = N;
+            while(n--)
             {
-              if(it->first>maxpair->first)
-                maxpair = it;
-              ++it;
+                if(it->first>maxpair->first)
+                    maxpair = it;
+                ++it;
             }
         }
     }
@@ -125,13 +125,21 @@ using namespace std;
 
     //!  call this at the end to get the the smallest N values with associated integer index
     const TVec< pair<T,int> >& getBottomN() { return bottomn; }
-  };
+};
 
 } // end of namespace PLearn
 
 #endif
 
-
-
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

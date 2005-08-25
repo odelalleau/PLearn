@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
-   ******************************************************* */
+ * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -52,12 +52,12 @@ using namespace std;
 // diff //
 //////////
 /*
-int diff(const string& refer, const string& other, const OptionBase* opt, PLearnDiff* diffs)
-{
+  int diff(const string& refer, const string& other, const OptionBase* opt, PLearnDiff* diffs)
+  {
   pout << "Calling basic diff with Option< ObjectType, " << opt->optiontype() << " >" << endl;
   assert( diffs );
   return diffs->diff(refer, other, opt->optionname());
-}
+  }
 */
 
 //////////
@@ -65,32 +65,45 @@ int diff(const string& refer, const string& other, const OptionBase* opt, PLearn
 //////////
 int diff(PP<Object> refer, PP<Object> other, PLearnDiff* diffs)
 {
-  bool delete_diffs = false;
-  if (!diffs) {
-    diffs = new PLearnDiff();
-    delete_diffs = true;
-  }
-  assert(diffs);
-  // Check objects are of the same class.
-  string refer_class = refer ? refer->classname() : "null";
-  string other_class = other ? other->classname() : "null";
-  int n_diffs = diffs->diff(refer_class, other_class, "classname");
-  if (n_diffs > 0)
-    return n_diffs; // We cannot compare two objects from different classes.
-  else if (!other && !refer)
-    return 0; // Both objects are null pointers.
-  assert( other && refer );
-  OptionList& options = refer->getOptionList();
-  for (OptionList::const_iterator it = options.begin(); it != options.end(); it++) {
-    // pout << "Comparing " << (*it)->optionname() << endl;
-    string option = (*it)->optionname();
-    string refer_opt = refer->getOption(option);
-    string other_opt = other->getOption(option);
-    n_diffs += (*it)->diff(refer_opt, other_opt, diffs);
-  }
-  if (delete_diffs)
-    delete diffs;
-  return n_diffs;
+    bool delete_diffs = false;
+    if (!diffs) {
+        diffs = new PLearnDiff();
+        delete_diffs = true;
+    }
+    assert(diffs);
+    // Check objects are of the same class.
+    string refer_class = refer ? refer->classname() : "null";
+    string other_class = other ? other->classname() : "null";
+    int n_diffs = diffs->diff(refer_class, other_class, "classname");
+    if (n_diffs > 0)
+        return n_diffs; // We cannot compare two objects from different classes.
+    else if (!other && !refer)
+        return 0; // Both objects are null pointers.
+    assert( other && refer );
+    OptionList& options = refer->getOptionList();
+    for (OptionList::const_iterator it = options.begin(); it != options.end(); it++) {
+        // pout << "Comparing " << (*it)->optionname() << endl;
+        string option = (*it)->optionname();
+        string refer_opt = refer->getOption(option);
+        string other_opt = other->getOption(option);
+        n_diffs += (*it)->diff(refer_opt, other_opt, diffs);
+    }
+    if (delete_diffs)
+        delete diffs;
+    return n_diffs;
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

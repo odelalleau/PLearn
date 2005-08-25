@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ExpVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ExpVariable.h"
 #include "Var_operators.h"
@@ -53,7 +53,7 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(ExpVariable, "ONE LINE DESCR", "NO HELP");
 
 ExpVariable::ExpVariable(Variable* input)
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 void ExpVariable::recomputeSize(int& l, int& w) const
@@ -68,15 +68,15 @@ void ExpVariable::recomputeSize(int& l, int& w) const
 
 void ExpVariable::fprop()
 {
-  for(int i=0; i<nelems(); i++)
-    valuedata[i] = safeexp(input->valuedata[i]);
+    for(int i=0; i<nelems(); i++)
+        valuedata[i] = safeexp(input->valuedata[i]);
 }
 
 
 void ExpVariable::bprop()
 {
-  for(int i=0; i<nelems(); i++)
-    input->gradientdata[i] += gradientdata[i]*valuedata[i];
+    for(int i=0; i<nelems(); i++)
+        input->gradientdata[i] += gradientdata[i]*valuedata[i];
 }
 
 
@@ -94,20 +94,31 @@ void ExpVariable::bprop()
 
 void ExpVariable::symbolicBprop()
 {
-  input->accg(g * Var(this));
+    input->accg(g * Var(this));
 }
 
 
 // R{exp(x)} = exp(x) R(x)
 void ExpVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  for(int i=0; i<nelems(); i++)
-    rvaluedata[i] = input->rvaluedata[i] * valuedata[i];
+    if (rValue.length()==0) resizeRValue();
+    for(int i=0; i<nelems(); i++)
+        rvaluedata[i] = input->rvaluedata[i] * valuedata[i];
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
 
@@ -54,82 +54,95 @@ class LocalNeighborsDifferencesVMatrix: public SourceVMatrix
 
 private:
 
-  typedef SourceVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
-  //! Used to store data and save memory allocations.
-  mutable Vec neighbor_row, ith_row, a_row, diff_k;
+    //! Used to store data and save memory allocations.
+    mutable Vec neighbor_row, ith_row, a_row, diff_k;
 
 protected:
-  // NON-OPTION FIELDS
+    // NON-OPTION FIELDS
 
-  TMat<int> neighbors; // length x n_neighbors matrix of nearest neighbor indices
+    TMat<int> neighbors; // length x n_neighbors matrix of nearest neighbor indices
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // ### declare public option fields (such as build options) here
-  // ...
-  int n_neighbors;
-  bool concat_neighbors;
-  bool append_indexes;
-  bool append_neighbors;
+    // ### declare public option fields (such as build options) here
+    // ...
+    int n_neighbors;
+    bool concat_neighbors;
+    bool append_indexes;
+    bool append_neighbors;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  LocalNeighborsDifferencesVMatrix();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    LocalNeighborsDifferencesVMatrix();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
-  //!  This is the only method requiring implementation
-  virtual void getNewRow(int i, const Vec& v) const;
+    //!  This is the only method requiring implementation
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(LocalNeighborsDifferencesVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(LocalNeighborsDifferencesVMatrix);
 
 };
 DECLARE_OBJECT_PTR(LocalNeighborsDifferencesVMatrix);
 
 inline VMat local_neighbors_differences(VMat source, int n_neighbors, bool concat = false, bool append_indexes = false, bool append_neighbors=false)
 {
-  LocalNeighborsDifferencesVMatrix* vmat = new LocalNeighborsDifferencesVMatrix();
-  vmat->concat_neighbors = concat;
-  vmat->source=source;
-  vmat->n_neighbors=n_neighbors;
-  vmat->append_indexes = append_indexes;
-  vmat->append_neighbors = append_neighbors;
-  vmat->build();
-  return vmat;
+    LocalNeighborsDifferencesVMatrix* vmat = new LocalNeighborsDifferencesVMatrix();
+    vmat->concat_neighbors = concat;
+    vmat->source=source;
+    vmat->n_neighbors=n_neighbors;
+    vmat->append_indexes = append_indexes;
+    vmat->append_neighbors = append_neighbors;
+    vmat->build();
+    return vmat;
 }
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

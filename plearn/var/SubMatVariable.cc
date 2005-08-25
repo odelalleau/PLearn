@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SubMatVariable.cc,v 1.8 2004/05/26 20:13:50 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ExtendedVariable.h"
 #include "SubMatVariable.h"
@@ -55,12 +55,12 @@ PLEARN_IMPLEMENT_OBJECT(SubMatVariable,
                         "NO HELP");
 
 SubMatVariable::SubMatVariable(Variable* v, int i, int j, int the_length, int the_width)
-: inherited(v, the_length, the_width),
-  startk(i*v->width()+j),
-  length_(the_length),
-  width_(the_width),
-  i_(i),
-  j_(j)
+    : inherited(v, the_length, the_width),
+      startk(i*v->width()+j),
+      length_(the_length),
+      width_(the_width),
+      i_(i),
+      j_(j)
 {
     build_();
 }
@@ -97,21 +97,21 @@ void SubMatVariable::recomputeSize(int& l, int& w) const
 
 void SubMatVariable::fprop()
 {
-  if(width()==input->width()) // optimized version for this special case
+    if(width()==input->width()) // optimized version for this special case
     {
-      real* inputdata = input->valuedata+startk;
-      for(int k=0; k<nelems(); k++)
-        valuedata[k] = inputdata[k];
+        real* inputdata = input->valuedata+startk;
+        for(int k=0; k<nelems(); k++)
+            valuedata[k] = inputdata[k];
     }
-  else // general version
+    else // general version
     {
-      real* inputrowdata = input->valuedata+startk;
-      int thisk=0;
-      for(int i=0; i<length(); i++)
+        real* inputrowdata = input->valuedata+startk;
+        int thisk=0;
+        for(int i=0; i<length(); i++)
         {
-          for(int j=0; j<width(); j++)
-            valuedata[thisk++] = inputrowdata[j];
-          inputrowdata += input->width();
+            for(int j=0; j<width(); j++)
+                valuedata[thisk++] = inputrowdata[j];
+            inputrowdata += input->width();
         }
     }
 }
@@ -119,21 +119,21 @@ void SubMatVariable::fprop()
 
 void SubMatVariable::bprop()
 {
-  if(width()==input->width()) // optimized version for this special case
+    if(width()==input->width()) // optimized version for this special case
     {
-      real* inputgradient = input->gradientdata+startk;
-      for(int k=0; k<nelems(); k++)
-        inputgradient[k] += gradientdata[k]; 
+        real* inputgradient = input->gradientdata+startk;
+        for(int k=0; k<nelems(); k++)
+            inputgradient[k] += gradientdata[k]; 
     }
-  else // general version
+    else // general version
     {
-      real* inputrowgradient = input->gradientdata+startk;
-      int thisk=0;
-      for(int i=0; i<length(); i++)
+        real* inputrowgradient = input->gradientdata+startk;
+        int thisk=0;
+        for(int i=0; i<length(); i++)
         {
-          for(int j=0; j<width(); j++)
-            inputrowgradient[j] += gradientdata[thisk++];
-          inputrowgradient += input->width();
+            for(int j=0; j<width(); j++)
+                inputrowgradient[j] += gradientdata[thisk++];
+            inputrowgradient += input->width();
         }
     }
 }
@@ -141,23 +141,23 @@ void SubMatVariable::bprop()
 
 void SubMatVariable::bbprop()
 {
-  if (input->diaghessian.length()==0)
-    input->resizeDiagHessian();
-  if(width()==input->width()) // optimized version for this special case
+    if (input->diaghessian.length()==0)
+        input->resizeDiagHessian();
+    if(width()==input->width()) // optimized version for this special case
     {
-      real* inputdiaghessian = input->diaghessian.data()+startk;
-      for(int k=0; k<nelems(); k++)
-        inputdiaghessian[k] += diaghessiandata[k]; 
+        real* inputdiaghessian = input->diaghessian.data()+startk;
+        for(int k=0; k<nelems(); k++)
+            inputdiaghessian[k] += diaghessiandata[k]; 
     }
-  else // general version
+    else // general version
     {
-      real* inputrowdiaghessian = input->diaghessiandata+startk;
-      int thisk=0;
-      for(int i=0; i<length(); i++)
+        real* inputrowdiaghessian = input->diaghessiandata+startk;
+        int thisk=0;
+        for(int i=0; i<length(); i++)
         {
-          for(int j=0; j<width(); j++)
-            inputrowdiaghessian[j] += diaghessiandata[thisk++];
-          inputrowdiaghessian += input->width();
+            for(int j=0; j<width(); j++)
+                inputrowdiaghessian[j] += diaghessiandata[thisk++];
+            inputrowdiaghessian += input->width();
         }
     }
 }
@@ -165,37 +165,49 @@ void SubMatVariable::bbprop()
 
 void SubMatVariable::symbolicBprop()
 {
-  int i = startk/input->width();
-  int j = startk%input->width();
-  int topextent = i;
-  int bottomextent = input->length()-(i+length());
-  int leftextent = j;
-  int rightextent = input->width()-(j+width());
-  input->accg(extend(g,topextent,bottomextent,leftextent,rightextent));
+    int i = startk/input->width();
+    int j = startk%input->width();
+    int topextent = i;
+    int bottomextent = input->length()-(i+length());
+    int leftextent = j;
+    int rightextent = input->width()-(j+width());
+    input->accg(extend(g,topextent,bottomextent,leftextent,rightextent));
 }
 
 
 void SubMatVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  if(width()==input->width()) // optimized version for this special case
+    if (rValue.length()==0) resizeRValue();
+    if(width()==input->width()) // optimized version for this special case
     {
-      real* inputrdata = input->rvaluedata+startk;
-      for(int k=0; k<nelems(); k++)
-        rvaluedata[k] = inputrdata[k];
+        real* inputrdata = input->rvaluedata+startk;
+        for(int k=0; k<nelems(); k++)
+            rvaluedata[k] = inputrdata[k];
     }
-  else // general version
+    else // general version
     {
-      real* inputrowrdata = input->rvaluedata+startk;
-      int thisk=0;
-      for(int i=0; i<length(); i++)
+        real* inputrowrdata = input->rvaluedata+startk;
+        int thisk=0;
+        for(int i=0; i<length(); i++)
         {
-          for(int j=0; j<width(); j++)
-            rvaluedata[thisk++] = inputrowrdata[j];
-          inputrowrdata += input->width();
+            for(int j=0; j<width(); j++)
+                rvaluedata[thisk++] = inputrowrdata[j];
+            inputrowrdata += input->width();
         }
     }
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

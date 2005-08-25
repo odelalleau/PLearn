@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PMemPool.cc,v 1.2 2005/05/22 04:10:56 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -54,42 +54,42 @@ using namespace std;
 //#####  PMemArena  ###########################################################
 
 PMemArena::PMemArena(size_t object_size_, size_t max_num_objects)
-  : storage(0), end_of_storage(0), object_size(object_size_), 
-    allocated_objects(0), watermark(0), free_list(0)
+    : storage(0), end_of_storage(0), object_size(object_size_), 
+      allocated_objects(0), watermark(0), free_list(0)
 {
-  if (object_size < sizeof(void*))
-    PLERROR("PMemArena::PMemArena: object_size must be at least %d; passed size is %d",
-            sizeof(void*), object_size);
-  size_t mem_size = object_size * max_num_objects;
-  size_t num_align = mem_size / sizeof(Aligner);
-  if (mem_size % sizeof(Aligner) != 0)
-    num_align++;
-  storage = new Aligner[num_align];
-  if (storage) {
-    watermark = static_cast<char*>(storage) + object_size * max_num_objects;
-    end_of_storage = watermark;
-  }
+    if (object_size < sizeof(void*))
+        PLERROR("PMemArena::PMemArena: object_size must be at least %d; passed size is %d",
+                sizeof(void*), object_size);
+    size_t mem_size = object_size * max_num_objects;
+    size_t num_align = mem_size / sizeof(Aligner);
+    if (mem_size % sizeof(Aligner) != 0)
+        num_align++;
+    storage = new Aligner[num_align];
+    if (storage) {
+        watermark = static_cast<char*>(storage) + object_size * max_num_objects;
+        end_of_storage = watermark;
+    }
 }
 
 PMemArena::~PMemArena()
 {
-  delete[] static_cast<Aligner*>(storage);
+    delete[] static_cast<Aligner*>(storage);
 }
 
 void PMemArena::deallocate(void* p)
 {
-  // If the freed object is exactly at the watermark location, add it back
-  // to watermark
-  if (p == watermark)
-    watermark += object_size;
-  else {
-    // Otherwise, add p to free_list
-    assert( belongsToArena(p) );
-    void** new_free_head = static_cast<void**>(p);
-    *new_free_head = free_list;
-    free_list = new_free_head;
-  }
-  allocated_objects--;
+    // If the freed object is exactly at the watermark location, add it back
+    // to watermark
+    if (p == watermark)
+        watermark += object_size;
+    else {
+        // Otherwise, add p to free_list
+        assert( belongsToArena(p) );
+        void** new_free_head = static_cast<void**>(p);
+        *new_free_head = free_list;
+        free_list = new_free_head;
+    }
+    allocated_objects--;
 }
 
 
@@ -97,109 +97,122 @@ void PMemArena::deallocate(void* p)
 
 PMemPool::PMemPool(size_t object_size_, size_t initial_size_,
                    float growth_factor_, bool use_fast_deallocator)
-  : last_arena(0),
-    object_size(object_size_),
-    initial_arena_size(initial_size_),
-    cur_arena_size(initial_size_),
-    arena_growth_factor(growth_factor_),
-    fast_deallocate(use_fast_deallocator),
-    free_list(0)
+    : last_arena(0),
+      object_size(object_size_),
+      initial_arena_size(initial_size_),
+      cur_arena_size(initial_size_),
+      arena_growth_factor(growth_factor_),
+      fast_deallocate(use_fast_deallocator),
+      free_list(0)
 { }
 
 void* PMemPool::allocate()
 {
-  // First try to allocate from last-used arena
-  if (last_arena) {
-    if (void* new_mem = last_arena->allocate())
-      return new_mem;
-  }
+    // First try to allocate from last-used arena
+    if (last_arena) {
+        if (void* new_mem = last_arena->allocate())
+            return new_mem;
+    }
 
-  // Otherwise, try to allocate from free list
-  if (free_list) {
-    void** to_return = static_cast<void**>(free_list);
-    free_list = *to_return;
-    return to_return;
-  }
+    // Otherwise, try to allocate from free list
+    if (free_list) {
+        void** to_return = static_cast<void**>(free_list);
+        free_list = *to_return;
+        return to_return;
+    }
 
-  // Otherwise, try to allocate from an existing arena
-  if (void* new_mem = allocateFromArenas())
-    return new_mem;
+    // Otherwise, try to allocate from an existing arena
+    if (void* new_mem = allocateFromArenas())
+        return new_mem;
 
-  // Otherwise, create a new arena and allocate from it
-  last_arena = newArena();
-  if (last_arena)
-    if (void* new_mem = last_arena->allocate())
-      return new_mem;
+    // Otherwise, create a new arena and allocate from it
+    last_arena = newArena();
+    if (last_arena)
+        if (void* new_mem = last_arena->allocate())
+            return new_mem;
 
-  // Last resort, throw bad_alloc...
-  throw std::bad_alloc();
+    // Last resort, throw bad_alloc...
+    throw std::bad_alloc();
 }
 
 void PMemPool::deallocate(void* p)
 {
-  // Fast deallocation :: append to free list
-  if (fast_deallocate) {
-    void** new_free_head = static_cast<void**>(p);
-    *new_free_head = free_list;
-    free_list = new_free_head;
-  }
-  // Traditional deallocator
-  else {
-    if (last_arena && last_arena->belongsToArena(p))
-      last_arena->deallocate(p);
+    // Fast deallocation :: append to free list
+    if (fast_deallocate) {
+        void** new_free_head = static_cast<void**>(p);
+        *new_free_head = free_list;
+        free_list = new_free_head;
+    }
+    // Traditional deallocator
     else {
-      // Find arena from map
-      map<void*,PMemArena*>::iterator arena_it = stormap.upper_bound(p);
-      assert( arena_it != stormap.begin() );
-      --arena_it;
-      PMemArena* arena = arena_it->second;
-      assert( arena && arena->belongsToArena(p));
-      arena->deallocate(p);
-      last_arena = arena;
-    }
+        if (last_arena && last_arena->belongsToArena(p))
+            last_arena->deallocate(p);
+        else {
+            // Find arena from map
+            map<void*,PMemArena*>::iterator arena_it = stormap.upper_bound(p);
+            assert( arena_it != stormap.begin() );
+            --arena_it;
+            PMemArena* arena = arena_it->second;
+            assert( arena && arena->belongsToArena(p));
+            arena->deallocate(p);
+            last_arena = arena;
+        }
   
-    // Check to see if arena should be eliminated
-    if (last_arena && last_arena->empty()) {
-      map<void*,PMemArena*>::iterator arena_it = stormap.upper_bound(p);
-      assert( arena_it != stormap.begin() );
-      --arena_it;
-      assert( last_arena == arena_it->second );
-      stormap.erase(arena_it);
-      arenas.remove(last_arena);
-      last_arena = 0;
+        // Check to see if arena should be eliminated
+        if (last_arena && last_arena->empty()) {
+            map<void*,PMemArena*>::iterator arena_it = stormap.upper_bound(p);
+            assert( arena_it != stormap.begin() );
+            --arena_it;
+            assert( last_arena == arena_it->second );
+            stormap.erase(arena_it);
+            arenas.remove(last_arena);
+            last_arena = 0;
+        }
     }
-  }
 }
 
 void* PMemPool::allocateFromArenas()
 {
-  for (list< PP<PMemArena> >::iterator it = arenas.begin(), end = arenas.end()
-         ; it != end ; ++it) {
-    if (void* newmem = (*it)->allocate()) {
-      last_arena = *it;
-      return newmem;
+    for (list< PP<PMemArena> >::iterator it = arenas.begin(), end = arenas.end()
+             ; it != end ; ++it) {
+        if (void* newmem = (*it)->allocate()) {
+            last_arena = *it;
+            return newmem;
+        }
     }
-  }
-  return 0;
+    return 0;
 }
 
 PMemArena* PMemPool::newArena()
 {
-  PP<PMemArena> new_arena = new PMemArena(object_size, cur_arena_size);
-  cur_arena_size = size_t(cur_arena_size * arena_growth_factor);
-  stormap[new_arena->storage] = (PMemArena*)new_arena;
-  arenas.push_back(new_arena);
-  return new_arena;
+    PP<PMemArena> new_arena = new PMemArena(object_size, cur_arena_size);
+    cur_arena_size = size_t(cur_arena_size * arena_growth_factor);
+    stormap[new_arena->storage] = (PMemArena*)new_arena;
+    arenas.push_back(new_arena);
+    return new_arena;
 }
   
 void PMemPool::purge_memory()
 {
-  arenas.clear();
-  stormap.clear();
-  last_arena = 0;
-  free_list  = 0;
-  cur_arena_size = initial_arena_size;
+    arenas.clear();
+    stormap.clear();
+    last_arena = 0;
+    free_list  = 0;
+    cur_arena_size = initial_arena_size;
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

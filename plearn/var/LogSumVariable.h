@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: LogSumVariable.h,v 1.5 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef LogSumVariable_INC
 #define LogSumVariable_INC
@@ -53,21 +53,21 @@ class LogSumVariable: public UnaryVariable
 {
 protected:
     typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  LogSumVariable() {}
+    //!  Default constructor for persistence
+    LogSumVariable() {}
 
 protected:
-  Vec input_softmax;
+    Vec input_softmax;
 public:
-  LogSumVariable(Variable* input);
-  PLEARN_DECLARE_OBJECT(LogSumVariable);
-  virtual void recomputeSize(int& l, int& w) const;
+    LogSumVariable(Variable* input);
+    PLEARN_DECLARE_OBJECT(LogSumVariable);
+    virtual void recomputeSize(int& l, int& w) const;
   
   
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 };
 
 inline Var logadd(Var input)
@@ -76,3 +76,16 @@ inline Var logadd(Var input)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

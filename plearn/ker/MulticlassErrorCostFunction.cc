@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MulticlassErrorCostFunction.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "MulticlassErrorCostFunction.h"
 
@@ -52,18 +52,30 @@ PLEARN_IMPLEMENT_OBJECT(MulticlassErrorCostFunction, "ONE LINE DESCR", "NO HELP"
 
 real MulticlassErrorCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
-  if (output.length() != target.length())
-    PLERROR("In MulticlassErrorCostFunction::evaluate: Output vec and target vec must have the same length (%d!=%d", output.length(),target.length());
+    if (output.length() != target.length())
+        PLERROR("In MulticlassErrorCostFunction::evaluate: Output vec and target vec must have the same length (%d!=%d", output.length(),target.length());
 
-  real cost = 0.0;
-  for (int i=0; i<output.length(); i++)
-  {
-    real output_i = output[i];
-    int target_i = (int)target[i];
-    cost += (target_i==1) ? output_i<0.5 : output_i>0.5;
-  }
-  return cost;
+    real cost = 0.0;
+    for (int i=0; i<output.length(); i++)
+    {
+        real output_i = output[i];
+        int target_i = (int)target[i];
+        cost += (target_i==1) ? output_i<0.5 : output_i>0.5;
+    }
+    return cost;
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

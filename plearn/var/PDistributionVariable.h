@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: PDistributionVariable.h,v 1.2 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef PDistributionVariable_INC
 #define PDistributionVariable_INC
@@ -53,31 +53,31 @@ using namespace std;
 class PDistributionVariable: public UnaryVariable
 {
 public:
-  typedef UnaryVariable inherited;
-  PP<PDistribution> dist;
+    typedef UnaryVariable inherited;
+    PP<PDistribution> dist;
 
 private:
-  void build_();
+    void build_();
 
 protected:
-  static void declareOptions(OptionList & ol);
+    static void declareOptions(OptionList & ol);
 
 public:
-  //!  Default constructor for persistence
-  PDistributionVariable() {}
-  PDistributionVariable(Variable* no_noise_var, PP<PDistribution> this_dist);
+    //!  Default constructor for persistence
+    PDistributionVariable() {}
+    PDistributionVariable(Variable* no_noise_var, PP<PDistribution> this_dist);
 
-  PLEARN_DECLARE_OBJECT(PDistributionVariable);
+    PLEARN_DECLARE_OBJECT(PDistributionVariable);
 
-  virtual void build();
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void build();
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
   
-  virtual void recomputeSize(int& l, int& w) const;  
-  virtual void fprop();
-  virtual void bprop();
-  virtual void bbprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;  
+    virtual void fprop();
+    virtual void bprop();
+    virtual void bbprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 };
 
 DECLARE_OBJECT_PTR(PDistributionVariable);
@@ -85,3 +85,16 @@ DECLARE_OBJECT_PTR(PDistributionVariable);
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

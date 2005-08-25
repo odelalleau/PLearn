@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 // Authors: Yoshua Bengio
 
@@ -53,72 +53,72 @@ using namespace std;
 
 class PLearnerOutputVMatrix: public RowBufferedVMatrix
 {
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // NON-OPTIONs
+    // NON-OPTIONs
 
-  mutable Vec row;
-  mutable Vec learner_input;
-  mutable TVec< Vec > learners_output;       //!< Instead of Mat to allow
-                                             //!< learners of various outputsizes
-  mutable Vec learner_target;
-  mutable Vec non_input_part_of_data_row;
-  mutable bool learners_need_train;  //!< Used to keep track of whether learners need training or not.
-  mutable TVec<Mat> complete_learners_output;
+    mutable Vec row;
+    mutable Vec learner_input;
+    mutable TVec< Vec > learners_output;       //!< Instead of Mat to allow
+    //!< learners of various outputsizes
+    mutable Vec learner_target;
+    mutable Vec non_input_part_of_data_row;
+    mutable bool learners_need_train;  //!< Used to keep track of whether learners need training or not.
+    mutable TVec<Mat> complete_learners_output;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  VMat fieldinfos_source;
-  VMat data; // whose input field will be applied to learner in order to obtain new input part of this VMatrix
-  VMat data_train;
-  TVec<PP<PLearner> > learners; // the outputs of the learners will be concatenated
-  bool put_raw_input; // if true not only the learner output but also the raw data input are in the input part of the VMatrix
-  bool put_non_input;
-  bool train_learners;
-  bool compute_output_once;
+    VMat fieldinfos_source;
+    VMat data; // whose input field will be applied to learner in order to obtain new input part of this VMatrix
+    VMat data_train;
+    TVec<PP<PLearner> > learners; // the outputs of the learners will be concatenated
+    bool put_raw_input; // if true not only the learner output but also the raw data input are in the input part of the VMatrix
+    bool put_non_input;
+    bool train_learners;
+    bool compute_output_once;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  PLearnerOutputVMatrix();
-  PLearnerOutputVMatrix(VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_=false, bool train_learners_ = false, bool compute_output_once_ = false, bool put_non_input_ = true);
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    PLearnerOutputVMatrix();
+    PLearnerOutputVMatrix(VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_=false, bool train_learners_ = false, bool compute_output_once_ = false, bool put_non_input_ = true);
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
-  //!  This is the only method requiring implementation
-  virtual void getNewRow(int i, const Vec& v) const;
+    //!  This is the only method requiring implementation
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(PLearnerOutputVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(PLearnerOutputVMatrix);
 
 };
 
@@ -126,3 +126,16 @@ DECLARE_OBJECT_PTR(PLearnerOutputVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

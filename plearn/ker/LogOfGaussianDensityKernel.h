@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: LogOfGaussianDensityKernel.h,v 1.3 2004/04/07 23:17:52 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef LogOfGaussianDensityKernel_INC
 #define LogOfGaussianDensityKernel_INC
@@ -52,19 +52,19 @@ using namespace std;
 
 /*! computes the log of a GaussianDensityKernel
   logp =  log[ exp(-0.5*norm_2(x1-x2)^2/sigma^2)/(sigma*sqrt(2pi))^n ]
-       =  log[ exp(-0.5*norm_2(x1-x2)^2/sigma^2)/exp(log[(sigma*sqrt(2pi))^n]) ]
-       =  log[ exp(-0.5*norm_2(x1-x2)^2/sigma^2)/exp(log[(2pi*sigma^2)^(n/2)]) ]
-       = -0.5* [ norm_2(x1-x2)^2/sigma^2 + n*( log(2pi) + log(sigma^2) ) ]
+  =  log[ exp(-0.5*norm_2(x1-x2)^2/sigma^2)/exp(log[(sigma*sqrt(2pi))^n]) ]
+  =  log[ exp(-0.5*norm_2(x1-x2)^2/sigma^2)/exp(log[(2pi*sigma^2)^(n/2)]) ]
+  = -0.5* [ norm_2(x1-x2)^2/sigma^2 + n*( log(2pi) + log(sigma^2) ) ]
   where n=x1.length().
 */
 class LogOfGaussianDensityKernel: public Kernel
 {
     typedef Kernel inherited;
 
- protected:
+protected:
     real sigma;
 
- public:
+public:
     LogOfGaussianDensityKernel()
         : sigma() {}
     LogOfGaussianDensityKernel(real the_sigma)
@@ -84,3 +84,15 @@ DECLARE_OBJECT_PTR(LogOfGaussianDensityKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

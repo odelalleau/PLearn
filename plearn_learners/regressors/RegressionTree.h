@@ -35,9 +35,9 @@
 
 
 /* ********************************************************************************    
-   * $Id: RegressionTree.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout         *
-   * This file is part of the PLearn library.                                     *
-   ******************************************************************************** */
+ * $Id: RegressionTree.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout         *
+ * This file is part of the PLearn library.                                     *
+ ******************************************************************************** */
 
 /*! \file PLearnLibrary/PLearnAlgo/RegressionTree.h */
 
@@ -52,7 +52,7 @@ using namespace std;
 
 class RegressionTree: public PLearner
 {
-  typedef PLearner inherited;
+    typedef PLearner inherited;
   
 private:
 
@@ -60,72 +60,84 @@ private:
   Build options: they have to be set before training
 */
 
-  int  missing_is_valid;
-  real loss_function_weight;
-  int maximum_number_of_nodes;
-  int compute_train_stats;   
-  real complexity_penalty_factor;
-  Vec multiclass_outputs;
-  PP<RegressionTreeLeave> leave_template;    
-  PP<RegressionTreeRegisters> sorted_train_set;
+    int  missing_is_valid;
+    real loss_function_weight;
+    int maximum_number_of_nodes;
+    int compute_train_stats;   
+    real complexity_penalty_factor;
+    Vec multiclass_outputs;
+    PP<RegressionTreeLeave> leave_template;    
+    PP<RegressionTreeRegisters> sorted_train_set;
   
 /*
   Learnt options: they are sized and initialized if need be, at stage 0
 */
 
-  PP<RegressionTreeNode> root;
-  PP<RegressionTreeLeave> first_leave;
-  PP<RegressionTreeQueue> priority_queue;
-  Vec first_leave_output;
-  Vec first_leave_error;
+    PP<RegressionTreeNode> root;
+    PP<RegressionTreeLeave> first_leave;
+    PP<RegressionTreeQueue> priority_queue;
+    Vec first_leave_output;
+    Vec first_leave_error;
  
 /*
   Work fields: they are sized and initialized if need be, at buid time
 */  
  
-  int length;
-  int inputsize;
-  int targetsize;
-  int weightsize;
-  real l2_loss_function_factor;
-  real l1_loss_function_factor;
-  int each_train_sample_index;
-  Vec sample_input;
-  Vec sample_output;
-  Vec sample_target;
-  Vec sample_costs;
-  real sample_weight;
-  PP<RegressionTreeNode> node;
+    int length;
+    int inputsize;
+    int targetsize;
+    int weightsize;
+    real l2_loss_function_factor;
+    real l1_loss_function_factor;
+    int each_train_sample_index;
+    Vec sample_input;
+    Vec sample_output;
+    Vec sample_target;
+    Vec sample_costs;
+    real sample_weight;
+    PP<RegressionTreeNode> node;
   
 public:
-                       RegressionTree();
-  virtual              ~RegressionTree();
+    RegressionTree();
+    virtual              ~RegressionTree();
     
     PLEARN_DECLARE_OBJECT(RegressionTree);
 
-  static  void         declareOptions(OptionList& ol);
-  virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
-  virtual void         build();
-  virtual void         train();
-  virtual void         forget();
-  virtual int          outputsize() const;
-  virtual TVec<string> getTrainCostNames() const;
-  virtual TVec<string> getTestCostNames() const;
-  virtual void         computeOutput(const Vec& input, Vec& output) const;
-  virtual void         computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
-  virtual void         computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs) const;
-          void         setSortedTrainSet(PP<RegressionTreeRegisters> the_sorted_train_set);
+    static  void         declareOptions(OptionList& ol);
+    virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
+    virtual void         build();
+    virtual void         train();
+    virtual void         forget();
+    virtual int          outputsize() const;
+    virtual TVec<string> getTrainCostNames() const;
+    virtual TVec<string> getTestCostNames() const;
+    virtual void         computeOutput(const Vec& input, Vec& output) const;
+    virtual void         computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
+    virtual void         computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs) const;
+    void         setSortedTrainSet(PP<RegressionTreeRegisters> the_sorted_train_set);
   
 private:
-          void         build_();
-          void         initialiseTree();
-          int          expandTree();
-          void         verbose(string msg, int level);
+    void         build_();
+    void         initialiseTree();
+    int          expandTree();
+    void         verbose(string msg, int level);
 };
 
-  DECLARE_OBJECT_PTR(RegressionTree);
+DECLARE_OBJECT_PTR(RegressionTree);
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -49,15 +49,15 @@ namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(ForwardVMatrix,
-    "Forward all calls to an underlying VMatrix.",
-    ""
-);
+                        "Forward all calls to an underlying VMatrix.",
+                        ""
+    );
 
 ForwardVMatrix::ForwardVMatrix()
 {}
 
 ForwardVMatrix::ForwardVMatrix(VMat the_vm)
-  : vm(the_vm)
+    : vm(the_vm)
 {
 }
 
@@ -71,34 +71,34 @@ ForwardVMatrix::build()
 void
 ForwardVMatrix::build_()
 {
-  if (vm) {
-    length_ = vm->length();
-    width_ = vm->width();
-    writable = vm->isWritable();
-    setMetaInfoFrom(vm);
-    if (vm->hasMetaDataDir() && !this->hasMetaDataDir())
-      setMetaDataDir(vm->getMetaDataDir());
+    if (vm) {
+        length_ = vm->length();
+        width_ = vm->width();
+        writable = vm->isWritable();
+        setMetaInfoFrom(vm);
+        if (vm->hasMetaDataDir() && !this->hasMetaDataDir())
+            setMetaDataDir(vm->getMetaDataDir());
 
-  } else {
-    length_ = 0;
-    width_ = 0;
-  }
+    } else {
+        length_ = 0;
+        width_ = 0;
+    }
 }
 
 void ForwardVMatrix::setVMat(VMat the_vm)
 {
-  if(the_vm)
-    vm = the_vm;
-  else
-    vm = VMat();
-  build_();
+    if(the_vm)
+        vm = the_vm;
+    else
+        vm = VMat();
+    build_();
 }
 
 void
 ForwardVMatrix::declareOptions(OptionList &ol)
 {
     declareOption(ol, "vm", &ForwardVMatrix::vm, OptionBase::buildoption,
-        "The underlying VMat to which all calls are forwarded.");
+                  "The underlying VMat to which all calls are forwarded.");
 
     inherited::declareOptions(ol);
 
@@ -122,25 +122,25 @@ string ForwardVMatrix::getString(int row,int col) const
 
 map<string,real> ForwardVMatrix::getStringMapping(int col) const
 {
-  PLERROR("ForwardVMatrix::getStringMapping not implemented yet");
-  // making the compiler happy: 
-  return map<string,real>();
+    PLERROR("ForwardVMatrix::getStringMapping not implemented yet");
+    // making the compiler happy: 
+    return map<string,real>();
 
-  //  return vm->getStringMapping(col); 
+    //  return vm->getStringMapping(col); 
 }
 
 ////////////////////////////
 // getStringToRealMapping //
 ////////////////////////////
 const map<string,real>& ForwardVMatrix::getStringToRealMapping(int col) const {
-  return vm->getStringToRealMapping(col);
+    return vm->getStringToRealMapping(col);
 }
 
 ////////////////////////////
 // getRealToStringMapping //
 ////////////////////////////
 const map<real,string>& ForwardVMatrix::getRealToStringMapping(int col) const {
-  return vm->getRealToStringMapping(col);
+    return vm->getRealToStringMapping(col);
 }
 
 void ForwardVMatrix::computeStats()
@@ -203,14 +203,14 @@ void ForwardVMatrix::compacify()
   
 void ForwardVMatrix::reset_dimensions() 
 { 
-  if (vm) {
-    vm->reset_dimensions();
-    length_ = vm->length();
-    width_ = vm->width();
-    inputsize_ = vm->inputsize();
-    targetsize_ = vm->targetsize();
-    weightsize_ = vm->weightsize();
-  }
+    if (vm) {
+        vm->reset_dimensions();
+        length_ = vm->length();
+        width_ = vm->width();
+        inputsize_ = vm->inputsize();
+        targetsize_ = vm->targetsize();
+        weightsize_ = vm->weightsize();
+    }
 }
 
 VMat ForwardVMatrix::subMat(int i, int j, int l, int w)
@@ -224,21 +224,32 @@ real ForwardVMatrix::dot(int i, const Vec& v) const
 { return vm->dot(i,  v); }
   
 void ForwardVMatrix::accumulateXtY(int X_startcol, int X_ncols, int Y_startcol, int Y_ncols, 
-                                Mat& result, int startrow, int nrows, int ignore_this_row) const
+                                   Mat& result, int startrow, int nrows, int ignore_this_row) const
 { vm->accumulateXtY(X_startcol, X_ncols, Y_startcol, Y_ncols, 
                     result, startrow, nrows, ignore_this_row); }
 
 void ForwardVMatrix::accumulateXtX(int X_startcol, int X_ncols, 
-                                Mat& result, int startrow, int nrows, int ignore_this_row) const
+                                   Mat& result, int startrow, int nrows, int ignore_this_row) const
 { vm->accumulateXtX(X_startcol, X_ncols, 
                     result, startrow, nrows, ignore_this_row); }
    
 void ForwardVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(vm, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(vm, copies);
 }
 
 } 
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

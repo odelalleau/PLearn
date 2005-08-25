@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: UniformizeVMatrix.cc,v 1.6 2004/07/09 19:42:23 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "UniformizeVMatrix.h"
 
@@ -49,7 +49,7 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(UniformizeVMatrix, "ONE LINE DESC", "NO HELP");
 
 UniformizeVMatrix::UniformizeVMatrix()
-  : a(0), b(1)
+    : a(0), b(1)
 {
 }
 
@@ -71,17 +71,17 @@ UniformizeVMatrix::build()
 void
 UniformizeVMatrix::build_()
 {
-  if (distr) {
-    fieldinfos = distr->getFieldInfos();
+    if (distr) {
+        fieldinfos = distr->getFieldInfos();
   
-    if (a >= b)
-      PLERROR("In UniformizeVMatrix: a (%f) must be strictly smaller than b (%f)", a, b);
-    if (index.length() != bins.length())
-      PLERROR("In UniformizeVMatrix: the number of elements in index (%d) must equal the number of rows in bins (%d)", index.length(), bins.length());
-    if (min(index)<0 || max(index)>distr->length()-1)
-      PLERROR("In UniformizeVMatrix: all values of index must be in range [0,%d]",
-              distr->length()-1);
-  }
+        if (a >= b)
+            PLERROR("In UniformizeVMatrix: a (%f) must be strictly smaller than b (%f)", a, b);
+        if (index.length() != bins.length())
+            PLERROR("In UniformizeVMatrix: the number of elements in index (%d) must equal the number of rows in bins (%d)", index.length(), bins.length());
+        if (min(index)<0 || max(index)>distr->length()-1)
+            PLERROR("In UniformizeVMatrix: all values of index must be in range [0,%d]",
+                    distr->length()-1);
+    }
 }
 
 void
@@ -98,20 +98,33 @@ UniformizeVMatrix::declareOptions(OptionList &ol)
 void UniformizeVMatrix::getNewRow(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length())
-    PLERROR("In UniformizeVMatrix::getNewRow OUT OF BOUNDS");
-  if(v.length() != width())
-    PLERROR("In UniformizeVMatrix::getNewRow v.length() must be equal to the VMat's width");
+    if(i<0 || i>=length())
+        PLERROR("In UniformizeVMatrix::getNewRow OUT OF BOUNDS");
+    if(v.length() != width())
+        PLERROR("In UniformizeVMatrix::getNewRow v.length() must be equal to the VMat's width");
 #endif
 
-  distr->getRow(i, v);
-  for(int j=0; j<v.length(); j++) {
-    if (vec_find(index, (real)j) != -1) {
-      Vec x_bin = bins(j);
-      real xx = estimatedCumProb(v[j], x_bin);
-      v[j] = xx*(b-a) - a;
+    distr->getRow(i, v);
+    for(int j=0; j<v.length(); j++) {
+        if (vec_find(index, (real)j) != -1) {
+            Vec x_bin = bins(j);
+            real xx = estimatedCumProb(v[j], x_bin);
+            v[j] = xx*(b-a) - a;
+        }
     }
-  }
 }
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

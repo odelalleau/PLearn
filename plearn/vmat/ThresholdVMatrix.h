@@ -53,35 +53,48 @@ using namespace std;
  */
 class ThresholdVMatrix: public RowBufferedVMatrix
 {
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
- protected:
-  VMat underlying_distr;
-  real threshold;
-  real cold_value;
-  real hot_value;
-  bool gt_threshold;
+protected:
+    VMat underlying_distr;
+    real threshold;
+    real cold_value;
+    real hot_value;
+    bool gt_threshold;
 
- public:
-  // ******************
-  // *  Constructors  *
-  // ******************
-  ThresholdVMatrix(); //!<  default constructor (for automatic deserialization)
+public:
+    // ******************
+    // *  Constructors  *
+    // ******************
+    ThresholdVMatrix(); //!<  default constructor (for automatic deserialization)
 
-  ThresholdVMatrix(VMat the_underlying_distr, real threshold_, real the_cold_value=0.0, real the_hot_value=1.0,
-		  bool gt_threshold_= true);
-  virtual void getNewRow(int i, const Vec& v) const;
-  virtual void reset_dimensions() 
+    ThresholdVMatrix(VMat the_underlying_distr, real threshold_, real the_cold_value=0.0, real the_hot_value=1.0,
+                     bool gt_threshold_= true);
+    virtual void getNewRow(int i, const Vec& v) const;
+    virtual void reset_dimensions() 
     { 
-      underlying_distr->reset_dimensions(); 
-      width_=underlying_distr->width(); 
-      length_=underlying_distr->length(); 
+        underlying_distr->reset_dimensions(); 
+        width_=underlying_distr->width(); 
+        length_=underlying_distr->length(); 
     }
 };
 
 inline VMat thresholdVMat(VMat d, real threshold, real cold_value=0.0, real hot_value=1.0,
-			 bool gt_threshold= true)
+                          bool gt_threshold= true)
 { return new ThresholdVMatrix(d, threshold, cold_value, hot_value, gt_threshold); }
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

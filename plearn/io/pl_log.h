@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: pl_log.h,v 1.5 2005/05/25 20:31:19 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados, Christian Dorion
 
@@ -61,65 +61,65 @@ namespace PLearn {
 #endif
 
 enum VerbosityLevel {
-  VLEVEL_MAND     = 0,    // Mandatory
-  VLEVEL_IMP      = 1,    // Important
-  VLEVEL_NORMAL   = 5,    // Normal
-  VLEVEL_DBG      = 10,   // Debug Info
-  VLEVEL_EXTREME  = 500   // Extreme Verbosity
+    VLEVEL_MAND     = 0,    // Mandatory
+    VLEVEL_IMP      = 1,    // Important
+    VLEVEL_NORMAL   = 5,    // Normal
+    VLEVEL_DBG      = 10,   // Debug Info
+    VLEVEL_EXTREME  = 500   // Extreme Verbosity
 }; 
   
 class PL_Log
 {
 public:
-  //! Constructor
-  //! (Use default destructor, copy constructor, etc.)
-  PL_Log();
+    //! Constructor
+    //! (Use default destructor, copy constructor, etc.)
+    PL_Log();
   
-  //! Set the actual runtime verbosity.  This is a verbosity threshold;
-  //! any "requested_verbosity" less than or equal to this verbosity is
-  //! displayed by PL_LOG.
-  void verbosity(int v)                     { runtime_verbosity = v; }
+    //! Set the actual runtime verbosity.  This is a verbosity threshold;
+    //! any "requested_verbosity" less than or equal to this verbosity is
+    //! displayed by PL_LOG.
+    void verbosity(int v)                     { runtime_verbosity = v; }
 
-  //! Return the current runtime verbosity
-  int verbosity() const                     { return runtime_verbosity; }
+    //! Return the current runtime verbosity
+    int verbosity() const                     { return runtime_verbosity; }
 
-  //! Bind the actual output PStream; default is stream constructed from cout
-  void outputStream(PStream stream)         { output_stream = stream; }
+    //! Bind the actual output PStream; default is stream constructed from cout
+    void outputStream(PStream stream)         { output_stream = stream; }
 
-  //! Return the actual output PStream
-  PStream outputStream() const              { return output_stream; }
+    //! Return the actual output PStream
+    PStream outputStream() const              { return output_stream; }
 
-  //! Changes the output_stream outmode
-  void outmode(PStream::mode_t outmode_) { output_stream.outmode = outmode_; }
+    //! Changes the output_stream outmode
+    void outmode(PStream::mode_t outmode_) { output_stream.outmode = outmode_; }
   
-  //! Underlying logging function.  If "requested_verbosity" is less than
-  //! or equal to verbosity, then output_stream is returned; otherwise
-  //! null_stream is returned.
-  PStream& logger(int requested_verbosity);
+    //! Underlying logging function.  If "requested_verbosity" is less than
+    //! or equal to verbosity, then output_stream is returned; otherwise
+    //! null_stream is returned.
+    PStream& logger(int requested_verbosity);
 
-  //! Return number of times logger() has been called
-  int loggerCount() const                   { return logger_count; }
+    //! Return number of times logger() has been called
+    int loggerCount() const                   { return logger_count; }
   
-  //! Return system-wide PL_Log
-  static PL_Log& instance();
+    //! Return system-wide PL_Log
+    static PL_Log& instance();
 
-  //! Support stuff for heading manipulator
-  struct Heading {
-    Heading(string h_) : h(h_) {}
-    string h;
-  };
+    //! Support stuff for heading manipulator
+    struct Heading {
+        Heading(string h_) : h(h_) {}
+        string h;
+    };
 
-  /**
-   * Parses a string to see whether or not it names a VerbosityLevel. If it
-   * doesn't, tries the cast to an int.
-   */
-  static VerbosityLevel vlevel_from_string(const string& v);
+    /**
+     * Parses a string to see whether or not it names a VerbosityLevel. If it
+     * doesn't, tries the cast to an int.
+     */
+    static VerbosityLevel vlevel_from_string(const string& v);
   
 protected:
-  int runtime_verbosity;
-  PStream output_stream;
-  PStream null_stream;
-  long logger_count;            //!< Number of times logger() has been called
+    int runtime_verbosity;
+    PStream output_stream;
+    PStream null_stream;
+    long logger_count;            //!< Number of times logger() has been called
 };
 
 //! MAIN INTERFACE to the logging system
@@ -137,7 +137,7 @@ PStream& plsep(PStream&);
 //! Manipulator that displays a nice heading
 inline PL_Log::Heading plhead(string s)
 {
-  return PL_Log::Heading(s);
+    return PL_Log::Heading(s);
 }
 
 //! Actually draw the heading
@@ -146,3 +146,16 @@ PStream& operator<<(PStream&, PL_Log::Heading);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

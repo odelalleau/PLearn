@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: CrossReferenceVMatrix.cc,v 1.4 2004/04/05 22:50:25 morinf Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "CrossReferenceVMatrix.h"
 
@@ -49,16 +49,16 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(CrossReferenceVMatrix, "ONE LINE DESC", "ONE LINE HELP");
 
 CrossReferenceVMatrix::CrossReferenceVMatrix()
-  : col1(0)
+    : col1(0)
 {
 }
 
 CrossReferenceVMatrix::CrossReferenceVMatrix(VMat v1, int c1, VMat v2)
- : inherited(v1.length(), v1.width()+v2.width()-1), vm1(v1), col1(c1), vm2(v2)
+    : inherited(v1.length(), v1.width()+v2.width()-1), vm1(v1), col1(c1), vm2(v2)
 {
     //fieldinfos = v1->getFieldInfos();
     // fieldinfos &= v2->getFieldInfos();
-  build();
+    build();
 }
 
 
@@ -90,37 +90,50 @@ CrossReferenceVMatrix::build_()
 void CrossReferenceVMatrix::getRow(int i, Vec samplevec) const
 {
 #ifdef BOUNDCHECK
-  if (i<0 || i>=length() || samplevec.length()!=width())
-    PLERROR("In CrossReferenceVMatrix::getRow OUT OF BOUNDS");
+    if (i<0 || i>=length() || samplevec.length()!=width())
+        PLERROR("In CrossReferenceVMatrix::getRow OUT OF BOUNDS");
 #endif
 
-  Vec v1(vm1.width());
-  Vec v2(vm2.width());
-  vm1->getRow(i, v1);
-  int index = (int)v1[col1];
-  vm2->getRow(index, v2);
+    Vec v1(vm1.width());
+    Vec v2(vm2.width());
+    vm1->getRow(i, v1);
+    int index = (int)v1[col1];
+    vm2->getRow(index, v2);
 
-  for (int j=0; j<col1; j++) samplevec[j] = v1[j];
-  for (int j=col1+1; j<v1.length(); j++) samplevec[j-1] = v1[j];
-  for (int j=0; j<v2.length(); j++) samplevec[j+v1.length()-1] = v2[j];
+    for (int j=0; j<col1; j++) samplevec[j] = v1[j];
+    for (int j=col1+1; j<v1.length(); j++) samplevec[j-1] = v1[j];
+    for (int j=0; j<v2.length(); j++) samplevec[j+v1.length()-1] = v2[j];
 }
 
 real CrossReferenceVMatrix::get(int i, int j) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length() || j<0 || j>=width())
-    PLERROR("In CrossReferenceVMatrix::get OUT OF BOUNDS");
+    if(i<0 || i>=length() || j<0 || j>=width())
+        PLERROR("In CrossReferenceVMatrix::get OUT OF BOUNDS");
 #endif
 
-  if (j < col1)
-    return vm1->get(i,j);
-  else if (j < vm1.width()-1)
-    return vm1->get(i,j+1);
-  else {
-    int ii = (int)vm1->get(i,col1);
-    int jj = j - vm1.width() + 1;
-    return vm2->get(ii,jj);
-  }
+    if (j < col1)
+        return vm1->get(i,j);
+    else if (j < vm1.width()-1)
+        return vm1->get(i,j+1);
+    else {
+        int ii = (int)vm1->get(i,col1);
+        int jj = j - vm1.width() + 1;
+        return vm2->get(ii,jj);
+    }
 }
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

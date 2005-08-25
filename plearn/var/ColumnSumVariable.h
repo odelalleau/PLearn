@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ColumnSumVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ColumnSumVariable_INC
 #define ColumnSumVariable_INC
@@ -54,30 +54,43 @@ class ColumnSumVariable: public UnaryVariable
 {
 protected:
     typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  ColumnSumVariable() {}
+    //!  Default constructor for persistence
+    ColumnSumVariable() {}
 
 public:
-  ColumnSumVariable(Variable* input);
-  PLEARN_DECLARE_OBJECT(ColumnSumVariable);
-  virtual void recomputeSize(int& l, int& w) const;
+    ColumnSumVariable(Variable* input);
+    PLEARN_DECLARE_OBJECT(ColumnSumVariable);
+    virtual void recomputeSize(int& l, int& w) const;
   
   
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 };
 
 
 inline Var columnSum(Var v)
 { 
-  if(v->isRowVec())
-    return v;
-  else
-    return new ColumnSumVariable(v); 
+    if(v->isRowVec())
+        return v;
+    else
+        return new ColumnSumVariable(v); 
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

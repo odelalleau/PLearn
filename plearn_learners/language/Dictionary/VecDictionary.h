@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecDictionary.h,v 1.2 2004/09/14 16:04:57 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
 
@@ -63,59 +63,59 @@ class VecDictionary: public Dictionary
 
 private:
   
-  typedef Dictionary inherited;
+    typedef Dictionary inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
-  //! Vector of dictionary
-  TVec<string> vector_dict;
+    // ************************
+    // * public build options *
+    // ************************
+    //! Vector of dictionary
+    TVec<string> vector_dict;
   
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  // ### Make sure the implementation in the .cc
-  // ### initializes all fields to reasonable default values.
-  VecDictionary();
+    //! Default constructor.
+    // ### Make sure the implementation in the .cc
+    // ### initializes all fields to reasonable default values.
+    VecDictionary();
 
 
-  //! Constructor
-  /*!
-    \param symbols vector of the symbols of the dictionary
-    \param up_mode update mode
-   */
-  VecDictionary(TVec<string> symbols,bool up_mode=DEFAULT_UPDATE);
+    //! Constructor
+    /*!
+      \param symbols vector of the symbols of the dictionary
+      \param up_mode update mode
+    */
+    VecDictionary(TVec<string> symbols,bool up_mode=DEFAULT_UPDATE);
   
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  PLEARN_DECLARE_OBJECT(VecDictionary);
+    PLEARN_DECLARE_OBJECT(VecDictionary);
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 
@@ -125,3 +125,16 @@ DECLARE_OBJECT_PTR(VecDictionary);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

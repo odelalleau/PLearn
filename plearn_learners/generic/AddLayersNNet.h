@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddLayersNNet.h,v 1.7 2004/10/12 17:32:55 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -53,93 +53,93 @@ class AddLayersNNet: public NNet {
 
 private:
 
-  typedef NNet inherited;
+    typedef NNet inherited;
   
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // Fields below are not options.
+    // Fields below are not options.
 
-  //! This vector contains the 'real' parts' sizes (there is not '-1').
-  //! It is filled at build time from 'parts_size' and the training set inputsize.
-  TVec<int> real_parts_size;
+    //! This vector contains the 'real' parts' sizes (there is not '-1').
+    //! It is filled at build time from 'parts_size' and the training set inputsize.
+    TVec<int> real_parts_size;
 
-  //! Contains the added hidden layers.
-  VarArray hidden_layers;
+    //! Contains the added hidden layers.
+    VarArray hidden_layers;
 
-  //! Contains the weights for the hidden layers added.
-  VarArray hidden_weights;
+    //! Contains the weights for the hidden layers added.
+    VarArray hidden_weights;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  TVec<int> add_hidden;
-  string added_hidden_transfer_func;
-  TVec<int> parts_size;
+    TVec<int> add_hidden;
+    string added_hidden_transfer_func;
+    TVec<int> parts_size;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  AddLayersNNet();
+    //! Default constructor.
+    AddLayersNNet();
 
-  // ********************
-  // * PLearner methods *
-  // ********************
+    // ********************
+    // * PLearner methods *
+    // ********************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(AddLayersNNet);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(AddLayersNNet);
 
-  // **************************
-  // **** PLearner methods ****
-  // **************************
+    // **************************
+    // **** PLearner methods ****
+    // **************************
 
-  //! Return the current activations of a given added hidden layer.
-  //! This is not a copy, so they should not be modified.
-  Vec getHiddenUnitsActivation(int layer);
+    //! Return the current activations of a given added hidden layer.
+    //! This is not a copy, so they should not be modified.
+    Vec getHiddenUnitsActivation(int layer);
 
-  //! Return the hidden weights for a given hidden layer.
-  //! This is not a copy, so they should not be modified.
-  Mat getHiddenWeights(int layer);
+    //! Return the hidden weights for a given hidden layer.
+    //! This is not a copy, so they should not be modified.
+    Mat getHiddenWeights(int layer);
 
-  //! Return the weights going out of a given added hidden layer.
-  //! This is not a copy, so they should not be modified.
-  Mat getOutputHiddenWeights(int layer);
+    //! Return the weights going out of a given added hidden layer.
+    //! This is not a copy, so they should not be modified.
+    Mat getOutputHiddenWeights(int layer);
 
 protected:
 
-  //! Overridden to account for the added layers.
-  virtual void initializeParams(bool set_seed = true);
-  virtual void buildPenalties(const Var& hidden_layer);
+    //! Overridden to account for the added layers.
+    virtual void initializeParams(bool set_seed = true);
+    virtual void buildPenalties(const Var& hidden_layer);
 
 };
 
@@ -149,3 +149,16 @@ DECLARE_OBJECT_PTR(AddLayersNNet);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

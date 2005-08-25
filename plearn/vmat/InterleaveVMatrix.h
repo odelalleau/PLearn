@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: InterleaveVMatrix.h,v 1.4 2004/04/05 22:55:21 morinf Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -56,52 +56,52 @@ using namespace std;
   For example, if VM1.length()==10 and VM2.length()==30 then
   the resulting VM will have 60 rows, and 3 repetitions
   of each row of VM1, with rows taken as follows: 
-   VM1.row(0), VM2.row(0), VM1.row(1), VM2.row(1), ..., 
-   VM1.row(9), VM2.row(9), VM1.row(0), VM2.row(10), ...
+  VM1.row(0), VM2.row(0), VM1.row(1), VM2.row(1), ..., 
+  VM1.row(9), VM2.row(9), VM1.row(0), VM2.row(10), ...
   Note that if VM2.length() is not a multiple of VM1.length()
   some records from VM1 will be repeated once more than others.
 */
 class InterleaveVMatrix: public VMatrix
 {
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
 protected:
-  Array<VMat> vm;
+    Array<VMat> vm;
 
 public:
-  // ******************
-  // *  Constructors  *
-  // ******************
-  InterleaveVMatrix(); //!<  default constructor (for automatic deserialization)
+    // ******************
+    // *  Constructors  *
+    // ******************
+    InterleaveVMatrix(); //!<  default constructor (for automatic deserialization)
 
-  //! The field names are copied from the first VMat in the array
-  InterleaveVMatrix(Array<VMat> distributions);
+    //! The field names are copied from the first VMat in the array
+    InterleaveVMatrix(Array<VMat> distributions);
 
-  //! The field names are copied from the first VMat d1
-  InterleaveVMatrix(VMat d1, VMat d2);
+    //! The field names are copied from the first VMat d1
+    InterleaveVMatrix(VMat d1, VMat d2);
   
-  PLEARN_DECLARE_OBJECT(InterleaveVMatrix);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(InterleaveVMatrix);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
-  virtual void reset_dimensions() 
+    virtual real get(int i, int j) const;
+    virtual void getSubRow(int i, int j, Vec v) const;
+    virtual void reset_dimensions() 
     { 
-      for (int i=0;i<vm.size();i++) vm[i]->reset_dimensions(); 
-      width_=vm[0]->width();
-      int maxl = 0;
-      int n=vm.size();
-      for (int i=0;i<n;i++) 
+        for (int i=0;i<vm.size();i++) vm[i]->reset_dimensions(); 
+        width_=vm[0]->width();
+        int maxl = 0;
+        int n=vm.size();
+        for (int i=0;i<n;i++) 
         {
-          if (vm[i]->width()!=width_) 
-            PLERROR("InterleaveVMatrix: underlying-distr %d has %d width, while 0-th has %d",
-                  i,vm[i]->width(),width_);
-          int l= vm[i]->length();
-          if (l>maxl) maxl=l;
+            if (vm[i]->width()!=width_) 
+                PLERROR("InterleaveVMatrix: underlying-distr %d has %d width, while 0-th has %d",
+                        i,vm[i]->width(),width_);
+            int l= vm[i]->length();
+            if (l>maxl) maxl=l;
         }
-      length_=n*maxl;
+        length_=n*maxl;
     }
 private:
     void build_();
@@ -112,3 +112,16 @@ DECLARE_OBJECT_PTR(InterleaveVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

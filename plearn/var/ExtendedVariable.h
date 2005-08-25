@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ExtendedVariable_INC
 #define ExtendedVariable_INC
@@ -60,35 +60,35 @@ using namespace std;
 */
 class ExtendedVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 public:
-  int top_extent;
-  int bottom_extent;
-  int left_extent;
-  int right_extent;
-  real fill_value; 
+    int top_extent;
+    int bottom_extent;
+    int left_extent;
+    int right_extent;
+    real fill_value; 
 
 public:
-  //!  Default constructor for persistence
-  ExtendedVariable()
-    : top_extent(), bottom_extent(), left_extent(), right_extent(), fill_value()
+    //!  Default constructor for persistence
+    ExtendedVariable()
+        : top_extent(), bottom_extent(), left_extent(), right_extent(), fill_value()
     {}
-  ExtendedVariable(Variable* input, 
-                   int the_top_extent, int the_bottom_extent, 
-                   int the_left_extent, int the_right_extent, 
-                   real the_fill_value);
+    ExtendedVariable(Variable* input, 
+                     int the_top_extent, int the_bottom_extent, 
+                     int the_left_extent, int the_right_extent, 
+                     real the_fill_value);
 
-  PLEARN_DECLARE_OBJECT(ExtendedVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(ExtendedVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;  
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;  
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 
 protected:
     void build_();
@@ -103,15 +103,28 @@ inline Var extend(Var v, int top_extent, int bottom_extent, int left_extent, int
 //!  simple extension of a vector (same semantic as old extend, when we only had vectors)
 inline Var extend(Var v, real extension_value = 1.0, int n_extend = 1)
 { 
-  if(v->isColumnVec())
-    return new ExtendedVariable(v,0,n_extend,0,0,extension_value); 
-  else if(v->isRowVec())
-    return new ExtendedVariable(v,0,0,0,n_extend,extension_value); 
-  PLERROR("In extend(Var v, real extension_value = 1.0, int n_extend = 1) v is not a vector (single row or single column)");
-  return Var();
+    if(v->isColumnVec())
+        return new ExtendedVariable(v,0,n_extend,0,0,extension_value); 
+    else if(v->isRowVec())
+        return new ExtendedVariable(v,0,0,0,n_extend,extension_value); 
+    PLERROR("In extend(Var v, real extension_value = 1.0, int n_extend = 1) v is not a vector (single row or single column)");
+    return Var();
 }
 
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

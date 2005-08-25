@@ -42,60 +42,73 @@ using namespace std;
 
 extern "C"
 {  
-  int dnaupd_(long int *, const char *, long int *, const char *, 
-              long int *, double *, double *, long int *, double *, 
-              long int *, long int *, long int *, double *, double *, 
-              long int *, long int *, short, short);
+    int dnaupd_(long int *, const char *, long int *, const char *, 
+                long int *, double *, double *, long int *, double *, 
+                long int *, long int *, long int *, double *, double *, 
+                long int *, long int *, short, short);
   
-  int dneupd_(long int *, const char *, long int *, double *, double *, 
-              double *, long int *, double *, double *, double *, 
-              const char *, long int *, const char *, long int *, double *, 
-              double *, 
-              long int *, double *, long int *, long int *, long int *, 
-              double *, double *, long int *, long int *, short, short,
-              short);
+    int dneupd_(long int *, const char *, long int *, double *, double *, 
+                double *, long int *, double *, double *, double *, 
+                const char *, long int *, const char *, long int *, double *, 
+                double *, 
+                long int *, double *, long int *, long int *, long int *, 
+                double *, double *, long int *, long int *, short, short,
+                short);
    
-  int snaupd_(long int *, const char *, long int *, const char *, 
-              long int *, float *, float *, long int *, float *, 
-              long int *, long int *, long int *, float *, float *, 
-              long int *, long int *, short, short);
+    int snaupd_(long int *, const char *, long int *, const char *, 
+                long int *, float *, float *, long int *, float *, 
+                long int *, long int *, long int *, float *, float *, 
+                long int *, long int *, short, short);
   
-  int sneupd_(long int *, const char *, long int *, float *, float *, 
-              float *, long int *, float *, float *, float *, 
-              const char *, long int *, const char *, long int *, float *, 
-              float *, 
-              long int *, float *, long int *, long int *, long int *, 
-              float *, float *, long int *, long int *, short, short,
-              short);
+    int sneupd_(long int *, const char *, long int *, float *, float *, 
+                float *, long int *, float *, float *, float *, 
+                const char *, long int *, const char *, long int *, float *, 
+                float *, 
+                long int *, float *, long int *, long int *, long int *, 
+                float *, float *, long int *, long int *, short, short,
+                short);
 
-  int dsaupd_(long int *, const char *, long int *, const char *, 
-              long int *, double *, double *, long int *, double *, 
-              long int *, long int *, long int *, double *, double *, 
-              long int *, long int *, short, short);
+    int dsaupd_(long int *, const char *, long int *, const char *, 
+                long int *, double *, double *, long int *, double *, 
+                long int *, long int *, long int *, double *, double *, 
+                long int *, long int *, short, short);
   
-  int dseupd_(long int *, const char *, long int *, double *, 
-              double *, long int *, double *, 
-              const char *, long int *, const char *, long int *, double *, 
-              double *, 
-              long int *, double *, long int *, long int *, long int *, 
-              double *, double *, long int *, long int *, short, short,
-              short);
+    int dseupd_(long int *, const char *, long int *, double *, 
+                double *, long int *, double *, 
+                const char *, long int *, const char *, long int *, double *, 
+                double *, 
+                long int *, double *, long int *, long int *, long int *, 
+                double *, double *, long int *, long int *, short, short,
+                short);
    
-  int ssaupd_(long int *, const char *, long int *, const char *, 
-              long int *, float *, float *, long int *, float *, 
-              long int *, long int *, long int *, float *, float *, 
-              long int *, long int *, short, short);
+    int ssaupd_(long int *, const char *, long int *, const char *, 
+                long int *, float *, float *, long int *, float *, 
+                long int *, long int *, long int *, float *, float *, 
+                long int *, long int *, short, short);
   
-  int sseupd_(long int *, const char *, long int *, float *, 
-              float *, long int *, float *, 
-              const char *, long int *, const char *, long int *, float *, 
-              float *, 
-              long int *, float *, long int *, long int *, long int *, 
-              float *, float *, long int *, long int *, short, short,
-              short);
+    int sseupd_(long int *, const char *, long int *, float *, 
+                float *, long int *, float *, 
+                const char *, long int *, const char *, long int *, float *, 
+                float *, 
+                long int *, float *, long int *, long int *, long int *, 
+                float *, float *, long int *, long int *, short, short,
+                short);
 }
 
 } // end of namespace PLearn
 
 
 #endif /* arpack_proto_INC */
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

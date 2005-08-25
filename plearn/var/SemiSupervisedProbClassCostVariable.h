@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SemiSupervisedProbClassCostVariable.h,v 1.4 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef SemiSupervisedProbClassCostVariable_INC
 #define SemiSupervisedProbClassCostVariable_INC
@@ -91,34 +91,34 @@ using namespace std;
 */
 class SemiSupervisedProbClassCostVariable: public NaryVariable
 {
-  typedef NaryVariable inherited;
+    typedef NaryVariable inherited;
 
 protected:
-  //! the option
-  real flatten_factor;
+    //! the option
+    real flatten_factor;
 
-  //! temporaries for avoiding re-computations in the bprop
-  Vec raised_prob;
-  real sum_raised_prob;
+    //! temporaries for avoiding re-computations in the bprop
+    Vec raised_prob;
+    real sum_raised_prob;
 
 public:
-  //!  Default constructor for persistence
-  SemiSupervisedProbClassCostVariable() : flatten_factor(1) {}
-  SemiSupervisedProbClassCostVariable(Var prob_, Var target_, Var prior_, real flattenfactor=1.0);
+    //!  Default constructor for persistence
+    SemiSupervisedProbClassCostVariable() : flatten_factor(1) {}
+    SemiSupervisedProbClassCostVariable(Var prob_, Var target_, Var prior_, real flattenfactor=1.0);
 
-  PLEARN_DECLARE_OBJECT(SemiSupervisedProbClassCostVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(SemiSupervisedProbClassCostVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
-  Var& prob() { return varray[0]; }
-  Var& target() { return varray[1]; }
-  Var& prior() { return varray[2]; }
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
+    Var& prob() { return varray[0]; }
+    Var& target() { return varray[1]; }
+    Var& prior() { return varray[2]; }
 
 protected:
     void build_();
@@ -129,3 +129,16 @@ DECLARE_OBJECT_PTR(SemiSupervisedProbClassCostVariable);
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

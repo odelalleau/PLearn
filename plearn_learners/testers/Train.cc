@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Train.cc,v 1.3 2004/09/14 16:04:58 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Martin Monperrus
 
@@ -48,12 +48,12 @@ namespace PLearn {
 using namespace std;
 
 Train::Train() 
-  /* ### Initialize all fields to their default value */
+    /* ### Initialize all fields to their default value */
 {
-  // ...
+    // ...
 
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
+    // ### You may or may not want to call build_() to finish building the object
+    // build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(Train, "An easy PTester", "Sometimes, we want to train a learner easily.\n"
@@ -63,45 +63,45 @@ PLEARN_IMPLEMENT_OBJECT(Train, "An easy PTester", "Sometimes, we want to train a
 
 void Train::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  // ### ex:
-  // declareOption(ol, "myoption", &Train::myoption, OptionBase::buildoption,
-  //               "Help text describing this option");
-  // ...
-   declareOption(ol, "dataset", &Train::trainset, OptionBase::buildoption,
-                 "Any valid vmat");
+    // ### ex:
+    // declareOption(ol, "myoption", &Train::myoption, OptionBase::buildoption,
+    //               "Help text describing this option");
+    // ...
+    declareOption(ol, "dataset", &Train::trainset, OptionBase::buildoption,
+                  "Any valid vmat");
 
-   declareOption(ol, "psave", &Train::psave, OptionBase::buildoption,
-                 "Name of the file .psave");
+    declareOption(ol, "psave", &Train::psave, OptionBase::buildoption,
+                  "Name of the file .psave");
   
-   declareOption(ol, "learner", &Train::learner, OptionBase::buildoption,
-                 "Any valid learner");
+    declareOption(ol, "learner", &Train::learner, OptionBase::buildoption,
+                  "Any valid learner");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void Train::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation. 
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+    // ### You should assume that the parent class' build_() has already been called.
 }
 
 // ### Nothing to add here, simply calls build_
 void Train::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void Train::run()
@@ -116,16 +116,29 @@ void Train::run()
 
 void Train::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("Train::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("Train::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

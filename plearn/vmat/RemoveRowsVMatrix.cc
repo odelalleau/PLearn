@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: RemoveRowsVMatrix.cc,v 1.3 2004/04/05 23:02:40 morinf Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "RemoveRowsVMatrix.h"
 
@@ -48,8 +48,8 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(RemoveRowsVMatrix, "ONE LINE DESC", "NO HELP");
 
 RemoveRowsVMatrix::RemoveRowsVMatrix(VMat the_distr, Vec the_indices)
-  : inherited(the_distr->length()-the_indices.length(), the_distr->width()),
-    distr(the_distr), indices(the_indices.copy())
+    : inherited(the_distr->length()-the_indices.length(), the_distr->width()),
+      distr(the_distr), indices(the_indices.copy())
 {
     build();
 }
@@ -80,13 +80,13 @@ RemoveRowsVMatrix::declareOptions(OptionList &ol)
 
 int RemoveRowsVMatrix::getrownum(int i) const
 {
-  int k=0;
-  while(k<indices.length() && indices[k]<=i)
-  {
-    i++;
-    k++;
-  }
-  return i;
+    int k=0;
+    while(k<indices.length() && indices[k]<=i)
+    {
+        i++;
+        k++;
+    }
+    return i;
 }
 
 real RemoveRowsVMatrix::get(int i, int j) const
@@ -103,3 +103,16 @@ real RemoveRowsVMatrix::dot(int i, const Vec& v) const
 
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

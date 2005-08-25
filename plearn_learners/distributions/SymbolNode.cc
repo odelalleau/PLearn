@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SymbolNode.cc,v 1.3 2004/10/13 18:59:24 larocheh Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle
 
@@ -47,36 +47,36 @@ namespace PLearn {
 using namespace std;
 
 SymbolNode::SymbolNode() 
-  /* ### Initialize all fields to their default value */
+    /* ### Initialize all fields to their default value */
 {
-  frequence = 0;
-  symbol = -1;
+    frequence = 0;
+    symbol = -1;
 }
 
 SymbolNode::SymbolNode(int symbol_) 
-  /* ### Initialize all fields to their default value */
+    /* ### Initialize all fields to their default value */
 {
-  frequence = 0;
-  symbol = symbol_;
+    frequence = 0;
+    symbol = symbol_;
 }
 
 PLEARN_IMPLEMENT_OBJECT(SymbolNode,
-    "Node for a NGramTree",
-    "Everything else is obvious\n"
-);
+                        "Node for a NGramTree",
+                        "Everything else is obvious\n"
+    );
 
 void SymbolNode::declareOptions(OptionList& ol)
 {
-   declareOption(ol, "frequence", &SymbolNode::frequence, OptionBase::learntoption,
-                 "Frequence associated to this node");
-   declareOption(ol, "frequencies", &SymbolNode::frequencies, OptionBase::learntoption,
-                 "Frequencies associated to a symbol at this node");
-   declareOption(ol, "symbol", &SymbolNode::symbol, OptionBase::buildoption,
-                 "Symbol associated to this node");
-   declareOption(ol, "children", &SymbolNode::children, OptionBase::buildoption,
-                 "Children of this node");
+    declareOption(ol, "frequence", &SymbolNode::frequence, OptionBase::learntoption,
+                  "Frequence associated to this node");
+    declareOption(ol, "frequencies", &SymbolNode::frequencies, OptionBase::learntoption,
+                  "Frequencies associated to a symbol at this node");
+    declareOption(ol, "symbol", &SymbolNode::symbol, OptionBase::buildoption,
+                  "Symbol associated to this node");
+    declareOption(ol, "children", &SymbolNode::children, OptionBase::buildoption,
+                  "Children of this node");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 void SymbolNode::build_(){}
@@ -84,73 +84,86 @@ void SymbolNode::build_(){}
 // ### Nothing to add here, simply calls build_
 void SymbolNode::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void SymbolNode::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  deepCopyField(children, copies);
-  deepCopyField(frequencies, copies);
-  //PLERROR("SymbolNode::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(children, copies);
+    deepCopyField(frequencies, copies);
+    //PLERROR("SymbolNode::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 PP<SymbolNode> SymbolNode::add(int child_)
 {
-  PP<SymbolNode> cn;
-  map<int,PP<SymbolNode> >::iterator it = children.find(child_);
-  if(it == children.end())
-  {
-    cn = new SymbolNode(child_);
-    children[child_] = cn;
-  }
-  else
-  {
-    cn = it->second;
-  }
-  return cn;
+    PP<SymbolNode> cn;
+    map<int,PP<SymbolNode> >::iterator it = children.find(child_);
+    if(it == children.end())
+    {
+        cn = new SymbolNode(child_);
+        children[child_] = cn;
+    }
+    else
+    {
+        cn = it->second;
+    }
+    return cn;
 }
 
 PP<SymbolNode> SymbolNode::child(int child_)
 {
-  if(children.find(child_) == children.end())
-    return 0;
+    if(children.find(child_) == children.end())
+        return 0;
 
-  return children.find(child_)->second;
+    return children.find(child_)->second;
 }
 
 TVec<PP<SymbolNode> > SymbolNode::getChildren()
 {
-  TVec<PP<SymbolNode> > ret(children.size());
-  int i=0;
-  for(map<int,PP<SymbolNode> >::iterator it = children.begin(); it != children.end(); it++)
-    ret[i++] = it->second;
-  return ret;
+    TVec<PP<SymbolNode> > ret(children.size());
+    int i=0;
+    for(map<int,PP<SymbolNode> >::iterator it = children.begin(); it != children.end(); it++)
+        ret[i++] = it->second;
+    return ret;
 }
 
 int SymbolNode::freq(int symbol)
 {
-  map<int,int>::iterator it = frequencies.find(symbol);
-  if(it == frequencies.end())
-    return 0;
-  else
-    return it->second;
+    map<int,int>::iterator it = frequencies.find(symbol);
+    if(it == frequencies.end())
+        return 0;
+    else
+        return it->second;
 }
 
 void SymbolNode::incr(int symbol)
 {
-  incr();
-  map<int,int>::iterator it = frequencies.find(symbol);
-  if(it == frequencies.end())
-    frequencies[symbol] = 1;
-  else
-  {
-    int temp = it->second;
-    frequencies[symbol] = temp+1;
-  }
+    incr();
+    map<int,int>::iterator it = frequencies.find(symbol);
+    if(it == frequencies.end())
+        frequencies[symbol] = 1;
+    else
+    {
+        int temp = it->second;
+        frequencies[symbol] = temp+1;
+    }
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

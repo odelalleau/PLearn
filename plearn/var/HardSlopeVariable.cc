@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: HardSlopeVariable.cc,v 1.3 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "HardSlopeVariable.h"
 #include "Var_utils.h"
@@ -56,9 +56,9 @@ PLEARN_IMPLEMENT_OBJECT(HardSlopeVariable,
                         "If the arguments are vectors than the operation is performed element by element on all of them.\n");
 
 HardSlopeVariable::  HardSlopeVariable(Variable* x, Variable* left, Variable* right)
-  : inherited(VarArray(x,left) & Var(right), 
-              x->length()<left->length()?left->length():x->length(), 
-              x->width()<left->width()?left->width():x->width()) 
+    : inherited(VarArray(x,left) & Var(right), 
+                x->length()<left->length()?left->length():x->length(), 
+                x->width()<left->width()?left->width():x->width()) 
 {}
 
 
@@ -84,70 +84,81 @@ void HardSlopeVariable::recomputeSize(int& l, int& w) const
 
 void HardSlopeVariable::fprop()
 {
-  int n=nelems();
-  int n1=varray[0]->nelems();
-  int n2=varray[1]->nelems();
-  int n3=varray[2]->nelems();
-  real* x = varray[0]->valuedata;
-  real* left = varray[1]->valuedata;
-  real* right = varray[2]->valuedata;
+    int n=nelems();
+    int n1=varray[0]->nelems();
+    int n2=varray[1]->nelems();
+    int n3=varray[2]->nelems();
+    real* x = varray[0]->valuedata;
+    real* left = varray[1]->valuedata;
+    real* right = varray[2]->valuedata;
 
-  if (n1==n && n2==n && n3==n)
-    for(int i=0; i<n; i++)
-      valuedata[i] = hard_slope(x[i], left[i], right[i]);
-  else if (n1==1 && n2==n && n3==n)
-    for(int i=0; i<n; i++)
-      valuedata[i] = hard_slope(*x, left[i], right[i]);
-  else
-  {
-    int m1= n1==1?0:1;
-    int m2= n2==1?0:1;
-    int m3= n3==1?0:1;
-    for(int i=0; i<n; i++,x+=m1,left+=m2,right+=m3)
-      valuedata[i] = hard_slope(*x, *left, *right);
-  }
+    if (n1==n && n2==n && n3==n)
+        for(int i=0; i<n; i++)
+            valuedata[i] = hard_slope(x[i], left[i], right[i]);
+    else if (n1==1 && n2==n && n3==n)
+        for(int i=0; i<n; i++)
+            valuedata[i] = hard_slope(*x, left[i], right[i]);
+    else
+    {
+        int m1= n1==1?0:1;
+        int m2= n2==1?0:1;
+        int m3= n3==1?0:1;
+        for(int i=0; i<n; i++,x+=m1,left+=m2,right+=m3)
+            valuedata[i] = hard_slope(*x, *left, *right);
+    }
 }
 
 
 void HardSlopeVariable::bprop()
 {
-  int n=nelems();
-  int n1=varray[0]->nelems();
-  int n2=varray[1]->nelems();
-  int n3=varray[2]->nelems();
-  int m1= n1==1?0:1;
-  int m2= n2==1?0:1;
-  int m3= n3==1?0:1;
-  real* x = varray[0]->valuedata;
-  real* left = varray[1]->valuedata;
-  real* right = varray[2]->valuedata;
-  real* dx = varray[0]->gradientdata;
-  real* dleft = varray[1]->gradientdata;
-  real* dright = varray[2]->gradientdata;
-  for(int i=0; i<n; i++,x+=m1,left+=m2,right+=m3,dx+=m1,dleft+=m2,dright+=m3)
-  {
-    real tleft = *x - *left;
-    real tright = *x - *right;
-    if (tright<=0 && tleft>=0)
+    int n=nelems();
+    int n1=varray[0]->nelems();
+    int n2=varray[1]->nelems();
+    int n3=varray[2]->nelems();
+    int m1= n1==1?0:1;
+    int m2= n2==1?0:1;
+    int m3= n3==1?0:1;
+    real* x = varray[0]->valuedata;
+    real* left = varray[1]->valuedata;
+    real* right = varray[2]->valuedata;
+    real* dx = varray[0]->gradientdata;
+    real* dleft = varray[1]->gradientdata;
+    real* dright = varray[2]->gradientdata;
+    for(int i=0; i<n; i++,x+=m1,left+=m2,right+=m3,dx+=m1,dleft+=m2,dright+=m3)
     {
-      real inv_delta=1.0/(*right - *left);
-      real dll = tright*inv_delta;
-      real drr = -tleft*inv_delta;
-      real dxx = inv_delta;
-      *dx += gradientdata[i] * dxx;
-      *dleft += gradientdata[i] * dll;
-      *dright += gradientdata[i] * drr;
+        real tleft = *x - *left;
+        real tright = *x - *right;
+        if (tright<=0 && tleft>=0)
+        {
+            real inv_delta=1.0/(*right - *left);
+            real dll = tright*inv_delta;
+            real drr = -tleft*inv_delta;
+            real dxx = inv_delta;
+            *dx += gradientdata[i] * dxx;
+            *dleft += gradientdata[i] * dll;
+            *dright += gradientdata[i] * drr;
+        }
     }
-  }
 }
 
 void HardSlopeVariable::symbolicBprop()
 {
-  PLERROR("HardSlopeVariable::symbolicBprop() not implemented");
+    PLERROR("HardSlopeVariable::symbolicBprop() not implemented");
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

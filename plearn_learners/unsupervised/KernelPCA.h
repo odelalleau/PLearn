@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelPCA.h,v 1.5 2004/09/14 16:04:59 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,69 +54,69 @@ class KernelPCA: public KernelProjection
 
 private:
 
-  typedef KernelProjection inherited;
+    typedef KernelProjection inherited;
   
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
-  Ker kpca_kernel;
-  bool kernel_is_distance;
-  bool remove_bias;
-  bool remove_bias_in_evaluate;
+    // ************************
+    // * public build options *
+    // ************************
+    Ker kpca_kernel;
+    bool kernel_is_distance;
+    bool remove_bias;
+    bool remove_bias_in_evaluate;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  KernelPCA();
+    //! Default constructor.
+    KernelPCA();
 
 
-  // ****************************
-  // * KernelProjection methods *
-  // ****************************
+    // ****************************
+    // * KernelProjection methods *
+    // ****************************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(KernelPCA);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(KernelPCA);
 
 
-  // **********************************
-  // **** KernelProjection methods ****
-  // **********************************
+    // **********************************
+    // **** KernelProjection methods ****
+    // **********************************
 
-  //! (Re-)initializes the PLearner in its fresh state.
-  virtual void forget();
+    //! (Re-)initializes the PLearner in its fresh state.
+    virtual void forget();
 
 };
 
@@ -126,3 +126,16 @@ DECLARE_OBJECT_PTR(KernelPCA);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

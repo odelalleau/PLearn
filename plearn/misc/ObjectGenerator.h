@@ -32,8 +32,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ObjectGenerator.h,v 1.4 2004/07/21 16:30:53 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include <plearn/base/Object.h>
 #include <plearn/math/TVec.h>
@@ -47,49 +47,49 @@ using namespace std;
 class ObjectGenerator: public Object
 {
 private:
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
 
-  //! Did we begin to generate new Objects???
-  bool generation_began;
+    //! Did we begin to generate new Objects???
+    bool generation_began;
 
 public:
 
-  //! The template Object from which we will generate other Objects
-  PP<Object> template_object;
+    //! The template Object from which we will generate other Objects
+    PP<Object> template_object;
 
 
- // ******************
- // * Object methods *
- // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private:
-  void build_();
+    void build_();
 
 protected:
-  static void declareOptions(OptionList& ol);
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  //! Default constructor
-  ObjectGenerator();
+    //! Default constructor
+    ObjectGenerator();
 
-  //! This will generate the next object in the list of all options
-  //! MUST be define by a subclass
-  virtual PP<Object> generateNextObject() = 0;
+    //! This will generate the next object in the list of all options
+    //! MUST be define by a subclass
+    virtual PP<Object> generateNextObject() = 0;
 
-  //! This will generate a list of all possible Objects.
-  //! By default, just loop over generateNextObject()
-  virtual TVec< PP<Object> > generateAllObjects();
+    //! This will generate a list of all possible Objects.
+    //! By default, just loop over generateNextObject()
+    virtual TVec< PP<Object> > generateAllObjects();
 
-  //! simply calls inherited::build() then build_()
-  virtual void build();
+    //! simply calls inherited::build() then build_()
+    virtual void build();
 
-  virtual void forget();
+    virtual void forget();
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_ABSTRACT_OBJECT(ObjectGenerator);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_ABSTRACT_OBJECT(ObjectGenerator);
 };
 
 // Declares a few other classes and functions related to this class
@@ -98,3 +98,16 @@ DECLARE_OBJECT_PTR(ObjectGenerator);
 } // end of namespace PLearn
 
 #endif // ObjectGenerator_INC
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

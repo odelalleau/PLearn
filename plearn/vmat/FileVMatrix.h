@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.18 2005/02/18 17:13:39 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -56,72 +56,72 @@ class FileVMatrix: public RowBufferedVMatrix
 
 private:
 
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
 protected:
 
-  PPath filename_;
-  FILE* f;
-  bool file_is_bigendian;
-  bool file_is_float;
+    PPath filename_;
+    FILE* f;
+    bool file_is_bigendian;
+    bool file_is_float;
 
 private:
 
-  bool build_new_file;
+    bool build_new_file;
 
-  //! Used to remember which file we were accessing before build was called for
-  //! the last time.
-  PPath old_filename;
+    //! Used to remember which file we were accessing before build was called for
+    //! the last time.
+    PPath old_filename;
 
 public:
 
-  FileVMatrix();
-  FileVMatrix(const PPath& filename, bool writable_=false); //!<  opens an existing file
-  FileVMatrix(const PPath& filename, int the_length, int the_width); //!<  create a new matrix file
-  FileVMatrix(const PPath& filename, int the_length, const TVec<string>& fieldnames); //!<  create a new matrix file
+    FileVMatrix();
+    FileVMatrix(const PPath& filename, bool writable_=false); //!<  opens an existing file
+    FileVMatrix(const PPath& filename, int the_length, int the_width); //!<  create a new matrix file
+    FileVMatrix(const PPath& filename, int the_length, const TVec<string>& fieldnames); //!<  create a new matrix file
 
 protected:
 
-  static void declareOptions(OptionList & ol);
-  virtual void getNewRow(int i, const Vec& v) const;
+    static void declareOptions(OptionList & ol);
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  // Options.
+    // Options.
 
-  bool remove_when_done;
-  bool track_ref;
+    bool remove_when_done;
+    bool track_ref;
 
-  //! Re-write the header with all current field values.
-  virtual void updateHeader();
+    //! Re-write the header with all current field values.
+    virtual void updateHeader();
 
-  virtual void put(int i, int j, real value);
-  virtual void putSubRow(int i, int j, Vec v);
-  virtual void appendRow(Vec v);
-  virtual void flush();
+    virtual void put(int i, int j, real value);
+    virtual void putSubRow(int i, int j, Vec v);
+    virtual void appendRow(Vec v);
+    virtual void flush();
 
-  virtual void build();
+    virtual void build();
 
-  //! Return count_refs[filename.absolute()].
-  static int countRefs(const PPath& filename);
+    //! Return count_refs[filename.absolute()].
+    static int countRefs(const PPath& filename);
 
-  PLEARN_DECLARE_OBJECT(FileVMatrix);
+    PLEARN_DECLARE_OBJECT(FileVMatrix);
 
 
-  //! Transform a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transform a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  virtual ~FileVMatrix();
-
-private:
-
-  void build_();
+    virtual ~FileVMatrix();
 
 private:
 
-  //! Maps a filename to the number of FileVMatrix that currently read it and
-  //! have the 'track_ref' option set to 1.
-  static map<string, int> count_refs;
+    void build_();
+
+private:
+
+    //! Maps a filename to the number of FileVMatrix that currently read it and
+    //! have the 'track_ref' option set to 1.
+    static map<string, int> count_refs;
 
 };
 
@@ -129,3 +129,16 @@ DECLARE_OBJECT_PTR(FileVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

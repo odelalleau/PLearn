@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ToBagSplitter.cc,v 1.4 2004/09/14 16:04:39 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -52,28 +52,28 @@ using namespace std;
 // ToBagSplitter //
 ///////////////////
 ToBagSplitter::ToBagSplitter() 
-  : Splitter(),
-    expected_size_of_bag(10)
+    : Splitter(),
+      expected_size_of_bag(10)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(ToBagSplitter,
-    "A Splitter that makes any existing splitter operate on bags only.",
-    "The dataset provided must contain bag information, as described in\n"
-    "SumOverBagsVariable");
+                        "A Splitter that makes any existing splitter operate on bags only.",
+                        "The dataset provided must contain bag information, as described in\n"
+                        "SumOverBagsVariable");
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void ToBagSplitter::declareOptions(OptionList& ol)
 {
-   declareOption(ol, "expected_size_of_bag", &ToBagSplitter::expected_size_of_bag, OptionBase::buildoption,
-       "The expected size of each bag. It is not compulsory to change this option.");
+    declareOption(ol, "expected_size_of_bag", &ToBagSplitter::expected_size_of_bag, OptionBase::buildoption,
+                  "The expected size of each bag. It is not compulsory to change this option.");
 
-   declareOption(ol, "sub_splitter", &ToBagSplitter::sub_splitter, OptionBase::buildoption,
-       "The underlying splitter we want to make operate on bags.");
+    declareOption(ol, "sub_splitter", &ToBagSplitter::sub_splitter, OptionBase::buildoption,
+                  "The underlying splitter we want to make operate on bags.");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ///////////
@@ -81,8 +81,8 @@ void ToBagSplitter::declareOptions(OptionList& ol)
 ///////////
 void ToBagSplitter::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -90,46 +90,46 @@ void ToBagSplitter::build()
 ////////////
 void ToBagSplitter::build_()
 {
-  if (dataset) {
-    // Prepare the bags index list.
-    int max_ninstances = 1;
-    // The first column in bags_store gives the number of instances in the bag,
-    // and the following columns give the indices of the corresponding rows in
-    // the original dataset.
-    Mat bags_store(dataset->length() / expected_size_of_bag + 1, expected_size_of_bag + 1);
-    int num_bag = 0;
-    int num_instance = 0;
-    int bag_signal_column = dataset->inputsize() + dataset->targetsize() - 1; // Bag signal in the last target column.
-    for (int i = 0; i < dataset->length(); i++) {
-      if (num_instance + 1 >= bags_store.width()) {
-        if (num_instance > 10*(expected_size_of_bag+1))
-          PLERROR("ToBagSplitter: found bag size (%d) more than 10 times bigger than expected_size_of_bag (%d)!\n",
-                  num_instance,expected_size_of_bag);
-        // Need to resize bags_store.
-        bags_store.resize(bags_store.length(), bags_store.width() * 2);
-      }
-      if (num_instance >= max_ninstances) {
-        max_ninstances = num_instance + 1;
-      }
-      bags_store(num_bag, num_instance + 1) = i;
-      num_instance++;
-      if (int(dataset->get(i, bag_signal_column)) & SumOverBagsVariable::TARGET_COLUMN_LAST) {
-        // Last element of a bag.
-        bags_store(num_bag, 0) = num_instance; // Store the number of instances in this bag.
-        num_bag++;
-        num_instance = 0;
-        if (num_bag >= bags_store.length()) {
-          // Need to resize bags_store.
-          bags_store.resize(bags_store.length() * 2, bags_store.width());
+    if (dataset) {
+        // Prepare the bags index list.
+        int max_ninstances = 1;
+        // The first column in bags_store gives the number of instances in the bag,
+        // and the following columns give the indices of the corresponding rows in
+        // the original dataset.
+        Mat bags_store(dataset->length() / expected_size_of_bag + 1, expected_size_of_bag + 1);
+        int num_bag = 0;
+        int num_instance = 0;
+        int bag_signal_column = dataset->inputsize() + dataset->targetsize() - 1; // Bag signal in the last target column.
+        for (int i = 0; i < dataset->length(); i++) {
+            if (num_instance + 1 >= bags_store.width()) {
+                if (num_instance > 10*(expected_size_of_bag+1))
+                    PLERROR("ToBagSplitter: found bag size (%d) more than 10 times bigger than expected_size_of_bag (%d)!\n",
+                            num_instance,expected_size_of_bag);
+                // Need to resize bags_store.
+                bags_store.resize(bags_store.length(), bags_store.width() * 2);
+            }
+            if (num_instance >= max_ninstances) {
+                max_ninstances = num_instance + 1;
+            }
+            bags_store(num_bag, num_instance + 1) = i;
+            num_instance++;
+            if (int(dataset->get(i, bag_signal_column)) & SumOverBagsVariable::TARGET_COLUMN_LAST) {
+                // Last element of a bag.
+                bags_store(num_bag, 0) = num_instance; // Store the number of instances in this bag.
+                num_bag++;
+                num_instance = 0;
+                if (num_bag >= bags_store.length()) {
+                    // Need to resize bags_store.
+                    bags_store.resize(bags_store.length() * 2, bags_store.width());
+                }
+            }
         }
-      }
+        // Resize to the minimum size needed.
+        bags_store.resize(num_bag, max_ninstances + 1);
+        bags_index = VMat(bags_store);
+        // Provide this index to the sub_splitter.
+        sub_splitter->setDataSet(bags_index);
     }
-    // Resize to the minimum size needed.
-    bags_store.resize(num_bag, max_ninstances + 1);
-    bags_index = VMat(bags_store);
-    // Provide this index to the sub_splitter.
-    sub_splitter->setDataSet(bags_index);
-  }
 }
 
 //////////////
@@ -137,23 +137,23 @@ void ToBagSplitter::build_()
 //////////////
 TVec<VMat> ToBagSplitter::getSplit(int k)
 {
-  // ### Build and return the kth split 
-  TVec<VMat> sub_splits = sub_splitter->getSplit(k);
-  TVec<VMat> result;
-  for (int i = 0; i < sub_splits.length(); i++) {
-    // Get the list of corresponding indices in the original dataset.
-    Mat indices = sub_splits[i].toMat();
-    // Turn it into a TVec<int>.
-    TVec<int> indices_int;
-    for (int j = 0; j < indices.length(); j++) {
-      for (int k = 0; k < indices(j, 0); k++) {
-        int indice = int(indices(j, k + 1));
-        indices_int.append(indice);
-      }
+    // ### Build and return the kth split 
+    TVec<VMat> sub_splits = sub_splitter->getSplit(k);
+    TVec<VMat> result;
+    for (int i = 0; i < sub_splits.length(); i++) {
+        // Get the list of corresponding indices in the original dataset.
+        Mat indices = sub_splits[i].toMat();
+        // Turn it into a TVec<int>.
+        TVec<int> indices_int;
+        for (int j = 0; j < indices.length(); j++) {
+            for (int k = 0; k < indices(j, 0); k++) {
+                int indice = int(indices(j, k + 1));
+                indices_int.append(indice);
+            }
+        }
+        result.append(new SelectRowsVMatrix(dataset, indices_int));
     }
-    result.append(new SelectRowsVMatrix(dataset, indices_int));
-  }
-  return result;
+    return result;
 }
 
 /////////////////////////////////
@@ -161,16 +161,16 @@ TVec<VMat> ToBagSplitter::getSplit(int k)
 /////////////////////////////////
 void ToBagSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Splitter::makeDeepCopyFromShallowCopy(copies);
+    Splitter::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("ToBagSplitter::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("ToBagSplitter::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 ///////////////////
@@ -178,8 +178,8 @@ void ToBagSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ///////////////////
 int ToBagSplitter::nSetsPerSplit() const
 {
-  // ### Return the number of sets per split
-  return sub_splitter->nSetsPerSplit();
+    // ### Return the number of sets per split
+    return sub_splitter->nSetsPerSplit();
 }
 
 /////////////
@@ -187,16 +187,29 @@ int ToBagSplitter::nSetsPerSplit() const
 /////////////
 int ToBagSplitter::nsplits() const
 {
-  return sub_splitter->nsplits();
+    return sub_splitter->nsplits();
 }
 
 ////////////////
 // setDataSet //
 ////////////////
 void ToBagSplitter::setDataSet(VMat the_dataset) {
-  inherited::setDataSet(the_dataset);
-  // Need to recompute the bags index.
-  build();
+    inherited::setDataSet(the_dataset);
+    // Need to recompute the bags index.
+    build();
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

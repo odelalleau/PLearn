@@ -37,9 +37,9 @@
  
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.h,v 1.10 2005/02/01 14:43:11 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -65,7 +65,7 @@ class CompactVMatrix : public RowBufferedVMatrix
     typedef RowBufferedVMatrix inherited;
     class SDBVMatrix;
 
-  protected:
+protected:
     
     //!  Each row of the matrix holds in order: bits, 1-byte symbols, fixed point numbers
     Storage<unsigned char> data;
@@ -75,27 +75,27 @@ class CompactVMatrix : public RowBufferedVMatrix
     int n_fixedpoint; //!<  number of fixed point numbers per row
     int n_variables; //!<  = n_bits + n_symbols + n_fixedpoint
     bool one_hot_encoding; //!<  the 1-byte symbols are converted to one-hot encoding by get
-  public:
+public:
     TVec<int> n_symbol_values; //!<  for each 1-byte symbol, the number of possible values
     int nbits() { return n_bits; }
     int nsymbols() { return n_symbols; }
     int nfixedpoint() { return n_fixedpoint; }
-  protected:
+protected:
     Vec fixedpoint_min, fixedpoint_max; //!<  the ranges of each number for fixed point encoding
     Vec delta; //!<  (fixedpoint_max-fixedpoint_min)/2^16
     TVec<int> variables_permutation; //!<  this variable is used only when constructed from VMat
 /*!                                        and provides the permutation of the original columns
-                                       in order to order them into (bits, bytes, fixedpoint)
-                                       variables_permutation[new_column]=old_column (not in one-hot code)
+  in order to order them into (bits, bytes, fixedpoint)
+  variables_permutation[new_column]=old_column (not in one-hot code)
 */
-  static unsigned char n_bits_in_byte[256];
-  static void set_n_bits_in_byte();
+    static unsigned char n_bits_in_byte[256];
+    static void set_n_bits_in_byte();
 
-  public:
+public:
     int n_last; //!<  used by dotProduct and squareDifference to specify # of last columns to ignore
-  protected:
+protected:
     int normal_width;         //!<  the value of width_ when one_hot_encoding=true
-  public:
+public:
     void setOneHotMode(bool on=true);
 
     // ******************
@@ -108,16 +108,16 @@ class CompactVMatrix : public RowBufferedVMatrix
                    Vec& fixed_point_max, bool one_hot_encoding=true);
 
 /*!       Convert a VMat into a CompactVMatrix: this will use the stats
-      computed in the fieldstats of the VMatrix (they will be computed if not
-      already) to figure out which variables are binary, discrete 
-      (and how many symbols), and the ranges of numeric variables.
-      THE VMAT DISCRETE VARIABLES MUST NOT BE ALREADY ONE-HOT ENCODED.
-      The variables will be permuted according to the permutation vector
-      which can be retrieved from the variables_permutation_vector() method.
-      By default the last column of the VMat will stay last, thus being coded as 
-      fixedpoint (so the permutation information may not be necessary if the
-      last column represents a target and all the previous ones some inputs.
-      keep_last_variables_last is the number of "last columns" to keep in place.
+  computed in the fieldstats of the VMatrix (they will be computed if not
+  already) to figure out which variables are binary, discrete 
+  (and how many symbols), and the ranges of numeric variables.
+  THE VMAT DISCRETE VARIABLES MUST NOT BE ALREADY ONE-HOT ENCODED.
+  The variables will be permuted according to the permutation vector
+  which can be retrieved from the variables_permutation_vector() method.
+  By default the last column of the VMat will stay last, thus being coded as 
+  fixedpoint (so the permutation information may not be necessary if the
+  last column represents a target and all the previous ones some inputs.
+  keep_last_variables_last is the number of "last columns" to keep in place.
 */
     CompactVMatrix(VMat m, int keep_last_variables_last=1, bool onehot_encoding=true);
 
@@ -126,10 +126,10 @@ class CompactVMatrix : public RowBufferedVMatrix
     CompactVMatrix(const string& filename, int nlast=1);
 
 /*!       Create a CompactVMatrix with the same structure as cvcm but
-      containing the data in m. Both must obviously have the same width.
-      If rescale is true, then the min/max values for fixed-point encoding
-      are recomputed. If check==true than this is verified and an error message 
-      is thrown if the floating point data are not in the expected ranges (of cvm).
+  containing the data in m. Both must obviously have the same width.
+  If rescale is true, then the min/max values for fixed-point encoding
+  are recomputed. If check==true than this is verified and an error message 
+  is thrown if the floating point data are not in the expected ranges (of cvm).
 */
     CompactVMatrix(CompactVMatrix* cvm, VMat m, bool rescale=false, bool check=true);
 
@@ -137,30 +137,30 @@ class CompactVMatrix : public RowBufferedVMatrix
     void append(CompactVMatrix* vm);
 
 /*!       create in the elements of row (except the n_last ones) a perturbed
-      version of the i-th row of the database. This 
-      random perturbation is based on the unconditional
-      statistics which should be present in the fieldstats; the
-      noise level can be modulated with the noise_level argument
-      (a value of 1 will perturb by as much as the noise seen in the
-      unconditional statistics). Continuous variables are resampled around
-      the current value with sigma = noise_leve * unconditional_sigma.
-      Discrete variables are resampled with a distribution that is a mixture:
-        (1-noise_level)*(probability mass on all current value)+noise_level*(unconditional distr)
+  version of the i-th row of the database. This 
+  random perturbation is based on the unconditional
+  statistics which should be present in the fieldstats; the
+  noise level can be modulated with the noise_level argument
+  (a value of 1 will perturb by as much as the noise seen in the
+  unconditional statistics). Continuous variables are resampled around
+  the current value with sigma = noise_leve * unconditional_sigma.
+  Discrete variables are resampled with a distribution that is a mixture:
+  (1-noise_level)*(probability mass on all current value)+noise_level*(unconditional distr)
 */
     void perturb(int i, Vec row, real noise_level, int n_last);
 
 /*!       this vector is filled only when the CompactVMatrix was constructed
-      from a VMat, and it provides the permutation of the original columns
-      to order them into (bits, bytes, fixedpoint)
+  from a VMat, and it provides the permutation of the original columns
+  to order them into (bits, bytes, fixedpoint)
 */
     TVec<int>& permutation_vector() { return variables_permutation; }
     
-  protected:
+protected:
 
     //!  decoding (v may be one-hot depending on one_hot_encoding flag)
     virtual void getNewRow(int i, const Vec& v) const;
 
-  public:
+public:
 
     //!  encoding (v is not one-hot, and the variables in v are in the "original" order
 
@@ -193,7 +193,7 @@ class CompactVMatrix : public RowBufferedVMatrix
     void makeDeepCopyFromShallowCopy(CopiesMap& copies);
     virtual void build() {}  //!<  nothing to do...
 
-  protected:
+protected:
     //!  auxiliary 
     int symbols_offset; //!<  where in each row the symbols start
     int fixedpoint_offset; //!<  where in each row the fixed point numbers start
@@ -204,3 +204,16 @@ DECLARE_OBJECT_PTR(CompactVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

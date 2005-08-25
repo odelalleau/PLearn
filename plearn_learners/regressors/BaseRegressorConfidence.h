@@ -35,9 +35,9 @@
 
 
 /* ********************************************************************************    
-   * $Id: BaseRegressorConfidence.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout   *
-   * This file is part of the PLearn library.                                     *
-   ******************************************************************************** */
+ * $Id: BaseRegressorConfidence.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout   *
+ * This file is part of the PLearn library.                                     *
+ ******************************************************************************** */
 
 /*! \file PLearnLibrary/PLearnAlgo/BaseRegressorConfidence.h */
 
@@ -54,7 +54,7 @@ using namespace std;
 
 class BaseRegressorConfidence: public PLearner
 {
-  typedef PLearner inherited;
+    typedef PLearner inherited;
   
 private:
 
@@ -62,58 +62,70 @@ private:
   Build options: they have to be set before training
 */
 
-  int  number_of_neighbors;                // the number of nearest neighbors to consider
-  real sigma;
-  real raise_confidence;
-  real lower_confidence;
+    int  number_of_neighbors;                // the number of nearest neighbors to consider
+    real sigma;
+    real raise_confidence;
+    real lower_confidence;
   
 /*
   Learnt options: they are sized and initialized if need be, at stage 0
 */
 
-  TMat<int> neighbors;
-  TVec<real> nearest_neighbbors_target_mean;
+    TMat<int> neighbors;
+    TVec<real> nearest_neighbbors_target_mean;
  
 /*
   Work fields: they are sized and initialized if need be, at buid time
 */ 
  
-  Vec input_to_search;
-  Vec target_to_search;
-  real weight_to_search;
-  Vec input_to_compare;
-  Vec target_to_compare;
-  real weight_to_compare;
-  real two_sigma_square;
-  real root_two_pi_sigma_square;
+    Vec input_to_search;
+    Vec target_to_search;
+    real weight_to_search;
+    Vec input_to_compare;
+    Vec target_to_compare;
+    real weight_to_compare;
+    real two_sigma_square;
+    real root_two_pi_sigma_square;
    
   
 public:
-                       BaseRegressorConfidence();
-  virtual              ~BaseRegressorConfidence();
+    BaseRegressorConfidence();
+    virtual              ~BaseRegressorConfidence();
     
     PLEARN_DECLARE_OBJECT(BaseRegressorConfidence);
 
-  static  void         declareOptions(OptionList& ol);
-  virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
-  virtual void         build();
-  virtual void         train();
-  virtual void         forget();
-  virtual int          outputsize() const;
-  virtual TVec<string> getTrainCostNames() const;
-  virtual TVec<string> getTestCostNames() const;
-  virtual void         computeOutput(const Vec& input, Vec& output) const;
-  virtual void         computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
-  virtual void         computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs) const;
+    static  void         declareOptions(OptionList& ol);
+    virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
+    virtual void         build();
+    virtual void         train();
+    virtual void         forget();
+    virtual int          outputsize() const;
+    virtual TVec<string> getTrainCostNames() const;
+    virtual TVec<string> getTestCostNames() const;
+    virtual void         computeOutput(const Vec& input, Vec& output) const;
+    virtual void         computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
+    virtual void         computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs) const;
   
 private:
-          void         build_();
-          void         verbose(string msg, int level);
+    void         build_();
+    void         verbose(string msg, int level);
 };
 
-  DECLARE_OBJECT_PTR(BaseRegressorConfidence);
+DECLARE_OBJECT_PTR(BaseRegressorConfidence);
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: VecElementVariable.cc,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "VecElementVariable.h"
 
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(VecElementVariable,
                         "NO HELP");
 
 VecElementVariable::VecElementVariable(const Vec& vec, Variable* input)
-  : inherited(input, 1,1), v(vec)
+    : inherited(input, 1,1), v(vec)
 {
     build_();
 }
@@ -84,8 +84,8 @@ void VecElementVariable::recomputeSize(int& l, int& w) const
 
 void VecElementVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  UnaryVariable::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(v, copies);
+    UnaryVariable::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(v, copies);
 }
 
 
@@ -102,4 +102,15 @@ void VecElementVariable::symbolicBprop() {}
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

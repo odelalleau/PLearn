@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DeterminantVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "DeterminantVariable.h"
 
@@ -52,7 +52,7 @@ PLEARN_IMPLEMENT_OBJECT(DeterminantVariable,
                         "NO HELP");
 
 DeterminantVariable::DeterminantVariable(Var m)
-  : inherited(m,1,1) 
+    : inherited(m,1,1) 
 {
     build_();
 }
@@ -79,23 +79,34 @@ void DeterminantVariable::recomputeSize(int& l, int& w) const
 
 void DeterminantVariable::fprop()
 {
-  valuedata[0] = det(input->matValue);
+    valuedata[0] = det(input->matValue);
 }
 
 
 void DeterminantVariable::bprop()
 {
-  PLERROR("DeterminantVariable::bprop not implemented yet");
+    PLERROR("DeterminantVariable::bprop not implemented yet");
 }
 
 
 void DeterminantVariable::symbolicBprop()
 {
-  PLERROR("DeterminantVariable::symbolicBprop not implemented yet");
+    PLERROR("DeterminantVariable::symbolicBprop not implemented yet");
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

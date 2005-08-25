@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SquareRootVariable.cc,v 1.5 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "SquareRootVariable.h"
 
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(SquareRootVariable,
                         "NO HELP");
 
 SquareRootVariable::SquareRootVariable(Variable* input)
-  : inherited(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {}
 
 void SquareRootVariable::recomputeSize(int& l, int& w) const
@@ -68,21 +68,21 @@ void SquareRootVariable::recomputeSize(int& l, int& w) const
 
 void SquareRootVariable::fprop()
 {
-  int n=nelems();
-  for(int i=0; i<n; i++)
-    valuedata[i] = sqrt(input->valuedata[i]);
+    int n=nelems();
+    for(int i=0; i<n; i++)
+        valuedata[i] = sqrt(input->valuedata[i]);
 }
 
 
 // dC/dx = dC/dy * 1/2 * 1/sqrt(x)
 void SquareRootVariable::bprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  int n=nelems();
-  for(int i=0; i<n; i++)
+    if (rValue.length()==0) resizeRValue();
+    int n=nelems();
+    for(int i=0; i<n; i++)
     {
-      input->gradientdata[i] += 0.5/sqrt(input->valuedata[i]) * gradientdata[i];
-      rvaluedata[i] = 2*input->valuedata[i]*input->rvaluedata[i];
+        input->gradientdata[i] += 0.5/sqrt(input->valuedata[i]) * gradientdata[i];
+        rvaluedata[i] = 2*input->valuedata[i]*input->rvaluedata[i];
     }
 }
 
@@ -105,4 +105,15 @@ void SquareRootVariable::bprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

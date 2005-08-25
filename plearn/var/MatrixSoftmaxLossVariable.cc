@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixSoftmaxLossVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "MatrixSoftmaxLossVariable.h"
 
@@ -52,7 +52,7 @@ PLEARN_IMPLEMENT_OBJECT(MatrixSoftmaxLossVariable,
                         "NO HELP");
 
 MatrixSoftmaxLossVariable::MatrixSoftmaxLossVariable(Variable* input1, Variable* input2) 
-  : inherited(input1, input2, input2->length(), input2->width())
+    : inherited(input1, input2, input2->length(), input2->width())
 {
     build_();
 }
@@ -84,55 +84,66 @@ void MatrixSoftmaxLossVariable::recomputeSize(int& l, int& w) const
 
 void MatrixSoftmaxLossVariable::fprop()
 {
-  for (int i=0; i<input2->length(); i++)
-  {
-    int classnum = (int)input2->valuedata[i];
-    real input_index = input1->matValue[classnum][i];
-    real sum=0;
-    for(int j=0; j<input1->length(); j++)
-        sum += safeexp(input1->matValue[j][i]-input_index);
-    valuedata[i] = 1.0/sum;
-  }
+    for (int i=0; i<input2->length(); i++)
+    {
+        int classnum = (int)input2->valuedata[i];
+        real input_index = input1->matValue[classnum][i];
+        real sum=0;
+        for(int j=0; j<input1->length(); j++)
+            sum += safeexp(input1->matValue[j][i]-input_index);
+        valuedata[i] = 1.0/sum;
+    }
 }
 
 
 void MatrixSoftmaxLossVariable::bprop()
 {  
-  for (int i=0; i<input2->length(); i++)
-  {
-    int classnum = (int)input2->valuedata[i];
-    real input_index = input1->matValue[classnum][i];
-    real vali = valuedata[i];
-    for(int j=0; j<input1->length(); j++)
-      {
-       if (j!=classnum){
-          input1->matGradient[j][i] = -gradientdata[i]*vali*vali*safeexp(input1->matValue[j][i]-input_index);}
-          else
-          input1->matGradient[j][i] = gradientdata[i]*vali*(1.-vali);
-      }
-  }
+    for (int i=0; i<input2->length(); i++)
+    {
+        int classnum = (int)input2->valuedata[i];
+        real input_index = input1->matValue[classnum][i];
+        real vali = valuedata[i];
+        for(int j=0; j<input1->length(); j++)
+        {
+            if (j!=classnum){
+                input1->matGradient[j][i] = -gradientdata[i]*vali*vali*safeexp(input1->matValue[j][i]-input_index);}
+            else
+                input1->matGradient[j][i] = gradientdata[i]*vali*(1.-vali);
+        }
+    }
 }
 
 
 void MatrixSoftmaxLossVariable::bbprop()
 {
-  PLERROR("MatrixSoftmaxLossVariable::bbprop() not implemented");
+    PLERROR("MatrixSoftmaxLossVariable::bbprop() not implemented");
 }
 
 
 void MatrixSoftmaxLossVariable::symbolicBprop()
 {
-  PLERROR("MatrixSoftmaxLossVariable::symbolicBprop() not implemented");
+    PLERROR("MatrixSoftmaxLossVariable::symbolicBprop() not implemented");
 }
 
 
 void MatrixSoftmaxLossVariable::rfprop()
 {
-  PLERROR("MatrixSoftmaxLossVariable::rfprop() not implemented");
+    PLERROR("MatrixSoftmaxLossVariable::rfprop() not implemented");
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

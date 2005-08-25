@@ -35,8 +35,8 @@
 // Authors: Rejean Ducharme
 
 /* *******************************************************      
-   * $Id: OracleObjectGenerator.h,v 1.1 2005/01/11 23:22:44 plearner Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include <plearn/misc/ObjectGenerator.h>
 #include "OptionsOracle.h"
@@ -51,52 +51,52 @@ using namespace std;
 class OracleObjectGenerator: public ObjectGenerator
 {
 private:
-  typedef ObjectGenerator inherited;
+    typedef ObjectGenerator inherited;
 
 protected:
 
-  //! The last parameters returned by the oracle
-  TVec<string> last_params;
+    //! The last parameters returned by the oracle
+    TVec<string> last_params;
 
 public:
 
-  //! The template Object from which we will generate other Objects
-  PP<OptionsOracle> oracle;
-  //PP<CartesianProductOracle> oracle;
+    //! The template Object from which we will generate other Objects
+    PP<OptionsOracle> oracle;
+    //PP<CartesianProductOracle> oracle;
 
 
- // ******************
- // * Object methods *
- // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private:
-  void build_();
+    void build_();
 
 protected:
-  static void declareOptions(OptionList& ol);
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  //! Default constructor
-  OracleObjectGenerator();
+    //! Default constructor
+    OracleObjectGenerator();
 
-  //! This will generate the next object in the list of all options
-  //! MUST be define by a subclass
-  virtual PP<Object> generateNextObject();
+    //! This will generate the next object in the list of all options
+    //! MUST be define by a subclass
+    virtual PP<Object> generateNextObject();
 
-  //! This will generate a list of all possible Objects.
-  //! By default, just loop over generateNextObject()
-  //virtual TVec< PP<Object> > generateAllObjects();
+    //! This will generate a list of all possible Objects.
+    //! By default, just loop over generateNextObject()
+    //virtual TVec< PP<Object> > generateAllObjects();
 
-  //! simply calls inherited::build() then build_()
-  virtual void build();
+    //! simply calls inherited::build() then build_()
+    virtual void build();
 
-  virtual void forget();
+    virtual void forget();
 
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(OracleObjectGenerator);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(OracleObjectGenerator);
 };
 
 // Declares a few other classes and functions related to this class
@@ -105,3 +105,16 @@ DECLARE_OBJECT_PTR(OracleObjectGenerator);
 } // end of namespace PLearn
 
 #endif // OracleObjectGenerator_INC
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

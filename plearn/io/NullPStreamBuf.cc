@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NullPStreamBuf.cc,v 1.1 2005/03/01 19:18:43 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -46,16 +46,29 @@
 namespace PLearn {
 using namespace std;
 
-  NullPStreamBuf::NullPStreamBuf()
+NullPStreamBuf::NullPStreamBuf()
     :PStreamBuf(true,true)
-  {}
+{}
 
 
-  NullPStreamBuf::streamsize NullPStreamBuf::read_(char* p, streamsize n)
-  { return 0; }
+NullPStreamBuf::streamsize NullPStreamBuf::read_(char* p, streamsize n)
+{ return 0; }
 
-  //! writes exactly n characters from p (unbuffered, must flush)
-  void NullPStreamBuf::write_(const char* p, streamsize n)
-  {}
+//! writes exactly n characters from p (unbuffered, must flush)
+void NullPStreamBuf::write_(const char* p, streamsize n)
+{}
   
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

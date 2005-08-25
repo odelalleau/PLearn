@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -47,82 +47,82 @@
 namespace PLearn {
 using namespace std;
 
-  RemotePLearnServer::RemotePLearnServer(const PStream& serverio)
+RemotePLearnServer::RemotePLearnServer(const PStream& serverio)
     :io(serverio)
-  {}
+{}
   
-  void RemotePLearnServer::clearMaps()
-  {
+void RemotePLearnServer::clearMaps()
+{
     io.copies_map_in.clear();
     io.copies_map_out.clear();
-  }
+}
   
-  void RemotePLearnServer::newObject(int objid, const Object& model)
-  { 
+void RemotePLearnServer::newObject(int objid, const Object& model)
+{ 
     clearMaps();
     io.write("!N "); io << objid << model << endl;
     expectResults(0);
-  }
+}
 
-  void RemotePLearnServer::newObject(int objid, PP<Object> model)
-  {
+void RemotePLearnServer::newObject(int objid, PP<Object> model)
+{
     if(model.isNull())
-      PLERROR("In RemotePLearnServer::newObject model is a Null pointer");
+        PLERROR("In RemotePLearnServer::newObject model is a Null pointer");
     newObject(objid, *model);
-  }
+}
 
-  void RemotePLearnServer::newObject(int objid, const string& description)
-  { 
+void RemotePLearnServer::newObject(int objid, const string& description)
+{ 
     clearMaps();
     io.write("!N "); io << objid; io.put(' ');
     io.write(description);
     io << endl;
     expectResults(0);
-  }
+}
 
-  void RemotePLearnServer::deleteObject(int objid)
-  {
+void RemotePLearnServer::deleteObject(int objid)
+{
     io.write("!D "); io << objid << endl;
     expectResults(0);
-  }
+}
 
-  void RemotePLearnServer::deleteAllObjects()
-  {
+void RemotePLearnServer::deleteAllObjects()
+{
     io.write("!Z "); 
     io << endl;
     expectResults(0);
-  }
+}
 
 
-  void RemotePLearnServer::expectResults(int nargs_expected)
-  {
+void RemotePLearnServer::expectResults(int nargs_expected)
+{
     DBG_LOG << "RemotePLearnServer entering expectResults" << endl;
     io.skipBlanksAndComments();
     int headchar = io.get();
     if(headchar!='!')
-      PLERROR(" Answers from plearn server are expected to start with a !, but I received a %c",headchar);
+        PLERROR(" Answers from plearn server are expected to start with a !, but I received a %c",headchar);
     int command = io.get();
     DBG_LOG << "RemotePLearnServer expectResults received command: " << (char)command << endl;
     int nreturned;
     string msg;
     switch(command)
-      {
-      case 'R':
+    {
+    case 'R':
         io >> nreturned;
         if(nreturned!=nargs_expected)
-          PLERROR("RemotePLearnServer: expected %d return arguments, but read R %d",nargs_expected,nreturned);
+            PLERROR("RemotePLearnServer: expected %d return arguments, but read R %d",nargs_expected,nreturned);
         break;
-      case 'E':
+    case 'E':
         io >> msg;
         PLERROR(msg.c_str());
         break;
-      default:
+    default:
         PLERROR("RemotePLearnServer: expected R (return command), but read %c ????",command);
-      }
-  }
+    }
+}
 
-  RemotePLearnServer::~RemotePLearnServer()
-  {
+RemotePLearnServer::~RemotePLearnServer()
+{
     DBG_LOG << "ENTERING RemotePLearnServer destructor" << endl;
     deleteAllObjects();
     //io.write("!Q");
@@ -132,7 +132,20 @@ using namespace std;
     // DBG_LOG << "RemotePLearnServer destructor: AFTER wait" << endl;
     // PLearnService::instance().freeServer(this);
     DBG_LOG << "LEAVING RemotePLearnServer destructor" << endl;
-  }
+}
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

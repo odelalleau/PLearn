@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DifferenceKernel.cc,v 1.5 2004/12/20 15:50:49 chapados Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "DifferenceKernel.h"
 #include "SelectedOutputCostFunction.h"
@@ -48,25 +48,37 @@ using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(
-  DifferenceKernel,
-  "Kernel whose output is the difference between vector1 and vector2",
-  "Output as follows:\n"
-  "  k(x1,x2) = \sum_i x1[i] - x2[i]");
+    DifferenceKernel,
+    "Kernel whose output is the difference between vector1 and vector2",
+    "Output as follows:\n"
+    "  k(x1,x2) = \sum_i x1[i] - x2[i]");
 real DifferenceKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
-  real result = 0.0;
-  for(int i=0; i<x1.length(); i++)
-    result += x1[i]-x2[i];
-  return result;
+    real result = 0.0;
+    for(int i=0; i<x1.length(); i++)
+        result += x1[i]-x2[i];
+    return result;
 }
 
 CostFunc output_minus_target(int singleoutputindex)
 {
-  if(singleoutputindex>=0)
-    return new SelectedOutputCostFunction(new DifferenceKernel(),singleoutputindex); 
-  else
-    return new DifferenceKernel(); 
+    if(singleoutputindex>=0)
+        return new SelectedOutputCostFunction(new DifferenceKernel(),singleoutputindex); 
+    else
+        return new DifferenceKernel(); 
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

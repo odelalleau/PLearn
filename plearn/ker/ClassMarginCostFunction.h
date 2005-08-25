@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ClassMarginCostFunction.h,v 1.4 2004/04/07 23:15:58 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ClassMarginCostFunction_INC
 #define ClassMarginCostFunction_INC
@@ -51,43 +51,43 @@ using namespace std;
 
 
 /*!   * If output and target both have length 1, when binary classification 
-    with targets -1 and +1 and the sign of the output is considered,
-    then margin is output[0]*target[0]
-    If binary targets is {0,1} and outputs>0, then the margin is:
-    (output[0]+1)*(target[0]+1)/4
-    However, if the flag output_is_positive is true then output is
-    replaced by output[0]-0.5 in the above expressions.
+  with targets -1 and +1 and the sign of the output is considered,
+  then margin is output[0]*target[0]
+  If binary targets is {0,1} and outputs>0, then the margin is:
+  (output[0]+1)*(target[0]+1)/4
+  However, if the flag output_is_positive is true then output is
+  replaced by output[0]-0.5 in the above expressions.
   * If output has length>1 and target has length 1, then output is understood 
-    as giving a score for each class while target is the index of the correct
-    class (numbered from 0). Then margin is the difference between the score 
-    of the correct class and the highest score among the other classes.
+  as giving a score for each class while target is the index of the correct
+  class (numbered from 0). Then margin is the difference between the score 
+  of the correct class and the highest score among the other classes.
   * If both output and target have a length>1 then output is understood 
-    as giving a score for each class while the correct class is given by 
-    argmax(target). Then margin is the difference between the score 
-    of the correct class and the highest score among the other classes.
+  as giving a score for each class while the correct class is given by 
+  argmax(target). Then margin is the difference between the score 
+  of the correct class and the highest score among the other classes.
   In all cases, as this is a cost function, we return -margin.
 */
 class ClassMarginCostFunction: public Kernel
 {
-  typedef Kernel inherited;
+    typedef Kernel inherited;
 
- public:
-  bool binary_target_is_01;
-  bool output_is_positive;
-  ClassMarginCostFunction(bool the_binary_target_is_01=false, 
-                          bool out_is_positive=false)
-    : binary_target_is_01(the_binary_target_is_01), 
-    output_is_positive(out_is_positive) {}
+public:
+    bool binary_target_is_01;
+    bool output_is_positive;
+    ClassMarginCostFunction(bool the_binary_target_is_01=false, 
+                            bool out_is_positive=false)
+        : binary_target_is_01(the_binary_target_is_01), 
+          output_is_positive(out_is_positive) {}
 
-  PLEARN_DECLARE_OBJECT(ClassMarginCostFunction);
+    PLEARN_DECLARE_OBJECT(ClassMarginCostFunction);
 
-  virtual string info() const
+    virtual string info() const
     { return "class_margin"; }
-  virtual real evaluate(const Vec& output, const Vec& target) const;  
+    virtual real evaluate(const Vec& output, const Vec& target) const;  
 
 protected:
-  //!  recognized option are "binary_target_is_01" and "output_is_positive"
-  static void declareOptions(OptionList &ol);  
+    //!  recognized option are "binary_target_is_01" and "output_is_positive"
+    static void declareOptions(OptionList &ol);  
 };
 
 DECLARE_OBJECT_PTR(ClassMarginCostFunction);
@@ -101,3 +101,15 @@ inline CostFunc class_margin(bool binary_target_is_01=false,
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

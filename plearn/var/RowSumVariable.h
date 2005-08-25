@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: RowSumVariable.h,v 1.5 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef RowSumVariable_INC
 #define RowSumVariable_INC
@@ -52,19 +52,19 @@ using namespace std;
 //!  result is a single column that contains the sum of each row of the input
 class RowSumVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  RowSumVariable() {}
-  RowSumVariable(Variable* input);
+    //!  Default constructor for persistence
+    RowSumVariable() {}
+    RowSumVariable(Variable* input);
 
-  PLEARN_DECLARE_OBJECT(RowSumVariable);
+    PLEARN_DECLARE_OBJECT(RowSumVariable);
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 };
 
@@ -72,12 +72,25 @@ DECLARE_OBJECT_PTR(RowSumVariable);
 
 inline Var rowSum(Var v)
 { 
-  if(v->isColumnVec())
-    return v;
-  else
-    return new RowSumVariable(v); 
+    if(v->isColumnVec())
+        return v;
+    else
+        return new RowSumVariable(v); 
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

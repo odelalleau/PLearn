@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MovingAverageVMatrix.h,v 1.4 2004/09/14 16:04:39 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 // Authors: Yoshua Bengio
 
@@ -51,69 +51,82 @@ using namespace std;
 
 class MovingAverageVMatrix: public SourceVMatrix
 {
-  typedef SourceVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  Mat sums; // at (i,j), sum from the beginning of the source vmatrix at column j, up to row i
-  Mat ma;  // moving average of width window_sizes[j] = (sums(i,j)-sums(i-window_sizes[j]))/window_sizes[j]
-  TMat<int> nnonmissing; // at (i,j): nb of non-missing encountered in the source vmatrix at column j, up to row i
-  Vec row;
-  Vec previous_sourcerow;
-  TVec<int> columns;
-  int max_window_size;
+    Mat sums; // at (i,j), sum from the beginning of the source vmatrix at column j, up to row i
+    Mat ma;  // moving average of width window_sizes[j] = (sums(i,j)-sums(i-window_sizes[j]))/window_sizes[j]
+    TMat<int> nnonmissing; // at (i,j): nb of non-missing encountered in the source vmatrix at column j, up to row i
+    Vec row;
+    Vec previous_sourcerow;
+    TVec<int> columns;
+    int max_window_size;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // ### declare public option fields (such as build options) here
-  TVec<string> columns_to_average;
-  TVec<int> window_sizes;
-  bool centered_windows;
+    // ### declare public option fields (such as build options) here
+    TVec<string> columns_to_average;
+    TVec<int> window_sizes;
+    bool centered_windows;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  MovingAverageVMatrix();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    MovingAverageVMatrix();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  //!  This is the only method requiring implementation
-  virtual void getNewRow(int i, Vec& v) const;
+    //!  This is the only method requiring implementation
+    virtual void getNewRow(int i, Vec& v) const;
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(MovingAverageVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(MovingAverageVMatrix);
 
 };
 DECLARE_OBJECT_PTR(MovingAverageVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

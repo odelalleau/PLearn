@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixInverseVariable.cc,v 1.5 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "MatrixInverseVariable.h"
 
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(MatrixInverseVariable,
                         "NO HELP");
 
 MatrixInverseVariable::MatrixInverseVariable(Variable* input)
-  : inherited(input, input->length(), input->width()) 
+    : inherited(input, input->length(), input->width()) 
 {}
 
 void MatrixInverseVariable::recomputeSize(int& l, int& w) const
@@ -67,23 +67,34 @@ void MatrixInverseVariable::recomputeSize(int& l, int& w) const
 
 void MatrixInverseVariable::fprop()
 {
-  inverse(input->matValue,matValue);
+    inverse(input->matValue,matValue);
 }
 
 
 void MatrixInverseVariable::bprop()
 {
-  PLERROR("MatrixInverseVariable: bprop not implemented yet");
+    PLERROR("MatrixInverseVariable: bprop not implemented yet");
 }
 
 
 void MatrixInverseVariable::symbolicBprop()
 {
-  PLERROR("MatrixInverseVariable: symbolicBprop not implemented yet");
+    PLERROR("MatrixInverseVariable: symbolicBprop not implemented yet");
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

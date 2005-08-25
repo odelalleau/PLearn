@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.h,v 1.7 2004/09/14 16:04:36 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,108 +54,108 @@ class AdditiveNormalizationKernel: public SourceKernel
 
 private:
 
-  typedef SourceKernel inherited;
+    typedef SourceKernel inherited;
 
-  //! Used to store the values of the source kernel.
-  mutable Vec all_k_x;
+    //! Used to store the values of the source kernel.
+    mutable Vec all_k_x;
   
 protected:
 
-  // *********************
-  // * Protected options *
-  // *********************
+    // *********************
+    // * Protected options *
+    // *********************
 
-  Vec average_col;
-  Vec average_row;
-  real total_average;
-  real total_average_unbiased;
+    Vec average_col;
+    Vec average_row;
+    real total_average;
+    real total_average_unbiased;
 
-  // Fields below are not options.
+    // Fields below are not options.
 
-  //! The last average computed in evaluate_i_x_again().
-  mutable real avg_evaluate_i_x_again;
+    //! The last average computed in evaluate_i_x_again().
+    mutable real avg_evaluate_i_x_again;
 
-  //! The last average computed in evaluate_x_i_again().
-  mutable real avg_evaluate_x_i_again;
+    //! The last average computed in evaluate_x_i_again().
+    mutable real avg_evaluate_x_i_again;
 
-  //! A multiplicative factor to scale the result (1 or -1/2).
-  real factor;
+    //! A multiplicative factor to scale the result (1 or -1/2).
+    real factor;
 
 public:
 
-  // ************************
-  // * Public build options *
-  // ************************
+    // ************************
+    // * Public build options *
+    // ************************
 
-  bool data_will_change;
-  bool double_centering;
-  bool remove_bias;
-  bool remove_bias_in_evaluate;
+    bool data_will_change;
+    bool double_centering;
+    bool remove_bias;
+    bool remove_bias_in_evaluate;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  AdditiveNormalizationKernel();
+    //! Default constructor.
+    AdditiveNormalizationKernel();
 
-  //! Created from an existing kernel.
-  AdditiveNormalizationKernel
+    //! Created from an existing kernel.
+    AdditiveNormalizationKernel
     (Ker the_source, bool remove_bias = false, bool remove_bias_in_evaluate = false,
      bool double_centering = false);
 
-  // ************************
-  // * SourceKernel methods *
-  // ************************
+    // ************************
+    // * SourceKernel methods *
+    // ************************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
-  //! Return the average of K(x,x_i) or K(x_i,x), depending on the value of
-  //! 'on_row' (true or false, respectively).
-  inline real computeAverage(const Vec& x, bool on_row, real squared_norm_of_x = -1) const;
+    //! Return the average of K(x,x_i) or K(x_i,x), depending on the value of
+    //! 'on_row' (true or false, respectively).
+    inline real computeAverage(const Vec& x, bool on_row, real squared_norm_of_x = -1) const;
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(AdditiveNormalizationKernel);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(AdditiveNormalizationKernel);
 
-  // ******************************
-  // **** SourceKernel methods ****
-  // ******************************
+    // ******************************
+    // **** SourceKernel methods ****
+    // ******************************
 
-  //! Overridden.
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
-  virtual real evaluate_i_j(int i, int j) const;
-  virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
-  virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
-  virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
-  virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
-  virtual void computeGramMatrix(Mat K) const;
-  virtual void setDataForKernelMatrix(VMat the_data);
+    //! Overridden.
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
+    virtual real evaluate_i_j(int i, int j) const;
+    virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
+    virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
+    virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
+    virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
+    virtual void computeGramMatrix(Mat K) const;
+    virtual void setDataForKernelMatrix(VMat the_data);
   
-  // You may also want to override these methods if you don't want them
-  // to be directly forwarded to the underlying kernel.
-  // virtual void addDataForKernelMatrix(const Vec& newRow);
-  // virtual void setParameters(Vec paramvec);
-  // virtual Vec getParameters() const;
+    // You may also want to override these methods if you don't want them
+    // to be directly forwarded to the underlying kernel.
+    // virtual void addDataForKernelMatrix(const Vec& newRow);
+    // virtual void setParameters(Vec paramvec);
+    // virtual Vec getParameters() const;
 
 };
 
@@ -166,4 +166,15 @@ DECLARE_OBJECT_PTR(AdditiveNormalizationKernel);
 
 #endif
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

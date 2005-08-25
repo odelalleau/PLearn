@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/Option.h */
@@ -63,63 +63,63 @@ class PLearnDiff;
 template<class ObjectType, class OptionType>
 class Option: public OptionBase
 {
-  typedef OptionBase inherited;
+    typedef OptionBase inherited;
   
 protected:
-  OptionType ObjectType::*ptr;
+    OptionType ObjectType::*ptr;
 
 public:
 
-  //! Most of these parameters only serve to provide the user 
-  //! with an informative help text.
-  Option(const string& optionname, OptionType ObjectType::* member_ptr, 
-         flag_t flags, const string& optiontype, const string& defaultval,
-         const string& description)
-    : inherited(optionname, flags, optiontype, defaultval, description),
-      ptr(member_ptr)
+    //! Most of these parameters only serve to provide the user 
+    //! with an informative help text.
+    Option(const string& optionname, OptionType ObjectType::* member_ptr, 
+           flag_t flags, const string& optiontype, const string& defaultval,
+           const string& description)
+        : inherited(optionname, flags, optiontype, defaultval, description),
+          ptr(member_ptr)
     { }
 
-  virtual void read(Object* o, PStream& in) const
+    virtual void read(Object* o, PStream& in) const
     { in >> dynamic_cast<ObjectType*>(o)->*ptr; }
 
-  virtual void read_and_discard(PStream& in) const
-  { 
-    // Current implementation seems buggy (the ';' is not compulsory), thus
-    // better throw an error (this method doesn't seem to be used anymore
-    // anyway, maybe we could throw it away).
-    PLERROR("In Option::read_and_discard() - Current implementation would not "
-            "work correctly");
-    string dummy;
-    int c = in.smartReadUntilNext(";)", dummy);
-    in.putback((char)c);
-    //OptionType op; //dummy object that will be destroyed after read
-    //in >> op; //read dummy object
-  }
+    virtual void read_and_discard(PStream& in) const
+    { 
+        // Current implementation seems buggy (the ';' is not compulsory), thus
+        // better throw an error (this method doesn't seem to be used anymore
+        // anyway, maybe we could throw it away).
+        PLERROR("In Option::read_and_discard() - Current implementation would not "
+                "work correctly");
+        string dummy;
+        int c = in.smartReadUntilNext(";)", dummy);
+        in.putback((char)c);
+        //OptionType op; //dummy object that will be destroyed after read
+        //in >> op; //read dummy object
+    }
 
-  virtual void write(const Object* o, PStream& out) const
+    virtual void write(const Object* o, PStream& out) const
     { out << dynamic_cast<ObjectType *>(const_cast<Object*>(o))->*ptr; }
 
-  virtual Object* getAsObject(Object* o) const
+    virtual Object* getAsObject(Object* o) const
     { return toObjectPtr(dynamic_cast<ObjectType*>(o)->*ptr); }
 
-  virtual const Object* getAsObject(const Object* o) const
+    virtual const Object* getAsObject(const Object* o) const
     { return toObjectPtr(dynamic_cast<const ObjectType*>(o)->*ptr); }
 
-  virtual Object *getIndexedObject(Object *o, int i) const
+    virtual Object *getIndexedObject(Object *o, int i) const
     { return toIndexedObjectPtr(dynamic_cast<ObjectType*>(o)->*ptr, i); };
 
-  virtual const Object* getIndexedObject(const Object *o, int i) const
+    virtual const Object* getIndexedObject(const Object *o, int i) const
     { return toIndexedObjectPtr(dynamic_cast<const ObjectType*>(o)->*ptr, i); };
 
-  virtual string optionHolderClassName(const Object* o) const
+    virtual string optionHolderClassName(const Object* o) const
     { return dynamic_cast<const ObjectType*>(o)->ObjectType::_classname_(); }
 
-  virtual int diff(const string& refer, const string& other, PLearnDiff* diffs) const
+    virtual int diff(const string& refer, const string& other, PLearnDiff* diffs) const
     {
-      // TODO COMMIT WITH THE PLERROR UNTIL IT IS FIXED.
-      PLERROR("OLIVIER: gcc 3.4.4 n'aime pas la ligne ci-dessous...");
-      // return PLearn::diff(refer, other, this, diffs);
-      return -1;
+        // TODO COMMIT WITH THE PLERROR UNTIL IT IS FIXED.
+        PLERROR("OLIVIER: gcc 3.4.4 n'aime pas la ligne ci-dessous...");
+        // return PLearn::diff(refer, other, this, diffs);
+        return -1;
     }
 
 };
@@ -131,26 +131,26 @@ public:
 template<class ObjectType, class VecElementType>
 class TVecOption : public Option<ObjectType, TVec<VecElementType> >
 {
-  typedef Option<ObjectType, TVec<VecElementType> > inherited;
+    typedef Option<ObjectType, TVec<VecElementType> > inherited;
   
 public:
-  TVecOption(const string& optionname, TVec<VecElementType> ObjectType::* member_ptr, 
-             OptionBase::flag_t flags, const string& optiontype, const string& defaultval,
-             const string& description)
-    : inherited(optionname, member_ptr, flags, optiontype, defaultval,
-                description)
+    TVecOption(const string& optionname, TVec<VecElementType> ObjectType::* member_ptr, 
+               OptionBase::flag_t flags, const string& optiontype, const string& defaultval,
+               const string& description)
+        : inherited(optionname, member_ptr, flags, optiontype, defaultval,
+                    description)
     { }
 
-  virtual void readIntoIndex(Object* o, PStream& in, const string& index)
+    virtual void readIntoIndex(Object* o, PStream& in, const string& index)
     {
-      int i = tolong(index);
-      in >> (dynamic_cast<ObjectType*>(o)->*(this->ptr))[i];
+        int i = tolong(index);
+        in >> (dynamic_cast<ObjectType*>(o)->*(this->ptr))[i];
     }
 
-  virtual void writeAtIndex(const Object* o, PStream& out, const string& index) const
+    virtual void writeAtIndex(const Object* o, PStream& out, const string& index) const
     {
-      int i = tolong(index);
-      out << (dynamic_cast<ObjectType*>(const_cast<Object*>(o))->*(this->ptr))[i];
+        int i = tolong(index);
+        out << (dynamic_cast<ObjectType*>(const_cast<Object*>(o))->*(this->ptr))[i];
     }
 
 };
@@ -163,10 +163,10 @@ public:
 //! If the option is not to be serialized, you can additionally specify 
 //! OptionBase::nosave
 /*! The "type" printed in the help is given by TypeTraits<OptionType>::name().
-    The "default value" printed in optionHelp() will be a serialization of 
-    the value of the field in a default constructed instance, (which should be ok in most cases),
-    unless you explicitly specify it as the last argument here (It is recomended that you *don't*
-    specify it explicitly, unless you really must). */
+  The "default value" printed in optionHelp() will be a serialization of 
+  the value of the field in a default constructed instance, (which should be ok in most cases),
+  unless you explicitly specify it as the last argument here (It is recomended that you *don't*
+  specify it explicitly, unless you really must). */
 
 template <class ObjectType, class OptionType>
 inline void declareOption(OptionList& ol,                      //!< list to which this option should be appended 
@@ -176,9 +176,9 @@ inline void declareOption(OptionList& ol,                      //!< list to whic
                           const string& description,           //!< a description of the option
                           const string& defaultval="")         //!< default value for this option, as set by the default constructor
 {
-  ol.push_back(new Option<ObjectType, OptionType>(optionname, member_ptr, flags, 
-                                                  TypeTraits<OptionType>::name(), 
-                                                  defaultval, description));
+    ol.push_back(new Option<ObjectType, OptionType>(optionname, member_ptr, flags, 
+                                                    TypeTraits<OptionType>::name(), 
+                                                    defaultval, description));
 }
 
 // Partial specialization for pointers
@@ -190,9 +190,9 @@ inline void declareOption(OptionList& ol,
                           const string& description,
                           const string& defaultval="")
 {
-  ol.push_back(new Option<ObjectType, OptionType *>(optionname, member_ptr, flags,
-                                                    TypeTraits<OptionType *>::name(), 
-                                                    defaultval, description));
+    ol.push_back(new Option<ObjectType, OptionType *>(optionname, member_ptr, flags,
+                                                      TypeTraits<OptionType *>::name(), 
+                                                      defaultval, description));
 }
 
 // Partial specialization for TVec<T>
@@ -204,10 +204,10 @@ inline void declareOption(OptionList& ol,
                           const string& description,
                           const string& defaultval="")
 {
-  ol.push_back(new TVecOption<ObjectType, VecElementType>(
-                 optionname, member_ptr, flags,
-                 TypeTraits< TVec<VecElementType> >::name(),
-                 defaultval, description));
+    ol.push_back(new TVecOption<ObjectType, VecElementType>(
+                     optionname, member_ptr, flags,
+                     TypeTraits< TVec<VecElementType> >::name(),
+                     defaultval, description));
 }
 
 
@@ -221,20 +221,20 @@ inline void redeclareOption(OptionList& ol,                      //!< the list t
                             const string& description,           //!< a description of the option
                             const string & defaultval="")        //!< the default value for this option, as set by the default constructor
 {
-  bool found = false;
-  for (OptionList::iterator it = ol.begin(); !found && it != ol.end(); it++) {
-    if ((*it)->optionname() == optionname) {
-      // We found the option to redeclare.
-      found = true;
-      (*it) = new Option<ObjectType, OptionType>
-        (optionname, member_ptr, flags, TypeTraits<OptionType>::name(), defaultval, description);
+    bool found = false;
+    for (OptionList::iterator it = ol.begin(); !found && it != ol.end(); it++) {
+        if ((*it)->optionname() == optionname) {
+            // We found the option to redeclare.
+            found = true;
+            (*it) = new Option<ObjectType, OptionType>
+                (optionname, member_ptr, flags, TypeTraits<OptionType>::name(), defaultval, description);
+        }
     }
-  }
-  if (!found) {
-    // We tried to redeclare an option that wasn't declared previously.
-    PLERROR("Option::redeclareOption: trying to redeclare option '%s' that has "
-            "not been declared before", optionname.c_str());
-  }
+    if (!found) {
+        // We tried to redeclare an option that wasn't declared previously.
+        PLERROR("Option::redeclareOption: trying to redeclare option '%s' that has "
+                "not been declared before", optionname.c_str());
+    }
 }
 
 //! Partial specialization for pointers
@@ -246,20 +246,20 @@ inline void redeclareOption(OptionList& ol,                      //!< the list t
                             const string& description,           //!< a description of the option
                             const string & defaultval="")        //!< the default value for this option, as set by the default constructor
 {
-  bool found = false;
-  for (OptionList::iterator it = ol.begin(); !found && it != ol.end(); it++) {
-    if ((*it)->optionname() == optionname) {
-      // We found the option to redeclare.
-      found = true;
-      (*it) = new Option<ObjectType, OptionType*>
-        (optionname, member_ptr, flags, TypeTraits<OptionType*>::name(), defaultval, description);
+    bool found = false;
+    for (OptionList::iterator it = ol.begin(); !found && it != ol.end(); it++) {
+        if ((*it)->optionname() == optionname) {
+            // We found the option to redeclare.
+            found = true;
+            (*it) = new Option<ObjectType, OptionType*>
+                (optionname, member_ptr, flags, TypeTraits<OptionType*>::name(), defaultval, description);
+        }
     }
-  }
-  if (!found) {
-    // We tried to redeclare an option that wasn't declared previously.
-    PLERROR("Option::redeclareOption: trying to redeclare option '%s' that has "
-            "not been declared before", optionname.c_str());
-  }
+    if (!found) {
+        // We tried to redeclare an option that wasn't declared previously.
+        PLERROR("Option::redeclareOption: trying to redeclare option '%s' that has "
+                "not been declared before", optionname.c_str());
+    }
 }
 
 //! Partial specialization for TVec<T>
@@ -271,25 +271,38 @@ inline void redeclareOption(OptionList& ol,
                             const string& description,
                             const string & defaultval="")
 {
-  bool found = false;
-  for (OptionList::iterator it = ol.begin(); !found && it != ol.end(); it++) {
-    if ((*it)->optionname() == optionname) {
-      // We found the option to redeclare.
-      found = true;
-      (*it) = new TVecOption<ObjectType, VecElementType>
-        (optionname, member_ptr, flags,
-         TypeTraits< TVec<VecElementType> >::name(),
-         defaultval, description);
+    bool found = false;
+    for (OptionList::iterator it = ol.begin(); !found && it != ol.end(); it++) {
+        if ((*it)->optionname() == optionname) {
+            // We found the option to redeclare.
+            found = true;
+            (*it) = new TVecOption<ObjectType, VecElementType>
+                (optionname, member_ptr, flags,
+                 TypeTraits< TVec<VecElementType> >::name(),
+                 defaultval, description);
+        }
     }
-  }
-  if (!found) {
-    // We tried to redeclare an option that wasn't declared previously.
-    PLERROR("Option::redeclareOption: trying to redeclare option '%s' that has "
-            "not been declared before", optionname.c_str());
-  }
+    if (!found) {
+        // We tried to redeclare an option that wasn't declared previously.
+        PLERROR("Option::redeclareOption: trying to redeclare option '%s' that has "
+                "not been declared before", optionname.c_str());
+    }
 }
 
 
 } // end of namespace PLearn
 
 #endif //!<  Option_INC
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

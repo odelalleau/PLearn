@@ -36,9 +36,9 @@
  
 
 /* *******************************************************      
-   * $Id: SourceVariable.h,v 1.7 2005/02/04 15:10:36 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef SourceVariable_INC
 #define SourceVariable_INC
@@ -50,43 +50,43 @@ using namespace std;
 
 class SourceVariable: public Variable
 {
-  typedef Variable inherited;
+    typedef Variable inherited;
 
 public:
-  //!  Default constructor for persistence
-  SourceVariable() {}
-  SourceVariable(int thelength, int thewidth);
-  SourceVariable(const Vec& v, bool vertical=true);
-  SourceVariable(const Mat& m);
+    //!  Default constructor for persistence
+    SourceVariable() {}
+    SourceVariable(int thelength, int thewidth);
+    SourceVariable(const Vec& v, bool vertical=true);
+    SourceVariable(const Mat& m);
 
 
-  virtual void setParents(const VarArray& parents)
-  { PLERROR("In Variable::setParents  trying to set parents of a SourceVariable..."); }
+    virtual void setParents(const VarArray& parents)
+    { PLERROR("In Variable::setParents  trying to set parents of a SourceVariable..."); }
 
 
-  virtual bool markPath();
-  virtual void buildPath(VarArray& proppath);
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-  PLEARN_DECLARE_OBJECT(SourceVariable);
+    virtual bool markPath();
+    virtual void buildPath(VarArray& proppath);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    PLEARN_DECLARE_OBJECT(SourceVariable);
   
   
-  virtual void fprop();
-  virtual void bprop();
-  virtual void bbprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
-  virtual VarArray sources();
-  virtual VarArray random_sources();
-  virtual VarArray ancestors();
-  virtual void unmarkAncestors();
-  virtual VarArray parents();
-  bool isConstant() { return true; }
+    virtual void fprop();
+    virtual void bprop();
+    virtual void bbprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
+    virtual VarArray sources();
+    virtual VarArray random_sources();
+    virtual VarArray ancestors();
+    virtual void unmarkAncestors();
+    virtual VarArray parents();
+    bool isConstant() { return true; }
 
-  void printInfo(bool print_gradient) { 
-    pout << getName() << "[" << (void*)this << "] " << *this << " = " << value;
-    if (print_gradient) pout << " gradient=" << gradient;
-    pout << endl; 
-  }
+    void printInfo(bool print_gradient) { 
+        pout << getName() << "[" << (void*)this << "] " << *this << " = " << value;
+        if (print_gradient) pout << " gradient=" << gradient;
+        pout << endl; 
+    }
 };
 
 DECLARE_OBJECT_PTR(SourceVariable);
@@ -95,3 +95,15 @@ DECLARE_OBJECT_PTR(SourceVariable);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,10 +36,10 @@
 
 
 /* *******************************************************      
-   * $Id: AutoSDBVMatrix.cc,v 1.10 2005/01/28 00:23:42 dorionc Exp $
-   * AUTHOR: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHOR: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "AutoSDBVMatrix.h"
 #include <plearn/io/load_and_save.h>
@@ -49,85 +49,96 @@ namespace PLearn {
 using namespace std;
 
 AutoSDBVMatrix::AutoSDBVMatrix(const string& dbname)
-  :sdb_(extract_filename(dbname), extract_directory(dbname), SDB::readonly, true), string_field_map()
+    :sdb_(extract_filename(dbname), extract_directory(dbname), SDB::readonly, true), string_field_map()
 {
-  metadatadir = extract_directory(dbname) + extract_filename(dbname) + ".metadata";
-  if(!force_mkdir(metadatadir))
-    PLWARNING("In AutoSDBVMatrix constructor, could not create directory %s",metadatadir.c_str());
+    metadatadir = extract_directory(dbname) + extract_filename(dbname) + ".metadata";
+    if(!force_mkdir(metadatadir))
+        PLWARNING("In AutoSDBVMatrix constructor, could not create directory %s",metadatadir.c_str());
 
-  const Schema& sc = sdb_.getSchema();
+    const Schema& sc = sdb_.getSchema();
 
-  //get string mappings from sdb metadatadir
-  getMappings();
+    //get string mappings from sdb metadatadir
+    getMappings();
 
-  row_ = Row(&sc);
-  Schema::const_iterator it = sc.begin();
-  Schema::const_iterator itend = sc.end();
+    row_ = Row(&sc);
+    Schema::const_iterator it = sc.begin();
+    Schema::const_iterator itend = sc.end();
 
-  width_= sdb_.width();
-  length_ = sdb_.length();
+    width_= sdb_.width();
+    length_ = sdb_.length();
 
-  // resize the string mappings (TODO/WARNING : two string maping systems coexist (not so peacfully), next 2 line are from the newer system but
-  // transition is uncompleted
-  map_sr = TVec<map<string,real> >(width_);
-  map_rs = TVec<map<real,string> >(width_);
+    // resize the string mappings (TODO/WARNING : two string maping systems coexist (not so peacfully), next 2 line are from the newer system but
+    // transition is uncompleted
+    map_sr = TVec<map<string,real> >(width_);
+    map_rs = TVec<map<real,string> >(width_);
 
-  int i=0;
-  for(it=sc.begin(); it!=itend; ++it)
+    int i=0;
+    for(it=sc.begin(); it!=itend; ++it)
     {
-      if(it->field_type==DateType)
-        declareField(i++, it->name, VMField::Date);
-      else
-	declareField(i++, it->name, VMField::UnknownType);
+        if(it->field_type==DateType)
+            declareField(i++, it->name, VMField::Date);
+        else
+            declareField(i++, it->name, VMField::UnknownType);
     }
 }
 
 void AutoSDBVMatrix::getNewRow(int i, const Vec& v) const
 {
-  sdb_.getInRow(i, row_);
-  Row::const_iterator it = row_.begin();
-  int w = width();
-  if(w!=v.length())
-    PLERROR("In AutoSDBVMatrix::getNewRow length of v must be width of VMatrix");
+    sdb_.getInRow(i, row_);
+    Row::const_iterator it = row_.begin();
+    int w = width();
+    if(w!=v.length())
+        PLERROR("In AutoSDBVMatrix::getNewRow length of v must be width of VMatrix");
 
-  int j=0;
-  while(j<w)
+    int j=0;
+    while(j<w)
     {
-      if(it.isString())
-	v[j]= string_field_map.find(it.name())->second[it.asString()];
-      else if(it.isMissing())
-	v[j] = MISSING_VALUE;
-      else if(it.isCharacter())
-	v[j] = (real)*(it.asCharacter());
-      else
-	v[j] = (real)it.toDouble();
-      ++j;
-      ++it;
+        if(it.isString())
+            v[j]= string_field_map.find(it.name())->second[it.asString()];
+        else if(it.isMissing())
+            v[j] = MISSING_VALUE;
+        else if(it.isCharacter())
+            v[j] = (real)*(it.asCharacter());
+        else
+            v[j] = (real)it.toDouble();
+        ++j;
+        ++it;
     }
 }
 
 
 void AutoSDBVMatrix::getMappings()
 {
-  const Schema& sc = sdb_.getSchema();
+    const Schema& sc = sdb_.getSchema();
   
-  for(Schema::const_iterator it= sc.begin(); it < sc.end(); ++it)
-    if(it->field_type == StringType)
-    {
-      PPath field_filename = metadatadir / (it->name + ".strings");
-      real  dft_val        = MISSING_VALUE;
+    for(Schema::const_iterator it= sc.begin(); it < sc.end(); ++it)
+        if(it->field_type == StringType)
+        {
+            PPath field_filename = metadatadir / (it->name + ".strings");
+            real  dft_val        = MISSING_VALUE;
       
-      // Get value for others, if file exists
-      if( isfile(field_filename + ".others") )
-        PLearn::load(field_filename + ".others", dft_val);
+            // Get value for others, if file exists
+            if( isfile(field_filename + ".others") )
+                PLearn::load(field_filename + ".others", dft_val);
       
-      // Get mapping, if it exists
-      string_field_map[it->name] = StringFieldMapping(field_filename, dft_val);
-      num2string_map[it->name]   = NumToStringMapping(field_filename);
-    }
+            // Get mapping, if it exists
+            string_field_map[it->name] = StringFieldMapping(field_filename, dft_val);
+            num2string_map[it->name]   = NumToStringMapping(field_filename);
+        }
 }
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiToUniInstanceSelectRandomVMatrix.h,v 1.1 2005/01/28 18:21:07 crompb Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Benoit Cromp
 
@@ -56,41 +56,41 @@ class MultiToUniInstanceSelectRandomVMatrix: public SelectRowsVMatrix
 
 private:
 
-  typedef SelectRowsVMatrix inherited;
+    typedef SelectRowsVMatrix inherited;
 
 public:
 
-  VMat source_;
+    VMat source_;
 
-  // ************************
-  // * Public build options *
-  // ************************
+    // ************************
+    // * Public build options *
+    // ************************
 
-  //! Random number generator seed
-  long seed;
+    //! Random number generator seed
+    long seed;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor
-  MultiToUniInstanceSelectRandomVMatrix();
+    //! Default constructor
+    MultiToUniInstanceSelectRandomVMatrix();
 
-  PLEARN_DECLARE_OBJECT(MultiToUniInstanceSelectRandomVMatrix);
+    PLEARN_DECLARE_OBJECT(MultiToUniInstanceSelectRandomVMatrix);
 
-  static void declareOptions(OptionList &ol);
-  virtual void build();
+    static void declareOptions(OptionList &ol);
+    virtual void build();
 
 protected:
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 public:
 
 private: 
 
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(MultiToUniInstanceSelectRandomVMatrix);
@@ -98,3 +98,15 @@ DECLARE_OBJECT_PTR(MultiToUniInstanceSelectRandomVMatrix);
 } // end of namespace PLearn
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

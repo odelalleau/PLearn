@@ -35,10 +35,10 @@
  
 
 /* *******************************************************      
-   * $Id$
-   * AUTHORS: Pascal Vincent & Frederic Morin
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Frederic Morin
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "TestMethod.h"
 
@@ -50,8 +50,8 @@ PLEARN_IMPLEMENT_OBJECT(TestMethod, "ONE LINE DESCR", "NO HELP");
 
 
 /*
-Vec TestMethod::test(PP<Learner> learner, const VMat &dataset)
-{
+  Vec TestMethod::test(PP<Learner> learner, const VMat &dataset)
+  {
   int nsp = splitter->nsplits(); 
   int nst = statnames.length();
   Vec results(nst);
@@ -64,14 +64,14 @@ Vec TestMethod::test(PP<Learner> learner, const VMat &dataset)
   TVec<int> setnum(nst);
 
   for(int i=0; i<nst; i++)
-    {          
-      string costname;
-      parse_statname(statnames[i], extstat[i], intstat[i], setnum[i], costname);
-      if(setnum==0) // train cost
-        costindex[i] = learner->getTrainCostIndex(costname);
-      else // test cost
-        costindex[i] = learner->getTestCostIndex(costname);
-    }
+  {          
+  string costname;
+  parse_statname(statnames[i], extstat[i], intstat[i], setnum[i], costname);
+  if(setnum==0) // train cost
+  costindex[i] = learner->getTrainCostIndex(costname);
+  else // test cost
+  costindex[i] = learner->getTestCostIndex(costname);
+  }
 
   // The global stats collector
   VecStatsCollector globalstats;
@@ -80,43 +80,43 @@ Vec TestMethod::test(PP<Learner> learner, const VMat &dataset)
   TVec<VecStatsCollector> stats;
 
   for(int k=0; k<nsp; k++)
-    {
-      Array<VMat> split = splitter->getSplit(k);
-      stats.resize(split.size());
+  {
+  Array<VMat> split = splitter->getSplit(k);
+  stats.resize(split.size());
 
-      if(forget_learner)
-        learner->forget();
+  if(forget_learner)
+  learner->forget();
       
-      // train
-      VecStatsCollector& st = stats[0];
-      learner->setTrainingSet(split[0]);
-      st.forget();
-      learner->newtrain(st);
-      st.finalize();
+  // train
+  VecStatsCollector& st = stats[0];
+  learner->setTrainingSet(split[0]);
+  st.forget();
+  learner->newtrain(st);
+  st.finalize();
 
-      // tests
-      for(int m=1; m<split.size(); m++)
-        {
-          VMat testset = split[m];
-          VecStatsCollector& st = stats[m];
-          st.forget();
-          learner->newtest(testset,st);
-          st.finalize();
-        }
+  // tests
+  for(int m=1; m<split.size(); m++)
+  {
+  VMat testset = split[m];
+  VecStatsCollector& st = stats[m];
+  st.forget();
+  learner->newtest(testset,st);
+  st.finalize();
+  }
 
-      for(int i=0; i<nst; i++)
-        results[i] = stats[setnum[i]].getStats(costindex[i]).getStat(intstat[i]);
+  for(int i=0; i<nst; i++)
+  results[i] = stats[setnum[i]].getStats(costindex[i]).getStat(intstat[i]);
 
-      globalstats.update(results);
-    }
+  globalstats.update(results);
+  }
 
   globalstats.finalize();
 
   for(int i=0; i<nst; i++)
-    results[i] = globalstats.getStats(i).getStat(extstat[i]);
+  results[i] = globalstats.getStats(i).getStat(extstat[i]);
 
   return results;
-}
+  }
 */
 
 void TestMethod::build_()
@@ -125,8 +125,8 @@ void TestMethod::build_()
 
 void TestMethod::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void
@@ -145,3 +145,16 @@ TestMethod::declareOptions(OptionList &ol)
 
 
 }; // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

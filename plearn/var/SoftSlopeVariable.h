@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeVariable.h,v 1.7 2004/04/27 15:59:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef SoftSlopeVariable_INC
 #define SoftSlopeVariable_INC
@@ -57,23 +57,23 @@ using namespace std;
 // It is always monotonically increasing wrt x (positive derivative in x).
 class SoftSlopeVariable: public NaryVariable
 {
-  typedef NaryVariable inherited;
+    typedef NaryVariable inherited;
 
 protected:
-  bool tabulated;
+    bool tabulated;
 
 public:
-  //!  Default constructor for persistence
-  SoftSlopeVariable() {}
-  SoftSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right, bool tabulated=true);
+    //!  Default constructor for persistence
+    SoftSlopeVariable() {}
+    SoftSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right, bool tabulated=true);
 
-  PLEARN_DECLARE_OBJECT(SoftSlopeVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(SoftSlopeVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 };
 
 DECLARE_OBJECT_PTR(SoftSlopeVariable);
@@ -84,35 +84,48 @@ inline Var soft_slope(Var x, Var smoothness, Var left, Var right)
 // derivative of soft_slope wrt x
 inline Var d_soft_slope(Var x, Var smoothness, Var left, Var right)
 {
-  return (-sigmoid(-smoothness*(x-left))+sigmoid(-smoothness*(x-right)))/(right-left);
+    return (-sigmoid(-smoothness*(x-left))+sigmoid(-smoothness*(x-right)))/(right-left);
 }
 
 // limit of soft_slope when smoothness-->0
 inline Var soft_slope_limit(Var x, Var smoothness, Var left, Var right)
 {
-  int l=0; 
-  int w=0;
-  if (x->length()>l) l=x->length();
-  if (x->width()>w) w=x->width();
-  if (smoothness->length()>l) l=smoothness->length();
-  if (smoothness->width()>w) w=smoothness->width();
-  if (left->length()>l) l=left->length();
-  if (left->width()>w) w=left->width();
-  if (right->length()>l) l=right->length();
-  if (right->width()>w) w=right->width();
-  if (x->length()>l && l!=x->length()) PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
-  if (x->width()>w && w!=x->width()) PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
-  if (smoothness->length()>l && l!=smoothness->length())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
-  if (smoothness->width()>w && w!=smoothness->width())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
-  if (left->length()>l && l!=left->length())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
-  if (left->width()>w && w!=left->width())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
-  if (right->length()>l && l!=right->length())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
-  if (right->width()>w && w!=right->width())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
-  Var res(l,w);
-  res->value.fill(0.5);
-  return res;
+    int l=0; 
+    int w=0;
+    if (x->length()>l) l=x->length();
+    if (x->width()>w) w=x->width();
+    if (smoothness->length()>l) l=smoothness->length();
+    if (smoothness->width()>w) w=smoothness->width();
+    if (left->length()>l) l=left->length();
+    if (left->width()>w) w=left->width();
+    if (right->length()>l) l=right->length();
+    if (right->width()>w) w=right->width();
+    if (x->length()>l && l!=x->length()) PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+    if (x->width()>w && w!=x->width()) PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+    if (smoothness->length()>l && l!=smoothness->length())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+    if (smoothness->width()>w && w!=smoothness->width())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+    if (left->length()>l && l!=left->length())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+    if (left->width()>w && w!=left->width())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+    if (right->length()>l && l!=right->length())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+    if (right->width()>w && w!=right->width())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+    Var res(l,w);
+    res->value.fill(0.5);
+    return res;
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

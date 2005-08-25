@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
 
@@ -54,78 +54,91 @@ class RandomNeighborsDifferencesVMatrix: public SourceVMatrix
 
 private:
 
-  typedef SourceVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
-  //! Used to store data and save memory allocations.
-  mutable Vec neighbor_row, ith_row, diff_k;
+    //! Used to store data and save memory allocations.
+    mutable Vec neighbor_row, ith_row, diff_k;
 
 protected:
-  // NON-OPTION FIELDS
+    // NON-OPTION FIELDS
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // ### declare public option fields (such as build options) here
-  // ...
-  int n_neighbors;
-  bool append_current_point_indexe;
-  bool append_random_neighbors_indexes;
+    // ### declare public option fields (such as build options) here
+    // ...
+    int n_neighbors;
+    bool append_current_point_indexe;
+    bool append_random_neighbors_indexes;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  RandomNeighborsDifferencesVMatrix();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    RandomNeighborsDifferencesVMatrix();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
-  //!  This is the only method requiring implementation
-  virtual void getNewRow(int i, const Vec& v) const;
+    //!  This is the only method requiring implementation
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(RandomNeighborsDifferencesVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(RandomNeighborsDifferencesVMatrix);
 
 };
 DECLARE_OBJECT_PTR(RandomNeighborsDifferencesVMatrix);
 
 inline VMat random_neighbors_differences(VMat source, int n_neighbors, bool append_current_point_indexe = false, bool append_random_neighbors_indexes = false)
 {
-  RandomNeighborsDifferencesVMatrix* vmat = new RandomNeighborsDifferencesVMatrix();
-  vmat->source=source;
-  vmat->n_neighbors=n_neighbors;
-  vmat->append_current_point_indexe = append_current_point_indexe;
-  vmat->append_random_neighbors_indexes = append_random_neighbors_indexes;
-  vmat->build();
-  return vmat;
+    RandomNeighborsDifferencesVMatrix* vmat = new RandomNeighborsDifferencesVMatrix();
+    vmat->source=source;
+    vmat->n_neighbors=n_neighbors;
+    vmat->append_current_point_indexe = append_current_point_indexe;
+    vmat->append_random_neighbors_indexes = append_random_neighbors_indexes;
+    vmat->build();
+    return vmat;
 }
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

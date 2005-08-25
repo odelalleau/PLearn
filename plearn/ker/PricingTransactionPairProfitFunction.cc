@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: PricingTransactionPairProfitFunction.cc,v 1.4 2004/04/07 23:16:58 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "PricingTransactionPairProfitFunction.h"
 
@@ -50,13 +50,13 @@ PLEARN_IMPLEMENT_OBJECT(PricingTransactionPairProfitFunction, "ONE LINE DESCR", 
 
 real PricingTransactionPairProfitFunction::evaluate(const Vec& output, const Vec& target) const
 {
-  real nb_units_transaction = output[0];
-  real cash_earned_at_t1 = output[1];
-  real price_t2 = target[0];
-  real transaction_loss_t2 = nb_units_transaction>0 ? additive_cost + 
-    fabs(nb_units_transaction) * (price_t2 * multiplicative_cost + per_unit_cost) : 0;
-  real profit = cash_earned_at_t1 + nb_units_transaction * price_t2 - transaction_loss_t2;
-  return profit;
+    real nb_units_transaction = output[0];
+    real cash_earned_at_t1 = output[1];
+    real price_t2 = target[0];
+    real transaction_loss_t2 = nb_units_transaction>0 ? additive_cost + 
+        fabs(nb_units_transaction) * (price_t2 * multiplicative_cost + per_unit_cost) : 0;
+    real profit = cash_earned_at_t1 + nb_units_transaction * price_t2 - transaction_loss_t2;
+    return profit;
 }
 
 
@@ -75,3 +75,15 @@ void PricingTransactionPairProfitFunction::declareOptions(OptionList &ol)
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: UniformVMatrix.h,v 1.4 2004/04/05 23:08:23 morinf Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -52,27 +52,27 @@ using namespace std;
 
 class UniformVMatrix: public VMatrix
 {
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
- protected:
-  real minval;
-  real maxval;
+protected:
+    real minval;
+    real maxval;
   
- public:
-  // ******************
-  // *  Constructors  *
-  // ******************
-  UniformVMatrix(); //!<  default constructor (for automatic deserialization)
+public:
+    // ******************
+    // *  Constructors  *
+    // ******************
+    UniformVMatrix(); //!<  default constructor (for automatic deserialization)
 
-  UniformVMatrix(real the_minval, real the_maxval, int the_width);    
+    UniformVMatrix(real the_minval, real the_maxval, int the_width);    
 
-  PLEARN_DECLARE_OBJECT(UniformVMatrix);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(UniformVMatrix);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
+    virtual real get(int i, int j) const;
+    virtual void getSubRow(int i, int j, Vec v) const;
 private:
     void build_();
 };
@@ -81,3 +81,16 @@ DECLARE_OBJECT_PTR(UniformVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

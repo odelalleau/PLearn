@@ -35,8 +35,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.h,v 1.10 2005/06/17 17:32:42 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file KFoldSplitter.h */
 #ifndef KFoldSplitter_INC
@@ -104,8 +104,8 @@ public:
     //! Returns the number of available different "splits"
     virtual int nsplits() const;
 
-  //! Returns the number of sets per split
-  virtual int nSetsPerSplit() const;
+    //! Returns the number of sets per split
+    virtual int nSetsPerSplit() const;
 
     //! Returns split number i
     virtual TVec<VMat> getSplit(int i=0);
@@ -118,3 +118,16 @@ DECLARE_OBJECT_PTR(KFoldSplitter);
 } // end of namespace PLearn
 
 #endif // KFoldSplitter_INC
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

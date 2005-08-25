@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ScaledGeneralizedDistanceRBFKernel.h,v 1.4 2004/09/14 16:04:36 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ScaledGeneralizedDistanceRBFKernel_INC
 #define ScaledGeneralizedDistanceRBFKernel_INC
@@ -59,12 +59,12 @@ protected:
     real b, c;
     Vec phi, a;
 
- public:
+public:
     ScaledGeneralizedDistanceRBFKernel()
         : b(), c(), phi(), a() {}
     ScaledGeneralizedDistanceRBFKernel(Vec the_phi, Vec the_a, real the_b, real the_c)
         : b(the_b), c(the_c), phi(the_phi), a(the_a)
-        {}
+    {}
 
     PLEARN_DECLARE_OBJECT(ScaledGeneralizedDistanceRBFKernel);
 
@@ -82,3 +82,15 @@ DECLARE_OBJECT_PTR(ScaledGeneralizedDistanceRBFKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

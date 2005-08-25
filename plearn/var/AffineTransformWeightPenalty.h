@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformWeightPenalty.h,v 1.7 2005/06/15 14:39:22 lamblin Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef AffineTransformWeightPenalty_INC
 #define AffineTransformWeightPenalty_INC
@@ -55,49 +55,49 @@ class AffineTransformWeightPenalty: public UnaryVariable
 {
     typedef UnaryVariable inherited;
 
-  protected:    
+protected:    
     real weight_decay_;
     real bias_decay_;
     string penalty_type_;
 
-  public:
+public:
     //!  Default constructor for persistence
     AffineTransformWeightPenalty()
-      : weight_decay_(0.0), bias_decay_(0.0), penalty_type_("L2_square")
+        : weight_decay_(0.0), bias_decay_(0.0), penalty_type_("L2_square")
     {
-      string pt = lowerstring( penalty_type_ );
-      if( pt == "l1" )
-        penalty_type_ = "L1";
-      else if( pt == "l1_square" || pt == "l1 square" || pt == "l1square" )
-        penalty_type_ = "L1_square";
-      else if( pt == "l2_square" || pt == "l2 square" || pt == "l2square" )
-        penalty_type_ = "L2_square";
-      else if( pt == "l2" )
-      {
-        PLWARNING("L2 penalty not supported, assuming you want L2 square");
-        penalty_type_ = "L2_square";
-      }
-      else
-        PLERROR("penalty_type_ \"%s\" not supported", penalty_type_.c_str());
+        string pt = lowerstring( penalty_type_ );
+        if( pt == "l1" )
+            penalty_type_ = "L1";
+        else if( pt == "l1_square" || pt == "l1 square" || pt == "l1square" )
+            penalty_type_ = "L1_square";
+        else if( pt == "l2_square" || pt == "l2 square" || pt == "l2square" )
+            penalty_type_ = "L2_square";
+        else if( pt == "l2" )
+        {
+            PLWARNING("L2 penalty not supported, assuming you want L2 square");
+            penalty_type_ = "L2_square";
+        }
+        else
+            PLERROR("penalty_type_ \"%s\" not supported", penalty_type_.c_str());
     }
 
     AffineTransformWeightPenalty(Variable* affinetransform, real weight_decay, real bias_decay=0., string penalty_type="L2_square")
-      : inherited(affinetransform, 1,1),weight_decay_(weight_decay),bias_decay_(bias_decay),penalty_type_(penalty_type)
+        : inherited(affinetransform, 1,1),weight_decay_(weight_decay),bias_decay_(bias_decay),penalty_type_(penalty_type)
     {
-      string pt = lowerstring( penalty_type_ );
-      if( pt == "l1" )
-        penalty_type_ = "L1";
-      else if( pt == "l1_square" || pt == "l1 square" || pt == "l1square" )
-        penalty_type_ = "L1_square";
-      else if( pt == "l2_square" || pt == "l2 square" || pt == "l2square" )
-        penalty_type_ = "L2_square";
-      else if( pt == "l2" )
-      {
-        PLWARNING("L2 penalty not supported, assuming you want L2 square");
-        penalty_type_ = "L2_square";
-      }
-      else
-        PLERROR("penalty_type_ \"%s\" not supported", penalty_type_.c_str());
+        string pt = lowerstring( penalty_type_ );
+        if( pt == "l1" )
+            penalty_type_ = "L1";
+        else if( pt == "l1_square" || pt == "l1 square" || pt == "l1square" )
+            penalty_type_ = "L1_square";
+        else if( pt == "l2_square" || pt == "l2 square" || pt == "l2square" )
+            penalty_type_ = "L2_square";
+        else if( pt == "l2" )
+        {
+            PLWARNING("L2 penalty not supported, assuming you want L2 square");
+            penalty_type_ = "L2_square";
+        }
+        else
+            PLERROR("penalty_type_ \"%s\" not supported", penalty_type_.c_str());
     }
 
     PLEARN_DECLARE_OBJECT(AffineTransformWeightPenalty);
@@ -118,3 +118,16 @@ inline Var affine_transform_weight_penalty(Var transformation, real weight_decay
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

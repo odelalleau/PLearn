@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StringPStreamBuf.cc,v 1.5 2005/03/01 19:18:44 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -47,47 +47,60 @@
 namespace PLearn {
 using namespace std;
 
-  StringPStreamBuf::StringPStreamBuf(string* ptrs, const string& openmode, bool own_string_,
-                   streamsize inbuf_capacity, streamsize outbuf_capacity, streamsize unget_capacity)
+StringPStreamBuf::StringPStreamBuf(string* ptrs, const string& openmode, bool own_string_,
+                                   streamsize inbuf_capacity, streamsize outbuf_capacity, streamsize unget_capacity)
     :PStreamBuf(openmode=="r", openmode=="w" || openmode=="a", inbuf_capacity, outbuf_capacity, unget_capacity),
      st(ptrs), read_index(0), own_string(own_string_)
-  {
+{
     if(openmode=="w") // truncate it first
-      st->clear();
+        st->clear();
 
     else if(openmode!="r" && openmode!="a")
-      PLERROR("In StringPStreamBuf invalid openmode %s, must be one of r, w, a",openmode.c_str());
-  }
+        PLERROR("In StringPStreamBuf invalid openmode %s, must be one of r, w, a",openmode.c_str());
+}
 
-  StringPStreamBuf::StringPStreamBuf(const string* ptrs, const string& openmode, bool own_string_,
-                   streamsize inbuf_capacity, streamsize unget_capacity)
+StringPStreamBuf::StringPStreamBuf(const string* ptrs, const string& openmode, bool own_string_,
+                                   streamsize inbuf_capacity, streamsize unget_capacity)
     :PStreamBuf(true, false, inbuf_capacity, 0, unget_capacity),
      st(const_cast<string*>(ptrs)), read_index(0), own_string(own_string_)
-  {
+{
     if(openmode!="r")
-      PLERROR("In StringPStreamBuf(const string*, ...) invalid openmode %s, must be one of r if giving a const string* ",openmode.c_str());    
-  }
+        PLERROR("In StringPStreamBuf(const string*, ...) invalid openmode %s, must be one of r if giving a const string* ",openmode.c_str());    
+}
 
-  StringPStreamBuf::~StringPStreamBuf()
-  {
+StringPStreamBuf::~StringPStreamBuf()
+{
     flush();
     
     if(own_string && st!=0)
-      delete st;
-  }
+        delete st;
+}
 
-  StringPStreamBuf::streamsize StringPStreamBuf::read_(char* p, streamsize n)
-  {
+StringPStreamBuf::streamsize StringPStreamBuf::read_(char* p, streamsize n)
+{
     string::size_type nread = st->copy(p, string::size_type(n), read_index); 
     read_index += nread;
     return streamsize(nread);
-  }
+}
 
-  //! writes exactly n characters from p (unbuffered, must flush)
-  void StringPStreamBuf::write_(const char* p, streamsize n)
-  {
+//! writes exactly n characters from p (unbuffered, must flush)
+void StringPStreamBuf::write_(const char* p, streamsize n)
+{
     while(n--)
-      st->operator+=(*p++);
-  }
+        st->operator+=(*p++);
+}
   
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

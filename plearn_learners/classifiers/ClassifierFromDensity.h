@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.h,v 1.9 2005/04/13 21:46:29 larocheh Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file ClassifierFromDensity.h */
 #ifndef ClassifierFromDensity_INC
@@ -51,93 +51,93 @@ class ClassifierFromDensity: public PLearner
 
 private:
 
-  typedef PLearner inherited;
+    typedef PLearner inherited;
 
 public:
 
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  int nclasses;
-  TVec< PP<PDistribution> > estimators;
-  Vec log_priors;
-  bool output_log_probabilities;
-  bool normalize_probabilities;
-  bool copy_estimator;
+    int nclasses;
+    TVec< PP<PDistribution> > estimators;
+    Vec log_priors;
+    bool output_log_probabilities;
+    bool normalize_probabilities;
+    bool copy_estimator;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  ClassifierFromDensity();
+    //! Default constructor.
+    ClassifierFromDensity();
 
-  // ******************
-  // * PLearner methods *
-  // ******************
+    // ******************
+    // * PLearner methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_() 
-  virtual void build();
+    //! Simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods
-  //  If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
-  PLEARN_DECLARE_OBJECT(ClassifierFromDensity);
+    // Declares other standard object methods
+    //  If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+    PLEARN_DECLARE_OBJECT(ClassifierFromDensity);
 
 
-  // **************************
-  // **** PLearner methods ****
-  // **************************
+    // **************************
+    // **** PLearner methods ****
+    // **************************
 
-  //! returns the size of this learner's output, (which typically
-  //! may depend on its inputsize(), targetsize() and set options)
-  virtual int outputsize() const;
+    //! returns the size of this learner's output, (which typically
+    //! may depend on its inputsize(), targetsize() and set options)
+    virtual int outputsize() const;
 
-  //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
-  //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
-  virtual void forget();
+    //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
+    //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
+    virtual void forget();
 
     
-  //! The role of the train method is to bring the learner up to stage==nstages,
-  //! updating the train_stats collector with training costs measured on-line in the process.
-  virtual void train();
+    //! The role of the train method is to bring the learner up to stage==nstages,
+    //! updating the train_stats collector with training costs measured on-line in the process.
+    virtual void train();
 
 
-  //! Computes the output from the input
-  virtual void computeOutput(const Vec& input, Vec& output) const;
+    //! Computes the output from the input
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
-  //! Computes the costs from already computed output. 
-  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                       const Vec& target, Vec& costs) const;
+    //! Computes the costs from already computed output. 
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const;
                                 
 
-  //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method)
-  virtual TVec<string> getTestCostNames() const;
+    //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method)
+    virtual TVec<string> getTestCostNames() const;
 
-  //! Returns the names of the objective costs that the train method computes and 
-  //! for which it updates the VecStatsCollector train_stats
-  virtual TVec<string> getTrainCostNames() const;
+    //! Returns the names of the objective costs that the train method computes and 
+    //! for which it updates the VecStatsCollector train_stats
+    virtual TVec<string> getTrainCostNames() const;
 
 
 };
@@ -148,3 +148,16 @@ DECLARE_OBJECT_PTR(ClassifierFromDensity);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

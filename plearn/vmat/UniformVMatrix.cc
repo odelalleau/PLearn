@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: UniformVMatrix.cc,v 1.5 2004/07/21 16:30:55 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "UniformVMatrix.h"
 #include <plearn/math/random.h>
@@ -50,12 +50,12 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(UniformVMatrix, "ONE LINE DESC", "NO HELP");
 
 UniformVMatrix::UniformVMatrix()
-  : minval(0), maxval(1)
+    : minval(0), maxval(1)
 {
 }
 
 UniformVMatrix::UniformVMatrix(real the_minval, real the_maxval, int the_width)
-  : inherited(-1,the_width),minval(the_minval), maxval(the_maxval)
+    : inherited(-1,the_width),minval(the_minval), maxval(the_maxval)
 {}
 
 void
@@ -80,16 +80,29 @@ UniformVMatrix::declareOptions(OptionList &ol)
 
 real UniformVMatrix::get(int i, int j) const
 {
-  double scale = maxval-minval;
-  return uniform_sample()*scale+minval;
+    double scale = maxval-minval;
+    return uniform_sample()*scale+minval;
 }
 
 void UniformVMatrix::getSubRow(int i, int j, Vec v) const
 {
-  double scale = maxval-minval;
-  for(int k=0; k<v.length(); k++)
-    v[k] = uniform_sample()*scale+minval;
+    double scale = maxval-minval;
+    for(int k=0; k<v.length(); k++)
+        v[k] = uniform_sample()*scale+minval;
 }
 
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

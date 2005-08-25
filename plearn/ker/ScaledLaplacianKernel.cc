@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ScaledLaplacianKernel.cc,v 1.5 2004/09/14 16:04:36 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ScaledLaplacianKernel.h"
 
@@ -50,27 +50,39 @@ PLEARN_IMPLEMENT_OBJECT(ScaledLaplacianKernel, "ONE LINE DESCR", "NO HELP");
 
 void ScaledLaplacianKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Kernel::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(phi, copies);
+    Kernel::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(phi, copies);
 }
 
 real ScaledLaplacianKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
 #ifdef BOUNDCHECK
-  if(x1.length()!=x2.length() || x1.length()!=phi.length())
-    PLERROR("IN ScaledLaplacianKernel::evaluate x1 and x2 and phi must have the same length");
+    if(x1.length()!=x2.length() || x1.length()!=phi.length())
+        PLERROR("IN ScaledLaplacianKernel::evaluate x1 and x2 and phi must have the same length");
 #endif
 
-  real summ = 0.0;
-  real* v1=x1.data();
-  real* v2=x2.data();
-  real* ph=phi.data();
-  int n=x1.length();
-  for(int i=0; i<n; i++)
-    summ += fabs(v1[i]-v2[i])*ph[i];
-  return exp(-summ);
+    real summ = 0.0;
+    real* v1=x1.data();
+    real* v2=x2.data();
+    real* ph=phi.data();
+    int n=x1.length();
+    for(int i=0; i<n; i++)
+        summ += fabs(v1[i]-v2[i])*ph[i];
+    return exp(-summ);
 }
 
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

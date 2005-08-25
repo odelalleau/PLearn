@@ -63,17 +63,17 @@ using namespace std;
 */
 
 enum SDBVMOutputCoding {
-  SDBVMUnknownCoding = 0,
-  SDBVMNumeric,				     //!<  straight output
-  SDBVMOneHot,				     //!<  classic one-hot
-  SDBVMOneHotMinus1			     //!<  One-hot vector containing
-  //!    all but first element
-  //!    (which is skipped)
+    SDBVMUnknownCoding = 0,
+    SDBVMNumeric,				     //!<  straight output
+    SDBVMOneHot,				     //!<  classic one-hot
+    SDBVMOneHotMinus1			     //!<  One-hot vector containing
+    //!    all but first element
+    //!    (which is skipped)
 };
 
 class SDBVMOutputCoder : public PPointable
 {
-  public:
+public:
     SDBVMOutputCoder(SDBVMOutputCoding oc = SDBVMNumeric,
                      real missing_values_mapping = MISSING_VALUE);
     virtual ~SDBVMOutputCoder();
@@ -108,16 +108,16 @@ class SDBVMOutputCoder : public PPointable
     //!  coding is desired, a reasonable integer should be passed
     virtual void setOutput(real output_value, const Vec& output_field) const;
 
-  public:
+public:
 /*!       Utility function to derive the number of classes given a generic
-      mapping: This function iterates over all targets of a mapping, and
-      notes whether the mapped values are all non-negative integers; if so,
-      it returns one more than the largest encountered integer.  Otherwise,
-      it returns zero.  If other_values_mapping or missing_values_mapping is
-      MISSING_VALUE, the number of classes is not affected.  Note that
-      other_values_mapping can be taken into account by this function, but
-      is not otherwise handled by this class; this special mapping must be
-      handled by other classes.
+  mapping: This function iterates over all targets of a mapping, and
+  notes whether the mapped values are all non-negative integers; if so,
+  it returns one more than the largest encountered integer.  Otherwise,
+  it returns zero.  If other_values_mapping or missing_values_mapping is
+  MISSING_VALUE, the number of classes is not affected.  Note that
+  other_values_mapping can be taken into account by this function, but
+  is not otherwise handled by this class; this special mapping must be
+  handled by other classes.
 */
     template <class Mapping>
     static int getNumClasses(const Mapping& mapping,
@@ -130,7 +130,7 @@ class SDBVMOutputCoder : public PPointable
                                      real other_values_mapping,
                                      real missing_values_mapping);
 
-  protected:
+protected:
     SDBVMOutputCoding output_coding_;
     int num_classes_;			     //!<  must be >0 for one-hot coding
     real missing_values_mapping_;
@@ -151,15 +151,15 @@ typedef PP<SDBVMOutputCoder> PSDBVMOutputCoder;
 
 class SDBVMField : public PPointable
 {
-  public:
+public:
     //!  Constructor: specifies the mapping for missing values
     SDBVMField(real missing_values_mapping=MISSING_VALUE, VMField::FieldType field_type=VMField::UnknownType)
-      : missing_values_mapping_(missing_values_mapping),
-        field_type_(field_type) {}
+        : missing_values_mapping_(missing_values_mapping),
+          field_type_(field_type) {}
     
 /*!       Given a database row, convert the appropriate parts to a
-      (preallocated) output vector of the correct width (given by
-      fieldWidth).  Replace MISSING_VALUEs by missing_values_mapping.
+  (preallocated) output vector of the correct width (given by
+  fieldWidth).  Replace MISSING_VALUEs by missing_values_mapping.
 */
     virtual void convertField(const SDBWithStats& sdb,
                               const Row& theRow,
@@ -169,9 +169,9 @@ class SDBVMField : public PPointable
     virtual int fieldWidth() const = 0;
 
 /*!       Query the kind of mapping performed by each field
-      DiscrGeneral: arbitrary discrete values
-      DiscrMonotonic: monotonic discrete values
-      DiscrFloat: monotonic + some exceptions
+  DiscrGeneral: arbitrary discrete values
+  DiscrMonotonic: monotonic discrete values
+  DiscrFloat: monotonic + some exceptions
 */
 
     VMField::FieldType fieldType() const { return field_type_; }
@@ -184,11 +184,11 @@ class SDBVMField : public PPointable
 
     virtual SDBVMOutputCoding getOutputCoding() const;
 
-  protected:
+protected:
     //!  Replace all MISSING_VALUEs in output vector by missing_values_mapping_
     void convertMissing(const Vec& output) const;
 
-  protected:
+protected:
     real missing_values_mapping_;
     VMField::FieldType field_type_;
 };
@@ -201,42 +201,42 @@ typedef PP<SDBVMField> PSDBVMField;
 
 class SDBVMSource
 {
-  protected:
+protected:
     FieldPtr sdbfieldptr;
     PSDBVMField sdbvmfieldptr;
     Vec output;
 
-  public:
+public:
     SDBVMSource(FieldPtr the_sdbfieldptr)
-      :sdbfieldptr(the_sdbfieldptr) {}
+        :sdbfieldptr(the_sdbfieldptr) {}
 
     SDBVMSource(PSDBVMField the_sdbvmfieldptr)
-      :sdbvmfieldptr(the_sdbvmfieldptr), 
-      output(1)
+        :sdbvmfieldptr(the_sdbvmfieldptr), 
+         output(1)
     {
-      if(sdbvmfieldptr->fieldWidth()!=1)
-        PLERROR("Can't make a SDBVMSource from a SDBVMField whose width is other than 1");
+        if(sdbvmfieldptr->fieldWidth()!=1)
+            PLERROR("Can't make a SDBVMSource from a SDBVMField whose width is other than 1");
     }
 
     //!  to get the value of this source
     FieldValue getValue(const SDBWithStats& sdb, const Row& row) const
     {
-      if(sdbfieldptr)
-        return *row.bind(sdbfieldptr);
-      else
-      {
-        sdbvmfieldptr->convertField(sdb,row,output);
-        return FieldValue(output[0]);
-      }
+        if(sdbfieldptr)
+            return *row.bind(sdbfieldptr);
+        else
+        {
+            sdbvmfieldptr->convertField(sdb,row,output);
+            return FieldValue(output[0]);
+        }
     }
 
     //!  to get the statistics for this source
     //!  (works only if the source is a FieldPtr, produces an error if it's a PSDBVMField)
     const FieldStat& getFieldStat(const SDBWithStats& sdb, const Row& row) const
     {
-      if(!sdbfieldptr)
-        PLERROR("works only if the source is a FieldPtr");
-      return sdb.getStat(sdbfieldptr.field_index());
+        if(!sdbfieldptr)
+            PLERROR("works only if the source is a FieldPtr");
+        return sdb.getStat(sdbfieldptr.field_index());
     }
 };
 
@@ -253,7 +253,7 @@ class SDBVMatrix : public RowBufferedVMatrix
     typedef RowBufferedVMatrix inherited;
     typedef vector<PSDBVMField> FieldsVector;
 
-  public:
+public:
     //!  Currently, the constructor assumes that the SDB exists on-disk
     SDBVMatrix(const string& dbname, bool detect_missing=false);
 
@@ -265,7 +265,7 @@ class SDBVMatrix : public RowBufferedVMatrix
 
     //!  Obtain a list of the added fields
     const FieldsVector& getFields() const {
-      return fields_;
+        return fields_;
     }
 
     //!  Transform row i of the SimpldDB into a row of the VMatrix
@@ -273,13 +273,13 @@ class SDBVMatrix : public RowBufferedVMatrix
 
     //!  Access underlying sdb
     SDBWithStats& sdb() {
-      return sdb_;
+        return sdb_;
     }
     const SDBWithStats& sdb() const {
-      return sdb_;
+        return sdb_;
     }
     
-  protected:
+protected:
     SDBWithStats sdb_;
     FieldsVector fields_;
     mutable Row row_;
@@ -295,15 +295,15 @@ class SDBVMFieldSource1 : public SDBVMField
 {
     typedef SDBVMField inherited;
     
-  public:
+public:
     //!  Use, e.g. my_schema("column_name"), to easily get a FieldPtr from a
     //!  symbolic column name
     SDBVMFieldSource1(SDBVMSource source, 
                       real missing_values_mapping=MISSING_VALUE,
                       VMField::FieldType field_type=VMField::UnknownType)
-      : inherited(missing_values_mapping,field_type), source_(source) {}
+        : inherited(missing_values_mapping,field_type), source_(source) {}
 
-  protected:
+protected:
     SDBVMSource source_;
 };
 
@@ -312,15 +312,15 @@ class SDBVMFieldSource2 : public SDBVMField
 {
     typedef SDBVMField inherited;
     
-  public:
+public:
     //!  Use, e.g. my_schema("column_name"), to easily get a FieldPtr from a
     //!  symbolic column name
     SDBVMFieldSource2(SDBVMSource source1, SDBVMSource source2, 
                       real missing_values_mapping=MISSING_VALUE,
                       VMField::FieldType field_type=VMField::UnknownType)
-      : inherited(missing_values_mapping,field_type), source1_(source1), source2_(source2) {}
+        : inherited(missing_values_mapping,field_type), source1_(source1), source2_(source2) {}
 
-  protected:
+protected:
     SDBVMSource source1_;
     SDBVMSource source2_;
 };
@@ -334,9 +334,9 @@ class SDBVMFieldAsIs : public SDBVMFieldSource1
 {
     typedef SDBVMFieldSource1 inherited;
     
-  public: 
+public: 
     SDBVMFieldAsIs(SDBVMSource source, real missing_values_mapping=MISSING_VALUE)
-      : inherited(source,missing_values_mapping,VMField::Continuous) {}
+        : inherited(source,missing_values_mapping,VMField::Continuous) {}
    
     virtual void convertField(const SDBWithStats& sdb, const Row& row,
                               const Vec& output) const;
@@ -350,10 +350,10 @@ class SDBVMFieldNormalize : public SDBVMFieldSource1
 {
     typedef SDBVMFieldSource1 inherited;
     
-  public: 
+public: 
     SDBVMFieldNormalize(SDBVMSource source, 
                         real missing_values_mapping=MISSING_VALUE)
-      : inherited(source,missing_values_mapping,VMField::Continuous) {}
+        : inherited(source,missing_values_mapping,VMField::Continuous) {}
    
     virtual void convertField(const SDBWithStats& sdb, const Row& row,
                               const Vec& output) const;
@@ -367,10 +367,10 @@ class SDBVMFieldDivSigma : public SDBVMFieldSource1
 {
     typedef SDBVMFieldSource1 inherited;
     
-  public: 
+public: 
     SDBVMFieldDivSigma(SDBVMSource source, 
                        real missing_values_mapping=MISSING_VALUE)
-      : inherited(source,missing_values_mapping,VMField::Continuous) {}
+        : inherited(source,missing_values_mapping,VMField::Continuous) {}
    
     virtual void convertField(const SDBWithStats& sdb, const Row& row,
                               const Vec& output) const;
@@ -384,17 +384,17 @@ class SDBVMFieldAffine : public SDBVMFieldSource1
 {
     typedef SDBVMFieldSource1 inherited;
     
-  public: 
+public: 
     SDBVMFieldAffine(SDBVMSource source, real a, real b=0.0, 
                      real missing_values_mapping=MISSING_VALUE)
-      : inherited(source,missing_values_mapping,VMField::Continuous), a_(a), b_(b) {}
+        : inherited(source,missing_values_mapping,VMField::Continuous), a_(a), b_(b) {}
    
     virtual void convertField(const SDBWithStats& sdb, const Row& row,
                               const Vec& output) const;
     
     virtual int fieldWidth() const;
 
-  protected:
+protected:
     real a_, b_;
 };
 
@@ -405,17 +405,17 @@ class SDBVMFieldPosAffine : public SDBVMFieldSource1
 {
     typedef SDBVMFieldSource1 inherited;
     
-  public: 
+public: 
     SDBVMFieldPosAffine(SDBVMSource source, real a, real b=0.0,
                         real missing_values_mapping=MISSING_VALUE)
-      : inherited(source,missing_values_mapping,VMField::Continuous), a_(a), b_(b) {}
+        : inherited(source,missing_values_mapping,VMField::Continuous), a_(a), b_(b) {}
     
     virtual void convertField(const SDBWithStats& sdb, const Row& row,
                               const Vec& output) const;
     
     virtual int fieldWidth() const;
 
-  protected:
+protected:
     real a_, b_;
 };
 
@@ -425,22 +425,22 @@ class SDBVMFieldSignedPower : public SDBVMFieldSource1
 {
     typedef SDBVMFieldSource1 inherited;
  
-  public:
+public:
     SDBVMFieldSignedPower(SDBVMSource source, real a,
-        real missing_values_mapping=MISSING_VALUE)
-     : inherited(source,missing_values_mapping,VMField::Continuous),
-        a_(a)
-        {
-          if (a_<=0.0 || a_>=1.0)
+                          real missing_values_mapping=MISSING_VALUE)
+        : inherited(source,missing_values_mapping,VMField::Continuous),
+          a_(a)
+    {
+        if (a_<=0.0 || a_>=1.0)
             PLERROR("Bad range for a (%f), must be in ]0,1[", a_);
-        }
+    }
  
     virtual void convertField(const SDBWithStats& sdb, const Row& row,
                               const Vec& output) const;
  
     virtual int fieldWidth() const;
  
-  protected:
+protected:
     real a_;
 };
 
@@ -455,23 +455,23 @@ class SDBVMFieldFunc1 : public SDBVMFieldSource1
 {
     typedef SDBVMFieldSource1 inherited;
     
-  public: 
+public: 
     SDBVMFieldFunc1(SDBVMSource source, Func func, 
                     real missing_values_mapping=MISSING_VALUE)
-      : inherited(source,missing_values_mapping,VMField::Continuous), func_(func) {}
+        : inherited(source,missing_values_mapping,VMField::Continuous), func_(func) {}
    
     virtual void convertField(const SDBWithStats& sdb, const Row& row,
                               const Vec& output) const;
     
     virtual int fieldWidth() const;
 
-  protected:
+protected:
     mutable Func func_;
 };
 
 
 /*!   Apply a two-input func to the field: call
-  	operator()(const Vec& input1, const Vec& input2)
+  operator()(const Vec& input1, const Vec& input2)
   of the func, with the input vectors set to the single value resulting
   from the conversion of each SDB field to a Real. Since the two-argument
   operator() in Func returns a real, the width of this field in the
@@ -481,17 +481,17 @@ class SDBVMFieldFunc2 : public SDBVMFieldSource2
 {
     typedef SDBVMFieldSource2 inherited;
     
-  public: 
+public: 
     SDBVMFieldFunc2(SDBVMSource source1, SDBVMSource source2, Func func,
                     real missing_values_mapping=MISSING_VALUE)
-      : inherited(source1, source2,missing_values_mapping,VMField::Continuous), func_(func) {}
+        : inherited(source1, source2,missing_values_mapping,VMField::Continuous), func_(func) {}
    
     virtual void convertField(const SDBWithStats& sdb, const Row& row,
                               const Vec& output) const;
     
     virtual int fieldWidth() const;
 
-  protected:
+protected:
     mutable Func func_;
 };
 
@@ -502,11 +502,11 @@ class SDBVMFieldFunc2 : public SDBVMFieldSource2
 //!  Convert a date to fill 3 columns in the VMat: YYYY, MM, DD
 class SDBVMFieldDate : public SDBVMFieldSource1
 {
-  typedef SDBVMFieldSource1 inherited;
+    typedef SDBVMFieldSource1 inherited;
     
-  public: 
+public: 
     SDBVMFieldDate(SDBVMSource source, real missing_values_mapping=MISSING_VALUE)
-      : inherited(source,missing_values_mapping,VMField::Date) {}
+        : inherited(source,missing_values_mapping,VMField::Date) {}
    
     virtual void convertField(const SDBWithStats& sdb, const Row& row,
                               const Vec& output) const;
@@ -515,16 +515,16 @@ class SDBVMFieldDate : public SDBVMFieldSource1
 };
 
 /*!   Convert a date according to the formula:
-  		((year - 1990)*365+(month-1)*30+(day-1))/3650
+  ((year - 1990)*365+(month-1)*30+(day-1))/3650
   which is approximately in the range [-1,1] for (1980-2000)
 */
 class SDBVMFieldDay : public SDBVMFieldSource1
 {
     typedef SDBVMFieldSource1 inherited;
     
-  public: 
+public: 
     SDBVMFieldDay(SDBVMSource source,real missing_values_mapping=MISSING_VALUE)
-      : inherited(source,missing_values_mapping,VMField::Continuous) {}
+        : inherited(source,missing_values_mapping,VMField::Continuous) {}
    
     virtual void convertField(const SDBWithStats& sdb, const Row& row,
                               const Vec& output) const;
@@ -540,9 +540,9 @@ class SDBVMFieldMonths : public SDBVMFieldSource1
 {
     typedef SDBVMFieldSource1 inherited;
     
-  public: 
+public: 
     SDBVMFieldMonths(SDBVMSource source,real missing_values_mapping=MISSING_VALUE)
-      : inherited(source,missing_values_mapping,VMField::Continuous) {}
+        : inherited(source,missing_values_mapping,VMField::Continuous) {}
    
     virtual void convertField(const SDBWithStats& sdb, const Row& row,
                               const Vec& output) const;
@@ -555,45 +555,45 @@ class SDBVMFieldMonths : public SDBVMFieldSource1
 class SDBVMFieldDateDiff : public SDBVMFieldSource2
 {
 protected:
-  PDate refdate;
-  FieldValue date1_threshold_;
-  FieldValue date2_threshold_;
-  char unit; //!<  unit can be 'D' for days, 'M' for months or 'Y' for years
+    PDate refdate;
+    FieldValue date1_threshold_;
+    FieldValue date2_threshold_;
+    char unit; //!<  unit can be 'D' for days, 'M' for months or 'Y' for years
 
 public:
-  //!  unit can be 'D' for days, 'M' for months or 'Y' for years
-  //!  (result is always an integer number of days, months, or years)
+    //!  unit can be 'D' for days, 'M' for months or 'Y' for years
+    //!  (result is always an integer number of days, months, or years)
 
 /*!     This will compute difference between dates in source1 and source2 The
-    sources must both be dates.  Optionally, two thresholds can be
-    specified, such that if a date is below or equal to its respective
-    threshold, then the date is considered MISSING_VALUE.  This is useful
-    to filter out some obvious outliers.
+  sources must both be dates.  Optionally, two thresholds can be
+  specified, such that if a date is below or equal to its respective
+  threshold, then the date is considered MISSING_VALUE.  This is useful
+  to filter out some obvious outliers.
     
-    (TO BE IMPLEMENTED: or one can be a date and the other an integer
-    numerical type; in this latter case, the integer is understood as
-    beeing expressed in the given unit...)
+  (TO BE IMPLEMENTED: or one can be a date and the other an integer
+  numerical type; in this latter case, the integer is understood as
+  beeing expressed in the given unit...)
 */
-  SDBVMFieldDateDiff(SDBVMSource source1, SDBVMSource source2,
-                     char the_unit = 'D',
-                     FieldValue date1_threshold = FieldValue(),
-                     FieldValue date2_threshold = FieldValue())
-    : SDBVMFieldSource2(source1,source2,MISSING_VALUE,VMField::Continuous),
-      refdate(), date1_threshold_(date1_threshold),
-      date2_threshold_(date2_threshold), unit(the_unit) {}
+    SDBVMFieldDateDiff(SDBVMSource source1, SDBVMSource source2,
+                       char the_unit = 'D',
+                       FieldValue date1_threshold = FieldValue(),
+                       FieldValue date2_threshold = FieldValue())
+        : SDBVMFieldSource2(source1,source2,MISSING_VALUE,VMField::Continuous),
+          refdate(), date1_threshold_(date1_threshold),
+          date2_threshold_(date2_threshold), unit(the_unit) {}
 
-  //!  This will compute difference between date in source1 and a fixed refdate
-  SDBVMFieldDateDiff(SDBVMSource source1,
-                     PDate the_refdate,
-                     char the_unit = 'D')
-    : SDBVMFieldSource2(source1,source1,MISSING_VALUE,VMField::Continuous),
-      refdate(the_refdate),
-      date1_threshold_(), date2_threshold_(), unit(the_unit) {}
+    //!  This will compute difference between date in source1 and a fixed refdate
+    SDBVMFieldDateDiff(SDBVMSource source1,
+                       PDate the_refdate,
+                       char the_unit = 'D')
+        : SDBVMFieldSource2(source1,source1,MISSING_VALUE,VMField::Continuous),
+          refdate(the_refdate),
+          date1_threshold_(), date2_threshold_(), unit(the_unit) {}
 
-  virtual void convertField(const SDBWithStats& sdb, const Row& row,
-                            const Vec& output) const;
+    virtual void convertField(const SDBWithStats& sdb, const Row& row,
+                              const Vec& output) const;
     
-  virtual int fieldWidth() const;
+    virtual int fieldWidth() const;
 };
 
 
@@ -605,12 +605,12 @@ class SDBVMFieldDiscrete : public SDBVMFieldSource1
 {
     typedef SDBVMFieldSource1 inherited;
 
-  public:
+public:
 /*!       All constructors now specify the number of classes (between 0 and
-      n-1), and whether one_hot output coding is desired (true) or direct
-      integer codes (false, the default).  By default, num_classes is not
-      known at construction time, and must be set by derived classes.  A
-      remapping for missing values can also be provided.
+  n-1), and whether one_hot output coding is desired (true) or direct
+  integer codes (false, the default).  By default, num_classes is not
+  known at construction time, and must be set by derived classes.  A
+  remapping for missing values can also be provided.
 */
     SDBVMFieldDiscrete(SDBVMSource source,
                        int num_classes = 0,
@@ -626,8 +626,8 @@ class SDBVMFieldDiscrete : public SDBVMFieldSource1
                        VMField::FieldType ft = VMField::DiscrGeneral);
 
 /*!       This function is implemented as a call to a virtual function
-      getDiscreteValue(), followed by a call to setOutput of the
-      OutputCoder.
+  getDiscreteValue(), followed by a call to setOutput of the
+  OutputCoder.
 */
     virtual void convertField(const SDBWithStats& sdb, const Row& row, const Vec& output) const;
 
@@ -636,8 +636,8 @@ class SDBVMFieldDiscrete : public SDBVMFieldSource1
     virtual SDBVMOutputCoding getOutputCoding() const;
 
 /*!       This function must be overridden in derived classes to get the
-      correctly-mapped discrete value obtained from the SDB.  The semantics
-      prescribe missing values to be remapped to missing_values_mapping_.
+  correctly-mapped discrete value obtained from the SDB.  The semantics
+  prescribe missing values to be remapped to missing_values_mapping_.
 */
     virtual real getDiscreteValue(const SDBWithStats& sdb, const Row& row) const = 0;
 
@@ -653,7 +653,7 @@ class SDBVMFieldDiscrete : public SDBVMFieldSource1
     void setOutputCoder(SDBVMOutputCoder* oc) { output_coder_ = oc; }
   
 
-  protected:
+protected:
     int num_classes_;			     //!<  must be >0 for one-hot coding
     PSDBVMOutputCoder output_coder_;	     //!<  perform actual formatting
 };
@@ -663,17 +663,17 @@ typedef PP<SDBVMFieldDiscrete> PSDBVMFieldDiscrete;
 //!  verifies if the date within the row is greater than a threshold date
 class SDBVMFieldDateGreater : public SDBVMFieldDiscrete
 {
-  typedef SDBVMFieldDiscrete inherited;
+    typedef SDBVMFieldDiscrete inherited;
 
-  protected:
+protected:
     PDate ref;
   
-  public:
+public:
     SDBVMFieldDateGreater(SDBVMSource source, PDate the_ref)
-      : inherited(source),ref(the_ref)
-      {
+        : inherited(source),ref(the_ref)
+    {
         setNumClasses(2);		     //!<  true or false
-      }
+    }
 
     virtual void convertField(const SDBWithStats& sdb, const Row& row,
                               const Vec& output) const;
@@ -693,13 +693,13 @@ class SDBVMFieldCodeAsIs : public SDBVMFieldDiscrete
 {
     typedef SDBVMFieldDiscrete inherited;
 
-  public:
+public:
     SDBVMFieldCodeAsIs(SDBVMSource source,
                        int num_classes = 0,
                        real missing_values_mapping = MISSING_VALUE,
                        SDBVMOutputCoding oc = SDBVMNumeric,
                        VMField::FieldType ft = VMField::DiscrGeneral)
-      : inherited(source, num_classes, missing_values_mapping, oc, ft) {}
+        : inherited(source, num_classes, missing_values_mapping, oc, ft) {}
 
     //!  Perform the actual remapping
     virtual real getDiscreteValue(const SDBWithStats& sdb, const Row& row) const;
@@ -709,7 +709,7 @@ class SDBVMFieldCodeAsIs : public SDBVMFieldDiscrete
 /*!   A field that remaps a finite set of real values onto discrete integer
   values in the range 0 -- n-1. The mapping provided in the
   constructor has the format:
-   "originalvalue1 newvalue1  original2 newvalue2  ... "
+  "originalvalue1 newvalue1  original2 newvalue2  ... "
   meaning that when the SDB field takes value originalvalueX then
   the VMatrix corresponding column will have the value newvalueX.
   If none of the "original values" is seen then the "other_values_mapping"
@@ -721,7 +721,7 @@ class SDBVMFieldRemapReals : public SDBVMFieldDiscrete
     typedef SDBVMFieldDiscrete inherited;
     typedef map<real,real> RealMap;
 
-  public:
+public:
     //!  This constructor accepts an explicitly-specified mappings string
     SDBVMFieldRemapReals(SDBVMSource source,
                          const string& mappings,
@@ -731,10 +731,10 @@ class SDBVMFieldRemapReals : public SDBVMFieldDiscrete
                          VMField::FieldType ft = VMField::DiscrGeneral);
 
 /*!       This constructor accepts mappings coming from a FieldStat.  Note
-      that the "hasmissing" field of the FieldStat is not automatically
-      taken into account, and you must provide a missing_values_mapping
-      here by yourself.  The mapping is not modified in any way by the
-      presence of missing values.
+  that the "hasmissing" field of the FieldStat is not automatically
+  taken into account, and you must provide a missing_values_mapping
+  here by yourself.  The mapping is not modified in any way by the
+  presence of missing values.
 */
     SDBVMFieldRemapReals(SDBVMSource source,
                          const FieldStat& field_stat,
@@ -750,7 +750,7 @@ class SDBVMFieldRemapReals : public SDBVMFieldDiscrete
     //!  target value in the map is set into the last (reference) argument.
     static RealMap getRealMapping(const string& mappings);
 
-  protected:
+protected:
     RealMap real_mapping_;
     real other_values_mapping_;
 };
@@ -758,7 +758,7 @@ class SDBVMFieldRemapReals : public SDBVMFieldDiscrete
 
 /*!   A field that remaps a finite set of strings onto discrete integers.
   The format of "mappings" is a string of the form:
-  	"string_0 value_0  string_1 value_1  ...  string_N value_N"
+  "string_0 value_0  string_1 value_1  ...  string_N value_N"
   where the string_i cannot contain spaces, and the space is the delimiter
   between strings and values.
   If none of the "string_X" is seen then the "other_values_mapping"
@@ -770,7 +770,7 @@ class SDBVMFieldRemapStrings : public SDBVMFieldDiscrete
     typedef SDBVMFieldDiscrete inherited;
     typedef map<string,real> StringMap;
 
-  public:
+public:
     //!  This constructor accepts an explicitly-specified mappings string
     SDBVMFieldRemapStrings(SDBVMSource source,
                            const string& mappings,
@@ -780,10 +780,10 @@ class SDBVMFieldRemapStrings : public SDBVMFieldDiscrete
                            VMField::FieldType ft = VMField::DiscrGeneral);
 
 /*!       This constructor accepts mappings coming from a FieldStat.  Note
-      that the "hasmissing" field of the FieldStat is not automatically
-      taken into account, and you must provide a missing_values_mapping
-      here by yourself.  The mapping is not modified in any way by the
-      presence of missing values.
+  that the "hasmissing" field of the FieldStat is not automatically
+  taken into account, and you must provide a missing_values_mapping
+  here by yourself.  The mapping is not modified in any way by the
+  presence of missing values.
 */
     SDBVMFieldRemapStrings(SDBVMSource source,
                            const FieldStat& field_stat,
@@ -799,7 +799,7 @@ class SDBVMFieldRemapStrings : public SDBVMFieldDiscrete
     //!  target value in the map is set into the last (reference) argument.
     static StringMap getStringMapping(const string& mappings);
     
-  protected:
+protected:
     StringMap string_mapping_;
     real other_values_mapping_;
 };
@@ -807,7 +807,7 @@ class SDBVMFieldRemapStrings : public SDBVMFieldDiscrete
 
 /*!   A field that remaps intervals on the reals onto discrete integer values.
   The format of the "mappings" argument is:
-  		"y_0 x_1 y_1 x_2 y_2 ... x_N y_N",
+  "y_0 x_1 y_1 x_2 y_2 ... x_N y_N",
   where the "x_i" are cut-points for X, with for the value y_i obtained
   when x_i <= X < x_{i+1}, and y_0 obtained for X<x_1, and y_N obtained
   for X >= y_N. It is required that x_i < x_{i+1}.
@@ -816,7 +816,7 @@ class SDBVMFieldRemapIntervals : public SDBVMFieldDiscrete
 {
     typedef SDBVMFieldDiscrete inherited;
 
-  public:
+public:
     SDBVMFieldRemapIntervals(SDBVMSource source,
                              const string& mappings,
                              real other_values_mapping = MISSING_VALUE,
@@ -828,15 +828,15 @@ class SDBVMFieldRemapIntervals : public SDBVMFieldDiscrete
     virtual real getDiscreteValue(const SDBWithStats& sdb, const Row& row) const;
     
 /*!       This parses the remapping string and returns a map. Whether the
-      target values are all non-negative integers is set in all_int.  The
-      maximum target value in the map is set into max_of_map.  The
-      intervals are returned in intervals_x and intervals_y
+  target values are all non-negative integers is set in all_int.  The
+  maximum target value in the map is set into max_of_map.  The
+  intervals are returned in intervals_x and intervals_y
 */
     static void getIntervals(const string& mappings,
                              bool& all_int,    real& max_of_map,
                              Vec& intervals_x, Vec& intervals_y);
     
-  protected:
+protected:
     Vec intervals_x_;
     Vec intervals_y_;
     real other_values_mapping_;
@@ -857,8 +857,8 @@ class SDBVMFieldRemapIntervals : public SDBVMFieldDiscrete
 //	\sum_{i=1}^N x_i \product_{j=i+1}^N y_j
 /*!   where \product_{j=N+1}^N is defined to be 1.
   
-  For convenience, this class inherites from SDBVMFieldDiscrete, but
-  does not use the inherited source_ member.
+For convenience, this class inherites from SDBVMFieldDiscrete, but
+does not use the inherited source_ member.
 */
 
 typedef Array<PSDBVMFieldDiscrete> FieldArray;
@@ -867,10 +867,10 @@ class SDBVMFieldMultiDiscrete : public SDBVMFieldDiscrete
 {
     typedef SDBVMFieldDiscrete inherited;
 
-  public:
+public:
 /*!       The constructor accepts an array of discrete fields; this class
-      assumes ownership of the fields; the array can be empty, and later set
-      with setFields().
+  assumes ownership of the fields; the array can be empty, and later set
+  with setFields().
 */
     SDBVMFieldMultiDiscrete(const FieldArray& fields,
                             real missing_values_mapping = MISSING_VALUE,
@@ -879,17 +879,17 @@ class SDBVMFieldMultiDiscrete : public SDBVMFieldDiscrete
 
     //!  Accessor and mutator for field array
     const FieldArray& getFields() const {
-      return fields_;
+        return fields_;
     }
 
     void setFields(const FieldArray& fields);
-  //!     virtual int fieldWidth() const;
+    //!     virtual int fieldWidth() const;
 
   
     //!  Compute the "array index" corresponding to the fields
     virtual real getDiscreteValue(const SDBWithStats& sdb, const Row& row) const;
 
-  protected:
+protected:
     FieldArray fields_;
     Vec field_multipliers_;		     //!<  factor by which to multiply
     //!   each variable for indexing
@@ -900,14 +900,14 @@ class SDBVMFieldMultiDiscrete : public SDBVMFieldDiscrete
 
 /*!   This class is specialized for processing an ICBC database with
   the following fields: 
-     "policy_start_date";
-     "policy_end_date";
-     "bodily_injury_incurred";
-     "property_damage_incurred";
-     "accident_death_incurred";
-     "collision_lou_incurred";
-     "comprehensive_incurred";
-     "roadstar_incurred";
+  "policy_start_date";
+  "policy_end_date";
+  "bodily_injury_incurred";
+  "property_damage_incurred";
+  "accident_death_incurred";
+  "collision_lou_incurred";
+  "comprehensive_incurred";
+  "roadstar_incurred";
   
   The output has at least 1 value and at most 8 values (number of outputs =
   targetname=="ALL"?5:1 + int(use_roadstar) + int(add_claims_sum_column) + int(rescale_by_interval)).
@@ -918,19 +918,19 @@ class SDBVMFieldMultiDiscrete : public SDBVMFieldDiscrete
   then there is only one target, which is the sum of all 4 KOLs excluding Bodily Injury.
   
   The weight is computed as follows:
-     duration = Year(policy_end_date)-Year(policy_start_date) 
-     weight = duration^2
+  duration = Year(policy_end_date)-Year(policy_start_date) 
+  weight = duration^2
   
   The 5 + int(use_roadstar) targets are computed as follows:
-     *_incurred_target = 0.001 * *_incurred;
-     if (rescale_by_interval)
-        *_incurred_target /= duration
-     if (rescale_by_start_date)
-        *_incurred_target /= smoothed *_incurred monthly mean for month m and year y
-        where m and y are the month and year of the policy start date of the contract.
-        (PS: for more information on the smoothed monthly means, read the comments
-        in PLearn/Databases/ICBCdatabases.h)
-     if is_missing(X_incurred_target) then X_incurred_target = 0
+  *_incurred_target = 0.001 * *_incurred;
+  if (rescale_by_interval)
+  *_incurred_target /= duration
+  if (rescale_by_start_date)
+  *_incurred_target /= smoothed *_incurred monthly mean for month m and year y
+  where m and y are the month and year of the policy start date of the contract.
+  (PS: for more information on the smoothed monthly means, read the comments
+  in PLearn/Databases/ICBCdatabases.h)
+  if is_missing(X_incurred_target) then X_incurred_target = 0
   
   where Year is the date given in units of years (with fractional part),
   so that in the common case where the difference is one year, the weight
@@ -943,36 +943,36 @@ class SDBVMFieldMultiDiscrete : public SDBVMFieldDiscrete
   We are to learn a function f(x) that predicts the incurred amounts
   for ONE YEAR, but the (x,target) pairs in the data may cover more or
   less than one year. So the loss should be
-     (f(x)*duration - target)^2
+  (f(x)*duration - target)^2
   where duration is in units of years. To make it more "standard" we
   instead consider the weighted squared loss, since
-     (f(x)*duration - target)^2 = duration^2 * (f(x) - target/duration)^2
-                                = w * (f(x) - normalized_target)^2
+  (f(x)*duration - target)^2 = duration^2 * (f(x) - target/duration)^2
+  = w * (f(x) - normalized_target)^2
   
   When add_claims_sum_column==true
-     sum of targets = sum of all the *_incurred targets after they have been rescaled
+  sum of targets = sum of all the *_incurred targets after they have been rescaled
   
   PS: * Year is the date given in units of years (with fractional part),
-        so that in the common case where the difference is one year, the weight
-        is 1 and there is no normalization of the targets.
-      * Note that the target outputs are in UNITS OF 1000 DOLLARS PER YEAR.
-      * When rescale_by_interval==true, the "weight" is the weight that should be given 
-        to the squared loss (f(x)-normalized_target)^2. This comes from the following reasoning:
-        We are to learn a function f(x) that predicts the incurred amounts
-        for ONE YEAR, but the (x,target) pairs in the data may cover more or
-        less than one year. So the loss should be
-        (f(x)*duration - target)^2
-        where duration is in units of years. To make it more "standard" we
-        instead consider the weighted squared loss, since
-        (f(x)*duration - target)^2 = duration^2 * (f(x) - target/duration)^2
-                                  =  w * (f(x) - normalized_target)^2
+  so that in the common case where the difference is one year, the weight
+  is 1 and there is no normalization of the targets.
+  * Note that the target outputs are in UNITS OF 1000 DOLLARS PER YEAR.
+  * When rescale_by_interval==true, the "weight" is the weight that should be given 
+  to the squared loss (f(x)-normalized_target)^2. This comes from the following reasoning:
+  We are to learn a function f(x) that predicts the incurred amounts
+  for ONE YEAR, but the (x,target) pairs in the data may cover more or
+  less than one year. So the loss should be
+  (f(x)*duration - target)^2
+  where duration is in units of years. To make it more "standard" we
+  instead consider the weighted squared loss, since
+  (f(x)*duration - target)^2 = duration^2 * (f(x) - target/duration)^2
+  =  w * (f(x) - normalized_target)^2
   
 */
 class SDBVMFieldICBCTargets : public SDBVMField
 {
     typedef SDBVMField inherited;
     
-  public:
+public:
     SDBVMFieldICBCTargets(Schema schema, bool use_roadstar,
                           bool add_claims_sum_column, bool rescale_by_interval,
                           bool rescale_by_start_date, Mat& start_date_rescaling_values,
@@ -981,22 +981,22 @@ class SDBVMFieldICBCTargets : public SDBVMField
     virtual void convertField(const SDBWithStats& sdb, const Row& row, const Vec& output) const;
 
     virtual int fieldWidth() const {
-      if (targetname_=="ALL")
-        return 5+int(use_roadstar_)+int(add_claims_sum_column_)+int(rescale_by_interval_); 
-      else if (targetname_=="sum_all_but_BI")
-        return 1;
-      else if (targetname_=="ALLcounts")
-	return 5;
-      else if (targetname_=="all_counts_but_BI")
-	return 4;
-      else if (targetname_=="ALLseverities")
-	return 10;
-      else if (targetname_=="all_severities_but_BI")
-	return 8;
-      else
-        return 1+int(use_roadstar_)+int(add_claims_sum_column_)+int(rescale_by_interval_);}
+        if (targetname_=="ALL")
+            return 5+int(use_roadstar_)+int(add_claims_sum_column_)+int(rescale_by_interval_); 
+        else if (targetname_=="sum_all_but_BI")
+            return 1;
+        else if (targetname_=="ALLcounts")
+            return 5;
+        else if (targetname_=="all_counts_but_BI")
+            return 4;
+        else if (targetname_=="ALLseverities")
+            return 10;
+        else if (targetname_=="all_severities_but_BI")
+            return 8;
+        else
+            return 1+int(use_roadstar_)+int(add_claims_sum_column_)+int(rescale_by_interval_);}
 
-  protected:
+protected:
     bool use_roadstar_;
     bool add_claims_sum_column_;
     bool rescale_by_interval_;
@@ -1029,22 +1029,22 @@ class SDBVMFieldICBCTargets : public SDBVMField
 
 class SDBVMFieldHasClaim : public SDBVMField
 {
-  typedef SDBVMField inherited;
+    typedef SDBVMField inherited;
     
-  public:
+public:
     SDBVMFieldHasClaim(Schema schema):
-      inherited(0),
-      bodily_injury_incurred_(schema("bodily_injury_incurred")),
-      property_damage_incurred_(schema("property_damage_incurred")),
-      accident_death_incurred_(schema("accident_death_incurred")),
-      collision_lou_incurred_(schema("collision_lou_incurred")),
-      comprehensive_incurred_(schema("comprehensive_incurred")),
-      roadstar_incurred_(schema("roadstar_incurred"))
-  {}
+        inherited(0),
+        bodily_injury_incurred_(schema("bodily_injury_incurred")),
+        property_damage_incurred_(schema("property_damage_incurred")),
+        accident_death_incurred_(schema("accident_death_incurred")),
+        collision_lou_incurred_(schema("collision_lou_incurred")),
+        comprehensive_incurred_(schema("comprehensive_incurred")),
+        roadstar_incurred_(schema("roadstar_incurred"))
+    {}
     virtual void convertField(const SDBWithStats& sdb, const Row& row, Vec& output) const;
     virtual int fieldWidth() const { return 1;}
   
-  protected:
+protected:
     FieldPtr bodily_injury_incurred_;
     FieldPtr property_damage_incurred_;
     FieldPtr accident_death_incurred_;
@@ -1056,23 +1056,23 @@ class SDBVMFieldHasClaim : public SDBVMField
 
 class SDBVMFieldSumClaims : public SDBVMField
 {
-  typedef SDBVMField inherited;
+    typedef SDBVMField inherited;
     
-  public:
+public:
     SDBVMFieldSumClaims(Schema schema):
-      inherited(0),
-      bodily_injury_incurred_(schema("bodily_injury_incurred")),
-      property_damage_incurred_(schema("property_damage_incurred")),
-      accident_death_incurred_(schema("accident_death_incurred")),
-      collision_lou_incurred_(schema("collision_lou_incurred")),
-      comprehensive_incurred_(schema("comprehensive_incurred")),
-      roadstar_incurred_(schema("roadstar_incurred"))
-  {}
+        inherited(0),
+        bodily_injury_incurred_(schema("bodily_injury_incurred")),
+        property_damage_incurred_(schema("property_damage_incurred")),
+        accident_death_incurred_(schema("accident_death_incurred")),
+        collision_lou_incurred_(schema("collision_lou_incurred")),
+        comprehensive_incurred_(schema("comprehensive_incurred")),
+        roadstar_incurred_(schema("roadstar_incurred"))
+    {}
     virtual void convertField(const SDBWithStats& sdb,
-        const Row& row, Vec& output) const;
+                              const Row& row, Vec& output) const;
     virtual int fieldWidth() const { return 1;}
   
-  protected:
+protected:
     FieldPtr bodily_injury_incurred_;
     FieldPtr property_damage_incurred_;
     FieldPtr accident_death_incurred_;
@@ -1085,16 +1085,16 @@ class SDBVMFieldICBCClassification : public SDBVMField
 {
     typedef SDBVMField inherited;
     
-  public:
+public:
     SDBVMFieldICBCClassification(Schema schema, const string& fieldname="",
-                const string& tmap_file="");
+                                 const string& tmap_file="");
 
     virtual void convertField(const SDBWithStats& sdb,
                               const Row& row, const Vec& output) const;
 
     virtual int fieldWidth() const { return 1; }
 
-  protected:
+protected:
     SDBVMSource bodily_injury_incurred_;
     SDBVMSource property_damage_incurred_;
     SDBVMSource accident_death_incurred_;
@@ -1126,42 +1126,54 @@ int ICBCpartition(const Vec& claims, real threshold);
   
   void foo()
   {
-      using namespace SDBFields;
-      ...
+  using namespace SDBFields;
+  ...
   }
 */
 
 namespace SDBFields
 {
-  typedef SDBVMSource			FSource;
-  typedef SDBVMField			FField;
-  typedef SDBVMFieldSource1		FSource1;
-  typedef SDBVMFieldSource2		FSource2;
-  typedef SDBVMFieldAsIs		FAsIs;
-  typedef SDBVMFieldNormalize		FNormalize;
-  typedef SDBVMFieldDivSigma		FDivSigma;
-  typedef SDBVMFieldAffine		FAffine;
-  typedef SDBVMFieldPosAffine		FPosAffine;
-  typedef SDBVMFieldSignedPower FSignedPower;
-  typedef SDBVMFieldFunc1		FFunc1;
-  typedef SDBVMFieldFunc2		FFunc2;
-  typedef SDBVMFieldDate		FDate;
-  typedef SDBVMFieldDateDiff		FDateDiff;
-  typedef SDBVMFieldDateGreater		FDateGreater;
-  typedef SDBVMFieldDay			FDay;
-  typedef SDBVMFieldDiscrete		FDiscrete;
-  typedef SDBVMFieldCodeAsIs		FCodeAsIs;
-  typedef SDBVMFieldRemapReals		FRemapReals;
-  typedef SDBVMFieldRemapStrings	FRemapStrings;
-  typedef SDBVMFieldRemapIntervals	FRemapIntervals;
-  typedef SDBVMFieldMultiDiscrete	FMultiDiscrete;
-  typedef SDBVMFieldICBCTargets	        FICBCTargets;
-  typedef SDBVMFieldHasClaim	        FHasClaim;
-  typedef SDBVMFieldSumClaims	        FSumClaims;
-  typedef SDBVMFieldICBCClassification	FICBCClassification;
+typedef SDBVMSource			FSource;
+typedef SDBVMField			FField;
+typedef SDBVMFieldSource1		FSource1;
+typedef SDBVMFieldSource2		FSource2;
+typedef SDBVMFieldAsIs		FAsIs;
+typedef SDBVMFieldNormalize		FNormalize;
+typedef SDBVMFieldDivSigma		FDivSigma;
+typedef SDBVMFieldAffine		FAffine;
+typedef SDBVMFieldPosAffine		FPosAffine;
+typedef SDBVMFieldSignedPower FSignedPower;
+typedef SDBVMFieldFunc1		FFunc1;
+typedef SDBVMFieldFunc2		FFunc2;
+typedef SDBVMFieldDate		FDate;
+typedef SDBVMFieldDateDiff		FDateDiff;
+typedef SDBVMFieldDateGreater		FDateGreater;
+typedef SDBVMFieldDay			FDay;
+typedef SDBVMFieldDiscrete		FDiscrete;
+typedef SDBVMFieldCodeAsIs		FCodeAsIs;
+typedef SDBVMFieldRemapReals		FRemapReals;
+typedef SDBVMFieldRemapStrings	FRemapStrings;
+typedef SDBVMFieldRemapIntervals	FRemapIntervals;
+typedef SDBVMFieldMultiDiscrete	FMultiDiscrete;
+typedef SDBVMFieldICBCTargets	        FICBCTargets;
+typedef SDBVMFieldHasClaim	        FHasClaim;
+typedef SDBVMFieldSumClaims	        FSumClaims;
+typedef SDBVMFieldICBCClassification	FICBCClassification;
 }
 
 } // end of namespace PLearn
 
 #endif //!<  NGSDBVMAT_H
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

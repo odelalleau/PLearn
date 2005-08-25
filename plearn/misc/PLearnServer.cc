@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -54,54 +54,54 @@ using namespace std;
 
 // Put function implementations here.
 
-  PLearnServer::PLearnServer(const PStream& input_output)
-      :io(input_output), clear_maps(true)
-  {
+PLearnServer::PLearnServer(const PStream& input_output)
+    :io(input_output), clear_maps(true)
+{
     
-  }
+}
 
-  void PLearnServer::callFunction(const string& name, int nargs)
-  {
+void PLearnServer::callFunction(const string& name, int nargs)
+{
     DBG_LOG << "PLearnServer FUNCTION CALL name=" << name << " nargs=" << nargs << endl;
     if(name=="cd")
-      {
+    {
         string path;
         io >> path;
         DBG_LOG << "  Arg0 = " << name << endl;        
         chdir(path);
         Object::prepareToSendResults(io,0);
-      }
+    }
     else if(name=="binary")
-      {
+    {
         io.setMode(PStream::plearn_binary);
         Object::prepareToSendResults(io,0);
-      }
+    }
     else if(name=="ascii")
-      {
+    {
         io.setMode(PStream::plearn_ascii);
         Object::prepareToSendResults(io,0);
-      }
+    }
     else if(name=="implicit_storage") // Takes a single boolean parameter
-      {
+    {
         io >> io.implicit_storage;
         Object::prepareToSendResults(io,0);
-      }
+    }
     else if(name=="pl_repository_revision") // returns the pl_repository_revision string
-      {
+    {
         string revs = pl_repository_revision();
         Object::prepareToSendResults(io,1);
         io << revs;
-      }
+    }
     else
-      PLERROR("In PLearnServer::callFunction Invalid function name %s",name.c_str());
+        PLERROR("In PLearnServer::callFunction Invalid function name %s",name.c_str());
 
     io << endl;
     DBG_LOG << "-> FUNCTION CALL DONE." << endl;
-  }
+}
 
 
-  void PLearnServer::printHelp()
-  {
+void PLearnServer::printHelp()
+{
     io.write("Summary of commands:\n"
              "  !?                                 # print this help message \n"
              "  !F functionname nargs arg1 ...     # calls a supported function.\n"
@@ -122,13 +122,13 @@ using namespace std;
              "Summary of currently supported functions:\n"
              "  !F cd 1 \"path\" \n"
              "\n"
-             );
+        );
     io << endl;
-  }
+}
 
-  bool PLearnServer::run()
-  {
-      const int upper_bound_id = 10000;
+bool PLearnServer::run()
+{
+    const int upper_bound_id = 10000;
 
     int obj_id;
     Object* obj;
@@ -139,48 +139,48 @@ using namespace std;
 
     DBG_LOG << "ENTERING PLearnServer::run()" << endl;
     for(;;)
-      {
+    {
         if(clear_maps)
-          {
+        {
             io.copies_map_in.clear();
             io.copies_map_out.clear();
 
             for (ObjMap::iterator it = objmap.begin(); it != objmap.end(); ++it)
                 if (it->first > upper_bound_id)
                     io.copies_map_in[it->first] = it->second;
-          }
+        }
         int c = -1;
         do { c = io.get(); }
         while(c!='!' && c!=EOF);
         
         if(c==EOF)
-          {
+        {
             // cerr << "Read EOF: quitting" << endl;
             return true;
-          }
+        }
         int command = io.get();
         
         try 
-          {            
+        {            
             switch(command)
-              {
-              case '?':
+            {
+            case '?':
                 printHelp();
                 break;
              
-              case 'P': // ping
+            case 'P': // ping
                 Object::prepareToSendResults(io,0);
                 io << endl;
                 break;
 
-              case 'F': // call function 
+            case 'F': // call function 
 
                 io >> method_name >> n_args;
                 callFunction(method_name, n_args);
                 io << endl;
                 break;
 
-              case 'N': // new
+            case 'N': // new
                 DBG_LOG << "PLearnServer NEW OBJECT" << endl;
                 obj = 0;
                 io >> obj_id >> obj;           // Read new object
@@ -192,7 +192,7 @@ using namespace std;
                 DBG_LOG << "-> OBJECT CREATED." << endl;
                 break;
             
-              case 'L': // load from file
+            case 'L': // load from file
                 DBG_LOG << "PLearnServer LOAD OBJECT" << endl;
                 obj = 0;
                 io >> obj_id >> filepath;
@@ -206,27 +206,27 @@ using namespace std;
                 DBG_LOG << "-> OBJECT LOADED." << endl;
                 break;
 
-              case 'D': // delete
+            case 'D': // delete
                 DBG_LOG << "PLearnServer DELETE OBJECT" << endl;
                 io >> obj_id;
                 DBG_LOG << "  ojbj_id = " << obj_id << endl;
                 if(objmap.erase(obj_id)==0)
-                  PLERROR("Calling delete of a non-existing object");
+                    PLERROR("Calling delete of a non-existing object");
 //                io.copies_map_in.erase(obj_id);
                 Object::prepareToSendResults(io,0);
                 io << endl;
                 DBG_LOG << "-> OBJECT DELETED." << endl;
                 break;
 
-              case 'M': // method call
+            case 'M': // method call
                 DBG_LOG << "PLearnServer METHOD CALL" << endl;
                 io >> obj_id;
                 DBG_LOG << "  ojbj_id = " << obj_id << endl;
                 found = objmap.find(obj_id);
                 if(found == objmap.end()) // unexistant obj_id
-                  PLERROR("Calling a method on a non-existing object");
+                    PLERROR("Calling a method on a non-existing object");
                 else 
-                  {
+                {
                     io >> method_name >> n_args;
                     DBG_LOG << "  method_name = " << method_name << endl;
                     DBG_LOG << "  n_args = " << n_args << endl;
@@ -234,10 +234,10 @@ using namespace std;
                     found->second->call(method_name, n_args, io);
                     io << endl;
                     DBG_LOG << "-> METHOD CALL DONE." << endl;
-                  }
+                }
                 break;
 
-              case 'Z': // delete all objects
+            case 'Z': // delete all objects
                 DBG_LOG << "PLearnServer DELETE ALL OBJECTS" << endl;
                 objmap.clear();
                 Object::prepareToSendResults(io,0);
@@ -245,59 +245,71 @@ using namespace std;
                 DBG_LOG << "-> ALL OBJECTS DELETED." << endl;
                 break;
 
-              case 'Q': // quit
+            case 'Q': // quit
                 DBG_LOG << "PLearnServer QUIT" << endl;
                 // cerr << "Quitting" << endl;
                 DBG_LOG << "LEAVING PLearnServer::run()" << endl;
                 return true;
               
-              case 'K': // kill
-                  DBG_LOG << "PLearnServer KILL" << endl;
-                  DBG_LOG << "LEAVING PLearnServer::run()" << endl;
-                  return false;
+            case 'K': // kill
+                DBG_LOG << "PLearnServer KILL" << endl;
+                DBG_LOG << "LEAVING PLearnServer::run()" << endl;
+                return false;
 //                  PLERROR("This is not an error");
 //                  exit(1);
 
-              default:
+            default:
                 PLERROR("Invalid PLearnServer command char: %c Type !? for help.",(char)command);
-              }
-          }
+            }
+        }
         catch(const PLearnError& e)
-          {
+        {
             // cerr << "PLearnServer caught PLearnError \"" << e.message() << '"' << endl;
             try 
-              {
-              io.write("!E ");
-              io << e.message() << endl;
-              }
+            {
+                io.write("!E ");
+                io << e.message() << endl;
+            }
             catch(const PLearnError& e2)
-              {
+            {
                 IMP_LOG << "PLearnServer ERROR: " << e2.message() << endl
                         << " while trying to send (to io) error: " << e.message() << endl
                         << " Probably due to peer closing before we finished sending." << endl
                         << " (If, as is likely, what we were sending were some remaining blanks" << endl
                         << " no need to worry...)." << endl;
-              }
-          }
+            }
+        }
         catch (...) 
-          {
+        {
             try
-              {
+            {
                 io.write("!E ");
                 io << "Unknown exception" << endl;
-              }
+            }
             catch(const PLearnError& e2)
-              {
+            {
                 IMP_LOG << "PLearnServer ERROR: " << e2.message() << endl
                         << " while trying to send (to io) notification of unknown exception." << endl
                         << " Probably due to peer closing before we finished sending." << endl
                         << " (If, as is likely, what we were sending were some remaining blanks" << endl
                         << " no need to worry...)." << endl;
-              }
-          }
-      }
+            }
+        }
+    }
     DBG_LOG << "LEAVING PLearnServer::run()" << endl;
-  }
+}
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

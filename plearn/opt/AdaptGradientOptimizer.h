@@ -38,9 +38,9 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.h,v 1.10 2004/02/20 21:11:48 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearn/plearn/opt/AdaptGradientOptimizer.h */
@@ -61,79 +61,79 @@ using namespace std;
  * adaptation methods.
  *
  */
-  class AdaptGradientOptimizer : public Optimizer
-  {
-      typedef Optimizer inherited;
+class AdaptGradientOptimizer : public Optimizer
+{
+    typedef Optimizer inherited;
       
-    public:
+public:
 
-      //!  gradient descent specific parameters
-      //!  (directly modifiable by the user)
-      real learning_rate; // current learning rate
+    //!  gradient descent specific parameters
+    //!  (directly modifiable by the user)
+    real learning_rate; // current learning rate
 
-      // Options (also available through setOption)
-      real start_learning_rate; //!< initial learning rate
-      real min_learning_rate;  //!< min value for learning_rate when adapting
-      real max_learning_rate;  //!< max value for learning_rate when adapting
-      //! Learning rate adaptation kind :
-      //! 0  : none
-      //! 1  : basic
-      //! 2  : ALAP1
-      //! 3  : variance
-      int learning_rate_adaptation;
-      real adapt_coeff1;  //!< a coefficient for learning rate adaptation
-      real adapt_coeff2;  //!< a coefficient for learning rate adaptation
-      real decrease_constant;
-      int mini_batch;
-      int adapt_every;    //!< after how many updates we adapt learning rate
+    // Options (also available through setOption)
+    real start_learning_rate; //!< initial learning rate
+    real min_learning_rate;  //!< min value for learning_rate when adapting
+    real max_learning_rate;  //!< max value for learning_rate when adapting
+    //! Learning rate adaptation kind :
+    //! 0  : none
+    //! 1  : basic
+    //! 2  : ALAP1
+    //! 3  : variance
+    int learning_rate_adaptation;
+    real adapt_coeff1;  //!< a coefficient for learning rate adaptation
+    real adapt_coeff2;  //!< a coefficient for learning rate adaptation
+    real decrease_constant;
+    int mini_batch;
+    int adapt_every;    //!< after how many updates we adapt learning rate
 
-    private:
+private:
 
-      bool stochastic_hack; // true when we're computing a stochastic gradient
-      Vec learning_rates;   // used to store the individual learning rates
-      Vec gradient;         // used to store the gradient
-      Vec tmp_storage;      // used to store various stuff
-      // used to store the previous weights evolution, it can be used to
-      // see how many times a weight has increased / decreased consecutively
-      Vec old_evol;
-      Array<Mat> oldgradientlocations; // used for the stochastic hack
-      Vec store_var_grad;     // used to store the gradient variance
-      Vec store_grad;         // used to store the gradient
-      Vec store_quad_grad;    // used to store the gradient^2
-      int count_updates;      // used to count how many examples we went through
+    bool stochastic_hack; // true when we're computing a stochastic gradient
+    Vec learning_rates;   // used to store the individual learning rates
+    Vec gradient;         // used to store the gradient
+    Vec tmp_storage;      // used to store various stuff
+    // used to store the previous weights evolution, it can be used to
+    // see how many times a weight has increased / decreased consecutively
+    Vec old_evol;
+    Array<Mat> oldgradientlocations; // used for the stochastic hack
+    Vec store_var_grad;     // used to store the gradient variance
+    Vec store_grad;         // used to store the gradient
+    Vec store_quad_grad;    // used to store the gradient^2
+    int count_updates;      // used to count how many examples we went through
 
-    public: 
+public: 
 
-      AdaptGradientOptimizer(real the_start_learning_rate=0.01, 
-                        real the_decrease_constant=0,
-                        real the_min_learning_rate=0.001,
-                        real the_max_learning_rate=0.02,
-                        int the_learning_rate_adaptation=0,
-                        real the_adapt_coeff1=0,
-                        real the_adapt_coeff2=0,
-                        int n_updates=1, const string& filename="", 
-                        int every_iterations=1);
-      AdaptGradientOptimizer(VarArray the_params, Var the_cost,
-                        real the_start_learning_rate=0.01, 
-                        real the_decrease_constant=0,
-                        real the_min_learning_rate=0.001,
-                        real the_max_learning_rate=0.02,
-                        int the_learning_rate_adaptation=0,
-                        real the_adapt_coeff1=0,
-                        real the_adapt_coeff2=0,
-                        int n_updates=1, const string& filename="", 
-                        int every_iterations=1);
-      AdaptGradientOptimizer(VarArray the_params, Var the_cost, 
-                        VarArray update_for_measure,
-                        real the_start_learning_rate=0.01, 
-                        real the_decrease_constant=0,
-                        real the_min_learning_rate=0.001,
-                        real the_max_learning_rate=0.02,
-                        int the_learning_rate_adaptation=0,
-                        real the_adapt_coeff1=0,
-                        real the_adapt_coeff2=0,
-                        int n_updates=1, const string& filename="", 
-                        int every_iterations=1);
+    AdaptGradientOptimizer(real the_start_learning_rate=0.01, 
+                           real the_decrease_constant=0,
+                           real the_min_learning_rate=0.001,
+                           real the_max_learning_rate=0.02,
+                           int the_learning_rate_adaptation=0,
+                           real the_adapt_coeff1=0,
+                           real the_adapt_coeff2=0,
+                           int n_updates=1, const string& filename="", 
+                           int every_iterations=1);
+    AdaptGradientOptimizer(VarArray the_params, Var the_cost,
+                           real the_start_learning_rate=0.01, 
+                           real the_decrease_constant=0,
+                           real the_min_learning_rate=0.001,
+                           real the_max_learning_rate=0.02,
+                           int the_learning_rate_adaptation=0,
+                           real the_adapt_coeff1=0,
+                           real the_adapt_coeff2=0,
+                           int n_updates=1, const string& filename="", 
+                           int every_iterations=1);
+    AdaptGradientOptimizer(VarArray the_params, Var the_cost, 
+                           VarArray update_for_measure,
+                           real the_start_learning_rate=0.01, 
+                           real the_decrease_constant=0,
+                           real the_min_learning_rate=0.001,
+                           real the_max_learning_rate=0.02,
+                           int the_learning_rate_adaptation=0,
+                           real the_adapt_coeff1=0,
+                           real the_adapt_coeff2=0,
+                           int n_updates=1, const string& filename="", 
+                           int every_iterations=1);
 
       
     PLEARN_DECLARE_OBJECT(AdaptGradientOptimizer);
@@ -141,20 +141,20 @@ using namespace std;
 
     virtual void build()
     {
-      inherited::build();
-      build_();
+        inherited::build();
+        build_();
     }
 
-  private:
+private:
 
     void build_();
     
-  public:
+public:
 
     virtual real optimize();
     virtual bool optimizeN(VecStatsCollector& stats_coll);
 
-  private:
+private:
 
     // Basic learning rate adaptation
     // If grad(i) > 0 : lr(i) = lr(i) + lr(i) * adapt_coeff1
@@ -175,12 +175,25 @@ using namespace std;
     // else              lr(i) = min_learning_rate
     void adaptLearningRateVariance();
 
-  protected:
+protected:
 
     static void declareOptions(OptionList& ol);
 
-  };
+};
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

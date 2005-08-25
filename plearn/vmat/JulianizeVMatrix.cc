@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.cc,v 1.10 2004/09/14 16:04:39 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file JulianizeVMatrix.cc */
 #include "JulianizeVMatrix.h"
@@ -56,130 +56,142 @@ PLEARN_IMPLEMENT_OBJECT(JulianizeVMatrix, "ONE LINE DESCR",
 
 
 JulianizeVMatrix::JulianizeVMatrix()
-  : inherited()
-  /* all other compiler-supplied defaults are reasonable */
+    : inherited()
+    /* all other compiler-supplied defaults are reasonable */
 { }
 
 JulianizeVMatrix::JulianizeVMatrix(VMat underlying,
                                    DateCode date_code,
                                    int starting_column)
-  : inherited(underlying->length(), newWidth(underlying, date_code)),
-    underlying_(underlying),
-    cols_codes_(1), und_row_(underlying.width())
+    : inherited(underlying->length(), newWidth(underlying, date_code)),
+      underlying_(underlying),
+      cols_codes_(1), und_row_(underlying.width())
 {
-  cols_codes_[0] = make_pair(starting_column, date_code);
-  setVMFields();
+    cols_codes_[0] = make_pair(starting_column, date_code);
+    setVMFields();
 }
 
 
 void JulianizeVMatrix::getNewRow(int i, const Vec& v) const
 {
-  underlying_->getRow(i, und_row_);
+    underlying_->getRow(i, und_row_);
 
-  Vec::iterator
-    src_beg = und_row_.begin(),
-    src_it  = und_row_.begin(),
-    src_end = und_row_.end(),
-    dst_it  = v.begin();
-  vector< pair<int,DateCode> >::const_iterator
-    codes_it  = cols_codes_.begin(),
-    codes_end = cols_codes_.end();
+    Vec::iterator
+        src_beg = und_row_.begin(),
+        src_it  = und_row_.begin(),
+        src_end = und_row_.end(),
+        dst_it  = v.begin();
+    vector< pair<int,DateCode> >::const_iterator
+        codes_it  = cols_codes_.begin(),
+        codes_end = cols_codes_.end();
 
-  for ( ; codes_it < codes_end ; ++codes_it ) {
-    // Copy what comes before the current date
-    dst_it = copy(src_it, src_beg + codes_it->first, dst_it);
-    src_it = src_beg + codes_it->first;
+    for ( ; codes_it < codes_end ; ++codes_it ) {
+        // Copy what comes before the current date
+        dst_it = copy(src_it, src_beg + codes_it->first, dst_it);
+        src_it = src_beg + codes_it->first;
 
-    // Now convert the date per se
-    double converted_date = 0;
-    int YYYY,MM,DD,hh,mm,ss;
-    YYYY = int(*src_it++);
-    MM   = int(*src_it++);
-    DD   = int(*src_it++);
-    switch(codes_it->second) {
-    case Date:
-      converted_date = PDate(YYYY,MM,DD).toJulianDay();
-      break;
-    case DateTime:
-      hh = int(*src_it++);
-      mm = int(*src_it++);
-      ss = int(*src_it++);
-      converted_date = PDateTime(YYYY,MM,DD,hh,mm,ss).toJulianDay();
-      break;
+        // Now convert the date per se
+        double converted_date = 0;
+        int YYYY,MM,DD,hh,mm,ss;
+        YYYY = int(*src_it++);
+        MM   = int(*src_it++);
+        DD   = int(*src_it++);
+        switch(codes_it->second) {
+        case Date:
+            converted_date = PDate(YYYY,MM,DD).toJulianDay();
+            break;
+        case DateTime:
+            hh = int(*src_it++);
+            mm = int(*src_it++);
+            ss = int(*src_it++);
+            converted_date = PDateTime(YYYY,MM,DD,hh,mm,ss).toJulianDay();
+            break;
+        }
+        *dst_it++ = converted_date;
     }
-    *dst_it++ = converted_date;
-  }
 
-  // And now copy what comes after the last date
-  copy(src_it, src_end, dst_it);
+    // And now copy what comes after the last date
+    copy(src_it, src_end, dst_it);
 }
 
 void JulianizeVMatrix::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  // ### ex:
-  // declareOption(ol, "myoption", &JulianizeVMatrix::myoption, OptionBase::buildoption,
-  //               "Help text describing this option");
-  // ...
+    // ### ex:
+    // declareOption(ol, "myoption", &JulianizeVMatrix::myoption, OptionBase::buildoption,
+    //               "Help text describing this option");
+    // ...
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void JulianizeVMatrix::build_()
 {
-  // No options to build at this point
+    // No options to build at this point
 }
 
 // ### Nothing to add here, simply calls build_
 void JulianizeVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void JulianizeVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(underlying_, copies);
-  deepCopyField(und_row_, copies);
-  // cols_codes_ already deep-copied since it is an STL vector
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(underlying_, copies);
+    deepCopyField(und_row_, copies);
+    // cols_codes_ already deep-copied since it is an STL vector
 }
 
 void JulianizeVMatrix::setVMFields()
 {
-  Array<VMField>& orig_fields = underlying_->getFieldInfos();
-  int new_field = 0;
-  int cur_field = 0, end_field = orig_fields.size();
-  vector< pair<int,DateCode> >::iterator it = cols_codes_.begin(),
-    end = cols_codes_.end();
+    Array<VMField>& orig_fields = underlying_->getFieldInfos();
+    int new_field = 0;
+    int cur_field = 0, end_field = orig_fields.size();
+    vector< pair<int,DateCode> >::iterator it = cols_codes_.begin(),
+        end = cols_codes_.end();
 
-  for ( ; cur_field < end_field ; ++cur_field, ++new_field) {
-    // We've got a date field
-    if (it != end && it->first == cur_field) {
-      switch(it->second) {
-      case Date:
-        this->declareField(new_field, "Date", VMField::Date);
-        break;
-      case DateTime:
-        this->declareField(new_field, "DateTime", VMField::Date);
-        break;
-      }
-      cur_field += dateCodeWidth(it->second)-1;
-      ++it;
+    for ( ; cur_field < end_field ; ++cur_field, ++new_field) {
+        // We've got a date field
+        if (it != end && it->first == cur_field) {
+            switch(it->second) {
+            case Date:
+                this->declareField(new_field, "Date", VMField::Date);
+                break;
+            case DateTime:
+                this->declareField(new_field, "DateTime", VMField::Date);
+                break;
+            }
+            cur_field += dateCodeWidth(it->second)-1;
+            ++it;
+        }
+        else {
+            this->declareField(new_field, orig_fields[cur_field].name,
+                               orig_fields[cur_field].fieldtype);
+        }
     }
-    else {
-      this->declareField(new_field, orig_fields[cur_field].name,
-                         orig_fields[cur_field].fieldtype);
-    }
-  }
 }
 
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

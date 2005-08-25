@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: PricingTransactionPairProfitFunction.h,v 1.4 2004/04/07 23:16:58 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef PricingTransactionPairProfitFunction_INC
 #define PricingTransactionPairProfitFunction_INC
@@ -56,9 +56,9 @@ using namespace std;
   contains at least one element which represents the price of
   the security at a later time t2.
   Profit is computed as follows:
-    transaction_loss_t2 =  nb_units_transaction>0 ? 
-                           additive_cost + multiplicative_cost * |nb_units_transaction| * price_t2 : 0
-    profit = cash_earned_at_t1 + nb_units_transaction * price_t2 - transaction_loss_t2;
+  transaction_loss_t2 =  nb_units_transaction>0 ? 
+  additive_cost + multiplicative_cost * |nb_units_transaction| * price_t2 : 0
+  profit = cash_earned_at_t1 + nb_units_transaction * price_t2 - transaction_loss_t2;
   
   where additive_cost, multiplicative_cost, per_unit_cost
   are user-specified parameters that control transaction losses
@@ -77,13 +77,13 @@ public:
     PricingTransactionPairProfitFunction(real the_multiplicative_cost, 
                                          real the_additive_cost=0,
                                          real the_per_unit_cost=0) :
-      multiplicative_cost(the_multiplicative_cost), additive_cost(the_additive_cost),
-      per_unit_cost(the_per_unit_cost) {}
+        multiplicative_cost(the_multiplicative_cost), additive_cost(the_additive_cost),
+        per_unit_cost(the_per_unit_cost) {}
     
     PLEARN_DECLARE_OBJECT(PricingTransactionPairProfitFunction);
     
     virtual string info() const
-        { return "pricing_pair_profit"; }
+    { return "pricing_pair_profit"; }
 
     virtual real evaluate(const Vec& output, const Vec& target) const; 
 
@@ -98,3 +98,15 @@ DECLARE_OBJECT_PTR(PricingTransactionPairProfitFunction);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

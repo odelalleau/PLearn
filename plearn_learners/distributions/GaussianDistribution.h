@@ -35,9 +35,9 @@
  
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnAlgo/GaussianDistribution.h */
@@ -50,17 +50,17 @@
 namespace PLearn {
 using namespace std;
 
-  // This is a density estimation learner.
-  // It uses a compact representation of a Gaussian, by keeping only the k 
-  // top eigenvalues and associated eigenvectors of the covariance matrix.
-  // All other eigenvalues are kept at the level of the k+1 th eigenvalue
-  // Optionally, a constant sigma is first added to the diagonal of the covariance matrix.
+// This is a density estimation learner.
+// It uses a compact representation of a Gaussian, by keeping only the k 
+// top eigenvalues and associated eigenvectors of the covariance matrix.
+// All other eigenvalues are kept at the level of the k+1 th eigenvalue
+// Optionally, a constant sigma is first added to the diagonal of the covariance matrix.
 
-  class GaussianDistribution: public PDistribution
-  {
+class GaussianDistribution: public PDistribution
+{
     typedef PDistribution inherited;
 
-  public:    
+public:    
 
     // Possibly "Learned" parameters
     Vec mu;
@@ -74,7 +74,7 @@ using namespace std;
     bool use_last_eig;
     float ignore_weights_below; //!< When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored
     
-  public:
+public:
     GaussianDistribution();
 
     PLEARN_DECLARE_OBJECT(GaussianDistribution);
@@ -96,18 +96,31 @@ using namespace std;
     //! Public build.
     virtual void build();
 
-  protected:
+protected:
     static void declareOptions(OptionList& ol);
 
-  private:
+private:
 
     //! Internal build.
     void build_();
 
-  };
+};
 
-  DECLARE_OBJECT_PTR(GaussianDistribution);
+DECLARE_OBJECT_PTR(GaussianDistribution);
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

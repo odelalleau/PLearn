@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: TimesScalarVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "DotProductVariable.h"
 #include "TimesScalarVariable.h"
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(TimesScalarVariable,
                         "NO HELP");
 
 TimesScalarVariable::TimesScalarVariable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, input1->length(), input1->width())
+    : inherited(input1, input2, input1->length(), input1->width())
 {
     build_();
 }
@@ -85,41 +85,52 @@ void TimesScalarVariable::recomputeSize(int& l, int& w) const
 
 void TimesScalarVariable::fprop()
 {
-  real scal = input2->valuedata[0];
-  for(int k=0; k<nelems(); k++)
-    valuedata[k] = input1->valuedata[k] * scal;
+    real scal = input2->valuedata[0];
+    for(int k=0; k<nelems(); k++)
+        valuedata[k] = input1->valuedata[k] * scal;
 }
 
 
 void TimesScalarVariable::bprop()
 {
-  for(int k=0; k<nelems(); k++)
+    for(int k=0; k<nelems(); k++)
     {
-      input1->gradientdata[k] += input2->valuedata[0]*gradientdata[k];
-      input2->gradientdata[0] += input1->valuedata[k]*gradientdata[k];
+        input1->gradientdata[k] += input2->valuedata[0]*gradientdata[k];
+        input2->gradientdata[0] += input1->valuedata[k]*gradientdata[k];
     }
 }
 
 
 void TimesScalarVariable::symbolicBprop()
 {
-  input1->accg(g*input2);
-  input2->accg(dot(g,input1));
+    input1->accg(g*input2);
+    input2->accg(dot(g,input1));
 }
 
 
 //R(x1x2)=R(x1)x2+x1R(x2)
 void TimesScalarVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  real scal = input2->valuedata[0];
-  real rscal = input2->rvaluedata[0];
-  for(int k=0; k<nelems(); k++)
-    rvaluedata[k] = input1->rvaluedata[k] * scal + input1->valuedata[k] * rscal;
+    if (rValue.length()==0) resizeRValue();
+    real scal = input2->valuedata[0];
+    real rscal = input2->rvaluedata[0];
+    for(int k=0; k<nelems(); k++)
+        rvaluedata[k] = input1->rvaluedata[k] * scal + input1->valuedata[k] * rscal;
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

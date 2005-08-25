@@ -33,9 +33,9 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Profiler.h,v 1.4 2004/07/21 16:30:54 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnUtil/Profiler.h */
 
@@ -59,49 +59,49 @@ namespace PLearn {
 using namespace std;
 
 /*!     Profiling tools, to count average time elapsed and number of times 
-    traversed for pieces of code delimited by two calls to the static
-    functions
+  traversed for pieces of code delimited by two calls to the static
+  functions
     
-       Profiler::start("name_of_piece_of_code");
-       ...
-       Profiler::end("name_of_piece_of_code");
+  Profiler::start("name_of_piece_of_code");
+  ...
+  Profiler::end("name_of_piece_of_code");
     
-    A static field of Profiler is used to maintain the statistics of 
-    occurence and durations for each piece of code. Calls to start/end
-    for the same name cannot be nested.
+  A static field of Profiler is used to maintain the statistics of 
+  occurence and durations for each piece of code. Calls to start/end
+  for the same name cannot be nested.
     
-    Before the above calls, usually in the main program, the user
-    must call
+  Before the above calls, usually in the main program, the user
+  must call
     
-       Profiler::activate();
+  Profiler::activate();
     
-    and after all the above calls, a report for all such pieces of code can then be obtained by calling 
+  and after all the above calls, a report for all such pieces of code can then be obtained by calling 
     
-       Profiler::report(cout);
+  Profiler::report(cout);
     
-    on an output stream. 
+  on an output stream. 
     
-    This code is based on statistical averaging (using the C "times" function)
-    because the individual measurements of elapsed time with times are too
-    coarse (e.g. 100th of a second).
+  This code is based on statistical averaging (using the C "times" function)
+  because the individual measurements of elapsed time with times are too
+  coarse (e.g. 100th of a second).
 */
 
-  class Profiler {
-    protected:
+class Profiler {
+protected:
 
     class Stats {
-      public:
-      int frequency_of_occurence;
-      int total_duration;
-      clock_t time_of_last_start;
-      bool on_going;
+    public:
+        int frequency_of_occurence;
+        int total_duration;
+        clock_t time_of_last_start;
+        bool on_going;
       
-      Stats(int f=0, int d=0) : 
-        frequency_of_occurence(f), total_duration(d), 
-        time_of_last_start(0), on_going(false) {}
+        Stats(int f=0, int d=0) : 
+            frequency_of_occurence(f), total_duration(d), 
+            time_of_last_start(0), on_going(false) {}
     };
 
-    public:
+public:
 
     static void activate() { active=true; }
     static void disactivate() { active=false; }
@@ -125,15 +125,27 @@ using namespace std;
     //!  the statistics recorded for each of the named pieces of codes.
     static void report(ostream& out);
 
-    protected:
+protected:
     
     static map<string,Stats> codes_statistics;
     static struct tms t;
     static bool active;
 
-  };
+};
 
 } // end of namespace PLearn
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

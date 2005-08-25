@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedSumOfVariable.cc,v 1.10 2004/11/24 18:27:15 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "UnfoldedSumOfVariable.h"
 #include <plearn/sys/PLMPI.h>
@@ -56,19 +56,19 @@ PLEARN_IMPLEMENT_OBJECT(UnfoldedSumOfVariable, "Variable that sums the value of 
                         "fly by another input, the bag_size.\n");
 
 UnfoldedSumOfVariable::UnfoldedSumOfVariable(Var inputmatrix, Var bagsize, Func the_f, int max_bagsize)
-  : inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs) & inputmatrix & bagsize, 
-              the_f->outputs[0]->length(), 
-              the_f->outputs[0]->width()),
-    input_matrix(inputmatrix), bag_size(bagsize),
-    f(the_f), max_bag_size(max_bagsize)
+    : inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs) & inputmatrix & bagsize, 
+                the_f->outputs[0]->length(), 
+                the_f->outputs[0]->width()),
+      input_matrix(inputmatrix), bag_size(bagsize),
+      f(the_f), max_bag_size(max_bagsize)
 {
-  build();
+    build();
 }
 
 void UnfoldedSumOfVariable::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void UnfoldedSumOfVariable::build_()
@@ -94,20 +94,20 @@ void UnfoldedSumOfVariable::build_()
 
 void UnfoldedSumOfVariable::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "f", &UnfoldedSumOfVariable::f, OptionBase::buildoption, 
-                "    Func that is replicated for each element of the 'bag' taken from the VMat.");
+    declareOption(ol, "f", &UnfoldedSumOfVariable::f, OptionBase::buildoption, 
+                  "    Func that is replicated for each element of the 'bag' taken from the VMat.");
 
-  declareOption(ol, "input_matrix", &UnfoldedSumOfVariable::input_matrix, OptionBase::buildoption, 
-                "    Var that contains the data, with multiple consecutive rows forming one bag.\n"
-                "    The last row of a bag has a non-missing target value.\n");
+    declareOption(ol, "input_matrix", &UnfoldedSumOfVariable::input_matrix, OptionBase::buildoption, 
+                  "    Var that contains the data, with multiple consecutive rows forming one bag.\n"
+                  "    The last row of a bag has a non-missing target value.\n");
 
-  declareOption(ol, "bag_size", &UnfoldedSumOfVariable::bag_size, OptionBase::buildoption, 
-                "    Var that gives the size of the bag (number of rows of input_matrix to consider).\n");
+    declareOption(ol, "bag_size", &UnfoldedSumOfVariable::bag_size, OptionBase::buildoption, 
+                  "    Var that gives the size of the bag (number of rows of input_matrix to consider).\n");
 
-  declareOption(ol, "max_bag_size", &UnfoldedSumOfVariable::max_bag_size, OptionBase::buildoption, 
-                "    maximum number of examples in a bag (more than that in input_matrix will trigger a run-time error).\n");
+    declareOption(ol, "max_bag_size", &UnfoldedSumOfVariable::max_bag_size, OptionBase::buildoption, 
+                  "    maximum number of examples in a bag (more than that in input_matrix will trigger a run-time error).\n");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 void UnfoldedSumOfVariable::recomputeSize(int& l, int& w) const
@@ -131,59 +131,70 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
 void UnfoldedSumOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  NaryVariable::makeDeepCopyFromShallowCopy(copies);
-  varDeepCopyField(input_matrix, copies);
-  varDeepCopyField(bag_size, copies);
-  deepCopyField(f, copies);
-  deepCopyField(inputs, copies);
-  deepCopyField(outputs, copies);
-  deepCopyField(f_paths, copies);
+    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    varDeepCopyField(input_matrix, copies);
+    varDeepCopyField(bag_size, copies);
+    deepCopyField(f, copies);
+    deepCopyField(inputs, copies);
+    deepCopyField(outputs, copies);
+    deepCopyField(f_paths, copies);
 }
 
 
 void UnfoldedSumOfVariable::fprop()
 {
-  value.clear();
-  int bagsize = (int)bag_size->valuedata[0];
-  if (bagsize>max_bag_size)
-    PLERROR("UnfoldedSumOfVariable: bag size=%d > expected max. bag size(%d)",
-            bagsize,max_bag_size);
-  for (int i=0;i<bagsize;i++)
+    value.clear();
+    int bagsize = (int)bag_size->valuedata[0];
+    if (bagsize>max_bag_size)
+        PLERROR("UnfoldedSumOfVariable: bag size=%d > expected max. bag size(%d)",
+                bagsize,max_bag_size);
+    for (int i=0;i<bagsize;i++)
     {
-      inputs[i] << input_matrix->matValue(i);
-      f_paths[i].fprop();
-      value += outputs[i]->value;
+        inputs[i] << input_matrix->matValue(i);
+        f_paths[i].fprop();
+        value += outputs[i]->value;
     }
 }
 
 
 void UnfoldedSumOfVariable::bprop()
 { 
-  int bagsize = (int)bag_size->valuedata[0];
-  for (int i=0;i<bagsize;i++)
+    int bagsize = (int)bag_size->valuedata[0];
+    for (int i=0;i<bagsize;i++)
     {
-      f_paths[i].clearGradient();
-      outputs[i]->gradient << gradient;
-      f_paths[i].bprop();
+        f_paths[i].clearGradient();
+        outputs[i]->gradient << gradient;
+        f_paths[i].bprop();
     }
 }
 
 
 void UnfoldedSumOfVariable::printInfo(bool print_gradient)
 {
-  for (int i=0;i<max_bag_size;i++)
-    f_paths[i].printInfo(print_gradient);
-  cout << info() << " : " << getName() << "[" << (void*)this << "]" 
-       << "(input_matrix=" << (void*)input_matrix << ", bag_size=" 
-       << (void*)bag_size << ", ";
-  for(int i=0; i<max_bag_size; i++) cout << (void*)outputs[i] << " ";
-  cout << ") = " << value;
-  if (print_gradient) cout << " gradient=" << gradient;
-  cout << endl; 
+    for (int i=0;i<max_bag_size;i++)
+        f_paths[i].printInfo(print_gradient);
+    cout << info() << " : " << getName() << "[" << (void*)this << "]" 
+         << "(input_matrix=" << (void*)input_matrix << ", bag_size=" 
+         << (void*)bag_size << ", ";
+    for(int i=0; i<max_bag_size; i++) cout << (void*)outputs[i] << " ";
+    cout << ") = " << value;
+    if (print_gradient) cout << " gradient=" << gradient;
+    cout << endl; 
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

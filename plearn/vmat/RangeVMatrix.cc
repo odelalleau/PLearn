@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: RangeVMatrix.cc,v 1.4 2004/04/05 23:01:00 morinf Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "RangeVMatrix.h"
 
@@ -48,49 +48,62 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(RangeVMatrix, "ONE LINE DESC", "NO HELP");
 
 RangeVMatrix::RangeVMatrix()
-  : start(0), end(0), step(1)
+    : start(0), end(0), step(1)
 {
 }
 
 RangeVMatrix::RangeVMatrix(real the_start, real the_end, real the_step)
-  : start(the_start), end(the_end), step(the_step)
+    : start(the_start), end(the_end), step(the_step)
 {
-  build();
+    build();
 }
 
 void
 RangeVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void
 RangeVMatrix::build_()
 {
-  width_=1;
-  length_ = (int)((end-start)/step); 
-  if (length_*step==(end-start))
-    length_++;
+    width_=1;
+    length_ = (int)((end-start)/step); 
+    if (length_*step==(end-start))
+        length_++;
 }
 
 void
 RangeVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "start", &RangeVMatrix::start, OptionBase::buildoption, "");
-  declareOption(ol, "end", &RangeVMatrix::end, OptionBase::buildoption, "");
-  declareOption(ol, "step", &RangeVMatrix::step, OptionBase::buildoption, "");
-  inherited::declareOptions(ol);
+    declareOption(ol, "start", &RangeVMatrix::start, OptionBase::buildoption, "");
+    declareOption(ol, "end", &RangeVMatrix::end, OptionBase::buildoption, "");
+    declareOption(ol, "step", &RangeVMatrix::step, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
 }
 
 real RangeVMatrix::get(int i, int j) const
 {
 #ifdef BOUNDCHECK
-  if(j!=0 || i<0 || i>=length())
-    PLERROR("In RangeVMatrix::get OUT OF BOUNDS");
+    if(j!=0 || i<0 || i>=length())
+        PLERROR("In RangeVMatrix::get OUT OF BOUNDS");
 #endif
-  return start+i*step;
+    return start+i*step;
 }
 
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

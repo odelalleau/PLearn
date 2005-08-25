@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file Experiment.cc */
 #include "Experiment.h"
@@ -48,14 +48,14 @@ namespace PLearn {
 using namespace std;
 
 Experiment::Experiment() 
-  :save_models(true), save_initial_models(false),
-   save_test_outputs(false), save_test_costs(false)
-  {}
+    :save_models(true), save_initial_models(false),
+     save_test_outputs(false), save_test_costs(false)
+{}
 
-  PLEARN_IMPLEMENT_OBJECT(Experiment, "DEPRECATED: use PTester instead", "");
+PLEARN_IMPLEMENT_OBJECT(Experiment, "DEPRECATED: use PTester instead", "");
 
-  void Experiment::declareOptions(OptionList& ol)
-  {
+void Experiment::declareOptions(OptionList& ol)
+{
     declareOption(ol, "expdir", &Experiment::expdir, OptionBase::buildoption,
                   "Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)");
     declareOption(ol, "learner", &Experiment::learner, OptionBase::buildoption,
@@ -74,132 +74,145 @@ Experiment::Experiment()
     declareOption(ol, "save_test_costs", &Experiment::save_test_costs, OptionBase::buildoption,
                   "If true, the costs of the test for split #k will be saved in Split#k/test_costs.pmat");
     inherited::declareOptions(ol);
-  }
+}
 
-  void Experiment::build_()
-  {
+void Experiment::build_()
+{
     splitter->setDataSet(dataset);
-  }
+}
 
-  // ### Nothing to add here, simply calls build_
-  void Experiment::build()
-  {
+// ### Nothing to add here, simply calls build_
+void Experiment::build()
+{
     inherited::build();
     build_();
-  }
+}
 
 void Experiment::run()
 {
-  if(expdir=="")
-    PLERROR("No expdir specified for Experiment.");
-  if(!learner)
-    PLERROR("No learner specified for Experiment.");
-  if(!splitter)
-    PLERROR("No splitter specified for Experiment");
+    if(expdir=="")
+        PLERROR("No expdir specified for Experiment.");
+    if(!learner)
+        PLERROR("No learner specified for Experiment.");
+    if(!splitter)
+        PLERROR("No splitter specified for Experiment");
 
-  if(PLMPI::rank==0)
+    if(PLMPI::rank==0)
     {
-      if(pathexists(expdir))
-        PLERROR("Directory (or file) %s already exists. First move it out of the way.",expdir.c_str());
+        if(pathexists(expdir))
+            PLERROR("Directory (or file) %s already exists. First move it out of the way.",expdir.c_str());
 
-      if(!force_mkdir(expdir))
-        PLERROR("Could not create experiment directory %s", expdir.c_str());
+        if(!force_mkdir(expdir))
+            PLERROR("Could not create experiment directory %s", expdir.c_str());
 
-      // Save this experiment description in the expdir
-      PLearn::save(append_slash(expdir)+"experiment.psave", *this);
+        // Save this experiment description in the expdir
+        PLearn::save(append_slash(expdir)+"experiment.psave", *this);
     }
 
-  int nsplits = splitter->nsplits();
-  Array<string> testresnames = learner->testResultsNames();
-  int ntestres = testresnames.size();
-  VecStatsCollector teststats;
+    int nsplits = splitter->nsplits();
+    Array<string> testresnames = learner->testResultsNames();
+    int ntestres = testresnames.size();
+    VecStatsCollector teststats;
 
-  // the vmat in which to save results
-  VMat results;
+    // the vmat in which to save results
+    VMat results;
 
-  if(PLMPI::rank==0)
+    if(PLMPI::rank==0)
     {
-      // filename
-      string fname = append_slash(expdir)+"results.amat";
+        // filename
+        string fname = append_slash(expdir)+"results.amat";
 
-      // fieldnames
-      TVec<string> fieldnames(1+ntestres);
-      fieldnames[0] = "splitnum";
-      for(int k=0; k<ntestres; k++)
-        fieldnames[k+1] = testresnames[k];
+        // fieldnames
+        TVec<string> fieldnames(1+ntestres);
+        fieldnames[0] = "splitnum";
+        for(int k=0; k<ntestres; k++)
+            fieldnames[k+1] = testresnames[k];
 
-      /*
-      cerr << "ntestres: " << ntestres << endl;
-      cerr << "testresnames: " << testresnames << endl;
-      cerr << "fieldnames: " << fieldnames << endl;
-      */
+        /*
+          cerr << "ntestres: " << ntestres << endl;
+          cerr << "testresnames: " << testresnames << endl;
+          cerr << "fieldnames: " << fieldnames << endl;
+        */
 
-      results = new AsciiVMatrix(fname, 1+ntestres, fieldnames, "# Special values for splitnum are: -1 -> MEAN; -2 -> STDERROR; -3 -> STDDEV");
+        results = new AsciiVMatrix(fname, 1+ntestres, fieldnames, "# Special values for splitnum are: -1 -> MEAN; -2 -> STDERROR; -3 -> STDDEV");
     }
 
-  Vec resultrow(1+ntestres); // will hold splitnum and testresults for that split
-  Vec resultrow_sub = resultrow.subVec(1,ntestres); // the part containing the test results
+    Vec resultrow(1+ntestres); // will hold splitnum and testresults for that split
+    Vec resultrow_sub = resultrow.subVec(1,ntestres); // the part containing the test results
 
-  for(int k=0; k<nsplits; k++)
+    for(int k=0; k<nsplits; k++)
     {
-      TVec<VMat> train_test = splitter->getSplit(k);
-      if(train_test.size()!=2) 
-        PLERROR("Splitter returned a split with %d subsets, instead of the expected 2: train&test",train_test.size());
-      VMat trainset = train_test[0];
-      VMat testset = train_test[1];
-      string learner_expdir = append_slash(expdir)+"Split"+tostring(k);
-      learner->setExperimentDirectory(learner_expdir);
+        TVec<VMat> train_test = splitter->getSplit(k);
+        if(train_test.size()!=2) 
+            PLERROR("Splitter returned a split with %d subsets, instead of the expected 2: train&test",train_test.size());
+        VMat trainset = train_test[0];
+        VMat testset = train_test[1];
+        string learner_expdir = append_slash(expdir)+"Split"+tostring(k);
+        learner->setExperimentDirectory(learner_expdir);
 
-      learner->forget();
-      if(save_initial_models)
-        PLearn::save(learner_expdir+slash+"initial.psave",learner);
+        learner->forget();
+        if(save_initial_models)
+            PLearn::save(learner_expdir+slash+"initial.psave",learner);
 
-      learner->setTestDuringTrain(testset);
-      learner->train(trainset);
-      if(save_models)
-        PLearn::save(learner_expdir+slash+"final.psave",learner);
+        learner->setTestDuringTrain(testset);
+        learner->train(trainset);
+        if(save_models)
+            PLearn::save(learner_expdir+slash+"final.psave",learner);
 
-      string test_outputs_fname = learner_expdir+slash+"test_outputs.pmat";
-      if(save_test_outputs)
-        test_outputs_fname = learner_expdir+slash+"test_outputs.pmat";
-      string test_costs_fname = learner_expdir+slash+"test_costs.pmat";
-      if(save_test_costs)
-        test_costs_fname = learner_expdir+slash+"test_costs.pmat";
-      Vec testres = learner->test(testset, test_outputs_fname, test_costs_fname);
+        string test_outputs_fname = learner_expdir+slash+"test_outputs.pmat";
+        if(save_test_outputs)
+            test_outputs_fname = learner_expdir+slash+"test_outputs.pmat";
+        string test_costs_fname = learner_expdir+slash+"test_costs.pmat";
+        if(save_test_costs)
+            test_costs_fname = learner_expdir+slash+"test_costs.pmat";
+        Vec testres = learner->test(testset, test_outputs_fname, test_costs_fname);
 
-      testres.println(cout);
+        testres.println(cout);
 
-      // PLWARNING("In Experiment: length of Vec returned by test = %d; number of names returned by testResultNames = %d",testres.length(), ntestres);
-      if(testres.length()!=ntestres)
-        PLERROR("In Experiment: length of Vec returned by test (%d) differs from number of names returned by testResultNames (%d)",
-                testres.length(), ntestres);
+        // PLWARNING("In Experiment: length of Vec returned by test = %d; number of names returned by testResultNames = %d",testres.length(), ntestres);
+        if(testres.length()!=ntestres)
+            PLERROR("In Experiment: length of Vec returned by test (%d) differs from number of names returned by testResultNames (%d)",
+                    testres.length(), ntestres);
 
-      teststats.update(testres);
-      if(PLMPI::rank==0) // write to file
+        teststats.update(testres);
+        if(PLMPI::rank==0) // write to file
         {
-          resultrow[0] = k;
-          resultrow_sub << testres;
-          results->appendRow(resultrow);
+            resultrow[0] = k;
+            resultrow_sub << testres;
+            results->appendRow(resultrow);
         }
     }
 
-  if(PLMPI::rank==0) // write global stats to file
+    if(PLMPI::rank==0) // write global stats to file
     {
-      // MEAN
-      resultrow[0] = -1;
-      resultrow_sub << teststats.getMean();
-      results->appendRow(resultrow);
+        // MEAN
+        resultrow[0] = -1;
+        resultrow_sub << teststats.getMean();
+        results->appendRow(resultrow);
 
-      // STDERROR
-      resultrow[0] = -2;
-      resultrow_sub << teststats.getStdError();
-      results->appendRow(resultrow);
+        // STDERROR
+        resultrow[0] = -2;
+        resultrow_sub << teststats.getStdError();
+        results->appendRow(resultrow);
 
-      // STDDEV
-      resultrow[0] = -3;
-      resultrow_sub << teststats.getStdDev();
-      results->appendRow(resultrow);
+        // STDDEV
+        resultrow[0] = -3;
+        resultrow_sub << teststats.getStdDev();
+        results->appendRow(resultrow);
     }
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

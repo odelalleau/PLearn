@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.h,v 1.13 2005/02/08 21:39:35 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file AsciiVMatrix.h */
 #ifndef AsciiVMatrix_INC
@@ -48,66 +48,66 @@ using namespace std;
 
 class AsciiVMatrix: public RowBufferedVMatrix
 {
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
 protected:
-  string filename;
-  mutable PStream file;
-  vector<streampos> pos_rows;
-  streampos vmatlength_pos;
-  bool readwritemode;
-  bool newfile;
-  bool rewrite_length;
-  int length_max;
+    string filename;
+    mutable PStream file;
+    vector<streampos> pos_rows;
+    streampos vmatlength_pos;
+    bool readwritemode;
+    bool newfile;
+    bool rewrite_length;
+    int length_max;
 
 public:
-  // ******************
-  // *  Constructors  *
-  // ******************
-  AsciiVMatrix(); //!<  default constructor (for automatic deserialization)
+    // ******************
+    // *  Constructors  *
+    // ******************
+    AsciiVMatrix(); //!<  default constructor (for automatic deserialization)
 
-  // Open an existing file.
-  // If readwrite==false, the appendRow method sends an error.
-  // If readwrite==true (the default), the file is open in read/write mode.
-  AsciiVMatrix(const string& fname, bool readwrite=true);
+    // Open an existing file.
+    // If readwrite==false, the appendRow method sends an error.
+    // If readwrite==true (the default), the file is open in read/write mode.
+    AsciiVMatrix(const string& fname, bool readwrite=true);
 
-  // Open a new file (in read/write mode).
-  // If a file of the same name already exist, an error is sent!
-  // The width of the matrix to be writen must be given.
-  // Optional fieldnames may be given (as many as width, blanks will be converted to underscore)
-  // Optional comment string (must start with a #, may be multiline with \n provided each line starts with a #).
-  AsciiVMatrix(const string& fname, int the_width, 
-               const TVec<string>& fieldnames = TVec<string>(), 
-               const string& the_comment="");
+    // Open a new file (in read/write mode).
+    // If a file of the same name already exist, an error is sent!
+    // The width of the matrix to be writen must be given.
+    // Optional fieldnames may be given (as many as width, blanks will be converted to underscore)
+    // Optional comment string (must start with a #, may be multiline with \n provided each line starts with a #).
+    AsciiVMatrix(const string& fname, int the_width, 
+                 const TVec<string>& fieldnames = TVec<string>(), 
+                 const string& the_comment="");
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
-  //!  This is the only method requiring implementation
-  virtual void getNewRow(int i, const Vec& v) const;
+    //!  This is the only method requiring implementation
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
-  //! Append a row at the end of the file
-  virtual void appendRow(Vec v);
+    //! Append a row at the end of the file
+    virtual void appendRow(Vec v);
 
-  //! These methods send an error message since, by choice,
-  //! we accept only to append row at the end of the file
-  virtual void put(int i, int j, real value);
-  virtual void putSubRow(int i, int j, Vec v);
-  virtual void putRow(int i, Vec v);
+    //! These methods send an error message since, by choice,
+    //! we accept only to append row at the end of the file
+    virtual void put(int i, int j, real value);
+    virtual void putSubRow(int i, int j, Vec v);
+    virtual void putRow(int i, Vec v);
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  virtual ~AsciiVMatrix();
+    virtual ~AsciiVMatrix();
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(AsciiVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(AsciiVMatrix);
 
 };
 
@@ -117,3 +117,15 @@ DECLARE_OBJECT_PTR(AsciiVMatrix);
 } // end of namespace PLearn
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

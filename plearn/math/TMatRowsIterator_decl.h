@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: TMatRowsIterator_decl.h,v 1.1 2004/04/17 00:44:55 plearner Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/TMat.h */
@@ -58,101 +58,114 @@ template <class T>
 class TMatRowsIterator
 {
 public:
-  //! Some useful typedefs
-  typedef random_access_iterator_tag iterator_category;
-  typedef TVec<T>                    value_type;
-  typedef ptrdiff_t                  difference_type;
-  typedef TVec<T>*                   pointer;
-  typedef TVec<T>&                   reference;
+    //! Some useful typedefs
+    typedef random_access_iterator_tag iterator_category;
+    typedef TVec<T>                    value_type;
+    typedef ptrdiff_t                  difference_type;
+    typedef TVec<T>*                   pointer;
+    typedef TVec<T>&                   reference;
   
 private:
-  T* ptr;                                    //!< current row pointer
-  int width;                                 //!< vector width
-  int mod;                                   //!< mod in underlying matrix
+    T* ptr;                                    //!< current row pointer
+    int width;                                 //!< vector width
+    int mod;                                   //!< mod in underlying matrix
 
 public:
-  TMatRowsIterator()
-    : ptr(), width(), mod() {}
+    TMatRowsIterator()
+        : ptr(), width(), mod() {}
 
-  TMatRowsIterator(T* p, int w, int m)
-    : ptr(p), width(w), mod(m) {}
+    TMatRowsIterator(T* p, int w, int m)
+        : ptr(p), width(w), mod(m) {}
 
-  // Implement trivial iterator functions
-  bool operator==(const TMatRowsIterator& other) const {
-    return ptr == other.ptr && width == other.width && mod == other.mod;
-  }
+    // Implement trivial iterator functions
+    bool operator==(const TMatRowsIterator& other) const {
+        return ptr == other.ptr && width == other.width && mod == other.mod;
+    }
 
-  bool operator!=(const TMatRowsIterator& y)
-  { return !operator==(y); }
+    bool operator!=(const TMatRowsIterator& y)
+    { return !operator==(y); }
 
-  value_type operator*() {
-    return TVec<T>(width, ptr);
-  }
+    value_type operator*() {
+        return TVec<T>(width, ptr);
+    }
 
-  // cannot define operator-> here since we cannot return a pointer to a
-  // temporary (e.g. stack-based) vector and expect this to work properly...
+    // cannot define operator-> here since we cannot return a pointer to a
+    // temporary (e.g. stack-based) vector and expect this to work properly...
   
-  // Implement forward iterator functions
-  TMatRowsIterator& operator++() {
-    ptr += mod;
-    return *this;
-  }
+    // Implement forward iterator functions
+    TMatRowsIterator& operator++() {
+        ptr += mod;
+        return *this;
+    }
 
-  TMatRowsIterator operator++(int) {
-    TMatRowsIterator r(*this);
-    ptr += mod;
-    return r;
-  }
+    TMatRowsIterator operator++(int) {
+        TMatRowsIterator r(*this);
+        ptr += mod;
+        return r;
+    }
 
-  // Implement bidirectional iterator functions
-  TMatRowsIterator& operator--() {
-    ptr -= mod;
-    return *this;
-  }
+    // Implement bidirectional iterator functions
+    TMatRowsIterator& operator--() {
+        ptr -= mod;
+        return *this;
+    }
 
-  TMatRowsIterator operator--(int) {
-    TMatRowsIterator r(*this);
-    ptr -= mod;
-    return r;
-  }
+    TMatRowsIterator operator--(int) {
+        TMatRowsIterator r(*this);
+        ptr -= mod;
+        return r;
+    }
 
-  // Implement random access iterator functions
-  TMatRowsIterator& operator+=(difference_type n) {
-    ptr += n*mod;
-    return *this;
-  }
+    // Implement random access iterator functions
+    TMatRowsIterator& operator+=(difference_type n) {
+        ptr += n*mod;
+        return *this;
+    }
 
-  TMatRowsIterator operator+(difference_type n) {
-    TMatRowsIterator r(*this);
-    r += n;
-    return r;
-  }
+    TMatRowsIterator operator+(difference_type n) {
+        TMatRowsIterator r(*this);
+        r += n;
+        return r;
+    }
   
-  TMatRowsIterator& operator-=(difference_type n) {
-    ptr -= n*mod;
-    return *this;
-  }
+    TMatRowsIterator& operator-=(difference_type n) {
+        ptr -= n*mod;
+        return *this;
+    }
 
-  TMatRowsIterator operator-(difference_type n) {
-    TMatRowsIterator r(*this);
-    r -= n;
-    return r;
-  }
+    TMatRowsIterator operator-(difference_type n) {
+        TMatRowsIterator r(*this);
+        r -= n;
+        return r;
+    }
 
-  difference_type operator-(const TMatRowsIterator& y) {
-    return (ptr - y.ptr) / mod;
-  }
+    difference_type operator-(const TMatRowsIterator& y) {
+        return (ptr - y.ptr) / mod;
+    }
   
-  value_type operator[](difference_type n) {
-    return TVec<T>(width, ptr + n*mod);
-  }
+    value_type operator[](difference_type n) {
+        return TVec<T>(width, ptr + n*mod);
+    }
 
-  bool operator<(const TMatRowsIterator& y) {
-    return ptr < y.ptr;
-  }
+    bool operator<(const TMatRowsIterator& y) {
+        return ptr < y.ptr;
+    }
 
 };
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

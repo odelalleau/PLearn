@@ -44,35 +44,35 @@ using namespace std;
 
 extern const size_t PL_HASH_NOMBRES_MAGIQUES[256];
 
-  //!  **************** Hash tables support *************************
+//!  **************** Hash tables support *************************
 
 /*! basic hashing function that can be used in defining the
-    hashing functions for objects or any type. This one
-    mixes the bits in the byte_length bytes starting at byte_start, 
-    and returns an integer between 0 and MAXINT
+  hashing functions for objects or any type. This one
+  mixes the bits in the byte_length bytes starting at byte_start, 
+  and returns an integer between 0 and MAXINT
 */
-  size_t hashbytes(const char* byte_start, size_t byte_length);
+size_t hashbytes(const char* byte_start, size_t byte_length);
 
 /*!     hashing function which must be redefined for classes that
-    can be used as keys:
+  can be used as keys:
     
-     unsigned int hash(const T& object);
-    or
-     unsigned int hash(const T object);
+  unsigned int hash(const T& object);
+  or
+  unsigned int hash(const T object);
     
-    This function returns ANY unsigned int (i.e. between 0 and MAXINT)
-    (it is hash(x)%table_size that will be used to choose an address
-    in the hash table).
+  This function returns ANY unsigned int (i.e. between 0 and MAXINT)
+  (it is hash(x)%table_size that will be used to choose an address
+  in the hash table).
     
-    It is defined here for some built-in types:
+  It is defined here for some built-in types:
     
 */
-  inline size_t hashval(const char* strng)
-  { return hashbytes(strng, strlen(strng)); }
+inline size_t hashval(const char* strng)
+{ return hashbytes(strng, strlen(strng)); }
 
-  //!  default which will work in many cases but not all
-  template <class T>
-    inline size_t hashval(const T& x) { return hashbytes((char*)&x,sizeof(T)); }
+//!  default which will work in many cases but not all
+template <class T>
+inline size_t hashval(const T& x) { return hashbytes((char*)&x,sizeof(T)); }
 
 } // end of namespace PLearn
 
@@ -84,7 +84,7 @@ extern const size_t PL_HASH_NOMBRES_MAGIQUES[256];
 SET_HASH_WITH_FUNCTION_NOCONSTREF(const char*, _s, PLearn::hashval(_s))
 #endif // __GNUC__
 
-SET_HASH_WITH_INHERITANCE(std::string, const char*, __s, __s.c_str())
+    SET_HASH_WITH_INHERITANCE(std::string, const char*, __s, __s.c_str())
 
 //hash functions for strings
 //template<>
@@ -104,7 +104,7 @@ SET_HASH_WITH_INHERITANCE(std::string, const char*, __s, __s.c_str())
 
 
 //for doubles 
-SET_HASH_WITH_FUNCTION(double, x, PLearn::hashval(x))
+    SET_HASH_WITH_FUNCTION(double, x, PLearn::hashval(x))
 //template<>
 //struct hash<double>
 //{
@@ -112,7 +112,7 @@ SET_HASH_WITH_FUNCTION(double, x, PLearn::hashval(x))
 //};
 
 //for floats 
-SET_HASH_WITH_FUNCTION(float, x, PLearn::hashval(x))
+    SET_HASH_WITH_FUNCTION(float, x, PLearn::hashval(x))
 //template<>
 //struct hash<float>
 //{
@@ -122,7 +122,7 @@ SET_HASH_WITH_FUNCTION(float, x, PLearn::hashval(x))
 
 #if defined(WIN32) & !defined(_MINGW_)
 
-using namespace stdext;
+    using namespace stdext;
 
 #if defined(__INTEL_COMPILER)
 // Because Intel compiler (in WIN32 only!!) defines hash_map and hash_table both in stdext and std
@@ -148,3 +148,16 @@ using namespace stdext;
 #endif // WIN32
 
 #endif // pl_hash_fun_H
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

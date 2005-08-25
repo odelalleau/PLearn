@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceKernel.h,v 1.2 2004/09/14 16:04:36 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,74 +54,74 @@ class SourceKernel: public Kernel
 
 private:
 
-  typedef Kernel inherited;
+    typedef Kernel inherited;
   
 protected:
 
-  // *********************
-  // * Protected options *
-  // *********************
+    // *********************
+    // * Protected options *
+    // *********************
 
 public:
 
-  // ************************
-  // * Public build options *
-  // ************************
+    // ************************
+    // * Public build options *
+    // ************************
 
-  Ker source_kernel;
+    Ker source_kernel;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  SourceKernel();
+    //! Default constructor.
+    SourceKernel();
 
-  // ******************
-  // * Kernel methods *
-  // ******************
+    // ******************
+    // * Kernel methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(SourceKernel);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(SourceKernel);
 
-  // **************************
-  // **** Kernel methods ****
-  // **************************
+    // **************************
+    // **** Kernel methods ****
+    // **************************
 
-  //! Compute K(x1,x2).
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
+    //! Compute K(x1,x2).
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
-  //! Overridden to forward to source_kernel.
-  virtual void addDataForKernelMatrix(const Vec& newRow);
-  virtual void computeGramMatrix(Mat K) const;
-  virtual real evaluate_i_j(int i, int j) const;
-  virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
-  virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
-  virtual void setDataForKernelMatrix(VMat the_data);
-  virtual void setParameters(Vec paramvec);
-  virtual Vec getParameters() const;
+    //! Overridden to forward to source_kernel.
+    virtual void addDataForKernelMatrix(const Vec& newRow);
+    virtual void computeGramMatrix(Mat K) const;
+    virtual real evaluate_i_j(int i, int j) const;
+    virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
+    virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
+    virtual void setDataForKernelMatrix(VMat the_data);
+    virtual void setParameters(Vec paramvec);
+    virtual Vec getParameters() const;
 
 };
 
@@ -132,3 +132,15 @@ DECLARE_OBJECT_PTR(SourceKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: .pyskeleton_header,v 1.1 2003/09/01 00:05:31 plearner Exp $ 
-   ******************************************************* */
+ * $Id: .pyskeleton_header,v 1.1 2003/09/01 00:05:31 plearner Exp $ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -61,38 +61,51 @@ namespace PLearn {
 template <class T, unsigned N, class TTrait>
 ostream& operator<<(ostream& os, const TinyVector<T,N,TTrait>& tiny_vec)
 {
-  os << '[';
-  for (int i=0, n=int(tiny_vec.size()); i<n ; ++i) {
-    os << tiny_vec[i];
-    if (i < n-1)
-      os << ',';
-  }
-  return os << ']';
+    os << '[';
+    for (int i=0, n=int(tiny_vec.size()); i<n ; ++i) {
+        os << tiny_vec[i];
+        if (i < n-1)
+            os << ',';
+    }
+    return os << ']';
 }
 
 template <class T, unsigned N, class TTrait>
 PStream& operator<<(PStream& os, const TinyVector<T,N,TTrait>& tiny_vec)
 {
-  os << '[';
-  for (int i=0, n=int(tiny_vec.size()); i<n ; ++i) {
-    os << tiny_vec[i];
-    if (i < n-1)
-      os << ',';
-  }
-  return os << ']';
+    os << '[';
+    for (int i=0, n=int(tiny_vec.size()); i<n ; ++i) {
+        os << tiny_vec[i];
+        if (i < n-1)
+            os << ',';
+    }
+    return os << ']';
 }
 
 
 template <class T, unsigned N, class TTrait>
 PStream& operator>>(PStream& is, TinyVector<T,N,TTrait>& tiny_vec)
 {
-  TVec<T> v;
-  is >> v;
-  tiny_vec.resize(v.size);
-  copy(v.begin(), v.end(), tiny_vec.begin());
-  return is;
+    TVec<T> v;
+    is >> v;
+    tiny_vec.resize(v.size);
+    copy(v.begin(), v.end(), tiny_vec.begin());
+    return is;
 }
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

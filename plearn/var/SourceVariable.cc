@@ -36,9 +36,9 @@
  
 
 /* *******************************************************      
-   * $Id: SourceVariable.cc,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "SourceVariable.h"
 
@@ -52,21 +52,21 @@ PLEARN_IMPLEMENT_OBJECT(SourceVariable,
                         "NO HELP");
 
 SourceVariable::SourceVariable(int thelength, int thewidth)
-  : inherited(thelength,thewidth)
+    : inherited(thelength,thewidth)
 {}
 
 SourceVariable::SourceVariable(const Vec& v, bool vertical)
-  : inherited(vertical ?v.toMat(v.length(),1) :v.toMat(1,v.length()))
+    : inherited(vertical ?v.toMat(v.length(),1) :v.toMat(1,v.length()))
 {}
 
 SourceVariable::SourceVariable(const Mat& m)
-  : inherited(m)
+    : inherited(m)
 {}
 
 void SourceVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Variable::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(rows_to_update, copies);
+    Variable::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(rows_to_update, copies);
 }
 
 void SourceVariable::fprop() {} // No input: nothing to fprop
@@ -77,33 +77,33 @@ void SourceVariable::symbolicBprop() {} // No input: nothing to bprop
 
 VarArray SourceVariable::sources() 
 { 
-  if (!marked)
+    if (!marked)
     {
-      setMark();
-      return Var(this);
+        setMark();
+        return Var(this);
     }
-  return VarArray(0,0);
+    return VarArray(0,0);
 }
 
 VarArray SourceVariable::random_sources() 
 { 
-  if (!marked)
-    setMark();
-  return VarArray(0,0);
+    if (!marked)
+        setMark();
+    return VarArray(0,0);
 }
 
 VarArray SourceVariable::ancestors() 
 { 
-  if (marked)
-    return VarArray(0,0);
-  setMark();
-  return Var(this);
+    if (marked)
+        return VarArray(0,0);
+    setMark();
+    return Var(this);
 }
 
 void SourceVariable::unmarkAncestors()
 { 
-  if (marked)
-    clearMark();
+    if (marked)
+        clearMark();
 }
 
 VarArray SourceVariable::parents()
@@ -114,13 +114,25 @@ bool SourceVariable::markPath()
 
 void SourceVariable::buildPath(VarArray& proppath)
 {
-  if(marked)
+    if(marked)
     {
-      //cout<<"add:"<<this->getName()<<endl;
-      proppath.append(Var(this));
-      clearMark();
+        //cout<<"add:"<<this->getName()<<endl;
+        proppath.append(Var(this));
+        clearMark();
     }
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -35,8 +35,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.cc,v 1.15 2005/06/17 17:32:42 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
 
@@ -49,26 +49,26 @@ namespace PLearn {
 using namespace std;
 
 KFoldSplitter::KFoldSplitter(int k)
-: append_non_constant_test(false),
-  append_train(false),
-  include_test_in_train(false),
-  K(k)
+    : append_non_constant_test(false),
+      append_train(false),
+      include_test_in_train(false),
+      K(k)
 {
-  // Default cross-validation range is the whole dataset.
-  cross_range.first   = 0;
-  cross_range.second  = 1;
+    // Default cross-validation range is the whole dataset.
+    cross_range.first   = 0;
+    cross_range.second  = 1;
 }
 
 PLEARN_IMPLEMENT_OBJECT(KFoldSplitter,
-    "K-fold cross-validation splitter.", 
-    "KFoldSplitter implements K splits of the dataset into a training-set and a test-set.\n"
-    "If the number of splits is higher than the number of examples, leave-one-out cross-validation\n"
-    "will be performed.\n"
-    "The cross-validation may be performed only on a subset of the source data, using the option\n"
-    "'cross_range', that will define a range of samples on which to perform cross-validation.\n"
-    "All samples before this range will systematically be added to the train set, while all samples\n"
-    "after this range will be added to the test set.\n"
-);
+                        "K-fold cross-validation splitter.", 
+                        "KFoldSplitter implements K splits of the dataset into a training-set and a test-set.\n"
+                        "If the number of splits is higher than the number of examples, leave-one-out cross-validation\n"
+                        "will be performed.\n"
+                        "The cross-validation may be performed only on a subset of the source data, using the option\n"
+                        "'cross_range', that will define a range of samples on which to perform cross-validation.\n"
+                        "All samples before this range will systematically be added to the train set, while all samples\n"
+                        "after this range will be added to the test set.\n"
+    );
 
 void KFoldSplitter::declareOptions(OptionList& ol)
 {
@@ -79,13 +79,13 @@ void KFoldSplitter::declareOptions(OptionList& ol)
                   "If set to 1, the trainset will be appended after in the returned sets.");
 
     declareOption(ol, "append_non_constant_test", &KFoldSplitter::append_non_constant_test, OptionBase::buildoption,
-        "If set to 1, the non-constant part of the test set will be appended in the returned sets.");
+                  "If set to 1, the non-constant part of the test set will be appended in the returned sets.");
 
     declareOption(ol, "include_test_in_train", &KFoldSplitter::include_test_in_train, OptionBase::buildoption,
-        "If set to 1, the test set will be included in the train set.");
+                  "If set to 1, the test set will be included in the train set.");
 
     declareOption(ol, "cross_range", &KFoldSplitter::cross_range, OptionBase::buildoption,
-        "The range on which cross-validation is applied (similar to the FractionSplitter ranges).");
+                  "The range on which cross-validation is applied (similar to the FractionSplitter ranges).");
 
     inherited::declareOptions(ol);
 }
@@ -107,12 +107,12 @@ int KFoldSplitter::nsplits() const
 
 int KFoldSplitter::nSetsPerSplit() const
 {
-  int nsets = 2;
-  if (append_train)
-    nsets++;
-  if (append_non_constant_test)
-    nsets++;
-  return nsets;
+    int nsets = 2;
+    if (append_train)
+        nsets++;
+    if (append_non_constant_test)
+        nsets++;
+    return nsets;
 }
 
 TVec<VMat> KFoldSplitter::getSplit(int k)
@@ -126,10 +126,10 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
     assert( start >= 0 && end >= 0 && end > start && start < n_data && end < n_data );
     int i_start = 0;
     if (start > 0)
-      i_start = start >= 1 ? int(round(start)) : int(round(n_data * start));
+        i_start = start >= 1 ? int(round(start)) : int(round(n_data * start));
     int i_end = n_data;
     if (end != 1)
-      i_end   = end   >= 1 ? int(round(end))   : int(round(n_data * end));
+        i_end   = end   >= 1 ? int(round(end))   : int(round(n_data * end));
     // The cross validation will be done only on examples i_start, ..., i_end - 1.
     int n_cross_data = i_end - i_start;
     bool do_partial_cross = (n_cross_data != n_data);
@@ -140,29 +140,41 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
     TVec<VMat> split_(2);
     VMat non_constant_test;
     if (do_partial_cross) {
-      VMat sub_data = new SubVMatrix(dataset, i_start, 0, n_cross_data, dataset->width());
-      split(sub_data, test_fraction, split_[0], split_[1], k, true);
-      non_constant_test = split_[1];
-      if (i_start > 0) {
-        VMat constant_train = new SubVMatrix(dataset, 0, 0, i_start, dataset->width());
-        split_[0] = new ConcatRowsVMatrix(constant_train, split_[0]);
-      }
-      if (i_end < n_data) {
-        VMat constant_test = new SubVMatrix(dataset, i_end, 0, n_data - i_end, dataset->width());
-        split_[1] = new ConcatRowsVMatrix(split_[1], constant_test);
-      }
+        VMat sub_data = new SubVMatrix(dataset, i_start, 0, n_cross_data, dataset->width());
+        split(sub_data, test_fraction, split_[0], split_[1], k, true);
+        non_constant_test = split_[1];
+        if (i_start > 0) {
+            VMat constant_train = new SubVMatrix(dataset, 0, 0, i_start, dataset->width());
+            split_[0] = new ConcatRowsVMatrix(constant_train, split_[0]);
+        }
+        if (i_end < n_data) {
+            VMat constant_test = new SubVMatrix(dataset, i_end, 0, n_data - i_end, dataset->width());
+            split_[1] = new ConcatRowsVMatrix(split_[1], constant_test);
+        }
     } else {
-      split(dataset, test_fraction, split_[0], split_[1], k, true);
-      non_constant_test = split_[1];
+        split(dataset, test_fraction, split_[0], split_[1], k, true);
+        non_constant_test = split_[1];
     }
     if (include_test_in_train)
-      split_[0] = new ConcatRowsVMatrix(split_[0], split_[1]);
+        split_[0] = new ConcatRowsVMatrix(split_[0], split_[1]);
     if (append_train)
-      split_.append(split_[0]);
+        split_.append(split_[0]);
     if (append_non_constant_test)
-      split_.append(non_constant_test);
+        split_.append(non_constant_test);
     return split_;
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

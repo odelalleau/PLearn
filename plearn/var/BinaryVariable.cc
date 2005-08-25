@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryVariable.cc,v 1.15 2004/11/24 18:24:27 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "BinaryVariable.h"
 
@@ -49,10 +49,10 @@ using namespace std;
 /** BinaryVariable **/
 
 BinaryVariable::BinaryVariable(Variable* v1, Variable* v2, int thelength,int thewidth)
-  :Variable(thelength,thewidth), input1(v1), input2(v2) 
+    :Variable(thelength,thewidth), input1(v1), input2(v2) 
 {
-  input1->disallowPartialUpdates();
-  input2->disallowPartialUpdates();
+    input1->disallowPartialUpdates();
+    input2->disallowPartialUpdates();
 }
 
 
@@ -60,26 +60,26 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(BinaryVariable, "ONE LINE DESCR", "NO HELP");
 
 void BinaryVariable::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "input1", &BinaryVariable::input1, OptionBase::buildoption, 
-                "The first parent variable that this one depends on\n");
+    declareOption(ol, "input1", &BinaryVariable::input1, OptionBase::buildoption, 
+                  "The first parent variable that this one depends on\n");
 
-  declareOption(ol, "input2", &BinaryVariable::input2, OptionBase::buildoption, 
-                "The second parent variable that this one depends on\n");
+    declareOption(ol, "input2", &BinaryVariable::input2, OptionBase::buildoption, 
+                  "The second parent variable that this one depends on\n");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 void BinaryVariable::setParents(const VarArray& parents)
 {
-  if(parents.length() != 2)
-    PLERROR("In BinaryVariable::setParents  VarArray length must be 2;"
-	    " you are trying to set %d parents for this BinaryVariable...", parents.length());
+    if(parents.length() != 2)
+        PLERROR("In BinaryVariable::setParents  VarArray length must be 2;"
+                " you are trying to set %d parents for this BinaryVariable...", parents.length());
 
-  input1= parents[0];
-  input2= parents[1];
+    input1= parents[0];
+    input2= parents[1];
   
-  int dummy_l, dummy_w;
-  recomputeSize(dummy_l, dummy_w);
+    int dummy_l, dummy_w;
+    recomputeSize(dummy_l, dummy_w);
 }
 
 #ifdef __INTEL_COMPILER
@@ -92,93 +92,104 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
 void BinaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Variable::makeDeepCopyFromShallowCopy(copies);
-  //deepCopyField(input1, copies);
-  varDeepCopyField(input1, copies);
-  //deepCopyField(input2, copies);
-  varDeepCopyField(input2, copies);
+    Variable::makeDeepCopyFromShallowCopy(copies);
+    //deepCopyField(input1, copies);
+    varDeepCopyField(input1, copies);
+    //deepCopyField(input2, copies);
+    varDeepCopyField(input2, copies);
 }
 
 
 bool BinaryVariable::markPath()
 {
-  if(!marked)
-    marked = input1->markPath() | input2->markPath();
-  return marked;
+    if(!marked)
+        marked = input1->markPath() | input2->markPath();
+    return marked;
 }
 
 
 void BinaryVariable::buildPath(VarArray& proppath)
 {
-  if(marked)
+    if(marked)
     {
-      input1->buildPath(proppath);
-      input2->buildPath(proppath);
-      proppath &= Var(this);
-      //cout<<"proppath="<<this->getName()<<endl;
-      clearMark();
+        input1->buildPath(proppath);
+        input2->buildPath(proppath);
+        proppath &= Var(this);
+        //cout<<"proppath="<<this->getName()<<endl;
+        clearMark();
     }
 }
 
 
 VarArray BinaryVariable::sources() 
 { 
-  if (marked)
-    return VarArray(0,0);
-  marked = true;
-  return input1->sources() & input2->sources(); 
+    if (marked)
+        return VarArray(0,0);
+    marked = true;
+    return input1->sources() & input2->sources(); 
 }
 
 
 VarArray BinaryVariable::random_sources() 
 { 
-  if (marked)
-    return VarArray(0,0);
-  marked = true;
-  return input1->random_sources() & input2->random_sources(); 
+    if (marked)
+        return VarArray(0,0);
+    marked = true;
+    return input1->random_sources() & input2->random_sources(); 
 }
 
 
 VarArray BinaryVariable::ancestors() 
 { 
-  if (marked)
-    return VarArray(0,0);
-  marked = true;
-  return input1->ancestors() & input2->ancestors() & Var(this) ;
+    if (marked)
+        return VarArray(0,0);
+    marked = true;
+    return input1->ancestors() & input2->ancestors() & Var(this) ;
 }
 
 
 void BinaryVariable::unmarkAncestors()
 { 
-  if (marked)
+    if (marked)
     {
-      marked = false;
-      input1->unmarkAncestors();
-      input2->unmarkAncestors();
+        marked = false;
+        input1->unmarkAncestors();
+        input2->unmarkAncestors();
     }
 }
 
 
 VarArray BinaryVariable::parents() 
 { 
-  VarArray unmarked_parents;
-  if (!input1->marked)
-    unmarked_parents.append(input1);
-  if (!input2->marked)
-    unmarked_parents.append(input2);
-  return unmarked_parents;
+    VarArray unmarked_parents;
+    if (!input1->marked)
+        unmarked_parents.append(input1);
+    if (!input2->marked)
+        unmarked_parents.append(input2);
+    return unmarked_parents;
 }
 
 
 void BinaryVariable::resizeRValue()
 {
-  inherited::resizeRValue();
-  if (!input1->rvaluedata) input1->resizeRValue();
-  if (!input2->rvaluedata) input2->resizeRValue();
+    inherited::resizeRValue();
+    if (!input1->rvaluedata) input1->resizeRValue();
+    if (!input2->rvaluedata) input2->resizeRValue();
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

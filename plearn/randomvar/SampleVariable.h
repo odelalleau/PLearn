@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: SampleVariable.h,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/SampleVariable.h */
@@ -59,70 +59,83 @@ using namespace std;
 
 class SourceSampleVariable: public SourceVariable
 {
- public:
-  SourceSampleVariable(int length, int width)
-    :SourceVariable(length, width) {}
-  virtual SourceSampleVariable* deepCopy(CopiesMap& copies) const =0;
-  virtual string classname() const;
-  virtual void bprop() { }
-  VarArray random_sources();
+public:
+    SourceSampleVariable(int length, int width)
+        :SourceVariable(length, width) {}
+    virtual SourceSampleVariable* deepCopy(CopiesMap& copies) const =0;
+    virtual string classname() const;
+    virtual void bprop() { }
+    VarArray random_sources();
 };
 
 class UnarySampleVariable: public UnaryVariable
 {
- public:
-  UnarySampleVariable(Variable* input, int length, int width)
-    :UnaryVariable(input,length,width) {}
-  virtual string classname() const;
-  virtual void bprop() { }
-  VarArray random_sources();
+public:
+    UnarySampleVariable(Variable* input, int length, int width)
+        :UnaryVariable(input,length,width) {}
+    virtual string classname() const;
+    virtual void bprop() { }
+    VarArray random_sources();
 };
 
 class BinarySampleVariable: public BinaryVariable
 {
- public:
-  BinarySampleVariable(Variable* input1, Variable* input2, int length, int width)
-    :BinaryVariable(input1,input2,length,width) { }
-  virtual string classname() const;
-  virtual void bprop() { }
-  VarArray random_sources();
+public:
+    BinarySampleVariable(Variable* input1, Variable* input2, int length, int width)
+        :BinaryVariable(input1,input2,length,width) { }
+    virtual string classname() const;
+    virtual void bprop() { }
+    VarArray random_sources();
 };
 
 class UniformSampleVariable: public SourceSampleVariable
 {
- protected:
-  real min_value, max_value;
-  char name[50];
+protected:
+    real min_value, max_value;
+    char name[50];
 
- public:
-  UniformSampleVariable(int length=1, int width=1,
-                        real minvalue=0, real maxvalue=1);
-  virtual UniformSampleVariable* deepCopy(CopiesMap& copies) const;
-  virtual string classname() const;
-  virtual void fprop();
+public:
+    UniformSampleVariable(int length=1, int width=1,
+                          real minvalue=0, real maxvalue=1);
+    virtual UniformSampleVariable* deepCopy(CopiesMap& copies) const;
+    virtual string classname() const;
+    virtual void fprop();
 };
 
 class MultinomialSampleVariable: public UnarySampleVariable
 {
- protected:
-  char name[50];
+protected:
+    char name[50];
 
- public:
-  MultinomialSampleVariable(Variable* probabilities, int length=1, int width=1);
-  virtual MultinomialSampleVariable* deepCopy(CopiesMap& copies) const;
-  virtual string classname() const;
-  virtual void fprop();
+public:
+    MultinomialSampleVariable(Variable* probabilities, int length=1, int width=1);
+    virtual MultinomialSampleVariable* deepCopy(CopiesMap& copies) const;
+    virtual string classname() const;
+    virtual void fprop();
 };
 
 class DiagonalNormalSampleVariable: public BinarySampleVariable
 {
- public:
-  DiagonalNormalSampleVariable(Variable* mu, Variable* sigma);
-  virtual DiagonalNormalSampleVariable* deepCopy(CopiesMap& copies) const;
-  virtual string classname() const;
-  virtual void fprop();
+public:
+    DiagonalNormalSampleVariable(Variable* mu, Variable* sigma);
+    virtual DiagonalNormalSampleVariable* deepCopy(CopiesMap& copies) const;
+    virtual string classname() const;
+    virtual void fprop();
 };
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

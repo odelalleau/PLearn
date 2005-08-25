@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.cc,v 1.9 2004/09/14 16:04:39 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file Splitter.cc */
 #include "Splitter.h"
@@ -50,87 +50,100 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Splitter, "ONE LINE DESCR", "NO HELP");
 
 void Splitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  deepCopyField(dataset, copies);
+    deepCopyField(dataset, copies);
 }
 
 void Splitter::setDataSet(VMat the_dataset)
 {
-  dataset = the_dataset;
+    dataset = the_dataset;
 }
 
 // Useful splitting functions
 
 void split(VMat d, real test_fraction, VMat& train, VMat& test, int i, bool use_all)
 {
-  int n = d.length();
-  real ftest = test_fraction>=1.0 ? test_fraction : test_fraction*real(n);
-  int ntest = int(ftest);
-  int ntrain_before_test = n - (i+1)*ntest;
-  int ntrain_after_test = i*ntest;
-  if (use_all) {
-    // See how many splits there are.
-    int nsplits = int(n / ftest + 0.5);
-    // See how many examples will be left.
-    int nleft = n - nsplits * ntest;
-    // Deduce how many examples to add in each split.
-    int ntest_more = nleft / nsplits;
-    // And, finally, how many splits will have one more example so that they are
-    // all taken somewhere.
-    int nsplits_one_more = nleft % nsplits;
-    // Now recompute ntest, ntrain_before_test and ntrain_after_test.
-    ntest = ntest + ntest_more;
-    if (i < nsplits_one_more) {
-      ntest++;
-      ntrain_before_test = n - (i+1) * ntest;
-    } else {
-      ntrain_before_test =
-        n
-      - (nsplits_one_more)          * (ntest + 1)
-      - (i - nsplits_one_more + 1)  * ntest;
+    int n = d.length();
+    real ftest = test_fraction>=1.0 ? test_fraction : test_fraction*real(n);
+    int ntest = int(ftest);
+    int ntrain_before_test = n - (i+1)*ntest;
+    int ntrain_after_test = i*ntest;
+    if (use_all) {
+        // See how many splits there are.
+        int nsplits = int(n / ftest + 0.5);
+        // See how many examples will be left.
+        int nleft = n - nsplits * ntest;
+        // Deduce how many examples to add in each split.
+        int ntest_more = nleft / nsplits;
+        // And, finally, how many splits will have one more example so that they are
+        // all taken somewhere.
+        int nsplits_one_more = nleft % nsplits;
+        // Now recompute ntest, ntrain_before_test and ntrain_after_test.
+        ntest = ntest + ntest_more;
+        if (i < nsplits_one_more) {
+            ntest++;
+            ntrain_before_test = n - (i+1) * ntest;
+        } else {
+            ntrain_before_test =
+                n
+                - (nsplits_one_more)          * (ntest + 1)
+                - (i - nsplits_one_more + 1)  * ntest;
+        }
+        ntrain_after_test = n - ntest - ntrain_before_test;
     }
-    ntrain_after_test = n - ntest - ntrain_before_test;
-  }
 
-  test = d.subMatRows(ntrain_before_test, ntest);
-  if(ntrain_after_test == 0)
-    train = d.subMatRows(0,ntrain_before_test);
-  else if(ntrain_before_test==0)
-    train = d.subMatRows(ntest, ntrain_after_test);
-  else
-    train = vconcat( d.subMatRows(0,ntrain_before_test), 
-                     d.subMatRows(ntrain_before_test+ntest, ntrain_after_test) );
+    test = d.subMatRows(ntrain_before_test, ntest);
+    if(ntrain_after_test == 0)
+        train = d.subMatRows(0,ntrain_before_test);
+    else if(ntrain_before_test==0)
+        train = d.subMatRows(ntest, ntrain_after_test);
+    else
+        train = vconcat( d.subMatRows(0,ntrain_before_test), 
+                         d.subMatRows(ntrain_before_test+ntest, ntrain_after_test) );
 }
 
 Vec randomSplit(VMat d, real test_fraction, VMat& train, VMat& test)
 {
-  int ntest = int( test_fraction>=1.0 ?test_fraction :test_fraction*d.length() );
-  int ntrain = d.length()-ntest;
-  Vec indices(0, d.length()-1, 1); // Range-vector
-  shuffleElements(indices);
-  train = d.rows(indices.subVec(0,ntrain));
-  test = d.rows(indices.subVec(ntrain,ntest));
-  return indices;
+    int ntest = int( test_fraction>=1.0 ?test_fraction :test_fraction*d.length() );
+    int ntrain = d.length()-ntest;
+    Vec indices(0, d.length()-1, 1); // Range-vector
+    shuffleElements(indices);
+    train = d.rows(indices.subVec(0,ntrain));
+    test = d.rows(indices.subVec(ntrain,ntest));
+    return indices;
 }
 
 void split(VMat d, real validation_fraction, real test_fraction, VMat& train, VMat& valid, VMat& test,bool do_shuffle)
 {
-  int ntest = int( test_fraction>=1.0 ?test_fraction :test_fraction*d.length() );
-  int nvalid = int( validation_fraction>=1.0 ?validation_fraction :validation_fraction*d.length() );
-  int ntrain = d.length()-(ntest+nvalid);
-  Vec indices(0, d.length()-1, 1); // Range-vector
-  if (do_shuffle){
-    cout<<"shuffle !"<<endl;
-    shuffleElements(indices);
-  }
-  train = d.rows(indices.subVec(0,ntrain));
-  valid = d.rows(indices.subVec(ntrain,nvalid));
-  test = d.rows(indices.subVec(ntrain+nvalid,ntest));
-  cout<<"n_train : "<<ntrain<<endl<<"n_valid : "<<nvalid<<endl<<"n_test : "<<(d.length()-ntrain+nvalid)<<endl;
+    int ntest = int( test_fraction>=1.0 ?test_fraction :test_fraction*d.length() );
+    int nvalid = int( validation_fraction>=1.0 ?validation_fraction :validation_fraction*d.length() );
+    int ntrain = d.length()-(ntest+nvalid);
+    Vec indices(0, d.length()-1, 1); // Range-vector
+    if (do_shuffle){
+        cout<<"shuffle !"<<endl;
+        shuffleElements(indices);
+    }
+    train = d.rows(indices.subVec(0,ntrain));
+    valid = d.rows(indices.subVec(ntrain,nvalid));
+    test = d.rows(indices.subVec(ntrain+nvalid,ntest));
+    cout<<"n_train : "<<ntrain<<endl<<"n_valid : "<<nvalid<<endl<<"n_test : "<<(d.length()-ntrain+nvalid)<<endl;
 }    
 
 void randomSplit(VMat d, real validation_fraction, real test_fraction, VMat& train, VMat& valid, VMat& test)
 {
-  split(d,validation_fraction,test_fraction,train,valid,test,true);
+    split(d,validation_fraction,test_fraction,train,valid,test,true);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixElementsVariable.cc,v 1.10 2004/11/24 18:26:25 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "MatrixElementsVariable.h"
 
@@ -62,9 +62,9 @@ PLEARN_IMPLEMENT_OBJECT(MatrixElementsVariable,
 MatrixElementsVariable::MatrixElementsVariable(Variable* the_expression, const Var& i_index,
                                                const Var& j_index, int number_of_i_values,
                                                int number_of_j_values, const VarArray& the_parameters)
-  : inherited(the_parameters, number_of_i_values, number_of_j_values), i(i_index), 
-    j(j_index), ni(number_of_i_values), nj(number_of_j_values), expression(the_expression), 
-    parameters(the_parameters)
+    : inherited(the_parameters, number_of_i_values, number_of_j_values), i(i_index), 
+      j(j_index), ni(number_of_i_values), nj(number_of_j_values), expression(the_expression), 
+      parameters(the_parameters)
 {
     build_();
 }
@@ -116,33 +116,33 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
 void MatrixElementsVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  NaryVariable::makeDeepCopyFromShallowCopy(copies);
-  varDeepCopyField(i, copies);
-  varDeepCopyField(j, copies);
-  varDeepCopyField(expression, copies);
-  deepCopyField(parameters, copies);
-  deepCopyField(full_fproppath, copies);
-  deepCopyField(fproppath, copies);
-  deepCopyField(bproppath, copies);
+    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    varDeepCopyField(i, copies);
+    varDeepCopyField(j, copies);
+    varDeepCopyField(expression, copies);
+    deepCopyField(parameters, copies);
+    deepCopyField(full_fproppath, copies);
+    deepCopyField(fproppath, copies);
+    deepCopyField(bproppath, copies);
 }
 
 
 void MatrixElementsVariable::fprop()
 {
-  int ii,jj;
+    int ii,jj;
 
-  for (ii=0;ii<ni;ii++)
+    for (ii=0;ii<ni;ii++)
     {
-      i->value[0]=ii;
-      for (jj=0;jj<nj;jj++)
+        i->value[0]=ii;
+        for (jj=0;jj<nj;jj++)
         {
-          j->value[0]=jj;
-          if (ii==0 && jj==0)
-            // effect of parameters is computed only once
-            full_fproppath.fprop();
-          else
-            fproppath.fprop();
-          matValue(ii,jj) = expression->value[0];
+            j->value[0]=jj;
+            if (ii==0 && jj==0)
+                // effect of parameters is computed only once
+                full_fproppath.fprop();
+            else
+                fproppath.fprop();
+            matValue(ii,jj) = expression->value[0];
         }
     }
 }
@@ -150,27 +150,27 @@ void MatrixElementsVariable::fprop()
 
 void MatrixElementsVariable::bprop()
 {
-  int ii,jj;
+    int ii,jj;
 
-  for (ii=0;ii<ni;ii++)
+    for (ii=0;ii<ni;ii++)
     {
-      i->value[0]=ii;
-      for (jj=0;jj<nj;jj++)
+        i->value[0]=ii;
+        for (jj=0;jj<nj;jj++)
         {
-          j->value[0]=jj;
-          if (ii==0 && jj==0)
-            // effect of parameters is computed only once
-            full_fproppath.fprop();
-          else
-            fproppath.fprop();
-          bproppath.clearGradient();
-          // PASCAL: peut-etre qu'ici on devrait avoir += ?
-          // (si l'expression est une Var utilisee ailleurs!)
-          // REPONSE: Non! (expression ne devrait etre utilisee 
-          // nulle part ailleurs. To do: utilisation de Func 
-          // pour le garantir...)
-          expression->gradient[0] = matGradient(ii,jj);
-          bproppath.bprop();
+            j->value[0]=jj;
+            if (ii==0 && jj==0)
+                // effect of parameters is computed only once
+                full_fproppath.fprop();
+            else
+                fproppath.fprop();
+            bproppath.clearGradient();
+            // PASCAL: peut-etre qu'ici on devrait avoir += ?
+            // (si l'expression est une Var utilisee ailleurs!)
+            // REPONSE: Non! (expression ne devrait etre utilisee 
+            // nulle part ailleurs. To do: utilisation de Func 
+            // pour le garantir...)
+            expression->gradient[0] = matGradient(ii,jj);
+            bproppath.bprop();
         }
     }
 }
@@ -178,30 +178,43 @@ void MatrixElementsVariable::bprop()
 
 void MatrixElementsVariable::fbprop()
 {
-  int ii,jj;
+    int ii,jj;
 
-  for (ii=0;ii<ni;ii++)
+    for (ii=0;ii<ni;ii++)
     {
-      i->value[0]=ii;
-      for (jj=0;jj<nj;jj++)
+        i->value[0]=ii;
+        for (jj=0;jj<nj;jj++)
         {
-          j->value[0]=jj;
-          if (ii==0 && jj==0)
-            // effect of parameters is computed only once
-            full_fproppath.fprop();
-          else
-            fproppath.fprop();
-          matValue(ii,jj) = expression->value[0];
-          bproppath.clearGradient();
-          // PASCAL: peut-etre qu'ici on devrait avoir += ?
-          // (si l'expression est une Var utilisee ailleurs!)
-          // REPONSE: Non! (expression ne devrait etre utilisee 
-          // nulle part ailleurs. To do: utilisation de Func 
-          // pour le garantir...)
-          expression->gradient[0] = matGradient(ii,jj);
-          bproppath.bprop();
+            j->value[0]=jj;
+            if (ii==0 && jj==0)
+                // effect of parameters is computed only once
+                full_fproppath.fprop();
+            else
+                fproppath.fprop();
+            matValue(ii,jj) = expression->value[0];
+            bproppath.clearGradient();
+            // PASCAL: peut-etre qu'ici on devrait avoir += ?
+            // (si l'expression est une Var utilisee ailleurs!)
+            // REPONSE: Non! (expression ne devrait etre utilisee 
+            // nulle part ailleurs. To do: utilisation de Func 
+            // pour le garantir...)
+            expression->gradient[0] = matGradient(ii,jj);
+            bproppath.bprop();
         }
     }
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

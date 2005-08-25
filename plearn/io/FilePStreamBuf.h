@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilePStreamBuf.h,v 1.6 2005/02/19 22:09:54 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -54,34 +54,47 @@ class FilePStreamBuf: public PStreamBuf
 
 private:
   
-  typedef PStreamBuf inherited;
+    typedef PStreamBuf inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
-  FILE* in;  //!< input FILE (0 if no input)
-  FILE* out; //!< output FILE (0 if no output)
-  bool own_in, own_out; //!< true if {in|out} should be closed by this object upon destruction.
+    // *********************
+    // * protected options *
+    // *********************
+    FILE* in;  //!< input FILE (0 if no input)
+    FILE* out; //!< output FILE (0 if no output)
+    bool own_in, own_out; //!< true if {in|out} should be closed by this object upon destruction.
 
 public:
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  FilePStreamBuf(FILE* in_f=0, FILE* out_f=0, 
-                 bool own_in=false, bool own_out=false);
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    FilePStreamBuf(FILE* in_f=0, FILE* out_f=0, 
+                   bool own_in=false, bool own_out=false);
 
-  virtual ~FilePStreamBuf();
+    virtual ~FilePStreamBuf();
 
 protected: 
 
-  virtual streamsize read_(char* p, streamsize n);
+    virtual streamsize read_(char* p, streamsize n);
 
-  //! writes exactly n characters from p (unbuffered, must flush)
-  virtual void write_(const char* p, streamsize n);
+    //! writes exactly n characters from p (unbuffered, must flush)
+    virtual void write_(const char* p, streamsize n);
 
 };
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

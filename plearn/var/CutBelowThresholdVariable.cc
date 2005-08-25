@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: CutBelowThresholdVariable.cc,v 1.6 2004/04/27 15:59:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "CutBelowThresholdVariable.h"
 #include "IsAboveThresholdVariable.h"
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(CutBelowThresholdVariable,
                         "NO HELP");
 
 CutBelowThresholdVariable::CutBelowThresholdVariable(Variable* input, real the_threshold)
-  : inherited(input, input->length(), input->width()), threshold(the_threshold) 
+    : inherited(input, input->length(), input->width()), threshold(the_threshold) 
 {}
 
 
@@ -77,29 +77,40 @@ CutBelowThresholdVariable::declareOptions(OptionList &ol)
 
 void CutBelowThresholdVariable::fprop()
 {
-  for(int i=0; i<nelems(); i++)
+    for(int i=0; i<nelems(); i++)
     {
-      real val = input->valuedata[i];
-      valuedata[i] = val<threshold ?threshold :val;
+        real val = input->valuedata[i];
+        valuedata[i] = val<threshold ?threshold :val;
     }
 }
 
 
 void CutBelowThresholdVariable::bprop()
 {
-  for(int i=0; i<nelems(); i++)
-    if(input->valuedata[i]>=threshold)        
-      input->gradientdata[i] += gradientdata[i];
+    for(int i=0; i<nelems(); i++)
+        if(input->valuedata[i]>=threshold)        
+            input->gradientdata[i] += gradientdata[i];
 }
 
 
 void CutBelowThresholdVariable::symbolicBprop()
 {
-  input->accg(g * (input>=threshold));
+    input->accg(g * (input>=threshold));
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

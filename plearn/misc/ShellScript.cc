@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ShellScript.cc,v 1.2 2004/09/14 16:04:37 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -47,65 +47,78 @@ namespace PLearn {
 using namespace std;
 
 ShellScript::ShellScript() 
-  /* ### Initialize all fields to their default value */
+    /* ### Initialize all fields to their default value */
 {
-  // ...
+    // ...
 
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
+    // ### You may or may not want to call build_() to finish building the object
+    // build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(ShellScript,
-    "Allows one to run shell commands (especially within a script).",
-    "This runnable object will execute the given shell commands when run.");
+                        "Allows one to run shell commands (especially within a script).",
+                        "This runnable object will execute the given shell commands when run.");
 
 void ShellScript::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  declareOption(ol, "shell_commands", &ShellScript::shell_commands, OptionBase::buildoption,
-      "The commands to be executed at run time.");
+    declareOption(ol, "shell_commands", &ShellScript::shell_commands, OptionBase::buildoption,
+                  "The commands to be executed at run time.");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void ShellScript::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation. 
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+    // ### You should assume that the parent class' build_() has already been called.
 }
 
 // ### Nothing to add here, simply calls build_
 void ShellScript::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void ShellScript::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(shell_commands, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(shell_commands, copies);
 }
 
 /////////
 // run //
 /////////
 void ShellScript::run() {
-  // Perform the commands provided in shell_commands.
-  for (int i = 0; i < shell_commands.length(); i++) {
-    system(shell_commands[i].c_str());
-  }
+    // Perform the commands provided in shell_commands.
+    for (int i = 0; i < shell_commands.length(); i++) {
+        system(shell_commands[i].c_str());
+    }
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

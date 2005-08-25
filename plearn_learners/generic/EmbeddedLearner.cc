@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.24 2005/06/02 16:46:44 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
 #include "EmbeddedLearner.h"
@@ -49,190 +49,203 @@ using namespace std;
 // ###### EmbeddedLearner ######################################################
 
 PLEARN_IMPLEMENT_OBJECT(
-  EmbeddedLearner,
-  "Wraps an underlying learner", 
-  "EmbeddedLearner implements nothing but forwarding \n"
-  "calls to an underlying learner. It is typically used as\n"
-  "baseclass for learners that are built on top of another learner.\n"
-  "Note that only the NECESSARY member functions are forwarded to\n"
-  "the embedded learner; for others, we rely on the base class\n"
-  "implementation (which themselves call forwarded functions).\n"
-  "This makes it easier to override only a few select functions.");
+    EmbeddedLearner,
+    "Wraps an underlying learner", 
+    "EmbeddedLearner implements nothing but forwarding \n"
+    "calls to an underlying learner. It is typically used as\n"
+    "baseclass for learners that are built on top of another learner.\n"
+    "Note that only the NECESSARY member functions are forwarded to\n"
+    "the embedded learner; for others, we rely on the base class\n"
+    "implementation (which themselves call forwarded functions).\n"
+    "This makes it easier to override only a few select functions.");
 
 EmbeddedLearner::EmbeddedLearner(string expdir_append_)
-  : learner_(0),
-    expdir_append(expdir_append_),
-    provide_learner_expdir(true)
+    : learner_(0),
+      expdir_append(expdir_append_),
+      provide_learner_expdir(true)
 { }
 
 void EmbeddedLearner::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "learner", &EmbeddedLearner::learner_,
-                OptionBase::buildoption,
-                "The embedded learner");
+    declareOption(ol, "learner", &EmbeddedLearner::learner_,
+                  OptionBase::buildoption,
+                  "The embedded learner");
 
-  declareOption(ol, "provide_learner_expdir", &EmbeddedLearner::provide_learner_expdir,
-                OptionBase::buildoption,
-                "Whether or not to provide the underlying learner with an experiment "
-                "directory one is given for this learner.");
+    declareOption(ol, "provide_learner_expdir", &EmbeddedLearner::provide_learner_expdir,
+                  OptionBase::buildoption,
+                  "Whether or not to provide the underlying learner with an experiment "
+                  "directory one is given for this learner.");
 
-   declareOption(ol, "expdir_append", &EmbeddedLearner::expdir_append,
-                OptionBase::buildoption,
-                "A string which should be appended to the expdir for the inner learner;"
-                "default = \"\".");
+    declareOption(ol, "expdir_append", &EmbeddedLearner::expdir_append,
+                  OptionBase::buildoption,
+                  "A string which should be appended to the expdir for the inner learner;"
+                  "default = \"\".");
 
  
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 void EmbeddedLearner::build_()
 {
-  if (!learner_)
-    PLERROR("EmbeddedLearner::_build() - learner_ attribute is NULL");
+    if (!learner_)
+        PLERROR("EmbeddedLearner::_build() - learner_ attribute is NULL");
 
-  learner_->build();
+    learner_->build();
 }
 
 void EmbeddedLearner::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void EmbeddedLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
-  assert( learner_ );
-  bool training_set_has_changed = !train_set || !(train_set->looksTheSameAs(training_set));
-  // If 'call_forget' is true, learner_->forget() will be called
-  // in this->forget() (called by PLearner::setTrainingSet a few lines below),
-  // so we don't need to call it here.
-  learner_->setTrainingSet(training_set, false);
-  if (call_forget && !training_set_has_changed)
-    // In this case, learner_->build() will not have been called, which may
-    // cause trouble if it updates data from the training set.
-    learner_->build();
-  inherited::setTrainingSet(training_set, call_forget);
+    assert( learner_ );
+    bool training_set_has_changed = !train_set || !(train_set->looksTheSameAs(training_set));
+    // If 'call_forget' is true, learner_->forget() will be called
+    // in this->forget() (called by PLearner::setTrainingSet a few lines below),
+    // so we don't need to call it here.
+    learner_->setTrainingSet(training_set, false);
+    if (call_forget && !training_set_has_changed)
+        // In this case, learner_->build() will not have been called, which may
+        // cause trouble if it updates data from the training set.
+        learner_->build();
+    inherited::setTrainingSet(training_set, call_forget);
 }
 
 void EmbeddedLearner::setValidationSet(VMat validset)
 {
-  assert( learner_ );
-  inherited::setValidationSet(validset);
-  learner_->setValidationSet(validset);
+    assert( learner_ );
+    inherited::setValidationSet(validset);
+    learner_->setValidationSet(validset);
 }
 
 void EmbeddedLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
 {
-  assert( learner_ );
-  inherited::setTrainStatsCollector(statscol);
-  learner_->setTrainStatsCollector(statscol);
+    assert( learner_ );
+    inherited::setTrainStatsCollector(statscol);
+    learner_->setTrainStatsCollector(statscol);
 }
 
 void EmbeddedLearner::setExperimentDirectory(const PPath& the_expdir)
 {
-  assert( learner_ );
-  inherited::setExperimentDirectory(the_expdir);
-  if (provide_learner_expdir) {
-    if (!the_expdir.isEmpty())
-      learner_->setExperimentDirectory(the_expdir / expdir_append);
-    else
-      learner_->setExperimentDirectory("");
-  }
+    assert( learner_ );
+    inherited::setExperimentDirectory(the_expdir);
+    if (provide_learner_expdir) {
+        if (!the_expdir.isEmpty())
+            learner_->setExperimentDirectory(the_expdir / expdir_append);
+        else
+            learner_->setExperimentDirectory("");
+    }
 }
 
 int EmbeddedLearner::inputsize() const
 {
-  assert( learner_ );
-  return learner_->inputsize();
+    assert( learner_ );
+    return learner_->inputsize();
 }
 
 int EmbeddedLearner::targetsize() const
 {
-  assert( learner_ );
-  return learner_->targetsize();
+    assert( learner_ );
+    return learner_->targetsize();
 }
 
 int EmbeddedLearner::outputsize() const
 {
-  assert( learner_ );
-  return learner_->outputsize();
+    assert( learner_ );
+    return learner_->outputsize();
 }
 
 void EmbeddedLearner::forget()
 {
-  assert( learner_ );
-  learner_->forget();
-  stage = 0;
+    assert( learner_ );
+    learner_->forget();
+    stage = 0;
 }
 
 void EmbeddedLearner::train()
 {
-  assert( learner_ );
-  learner_->train();
-  stage = learner_->stage;
+    assert( learner_ );
+    learner_->train();
+    stage = learner_->stage;
 }
 
 void EmbeddedLearner::computeOutput(const Vec& input, Vec& output) const
 { 
-  assert( learner_ );
-  learner_->computeOutput(input, output); 
+    assert( learner_ );
+    learner_->computeOutput(input, output); 
 }
 
 void EmbeddedLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                               const Vec& target, Vec& costs) const
 { 
-  assert( learner_ );
-  learner_->computeCostsFromOutputs(input, output, target, costs); 
+    assert( learner_ );
+    learner_->computeCostsFromOutputs(input, output, target, costs); 
 }
                                                       
 void EmbeddedLearner::computeOutputAndCosts(const Vec& input, const Vec& target, 
                                             Vec& output, Vec& costs) const
 { 
-  assert( learner_ );
-  learner_->computeOutputAndCosts(input, target, output, costs); 
+    assert( learner_ );
+    learner_->computeOutputAndCosts(input, target, output, costs); 
 }
 
 bool EmbeddedLearner::computeConfidenceFromOutput(
-  const Vec& input, const Vec& output,
-  real probability, TVec< pair<real,real> >& intervals) const
+    const Vec& input, const Vec& output,
+    real probability, TVec< pair<real,real> >& intervals) const
 {
-  assert( learner_ );
-  return learner_->computeConfidenceFromOutput(input,output,probability,
-                                               intervals);
+    assert( learner_ );
+    return learner_->computeConfidenceFromOutput(input,output,probability,
+                                                 intervals);
 }
 
 TVec<string> EmbeddedLearner::getTestCostNames() const
 {
-  assert( learner_ );
-  return learner_->getTestCostNames();
+    assert( learner_ );
+    return learner_->getTestCostNames();
 }
 
 TVec<string> EmbeddedLearner::getTrainCostNames() const
 {
-  assert( learner_ );
-  return learner_->getTrainCostNames();
+    assert( learner_ );
+    return learner_->getTrainCostNames();
 }
 
 void EmbeddedLearner::resetInternalState()
 {
-  assert( learner_ );
-  learner_->resetInternalState();
+    assert( learner_ );
+    learner_->resetInternalState();
 }
 
 bool EmbeddedLearner::isStatefulLearner() const
 {
-  assert( learner_ );
-  return learner_->isStatefulLearner();
+    assert( learner_ );
+    return learner_->isStatefulLearner();
 }
 
 void EmbeddedLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  deepCopyField(learner_, copies);    
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    deepCopyField(learner_, copies);    
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

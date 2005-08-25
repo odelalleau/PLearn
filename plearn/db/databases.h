@@ -36,10 +36,10 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * AUTHORS: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file Databases/databases.h */
@@ -115,29 +115,29 @@ void loadUCISet(VMat& data, PP<UCISpecification> uci_spec);
 
 /*!   This will return a VMat with a target in the last column in {0,..,nclasses-1} (for binary classification possible values are 0 and 1 (not -1)). 
   Possible dbname are:
-    2d
-    letters
-    breast
-    usps
-    mnist
-    usps0 ... usps9
-    nist0 ... usps9
+  2d
+  letters
+  breast
+  usps
+  mnist
+  usps0 ... usps9
+  nist0 ... usps9
   The dbname can optionally be followed by :size in which case only the 'size'
   first elements of trainset and testset will be kept.
 */
 
 inline string loadClassificationDatasetHelp()
 {
-  return "  Preprogrammed datasets are: \n"
-    "    2d \n"
-    "    letters \n"
-    "    breast \n"
-    "    usps \n"
-    "    mnist \n"
-    "    usps0 ... usps9 \n"
-    "    nist0 ... usps9 \n"
-    "    They can optionally be followed by :size in which case only the 'size' \n"
-    "    first rows will be kept. \n";
+    return "  Preprogrammed datasets are: \n"
+        "    2d \n"
+        "    letters \n"
+        "    breast \n"
+        "    usps \n"
+        "    mnist \n"
+        "    usps0 ... usps9 \n"
+        "    nist0 ... usps9 \n"
+        "    They can optionally be followed by :size in which case only the 'size' \n"
+        "    first rows will be kept. \n";
 }
 
 inline string loadUCIDatasetsHelp()
@@ -210,9 +210,15 @@ void loadClassificationDataset(const string& dbname, int& inputsize, int& nclass
 
 #endif
 
-
-
-
-
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

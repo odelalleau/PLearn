@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: RowOfVariable.h,v 1.1 2005/06/17 20:43:32 larocheh Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef RowOfVariable_INC
 #define RowOfVariable_INC
@@ -54,11 +54,11 @@ class RowOfVariable: public UnaryVariable
 {
     typedef UnaryVariable inherited;
 
-  public:
-  //protected:
+public:
+    //protected:
     VMat distr;
         
-  public:
+public:
     //!  protected default constructor for persistence
     RowOfVariable() : distr() {}
   
@@ -90,3 +90,16 @@ inline Var rowOf(VMat distr, Var index)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ScaledGaussianKernel.h,v 1.4 2004/09/14 16:04:36 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ScaledGaussianKernel_INC
 #define ScaledGaussianKernel_INC
@@ -65,7 +65,7 @@ public:
         : sigma(), phi() {}
     ScaledGaussianKernel(real the_sigma, Vec the_phi)
         :sigma(the_sigma), phi(the_phi)
-        {}
+    {}
     
     PLEARN_DECLARE_OBJECT(ScaledGaussianKernel);
     
@@ -83,3 +83,15 @@ DECLARE_OBJECT_PTR(ScaledGaussianKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

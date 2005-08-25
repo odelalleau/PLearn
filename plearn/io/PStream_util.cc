@@ -45,14 +45,14 @@ using namespace std;
 
 const string& wordseparators()
 {
-  static string wordseps = " \t\n\r)]};,:|#";
-  return wordseps;
+    static string wordseps = " \t\n\r)]};,:|#";
+    return wordseps;
 } 
 
 const string& raw_wordseparators()
 {
-  static string raw_wordseps = " \t\n\r";
-  return raw_wordseps;
+    static string raw_wordseps = " \t\n\r";
+    return raw_wordseps;
 }   
   
 pl_stream_raw raw;
@@ -68,3 +68,16 @@ iostream nullinout(&null_streambuf);
 
 
 }
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

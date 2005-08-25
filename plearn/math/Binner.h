@@ -37,8 +37,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.h,v 1.9 2004/10/29 21:21:11 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file Binner.h */
 #ifndef Binner_INC
@@ -54,68 +54,68 @@ using namespace std;
 class Binner: public Object
 {
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
     
 public:
 
-  typedef Object inherited;
+    typedef Object inherited;
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // ### declare public option fields (such as build options) here
-  // ...
+    // ### declare public option fields (such as build options) here
+    // ...
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  Binner();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    Binner();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Return the number of bins computed by this binner.
-  //! Default implementation displays an error.
-  virtual int nBins() const;
+    //! Return the number of bins computed by this binner.
+    //! Default implementation displays an error.
+    virtual int nBins() const;
   
-  //! Returns a binning for a single column vmatrix v.
-  virtual PP<RealMapping> getBinning(VMat v) const;
+    //! Returns a binning for a single column vmatrix v.
+    virtual PP<RealMapping> getBinning(VMat v) const;
 
-  //! Return a vector whose i-th element is the list of the indices in 'v' that
-  //! belong to the i-th bin. This method does not need to be written in
-  //! subclasses (in general), as long as 'getBinning()' is implemented.
-  virtual TVec< TVec<int> > getBins(const Vec& v) const;
+    //! Return a vector whose i-th element is the list of the indices in 'v' that
+    //! belong to the i-th bin. This method does not need to be written in
+    //! subclasses (in general), as long as 'getBinning()' is implemented.
+    virtual TVec< TVec<int> > getBins(const Vec& v) const;
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(Binner);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(Binner);
 
 };
 
@@ -125,3 +125,16 @@ DECLARE_OBJECT_PTR(Binner);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: ProgressBar.h,v 1.8 2004/07/21 16:30:50 chrish42 Exp $
-   * AUTHORS: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 // This file contains useful functions for string manipulation
 // that are used in the PLearn Library
@@ -66,24 +66,24 @@ class ProgressBar;
 class ProgressBarPlugin : public PPointable
 {
 public:
-  ProgressBarPlugin() {}
-  virtual ~ProgressBarPlugin() {}
-  virtual void addProgressBar(ProgressBar * pb){};
-  virtual void killProgressBar(ProgressBar * pb){};
-  virtual void update(ProgressBar * pb, unsigned long newpos){};
+    ProgressBarPlugin() {}
+    virtual ~ProgressBarPlugin() {}
+    virtual void addProgressBar(ProgressBar * pb){};
+    virtual void killProgressBar(ProgressBar * pb){};
+    virtual void update(ProgressBar * pb, unsigned long newpos){};
 };
 
 
 //! Simple plugin for displaying text progress bar
 class TextProgressBarPlugin : public ProgressBarPlugin
 {
-  PStream out;
+    PStream out;
 public:
-  virtual void addProgressBar(ProgressBar * pb);
-  virtual void update(ProgressBar * pb, unsigned long newpos);
+    virtual void addProgressBar(ProgressBar * pb);
+    virtual void update(ProgressBar * pb, unsigned long newpos);
 
-  TextProgressBarPlugin(ostream& _out);
-  TextProgressBarPlugin(PStream& _out);
+    TextProgressBarPlugin(ostream& _out);
+    TextProgressBarPlugin(PStream& _out);
 };
 
 
@@ -109,37 +109,50 @@ struct NullProgressBarPlugin : public ProgressBarPlugin
 class ProgressBar
 {
 public:
-  string title;
-  unsigned long currentpos; // current position
-  unsigned long maxpos;
+    string title;
+    unsigned long currentpos; // current position
+    unsigned long maxpos;
 
-  // creates a new progressbar with the given title and maxpos
-  // *** Note, for now, ignore the stream (someday, remove this argument for 
-  // every progressBar creation in PLearn)
-  ProgressBar(string _title, unsigned long the_maxpos);
-  ProgressBar(ostream& _out,string _title, unsigned long the_maxpos);
-  ProgressBar(PStream& _out,string _title, unsigned long the_maxpos);
+    // creates a new progressbar with the given title and maxpos
+    // *** Note, for now, ignore the stream (someday, remove this argument for 
+    // every progressBar creation in PLearn)
+    ProgressBar(string _title, unsigned long the_maxpos);
+    ProgressBar(ostream& _out,string _title, unsigned long the_maxpos);
+    ProgressBar(PStream& _out,string _title, unsigned long the_maxpos);
   
-  // moves the progressbar up to position newpos
-  void operator()(unsigned long newpos){plugin->update(this,newpos);}
+    // moves the progressbar up to position newpos
+    void operator()(unsigned long newpos){plugin->update(this,newpos);}
  
-  void update(unsigned long newpos){plugin->update(this,newpos);}
+    void update(unsigned long newpos){plugin->update(this,newpos);}
 
-  // this function assumes plugin is always a valid object (it is created statically in the .cc)
-  static void setPlugin(PP<ProgressBarPlugin> plugin_) { plugin = plugin_; }
-  static PP<ProgressBarPlugin> getCurrentPlugin();
+    // this function assumes plugin is always a valid object (it is created statically in the .cc)
+    static void setPlugin(PP<ProgressBarPlugin> plugin_) { plugin = plugin_; }
+    static PP<ProgressBarPlugin> getCurrentPlugin();
 
-  // Completes and removes the progressBar 
-  void close();
+    // Completes and removes the progressBar 
+    void close();
   
-  // calls close() if not already done
-  ~ProgressBar();
+    // calls close() if not already done
+    ~ProgressBar();
 private:
-  bool closed;
-  static PP<ProgressBarPlugin> plugin;
+    bool closed;
+    static PP<ProgressBarPlugin> plugin;
 };
 
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

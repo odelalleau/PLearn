@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
-   ******************************************************* */
+ * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -46,17 +46,17 @@ namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
-  ConstantVMatrix,
-  "VMatrix that returns a constant element.",
-  "This VMatrix returns a constant element (specified upon construction\n"
-  "through the constant_output option)");
+    ConstantVMatrix,
+    "VMatrix that returns a constant element.",
+    "This VMatrix returns a constant element (specified upon construction\n"
+    "through the constant_output option)");
 
 ConstantVMatrix::ConstantVMatrix() 
-  : inherited(), constant_output(MISSING_VALUE)
+    : inherited(), constant_output(MISSING_VALUE)
 { }
 
 ConstantVMatrix::ConstantVMatrix(int the_length, int the_width, real constant)
-  : inherited(the_length, the_width), constant_output(constant)
+    : inherited(the_length, the_width), constant_output(constant)
 { }
 
 ////////////////////
@@ -64,12 +64,12 @@ ConstantVMatrix::ConstantVMatrix(int the_length, int the_width, real constant)
 ////////////////////
 void ConstantVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "constant_output", &ConstantVMatrix::constant_output,
-                OptionBase::buildoption,
-                "The constant output to return");
+    declareOption(ol, "constant_output", &ConstantVMatrix::constant_output,
+                  OptionBase::buildoption,
+                  "The constant output to return");
   
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ///////////
@@ -77,8 +77,8 @@ void ConstantVMatrix::declareOptions(OptionList& ol)
 ///////////
 void ConstantVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -93,7 +93,7 @@ void ConstantVMatrix::build_()
 /////////
 real ConstantVMatrix::get(int i, int j) const
 {
-  return constant_output;
+    return constant_output;
 }
 
 ///////////////
@@ -101,7 +101,7 @@ real ConstantVMatrix::get(int i, int j) const
 ///////////////
 void ConstantVMatrix::getSubRow(int i, int j, Vec v) const
 {
-  v.fill(constant_output);
+    v.fill(constant_output);
 }
 
 /////////////////////////////////
@@ -109,7 +109,20 @@ void ConstantVMatrix::getSubRow(int i, int j, Vec v) const
 /////////////////////////////////
 void ConstantVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

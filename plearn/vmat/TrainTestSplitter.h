@@ -35,8 +35,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.h,v 1.10 2005/04/06 19:05:21 lapalmej Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file TrainTestSplitter.h */
 #ifndef TrainTestSplitter_INC
@@ -49,71 +49,71 @@ using namespace std;
 
 class TrainTestSplitter: public Splitter
 {
-  typedef Splitter inherited;
+    typedef Splitter inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  int append_train;
-  real test_fraction; // the fraction of the dataset to be used as test (hese will be the last few samples of the dataset)
-  bool calc_with_pct;
-  int test_fraction_abs;
+    int append_train;
+    real test_fraction; // the fraction of the dataset to be used as test (hese will be the last few samples of the dataset)
+    bool calc_with_pct;
+    int test_fraction_abs;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  TrainTestSplitter(real the_test_fraction = 0.0);
-  TrainTestSplitter(int the_test_fraction);
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    TrainTestSplitter(real the_test_fraction = 0.0);
+    TrainTestSplitter(int the_test_fraction);
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(TrainTestSplitter);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(TrainTestSplitter);
 
 
-  // ********************************
-  // *        Splitter methods      *
-  // * (must be implemented in .cc) *
-  // ********************************
+    // ********************************
+    // *        Splitter methods      *
+    // * (must be implemented in .cc) *
+    // ********************************
 
-  //! Returns the number of available different "splits"
-  virtual int nsplits() const;
+    //! Returns the number of available different "splits"
+    virtual int nsplits() const;
 
-  //! Returns the number of sets per split
-  virtual int nSetsPerSplit() const;
+    //! Returns the number of sets per split
+    virtual int nSetsPerSplit() const;
 
-  //! Returns split number i
-  virtual TVec<VMat> getSplit(int i=0);
+    //! Returns split number i
+    virtual TVec<VMat> getSplit(int i=0);
 
 };
 
@@ -123,3 +123,16 @@ DECLARE_OBJECT_PTR(TrainTestSplitter);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -37,8 +37,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalCDFSmoother.cc,v 1.6 2004/09/14 16:04:36 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file ConditionalCDFSmoother.cc */
 
@@ -50,7 +50,7 @@ using namespace std;
 ConditionalCDFSmoother::ConditionalCDFSmoother() {}
 
 ConditionalCDFSmoother::ConditionalCDFSmoother(PP<HistogramDistribution>& prior_cdf_) 
-  :Smoother(), prior_cdf(prior_cdf_)
+    :Smoother(), prior_cdf(prior_cdf_)
 {}
 
 
@@ -63,11 +63,11 @@ PLEARN_IMPLEMENT_OBJECT(ConditionalCDFSmoother,
 
 void ConditionalCDFSmoother::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "prior_cdf", &ConditionalCDFSmoother::prior_cdf, OptionBase::buildoption,
-                "Prior CDF used to smooth other functions");
+    declareOption(ol, "prior_cdf", &ConditionalCDFSmoother::prior_cdf, OptionBase::buildoption,
+                  "Prior CDF used to smooth other functions");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void ConditionalCDFSmoother::build_()
@@ -76,21 +76,34 @@ void ConditionalCDFSmoother::build_()
 
 void ConditionalCDFSmoother::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void ConditionalCDFSmoother::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Object::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(prior_cdf, copies);
+    Object::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(prior_cdf, copies);
 }
 
 real ConditionalCDFSmoother::smooth(const Vec& source_function, Vec& smoothed_function, 
-		      Vec bin_positions, Vec dest_bin_positions) const
+                                    Vec bin_positions, Vec dest_bin_positions) const
 {
-  PLERROR("smooth not implemented for ConditionalCDFSmoother.");
-  return 0.0;
+    PLERROR("smooth not implemented for ConditionalCDFSmoother.");
+    return 0.0;
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: VarElementVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "VarElementVariable.h"
 #include "ElementAtPositionVariable.h"
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(VarElementVariable,
                         "NO HELP");
 
 VarElementVariable::VarElementVariable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, 1, 1)
+    : inherited(input1, input2, 1, 1)
 {
     build_();
 }
@@ -78,64 +78,64 @@ void VarElementVariable::recomputeSize(int& l, int& w) const
 
 void VarElementVariable::fprop()
 {
-  if(input2->isScalar()) // scalar position index k
+    if(input2->isScalar()) // scalar position index k
     {
-      int k = int(input2->valuedata[0]);
+        int k = int(input2->valuedata[0]);
 #ifdef BOUNDCHECK
-      if (k >= input1->length())
-          PLERROR("VarElementVariable::fprop() - k = %d is out of range (size is %d)", k, input1->length());
+        if (k >= input1->length())
+            PLERROR("VarElementVariable::fprop() - k = %d is out of range (size is %d)", k, input1->length());
 #endif
-      valuedata[0] = input1->valuedata[k];
+        valuedata[0] = input1->valuedata[k];
     }
-  else // (i,j) position index
+    else // (i,j) position index
     {
-      int i = int(input2->valuedata[0]);
-      int j = int(input2->valuedata[1]);
+        int i = int(input2->valuedata[0]);
+        int j = int(input2->valuedata[1]);
 #ifdef BOUNDCHECK
-      if ((i * input1->width() + j) >= input1->width() * input1->length())
-          PLERROR("VarElementVariable::fprop() - (%d, %d) out of range"
-                  "(size is %d)", i, j, input1->length() * input1->width());
+        if ((i * input1->width() + j) >= input1->width() * input1->length())
+            PLERROR("VarElementVariable::fprop() - (%d, %d) out of range"
+                    "(size is %d)", i, j, input1->length() * input1->width());
 #endif
-      valuedata[0] = input1->valuedata[i*input1->width()+j];
+        valuedata[0] = input1->valuedata[i*input1->width()+j];
     }
 }
 
 
 void VarElementVariable::bprop()
 {
-  if(input2->isScalar()) // scalar position index k
+    if(input2->isScalar()) // scalar position index k
     {
-      int k = int(input2->valuedata[0]);
-      input1->gradientdata[k] += gradientdata[0];
+        int k = int(input2->valuedata[0]);
+        input1->gradientdata[k] += gradientdata[0];
     }
-  else // (i,j) position index
+    else // (i,j) position index
     {
-      int i = int(input2->valuedata[0]);
-      int j = int(input2->valuedata[1]);
-      input1->gradientdata[i*input1->width()+j] += gradientdata[0];
+        int i = int(input2->valuedata[0]);
+        int j = int(input2->valuedata[1]);
+        input1->gradientdata[i*input1->width()+j] += gradientdata[0];
     }
 }
 
 
 void VarElementVariable::symbolicBprop()
 {
-  input1->accg(new ElementAtPositionVariable(g,input2,input1->length(),input1->width()));
+    input1->accg(new ElementAtPositionVariable(g,input2,input1->length(),input1->width()));
 }
 
 
 void VarElementVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  if(input2->isScalar()) // scalar position index k
+    if (rValue.length()==0) resizeRValue();
+    if(input2->isScalar()) // scalar position index k
     {
-      int k = int(input2->valuedata[0]);
-      rvaluedata[0] = input1->rvaluedata[k];
+        int k = int(input2->valuedata[0]);
+        rvaluedata[0] = input1->rvaluedata[k];
     }
-  else // (i,j) position index
+    else // (i,j) position index
     {
-      int i = int(input2->valuedata[0]);
-      int j = int(input2->valuedata[1]);
-      rvaluedata[0] = input1->rvaluedata[i*input1->width()+j];
+        int i = int(input2->valuedata[0]);
+        int j = int(input2->valuedata[1]);
+        rvaluedata[0] = input1->rvaluedata[i*input1->width()+j];
     }
 }
 
@@ -143,4 +143,15 @@ void VarElementVariable::rfprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

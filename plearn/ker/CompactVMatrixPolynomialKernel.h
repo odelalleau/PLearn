@@ -35,9 +35,9 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrixPolynomialKernel.h,v 1.6 2004/07/21 16:30:52 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/Kernel.h */
@@ -58,7 +58,7 @@ using namespace std;
 */
 class CompactVMatrixPolynomialKernel: public Kernel
 {
-  typedef Kernel inherited;
+    typedef Kernel inherited;
 		
 protected:
     int n; //!<  degree of polynomial
@@ -84,3 +84,16 @@ DECLARE_OBJECT_PTR(CompactVMatrixPolynomialKernel);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

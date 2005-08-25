@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: qld_interface.cc,v 1.2 2005/04/12 15:32:05 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -50,56 +50,69 @@ namespace PLearn {
 using namespace std;
 
 void qld_interface(
-  Mat A,                       //!< linear constraints data matrix
-  Vec B,                       //!< linear constraints constants
-  int ME,                      //!< number of equality constraints
-  Mat C,                       //!< objective function matrix (SPD)
-  Vec D,                       //!< objective function constants
-  Vec XL,                      //!< lower bounds for the variables
-  Vec XU,                      //!< upper bounds for the variables
-  int& iout,                   //!< desired output unit number (e.g. 1)
-  int& ifail,                  //!< termination reason
-  int& iprint,                 //!< output control (0=no output)
-  Vec& X,                      //!< optional solution on return
-  Vec& U,                      //!< lagrange multipliers on return
-  Vec WAR,                     //!< real working array; resized automatically
-  TVec<int> IWAR               //!< int working array; resized automatically
-  )
+    Mat A,                       //!< linear constraints data matrix
+    Vec B,                       //!< linear constraints constants
+    int ME,                      //!< number of equality constraints
+    Mat C,                       //!< objective function matrix (SPD)
+    Vec D,                       //!< objective function constants
+    Vec XL,                      //!< lower bounds for the variables
+    Vec XU,                      //!< upper bounds for the variables
+    int& iout,                   //!< desired output unit number (e.g. 1)
+    int& ifail,                  //!< termination reason
+    int& iprint,                 //!< output control (0=no output)
+    Vec& X,                      //!< optional solution on return
+    Vec& U,                      //!< lagrange multipliers on return
+    Vec WAR,                     //!< real working array; resized automatically
+    TVec<int> IWAR               //!< int working array; resized automatically
+    )
 {
-  int M = A.length();
-  int N = A.width();
+    int M = A.length();
+    int N = A.width();
 
-  assert( M >= 1 && N >= 1 );
-  assert( M == B.length() );
-  assert( N == C.width()  &&  N == C.length() );
-  assert( N == D.length() );
-  assert( N == XL.length() && N == XU.length() );
+    assert( M >= 1 && N >= 1 );
+    assert( M == B.length() );
+    assert( N == C.width()  &&  N == C.length() );
+    assert( N == D.length() );
+    assert( N == XL.length() && N == XU.length() );
   
-  int MMAX  = max(M,1);
-  int NMAX  = N;
-  int MNN   = M + N + N;
-  int LWAR  = 3 * NMAX * NMAX/2 + 10*NMAX + 2*(MMAX+1);
-  int LIWAR = N;
+    int MMAX  = max(M,1);
+    int NMAX  = N;
+    int MNN   = M + N + N;
+    int LWAR  = 3 * NMAX * NMAX/2 + 10*NMAX + 2*(MMAX+1);
+    int LIWAR = N;
 
-  // In this first version, transpose matrix A
-  Mat Atrans = transpose(A);
-  X.resize(N);
-  U.resize(MNN);
-  WAR.resize(LWAR);
-  IWAR.resize(LIWAR);
-  IWAR[0] = 0;                   // QLD performs Cholesky itself
-  double eps = DBL_EPSILON;
+    // In this first version, transpose matrix A
+    Mat Atrans = transpose(A);
+    X.resize(N);
+    U.resize(MNN);
+    WAR.resize(LWAR);
+    IWAR.resize(LIWAR);
+    IWAR[0] = 0;                   // QLD performs Cholesky itself
+    double eps = DBL_EPSILON;
 
-  ql0001_(&M,          &ME,       &MMAX,
-          &N,          &NMAX,     &MNN,
-          C.data(),    D.data(),  Atrans.data(),
-          B.data(),    XL.data(), XU.data(),
-          X.data(),    U.data(),
-          &iout,       &ifail,    &iprint,
-          WAR.data(),  &LWAR,
-          IWAR.data(), &LIWAR,
-          &eps);
+    ql0001_(&M,          &ME,       &MMAX,
+            &N,          &NMAX,     &MNN,
+            C.data(),    D.data(),  Atrans.data(),
+            B.data(),    XL.data(), XU.data(),
+            X.data(),    U.data(),
+            &iout,       &ifail,    &iprint,
+            WAR.data(),  &LWAR,
+            IWAR.data(), &LIWAR,
+            &eps);
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

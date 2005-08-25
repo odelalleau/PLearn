@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ClassDistanceProportionCostFunction.h,v 1.4 2004/04/07 23:15:17 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ClassDistanceProportionCostFunction_INC
 #define ClassDistanceProportionCostFunction_INC
@@ -63,14 +63,14 @@ using namespace std;
 */
 class ClassDistanceProportionCostFunction: public Kernel
 {
-  typedef Kernel inherited;
+    typedef Kernel inherited;
 
 public:
-  ClassDistanceProportionCostFunction() {}
+    ClassDistanceProportionCostFunction() {}
 
-  PLEARN_DECLARE_OBJECT(ClassDistanceProportionCostFunction);
+    PLEARN_DECLARE_OBJECT(ClassDistanceProportionCostFunction);
 
-  virtual real evaluate(const Vec& output, const Vec& target) const;
+    virtual real evaluate(const Vec& output, const Vec& target) const;
 };
 
 DECLARE_OBJECT_PTR(ClassDistanceProportionCostFunction);
@@ -78,7 +78,7 @@ DECLARE_OBJECT_PTR(ClassDistanceProportionCostFunction);
 //!  if outputs are neg distances to each class: dist_to_correct_class/(dist_to_correct_class+dist_to_closest_other_class)
 inline CostFunc class_distance_proportion() 
 { 
-  return new ClassDistanceProportionCostFunction(); 
+    return new ClassDistanceProportionCostFunction(); 
 }
 
 
@@ -86,3 +86,15 @@ inline CostFunc class_distance_proportion()
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixSumOfVariable.cc,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "MatrixSumOfVariable.h"
 
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(MatrixSumOfVariable,
 MatrixSumOfVariable::MatrixSumOfVariable(VMat the_distr, Func the_f, int the_nsamples, int the_input_size)
     : inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs), the_f->outputs[0]->length(), the_f->outputs[0]->width()),
       distr(the_distr), f(the_f), nsamples(the_nsamples), input_size(the_input_size)
-      //, curpos(0), input_value(the_distr->width()*nsamples), input_gradient(the_distr->width()*nsamples), output_value(the_f->outputs[0]->size())
+    //, curpos(0), input_value(the_distr->width()*nsamples), input_gradient(the_distr->width()*nsamples), output_value(the_f->outputs[0]->size())
 {
     build_();
 }
@@ -107,30 +107,30 @@ void MatrixSumOfVariable::recomputeSize(int& l, int& w) const
 
 void MatrixSumOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  NaryVariable::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(distr, copies);
-  deepCopyField(f, copies);
+    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(distr, copies);
+    deepCopyField(f, copies);
 }
 
 
 void MatrixSumOfVariable::fprop()
 {
-  Vec oneInput_value(distr->width());
-  f->recomputeParents();
+    Vec oneInput_value(distr->width());
+    f->recomputeParents();
 
-  int inputpos=0;
-  int targetpos=nsamples*input_size;
-  for (int i=0; i<nsamples; i++)
+    int inputpos=0;
+    int targetpos=nsamples*input_size;
+    for (int i=0; i<nsamples; i++)
     {
-    distr->getRow(curpos, oneInput_value);
-    for (int j=0; j<input_size; j++,inputpos++)
-      input_value[inputpos]=oneInput_value[j];
-    for (int j=input_size; j<distr.width(); j++,targetpos++)
-      input_value[targetpos] = oneInput_value[j];
-    if(++curpos==distr.length())
-      curpos=0;
+        distr->getRow(curpos, oneInput_value);
+        for (int j=0; j<input_size; j++,inputpos++)
+            input_value[inputpos]=oneInput_value[j];
+        for (int j=input_size; j<distr.width(); j++,targetpos++)
+            input_value[targetpos] = oneInput_value[j];
+        if(++curpos==distr.length())
+            curpos=0;
     }
-  f->fprop(input_value, value);
+    f->fprop(input_value, value);
 }
 
 
@@ -140,22 +140,22 @@ void MatrixSumOfVariable::bprop()
 
 void MatrixSumOfVariable::fbprop()
 {
-  Vec oneInput_value(distr->width());
-  f->recomputeParents();
+    Vec oneInput_value(distr->width());
+    f->recomputeParents();
   
-  int inputpos=0;
-  int targetpos=nsamples*input_size;
-  for (int i=0; i<nsamples; i++)
+    int inputpos=0;
+    int targetpos=nsamples*input_size;
+    for (int i=0; i<nsamples; i++)
     {
-    distr->getRow(curpos, oneInput_value);
-    for (int j=0; j<input_size; j++,inputpos++)
-      input_value[inputpos]=oneInput_value[j];
-    for (int j=input_size; j<distr.width(); j++,targetpos++)
-      input_value[targetpos] = oneInput_value[j];
-    if(++curpos==distr.length())
-      curpos=0;
+        distr->getRow(curpos, oneInput_value);
+        for (int j=0; j<input_size; j++,inputpos++)
+            input_value[inputpos]=oneInput_value[j];
+        for (int j=input_size; j<distr.width(); j++,targetpos++)
+            input_value[targetpos] = oneInput_value[j];
+        if(++curpos==distr.length())
+            curpos=0;
     }
-  f->fbprop(input_value, value, input_gradient, gradient);
+    f->fbprop(input_value, value, input_gradient, gradient);
 }
 
 
@@ -173,33 +173,44 @@ void MatrixSumOfVariable::rfprop()
 
 void MatrixSumOfVariable::printInfo(bool print_gradient)
 {
-  PLERROR("MatrixSumOfVariable::printInfo not implemented.");
-  Vec input_value(distr->width());
-  Vec input_gradient(distr->width());
-  Vec output_value(nelems());
+    PLERROR("MatrixSumOfVariable::printInfo not implemented.");
+    Vec input_value(distr->width());
+    Vec input_gradient(distr->width());
+    Vec output_value(nelems());
 
-  f->recomputeParents();
-  value.clear();
+    f->recomputeParents();
+    value.clear();
 
-  for(int i=0; i<nsamples; i++)
-  {
-    distr->getRow(curpos++,input_value);
-    if (print_gradient)
-      f->fbprop(input_value, output_value, input_gradient, gradient);
-    else
-      f->fprop(input_value, output_value);
-    value += output_value;
-    if(++curpos>=distr->length())
-      curpos = 0;
-    f->fproppath.printInfo(print_gradient);
-  }
-  cout << info() << " : " << getName() << " = " << value;
-  if (print_gradient) cout << " gradient=" << gradient;
-  cout << endl; 
+    for(int i=0; i<nsamples; i++)
+    {
+        distr->getRow(curpos++,input_value);
+        if (print_gradient)
+            f->fbprop(input_value, output_value, input_gradient, gradient);
+        else
+            f->fprop(input_value, output_value);
+        value += output_value;
+        if(++curpos>=distr->length())
+            curpos = 0;
+        f->fproppath.printInfo(print_gradient);
+    }
+    cout << info() << " : " << getName() << " = " << value;
+    if (print_gradient) cout << " gradient=" << gradient;
+    cout << endl; 
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

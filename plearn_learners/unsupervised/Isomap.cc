@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Isomap.cc,v 1.8 2005/05/30 20:15:23 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -51,57 +51,57 @@ using namespace std;
 // Isomap //
 ////////////
 Isomap::Isomap() 
-: geodesic_file(""),
-  knn(10)
+    : geodesic_file(""),
+      knn(10)
 {
-  kernel_is_distance = true;
-  // Default distance kernel is the classical Euclidean distance.
-  distance_kernel = new DistanceKernel(2);
+    kernel_is_distance = true;
+    // Default distance kernel is the classical Euclidean distance.
+    distance_kernel = new DistanceKernel(2);
 }
 
 PLEARN_IMPLEMENT_OBJECT(Isomap,
-    "Performs ISOMAP dimensionality reduction.",
-    "Be careful that when looking for the 'knn' nearest neighbors of a point x,\n"
-    "we consider all points from the training data D, including x itself if it\n"
-    "belongs to D. Thus, to obtain the same result as with the classical ISOMAP\n"
-    "algorithm, one should use one more neighbor.\n"
-    "Note also that when used out-of-sample, this will result in a different output\n"
-    "than an algorithm applying the same formula, but considering one less neighbor.\n"
-);
+                        "Performs ISOMAP dimensionality reduction.",
+                        "Be careful that when looking for the 'knn' nearest neighbors of a point x,\n"
+                        "we consider all points from the training data D, including x itself if it\n"
+                        "belongs to D. Thus, to obtain the same result as with the classical ISOMAP\n"
+                        "algorithm, one should use one more neighbor.\n"
+                        "Note also that when used out-of-sample, this will result in a different output\n"
+                        "than an algorithm applying the same formula, but considering one less neighbor.\n"
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void Isomap::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  // declareOption(ol, "myoption", &Isomap::myoption, OptionBase::buildoption,
-  //               "Help text describing this option");
-  // ...
+    // declareOption(ol, "myoption", &Isomap::myoption, OptionBase::buildoption,
+    //               "Help text describing this option");
+    // ...
 
-  declareOption(ol, "knn", &Isomap::knn, OptionBase::buildoption,
-      "The number of nearest neighbors considered.");
+    declareOption(ol, "knn", &Isomap::knn, OptionBase::buildoption,
+                  "The number of nearest neighbors considered.");
 
-  declareOption(ol, "distance_kernel", &Isomap::distance_kernel, OptionBase::buildoption,
-      "The kernel used to compute the input space distances.");
+    declareOption(ol, "distance_kernel", &Isomap::distance_kernel, OptionBase::buildoption,
+                  "The kernel used to compute the input space distances.");
 
-  declareOption(ol, "geodesic_file", &Isomap::geodesic_file, OptionBase::buildoption,
-      "If provided, the geodesic distances will be saved in this file in binary format.");
+    declareOption(ol, "geodesic_file", &Isomap::geodesic_file, OptionBase::buildoption,
+                  "If provided, the geodesic distances will be saved in this file in binary format.");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 
-  // Modify some options from KernelPCA so as to hide them.
-  redeclareOption(ol, "kernel_is_distance", &Isomap::kernel_is_distance, OptionBase::nosave,
-      "In ISOMAP, the kernel is always a distance");
+    // Modify some options from KernelPCA so as to hide them.
+    redeclareOption(ol, "kernel_is_distance", &Isomap::kernel_is_distance, OptionBase::nosave,
+                    "In ISOMAP, the kernel is always a distance");
 
-  redeclareOption(ol, "kernel", &Isomap::kpca_kernel, OptionBase::learntoption,
-      "The underlying KPCA kernel is now obtained from 'distance_kernel'.");
+    redeclareOption(ol, "kernel", &Isomap::kpca_kernel, OptionBase::learntoption,
+                    "The underlying KPCA kernel is now obtained from 'distance_kernel'.");
 
 }
 
@@ -110,8 +110,8 @@ void Isomap::declareOptions(OptionList& ol)
 ///////////
 void Isomap::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -119,23 +119,23 @@ void Isomap::build()
 ////////////
 void Isomap::build_()
 {
-  // Obtain the "real" KPCA kernel by computing the geodesic distances from
-  // the 'distance_kernel'.
-  // We have to do this iff:
-  // 1. A 'distance_kernel' is provided, and
-  // 2. either:
-  //    2.a. the 'kpca_kernel' field is not set, or
-  //    2.b. the 'kpca_kernel' field is not a GeodesicDistanceKernel acting on 'distance_kernel'.
-  // This is to ensure that a loaded 'kpca_kernel' won't be overwritten.
-  if (distance_kernel &&
-      (!kpca_kernel ||
-       (dynamic_cast<GeodesicDistanceKernel*>((Kernel*) kpca_kernel))->distance_kernel != distance_kernel)) {
-    this->kpca_kernel = new GeodesicDistanceKernel(distance_kernel, knn, geodesic_file, true);
-    // We have modified the KPCA kernel, we must rebuild the KPCA.
-    inherited::build();
-  }
-  if (kpca_kernel)
-    kpca_kernel->report_progress = report_progress;
+    // Obtain the "real" KPCA kernel by computing the geodesic distances from
+    // the 'distance_kernel'.
+    // We have to do this iff:
+    // 1. A 'distance_kernel' is provided, and
+    // 2. either:
+    //    2.a. the 'kpca_kernel' field is not set, or
+    //    2.b. the 'kpca_kernel' field is not a GeodesicDistanceKernel acting on 'distance_kernel'.
+    // This is to ensure that a loaded 'kpca_kernel' won't be overwritten.
+    if (distance_kernel &&
+        (!kpca_kernel ||
+         (dynamic_cast<GeodesicDistanceKernel*>((Kernel*) kpca_kernel))->distance_kernel != distance_kernel)) {
+        this->kpca_kernel = new GeodesicDistanceKernel(distance_kernel, knn, geodesic_file, true);
+        // We have modified the KPCA kernel, we must rebuild the KPCA.
+        inherited::build();
+    }
+    if (kpca_kernel)
+        kpca_kernel->report_progress = report_progress;
 }
 
 ////////////
@@ -143,7 +143,7 @@ void Isomap::build_()
 ////////////
 void Isomap::forget()
 {
-  inherited::forget();
+    inherited::forget();
 }
     
 /////////////////////////////////
@@ -151,9 +151,21 @@ void Isomap::forget()
 /////////////////////////////////
 void Isomap::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(distance_kernel, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(distance_kernel, copies);
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

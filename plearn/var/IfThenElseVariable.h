@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: IfThenElseVariable.h,v 1.5 2004/04/27 16:04:13 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef IfThenElseVariable_INC
 #define IfThenElseVariable_INC
@@ -59,22 +59,22 @@ class IfThenElseVariable: public NaryVariable
     typedef NaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  IfThenElseVariable() {}
-  IfThenElseVariable(Var IfVar, Var ThenVar, Var ElseVar);
+    //!  Default constructor for persistence
+    IfThenElseVariable() {}
+    IfThenElseVariable(Var IfVar, Var ThenVar, Var ElseVar);
 
-  PLEARN_DECLARE_OBJECT(IfThenElseVariable);
+    PLEARN_DECLARE_OBJECT(IfThenElseVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
-  Var& If() { return varray[0]; }
-  Var& Then() { return varray[1]; }
-  Var& Else() { return varray[2]; }
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
+    Var& If() { return varray[0]; }
+    Var& Then() { return varray[1]; }
+    Var& Else() { return varray[2]; }
 
 protected:
     void build_();
@@ -89,3 +89,16 @@ inline Var ifThenElse(Var If, Var Then, Var Else)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

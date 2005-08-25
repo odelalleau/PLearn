@@ -36,8 +36,8 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: OptionsOracle.h,v 1.1 2005/01/11 23:22:44 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file OptionsOracle.h */
 #ifndef OptionsOracle_INC
@@ -52,85 +52,98 @@ using namespace std;
 
 class OptionsOracle: public Object
 {
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // This is an abstract base class. Not much in ways of build options here...
+    // This is an abstract base class. Not much in ways of build options here...
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  OptionsOracle();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    OptionsOracle();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  //! SUBCLASS WRITING:
-  //! returns the set of names of options this generator generates
-  virtual TVec<string>  getOptionNames() const =0;
+    //! SUBCLASS WRITING:
+    //! returns the set of names of options this generator generates
+    virtual TVec<string>  getOptionNames() const =0;
 
-  /*!
-  SUBCLASS WRITING: 
-  This notifies the oracle, of the result obtained for a previous trial it suggested.
-  The oracle is expected to return the next suggestion, or an empty vector if stopping
-  conditions were met, or it run out of suggestions.
-  An empty vector may be passed for older_trial if there is no result to report.
-  */
-  virtual TVec<string> generateNextTrial(const TVec<string>& older_trial, real obtained_objective) =0;
+    /*!
+      SUBCLASS WRITING: 
+      This notifies the oracle, of the result obtained for a previous trial it suggested.
+      The oracle is expected to return the next suggestion, or an empty vector if stopping
+      conditions were met, or it run out of suggestions.
+      An empty vector may be passed for older_trial if there is no result to report.
+    */
+    virtual TVec<string> generateNextTrial(const TVec<string>& older_trial, real obtained_objective) =0;
 
-  //! SUBCLASS WRITING: Should reset the generator's internal state (as having no info about previous trials).
-  virtual void forget() =0;
+    //! SUBCLASS WRITING: Should reset the generator's internal state (as having no info about previous trials).
+    virtual void forget() =0;
 
-  inline TVec<string> generateFirstTrial()
-  { 
-    forget();
-    return generateNextTrial(TVec<string>(), FLT_MAX); 
-  }
+    inline TVec<string> generateFirstTrial()
+    { 
+        forget();
+        return generateNextTrial(TVec<string>(), FLT_MAX); 
+    }
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_ABSTRACT_OBJECT(OptionsOracle);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_ABSTRACT_OBJECT(OptionsOracle);
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(OptionsOracle);
+DECLARE_OBJECT_PTR(OptionsOracle);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ThresholdBpropVariable.cc,v 1.1 2005/05/12 15:55:53 larocheh Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ThresholdBpropVariable.h"
 
@@ -58,7 +58,7 @@ PLEARN_IMPLEMENT_OBJECT(ThresholdBpropVariable,
                         "gradient_threshold_factor option to obtain the threshold,\n"
                         "beyond which the gradient is fixed.\n");
 
-  ThresholdBpropVariable::ThresholdBpropVariable(Variable* input, real the_gradient_threshold_factor)
+ThresholdBpropVariable::ThresholdBpropVariable(Variable* input, real the_gradient_threshold_factor)
     : inherited(input, input->length(), input->width()),
       gradient_threshold_factor(the_gradient_threshold_factor)
 {
@@ -89,31 +89,42 @@ ThresholdBpropVariable::declareOptions(OptionList &ol)
 void ThresholdBpropVariable::recomputeSize(int& l, int& w) const
 {
     if (input) {
-      l = input->length();
-      w = input->width();
+        l = input->length();
+        w = input->width();
     } else
-      l = w = 0;
+        l = w = 0;
 }
 
 void ThresholdBpropVariable::fprop()
 {
-  for(int k=0; k<input->nelems(); k++)
-    valuedata[k] = input->valuedata[k];
+    for(int k=0; k<input->nelems(); k++)
+        valuedata[k] = input->valuedata[k];
 }
 
 
 void ThresholdBpropVariable::bprop()
 {
-  if(gradient_threshold_factor!=0)
+    if(gradient_threshold_factor!=0)
     {
-      for(int k=0; k<input->nelems(); k++)
-        if(abs(gradientdata[k]) > abs(gradient_threshold_factor * input->valuedata[k]))
-          input->gradientdata[k] += abs(gradient_threshold_factor * input->valuedata[k]) * (gradientdata[k]>0 ? 1 : -1);
-        else
-          input->gradientdata[k] += gradientdata[k];
+        for(int k=0; k<input->nelems(); k++)
+            if(abs(gradientdata[k]) > abs(gradient_threshold_factor * input->valuedata[k]))
+                input->gradientdata[k] += abs(gradient_threshold_factor * input->valuedata[k]) * (gradientdata[k]>0 ? 1 : -1);
+            else
+                input->gradientdata[k] += gradientdata[k];
     }
 }
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

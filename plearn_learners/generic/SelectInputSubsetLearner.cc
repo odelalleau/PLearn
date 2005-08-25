@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectInputSubsetLearner.cc,v 1.4 2004/09/14 16:04:56 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 // Authors: Yoshua Bengio
 
@@ -47,7 +47,7 @@
 namespace PLearn {
 using namespace std;
 
-  SelectInputSubsetLearner::SelectInputSubsetLearner() : random_fraction(0)
+SelectInputSubsetLearner::SelectInputSubsetLearner() : random_fraction(0)
 /* ### Initialize all fields to their default value here */
 {
 }
@@ -59,57 +59,57 @@ PLEARN_IMPLEMENT_OBJECT(SelectInputSubsetLearner, "PLearner which selects a subs
 
 void SelectInputSubsetLearner::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  declareOption(ol, "selected_inputs", &SelectInputSubsetLearner::selected_inputs, OptionBase::buildoption,
-                "List of selected inputs. If this option is set then random_fraction should not be set (or set to 0).\n");
+    declareOption(ol, "selected_inputs", &SelectInputSubsetLearner::selected_inputs, OptionBase::buildoption,
+                  "List of selected inputs. If this option is set then random_fraction should not be set (or set to 0).\n");
 
-  declareOption(ol, "random_fraction", &SelectInputSubsetLearner::random_fraction, OptionBase::buildoption,
-                "Fraction of the original inputs that is randomly selected.\n"
-                "If 0 then the selected_inputs option should be set.\n"
-                "If selected_inputs is provided (length>0) then this option is ignored.\n");
+    declareOption(ol, "random_fraction", &SelectInputSubsetLearner::random_fraction, OptionBase::buildoption,
+                  "Fraction of the original inputs that is randomly selected.\n"
+                  "If 0 then the selected_inputs option should be set.\n"
+                  "If selected_inputs is provided (length>0) then this option is ignored.\n");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void SelectInputSubsetLearner::build_()
 {
-  if (random_fraction>0 && learner_ && inputsize_>0 && selected_inputs.length()==0)
-  {
-    int n_selected = int(rint(random_fraction*inputsize_));
-    selected_inputs.resize(inputsize_);
-    for (int i=0;i<n_selected;i++) 
-      selected_inputs[i]=i;
-    shuffleElements(selected_inputs);
-    selected_inputs.resize(n_selected);
-  }
-  learner_inputs.resize(selected_inputs.length());
+    if (random_fraction>0 && learner_ && inputsize_>0 && selected_inputs.length()==0)
+    {
+        int n_selected = int(rint(random_fraction*inputsize_));
+        selected_inputs.resize(inputsize_);
+        for (int i=0;i<n_selected;i++) 
+            selected_inputs[i]=i;
+        shuffleElements(selected_inputs);
+        selected_inputs.resize(n_selected);
+    }
+    learner_inputs.resize(selected_inputs.length());
 }
 
 // ### Nothing to add here, simply calls build_
 void SelectInputSubsetLearner::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 
 void SelectInputSubsetLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  deepCopyField(selected_inputs, copies);
-  deepCopyField(all_indices, copies);
-  deepCopyField(learner_inputs, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    deepCopyField(selected_inputs, copies);
+    deepCopyField(all_indices, copies);
+    deepCopyField(learner_inputs, copies);
 }
 
 int SelectInputSubsetLearner::inputsize() const
@@ -118,40 +118,53 @@ int SelectInputSubsetLearner::inputsize() const
 
 void SelectInputSubsetLearner::computeOutput(const Vec& input, Vec& output) const
 {
-  for (int i=0;i<learner_inputs.length();i++)
-    learner_inputs[i] = input[selected_inputs[i]];
-  learner_->computeOutput(learner_inputs,output);
+    for (int i=0;i<learner_inputs.length();i++)
+        learner_inputs[i] = input[selected_inputs[i]];
+    learner_->computeOutput(learner_inputs,output);
 }    
 
 void SelectInputSubsetLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                           const Vec& target, Vec& costs) const
+                                                       const Vec& target, Vec& costs) const
 {
-  // Compute the costs from *already* computed output. 
-  for (int i=0;i<learner_inputs.length();i++)
-    learner_inputs[i] = input[selected_inputs[i]];
-  learner_->computeCostsFromOutputs(learner_inputs,output,target,costs);
+    // Compute the costs from *already* computed output. 
+    for (int i=0;i<learner_inputs.length();i++)
+        learner_inputs[i] = input[selected_inputs[i]];
+    learner_->computeCostsFromOutputs(learner_inputs,output,target,costs);
 }                                
 
 void SelectInputSubsetLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
                                                      Vec& output, Vec& costs) const
 { 
-  for (int i=0;i<learner_inputs.length();i++)
-    learner_inputs[i] = input[selected_inputs[i]];
-  learner_->computeOutputAndCosts(learner_inputs, target, output, costs); 
+    for (int i=0;i<learner_inputs.length();i++)
+        learner_inputs[i] = input[selected_inputs[i]];
+    learner_->computeOutputAndCosts(learner_inputs, target, output, costs); 
 }
 
 void SelectInputSubsetLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
-  inherited::setTrainingSet(training_set,call_forget);
-  int n_other_columns = training_set->width()-inputsize();
-  all_indices.resize(selected_inputs.length()+n_other_columns);
-  for (int i=0;i<selected_inputs.length();i++)
-    all_indices[i]=selected_inputs[i];
-  for (int j=0;j<n_other_columns;j++)
-    all_indices[selected_inputs.length()+j]=inputsize()+j;
-  VMat vm = new SelectColumnsVMatrix(training_set,all_indices);
-  vm->defineSizes(selected_inputs.length(),training_set->targetsize(),training_set->weightsize());
-  learner_->setTrainingSet(vm,call_forget);
+    inherited::setTrainingSet(training_set,call_forget);
+    int n_other_columns = training_set->width()-inputsize();
+    all_indices.resize(selected_inputs.length()+n_other_columns);
+    for (int i=0;i<selected_inputs.length();i++)
+        all_indices[i]=selected_inputs[i];
+    for (int j=0;j<n_other_columns;j++)
+        all_indices[selected_inputs.length()+j]=inputsize()+j;
+    VMat vm = new SelectColumnsVMatrix(training_set,all_indices);
+    vm->defineSizes(selected_inputs.length(),training_set->targetsize(),training_set->weightsize());
+    learner_->setTrainingSet(vm,call_forget);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

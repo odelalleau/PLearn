@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
-* $Id: OptimizeOptionOracle.cc,v 1.1 2005/01/12 14:30:47 tihocan Exp $
-******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -48,35 +48,35 @@ namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(OptimizeOptionOracle,
-    "This Oracle tries to optimize a given option (which must be a real number).",
-    "It starts from the value provided by the user, then tries higher and lower\n"
-    "values in order to try and find the minimum cost.\n"
-    "The algorithm employed is very basic, and subject to fall into local minima.\n"
-);
+                        "This Oracle tries to optimize a given option (which must be a real number).",
+                        "It starts from the value provided by the user, then tries higher and lower\n"
+                        "values in order to try and find the minimum cost.\n"
+                        "The algorithm employed is very basic, and subject to fall into local minima.\n"
+    );
 
 //////////////////////////
 // OptimizeOptionOracle //
 //////////////////////////
 OptimizeOptionOracle::OptimizeOptionOracle() 
-: current_direction("not_started"),
-  lower_bound(1),
-  n_steps(0),
-  upper_bound(-1),
-  factor(2),
-  max_steps(10),
-  max_value(REAL_MAX),
-  min_value(-REAL_MAX),
-  relative_precision(0.5),
-  option(""),
-  start_direction("random"),
-  start_value(0)
+    : current_direction("not_started"),
+      lower_bound(1),
+      n_steps(0),
+      upper_bound(-1),
+      factor(2),
+      max_steps(10),
+      max_value(REAL_MAX),
+      min_value(-REAL_MAX),
+      relative_precision(0.5),
+      option(""),
+      start_direction("random"),
+      start_value(0)
 {}
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void OptimizeOptionOracle::declareOptions(OptionList& ol)
-  {
+{
     declareOption(ol, "option", &OptimizeOptionOracle::option, OptionBase::buildoption, 
                   "The name of the option to optimize.");
 
@@ -124,14 +124,14 @@ void OptimizeOptionOracle::declareOptions(OptionList& ol)
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
+}
 
 ///////////
 // build //
 ///////////
 void OptimizeOptionOracle::build() {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -139,14 +139,14 @@ void OptimizeOptionOracle::build() {
 ////////////
 void OptimizeOptionOracle::build_()
 {
-  if (min_value > max_value) {
-    PLERROR("In OptimizeOptionOracle::build_ - You specified a min_value higher than max_value");
-  }
-  if (lower_bound > upper_bound) {
-    // Should only happen when this object is built for the first time.
-    lower_bound = min_value;
-    upper_bound = max_value;
-  }
+    if (min_value > max_value) {
+        PLERROR("In OptimizeOptionOracle::build_ - You specified a min_value higher than max_value");
+    }
+    if (lower_bound > upper_bound) {
+        // Should only happen when this object is built for the first time.
+        lower_bound = min_value;
+        upper_bound = max_value;
+    }
 }
 
 ////////////
@@ -154,17 +154,17 @@ void OptimizeOptionOracle::build_()
 ////////////
 void OptimizeOptionOracle::forget()
 {
-  current_direction = "not_started";
-  lower_bound = min_value;
-  upper_bound = max_value;
-  n_steps = 0;
+    current_direction = "not_started";
+    lower_bound = min_value;
+    upper_bound = max_value;
+    n_steps = 0;
 }
 
 ////////////////////
 // getOptionNames //
 ////////////////////
 TVec<string> OptimizeOptionOracle::getOptionNames() const {
-  return TVec<string>(1,option);
+    return TVec<string>(1,option);
 }
 
 ///////////////////////
@@ -172,95 +172,95 @@ TVec<string> OptimizeOptionOracle::getOptionNames() const {
 ///////////////////////
 TVec<string> OptimizeOptionOracle::generateNextTrial(const TVec<string>& older_trial, real obtained_objective)
 {
-  if (n_steps >= max_steps) {
-    // Time to stop.
-    TVec<string> empty(0);
-    return empty;
-  } else {
-    n_steps++;
-  }
+    if (n_steps >= max_steps) {
+        // Time to stop.
+        TVec<string> empty(0);
+        return empty;
+    } else {
+        n_steps++;
+    }
 
-  if (older_trial.length() == 0) {
-    // This is the first try: we just start with the given start value.
-    best = start_value;
-    best_objective = REAL_MAX;
-    return TVec<string>(1, tostring(start_value));
-  }
+    if (older_trial.length() == 0) {
+        // This is the first try: we just start with the given start value.
+        best = start_value;
+        best_objective = REAL_MAX;
+        return TVec<string>(1, tostring(start_value));
+    }
 
-  // We can stop if the interval is restrained enough.
-  if (lower_bound >= best - (best * relative_precision) &&
-      upper_bound <= best + (best * relative_precision)) {
-    TVec<string> empty(0);
-    return empty;
-  }
+    // We can stop if the interval is restrained enough.
+    if (lower_bound >= best - (best * relative_precision) &&
+        upper_bound <= best + (best * relative_precision)) {
+        TVec<string> empty(0);
+        return empty;
+    }
 
-  real last = toreal(older_trial[0]); // The last value tried
-  bool improved = false;
-  if (obtained_objective < best_objective) {
-    improved = true;
-    best_objective = obtained_objective;
-  }
+    real last = toreal(older_trial[0]); // The last value tried
+    bool improved = false;
+    if (obtained_objective < best_objective) {
+        improved = true;
+        best_objective = obtained_objective;
+    }
   
-  if (current_direction == "not_started") {
-    // This is the second try.
-    if (start_direction == "random") {
-      // Need to start with a random direction.
-      real t = uniform_sample();
-      if (t < 0.5) {
-        current_direction = "up";
-      } else {
-        current_direction = "down";
-      }
+    if (current_direction == "not_started") {
+        // This is the second try.
+        if (start_direction == "random") {
+            // Need to start with a random direction.
+            real t = uniform_sample();
+            if (t < 0.5) {
+                current_direction = "up";
+            } else {
+                current_direction = "down";
+            }
+        } else {
+            current_direction = start_direction;
+        }
     } else {
-      current_direction = start_direction;
+        // Find out in which direction we should go now.
+        if (improved) {
+            // Going in the 'current_direction' helped, let's keep going.
+            if (current_direction == "up") {
+                lower_bound = best;
+            } else {
+                upper_bound = best;
+            }
+        } else {
+            // Going in the 'current_direction' didn't help. We go the other way.
+            if (current_direction == "up") {
+                current_direction = "down";
+                upper_bound = last;
+            } else {
+                current_direction = "up";
+                lower_bound = last;
+            }
+        }
     }
-  } else {
-    // Find out in which direction we should go now.
+
     if (improved) {
-      // Going in the 'current_direction' helped, let's keep going.
-      if (current_direction == "up") {
-        lower_bound = best;
-      } else {
-        upper_bound = best;
-      }
-    } else {
-      // Going in the 'current_direction' didn't help. We go the other way.
-      if (current_direction == "up") {
-        current_direction = "down";
-        upper_bound = last;
-      } else {
-        current_direction = "up";
-        lower_bound = last;
-      }
+        best = last;
     }
-  }
 
-  if (improved) {
-    best = last;
-  }
-
-  real next; // The next value we are going to try.
-  if (current_direction == "up") {
-    if (best * factor < upper_bound*0.99) {
-      // We can try much higher (the 0.99 is there to ensure we do not indefinitely
-      // try the same 'upper_bound' value).
-      next = best * factor;
+    real next; // The next value we are going to try.
+    if (current_direction == "up") {
+        if (best * factor < upper_bound*0.99) {
+            // We can try much higher (the 0.99 is there to ensure we do not indefinitely
+            // try the same 'upper_bound' value).
+            next = best * factor;
+        } else {
+            // We take the middle point between 'best' and 'upper_bound'.
+            next = (best + upper_bound) / 2;
+        }
+    } else if (current_direction == "down") {
+        if (best / factor > lower_bound*1.01) {
+            // We can try much lower.
+            next = best / factor;
+        } else {
+            // We take the middle point between 'best' and 'lower_bound'.
+            next = (best + lower_bound) / 2;
+        }
     } else {
-      // We take the middle point between 'best' and 'upper_bound'.
-      next = (best + upper_bound) / 2;
+        PLERROR("In OptimizeOptionOracle::generateNextTrial - Wrong value for 'current_direction'");
     }
-  } else if (current_direction == "down") {
-    if (best / factor > lower_bound*1.01) {
-      // We can try much lower.
-      next = best / factor;
-    } else {
-      // We take the middle point between 'best' and 'lower_bound'.
-      next = (best + lower_bound) / 2;
-    }
-  } else {
-    PLERROR("In OptimizeOptionOracle::generateNextTrial - Wrong value for 'current_direction'");
-  }
-  return TVec<string>(1, tostring(next));
+    return TVec<string>(1, tostring(next));
 }
 
 /////////////////////////////////
@@ -268,16 +268,29 @@ TVec<string> OptimizeOptionOracle::generateNextTrial(const TVec<string>& older_t
 /////////////////////////////////
 void OptimizeOptionOracle::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("OptimizeOptionOracle::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("OptimizeOptionOracle::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

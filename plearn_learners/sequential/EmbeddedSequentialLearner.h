@@ -44,25 +44,25 @@ namespace PLearn {
 using namespace std;
 
 /*! This SequentialLearner simply embeddes a Learner that we wish
-    to train sequentially.  Most of the methods simply forward the call
-    to the underlying Learner.
+  to train sequentially.  Most of the methods simply forward the call
+  to the underlying Learner.
 */
 
 class EmbeddedSequentialLearner: public SequentialLearner
 {
-  public:
+public:
 
     PP<PLearner> learner;  // the underlying Learner
 
-  private:
+private:
     //! This does the actual building
     void build_();
 
-  protected:
+protected:
     //! Declare this class' options
     static void declareOptions(OptionList& ol);
 
-  public:
+public:
 
     //! Constructor
     EmbeddedSequentialLearner();
@@ -74,13 +74,13 @@ class EmbeddedSequentialLearner: public SequentialLearner
     virtual void train();
  
 /*!       *** SUBCLASS WRITING: ***
-      The method should:
-        - call computeOutputAndCosts on the test set
-        - save the outputs and the costs in the  predictions & errors
-          matrices, beginning at position last_call_train_t
+  The method should:
+  - call computeOutputAndCosts on the test set
+  - save the outputs and the costs in the  predictions & errors
+  matrices, beginning at position last_call_train_t
 */
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
-        VMat testoutputs=0, VMat testcosts=0) const;
+                      VMat testoutputs=0, VMat testcosts=0) const;
 
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
@@ -93,10 +93,10 @@ class EmbeddedSequentialLearner: public SequentialLearner
     virtual void computeOutput(const Vec& input, Vec& output);
  
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
-        const Vec& target, Vec& costs);
+                                         const Vec& target, Vec& costs);
  
     virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-        Vec& output, Vec& costs);
+                                       Vec& output, Vec& costs);
  
     virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs);
  
@@ -115,3 +115,16 @@ DECLARE_OBJECT_PTR(EmbeddedSequentialLearner);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

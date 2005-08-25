@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: LogOfGaussianDensityKernel.cc,v 1.4 2004/04/07 23:17:52 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "LogOfGaussianDensityKernel.h"
 
@@ -50,28 +50,40 @@ PLEARN_IMPLEMENT_OBJECT(LogOfGaussianDensityKernel, "ONE LINE DESCR", "NO HELP")
 
 real LogOfGaussianDensityKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
-  // cerr << "LogOfGaussKernel mu: " << x1 << endl; 
-  double sigmasq = sigma*sigma;
-  // cerr << "sqnorm_xmu " << powdistance(x1, x2, real(2.0)) << endl;
-  // cerr << "sigmasq " << sigmasq << endl;
-  double q = powdistance(x1, x2, real(2.0))/sigmasq;
-  // cerr << "log of gauss kernel q = " << q << endl; 
-  //double logp = -0.5 * ( q + x1.length()*( log(2*M_PI) + log(sigmasq)) ); 
-  double logp = -0.5 * ( q + x1.length()*( log(2*Pi) + log(sigmasq)) ); 
-  // cerr << "logp = " << logp << endl;
-  // exit(0);
-  return real(logp);
+    // cerr << "LogOfGaussKernel mu: " << x1 << endl; 
+    double sigmasq = sigma*sigma;
+    // cerr << "sqnorm_xmu " << powdistance(x1, x2, real(2.0)) << endl;
+    // cerr << "sigmasq " << sigmasq << endl;
+    double q = powdistance(x1, x2, real(2.0))/sigmasq;
+    // cerr << "log of gauss kernel q = " << q << endl; 
+    //double logp = -0.5 * ( q + x1.length()*( log(2*M_PI) + log(sigmasq)) ); 
+    double logp = -0.5 * ( q + x1.length()*( log(2*Pi) + log(sigmasq)) ); 
+    // cerr << "logp = " << logp << endl;
+    // exit(0);
+    return real(logp);
 }
 
 
 void LogOfGaussianDensityKernel::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "sigma", &LogOfGaussianDensityKernel::sigma, OptionBase::buildoption,
-                "The width of the Gaussian");
-  inherited::declareOptions(ol);
+    declareOption(ol, "sigma", &LogOfGaussianDensityKernel::sigma, OptionBase::buildoption,
+                  "The width of the Gaussian");
+    inherited::declareOptions(ol);
 }
 
 
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

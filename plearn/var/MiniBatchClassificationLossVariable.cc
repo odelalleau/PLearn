@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MiniBatchClassificationLossVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "MiniBatchClassificationLossVariable.h"
 
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(MiniBatchClassificationLossVariable,
                         "NO HELP");
 
 MiniBatchClassificationLossVariable::MiniBatchClassificationLossVariable(Variable* netout, Variable* classnum)
-  : inherited(netout,classnum,classnum->length(),classnum->width())
+    : inherited(netout,classnum,classnum->length(),classnum->width())
 {
     build_();
 }
@@ -85,32 +85,43 @@ void MiniBatchClassificationLossVariable::recomputeSize(int& l, int& w) const
 
 void MiniBatchClassificationLossVariable::fprop()
 {
-  int n = input2->size();
-  if(input1->length()==n)
-    for (int i=0; i<n; i++)
-      {
-      int topscorepos = argmax(input1->matValue.row(i));
-      int num = int(input2->valuedata[i]);
-      valuedata[i] = (topscorepos==num ?0 :1);
-      }
-  else if(input1->width()==n)
-    for (int i=0; i<n; i++)
-      {
-      int topscorepos = argmax(input1->matValue.column(i));
-      int num = int(input2->valuedata[i]);
-      valuedata[i] = (topscorepos==num ?0 :1);
-      }
-  else PLERROR("In MiniBatchClassificationLossVariable: The length or width of netout doesn't equal to the size of classnum");
+    int n = input2->size();
+    if(input1->length()==n)
+        for (int i=0; i<n; i++)
+        {
+            int topscorepos = argmax(input1->matValue.row(i));
+            int num = int(input2->valuedata[i]);
+            valuedata[i] = (topscorepos==num ?0 :1);
+        }
+    else if(input1->width()==n)
+        for (int i=0; i<n; i++)
+        {
+            int topscorepos = argmax(input1->matValue.column(i));
+            int num = int(input2->valuedata[i]);
+            valuedata[i] = (topscorepos==num ?0 :1);
+        }
+    else PLERROR("In MiniBatchClassificationLossVariable: The length or width of netout doesn't equal to the size of classnum");
 }
 
 
 void MiniBatchClassificationLossVariable::symbolicBprop()
 {
-  PLERROR("MiniBatchClassificationLossVariable::symbolicBprop not implemented.");
+    PLERROR("MiniBatchClassificationLossVariable::symbolicBprop not implemented.");
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

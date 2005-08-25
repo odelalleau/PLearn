@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: EntropyContrastLearner.cc,v 1.3 2004/10/01 19:47:11 mariusmuja Exp $ 
+ * $Id$ 
  ******************************************************* */
 
 // Authors: Marius Muja
@@ -70,19 +70,19 @@ void displayVarFn(const Func& f,bool display_values)
 
 EntropyContrastLearner::EntropyContrastLearner() 
     : distribution("normal"),
-    weight_real(1),
-    weight_generated(1),
-    weight_extra(1),
-    weight_decay_hidden(0),
-    weight_decay_output(0),
-    normalize_constraints(true),
-    save_best_params(true),
-    sigma_generated(0.1),
-    sigma_min_threshold(0.1),
-    eps(0.0001),
-    save_x_hat(false),
-    gen_method("N(0,I)"),
-    use_sigma_min_threshold(true)
+      weight_real(1),
+      weight_generated(1),
+      weight_extra(1),
+      weight_decay_hidden(0),
+      weight_decay_output(0),
+      normalize_constraints(true),
+      save_best_params(true),
+      sigma_generated(0.1),
+      sigma_min_threshold(0.1),
+      eps(0.0001),
+      save_x_hat(false),
+      gen_method("N(0,I)"),
+      use_sigma_min_threshold(true)
 {
 
     // ### You may or may not want to call build_() to finish building the object
@@ -94,41 +94,41 @@ PLEARN_IMPLEMENT_OBJECT(EntropyContrastLearner, "ONE LINE DESCRIPTION", "MULTI-L
 void EntropyContrastLearner::declareOptions(OptionList& ol)
 {
     declareOption(ol, "nconstraints", &EntropyContrastLearner::nconstraints, OptionBase::buildoption,
-            "The number of constraints to create (that's also the outputsize)");
+                  "The number of constraints to create (that's also the outputsize)");
     declareOption(ol, "nhidden", &EntropyContrastLearner::nhidden, OptionBase::buildoption,
-            "the number of hidden units");
+                  "the number of hidden units");
     declareOption(ol, "optimizer", &EntropyContrastLearner::optimizer, OptionBase::buildoption, 
-            "specify the optimizer to use\n");
+                  "specify the optimizer to use\n");
     declareOption(ol, "distribution", &EntropyContrastLearner::distribution, OptionBase::buildoption, 
-            "the distribution to use\n");
+                  "the distribution to use\n");
     declareOption(ol, "weight_real", &EntropyContrastLearner::weight_real, OptionBase::buildoption, 
-            "the relative weight for the cost of the real data, for default is 1\n");
+                  "the relative weight for the cost of the real data, for default is 1\n");
     declareOption(ol, "weight_generated", &EntropyContrastLearner::weight_generated, OptionBase::buildoption, 
-            "the relative weight for the cost of the generated data, for default is 1\n");
+                  "the relative weight for the cost of the generated data, for default is 1\n");
     declareOption(ol, "weight_extra", &EntropyContrastLearner::weight_extra, OptionBase::buildoption, 
-            "the relative weight for the extra cost, for default is 1\n");
+                  "the relative weight for the extra cost, for default is 1\n");
     declareOption(ol, "weight_decay_hidden", &EntropyContrastLearner::weight_decay_hidden, OptionBase::buildoption, 
-            "decay factor for the hidden units\n");
+                  "decay factor for the hidden units\n");
     declareOption(ol, "weight_decay_output", &EntropyContrastLearner::weight_decay_output, OptionBase::buildoption, 
-            "decay factor for the output units\n");
+                  "decay factor for the output units\n");
     declareOption(ol, "normalize_constraints", &EntropyContrastLearner::normalize_constraints, OptionBase::buildoption, 
-            "normalize the output constraints\n");
+                  "normalize the output constraints\n");
     declareOption(ol, "save_best_params", &EntropyContrastLearner::save_best_params, OptionBase::buildoption, 
-            "specify if the best params are saved on each stage\n");
+                  "specify if the best params are saved on each stage\n");
     declareOption(ol, "sigma_generated", &EntropyContrastLearner::sigma_generated, OptionBase::buildoption, 
-            "the sigma for the gaussian from which we get the generated data\n");
+                  "the sigma for the gaussian from which we get the generated data\n");
     declareOption(ol, "sigma_min_threshold", &EntropyContrastLearner::sigma_min_threshold, OptionBase::buildoption, 
-            "the minimum value for each element of sigma of the computed features\n");
+                  "the minimum value for each element of sigma of the computed features\n");
     declareOption(ol, "eps", &EntropyContrastLearner::eps, OptionBase::buildoption, 
-            "we ignore singular values smaller than this.\n");
+                  "we ignore singular values smaller than this.\n");
     declareOption(ol, "gradient_scaling", &EntropyContrastLearner::gradient_scaling, OptionBase::buildoption, 
-            "");
+                  "");
     declareOption(ol, "save_x_hat", &EntropyContrastLearner::save_x_hat, OptionBase::buildoption, 
-            "Save generated data to a file(for debug purposes).");
+                  "Save generated data to a file(for debug purposes).");
     declareOption(ol, "gen_method", &EntropyContrastLearner::gen_method, OptionBase::buildoption, 
-            "The method used to generate new points.");
+                  "The method used to generate new points.");
     declareOption(ol, "use_sigma_min_threshold", &EntropyContrastLearner::use_sigma_min_threshold, OptionBase::buildoption, 
-            "Specify if the sigma of the features should be limited.");
+                  "Specify if the sigma of the features should be limited.");
     
 
 
@@ -138,7 +138,7 @@ void EntropyContrastLearner::declareOptions(OptionList& ol)
 
 void EntropyContrastLearner::build_()
 {
-   manual_seed(time(NULL)); 
+    manual_seed(time(NULL)); 
 
     if (train_set) {
 
@@ -191,11 +191,11 @@ void EntropyContrastLearner::build_()
 
         for(int i=0 ; i<nconstraints ; ++i) { 
             for(int j=i ; j>=0 ; --j) { 
-               if (j==i) {
-                   f[i] = product(W[INDEX(i,j)],hf[j]) + W_b[i];
-               } else {
-                   f[i] = f[i] + product(W[INDEX(i,j)],no_bprop(hf[j]));
-               }
+                if (j==i) {
+                    f[i] = product(W[INDEX(i,j)],hf[j]) + W_b[i];
+                } else {
+                    f[i] = f[i] + product(W[INDEX(i,j)],no_bprop(hf[j]));
+                }
             }
         }
         
@@ -209,11 +209,11 @@ void EntropyContrastLearner::build_()
 
         for(int i=0 ; i<nconstraints ; ++i) { 
             for(int j=i ; j>=0 ; --j) { 
-               if (j==i) {
-                   g[i] = product(W[INDEX(i,j)],hg[j]);
-               } else {
-                   g[i] = g[i] + product(W[INDEX(i,j)],no_bprop(hg[j]));
-               }
+                if (j==i) {
+                    g[i] = product(W[INDEX(i,j)],hg[j]);
+                } else {
+                    g[i] = g[i] + product(W[INDEX(i,j)],no_bprop(hg[j]));
+                }
             }
         }
 
@@ -285,11 +285,11 @@ void EntropyContrastLearner::build_()
 
         for(int i=0 ; i<nconstraints ; ++i) { 
             for(int j=i ; j>=0 ; --j) { 
-               if (j==i) {
-                   f_hat[i] = product(W[INDEX(i,j)],hf_hat[j]) + W_b[i];
-               } else {
-                   f_hat[i] = f_hat[i] + product(W[INDEX(i,j)],no_bprop(hf_hat[j]));
-               }
+                if (j==i) {
+                    f_hat[i] = product(W[INDEX(i,j)],hf_hat[j]) + W_b[i];
+                } else {
+                    f_hat[i] = f_hat[i] + product(W[INDEX(i,j)],no_bprop(hf_hat[j]));
+                }
             }
         }
 
@@ -297,14 +297,14 @@ void EntropyContrastLearner::build_()
         // extra cost - to keep constrains perpendicular
         Var extra_cost;
         for(int i=0 ; i<nconstraints ; ++i) { 
-          for(int j=i+1 ; j<nconstraints ; ++j) { 
-            Var tmp = no_bprop(g[i]);
-            if (extra_cost.isNull()) {
-              extra_cost = square(dot(tmp,g[j])/product(norm(tmp),norm(g[j])));
-            } else {
-              extra_cost = extra_cost + square(dot(tmp,g[j])/product(norm(tmp),norm(g[j])));
+            for(int j=i+1 ; j<nconstraints ; ++j) { 
+                Var tmp = no_bprop(g[i]);
+                if (extra_cost.isNull()) {
+                    extra_cost = square(dot(tmp,g[j])/product(norm(tmp),norm(g[j])));
+                } else {
+                    extra_cost = extra_cost + square(dot(tmp,g[j])/product(norm(tmp),norm(g[j])));
+                }
             }
-          }
         }
 
         Var f_var = hconcat(f);
@@ -341,7 +341,7 @@ void EntropyContrastLearner::build_()
             c_sigma_hat->setName("generated sigma cost");
             
             c_entropy = weight_real*square(f_var-no_bprop(mu))/no_bprop(sigma) - 
-                        weight_generated*square(f_hat_var-no_bprop(mu_hat))/no_bprop(sigma_hat);
+                weight_generated*square(f_hat_var-no_bprop(mu_hat))/no_bprop(sigma_hat);
             c_entropy->setName("entropy cost");
 
             costs = c_entropy & c_mu & c_sigma & c_mu_hat & c_sigma_hat;
@@ -412,8 +412,8 @@ int EntropyContrastLearner::outputsize() const
 void EntropyContrastLearner::forget()
 {
 
-  if (train_set) initializeParams();
-  stage = 0;
+    if (train_set) initializeParams();
+    stage = 0;
 }
 
 void EntropyContrastLearner::train()
@@ -550,7 +550,7 @@ void EntropyContrastLearner::computeOutput(const Vec& input, Vec& output) const
 }    
 
 void EntropyContrastLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
-        const Vec& target, Vec& costs) const
+                                                     const Vec& target, Vec& costs) const
 {
     // Compute the costs from *already* computed output. 
     // ...
@@ -577,15 +577,15 @@ void EntropyContrastLearner::initializeParams()
 {
     real delta = 1; //1.0 / sqrt(real(inputsize()));
     for(int k=0 ; k<nconstraints ; ++k) { 
-      fill_random_uniform(V[k]->matValue, -delta, delta);
-      fill_random_uniform(V_b[k]->matValue, -delta, delta);
-      fill_random_uniform(W_b[k]->matValue, -delta, delta);
+        fill_random_uniform(V[k]->matValue, -delta, delta);
+        fill_random_uniform(V_b[k]->matValue, -delta, delta);
+        fill_random_uniform(W_b[k]->matValue, -delta, delta);
 //      V_b[k]->matValue.fill(0);
 //      W_b[k]->matValue.fill(0);
     }
     delta = 1;//1.0 / real(nhidden);
     for(int k=0 ; k<((nconstraints*(nconstraints+1))/2) ; ++k) { 
-      fill_random_uniform(W[k]->matValue, -delta, delta);
+        fill_random_uniform(W[k]->matValue, -delta, delta);
     }
 
     if (distribution=="normal") {
@@ -597,3 +597,16 @@ void EntropyContrastLearner::initializeParams()
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

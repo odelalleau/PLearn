@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVariable.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "OneHotVariable.h"
 
@@ -89,15 +89,15 @@ void OneHotVariable::recomputeSize(int& l, int& w) const
 
 void OneHotVariable::fprop()
 {
-  int index = int(input->valuedata[0]);
-  if (nelems()==1)
-    value[0] = index==0 ? coldvalue : hotvalue;
-  else
-  {
-    for(int i=0; i<nelems(); i++)
-      valuedata[i] = coldvalue;
-    value[index] = hotvalue;
-  }
+    int index = int(input->valuedata[0]);
+    if (nelems()==1)
+        value[0] = index==0 ? coldvalue : hotvalue;
+    else
+    {
+        for(int i=0; i<nelems(); i++)
+            valuedata[i] = coldvalue;
+        value[index] = hotvalue;
+    }
 }
 
 
@@ -108,11 +108,22 @@ void OneHotVariable::symbolicBprop() {}
 
 
 void OneHotVariable::rfprop() {
-  if (rValue.length()==0) resizeRValue();
+    if (rValue.length()==0) resizeRValue();
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

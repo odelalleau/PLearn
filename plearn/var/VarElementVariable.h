@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: VarElementVariable.h,v 1.4 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef VarElementVariable_INC
 #define VarElementVariable_INC
@@ -56,26 +56,26 @@ using namespace std;
 */
 class VarElementVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  VarElementVariable() {}
-  VarElementVariable(Variable* input1, Variable* input2);
+    //!  Default constructor for persistence
+    VarElementVariable() {}
+    VarElementVariable(Variable* input1, Variable* input2);
 
-  PLEARN_DECLARE_OBJECT(VarElementVariable);
+    PLEARN_DECLARE_OBJECT(VarElementVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  //  virtual void rprop();
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    //  virtual void rprop();
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 
 protected:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(VarElementVariable);
@@ -84,4 +84,15 @@ DECLARE_OBJECT_PTR(VarElementVariable);
 
 #endif
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: UniformizeVMatrix.h,v 1.6 2004/07/09 19:42:23 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -54,44 +54,44 @@ using namespace std;
 /*!   VMatrix that can be used to uniformize (between a and b)
   each feature in index of the underlying distribution such that:
   P(x') = .5   if  a < x'< b
-        =  0   otherwise
+  =  0   otherwise
   
   We suppose that the original distribution of x, P(x), could be anything,
   and we map "a" with bins[0] and "b" with bins[N-1].
 */
 class UniformizeVMatrix: public RowBufferedVMatrix
 {
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
 protected:
-  VMat distr;
-  Mat bins;
-  Vec index;
-  real a;
-  real b;
+    VMat distr;
+    Mat bins;
+    Vec index;
+    real a;
+    real b;
 
 public:
-  // ******************
-  // *  Constructors  *
-  // ******************
-  UniformizeVMatrix(); //!<  default constructor (for automatic deserialization)
+    // ******************
+    // *  Constructors  *
+    // ******************
+    UniformizeVMatrix(); //!<  default constructor (for automatic deserialization)
 
-  //! The original VMFields are copied upon construction
-  UniformizeVMatrix(VMat the_distr, Mat the_bins, Vec the_index,
-                    real the_a=0.0, real the_b=1.0);
+    //! The original VMFields are copied upon construction
+    UniformizeVMatrix(VMat the_distr, Mat the_bins, Vec the_index,
+                      real the_a=0.0, real the_b=1.0);
 
-  PLEARN_DECLARE_OBJECT(UniformizeVMatrix);
+    PLEARN_DECLARE_OBJECT(UniformizeVMatrix);
 
 protected:
 
-  static void declareOptions(OptionList &ol);
-  virtual void getNewRow(int i, const Vec& v) const;
+    static void declareOptions(OptionList &ol);
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  virtual void build();
+    virtual void build();
 
-  virtual void reset_dimensions()
+    virtual void reset_dimensions()
     { distr->reset_dimensions(); width_=distr->width(); length_=distr->length(); }
 private:
     void build_();
@@ -101,3 +101,16 @@ DECLARE_OBJECT_PTR(UniformizeVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

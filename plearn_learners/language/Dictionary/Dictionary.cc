@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Dictionary.cc,v 1.5 2004/11/24 18:41:00 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
 
@@ -46,116 +46,129 @@
 namespace PLearn {
 using namespace std;
   
-  Dictionary::Dictionary()
+Dictionary::Dictionary()
     :
     update_mode(UPDATE) 
-  {
-  }
+{
+}
 
 PLEARN_IMPLEMENT_OBJECT(Dictionary,
-    "Mapping string->int and int->string",
-    "A dictionary is a mapping between a string and and index (int).\n"
-  "Depending on the update mode, the dictionay can include an unknown \n"
-  "word when asking for its Id with getId();\n"
-  "if update_mode == UPDATE, add the word and return its Id\n"
-  "if  update_mode == NO_UPDATE, return -1\n"
-  "\n"
-  "Also, when asking for the symbol associated to an Id, no update is possible.\n"
-  "If the id is not in the dictionary, than the symbol is ""\n"
-  "\n"                     
-  "An object from Dictionary is instantiated empty, and then symbols can be added in the\n"
-  "dictionary by using getId() (with update_mode == UPDATE). Subclasses will normaly \n"
-  "permit more sophisticated instantiation.\n");
+                        "Mapping string->int and int->string",
+                        "A dictionary is a mapping between a string and and index (int).\n"
+                        "Depending on the update mode, the dictionay can include an unknown \n"
+                        "word when asking for its Id with getId();\n"
+                        "if update_mode == UPDATE, add the word and return its Id\n"
+                        "if  update_mode == NO_UPDATE, return -1\n"
+                        "\n"
+                        "Also, when asking for the symbol associated to an Id, no update is possible.\n"
+                        "If the id is not in the dictionary, than the symbol is ""\n"
+                        "\n"                     
+                        "An object from Dictionary is instantiated empty, and then symbols can be added in the\n"
+                        "dictionary by using getId() (with update_mode == UPDATE). Subclasses will normaly \n"
+                        "permit more sophisticated instantiation.\n");
 
 void Dictionary::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "update_mode", &Dictionary::update_mode, OptionBase::buildoption, "update_mode : 0(no_update)/1(update). Default is update");
-  declareOption(ol, "string_to_int", &Dictionary::string_to_int, OptionBase::buildoption, "string to int mapping");
-  declareOption(ol, "int_to_string", &Dictionary::int_to_string, OptionBase::buildoption, "int to string mapping");
-  inherited::declareOptions(ol);
+    declareOption(ol, "update_mode", &Dictionary::update_mode, OptionBase::buildoption, "update_mode : 0(no_update)/1(update). Default is update");
+    declareOption(ol, "string_to_int", &Dictionary::string_to_int, OptionBase::buildoption, "string to int mapping");
+    declareOption(ol, "int_to_string", &Dictionary::int_to_string, OptionBase::buildoption, "int to string mapping");
+    inherited::declareOptions(ol);
 }
 
 void Dictionary::build_(){
   
-  if(classname()=="Dictionary"){
-    if(update_mode==NO_UPDATE){
-      update_mode = UPDATE;
-      // the dictionary must contain oov
-      getId(OOV_TAG);
-      update_mode = NO_UPDATE;
+    if(classname()=="Dictionary"){
+        if(update_mode==NO_UPDATE){
+            update_mode = UPDATE;
+            // the dictionary must contain oov
+            getId(OOV_TAG);
+            update_mode = NO_UPDATE;
+        }
     }
-  }
 }
 
 // ### Nothing to add here, simply calls build_
 void Dictionary::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void  Dictionary::setUpdateMode(bool up_mode)
 {
-  update_mode =up_mode;
+    update_mode =up_mode;
 }
 
 int Dictionary::getId(string symbol, TVec<string> options)
 {
-  // Gives the id of a symbol in the dictionary
-  // If the symbol is not in the dictionary, 
-  // returns index of OOV_TAG if update_mode = NO_UPDATE,
-  // insert the new word otherwise and return its index
-  int index;
-  if(update_mode== UPDATE)
-  {
-    if(string_to_int.find(symbol) == string_to_int.end()){
-      // word not found, add it
-      index=string_to_int.size();
-      string_to_int[symbol] = index;
-      int_to_string[index] = symbol;
+    // Gives the id of a symbol in the dictionary
+    // If the symbol is not in the dictionary, 
+    // returns index of OOV_TAG if update_mode = NO_UPDATE,
+    // insert the new word otherwise and return its index
+    int index;
+    if(update_mode== UPDATE)
+    {
+        if(string_to_int.find(symbol) == string_to_int.end()){
+            // word not found, add it
+            index=string_to_int.size();
+            string_to_int[symbol] = index;
+            int_to_string[index] = symbol;
+        }
+        return string_to_int[symbol];
     }
-    return string_to_int[symbol];
-  }
-  else
-  {
-    // NO update mode
-    if(string_to_int.find(symbol) == string_to_int.end()){
-      // word not found, return oov
-      return string_to_int[OOV_TAG];
-    }else{
-      return string_to_int[symbol];
+    else
+    {
+        // NO update mode
+        if(string_to_int.find(symbol) == string_to_int.end()){
+            // word not found, return oov
+            return string_to_int[OOV_TAG];
+        }else{
+            return string_to_int[symbol];
+        }
     }
-  }
 }
 
 int Dictionary::getId(string symbol, TVec<string> options)const
 {
-  // Const version
-  // Gives the id of a symbol in the dictionary
-  // If the symbol is not in the dictionary, 
-  // returns index of OOV_TAG
+    // Const version
+    // Gives the id of a symbol in the dictionary
+    // If the symbol is not in the dictionary, 
+    // returns index of OOV_TAG
 
-  if(string_to_int.find(symbol) == string_to_int.end()){
-    // word not found, return oov
-    return string_to_int.find(OOV_TAG)->second;
-  }else{
-    return string_to_int.find(symbol)->second;
-  }
+    if(string_to_int.find(symbol) == string_to_int.end()){
+        // word not found, return oov
+        return string_to_int.find(OOV_TAG)->second;
+    }else{
+        return string_to_int.find(symbol)->second;
+    }
 }
 
 string Dictionary::getSymbol(int id, TVec<int>options)const
 {
-  if(int_to_string.find(id) == int_to_string.end())
-    return "";
-  else
-    return int_to_string.find(id)->second;
+    if(int_to_string.find(id) == int_to_string.end())
+        return "";
+    else
+        return int_to_string.find(id)->second;
 }
 
 void Dictionary::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(string_to_int, copies);
-  deepCopyField(int_to_string, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(string_to_int, copies);
+    deepCopyField(int_to_string, copies);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

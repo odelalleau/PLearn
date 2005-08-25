@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RowsSubVMatrix.cc,v 1.6 2005/04/23 13:19:23 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -48,14 +48,14 @@ using namespace std;
 
 
 RowsSubVMatrix::RowsSubVMatrix()
-  :startrow(0)
+    :startrow(0)
 {}
 
 RowsSubVMatrix::RowsSubVMatrix(VMat the_source, int the_startrow, int the_length)
-  :SourceVMatrix(the_source), startrow(the_startrow)
+    :SourceVMatrix(the_source), startrow(the_startrow)
 { 
-  length_ = the_length;
-  build_(); 
+    length_ = the_length;
+    build_(); 
 }
 
 
@@ -63,36 +63,48 @@ PLEARN_IMPLEMENT_OBJECT(RowsSubVMatrix, "ONE LINE DESCRIPTION", "MULTI-LINE \nHE
 
 void RowsSubVMatrix::getNewRow(int i, const Vec& v) const
 {
-  source->getRow(startrow+i,v);
+    source->getRow(startrow+i,v);
 }
 
 void RowsSubVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "startrow", &RowsSubVMatrix::startrow, OptionBase::buildoption,
-                "The row where this submatrix starts in the source.\n"
-                "You should also explicitly specify the length option.\n");
+    declareOption(ol, "startrow", &RowsSubVMatrix::startrow, OptionBase::buildoption,
+                  "The row where this submatrix starts in the source.\n"
+                  "You should also explicitly specify the length option.\n");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void RowsSubVMatrix::build_()
 {
-  if (source)
-    setMetaInfoFromSource();
+    if (source)
+        setMetaInfoFromSource();
 }
 
 // ### Nothing to add here, simply calls build_
 void RowsSubVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void RowsSubVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

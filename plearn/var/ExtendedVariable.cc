@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVariable.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ExtendedVariable.h"
 #include "SubMatVariable.h"
@@ -57,10 +57,10 @@ PLEARN_IMPLEMENT_OBJECT(ExtendedVariable,
 
 ExtendedVariable::ExtendedVariable(Variable* input, int the_top_extent, int the_bottom_extent,
                                    int the_left_extent, int the_right_extent, real the_fill_value)
-  : inherited(input, input->length()+the_top_extent+the_bottom_extent, input->width()+the_left_extent+the_right_extent),
-    top_extent(the_top_extent), bottom_extent(the_bottom_extent), 
-    left_extent(the_left_extent), right_extent(the_right_extent),
-    fill_value(the_fill_value)
+    : inherited(input, input->length()+the_top_extent+the_bottom_extent, input->width()+the_left_extent+the_right_extent),
+      top_extent(the_top_extent), bottom_extent(the_bottom_extent), 
+      left_extent(the_left_extent), right_extent(the_right_extent),
+      fill_value(the_fill_value)
 {
     build_();
 }
@@ -103,21 +103,21 @@ void ExtendedVariable::recomputeSize(int& l, int& w) const
 
 void ExtendedVariable::fprop()
 {
-  if(width()==input->width()) // optimized code for this special case (no left or right extents)
+    if(width()==input->width()) // optimized code for this special case (no left or right extents)
     {
-      real* data = valuedata+top_extent*width();
-      for(int k=0; k<input->nelems(); k++)
-        data[k] = input->valuedata[k];
+        real* data = valuedata+top_extent*width();
+        for(int k=0; k<input->nelems(); k++)
+            data[k] = input->valuedata[k];
     }
-  else // general case
+    else // general case
     {
-      real* rowdata=valuedata+top_extent*width()+left_extent;
-      int inputk=0;
-      for(int i=0; i<input->length(); i++)
+        real* rowdata=valuedata+top_extent*width()+left_extent;
+        int inputk=0;
+        for(int i=0; i<input->length(); i++)
         {
-          for(int j=0; j<input->width(); j++)
-            rowdata[j] = input->valuedata[inputk++];
-          rowdata += width();
+            for(int j=0; j<input->width(); j++)
+                rowdata[j] = input->valuedata[inputk++];
+            rowdata += width();
         }
     }
 }
@@ -125,21 +125,21 @@ void ExtendedVariable::fprop()
 
 void ExtendedVariable::bprop()
 {
-  if(width()==input->width()) // optimized code for this special case (no left or right extents)
+    if(width()==input->width()) // optimized code for this special case (no left or right extents)
     {
-      real* data = gradientdata+top_extent*width();
-      for(int k=0; k<input->nelems(); k++)
-        input->gradientdata[k] += data[k];
+        real* data = gradientdata+top_extent*width();
+        for(int k=0; k<input->nelems(); k++)
+            input->gradientdata[k] += data[k];
     }
-  else // general case
+    else // general case
     {
-      real* rowdata = gradientdata+top_extent*width()+left_extent;
-      int inputk = 0;
-      for(int i=0; i<input->length(); i++)
+        real* rowdata = gradientdata+top_extent*width()+left_extent;
+        int inputk = 0;
+        for(int i=0; i<input->length(); i++)
         {
-          for(int j=0; j<input->width(); j++)
-            input->gradientdata[inputk++] += rowdata[j]; 
-          rowdata += width();
+            for(int j=0; j<input->width(); j++)
+                input->gradientdata[inputk++] += rowdata[j]; 
+            rowdata += width();
         }
     }
 }
@@ -147,32 +147,43 @@ void ExtendedVariable::bprop()
 
 void ExtendedVariable::symbolicBprop()
 {
-  input->accg(new SubMatVariable(g,top_extent,left_extent,input->length(),input->width()));
+    input->accg(new SubMatVariable(g,top_extent,left_extent,input->length(),input->width()));
 }
 
 
 void ExtendedVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
-  if(width()==input->width()) // optimized code for this special case (no left or right extents)
+    if (rValue.length()==0) resizeRValue();
+    if(width()==input->width()) // optimized code for this special case (no left or right extents)
     {
-      real* data = rvaluedata+top_extent*width();
-      for(int k=0; k<input->nelems(); k++)
-        data[k] = input->rvaluedata[k];
+        real* data = rvaluedata+top_extent*width();
+        for(int k=0; k<input->nelems(); k++)
+            data[k] = input->rvaluedata[k];
     }
-  else // general case
+    else // general case
     {
-      real* rowdata=rvaluedata+top_extent*width()+left_extent;
-      int inputk=0;
-      for(int i=0; i<input->length(); i++)
+        real* rowdata=rvaluedata+top_extent*width()+left_extent;
+        int inputk=0;
+        for(int i=0; i<input->length(); i++)
         {
-          for(int j=0; j<input->width(); j++)
-            rowdata[j] = input->rvaluedata[inputk++];
-          rowdata += width();
+            for(int j=0; j<input->width(); j++)
+                rowdata[j] = input->rvaluedata[inputk++];
+            rowdata += width();
         }
     }
 }
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

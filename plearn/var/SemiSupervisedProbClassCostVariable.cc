@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SemiSupervisedProbClassCostVariable.cc,v 1.4 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "SemiSupervisedProbClassCostVariable.h"
 #include "Var_utils.h"
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(SemiSupervisedProbClassCostVariable,
                         "NO HELP");
 
 SemiSupervisedProbClassCostVariable::SemiSupervisedProbClassCostVariable(Var prob_, Var target_, Var prior_, real ff)
-  : inherited(prob_ & target_ & (VarArray)prior_,1,1), flatten_factor(ff)
+    : inherited(prob_ & target_ & (VarArray)prior_,1,1), flatten_factor(ff)
 {
     build_();
 }
@@ -94,72 +94,83 @@ void SemiSupervisedProbClassCostVariable::recomputeSize(int& l, int& w) const
 
 void SemiSupervisedProbClassCostVariable::fprop()
 {
-  //!   If target is not missing:
-  //!     cost = - log(prob[target])
-  //!   Else
-  //!     cost = - (1/flatten_factor) log sum_i (prior[i] * prob[i])^flatten_factor
-  real target_value = target()->valuedata[0];
-  int n=prob()->size();
-  real* p=prob()->valuedata;
-  if (finite(target_value)) // supervised case
+    //!   If target is not missing:
+    //!     cost = - log(prob[target])
+    //!   Else
+    //!     cost = - (1/flatten_factor) log sum_i (prior[i] * prob[i])^flatten_factor
+    real target_value = target()->valuedata[0];
+    int n=prob()->size();
+    real* p=prob()->valuedata;
+    if (finite(target_value)) // supervised case
     {
-      int t = int(target_value);
-      if (t<0 || t>=n)
-        PLERROR("In SemiSupervisedProbClassCostVariable: target must be either missing or between 0 and %d incl.\n",prob()->size()-1);
-      valuedata[0] = -safeflog(p[t]);
+        int t = int(target_value);
+        if (t<0 || t>=n)
+            PLERROR("In SemiSupervisedProbClassCostVariable: target must be either missing or between 0 and %d incl.\n",prob()->size()-1);
+        valuedata[0] = -safeflog(p[t]);
     }
-  else // unsupervised case
+    else // unsupervised case
     {
-      sum_raised_prob=0;
-      real* priorv = prior()->valuedata;
-      for (int i=0;i<n;i++)
-      {
-        raised_prob[i] = pow(priorv[i]*p[i],flatten_factor);
-        sum_raised_prob += raised_prob[i];
-      }
-      valuedata[0] = - safeflog(sum_raised_prob)/flatten_factor;
+        sum_raised_prob=0;
+        real* priorv = prior()->valuedata;
+        for (int i=0;i<n;i++)
+        {
+            raised_prob[i] = pow(priorv[i]*p[i],flatten_factor);
+            sum_raised_prob += raised_prob[i];
+        }
+        valuedata[0] = - safeflog(sum_raised_prob)/flatten_factor;
     }
 }
 
 void SemiSupervisedProbClassCostVariable::bprop()
 {
-  real target_value = target()->valuedata[0];
-  int n=prob()->size();
-  real* dprob=prob()->gradientdata;
-  real* p=prob()->valuedata;
-  if (finite(target_value)) // supervised case
+    real target_value = target()->valuedata[0];
+    int n=prob()->size();
+    real* dprob=prob()->gradientdata;
+    real* p=prob()->valuedata;
+    if (finite(target_value)) // supervised case
     {
-      int t = int(target_value);
-      for (int i=0;i<n;i++)
-        if (i==t && p[t]>0)
-          dprob[i] += -gradientdata[0]/p[t];
+        int t = int(target_value);
+        for (int i=0;i<n;i++)
+            if (i==t && p[t]>0)
+                dprob[i] += -gradientdata[0]/p[t];
     }
-  else // unsupervised case
+    else // unsupervised case
     {
-      for (int i=0;i<n;i++)
-        if (p[i]>0)
-          {
-            real grad = - gradientdata[0]*raised_prob[i]/(p[i]*sum_raised_prob);
-            if (finite(grad))
-              dprob[i] += grad;
-          }
+        for (int i=0;i<n;i++)
+            if (p[i]>0)
+            {
+                real grad = - gradientdata[0]*raised_prob[i]/(p[i]*sum_raised_prob);
+                if (finite(grad))
+                    dprob[i] += grad;
+            }
     }
 }
 
 
 void SemiSupervisedProbClassCostVariable::symbolicBprop()
 {
-  PLERROR("SemiSupervisedProbClassCostVariable::symbolicBprop() not implemented");
+    PLERROR("SemiSupervisedProbClassCostVariable::symbolicBprop() not implemented");
 }
 
 
 void SemiSupervisedProbClassCostVariable::rfprop()
 {
-  PLERROR("SemiSupervisedProbClassCostVariable::rfprop() not implemented");
+    PLERROR("SemiSupervisedProbClassCostVariable::rfprop() not implemented");
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

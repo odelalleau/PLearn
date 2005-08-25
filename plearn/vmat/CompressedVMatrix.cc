@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: CompressedVMatrix.cc,v 1.7 2004/07/21 16:30:55 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include <plearn/math/VecCompressor.h>
 #include "CompressedVMatrix.h"
@@ -61,73 +61,86 @@ CompressedVMatrix::CompressedVMatrix(int the_max_length, int the_width, size_t m
 
 void CompressedVMatrix::init(int the_max_length, int the_width, size_t memory_alloc)
 {
-  length_ = 0;
-  width_ = the_width;
-  max_length = the_max_length;
-  data = new signed char[memory_alloc];
-  dataend = data+memory_alloc;
-  curpos = data;
-  rowstarts = new signed char*[max_length];
+    length_ = 0;
+    width_ = the_width;
+    max_length = the_max_length;
+    data = new signed char[memory_alloc];
+    dataend = data+memory_alloc;
+    curpos = data;
+    rowstarts = new signed char*[max_length];
 }
 
 CompressedVMatrix::CompressedVMatrix(VMat m, size_t memory_alloc)
 {
-  if(memory_alloc==0)
-    init(m.length(), m.width(), m.length()*VecCompressor::worstCaseSize(m.width()));
-  Vec v(m.width());
-  for(int i=0; i<m.length(); i++)
+    if(memory_alloc==0)
+        init(m.length(), m.width(), m.length()*VecCompressor::worstCaseSize(m.width()));
+    Vec v(m.width());
+    for(int i=0; i<m.length(); i++)
     {
-      m->getRow(i,v);
-      appendRow(v);
+        m->getRow(i,v);
+        appendRow(v);
     }
 }
 
 void CompressedVMatrix::getNewRow(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
-  if(v.length() != width_)
-    PLERROR("In CompressedVMatrix::getNewRow length of v and width of matrix do not match");
-  if(i<0 || i>=length_)
-    PLERROR("In CompressedVMatrix::getNewRow OUT OF BOUNDS row index");
+    if(v.length() != width_)
+        PLERROR("In CompressedVMatrix::getNewRow length of v and width of matrix do not match");
+    if(i<0 || i>=length_)
+        PLERROR("In CompressedVMatrix::getNewRow OUT OF BOUNDS row index");
 #endif
-  VecCompressor::uncompressVec(rowstarts[i],v);
+    VecCompressor::uncompressVec(rowstarts[i],v);
 }
 
 void CompressedVMatrix::appendRow(Vec v)
 {
-  if(length_>=max_length)
-    PLERROR("In CompressedVMatrix::appendRow, max_length exceeded");
-  rowstarts[length_] = curpos;
-  curpos = VecCompressor::compressVec(v,curpos);
-  if(curpos>dataend)
-    PLERROR("In CompressedVMatrix::appendRow not enough space reserved for data");
-  ++length_;
+    if(length_>=max_length)
+        PLERROR("In CompressedVMatrix::appendRow, max_length exceeded");
+    rowstarts[length_] = curpos;
+    curpos = VecCompressor::compressVec(v,curpos);
+    if(curpos>dataend)
+        PLERROR("In CompressedVMatrix::appendRow not enough space reserved for data");
+    ++length_;
 }
 
 void CompressedVMatrix::compacify()
 {
-  size_t datasize = curpos-data;
-  signed char* old_data = data;
-  signed char** old_rowstarts = rowstarts;
-  data = new signed char[datasize];
-  dataend = data+datasize;
-  curpos = dataend;
-  rowstarts = new signed char*[length_];
-  memcpy(data, old_data, datasize);
+    size_t datasize = curpos-data;
+    signed char* old_data = data;
+    signed char** old_rowstarts = rowstarts;
+    data = new signed char[datasize];
+    dataend = data+datasize;
+    curpos = dataend;
+    rowstarts = new signed char*[length_];
+    memcpy(data, old_data, datasize);
 
-  for(int i=0; i<length_; i++)
-    rowstarts[i] = data + (old_rowstarts[i]-old_data);
-  max_length = length_;
-  delete[] old_data;
-  delete[] old_rowstarts;
+    for(int i=0; i<length_; i++)
+        rowstarts[i] = data + (old_rowstarts[i]-old_data);
+    max_length = length_;
+    delete[] old_data;
+    delete[] old_rowstarts;
 }
 
 CompressedVMatrix::~CompressedVMatrix()
 {
-  if(data)
-    delete[] data;
-  if(rowstarts)
-    delete[] rowstarts;
+    if(data)
+        delete[] data;
+    if(rowstarts)
+        delete[] rowstarts;
 }
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

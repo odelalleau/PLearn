@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: TmpFilenames.cc,v 1.5 2004/03/04 15:07:37 tihocan Exp $
-   * AUTHORS: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "TmpFilenames.h"
 #include "fileutils.h"      //!< For newFilename.
@@ -50,8 +50,8 @@ using namespace std;
 
 TmpFilenames::TmpFilenames(int nfiles, const string directory, const string prefix)
 {
-  for(int k=0; k<nfiles; k++)
-    addFilename(directory, prefix);
+    for(int k=0; k<nfiles; k++)
+        addFilename(directory, prefix);
 }
 
 TmpFilenames::TmpFilenames(const TmpFilenames& other)
@@ -59,25 +59,38 @@ TmpFilenames::TmpFilenames(const TmpFilenames& other)
 
 void TmpFilenames::operator=(const TmpFilenames& other)
 {
-  resize(other.size());
-  for(int k=0; k<size(); k++)
-  {
-    operator[](k) = other[k];
-  }
+    resize(other.size());
+    for(int k=0; k<size(); k++)
+    {
+        operator[](k) = other[k];
+    }
 }
 
 string TmpFilenames::addFilename(const string directory, const string prefix)
 {
-  string newfilename = newFilename(directory,prefix);
-  append(newfilename);
-  return newfilename;
+    string newfilename = newFilename(directory,prefix);
+    append(newfilename);
+    return newfilename;
 }
 
 char* TmpFilenames::newFile(const string directory, const string prefix)
 {
-  PLERROR("TmpFilenames::newFile : DEPRECATED method.  Use addFilename instead.");
-  char* dummy = 0; return dummy;  // for return compatibility
+    PLERROR("TmpFilenames::newFile : DEPRECATED method.  Use addFilename instead.");
+    char* dummy = 0; return dummy;  // for return compatibility
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

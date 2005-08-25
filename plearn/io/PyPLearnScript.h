@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PyPLearnScript.h,v 1.3 2005/04/26 16:51:49 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christian Dorion
 
@@ -53,101 +53,101 @@ namespace PLearn {
 class PyPLearnScript: public Object
 {
 public:
-  // STATIC METHODS
+    // STATIC METHODS
 
-  /*!
-    Given a filename, call an external process with the given name (default
-    = "pyplearn_driver.py") to preprocess it and return the preprocessed
-    version.  Arguments to the subprocess can be passed.
-    Passing '--help' passes it unmodified to the subprogram
-    and is assumed to print a help string.  If '--dump' is passed,
-    the Python-preprocessed script is printed to standard output.
-  */
-  static PP<PyPLearnScript> process(
-    const std::string& filename,
-    const std::vector<std::string>& args = std::vector<std::string>(),
-    const std::string& drivername        = "pyplearn_driver.py" );
+    /*!
+      Given a filename, call an external process with the given name (default
+      = "pyplearn_driver.py") to preprocess it and return the preprocessed
+      version.  Arguments to the subprocess can be passed.
+      Passing '--help' passes it unmodified to the subprogram
+      and is assumed to print a help string.  If '--dump' is passed,
+      the Python-preprocessed script is printed to standard output.
+    */
+    static PP<PyPLearnScript> process(
+        const std::string& filename,
+        const std::vector<std::string>& args = std::vector<std::string>(),
+        const std::string& drivername        = "pyplearn_driver.py" );
 
-  /*!
-   * This static method forwards its arguments to process() and returns a 
-   * pointer on an object of template type Obj by loading the resulting plearn 
-   * script. Note that the object IS NOT BUILT since one may want to set other 
-   * options prior to calling build().  
-   */
-  template<class Obj>
-  static PP<Obj> load(
-    const std::string& filename,
-    const std::vector<std::string>& args = std::vector<std::string>(),
-    const std::string& drivername        = "pyplearn_driver.py" )
-  {
-    PP<PyPLearnScript> script = PyPLearnScript::process(filename, args, drivername);
+    /*!
+     * This static method forwards its arguments to process() and returns a 
+     * pointer on an object of template type Obj by loading the resulting plearn 
+     * script. Note that the object IS NOT BUILT since one may want to set other 
+     * options prior to calling build().  
+     */
+    template<class Obj>
+    static PP<Obj> load(
+        const std::string& filename,
+        const std::vector<std::string>& args = std::vector<std::string>(),
+        const std::string& drivername        = "pyplearn_driver.py" )
+    {
+        PP<PyPLearnScript> script = PyPLearnScript::process(filename, args, drivername);
 
-    PStream in = openString( script->plearn_script, PStream::plearn_ascii );
-    PP<Obj> o  = new Obj();
-    in >> o;
+        PStream in = openString( script->plearn_script, PStream::plearn_ascii );
+        PP<Obj> o  = new Obj();
+        in >> o;
 
-    return o;
-  }
+        return o;
+    }
 
  
 private:
-  typedef Object inherited;
+    typedef Object inherited;
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected:
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  //! The plearn_script
-  std::string plearn_script;
+    //! The plearn_script
+    std::string plearn_script;
   
-  //! Variables set at command line
-  std::map<std::string, std::string> vars;
+    //! Variables set at command line
+    std::map<std::string, std::string> vars;
 
-  //! Script is in fact an help message
-  bool do_help;
+    //! Script is in fact an help message
+    bool do_help;
 
-  //! Dump the script and forget it
-  bool do_dump;  
+    //! Dump the script and forget it
+    bool do_dump;  
 
-  /*!
-    Informations relative to the experiment settings, to be wrote in an
-    expdir file.
-  */
-  std::string metainfos;
+    /*!
+      Informations relative to the experiment settings, to be wrote in an
+      expdir file.
+    */
+    std::string metainfos;
 
-  //! The expdir of the experiment described by the script
-  PPath expdir;
+    //! The expdir of the experiment described by the script
+    PPath expdir;
   
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  PyPLearnScript();
+    //! Default constructor.
+    PyPLearnScript();
 
-  //! Returns the internal script representation
-  string getScript() { return plearn_script; }
+    //! Returns the internal script representation
+    string getScript() { return plearn_script; }
 
-  //! Saving metainfos to the expdir
-  void close();
+    //! Saving metainfos to the expdir
+    void close();
   
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(PyPLearnScript);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(PyPLearnScript);
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
 // Declares a few other classes and functions related to this class
@@ -156,3 +156,16 @@ DECLARE_OBJECT_PTR(PyPLearnScript);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

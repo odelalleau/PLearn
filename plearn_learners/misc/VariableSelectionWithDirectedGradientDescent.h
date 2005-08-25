@@ -35,9 +35,9 @@
 
 
 /* **************************************************************************************************************    
-   * $Id: VariableSelectionWithDirectedGradientDescent.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout         *
-   * This file is part of the PLearn library.                                                                   *
-   ************************************************************************************************************** */
+ * $Id: VariableSelectionWithDirectedGradientDescent.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout         *
+ * This file is part of the PLearn library.                                                                   *
+ ************************************************************************************************************** */
 
 /*! \file PLearnLibrary/PLearnAlgo/VariableSelectionWithDirectedGradientDescent.h */
 
@@ -51,41 +51,41 @@ using namespace std;
 
 class VariableSelectionWithDirectedGradientDescent: public PLearner
 {
-  typedef PLearner inherited;
+    typedef PLearner inherited;
 private:        
-  int inputsize;                              // input size of train set
-  int targetsize;                             // output size of train set
-  int weightsize;                             // weightsize size of train set
-  int length;                                 // number of samples in train set
-  int width;                                  // number of columns in train set
+    int inputsize;                              // input size of train set
+    int targetsize;                             // output size of train set
+    int weightsize;                             // weightsize size of train set
+    int length;                                 // number of samples in train set
+    int width;                                  // number of columns in train set
   
-  real learning_rate;  
-  Mat input_weights;
-  TVec<bool> weights_selected;
-  TVec<int> selected_variables;
+    real learning_rate;  
+    Mat input_weights;
+    TVec<bool> weights_selected;
+    TVec<int> selected_variables;
   
-  ProgressBar* pb;
-  int row;
-  int col;
-  Vec sample_input;
-  Vec sample_target;
-  real sample_weight;
-  Vec sample_output;
-  Vec sample_cost;  
-  Vec train_criterion;
-  real n7_value;
-  real n8_value;
-  real n9_value;
-  real n10_value;
-  real n10_gradient;
-  real n9_gradient;
-  real n8_gradient;
-  real n7_gradient;
-  Mat weights_gradient;
-  int weights_gradient_max_col;
-  real weights_gradient_max;
-  //! Stores the sum of the absolute values of the gradient over all targets.
-  Vec sum_of_abs_gradient;
+    ProgressBar* pb;
+    int row;
+    int col;
+    Vec sample_input;
+    Vec sample_target;
+    real sample_weight;
+    Vec sample_output;
+    Vec sample_cost;  
+    Vec train_criterion;
+    real n7_value;
+    real n8_value;
+    real n9_value;
+    real n10_value;
+    real n10_gradient;
+    real n9_gradient;
+    real n8_gradient;
+    real n7_gradient;
+    Mat weights_gradient;
+    int weights_gradient_max_col;
+    real weights_gradient_max;
+    //! Stores the sum of the absolute values of the gradient over all targets.
+    Vec sum_of_abs_gradient;
   
   
 public:
@@ -95,26 +95,26 @@ public:
     
     PLEARN_DECLARE_OBJECT(VariableSelectionWithDirectedGradientDescent);
 
-  virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
-  virtual void         build();
-  virtual void         train();
-  virtual void         forget();
-  virtual int          outputsize() const;
-  virtual TVec<string> getTrainCostNames() const;
-  virtual TVec<string> getTestCostNames() const;
-  virtual void         computeOutput(const Vec& input, Vec& output) const;
-  virtual void         computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs) const;
-  //! Overridden to take into account the new value of targetsize.
-  virtual void         setTrainingSet(VMat training_set, bool call_forget=true);
+    virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
+    virtual void         build();
+    virtual void         train();
+    virtual void         forget();
+    virtual int          outputsize() const;
+    virtual TVec<string> getTrainCostNames() const;
+    virtual TVec<string> getTestCostNames() const;
+    virtual void         computeOutput(const Vec& input, Vec& output) const;
+    virtual void         computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs) const;
+    //! Overridden to take into account the new value of targetsize.
+    virtual void         setTrainingSet(VMat training_set, bool call_forget=true);
 
 
 protected:
 
-  static  void         declareOptions(OptionList& ol);
+    static  void         declareOptions(OptionList& ol);
 
 private:
-          void         build_();
-          void         verbose(string the_msg, int the_level);
+    void         build_();
+    void         verbose(string the_msg, int the_level);
 };
 
 DECLARE_OBJECT_PTR(VariableSelectionWithDirectedGradientDescent);
@@ -123,3 +123,15 @@ DECLARE_OBJECT_PTR(VariableSelectionWithDirectedGradientDescent);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

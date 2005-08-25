@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.h,v 1.15 2004/11/26 16:57:23 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -51,64 +51,77 @@ using namespace std;
  
 class MemoryVMatrix: public VMatrix
 {
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
 protected:
 
-  //! The matrix storing the data in memory. It can either point to 'data'
-  //! or be filled with the content of 'data_vm', depending on which of these
-  //! two options is used.
-  Mat memory_data;
+    //! The matrix storing the data in memory. It can either point to 'data'
+    //! or be filled with the content of 'data_vm', depending on which of these
+    //! two options is used.
+    Mat memory_data;
 
-  //! Set to true if data is given through the 'data' option instead of the
-  //! 'data_vm' option. It requires memory_data and data to systematically
-  //! be the same.
-  bool synch_data;
+    //! Set to true if data is given through the 'data' option instead of the
+    //! 'data_vm' option. It requires memory_data and data to systematically
+    //! be the same.
+    bool synch_data;
 
 public:
 
-  Mat data;
-  VMat data_vm;
+    Mat data;
+    VMat data_vm;
 
 private:
 
-  //! This does the actual building.
-  void build_();
+    //! This does the actual building.
+    void build_();
 
 protected:
 
-  static void declareOptions(OptionList& ol);
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  MemoryVMatrix();
-  MemoryVMatrix(const Mat& the_data);
-  MemoryVMatrix(int l, int w);
-  MemoryVMatrix(VMat the_data_vm);
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
-  virtual void getRow(int i, Vec v) const;
-  virtual void getColumn(int i, Vec v) const;
-  virtual void getMat(int i, int j, Mat m) const;
-  virtual void put(int i, int j, real value);
-  virtual void putSubRow(int i, int j, Vec v);
-  virtual void putRow(int i, Vec v);
-  virtual void appendRow(Vec v);
-  virtual void fill(real value);
-  virtual void putMat(int i, int j, Mat m);
-  virtual Mat toMat() const;
-  virtual VMat subMat(int i, int j, int l, int w);
-  virtual real dot(int i1, int i2, int inputsize) const;
-  virtual real dot(int i, const Vec& v) const;
+    MemoryVMatrix();
+    MemoryVMatrix(const Mat& the_data);
+    MemoryVMatrix(int l, int w);
+    MemoryVMatrix(VMat the_data_vm);
+    virtual real get(int i, int j) const;
+    virtual void getSubRow(int i, int j, Vec v) const;
+    virtual void getRow(int i, Vec v) const;
+    virtual void getColumn(int i, Vec v) const;
+    virtual void getMat(int i, int j, Mat m) const;
+    virtual void put(int i, int j, real value);
+    virtual void putSubRow(int i, int j, Vec v);
+    virtual void putRow(int i, Vec v);
+    virtual void appendRow(Vec v);
+    virtual void fill(real value);
+    virtual void putMat(int i, int j, Mat m);
+    virtual Mat toMat() const;
+    virtual VMat subMat(int i, int j, int l, int w);
+    virtual real dot(int i1, int i2, int inputsize) const;
+    virtual real dot(int i, const Vec& v) const;
 
-  //! simply calls inherited::build() then build_()
-  virtual void build();
+    //! simply calls inherited::build() then build_()
+    virtual void build();
 
-  PLEARN_DECLARE_OBJECT(MemoryVMatrix);
-  void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    PLEARN_DECLARE_OBJECT(MemoryVMatrix);
+    void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
 DECLARE_OBJECT_PTR(MemoryVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

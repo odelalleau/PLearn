@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedSumOfVariable.h,v 1.8 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef UnfoldedSumOfVariable_INC
 #define UnfoldedSumOfVariable_INC
@@ -51,39 +51,39 @@ using namespace std;
 
 class UnfoldedSumOfVariable: public NaryVariable
 {
-  typedef NaryVariable inherited;
+    typedef NaryVariable inherited;
 
 public:
-  //protected:
-  Var input_matrix;
-  Var bag_size;
-  Func f;
-  int max_bag_size;
+    //protected:
+    Var input_matrix;
+    Var bag_size;
+    Func f;
+    int max_bag_size;
 
-  TVec<VarArray> inputs;  // all the input Var's
-  VarArray outputs;       // and the corresponding output Var's, 
-  TVec<VarArray> f_paths; // the duplicates of f prop. path for each input/output pair: inputs[i]->outputs[i]
+    TVec<VarArray> inputs;  // all the input Var's
+    VarArray outputs;       // and the corresponding output Var's, 
+    TVec<VarArray> f_paths; // the duplicates of f prop. path for each input/output pair: inputs[i]->outputs[i]
 
 public:
-  //!  protected default constructor for persistence
-  UnfoldedSumOfVariable() : max_bag_size(0) {}
-  //! Sum_{i=0 to bag_size} f(i-th row of input_matrix)
-  UnfoldedSumOfVariable(Var inputmatrix, Var bagsize, Func the_f, int maxbagsize);
+    //!  protected default constructor for persistence
+    UnfoldedSumOfVariable() : max_bag_size(0) {}
+    //! Sum_{i=0 to bag_size} f(i-th row of input_matrix)
+    UnfoldedSumOfVariable(Var inputmatrix, Var bagsize, Func the_f, int maxbagsize);
     
-  PLEARN_DECLARE_OBJECT(UnfoldedSumOfVariable);
-  static void declareOptions(OptionList& ol);
+    PLEARN_DECLARE_OBJECT(UnfoldedSumOfVariable);
+    static void declareOptions(OptionList& ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-  virtual void fprop();
-  virtual void bprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void fprop();
+    virtual void bprop();
     
-  void printInfo(bool print_gradient);
+    void printInfo(bool print_gradient);
 
 private:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(UnfoldedSumOfVariable);
@@ -94,3 +94,16 @@ inline Var unfoldedSumOf(Var input_matrix, Var bag_size, Func f, int max_bag_siz
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

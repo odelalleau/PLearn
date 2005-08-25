@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: LogSumVariable.cc,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "LogSumVariable.h"
 #include "SoftmaxVariable.h"
@@ -53,7 +53,7 @@ using namespace std;
 /** LogSumVariable **/
 
 LogSumVariable::LogSumVariable(Variable* input)
-  :UnaryVariable(input,1,1),input_softmax(input->nelems()) {}
+    :UnaryVariable(input,1,1),input_softmax(input->nelems()) {}
 
 
 PLEARN_IMPLEMENT_OBJECT(LogSumVariable, "ONE LINE DESCR", "NO HELP");
@@ -70,31 +70,42 @@ void LogSumVariable::recomputeSize(int& l, int& w) const
 
 void LogSumVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  UnaryVariable::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(input_softmax, copies);
+    UnaryVariable::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(input_softmax, copies);
 }
 
 
 void LogSumVariable::fprop()
 {
-  valuedata[0] = logadd(input->value);
+    valuedata[0] = logadd(input->value);
 }
 
 
 void LogSumVariable::bprop()
 {
-  softmax(input->value,input_softmax);
-  multiplyAcc(input->gradient, input_softmax,gradientdata[0]);
+    softmax(input->value,input_softmax);
+    multiplyAcc(input->gradient, input_softmax,gradientdata[0]);
 }
 
 
 void LogSumVariable::symbolicBprop()
 {
-  input->accg(g*softmax(input));
+    input->accg(g*softmax(input));
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

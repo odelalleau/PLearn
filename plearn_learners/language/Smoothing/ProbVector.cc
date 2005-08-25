@@ -40,69 +40,82 @@ namespace PLearn {
 
 void ProbVector::smoothNormalize(string name,real discounting_value)
 {
-  // smooth by discounting  and Normalize
+    // smooth by discounting  and Normalize
 
 #ifdef DEBUG  
-  cout << "Smoothing "<< name;
+    cout << "Smoothing "<< name;
 #endif
-  bool err_smooth_flag=false;
-  int f;
-  int size =  length_;
-  real *v = data();
-  real word_seen=0;
-  real sum_discounted=0.0;
-  real sum_v = 0;
+    bool err_smooth_flag=false;
+    int f;
+    int size =  length_;
+    real *v = data();
+    real word_seen=0;
+    real sum_discounted=0.0;
+    real sum_v = 0;
 
-  for(f=0;f<size;f++){
-    if (v[f]>discounting_value){
-      sum_v+=v[f];
-      v[f]-=discounting_value;
-      sum_discounted +=discounting_value;
-      word_seen++;
-      continue;
+    for(f=0;f<size;f++){
+        if (v[f]>discounting_value){
+            sum_v+=v[f];
+            v[f]-=discounting_value;
+            sum_discounted +=discounting_value;
+            word_seen++;
+            continue;
+        }
+        // in the case of non integer counts (typically during E.M. algo)
+        if (v[f]>0 && v[f]<discounting_value){
+            sum_v+=v[f];
+            err_smooth_flag=true;
+        }
     }
-    // in the case of non integer counts (typically during E.M. algo)
-    if (v[f]>0 && v[f]<discounting_value){
-      sum_v+=v[f];
-      err_smooth_flag=true;
+#ifdef DEBUG  
+    cout << ": discounted " << sum_discounted << " from " << word_seen << " seen events summing " <<sum_v ;
+#endif
+    // distribute discounted mass
+    real unseen_prob=sum_discounted/(sum_v*size);
+    word_seen=0;
+    for(f=0;f<size;f++){
+        // Distribute on both seen and unseen events
+        //if (v[f]<=discounting_value){
+        word_seen++;
+        v[f]/=sum_v;
+        v[f]+= unseen_prob;
+        // }else{
+        //       v[f]/=sum_v;
+        //     }
     }
-  }
 #ifdef DEBUG  
-  cout << ": discounted " << sum_discounted << " from " << word_seen << " seen events summing " <<sum_v ;
+    cout << " redistribute " << unseen_prob << " to "<< word_seen << " unseen events" <<endl;
 #endif
-  // distribute discounted mass
-  real unseen_prob=sum_discounted/(sum_v*size);
-  word_seen=0;
-  for(f=0;f<size;f++){
-    // Distribute on both seen and unseen events
-    //if (v[f]<=discounting_value){
-      word_seen++;
-      v[f]/=sum_v;
-      v[f]+= unseen_prob;
-      // }else{
-      //       v[f]/=sum_v;
-      //     }
-  }
-#ifdef DEBUG  
-  cout << " redistribute " << unseen_prob << " to "<< word_seen << " unseen events" <<endl;
-#endif
-  if(err_smooth_flag)PLWARNING("minimal value < discounted value in Backoff  Smoothing smoothNormalize a probVector");
+    if(err_smooth_flag)PLWARNING("minimal value < discounted value in Backoff  Smoothing smoothNormalize a probVector");
 }
 
 void ProbVector::normalize()
 {
-  // Normalize the vector (sum = 1)
-  int f;
-  int size =  length_;
-  real *v = data();
-  real sum_v = 0;
+    // Normalize the vector (sum = 1)
+    int f;
+    int size =  length_;
+    real *v = data();
+    real sum_v = 0;
 
-  for(f=0;f<size;f++){
-    sum_v+=v[f];
-  }
-  for(f=0;f<size;f++){
-    v[f]/=sum_v;
-  }
+    for(f=0;f<size;f++){
+        sum_v+=v[f];
+    }
+    for(f=0;f<size;f++){
+        v[f]/=sum_v;
+    }
 }
 
 }
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

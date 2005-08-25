@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef SubMatTransposeVariable_INC
 #define SubMatTransposeVariable_INC
@@ -54,30 +54,30 @@ class SubMatTransposeVariable: public UnaryVariable
 
 private:
 
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 protected:
 
-  int startk;
-  int length_, width_;
-  int i_, j_;
+    int startk;
+    int length_, width_;
+    int i_, j_;
 
 public:
 
-  //!  Default constructor for persistence
-  SubMatTransposeVariable() : startk(0), length_(0), width_(0), i_(0), j_(0) {}
-  SubMatTransposeVariable(Variable* v, int i, int j, int the_length, int the_width);
+    //!  Default constructor for persistence
+    SubMatTransposeVariable() : startk(0), length_(0), width_(0), i_(0), j_(0) {}
+    SubMatTransposeVariable(Variable* v, int i, int j, int the_length, int the_width);
 
-  PLEARN_DECLARE_OBJECT(SubMatTransposeVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(SubMatTransposeVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 
 private:
 
@@ -93,3 +93,16 @@ inline Var transpose(Var v)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

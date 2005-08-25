@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TransposeVMatrix.cc,v 1.5 2005/05/30 20:15:23 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,33 +54,33 @@ TransposeVMatrix::TransposeVMatrix()
 
 TransposeVMatrix::TransposeVMatrix(const VMat& the_source)
 {
-  source = the_source;
-  build();
+    source = the_source;
+    build();
 }
 
 PLEARN_IMPLEMENT_OBJECT(TransposeVMatrix,
-    "A VMatrix that sees the transpose of another VMatrix.",
-    ""
-);
+                        "A VMatrix that sees the transpose of another VMatrix.",
+                        ""
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void TransposeVMatrix::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  // ### ex:
-  // declareOption(ol, "myoption", &TransposeVMatrix::myoption, OptionBase::buildoption,
-  //               "Help text describing this option");
-  // ...
+    // ### ex:
+    // declareOption(ol, "myoption", &TransposeVMatrix::myoption, OptionBase::buildoption,
+    //               "Help text describing this option");
+    // ...
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 ///////////
@@ -88,9 +88,9 @@ void TransposeVMatrix::declareOptions(OptionList& ol)
 ///////////
 void TransposeVMatrix::build()
 {
-  // ### Nothing to add here, simply calls build_
-  inherited::build();
-  build_();
+    // ### Nothing to add here, simply calls build_
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -98,17 +98,17 @@ void TransposeVMatrix::build()
 ////////////
 void TransposeVMatrix::build_()
 {
-  if (source) {
-    width_ = source->length();
-    length_ = source->width();
-    if (inputsize_ < 0)
-      inputsize_ = width_;
-    if (targetsize_ < 0)
-      targetsize_ = 0;
-    if (weightsize_ < 0)
-      weightsize_ = 0;
-    setMetaInfoFromSource();
-  }
+    if (source) {
+        width_ = source->length();
+        length_ = source->width();
+        if (inputsize_ < 0)
+            inputsize_ = width_;
+        if (targetsize_ < 0)
+            targetsize_ = 0;
+        if (weightsize_ < 0)
+            weightsize_ = 0;
+        setMetaInfoFromSource();
+    }
 }
 
 ///////////////
@@ -116,7 +116,7 @@ void TransposeVMatrix::build_()
 ///////////////
 void TransposeVMatrix::getNewRow(int i, const Vec& v) const
 {
-  source->getColumn(i, v);
+    source->getColumn(i, v);
 }
 
 /////////////////////////////////
@@ -124,8 +124,20 @@ void TransposeVMatrix::getNewRow(int i, const Vec& v) const
 /////////////////////////////////
 void TransposeVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

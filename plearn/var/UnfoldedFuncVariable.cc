@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.cc,v 1.11 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "UnfoldedFuncVariable.h"
 //#include "PLMPI.h"
@@ -58,24 +58,24 @@ PLEARN_IMPLEMENT_OBJECT(UnfoldedFuncVariable, "Variable that puts in the rows of
                         "The parents of this variable include the non-input parents of the Func.\n");
 
 UnfoldedFuncVariable::UnfoldedFuncVariable()
-  : transpose(0)
-  {}
+    : transpose(0)
+{}
 
 UnfoldedFuncVariable::UnfoldedFuncVariable(Var inputmatrix, Func the_f, bool the_transpose)
-  : inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs) & inputmatrix, 
+    : inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs) & inputmatrix, 
                 the_transpose ? the_f->outputs[0]->length()*the_f->outputs[0]->width() : inputmatrix->length(),
                 the_transpose ? inputmatrix->width() : the_f->outputs[0]->length()*the_f->outputs[0]->width()),
-    input_matrix(inputmatrix), 
-    f(the_f),
-    transpose(the_transpose)
+      input_matrix(inputmatrix), 
+      f(the_f),
+      transpose(the_transpose)
 {
-  build();
+    build();
 }
 
 void UnfoldedFuncVariable::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void UnfoldedFuncVariable::build_()
@@ -102,17 +102,17 @@ void UnfoldedFuncVariable::build_()
 
 void UnfoldedFuncVariable::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "f", &UnfoldedFuncVariable::f, OptionBase::buildoption, 
-                "    Func that is replicated for each element of the 'bag' taken from the VMat.");
+    declareOption(ol, "f", &UnfoldedFuncVariable::f, OptionBase::buildoption, 
+                  "    Func that is replicated for each element of the 'bag' taken from the VMat.");
 
-  declareOption(ol, "input_matrix", &UnfoldedFuncVariable::input_matrix, OptionBase::buildoption, 
-                "    Var that contains the data, with multiple consecutive rows forming one bag.\n");
+    declareOption(ol, "input_matrix", &UnfoldedFuncVariable::input_matrix, OptionBase::buildoption, 
+                  "    Var that contains the data, with multiple consecutive rows forming one bag.\n");
 
-  declareOption(ol, "transpose", &UnfoldedFuncVariable::transpose, OptionBase::buildoption, 
-                "    If set to 1, then instead puts in the columns of the output matrix the values\n"
-                "    of f at the columns of the input matrix.");
+    declareOption(ol, "transpose", &UnfoldedFuncVariable::transpose, OptionBase::buildoption, 
+                  "    If set to 1, then instead puts in the columns of the output matrix the values\n"
+                  "    of f at the columns of the input matrix.");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 
@@ -133,66 +133,77 @@ void UnfoldedFuncVariable::recomputeSize(int& l, int& w) const
 
 void UnfoldedFuncVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  NaryVariable::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(input_matrix, copies);
-  deepCopyField(f, copies);
-  deepCopyField(inputs, copies);
-  deepCopyField(outputs, copies);
-  deepCopyField(f_paths, copies);
+    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(input_matrix, copies);
+    deepCopyField(f, copies);
+    deepCopyField(inputs, copies);
+    deepCopyField(outputs, copies);
+    deepCopyField(f_paths, copies);
 }
 
 
 void UnfoldedFuncVariable::fprop()
 {
-  int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
-  for (int i=0;i<n_unfold;i++) {
-    if (transpose) {
-      Vec tmp = input_matrix->matValue.column(i).toVecCopy(); // TODO something more efficient
-      inputs[i] << tmp;
-    } else {
-      inputs[i] << input_matrix->matValue(i);
+    int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
+    for (int i=0;i<n_unfold;i++) {
+        if (transpose) {
+            Vec tmp = input_matrix->matValue.column(i).toVecCopy(); // TODO something more efficient
+            inputs[i] << tmp;
+        } else {
+            inputs[i] << input_matrix->matValue(i);
+        }
+        f_paths[i].fprop();
+        if (transpose) {
+            matValue.column(i) << outputs[i]->value;
+        } else {
+            matValue(i) << outputs[i]->value;
+        }
     }
-    f_paths[i].fprop();
-    if (transpose) {
-      matValue.column(i) << outputs[i]->value;
-    } else {
-      matValue(i) << outputs[i]->value;
-    }
-  }
 }
 
 
 void UnfoldedFuncVariable::bprop()
 { 
-  int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
-  for (int i=0;i<n_unfold;i++)
+    int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
+    for (int i=0;i<n_unfold;i++)
     {
-      f_paths[i].clearGradient();
-      if (transpose) {
-        Vec tmp = matGradient.column(i).toVecCopy(); // TODO more efficient + check while it compiled without tmp = toVecCopy
-        outputs[i]->gradient << tmp;
-      } else {
-        outputs[i]->gradient << matGradient(i);
-      }
-      f_paths[i].bprop();
+        f_paths[i].clearGradient();
+        if (transpose) {
+            Vec tmp = matGradient.column(i).toVecCopy(); // TODO more efficient + check while it compiled without tmp = toVecCopy
+            outputs[i]->gradient << tmp;
+        } else {
+            outputs[i]->gradient << matGradient(i);
+        }
+        f_paths[i].bprop();
     }
 }
 
 
 void UnfoldedFuncVariable::printInfo(bool print_gradient)
 {
-  int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
-  for (int i=0;i<n_unfold;i++)
-    f_paths[i].printInfo(print_gradient);
-  cout << info() << " : " << getName() << "[" << (void*)this << "]" 
-       << "(input_matrix=" << (void*)input_matrix << " ";
-  for(int i=0; i<n_unfold; i++) cout << (void*)outputs[i] << " ";
-  cout << ") = " << value;
-  if (print_gradient) cout << " gradient=" << gradient;
-  cout << endl; 
+    int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
+    for (int i=0;i<n_unfold;i++)
+        f_paths[i].printInfo(print_gradient);
+    cout << info() << " : " << getName() << "[" << (void*)this << "]" 
+         << "(input_matrix=" << (void*)input_matrix << " ";
+    for(int i=0; i<n_unfold; i++) cout << (void*)outputs[i] << " ";
+    cout << ") = " << value;
+    if (print_gradient) cout << " gradient=" << gradient;
+    cout << endl; 
 }
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

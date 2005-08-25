@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CompareLearner.h,v 1.2 2005/02/08 21:59:56 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle
 
@@ -53,123 +53,136 @@ class CompareLearner: public PLearner
 
 private:
 
-  typedef PLearner inherited;
+    typedef PLearner inherited;
   
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
 
-  //! Number of learners to compare
-  int n_learners;
-  //! Output size of the learners
-  int learners_outputsize;
-  //! Indexes of the different costs
-  TMat<int> costs_indexes;
+    //! Number of learners to compare
+    int n_learners;
+    //! Output size of the learners
+    int learners_outputsize;
+    //! Indexes of the different costs
+    TMat<int> costs_indexes;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  //! Learners to compare
-  TVec< PP<PLearner> > learners;
-  //! Names of the learners
-  TVec<string> learner_names;
-  //! Common costs of the learners
-  TVec<string> common_costs;
+    //! Learners to compare
+    TVec< PP<PLearner> > learners;
+    //! Names of the learners
+    TVec<string> learner_names;
+    //! Common costs of the learners
+    TVec<string> common_costs;
   
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  CompareLearner();
+    //! Default constructor.
+    CompareLearner();
 
 
-  // ********************
-  // * PLearner methods *
-  // ********************
+    // ********************
+    // * PLearner methods *
+    // ********************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  // If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT.
-  PLEARN_DECLARE_OBJECT(CompareLearner);
+    // Declares other standard object methods.
+    // If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT.
+    PLEARN_DECLARE_OBJECT(CompareLearner);
 
 
-  // **************************
-  // **** PLearner methods ****
-  // **************************
+    // **************************
+    // **** PLearner methods ****
+    // **************************
 
-  //! Returns the size of this learner's output, (which typically
-  //! may depend on its inputsize(), targetsize() and set options).
-  virtual int outputsize() const;
+    //! Returns the size of this learner's output, (which typically
+    //! may depend on its inputsize(), targetsize() and set options).
+    virtual int outputsize() const;
 
-  //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
-  //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
-  virtual void forget();
+    //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
+    //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
+    virtual void forget();
 
     
-  //! The role of the train method is to bring the learner up to stage==nstages,
-  //! updating the train_stats collector with training costs measured on-line in the process.
-  virtual void train();
+    //! The role of the train method is to bring the learner up to stage==nstages,
+    //! updating the train_stats collector with training costs measured on-line in the process.
+    virtual void train();
 
 
-  //! Computes the output from the input.
-  virtual void computeOutput(const Vec& input, Vec& output) const;
+    //! Computes the output from the input.
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
-  //! Computes the costs from already computed output. 
-  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                       const Vec& target, Vec& costs) const;
+    //! Computes the costs from already computed output. 
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const;
                                 
 
-  //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
-  virtual TVec<std::string> getTestCostNames() const;
+    //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
+    virtual TVec<std::string> getTestCostNames() const;
 
-  //! Returns the names of the objective costs that the train method computes and 
-  //! for which it updates the VecStatsCollector train_stats.
-  virtual TVec<std::string> getTrainCostNames() const;
+    //! Returns the names of the objective costs that the train method computes and 
+    //! for which it updates the VecStatsCollector train_stats.
+    virtual TVec<std::string> getTrainCostNames() const;
 
-  virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol);
+    virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol);
 
-  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
   
-  virtual void setValidationSet(VMat validset);
+    virtual void setValidationSet(VMat validset);
 
-  virtual void setExperimentDirectory(const PPath& the_expdir);
+    virtual void setExperimentDirectory(const PPath& the_expdir);
 
 };
   
-  // Declares a few other classes and functions related to this class.
-  DECLARE_OBJECT_PTR(CompareLearner);
+// Declares a few other classes and functions related to this class.
+DECLARE_OBJECT_PTR(CompareLearner);
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

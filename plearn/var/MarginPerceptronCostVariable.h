@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef MarginPerceptronCostVariable_INC
 #define MarginPerceptronCostVariable_INC
@@ -48,43 +48,56 @@
 namespace PLearn {
 using namespace std;
 
-  // cost = sum_i max(0,margin - signed_target[i]*output[i])
-  // where signed_target is inferred from target as follows.
-  // target must be in (0,1,...,nclasses-1).
-  // If output.size()==1, signed_target[0] = target*2-1
-  // else signed_target[i] = 1_{target==i} - 1_{target!=i}.
+// cost = sum_i max(0,margin - signed_target[i]*output[i])
+// where signed_target is inferred from target as follows.
+// target must be in (0,1,...,nclasses-1).
+// If output.size()==1, signed_target[0] = target*2-1
+// else signed_target[i] = 1_{target==i} - 1_{target!=i}.
 class MarginPerceptronCostVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 protected:  
-  real margin;
+    real margin;
   
 public:
-  //!  Default constructor for persistence
-  MarginPerceptronCostVariable();
-  MarginPerceptronCostVariable(Variable* output, Variable* target, real margin);
+    //!  Default constructor for persistence
+    MarginPerceptronCostVariable();
+    MarginPerceptronCostVariable(Variable* output, Variable* target, real margin);
 
-  PLEARN_DECLARE_OBJECT(MarginPerceptronCostVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(MarginPerceptronCostVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
 
 protected:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(MarginPerceptronCostVariable);
 
 inline Var margin_perceptron_cost(Var output, Var target, real margin)
 {
-  return new MarginPerceptronCostVariable(output, target, margin);
+    return new MarginPerceptronCostVariable(output, target, margin);
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

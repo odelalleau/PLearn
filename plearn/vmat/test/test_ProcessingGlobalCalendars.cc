@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: test_ProcessingGlobalCalendars.cc,v 1.1 2005/05/24 21:54:57 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christian Dorion
 
@@ -60,25 +60,38 @@ string test_dates =
 
 int main()
 {
-  PStream cal_stream = openString(cal_dates, PStream::plearn_ascii);
-  PStream test_stream= openString(test_dates,PStream::plearn_ascii);
+    PStream cal_stream = openString(cal_dates, PStream::plearn_ascii);
+    PStream test_stream= openString(test_dates,PStream::plearn_ascii);
 
-  Vec cal_timestamps;
-  Mat test_dates_mat;
-  cal_stream  >> cal_timestamps;
-  test_stream >> test_dates_mat;
+    Vec cal_timestamps;
+    Mat test_dates_mat;
+    cal_stream  >> cal_timestamps;
+    test_stream >> test_dates_mat;
 
-  // Install global calendar
-  PCalendar cal = Calendar::makeCalendar(cal_timestamps);
-  Calendar::setGlobalCalendar("1", cal);
+    // Install global calendar
+    PCalendar cal = Calendar::makeCalendar(cal_timestamps);
+    Calendar::setGlobalCalendar("1", cal);
 
-  // Create source data
-  VMat source_data(test_dates_mat);
-  source_data->declareField(0,"date");
+    // Create source data
+    VMat source_data(test_dates_mat);
+    source_data->declareField(0,"date");
   
-  // Create processing vmatrix
-  PP<ProcessingVMatrix> ProcVM = new ProcessingVMatrix(source_data,
-                                                       vpl_prg);
-  ProcVM->saveAMAT("test_ProcessingGlobalCalendars_output.amat");
-  return 0;
+    // Create processing vmatrix
+    PP<ProcessingVMatrix> ProcVM = new ProcessingVMatrix(source_data,
+                                                         vpl_prg);
+    ProcVM->saveAMAT("test_ProcessingGlobalCalendars_output.amat");
+    return 0;
 }
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

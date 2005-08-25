@@ -36,8 +36,8 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.h,v 1.15 2004/11/04 14:58:37 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -58,64 +58,64 @@ class SelectColumnsVMatrix: public SourceVMatrix
   
 private:
     
- typedef SourceVMatrix inherited;
+    typedef SourceVMatrix inherited;
   
 public:
 
-  // Public build options.
+    // Public build options.
 
-  bool extend_with_missing;
-  TVec<int> indices;
-  TVec<string> fields;
-  bool fields_partial_match;
+    bool extend_with_missing;
+    TVec<int> indices;
+    TVec<string> fields;
+    bool fields_partial_match;
 
 public:
 
-  //! Default constructor.
-  SelectColumnsVMatrix();
+    //! Default constructor.
+    SelectColumnsVMatrix();
   
-  //! The appropriate fieldinfos are copied upon construction.
-  //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
-  SelectColumnsVMatrix(VMat the_source, TVec<string> the_fields, bool the_extend_with_missing = false);
+    //! The appropriate fieldinfos are copied upon construction.
+    //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
+    SelectColumnsVMatrix(VMat the_source, TVec<string> the_fields, bool the_extend_with_missing = false);
 
-  //! The appropriate fieldinfos are copied upon construction
-  //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
-  SelectColumnsVMatrix(VMat the_source, TVec<int> the_indices);
+    //! The appropriate fieldinfos are copied upon construction
+    //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
+    SelectColumnsVMatrix(VMat the_source, TVec<int> the_indices);
 
-  //! Here the indices will be copied locally into an integer vector
-  SelectColumnsVMatrix(VMat the_source, Vec the_indices);
+    //! Here the indices will be copied locally into an integer vector
+    SelectColumnsVMatrix(VMat the_source, Vec the_indices);
 
-  PLEARN_DECLARE_OBJECT(SelectColumnsVMatrix);
+    PLEARN_DECLARE_OBJECT(SelectColumnsVMatrix);
 
-  virtual void build();
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void build();
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
 
-  static void declareOptions(OptionList &ol);
-  void getNewRow(int i, const Vec& v) const { getSubRow(i, 0, v); }
+    static void declareOptions(OptionList &ol);
+    void getNewRow(int i, const Vec& v) const { getSubRow(i, 0, v); }
 
 public:
 
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
-  virtual void reset_dimensions() 
-  { 
-    source->reset_dimensions(); length_=source->length(); 
-    for (int i=0;indices.length();i++)
-      if (indices[i]>=source->width())
-        PLERROR("SelectColumnsVMatrix::reset_dimensions, underlying source not wide enough (%d>=%d)",
-            indices[i],source->width());
-  }
+    virtual real get(int i, int j) const;
+    virtual void getSubRow(int i, int j, Vec v) const;
+    virtual void reset_dimensions() 
+    { 
+        source->reset_dimensions(); length_=source->length(); 
+        for (int i=0;indices.length();i++)
+            if (indices[i]>=source->width())
+                PLERROR("SelectColumnsVMatrix::reset_dimensions, underlying source not wide enough (%d>=%d)",
+                        indices[i],source->width());
+    }
 
-  virtual const map<string,real>& getStringToRealMapping(int col) const;
-  virtual const map<real,string>& getRealToStringMapping(int col) const;
+    virtual const map<string,real>& getStringToRealMapping(int col) const;
+    virtual const map<real,string>& getRealToStringMapping(int col) const;
 
-  virtual real getStringVal(int col, const string & str) const;
-  virtual string getValString(int col, real val) const;
+    virtual real getStringVal(int col, const string & str) const;
+    virtual string getValString(int col, real val) const;
 
 private:
-  void build_();
+    void build_();
 
 };
 
@@ -123,3 +123,16 @@ DECLARE_OBJECT_PTR(SelectColumnsVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

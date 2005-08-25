@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.h,v 1.10 2005/02/08 21:34:29 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Christopher Kermorvant
 
@@ -59,87 +59,87 @@ class DictionaryVMatrix: public RowBufferedVMatrix
 
 private:
   
-  //! Number of attributes in the input text file (\t separated)
-  int attributes_number;
-  typedef RowBufferedVMatrix inherited;
+    //! Number of attributes in the input text file (\t separated)
+    int attributes_number;
+    typedef RowBufferedVMatrix inherited;
 
-  Mat data;
+    Mat data;
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  //! The text input file which is processed with dictionaries 
-  PPath input_file;
+    //! The text input file which is processed with dictionaries 
+    PPath input_file;
 
-  //! The dictionaries, one for each attributes
-  TVec< PP<Dictionary> > dictionaries;
+    //! The dictionaries, one for each attributes
+    TVec< PP<Dictionary> > dictionaries;
   
-  //! The options fields of every dictionaries
-  TVec< TVec <int> > option_fields;
+    //! The options fields of every dictionaries
+    TVec< TVec <int> > option_fields;
 
-  //! String delimiters for input file fields
-  string delimiters;
+    //! String delimiters for input file fields
+    string delimiters;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  DictionaryVMatrix();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    DictionaryVMatrix();
 
-  // ******************
-  // * Object methods *
-  // ******************
-  DictionaryVMatrix(const string filename);
+    // ******************
+    // * Object methods *
+    // ******************
+    DictionaryVMatrix(const string filename);
 private: 
 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
-  void extractDicType();
-  void buildDics();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
+    void extractDicType();
+    void buildDics();
 protected: 
 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
-  //! Fill the vector 'v' with the content of the i-th row.
-  //! v is assumed to be the right size.
-   virtual void getNewRow(int i, const Vec& v) const;
+    //! Fill the vector 'v' with the content of the i-th row.
+    //! v is assumed to be the right size.
+    virtual void getNewRow(int i, const Vec& v) const;
 
-  //! returns value associated with a string (or MISSING_VALUE if there's no association for this string)
-  virtual real getStringVal(int col, const string & str) const;
+    //! returns value associated with a string (or MISSING_VALUE if there's no association for this string)
+    virtual real getStringVal(int col, const string & str) const;
   
-  virtual string getValString(int col, real val) const;
+    virtual string getValString(int col, real val) const;
   
-  virtual int getDimension(int row, int col) const;
+    virtual int getDimension(int row, int col) const;
 
-  virtual Vec getValues(int row, int col) const;
+    virtual Vec getValues(int row, int col) const;
 
-  //! Gives the possible values of a certain field (column) given the input
-  virtual Vec getValues(const Vec& input, int col) const;
+    //! Gives the possible values of a certain field (column) given the input
+    virtual Vec getValues(const Vec& input, int col) const;
 
 public:
 
-  // Simply call inherited::build() then build_().
-  virtual void build();
+    // Simply call inherited::build() then build_().
+    virtual void build();
 
-  //! Transform a shallow copy into a deep copy.
-   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transform a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
   
-  //  virtual void save(const string& filename) ;  
-  //! Declare name and deepCopy methods.
-  PLEARN_DECLARE_OBJECT(DictionaryVMatrix);
+    //  virtual void save(const string& filename) ;  
+    //! Declare name and deepCopy methods.
+    PLEARN_DECLARE_OBJECT(DictionaryVMatrix);
 
 };
 
@@ -147,3 +147,16 @@ DECLARE_OBJECT_PTR(DictionaryVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

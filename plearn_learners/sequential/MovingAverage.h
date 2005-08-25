@@ -48,20 +48,20 @@ using namespace std;
 
 class MovingAverage: public SequentialLearner
 {
-  public:
+public:
 
     int window_length; // the length of the window on which to calculate the average
     Array<string> cost_funcs; // a list of cost functions (only MSE for now)
 
-  private:
+private:
     //! This does the actual building
     void build_();
 
-  protected:
+protected:
     //! Declare this class' options
     static void declareOptions(OptionList& ol);
 
-  public:
+public:
 
     //! Constructor
     MovingAverage();
@@ -72,10 +72,10 @@ class MovingAverage: public SequentialLearner
     virtual void train();
  
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
-        VMat testoutputs=0, VMat testcosts=0) const;
+                      VMat testoutputs=0, VMat testcosts=0) const;
 
     virtual void computeCostsFromOutputs(const Vec& inputs, const Vec& outputs,
-        const Vec& targets, Vec& costs) const;
+                                         const Vec& targets, Vec& costs) const;
 
     virtual TVec<string> getTrainCostNames() const;
     virtual TVec<string> getTestCostNames() const;
@@ -95,3 +95,16 @@ DECLARE_OBJECT_PTR(MovingAverage);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

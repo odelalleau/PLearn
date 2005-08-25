@@ -35,9 +35,9 @@
  
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnAlgo/GaussianDistribution.cc */
@@ -80,50 +80,50 @@ PLEARN_IMPLEMENT_OBJECT(GaussianDistribution,
 
 void GaussianDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(mu, copies);
-  deepCopyField(eigenvalues, copies);
-  deepCopyField(eigenvectors, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(mu, copies);
+    deepCopyField(eigenvalues, copies);
+    deepCopyField(eigenvectors, copies);
 }
 
 
 GaussianDistribution::GaussianDistribution()
-  :k(1000), 
-   gamma(0), 
-   min_eig(0),
-   use_last_eig(false),
-   ignore_weights_below(0)
+    :k(1000), 
+     gamma(0), 
+     min_eig(0),
+     use_last_eig(false),
+     ignore_weights_below(0)
 {
 }
 
 
 void GaussianDistribution::declareOptions(OptionList& ol)
 {
-  // Build options
-  declareOption(ol, "k", &GaussianDistribution::k, OptionBase::buildoption, 
-                "number of eigenvectors to keep when training");
+    // Build options
+    declareOption(ol, "k", &GaussianDistribution::k, OptionBase::buildoption, 
+                  "number of eigenvectors to keep when training");
 
-  declareOption(ol, "gamma", &GaussianDistribution::gamma, OptionBase::buildoption, 
-                "Value to add to the empirical eigenvalues to obtain actual variance.\n");
-  declareOption(ol, "min_eig", &GaussianDistribution::min_eig, OptionBase::buildoption, 
-                "Imposes a minimum over the actual variances to be used.\n"
-                "Actual variance used in the principal directions is max(min_eig, eigenvalue_i+gamma)\n");
-  declareOption(ol, "use_last_eig", &GaussianDistribution::use_last_eig, OptionBase::buildoption, 
-                "If true, the actual variance used for directions in the nullspace of VDV' \n"
-                "(i.e. orthogonal to the kept eigenvectors) will be the same as the\n"
-                "actual variance used for the last principal direction. \n"
-                "If false, the actual variance used for directions in the nullspace \n"
-                "will be max(min_eig, gamma)\n");
+    declareOption(ol, "gamma", &GaussianDistribution::gamma, OptionBase::buildoption, 
+                  "Value to add to the empirical eigenvalues to obtain actual variance.\n");
+    declareOption(ol, "min_eig", &GaussianDistribution::min_eig, OptionBase::buildoption, 
+                  "Imposes a minimum over the actual variances to be used.\n"
+                  "Actual variance used in the principal directions is max(min_eig, eigenvalue_i+gamma)\n");
+    declareOption(ol, "use_last_eig", &GaussianDistribution::use_last_eig, OptionBase::buildoption, 
+                  "If true, the actual variance used for directions in the nullspace of VDV' \n"
+                  "(i.e. orthogonal to the kept eigenvectors) will be the same as the\n"
+                  "actual variance used for the last principal direction. \n"
+                  "If false, the actual variance used for directions in the nullspace \n"
+                  "will be max(min_eig, gamma)\n");
 
-  declareOption(ol, "ignore_weights_below", &GaussianDistribution::ignore_weights_below, OptionBase::buildoption | OptionBase::nosave, 
-                "DEPRECATED: When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored");
+    declareOption(ol, "ignore_weights_below", &GaussianDistribution::ignore_weights_below, OptionBase::buildoption | OptionBase::nosave, 
+                  "DEPRECATED: When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored");
 
-  // Learnt options
-  declareOption(ol, "mu", &GaussianDistribution::mu, OptionBase::learntoption, "");
-  declareOption(ol, "eigenvalues", &GaussianDistribution::eigenvalues, OptionBase::learntoption, "");
-  declareOption(ol, "eigenvectors", &GaussianDistribution::eigenvectors, OptionBase::learntoption, "");
+    // Learnt options
+    declareOption(ol, "mu", &GaussianDistribution::mu, OptionBase::learntoption, "");
+    declareOption(ol, "eigenvalues", &GaussianDistribution::eigenvalues, OptionBase::learntoption, "");
+    declareOption(ol, "eigenvectors", &GaussianDistribution::eigenvectors, OptionBase::learntoption, "");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 ///////////
@@ -131,8 +131,8 @@ void GaussianDistribution::declareOptions(OptionList& ol)
 ///////////
 void GaussianDistribution::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -140,10 +140,10 @@ void GaussianDistribution::build()
 ////////////
 void GaussianDistribution::build_()
 {
-  if (ignore_weights_below != 0)
-    PLERROR("In GaussianDistribution::build_ - For the sake of simplicity, the "
-            "option 'ignore_weights_below' in GaussianDistribution has been "
-            "removed. If you were using it, please feel free to complain.");
+    if (ignore_weights_below != 0)
+        PLERROR("In GaussianDistribution::build_ - For the sake of simplicity, the "
+                "option 'ignore_weights_below' in GaussianDistribution has been "
+                "removed. If you were using it, please feel free to complain.");
 }
 
 void GaussianDistribution::forget()
@@ -151,124 +151,137 @@ void GaussianDistribution::forget()
 
 void GaussianDistribution::train()
 {
-  VMat training_set = getTrainingSet();
-  int l = training_set.length();
-  int d = training_set.width();
-  int ws = training_set->weightsize();
+    VMat training_set = getTrainingSet();
+    int l = training_set.length();
+    int d = training_set.width();
+    int ws = training_set->weightsize();
 
-  if(d!=inputsize()+ws)
-    PLERROR("In GaussianDistribution::train width of training_set should be equal to inputsize()+weightsize()");
+    if(d!=inputsize()+ws)
+        PLERROR("In GaussianDistribution::train width of training_set should be equal to inputsize()+weightsize()");
 
-  // these are used in SVD
-  static Mat trainmat;
-  static Mat U;
+    // these are used in SVD
+    static Mat trainmat;
+    static Mat U;
 
-  // The maximum number of eigenvalues we want.
-  int maxneigval = min(k, min(l,d));
+    // The maximum number of eigenvalues we want.
+    int maxneigval = min(k, min(l,d));
 
-  // First get mean and covariance
-  // (declared static to avoid repeated dynamic memory allocation)
-  static Mat covarmat;
+    // First get mean and covariance
+    // (declared static to avoid repeated dynamic memory allocation)
+    static Mat covarmat;
 
-  if(ws==0)
-    computeMeanAndCovar(training_set, mu, covarmat);
-  else if(ws==1)
-    computeInputMeanAndCovar(training_set, mu, covarmat);
-  else
-    PLERROR("In GaussianDistribution, weightsize can only be 0 or 1");
+    if(ws==0)
+        computeMeanAndCovar(training_set, mu, covarmat);
+    else if(ws==1)
+        computeInputMeanAndCovar(training_set, mu, covarmat);
+    else
+        PLERROR("In GaussianDistribution, weightsize can only be 0 or 1");
       
-  // cerr << "maxneigval: " << maxneigval << " ";
-  // cerr << eigenvalues.length() << endl;
-  // cerr << "eig V: \n" << V << endl;
+    // cerr << "maxneigval: " << maxneigval << " ";
+    // cerr << eigenvalues.length() << endl;
+    // cerr << "eig V: \n" << V << endl;
 
-  // Compute eigendecomposition only if there is a training set...
-  // Otherwise, just fill the eigen-* matrices to all NaN...
-  if (l>0 && maxneigval>0)
+    // Compute eigendecomposition only if there is a training set...
+    // Otherwise, just fill the eigen-* matrices to all NaN...
+    if (l>0 && maxneigval>0)
     {
-      eigenVecOfSymmMat(covarmat, maxneigval, eigenvalues, eigenvectors);
-      int neig = 0;
-      while(neig<eigenvalues.length() && eigenvalues[neig]>0.)
-        neig++;
-      eigenvalues.resize(neig);
-      eigenvectors.resize(neig,mu.length());
+        eigenVecOfSymmMat(covarmat, maxneigval, eigenvalues, eigenvectors);
+        int neig = 0;
+        while(neig<eigenvalues.length() && eigenvalues[neig]>0.)
+            neig++;
+        eigenvalues.resize(neig);
+        eigenvectors.resize(neig,mu.length());
     }
-  else 
+    else 
     {
-      eigenvalues.resize(0);
-      eigenvectors.resize(0, mu.length());
-      /*
-      eigenvalues.resize(maxneigval);
-      eigenvectors.resize(maxneigval, mu.size());
-      eigenvalues.fill(0);
-      eigenvectors.fill(0);
-      */
+        eigenvalues.resize(0);
+        eigenvectors.resize(0, mu.length());
+        /*
+          eigenvalues.resize(maxneigval);
+          eigenvectors.resize(maxneigval, mu.size());
+          eigenvalues.fill(0);
+          eigenvectors.fill(0);
+        */
     }
 }
 
 real GaussianDistribution::log_density(const Vec& x) const 
 { 
-  static Vec actual_eigenvalues;
+    static Vec actual_eigenvalues;
 
-  if(min_eig<=0 && !use_last_eig)
-    return logOfCompactGaussian(x, mu, eigenvalues, eigenvectors, gamma, true);
-  else
+    if(min_eig<=0 && !use_last_eig)
+        return logOfCompactGaussian(x, mu, eigenvalues, eigenvectors, gamma, true);
+    else
     {
-      int neig = eigenvalues.length();
-      real remaining_eig = 0; // variance for directions in null space 
-      actual_eigenvalues.resize(neig);
-      for(int j=0; j<neig; j++)
-        actual_eigenvalues[j] = max(eigenvalues[j]+gamma, min_eig);
-      if(use_last_eig)
-        remaining_eig = actual_eigenvalues[neig-1];
-      else
-        remaining_eig = max(gamma, min_eig);
-      return logOfCompactGaussian(x, mu, actual_eigenvalues, eigenvectors, remaining_eig);
+        int neig = eigenvalues.length();
+        real remaining_eig = 0; // variance for directions in null space 
+        actual_eigenvalues.resize(neig);
+        for(int j=0; j<neig; j++)
+            actual_eigenvalues[j] = max(eigenvalues[j]+gamma, min_eig);
+        if(use_last_eig)
+            remaining_eig = actual_eigenvalues[neig-1];
+        else
+            remaining_eig = max(gamma, min_eig);
+        return logOfCompactGaussian(x, mu, actual_eigenvalues, eigenvectors, remaining_eig);
     }
 }
 
 
 void GaussianDistribution::resetGenerator(long g_seed) const
 {
-  manual_seed(g_seed);
+    manual_seed(g_seed);
 }
 
 void GaussianDistribution::generate(Vec& x) const
 {
-  static Vec r;
-  int neig = eigenvalues.length();
-  int m = mu.length();
-  r.resize(neig);
+    static Vec r;
+    int neig = eigenvalues.length();
+    int m = mu.length();
+    r.resize(neig);
   
-  real remaining_eig = 0;
-  if(use_last_eig)
-    remaining_eig = max(eigenvalues[neig-1]+gamma, min_eig);
-  else
-    remaining_eig = max(gamma, min_eig);
+    real remaining_eig = 0;
+    if(use_last_eig)
+        remaining_eig = max(eigenvalues[neig-1]+gamma, min_eig);
+    else
+        remaining_eig = max(gamma, min_eig);
 
-  fill_random_normal(r);
-  for(int i=0; i<neig; i++)
+    fill_random_normal(r);
+    for(int i=0; i<neig; i++)
     {
-      real neweig = max(eigenvalues[i]+gamma, min_eig)-remaining_eig;
-      r[i] *= sqrt(neweig);
+        real neweig = max(eigenvalues[i]+gamma, min_eig)-remaining_eig;
+        r[i] *= sqrt(neweig);
     }
-  x.resize(m);
-  transposeProduct(x,eigenvectors,r);
-  if(remaining_eig>0.)
+    x.resize(m);
+    transposeProduct(x,eigenvectors,r);
+    if(remaining_eig>0.)
     {
-      r.resize(m);
-      fill_random_normal(r,0,sqrt(remaining_eig));
-      x += r;
+        r.resize(m);
+        fill_random_normal(r,0,sqrt(remaining_eig));
+        x += r;
     }
-  x += mu;
+    x += mu;
 }
 
 ///////////////
 // inputsize //
 ///////////////
 int GaussianDistribution::inputsize() const {
-  if (train_set || mu.length() == 0)
-    return inherited::inputsize();
-  return mu.length();
+    if (train_set || mu.length() == 0)
+        return inherited::inputsize();
+    return mu.length();
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

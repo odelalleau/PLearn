@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CartesianProductOracle.h,v 1.2 2005/02/19 22:10:15 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 /*! \file CartesianProductOracle.h */
 #ifndef CartesianProductOracle_INC
@@ -47,64 +47,64 @@ using namespace std;
 
 class CartesianProductOracle: public OptionsOracle
 {
-  typedef OptionsOracle inherited;
+    typedef OptionsOracle inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // indices for the next combination of values
-  TVec<int> option_values_indices;
-  bool last_combination; // to know that we have gone through all combinations
+    // indices for the next combination of values
+    TVec<int> option_values_indices;
+    bool last_combination; // to know that we have gone through all combinations
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  TVec<string> option_names; //!< name of options
-  TVec< TVec<string> > option_values; //!< A list of option values for each option name
+    TVec<string> option_names; //!< name of options
+    TVec< TVec<string> > option_values; //!< A list of option values for each option name
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  CartesianProductOracle();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    CartesianProductOracle();
 
 
-  // ******************
-  // * OptionsOracle methods *
-  // ******************
+    // ******************
+    // * OptionsOracle methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  //! returns the set of names of options this generator generates
-  virtual TVec<string>  getOptionNames() const;
+    //! returns the set of names of options this generator generates
+    virtual TVec<string>  getOptionNames() const;
 
-  virtual TVec<string> generateNextTrial(const TVec<string>& older_trial, real obtained_objective);
+    virtual TVec<string> generateNextTrial(const TVec<string>& older_trial, real obtained_objective);
 
-  virtual void forget();
+    virtual void forget();
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(CartesianProductOracle);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(CartesianProductOracle);
 };
 
 // Declares a few other classes and functions related to this class
@@ -113,3 +113,16 @@ DECLARE_OBJECT_PTR(CartesianProductOracle);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

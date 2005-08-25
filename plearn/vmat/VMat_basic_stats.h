@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -52,7 +52,7 @@
 namespace PLearn {
 using namespace std;
 
-  class VMat;
+class VMat;
 
 #define MEAN_ROW 0
 #define STDDEV_ROW 1
@@ -126,12 +126,12 @@ TVec<Mat> computeConditionalMeans(VMat trainset, int targetsize, Mat& basic_stat
   (as we probably only want to 'normalize' the 'input' part of the sample, 
   and not the 'target' that is typically present in the last columns).
 */
-  VMat normalize(const VMat& d, const Vec& meanvec, const Vec& stddevvec);
+VMat normalize(const VMat& d, const Vec& meanvec, const Vec& stddevvec);
 
-  //! Here, mean and stddev are estimated on d.subMat(0,0,ntrain,inputsize).
-  VMat normalize(const VMat& d, int inputsize, int ntrain);
-  //! Here, mean and stddev are estimated on the whole dataset d.
-  VMat normalize(const VMat& d, int inputsize);
+//! Here, mean and stddev are estimated on d.subMat(0,0,ntrain,inputsize).
+VMat normalize(const VMat& d, int inputsize, int ntrain);
+//! Here, mean and stddev are estimated on the whole dataset d.
+VMat normalize(const VMat& d, int inputsize);
 
 //! Compute the correlations between each of the columns of x and each of the 
 //! columns of y. The results are in the x.width() by y.width() matrix r.
@@ -145,3 +145,16 @@ void correlations(const VMat& x, const VMat& y, Mat& r, Mat& pvalues, bool ignor
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

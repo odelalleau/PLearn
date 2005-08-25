@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixSumOfVariable.h,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef MatrixSumOfVariable_INC
 #define MatrixSumOfVariable_INC
@@ -53,8 +53,8 @@ class MatrixSumOfVariable: public NaryVariable
 {
     typedef NaryVariable inherited;
 
-  public:
-  //protected:
+public:
+    //protected:
     VMat distr;
     Func f;
     int nsamples;
@@ -65,7 +65,7 @@ class MatrixSumOfVariable: public NaryVariable
     Vec input_gradient;
     Vec output_value;
     
-  public:
+public:
     //!  protected default constructor for persistence
     MatrixSumOfVariable() : distr(), f(), nsamples(), input_size(), curpos() {}
     //!  Sum_{inputs \in distr} f(inputs)
@@ -103,3 +103,16 @@ inline Var meanOf(VMat distr, Func f, int nsamples, int input_size)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

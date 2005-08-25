@@ -36,10 +36,10 @@
  
 
 /* *******************************************************      
-   * $Id$
-   * AUTHORS: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 // This file contains useful functions for file manipulation
 // that are used in the PLearn Library
@@ -62,171 +62,184 @@
 namespace PLearn {
 using namespace std;
   
-  //! Change current directory.
-  int chdir(const PPath& path);
+//! Change current directory.
+int chdir(const PPath& path);
 
-  //! Returns true if the given path points to an existing regular file or directory.
-  bool pathexists(const PPath& path);
+//! Returns true if the given path points to an existing regular file or directory.
+bool pathexists(const PPath& path);
 
-  //! Returns true if the given path is an existing directory (or a symbolic link pointing to a directory).
-  bool isdir(const PPath& path);
+//! Returns true if the given path is an existing directory (or a symbolic link pointing to a directory).
+bool isdir(const PPath& path);
 
-  //! Returns true if the given path is an existing regular file (or a symbolic link pointing to a file).
-  bool isfile(const PPath& path);
+//! Returns true if the given path is an existing regular file (or a symbolic link pointing to a file).
+bool isfile(const PPath& path);
 
-  //! Returns the time of last modification of file (or 0 if file does not exist).
-  time_t mtime(const PPath& path);
+//! Returns the time of last modification of file (or 0 if file does not exist).
+time_t mtime(const PPath& path);
 
-  /*! Returns a list of all entries in the given directory (omitting entries "." and "..")
-      If the directory cannot be opened an error is issued.
-      The returned entries are not full paths.
-  */
-  vector<string> lsdir(const PPath& dirpath);
+/*! Returns a list of all entries in the given directory (omitting entries "." and "..")
+  If the directory cannot be opened an error is issued.
+  The returned entries are not full paths.
+*/
+vector<string> lsdir(const PPath& dirpath);
 
-  //! Same as lsdir, except the returned entries are full paths.
-  vector<PPath> lsdir_fullpath(const PPath& dirpath);
+//! Same as lsdir, except the returned entries are full paths.
+vector<PPath> lsdir_fullpath(const PPath& dirpath);
 
-  /*! Forces directory creation if it does not already exist. 
-      (also creates any missing directory along its path).
-      Return value indicates success (true) or failure (false).
-      If the directory already exists, true is returned.
-  */
-  bool force_mkdir(const PPath& dirname);
+/*! Forces directory creation if it does not already exist. 
+  (also creates any missing directory along its path).
+  Return value indicates success (true) or failure (false).
+  If the directory already exists, true is returned.
+*/
+bool force_mkdir(const PPath& dirname);
   
-  //! Extracts the directory part of the filepath and calls force_mkdir.
-  //! Calls PLERROR in case of failure.
-  void force_mkdir_for_file(const PPath& filepath);
+//! Extracts the directory part of the filepath and calls force_mkdir.
+//! Calls PLERROR in case of failure.
+void force_mkdir_for_file(const PPath& filepath);
 
-  /*! Forces removal of directory and all its content.
-      Return value indicates success (true) or failure (false).
-      If the directory does not exist, false is returned.
-  */
-  bool force_rmdir(const PPath& dirname);
+/*! Forces removal of directory and all its content.
+  Return value indicates success (true) or failure (false).
+  If the directory does not exist, false is returned.
+*/
+bool force_rmdir(const PPath& dirname);
 
-  //! Returns the length of a file, measured in bytes.
-  long filesize(const PPath& filename);
+//! Returns the length of a file, measured in bytes.
+long filesize(const PPath& filename);
 
-  //! Calls system with cp -R to recursively copy source to destination.
-  void cp(const PPath& srcpath, const PPath& destpath);
+//! Calls system with cp -R to recursively copy source to destination.
+void cp(const PPath& srcpath, const PPath& destpath);
 
-  //! Calls system rm command to remove the given file.
-  void rm(const PPath& file);
+//! Calls system rm command to remove the given file.
+void rm(const PPath& file);
 
-  //! Calls system mv command to move the given source file to destination.
-  void mv(const PPath& source, const PPath& dest);
+//! Calls system mv command to move the given source file to destination.
+void mv(const PPath& source, const PPath& dest);
 
-  //! Same as mv, but will not prompt before overwriting.
-  void mvforce(const PPath& source, const PPath& dest);
+//! Same as mv, but will not prompt before overwriting.
+void mvforce(const PPath& source, const PPath& dest);
 
-  //! Trivial unix touch.
-  void touch(const PPath& file);
+//! Trivial unix touch.
+void touch(const PPath& file);
 
-  //! Reads while the characters read exactly match those in s.
-  //! Will throw a PLERROR exception as soon as it doesn't match.
-  void readWhileMatches(PStream& in, const string& s);
+//! Reads while the characters read exactly match those in s.
+//! Will throw a PLERROR exception as soon as it doesn't match.
+void readWhileMatches(PStream& in, const string& s);
 
-  //! Skips everything until '\n' (also consumes the '\n').
-  void skipRestOfLine(PStream& in);
+//! Skips everything until '\n' (also consumes the '\n').
+void skipRestOfLine(PStream& in);
 
-  //! Will skip all blanks (white space, newline and #-style comments).
-  //! Next character read will be first "non-blank".
-  void skipBlanksAndComments(PStream& in);
+//! Will skip all blanks (white space, newline and #-style comments).
+//! Next character read will be first "non-blank".
+void skipBlanksAndComments(PStream& in);
 
-  //! Fills 'line' with the next non blank line (#-style comments are
-  //! considered blank, and automatically stripped out of 'line').
-  void getNextNonBlankLine(PStream& in, string& line);
+//! Fills 'line' with the next non blank line (#-style comments are
+//! considered blank, and automatically stripped out of 'line').
+void getNextNonBlankLine(PStream& in, string& line);
 
-  //! Will return the number of non-blank lines of file.
-  //! #-style comments are considered blank.
-  int countNonBlankLinesOfFile(const PPath& filename);
+//! Will return the number of non-blank lines of file.
+//! #-style comments are considered blank.
+int countNonBlankLinesOfFile(const PPath& filename);
 
-  //! Peeks the first char after removal of blanks.
-  inline int peekAfterSkipBlanks(PStream& in) {
+//! Peeks the first char after removal of blanks.
+inline int peekAfterSkipBlanks(PStream& in) {
     int c;
     do {
-      c = in.get();
+        c = in.get();
     } while (c != EOF && isspace(c));
     in.unget();
     return c;
-  }
+}
 
-  //! Peeks the first char after removal of blanks and comments.
-  inline int peekAfterSkipBlanksAndComments(PStream& in)
-  { skipBlanksAndComments(in); return in.peek(); }
+//! Peeks the first char after removal of blanks and comments.
+inline int peekAfterSkipBlanksAndComments(PStream& in)
+{ skipBlanksAndComments(in); return in.peek(); }
 
-  //! Gets the first char after removal of blanks.
-  inline int getAfterSkipBlanks(PStream& in) {
+//! Gets the first char after removal of blanks.
+inline int getAfterSkipBlanks(PStream& in) {
     int c;
     do {
-      c = in.get();
+        c = in.get();
     } while (c != EOF && isspace(c));
     return c;
-  }
+}
 
-  //! Gets the first char after removal of blanks and comments.
-  inline int getAfterSkipBlanksAndComments(PStream& in)
-  { skipBlanksAndComments(in); return in.get(); }
+//! Gets the first char after removal of blanks and comments.
+inline int getAfterSkipBlanksAndComments(PStream& in)
+{ skipBlanksAndComments(in); return in.get(); }
 
-  //! Returns a temporary file (or directory) name suitable
-  //! for a unique (one time) use. If provided, 'prefix' will
-  //! be give the first characters of the file (or directory).
-  PPath newFilename(const PPath& directory = "/tmp/", const string& prefix="", bool is_directory=false);
+//! Returns a temporary file (or directory) name suitable
+//! for a unique (one time) use. If provided, 'prefix' will
+//! be give the first characters of the file (or directory).
+PPath newFilename(const PPath& directory = "/tmp/", const string& prefix="", bool is_directory=false);
 
-  //! Return a valid filename from a potentially invalid one.
-  PPath makeFileNameValid(const PPath& filename);
+//! Return a valid filename from a potentially invalid one.
+PPath makeFileNameValid(const PPath& filename);
 
-  //! Returns the whole content of the file as a string.
-  string loadFileAsString(const PPath& filepath);
+//! Returns the whole content of the file as a string.
+string loadFileAsString(const PPath& filepath);
 
-  //! Writes the raw string into the given file.
-  //! Intermediate directories in filepath are created if necessary.
-  void saveStringInFile(const PPath& filepath, const string& text);
+//! Writes the raw string into the given file.
+//! Intermediate directories in filepath are created if necessary.
+void saveStringInFile(const PPath& filepath, const string& text);
 
-  //! Will return the text, macro processed, with each instance of ${varname}
-  //! in the text that corresponds to a key in the given map replaced by its
-  //! associated value. 
-  //! Also every $DEFINE{varname=... } in the text will add a new varname
-  //! entry in the map (the DEFINE macro will be discarded).
-  //! Also every $INCLUDE{filepath} will be replaced in place by the text of
-  //! the file it includes
-  string readAndMacroProcess(PStream& in, map<string, string>& variables);
+//! Will return the text, macro processed, with each instance of ${varname}
+//! in the text that corresponds to a key in the given map replaced by its
+//! associated value. 
+//! Also every $DEFINE{varname=... } in the text will add a new varname
+//! entry in the map (the DEFINE macro will be discarded).
+//! Also every $INCLUDE{filepath} will be replaced in place by the text of
+//! the file it includes
+string readAndMacroProcess(PStream& in, map<string, string>& variables);
 
-  /*! Given a filename, generates the standard PLearn variables FILEPATH,
-      DIRPATH, FILENAME, FILEBASE, FILEEXT, DATE, TIME and DATETIME and
-      adds them to the map of variables passed as an argument.
-  */
-  void addFileAndDateVariables(const PPath& filepath, map<string, string>& variables);
+/*! Given a filename, generates the standard PLearn variables FILEPATH,
+  DIRPATH, FILENAME, FILEBASE, FILEEXT, DATE, TIME and DATETIME and
+  adds them to the map of variables passed as an argument.
+*/
+void addFileAndDateVariables(const PPath& filepath, map<string, string>& variables);
     
-  /*! Same as readAndMacroProcess, but takes a filename instead of a string.
-      The following variables are automatically set from the filepath: FILEPATH DIRPATH FILENAME FILEBASE FILEEXT 
-      Ex: if the absolute path to filepath is /home/me/foo.plearn
-      Then we'll get:
-      FILEPATH = "/home/me/foo.plearn"
-      DIRPATH  = "/home/me"
-      FILENAME = "foo.plearn"
-      FILEBASE = "foo"
-      FILEEXT  = ".plearn"
-      Variables for the date and time (DATE, TIME, DATETIME) are also defined.
+/*! Same as readAndMacroProcess, but takes a filename instead of a string.
+  The following variables are automatically set from the filepath: FILEPATH DIRPATH FILENAME FILEBASE FILEEXT 
+  Ex: if the absolute path to filepath is /home/me/foo.plearn
+  Then we'll get:
+  FILEPATH = "/home/me/foo.plearn"
+  DIRPATH  = "/home/me"
+  FILENAME = "foo.plearn"
+  FILEBASE = "foo"
+  FILEEXT  = ".plearn"
+  Variables for the date and time (DATE, TIME, DATETIME) are also defined.
 
-      If 'change_dir' is set to true, the program will move to the directory
-      containing 'filepath' before reading the file, and will move back to the
-      current directory before exiting the function.
+  If 'change_dir' is set to true, the program will move to the directory
+  containing 'filepath' before reading the file, and will move back to the
+  current directory before exiting the function.
 
-      The path 'filepath' may contain local variables in the form:
-      dir/file::var1=x1::var2=x2 ...
-      These variables will be used when parsing the file, but will not be saved
-      in the 'variables' map.
-  */
-  string readFileAndMacroProcess(const PPath& filepath,
-                                 map<string, string>& variables,
-                                 bool change_dir = false);
+  The path 'filepath' may contain local variables in the form:
+  dir/file::var1=x1::var2=x2 ...
+  These variables will be used when parsing the file, but will not be saved
+  in the 'variables' map.
+*/
+string readFileAndMacroProcess(const PPath& filepath,
+                               map<string, string>& variables,
+                               bool change_dir = false);
 
-  inline string readFileAndMacroProcess(const PPath& filepath)
-  {
+inline string readFileAndMacroProcess(const PPath& filepath)
+{
     map<string, string> variables;
     return readFileAndMacroProcess(filepath, variables);
-  }
+}
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: InterleaveVMatrix.cc,v 1.4 2004/04/05 22:55:21 morinf Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "InterleaveVMatrix.h"
 
@@ -53,15 +53,15 @@ InterleaveVMatrix::InterleaveVMatrix()
 }
 
 InterleaveVMatrix::InterleaveVMatrix(Array<VMat> the_vm)
-  : vm(the_vm)
+    : vm(the_vm)
 {
-  build();
+    build();
 }
 
 InterleaveVMatrix::InterleaveVMatrix(VMat d1, VMat d2)
-  : vm(d1,d2)
+    : vm(d1,d2)
 {
-  build();
+    build();
 }
 
 void
@@ -74,25 +74,25 @@ InterleaveVMatrix::build()
 void
 InterleaveVMatrix::build_()
 {
-  if (vm) {
-    int n = vm.size();
-    if (n<1) 
-      PLERROR("InterleaveVMatrix expects >= 1 underlying-distribution, got %d",n);
+    if (vm) {
+        int n = vm.size();
+        if (n<1) 
+            PLERROR("InterleaveVMatrix expects >= 1 underlying-distribution, got %d",n);
 
-    // Copy the parent fields
-    fieldinfos = vm[0]->getFieldInfos();
+        // Copy the parent fields
+        fieldinfos = vm[0]->getFieldInfos();
   
-    width_ = vm[0]->width();
-    int maxl = 0;
-    for (int i = 0; i < n; i++) {
-      if (vm[i]->width() != width_)
-        PLERROR("InterleaveVMatrix: underlying-distr %d has %d width, while 0-th has %d",i,vm[i]->width(),width_);
-      int l = vm[i]->length();
-      if (l > maxl)
-          maxl=l;
+        width_ = vm[0]->width();
+        int maxl = 0;
+        for (int i = 0; i < n; i++) {
+            if (vm[i]->width() != width_)
+                PLERROR("InterleaveVMatrix: underlying-distr %d has %d width, while 0-th has %d",i,vm[i]->width(),width_);
+            int l = vm[i]->length();
+            if (l > maxl)
+                maxl=l;
+        }
+        length_ = n * maxl;
     }
-    length_ = n * maxl;
-  }
 }
 
 void
@@ -105,25 +105,38 @@ InterleaveVMatrix::declareOptions(OptionList &ol)
 real InterleaveVMatrix::get(int i, int j) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length() || j<0 || j>=width())
-    PLERROR("In InterleaveVMatrix::get OUT OF BOUNDS");
+    if(i<0 || i>=length() || j<0 || j>=width())
+        PLERROR("In InterleaveVMatrix::get OUT OF BOUNDS");
 #endif
-  int n=vm.size();
-  int m = i%n; // which VM 
-  int pos = int(i/n) % vm[m].length(); // position within vm[m]
-  return vm[m]->get(pos,j);
+    int n=vm.size();
+    int m = i%n; // which VM 
+    int pos = int(i/n) % vm[m].length(); // position within vm[m]
+    return vm[m]->get(pos,j);
 }
 
 void InterleaveVMatrix::getSubRow(int i, int j, Vec v) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length() || j<0 || j+v.length()>width())
-    PLERROR("In InterleaveVMatrix::getRow OUT OF BOUNDS");
+    if(i<0 || i>=length() || j<0 || j+v.length()>width())
+        PLERROR("In InterleaveVMatrix::getRow OUT OF BOUNDS");
 #endif
-  int n=vm.size();
-  int m = i%n; // which VM 
-  int pos = int(i/n) % vm[m].length(); // position within vm[m]
-  vm[m]->getSubRow(pos, j, v);
+    int n=vm.size();
+    int m = i%n; // which VM 
+    int pos = int(i/n) % vm[m].length(); // position within vm[m]
+    vm[m]->getSubRow(pos, j, v);
 }
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

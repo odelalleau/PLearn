@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MinusScalarVariable.h,v 1.4 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef MinusScalarVariable_INC
 #define MinusScalarVariable_INC
@@ -53,23 +53,23 @@ using namespace std;
 
 class MinusScalarVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  MinusScalarVariable() {}
-  MinusScalarVariable(Variable* input1, Variable* input2);
+    //!  Default constructor for persistence
+    MinusScalarVariable() {}
+    MinusScalarVariable(Variable* input1, Variable* input2);
 
-  PLEARN_DECLARE_OBJECT(MinusScalarVariable);
+    PLEARN_DECLARE_OBJECT(MinusScalarVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void bbprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void bbprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 
 protected:
     void build_();
@@ -79,3 +79,16 @@ protected:
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

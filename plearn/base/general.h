@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: general.h,v 1.15 2004/07/21 16:30:50 chrish42 Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/general.h */
@@ -107,40 +107,40 @@
 
 namespace std {
   
-  //! efficient specialisations of std::copy for built-in types
+//! efficient specialisations of std::copy for built-in types
 
-  inline float* copy(float* first, float* last, float* dest)
-  { size_t n = last-first; memcpy(dest, first, n*sizeof(float)); return dest+n; }
+inline float* copy(float* first, float* last, float* dest)
+{ size_t n = last-first; memcpy(dest, first, n*sizeof(float)); return dest+n; }
 
-  inline double* copy(double* first, double* last, double* dest)
-  { size_t n = last-first; memcpy(dest, first, n*sizeof(double)); return dest+n; }
+inline double* copy(double* first, double* last, double* dest)
+{ size_t n = last-first; memcpy(dest, first, n*sizeof(double)); return dest+n; }
 
-  inline bool* copy(bool* first, bool* last, bool* dest)
-  { size_t n = last-first; memcpy(dest, first, n*sizeof(bool)); return dest+n; }
+inline bool* copy(bool* first, bool* last, bool* dest)
+{ size_t n = last-first; memcpy(dest, first, n*sizeof(bool)); return dest+n; }
 
-  inline char* copy(char* first, char* last, char* dest)
-  { size_t n = last-first; memcpy(dest, first, n*sizeof(char)); return dest+n; }
+inline char* copy(char* first, char* last, char* dest)
+{ size_t n = last-first; memcpy(dest, first, n*sizeof(char)); return dest+n; }
 
-  inline unsigned char* copy(unsigned char* first, unsigned char* last, unsigned char* dest)
-  { size_t n = last-first; memcpy(dest, first, n*sizeof(unsigned char)); return dest+n; }
+inline unsigned char* copy(unsigned char* first, unsigned char* last, unsigned char* dest)
+{ size_t n = last-first; memcpy(dest, first, n*sizeof(unsigned char)); return dest+n; }
 
-  inline short* copy(short* first, short* last, short* dest)
-  { size_t n = last-first; memcpy(dest, first, n*sizeof(short)); return dest+n; }
+inline short* copy(short* first, short* last, short* dest)
+{ size_t n = last-first; memcpy(dest, first, n*sizeof(short)); return dest+n; }
 
-  inline unsigned short* copy(unsigned short* first, unsigned short* last, unsigned short* dest)
-  { size_t n = last-first; memcpy(dest, first, n*sizeof(unsigned short)); return dest+n; }
+inline unsigned short* copy(unsigned short* first, unsigned short* last, unsigned short* dest)
+{ size_t n = last-first; memcpy(dest, first, n*sizeof(unsigned short)); return dest+n; }
 
-  inline int* copy(int* first, int* last, int* dest)
-  { size_t n = last-first; memcpy(dest, first, n*sizeof(int)); return dest+n; }
+inline int* copy(int* first, int* last, int* dest)
+{ size_t n = last-first; memcpy(dest, first, n*sizeof(int)); return dest+n; }
 
-  inline unsigned int* copy(unsigned int* first, unsigned int* last, unsigned int* dest)
-  { size_t n = last-first; memcpy(dest, first, n*sizeof(unsigned int)); return dest+n; }
+inline unsigned int* copy(unsigned int* first, unsigned int* last, unsigned int* dest)
+{ size_t n = last-first; memcpy(dest, first, n*sizeof(unsigned int)); return dest+n; }
 
-  inline long* copy(long* first, long* last, long* dest)
-  { size_t n = last-first; memcpy(dest, first, n*sizeof(long)); return dest+n; }
+inline long* copy(long* first, long* last, long* dest)
+{ size_t n = last-first; memcpy(dest, first, n*sizeof(long)); return dest+n; }
 
-  inline unsigned long* copy(unsigned long* first, unsigned long* last, unsigned long* dest)
-  { size_t n = last-first; memcpy(dest, first, n*sizeof(unsigned long)); return dest+n; }
+inline unsigned long* copy(unsigned long* first, unsigned long* last, unsigned long* dest)
+{ size_t n = last-first; memcpy(dest, first, n*sizeof(unsigned long)); return dest+n; }
 
 } // end of namespace std
 
@@ -155,15 +155,15 @@ using namespace std;
 using std::min;
 using std::max;
 
-  //! Like std::copy, but with an explicit cast to the destination type
-  template<class In, class Out>
-  inline Out copy_cast(In first, In last, Out res)
-  {
+//! Like std::copy, but with an explicit cast to the destination type
+template<class In, class Out>
+inline Out copy_cast(In first, In last, Out res)
+{
     typedef typename iterator_traits<Out>::value_type out_t;
     for(; first!=last; ++first, ++res)
-      *res = out_t(*first);
+        *res = out_t(*first);
     return res;
-  }
+}
 
 
 //! clearing an element (that's called by clear_n...)
@@ -188,75 +188,75 @@ inline void clear_1(float& x) { x = 0; }
 inline void clear_1(double& x) { x = 0; }
 inline void clear_1(bool& x) { x = false; }
 
-  //! clears n elements starting at iterator position begin 
-  template<class For>
-  inline void clear_n(For begin, int n)
-  {
+//! clears n elements starting at iterator position begin 
+template<class For>
+inline void clear_n(For begin, int n)
+{
     while(n--)
-      {
+    {
         clear_1(*begin);
         ++begin;
-      }
-  }
-
-  //! efficient specialisation for built-in types
-  inline void clear_n(float* begin, int n)
-  { memset(begin,0,n*sizeof(float)); }
-
-  inline void clear_n(double* begin, int n)
-  { memset(begin,0,n*sizeof(double)); }
-
-  inline void clear_n(bool* begin, int n)
-  { memset(begin,0,n*sizeof(bool)); }
-
-  inline void clear_n(char* begin, int n)
-  { memset(begin,0,n*sizeof(char)); }
-
-  inline void clear_n(unsigned char* begin, int n)
-  { memset(begin,0,n*sizeof(unsigned char)); }
-
-  inline void clear_n(short* begin, int n)
-  { memset(begin,0,n*sizeof(short)); }
-
-  inline void clear_n(unsigned short* begin, int n)
-  { memset(begin,0,n*sizeof(unsigned short)); }
-
-  inline void clear_n(int* begin, int n)
-  { memset(begin,0,n*sizeof(int)); }
-
-  inline void clear_n(unsigned int* begin, int n)
-  { memset(begin,0,n*sizeof(unsigned int)); }
-
-  inline void clear_n(long* begin, int n)
-  { memset(begin,0,n*sizeof(long)); }  
-
-  inline void clear_n(unsigned long* begin, int n)
-  { memset(begin,0,n*sizeof(unsigned long)); }  
-
-  typedef int (*compare_function)(const void *, const void *);
-
-  template<class T>
-  inline void swap(T& a, T& b)
-    { 
-      T tmp; 
-      tmp = a;
-      a = b;
-      b = tmp;
     }
+}
+
+//! efficient specialisation for built-in types
+inline void clear_n(float* begin, int n)
+{ memset(begin,0,n*sizeof(float)); }
+
+inline void clear_n(double* begin, int n)
+{ memset(begin,0,n*sizeof(double)); }
+
+inline void clear_n(bool* begin, int n)
+{ memset(begin,0,n*sizeof(bool)); }
+
+inline void clear_n(char* begin, int n)
+{ memset(begin,0,n*sizeof(char)); }
+
+inline void clear_n(unsigned char* begin, int n)
+{ memset(begin,0,n*sizeof(unsigned char)); }
+
+inline void clear_n(short* begin, int n)
+{ memset(begin,0,n*sizeof(short)); }
+
+inline void clear_n(unsigned short* begin, int n)
+{ memset(begin,0,n*sizeof(unsigned short)); }
+
+inline void clear_n(int* begin, int n)
+{ memset(begin,0,n*sizeof(int)); }
+
+inline void clear_n(unsigned int* begin, int n)
+{ memset(begin,0,n*sizeof(unsigned int)); }
+
+inline void clear_n(long* begin, int n)
+{ memset(begin,0,n*sizeof(long)); }  
+
+inline void clear_n(unsigned long* begin, int n)
+{ memset(begin,0,n*sizeof(unsigned long)); }  
+
+typedef int (*compare_function)(const void *, const void *);
+
+template<class T>
+inline void swap(T& a, T& b)
+{ 
+    T tmp; 
+    tmp = a;
+    a = b;
+    b = tmp;
+}
 
 //!  make a copy of a C string and return it
-  char* strcopy(char* s);
+char* strcopy(char* s);
 
 //!  print a number without unnecessary trailing zero's, into buffer
-  void pretty_print_number(char* buffer, real number);
+void pretty_print_number(char* buffer, real number);
 
 //!  Simple file info
-  int   file_size(const string& filename);
-  bool file_exists(const string& filename);
+int   file_size(const string& filename);
+bool file_exists(const string& filename);
 
 	
-  //!  check that all keys of the map are int values
-  bool isMapKeysAreInt(map<real,int>& m);
+//!  check that all keys of the map are int values
+bool isMapKeysAreInt(map<real,int>& m);
 
 // return the name of host, e.g. with getenv("HOSTNAME") or getenv("HOST")
 string hostname();
@@ -265,8 +265,8 @@ string hostname();
 class PLearnInit
 {
 public:
-  PLearnInit();
-  ~PLearnInit();
+    PLearnInit();
+    ~PLearnInit();
 };
 
 //static PLearnInit _plearn_init_;
@@ -278,3 +278,16 @@ string prgname(const string& setname = "");
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

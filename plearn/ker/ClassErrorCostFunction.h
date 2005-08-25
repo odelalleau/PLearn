@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ClassErrorCostFunction.h,v 1.5 2004/09/24 15:06:27 kermorvc Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ClassErrorCostFunction_INC
 #define ClassErrorCostFunction_INC
@@ -52,55 +52,55 @@ using namespace std;
 
 
 /*!   * If output and target both have length 1, then binary classification 
-    with targets -1 and +1 is assumed and the sign of the output is considered
-    If ouput is MISSING_VALUE, evaluation returns MISSING_VALUE; MISSING_VALUE
-    can be considered as an error if ignore_missing_value is set to false.
+  with targets -1 and +1 is assumed and the sign of the output is considered
+  If ouput is MISSING_VALUE, evaluation returns MISSING_VALUE; MISSING_VALUE
+  can be considered as an error if ignore_missing_value is set to false.
   * If output has length>1 and target has length 1, then output is understood 
-    as giving a score for each class while target is the index of the correct
-    class (numbered from 0)
+  as giving a score for each class while target is the index of the correct
+  class (numbered from 0)
   * If both output and target have a length>1 then then output is understood 
-    as giving a score for each class while the correct class is given by 
-    argmax(target)
+  as giving a score for each class while the correct class is given by 
+  argmax(target)
   In any case, evaluation returns 0 if classification was correct, 1 otherwise
 */
 class ClassErrorCostFunction: public Kernel
 {
-  typedef Kernel inherited;
+    typedef Kernel inherited;
   
-  protected:
-     bool output_is_classnum;
-     bool ignore_missing_values;
+protected:
+    bool output_is_classnum;
+    bool ignore_missing_values;
 
- public:
+public:
 /*!       There are several cases:
-      1) target is a single value +1 or -1 , and output is a single value whose sign stands for the class
-      2) target is a single value in 0..n-1 indicating classnumber and output is a n-dimensional vector of scores
-      3) target is a n-dimensional vector whose argmax indicates the class, and output is a n-dimensional vector of scores
-      4) target is a single value indicating classnumber, and output is a single value indicating classnumber
-      5) target is a single value 0 or 1 , and output is a single value with the threshold 0.5
-      Cases 1,2,3 are handled correctly with the default output_is_classnum=false
-      For case 4 and 5, you must specify output_is_classnum=true
+  1) target is a single value +1 or -1 , and output is a single value whose sign stands for the class
+  2) target is a single value in 0..n-1 indicating classnumber and output is a n-dimensional vector of scores
+  3) target is a n-dimensional vector whose argmax indicates the class, and output is a n-dimensional vector of scores
+  4) target is a single value indicating classnumber, and output is a single value indicating classnumber
+  5) target is a single value 0 or 1 , and output is a single value with the threshold 0.5
+  Cases 1,2,3 are handled correctly with the default output_is_classnum=false
+  For case 4 and 5, you must specify output_is_classnum=true
 */
-  ClassErrorCostFunction(bool the_output_is_classnum = false,bool the_ignore_missing_values=true)
-    :output_is_classnum(the_output_is_classnum),ignore_missing_values(the_ignore_missing_values) {}
+    ClassErrorCostFunction(bool the_output_is_classnum = false,bool the_ignore_missing_values=true)
+        :output_is_classnum(the_output_is_classnum),ignore_missing_values(the_ignore_missing_values) {}
 
-  PLEARN_DECLARE_OBJECT(ClassErrorCostFunction);
+    PLEARN_DECLARE_OBJECT(ClassErrorCostFunction);
 
-  virtual string info() const
+    virtual string info() const
     { return "class_error"; }
 
-  virtual real evaluate(const Vec& output, const Vec& target) const;
+    virtual real evaluate(const Vec& output, const Vec& target) const;
 
 protected:
-  //!  recognized option is "output_is_classnum"  
-  static void declareOptions(OptionList &ol);
+    //!  recognized option is "output_is_classnum"  
+    static void declareOptions(OptionList &ol);
 };
 
 DECLARE_OBJECT_PTR(ClassErrorCostFunction);
 
 inline CostFunc class_error(bool output_is_classnum=false,bool ignore_missing_values=true) 
 { 
-  return new ClassErrorCostFunction(output_is_classnum, ignore_missing_values); 
+    return new ClassErrorCostFunction(output_is_classnum, ignore_missing_values); 
 } 
 
 
@@ -108,3 +108,15 @@ inline CostFunc class_error(bool output_is_classnum=false,bool ignore_missing_va
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

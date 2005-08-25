@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeVariable.cc,v 1.8 2004/04/27 15:59:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "SoftSlopeVariable.h"
 //#include "Var_utils.h"
@@ -59,7 +59,7 @@ PLEARN_IMPLEMENT_OBJECT(SoftSlopeVariable,
                         "If the arguments are vectors than the operation is performed element by element on all of them.\n");
 
 SoftSlopeVariable::  SoftSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right, bool tabulated_)
-  : inherited(VarArray(x,smoothness) & Var(left) & Var(right), 
+    : inherited(VarArray(x,smoothness) & Var(left) & Var(right), 
                 x->length()<left->length()?left->length():x->length(), 
                 x->width()<left->width()?left->width():x->width()), tabulated(tabulated_)
 {}
@@ -94,80 +94,91 @@ void SoftSlopeVariable::recomputeSize(int& l, int& w) const
 
 void SoftSlopeVariable::fprop()
 {
-  int n=nelems();
-  int n1=varray[0]->nelems();
-  int n2=varray[1]->nelems();
-  int n3=varray[2]->nelems();
-  int n4=varray[3]->nelems();
-  real* x = varray[0]->valuedata;
-  real* smoothness = varray[1]->valuedata;
-  real* left = varray[2]->valuedata;
-  real* right = varray[3]->valuedata;
+    int n=nelems();
+    int n1=varray[0]->nelems();
+    int n2=varray[1]->nelems();
+    int n3=varray[2]->nelems();
+    int n4=varray[3]->nelems();
+    real* x = varray[0]->valuedata;
+    real* smoothness = varray[1]->valuedata;
+    real* left = varray[2]->valuedata;
+    real* right = varray[3]->valuedata;
 
-  if (n1==n && n2==n && n3==n && n4==n)
-    for(int i=0; i<n; i++)
-      valuedata[i] = tabulated?tabulated_soft_slope(x[i], smoothness[i], left[i], right[i]):soft_slope(x[i], smoothness[i], left[i], right[i]);
-  else if (n1==1 && n2==n && n3==n && n4==n)
-    for(int i=0; i<n; i++)
-      valuedata[i] = tabulated?tabulated_soft_slope(*x, smoothness[i], left[i], right[i]):soft_slope(*x, smoothness[i], left[i], right[i]);
-  else
-  {
-    int m1= n1==1?0:1;
-    int m2= n2==1?0:1;
-    int m3= n3==1?0:1;
-    int m4= n4==1?0:1;
-    for(int i=0; i<n; i++,x+=m1,smoothness+=m2,left+=m3,right+=m4)
-      valuedata[i] = tabulated?tabulated_soft_slope(*x, *smoothness, *left, *right):soft_slope(*x, *smoothness, *left, *right);
-  }
+    if (n1==n && n2==n && n3==n && n4==n)
+        for(int i=0; i<n; i++)
+            valuedata[i] = tabulated?tabulated_soft_slope(x[i], smoothness[i], left[i], right[i]):soft_slope(x[i], smoothness[i], left[i], right[i]);
+    else if (n1==1 && n2==n && n3==n && n4==n)
+        for(int i=0; i<n; i++)
+            valuedata[i] = tabulated?tabulated_soft_slope(*x, smoothness[i], left[i], right[i]):soft_slope(*x, smoothness[i], left[i], right[i]);
+    else
+    {
+        int m1= n1==1?0:1;
+        int m2= n2==1?0:1;
+        int m3= n3==1?0:1;
+        int m4= n4==1?0:1;
+        for(int i=0; i<n; i++,x+=m1,smoothness+=m2,left+=m3,right+=m4)
+            valuedata[i] = tabulated?tabulated_soft_slope(*x, *smoothness, *left, *right):soft_slope(*x, *smoothness, *left, *right);
+    }
 }
 
 
 void SoftSlopeVariable::bprop()
 {
-  int n=nelems();
-  int n1=varray[0]->nelems();
-  int n2=varray[1]->nelems();
-  int n3=varray[2]->nelems();
-  int n4=varray[3]->nelems();
-  int m1= n1==1?0:1;
-  int m2= n2==1?0:1;
-  int m3= n3==1?0:1;
-  int m4= n4==1?0:1;
-  real* x = varray[0]->valuedata;
-  real* smoothness = varray[1]->valuedata;
-  real* left = varray[2]->valuedata;
-  real* right = varray[3]->valuedata;
-  real* dx = varray[0]->gradientdata;
-  real* dsmoothness = varray[1]->gradientdata;
-  real* dleft = varray[2]->gradientdata;
-  real* dright = varray[3]->gradientdata;
-  for(int i=0; i<n; i++,x+=m1,smoothness+=m2,left+=m3,right+=m4,dx+=m1,dsmoothness+=m2,dleft+=m3,dright+=m4)
-  {
-    if (*smoothness == 0) continue;
-    real inv_smoothness = 1.0 / *smoothness;
-    real t1 = sigmoid(- *smoothness*(*x-*left));
-    real t2 = sigmoid(- *smoothness*(*x-*right));
-    real inv_delta=1.0/(*right-*left);
-    real rat = (tabulated?tabulated_soft_slope(*x, *smoothness, *left, *right):soft_slope(*x, *smoothness, *left, *right)) -1;
-    real move = rat * inv_delta;
-    real dss = (-t1*(*x-*left) + t2*(*x-*right))*inv_smoothness*inv_delta - rat * inv_smoothness;
-    real dll = t1*inv_delta*inv_smoothness + move;
-    real drr = -t2*inv_delta*inv_smoothness - move;
-    real dxx = (-t1+t2)*inv_delta;
-    *dx += gradientdata[i] * dxx;
-    *dsmoothness += gradientdata[i] * dss;
-    *dleft += gradientdata[i] * dll;
-    *dright += gradientdata[i] * drr;
-  }
+    int n=nelems();
+    int n1=varray[0]->nelems();
+    int n2=varray[1]->nelems();
+    int n3=varray[2]->nelems();
+    int n4=varray[3]->nelems();
+    int m1= n1==1?0:1;
+    int m2= n2==1?0:1;
+    int m3= n3==1?0:1;
+    int m4= n4==1?0:1;
+    real* x = varray[0]->valuedata;
+    real* smoothness = varray[1]->valuedata;
+    real* left = varray[2]->valuedata;
+    real* right = varray[3]->valuedata;
+    real* dx = varray[0]->gradientdata;
+    real* dsmoothness = varray[1]->gradientdata;
+    real* dleft = varray[2]->gradientdata;
+    real* dright = varray[3]->gradientdata;
+    for(int i=0; i<n; i++,x+=m1,smoothness+=m2,left+=m3,right+=m4,dx+=m1,dsmoothness+=m2,dleft+=m3,dright+=m4)
+    {
+        if (*smoothness == 0) continue;
+        real inv_smoothness = 1.0 / *smoothness;
+        real t1 = sigmoid(- *smoothness*(*x-*left));
+        real t2 = sigmoid(- *smoothness*(*x-*right));
+        real inv_delta=1.0/(*right-*left);
+        real rat = (tabulated?tabulated_soft_slope(*x, *smoothness, *left, *right):soft_slope(*x, *smoothness, *left, *right)) -1;
+        real move = rat * inv_delta;
+        real dss = (-t1*(*x-*left) + t2*(*x-*right))*inv_smoothness*inv_delta - rat * inv_smoothness;
+        real dll = t1*inv_delta*inv_smoothness + move;
+        real drr = -t2*inv_delta*inv_smoothness - move;
+        real dxx = (-t1+t2)*inv_delta;
+        *dx += gradientdata[i] * dxx;
+        *dsmoothness += gradientdata[i] * dss;
+        *dleft += gradientdata[i] * dll;
+        *dright += gradientdata[i] * drr;
+    }
 }
 
 void SoftSlopeVariable::symbolicBprop()
 {
-  PLERROR("SoftSlopeVariable::symbolicBprop() not implemented");
+    PLERROR("SoftSlopeVariable::symbolicBprop() not implemented");
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

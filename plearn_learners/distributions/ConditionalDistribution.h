@@ -49,44 +49,57 @@ using namespace std;
 class ConditionalDistribution: public Distribution
 {
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
     
 public:
 
-  typedef Distribution inherited;
+    typedef Distribution inherited;
 
     // the part of the PLearner's inputsize() that corresponds to the size
     // of the conditioning variable. It should be < inputsize().
-  int input_part_size;
+    int input_part_size;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  ConditionalDistribution();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    ConditionalDistribution();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(ConditionalDistribution);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(ConditionalDistribution);
 
-  //! Set the input part before using the inherited methods
-  virtual void setInput(const Vec& input);
+    //! Set the input part before using the inherited methods
+    virtual void setInput(const Vec& input);
 
-  virtual void use(const Vec& input, Vec& output);
+    virtual void use(const Vec& input, Vec& output);
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(ConditionalDistribution);
+DECLARE_OBJECT_PTR(ConditionalDistribution);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

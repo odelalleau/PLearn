@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExplicitSplitter.cc,v 1.10 2004/09/14 16:04:39 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file ExplicitSplitter.cc */
 #include "ExplicitSplitter.h"
@@ -44,20 +44,20 @@ namespace PLearn {
 using namespace std;
 
 ExplicitSplitter::ExplicitSplitter() 
-  :Splitter()
+    :Splitter()
 {}
 
 
 PLEARN_IMPLEMENT_OBJECT(ExplicitSplitter, "ONE LINE DESCR",
-    "ExplicitSplitter allows you to define a 'splitter' by giving explicitly the datasets for each split\n"
-    "as a matrix VMatrices.\n"
-    "(This splitter in effect ignores the 'dataset' it is given with setDataSet) \n");
+                        "ExplicitSplitter allows you to define a 'splitter' by giving explicitly the datasets for each split\n"
+                        "as a matrix VMatrices.\n"
+                        "(This splitter in effect ignores the 'dataset' it is given with setDataSet) \n");
 
 void ExplicitSplitter::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "splitsets", &ExplicitSplitter::splitsets, OptionBase::buildoption,
-                "This is a matrix of VMat giving explicitly the datasets for each split.");
-  inherited::declareOptions(ol);
+    declareOption(ol, "splitsets", &ExplicitSplitter::splitsets, OptionBase::buildoption,
+                  "This is a matrix of VMat giving explicitly the datasets for each split.");
+    inherited::declareOptions(ol);
 }
 
 void ExplicitSplitter::build_()
@@ -67,31 +67,44 @@ void ExplicitSplitter::build_()
 // ### Nothing to add here, simply calls build_
 void ExplicitSplitter::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void ExplicitSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Splitter::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(splitsets, copies);
+    Splitter::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(splitsets, copies);
 }
 
 int ExplicitSplitter::nsplits() const
 {
-  return splitsets.length();
+    return splitsets.length();
 }
 
 int ExplicitSplitter::nSetsPerSplit() const
 {
-  return splitsets.width();
+    return splitsets.width();
 }
 
 
 TVec<VMat> ExplicitSplitter::getSplit(int k)
 {
-  return splitsets(k);
+    return splitsets(k);
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

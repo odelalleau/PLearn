@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -52,67 +52,67 @@ using namespace std;
 UnconditionalDistribution::UnconditionalDistribution() 
 /* ### Initialize all fields to their default value here */
 {
-  // ...
+    // ...
 
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
+    // ### You may or may not want to call build_() to finish building the object
+    // build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(UnconditionalDistribution,
-    "This class is a simplified version of PDistribution for unconditional distributions.",
-    "Its only goal is to hide the conditional side of PDistributions to make it simpler."
-);
+                        "This class is a simplified version of PDistribution for unconditional distributions.",
+                        "Its only goal is to hide the conditional side of PDistributions to make it simpler."
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void UnconditionalDistribution::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
-  // ### ex:
-  // declareOption(ol, "myoption", &UnconditionalDistribution::myoption, OptionBase::buildoption,
-  //               "Help text describing this option");
-  // ...
+    // ### ex:
+    // declareOption(ol, "myoption", &UnconditionalDistribution::myoption, OptionBase::buildoption,
+    //               "Help text describing this option");
+    // ...
 
-  // First call the parent class' declareOptions().
-  inherited::declareOptions(ol);
+    // First call the parent class' declareOptions().
+    inherited::declareOptions(ol);
 
-  // And modify some options for unconditional distributions.
+    // And modify some options for unconditional distributions.
 
-  redeclareOption(ol, "outputs_def", &PDistribution::outputs_def, OptionBase::buildoption,
-      "Defines what will be given in output. This is a string where the characters\n"
-      "have the following meaning:\n"
-      "'l'-> log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn,\n"
-      "'e' -> expectation, 'v' -> variance.\n"
-      "In lower case they give the value associated with a given observation.\n"
-      "In upper case, a curve is evaluated at regular intervals and produced in\n"
-      "output (as a histogram), only for 'L', 'D', 'C' and 'S'.\n"
-      "The number of curve points is determined by the 'n_curve_points' option.\n"
-      "Note that the upper case letters only work for SCALAR variables."
-      );
+    redeclareOption(ol, "outputs_def", &PDistribution::outputs_def, OptionBase::buildoption,
+                    "Defines what will be given in output. This is a string where the characters\n"
+                    "have the following meaning:\n"
+                    "'l'-> log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn,\n"
+                    "'e' -> expectation, 'v' -> variance.\n"
+                    "In lower case they give the value associated with a given observation.\n"
+                    "In upper case, a curve is evaluated at regular intervals and produced in\n"
+                    "output (as a histogram), only for 'L', 'D', 'C' and 'S'.\n"
+                    "The number of curve points is determined by the 'n_curve_points' option.\n"
+                    "Note that the upper case letters only work for SCALAR variables."
+        );
 
-  redeclareOption(ol, "conditional_flags", &UnconditionalDistribution::conditional_flags, OptionBase::nosave,
-      "Unused in unconditional distributions.");
+    redeclareOption(ol, "conditional_flags", &UnconditionalDistribution::conditional_flags, OptionBase::nosave,
+                    "Unused in unconditional distributions.");
 
-  redeclareOption(ol, "provide_input", &UnconditionalDistribution::provide_input, OptionBase::nosave,
-      "Unused in unconditional distributions.");
+    redeclareOption(ol, "provide_input", &UnconditionalDistribution::provide_input, OptionBase::nosave,
+                    "Unused in unconditional distributions.");
 
-  redeclareOption(ol, "cond_sort",  &UnconditionalDistribution::cond_sort, OptionBase::nosave,
-      "Unused in unconditional distributions.");
+    redeclareOption(ol, "cond_sort",  &UnconditionalDistribution::cond_sort, OptionBase::nosave,
+                    "Unused in unconditional distributions.");
 
-  redeclareOption(ol, "n_input",  &UnconditionalDistribution::n_input, OptionBase::nosave,
-      "Unused in unconditional distributions.");
+    redeclareOption(ol, "n_input",  &UnconditionalDistribution::n_input, OptionBase::nosave,
+                    "Unused in unconditional distributions.");
 
-  redeclareOption(ol, "n_target",  &UnconditionalDistribution::n_target, OptionBase::nosave,
-      "Unused in unconditional distributions.");
+    redeclareOption(ol, "n_target",  &UnconditionalDistribution::n_target, OptionBase::nosave,
+                    "Unused in unconditional distributions.");
 
-  redeclareOption(ol, "n_margin",  &UnconditionalDistribution::n_margin, OptionBase::nosave,
-      "Unused in unconditional distributions.");
+    redeclareOption(ol, "n_margin",  &UnconditionalDistribution::n_margin, OptionBase::nosave,
+                    "Unused in unconditional distributions.");
 
 }
 
@@ -121,8 +121,8 @@ void UnconditionalDistribution::declareOptions(OptionList& ol)
 ///////////
 void UnconditionalDistribution::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -137,21 +137,21 @@ void UnconditionalDistribution::build_()
 /////////////////////////////////
 void UnconditionalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 ////////////////////
 // setTrainingSet //
 ////////////////////
 void UnconditionalDistribution::setTrainingSet(VMat training_set, bool call_forget) {
-  PLearner::setTrainingSet(training_set, call_forget);
+    PLearner::setTrainingSet(training_set, call_forget);
 }
 
 //////////////
 // setInput //
 //////////////
 void UnconditionalDistribution::setInput(const Vec& input) const {
-  PLERROR("setInput not implemented for UnconditionalDistribution");
+    PLERROR("setInput not implemented for UnconditionalDistribution");
 }
 
 //////////////////////////////////
@@ -163,3 +163,15 @@ void UnconditionalDistribution::updateFromConditionalSorting() const {
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: NormalizedDotProductKernel.h,v 1.3 2004/04/07 23:15:17 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef NormalizedDotProductKernel_INC
 #define NormalizedDotProductKernel_INC
@@ -76,3 +76,15 @@ DECLARE_OBJECT_PTR(NormalizedDotProductKernel);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RankLearner.h,v 1.2 2004/11/05 16:08:38 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -53,124 +53,124 @@ class RankLearner: public EmbeddedLearner {
 
 private:
 
-  typedef EmbeddedLearner inherited;
+    typedef EmbeddedLearner inherited;
   
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  Vec sorted_targets;
+    Vec sorted_targets;
 
-  // Fields below are not options.
+    // Fields below are not options.
 
-  //! Used to store the last output computed, in order not to have to recompute
-  //! the sub-learner's output in computeCostsFromOutputs().
-  mutable Vec last_output;
+    //! Used to store the last output computed, in order not to have to recompute
+    //! the sub-learner's output in computeCostsFromOutputs().
+    mutable Vec last_output;
   
-  //! Used to store the sub-learner's output.
-  mutable Vec learner_output;
+    //! Used to store the sub-learner's output.
+    mutable Vec learner_output;
 
-  //! A vector used to store the desired sub-learner's target when computing
-  //! the output.
-  Vec learner_target;
+    //! A vector used to store the desired sub-learner's target when computing
+    //! the output.
+    Vec learner_target;
 
-  //! A pointer to the ranked training set given to the sub-learner.
-  PP<RankedVMatrix> ranked_trainset;
+    //! A pointer to the ranked training set given to the sub-learner.
+    PP<RankedVMatrix> ranked_trainset;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  RankLearner();
+    //! Default constructor.
+    RankLearner();
 
-  // ********************
-  // * PLearner methods *
-  // ********************
+    // ********************
+    // * PLearner methods *
+    // ********************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(RankLearner);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(RankLearner);
 
-  // **************************
-  // **** PLearner methods ****
-  // **************************
+    // **************************
+    // **** PLearner methods ****
+    // **************************
 
-  //! Returns the size of this learner's output, (which typically
-  //! may depend on its inputsize(), targetsize() and set options).
-  virtual int outputsize() const;
+    //! Returns the size of this learner's output, (which typically
+    //! may depend on its inputsize(), targetsize() and set options).
+    virtual int outputsize() const;
 
-  //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
-  //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
-  virtual void forget();
+    //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
+    //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
+    virtual void forget();
     
-  //! Computes the output from the input.
-  virtual void computeOutput(const Vec& input, Vec& output) const;
+    //! Computes the output from the input.
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
-  //! Computes the costs from already computed output. 
-  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                       const Vec& target, Vec& costs) const;
+    //! Computes the costs from already computed output. 
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const;
 
-  //! Overridden because no costs are computed (see help).
-  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-                                     Vec& output, Vec& costs) const;
+    //! Overridden because no costs are computed (see help).
+    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                       Vec& output, Vec& costs) const;
 
-  //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
-  //! See help.
-  virtual TVec<std::string> getTestCostNames() const;
+    //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
+    //! See help.
+    virtual TVec<std::string> getTestCostNames() const;
 
-  //! Returns the names of the objective costs that the train method computes and 
-  //! for which it updates the VecStatsCollector train_stats.
-  //! See help.
-  virtual TVec<std::string> getTrainCostNames() const;
+    //! Returns the names of the objective costs that the train method computes and 
+    //! for which it updates the VecStatsCollector train_stats.
+    //! See help.
+    virtual TVec<std::string> getTrainCostNames() const;
 
-  //! Overridden to sort the targets by rank and provide the modified training
-  //! set to the underlying learner.
-  virtual void setTrainingSet(VMat training_set, bool call_forget = true);
+    //! Overridden to sort the targets by rank and provide the modified training
+    //! set to the underlying learner.
+    virtual void setTrainingSet(VMat training_set, bool call_forget = true);
 
-  //! Overridden so as to learn the 'sorted_targets' option.
-  virtual void train();
+    //! Overridden so as to learn the 'sorted_targets' option.
+    virtual void train();
 
-  // *** SUBCLASS WRITING: ***
-  // While in general not necessary, in case of particular needs 
-  // (efficiency concerns for ex) you may also want to overload
-  // some of the following methods:
-  // virtual void computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
-  // virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
-  // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
-  // virtual int nTestCosts() const;
-  // virtual int nTrainCosts() const;
-  // virtual void resetInternalState();
-  // virtual bool isStatefulLearner() const;
+    // *** SUBCLASS WRITING: ***
+    // While in general not necessary, in case of particular needs 
+    // (efficiency concerns for ex) you may also want to overload
+    // some of the following methods:
+    // virtual void computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
+    // virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
+    // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
+    // virtual int nTestCosts() const;
+    // virtual int nTrainCosts() const;
+    // virtual void resetInternalState();
+    // virtual bool isStatefulLearner() const;
 
 };
 
@@ -180,3 +180,16 @@ DECLARE_OBJECT_PTR(RankLearner);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

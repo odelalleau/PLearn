@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalStatsCollector.h,v 1.7 2004/09/14 16:04:36 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -54,21 +54,21 @@ using namespace std;
 class ConditionalStatsCollector: public Object
 {
 public:
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
     
 public:
 
-  // ************************
-  // * options *
-  // ************************
+    // ************************
+    // * options *
+    // ************************
 
     //! index of conditioning variable
     int condvar; 
@@ -114,24 +114,24 @@ public:
     //! counts[k] has one more row and column than there are mapping ranges: the last ones counting "MISSING_VALUE" occurences.
     TVec< TMat<double> > maxima_condvar; 
 
-  // ****************
-  // * Methods
-  // ****************
+    // ****************
+    // * Methods
+    // ****************
 
 public:
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  ConditionalStatsCollector();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    ConditionalStatsCollector();
 
-  //! Sets the ranges of interest for each variable, and the index of the conditioning variable. Ranges for a given variable should not overlap.
-  void setBinMappingsAndCondvar(const TVec<RealMapping>& the_ranges, int the_condvar);
+    //! Sets the ranges of interest for each variable, and the index of the conditioning variable. Ranges for a given variable should not overlap.
+    void setBinMappingsAndCondvar(const TVec<RealMapping>& the_ranges, int the_condvar);
 
-  //! clears all statistics, allowing to restart collecting them
-  void forget();
+    //! clears all statistics, allowing to restart collecting them
+    void forget();
 
-  //! Updates the counts for an observation v
-  void update(const Vec& v, real weight = 1.0);
+    //! Updates the counts for an observation v
+    void update(const Vec& v, real weight = 1.0);
 
 protected:
     //! Returns the first index of the range containing the given value for that variable
@@ -139,38 +139,51 @@ protected:
     //! Returns -1 if no range containing val was found
     int findrange(int varindex, real val) const;
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (PLEASE IMPLEMENT IN .cc)
-  void build_();
+    //! This does the actual building. 
+    // (PLEASE IMPLEMENT IN .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (PLEASE IMPLEMENT IN .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (PLEASE IMPLEMENT IN .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  // Declares other standard object methods
-  //  If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
-  PLEARN_DECLARE_OBJECT(ConditionalStatsCollector);
+    // Declares other standard object methods
+    //  If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+    PLEARN_DECLARE_OBJECT(ConditionalStatsCollector);
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  // (PLEASE IMPLEMENT IN .cc)
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    // (PLEASE IMPLEMENT IN .cc)
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(ConditionalStatsCollector);
+DECLARE_OBJECT_PTR(ConditionalStatsCollector);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

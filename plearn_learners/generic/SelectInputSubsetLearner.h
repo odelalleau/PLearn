@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectInputSubsetLearner.h,v 1.3 2004/09/14 16:04:56 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 // Authors: Yoshua Bengio
 
@@ -54,94 +54,94 @@ class SelectInputSubsetLearner: public EmbeddedLearner
 
 private:
 
-  typedef EmbeddedLearner inherited;
+    typedef EmbeddedLearner inherited;
   
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
-  Vec learner_inputs;
-  TVec<int> all_indices; // indices of selected inputs + indices of the target and weight and other columns
+    // *********************
+    // * protected options *
+    // *********************
+    Vec learner_inputs;
+    TVec<int> all_indices; // indices of selected inputs + indices of the target and weight and other columns
 
-  // ### declare protected option fields (such as learnt parameters) here
+    // ### declare protected option fields (such as learnt parameters) here
     
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // ### declare public option fields (such as build options) here
+    // ### declare public option fields (such as build options) here
   
-  // the inputs can be selected explicitly
-  TVec<int> selected_inputs;
-  // or they can be selected automatically and randomly
-  // by taking a random subset from the original, if random_fraction>0
-  // (that subset will be of size int(random_fraction*inputsize()).
-  real random_fraction;
+    // the inputs can be selected explicitly
+    TVec<int> selected_inputs;
+    // or they can be selected automatically and randomly
+    // by taking a random subset from the original, if random_fraction>0
+    // (that subset will be of size int(random_fraction*inputsize()).
+    real random_fraction;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  SelectInputSubsetLearner();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    SelectInputSubsetLearner();
 
 
-  // ********************
-  // * PLearner methods *
-  // ********************
+    // ********************
+    // * PLearner methods *
+    // ********************
 
 private: 
 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
   
-  //! Declares this class' options.
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
 
-  // ************************
-  // **** Object methods ****
-  // ************************
+    // ************************
+    // **** Object methods ****
+    // ************************
 
-  //! Simply calls inherited::build() then build_().
-  virtual void build();
+    //! Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  // Declares other standard object methods.
-  // If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
-  PLEARN_DECLARE_OBJECT(SelectInputSubsetLearner);
+    // Declares other standard object methods.
+    // If your class is not instantiatable (it has pure virtual methods)
+    // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
+    PLEARN_DECLARE_OBJECT(SelectInputSubsetLearner);
 
 
-  // **************************
-  // **** PLearner methods ****
-  // **************************
+    // **************************
+    // **** PLearner methods ****
+    // **************************
 
-  virtual int inputsize() const;
+    virtual int inputsize() const;
 
-  //! Computes the output from the input.
-  virtual void computeOutput(const Vec& input, Vec& output) const;
+    //! Computes the output from the input.
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
-  //! Computes the costs from already computed output. 
-  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                       const Vec& target, Vec& costs) const;
+    //! Computes the costs from already computed output. 
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const;
                                 
 
-  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-                                     Vec& output, Vec& costs) const;
+    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                       Vec& output, Vec& costs) const;
 
-  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
 };
 
@@ -151,3 +151,16 @@ DECLARE_OBJECT_PTR(SelectInputSubsetLearner);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

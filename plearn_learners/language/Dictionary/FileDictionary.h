@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FileDictionary.h,v 1.2 2004/09/14 16:04:57 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
 
@@ -58,59 +58,59 @@ class FileDictionary: public Dictionary
 
 private:
   
-  typedef Dictionary inherited;
+    typedef Dictionary inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
     //! file_name of dictionary
-  string file_name_dict;
+    string file_name_dict;
     
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  // ### Make sure the implementation in the .cc
-  // ### initializes all fields to reasonable default values.
-  FileDictionary();
+    //! Default constructor.
+    // ### Make sure the implementation in the .cc
+    // ### initializes all fields to reasonable default values.
+    FileDictionary();
 
 
-  //! Constructor
-  /*!
-    \param file_name file containing the symbols of the dictionary
-    \param up_mode update mode
-   */
-  FileDictionary(string file_name,bool up_mode=DEFAULT_UPDATE);
+    //! Constructor
+    /*!
+      \param file_name file containing the symbols of the dictionary
+      \param up_mode update mode
+    */
+    FileDictionary(string file_name,bool up_mode=DEFAULT_UPDATE);
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(FileDictionary);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(FileDictionary);
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 };
 
@@ -120,3 +120,16 @@ DECLARE_OBJECT_PTR(FileDictionary);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

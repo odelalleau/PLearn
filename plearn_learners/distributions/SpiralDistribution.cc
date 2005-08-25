@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.cc,v 1.11 2004/09/14 16:04:56 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file SpiralDistribution.cc */
 #include "SpiralDistribution.h"
@@ -45,39 +45,39 @@ namespace PLearn {
 using namespace std;
 
 SpiralDistribution::SpiralDistribution() 
-  : lambda(0.04),
-    alpha(1),
-    tmin(3),
-    tmax(15),
-    sigma(0.01),
-    uniformity(1),
-    include_t(false)
-  {
+    : lambda(0.04),
+      alpha(1),
+      tmin(3),
+      tmax(15),
+      sigma(0.01),
+      uniformity(1),
+      include_t(false)
+{
     // build_();
-  }
+}
 
-  PLEARN_IMPLEMENT_OBJECT(SpiralDistribution, "Generates samples drawn from a 2D spiral", 
-      "SpiralDistribution is a generative model that generates 2D (x,y) samples in the following manner:\n"
-      " t ~ uniform([tmin, tmax])^uniformity \n"
-      " x = lambda*t*sin(alpha*t) + N(0,sigma) \n"
-      " y = lambda*t*cos(alpha*t) + N(0,sigma) \n");
+PLEARN_IMPLEMENT_OBJECT(SpiralDistribution, "Generates samples drawn from a 2D spiral", 
+                        "SpiralDistribution is a generative model that generates 2D (x,y) samples in the following manner:\n"
+                        " t ~ uniform([tmin, tmax])^uniformity \n"
+                        " x = lambda*t*sin(alpha*t) + N(0,sigma) \n"
+                        " y = lambda*t*cos(alpha*t) + N(0,sigma) \n");
 
-  void SpiralDistribution::declareOptions(OptionList& ol)
-  {
-  declareOption(ol, "lambda", &SpiralDistribution::lambda, OptionBase::buildoption,"");
-  declareOption(ol, "alpha", &SpiralDistribution::alpha, OptionBase::buildoption,"");
-  declareOption(ol, "tmin", &SpiralDistribution::tmin, OptionBase::buildoption,"");
-  declareOption(ol, "tmax", &SpiralDistribution::tmax, OptionBase::buildoption,"");
-  declareOption(ol, "sigma", &SpiralDistribution::sigma, OptionBase::buildoption,"");
-  declareOption(ol, "uniformity", &SpiralDistribution::uniformity, OptionBase::buildoption,"");
-  declareOption(ol, "include_t", &SpiralDistribution::include_t, OptionBase::buildoption,
-                "If true, then t will be appended to the generated sample, along with x and y.");
+void SpiralDistribution::declareOptions(OptionList& ol)
+{
+    declareOption(ol, "lambda", &SpiralDistribution::lambda, OptionBase::buildoption,"");
+    declareOption(ol, "alpha", &SpiralDistribution::alpha, OptionBase::buildoption,"");
+    declareOption(ol, "tmin", &SpiralDistribution::tmin, OptionBase::buildoption,"");
+    declareOption(ol, "tmax", &SpiralDistribution::tmax, OptionBase::buildoption,"");
+    declareOption(ol, "sigma", &SpiralDistribution::sigma, OptionBase::buildoption,"");
+    declareOption(ol, "uniformity", &SpiralDistribution::uniformity, OptionBase::buildoption,"");
+    declareOption(ol, "include_t", &SpiralDistribution::include_t, OptionBase::buildoption,
+                  "If true, then t will be appended to the generated sample, along with x and y.");
   
-  inherited::declareOptions(ol);
-  }
+    inherited::declareOptions(ol);
+}
 
-  void SpiralDistribution::build_()
-  {
+void SpiralDistribution::build_()
+{
     // ### This method should do the real building of the object,
     // ### according to set 'options', in *any* situation. 
     // ### Typical situations include:
@@ -85,17 +85,17 @@ SpiralDistribution::SpiralDistribution()
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
-  }
+}
 
-  // ### Nothing to add here, simply calls build_
-  void SpiralDistribution::build()
-  {
+// ### Nothing to add here, simply calls build_
+void SpiralDistribution::build()
+{
     inherited::build();
     build_();
-  }
+}
 
-  void SpiralDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-  {
+void SpiralDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     // ### Call deepCopyField on all "pointer-like" fields 
@@ -106,7 +106,7 @@ SpiralDistribution::SpiralDistribution()
 
     // ### Remove this line when you have fully implemented this method.
     PLERROR("SpiralDistribution::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-  }
+}
 
 real SpiralDistribution::log_density(const Vec& x) const
 { PLERROR("density not implemented for SpiralDistribution"); return 0; }
@@ -125,26 +125,26 @@ void SpiralDistribution::variance(Mat& covar) const
 
 void SpiralDistribution::curve(real t, real& x, real& y) const
 {
-  x = lambda*t*sin(alpha*t);
-  y = lambda*t*cos(alpha*t);
+    x = lambda*t*sin(alpha*t);
+    y = lambda*t*cos(alpha*t);
 }
 
 void SpiralDistribution::generate(Vec& v) const
 { 
-  v.resize(inputsize());
+    v.resize(inputsize());
   
-  real x, y;
-  real u =  bounded_uniform(0,1);
-  real t = (uniformity==1)?u:pow(u,uniformity);
-  t = tmin+(tmax-tmin)*t;
-  curve(t,x,y);
-  x += gaussian_mu_sigma(0, sigma);
-  y += gaussian_mu_sigma(0, sigma);
+    real x, y;
+    real u =  bounded_uniform(0,1);
+    real t = (uniformity==1)?u:pow(u,uniformity);
+    t = tmin+(tmax-tmin)*t;
+    curve(t,x,y);
+    x += gaussian_mu_sigma(0, sigma);
+    y += gaussian_mu_sigma(0, sigma);
 
-  v[0] = x;
-  v[1] = y;
-  if(inputsize()==3)
-    v[2] = t;
+    v[0] = x;
+    v[1] = y;
+    if(inputsize()==3)
+        v[2] = t;
 }
 
 
@@ -156,8 +156,21 @@ int SpiralDistribution::inputsize() const
 
 void SpiralDistribution::resetGenerator(long g_seed) const
 {
-  manual_seed(g_seed);  
+    manual_seed(g_seed);  
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: SentencesBlocks.cc,v 1.3 2004/02/20 21:14:44 chrish42 Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "SentencesBlocks.h"
 
@@ -46,68 +46,81 @@ using namespace std;
 /** SentencesBlocks **/
 
 SentencesBlocks::SentencesBlocks(int n_blocks, VMat d, Vec separator)
-  : TVec<VMat>(n_blocks)
+    : TVec<VMat>(n_blocks)
 {
-  if (n_blocks==1) 
-  {
-    (*this)[0]=d;
-    return;
-  }
-  int total_size = d->length();
-  if (total_size < n_blocks * 2)
-    PLERROR("SentencesBlocks: can't have blocks of size < 2 in average");
-  Vec v(d->width());
-  int b=0;
-  int previous_previous_block=0,previous_beginning_of_block = 0, previous_beginning_of_sentence=0;
-  int next_target = (int)(total_size / (real)n_blocks);
-  for (int i=0;i<total_size && b<n_blocks-1;i++)
-  {
-    d->getRow(i,v);
-    if (v==separator)
+    if (n_blocks==1) 
     {
-      if (i>=next_target)
-      {
-        int cut=0;
-        if (i-next_target < next_target-previous_beginning_of_sentence ||
-            previous_beginning_of_sentence < previous_beginning_of_block)
-          cut=i+1;
-        else
+        (*this)[0]=d;
+        return;
+    }
+    int total_size = d->length();
+    if (total_size < n_blocks * 2)
+        PLERROR("SentencesBlocks: can't have blocks of size < 2 in average");
+    Vec v(d->width());
+    int b=0;
+    int previous_previous_block=0,previous_beginning_of_block = 0, previous_beginning_of_sentence=0;
+    int next_target = (int)(total_size / (real)n_blocks);
+    for (int i=0;i<total_size && b<n_blocks-1;i++)
+    {
+        d->getRow(i,v);
+        if (v==separator)
         {
-          cut=previous_beginning_of_sentence;
-          previous_beginning_of_sentence = i+1;
+            if (i>=next_target)
+            {
+                int cut=0;
+                if (i-next_target < next_target-previous_beginning_of_sentence ||
+                    previous_beginning_of_sentence < previous_beginning_of_block)
+                    cut=i+1;
+                else
+                {
+                    cut=previous_beginning_of_sentence;
+                    previous_beginning_of_sentence = i+1;
+                }
+                (*this)[b++] = d.subMatRows(previous_beginning_of_block,
+                                            cut-previous_beginning_of_block);
+                previous_previous_block = previous_beginning_of_block;
+                previous_beginning_of_block=cut;
+                if (b<n_blocks)
+                {
+                    if (b>n_blocks-3)
+                        next_target = (int)((total_size - cut) / (real)(n_blocks-b));
+                    else
+                        next_target = (int)(total_size * (real)(b+1.0) / n_blocks);
+                }
+            }
+            else
+                previous_beginning_of_sentence=i+1;
         }
+    }
+    if (b==n_blocks-1)
+        (*this)[b++] = d.subMatRows(previous_beginning_of_block,
+                                    total_size-previous_beginning_of_block);
+    if (b<n_blocks-1) // we have to backtrack, split previous block in two
+    {
+        if (b<n_blocks-2)
+            PLERROR("SentencesBlocks: blocks are too small!");
+        if (previous_beginning_of_sentence<previous_beginning_of_block)
+            PLERROR("SentencesBlocks: Blocks are too small!");
+        int cut = previous_beginning_of_sentence;
         (*this)[b++] = d.subMatRows(previous_beginning_of_block,
                                     cut-previous_beginning_of_block);
-        previous_previous_block = previous_beginning_of_block;
         previous_beginning_of_block=cut;
-        if (b<n_blocks)
-        {
-          if (b>n_blocks-3)
-            next_target = (int)((total_size - cut) / (real)(n_blocks-b));
-          else
-            next_target = (int)(total_size * (real)(b+1.0) / n_blocks);
-        }
-      }
-      else
-        previous_beginning_of_sentence=i+1;
+        (*this)[b++] = d.subMatRows(previous_beginning_of_block,
+                                    total_size-previous_beginning_of_block);
     }
-  }
-  if (b==n_blocks-1)
-    (*this)[b++] = d.subMatRows(previous_beginning_of_block,
-                                total_size-previous_beginning_of_block);
-  if (b<n_blocks-1) // we have to backtrack, split previous block in two
-  {
-    if (b<n_blocks-2)
-      PLERROR("SentencesBlocks: blocks are too small!");
-    if (previous_beginning_of_sentence<previous_beginning_of_block)
-      PLERROR("SentencesBlocks: Blocks are too small!");
-    int cut = previous_beginning_of_sentence;
-    (*this)[b++] = d.subMatRows(previous_beginning_of_block,
-                                cut-previous_beginning_of_block);
-    previous_beginning_of_block=cut;
-    (*this)[b++] = d.subMatRows(previous_beginning_of_block,
-                                total_size-previous_beginning_of_block);
-  }
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -42,7 +42,7 @@ namespace PLearn {
 using namespace std;
 
 ConditionalDistribution::ConditionalDistribution() 
-  :inherited()
+    :inherited()
 {
    
 }
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(ConditionalDistribution, "ONE LINE DESCR",
 
 void ConditionalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 
@@ -64,21 +64,34 @@ void ConditionalDistribution::setInput(const Vec& input)
 
 void ConditionalDistribution::use(const Vec& input, Vec& output)
 {
-  Vec x = input.subVec(0,input_part_size);
-  Vec y = input.subVec(input_part_size,input.length()-input_part_size);
-  setInput(x);
-  if (use_returns_what=="l")
-    output[0]=log_density(y);
-  else if (use_returns_what=="d")
-    output[0]=density(y);
-  else if (use_returns_what=="c")
-    output[0]=cdf(y);
-  else if (use_returns_what=="s")
-    output[0]=survival_fn(y);
-  else if (use_returns_what=="e")
-    output << expectation();
-  else if (use_returns_what=="v")
-    output << variance().toVec();
+    Vec x = input.subVec(0,input_part_size);
+    Vec y = input.subVec(input_part_size,input.length()-input_part_size);
+    setInput(x);
+    if (use_returns_what=="l")
+        output[0]=log_density(y);
+    else if (use_returns_what=="d")
+        output[0]=density(y);
+    else if (use_returns_what=="c")
+        output[0]=cdf(y);
+    else if (use_returns_what=="s")
+        output[0]=survival_fn(y);
+    else if (use_returns_what=="e")
+        output << expectation();
+    else if (use_returns_what=="v")
+        output << variance().toVec();
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HorizonStatefulLearner.cc,v 1.2 2004/10/19 14:23:57 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Réjean Ducharme
 
@@ -47,56 +47,69 @@ namespace PLearn {
 using namespace std;
 
 HorizonStatefulLearner::HorizonStatefulLearner()
-  : inherited(), horizon(0)
+    : inherited(), horizon(0)
 {}
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
-  HorizonStatefulLearner,
-  "Kind of StatefulLearner designed for forecasting at horizon h",
-  "A HorizonStatefulLearner is a StatefulLearner designed for forecasting\n"
-  "at horizon h.  It serves as a base class for more specialized\n"
-  "forecasters.  Contrarily to StatefulLearner, the HorizonStatefulLearner\n"
-  "introduces a few additional assumptions on the structure of the training\n"
-  "set and the interpretation of the various test methods:\n"
-  "\n"
-  "- In the training set, it assumes that the inputs and targets are spaced\n"
-  "  apart by the forecasting horizon.  Hence, for the inputs at row t, the\n"
-  "  targets are located at row t+horizon.\n"
-  "\n"
-  "- For computeOutputAndCosts (and friends), the inputs and outputs vector\n"
-  "  are FOR THE CURRENT TIME STEP, but the targets and costs correspond to\n"
-  "  the inputs/outputs that were horizon time steps IN THE PAST.  This\n"
-  "  means that derived classes will usually have to keep a memory of the\n"
-  "  past \"horizon\" inputs and/or outputs in order to compute meaningful\n"
-  "  costs.");
+    HorizonStatefulLearner,
+    "Kind of StatefulLearner designed for forecasting at horizon h",
+    "A HorizonStatefulLearner is a StatefulLearner designed for forecasting\n"
+    "at horizon h.  It serves as a base class for more specialized\n"
+    "forecasters.  Contrarily to StatefulLearner, the HorizonStatefulLearner\n"
+    "introduces a few additional assumptions on the structure of the training\n"
+    "set and the interpretation of the various test methods:\n"
+    "\n"
+    "- In the training set, it assumes that the inputs and targets are spaced\n"
+    "  apart by the forecasting horizon.  Hence, for the inputs at row t, the\n"
+    "  targets are located at row t+horizon.\n"
+    "\n"
+    "- For computeOutputAndCosts (and friends), the inputs and outputs vector\n"
+    "  are FOR THE CURRENT TIME STEP, but the targets and costs correspond to\n"
+    "  the inputs/outputs that were horizon time steps IN THE PAST.  This\n"
+    "  means that derived classes will usually have to keep a memory of the\n"
+    "  past \"horizon\" inputs and/or outputs in order to compute meaningful\n"
+    "  costs.");
 
 void HorizonStatefulLearner::declareOptions(OptionList& ol)
 {
-  declareOption(
-    ol, "horizon", &HorizonStatefulLearner::horizon,
-    OptionBase::buildoption,
-    "Forecasting horizon for the learner; see detailed class help for\n"
-    "interpretation.  (Default value = 0)");
+    declareOption(
+        ol, "horizon", &HorizonStatefulLearner::horizon,
+        OptionBase::buildoption,
+        "Forecasting horizon for the learner; see detailed class help for\n"
+        "interpretation.  (Default value = 0)");
 
-  inherited::declareOptions(ol);
+    inherited::declareOptions(ol);
 }
 
 void HorizonStatefulLearner::build_()
 {
-  if (horizon < 0)
-    PLERROR("HorizonStatefulLearner::build_: horizon must be non-negative");
+    if (horizon < 0)
+        PLERROR("HorizonStatefulLearner::build_: horizon must be non-negative");
 }
 
 // ### Nothing to add here, simply calls build_
 void HorizonStatefulLearner::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void HorizonStatefulLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

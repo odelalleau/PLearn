@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BinaryOpVMatrix.h,v 1.1 2005/04/27 14:21:14 chapados Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Nicolas Chapados
 
@@ -54,64 +54,64 @@ class BinaryOpVMatrix: public RowBufferedVMatrix
 
 private:
 
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
-  static real op_add(double x, double y) { return x+y; }
-  static real op_sub(double x, double y) { return x-y; }
-  static real op_mul(double x, double y) { return x*y; }
-  static real op_div(double x, double y) { return x/y; }
+    static real op_add(double x, double y) { return x+y; }
+    static real op_sub(double x, double y) { return x-y; }
+    static real op_mul(double x, double y) { return x*y; }
+    static real op_div(double x, double y) { return x/y; }
 
-  //! Operation to perform
-  real (*selected_op)(double,double);
+    //! Operation to perform
+    real (*selected_op)(double,double);
 
-  //! Implementation buffers
-  mutable Vec row1, row2;
+    //! Implementation buffers
+    mutable Vec row1, row2;
   
 public:
 
-  //! First VMatrix to operate on
-  VMat vm1;
+    //! First VMatrix to operate on
+    VMat vm1;
 
-  //! Second VMatrix to operate on
-  VMat vm2;
+    //! Second VMatrix to operate on
+    VMat vm2;
 
-  //! Operation to perform; may be "add", "sub", "mult", "div"
-  string op;
+    //! Operation to perform; may be "add", "sub", "mult", "div"
+    string op;
   
 
-  //! Default constructor.
-  BinaryOpVMatrix();
+    //! Default constructor.
+    BinaryOpVMatrix();
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
-  //! Fill the vector 'v' with the content of the i-th row.
-  //! v is assumed to be the right size.
-  virtual void getNewRow(int i, const Vec& v) const;
+    //! Fill the vector 'v' with the content of the i-th row.
+    //! v is assumed to be the right size.
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  // Simply call inherited::build() then build_().
-  virtual void build();
+    // Simply call inherited::build() then build_().
+    virtual void build();
 
-  //! Transform a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transform a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declare name and deepCopy methods.
-  PLEARN_DECLARE_OBJECT(BinaryOpVMatrix);
+    //! Declare name and deepCopy methods.
+    PLEARN_DECLARE_OBJECT(BinaryOpVMatrix);
 
 };
 
@@ -119,3 +119,16 @@ DECLARE_OBJECT_PTR(BinaryOpVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

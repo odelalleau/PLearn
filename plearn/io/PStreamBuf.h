@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.h,v 1.18 2005/02/16 20:19:49 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file PStreamBuf.h */
 #ifndef PStreamBuf_INC
@@ -50,154 +50,167 @@ using namespace std;
 class PStreamBuf: public PPointable
 {    
 
-  typedef PPointable inherited;
+    typedef PPointable inherited;
   
 public:
 
-  typedef size_t streamsize; 
-  typedef off_t streampos; 
+    typedef size_t streamsize; 
+    typedef off_t streampos; 
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor
-  PStreamBuf(bool is_readable_, bool is_writable_,
-             streamsize inbuf_capacity=1, streamsize outbuf_capacity=0,
-             streamsize unget_capacity=default_ungetsize);
+    //! Default constructor
+    PStreamBuf(bool is_readable_, bool is_writable_,
+               streamsize inbuf_capacity=1, streamsize outbuf_capacity=0,
+               streamsize unget_capacity=default_ungetsize);
 
-  void setBufferCapacities(streamsize inbuf_capacity,
-                           streamsize outbuf_capacity,
-                           streamsize unget_capacity);
+    void setBufferCapacities(streamsize inbuf_capacity,
+                             streamsize outbuf_capacity,
+                             streamsize unget_capacity);
 
-  virtual ~PStreamBuf();
+    virtual ~PStreamBuf();
 
 protected:
 
-  /// Default size for unget buffer for PStreamBuf and its subclasses.
-  static const streamsize default_ungetsize = 100;
+    /// Default size for unget buffer for PStreamBuf and its subclasses.
+    static const streamsize default_ungetsize = 100;
 
-  bool is_readable;
-  bool is_writable;
+    bool is_readable;
+    bool is_writable;
 
-  //! Remember the last character read by get() or read().
-  //! Could be EOF, or PSTREAMBUF_NO_GET (no character available).
-  int last_get;
+    //! Remember the last character read by get() or read().
+    //! Could be EOF, or PSTREAMBUF_NO_GET (no character available).
+    int last_get;
 
 private: 
 
-  // Input buffer mechanism
-  // ungetsize+inbuf_chunksize characters are allocated in total for the buffer.
-  // Calls to read_ are always made as read_(inbuf+ungetsize, inbuf_chunksize);
-  // The first ungetsize characters of the buffer are reserved for ungets
-  streamsize ungetsize;
-  streamsize inbuf_chunksize;
-  char* inbuf;  //!< beginning of input buffer
-  char* inbuf_p; //!< position of next character to be read
-  char* inbuf_end; //!< one after last available character
+    // Input buffer mechanism
+    // ungetsize+inbuf_chunksize characters are allocated in total for the buffer.
+    // Calls to read_ are always made as read_(inbuf+ungetsize, inbuf_chunksize);
+    // The first ungetsize characters of the buffer are reserved for ungets
+    streamsize ungetsize;
+    streamsize inbuf_chunksize;
+    char* inbuf;  //!< beginning of input buffer
+    char* inbuf_p; //!< position of next character to be read
+    char* inbuf_end; //!< one after last available character
 
-  // Output buffer
-  streamsize outbuf_chunksize;
-  char* outbuf; //!< beginning of output buffer
-  char* outbuf_p; //!< position of next character to be written
-  char* outbuf_end; //!< one after last reserved character in outbuf
+    // Output buffer
+    streamsize outbuf_chunksize;
+    char* outbuf; //!< beginning of output buffer
+    char* outbuf_p; //!< position of next character to be written
+    char* outbuf_end; //!< one after last reserved character in outbuf
 
 protected:
-  //! reads up to n characters into p
-  //! You should override this call in subclasses. 
-  //! Default version issues a PLERROR
-  /*!  On success, the number of bytes read is returned.  Zero indicates
-    end of file. If we are not at end of file, at least one character
-    should be returned (the call must block until at least one char is
-    available).  It is not an error if the number returned is smaller than
-    the number of bytes requested; this may happen for example because
-    fewer bytes are actually available right now (maybe because we were
-    close to end-of-file, or because we are reading from a pipe, or from a
-    terminal).  If an error occurs, an exception should be thrown.
-  */
-  virtual streamsize read_(char* p, streamsize n);
+    //! reads up to n characters into p
+    //! You should override this call in subclasses. 
+    //! Default version issues a PLERROR
+    /*!  On success, the number of bytes read is returned.  Zero indicates
+      end of file. If we are not at end of file, at least one character
+      should be returned (the call must block until at least one char is
+      available).  It is not an error if the number returned is smaller than
+      the number of bytes requested; this may happen for example because
+      fewer bytes are actually available right now (maybe because we were
+      close to end-of-file, or because we are reading from a pipe, or from a
+      terminal).  If an error occurs, an exception should be thrown.
+    */
+    virtual streamsize read_(char* p, streamsize n);
 
-  //! writes exactly n characters from p (unbuffered, must flush)
-  //! Default version issues a PLERROR
-  virtual void write_(const char* p, streamsize n);
+    //! writes exactly n characters from p (unbuffered, must flush)
+    //! Default version issues a PLERROR
+    virtual void write_(const char* p, streamsize n);
 
 private:
 
-  // refills the inbuf
-  streamsize refill_in_buf();
+    // refills the inbuf
+    streamsize refill_in_buf();
 
 public:
 
-  bool isReadable() const
-  { return is_readable; }
+    bool isReadable() const
+    { return is_readable; }
 
-  bool isWritable() const
-  { return is_writable; }
+    bool isWritable() const
+    { return is_writable; }
 
-  int get()
-  {
-    if(inbuf_p<inbuf_end || refill_in_buf())
-      return (last_get = (unsigned char) *inbuf_p++);
-    else
-      return (last_get = -1);
-  }
-  
-  //! Character c will be returned by the next get().
-  //! If you put back the result of a previous call to get(), make sure it is
-  //! not EOF.
-  void putback(char c);
-
-  //! Call putback(c) where c is the last character read by get() or read(),
-  //! stored in 'last_get'. If last_get == EOF, does nothing.
-  //! Will crash if one tries to call it twice (use unread() instead), i.e.
-  //! when last_get == PSTREAMBUF_NO_GET.
-  void unget();
-
-  int peek()
-  {
-    if(inbuf_p<inbuf_end || refill_in_buf())
-      return (unsigned char) *inbuf_p;
-    else
-      return -1;
-  }
-  
-  streamsize read(char* p, streamsize n);
-
-  //! Puts the given characters back in the input buffer
-  //! so that they're the next thing read.
-  void unread(const char* p, streamsize n);
-
-  void flush();
-
-  void put(char c)
-  {
-#ifdef BOUNDCHECK
-  if(!isWritable())
-    PLERROR("Called PStreamBuf::put on a buffer not marked as writable");
-#endif
-  if(outbuf_chunksize>0) // buffered
+    int get()
     {
-      if(outbuf_p==outbuf_end)
-        flush();
-      *outbuf_p++ = c;
+        if(inbuf_p<inbuf_end || refill_in_buf())
+            return (last_get = (unsigned char) *inbuf_p++);
+        else
+            return (last_get = -1);
     }
-  else // unbuffered
-    write_(&c,1);
-  }
+  
+    //! Character c will be returned by the next get().
+    //! If you put back the result of a previous call to get(), make sure it is
+    //! not EOF.
+    void putback(char c);
 
-  void write(const char* p, streamsize n);
+    //! Call putback(c) where c is the last character read by get() or read(),
+    //! stored in 'last_get'. If last_get == EOF, does nothing.
+    //! Will crash if one tries to call it twice (use unread() instead), i.e.
+    //! when last_get == PSTREAMBUF_NO_GET.
+    void unget();
 
-  /// Checks if the streambuf is valid and can be written to or read from.
-  virtual bool good() const;
+    int peek()
+    {
+        if(inbuf_p<inbuf_end || refill_in_buf())
+            return (unsigned char) *inbuf_p;
+        else
+            return -1;
+    }
+  
+    streamsize read(char* p, streamsize n);
 
-  /// Checks if we reached the end of the file.
-  bool eof() const
-  {
-    return const_cast<PStreamBuf*>(this)->peek() == EOF;
-  }
+    //! Puts the given characters back in the input buffer
+    //! so that they're the next thing read.
+    void unread(const char* p, streamsize n);
+
+    void flush();
+
+    void put(char c)
+    {
+#ifdef BOUNDCHECK
+        if(!isWritable())
+            PLERROR("Called PStreamBuf::put on a buffer not marked as writable");
+#endif
+        if(outbuf_chunksize>0) // buffered
+        {
+            if(outbuf_p==outbuf_end)
+                flush();
+            *outbuf_p++ = c;
+        }
+        else // unbuffered
+            write_(&c,1);
+    }
+
+    void write(const char* p, streamsize n);
+
+    /// Checks if the streambuf is valid and can be written to or read from.
+    virtual bool good() const;
+
+    /// Checks if we reached the end of the file.
+    bool eof() const
+    {
+        return const_cast<PStreamBuf*>(this)->peek() == EOF;
+    }
   
 };
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

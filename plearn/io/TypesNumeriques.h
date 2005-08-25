@@ -33,10 +33,10 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TypesNumeriques.h,v 1.2 2004/07/12 13:39:30 tihocan Exp $
-   * AUTHORS: Steven Pigeon & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Steven Pigeon & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 // Utilities to translate a text stream into a sequence of tokens
 // that are more manageable to model for building a statistical 
@@ -64,51 +64,51 @@ bool containsChar(const char *s, const char *symbols);
 
 //////////////////////////////////////////////////!<  
 typedef enum {
-              NT_NOT_NUMERIC          = 0x0000,
-              NT_ORDINAL              = 0x0001, 
-              NT_CARDINAL             = 0x0002,
-              NT_CURRENCY             = 0x0004,
-              NT_PREFIXED             = 0x0008,
-              NT_SUFFIXED             = 0x0010,
-              NT_RANGE                = 0x0020,
-              NT_TIME                 = 0x0040, 
-              NT_CODE                 = 0x0080, 
-              NT_PERCENT              = 0x0100, 
-              NT_UNKNOWN_NUMERIC_TYPE = 0x8000  //!<  looks numeric, but none of the above (ana or something)
-             } eNumericType;
+    NT_NOT_NUMERIC          = 0x0000,
+    NT_ORDINAL              = 0x0001, 
+    NT_CARDINAL             = 0x0002,
+    NT_CURRENCY             = 0x0004,
+    NT_PREFIXED             = 0x0008,
+    NT_SUFFIXED             = 0x0010,
+    NT_RANGE                = 0x0020,
+    NT_TIME                 = 0x0040, 
+    NT_CODE                 = 0x0080, 
+    NT_PERCENT              = 0x0100, 
+    NT_UNKNOWN_NUMERIC_TYPE = 0x8000  //!<  looks numeric, but none of the above (ana or something)
+} eNumericType;
 
 
 //////////////////////////////////////////////////!<  
 typedef struct
-         {
-           char * pattern;
-           int attributs;
-         } tRule;
+{
+    char * pattern;
+    int attributs;
+} tRule;
 
 //////////////////////////////////////////////////!<  
 const tRule rules[] = 
-       {
-        {"#an",     NT_CARDINAL + NT_PREFIXED },
-        {"#n",      NT_CARDINAL               },
-        {"#na",     NT_CARDINAL + NT_SUFFIXED },
-        {"#ar",     NT_RANGE + NT_PREFIXED },
-        {"#r",      NT_RANGE               },
-        {"#ra",     NT_RANGE + NT_SUFFIXED },
-        {"#n'a",    NT_ORDINAL  + NT_SUFFIXED },
-        {"#ao",     NT_ORDINAL  + NT_PREFIXED },
-        {"#o",      NT_ORDINAL                },
-        {"#oa",     NT_ORDINAL  + NT_SUFFIXED },
-        {"#o'a",    NT_ORDINAL  + NT_SUFFIXED },
-        {"#$n",     NT_CURRENCY               },
-        {"#$na",    NT_CURRENCY + NT_SUFFIXED },
-        {"#$r",     NT_CURRENCY + NT_RANGE    },
-        {"#$ra",    NT_CURRENCY + NT_RANGE + NT_SUFFIXED },
-        {"#n:n",    NT_TIME },
-        {"#n:n:n",  NT_TIME },
-        {"#r:n",    NT_CODE },
-        {"#n:r",    NT_CODE },
-        {"",  NT_UNKNOWN_NUMERIC_TYPE}
-       };
+{
+    {"#an",     NT_CARDINAL + NT_PREFIXED },
+    {"#n",      NT_CARDINAL               },
+    {"#na",     NT_CARDINAL + NT_SUFFIXED },
+    {"#ar",     NT_RANGE + NT_PREFIXED },
+    {"#r",      NT_RANGE               },
+    {"#ra",     NT_RANGE + NT_SUFFIXED },
+    {"#n'a",    NT_ORDINAL  + NT_SUFFIXED },
+    {"#ao",     NT_ORDINAL  + NT_PREFIXED },
+    {"#o",      NT_ORDINAL                },
+    {"#oa",     NT_ORDINAL  + NT_SUFFIXED },
+    {"#o'a",    NT_ORDINAL  + NT_SUFFIXED },
+    {"#$n",     NT_CURRENCY               },
+    {"#$na",    NT_CURRENCY + NT_SUFFIXED },
+    {"#$r",     NT_CURRENCY + NT_RANGE    },
+    {"#$ra",    NT_CURRENCY + NT_RANGE + NT_SUFFIXED },
+    {"#n:n",    NT_TIME },
+    {"#n:n:n",  NT_TIME },
+    {"#r:n",    NT_CODE },
+    {"#n:r",    NT_CODE },
+    {"",  NT_UNKNOWN_NUMERIC_TYPE}
+};
 
 //////////////////////////////////////////////////!<  
 
@@ -122,3 +122,16 @@ void compactRepresentation(char *t); //!<  gives a (intermediate) code for a num
 
 #endif 
 //MODULE_TYPES_NUMERIQUES
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

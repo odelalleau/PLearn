@@ -34,10 +34,10 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include <cstdarg>
 //#include <cstdlib>
@@ -65,29 +65,29 @@ ostream* error_stream = &cerr;
 #ifndef USER_SUPPLIED_ERROR
 void errormsg(const char* msg, ...)
 {
-  va_list args;
-  va_start(args,msg);
-  char message[ERROR_MSG_SIZE];
+    va_list args;
+    va_start(args,msg);
+    char message[ERROR_MSG_SIZE];
 
 #if !defined(ULTRIX) && !defined(_MINGW_) && !defined(WIN32)
-  vsnprintf(message, ERROR_MSG_SIZE,msg,args);
+    vsnprintf(message, ERROR_MSG_SIZE,msg,args);
 #else
-  vsprintf(message,msg,args);
+    vsprintf(message,msg,args);
 #endif
 
-  va_end(args);
+    va_end(args);
 
 #ifndef USE_EXCEPTIONS
 #if USING_MPI
-  *error_stream <<" ERROR from rank=" << PLMPI::rank << ": " <<message<<endl;
+    *error_stream <<" ERROR from rank=" << PLMPI::rank << ": " <<message<<endl;
 #else //USING_MPI
-  *error_stream <<" ERROR: "<<message<<endl;
+    *error_stream <<" ERROR: "<<message<<endl;
 #endif //USING_MPI
-  exit(1);
+    exit(1);
 #else
 // Commented out as one error message seems to be enough.
 //  IMP_LOG << "Throwing PLearnError exception: " << message << endl;
-  throw PLearnError(message);                
+    throw PLearnError(message);                
 #endif
 }
 #endif
@@ -95,55 +95,68 @@ void errormsg(const char* msg, ...)
 
 void  warningmsg(const char* msg, ...)
 {
-  va_list args;
-  va_start(args,msg);
-  char message[ERROR_MSG_SIZE];
+    va_list args;
+    va_start(args,msg);
+    char message[ERROR_MSG_SIZE];
 
 #if !defined(ULTRIX) && !defined(_MINGW_) && !defined(WIN32)
-  vsnprintf(message,ERROR_MSG_SIZE,msg,args);
+    vsnprintf(message,ERROR_MSG_SIZE,msg,args);
 #else
-  vsprintf(message,msg,args);
+    vsprintf(message,msg,args);
 #endif
 
-  va_end(args);
+    va_end(args);
 
-  *error_stream <<" WARNING: "<<message<<endl;
+    *error_stream <<" WARNING: "<<message<<endl;
 }
 
 void  deprecationmsg(const char* msg, ...)
 {
-  va_list args;
-  va_start(args,msg);
-  char message[ERROR_MSG_SIZE];
+    va_list args;
+    va_start(args,msg);
+    char message[ERROR_MSG_SIZE];
 
 #if !defined(ULTRIX) && !defined(_MINGW_) && !defined(WIN32)
-  vsnprintf(message,ERROR_MSG_SIZE,msg,args);
+    vsnprintf(message,ERROR_MSG_SIZE,msg,args);
 #else
-  vsprintf(message,msg,args);
+    vsprintf(message,msg,args);
 #endif
 
-  va_end(args);
+    va_end(args);
 
-  *error_stream <<" DEPRECATION_WARNING: "<<message<<endl;
+    *error_stream <<" DEPRECATION_WARNING: "<<message<<endl;
 }
 
 void exitmsg(const char* msg, ...)
 {
-  va_list args;
-  va_start(args,msg);
-  char message[ERROR_MSG_SIZE];
+    va_list args;
+    va_start(args,msg);
+    char message[ERROR_MSG_SIZE];
 
 #if !defined(ULTRIX) && !defined(_MINGW_) && !defined(WIN32)
-  vsnprintf(message,ERROR_MSG_SIZE,msg,args);
+    vsnprintf(message,ERROR_MSG_SIZE,msg,args);
 #else
-  vsprintf(message,msg,args);
+    vsprintf(message,msg,args);
 #endif
 
-  va_end(args);
+    va_end(args);
 
-  *error_stream << message << endl;
-  exit(1);
+    *error_stream << message << endl;
+    exit(1);
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

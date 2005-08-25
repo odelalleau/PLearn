@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: VarArrayElementVariable.cc,v 1.6 2004/05/04 21:15:53 nova77 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "VarArrayElementVariable.h"
 
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(VarArrayElementVariable,
 
 VarArrayElementVariable::
 VarArrayElementVariable(VarArray& input1, const Var& input2)
-  : inherited(input1 & (VarArray)input2, input1[0]->length(), input1[0]->width())
+    : inherited(input1 & (VarArray)input2, input1[0]->length(), input1[0]->width())
 {
     build_();
 }
@@ -93,33 +93,44 @@ void VarArrayElementVariable::recomputeSize(int& l, int& w) const
 
 void VarArrayElementVariable::fprop()
 {
-  int index = (int)(varray.last()->valuedata[0]);
+    int index = (int)(varray.last()->valuedata[0]);
 #ifdef BOUNDCHECK
-  if (index<0 || index>=varray.size()-1)
-    PLERROR("VarArrayElementVariable::fprop, out of bound access of array(%d) at %d",
-          varray.size()-1,index);
+    if (index<0 || index>=varray.size()-1)
+        PLERROR("VarArrayElementVariable::fprop, out of bound access of array(%d) at %d",
+                varray.size()-1,index);
 #endif
-  for (int i=0;i<nelems();i++)
-    valuedata[i] = varray[index]->valuedata[i];
+    for (int i=0;i<nelems();i++)
+        valuedata[i] = varray[index]->valuedata[i];
 }
 
 
 void VarArrayElementVariable::bprop()
 {
-  int index = (int)(varray.last()->valuedata[0]);
-  for (int i=0;i<nelems();i++)
-    varray[index]->gradientdata[i] += gradientdata[i];
+    int index = (int)(varray.last()->valuedata[0]);
+    for (int i=0;i<nelems();i++)
+        varray[index]->gradientdata[i] += gradientdata[i];
 }
 
 
 void VarArrayElementVariable::symbolicBprop()
 {
-  int index = (int)(varray.last()->valuedata[0]);
-  varray[index]->accg(g);
+    int index = (int)(varray.last()->valuedata[0]);
+    varray[index]->accg(g);
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

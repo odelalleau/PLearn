@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: IntVecFile.h,v 1.5 2004/07/21 16:30:51 chrish42 Exp $
-   * AUTHORS: Pascal Vincent
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/IntVecFile.h */
@@ -77,50 +77,63 @@ using namespace std;
 class IntVecFile
 {
 protected:
-  string filename;
-  FILE* f;
-  int length_;
-  int version_number_;                       //!< 0 if old version, 1 if
-                                             //!< current version
-  char endianness_;                          //!< either 'L' or 'B'
+    string filename;
+    FILE* f;
+    int length_;
+    int version_number_;                       //!< 0 if old version, 1 if
+    //!< current version
+    char endianness_;                          //!< either 'L' or 'B'
 
-  static const char signature[];             //!< magic signature
-  static const int header_size[];            //!< index array by version number
+    static const char signature[];             //!< magic signature
+    static const int header_size[];            //!< index array by version number
 
 public:
-  //!  Default constructor, you must then call open
-  IntVecFile()
-    : filename(""), f(0), length_(-1),
-      version_number_(1), endianness_(byte_order()) { }
+    //!  Default constructor, you must then call open
+    IntVecFile()
+        : filename(""), f(0), length_(-1),
+          version_number_(1), endianness_(byte_order()) { }
 
-  IntVecFile(const string& the_filename, bool readwrite=false)
-    : f(0)  { open(the_filename, readwrite); }
+    IntVecFile(const string& the_filename, bool readwrite=false)
+        : f(0)  { open(the_filename, readwrite); }
 
-  //! The copy constructor opens the file a second time in readonly mode only
-  IntVecFile(const IntVecFile& other);
+    //! The copy constructor opens the file a second time in readonly mode only
+    IntVecFile(const IntVecFile& other);
 
-  void open(const string& the_filename, bool readwrite=false);
-  void close();
+    void open(const string& the_filename, bool readwrite=false);
+    void close();
 
-  int get(int i) const;
-  void put(int i, int value);
+    int get(int i) const;
+    void put(int i, int value);
   
-  TVec<int> getVec() const;
+    TVec<int> getVec() const;
 
-  inline int length() const { return length_; }
-  inline int operator[](int i) const { return get(i); }
-  inline void append(int value) { put(length(),value); }
-  void append(const TVec<int>& vec);
+    inline int length() const { return length_; }
+    inline int operator[](int i) const { return get(i); }
+    inline void append(int value) { put(length(),value); }
+    void append(const TVec<int>& vec);
 
-  ~IntVecFile();
+    ~IntVecFile();
 
 protected:
-  void writeFileSignature();                 //!< write magic signature
-  void getVersionAndSize();                  //!< store in data members
-  void seek_to_index(int index) const;       //!< seek depending on version
+    void writeFileSignature();                 //!< write magic signature
+    void getVersionAndSize();                  //!< store in data members
+    void seek_to_index(int index) const;       //!< seek depending on version
 };
 
 
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

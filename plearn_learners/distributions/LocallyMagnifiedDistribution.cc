@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyMagnifiedDistribution.cc,v 1.1 2005/04/23 13:19:23 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -53,28 +53,28 @@ using namespace std;
 // LocallyMagnifiedDistribution //
 //////////////////
 LocallyMagnifiedDistribution::LocallyMagnifiedDistribution()
-  :mode(0),
-   width_neighbor(0),
-   width_factor(1.0),
-   width_optionname("sigma")
+    :mode(0),
+     width_neighbor(0),
+     width_factor(1.0),
+     width_optionname("sigma")
 {
 }
 
 PLEARN_IMPLEMENT_OBJECT(LocallyMagnifiedDistribution,
-    "ONE LINE DESCR",
-    "NO HELP"
-);
+                        "ONE LINE DESCR",
+                        "NO HELP"
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void LocallyMagnifiedDistribution::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
 
     declareOption(ol, "mode", &LocallyMagnifiedDistribution::mode, OptionBase::buildoption,
                   "Output computation mode");
@@ -98,8 +98,8 @@ void LocallyMagnifiedDistribution::declareOptions(OptionList& ol)
     declareOption(ol, "train_set", &LocallyMagnifiedDistribution::train_set, OptionBase::learntoption,
                   "We need to store the training set, as this learner is memory-based...");
 
-  // Now call the parent class' declareOptions().
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions().
+    inherited::declareOptions(ol);
 }
 
 ///////////
@@ -107,9 +107,9 @@ void LocallyMagnifiedDistribution::declareOptions(OptionList& ol)
 ///////////
 void LocallyMagnifiedDistribution::build()
 {
-  // ### Nothing to add here, simply calls build_().
-  inherited::build();
-  build_();
+    // ### Nothing to add here, simply calls build_().
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -117,33 +117,33 @@ void LocallyMagnifiedDistribution::build()
 ////////////
 void LocallyMagnifiedDistribution::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation. 
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+    // ### You should assume that the parent class' build_() has already been called.
 
-  // ### If the distribution is conditional, you should finish build_() by:
-  // PDistribution::finishConditionalBuild();
+    // ### If the distribution is conditional, you should finish build_() by:
+    // PDistribution::finishConditionalBuild();
 
-  if(width_neighbor>0)
+    if(width_neighbor>0)
     {
-      NN = new ExhaustiveNearestNeighbors(); // for now use Exhaustive search and default Euclidean distance
-      NN->num_neighbors = width_neighbor;
-      NN->copy_input = false;
-      NN->copy_target = false;
-      NN->copy_weight = false;
-      NN->copy_index = true;
-      NN->build();
-      if(!train_set.isNull())
+        NN = new ExhaustiveNearestNeighbors(); // for now use Exhaustive search and default Euclidean distance
+        NN->num_neighbors = width_neighbor;
+        NN->copy_input = false;
+        NN->copy_target = false;
+        NN->copy_weight = false;
+        NN->copy_index = true;
+        NN->build();
+        if(!train_set.isNull())
         {
-          NN->setTrainingSet(train_set);
-          NN->train();
+            NN->setTrainingSet(train_set);
+            NN->train();
         }
-      NN_outputs.resize(width_neighbor);
-      NN_costs.resize(width_neighbor);
+        NN_outputs.resize(width_neighbor);
+        NN_costs.resize(width_neighbor);
     }
 
 }
@@ -153,63 +153,63 @@ void LocallyMagnifiedDistribution::build_()
 /////////////////
 real LocallyMagnifiedDistribution::log_density(const Vec& y) const
 {
-  int l = train_set.length();
-  int w = inputsize();
-  int ws = train_set->weightsize();
-  weights.resize(l);
-  // 'weights' will contain the "localization" weights for the current test point.
-  trainsample.resize(w+ws);
-  Vec input = trainsample.subVec(0,w);
+    int l = train_set.length();
+    int w = inputsize();
+    int ws = train_set->weightsize();
+    weights.resize(l);
+    // 'weights' will contain the "localization" weights for the current test point.
+    trainsample.resize(w+ws);
+    Vec input = trainsample.subVec(0,w);
 
-  if(width_neighbor>0)
+    if(width_neighbor>0)
     {
-      // Find distance d to width_neighbor neighbour
-      NN->computeOutputAndCosts(y, emptyvec, NN_outputs, NN_costs);
-      real d = NN_costs[width_neighbor-1];
-      // Now set new kernel width:
-      real newwidth = d*width_factor;
-      weighting_kernel->setOption(width_optionname,tostring2(newwidth));
-      weighting_kernel->build(); // rebuild to adapt to width change
+        // Find distance d to width_neighbor neighbour
+        NN->computeOutputAndCosts(y, emptyvec, NN_outputs, NN_costs);
+        real d = NN_costs[width_neighbor-1];
+        // Now set new kernel width:
+        real newwidth = d*width_factor;
+        weighting_kernel->setOption(width_optionname,tostring2(newwidth));
+        weighting_kernel->build(); // rebuild to adapt to width change
     }
 
-  double weightsum = 0;
-  for(int i=0; i<l; i++)
+    double weightsum = 0;
+    for(int i=0; i<l; i++)
     {
-      train_set->getRow(i,trainsample);
-      real weight = weighting_kernel(y,input);
-      if(ws==1)
-        weight *= trainsample[w];
-      weights[i] = weight;
-      weightsum += weight;
+        train_set->getRow(i,trainsample);
+        real weight = weighting_kernel(y,input);
+        if(ws==1)
+            weight *= trainsample[w];
+        weights[i] = weight;
+        weightsum += weight;
     }  
   
-  VMat weight_column(columnmatrix(weights));
+    VMat weight_column(columnmatrix(weights));
 
-  VMat weighted_trainset;
-  if(ws==0) // append weight column    
-    weighted_trainset = hconcat(train_set, weight_column);
-  else // replace last column by weight column
-    weighted_trainset = hconcat(train_set.subMatColumns(0,inputsize()), weight_column);
-  weighted_trainset->defineSizes(w,0,1);
+    VMat weighted_trainset;
+    if(ws==0) // append weight column    
+        weighted_trainset = hconcat(train_set, weight_column);
+    else // replace last column by weight column
+        weighted_trainset = hconcat(train_set.subMatColumns(0,inputsize()), weight_column);
+    weighted_trainset->defineSizes(w,0,1);
 
-  localdistr->forget();
-  localdistr->setTrainingSet(weighted_trainset);
-  localdistr->train();
-  double log_local_p = localdistr->log_density(y);
-  double log_p = log_local_p + std::log((float)weightsum) - std::log((float)l) - std::log((float)weighting_kernel(input,input));
+    localdistr->forget();
+    localdistr->setTrainingSet(weighted_trainset);
+    localdistr->train();
+    double log_local_p = localdistr->log_density(y);
+    double log_p = log_local_p + std::log((float)weightsum) - std::log((float)l) - std::log((float)weighting_kernel(input,input));
 
-  switch(mode)
+    switch(mode)
     {
     case 0: 
-      return log_p;
+        return log_p;
     case 1:
-      return log_local_p;
+        return log_local_p;
     case 2:
-      return std::log((float)weightsum) - std::log((float)l);
+        return std::log((float)weightsum) - std::log((float)l);
     case 3:
-      return std::log((float)weightsum);
+        return std::log((float)weightsum);
     default:
-      return log_p;
+        return log_p;
     }
 
 }
@@ -219,16 +219,16 @@ real LocallyMagnifiedDistribution::log_density(const Vec& y) const
 /////////////////////////////////
 void LocallyMagnifiedDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-  deepCopyField(weighting_kernel, copies);
-  deepCopyField(localdistr, copies);
-  deepCopyField(NN, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
+    deepCopyField(weighting_kernel, copies);
+    deepCopyField(localdistr, copies);
+    deepCopyField(NN, copies);
 }
 
 
@@ -238,10 +238,10 @@ void LocallyMagnifiedDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies
 ///////////
 void LocallyMagnifiedDistribution::train()
 {
-  if(width_neighbor>0) // train nearest neighbor searcher
+    if(width_neighbor>0) // train nearest neighbor searcher
     {
-      NN->setTrainingSet(train_set);
-      NN->train();
+        NN->setTrainingSet(train_set);
+        NN->train();
     }
 }
 
@@ -252,3 +252,16 @@ void LocallyMagnifiedDistribution::forget()
 
 
 }
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

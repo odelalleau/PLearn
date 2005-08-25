@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: MulticlassErrorCostFunction.h,v 1.4 2004/04/07 23:15:17 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef MulticlassErrorCostFunction_INC
 #define MulticlassErrorCostFunction_INC
@@ -56,17 +56,17 @@ using namespace std;
 
 class MulticlassErrorCostFunction: public Kernel
 {
-  typedef Kernel inherited;
+    typedef Kernel inherited;
 		
- public:
-  MulticlassErrorCostFunction() {}
+public:
+    MulticlassErrorCostFunction() {}
 
-  PLEARN_DECLARE_OBJECT(MulticlassErrorCostFunction);
+    PLEARN_DECLARE_OBJECT(MulticlassErrorCostFunction);
 
-  virtual string info() const
+    virtual string info() const
     { return "multiclass_error"; }
 
-  virtual real evaluate(const Vec& output, const Vec& target) const;
+    virtual real evaluate(const Vec& output, const Vec& target) const;
 };
 
 DECLARE_OBJECT_PTR(MulticlassErrorCostFunction);
@@ -75,3 +75,15 @@ DECLARE_OBJECT_PTR(MulticlassErrorCostFunction);
 
 #endif
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

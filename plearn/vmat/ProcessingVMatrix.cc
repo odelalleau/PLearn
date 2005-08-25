@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -48,67 +48,79 @@ using namespace std;
 
 
 ProcessingVMatrix::ProcessingVMatrix()
-  :inherited()
-  /* ### Initialise all fields to their default value */
+    :inherited()
+    /* ### Initialise all fields to their default value */
 {
-  // ...
+    // ...
 
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
+    // ### You may or may not want to call build_() to finish building the object
+    // build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(
-  ProcessingVMatrix,
-  "VMatrix whose rows are processed using a VPL script",
-  "See class VMatLanguage for help on VPL syntax."
-  );
+    ProcessingVMatrix,
+    "VMatrix whose rows are processed using a VPL script",
+    "See class VMatLanguage for help on VPL syntax."
+    );
 
 void ProcessingVMatrix::getNewRow(int i, const Vec& v) const
 {
-  program.run(i,v);
+    program.run(i,v);
 }
 
 void ProcessingVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "prg", &ProcessingVMatrix::prg, OptionBase::buildoption,
-                "The VPL code to be applied to each row of the vmat");
+    declareOption(ol, "prg", &ProcessingVMatrix::prg, OptionBase::buildoption,
+                  "The VPL code to be applied to each row of the vmat");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void ProcessingVMatrix::build_()
 {
-  // Do not do anything until we get the source VMat.
-  if (!source)
-    return;
-  vector<string> fieldnames;
-  program.setSource(source);
-  program.compileString(prg,fieldnames); 
-  int nfields = (int)fieldnames.size();
-  width_ = nfields;
+    // Do not do anything until we get the source VMat.
+    if (!source)
+        return;
+    vector<string> fieldnames;
+    program.setSource(source);
+    program.compileString(prg,fieldnames); 
+    int nfields = (int)fieldnames.size();
+    width_ = nfields;
 
-  // Set field infos.
-  fieldinfos.resize(nfields);
-  for(int j=0; j<nfields; j++)
-    fieldinfos[j] = VMField(fieldnames[j]);
+    // Set field infos.
+    fieldinfos.resize(nfields);
+    for(int j=0; j<nfields; j++)
+        fieldinfos[j] = VMField(fieldnames[j]);
 
-  length_ = source->length();
-  setMetaInfoFromSource();
-  sourcevec.resize(source->width());
+    length_ = source->length();
+    setMetaInfoFromSource();
+    sourcevec.resize(source->width());
 }
 
 void ProcessingVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void ProcessingVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(sourcevec, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(sourcevec, copies);
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

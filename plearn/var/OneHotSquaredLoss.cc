@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "OneHotSquaredLoss.h"
 #include "RowAtPositionVariable.h"
@@ -56,11 +56,11 @@ PLEARN_IMPLEMENT_OBJECT(OneHotSquaredLoss,
                         "NO HELP");
 
 OneHotSquaredLoss::OneHotSquaredLoss()
-  : coldval_(0.), hotval_(0.)
+    : coldval_(0.), hotval_(0.)
 { }
   
 OneHotSquaredLoss::OneHotSquaredLoss(Variable* netout, Variable* classnum, real coldval, real hotval)
-  : inherited(netout,classnum,1,1), coldval_(coldval), hotval_(hotval)
+    : inherited(netout,classnum,1,1), coldval_(coldval), hotval_(hotval)
 {
     build_();
 }
@@ -93,58 +93,69 @@ void OneHotSquaredLoss::recomputeSize(int& l, int& w) const
   
 void OneHotSquaredLoss::fprop()
 {
-  real* netout = input1->valuedata;
-  int n = input1->value.size();
-  int classnum = (int) input2->valuedata[0];
-  real res = 0.;
-  for(int i=0; i<n; i++)
-    res += square(*netout++ - (i==classnum ? hotval_ : coldval_));
-  *valuedata = res;
+    real* netout = input1->valuedata;
+    int n = input1->value.size();
+    int classnum = (int) input2->valuedata[0];
+    real res = 0.;
+    for(int i=0; i<n; i++)
+        res += square(*netout++ - (i==classnum ? hotval_ : coldval_));
+    *valuedata = res;
 }
 
 
 void OneHotSquaredLoss::bprop()
 {
-  real gr = *gradientdata;
-  real* netout = input1->valuedata;
-  int n = input1->value.size();
-  int classnum = (int) input2->valuedata[0];
-  real* input1grptr = input1->gradientdata;
-  if(gr!=1.)
-  {
-    gr = gr+gr;
-    for(int i=0; i<n; i++)
-      *input1grptr++ += gr*(*netout++ - (i==classnum ? hotval_ : coldval_));
-  }
-  else // specialised version for gr==1
-  {
-    for(int i=0; i<n; i++)
-      input1->gradientdata[i] += two(netout[i] - (i==classnum ? hotval_ : coldval_));        
-  }
+    real gr = *gradientdata;
+    real* netout = input1->valuedata;
+    int n = input1->value.size();
+    int classnum = (int) input2->valuedata[0];
+    real* input1grptr = input1->gradientdata;
+    if(gr!=1.)
+    {
+        gr = gr+gr;
+        for(int i=0; i<n; i++)
+            *input1grptr++ += gr*(*netout++ - (i==classnum ? hotval_ : coldval_));
+    }
+    else // specialised version for gr==1
+    {
+        for(int i=0; i<n; i++)
+            input1->gradientdata[i] += two(netout[i] - (i==classnum ? hotval_ : coldval_));        
+    }
 }
 
 
 void OneHotSquaredLoss::symbolicBprop()
 {
-  Var gi =  g*(input1 - coldval_);
-  Var gindex = new RowAtPositionVariable(g*(coldval_-hotval_), input2, input1->length());
-  Var ginput = gi + gindex;
-  input1->accg(ginput+ginput); //2*gi
+    Var gi =  g*(input1 - coldval_);
+    Var gindex = new RowAtPositionVariable(g*(coldval_-hotval_), input2, input1->length());
+    Var ginput = gi + gindex;
+    input1->accg(ginput+ginput); //2*gi
 }
 
 
 void OneHotSquaredLoss::rfprop()
 {
-  int n = input1->value.size();
-  int classnum = (int) input2->valuedata[0];
-  real sum = 0;
-  for (int i=0; i<n; i++)
-       sum += 2 * input1->rvaluedata[i] * (input1->valuedata[i] - (i==classnum ? hotval_ : coldval_));
-  rvaluedata[0] = sum;
+    int n = input1->value.size();
+    int classnum = (int) input2->valuedata[0];
+    real sum = 0;
+    for (int i=0; i<n; i++)
+        sum += 2 * input1->rvaluedata[i] * (input1->valuedata[i] - (i==classnum ? hotval_ : coldval_));
+    rvaluedata[0] = sum;
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

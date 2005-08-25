@@ -25,601 +25,614 @@ typedef const map<int, real> ConstSparseVec;
 class ProbabilitySparseMatrix : public Object
 {
 private:
-  RowMapSparseMatrix<real> x2y;
-  RowMapSparseMatrix<real> y2x;
+    RowMapSparseMatrix<real> x2y;
+    RowMapSparseMatrix<real> y2x;
 public:
 
-  Set Y;
-  Set X;
+    Set Y;
+    Set X;
 
-  bool raise_error;
-  string name;
+    bool raise_error;
+    string name;
 
-  ProbabilitySparseMatrix(int ny=0, int nx=0, string pname = "pYX") : raise_error(true)
+    ProbabilitySparseMatrix(int ny=0, int nx=0, string pname = "pYX") : raise_error(true)
     {
-      resize(ny,nx);
-      name = pname;
+        resize(ny,nx);
+        name = pname;
     }
-  void resize(int ny, int nx) { 
-    x2y.resize(nx,ny); 
-    y2x.resize(ny,nx);
-  }
-  int nx() { return x2y.length(); }
-  int ny() { return y2x.length(); }
+    void resize(int ny, int nx) { 
+        x2y.resize(nx,ny); 
+        y2x.resize(ny,nx);
+    }
+    int nx() { return x2y.length(); }
+    int ny() { return y2x.length(); }
 
-  void rename(string new_name) { name = new_name; }
+    void rename(string new_name) { name = new_name; }
 
-  Set computeX()
-  {
-    X.clear();
-    for (int xx = 0; xx < nx(); xx++)
+    Set computeX()
     {
-      if (sumPYx(xx) > 0)
-      {
-        X.insert(xx);
-      }
-    }
-    return X;
-  }
-
-  Set computeY()
-  {
-    Y.clear();
-    for (int yy = 0; yy < ny(); yy++)
-    {
-      if (sumPyX(yy) > 0)
-      {
-        Y.insert(yy);
-      }
-    }
-    return Y;
-  }
-
-  real get(int y,int x) { 
-    map<int,real>& mx = x2y(x);
-    if (mx.size()==0)
-    {
-      if (raise_error)
-        //PLERROR("trying to access an invalid probability at P(%d|%d) in %s",y,x, name);
-        PLWARNING("trying to access an invalid probability at P(%d|%d) in %s",y,x, name.c_str());
-      return 0; 
-    }
-    if (mx.find(y)!=mx.end()) 
-      return mx[y]; 
-    return 0;
-  }
-
-  bool exists(int y, int x) { 
-    map<int,real>& mx = x2y(x);
-    if (mx.size()==0) return false;
-    return mx.find(y)!=mx.end();
-  }
-
-  // most access are for reading, allow operator() for convenience
-  real operator()(int y, int x) { return get(y,x); }
-  void incr(int y, int x, real increment=1) 
-    { 
-      if (increment!=0)
-      {
-        real current_value = 0;
-        map<int,real>& mx = x2y(x);
-        if (mx.size()!=0)
+        X.clear();
+        for (int xx = 0; xx < nx(); xx++)
         {
-          map<int,real>::const_iterator it = mx.find(y);
-          if (it!=mx.end())
-            current_value = it->second;
+            if (sumPYx(xx) > 0)
+            {
+                X.insert(xx);
+            }
         }
-        set(y,x,current_value+increment); 
-      }
+        return X;
     }
-  const map<int,real>& getPYx(int x, bool dont_raise_error=false)  // const is to force user to call set for writing
+
+    Set computeY()
+    {
+        Y.clear();
+        for (int yy = 0; yy < ny(); yy++)
+        {
+            if (sumPyX(yy) > 0)
+            {
+                Y.insert(yy);
+            }
+        }
+        return Y;
+    }
+
+    real get(int y,int x) { 
+        map<int,real>& mx = x2y(x);
+        if (mx.size()==0)
+        {
+            if (raise_error)
+                //PLERROR("trying to access an invalid probability at P(%d|%d) in %s",y,x, name);
+                PLWARNING("trying to access an invalid probability at P(%d|%d) in %s",y,x, name.c_str());
+            return 0; 
+        }
+        if (mx.find(y)!=mx.end()) 
+            return mx[y]; 
+        return 0;
+    }
+
+    bool exists(int y, int x) { 
+        map<int,real>& mx = x2y(x);
+        if (mx.size()==0) return false;
+        return mx.find(y)!=mx.end();
+    }
+
+    // most access are for reading, allow operator() for convenience
+    real operator()(int y, int x) { return get(y,x); }
+    void incr(int y, int x, real increment=1) 
     { 
-      const map<int,real>& PYx = x2y(x);
-      if (raise_error && !dont_raise_error && PYx.size()==0)
-        PLERROR("ProbabilitySparseMatrix::getPyx: accessing an empty column at X=%d",x);
-      return PYx;
+        if (increment!=0)
+        {
+            real current_value = 0;
+            map<int,real>& mx = x2y(x);
+            if (mx.size()!=0)
+            {
+                map<int,real>::const_iterator it = mx.find(y);
+                if (it!=mx.end())
+                    current_value = it->second;
+            }
+            set(y,x,current_value+increment); 
+        }
     }
-  const map<int,real>& getPyX(int y)   // const is to force user to call set for writing
+    const map<int,real>& getPYx(int x, bool dont_raise_error=false)  // const is to force user to call set for writing
     { 
-      return y2x(y); 
+        const map<int,real>& PYx = x2y(x);
+        if (raise_error && !dont_raise_error && PYx.size()==0)
+            PLERROR("ProbabilitySparseMatrix::getPyx: accessing an empty column at X=%d",x);
+        return PYx;
     }
-
-  map<int,real> getPYxCopy(int x, bool dont_raise_error=false) 
+    const map<int,real>& getPyX(int y)   // const is to force user to call set for writing
     { 
-      map<int,real> PYx = x2y(x);
-      if (raise_error && !dont_raise_error && PYx.size()==0)
-        PLERROR("ProbabilitySparseMatrix::getPyx: accessing an empty column at X=%d",x);
-      return PYx;
+        return y2x(y); 
     }
 
-  map<int,real> getPyXCopy(int y)
+    map<int,real> getPYxCopy(int x, bool dont_raise_error=false) 
     { 
-      map<int, real> pyX = y2x(y);
-      return pyX; 
+        map<int,real> PYx = x2y(x);
+        if (raise_error && !dont_raise_error && PYx.size()==0)
+            PLERROR("ProbabilitySparseMatrix::getPyx: accessing an empty column at X=%d",x);
+        return PYx;
     }
 
-  void setPYx(int x, const map<int, real>& pYx)
-    {
-      for (map<int, real>::const_iterator it = pYx.begin(); it != pYx.end(); ++it)
-        set(it->first, x, it->second);
+    map<int,real> getPyXCopy(int y)
+    { 
+        map<int, real> pyX = y2x(y);
+        return pyX; 
     }
 
-  void setPyX(int y, const map<int, real>& pyX)
+    void setPYx(int x, const map<int, real>& pYx)
     {
-      for (map<int, real>::const_iterator it = pyX.begin(); it != pyX.end(); ++it)
-        set(y, it->first, it->second);
+        for (map<int, real>::const_iterator it = pYx.begin(); it != pYx.end(); ++it)
+            set(it->first, x, it->second);
     }
 
-  void set(int y,int x,real v, bool dont_warn_for_zero = false) { 
-    if (v!=0)
+    void setPyX(int y, const map<int, real>& pyX)
     {
-      x2y(x,y)=v;
-      y2x(y,x)=v;
-    } else 
-    {
-      if (!dont_warn_for_zero)
-        PLWARNING("setting something to 0 in ProbabilitySparseMatrix %s", name.c_str());
-      map<int,real>& PYx = x2y(x);
-      if (PYx.find(y)!=PYx.end())
-      {
-        PYx.erase(y);
-        map<int,real>& PyX = y2x(y);
-        PyX.erase(x);
-      }
+        for (map<int, real>::const_iterator it = pyX.begin(); it != pyX.end(); ++it)
+            set(y, it->first, it->second);
     }
-  }
 
-  void removeElem(int y, int x)
-  {
-    set(y, x, 0.0, true);
-  }
-
-  real sumPYx(int x, Set Y)
-  {
-    real sum_pYx = 0.0;
-    map<int, real>& col = x2y(x);
-    for (map<int, real>::const_iterator yit = col.begin(); yit != col.end(); ++yit)
-    {
-      int y = yit->first;
-      if (Y.contains(y))
-        sum_pYx += yit->second;
+    void set(int y,int x,real v, bool dont_warn_for_zero = false) { 
+        if (v!=0)
+        {
+            x2y(x,y)=v;
+            y2x(y,x)=v;
+        } else 
+        {
+            if (!dont_warn_for_zero)
+                PLWARNING("setting something to 0 in ProbabilitySparseMatrix %s", name.c_str());
+            map<int,real>& PYx = x2y(x);
+            if (PYx.find(y)!=PYx.end())
+            {
+                PYx.erase(y);
+                map<int,real>& PyX = y2x(y);
+                PyX.erase(x);
+            }
+        }
     }
-    return sum_pYx;
-  }
+
+    void removeElem(int y, int x)
+    {
+        set(y, x, 0.0, true);
+    }
+
+    real sumPYx(int x, Set Y)
+    {
+        real sum_pYx = 0.0;
+        map<int, real>& col = x2y(x);
+        for (map<int, real>::const_iterator yit = col.begin(); yit != col.end(); ++yit)
+        {
+            int y = yit->first;
+            if (Y.contains(y))
+                sum_pYx += yit->second;
+        }
+        return sum_pYx;
+    }
   
-  real sumPyX(int y, Set X)
-  {
-    real sum_pyX = 0.0;
-    map<int, real>& row = y2x(y);
-    for (map<int, real>::const_iterator xit = row.begin(); xit != row.end(); ++xit)
+    real sumPyX(int y, Set X)
     {
-      int x = xit->first;
-      if (X.contains(x))
-        sum_pyX += xit->second;
+        real sum_pyX = 0.0;
+        map<int, real>& row = y2x(y);
+        for (map<int, real>::const_iterator xit = row.begin(); xit != row.end(); ++xit)
+        {
+            int x = xit->first;
+            if (X.contains(x))
+                sum_pyX += xit->second;
+        }
+        return sum_pyX;
     }
-    return sum_pyX;
-  }
 
-  real sumPYx(int x)
-  {
-    real sum_pYx = 0.0;
-    map<int, real>& col = x2y(x);
-    for (map<int, real>::const_iterator yit = col.begin(); yit != col.end(); ++yit)
+    real sumPYx(int x)
     {
-      sum_pYx += yit->second;
+        real sum_pYx = 0.0;
+        map<int, real>& col = x2y(x);
+        for (map<int, real>::const_iterator yit = col.begin(); yit != col.end(); ++yit)
+        {
+            sum_pYx += yit->second;
+        }
+        return sum_pYx;
     }
-    return sum_pYx;
-  }
   
-  real sumPyX(int y)
-  {
-    real sum_pyX = 0.0;
-    map<int, real>& row = y2x(y);
-    for (map<int, real>::const_iterator xit = row.begin(); xit != row.end(); ++xit)
+    real sumPyX(int y)
     {
-      sum_pyX += xit->second;
+        real sum_pyX = 0.0;
+        map<int, real>& row = y2x(y);
+        for (map<int, real>::const_iterator xit = row.begin(); xit != row.end(); ++xit)
+        {
+            sum_pyX += xit->second;
+        }
+        return sum_pyX;
     }
-    return sum_pyX;
-  }
 
-  // DEPRECATED
-  // put existing elements to 0 without removing them
-  void clearElements() {
-    for (int x=0;x<nx();x++)
+    // DEPRECATED
+    // put existing elements to 0 without removing them
+    void clearElements() {
+        for (int x=0;x<nx();x++)
+        {
+            map<int,real>& r = x2y(x);
+            for (map<int,real>::iterator it = r.begin(); it!=r.end(); ++it)
+            {
+                it->second=0;
+                y2x(it->first,x)=0;
+            }
+        }
+    }
+
+    // release all elements in the maps
+    void clear() { x2y.clear(); y2x.clear(); }
+
+    void removeRow(int y, Set X) {
+        y2x(y).clear();
+        for (SetIterator it=X.begin();it!=X.end();++it)
+        {
+            int x = *it;
+            map<int,real>& pYx = x2y(x);
+            if (pYx.size()>0)
+                pYx.erase(y);
+        }
+    }
+
+    void removeRow(int y) 
     {
-      map<int,real>& r = x2y(x);
-      for (map<int,real>::iterator it = r.begin(); it!=r.end(); ++it)
-      {
-        it->second=0;
-        y2x(it->first,x)=0;
-      }
+        map<int, real>& row = y2x(y);
+        for (map<int, real>::iterator it = row.begin(); it != row.end(); ++it)
+        {
+            int x = it->first;
+            map<int,real>& Yx = x2y(x);
+            if (Yx.size()>0)
+                Yx.erase(y);
+        }
+        row.clear();
     }
-  }
 
-  // release all elements in the maps
-  void clear() { x2y.clear(); y2x.clear(); }
-
-  void removeRow(int y, Set X) {
-    y2x(y).clear();
-    for (SetIterator it=X.begin();it!=X.end();++it)
+    void removeColumn(int x)
     {
-      int x = *it;
-      map<int,real>& pYx = x2y(x);
-      if (pYx.size()>0)
-        pYx.erase(y);
+        map<int, real>& col = x2y(x);
+        for (map<int, real>::iterator it = col.begin(); it != col.end(); ++it)
+        {
+            int y = it->first;
+            map<int,real>& yX = y2x(y);
+            if (yX.size()>0)
+                yX.erase(x);
+        }
+        col.clear();
     }
-  }
 
-  void removeRow(int y) 
-  {
-    map<int, real>& row = y2x(y);
-    for (map<int, real>::iterator it = row.begin(); it != row.end(); ++it)
+    int size()
     {
-      int x = it->first;
-      map<int,real>& Yx = x2y(x);
-      if (Yx.size()>0)
-        Yx.erase(y);
+        if (x2y.size() != y2x.size())
+            PLWARNING("x2y and y2x sizes dont match");
+        return y2x.size();
     }
-    row.clear();
-  }
 
-  void removeColumn(int x)
-  {
-    map<int, real>& col = x2y(x);
-    for (map<int, real>::iterator it = col.begin(); it != col.end(); ++it)
+    void removeExtra(ProbabilitySparseMatrix& m)
     {
-      int y = it->first;
-      map<int,real>& yX = y2x(y);
-      if (yX.size()>0)
-        yX.erase(x);
+        //for (SetIterator yit = Y.begin(); yit != Y.end(); ++yit)
+        int _ny = ny();
+        Set x_to_remove;
+        for (int y = 0; y < _ny; y++)
+        {
+            //int y = *yit;
+            ConstSparseVec& yX = getPyX(y);
+            x_to_remove.clear();
+            for (SparseVec::const_iterator xit = yX.begin(); xit != yX.end(); ++xit)
+            {
+                int x = xit->first;
+                if (!m.exists(y, x))
+                    x_to_remove.insert(x);
+            }
+            for (SetIterator xit = x_to_remove.begin(); xit != x_to_remove.end(); ++xit)
+            {
+                int x = *xit;
+                removeElem(y, x);
+            }
+        }
     }
-    col.clear();
-  }
 
-  int size()
-  {
-    if (x2y.size() != y2x.size())
-      PLWARNING("x2y and y2x sizes dont match");
-    return y2x.size();
-  }
-
-  void removeExtra(ProbabilitySparseMatrix& m)
-  {
-    //for (SetIterator yit = Y.begin(); yit != Y.end(); ++yit)
-    int _ny = ny();
-    Set x_to_remove;
-    for (int y = 0; y < _ny; y++)
+    void fullPrint()
     {
-      //int y = *yit;
-      ConstSparseVec& yX = getPyX(y);
-      x_to_remove.clear();
-      for (SparseVec::const_iterator xit = yX.begin(); xit != yX.end(); ++xit)
-      {
-        int x = xit->first;
-        if (!m.exists(y, x))
-          x_to_remove.insert(x);
-      }
-      for (SetIterator xit = x_to_remove.begin(); xit != x_to_remove.end(); ++xit)
-      {
-        int x = *xit;
-        removeElem(y, x);
-      }
+        cout << "y2x" << endl;
+        for (int y = 0; y < ny(); y++)
+        {
+            for (int x = 0; x < nx(); x++)
+            {
+                cout << y2x(y, x) << " ";
+            }
+            cout << endl;
+        }
+        cout << "x2y" << endl;
+        for (int x = 0; x < nx(); x++)
+        {
+            for (int y = 0; y < ny(); y++)
+            {
+                cout << x2y(x, y) << " ";
+            }
+            cout << endl;
+        }
     }
-  }
 
-  void fullPrint()
-  {
-    cout << "y2x" << endl;
-    for (int y = 0; y < ny(); y++)
+    void save(string filename)
     {
-      for (int x = 0; x < nx(); x++)
-      {
-        cout << y2x(y, x) << " ";
-      }
-      cout << endl;
+        y2x.save(filename + ".y2x");
+        x2y.save(filename + ".x2y");
     }
-    cout << "x2y" << endl;
-    for (int x = 0; x < nx(); x++)
+
+    void load(string filename)
     {
-      for (int y = 0; y < ny(); y++)
-      {
-        cout << x2y(x, y) << " ";
-      }
-      cout << endl;
+        y2x.load(filename + ".y2x");
+        x2y.load(filename + ".x2y");
     }
-  }
 
-  void save(string filename)
-  {
-    y2x.save(filename + ".y2x");
-    x2y.save(filename + ".x2y");
-  }
-
-  void load(string filename)
-  {
-    y2x.load(filename + ".y2x");
-    x2y.load(filename + ".x2y");
-  }
-
-  real* getAsFullVector()
-  {
-    // a vector of triples : (row, col, value)
-    int vector_size = y2x.size() * 3;
-    real* full_vector = new real[vector_size];
-    int pos = 0;
-    for (int i = 0; i < ny(); i++)
+    real* getAsFullVector()
     {
-      map<int, real>& row_i = y2x(i);
-      for (map<int, real>::iterator it = row_i.begin(); it != row_i.end(); ++it)
-      {
-        int j = it->first;
-        real value = it->second;
-        full_vector[pos++] = (real)i;
-        full_vector[pos++] = (real)j;
-        full_vector[pos++] = value;
-      }
+        // a vector of triples : (row, col, value)
+        int vector_size = y2x.size() * 3;
+        real* full_vector = new real[vector_size];
+        int pos = 0;
+        for (int i = 0; i < ny(); i++)
+        {
+            map<int, real>& row_i = y2x(i);
+            for (map<int, real>::iterator it = row_i.begin(); it != row_i.end(); ++it)
+            {
+                int j = it->first;
+                real value = it->second;
+                full_vector[pos++] = (real)i;
+                full_vector[pos++] = (real)j;
+                full_vector[pos++] = value;
+            }
+        }
+        if (pos != vector_size)
+            PLERROR("weird");
+        return full_vector;
     }
-    if (pos != vector_size)
-      PLERROR("weird");
-    return full_vector;
-  }
 
-  void getAsMaxSizedVectors(int max_size, vector<pair<real*, int> >& vectors)
-  {
-    if ((max_size % 3) != 0) PLWARNING("dangerous vector size (max_size mod 3 must equal 0)");
+    void getAsMaxSizedVectors(int max_size, vector<pair<real*, int> >& vectors)
+    {
+        if ((max_size % 3) != 0) PLWARNING("dangerous vector size (max_size mod 3 must equal 0)");
 
-    int n_elems = y2x.size() * 3;
-    int n_vecs = n_elems / max_size;
-    int remaining = n_elems % max_size;
-    if (remaining > 0) // padding to get sure that last block size (= remaining) is moddable by 3
-    {
-      n_vecs += 1;
-      int mod3 = remaining % 3;
-      if (mod3 != 0)
-        remaining += (3 - mod3);
+        int n_elems = y2x.size() * 3;
+        int n_vecs = n_elems / max_size;
+        int remaining = n_elems % max_size;
+        if (remaining > 0) // padding to get sure that last block size (= remaining) is moddable by 3
+        {
+            n_vecs += 1;
+            int mod3 = remaining % 3;
+            if (mod3 != 0)
+                remaining += (3 - mod3);
+        }
+        vectors.resize(n_vecs);
+        //cerr << "(" << name << ") size = " << n_elems << endl;
+        for (int i = 0; i < n_vecs; i++)
+        {
+            if (i == (n_vecs - 1) && remaining > 0)
+            {
+                vectors[i].first = new real[remaining];
+                vectors[i].second = remaining;
+                //cerr << "(" << name << ") i = " << i << ", size = " << remaining << endl;
+            } else
+            {
+                vectors[i].first = new real[max_size];
+                vectors[i].second = max_size;
+                //cerr << "(" << name << ") i = " << i << ", size = " << max_size << endl;
+            }
+        }
+        int pos = 0;
+        for (int i = 0; i < ny(); i++)
+        {
+            map<int, real>& row_i = y2x(i);
+            for (map<int, real>::iterator it = row_i.begin(); it != row_i.end(); ++it)
+            {
+                int j = it->first;
+                real value = it->second;
+                vectors[pos / max_size].first[pos++ % max_size] = i;
+                vectors[pos / max_size].first[pos++ % max_size] = j;
+                vectors[pos / max_size].first[pos++ % max_size] = value;
+            }
+        }
+        while (pos < n_elems) // pad with (0, 0, 0)
+        {
+            vectors[pos / max_size].first[pos++ % max_size] = 0;
+            vectors[pos / max_size].first[pos++ % max_size] = 0;
+            vectors[pos / max_size].first[pos++ % max_size] = 0;
+        }
     }
-    vectors.resize(n_vecs);
-    //cerr << "(" << name << ") size = " << n_elems << endl;
-    for (int i = 0; i < n_vecs; i++)
-    {
-      if (i == (n_vecs - 1) && remaining > 0)
-      {
-        vectors[i].first = new real[remaining];
-        vectors[i].second = remaining;
-        //cerr << "(" << name << ") i = " << i << ", size = " << remaining << endl;
-      } else
-      {
-        vectors[i].first = new real[max_size];
-        vectors[i].second = max_size;
-        //cerr << "(" << name << ") i = " << i << ", size = " << max_size << endl;
-      }
-    }
-    int pos = 0;
-    for (int i = 0; i < ny(); i++)
-    {
-      map<int, real>& row_i = y2x(i);
-      for (map<int, real>::iterator it = row_i.begin(); it != row_i.end(); ++it)
-      {
-        int j = it->first;
-        real value = it->second;
-        vectors[pos / max_size].first[pos++ % max_size] = i;
-        vectors[pos / max_size].first[pos++ % max_size] = j;
-        vectors[pos / max_size].first[pos++ % max_size] = value;
-      }
-    }
-    while (pos < n_elems) // pad with (0, 0, 0)
-    {
-      vectors[pos / max_size].first[pos++ % max_size] = 0;
-      vectors[pos / max_size].first[pos++ % max_size] = 0;
-      vectors[pos / max_size].first[pos++ % max_size] = 0;
-    }
-  }
 
-  void add(real* full_vector, int n_elems)
-  {
-    for (int i = 0; i < n_elems; i += 3)
-      incr((int)full_vector[i], (int)full_vector[i + 1], full_vector[i + 2]);
-  }
-
-  void set(real* full_vector, int n_elems)
-  {
-    clear();
-    for (int i = 0; i < n_elems; i += 3)
-      set((int)full_vector[i], (int)full_vector[i + 1], full_vector[i + 2]);
-  }
-
-  real sumOfElements()
-  {
-    real sum = 0.0;
-    for (int i = 0; i < ny(); i++)
+    void add(real* full_vector, int n_elems)
     {
-      map<int, real>& row_i = y2x(i);
-      for (map<int, real>::iterator it = row_i.begin(); it != row_i.end(); ++it)
-      {
-        int j = it->first;
-        sum += get(i, j);
-      }
+        for (int i = 0; i < n_elems; i += 3)
+            incr((int)full_vector[i], (int)full_vector[i + 1], full_vector[i + 2]);
     }
-    return sum;
-  }
+
+    void set(real* full_vector, int n_elems)
+    {
+        clear();
+        for (int i = 0; i < n_elems; i += 3)
+            set((int)full_vector[i], (int)full_vector[i + 1], full_vector[i + 2]);
+    }
+
+    real sumOfElements()
+    {
+        real sum = 0.0;
+        for (int i = 0; i < ny(); i++)
+        {
+            map<int, real>& row_i = y2x(i);
+            for (map<int, real>::iterator it = row_i.begin(); it != row_i.end(); ++it)
+            {
+                int j = it->first;
+                sum += get(i, j);
+            }
+        }
+        return sum;
+    }
 
 };
 
 inline void samePos(ProbabilitySparseMatrix& m1, ProbabilitySparseMatrix& m2, string m1name, string m2name)
 {
-  for (SetIterator yit = m1.Y.begin(); yit != m1.Y.end(); ++yit)
-  {
-    int y = *yit;
-    const map<int, real>& yX = m1.getPyX(y);
-    for (map<int, real>::const_iterator it = yX.begin(); it != yX.end(); ++it)
+    for (SetIterator yit = m1.Y.begin(); yit != m1.Y.end(); ++yit)
     {
-      int x = it->first;
-      if (!m2.exists(y, x))
-        PLERROR("in samePos, %s contains an element that is not present in %s", m1name.c_str(), m2name.c_str());
+        int y = *yit;
+        const map<int, real>& yX = m1.getPyX(y);
+        for (map<int, real>::const_iterator it = yX.begin(); it != yX.end(); ++it)
+        {
+            int x = it->first;
+            if (!m2.exists(y, x))
+                PLERROR("in samePos, %s contains an element that is not present in %s", m1name.c_str(), m2name.c_str());
+        }
     }
-  }
 }
 
 inline void check_prob(ProbabilitySparseMatrix& pYX, string Yname, string Xname)
 {
-  bool failed = false;
-  real sum_pY = 0.0;
-  Set X = pYX.X;
-  for (SetIterator x_it = X.begin(); x_it!=X.end(); ++x_it)
-  {
-    int x = *x_it;
-    const map<int,real>& pYx = pYX.getPYx(x);
-    sum_pY = 0.0;
-    for (map<int,real>::const_iterator y_it=pYx.begin();y_it!=pYx.end();++y_it)
+    bool failed = false;
+    real sum_pY = 0.0;
+    Set X = pYX.X;
+    for (SetIterator x_it = X.begin(); x_it!=X.end(); ++x_it)
     {
-      sum_pY += y_it->second;
+        int x = *x_it;
+        const map<int,real>& pYx = pYX.getPYx(x);
+        sum_pY = 0.0;
+        for (map<int,real>::const_iterator y_it=pYx.begin();y_it!=pYx.end();++y_it)
+        {
+            sum_pY += y_it->second;
+        }
+        if (fabs(sum_pY - 1.0) > 1e-4)
+        {
+            failed = true;
+            break;
+        }
     }
-    if (fabs(sum_pY - 1.0) > 1e-4)
-    {
-      failed = true;
-      break;
-    }
-  }
-  if (failed)
-    PLERROR("check_prob failed for %s -> %s (sum of a column = %g)", Xname.c_str(), Yname.c_str(), sum_pY);
+    if (failed)
+        PLERROR("check_prob failed for %s -> %s (sum of a column = %g)", Xname.c_str(), Yname.c_str(), sum_pY);
 }
 
 inline void check_prob(Set Y, const map<int, real>& pYx)
 {
-  real sum_y=0;
-  for (map<int,real>::const_iterator y_it=pYx.begin();y_it!=pYx.end();++y_it)
-    if (Y.contains(y_it->first))
-      sum_y += y_it->second;
-  if (fabs(sum_y-1)>1e-4 && pYx.size() != 0)
-    PLERROR("check_prob failed, sum_y=%g",sum_y);
+    real sum_y=0;
+    for (map<int,real>::const_iterator y_it=pYx.begin();y_it!=pYx.end();++y_it)
+        if (Y.contains(y_it->first))
+            sum_y += y_it->second;
+    if (fabs(sum_y-1)>1e-4 && pYx.size() != 0)
+        PLERROR("check_prob failed, sum_y=%g",sum_y);
 }
 
 inline void update(ProbabilitySparseMatrix& pYX, ProbabilitySparseMatrix& nYX)
 {
-  pYX.clear();
-  nYX.computeX();
-  nYX.computeY();
-  for (SetIterator xit = nYX.X.begin(); xit != nYX.X.end(); ++xit)
-  {
-    int x = *xit;
-    real sumYx = nYX.sumPYx(x);
-    if (sumYx != 0.0)
+    pYX.clear();
+    nYX.computeX();
+    nYX.computeY();
+    for (SetIterator xit = nYX.X.begin(); xit != nYX.X.end(); ++xit)
     {
-      for (SetIterator yit = nYX.Y.begin(); yit != nYX.Y.end(); ++yit)
-      {
-        int y = *yit;
-        real p = nYX(y, x) / sumYx;
-        if (p)
-          pYX.set(y, x, p);
-      }
+        int x = *xit;
+        real sumYx = nYX.sumPYx(x);
+        if (sumYx != 0.0)
+        {
+            for (SetIterator yit = nYX.Y.begin(); yit != nYX.Y.end(); ++yit)
+            {
+                int y = *yit;
+                real p = nYX(y, x) / sumYx;
+                if (p)
+                    pYX.set(y, x, p);
+            }
+        }
     }
-  }
-  pYX.computeY();
-  pYX.computeX();
+    pYX.computeY();
+    pYX.computeX();
 }
 
 inline void updateAndClearCounts(ProbabilitySparseMatrix& pYX, ProbabilitySparseMatrix& nYX)
 {
-  pYX.clear();
-  nYX.computeX();
-  nYX.computeY();
-  for (SetIterator xit = nYX.X.begin(); xit != nYX.X.end(); ++xit)
-  {
-    int x = *xit;
-    real sumYx = nYX.sumPYx(x);
-    if (sumYx != 0.0)
+    pYX.clear();
+    nYX.computeX();
+    nYX.computeY();
+    for (SetIterator xit = nYX.X.begin(); xit != nYX.X.end(); ++xit)
     {
-      for (SetIterator yit = nYX.Y.begin(); yit != nYX.Y.end(); ++yit)
-      {
-        int y = *yit;
-        real p = nYX(y, x) / sumYx;
-        if (p)
-          pYX.set(y, x, p);
-      }
+        int x = *xit;
+        real sumYx = nYX.sumPYx(x);
+        if (sumYx != 0.0)
+        {
+            for (SetIterator yit = nYX.Y.begin(); yit != nYX.Y.end(); ++yit)
+            {
+                int y = *yit;
+                real p = nYX(y, x) / sumYx;
+                if (p)
+                    pYX.set(y, x, p);
+            }
+        }
     }
-  }
-  pYX.computeY();
-  pYX.computeX();
+    pYX.computeY();
+    pYX.computeX();
 }
 
 inline ostream& operator<<(ostream& out, ProbabilitySparseMatrix& pyx)
 {
-  bool re = pyx.raise_error;
-  pyx.raise_error = false;
-  for (int y = 0; y < pyx.ny(); y++)
-  {
-    for (int x = 0; x < pyx.nx(); x++)
+    bool re = pyx.raise_error;
+    pyx.raise_error = false;
+    for (int y = 0; y < pyx.ny(); y++)
     {
-      out << setw(NUMWIDTH) << pyx(y, x);
+        for (int x = 0; x < pyx.nx(); x++)
+        {
+            out << setw(NUMWIDTH) << pyx(y, x);
+        }
+        out << endl;
     }
-    out << endl;
-  }
-  pyx.raise_error = re;
-  return out;
+    pyx.raise_error = re;
+    return out;
 }
 
 inline void print(ostream& out, ProbabilitySparseMatrix& pyx, Set Y, Set X)
 {
-  for (SetIterator yit = Y.begin(); yit != Y.end(); ++yit)
-  {
-    int y = *yit;
-    for (SetIterator xit = X.begin(); xit != X.end(); ++xit)
+    for (SetIterator yit = Y.begin(); yit != Y.end(); ++yit)
     {
-      int x = *xit;
-      out << setw(NUMWIDTH) << pyx(y, x);
+        int y = *yit;
+        for (SetIterator xit = X.begin(); xit != X.end(); ++xit)
+        {
+            int x = *xit;
+            out << setw(NUMWIDTH) << pyx(y, x);
+        }
+        out << endl;
     }
-    out << endl;
-  }
 }
 
 inline void print(ostream& out, RowMapSparseMatrix<real>& m)
 {
-  for (int i = 0; i < m.length(); i++)
-  {
-    for (int j = 0; j < m.width(); j++)
+    for (int i = 0; i < m.length(); i++)
     {
-      out << setw(NUMWIDTH) << m(i, j);
+        for (int j = 0; j < m.width(); j++)
+        {
+            out << setw(NUMWIDTH) << m(i, j);
+        }
+        out << endl;
     }
-    out << endl;
-  }
 }
 
 inline void print(ostream& out, const map<int, real>& vec, int size)
 {
-  for (int i = 0; i < size; i++)
-  {
-    map<int, real>::const_iterator vec_it = vec.find(i);
-    if (vec_it != vec.end())
-      out << setw(NUMWIDTH) << vec_it->second;
-    else
-      out << setw(NUMWIDTH) << 0;
-  }
-  out << endl;
+    for (int i = 0; i < size; i++)
+    {
+        map<int, real>::const_iterator vec_it = vec.find(i);
+        if (vec_it != vec.end())
+            out << setw(NUMWIDTH) << vec_it->second;
+        else
+            out << setw(NUMWIDTH) << 0;
+    }
+    out << endl;
 }
 
 inline void print(ostream& out, const map<int, real>& vec)
 {
-  for (map<int, real>::const_iterator it = vec.begin(); it != vec.end(); ++it)
-  {
-    out << setw(NUMWIDTH) << it->second;
-  }
-  out << endl;
+    for (map<int, real>::const_iterator it = vec.begin(); it != vec.end(); ++it)
+    {
+        out << setw(NUMWIDTH) << it->second;
+    }
+    out << endl;
 }
 
 inline void print(ostream& out, const map<int, real>& vec, Set V)
 {
-  for (SetIterator vit = V.begin(); vit != V.end(); ++vit)
-  {
-    int v = *vit;
-    map<int, real>::const_iterator vec_it = vec.find(v);
-    if (vec_it != vec.end())
-      out << setw(NUMWIDTH) << vec_it->second;
-    else
-      out << setw(NUMWIDTH) << 0;
-  }
-  out << endl;
+    for (SetIterator vit = V.begin(); vit != V.end(); ++vit)
+    {
+        int v = *vit;
+        map<int, real>::const_iterator vec_it = vec.find(v);
+        if (vec_it != vec.end())
+            out << setw(NUMWIDTH) << vec_it->second;
+        else
+            out << setw(NUMWIDTH) << 0;
+    }
+    out << endl;
 }
 
 }
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

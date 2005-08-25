@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: Max2Variable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef Max2Variable_INC
 #define Max2Variable_INC
@@ -50,27 +50,27 @@ using namespace std;
 
 
 /*!   elementwise max over 2 elements:
-   max(v1,v2)[i] = max(v1[i],v2[i])
+  max(v1,v2)[i] = max(v1[i],v2[i])
   with same dimensions as the input vectors
   (both must have same length())
 */
 class Max2Variable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  Max2Variable() {}
-  Max2Variable(Variable* input, Variable* power);
+    //!  Default constructor for persistence
+    Max2Variable() {}
+    Max2Variable(Variable* input, Variable* power);
 
-  PLEARN_DECLARE_OBJECT(Max2Variable);
+    PLEARN_DECLARE_OBJECT(Max2Variable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
     void build_();
@@ -84,3 +84,16 @@ inline Var max(Var v1, Var v2)
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

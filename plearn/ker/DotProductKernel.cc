@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DotProductKernel.cc,v 1.7 2005/06/10 14:16:07 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "DotProductKernel.h"
 
@@ -47,9 +47,9 @@ using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(DotProductKernel,
-    "Simple Euclidean dot product K(x,y) = <x,y> = sum_i x_i y_i.",
-    ""
-);
+                        "Simple Euclidean dot product K(x,y) = <x,y> = sum_i x_i y_i.",
+                        ""
+    );
 
 real DotProductKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return dot(x1,x2); }
@@ -68,3 +68,15 @@ real DotProductKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x)
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

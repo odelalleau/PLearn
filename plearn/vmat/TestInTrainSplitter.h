@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestInTrainSplitter.h,v 1.3 2004/09/14 16:04:39 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -54,98 +54,98 @@ class TestInTrainSplitter: public Splitter
 
 private:
 
-  typedef Splitter inherited;
+    typedef Splitter inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
   
-  // Fields below are not options.
+    // Fields below are not options.
 
-  //! Store the first split provided by the source_splitter.
-  //! This is because we need it the number of points in the train and test
-  //! parts in the nsplits() method.
-  mutable TVec<VMat> first_source_split;
+    //! Store the first split provided by the source_splitter.
+    //! This is because we need it the number of points in the train and test
+    //! parts in the nsplits() method.
+    mutable TVec<VMat> first_source_split;
 
-  //! The number of samples in the test set that would be left if we
-  //! didn't make sure they were all added once.
-  mutable int n_left;
+    //! The number of samples in the test set that would be left if we
+    //! didn't make sure they were all added once.
+    mutable int n_left;
 
-  //! The number of splits to make for each split given by the source_splitter.
-  mutable int n_splits_per_source_split;
+    //! The number of splits to make for each split given by the source_splitter.
+    mutable int n_splits_per_source_split;
     
-  //! The number of samples in the train and test parts, as given by
-  //! the source_splitter.
-  mutable int n_train, n_test;
+    //! The number of samples in the train and test parts, as given by
+    //! the source_splitter.
+    mutable int n_train, n_test;
 
-  //! The number of sample to add each time in the train set.
-  mutable int n_to_add;
+    //! The number of sample to add each time in the train set.
+    mutable int n_to_add;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  real percentage_added;
-  PP<Splitter> source_splitter;
+    real percentage_added;
+    PP<Splitter> source_splitter;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  TestInTrainSplitter();
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    TestInTrainSplitter();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(TestInTrainSplitter);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(TestInTrainSplitter);
 
 
-  // ********************************
-  // *        Splitter methods      *
-  // ********************************
+    // ********************************
+    // *        Splitter methods      *
+    // ********************************
   
-  //! Overridden to forward to underlying splitter and reset 'first_source_split'.
-  virtual void setDataSet(VMat the_dataset);
+    //! Overridden to forward to underlying splitter and reset 'first_source_split'.
+    virtual void setDataSet(VMat the_dataset);
 
-  //! Returns the number of available different "splits"
-  virtual int nsplits() const;
+    //! Returns the number of available different "splits"
+    virtual int nsplits() const;
 
-  //! Returns the number of sets per split
-  virtual int nSetsPerSplit() const;
+    //! Returns the number of sets per split
+    virtual int nSetsPerSplit() const;
 
-  //! Compute the first split of source_splitter and store it in 'first_source_split'.
-  virtual void getFirstSplit() const;
+    //! Compute the first split of source_splitter and store it in 'first_source_split'.
+    virtual void getFirstSplit() const;
 
-  //! Returns split number i
-  virtual TVec<VMat> getSplit(int i=0);
+    //! Returns split number i
+    virtual TVec<VMat> getSplit(int i=0);
 
 };
 
@@ -155,3 +155,16 @@ DECLARE_OBJECT_PTR(TestInTrainSplitter);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

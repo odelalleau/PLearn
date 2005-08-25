@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: NaryVariable.h,v 1.12 2005/02/04 15:10:36 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef NaryVariable_INC
 #define NaryVariable_INC
@@ -58,43 +58,43 @@ using namespace std;
 
 class NaryVariable: public Variable
 {
-  //typedef NaryVariable inherited;
+    //typedef NaryVariable inherited;
 
 protected:
-  //!  Default constructor for persistence
-  NaryVariable() {}
-  static void declareOptions(OptionList & ol);
+    //!  Default constructor for persistence
+    NaryVariable() {}
+    static void declareOptions(OptionList & ol);
   
 public: // Temporarily public for GradientOptimizer hack (speed contest, Pascal)
-  VarArray varray;
+    VarArray varray;
 
-  // norman: moved to public (TEMP!)
-  typedef Variable inherited;
+    // norman: moved to public (TEMP!)
+    typedef Variable inherited;
 
 public:
-  NaryVariable(const VarArray& the_varray, int thelength, int thewidth=1);
-  PLEARN_DECLARE_ABSTRACT_OBJECT(NaryVariable);
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    NaryVariable(const VarArray& the_varray, int thelength, int thewidth=1);
+    PLEARN_DECLARE_ABSTRACT_OBJECT(NaryVariable);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   
   
 
-  virtual bool markPath();
-  virtual void buildPath(VarArray& proppath);
-  virtual VarArray sources();
-  virtual VarArray random_sources();
-  virtual VarArray ancestors();
-  virtual void unmarkAncestors();
-  virtual VarArray parents();
-  void printInfo(bool print_gradient) { 
-    pout <<  getName() << "[" << (void*)this << "] " << classname() << "(" << (void*)varray[0];
-    for (int i=1;i<varray.size();i++)
-      pout << "," << (void*)varray[i];
-    pout << ") = " << value;
-    if (print_gradient) pout << " gradient=" << gradient;
-    pout << endl; 
-  }
-  virtual void resizeRValue();
+    virtual bool markPath();
+    virtual void buildPath(VarArray& proppath);
+    virtual VarArray sources();
+    virtual VarArray random_sources();
+    virtual VarArray ancestors();
+    virtual void unmarkAncestors();
+    virtual VarArray parents();
+    void printInfo(bool print_gradient) { 
+        pout <<  getName() << "[" << (void*)this << "] " << classname() << "(" << (void*)varray[0];
+        for (int i=1;i<varray.size();i++)
+            pout << "," << (void*)varray[i];
+        pout << ") = " << value;
+        if (print_gradient) pout << " gradient=" << gradient;
+        pout << endl; 
+    }
+    virtual void resizeRValue();
 };
 
 
@@ -102,3 +102,15 @@ public:
 
 #endif 
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

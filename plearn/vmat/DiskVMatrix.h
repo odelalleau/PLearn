@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.h,v 1.13 2005/01/25 03:15:46 dorionc Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -55,61 +55,74 @@ using namespace std;
 //!  Each row is compressed/decompressed through the methods of VecCompressor
 class DiskVMatrix: public RowBufferedVMatrix
 {
-  typedef RowBufferedVMatrix inherited;
+    typedef RowBufferedVMatrix inherited;
 
 protected:
-  mutable FILE* indexf;
-  mutable TVec<FILE*> dataf;
-  bool freshnewfile;
-  bool old_format; // is thisfile in the old deprecated format?
-  bool swap_endians; // was this file written in the opposite endian order
+    mutable FILE* indexf;
+    mutable TVec<FILE*> dataf;
+    bool freshnewfile;
+    bool old_format; // is thisfile in the old deprecated format?
+    bool swap_endians; // was this file written in the opposite endian order
 public:
 
-  // Build options
-  PPath dirname;
-  //bool readwritemode;
-  double tolerance;    // the error tolerance for storing doubles as floats
+    // Build options
+    PPath dirname;
+    //bool readwritemode;
+    double tolerance;    // the error tolerance for storing doubles as floats
   
-  DiskVMatrix();
+    DiskVMatrix();
 
 /*!     Opens an existing one. If directory does not exist or has missing files, an error is issued.
-    If readwrite is true, then the files are opened in read/write mode and appendRow can be called.
-    If readwrite is false (the default), then the files are opened in read only mode, and calling appendRow 
-    will issue an error.
+  If readwrite is true, then the files are opened in read/write mode and appendRow can be called.
+  If readwrite is false (the default), then the files are opened in read only mode, and calling appendRow 
+  will issue an error.
 */
-  DiskVMatrix(const string& the_dirname, bool readwrite=false); 
+    DiskVMatrix(const string& the_dirname, bool readwrite=false); 
 
 /*!     Create a new one. 
-    If directory already exist an error is issued
-    (you may consider calling force_rmdir prior to this.)
-    Howver if it is a file then the file is erased and replaced by a new directory
-    (this was to allow TmpFilenames to be used with this class).
-    Files are opened in read/write mode so appendRow can be called.
+  If directory already exist an error is issued
+  (you may consider calling force_rmdir prior to this.)
+  Howver if it is a file then the file is erased and replaced by a new directory
+  (this was to allow TmpFilenames to be used with this class).
+  Files are opened in read/write mode so appendRow can be called.
 */
-  DiskVMatrix(const string& the_dirname, int the_width, bool write_double_as_float=false);
+    DiskVMatrix(const string& the_dirname, int the_width, bool write_double_as_float=false);
 
-  virtual void putRow(int i, Vec v);
-  virtual void appendRow(Vec v);
-  virtual void flush();
+    virtual void putRow(int i, Vec v);
+    virtual void appendRow(Vec v);
+    virtual void flush();
 
-  virtual void build();
+    virtual void build();
 
 protected:
 
-  virtual void getNewRow(int i, const Vec& v) const;
-  static void declareOptions(OptionList & ol);
+    virtual void getNewRow(int i, const Vec& v) const;
+    static void declareOptions(OptionList & ol);
 
 public:
 
-  PLEARN_DECLARE_OBJECT(DiskVMatrix);
+    PLEARN_DECLARE_OBJECT(DiskVMatrix);
 
   
-  virtual ~DiskVMatrix();
+    virtual ~DiskVMatrix();
 private:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(DiskVMatrix);
 
 } // end of namespace PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

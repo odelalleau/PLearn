@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LimitedGaussianSmoother.h,v 1.8 2004/09/14 16:04:36 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file LimitedGaussianSmoother.h */
 #ifndef LimitedGaussianSmoother_INC
@@ -58,75 +58,88 @@ using namespace std;
 class LimitedGaussianSmoother: public Smoother
 {
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  real window_size_wrt_sigma, sigma_bin;
+    real window_size_wrt_sigma, sigma_bin;
 
     
 public:
 
-  typedef Smoother inherited;
+    typedef Smoother inherited;
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  // ### declare public option fields (such as build options) here
-  // ...
+    // ### declare public option fields (such as build options) here
+    // ...
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  LimitedGaussianSmoother();
-
-
-  LimitedGaussianSmoother(real window_size_wrt_sigma_, real sigma_bin_);
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    LimitedGaussianSmoother();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    LimitedGaussianSmoother(real window_size_wrt_sigma_, real sigma_bin_);
+
+
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(LimitedGaussianSmoother);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(LimitedGaussianSmoother);
 
 
-  /****
-   * Smoother methods
-   */
+    /****
+     * Smoother methods
+     */
 
- public:
-  virtual real smooth(const Vec& source_function, Vec& smoothed_function, 
-		      Vec bin_positions = Vec(), Vec dest_bin_positions = Vec()) const;
+public:
+    virtual real smooth(const Vec& source_function, Vec& smoothed_function, 
+                        Vec bin_positions = Vec(), Vec dest_bin_positions = Vec()) const;
 
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(LimitedGaussianSmoother);
+DECLARE_OBJECT_PTR(LimitedGaussianSmoother);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

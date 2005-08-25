@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ClassMarginCostFunction.cc,v 1.4 2004/04/07 23:15:58 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ClassMarginCostFunction.h"
 
@@ -50,33 +50,33 @@ PLEARN_IMPLEMENT_OBJECT(ClassMarginCostFunction, "ONE LINE DESCR", "NO HELP");
 
 real ClassMarginCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
-  real margin;
-  if (output.length()==1)
-  {
-    real out = output[0];
-    if (output_is_positive)
-      out = 2*out-1;
-    margin = binary_target_is_01 ? out*(target[0]-0.5)*4.0 : out*target[0];
-  }
-  else // we assume output gives a score for each class
-  {
-    int trueclass;
-    if (target.length()==1)
+    real margin;
+    if (output.length()==1)
     {
-      trueclass = int(target[0]);
-      if (!binary_target_is_01)
-        trueclass = (trueclass+1)/2;
+        real out = output[0];
+        if (output_is_positive)
+            out = 2*out-1;
+        margin = binary_target_is_01 ? out*(target[0]-0.5)*4.0 : out*target[0];
     }
-    else
-      trueclass = argmax(target);
+    else // we assume output gives a score for each class
+    {
+        int trueclass;
+        if (target.length()==1)
+        {
+            trueclass = int(target[0]);
+            if (!binary_target_is_01)
+                trueclass = (trueclass+1)/2;
+        }
+        else
+            trueclass = argmax(target);
     
-    real trueclass_score = output[trueclass];
-    output[trueclass] = -FLT_MAX;
-    real otherclass_score = max(output);
-    output[trueclass] = trueclass_score;
-    margin = trueclass_score-otherclass_score;
-  }
-  return -margin;
+        real trueclass_score = output[trueclass];
+        output[trueclass] = -FLT_MAX;
+        real otherclass_score = max(output);
+        output[trueclass] = trueclass_score;
+        margin = trueclass_score-otherclass_score;
+    }
+    return -margin;
 }
 
 void ClassMarginCostFunction::declareOptions(OptionList &ol)
@@ -90,3 +90,15 @@ void ClassMarginCostFunction::declareOptions(OptionList &ol)
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

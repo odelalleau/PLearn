@@ -34,8 +34,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenerateDecisionPlot.cc,v 1.10 2004/09/27 20:19:30 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file GenerateDecisionPlot.cc */
 #include "GenerateDecisionPlot.h"
@@ -47,169 +47,169 @@ using namespace std;
 
 
 /*!
-If fieldnames is omitted then the fields will be named basename_0 basename_1 ...
-Otherwise they are named basename_ followed by the corresponding field name.
+  If fieldnames is omitted then the fields will be named basename_0 basename_1 ...
+  Otherwise they are named basename_ followed by the corresponding field name.
 */
 void DX_write_2D_fields(ostream& out, const string& basename, TVec<Mat> fields, real x0, real y0, real deltax, real deltay, 
                         TVec<string> fieldnames=TVec<string>())
 {
-  int nfields = fields.length();
-  int nx = fields[0].length();
-  int ny = fields[0].width();
+    int nfields = fields.length();
+    int nx = fields[0].length();
+    int ny = fields[0].width();
 
-  string posname = string("\"") + basename + "_gridpos\"";
+    string posname = string("\"") + basename + "_gridpos\"";
 
-  out << "object " << posname << " class gridpositions counts " << nx << " " << ny << "\n"
-      << "origin  " << x0 << " " << y0 << "\n"
-      << "delta   " << deltax << " 0 \n"
-      << "delta    0 " << deltay << " \n\n\n";
+    out << "object " << posname << " class gridpositions counts " << nx << " " << ny << "\n"
+        << "origin  " << x0 << " " << y0 << "\n"
+        << "delta   " << deltax << " 0 \n"
+        << "delta    0 " << deltay << " \n\n\n";
 
-  string conname = string("\"") + basename + "_gridcon\"";
+    string conname = string("\"") + basename + "_gridcon\"";
 
-  out << "object " << conname << " class gridconnections counts " << nx << " " << ny << "\n"
-    //      << "attribute \"element type\" string \"cubes\" \n"
-      << "attribute \"ref\" string \"positions\" \n\n\n";
+    out << "object " << conname << " class gridconnections counts " << nx << " " << ny << "\n"
+        //      << "attribute \"element type\" string \"cubes\" \n"
+        << "attribute \"ref\" string \"positions\" \n\n\n";
 
-  for(int k=0; k<nfields; k++)
+    for(int k=0; k<nfields; k++)
     {
-      Mat& m = fields[k];
-      string fieldname = tostring(k);
-      if(fieldnames)
-        fieldname = fieldnames[k];
+        Mat& m = fields[k];
+        string fieldname = tostring(k);
+        if(fieldnames)
+            fieldname = fieldnames[k];
 
-      string dataname = string("\"") + basename + "_" + fieldname + "_data\"";
+        string dataname = string("\"") + basename + "_" + fieldname + "_data\"";
 
-      out << "object " << dataname << " class array type float rank 0 items " << nx*ny << " data follows \n";
-      for(int i=0; i<nx; i++)
+        out << "object " << dataname << " class array type float rank 0 items " << nx*ny << " data follows \n";
+        for(int i=0; i<nx; i++)
         {
-          for(int j=0; j<ny; j++)
-            out << m(i,j) << " ";
-          out << "\n";
+            for(int j=0; j<ny; j++)
+                out << m(i,j) << " ";
+            out << "\n";
         }
-      out << "attribute \"dep\" string \"positions\" \n\n\n";
+        out << "attribute \"dep\" string \"positions\" \n\n\n";
 
-      out << "object \"" << fieldname << "\" class field \n"
-          << "component \"positions\" " << posname << " \n"
-          << "component \"connections\" " << conname << " \n"
-          << "component \"data\" " << dataname << " \n\n\n";
+        out << "object \"" << fieldname << "\" class field \n"
+            << "component \"positions\" " << posname << " \n"
+            << "component \"connections\" " << conname << " \n"
+            << "component \"data\" " << dataname << " \n\n\n";
     }
 }
 
 
 void DX_write_2D_fields(ostream& out, const string& basename, Vec X, Vec Y, TVec<Mat> fields)
 {
-  int nfields = fields.length();
-  int nx = fields[0].length();
-  int ny = fields[0].width();
+    int nfields = fields.length();
+    int nx = fields[0].length();
+    int ny = fields[0].width();
 
-  /*
-  out << "object \"" << basename << "_X\" class array type float rank 0 items " << nx << " data follows \n";
-  for(int i=0; i<nx; i++)
-    out << X[i] << "\n";
-  out << "\n\n";
-    
-  out << "object \"" << basename << "_Y\" class array type float rank 0 items " << ny << " data follows \n";
-  for(int i=0; i<ny; i++)
-    out << Y[i] << "\n";
-  */
-
-  string posname = string("\"") + basename + "_gridpos\"";
-  out << "object " << posname << " class array type float rank 1 shape 2 items " << nx*ny << " data follows\n";
-  for(int i=0; i<nx; i++)
-    for(int j=0; j<ny; j++)
-      out << X[i] << " " << Y[j] << "\n";
-  out << "\n\n";
-
-  string conname = string("\"") + basename + "_gridcon\"";
-  out << "object " << conname << " class gridconnections counts " << nx << " " << ny << "\n"
-    //      << "attribute \"element type\" string \"cubes\" \n"
-      << "attribute \"ref\" string \"positions\" \n\n\n";
-
-  for(int k=0; k<nfields; k++)
-    {
-      Mat& m = fields[k];
-      string fieldname = "output" + tostring(k);
-      string dataname = string("\"") + basename + "_" + fieldname + "_data\"";
-
-      out << "object " << dataname << " class array type float rank 0 items " << nx*ny << " data follows \n";
+    /*
+      out << "object \"" << basename << "_X\" class array type float rank 0 items " << nx << " data follows \n";
       for(int i=0; i<nx; i++)
-        {
-          for(int j=0; j<ny; j++)
-            out << m(i,j) << " ";
-          out << "\n";
-        }
-      out << "attribute \"dep\" string \"positions\" \n\n\n";
+      out << X[i] << "\n";
+      out << "\n\n";
+    
+      out << "object \"" << basename << "_Y\" class array type float rank 0 items " << ny << " data follows \n";
+      for(int i=0; i<ny; i++)
+      out << Y[i] << "\n";
+    */
 
-      out << "object \"" << fieldname << "\" class field \n"
-          << "component \"positions\" " << posname << " \n"
-          << "component \"connections\" " << conname << " \n"
-          << "component \"data\" " << dataname << " \n\n\n";
+    string posname = string("\"") + basename + "_gridpos\"";
+    out << "object " << posname << " class array type float rank 1 shape 2 items " << nx*ny << " data follows\n";
+    for(int i=0; i<nx; i++)
+        for(int j=0; j<ny; j++)
+            out << X[i] << " " << Y[j] << "\n";
+    out << "\n\n";
+
+    string conname = string("\"") + basename + "_gridcon\"";
+    out << "object " << conname << " class gridconnections counts " << nx << " " << ny << "\n"
+        //      << "attribute \"element type\" string \"cubes\" \n"
+        << "attribute \"ref\" string \"positions\" \n\n\n";
+
+    for(int k=0; k<nfields; k++)
+    {
+        Mat& m = fields[k];
+        string fieldname = "output" + tostring(k);
+        string dataname = string("\"") + basename + "_" + fieldname + "_data\"";
+
+        out << "object " << dataname << " class array type float rank 0 items " << nx*ny << " data follows \n";
+        for(int i=0; i<nx; i++)
+        {
+            for(int j=0; j<ny; j++)
+                out << m(i,j) << " ";
+            out << "\n";
+        }
+        out << "attribute \"dep\" string \"positions\" \n\n\n";
+
+        out << "object \"" << fieldname << "\" class field \n"
+            << "component \"positions\" " << posname << " \n"
+            << "component \"connections\" " << conname << " \n"
+            << "component \"data\" " << dataname << " \n\n\n";
     }
 }
 
 
 TVec<Mat> computeOutputFields(PP<PLearner> learner, Vec X, Vec Y)
 {
-  int noutputs = learner->outputsize();
+    int noutputs = learner->outputsize();
 
-  int nx = X.length();
-  int ny = Y.length();
-  int nfields = noutputs;
-  TVec<Mat> fields(nfields);
+    int nx = X.length();
+    int ny = Y.length();
+    int nfields = noutputs;
+    TVec<Mat> fields(nfields);
 
-  for(int k=0; k<nfields; k++)
-    fields[k].resize(nx,ny);
+    for(int k=0; k<nfields; k++)
+        fields[k].resize(nx,ny);
 
-  Vec input(2);
-  Vec output(noutputs);
+    Vec input(2);
+    Vec output(noutputs);
 
-  ProgressBar pb("Computing " + tostring(nx) + " x " + tostring(ny) + " output field",nx*ny);
+    ProgressBar pb("Computing " + tostring(nx) + " x " + tostring(ny) + " output field",nx*ny);
   
-  for(int i=0; i<nx; i++)
-    for(int j=0; j<ny; j++)
-      {
-        input[0] = X[i];
-        input[1] = Y[j];
-        learner->computeOutput(input,output);
-        // cerr << "in: " << input << " out: " << output << endl;
-        for(int k=0; k<noutputs; k++)
-          fields[k](i,j) = output[k];
-        pb.update(i*nx+j);
-      }
+    for(int i=0; i<nx; i++)
+        for(int j=0; j<ny; j++)
+        {
+            input[0] = X[i];
+            input[1] = Y[j];
+            learner->computeOutput(input,output);
+            // cerr << "in: " << input << " out: " << output << endl;
+            for(int k=0; k<noutputs; k++)
+                fields[k](i,j) = output[k];
+            pb.update(i*nx+j);
+        }
 
-  return fields;
+    return fields;
 }
 
 
 TVec<Mat> computeOutputFields(PP<PLearner> learner, int nx, int ny, real x0, real y0, real deltax, real deltay)
 {
-  int noutputs = learner->outputsize();
-  int nfields = noutputs;
+    int noutputs = learner->outputsize();
+    int nfields = noutputs;
 
-  TVec<Mat> fields(nfields);
-  for(int k=0; k<nfields; k++)
-    fields[k].resize(nx,ny);
+    TVec<Mat> fields(nfields);
+    for(int k=0; k<nfields; k++)
+        fields[k].resize(nx,ny);
 
-  Vec input(2);
-  Vec output(noutputs);
+    Vec input(2);
+    Vec output(noutputs);
 
-  ProgressBar pb("Computing " + tostring(nx) + " x " + tostring(ny) + " output field",nx*ny);
+    ProgressBar pb("Computing " + tostring(nx) + " x " + tostring(ny) + " output field",nx*ny);
 
-  real x = x0;
-  real y = y0;
-  for(int i=0; i<nx; i++, x+=deltax)
-    for(int j=0; j<ny; j++, y+=deltay)
-      {
-        input[0] = x;
-        input[1] = y;
-        learner->computeOutput(input,output);
-        // cerr << "in: " << input << " out: " << output << endl;
-        for(int k=0; k<noutputs; k++)
-          fields[k](i,j) = output[k];
-        pb.update(i*nx+j);
-      }
+    real x = x0;
+    real y = y0;
+    for(int i=0; i<nx; i++, x+=deltax)
+        for(int j=0; j<ny; j++, y+=deltay)
+        {
+            input[0] = x;
+            input[1] = y;
+            learner->computeOutput(input,output);
+            // cerr << "in: " << input << " out: " << output << endl;
+            for(int k=0; k<noutputs; k++)
+                fields[k](i,j) = output[k];
+            pb.update(i*nx+j);
+        }
 
-  return fields;
+    return fields;
 }
 
 // Finds appropriate x0, y0, deltax, deltay from the dataset range, computes the fields and returns them
@@ -217,58 +217,58 @@ TVec<Mat> computeOutputFields(PP<PLearner> learner, int nx, int ny, real x0, rea
 TVec<Mat> computeOutputFieldsAutoRange(PP<PLearner> learner, VMat dataset, int nx, int ny, 
                                        real& x0, real& y0, real& deltax, real& deltay, real extraspace=.10)
 {
-  Vec minv(2);
-  Vec maxv(2);
-  computeRange(dataset.subMatColumns(0,2), minv, maxv);
-  real extrax = (maxv[0]-minv[0])*extraspace;
-  x0 = minv[0]-extrax;
-  deltax = (maxv[0]+extrax-x0)/nx;
-  real extray = (maxv[1]-minv[1])*extraspace;
-  y0 = minv[1]-extray;
-  deltay = (maxv[1]+extray-y0)/ny;
-  return computeOutputFields(learner, nx, ny, x0, y0, deltax, deltay);
+    Vec minv(2);
+    Vec maxv(2);
+    computeRange(dataset.subMatColumns(0,2), minv, maxv);
+    real extrax = (maxv[0]-minv[0])*extraspace;
+    x0 = minv[0]-extrax;
+    deltax = (maxv[0]+extrax-x0)/nx;
+    real extray = (maxv[1]-minv[1])*extraspace;
+    y0 = minv[1]-extray;
+    deltay = (maxv[1]+extray-y0)/ny;
+    return computeOutputFields(learner, nx, ny, x0, y0, deltax, deltay);
 }
 
 
 void computeXYPositions(VMat dataset, int nx, int ny, Vec& X, Vec& Y, real extraspace=.10)
 {
-  Vec minv(2);
-  Vec maxv(2);
-  computeRange(dataset.subMatColumns(0,2), minv, maxv);
-  real extrax = (maxv[0]-minv[0])*extraspace;
-  real x0 = minv[0]-extrax;
-  real deltax = (maxv[0]+extrax-x0)/nx;
-  real extray = (maxv[1]-minv[1])*extraspace;
-  real y0 = minv[1]-extray;
-  real deltay = (maxv[1]+extray-y0)/ny;
+    Vec minv(2);
+    Vec maxv(2);
+    computeRange(dataset.subMatColumns(0,2), minv, maxv);
+    real extrax = (maxv[0]-minv[0])*extraspace;
+    real x0 = minv[0]-extrax;
+    real deltax = (maxv[0]+extrax-x0)/nx;
+    real extray = (maxv[1]-minv[1])*extraspace;
+    real y0 = minv[1]-extray;
+    real deltay = (maxv[1]+extray-y0)/ny;
 
-  set<real> xpos;
-  set<real> ypos;
-  int l = dataset.length();
-  Vec datapoint(2);
-  for(int i=0; i<l; i++)
+    set<real> xpos;
+    set<real> ypos;
+    int l = dataset.length();
+    Vec datapoint(2);
+    for(int i=0; i<l; i++)
     {
-      dataset->getRow(i,datapoint);
-      xpos.insert(datapoint[0]);
-      ypos.insert(datapoint[1]);
+        dataset->getRow(i,datapoint);
+        xpos.insert(datapoint[0]);
+        ypos.insert(datapoint[1]);
     }
-  real x = x0;
-  for(int i=0; i<nx; i++, x+=deltax)
-    xpos.insert(x);
-  real y = y0;
-  for(int j=0; j<ny; j++, y+=deltay)
-    ypos.insert(y);
-  set<real>::iterator it;
-  X.resize(xpos.size());
-  real* xptr = X.data();
-  it = xpos.begin();
-  while(it!=xpos.end())
-    *xptr++ = *it++;
-  Y.resize(ypos.size());
-  real* yptr = Y.data();
-  it = ypos.begin();
-  while(it!=ypos.end())
-    *yptr++ = *it++;
+    real x = x0;
+    for(int i=0; i<nx; i++, x+=deltax)
+        xpos.insert(x);
+    real y = y0;
+    for(int j=0; j<ny; j++, y+=deltay)
+        ypos.insert(y);
+    set<real>::iterator it;
+    X.resize(xpos.size());
+    real* xptr = X.data();
+    it = xpos.begin();
+    while(it!=xpos.end())
+        *xptr++ = *it++;
+    Y.resize(ypos.size());
+    real* yptr = Y.data();
+    it = ypos.begin();
+    while(it!=ypos.end())
+        *yptr++ = *it++;
 }
 
 
@@ -277,59 +277,59 @@ void computeXYPositions(VMat dataset, int nx, int ny, Vec& X, Vec& Y, real extra
 //! "dset" field will be input -> target, outputs
 void DX_create_dataset_outputs_file(const string& filename, PP<PLearner> learner, VMat dataset)
 {
-  ofstream out(filename.c_str());
+    ofstream out(filename.c_str());
 
-  int l = dataset.length();
-  int inputsize = learner->inputsize();
-  int targetsize = learner->targetsize();
-  int outputsize = learner->outputsize();
+    int l = dataset.length();
+    int inputsize = learner->inputsize();
+    int targetsize = learner->targetsize();
+    int outputsize = learner->outputsize();
 
-  // First write data points (input -> target, output)
-  Vec input(inputsize);
-  Vec target(targetsize);
-  real weight;
-  Vec output(outputsize);
+    // First write data points (input -> target, output)
+    Vec input(inputsize);
+    Vec target(targetsize);
+    real weight;
+    Vec output(outputsize);
 
-  // write 2D positions
-  out << "object \"dset_pos\" class array type float rank 1 shape " << inputsize << " items " << l << " data follows \n";
-  for(int i=0; i<l; i++)
+    // write 2D positions
+    out << "object \"dset_pos\" class array type float rank 1 shape " << inputsize << " items " << l << " data follows \n";
+    for(int i=0; i<l; i++)
     {
-      dataset->getExample(i,input,target,weight);
-      for(int j=0; j<inputsize; j++)
-        out << input[j] << " ";
-      out << "\n";
+        dataset->getExample(i,input,target,weight);
+        for(int j=0; j<inputsize; j++)
+            out << input[j] << " ";
+        out << "\n";
     }
-  out << "\n\n\n";
+    out << "\n\n\n";
 
-  // Now write data for those positions (target and output)
-  if(targetsize+outputsize>0)
+    // Now write data for those positions (target and output)
+    if(targetsize+outputsize>0)
     {
-      ProgressBar pb("Computing outputs for dataset points",l);
-      out << "object \"dset_value\" class array type float rank 1 shape " << targetsize+outputsize << " items " << l << " data follows \n";
-      for(int i=0; i<l; i++)
+        ProgressBar pb("Computing outputs for dataset points",l);
+        out << "object \"dset_value\" class array type float rank 1 shape " << targetsize+outputsize << " items " << l << " data follows \n";
+        for(int i=0; i<l; i++)
         {
-          dataset->getExample(i,input,target,weight);
-          for(int j=0; j<targetsize; j++)
-            out << target[j] << " ";
-          learner->computeOutput(input, output);
-          for(int j=0; j<outputsize; j++)
-            out << output[j] << " ";
-          out << "\n";
-          pb.update(i);
+            dataset->getExample(i,input,target,weight);
+            for(int j=0; j<targetsize; j++)
+                out << target[j] << " ";
+            learner->computeOutput(input, output);
+            for(int j=0; j<outputsize; j++)
+                out << output[j] << " ";
+            out << "\n";
+            pb.update(i);
         }
-      out << "attribute \"dep\" string \"positions\" \n\n\n";
+        out << "attribute \"dep\" string \"positions\" \n\n\n";
     }
 
-  // Field is created with two components: "positions" and "data"
-  out << "object \"dset\" class field \n"
-      << "component \"positions\" \"dset_pos\" \n";
-  if(targetsize+outputsize>0)
-    out << "component \"data\" \"dset_value\" \n";
-  out << "\n\n\n";
+    // Field is created with two components: "positions" and "data"
+    out << "object \"dset\" class field \n"
+        << "component \"positions\" \"dset_pos\" \n";
+    if(targetsize+outputsize>0)
+        out << "component \"data\" \"dset_value\" \n";
+    out << "\n\n\n";
 
 
   
-  out << "end" << endl;
+    out << "end" << endl;
 }
 
 
@@ -341,136 +341,136 @@ void DX_create_dataset_outputs_file(const string& filename, PP<PLearner> learner
 //! made of the x and y coordinates of the dataset that fall within the [xmin, xmax] x [ymin, ymax] range.
 
 void DX_create_grid_outputs_file(const string& filename, PP<PLearner> learner, VMat dataset, 
-                                  int nx, int ny, bool include_datapoint_grid=false, 
-                                  real xmin=MISSING_VALUE, real xmax=MISSING_VALUE, 
-                                  real ymin=MISSING_VALUE, real ymax=MISSING_VALUE,
-                                  real extraspace=.10)
+                                 int nx, int ny, bool include_datapoint_grid=false, 
+                                 real xmin=MISSING_VALUE, real xmax=MISSING_VALUE, 
+                                 real ymin=MISSING_VALUE, real ymax=MISSING_VALUE,
+                                 real extraspace=.10)
 {
-  ofstream out(filename.c_str());
+    ofstream out(filename.c_str());
 
-  double logsum = -FLT_MAX;
+    double logsum = -FLT_MAX;
 
-  int l = dataset.length();
-  int inputsize = learner->inputsize();
-  int targetsize = learner->targetsize();
-  int outputsize = learner->outputsize();
+    int l = dataset.length();
+    int inputsize = learner->inputsize();
+    int targetsize = learner->targetsize();
+    int outputsize = learner->outputsize();
 
-  Vec input(inputsize);
-  Vec target(targetsize);
-  real weight;
-  Vec output(outputsize);
+    Vec input(inputsize);
+    Vec target(targetsize);
+    real weight;
+    Vec output(outputsize);
 
-  // Create the grid field
+    // Create the grid field
 
-  set<real> xpos;
-  set<real> ypos;
+    set<real> xpos;
+    set<real> ypos;
 
-  // First the regular grid coordinates
-  Vec minv(2);
-  Vec maxv(2);
-  computeRange(dataset.subMatColumns(0,2), minv, maxv);
-  real extrax = (maxv[0]-minv[0])*extraspace;
-  real extray = (maxv[1]-minv[1])*extraspace;
-  if(is_missing(xmin))
-    xmin = minv[0]-extrax;
-  if(is_missing(xmax))
-    xmax = maxv[0]+extrax;
-  if(is_missing(ymin))
-    ymin = minv[1]-extray;
-  if(is_missing(ymax))
-    ymax = maxv[1]+extray;
-  real deltax = (xmax-xmin)/nx;
-  real deltay = (ymax-ymin)/ny;
+    // First the regular grid coordinates
+    Vec minv(2);
+    Vec maxv(2);
+    computeRange(dataset.subMatColumns(0,2), minv, maxv);
+    real extrax = (maxv[0]-minv[0])*extraspace;
+    real extray = (maxv[1]-minv[1])*extraspace;
+    if(is_missing(xmin))
+        xmin = minv[0]-extrax;
+    if(is_missing(xmax))
+        xmax = maxv[0]+extrax;
+    if(is_missing(ymin))
+        ymin = minv[1]-extray;
+    if(is_missing(ymax))
+        ymax = maxv[1]+extray;
+    real deltax = (xmax-xmin)/nx;
+    real deltay = (ymax-ymin)/ny;
 
-  real x = xmin;
-  for(int i=0; i<nx; i++, x+=deltax)
-    xpos.insert(x);
-  real y = ymin;
-  for(int j=0; j<ny; j++, y+=deltay)
-    ypos.insert(y);
+    real x = xmin;
+    for(int i=0; i<nx; i++, x+=deltax)
+        xpos.insert(x);
+    real y = ymin;
+    for(int j=0; j<ny; j++, y+=deltay)
+        ypos.insert(y);
 
-  // also include irregular grid coordinates based on coordinates of dataset points?
-  if(include_datapoint_grid) 
+    // also include irregular grid coordinates based on coordinates of dataset points?
+    if(include_datapoint_grid) 
     {
-      for(int i=0; i<l; i++)
+        for(int i=0; i<l; i++)
         {
-          dataset->getExample(i,input,target,weight);
-          x = input[0];
-          y = input[1];
-          if(x>xmin && x<xmax)
-            xpos.insert(x);
-          if(y>ymin && y<ymax)
-            ypos.insert(y);
+            dataset->getExample(i,input,target,weight);
+            x = input[0];
+            y = input[1];
+            if(x>xmin && x<xmax)
+                xpos.insert(x);
+            if(y>ymin && y<ymax)
+                ypos.insert(y);
         }
     }
 
-  nx = xpos.size();
-  ny = ypos.size();
-  set<real>::iterator itx;
-  set<real>::iterator ity;
+    nx = xpos.size();
+    ny = ypos.size();
+    set<real>::iterator itx;
+    set<real>::iterator ity;
 
-  out << "object \"outputs_gridpos\" class array type float rank 1 shape 2 items " << nx*ny << " data follows\n";
-  for(itx=xpos.begin(); itx!=xpos.end(); ++itx)
-    for(ity=ypos.begin(); ity!=ypos.end(); ++ity)
-      out << *itx << " " << *ity << "\n";
-  out << "\n\n";
+    out << "object \"outputs_gridpos\" class array type float rank 1 shape 2 items " << nx*ny << " data follows\n";
+    for(itx=xpos.begin(); itx!=xpos.end(); ++itx)
+        for(ity=ypos.begin(); ity!=ypos.end(); ++ity)
+            out << *itx << " " << *ity << "\n";
+    out << "\n\n";
 
-  out << "object \"outputs_gridcon\" class gridconnections counts " << nx << " " << ny << "\n"
-    //      << "attribute \"element type\" string \"cubes\" \n"
-      << "attribute \"ref\" string \"positions\" \n\n\n";
+    out << "object \"outputs_gridcon\" class gridconnections counts " << nx << " " << ny << "\n"
+        //      << "attribute \"element type\" string \"cubes\" \n"
+        << "attribute \"ref\" string \"positions\" \n\n\n";
 
-  out << "object \"outputs_values\" class array type float rank 1 shape " << outputsize << " items " << nx*ny << " data follows \n";
+    out << "object \"outputs_values\" class array type float rank 1 shape " << outputsize << " items " << nx*ny << " data follows \n";
   
-  ProgressBar pb("Computing outputs for grid positions: " + tostring(nx)+"x"+tostring(ny), nx*ny);
-  int n = 0;
-  for(itx=xpos.begin(); itx!=xpos.end(); ++itx)
+    ProgressBar pb("Computing outputs for grid positions: " + tostring(nx)+"x"+tostring(ny), nx*ny);
+    int n = 0;
+    for(itx=xpos.begin(); itx!=xpos.end(); ++itx)
     {
-      input[0] = *itx;
-      for(ity=ypos.begin(); ity!=ypos.end(); ++ity)
+        input[0] = *itx;
+        for(ity=ypos.begin(); ity!=ypos.end(); ++ity)
         {
-          input[1] = *ity;
-          learner->computeOutput(input, output);
-          for(int j=0; j<outputsize; j++)
-            out << output[j] << " ";
-          out << "\n";
-          if(logsum==-FLT_MAX)
-            logsum = output[0];
-          else 
-            logsum = logadd(logsum, output[0]);
-          pb.update(n++);
+            input[1] = *ity;
+            learner->computeOutput(input, output);
+            for(int j=0; j<outputsize; j++)
+                out << output[j] << " ";
+            out << "\n";
+            if(logsum==-FLT_MAX)
+                logsum = output[0];
+            else 
+                logsum = logadd(logsum, output[0]);
+            pb.update(n++);
         }
     }
-  pb.close();
-  out << "attribute \"dep\" string \"positions\" \n\n\n";
+    pb.close();
+    out << "attribute \"dep\" string \"positions\" \n\n\n";
 
-  out << "object \"outputs\" class field \n"
-      << "component \"positions\" \"outputs_gridpos\" \n"
-      << "component \"connections\" \"outputs_gridcon\" \n"
-      << "component \"data\" \"outputs_values\" \n\n\n";
+    out << "object \"outputs\" class field \n"
+        << "component \"positions\" \"outputs_gridpos\" \n"
+        << "component \"connections\" \"outputs_gridcon\" \n"
+        << "component \"data\" \"outputs_values\" \n\n\n";
   
-  out << "end" << endl;
+    out << "end" << endl;
 
-  double surfelem = deltax*deltay;
-  double surfintegral = exp(logsum)*surfelem;
-  cerr << "Estimated integral over sampled domain: " << surfintegral << endl;
+    double surfelem = deltax*deltay;
+    double surfintegral = exp(logsum)*surfelem;
+    cerr << "Estimated integral over sampled domain: " << surfintegral << endl;
 }
 
 
 GenerateDecisionPlot::GenerateDecisionPlot() 
-  :basename("dxplot"),
-   nx(10), ny(10),
-   include_datapoint_grid(false),
-   xmin(MISSING_VALUE), 
-   xmax(MISSING_VALUE), 
-   ymin(MISSING_VALUE), 
-   ymax(MISSING_VALUE)
-  {
-  }
+    :basename("dxplot"),
+     nx(10), ny(10),
+     include_datapoint_grid(false),
+     xmin(MISSING_VALUE), 
+     xmax(MISSING_VALUE), 
+     ymin(MISSING_VALUE), 
+     ymax(MISSING_VALUE)
+{
+}
 
-  PLEARN_IMPLEMENT_OBJECT(GenerateDecisionPlot, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(GenerateDecisionPlot, "ONE LINE DESCR", "NO HELP");
 
-  void GenerateDecisionPlot::declareOptions(OptionList& ol)
-  {
+void GenerateDecisionPlot::declareOptions(OptionList& ol)
+{
     // ### Declare all of this object's options here
     // ### For the "flags" of each option, you should typically specify  
     // ### one of OptionBase::buildoption, OptionBase::learntoption or 
@@ -482,32 +482,32 @@ GenerateDecisionPlot::GenerateDecisionPlot()
                   "files basename_dset.dx containing targets and outputs for the given dataset positions\n"
                   "and basename_outputs.dx containing outputs computed at grid positions\n");
     declareOption(ol, "learner", &GenerateDecisionPlot::learner, OptionBase::buildoption,
-                   "The learner to train/test. Its train_set will be used as the dataset on\n"
+                  "The learner to train/test. Its train_set will be used as the dataset on\n"
                   "which to base this decision plot (ranges are inferred from it, and decisions\n"
                   "on the training points are written in basename_dset.dx");
     declareOption(ol, "nx", &GenerateDecisionPlot::nx, OptionBase::buildoption,
-                   "Number of x sample coordinates (grid)");
+                  "Number of x sample coordinates (grid)");
     declareOption(ol, "ny", &GenerateDecisionPlot::ny, OptionBase::buildoption,
-                   "Number of y sample coordinates (grid)");
+                  "Number of y sample coordinates (grid)");
     declareOption(ol, "include_datapoint_grid", &GenerateDecisionPlot::include_datapoint_grid, OptionBase::buildoption,
-                   "");
+                  "");
     declareOption(ol, "xmin", &GenerateDecisionPlot::xmin, OptionBase::buildoption,
-                   "");
+                  "");
     declareOption(ol, "xmax", &GenerateDecisionPlot::xmax, OptionBase::buildoption,
-                   "");
+                  "");
     declareOption(ol, "ymin", &GenerateDecisionPlot::ymin, OptionBase::buildoption,
-                   "");
+                  "");
     declareOption(ol, "ymax", &GenerateDecisionPlot::ymax, OptionBase::buildoption,
-                   "");
+                  "");
     declareOption(ol, "save_learner_as", &GenerateDecisionPlot::save_learner_as, OptionBase::buildoption,
-                   "(Optionally) save trained learner in this file (.psave)");
+                  "(Optionally) save trained learner in this file (.psave)");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
+}
 
-  void GenerateDecisionPlot::build_()
-  {
+void GenerateDecisionPlot::build_()
+{
     // ### This method should do the real building of the object,
     // ### according to set 'options', in *any* situation. 
     // ### Typical situations include:
@@ -515,45 +515,58 @@ GenerateDecisionPlot::GenerateDecisionPlot()
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
-  }
+}
 
-  //! Overload this for runnable objects (default method issues a runtime error)
+//! Overload this for runnable objects (default method issues a runtime error)
 void GenerateDecisionPlot::run()
 {
-  VMat dataset = learner->getTrainingSet();
-  learner->setTrainStatsCollector(new VecStatsCollector());
-  learner->train();
+    VMat dataset = learner->getTrainingSet();
+    learner->setTrainStatsCollector(new VecStatsCollector());
+    learner->train();
 
-  if(save_learner_as!="")
+    if(save_learner_as!="")
     {
-      cerr << "Saving trained learner in file " << save_learner_as << endl;
-      PLearn::save(save_learner_as, *learner);
+        cerr << "Saving trained learner in file " << save_learner_as << endl;
+        PLearn::save(save_learner_as, *learner);
     }
 
-  string dset_fname = basename+"_dset.dx";
-  cerr << "Computing and writing dataset output field to file " << dset_fname << endl;
-  DX_create_dataset_outputs_file(dset_fname, learner, dataset);
+    string dset_fname = basename+"_dset.dx";
+    cerr << "Computing and writing dataset output field to file " << dset_fname << endl;
+    DX_create_dataset_outputs_file(dset_fname, learner, dataset);
 
-  string outputs_fname = basename+"_outputs.dx";
-  cerr << "Computing and writing grid output field to file " << outputs_fname << endl; 
-  DX_create_grid_outputs_file(outputs_fname, learner, dataset, nx, ny, 
-                               include_datapoint_grid, 
-                               xmin, xmax, ymin, ymax);
-  cerr << "You can now view those files with OpenDX." << endl;
+    string outputs_fname = basename+"_outputs.dx";
+    cerr << "Computing and writing grid output field to file " << outputs_fname << endl; 
+    DX_create_grid_outputs_file(outputs_fname, learner, dataset, nx, ny, 
+                                include_datapoint_grid, 
+                                xmin, xmax, ymin, ymax);
+    cerr << "You can now view those files with OpenDX." << endl;
 }
 
 
-  // ### Nothing to add here, simply calls build_
-  void GenerateDecisionPlot::build()
-  {
+// ### Nothing to add here, simply calls build_
+void GenerateDecisionPlot::build()
+{
     inherited::build();
     build_();
-  }
+}
 
 
-  void GenerateDecisionPlot::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-  {
+void GenerateDecisionPlot::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
     inherited::makeDeepCopyFromShallowCopy(copies);
-  }
+}
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

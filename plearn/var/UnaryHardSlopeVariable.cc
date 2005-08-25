@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "UnaryHardSlopeVariable.h"
 #include "Var_operators.h"
@@ -54,12 +54,12 @@ PLEARN_IMPLEMENT_OBJECT(UnaryHardSlopeVariable,
                         "Maps x (elementwise) to 0 if x<left, 1 if x>right, and linear in between otherwise.");
 
 UnaryHardSlopeVariable::UnaryHardSlopeVariable()
-  : left(0), right(0), inv_slope(0)
+    : left(0), right(0), inv_slope(0)
 { }
   
 UnaryHardSlopeVariable::UnaryHardSlopeVariable(Variable* input,real l,real r) 
-  : inherited(input, input->length(), input->width()) ,
-    left(l), right(r), inv_slope(1.0/(r-l))
+    : inherited(input, input->length(), input->width()) ,
+      left(l), right(r), inv_slope(1.0/(r-l))
 {}
 
 void
@@ -95,30 +95,41 @@ void UnaryHardSlopeVariable::recomputeSize(int& l, int& w) const
 
 void UnaryHardSlopeVariable::fprop()
 {
-  int l = nelems();
-  real* inputptr = input->valuedata;
-  real* ptr = valuedata;
-  for(int i=0; i<l; i++)
-    *ptr++ = hard_slope(*inputptr++,left,right);
+    int l = nelems();
+    real* inputptr = input->valuedata;
+    real* ptr = valuedata;
+    for(int i=0; i<l; i++)
+        *ptr++ = hard_slope(*inputptr++,left,right);
 }
 
 
 void UnaryHardSlopeVariable::bprop()
 {
-  int l = nelems();
-  real* inputgradientptr = input->gradientdata;
-  real* gradientptr = gradientdata;
-  real* valueptr = valuedata;
-  for(int i=0; i<l; i++)
-  {
-    real x = *valueptr++;
-    if (x>left)
-      if (x<right)
-        *inputgradientptr++ += *gradientptr++ * inv_slope;
-  }
+    int l = nelems();
+    real* inputgradientptr = input->gradientdata;
+    real* gradientptr = gradientdata;
+    real* valueptr = valuedata;
+    for(int i=0; i<l; i++)
+    {
+        real x = *valueptr++;
+        if (x>left)
+            if (x<right)
+                *inputgradientptr++ += *gradientptr++ * inv_slope;
+    }
 }
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

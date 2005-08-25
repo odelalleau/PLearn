@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ClassErrorCostFunction.cc,v 1.7 2004/11/23 21:27:27 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ClassErrorCostFunction.h"
 #include <plearn/math/TMat_maths_impl.h>
@@ -53,33 +53,33 @@ PLEARN_IMPLEMENT_OBJECT(ClassErrorCostFunction, "Compute a classification cost f
 
 real ClassErrorCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
-  if(is_missing(output[0]) && ignore_missing_values && output.length()==1 )return MISSING_VALUE;
-  if(output_is_classnum)
-  {
-    if(is_integer(output[0]))
-      return output[0]==target[0] ?0 :1;
-    else if(target[0]==1.)
-      return output[0]>0.5 ?0 :1;
-    else // target[0]==0 or -1
-      return output[0]<=0.5 ?0 :1;
-  }
+    if(is_missing(output[0]) && ignore_missing_values && output.length()==1 )return MISSING_VALUE;
+    if(output_is_classnum)
+    {
+        if(is_integer(output[0]))
+            return output[0]==target[0] ?0 :1;
+        else if(target[0]==1.)
+            return output[0]>0.5 ?0 :1;
+        else // target[0]==0 or -1
+            return output[0]<=0.5 ?0 :1;
+    }
 
-  if(output.length()==1) // we assume the sign of output indicates the chosen class 
-  {
-    if(target[0]>0)
-      return output[0]>0 ?0. :1.;
-    else
-      return output[0]<0 ?0. :1.;
-  }
-  else // we assume output gives a score for each class
-  {
-    int trueclass;
-    if(target.length()==1)
-      trueclass = int(target[0]);
-    else
-      trueclass = argmax(target);
-    return argmax(output)==trueclass ?0. :1.;
-  }
+    if(output.length()==1) // we assume the sign of output indicates the chosen class 
+    {
+        if(target[0]>0)
+            return output[0]>0 ?0. :1.;
+        else
+            return output[0]<0 ?0. :1.;
+    }
+    else // we assume output gives a score for each class
+    {
+        int trueclass;
+        if(target.length()==1)
+            trueclass = int(target[0]);
+        else
+            trueclass = argmax(target);
+        return argmax(output)==trueclass ?0. :1.;
+    }
 }
 
 void
@@ -95,3 +95,15 @@ ClassErrorCostFunction::declareOptions(OptionList &ol)
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: PairsVMatrix.cc,v 1.6 2004/07/09 19:42:23 tihocan Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 #include "PairsVMatrix.h"
 
@@ -53,8 +53,8 @@ PairsVMatrix::PairsVMatrix()
 }
 
 PairsVMatrix::PairsVMatrix(Mat the_data1, Mat the_data2)
-  : inherited(data1.width()+data2.width(), data1.length()*data2.length()), 
-    data1(the_data1), data2(the_data2)
+    : inherited(data1.width()+data2.width(), data1.length()*data2.length()), 
+      data1(the_data1), data2(the_data2)
 {
 }
 
@@ -80,17 +80,30 @@ PairsVMatrix::declareOptions(OptionList &ol)
 
 void PairsVMatrix::getNewRow(int ij, const Vec& samplevec) const
 {
-  //ij = ij%length_;
-  ij %= length_;
-  real* data = samplevec.data();
-  real* data_i = data1[ij/data2.length()];
-  real* data_j = data2[ij%data2.length()];
-  int kk=0;
-  for (int k=0;k<data1.width();k++)
-    data[kk++] = data_i[k];
-  for (int k=0;k<data2.width();k++)
-    data[kk++] = data_j[k];
+    //ij = ij%length_;
+    ij %= length_;
+    real* data = samplevec.data();
+    real* data_i = data1[ij/data2.length()];
+    real* data_j = data2[ij%data2.length()];
+    int kk=0;
+    for (int k=0;k<data1.width();k++)
+        data[kk++] = data_i[k];
+    for (int k=0;k<data2.width();k++)
+        data[kk++] = data_j[k];
 }
 
 
 } // end of namespcae PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

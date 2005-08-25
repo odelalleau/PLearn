@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ExtractVariable.h,v 1.1 2004/10/01 19:41:59 mariusmuja Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef ExtractVariable_INC
 #define ExtractVariable_INC
@@ -53,42 +53,55 @@ class ExtractVariable: public UnaryVariable
 
 private:
 
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 protected:
 
-  int offset_;
-  int length_, width_;
+    int offset_;
+    int length_, width_;
 
 public:
 
-  //!  Default constructor for persistence
-  ExtractVariable() {}
-  ExtractVariable(Variable* v, int the_offset, int the_length, int the_width);
+    //!  Default constructor for persistence
+    ExtractVariable() {}
+    ExtractVariable(Variable* v, int the_offset, int the_length, int the_width);
       
-  PLEARN_DECLARE_OBJECT(ExtractVariable);
+    PLEARN_DECLARE_OBJECT(ExtractVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void bbprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void bbprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 
 private:
 
-  void build_();
+    void build_();
 
 };
 
 DECLARE_OBJECT_PTR(ExtractVariable);
 
 inline Var extract(Var v, int o, int l, int w) {
-  return new ExtractVariable(v, o, l, w);
+    return new ExtractVariable(v, o, l, w);
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

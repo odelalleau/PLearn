@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateRowVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef DuplicateRowVariable_INC
 #define DuplicateRowVariable_INC
@@ -51,42 +51,55 @@ using namespace std;
 
 class DuplicateRowVariable: public UnaryVariable
 {
-  typedef UnaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 protected:
-  int length_;
+    int length_;
 //  int n_duplicates;
 public:
-  //!  Default constructor for persistence
-  DuplicateRowVariable() {};//: n_duplicates() {}
-  DuplicateRowVariable(Variable* input, int thelength);
+    //!  Default constructor for persistence
+    DuplicateRowVariable() {};//: n_duplicates() {}
+    DuplicateRowVariable(Variable* input, int thelength);
 
-  PLEARN_DECLARE_OBJECT(DuplicateRowVariable);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(DuplicateRowVariable);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
 
 protected:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(DuplicateRowVariable);
 
 inline Var duplicateRow(Var v, int the_length)
 { 
-  if(!v->isRowVec())
-    PLERROR("In duplicateRow: v is not a single-row var");
-  if(the_length==1)
-    return v;
-  else
-    return new DuplicateRowVariable(v,the_length); 
+    if(!v->isRowVec())
+        PLERROR("In duplicateRow: v is not a single-row var");
+    if(the_length==1)
+        return v;
+    else
+        return new DuplicateRowVariable(v,the_length); 
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

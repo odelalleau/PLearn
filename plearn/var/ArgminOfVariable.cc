@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: ArgminOfVariable.cc,v 1.5 2004/09/14 16:04:38 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ArgminOfVariable.h"
 
@@ -53,14 +53,14 @@ ArgminOfVariable::ArgminOfVariable(Variable* the_v,
                                    Variable* the_expression,
                                    Variable* the_values_of_v,
                                    const VarArray& the_inputs)
-  :NaryVariable(the_inputs,1,1), inputs(the_inputs), expression(the_expression),
-   values_of_v(the_values_of_v), v(the_v)
+    :NaryVariable(the_inputs,1,1), inputs(the_inputs), expression(the_expression),
+     values_of_v(the_values_of_v), v(the_v)
 {
-  if (!v->isScalar() || !values_of_v->isVec())
-    PLERROR("ArgminOfVariable currently implemented only for a scalar v and a vector values_of_v");
-  vv_path = propagationPath(inputs,values_of_v);
-  e_path = propagationPath(inputs& (VarArray)v, expression);
-  v_path = propagationPath(v, expression);
+    if (!v->isScalar() || !values_of_v->isVec())
+        PLERROR("ArgminOfVariable currently implemented only for a scalar v and a vector values_of_v");
+    vv_path = propagationPath(inputs,values_of_v);
+    e_path = propagationPath(inputs& (VarArray)v, expression);
+    v_path = propagationPath(v, expression);
 }
 
 
@@ -72,51 +72,62 @@ void ArgminOfVariable::recomputeSize(int& l, int& w) const
 
 void ArgminOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  NaryVariable::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(inputs, copies);
-  deepCopyField(expression, copies);
-  deepCopyField(values_of_v, copies);
-  deepCopyField(v, copies);
-  deepCopyField(vv_path, copies);
-  deepCopyField(e_path, copies);
-  deepCopyField(v_path, copies);
+    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(inputs, copies);
+    deepCopyField(expression, copies);
+    deepCopyField(values_of_v, copies);
+    deepCopyField(v, copies);
+    deepCopyField(vv_path, copies);
+    deepCopyField(e_path, copies);
+    deepCopyField(v_path, copies);
 }
 
 
 
 void ArgminOfVariable::fprop()
 {
-  vv_path.fprop(); // compute influence of inputs on values_of_v
-  real min_value_of_expression = FLT_MAX;
-  real argmin_value_of_v = values_of_v->value[0];
-  for (int i=0;i<values_of_v->nelems();i++)
+    vv_path.fprop(); // compute influence of inputs on values_of_v
+    real min_value_of_expression = FLT_MAX;
+    real argmin_value_of_v = values_of_v->value[0];
+    for (int i=0;i<values_of_v->nelems();i++)
     {
-      v->value[0] = values_of_v->value[i];
-      if (i==0)
-        e_path.fprop(); // compute influence of v and inputs on expression
-      else
-        v_path.fprop(); // otherwise, keep influence of inputs fixed
-      real e = expression->value[0];
-      if (e<min_value_of_expression)
+        v->value[0] = values_of_v->value[i];
+        if (i==0)
+            e_path.fprop(); // compute influence of v and inputs on expression
+        else
+            v_path.fprop(); // otherwise, keep influence of inputs fixed
+        real e = expression->value[0];
+        if (e<min_value_of_expression)
         {
-          min_value_of_expression = e;
-          argmin_value_of_v = v->value[0];
-          index_of_argmin = i;
+            min_value_of_expression = e;
+            argmin_value_of_v = v->value[0];
+            index_of_argmin = i;
         }
     }
-  value[0] = argmin_value_of_v;
+    value[0] = argmin_value_of_v;
 }
 
 
 void ArgminOfVariable::bprop()
 {
-  vv_path.clearGradient();
-  values_of_v->gradientdata[index_of_argmin] = gradientdata[0];
-  vv_path.bprop();
+    vv_path.clearGradient();
+    values_of_v->gradientdata[index_of_argmin] = gradientdata[0];
+    vv_path.bprop();
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

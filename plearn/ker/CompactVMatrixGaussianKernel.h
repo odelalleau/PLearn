@@ -35,9 +35,9 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrixGaussianKernel.h,v 1.6 2004/07/21 16:30:52 chrish42 Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/Kernel.h */
@@ -58,26 +58,26 @@ using namespace std;
 */
 class CompactVMatrixGaussianKernel: public Kernel
 {
-  typedef Kernel inherited;
-
- protected:
-  real sigma;
-  PP<CompactVMatrix> m;
-
- public:
-  CompactVMatrixGaussianKernel()
-    : sigma(), m(0) {}
-  CompactVMatrixGaussianKernel(real the_sigma,PP<CompactVMatrix>& vm)
-    : sigma(the_sigma), m(vm) {}
-
-  PLEARN_DECLARE_OBJECT(CompactVMatrixGaussianKernel);
-
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
-  virtual void setParameters(Vec paramvec);
+    typedef Kernel inherited;
 
 protected:
-  //!  recognized option are "sigma" and "m"
-  static void declareOptions(OptionList &ol);
+    real sigma;
+    PP<CompactVMatrix> m;
+
+public:
+    CompactVMatrixGaussianKernel()
+        : sigma(), m(0) {}
+    CompactVMatrixGaussianKernel(real the_sigma,PP<CompactVMatrix>& vm)
+        : sigma(the_sigma), m(vm) {}
+
+    PLEARN_DECLARE_OBJECT(CompactVMatrixGaussianKernel);
+
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
+    virtual void setParameters(Vec paramvec);
+
+protected:
+    //!  recognized option are "sigma" and "m"
+    static void declareOptions(OptionList &ol);
 };
 
 DECLARE_OBJECT_PTR(CompactVMatrixGaussianKernel);
@@ -86,3 +86,16 @@ DECLARE_OBJECT_PTR(CompactVMatrixGaussianKernel);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

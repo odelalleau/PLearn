@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunObject.cc,v 1.4 2004/12/22 19:38:15 chrish42 Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -52,25 +52,25 @@ using namespace std;
 ///////////////
 RunObject::RunObject() 
 {
-  save_object_name="";
+    save_object_name="";
 }
 
 PLEARN_IMPLEMENT_OBJECT(RunObject,
-    "Allows to build a non-runnable object in a PLearn script.",
-    "This Object implements a run() method so that it can be used in\n"
-    "a PLearn script, in order to build another Object given by the\n"
-    "'underlying_object' option without PLearn returning an error.\n"
-);
+                        "Allows to build a non-runnable object in a PLearn script.",
+                        "This Object implements a run() method so that it can be used in\n"
+                        "a PLearn script, in order to build another Object given by the\n"
+                        "'underlying_object' option without PLearn returning an error.\n"
+    );
 
 void RunObject::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "underlying_object", &RunObject::underlying_object, OptionBase::buildoption,
-      "The underlying object to be built.");
-  declareOption(ol, "save_object_name", &RunObject::save_object_name, OptionBase::buildoption,
-      "Save the object with this name");
+    declareOption(ol, "underlying_object", &RunObject::underlying_object, OptionBase::buildoption,
+                  "The underlying object to be built.");
+    declareOption(ol, "save_object_name", &RunObject::save_object_name, OptionBase::buildoption,
+                  "Save the object with this name");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void RunObject::build_()
@@ -79,24 +79,24 @@ void RunObject::build_()
 
 void RunObject::build()
 {
-  inherited::build();
-  build_();
-  if (save_object_name != "")
-    PLearn::save(save_object_name, underlying_object);
+    inherited::build();
+    build_();
+    if (save_object_name != "")
+        PLearn::save(save_object_name, underlying_object);
 }
 
 void RunObject::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("RunObject::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("RunObject::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 /////////
@@ -106,3 +106,16 @@ void RunObject::run() {
 }
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

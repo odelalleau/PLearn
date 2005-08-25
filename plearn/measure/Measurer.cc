@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: Measurer.cc,v 1.2 2004/02/20 21:11:47 chrish42 Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "Measurer.h"
 
@@ -52,12 +52,21 @@ Measurer::~Measurer()
 
 bool CallbackMeasurer::measure(int t, const Vec& costs)
 { 
-  return callback(t,costs); 
+    return callback(t,costs); 
 }
 
 
 } // end of namespace PLearn
 
-
-
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

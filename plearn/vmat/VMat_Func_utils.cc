@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_Func_utils.cc,v 1.1 2004/09/27 20:19:27 plearner Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -51,53 +51,66 @@ using namespace std;
 // Put function implementations here.
 void evaluateSumOfFprop(VMat vm, Func f, Vec& output_result, int nsamples)
 {
-  //if (f->outputs.size()!=1)
-  //  PLERROR("In evaluateSumOfFprop: function must have a single variable output (maybe you can concat the vars into a single one, if this is really what you want)");
+    //if (f->outputs.size()!=1)
+    //  PLERROR("In evaluateSumOfFprop: function must have a single variable output (maybe you can concat the vars into a single one, if this is really what you want)");
  
-  static int curpos = 0;
-  int l = vm->length();
-  int w = vm->width();
-  if (nsamples == -1) nsamples = l;
-  Vec input_value(w);
-  Vec output_value(output_result.length());
+    static int curpos = 0;
+    int l = vm->length();
+    int w = vm->width();
+    if (nsamples == -1) nsamples = l;
+    Vec input_value(w);
+    Vec output_value(output_result.length());
 
-  f->recomputeParents();
-  output_result.clear();
+    f->recomputeParents();
+    output_result.clear();
  
-  for(int i=0; i<nsamples; i++)
-  {
-    vm->getRow(curpos++, input_value);
-    f->fprop(input_value, output_value);
-    output_result += output_value;
-    if(curpos == l) curpos = 0;
-  }
+    for(int i=0; i<nsamples; i++)
+    {
+        vm->getRow(curpos++, input_value);
+        f->fprop(input_value, output_value);
+        output_result += output_value;
+        if(curpos == l) curpos = 0;
+    }
 }
 
 void evaluateSumOfFbprop(VMat vm, Func f, Vec& output_result, Vec& output_gradient, int nsamples)
 {
 //  if(f->outputs.size()!=1)
- //   PLERROR("In evaluateSumOfFprop: function must have a single variable output (maybe you can concat the vars into a single one, if this is really what you want)");
+    //   PLERROR("In evaluateSumOfFprop: function must have a single variable output (maybe you can concat the vars into a single one, if this is really what you want)");
  
-  static int curpos = 0;
-  int l = vm->length();
-  int w = vm->width();
-  if (nsamples == -1) nsamples = l;
-  Vec input_value(w);
-  Vec input_gradient(w);
-  Vec output_value(output_result.length());
+    static int curpos = 0;
+    int l = vm->length();
+    int w = vm->width();
+    if (nsamples == -1) nsamples = l;
+    Vec input_value(w);
+    Vec input_gradient(w);
+    Vec output_value(output_result.length());
 
-  f->recomputeParents();
-  output_result.clear();
+    f->recomputeParents();
+    output_result.clear();
  
-  for(int i=0; i<nsamples; i++)
-  {
-    vm->getRow(curpos++, input_value);
-    f->fbprop(input_value, output_value, input_gradient, output_gradient);
-    //displayFunction(f, true);
-    output_result += output_value;
-    if(curpos == l) curpos = 0;
-  }
+    for(int i=0; i<nsamples; i++)
+    {
+        vm->getRow(curpos++, input_value);
+        f->fbprop(input_value, output_value, input_gradient, output_gradient);
+        //displayFunction(f, true);
+        output_result += output_value;
+        if(curpos == l) curpos = 0;
+    }
 }
 
 
 } // end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

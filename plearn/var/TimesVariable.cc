@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: TimesVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "TimesVariable.h"
 #include "Var_operators.h"
@@ -55,7 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(TimesVariable,
                         "NO HELP");
 
 TimesVariable::TimesVariable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, input1->length(), input1->width())
+    : inherited(input1, input2, input1->length(), input1->width())
 {
     build_();
 }
@@ -88,29 +88,40 @@ void TimesVariable::recomputeSize(int& l, int& w) const
 
 void TimesVariable::fprop()
 {
-  for(int k=0; k<nelems(); k++)
-    valuedata[k] = input1->valuedata[k]*input2->valuedata[k];
+    for(int k=0; k<nelems(); k++)
+        valuedata[k] = input1->valuedata[k]*input2->valuedata[k];
 }
 
 
 void TimesVariable::bprop()
 {
-  for(int k=0; k<nelems(); k++)
+    for(int k=0; k<nelems(); k++)
     {
-      input1->gradientdata[k] += input2->valuedata[k]*gradientdata[k];
-      input2->gradientdata[k] += input1->valuedata[k]*gradientdata[k];
+        input1->gradientdata[k] += input2->valuedata[k]*gradientdata[k];
+        input2->gradientdata[k] += input1->valuedata[k]*gradientdata[k];
     }
 }
 
 
 void TimesVariable::symbolicBprop()
 {
-  input1->accg(g*input2);
-  input2->accg(g*input1);
+    input1->accg(g*input2);
+    input2->accg(g*input1);
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

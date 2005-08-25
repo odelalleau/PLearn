@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: DotProductVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "DotProductVariable.h"
 #include "Var_operators.h"
@@ -57,7 +57,7 @@ PLEARN_IMPLEMENT_OBJECT(DotProductVariable,
                         "NO HELP");
 
 DotProductVariable::DotProductVariable(Variable* input1, Variable* input2)
-  : inherited(input1, input2, 1, 1)
+    : inherited(input1, input2, 1, 1)
 {
     build_();
 }
@@ -88,59 +88,70 @@ void DotProductVariable::recomputeSize(int& l, int& w) const
 
 void DotProductVariable::fprop()
 {
-  real sum = 0.0;
-  for (int k=0; k<input1->nelems(); k++)
-    sum += input1->valuedata[k] * input2->valuedata[k];
-  valuedata[0] = sum;
+    real sum = 0.0;
+    for (int k=0; k<input1->nelems(); k++)
+        sum += input1->valuedata[k] * input2->valuedata[k];
+    valuedata[0] = sum;
 }
 
 
 void DotProductVariable::bprop()
 {
-  real grad = gradientdata[0];
-  for (int k=0; k<input1->nelems(); k++)
+    real grad = gradientdata[0];
+    for (int k=0; k<input1->nelems(); k++)
     {
-      input1->gradientdata[k] += input2->valuedata[k] * grad;
-      input2->gradientdata[k] += input1->valuedata[k] * grad;
+        input1->gradientdata[k] += input2->valuedata[k] * grad;
+        input2->gradientdata[k] += input1->valuedata[k] * grad;
     }
 }
 
 
 void DotProductVariable::bbprop()
 {
-  if (input1->diaghessian.length()==0)
-    input1->resizeDiagHessian();
-  if (input2->diaghessian.length()==0)
-    input2->resizeDiagHessian();
-  real h = diaghessiandata[0];
-  for (int k=0; k<input1->nelems(); k++)
+    if (input1->diaghessian.length()==0)
+        input1->resizeDiagHessian();
+    if (input2->diaghessian.length()==0)
+        input2->resizeDiagHessian();
+    real h = diaghessiandata[0];
+    for (int k=0; k<input1->nelems(); k++)
     {
-      real in2v=input2->valuedata[k];
-      input1->diaghessiandata[k] += in2v * in2v * h;
-      real in1v=input1->valuedata[k];
-      input2->diaghessiandata[k] += in1v * in1v * h;
+        real in2v=input2->valuedata[k];
+        input1->diaghessiandata[k] += in2v * in2v * h;
+        real in1v=input1->valuedata[k];
+        input2->diaghessiandata[k] += in1v * in1v * h;
     }
 }
 
 
 void DotProductVariable::symbolicBprop()
 {
-  input1->accg(input2*g);
-  input2->accg(input1*g);
+    input1->accg(input2*g);
+    input2->accg(input1*g);
 }
 
 
 void DotProductVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue(); 
-  real sum = 0.0;
-  for (int k=0; k<input1->nelems(); k++)
-    sum += input1->rvaluedata[k] * input2->valuedata[k] + input1->valuedata[k] * input2->rvaluedata[k];
-  rvaluedata[0] = sum;
+    if (rValue.length()==0) resizeRValue(); 
+    real sum = 0.0;
+    for (int k=0; k<input1->nelems(); k++)
+        sum += input1->rvaluedata[k] * input2->valuedata[k] + input1->valuedata[k] * input2->rvaluedata[k];
+    rvaluedata[0] = sum;
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

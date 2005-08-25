@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyPrecomputedVMatrix.cc,v 1.12 2005/02/21 16:54:02 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -52,56 +52,56 @@ using namespace std;
 // LocallyPrecomputedVMatrix //
 ///////////////////////////////
 LocallyPrecomputedVMatrix::LocallyPrecomputedVMatrix()
-: local_dir("/Tmp"),
-  max_wait(30),
-  remove_when_done(true),
-  sequential_access(true),
-  verbosity(2)
+    : local_dir("/Tmp"),
+      max_wait(30),
+      remove_when_done(true),
+      sequential_access(true),
+      verbosity(2)
 {
-  precomp_type = "pmat";
+    precomp_type = "pmat";
 }
 
 PLEARN_IMPLEMENT_OBJECT(LocallyPrecomputedVMatrix,
-    "A VMat that precomputes its source in a local directory.",
-    "The 'sequential_access' option can be used to ensure that parallel experiments\n"
-    "do not access simultaneously the source VMat, in order to stay nice with the\n"
-    "disk usage. This is achieved thanks to a system lock file in the metadatadir of\n"
-    "the source VMat. Because it may happen that a lock file remains after an experiment\n"
-    "crashed, it will be ignored when it gets older than 'max_wait' minutes.\n"
-    "The default behavior (which can be modified through this VMat's options) is to\n"
-    "automatically delete the precomputed file when it is not used anymore (actually,\n"
-    "the whole metadata directory will be deleted, so you should not store important\n"
-    "informations in it).\n"
-);
+                        "A VMat that precomputes its source in a local directory.",
+                        "The 'sequential_access' option can be used to ensure that parallel experiments\n"
+                        "do not access simultaneously the source VMat, in order to stay nice with the\n"
+                        "disk usage. This is achieved thanks to a system lock file in the metadatadir of\n"
+                        "the source VMat. Because it may happen that a lock file remains after an experiment\n"
+                        "crashed, it will be ignored when it gets older than 'max_wait' minutes.\n"
+                        "The default behavior (which can be modified through this VMat's options) is to\n"
+                        "automatically delete the precomputed file when it is not used anymore (actually,\n"
+                        "the whole metadata directory will be deleted, so you should not store important\n"
+                        "informations in it).\n"
+    );
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void LocallyPrecomputedVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "local_dir", &LocallyPrecomputedVMatrix::local_dir, OptionBase::buildoption,
-      "The local directory in which we want to save the precomputed data.");
+    declareOption(ol, "local_dir", &LocallyPrecomputedVMatrix::local_dir, OptionBase::buildoption,
+                  "The local directory in which we want to save the precomputed data.");
 
-  declareOption(ol, "remove_when_done", &LocallyPrecomputedVMatrix::remove_when_done, OptionBase::buildoption,
-      "Whether we want or not to remove the precomputed data when this object is deleted.");
+    declareOption(ol, "remove_when_done", &LocallyPrecomputedVMatrix::remove_when_done, OptionBase::buildoption,
+                  "Whether we want or not to remove the precomputed data when this object is deleted.");
 
-  declareOption(ol, "sequential_access", &LocallyPrecomputedVMatrix::sequential_access, OptionBase::buildoption,
-      "If set to 1, ensures there are no multiple parallel precomputations (see class help).");
+    declareOption(ol, "sequential_access", &LocallyPrecomputedVMatrix::sequential_access, OptionBase::buildoption,
+                  "If set to 1, ensures there are no multiple parallel precomputations (see class help).");
 
-  declareOption(ol, "max_wait", &LocallyPrecomputedVMatrix::max_wait, OptionBase::buildoption,
-      "Maximum wait time in minutes when 'sequential access' is set to 1 (see class help).");
+    declareOption(ol, "max_wait", &LocallyPrecomputedVMatrix::max_wait, OptionBase::buildoption,
+                  "Maximum wait time in minutes when 'sequential access' is set to 1 (see class help).");
 
-  declareOption(ol, "verbosity", &LocallyPrecomputedVMatrix::verbosity, OptionBase::buildoption,
-      "Controls the amount of displayed information.");
+    declareOption(ol, "verbosity", &LocallyPrecomputedVMatrix::verbosity, OptionBase::buildoption,
+                  "Controls the amount of displayed information.");
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 
-  redeclareOption(ol, "metadatadir", &LocallyPrecomputedVMatrix::metadatadir, OptionBase::nosave,
-      "The metadatadir will be defined by the 'local_dir' option.");
+    redeclareOption(ol, "metadatadir", &LocallyPrecomputedVMatrix::metadatadir, OptionBase::nosave,
+                    "The metadatadir will be defined by the 'local_dir' option.");
 
-  redeclareOption(ol, "precomp_type", &LocallyPrecomputedVMatrix::precomp_type, OptionBase::nosave,
-      "We always use 'pmat' here.");
+    redeclareOption(ol, "precomp_type", &LocallyPrecomputedVMatrix::precomp_type, OptionBase::nosave,
+                    "We always use 'pmat' here.");
 }
 
 ///////////
@@ -109,8 +109,8 @@ void LocallyPrecomputedVMatrix::declareOptions(OptionList& ol)
 ///////////
 void LocallyPrecomputedVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -118,30 +118,30 @@ void LocallyPrecomputedVMatrix::build()
 ////////////
 void LocallyPrecomputedVMatrix::build_()
 {
-  if (metadatadir == "") {
-    bool made_dir = force_mkdir(local_dir);
-    if (!made_dir) {
-      PLWARNING(
-          "In LocallyPrecomputedVMatrix::build_ - Could not create dir: %s\n"
-          "The program may crash if it needs to access an element of this VMatrix.",
-          local_dir.c_str());
-      return;
+    if (metadatadir == "") {
+        bool made_dir = force_mkdir(local_dir);
+        if (!made_dir) {
+            PLWARNING(
+                "In LocallyPrecomputedVMatrix::build_ - Could not create dir: %s\n"
+                "The program may crash if it needs to access an element of this VMatrix.",
+                local_dir.c_str());
+            return;
+        }
+        metadatadir = newFilename(local_dir, "locally_precomputed_", true);
+        if (sequential_access) {
+            // If necessary, wait until we are allowed to start the precomputation.
+            if (source->hasMetaDataDir())
+                source->lockMetaDataDir(max_wait * 60, verbosity >= 2);
+            else
+                PLERROR("In LocallyPrecomputedVMatrix::build_ - The source VMatrix must have a metadatadir");
+        }
+        inherited::build();
+        precomp_source->setOption("remove_when_done", tostring(remove_when_done));
+        precomp_source->setOption("track_ref", "1");
+        precomp_source->build();
+        if (sequential_access)
+            source->unlockMetaDataDir();
     }
-    metadatadir = newFilename(local_dir, "locally_precomputed_", true);
-    if (sequential_access) {
-      // If necessary, wait until we are allowed to start the precomputation.
-      if (source->hasMetaDataDir())
-        source->lockMetaDataDir(max_wait * 60, verbosity >= 2);
-      else
-        PLERROR("In LocallyPrecomputedVMatrix::build_ - The source VMatrix must have a metadatadir");
-    }
-    inherited::build();
-    precomp_source->setOption("remove_when_done", tostring(remove_when_done));
-    precomp_source->setOption("track_ref", "1");
-    precomp_source->build();
-    if (sequential_access)
-      source->unlockMetaDataDir();
-  }
 }
 
 /////////////////////////////////
@@ -149,7 +149,7 @@ void LocallyPrecomputedVMatrix::build_()
 /////////////////////////////////
 void LocallyPrecomputedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 ////////////////////////////////
@@ -157,26 +157,38 @@ void LocallyPrecomputedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////////////////////
 LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix()
 {
-  if (remove_when_done && metadatadir != "") {
-    // Get the name of the precomputed file.
-    string filename_option;
-    openString(precomp_source->getOption("filename"), PStream::plearn_ascii)
-      >> filename_option;
-    PPath precomputed_file = PPath(filename_option);
-    // First we delete the precomputed source, so that it does not try to save
-    // more stuff in the metadatadir after it has been deleted.
-    precomp_source = 0;
-    // Let's check whether more FileVMatrix are accessing the same precomputed file.
-    if (FileVMatrix::countRefs(precomputed_file) == 0) {
-      bool removed = force_rmdir(metadatadir);
-      if (!removed && verbosity >= 1)
-        PLWARNING("In LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix - "
-                  "The precomputed data (in '%s') could not be removed",
-                   metadatadir.absolute().c_str());
+    if (remove_when_done && metadatadir != "") {
+        // Get the name of the precomputed file.
+        string filename_option;
+        openString(precomp_source->getOption("filename"), PStream::plearn_ascii)
+            >> filename_option;
+        PPath precomputed_file = PPath(filename_option);
+        // First we delete the precomputed source, so that it does not try to save
+        // more stuff in the metadatadir after it has been deleted.
+        precomp_source = 0;
+        // Let's check whether more FileVMatrix are accessing the same precomputed file.
+        if (FileVMatrix::countRefs(precomputed_file) == 0) {
+            bool removed = force_rmdir(metadatadir);
+            if (!removed && verbosity >= 1)
+                PLWARNING("In LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix - "
+                          "The precomputed data (in '%s') could not be removed",
+                          metadatadir.absolute().c_str());
+        }
     }
-  }
 }
 
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

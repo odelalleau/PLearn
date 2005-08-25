@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id$
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "IndexAtPositionVariable.h"
 #include "ColumnIndexVariable.h"
@@ -55,11 +55,11 @@ PLEARN_IMPLEMENT_OBJECT(IndexAtPositionVariable,
 
 
 IndexAtPositionVariable::IndexAtPositionVariable()
-  : length_(0), width_(0)
+    : length_(0), width_(0)
 { }
   
 IndexAtPositionVariable::IndexAtPositionVariable(Variable* input1, Variable* input2, int the_length, int the_width)
-  : inherited(input1, input2, the_length, the_width), length_(the_length), width_(the_width)
+    : inherited(input1, input2, the_length, the_width), length_(the_length), width_(the_width)
 {
     build_();
 }
@@ -96,45 +96,45 @@ void IndexAtPositionVariable::recomputeSize(int& l, int& w) const
 
 void IndexAtPositionVariable::fprop()
 {
-  value.clear();
-  for (int j=0; j<input2->size(); j++)
+    value.clear();
+    for (int j=0; j<input2->size(); j++)
     {  
-    int i = (int)input2->valuedata[j];
-    valuedata[i*width()+j] = input1->valuedata[j];
+        int i = (int)input2->valuedata[j];
+        valuedata[i*width()+j] = input1->valuedata[j];
     }
 }
 
 
 void IndexAtPositionVariable::bprop()
 {
-  for (int j=0; j<input2->size(); j++)
+    for (int j=0; j<input2->size(); j++)
     {
-    int i = (int)input2->valuedata[j];
-    input1->gradientdata[i*width()+j] += gradientdata[j];
+        int i = (int)input2->valuedata[j];
+        input1->gradientdata[i*width()+j] += gradientdata[j];
     }
 }
 
 
 void IndexAtPositionVariable::symbolicBprop()
 {
-  input1->accg(new ColumnIndexVariable(g,input2));
+    input1->accg(new ColumnIndexVariable(g,input2));
 }
 
 
 void IndexAtPositionVariable::rfprop()
 {
 /*  if (rValue.length()==0) resizeRValue();
-  rValue.clear();
-  if (input2->isScalar()) // input2 is a scalar (interpreted as a k)
+    rValue.clear();
+    if (input2->isScalar()) // input2 is a scalar (interpreted as a k)
     {
-      int k = (int)input2->valuedata[0];
-      rvaluedata[k] = input1->rvaluedata[0];
+    int k = (int)input2->valuedata[0];
+    rvaluedata[k] = input1->rvaluedata[0];
     }
-  else // input2 has 2 Indexs (interpreted as (i,j) coordinates)
+    else // input2 has 2 Indexs (interpreted as (i,j) coordinates)
     {
-      int i = (int)input2->valuedata[0];
-      int j = (int)input2->valuedata[1];
-      rvaluedata[i*width()+j] = input1->rvaluedata[0];
+    int i = (int)input2->valuedata[0];
+    int j = (int)input2->valuedata[1];
+    rvaluedata[i*width()+j] = input1->rvaluedata[0];
     }*/
     PLERROR("IndexAtPositionVariable::rfprop() not implemented.");
 }
@@ -143,4 +143,15 @@ void IndexAtPositionVariable::rfprop()
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

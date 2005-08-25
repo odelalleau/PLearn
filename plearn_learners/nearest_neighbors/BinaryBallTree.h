@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BinaryBallTree.h,v 1.1 2005/03/04 21:01:58 lamblin Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Lamblin
 
@@ -57,78 +57,91 @@ class BinaryBallTree: public Object
 
 private:
   
-  typedef Object inherited;
+    typedef Object inherited;
 
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  BinaryBallTree* parent;
-  BinBallTree child1;
-  BinBallTree child2;
+    BinaryBallTree* parent;
+    BinBallTree child1;
+    BinBallTree child2;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  Vec pivot;
-  real radius;
-  TVec<int> point_set;
+    Vec pivot;
+    real radius;
+    TVec<int> point_set;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  BinaryBallTree();
+    //! Default constructor.
+    BinaryBallTree();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
-  //! Declares this class' options.
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options.
+    static void declareOptions(OptionList& ol);
 
 public:
-  // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(BinaryBallTree);
+    // Declares other standard object methods.
+    PLEARN_DECLARE_OBJECT(BinaryBallTree);
 
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    //! Transforms a shallow copy into a deep copy
+    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
-  virtual void setFirstChild( const BinBallTree& first_child );
+    virtual void setFirstChild( const BinBallTree& first_child );
 
-  virtual void setSecondChild( const BinBallTree& second_child );
+    virtual void setSecondChild( const BinBallTree& second_child );
 
-  virtual BinBallTree getFirstChild();
+    virtual BinBallTree getFirstChild();
 
-  virtual BinBallTree getSecondChild();
+    virtual BinBallTree getSecondChild();
 
-  virtual BinaryBallTree* getParent();
+    virtual BinaryBallTree* getParent();
 
-  bool isEmpty() const
-  {
-    bool result = !pivot && !child1 && !child2 ;
-    return result;
-  }
+    bool isEmpty() const
+    {
+        bool result = !pivot && !child1 && !child2 ;
+        return result;
+    }
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(BinaryBallTree);
+DECLARE_OBJECT_PTR(BinaryBallTree);
   
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id$ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 /*! \file Experiment.h */
 #ifndef Experiment_INC
@@ -52,55 +52,55 @@ class Experiment: public Object
 {    
 public:
 
-  typedef Object inherited;
+    typedef Object inherited;
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
   
-  // See declareOptions method in .cc for the role of these options.
+    // See declareOptions method in .cc for the role of these options.
 
-  //! Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
-  string expdir;  
-  PP<Learner> learner;
-  VMat dataset;
-  PP<Splitter> splitter;
-  bool save_models;
-  bool save_initial_models;
-  bool save_test_outputs;
-  bool save_test_costs;
+    //! Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
+    string expdir;  
+    PP<Learner> learner;
+    VMat dataset;
+    PP<Splitter> splitter;
+    bool save_models;
+    bool save_initial_models;
+    bool save_test_outputs;
+    bool save_test_costs;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  // Default constructor
-  Experiment();
+    // Default constructor
+    Experiment();
 
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
 
 protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+    // simply calls inherited::build() then build_() 
+    virtual void build();
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(Experiment);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(Experiment);
 
-  //! runs the experiment
-  virtual void run();
+    //! runs the experiment
+    virtual void run();
 
 };
 
@@ -110,3 +110,16 @@ DECLARE_OBJECT_PTR(Experiment);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

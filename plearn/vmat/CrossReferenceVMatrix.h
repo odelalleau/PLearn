@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: CrossReferenceVMatrix.h,v 1.4 2004/04/05 22:50:25 morinf Exp $
-   ******************************************************* */
+ * $Id$
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -54,41 +54,54 @@ using namespace std;
   to the index set by col1 of vm1, is merged with vm1.
   
   for i=1,vm1.length()
-    vm.row(i) <- vm1.row(i) + vm2.row(vm1(i,col1))
+  vm.row(i) <- vm1.row(i) + vm2.row(vm1(i,col1))
   
 */
 class CrossReferenceVMatrix: public VMatrix
 {
-  typedef VMatrix inherited;
+    typedef VMatrix inherited;
 
- protected:
-  VMat vm1;
-  int col1;
-  VMat vm2;
+protected:
+    VMat vm1;
+    int col1;
+    VMat vm2;
 
- public:
-  // ******************
-  // *  Constructors  *
-  // ******************
-  CrossReferenceVMatrix(); //!<  default constructor (for automatic deserialization)
+public:
+    // ******************
+    // *  Constructors  *
+    // ******************
+    CrossReferenceVMatrix(); //!<  default constructor (for automatic deserialization)
 
-  //! The column headings are simply the concatenation of the headings in
-  //! the two vmatrices.
-  CrossReferenceVMatrix(VMat v1, int c1, VMat v2);
+    //! The column headings are simply the concatenation of the headings in
+    //! the two vmatrices.
+    CrossReferenceVMatrix(VMat v1, int c1, VMat v2);
 
-  PLEARN_DECLARE_OBJECT(CrossReferenceVMatrix);
-  static void declareOptions(OptionList &ol);
+    PLEARN_DECLARE_OBJECT(CrossReferenceVMatrix);
+    static void declareOptions(OptionList &ol);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void getRow(int i, Vec samplevec) const;
-  virtual real get(int i, int j) const;
-  virtual void reset_dimensions() { PLERROR("CrossReferenceVMatrix::reset_dimensions() not implemented"); }
+    virtual void getRow(int i, Vec samplevec) const;
+    virtual real get(int i, int j) const;
+    virtual void reset_dimensions() { PLERROR("CrossReferenceVMatrix::reset_dimensions() not implemented"); }
 private:
-  void build_();
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(CrossReferenceVMatrix);
 
 } // end of namespcae PLearn
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

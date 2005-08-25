@@ -33,9 +33,9 @@
 
 
 /* *******************************************************      
-   * $Id: LiftOutputVariable.h,v 1.3 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef LiftOutputVariable_INC
 #define LiftOutputVariable_INC
@@ -47,20 +47,20 @@ using namespace std;
 
 class LiftOutputVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-  //!  Default constructor for persistence
-  LiftOutputVariable() {}
-  LiftOutputVariable(Variable* netout, Variable* target);
+    //!  Default constructor for persistence
+    LiftOutputVariable() {}
+    LiftOutputVariable(Variable* netout, Variable* target);
 
-  PLEARN_DECLARE_OBJECT(LiftOutputVariable);
+    PLEARN_DECLARE_OBJECT(LiftOutputVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
 
 protected:
     void build_();
@@ -70,9 +70,22 @@ DECLARE_OBJECT_PTR(LiftOutputVariable);
 
 inline Var lift_output(Var linear_output, Var target)
 {
-  return new LiftOutputVariable(linear_output, target);
+    return new LiftOutputVariable(linear_output, target);
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

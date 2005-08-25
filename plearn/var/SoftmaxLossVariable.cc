@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: SoftmaxLossVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #include "ExpVariable.h"
 #include "RowAtPositionVariable.h"
@@ -56,7 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(SoftmaxLossVariable,
                         "NO HELP");
 
 SoftmaxLossVariable::SoftmaxLossVariable(Variable* input1, Variable* input2) 
-  : inherited(input1, input2, 1, 1)
+    : inherited(input1, input2, 1, 1)
 {
     build_();
 }
@@ -80,66 +80,77 @@ void SoftmaxLossVariable::recomputeSize(int& l, int& w) const
 
 void SoftmaxLossVariable::fprop()
 {
-  int classnum = (int)input2->valuedata[0];
-  real input_index = input1->valuedata[classnum];
-  real sum=0;
-  for(int i=0; i<input1->nelems(); i++)
-    sum += safeexp(input1->valuedata[i]-input_index);
-  valuedata[0] = 1.0/sum;
+    int classnum = (int)input2->valuedata[0];
+    real input_index = input1->valuedata[classnum];
+    real sum=0;
+    for(int i=0; i<input1->nelems(); i++)
+        sum += safeexp(input1->valuedata[i]-input_index);
+    valuedata[0] = 1.0/sum;
 }
 
 
 void SoftmaxLossVariable::bprop()
 {
-  int classnum = (int)input2->valuedata[0];
-  real input_index = input1->valuedata[classnum];
-  real vali = valuedata[0];
-  for(int i=0; i<input1->nelems(); i++)
-  {
-    if (i!=classnum)
-       //input1->gradientdata[i] = -gradientdata[i]/*?*/*vali*vali*safeexp(input1->valuedata[i]-input_index);
-       input1->gradientdata[i] = -gradientdata[i]*vali*vali*safeexp(input1->valuedata[i]-input_index);
-    else
-       input1->gradientdata[i] = gradientdata[i]*vali*(1.-vali);
-  }
+    int classnum = (int)input2->valuedata[0];
+    real input_index = input1->valuedata[classnum];
+    real vali = valuedata[0];
+    for(int i=0; i<input1->nelems(); i++)
+    {
+        if (i!=classnum)
+            //input1->gradientdata[i] = -gradientdata[i]/*?*/*vali*vali*safeexp(input1->valuedata[i]-input_index);
+            input1->gradientdata[i] = -gradientdata[i]*vali*vali*safeexp(input1->valuedata[i]-input_index);
+        else
+            input1->gradientdata[i] = gradientdata[i]*vali*(1.-vali);
+    }
 }
 
 
 void SoftmaxLossVariable::bbprop()
 {
-  PLERROR("SofmaxVariable::bbprop() not implemented");
+    PLERROR("SofmaxVariable::bbprop() not implemented");
 }
 
 
 void SoftmaxLossVariable::symbolicBprop()
 {
-  Var gi = -g * Var(this) * Var(this) * exp(input1-input1(input2));
-  Var gindex = new RowAtPositionVariable(g * Var(this), input2, input1->length());
-  input1->accg(gi+gindex);
+    Var gi = -g * Var(this) * Var(this) * exp(input1-input1(input2));
+    Var gindex = new RowAtPositionVariable(g * Var(this), input2, input1->length());
+    input1->accg(gi+gindex);
 }
 
 
 // R{ s_i = exp(x_i) / sum_j exp(x_j) }   = (s_i(1-s_i) - sum_{k!=i} s_i s_k) R(s_i) = s_i ((1-s_i) - sum_{k!=i} s_k) R(s_i)
 void SoftmaxLossVariable::rfprop()
 {
-  if (rValue.length()==0) resizeRValue();
+    if (rValue.length()==0) resizeRValue();
 
-  int classnum = (int)input2->valuedata[0];
-  real input_index = input1->valuedata[classnum];
-  real vali = valuedata[0];
-  real sum = 0;
-  for(int i=0; i<input1->nelems(); i++)
-  {
-    real res =vali * input1->rvaluedata[i];
-    if (i != classnum)
-       sum -= res * vali* safeexp(input1->valuedata[i]-input_index);
-    else sum += res * (1 - vali);
-  }
-  rvaluedata[0] = sum;
+    int classnum = (int)input2->valuedata[0];
+    real input_index = input1->valuedata[classnum];
+    real vali = valuedata[0];
+    real sum = 0;
+    for(int i=0; i<input1->nelems(); i++)
+    {
+        real res =vali * input1->rvaluedata[i];
+        if (i != classnum)
+            sum -= res * vali* safeexp(input1->valuedata[i]-input_index);
+        else sum += res * (1 - vali);
+    }
+    rvaluedata[0] = sum;
 }
 
 
 
 } // end of namespace PLearn
 
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

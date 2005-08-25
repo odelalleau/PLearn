@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: SampleVariable.cc,v 1.5 2004/09/14 16:04:38 chrish42 Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 #include "SampleVariable.h"
@@ -51,28 +51,28 @@ using namespace std;
 
 /*** SourceSampleVariable ***/
 
-  string SourceSampleVariable::classname() const
-  { return "SourceSampleVariable"; }
+string SourceSampleVariable::classname() const
+{ return "SourceSampleVariable"; }
 
 VarArray SourceSampleVariable::random_sources() 
 { 
-  if (marked)
-    return VarArray(0,0);
-  marked = true;
-  return Var(this); 
+    if (marked)
+        return VarArray(0,0);
+    marked = true;
+    return Var(this); 
 }
 
 /*** UnarySampleVariable ***/
 
-  string UnarySampleVariable::classname() const
-  { return "UnarySampleVariable"; }
+string UnarySampleVariable::classname() const
+{ return "UnarySampleVariable"; }
 
 VarArray UnarySampleVariable::random_sources() 
 { 
-  if (marked)
-    return VarArray(0,0);
-  marked = true;
-  return input->random_sources() & Var(this); 
+    if (marked)
+        return VarArray(0,0);
+    marked = true;
+    return input->random_sources() & Var(this); 
 }
 
 /*** BinarySampleVariable ***/
@@ -82,10 +82,10 @@ string BinarySampleVariable::classname() const
 
 VarArray BinarySampleVariable::random_sources() 
 { 
-  if (marked)
-    return VarArray(0,0);
-  marked = true;
-  return input1->random_sources() & input2->random_sources() & Var(this); 
+    if (marked)
+        return VarArray(0,0);
+    marked = true;
+    return input1->random_sources() & input2->random_sources() & Var(this); 
 }
 
 /*** UniformSampleVariable ***/
@@ -94,34 +94,34 @@ string UniformSampleVariable::classname() const
 { return "UniformSampleVariable"; }
 
 UniformSampleVariable::UniformSampleVariable( int length, int width,
-                                             real minvalue, 
-                                             real maxvalue)
+                                              real minvalue, 
+                                              real maxvalue)
     :SourceSampleVariable(length,width),
      min_value(minvalue),max_value(maxvalue)
 {
-  sprintf(name,"U[%f,%f]",min_value,max_value);
+    sprintf(name,"U[%f,%f]",min_value,max_value);
 }
 
 UniformSampleVariable* UniformSampleVariable::deepCopy(CopiesMap& copies) const
 {
-  CopiesMap::iterator it = copies.find(this);
-  if (it!=copies.end()) // a copy already exists, so return it
-    return (UniformSampleVariable*)it->second;
+    CopiesMap::iterator it = copies.find(this);
+    if (it!=copies.end()) // a copy already exists, so return it
+        return (UniformSampleVariable*)it->second;
   
-  // Otherwise call the copy constructor to obtain a SHALLOW copy
-  UniformSampleVariable* deep_copy = new UniformSampleVariable(*this); 
-  // Put the copy in the map
-  copies[this] = deep_copy;
-  // Transform the shallow copy into a deep copy
-  deep_copy->makeDeepCopyFromShallowCopy(copies);
-  // return the completed deep_copy
-  return deep_copy;
+    // Otherwise call the copy constructor to obtain a SHALLOW copy
+    UniformSampleVariable* deep_copy = new UniformSampleVariable(*this); 
+    // Put the copy in the map
+    copies[this] = deep_copy;
+    // Transform the shallow copy into a deep copy
+    deep_copy->makeDeepCopyFromShallowCopy(copies);
+    // return the completed deep_copy
+    return deep_copy;
 }
 
 void UniformSampleVariable::fprop()
 {
-  for (int k=0;k<nelems();k++)
-    valuedata[k] = bounded_uniform(min_value,max_value);
+    for (int k=0;k<nelems();k++)
+        valuedata[k] = bounded_uniform(min_value,max_value);
 
 }
 
@@ -134,29 +134,29 @@ MultinomialSampleVariable::MultinomialSampleVariable(Variable* probabilities,
                                                      int length, int width)
     :UnarySampleVariable(probabilities, length, width)
 {
-  sprintf(name,"Multinomial[%dx%d]",length,width);
+    sprintf(name,"Multinomial[%dx%d]",length,width);
 }
 
 MultinomialSampleVariable* MultinomialSampleVariable::deepCopy(CopiesMap& copies) const
 {
-  CopiesMap::iterator it = copies.find(this);
-  if (it!=copies.end()) // a copy already exists, so return it
-    return (MultinomialSampleVariable*)it->second;
+    CopiesMap::iterator it = copies.find(this);
+    if (it!=copies.end()) // a copy already exists, so return it
+        return (MultinomialSampleVariable*)it->second;
   
-  // Otherwise call the copy constructor to obtain a SHALLOW copy
-  MultinomialSampleVariable* deep_copy = new MultinomialSampleVariable(*this); 
-  // Put the copy in the map
-  copies[this] = deep_copy;
-  // Transform the shallow copy into a deep copy
-  deep_copy->makeDeepCopyFromShallowCopy(copies);
-  // return the completed deep_copy
-  return deep_copy;
+    // Otherwise call the copy constructor to obtain a SHALLOW copy
+    MultinomialSampleVariable* deep_copy = new MultinomialSampleVariable(*this); 
+    // Put the copy in the map
+    copies[this] = deep_copy;
+    // Transform the shallow copy into a deep copy
+    deep_copy->makeDeepCopyFromShallowCopy(copies);
+    // return the completed deep_copy
+    return deep_copy;
 }
 
 void MultinomialSampleVariable::fprop()
 {
-  for (int k=0;k<nelems();k++)
-    valuedata[k] = multinomial_sample(input->value);
+    for (int k=0;k<nelems();k++)
+        valuedata[k] = multinomial_sample(input->value);
 
 }
 
@@ -167,44 +167,56 @@ string DiagonalNormalSampleVariable::classname() const
 
 DiagonalNormalSampleVariable::DiagonalNormalSampleVariable
 (Variable* mu, Variable* sigma)
-  :BinarySampleVariable(mu, sigma, mu->length(), mu->width()) 
+    :BinarySampleVariable(mu, sigma, mu->length(), mu->width()) 
 {
-  if (!sigma->isScalar() && (mu->length()!=sigma->length() || mu->width()!=sigma->width()) )
-    PLERROR("DiagonalNormalSampleVariable: mu(%d,%d) incompatible with sigma(%d,%d)",
-          mu->length(),mu->width(),sigma->length(),sigma->width());
+    if (!sigma->isScalar() && (mu->length()!=sigma->length() || mu->width()!=sigma->width()) )
+        PLERROR("DiagonalNormalSampleVariable: mu(%d,%d) incompatible with sigma(%d,%d)",
+                mu->length(),mu->width(),sigma->length(),sigma->width());
 }
 
 DiagonalNormalSampleVariable* DiagonalNormalSampleVariable::deepCopy(CopiesMap& copies) const
 {
-  CopiesMap::iterator it = copies.find(this);
-  if (it!=copies.end()) // a copy already exists, so return it
-    return (DiagonalNormalSampleVariable*)it->second;
+    CopiesMap::iterator it = copies.find(this);
+    if (it!=copies.end()) // a copy already exists, so return it
+        return (DiagonalNormalSampleVariable*)it->second;
   
-  // Otherwise call the copy constructor to obtain a SHALLOW copy
-  DiagonalNormalSampleVariable* deep_copy = new DiagonalNormalSampleVariable(*this); 
-  // Put the copy in the map
-  copies[this] = deep_copy;
-  // Transform the shallow copy into a deep copy
-  deep_copy->makeDeepCopyFromShallowCopy(copies);
-  // return the completed deep_copy
-  return deep_copy;
+    // Otherwise call the copy constructor to obtain a SHALLOW copy
+    DiagonalNormalSampleVariable* deep_copy = new DiagonalNormalSampleVariable(*this); 
+    // Put the copy in the map
+    copies[this] = deep_copy;
+    // Transform the shallow copy into a deep copy
+    deep_copy->makeDeepCopyFromShallowCopy(copies);
+    // return the completed deep_copy
+    return deep_copy;
 }
 
 void DiagonalNormalSampleVariable::fprop()
 {
-  if (input2->isScalar())
+    if (input2->isScalar())
     {
-      real sigma = input2->valuedata[0];
-      for (int k=0;k<length();k++)
-        valuedata[k] = gaussian_mu_sigma(input1->valuedata[k],
-                                         sigma);
+        real sigma = input2->valuedata[0];
+        for (int k=0;k<length();k++)
+            valuedata[k] = gaussian_mu_sigma(input1->valuedata[k],
+                                             sigma);
     }
-  else
-    for (int k=0;k<length();k++)
-      valuedata[k] = gaussian_mu_sigma(input1->valuedata[k],
-                                       input2->valuedata[k]);
+    else
+        for (int k=0;k<length();k++)
+            valuedata[k] = gaussian_mu_sigma(input1->valuedata[k],
+                                             input2->valuedata[k]);
 }
 
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

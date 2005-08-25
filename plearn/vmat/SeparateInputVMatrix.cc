@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SeparateInputVMatrix.cc,v 1.1 2005/04/13 19:42:43 larocheh Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Hugo Larochelle
 
@@ -50,21 +50,21 @@ using namespace std;
 // SeparateInputVMatrix //
 //////////////////
 SeparateInputVMatrix::SeparateInputVMatrix()
-  : nsep(1)
+    : nsep(1)
 {
 
-  // build_();
+    // build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(SeparateInputVMatrix,
-    "Separates the input in nsep parts and  distributes them on different rows.",
-    "Also copies target and weight parts for each of these rows."
-);
+                        "Separates the input in nsep parts and  distributes them on different rows.",
+                        "Also copies target and weight parts for each of these rows."
+    );
 
 SeparateInputVMatrix::SeparateInputVMatrix(VMat the_source, int the_nsep)
-: inherited(the_source), nsep(the_nsep)
+    : inherited(the_source), nsep(the_nsep)
 {
-  build_();
+    build_();
 }
 
 
@@ -73,9 +73,9 @@ SeparateInputVMatrix::SeparateInputVMatrix(VMat the_source, int the_nsep)
 ////////////////////
 void SeparateInputVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "nsep", &SeparateInputVMatrix::nsep, OptionBase::buildoption, 
-                "Number of separations of the input. The input size has to be\n"
-                "a multiple of that value.");
+    declareOption(ol, "nsep", &SeparateInputVMatrix::nsep, OptionBase::buildoption, 
+                  "Number of separations of the input. The input size has to be\n"
+                  "a multiple of that value.");
 
     inherited::declareOptions(ol);
 }
@@ -85,9 +85,9 @@ void SeparateInputVMatrix::declareOptions(OptionList& ol)
 ///////////
 void SeparateInputVMatrix::build()
 {
-  // ### Nothing to add here, simply calls build_
-  inherited::build();
-  build_();
+    // ### Nothing to add here, simply calls build_
+    inherited::build();
+    build_();
 }
 
 ////////////
@@ -95,17 +95,17 @@ void SeparateInputVMatrix::build()
 ////////////
 void SeparateInputVMatrix::build_()
 {
-  if (source) {
-    if(source->inputsize() % nsep != 0)
-      PLERROR("In SeparateInputVMatrix::build_(): inputsize=%d of source vmat should be a multiple of nsep=%d",source->inputsize(),nsep);
-    inputsize_ = source->inputsize()/nsep;
-    targetsize_ = source->targetsize();
-    weightsize_ = source->weightsize();
-    //fieldinfos = source->fieldinfos;
-    length_ = source.length() * nsep;
-    width_ = inputsize_+targetsize_+weightsize_;
-    sourcerow.resize(source->width());
-  }
+    if (source) {
+        if(source->inputsize() % nsep != 0)
+            PLERROR("In SeparateInputVMatrix::build_(): inputsize=%d of source vmat should be a multiple of nsep=%d",source->inputsize(),nsep);
+        inputsize_ = source->inputsize()/nsep;
+        targetsize_ = source->targetsize();
+        weightsize_ = source->weightsize();
+        //fieldinfos = source->fieldinfos;
+        length_ = source.length() * nsep;
+        width_ = inputsize_+targetsize_+weightsize_;
+        sourcerow.resize(source->width());
+    }
 }
 
 ///////////////
@@ -113,10 +113,10 @@ void SeparateInputVMatrix::build_()
 ///////////////
 void SeparateInputVMatrix::getNewRow(int i, const Vec& v) const
 {
-  source->getRow(i/nsep,sourcerow);
-  v.subVec(0,inputsize_) << sourcerow.subVec(i%nsep * inputsize_, inputsize_);
-  v.subVec(inputsize_,targetsize_+weightsize_) << 
-    sourcerow.subVec(source->inputsize(),targetsize_+weightsize_);
+    source->getRow(i/nsep,sourcerow);
+    v.subVec(0,inputsize_) << sourcerow.subVec(i%nsep * inputsize_, inputsize_);
+    v.subVec(inputsize_,targetsize_+weightsize_) << 
+        sourcerow.subVec(source->inputsize(),targetsize_+weightsize_);
 }
 
 /////////////////////////////////
@@ -124,17 +124,29 @@ void SeparateInputVMatrix::getNewRow(int i, const Vec& v) const
 /////////////////////////////////
 void SeparateInputVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
 
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
 
-  // ### Remove this line when you have fully implemented this method.
-  //PLERROR("SeparateInputVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    // ### Remove this line when you have fully implemented this method.
+    //PLERROR("SeparateInputVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RankedVMatrix.h,v 1.2 2004/10/29 21:16:09 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Olivier Delalleau
 
@@ -53,75 +53,75 @@ class RankedVMatrix: public SourceVMatrix
 
 private:
 
-  typedef SourceVMatrix inherited;
+    typedef SourceVMatrix inherited;
 
 protected:
 
-  // *********************
-  // * protected options *
-  // *********************
+    // *********************
+    // * protected options *
+    // *********************
 
-  // Fields below are not options.
+    // Fields below are not options.
 
-  //! The i-th element is the rank of the target for the i-th sample in the VMat.
-  TVec<int> index_to_rank;
+    //! The i-th element is the rank of the target for the i-th sample in the VMat.
+    TVec<int> index_to_rank;
 
-  //! The first column is the (sorted) target column, and the second column is
-  //! the corresponding list of indices.
-  Mat sorted_targets;
+    //! The first column is the (sorted) target column, and the second column is
+    //! the corresponding list of indices.
+    Mat sorted_targets;
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
+    // ************************
+    // * public build options *
+    // ************************
 
-  PP<RankedVMatrix> reference;
+    PP<RankedVMatrix> reference;
 
-  // ****************
-  // * Constructors *
-  // ****************
+    // ****************
+    // * Constructors *
+    // ****************
 
-  //! Default constructor.
-  RankedVMatrix();
+    //! Default constructor.
+    RankedVMatrix();
 
-  //! Convenient constructor.
-  RankedVMatrix(VMat source, PP<RankedVMatrix> reference = 0);
+    //! Convenient constructor.
+    RankedVMatrix(VMat source, PP<RankedVMatrix> reference = 0);
 
-  // ******************
-  // * Object methods *
-  // ******************
+    // ******************
+    // * Object methods *
+    // ******************
 
 private: 
 
-  //! This does the actual building. 
-  void build_();
+    //! This does the actual building. 
+    void build_();
 
 protected: 
 
-  //! Declares this class' options
-  static void declareOptions(OptionList& ol);
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
 
-  //! Fill the vector 'v' with the content of the i-th row.
-  //! v is assumed to be the right size.
-  virtual void getNewRow(int i, const Vec& v) const;
+    //! Fill the vector 'v' with the content of the i-th row.
+    //! v is assumed to be the right size.
+    virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
-  //! Return 'index_to_rank'.
-  TVec<int> getIndexToRank() {return index_to_rank;}
+    //! Return 'index_to_rank'.
+    TVec<int> getIndexToRank() {return index_to_rank;}
 
-  //! Return 'sorted_targets'.
-  Mat getSortedTargets() {return sorted_targets;}
+    //! Return 'sorted_targets'.
+    Mat getSortedTargets() {return sorted_targets;}
 
-  // Simply calls inherited::build() then build_().
-  virtual void build();
+    // Simply calls inherited::build() then build_().
+    virtual void build();
 
-  //! Transforms a shallow copy into a deep copy.
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    //! Transforms a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(RankedVMatrix);
+    //! Declares name and deepCopy methods
+    PLEARN_DECLARE_OBJECT(RankedVMatrix);
 
 };
 
@@ -130,3 +130,16 @@ DECLARE_OBJECT_PTR(RankedVMatrix);
 } // end of namespace PLearn
 
 #endif
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

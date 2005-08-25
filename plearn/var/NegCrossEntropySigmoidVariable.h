@@ -36,9 +36,9 @@
 
 
 /* *******************************************************      
-   * $Id: NegCrossEntropySigmoidVariable.h,v 1.4 2004/04/27 15:58:16 morinf Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef NegCrossEntropySigmoidVariable_INC
 #define NegCrossEntropySigmoidVariable_INC
@@ -51,28 +51,28 @@ using namespace std;
 
 class NegCrossEntropySigmoidVariable: public BinaryVariable
 {
-  typedef BinaryVariable inherited;
+    typedef BinaryVariable inherited;
 protected:
   
-  //! If > 0, will modify the cost function to:
-  //! (1-t)(r*log(o)+(1-r)*log(1-o)) + t*(r*log(1-o)+(1-r)*log(o))
-  //! (t = target, o = output, r = regularizer = a small value)
-  real regularizer;
+    //! If > 0, will modify the cost function to:
+    //! (1-t)(r*log(o)+(1-r)*log(1-o)) + t*(r*log(1-o)+(1-r)*log(o))
+    //! (t = target, o = output, r = regularizer = a small value)
+    real regularizer;
   
 public:
-  //!  Default constructor for persistence
-  NegCrossEntropySigmoidVariable() {}
-  NegCrossEntropySigmoidVariable(Variable* netout, Variable* target, real regularizer_ = 0.0);
+    //!  Default constructor for persistence
+    NegCrossEntropySigmoidVariable() {}
+    NegCrossEntropySigmoidVariable(Variable* netout, Variable* target, real regularizer_ = 0.0);
 
-  PLEARN_DECLARE_OBJECT(NegCrossEntropySigmoidVariable);
+    PLEARN_DECLARE_OBJECT(NegCrossEntropySigmoidVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
     //!  Deprecated
-  void setRegularizer(real r);
+    void setRegularizer(real r);
 
 protected:
     void build_();
@@ -82,9 +82,22 @@ DECLARE_OBJECT_PTR(NegCrossEntropySigmoidVariable);
 
 inline Var stable_cross_entropy(Var linear_output, Var target)
 {
-  return new NegCrossEntropySigmoidVariable(linear_output, target);
+    return new NegCrossEntropySigmoidVariable(linear_output, target);
 }
 
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -33,8 +33,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.cc,v 1.18 2005/02/04 15:10:42 tihocan Exp $ 
-   ******************************************************* */
+ * $Id$ 
+ ******************************************************* */
 
 // Authors: Pascal Vincent
 
@@ -49,71 +49,71 @@ using namespace std;
 
 
 SourceVMatrix::SourceVMatrix()
-  :inherited()
-  /* ### Initialise all fields to their default value */
+    :inherited()
+    /* ### Initialise all fields to their default value */
 {
-  // ...
+    // ...
 
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
+    // ### You may or may not want to call build_() to finish building the object
+    // build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(SourceVMatrix,
-    "Super-class for VMatrices that point to another one (the source vmatrix)",
-    ""
-);
+                        "Super-class for VMatrices that point to another one (the source vmatrix)",
+                        ""
+    );
 
 void SourceVMatrix::setMetaDataDir(const PPath& the_metadatadir)
 {
-  inherited::setMetaDataDir(the_metadatadir);
+    inherited::setMetaDataDir(the_metadatadir);
   
-  if(!source->hasMetaDataDir())
-    source->setMetaDataDir(the_metadatadir/"Source");
+    if(!source->hasMetaDataDir())
+        source->setMetaDataDir(the_metadatadir/"Source");
 
-  // Set mapping and info files from source if not set
-  if(hasFieldInfos())
-  {
-    for(int j=0; j<width_; j++)
+    // Set mapping and info files from source if not set
+    if(hasFieldInfos())
     {
-      string fnam = fieldName(j);
-      if(!file_exists(getSFIFFilename(fnam,".smap")) && file_exists(source->getSFIFFilename(fnam,".smap")))            
-        setSFIFFilename(fnam, ".smap", source->getSFIFFilename(fnam,".smap"));
+        for(int j=0; j<width_; j++)
+        {
+            string fnam = fieldName(j);
+            if(!file_exists(getSFIFFilename(fnam,".smap")) && file_exists(source->getSFIFFilename(fnam,".smap")))            
+                setSFIFFilename(fnam, ".smap", source->getSFIFFilename(fnam,".smap"));
 
-      if(!file_exists(getSFIFFilename(fnam,".notes")) && file_exists(source->getSFIFFilename(fnam,".notes")))            
-        setSFIFFilename(fnam, ".notes", source->getSFIFFilename(fnam,".notes"));
+            if(!file_exists(getSFIFFilename(fnam,".notes")) && file_exists(source->getSFIFFilename(fnam,".notes")))            
+                setSFIFFilename(fnam, ".notes", source->getSFIFFilename(fnam,".notes"));
 
-      if(!file_exists(getSFIFFilename(fnam,".binning")) && file_exists(source->getSFIFFilename(fnam,".binning")))            
-        setSFIFFilename(fnam, ".binning", source->getSFIFFilename(fnam,".binning"));
+            if(!file_exists(getSFIFFilename(fnam,".binning")) && file_exists(source->getSFIFFilename(fnam,".binning")))            
+                setSFIFFilename(fnam, ".binning", source->getSFIFFilename(fnam,".binning"));
+        }
     }
-  }
 }
 
 void SourceVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "source", &SourceVMatrix::source, OptionBase::buildoption,
-                "The source VMatrix");
+    declareOption(ol, "source", &SourceVMatrix::source, OptionBase::buildoption,
+                  "The source VMatrix");
 
-  /*
-  declareOption(ol, "dependencies", &SourceVMatrix::dependencies, OptionBase::buildoption,
-                "a list of paths to files that this VMat depends on. \n"
-                "This vmat's mtime will initially be set to the latest of \n"
-                "the last modification times of its dependencies. \n"
-                "The mtime of its source will also be taken into account \n"
-                "generally later, when setMetaInfoFromSource gets called \n");
-  */
+    /*
+      declareOption(ol, "dependencies", &SourceVMatrix::dependencies, OptionBase::buildoption,
+      "a list of paths to files that this VMat depends on. \n"
+      "This vmat's mtime will initially be set to the latest of \n"
+      "the last modification times of its dependencies. \n"
+      "The mtime of its source will also be taken into account \n"
+      "generally later, when setMetaInfoFromSource gets called \n");
+    */
 
-  // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
 }
 
 void SourceVMatrix::build_()
 {
-  /*
-  time_t mt = getMtime();
-  for(int k=0; k<dependencies.size(); k++)
-    mt = max(mt, mtime(dependencies[k]));
-  setMtime(mt);
-  */
+    /*
+      time_t mt = getMtime();
+      for(int k=0; k<dependencies.size(); k++)
+      mt = max(mt, mtime(dependencies[k]));
+      setMtime(mt);
+    */
 }
 
 ///////////////////////////
@@ -121,44 +121,56 @@ void SourceVMatrix::build_()
 ///////////////////////////
 void SourceVMatrix::setMetaInfoFromSource()
 {
-  setMetaInfoFrom(source);
+    setMetaInfoFrom(source);
 }
 
 // ### Nothing to add here, simply calls build_
 void SourceVMatrix::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
 void SourceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(sourcerow, copies);
-  deepCopyField(source, copies);
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(sourcerow, copies);
+    deepCopyField(source, copies);
 }
 
 ///////////////
 // getNewRow //
 ///////////////
 void SourceVMatrix::getNewRow(int i, const Vec& v) const {
-  PLERROR("In SourceVMatrix::getNewRow - getNewRow not implemented for this subclass of SourceVMatrix");
+    PLERROR("In SourceVMatrix::getNewRow - getNewRow not implemented for this subclass of SourceVMatrix");
 }
 
 int SourceVMatrix::getDimension(int row, int col) const
 {
-  return source->getDimension(row,col);
+    return source->getDimension(row,col);
 }
 
 Vec SourceVMatrix::getValues(int row, int col) const
 {
-  return source->getValues(row,col);
+    return source->getValues(row,col);
 }
 
 Vec SourceVMatrix::getValues(const Vec& input, int col) const
 {
-  return source->getValues(input,col);
+    return source->getValues(input,col);
 }
 
 } // end of namespace PLearn
 
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

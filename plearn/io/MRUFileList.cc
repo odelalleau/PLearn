@@ -40,60 +40,73 @@
 namespace PLearn {
 
 MRUFileList::MRUFileList(int _max_opened_files, ios_base::openmode _mode)
-  :max_opened_files(_max_opened_files),tot_miss(0),tot_access(0),mode(_mode)
+    :max_opened_files(_max_opened_files),tot_miss(0),tot_access(0),mode(_mode)
 {}
 
 ofstream * MRUFileList::getFile(string fname)
 
 {
-  tot_access++;
-  list_typ::iterator it = mru_list.end();
-  ofstream * ofile;
+    tot_access++;
+    list_typ::iterator it = mru_list.end();
+    ofstream * ofile;
   
-  // search for the wanted file in the MRU list
-  for(list_typ::iterator it2 = mru_list.begin(); it2 != mru_list.end(); ++it2)
-    if(it2->first == fname)
-    {
-      it=it2;
-      break;
-    }
+    // search for the wanted file in the MRU list
+    for(list_typ::iterator it2 = mru_list.begin(); it2 != mru_list.end(); ++it2)
+        if(it2->first == fname)
+        {
+            it=it2;
+            break;
+        }
 
-  // the file is not currently opened. 
-  if(it == mru_list.end())
-  {
-    tot_miss++;
-    // If we have already the max of opened files, we close the least recently used
-    if((signed)mru_list.size() >= max_opened_files)
+    // the file is not currently opened. 
+    if(it == mru_list.end())
     {
-      (mru_list.back().second)->close();
-      delete (mru_list.back().second);
-      mru_list.pop_back();
+        tot_miss++;
+        // If we have already the max of opened files, we close the least recently used
+        if((signed)mru_list.size() >= max_opened_files)
+        {
+            (mru_list.back().second)->close();
+            delete (mru_list.back().second);
+            mru_list.pop_back();
+        }
+        ofile = new ofstream(fname.c_str(),mode);
+        if(ofile->bad())
+        {
+            error="Could not open/create file "+fname+".";
+            return NULL;
+        }
+        mru_list.push_front(make_pair(fname,ofile));
+        return ofile;
     }
-    ofile = new ofstream(fname.c_str(),mode);
-    if(ofile->bad())
-    {
-      error="Could not open/create file "+fname+".";
-      return NULL;
-    }
+  
+    // else, we move the file to the top of the list and return the associated ofstream ptr
+  
+    ofile=it->second;
+    mru_list.erase(it);
     mru_list.push_front(make_pair(fname,ofile));
     return ofile;
-  }
-  
-  // else, we move the file to the top of the list and return the associated ofstream ptr
-  
-  ofile=it->second;
-  mru_list.erase(it);
-  mru_list.push_front(make_pair(fname,ofile));
-  return ofile;
 }
   
 MRUFileList::~MRUFileList()
 {
-  for(list_typ::iterator it = mru_list.begin(); it != mru_list.end(); ++it)
-  {
-    (it->second)->close();
-    delete it->second;
-  }
+    for(list_typ::iterator it = mru_list.begin(); it != mru_list.end(); ++it)
+    {
+        (it->second)->close();
+        delete it->second;
+    }
 }
 
 } //end of namespace PLearn
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

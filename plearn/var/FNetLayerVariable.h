@@ -34,9 +34,9 @@
 
 
 /* *******************************************************      
-   * $Id: FNetLayerVariable.h,v 1.8 2005/05/25 16:47:28 tihocan Exp $
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id$
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 #ifndef FNetLayerVariable_INC
 #define FNetLayerVariable_INC
@@ -53,66 +53,66 @@ using namespace std;
 //! and biases (layer_size x (n_inputs + 1)).
 class FNetLayerVariable: public NaryVariable
 {
-  typedef NaryVariable inherited;
+    typedef NaryVariable inherited;
 
-  //! INTERNAL LEARNED PARAMETERS
-  Mat mu; // [hidden unit, input element] centering normalization
-  Mat invs; // 1/sqrt(mu2 - mu*mu) for normalization
-  real gradient_threshold; // threshold for |dC/da[k,i]| to 'activate' gradient propagation through unit i at example k
+    //! INTERNAL LEARNED PARAMETERS
+    Mat mu; // [hidden unit, input element] centering normalization
+    Mat invs; // 1/sqrt(mu2 - mu*mu) for normalization
+    real gradient_threshold; // threshold for |dC/da[k,i]| to 'activate' gradient propagation through unit i at example k
 
-  //! INTERNAL COMPUTATION
-  Mat mu2; // to compute invs, the inverse of the standard deviation
-  real avg_act_gradient; // mov. avg of |dC/da[i,k]|
-  bool no_bprop_has_been_done; // have we ever done a bprop before?
-  TVec<Mat> u; // normalized input [example index in minibatch](hidden unit, input index)
-  Mat inh; // inhibitory signal on each hidden unit (minibatch_size x n_hidden)
-  Mat cum_inh; 
+    //! INTERNAL COMPUTATION
+    Mat mu2; // to compute invs, the inverse of the standard deviation
+    real avg_act_gradient; // mov. avg of |dC/da[i,k]|
+    bool no_bprop_has_been_done; // have we ever done a bprop before?
+    TVec<Mat> u; // normalized input [example index in minibatch](hidden unit, input index)
+    Mat inh; // inhibitory signal on each hidden unit (minibatch_size x n_hidden)
+    Mat cum_inh; 
 
 public:
 
-  //! OPTIONS
-  real c1_;
-  real c2_;
-  int n_inputs;
-  int n_hidden;
-  int minibatch_size;
-  bool inhibit_next_units; 
-  bool inhibit_by_sum;
-  bool squashed_inhibition;
-  bool normalize_inputs;
-  bool backprop_to_inputs;
-  real exp_moving_average_coefficient;
-  real average_error_fraction_to_threshold;
-  real min_stddev;
+    //! OPTIONS
+    real c1_;
+    real c2_;
+    int n_inputs;
+    int n_hidden;
+    int minibatch_size;
+    bool inhibit_next_units; 
+    bool inhibit_by_sum;
+    bool squashed_inhibition;
+    bool normalize_inputs;
+    bool backprop_to_inputs;
+    real exp_moving_average_coefficient;
+    real average_error_fraction_to_threshold;
+    real min_stddev;
 
-  //!  Default constructor for persistence
-  FNetLayerVariable();
+    //!  Default constructor for persistence
+    FNetLayerVariable();
 
-  FNetLayerVariable(Var inputs, Var weights,
-                    Var biases, Var inhibition_weights,
-                    bool _inhibit_next_units=true,
-                    bool _normalize_inputs=true,
-                    bool _backprop_to_inputs=false,
-                    real _exp_moving_average_coefficient=0.001,
-                    real _average_error_fraction_to_threshold=0.5);
+    FNetLayerVariable(Var inputs, Var weights,
+                      Var biases, Var inhibition_weights,
+                      bool _inhibit_next_units=true,
+                      bool _normalize_inputs=true,
+                      bool _backprop_to_inputs=false,
+                      real _exp_moving_average_coefficient=0.001,
+                      real _average_error_fraction_to_threshold=0.5);
 
-  PLEARN_DECLARE_OBJECT(FNetLayerVariable);
+    PLEARN_DECLARE_OBJECT(FNetLayerVariable);
 
-  virtual void build();
+    virtual void build();
 
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  virtual void recomputeSize(int& l, int& w) const;
-  virtual void fprop();
-  virtual void bprop();
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
 
 protected:
 
-  static void declareOptions(OptionList &ol);
+    static void declareOptions(OptionList &ol);
 
 private:
 
-  void build_();
+    void build_();
 
 };
 
@@ -121,3 +121,16 @@ DECLARE_OBJECT_PTR(FNetLayerVariable);
 } // end of namespace PLearn
 
 #endif 
+
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :
