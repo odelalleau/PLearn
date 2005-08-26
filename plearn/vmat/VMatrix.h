@@ -189,8 +189,8 @@ public:
     void declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype=VMField::UnknownType);
     void declareFieldNames(const TVec<string>& fnames);
 
-    //!< Returns the column index corresponding to a fieldname
-    //!<  or -1 if the name was not found.
+    //! Returns the column index corresponding to a fieldname
+    //! or -1 if the name was not found.
     int fieldIndex(const string& fieldname) const;
 
     //! This first calls fieldIndex to try and get the index corresponding to the given string
