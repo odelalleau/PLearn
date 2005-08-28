@@ -1,4 +1,4 @@
-// -*- C++ -*-4 1999/10/29 20:41:34 dugas
+// -*- C++ -*-
 
 // TypeTraits.h
 // Copyright (C) 2002 Pascal Vincent
@@ -53,33 +53,43 @@
 namespace PLearn {
 using std::string;
 
-/*! TypeTraits<some_type> will deliver the following information on the type:
-  - its name() [ returned as a string ]
-  - the "typecode", which is the header-byte used to indicate type of an element to follow
-  in plearn_binary serialization. little_endian_typecode() and big_endian_typecode()
-  respectively return the code to designate little-endian or big-endian representation.
-  Only the very basic C++ types have specific typecodes. For all other more complex types,
-  these functions should always return 0xFF
-*/
-
-// The following template defines the TypeTraits for a generic unknown type
-
+/**
+ *  @class TypeTraits
+ *  @brief TypeTraits provides a type-information mechanism for C++ types
+ *
+ *  TypeTraits<some_type> delivers the following information on the type:
+ *
+ *  @li Its \c name(), returned as a string
+ *
+ *  @li The "typecode", which is the header-byte used to indicate type of an
+ *      element to follow in plearn_binary serialization. \c little_endian_typecode()
+ *      and \c big_endian_typecode() respectively return the code to designate
+ *      little-endian or big-endian representation.  Only the very basic C++ types
+ *      have specific typecodes. For all other more complex types, these functions
+ *      should always return 0xFF.
+ */
 template<class T>
 class TypeTraits
 {
 public:
+    //! String representation of type type
     static inline string name()
     { return "UNKNOWN_TYPE_NAME"; }
 
+    //! Type-code for representing the little-endian serialization of an object
+    //! in PLearn's binary serialization format
     static inline unsigned char little_endian_typecode()
     { return 0xFF; }
 
+    //! Type-code for representing the big-endian serialization of an object
+    //! in PLearn's binary serialization format
     static inline unsigned char big_endian_typecode()
     { return 0xFF; }
 
 };
 
-// Pointer type
+
+//#####  Specializations  #####################################################
 
 template<class T>
 class TypeTraits<T*>
@@ -126,18 +136,18 @@ public:                                          \
 }
 
 // DECLARE_TYPE_TRAITS_FOR_BASETYPE(bool, ??, ??);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(char, 0x01, 0x01);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(signed char, 0x01, 0x01);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned char, 0x02, 0x02);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(short, 0x03, 0x04);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(char,           0x01, 0x01);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(signed char,    0x01, 0x01);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned char,  0x02, 0x02);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(short,          0x03, 0x04);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned short, 0x05, 0x06);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(int, 0x07, 0x08);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned int, 0x0B, 0x0C);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(long, 0x07, 0x08);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned long, 0x0B, 0x0C);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(float, 0x0E, 0x0F);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(double, 0x10, 0x11);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(bool, 0x30, 0x30);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(int,            0x07, 0x08);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned int,   0x0B, 0x0C);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(long,           0x07, 0x08);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned long,  0x0B, 0x0C);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(float,          0x0E, 0x0F);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(double,         0x10, 0x11);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(bool,           0x30, 0x30);
 
 DECLARE_TYPE_TRAITS(string);
 
