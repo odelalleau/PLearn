@@ -53,15 +53,39 @@ typedef Object* (*NEW_OBJECT)();
 typedef OptionList& (*GETOPTIONLIST_METHOD)();
 typedef bool (*ISA_METHOD)(Object* o);
 
+
+//###########################  CLASS  TYPEMAPENTRY  ###########################
+
+/**
+ *  Description of a single type within the TypeMap
+ */
 class TypeMapEntry
 {
 public:
+    //! Name of the "type" (derived from \c PLearn::Object)
     string type_name;
-    string parent_class; // name of parent class
+
+    //! Name of the base class
+    string parent_class;
+
+    //! Function pointer which, when called, instantiates a new
+    //! object with the default constructor.  This can be null,
+    //! in which case the class is considered abstract.
     NEW_OBJECT constructor;
+
+    //! Function pointer which, when called, returns a pointer to
+    //! the list of options supported by the class
     GETOPTIONLIST_METHOD getoptionlist_method;
+
+    //! Function pointer which, when called with a pointer to an
+    //! object, tests whether the object is dynamic-castable to the
+    //! type (class).
     ISA_METHOD isa_method;
+
+    //! Short one-line documentation string
     string one_line_descr;
+
+    //! Detailed documentation for users
     string multi_line_help;
   
     TypeMapEntry(const string& the_type_name, 
@@ -71,22 +95,34 @@ public:
                  ISA_METHOD the_isa_method=0,
                  const string& the_one_line_descr = "",
                  const string& the_multi_line_help = "")
-        :type_name(the_type_name),
-         parent_class(the_parent_class),
-         constructor(the_constructor), 
-         getoptionlist_method(the_getoptionlist_method),
-         isa_method(the_isa_method),
-         one_line_descr(the_one_line_descr),
-         multi_line_help(the_multi_line_help)
-    {}
+        : type_name(the_type_name),
+          parent_class(the_parent_class),
+          constructor(the_constructor), 
+          getoptionlist_method(the_getoptionlist_method),
+          isa_method(the_isa_method),
+          one_line_descr(the_one_line_descr),
+          multi_line_help(the_multi_line_help)
+    { }
 };
 
 typedef std::map<string,TypeMapEntry> TypeMap;
 
 
 //###########################  CLASS  TYPEFACTORY  ############################
-//!  
 
+/**
+ *  Create new objects given their type name (as a string).
+ *
+ *  The TypeFactory operates as a Singleton class and is shared across the
+ *  PLearn system.  It can be used to register types (classes) derived from
+ *  \c PLearn::Object.  The typical pattern for instantiating a new object
+ *  given its class name is as follows:
+ *
+ *  @code
+ *  string typename = "SomeTypeName";
+ *  Object* new_object = TypeFactory::instance().newObject(typename);
+ *  @endcode
+ */
 class TypeFactory
 {
 protected:
@@ -121,12 +157,12 @@ public:
     //! (This simply checks if it was declared with a constructor or not)
     bool isAbstract(string type_name) const;
 
+    //! Return a reference to the typemap
     const TypeMap& getTypeMap() const
     { return type_map_; }
 
     //!  Return the singleton (static) instance of the type factory
     static TypeFactory& instance();
-  
 };
 
 
