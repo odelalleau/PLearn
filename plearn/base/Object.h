@@ -50,7 +50,6 @@
 #include <string>
 #include "PP.h"
 #include "StaticInitializer.h"
-#include "Array.h"
 #include "TypeFactory.h"
 #include "Option.h"
 #include <plearn/io/PPath.h>
@@ -661,35 +660,6 @@ private:
      */
     void build_();
 };
-
-//! The toObjectPtr functions attempt to return a pointer to Object 
-//! (or 0 if the passed argument cannot be considered an Object subclass)
-
-template<class T> inline Object* toObjectPtr(const T* x) // Never to be called stub
-{ PLERROR("toObjectPtr() - Unexpected error"); return 0; }
-
-template<class T> inline Object* toObjectPtr(const T& x) // Never to be called stub
-{ PLERROR("toObjectPtr() - Unexpected error"); return 0; }
-
-
-template<> inline Object* toObjectPtr(const Object &x)
-{ return const_cast<Object *>(&x); }
-
-template<> inline Object* toObjectPtr(const Object *x)
-{ return const_cast<Object *>(x); }
-
-
-template<class T> inline Object* toObjectPtr(const PP<T>& x)
-{ return toObjectPtr(*static_cast<T *>(x)); }
-
-template<class T> Object* toIndexedObjectPtr(const Array<T> &x, int i)
-{ return toObjectPtr(static_cast<T &>(x[i])); }
-
-template<class T> Object* toIndexedObjectPtr(const TVec<T> &x, int i)
-{ return toObjectPtr(static_cast<T &>(x[i])); }
-
-template<class T> Object *toIndexedObjectPtr(const T&, int) // Never to be called stub
-{ PLERROR("toIndexedObjectPtr() - Unexpected error"); return 0; }
 
 
 /**
