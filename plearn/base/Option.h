@@ -47,6 +47,7 @@
 #define Option_INC
 
 #include "OptionBase.h"
+#include <plearn/base/ObjectConversions.h>
 #include <plearn/base/diff.h>
 #include <plearn/base/lexical_cast.h>
 
@@ -61,7 +62,7 @@ class PLearnDiff;
   
 //! Template class for option definitions
 template<class ObjectType, class OptionType>
-class Option: public OptionBase
+class Option : public OptionBase
 {
     typedef OptionBase inherited;
   
@@ -81,20 +82,6 @@ public:
 
     virtual void read(Object* o, PStream& in) const
     { in >> dynamic_cast<ObjectType*>(o)->*ptr; }
-
-    virtual void read_and_discard(PStream& in) const
-    { 
-        // Current implementation seems buggy (the ';' is not compulsory), thus
-        // better throw an error (this method doesn't seem to be used anymore
-        // anyway, maybe we could throw it away).
-        PLERROR("In Option::read_and_discard() - Current implementation would not "
-                "work correctly");
-        string dummy;
-        int c = in.smartReadUntilNext(";)", dummy);
-        in.putback((char)c);
-        //OptionType op; //dummy object that will be destroyed after read
-        //in >> op; //read dummy object
-    }
 
     virtual void write(const Object* o, PStream& out) const
     { out << dynamic_cast<ObjectType *>(const_cast<Object*>(o))->*ptr; }
@@ -122,6 +109,21 @@ public:
         return -1;
     }
 
+    //! Implementation of isAccessibleAsObject() relies on caching since
+    //! the first call may need to default-construct an object; relatively slow.
+    virtual bool isAccessibleAsObject() const
+    {
+        static bool accessible = isConvertibleToObjectPtr(OptionType());
+        return accessible;
+    }
+
+    virtual int indexableSize(const Object* o) const
+    {
+        const ObjectType* oto = dynamic_cast<const ObjectType*>(o);
+        assert( oto );
+        return indexableObjectSize(oto->*ptr);
+    }
+    
 };
 
 //#####  TVec-Specific Option  ################################################
@@ -158,21 +160,25 @@ public:
 
 //#####  declareOption and Friends  ###########################################
 
-//! For flags, you should specify one of 
-//! OptionBase::buildoption, OptionBase::learntoption or OptionBase::tuningoption
-//! If the option is not to be serialized, you can additionally specify 
-//! OptionBase::nosave
-/*! The "type" printed in the help is given by TypeTraits<OptionType>::name().
-  The "default value" printed in optionHelp() will be a serialization of 
-  the value of the field in a default constructed instance, (which should be ok in most cases),
-  unless you explicitly specify it as the last argument here (It is recomended that you *don't*
-  specify it explicitly, unless you really must). */
-
+/**
+ * Declare an individual option with a \c declareOptions() member function.
+ *
+ * For flags, you should specify one of OptionBase::buildoption,
+ * OptionBase::learntoption or OptionBase::tuningoption If the option is not to
+ * be serialized, you can additionally specify OptionBase::nosave
+ *
+ * The "type" printed in the help is given by TypeTraits<OptionType>::name().
+ * The "default value" printed in optionHelp() will be a serialization of the
+ * value of the field in a default constructed instance, (which should be ok in
+ * most cases), unless you explicitly specify it as the last argument here (It
+ * is recomended that you *don't* specify it explicitly, unless you really
+ * must).
+ */
 template <class ObjectType, class OptionType>
 inline void declareOption(OptionList& ol,                      //!< list to which this option should be appended 
                           const string& optionname,            //!< the name of this option
                           OptionType ObjectType::* member_ptr, //!< &YourClass::your_field
-                          OptionBase::flag_t flags,            //! see the flags in OptionBase
+                          OptionBase::flag_t flags,            //!< see the flags in OptionBase
                           const string& description,           //!< a description of the option
                           const string& defaultval="")         //!< default value for this option, as set by the default constructor
 {
@@ -181,7 +187,7 @@ inline void declareOption(OptionList& ol,                      //!< list to whic
                                                     defaultval, description));
 }
 
-// Partial specialization for pointers
+// Overload for simple pointers
 template <class ObjectType, class OptionType>
 inline void declareOption(OptionList& ol,
                           const string& optionname,
@@ -195,7 +201,7 @@ inline void declareOption(OptionList& ol,
                                                       defaultval, description));
 }
 
-// Partial specialization for TVec<T>
+// Overload for TVec<T>
 template <class ObjectType, class VecElementType>
 inline void declareOption(OptionList& ol,
                           const string& optionname,
