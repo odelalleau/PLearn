@@ -156,11 +156,11 @@ int print_diff(ostream& out, VMat m1, VMat m2, double tolerance, int verbose)
         m2->getRow(i,v2);
         for(int j=0; j<w; j++)
         {
-            double d = v1[j]-v2[j];
-            if(fabs(d)>tolerance || (is_missing(v1[j]) && !is_missing(v2[j])) || (is_missing(v2[j]) && !is_missing(v1[j])))
+            if (!is_equal(v1[j], v2[j], 1.0, real(tolerance), real(tolerance)))
             {
                 if (verbose)
-                    out << "Elements at " << i << ',' << j << " differ by " << d << endl;
+                    out << "Elements at " << i << ',' << j << " differ by "
+                        << v1[j] - v2[j] << endl;
                 ++ndiff;
             }
         }
