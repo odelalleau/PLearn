@@ -46,12 +46,30 @@
 namespace PLearn {
 using namespace std;
 
+////////////////////////////
+// pl_repository_revision //
+////////////////////////////
 string pl_repository_revision()
 {
     // PL_REPOSITORY_REVISION is a command-line define from pymake
     return string(PL_REPOSITORY_REVISION);
 }
 
+////////////////////////////////
+// pl_repository_compile_date //
+////////////////////////////////
+string pl_repository_compile_date()
+{
+    return string(__DATE__);
+}
+
+////////////////////////////////
+// pl_repository_compile_time //
+////////////////////////////////
+string pl_repository_compile_time()
+{
+    return string(__TIME__);
+}
 
 } // end of namespace PLearn
 

@@ -51,8 +51,14 @@ namespace PLearn {
 using std::string;
   
 //! Return a string giving the version-control repository revision(s)
-//! with which this PLearn executable has been compiled
+//! with which this PLearn executable has been compiled.
 string pl_repository_revision();
+
+//! Return the date when pl_repository_revision.cc was compiled.
+string pl_repository_compile_date();
+
+//! Return the time when pl_repository_revision.cc was compiled.
+string pl_repository_compile_time();
 
 
 } // end of namespace PLearn

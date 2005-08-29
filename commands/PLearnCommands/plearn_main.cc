@@ -80,8 +80,8 @@ static void output_version(int major_version, int minor_version, int fixlevel )
             cerr << "."      << fixlevel;
     }
     cerr << "  svn_revision:" << pl_repository_revision();
-    cerr << "  ("    << __DATE__ << " "
-         << __TIME__ << ")"      << endl;
+    cerr << "  ("    << pl_repository_compile_date() << " "
+         << pl_repository_compile_time() << ")"      << endl;
 }
 
 static void set_global_calendars(string command_line_option)
