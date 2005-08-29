@@ -72,6 +72,9 @@ public:
     // * public build options *
     // ************************
 
+    real absolute_tolerance;
+    real relative_tolerance;
+
     // ****************
     // * Constructors *
     // ****************
@@ -130,6 +133,12 @@ void addDiffPrefix(PLearnDiff* diffs, const string& prefix, int n);
 //! Just call diffs->diff(refer, other, name);
 //! This function is used so that it can be forward-declared.
 int diff(PLearnDiff* diffs, const string& refer, const string& other, const string& name);
+
+//! Return the absolute tolerance of a PLearnDiff.
+real get_absolute_tolerance(PLearnDiff* diffs);
+
+//! Return the relative tolerance of a PLearnDiff.
+real get_relative_tolerance(PLearnDiff* diffs);
 
 } // end of namespace PLearn
 

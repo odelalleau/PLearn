@@ -58,24 +58,51 @@ PLearnCommandRegistry DiffCommand::reg_(new DiffCommand);
 
 DiffCommand::DiffCommand():
     PLearnCommand("diff",
-                  "Compare PLearn objects",
-                  "The files with the objects' specifications are given in argument,\n"
-                  "the first one being the reference object"
-        ) 
+        "Compare PLearn objects",
+        prgname() + " diff <reference.psave> <other_1.psave> ..."
+                    "<other_n.psave> "
+                    "[ <tolerance> [ <relative_tolerance> ] ]\n"
+        "The files with the objects' specifications are given in argument,\n"
+        "the first one being the reference object.\n"
+        "If 'tolerance' is specified, it is taken as the absolute tolerance\n"
+        "(when two numbers are less than 1), and as the relative tolerance\n"
+        "(when one of two numbers is more than 1) unless "
+        "'relative_tolerance'\n"
+        "is also specified.\n"
+    )
 {}
 
 //! The actual implementation of the 'DiffCommand' command 
 void DiffCommand::run(const vector<string>& args)
 {
-    if (args.size() < 2)
-        PLERROR("In DiffCommand::run - You need to provide at least two file names");
+    const char* error_msg = "In DiffCommand::run - You need to provide at "
+                            "least two file names";
+    if (args.size() < 2) PLERROR(error_msg);
     // Parse arguments.
+    // First check whether some tolerance is given.
+    real absolute_tolerance = ABSOLUTE_TOLERANCE;
+    real relative_tolerance = RELATIVE_TOLERANCE;
+    real tol;
+    string tol_str = args[args.size() - 1];
+    int to_ignore = 0;  // Number of arguments to ignore at end of 'args'.
+    if (pl_isnumber(tol_str, &tol)) {
+        relative_tolerance = tol;
+        tol_str = args[args.size() - 2];
+        to_ignore++;
+        if (pl_isnumber(tol_str, &tol)) {
+            to_ignore++;
+            absolute_tolerance = tol;
+        } else
+            absolute_tolerance = relative_tolerance;
+    }
+    // Then read the object specifications paths.
     TVec<PPath> obj_spec;
-    for (vector<string>::size_type i = 0; i < args.size(); i++)
+    int n = int(args.size()) - to_ignore;
+    if (n < 2) PLERROR(error_msg);
+    for (vector<string>::size_type i = 0; i<vector<string>::size_type(n); i++)
         obj_spec.append(args[i]);
     // Load objects.
     TVec< PP<Object> > obj;
-    int n = int(args.size());
     for (int i = 0; i < n; i++) {
         PP<Object> new_object;
         string object_spec = readFileAndMacroProcess(obj_spec[i]);
@@ -90,6 +117,8 @@ void DiffCommand::run(const vector<string>& args)
     PStream& out = pout;
     PP<Object> refer = obj[0];
     PP<PLearnDiff> diffs = new PLearnDiff();
+    diffs->absolute_tolerance = absolute_tolerance;
+    diffs->relative_tolerance = relative_tolerance;
     for (int i = 1; i < n; i++) {
         PP<Object> other = obj[i];
         diffs->forget();

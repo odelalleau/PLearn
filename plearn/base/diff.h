@@ -64,13 +64,15 @@ class VMatrix;
 class PLearnDiff;
 void addDiffPrefix(PLearnDiff* diffs, const string& prefix, int n);
 int diff(PLearnDiff* diffs, const string& refer, const string& other, const string& name);
+real get_absolute_tolerance(PLearnDiff* diffs);
+real get_relative_tolerance(PLearnDiff* diffs);
  
 //! Default diff function: compare the two strings.
 template<class ObjectType, class OptionType>
 int diff(const string& refer, const string& other,
          const Option<ObjectType, OptionType>* opt, PLearnDiff* diffs)
 {
-    pout << "Calling basic diff with Option< ObjectType, " << opt->optiontype() << " >" << endl;
+    // pout << "Calling basic diff with Option< ObjectType, " << opt->optiontype() << " >" << endl;
     assert( diffs );
     return diff(diffs, refer, other, opt->optionname());
 }
@@ -86,7 +88,8 @@ int diff(const string& refer, const string& other, const Option<ObjectType, doub
     in = openString(other, PStream::plearn_ascii);
     in >> x_other;
     in.flush();
-    if (is_equal(real(x_refer), real(x_other)))
+    if (is_equal(real(x_refer), real(x_other), 1.0,
+                 get_absolute_tolerance(diffs), get_relative_tolerance(diffs)))
         return 0;
     else
         return diff(diffs, refer, other, opt->optionname());
@@ -104,7 +107,8 @@ int diff(const string& refer, const string& other, const Option<ObjectType, floa
     in = openString(other, PStream::plearn_ascii);
     in >> x_other;
     in.flush();
-    if (is_equal(real(x_refer), real(x_other)))
+    if (is_equal(real(x_refer), real(x_other), 1.0,
+                 get_absolute_tolerance(diffs), get_relative_tolerance(diffs)))
         return 0;
     else
         return diff(diffs, refer, other, opt->optionname());

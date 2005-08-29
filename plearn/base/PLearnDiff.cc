@@ -47,7 +47,9 @@
 namespace PLearn {
 using namespace std;
 
-PLearnDiff::PLearnDiff() 
+PLearnDiff::PLearnDiff():
+    absolute_tolerance(ABSOLUTE_TOLERANCE),
+    relative_tolerance(RELATIVE_TOLERANCE)
 {
     build_();
     forget();
@@ -60,10 +62,11 @@ PLEARN_IMPLEMENT_OBJECT(PLearnDiff,
 
 void PLearnDiff::declareOptions(OptionList& ol)
 {
-    // ### ex:
-    // declareOption(ol, "myoption", &PLearnDiff::myoption, OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
+    declareOption(ol, "absolute_tolerance", &PLearnDiff::absolute_tolerance, OptionBase::buildoption,
+            "The absolute tolerance used when comparing real numbers less than 1.");
+
+    declareOption(ol, "relative_tolerance", &PLearnDiff::relative_tolerance, OptionBase::buildoption,
+            "The relative tolerance used when comparing real numbers and one is more than 1.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -132,6 +135,24 @@ int diff(PLearnDiff* diffs, const string& refer, const string& other, const stri
 void PLearnDiff::forget()
 {
     diffs.resize(0, diffs.width());
+}
+
+////////////////////////////
+// get_absolute_tolerance //
+////////////////////////////
+real get_absolute_tolerance(PLearnDiff* diffs)
+{
+    assert( diffs );
+    return diffs->absolute_tolerance;
+}
+
+////////////////////////////
+// get_relative_tolerance //
+////////////////////////////
+real get_relative_tolerance(PLearnDiff* diffs)
+{
+    assert( diffs );
+    return diffs->relative_tolerance;
 }
 
 /////////////////////////////////
