@@ -62,8 +62,6 @@
  * Torch *
  *********/
 //#include <plearn_learners/classifiers/SVMClassificationTorch.h>
-//#include <plearn_torch/TorchKernel.h>
-//#include <plearn_torch/TorchDataSet.h>
 
 #endif
 
