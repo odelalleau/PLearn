@@ -51,7 +51,7 @@ class Object;
 //!  default-initialized Object
 typedef Object* (*NEW_OBJECT)();
 typedef OptionList& (*GETOPTIONLIST_METHOD)();
-typedef bool (*ISA_METHOD)(Object* o);
+typedef bool (*ISA_METHOD)(const Object* o);
 
 
 //###########################  CLASS  TYPEMAPENTRY  ###########################
@@ -140,28 +140,32 @@ public:
                               const string& one_line_descr,
                               const string& multi_line_help);  
 
-    //!  Register a type
+    //! Register a type
     void registerType(const TypeMapEntry& entry);
 
-    //!  Unregister a type
-    void unregisterType(string type_name);
+    //! Unregister a type
+    void unregisterType(const string& type_name);
 
-    //!  Verify if the type is registered
-    bool isRegistered(string type_name) const;
+    //! Verify if the type is registered
+    bool isRegistered(const string& type_name) const;
 
-    //!  Construct a new default-constructed object given its type name
-    //!  Calls PLERROR (throws an exception) if type_name is not registered
-    Object* newObject(string type_name) const;
+    //! Construct a new default-constructed object given its type name
+    //! Calls PLERROR (throws an exception) if type_name is not registered
+    Object* newObject(const string& type_name) const;
 
     //! Tells if the given object is a virtual base class (with pure virtual methods)
     //! (This simply checks if it was declared with a constructor or not)
-    bool isAbstract(string type_name) const;
+    bool isAbstract(const string& type_name) const;
 
+    //! Return an entry in typemap corresponding to given type_name.  Raise
+    //! PLERROR if type_name is not registered
+    const TypeMapEntry& getTypeMapEntry(const string& type_name) const;
+    
     //! Return a reference to the typemap
     const TypeMap& getTypeMap() const
     { return type_map_; }
 
-    //!  Return the singleton (static) instance of the type factory
+    //! Return the singleton (static) instance of the type factory
     static TypeFactory& instance();
 };
 

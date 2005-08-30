@@ -67,32 +67,38 @@ void TypeFactory::registerType(const TypeMapEntry& entry)
     //cout << "register type " << type_name << endl;
 }
 
-void TypeFactory::unregisterType(string type_name)
+void TypeFactory::unregisterType(const string& type_name)
 {
     type_map_.erase(type_name);                // ok even if does not exist
 }
 
-bool TypeFactory::isRegistered(string type_name) const
+bool TypeFactory::isRegistered(const string& type_name) const
 {
     return type_map_.find(type_name)!=type_map_.end();
 }
 
-Object* TypeFactory::newObject(string type_name) const
+Object* TypeFactory::newObject(const string& type_name) const
 {
-    TypeMap::const_iterator it = type_map_.find(type_name);
-    if (it == type_map_.end())
-        PLERROR("In TypeFactory::newObject(\"%s\"): %s not registered in type map.", type_name.c_str(), type_name.c_str());
-    if (!(*it->second.constructor))
-        PLERROR("In TypeFactory::newObject(\"%s\"): %s does not have a factory constructor!", type_name.c_str(), type_name.c_str());
-    return (*it->second.constructor)();
+    const TypeMapEntry& tme = getTypeMapEntry(type_name);
+    if (! tme.constructor)
+        PLERROR("In TypeFactory::newObject(\"%s\"): \"%s\" does not have a factory constructor!",
+                type_name.c_str(), type_name.c_str());
+    return tme.constructor();
 }
 
-bool TypeFactory::isAbstract(string type_name) const
+bool TypeFactory::isAbstract(const string& type_name) const
+{
+    const TypeMapEntry& tme = getTypeMapEntry(type_name);
+    return tme.constructor == 0;
+}
+
+const TypeMapEntry& TypeFactory::getTypeMapEntry(const string& type_name) const
 {
     TypeMap::const_iterator it = type_map_.find(type_name);
     if (it == type_map_.end())
-        PLERROR("In TypeFactory: %s not registered in type map.", type_name.c_str(), type_name.c_str());
-    return it->second.constructor == 0;
+        PLERROR("TypeFactory: requested type \"%s\" is not registered in type map.",
+                type_name.c_str());
+    return it->second;
 }
 
 TypeFactory& TypeFactory::instance()
@@ -101,6 +107,8 @@ TypeFactory& TypeFactory::instance()
     return instance_;
 }
 
+
+//#####  displayObjectHelp  ###################################################
 
 void displayObjectHelp(ostream& out, const string& classname)
 {
