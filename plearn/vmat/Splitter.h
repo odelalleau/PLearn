@@ -47,20 +47,18 @@
 namespace PLearn {
 using namespace std;
 
-/*!
-
-This class is an abstract base class for mechanisms allowing to "split" a
-dataset into one or several partitions (or "splits").
-
-Thus for instance a subclass can be used to implement k-fold splits (for
-k-fold cross validation), where each of the k splits returned by
-getSplit(i=0..k-1) would be an 2-element array containing the
-corresponding training-set and test-set.
-
-A splitter is an essential part of a PTester.
-*/
-
-class Splitter: public Object
+/**
+ * This class is an abstract base class for mechanisms allowing to "split" a
+ * dataset into one or several partitions (or "splits").
+ * 
+ * Thus for instance a subclass can be used to implement k-fold splits (for
+ * k-fold cross validation), where each of the k splits returned by
+ * getSplit(i=0..k-1) would be an 2-element array containing the corresponding
+ * training-set and test-set.
+ * 
+ * A splitter is an essential part of a PTester.
+ */
+class Splitter : public Object
 {
     typedef Object inherited;
 

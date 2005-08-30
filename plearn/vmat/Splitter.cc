@@ -46,7 +46,19 @@
 namespace PLearn {
 using namespace std;
 
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Splitter, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
+    Splitter,
+    "Allows to split a VMat into one or several (sub-)VMats",
+    "This class is an abstract base class for mechanisms allowing to \"split\" a\n"
+    "dataset into one or several partitions (or \"splits\").\n"
+    "\n"
+    "Thus for instance a subclass can be used to implement k-fold splits (for\n"
+    "k-fold cross validation), where each of the k splits returned by\n"
+    "getSplit(i=0..k-1) would be an 2-element array containing the corresponding\n"
+    "training-set and test-set.\n"
+    "\n"
+    "A splitter is an essential part of a PTester.\n"
+    );
 
 void Splitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
