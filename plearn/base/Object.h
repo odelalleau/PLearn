@@ -80,81 +80,116 @@ using namespace std;
         static OptionList& _getOptionList_();                   \
         virtual OptionList& getOptionList() const;              \
         static Object* _new_instance_for_typemap_();            \
-        static bool _isa_(Object* o);                           \
+        static bool _isa_(const Object* o);                     \
         virtual CLASSTYPE* deepCopy(CopiesMap &copies) const;   \
         static void _static_initialize_();                      \
-	      static StaticInitializer _static_initializer_
+        static StaticInitializer _static_initializer_
 
-#define PLEARN_IMPLEMENT_OBJECT(CLASSTYPE, ONELINEDESCR, MULTILINEHELP)    \
-	      string CLASSTYPE::_classname_()                              \
-          { return #CLASSTYPE; }                                           \
-	      string CLASSTYPE::classname() const                          \
-          { return _classname_(); }                                        \
-        OptionList& CLASSTYPE::_getOptionList_()                           \
-          { static OptionList ol;                                          \
-            if(ol.empty())                                                 \
-              declareOptions(ol);                                          \
-            return ol; }                                                   \
-        OptionList& CLASSTYPE::getOptionList() const                       \
-          { return _getOptionList_(); }                                    \
-        Object* CLASSTYPE::_new_instance_for_typemap_()                    \
-          { return new CLASSTYPE(); }                                      \
-        bool CLASSTYPE::_isa_(Object* o)                                   \
-          { return dynamic_cast<CLASSTYPE*>(o) != 0; }                     \
-        CLASSTYPE* CLASSTYPE::deepCopy(CopiesMap& copies) const            \
-          { CopiesMap::iterator it = copies.find(this);                    \
-            if (it != copies.end())                                        \
-              return static_cast<CLASSTYPE*>(it->second);                  \
-            CLASSTYPE* deep_copy =                                         \
-                 new CLASSTYPE(dynamic_cast<const CLASSTYPE&>(*this));     \
-            copies[this] = deep_copy;                                      \
-            deep_copy->makeDeepCopyFromShallowCopy(copies);                \
-            return deep_copy; }                                            \
-        void CLASSTYPE::_static_initialize_()                              \
-          { TypeFactory::register_type(                                    \
-            #CLASSTYPE,                                                    \
-	          inherited::_classname_(),                                \
-            &CLASSTYPE::_new_instance_for_typemap_,                        \
-            &CLASSTYPE::_getOptionList_,                                   \
-            &CLASSTYPE::_isa_,                                             \
-            ONELINEDESCR,                                                  \
-            MULTILINEHELP  ); }                                            \
-	      StaticInitializer CLASSTYPE::_static_initializer_(&CLASSTYPE::_static_initialize_)
+#define PLEARN_IMPLEMENT_OBJECT(CLASSTYPE, ONELINEDESCR, MULTILINEHELP)                         \
+        string CLASSTYPE::_classname_()                                                         \
+        {                                                                                       \
+            return #CLASSTYPE;                                                                  \
+        }                                                                                       \
+                                                                                                \
+        string CLASSTYPE::classname() const                                                     \
+        {                                                                                       \
+            return _classname_();                                                               \
+        }                                                                                       \
+                                                                                                \
+        OptionList& CLASSTYPE::_getOptionList_()                                                \
+        {                                                                                       \
+            static OptionList ol;                                                               \
+            if(ol.empty())                                                                      \
+                declareOptions(ol);                                                             \
+            return ol;                                                                          \
+        }                                                                                       \
+                                                                                                \
+        OptionList& CLASSTYPE::getOptionList() const                                            \
+        {                                                                                       \
+            return _getOptionList_();                                                           \
+        }                                                                                       \
+                                                                                                \
+        Object* CLASSTYPE::_new_instance_for_typemap_()                                         \
+        {                                                                                       \
+            return new CLASSTYPE();                                                             \
+        }                                                                                       \
+                                                                                                \
+        bool CLASSTYPE::_isa_(const Object* o)                                                  \
+        {                                                                                       \
+            return dynamic_cast<const CLASSTYPE*>(o) != 0;                                      \
+        }                                                                                       \
+                                                                                                \
+        CLASSTYPE* CLASSTYPE::deepCopy(CopiesMap& copies) const                                 \
+        {                                                                                       \
+            CopiesMap::iterator it = copies.find(this);                                         \
+            if (it != copies.end())                                                             \
+                return static_cast<CLASSTYPE*>(it->second);                                     \
+            CLASSTYPE* deep_copy =                                                              \
+                new CLASSTYPE(dynamic_cast<const CLASSTYPE&>(*this));                           \
+            copies[this] = deep_copy;                                                           \
+            deep_copy->makeDeepCopyFromShallowCopy(copies);                                     \
+            return deep_copy;                                                                   \
+        }                                                                                       \
+                                                                                                \
+        void CLASSTYPE::_static_initialize_()                                                   \
+        {                                                                                       \
+            TypeFactory::register_type(#CLASSTYPE,                                              \
+                                       inherited::_classname_(),                                \
+                                       &CLASSTYPE::_new_instance_for_typemap_,                  \
+                                       &CLASSTYPE::_getOptionList_,                             \
+                                       &CLASSTYPE::_isa_,                                       \
+                                       ONELINEDESCR,                                            \
+                                       MULTILINEHELP);                                          \
+        }                                                                                       \
+        StaticInitializer CLASSTYPE::_static_initializer_(&CLASSTYPE::_static_initialize_)
 
 
 #define PLEARN_DECLARE_ABSTRACT_OBJECT(CLASSTYPE)               \
         public:                                                 \
         static string _classname_();                            \
         static OptionList& _getOptionList_();                   \
-        static bool _isa_(Object* o);                           \
+        static bool _isa_(const Object* o);                     \
         virtual CLASSTYPE* deepCopy(CopiesMap &copies) const;   \
         static void _static_initialize_();                      \
-	      static StaticInitializer _static_initializer_
+        static StaticInitializer _static_initializer_
 
-#define PLEARN_IMPLEMENT_ABSTRACT_OBJECT(CLASSTYPE, ONELINEDESCR, MULTILINEHELP)   \
-	      string CLASSTYPE::_classname_()                                      \
-          { return #CLASSTYPE; }                                                   \
-        OptionList& CLASSTYPE::_getOptionList_()                                   \
-          { static OptionList ol;                                                  \
-            if(ol.empty())                                                         \
-              declareOptions(ol);                                                  \
-            return ol; }                                                           \
-        bool CLASSTYPE::_isa_(Object* o)                                           \
-          { return dynamic_cast<CLASSTYPE*>(o) != 0; }                             \
-        CLASSTYPE* CLASSTYPE::deepCopy(CopiesMap& copies) const                    \
-          { PLERROR("Called virtual method deepCopy of an abstract class. "        \
-                    "This should never happen!");                                  \
-            return 0; }                                                            \
-        void CLASSTYPE::_static_initialize_()                                      \
-          { TypeFactory::register_type(                                            \
-            #CLASSTYPE,                                                            \
-	          inherited::_classname_(),                                        \
-            0,                                                                     \
-            &CLASSTYPE::_getOptionList_,                                           \
-            &CLASSTYPE::_isa_,                                                     \
-            ONELINEDESCR,                                                          \
-            MULTILINEHELP  ); }                                                    \
-	      StaticInitializer CLASSTYPE::_static_initializer_(&CLASSTYPE::_static_initialize_)
+#define PLEARN_IMPLEMENT_ABSTRACT_OBJECT(CLASSTYPE, ONELINEDESCR, MULTILINEHELP)                \
+        string CLASSTYPE::_classname_()                                                         \
+        {                                                                                       \
+            return #CLASSTYPE;                                                                  \
+        }                                                                                       \
+                                                                                                \
+        OptionList& CLASSTYPE::_getOptionList_()                                                \
+        {                                                                                       \
+            static OptionList ol;                                                               \
+            if(ol.empty())                                                                      \
+                declareOptions(ol);                                                             \
+            return ol;                                                                          \
+        }                                                                                       \
+                                                                                                \
+        bool CLASSTYPE::_isa_(const Object* o)                                                  \
+        {                                                                                       \
+            return dynamic_cast<const CLASSTYPE*>(o) != 0;                                      \
+        }                                                                                       \
+                                                                                                \
+        CLASSTYPE* CLASSTYPE::deepCopy(CopiesMap& copies) const                                 \
+        {                                                                                       \
+            PLERROR("Called virtual method deepCopy of an abstract class. "                     \
+                    "This should never happen!");                                               \
+            return 0;                                                                           \
+        }                                                                                       \
+                                                                                                \
+        void CLASSTYPE::_static_initialize_()                                                   \
+        {                                                                                       \
+            TypeFactory::register_type(#CLASSTYPE,                                              \
+                                       inherited::_classname_(),                                \
+                                       0,                                                       \
+                                       &CLASSTYPE::_getOptionList_,                             \
+                                       &CLASSTYPE::_isa_,                                       \
+                                       ONELINEDESCR,                                            \
+                                       MULTILINEHELP  );                                        \
+        }                                                                                       \
+        StaticInitializer CLASSTYPE::_static_initializer_(&CLASSTYPE::_static_initialize_)
 
 
 // Now for TEMPLATEs...
@@ -190,60 +225,80 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
         static OptionList& _getOptionList_();                                                   \
         virtual OptionList& getOptionList() const;                                              \
         static Object* _new_instance_for_typemap_();                                            \
-        static bool _isa_(Object* o);                                                           \
+        static bool _isa_(const Object* o);                                                     \
         virtual CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >* deepCopy(CopiesMap &copies) const;    \
         static void _static_initialize_();                                                      \
-	      static StaticInitializer _static_initializer_;                    
+        static StaticInitializer _static_initializer_;
 
-#define PLEARN_IMPLEMENT_TEMPLATE_OBJECT(CLASSTYPE, ONELINEDESCR, MULTILINEHELP)         \
-        template < TEMPLATE_DEF_ ## CLASSTYPE >                                          \
-	      string CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_classname_()             \
-          { return TEMPLATE_NAME_ ## CLASSTYPE ; }                                       \
-        template < TEMPLATE_DEF_ ## CLASSTYPE >                                          \
-	      string CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::classname() const         \
-          { return _classname_(); }                                                      \
-        template < TEMPLATE_DEF_ ## CLASSTYPE >                                          \
-        OptionList& CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_getOptionList_()          \
-          { static OptionList ol;                                                        \
-            if(ol.empty())                                                               \
-              declareOptions(ol);                                                        \
-            return ol; }                                                                 \
-        template < TEMPLATE_DEF_ ## CLASSTYPE >                                          \
-        OptionList& CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::getOptionList() const      \
-          { return _getOptionList_(); }                                                  \
-        template < TEMPLATE_DEF_ ## CLASSTYPE >                                          \
-        Object* CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_new_instance_for_typemap_()   \
-          { return new CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >(); }                     \
-        template < TEMPLATE_DEF_ ## CLASSTYPE >                                          \
-        bool CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_isa_(Object* o)                  \
-          { return dynamic_cast<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >*>(o) != 0; }    \
-                                                                                         \
-        template < TEMPLATE_DEF_ ## CLASSTYPE >                                          \
-        CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >*                                        \
-        CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::deepCopy(CopiesMap& copies) const      \
-        {                                                                                \
-          CopiesMap::iterator it = copies.find(this);                                    \
-          if (it != copies.end())                                                        \
-            return static_cast<CLASSTYPE*>(it->second);                                  \
-          CLASSTYPE* deep_copy = new CLASSTYPE(dynamic_cast<const CLASSTYPE&>(*this));   \
-          copies[this] = deep_copy;                                                      \
-          deep_copy->makeDeepCopyFromShallowCopy(copies);                                \
-          return deep_copy;                                                              \
-        }                                                                                \
-                                                                                         \
-        template < TEMPLATE_DEF_ ## CLASSTYPE >                                          \
-        void CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_static_initialize_()             \
-          { TypeFactory::register_type(                                                  \
-        CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_classname_(),                         \
-	      CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::inherited::_classname_(),        \
-        &CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_new_instance_for_typemap_,           \
-        &CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_getOptionList_,                      \
-        &CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_isa_,                                \
-        ONELINEDESCR,                                                                    \
-        MULTILINEHELP  ); }                                                              \
-        template < TEMPLATE_DEF_ ## CLASSTYPE >                                          \
-	      StaticInitializer CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_static_initializer_(&CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_static_initialize_);
-
+#define PLEARN_IMPLEMENT_TEMPLATE_OBJECT(CLASSTYPE, ONELINEDESCR, MULTILINEHELP)                \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        string CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_classname_()                          \
+        {                                                                                       \
+            return TEMPLATE_NAME_ ## CLASSTYPE ;                                                \
+        }                                                                                       \
+                                                                                                \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        string CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::classname() const                      \
+        {                                                                                       \
+            return _classname_();                                                               \
+        }                                                                                       \
+                                                                                                \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        OptionList& CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_getOptionList_()                 \
+        {                                                                                       \
+            static OptionList ol;                                                               \
+            if(ol.empty())                                                                      \
+              declareOptions(ol);                                                               \
+            return ol;                                                                          \
+        }                                                                                       \
+                                                                                                \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        OptionList& CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::getOptionList() const             \
+        {                                                                                       \
+            return _getOptionList_();                                                           \
+        }                                                                                       \
+                                                                                                \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        Object* CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_new_instance_for_typemap_()          \
+        {                                                                                       \
+            return new CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >();                              \
+        }                                                                                       \
+                                                                                                \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        bool CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_isa_(const Object* o)                   \
+        {                                                                                       \
+            return dynamic_cast<const CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >*>(o) != 0;       \
+        }                                                                                       \
+                                                                                                \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >*                                               \
+        CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::deepCopy(CopiesMap& copies) const             \
+        {                                                                                       \
+            CopiesMap::iterator it = copies.find(this);                                         \
+            if (it != copies.end())                                                             \
+                return static_cast<CLASSTYPE*>(it->second);                                     \
+            CLASSTYPE* deep_copy = new CLASSTYPE(dynamic_cast<const CLASSTYPE&>(*this));        \
+            copies[this] = deep_copy;                                                           \
+            deep_copy->makeDeepCopyFromShallowCopy(copies);                                     \
+            return deep_copy;                                                                   \
+        }                                                                                       \
+                                                                                                \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        void CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_static_initialize_()                    \
+        {                                                                                       \
+            TypeFactory::register_type(                                                         \
+                CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_classname_(),                        \
+                CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::inherited::_classname_(),             \
+                &CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_new_instance_for_typemap_,          \
+                &CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_getOptionList_,                     \
+                &CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_isa_,                               \
+                ONELINEDESCR,                                                                   \
+                MULTILINEHELP);                                                                 \
+        }                                                                                       \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        StaticInitializer CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::                            \
+            _static_initializer_(&CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::                    \
+                                 _static_initialize_);
 
 
 /*! The following macro should be called just *after* the declaration of
@@ -252,74 +307,112 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
   comparison (diff) with other objects.
 */
 
-#define DECLARE_OBJECT_PTR(CLASSTYPE)                                      \
-        inline Object *toObjectPtr(const CLASSTYPE &o)                     \
-          { return const_cast<CLASSTYPE *>(&o); }                          \
-        inline PStream &operator>>(PStream &in, CLASSTYPE &o)              \
-          { o.newread(in); return in; }                                    \
-        inline PStream &operator>>(PStream &in, CLASSTYPE * &o)            \
-          { Object *ptr = o;                                               \
-            in >> ptr;                                                     \
-            o = dynamic_cast<CLASSTYPE *>(ptr);                            \
-            if(ptr!=0 && o==0)                                             \
-              PLERROR("Mismatched classes while reading a pointer: %s is not a %s", \
-                   ptr->classname().c_str(),CLASSTYPE::_classname_().c_str()); \
-            return in; }                                                   \
-        inline PStream &operator<<(PStream &out, const CLASSTYPE &o)       \
-          { o.newwrite(out); return out; }                                 \
-        inline PStream &operator>>(PStream &in, PP<CLASSTYPE> &o)          \
-          { Object *ptr = (CLASSTYPE *)o;                                  \
-            in >> ptr;                                                     \
-            o = dynamic_cast<CLASSTYPE *>(ptr);                            \
-            if(ptr!=0 && o.isNull())                                       \
-              PLERROR("Mismatched classes while reading a PP: %s is not a %s", \
-                   ptr->classname().c_str(),CLASSTYPE::_classname_().c_str()); \
-            return in;                                                     \
-          }                                                                \
-        template<class ObjectType>                                         \
-        int diff(const string& refer, const string& other,                 \
-                 const Option<ObjectType, CLASSTYPE>* opt, PLearnDiff* diffs)  \
-          { pout << "Calling diff_Object with Option< ObjectType, " <<     \
-              opt->optiontype() << " >" << endl;                           \
-            PP<OptionBase> new_opt = new Option<ObjectType, PP<CLASSTYPE> >\
-                (opt->optionname(), 0, 0, "", "", "");                     \
-            return new_opt->diff(refer, other, diffs);                     \
-          }                                                                \
+#define DECLARE_OBJECT_PTR(CLASSTYPE)                                                   \
+        inline Object *toObjectPtr(const CLASSTYPE &o)                                  \
+        {                                                                               \
+            return const_cast<CLASSTYPE *>(&o);                                         \
+        }                                                                               \
+                                                                                        \
+        inline PStream &operator>>(PStream &in, CLASSTYPE &o)                           \
+        {                                                                               \
+            o.newread(in);                                                              \
+            return in;                                                                  \
+        }                                                                               \
+                                                                                        \
+        inline PStream &operator>>(PStream &in, CLASSTYPE * &o)                         \
+        {                                                                               \
+            Object *ptr = o;                                                            \
+            in >> ptr;                                                                  \
+            o = dynamic_cast<CLASSTYPE *>(ptr);                                         \
+            if(ptr!=0 && o==0)                                                          \
+              PLERROR("Mismatched classes while reading a pointer: %s is not a %s",     \
+                   ptr->classname().c_str(),CLASSTYPE::_classname_().c_str());          \
+            return in;                                                                  \
+        }                                                                               \
+                                                                                        \
+        inline PStream &operator<<(PStream &out, const CLASSTYPE &o)                    \
+        {                                                                               \
+            o.newwrite(out);                                                            \
+            return out;                                                                 \
+        }                                                                               \
+                                                                                        \
+        inline PStream &operator>>(PStream &in, PP<CLASSTYPE> &o)                       \
+        {                                                                               \
+            Object *ptr = (CLASSTYPE *)o;                                               \
+            in >> ptr;                                                                  \
+            o = dynamic_cast<CLASSTYPE *>(ptr);                                         \
+            if(ptr!=0 && o.isNull())                                                    \
+              PLERROR("Mismatched classes while reading a PP: %s is not a %s",          \
+                   ptr->classname().c_str(),CLASSTYPE::_classname_().c_str());          \
+            return in;                                                                  \
+        }                                                                               \
+                                                                                        \
+        template<class ObjectType>                                                      \
+        int diff(const string& refer, const string& other,                              \
+                 const Option<ObjectType, CLASSTYPE>* opt, PLearnDiff* diffs)           \
+        {                                                                               \
+            pout << "Calling diff_Object with Option< ObjectType, "                     \
+                 << opt->optiontype() << " >" << endl;                                  \
+            PP<OptionBase> new_opt = new Option<ObjectType, PP<CLASSTYPE> >             \
+                (opt->optionname(), 0, 0, "", "", "");                                  \
+            return new_opt->diff(refer, other, diffs);                                  \
+        }                                                                               \
         DECLARE_TYPE_TRAITS(CLASSTYPE)
 
-#define DECLARE_TEMPLATE_OBJECT_PTR(CLASSTYPE)                                                          \
-        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                         \
-        inline Object *toObjectPtr(const CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  &o)                  \
-          { return const_cast<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  *>(&o); }                       \
-        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                         \
-        inline PStream &operator>>(PStream &in, CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  &o)           \
-          { o.newread(in); return in; }                                                                 \
-        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                         \
-        inline PStream &operator>>(PStream &in, CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  * &o)         \
-          { if (o) o->newread(in);                                                                      \
-            else o = static_cast<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  *>(readObject(in));          \
-            return in; }                                                                                \
-        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                         \
-        inline PStream &operator<<(PStream &out, const CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  &o)    \
-          { o.newwrite(out); return out; }                                                              \
-        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                         \
-        inline PStream &operator>>(PStream &in, PP<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE > > &o)       \
-          { Object *ptr = (CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  *)o;                               \
-            in >> ptr;                                                                                  \
-            o = dynamic_cast<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  *>(ptr);                         \
-            return in;                                                                                  \
-          }                                                                                             \
-        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                         \
-         class TypeTraits< CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE > >                                   \
-           {                                                                                            \
-             public:                                                                                    \
-               static inline string name()                                                              \
-                 { return CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_classname_(); }                    \
-            static inline unsigned char little_endian_typecode()                                        \
-             { return 0xFF; }                                                                           \
-            static inline unsigned char big_endian_typecode()                                           \
-             { return 0xFF; }                                                                           \
-            } 
+#define DECLARE_TEMPLATE_OBJECT_PTR(CLASSTYPE)                                                  \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        inline Object *toObjectPtr(const CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  &o)          \
+        {                                                                                       \
+            return const_cast<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  *>(&o);                 \
+        }                                                                                       \
+                                                                                                \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        inline PStream &operator>>(PStream &in, CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  &o)   \
+        {                                                                                       \
+            o.newread(in); return in;                                                           \
+        }                                                                                       \
+                                                                                                \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        inline PStream &operator>>(PStream &in, CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  * &o) \
+        {                                                                                       \
+            if (o)                                                                              \
+                o->newread(in);                                                                 \
+            else                                                                                \
+                o = static_cast<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  *>(readObject(in));   \
+            return in;                                                                          \
+        }                                                                                       \
+                                                                                                \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        inline PStream &                                                                        \
+        operator<<(PStream &out, const CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  &o)            \
+        {                                                                                       \
+            o.newwrite(out);                                                                    \
+            return out;                                                                         \
+        }                                                                                       \
+                                                                                                \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        inline PStream&                                                                         \
+        operator>>(PStream &in, PP<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE > > &o)               \
+        {                                                                                       \
+            Object *ptr = (CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  *)o;                       \
+            in >> ptr;                                                                          \
+            o = dynamic_cast<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >  *>(ptr);                 \
+            return in;                                                                          \
+        }                                                                                       \
+                                                                                                \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        class TypeTraits< CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE > >                            \
+        {                                                                                       \
+        public:                                                                                 \
+            static inline string name()                                                         \
+            { return CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_classname_(); }                 \
+                                                                                                \
+            static inline unsigned char little_endian_typecode()                                \
+            { return 0xFF; }                                                                    \
+                                                                                                \
+            static inline unsigned char big_endian_typecode()                                   \
+            { return 0xFF; }                                                                    \
+        } 
 
 
 
@@ -676,7 +769,10 @@ private:
  */
 Object *readObject(PStream &in, unsigned int id = UINT_MAX);
 inline Object *readObject(istream &in_)
-{ PStream in(&in_); return readObject(in); }
+{
+    PStream in(&in_);
+    return readObject(in);
+}
 
 //! Loads an object from the given file (no macro-preprocessing is performed)
 Object* loadObject(const PPath &filename);
@@ -693,18 +789,26 @@ Object* macroLoadObject(const PPath &filename);
 //! This actually calls readObject on an istrstream, so anything
 //! understandable by readObject can be used here
 inline Object* newObject(const string& representation)
-{ istrstream in(representation.c_str()); return readObject(in); }
+{
+    istrstream in(representation.c_str());
+    return readObject(in);
+}
 
 inline PStream &operator>>(PStream &in, Object &o)
-{ o.newread(in); return in; }
+{
+    o.newread(in);
+    return in;
+}
 
 inline PStream &operator<<(PStream &out, const Object &o)
-{ o.newwrite(out); return out; }
+{
+    o.newwrite(out);
+    return out;
+}
 
 
-// This takes precedence over the template definitions for a template type T in PStream.h
+//! This takes precedence over the template definitions for a template type T in PStream.h
 PStream &operator>>(PStream &in, Object * &o);
-
 
 } // end of namespace PLearn
 
