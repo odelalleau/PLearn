@@ -38,6 +38,18 @@ public:
     {
         cout << "X::printName: " << name << endl;
     }
+
+    virtual void method1(string s)
+    {
+        cout << "X::method1: name='" << name << "'  arg1='" << s << "'" << endl;
+    }
+    
+    virtual void method2(string s, int i)
+    {
+        cout << "X::method1: name='" << name
+             << "'  arg1='" << s << "'"
+             << "'  arg2='" << i << "'" << endl;
+    }
 };
 
 DECLARE_OBJECT_PTR(X);
@@ -94,9 +106,23 @@ PLEARN_IMPLEMENT_OBJECT(Z, "", "");
 
 //#####  main  ################################################################
 
+using namespace PLearn;
+
+void iterate(ObjectGraphIterator grit, ObjectGraphIterator grend)
+{
+    for ( ; grit != grend ; ++grit ) {
+        const Object* curobj = *grit;
+        cout << "Encountered class \"" << curobj->classname() << "\""
+             << " at option \"" << grit.getCurrentOptionName() << "\"" << endl;
+        if (const X* x = dynamic_cast<const X*>(curobj)) {
+            cout << "... and name is: " << x->name << endl;
+        }
+    }
+}
+
+
 int main()
 {
-    using namespace PLearn;
     string test_objects =
         "Z(sub_objects = [X(name=\"X1\"),          \n"
         "                 *1->X(name=\"X2\"),      \n"
@@ -114,17 +140,28 @@ int main()
     PP<Object> o;
     strin >> o;
     
-    pout << "Built structure: " << endl
-         << o;
+    pout << endl << "Built structure: " << endl
+         << o << flush;
 
-    ObjectGraphIterator ogrit(o, ObjectGraphIterator::BreadthOrder), ogrend;
-    for ( ; ogrit != ogrend ; ++ogrit ) {
-        const Object* curobj = *ogrit;
-        cout << "Encountered class \"" << curobj->classname() << "\"" << endl;
-        if (const X* x = dynamic_cast<const X*>(curobj)) {
-            cout << "... and name is: " << x->name << endl;
-        }
-    }
+    cout << endl << "Now traversing the graph in breadth-first:" << endl;
+    iterate(ObjectGraphIterator(o, ObjectGraphIterator::BreadthOrder, true),
+            ObjectGraphIterator());
+
+    cout << endl << "Traversing only Y objects in depth-first:" << endl;
+    iterate(ObjectGraphIterator(o, ObjectGraphIterator::DepthPreOrder, true, "Y"),
+            ObjectGraphIterator());
+
+    cout << endl << "Broadcast a call to X::printName()" << endl;
+    object_broadcast(o, &X::printName);
+    
+    cout << endl << "Broadcast a call to Y::printName()" << endl;
+    object_broadcast(o, &Y::printName);
+
+    cout << endl << "Broadcast a breadth-first call to Y::method1(\"foo\")" << endl;
+    object_broadcast(o, &Y::method1, string("foo"), ObjectGraphIterator::BreadthOrder);
+
+    cout << endl << "Broadcast a breadth-first call to Y::method2(\"foo\",42)" << endl;
+    object_broadcast(o, &Y::method2, string("foo"), 42, ObjectGraphIterator::BreadthOrder);
 
     return 0;
 }

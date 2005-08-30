@@ -47,6 +47,10 @@
 // From C++ stdlib
 #include <string>
 #include <vector>
+#include <utility>
+
+// From boost
+#include <boost/call_traits.hpp>
 
 // From PLearn
 #include <plearn/base/OptionBase.h>
@@ -165,9 +169,21 @@ public:
     //! Default constructor makes an "invalid" iterator
     ObjectGraphIterator();
     
-    //! Constructor takes a root node, an optional traversal type,
-    //! and an optional class name for filtering by type
+    /**
+     *  Usual constructor to iterate over an object graph.
+     *
+     *  @param root               Starting object from which to start the iteration
+     *  @param tt                 Type of traversal, e.g. \c BreadthOrder
+     *                            or \c DepthPreOrder
+     *  @param compute_optnames   Whether the function getCurrentOptionName()
+     *                            returns something meaningful; this slows
+     *                            down computations a bit
+     *  @param base_class_filter  Name of base class to filter results; it is
+     *                            guaranteed that the returned objects will be
+     *                            of a class derived from this one
+     */
     ObjectGraphIterator(const Object* root, TraversalType tt = DepthPreOrder,
+                        bool compute_optnames = false,
                         const std::string& base_class_filter = "");
     
     // Default assignment, copy constructor, destructor
@@ -192,7 +208,17 @@ public:
     const Object* operator*() const
     {
         assert( !invalid() );
-        return *m_it;
+        return m_it->first;
+    }
+
+    //! Return the option "pathname" to retrieve the option using
+    //! \getOption() on the root object.  This will be the empty
+    //! string for the root object, or if the iterator was
+    //! constructed with the option compute_optnames set to 'false'.
+    const string& getCurrentOptionName() const
+    {
+        assert( !invalid() );
+        return m_it->second;
     }
     
     //! Go to next object or "invalid" state if end of iteration
@@ -210,10 +236,12 @@ public:
 protected:
     //! Build a traversal graph from a root node; filters are not yet taken
     //! into account at this point
-    void buildTraversalGraph(const Object* root, TraversalType tt);
+    void buildTraversalGraph(const Object* root, TraversalType tt,
+                             bool compute_optnames);
 
 protected:
-    typedef std::vector<const Object*> ObjectList;
+    typedef pair<const Object*, string> ObjectAndName;
+    typedef std::vector<ObjectAndName> ObjectList;
     typedef bool (*ISA)(const Object*);
     
     ObjectList m_object_list;                //!< from buildTraversalGraph()
@@ -222,6 +250,104 @@ protected:
     ObjectList::iterator m_end;              //!< End of m_object_list
     ISA m_isa_tester;                        //!< Predicate for sub-type filter
 };
+
+
+//#####  Broadcast  ###########################################################
+
+/**
+ *  @function object_broadcast
+ *  @brief    Call a specific member function across a graph of \c Objects.
+ *
+ *  The global function object_broadcast is used to call a member function on a
+ *  graph of \c Objects, but only for those objects that are of a class that
+ *  can accept the member function.  Right now, forms with 0, 1 or 2 arguments
+ *  are supported.
+ *
+ *  Both const and non-const forms are supported.
+ *
+ *  The return values of the individual functions called are ignored.
+ *
+ *  Implementation note: we use the Boost call_traits library to ensure that
+ *  _references to references_ do not occur in the argument lists of
+ *  object_broadcast, which would be outlawed by the C++ standard.
+ */
+
+// Zero argument, const
+template <class T, class U>
+void object_broadcast(const Object* o, U (T::*func)() const,
+                      ObjectGraphIterator::TraversalType tt = ObjectGraphIterator::DepthPreOrder)
+{
+    ObjectGraphIterator grit(o, tt, false, T::_classname_()), grend;
+    for ( ; grit != grend ; ++grit)
+        if (const T* t = dynamic_cast<const T*>(*grit))
+            (t->*func)();
+}
+
+
+// Zero argument, non-const
+template <class T, class U>
+void object_broadcast(Object* o, U (T::*func)(),
+                      ObjectGraphIterator::TraversalType tt = ObjectGraphIterator::DepthPreOrder)
+{
+    ObjectGraphIterator grit(o, tt, false, T::_classname_()), grend;
+    for ( ; grit != grend ; ++grit)
+        if (T* t = const_cast<T*>(dynamic_cast<const T*>(*grit)))
+            (t->*func)();
+}
+
+
+// One argument, const
+template <class T, class U, class V>
+void object_broadcast(const Object* o, U (T::*func)(V) const,
+                      typename boost::call_traits<V>::param_type arg1,
+                      ObjectGraphIterator::TraversalType tt = ObjectGraphIterator::DepthPreOrder)
+{
+    ObjectGraphIterator grit(o, tt, false, T::_classname_()), grend;
+    for ( ; grit != grend ; ++grit)
+        if (const T* t = dynamic_cast<const T*>(*grit))
+            (t->*func)(arg1);
+}
+
+
+// One argument, non-const
+template <class T, class U, class V>
+void object_broadcast(Object* o, U (T::*func)(V),
+                      typename boost::call_traits<V>::param_type arg1,
+                      ObjectGraphIterator::TraversalType tt = ObjectGraphIterator::DepthPreOrder)
+{
+    ObjectGraphIterator grit(o, tt, false, T::_classname_()), grend;
+    for ( ; grit != grend ; ++grit)
+        if (T* t = const_cast<T*>(dynamic_cast<const T*>(*grit)))
+            (t->*func)(arg1);
+}
+
+
+// Two arguments, const
+template <class T, class U, class V, class W>
+void object_broadcast(const Object* o, U (T::*func)(V,W) const,
+                      typename boost::call_traits<V>::param_type arg1,
+                      typename boost::call_traits<W>::param_type arg2,
+                      ObjectGraphIterator::TraversalType tt = ObjectGraphIterator::DepthPreOrder)
+{
+    ObjectGraphIterator grit(o, tt, false, T::_classname_()), grend;
+    for ( ; grit != grend ; ++grit)
+        if (const T* t = dynamic_cast<const T*>(*grit))
+            (t->*func)(arg1,arg2);
+}
+
+
+// Two arguments, non-const
+template <class T, class U, class V, class W>
+void object_broadcast(Object* o, U (T::*func)(V,W),
+                      typename boost::call_traits<V>::param_type arg1,
+                      typename boost::call_traits<W>::param_type arg2,
+                      ObjectGraphIterator::TraversalType tt = ObjectGraphIterator::DepthPreOrder)
+{
+    ObjectGraphIterator grit(o, tt, false, T::_classname_()), grend;
+    for ( ; grit != grend ; ++grit)
+        if (T* t = const_cast<T*>(dynamic_cast<const T*>(*grit)))
+            (t->*func)(arg1,arg2);
+}
 
 
 } // end of namespace PLearn

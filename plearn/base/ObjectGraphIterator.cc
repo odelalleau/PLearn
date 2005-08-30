@@ -150,10 +150,11 @@ ObjectGraphIterator::ObjectGraphIterator()
 
 
 ObjectGraphIterator::ObjectGraphIterator(
-    const Object* root, TraversalType tt, const string& base_class_filter)
+    const Object* root, TraversalType tt,
+    bool compute_optnames, const string& base_class_filter)
     : m_base_class_filter(base_class_filter), m_isa_tester()
 {
-    buildTraversalGraph(root, tt);
+    buildTraversalGraph(root, tt, compute_optnames);
     m_it  = m_object_list.begin();
     m_end = m_object_list.end();
     if (m_base_class_filter != "") {
@@ -193,11 +194,12 @@ const ObjectGraphIterator& ObjectGraphIterator::operator++()
 //#####  buildTraversalGraph  #################################################
 
 void ObjectGraphIterator::buildTraversalGraph(const Object* root,
-                                              TraversalType tt)
+                                              TraversalType tt,
+                                              bool compute_optnames)
 {
     // The deque is used to maintain either a FIFO or LIFO of nodes to visit.
     // Deletion is always carried out with a pop_back.
-    typedef std::deque<const Object*> Q;
+    typedef std::deque<ObjectAndName> Q;
     typedef std::set<const Object*> SeenSet;
     typedef void (Q::*QAppender)(Q::const_reference);
 
@@ -213,27 +215,33 @@ void ObjectGraphIterator::buildTraversalGraph(const Object* root,
 
     // Start out by appending the root
     m_object_list.resize(0);
-    (object_queue.*appender)(root);
+    (object_queue.*appender)(make_pair(root, ""));
     seen.insert(root);
 
     // Traverse the graph
     while (object_queue.size() > 0) {
-        const Object* cur_obj = object_queue.back();
+        ObjectAndName cur_objname = object_queue.back();
         object_queue.pop_back();
-        m_object_list.push_back(cur_obj);
+        m_object_list.push_back(cur_objname);
 
-        ObjectOptionsIterator options(cur_obj), end_options;
+        ObjectOptionsIterator options(cur_objname.first), end_options;
         for ( ; options != end_options ; ++options) {
             const Object* candidate_object = *options;
             if (candidate_object && seen.find(candidate_object) == not_seen) {
-                (object_queue.*appender)(candidate_object);
+                string new_optname;
+                if (compute_optnames) {
+                    new_optname = cur_objname.second;
+                    if (new_optname != "")
+                        new_optname += ".";
+                    new_optname += options.getCurrentOptionName();
+                }
+                (object_queue.*appender)(make_pair(candidate_object,
+                                                   new_optname));
                 seen.insert(candidate_object);
             }
         }
     }
-}
-
-    
+}    
 
 } // end of namespace PLearn
 
