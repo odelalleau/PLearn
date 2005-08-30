@@ -184,7 +184,11 @@ inline Object* toObjectPtr(const T& x)
 template<class T>
 inline Object* toObjectPtr(const PP<T>& x)
 {
-    return toObjectPtr(*static_cast<T *>(x));
+    if (x.isNotNull())
+        return toObjectPtr(*static_cast<T *>(x));
+    else
+        return 0;
+    
 }
 
 
