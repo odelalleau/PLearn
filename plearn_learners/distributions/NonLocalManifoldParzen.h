@@ -188,6 +188,8 @@ public:
     int rw_n_step;
     //! Size of the step;
     real rw_size_step;
+    //! Parameters to share
+    VarArray shared_parameters;
 
     // ****************
     // * Constructors *
