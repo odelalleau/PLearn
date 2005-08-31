@@ -56,14 +56,16 @@ using namespace std;
 //#####  ObjectOptionsIterator  ###############################################
 
 ObjectOptionsIterator::ObjectOptionsIterator()
-    : m_invalid(true),
+    : m_invalid(true), m_skip_nulls(true),
       m_object(0), m_options(0),
       m_cur_option(), m_cur_index(), m_max_index()
 { }
 
 
-ObjectOptionsIterator::ObjectOptionsIterator(const Object* root)
+ObjectOptionsIterator::ObjectOptionsIterator(const Object* root,
+                                             bool skip_nulls)
     : m_invalid(true),
+      m_skip_nulls(skip_nulls),
       m_object(root), m_options(0),
       m_cur_option(), m_cur_index(), m_max_index()
 {
@@ -118,26 +120,32 @@ const ObjectOptionsIterator& ObjectOptionsIterator::operator++()
 {
     assert( !m_invalid && m_object && m_options );
 
-    // Start by considering current iteration within an indexable option
-    if (m_max_index > 0) {
-        ++m_cur_index;
-        assert( m_cur_index <= m_max_index );
-        if (m_cur_index < m_max_index)
-            return *this;
-    }
-
-    // Otherwise find next option accessible as object.  Go to invalid state if
-    // cannot find any
-    const int n = m_options->size();
-    for ( ++m_cur_option ; m_cur_option < n ; ++m_cur_option ) {
-        if ((*m_options)[m_cur_option]->isAccessibleAsObject()) {
-            m_cur_index = 0;
-            m_max_index = (*m_options)[m_cur_option]->indexableSize(m_object);
-            break;
+    do {
+        // Start by considering current iteration within an indexable option
+        if (m_max_index > 0) {
+            ++m_cur_index;
+            assert( m_cur_index <= m_max_index );
+            if (m_cur_index < m_max_index)
+                return *this;
         }
-    }
 
-    m_invalid = (m_cur_option >= n);
+        // Otherwise find next option accessible as object.  Go to invalid state if
+        // cannot find any
+        const int n = m_options->size();
+        for ( ++m_cur_option ; m_cur_option < n ; ++m_cur_option ) {
+            if ((*m_options)[m_cur_option]->isAccessibleAsObject()) {
+                m_cur_index = 0;
+                m_max_index = (*m_options)[m_cur_option]->indexableSize(m_object);
+                break;
+            }
+        }
+
+        m_invalid = (m_cur_option >= n);
+
+        // Condition below: keep incrementing as long as we are hitting a null
+        // object (and skipping nulls is requested)
+    } while (!m_invalid && m_skip_nulls && !**this);
+
     return *this;
 }
 
@@ -152,18 +160,18 @@ ObjectGraphIterator::ObjectGraphIterator()
 ObjectGraphIterator::ObjectGraphIterator(
     const Object* root, TraversalType tt,
     bool compute_optnames, const string& base_class_filter)
-    : m_base_class_filter(base_class_filter), m_isa_tester()
+    : m_isa_tester()
 {
     buildTraversalGraph(root, tt, compute_optnames);
     m_it  = m_object_list.begin();
     m_end = m_object_list.end();
-    if (m_base_class_filter != "") {
+    if (base_class_filter != "") {
         const TypeMapEntry& tme =
-            TypeFactory::instance().getTypeMapEntry(m_base_class_filter);
+            TypeFactory::instance().getTypeMapEntry(base_class_filter);
         m_isa_tester = tme.isa_method;
         if (! m_isa_tester)
             PLERROR("ObjectGraphIterator: requested type filter \"%s\" does not "
-                    "have an ISA type predicate function", m_base_class_filter.c_str());
+                    "have an ISA type predicate function", base_class_filter.c_str());
     }
 
     // If first object is not acceptable according to predicate, skip to next

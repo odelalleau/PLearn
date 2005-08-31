@@ -79,8 +79,16 @@ public:
     //! Default constructor: invalid iterator
     ObjectOptionsIterator();
 
-    //! Iterate along all sub-objects of the given object
-    ObjectOptionsIterator(const Object* root);
+    /**
+     *  Iterate along all first-level sub-objects of the given object.
+     *
+     *  @param root          Object on which to iterate
+     *  @param skip_nulls    If true, null sub-objects are skipped (default);
+     *                       in some instances, it's necesary to iterate along
+     *                       ALL options, including null objects, whereupon
+     *                       you specify false.
+     */
+    ObjectOptionsIterator(const Object* root, bool skip_nulls = true);
 
     // Default assignment, copy constructor, destructor
 
@@ -121,6 +129,7 @@ public:
 
 protected:
     bool m_invalid;                          //!< If true: invalid state
+    bool m_skip_nulls;                       //!< If true: never return null ptrs
     const Object* m_object;                  //!< Object we are pointing to
     const OptionList* m_options;             //!< OptionList of that object
     int m_cur_option;                        //!< Which option we're at
@@ -245,7 +254,6 @@ protected:
     typedef bool (*ISA)(const Object*);
     
     ObjectList m_object_list;                //!< from buildTraversalGraph()
-    std::string m_base_class_filter;
     ObjectList::iterator m_it;               //!< Iterator within m_object_list
     ObjectList::iterator m_end;              //!< End of m_object_list
     ISA m_isa_tester;                        //!< Predicate for sub-type filter
@@ -255,10 +263,10 @@ protected:
 //#####  Broadcast  ###########################################################
 
 /**
- *  @function object_broadcast
+ *  @function memfun_broadcast
  *  @brief    Call a specific member function across a graph of \c Objects.
  *
- *  The global function object_broadcast is used to call a member function on a
+ *  The global function memfun_broadcast is used to call a member function on a
  *  graph of \c Objects, but only for those objects that are of a class that
  *  can accept the member function.  Right now, forms with 0, 1 or 2 arguments
  *  are supported.
@@ -269,12 +277,12 @@ protected:
  *
  *  Implementation note: we use the Boost call_traits library to ensure that
  *  _references to references_ do not occur in the argument lists of
- *  object_broadcast, which would be outlawed by the C++ standard.
+ *  memfun_broadcast, which would be outlawed by the C++ standard.
  */
 
 // Zero argument, const
 template <class T, class U>
-void object_broadcast(const Object* o, U (T::*func)() const,
+void memfun_broadcast(const Object* o, U (T::*func)() const,
                       ObjectGraphIterator::TraversalType tt = ObjectGraphIterator::DepthPreOrder)
 {
     ObjectGraphIterator grit(o, tt, false, T::_classname_()), grend;
@@ -286,7 +294,7 @@ void object_broadcast(const Object* o, U (T::*func)() const,
 
 // Zero argument, non-const
 template <class T, class U>
-void object_broadcast(Object* o, U (T::*func)(),
+void memfun_broadcast(Object* o, U (T::*func)(),
                       ObjectGraphIterator::TraversalType tt = ObjectGraphIterator::DepthPreOrder)
 {
     ObjectGraphIterator grit(o, tt, false, T::_classname_()), grend;
@@ -298,7 +306,7 @@ void object_broadcast(Object* o, U (T::*func)(),
 
 // One argument, const
 template <class T, class U, class V>
-void object_broadcast(const Object* o, U (T::*func)(V) const,
+void memfun_broadcast(const Object* o, U (T::*func)(V) const,
                       typename boost::call_traits<V>::param_type arg1,
                       ObjectGraphIterator::TraversalType tt = ObjectGraphIterator::DepthPreOrder)
 {
@@ -311,7 +319,7 @@ void object_broadcast(const Object* o, U (T::*func)(V) const,
 
 // One argument, non-const
 template <class T, class U, class V>
-void object_broadcast(Object* o, U (T::*func)(V),
+void memfun_broadcast(Object* o, U (T::*func)(V),
                       typename boost::call_traits<V>::param_type arg1,
                       ObjectGraphIterator::TraversalType tt = ObjectGraphIterator::DepthPreOrder)
 {
@@ -324,7 +332,7 @@ void object_broadcast(Object* o, U (T::*func)(V),
 
 // Two arguments, const
 template <class T, class U, class V, class W>
-void object_broadcast(const Object* o, U (T::*func)(V,W) const,
+void memfun_broadcast(const Object* o, U (T::*func)(V,W) const,
                       typename boost::call_traits<V>::param_type arg1,
                       typename boost::call_traits<W>::param_type arg2,
                       ObjectGraphIterator::TraversalType tt = ObjectGraphIterator::DepthPreOrder)
@@ -338,7 +346,7 @@ void object_broadcast(const Object* o, U (T::*func)(V,W) const,
 
 // Two arguments, non-const
 template <class T, class U, class V, class W>
-void object_broadcast(Object* o, U (T::*func)(V,W),
+void memfun_broadcast(Object* o, U (T::*func)(V,W),
                       typename boost::call_traits<V>::param_type arg1,
                       typename boost::call_traits<W>::param_type arg2,
                       ObjectGraphIterator::TraversalType tt = ObjectGraphIterator::DepthPreOrder)
@@ -347,6 +355,113 @@ void object_broadcast(Object* o, U (T::*func)(V,W),
     for ( ; grit != grend ; ++grit)
         if (T* t = const_cast<T*>(dynamic_cast<const T*>(*grit)))
             (t->*func)(arg1,arg2);
+}
+
+
+/**
+ *  @function memfun_broadcast_optname
+ *  @brief    Call a specific member function across a graph of \c Objects with
+ *            the option name as argument.
+ *
+ *  The global function memfun_broadcast_optname is used to call a member
+ *  function on a graph of \c Objects, but only for those objects that are of a
+ *  class that can accept the member function.  Right now, forms with 0, 1 or 2
+ *  arguments are supported.  This function, contrarily to \c memfun_broadcast,
+ *  supplies the option name as the _first argument_ to the called member
+ *  function.  The option name is of a form that \c getOption() or \c
+ *  setOption() would accept and is used to "locate" the object within the
+ *  object graph started out by the starting \c Object* \c o.
+ *
+ *  Both const and non-const forms are supported.
+ *
+ *  The return values of the individual functions called are ignored.
+ *
+ *  Implementation note: we use the Boost call_traits library to ensure that
+ *  _references to references_ do not occur in the argument lists of
+ *  memfun_broadcast_optname, which would be outlawed by the C++ standard.
+ */
+
+// Zero argument, const
+template <class T, class U, class V>
+void memfun_broadcast_optname(const Object* o, U (T::*func)(V) const,
+                              ObjectGraphIterator::TraversalType tt =
+                              ObjectGraphIterator::DepthPreOrder)
+{
+    ObjectGraphIterator grit(o, tt, true, T::_classname_()), grend;
+    for ( ; grit != grend ; ++grit)
+        if (const T* t = dynamic_cast<const T*>(*grit))
+            (t->*func)(grit.getCurrentOptionName());
+}
+
+
+// Zero argument, non-const
+template <class T, class U, class V>
+void memfun_broadcast_optname(Object* o, U (T::*func)(V),
+                              ObjectGraphIterator::TraversalType tt =
+                              ObjectGraphIterator::DepthPreOrder)
+{
+    ObjectGraphIterator grit(o, tt, true, T::_classname_()), grend;
+    for ( ; grit != grend ; ++grit)
+        if (T* t = const_cast<T*>(dynamic_cast<const T*>(*grit)))
+            (t->*func)(grit.getCurrentOptionName());
+}
+
+
+// One argument, const
+template <class T, class U, class V, class W>
+void memfun_broadcast_optname(const Object* o, U (T::*func)(V,W) const,
+                              typename boost::call_traits<V>::param_type arg1,
+                              ObjectGraphIterator::TraversalType tt =
+                              ObjectGraphIterator::DepthPreOrder)
+{
+    ObjectGraphIterator grit(o, tt, true, T::_classname_()), grend;
+    for ( ; grit != grend ; ++grit)
+        if (const T* t = dynamic_cast<const T*>(*grit))
+            (t->*func)(grit.getCurrentOptionName(), arg1);
+}
+
+
+// One argument, non-const
+template <class T, class U, class V, class W>
+void memfun_broadcast_optname(Object* o, U (T::*func)(V,W),
+                              typename boost::call_traits<V>::param_type arg1,
+                              ObjectGraphIterator::TraversalType tt =
+                              ObjectGraphIterator::DepthPreOrder)
+{
+    ObjectGraphIterator grit(o, tt, true, T::_classname_()), grend;
+    for ( ; grit != grend ; ++grit)
+        if (T* t = const_cast<T*>(dynamic_cast<const T*>(*grit)))
+            (t->*func)(grit.getCurrentOptionName(), arg1);
+}
+
+
+// Two arguments, const
+template <class T, class U, class V, class W, class X>
+void memfun_broadcast_optname(const Object* o, U (T::*func)(V,W,X) const,
+                              typename boost::call_traits<V>::param_type arg1,
+                              typename boost::call_traits<W>::param_type arg2,
+                              ObjectGraphIterator::TraversalType tt =
+                              ObjectGraphIterator::DepthPreOrder)
+{
+    ObjectGraphIterator grit(o, tt, true, T::_classname_()), grend;
+    for ( ; grit != grend ; ++grit)
+        if (const T* t = dynamic_cast<const T*>(*grit))
+            (t->*func)(grit.getCurrentOptionName(), arg1, arg2);
+}
+
+
+// Two arguments, non-const
+template <class T, class U, class V, class W, class X>
+void memfun_broadcast_optname(Object* o, U (T::*func)(V,W,X),
+                              typename boost::call_traits<V>::param_type arg1,
+                              typename boost::call_traits<W>::param_type arg2,
+                              ObjectGraphIterator::TraversalType tt =
+                              ObjectGraphIterator::DepthPreOrder)
+{
+    ObjectGraphIterator grit(o, tt, true, T::_classname_()), grend;
+    for ( ; grit != grend ; ++grit)
+        if (T* t = const_cast<T*>(dynamic_cast<const T*>(*grit)))
+            (t->*func)(grit.getCurrentOptionName(), arg1, arg2);
 }
 
 

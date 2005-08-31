@@ -48,7 +48,7 @@ public:
     {
         cout << "X::method1: name='" << name
              << "'  arg1='" << s << "'"
-             << "'  arg2='" << i << "'" << endl;
+             << "  arg2='" << i << "'" << endl;
     }
 };
 
@@ -152,16 +152,19 @@ int main()
             ObjectGraphIterator());
 
     cout << endl << "Broadcast a call to X::printName()" << endl;
-    object_broadcast(o, &X::printName);
+    memfun_broadcast(o, &X::printName);
     
     cout << endl << "Broadcast a call to Y::printName()" << endl;
-    object_broadcast(o, &Y::printName);
+    memfun_broadcast(o, &Y::printName);
 
-    cout << endl << "Broadcast a breadth-first call to Y::method1(\"foo\")" << endl;
-    object_broadcast(o, &Y::method1, string("foo"), ObjectGraphIterator::BreadthOrder);
+    cout << endl << "Broadcast a breadth-first call to X::method1(\"foo\")" << endl;
+    memfun_broadcast(o, &X::method1, string("foo"), ObjectGraphIterator::BreadthOrder);
 
-    cout << endl << "Broadcast a breadth-first call to Y::method2(\"foo\",42)" << endl;
-    object_broadcast(o, &Y::method2, string("foo"), 42, ObjectGraphIterator::BreadthOrder);
+    cout << endl << "Broadcast a breadth-first call to X::method1(option_name)" << endl;
+    memfun_broadcast_optname(o, &X::method1, ObjectGraphIterator::BreadthOrder);
+
+    cout << endl << "Broadcast a breadth-first call to X::method2(\"foo\",42)" << endl;
+    memfun_broadcast(o, &X::method2, string("foo"), 42, ObjectGraphIterator::BreadthOrder);
 
     return 0;
 }
