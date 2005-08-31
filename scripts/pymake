@@ -406,7 +406,7 @@ def printusage():
     print '        Allows to compile on .pymake/linux-x86_64.hosts,'
     print '        linux-ia64.hosts and linux-i386.hosts.'
     print
-    print "A special option is -dependency: if this is givven, target won't be compiled or linked,"
+    print "A special option is -dependency: if this is given, target won't be compiled or linked,"
     print "but information regarding the dependency graph will be produced insted, as follows:"
     print "  pymake -dependency target "
     print "    will generate the full dependency graph of target in targetname.dot and targetname.ps file."
