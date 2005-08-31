@@ -199,6 +199,10 @@ void NonLocalManifoldParzen::declareOptions(OptionList& ol)
                   "Parameters of the tangent_predictor function.\n"
         );
 
+    declareOption(ol, "shared_parameters", &NonLocalManifoldParzen::shared_parameters, OptionBase::buildoption,
+                  "Parameters of another NonLocalManifoldParzen estimator to share with this current object.\n"
+        );
+
     declareOption(ol, "L", &NonLocalManifoldParzen::L, OptionBase::learntoption,
                   "Number of gaussians.\n"
         );
@@ -269,6 +273,8 @@ void NonLocalManifoldParzen::build_()
 
         VarArray params;
 
+        int sp_index = 0;
+
         Var log_n_examples(1,1,"log(n_examples)");
         if(train_set)
         {
@@ -285,6 +291,8 @@ void NonLocalManifoldParzen::build_()
 
             if (hidden_layer) // user-specified hidden layer Var
             {
+                if(shared_parameters.size() != 0)
+                    PLERROR("In NonLocalManifoldParzen:build_(): shared parameters is not implemented for user-specified hidden layer Var");
                 NaryVariable* layer_var = dynamic_cast<NaryVariable*>((Variable*)hidden_layer);
                 if (!layer_var)
                     PLERROR("In NonLocalManifoldParzen::build - 'hidden_layer' should be "
@@ -304,21 +312,43 @@ void NonLocalManifoldParzen::build_()
             {
                 if (n_hidden_units <= 0)
                     PLERROR("NonLocalManifoldParzen::Number of hidden units should be positive, now %d\n",n_hidden_units);
-                c = Var(n_hidden_units,1,"c ");
-                V = Var(n_hidden_units,n,"V ");               
+                if(shared_parameters.size() != 0)
+                {
+                    c = shared_parameters[sp_index++];
+                    V = shared_parameters[sp_index++];
+                }
+                else
+                {
+                    c = Var(n_hidden_units,1,"c ");
+                    V = Var(n_hidden_units,n,"V ");               
+                }
                 params.append(c);
                 params.append(V);
                 a = tanh(c + product(V,x));
             }
 
-            muV = Var(n,n_hidden_units,"muV "); 
-            snV = Var(1,n_hidden_units,"snV ");  
-            snb = Var(1,1,"snB ");      
-        
+            if(shared_parameters != 0)
+            {
+                muV = shared_parameters[sp_index++];
+                snV = shared_parameters[sp_index++];
+                snb = shared_parameters[sp_index++];
+            }
+            else
+            {
+                muV = Var(n,n_hidden_units,"muV "); 
+                snV = Var(1,n_hidden_units,"snV ");  
+                snb = Var(1,1,"snB ");      
+            }
+            params.append(muV);
+            params.append(snV);
+            params.append(snb);
 
             if(architecture_type == "embedding_neural_network")
             {
-                W = Var(ncomponents,n_hidden_units,"W ");       
+                if(shared_parameters.size() != 0)
+                    W = shared_parameters[sp_index++];
+                else
+                    W = Var(ncomponents,n_hidden_units,"W ");       
                 tangent_plane = diagonalized_factors_product(W,1-a*a,V); 
                 embedding = product(W,a);
                 output_embedding = Func(x,embedding);
@@ -326,8 +356,16 @@ void NonLocalManifoldParzen::build_()
             } 
             else if(architecture_type == "single_neural_network")
             {
-                b = Var(ncomponents*n,1,"b");
-                W = Var(ncomponents*n,n_hidden_units,"W ");
+                if(shared_parameters.size() != 0)
+                {
+                    b = shared_parameters[sp_index++];
+                    W = shared_parameters[sp_index++];
+                }
+                else
+                {
+                    b = Var(ncomponents*n,1,"b");
+                    W = Var(ncomponents*n,n_hidden_units,"W ");
+                }
                 tangent_plane = reshape(b + product(W,a),ncomponents,n);
                 params.append(b);
                 params.append(W);
@@ -343,21 +381,24 @@ void NonLocalManifoldParzen::build_()
                 mu->value.fill(0);
                 mu_nneighbors = 0;
             }
-            params.append(muV);
             min_sig = new SourceVariable(1,1);
             min_sig->value[0] = sigma_min;
             min_sig->setName("min_sig");
-            init_sig = Var(1,1);
-            init_sig->setName("init_sig");
-
+            if(shared_parameters.size() != 0)
+                init_sig = shared_parameters[sp_index++];
+            else
+            {
+                init_sig = Var(1,1);
+                init_sig->setName("init_sig");
+            }
+            params.append(init_sig);
+            
             if(variances_transfer_function == "softplus") sn = softplus(snb + product(snV,a))  + min_sig + softplus(init_sig);
             else if(variances_transfer_function == "square") sn = square(snb + product(snV,a)) + min_sig + square(init_sig);
             else if(variances_transfer_function == "exp") sn = exp(snb + product(snV,a)) + min_sig + exp(init_sig);
             else PLERROR("In NonLocalManifoldParzen::build_ : unknown variances_transfer_function option %s ", variances_transfer_function.c_str());
       
-            params.append(snV);
-            params.append(snb);
-            params.append(init_sig);
+
 
             if(sigma_threshold_factor > 0)
             {        
@@ -436,12 +477,14 @@ void NonLocalManifoldParzen::build_()
             predictor = Func(x, params , tangent_plane & mu & sn );
         }
 
-        if (parameters.size()>0 && parameters.nelems() == predictor->parameters.nelems())
-            predictor->parameters.copyValuesFrom(parameters);
-        parameters.resize(predictor->parameters.size());
-        for (int i=0;i<parameters.size();i++)
-            parameters[i] = predictor->parameters[i];
-
+        if(shared_parameters.size() == 0)
+        {
+            if (parameters.size()>0 && parameters.nelems() == predictor->parameters.nelems())
+                predictor->parameters.copyValuesFrom(parameters);
+            parameters.resize(predictor->parameters.size());
+            for (int i=0;i<parameters.size();i++)
+                parameters[i] = predictor->parameters[i];
+        }
         Var target_index = Var(1,1);
         target_index->setName("target_index");
         Var neighbor_indexes = Var(nneighbors,1);
@@ -658,6 +701,7 @@ void NonLocalManifoldParzen::makeDeepCopyFromShallowCopy(CopiesMap& copies)
  deepCopyField(S_svd, copies);
 
  deepCopyField(parameters, copies);
+ deepCopyField(shared_parameters, copies);
 
  deepCopyField(reference_set,copies);
  varDeepCopyField(hidden_layer, copies);
