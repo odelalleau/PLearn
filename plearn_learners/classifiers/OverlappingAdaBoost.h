@@ -77,6 +77,9 @@ protected:
     //! Output of the weak learners pour the training set
     TVec< VMat > weak_learners_output;
   
+    //! Initial weights of the training samples
+    Mat initial_weights;
+
 public:
 
     // ************************
@@ -92,23 +95,25 @@ public:
     //! normally 0.5
     real target_error;
 
+
+    //! power to apply on the weights to sharpen (>1) or smooth (<1) the weights distribution
+    real power_weights;
+
     //! whether to give an expdir to the underlying weak learners
     bool provide_learner_expdir;
-  
+
     //! threshold on output of weak learner to decide if class 0 or class 1
     real output_threshold;
 
     //! whether to compute training error during training
     bool compute_training_error;
 
-    //! use more refined training criterion when weak classifier is soft
-    bool pseudo_loss_adaboost;
 
-    // use confidence-rated adaboost
-    bool conf_rated_adaboost;
+    //! type of boosting to use;
+    string boosting_type;
 
     //! use resampling (vs weighting) to train the underlying classifier
-    bool weight_by_resampling;
+    //bool weight_by_resampling;
 
     //! stop if weak learner does not seem to help
     bool early_stopping;
@@ -121,6 +126,31 @@ public:
 
     //! number of classes
     int nclasses;
+
+    //! number of epochs after which boosting retrains new weak learners
+    int retrain_after_n_epochs;
+
+    //! indication the ordinary boosting should be used 
+    bool ordinary_boosting;
+
+    //! classes that we really want to discriminate
+    TVec<int> classes_to_discriminate;
+
+    //! indication that the weights should be scaled by dividing by
+    //! the maximum weight value
+    bool scale_using_max_weight;
+
+    //! indication that the training set size should be adjusted
+    //! based on the weight distribution. This is useful
+    //! for weak learners using gradient descent optimization
+    bool adjust_training_set_size;
+
+    //! Fraction of the original training set to really be used for training
+    //! (the other samples are assumed to be used for validation by the user).
+    //! If <= 0, than no validation set is assumed.
+    //! If > 1, than it is assumed to be the number of samples
+    //! in the training set, instead of the fraction of samples.
+    real train_subset;
 
     // ****************
     // * Constructors *
