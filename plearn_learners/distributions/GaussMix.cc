@@ -315,7 +315,6 @@ void GaussMix::computeMeansAndCovariances() {
 #endif
         } else
             PLERROR("In GaussMix::computeMeansAndCovariances - Not implemented for this type of Gaussian");
-        // TODO Implement them all.
     }
 }
 
@@ -604,6 +603,10 @@ void GaussMix::generateFromGaussian(Vec& s, int given_gaussian) const {
            if (n_margin > 0)
            PLERROR("In GaussMix::generateFromGaussian - Marginalization not implemented for the general type");
         */
+        // TODO Does this work or not ?
+        if (n_margin > 0)
+            PLERROR("In GaussMix::generateFromGaussian - Is marginalization "
+                    "implemented for the general type ??");
         static Vec norm;
         static real lambda0;
         static int n_eig;
