@@ -129,6 +129,30 @@ void SelectRowsVMatrix::declareOptions(OptionList &ol)
                   "Set to 1 if the weightsize was obtained from the source VMat.");
 
     inherited::declareOptions(ol);
+
+    // Hide unused options.
+    // Note: it is not obvious that all the options below are useless, one may
+    // want to un-hide some in the future. However, the more hidden, the
+    // simpler for the beginner.
+
+    redeclareOption(ol, "writable", &SelectRowsVMatrix::writable,
+                    OptionBase::nosave, "Not used.");
+
+    redeclareOption(ol, "length", &SelectRowsVMatrix::length_,
+                    OptionBase::nosave, "Not used.");
+
+    redeclareOption(ol, "width", &SelectRowsVMatrix::width_,
+                    OptionBase::nosave, "Not used.");
+
+    redeclareOption(ol, "inputsize", &SelectRowsVMatrix::inputsize_,
+                    OptionBase::nosave, "Not used.");
+
+    redeclareOption(ol, "targetsize", &SelectRowsVMatrix::targetsize_,
+                    OptionBase::nosave, "Not used.");
+
+    redeclareOption(ol, "weightsize", &SelectRowsVMatrix::weightsize_,
+                    OptionBase::nosave, "Not used.");
+
 }
 
 void SelectRowsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
