@@ -481,8 +481,16 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
                 n_eig = n_eigen_computed;
             }
         }
+        if (size > 0)
+            y_centered.resize(size);
+        else {
+            // 'y_centered' may have a null storage if we just resize it to
+            // zero. Thus we first resize it to one then to zero.
+            assert( size == 0 );
+            y_centered.resize(1);
+            y_centered.resize(0);
+        }
         t = log_coeff[j];
-        y_centered.resize(size);
         y_centered << y_no_missing;
         y_centered -= mu_y;
         squared_norm_y_centered = pownorm(y_centered);
@@ -513,6 +521,7 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
                     conditional_flags[cond_flags_backup[i]] = cond_flags_backup[i+1];
             setConditionalFlags(conditional_flags);
         }
+        // TODO Check the value returned here when all features are missing.
         return t;
     } else {
         PLERROR("In GaussMix::computeLogLikelihood - Not implemented for this type of Gaussian");
@@ -815,7 +824,9 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
             clust_i = clust(i);
             int j;
             for (j = 0;
-                 j < input.length() && clust_stat[i].getStats(j).nnonmissing() == 0;
+                 j < input.length()
+                    && clust_stat[i].stats.length() > 0
+                    && clust_stat[i].getStats(j).nnonmissing() == 0;
                  j++) {}
             if (j < input.length())
                 // There have been some samples assigned to this cluster.
