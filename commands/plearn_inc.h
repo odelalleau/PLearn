@@ -241,6 +241,7 @@
 #include <plearn/vmat/RankedVMatrix.h>
 #include <plearn/vmat/RegularGridVMatrix.h>
 #include <plearn/vmat/RemoveDuplicateVMatrix.h>
+#include <plearn/vmat/ReorderByMissingVMatrix.h>
 #include <plearn/vmat/SelectAttributsSequenceVMatrix.h>
 #include <plearn/vmat/ShuffleColumnsVMatrix.h>
 #include <plearn/vmat/SortRowsVMatrix.h>
@@ -249,8 +250,8 @@
 #include <plearn/vmat/TextFilesVMatrix.h>
 #include <plearn/vmat/ThresholdVMatrix.h>
 #include <plearn/vmat/TransposeVMatrix.h>
-#include <plearn/vmat/VMatrixFromDistribution.h>
 #include <plearn/vmat/ViewSplitterVMatrix.h>
+#include <plearn/vmat/VMatrixFromDistribution.h>
 #endif
 
 
