@@ -190,7 +190,8 @@ void MemoryVMatrix::getSubRow(int i, int j, Vec v) const
 ////////////
 void MemoryVMatrix::getRow(int i, Vec v) const
 {
-    if (v.length() > 0)
+    assert( v.length() == width_ );
+    if (width_ > 0)
         v.copyFrom(memory_data[i], width_);
 }
 

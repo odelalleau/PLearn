@@ -178,7 +178,11 @@ void ForwardVMatrix::appendRow(Vec v)
 { vm->appendRow(v); }
 
 void ForwardVMatrix::getRow(int i, Vec v) const
-{ vm->getRow(i, v); }
+{
+    assert( v.length() == width() );
+    vm->getRow(i, v);
+}
+
 void ForwardVMatrix::putRow(int i, Vec v)
 { vm->putRow(i, v); }
 void ForwardVMatrix::fill(real value)
