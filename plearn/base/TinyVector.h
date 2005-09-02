@@ -36,7 +36,7 @@
 
 //#include <utility>
 //#include <stdexcept>			     // for out_of_range
-//#include <algorithm>			     // for lexicographical_compare
+#include <algorithm>			     // for lexicographical_compare
 #include <typeinfo>
 
 #include "plerror.h"
@@ -45,25 +45,29 @@
 
 namespace PLearn {
 using namespace std;
-//using namespace std::rel_ops; // ne compile pas, pour une raison etrange
 
 //!  Forward declaration
 template <class T> class TinyVectorTrait;
 
 
 //############################  CLASS  TINYVECTOR  ########################
-/*!       
-  A tiny vector tries to mimic (a small subset of) the interface of a
-  built-in standard vector<>, but it has an additional restriction: it
-  can hold a compile-time maximum number of elements.  In exchange for
-  this restriction, it allocates the elements of the vector within the
-  class, which completely eliminates the need for dynamic allocation.
-  In addition, the size of the vector is not stored explicitly, but
-  rather determined from the number of "missing values".  What exactly
-  should be considered a missing value differs for each type T, which
-  is why a TinyVectorTrait::Missing is defined for useful types.  You
-  can also define one yourself.
-*/
+
+/**
+ *  @class TinyVector
+ *  @brief Compile-time fixed-size vector with interface close to std::vector.
+ *
+ *
+ *  A tiny vector tries to mimic (a small subset of) the interface of a
+ *  built-in standard std::vector<>, but it has an additional restriction: it
+ *  can hold a compile-time maximum number of elements.  In exchange for this
+ *  restriction, it allocates the elements of the vector within the class,
+ *  which completely eliminates the need for dynamic allocation.  In addition,
+ *  the size of the vector is not stored explicitly, but rather determined from
+ *  the number of "missing values".  What exactly should be considered a
+ *  missing value differs for each type T, which is why a
+ *  TinyVectorTrait::Missing is defined for useful types.  You can also define
+ *  one yourself.
+ */
 
 template < class T, unsigned N, class TTrait = TinyVectorTrait<T> >
 class TinyVector
@@ -211,12 +215,16 @@ inline void operator<<(TinyVector<T,N,TTrait>& x,
 
 
 //#########################  CLASS  TINYVECTORTRAIT  ######################
-/*!       
-  The class TinyVectorTrait is specialized for each class T of
-  interest.  It defines a static constant named "Missing", which is
-  the missing value for the type.  These missing values are used, in
-  turn, to determine what is and is not an element of a TinyVector.
-*/
+
+/**
+ *  @class TinyVectorTrait
+ *  @brief Define "missing-value" for a number of types with TinyVector.
+ *
+ *  The class TinyVectorTrait is specialized for each class T of interest.  It
+ *  defines a static constant named "Missing", which is the missing value for
+ *  the type.  These missing values are used, in turn, to determine what is and
+ *  is not an element of a TinyVector.
+ */
     
 template <typename T> class TinyVectorTrait {};
 
