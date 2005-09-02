@@ -2,6 +2,7 @@
 // VecStatsCollector.cc
 // 
 // Copyright (C) 2002 Pascal Vincent
+// Copyright (C) 2005 University of Montreal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -272,7 +273,7 @@ void VecStatsCollector::remove_observation(const Vec& x, real weight)
                 // TODO The two lines below could be optimized with an additional Vec
                 // storing the sum of weighted x_i for non missing data.
                 for (int i = 0; i < n; i++)
-                    sum_cross(i)                 -= weight * x[i];
+                    sum_cross(i)               -= weight * x[i];
             }
         }
     }
@@ -396,7 +397,13 @@ void VecStatsCollector::getCovariance(Mat& covar) const {
     //                     + (sum^i,j_k w(k) - sum^i_k w(k) - sum^j_k w(k) )
     //                       * sum^i,j_k w(k)^2 / (sum^i_k w(k) * sum^j_k w(k))
     //                   ]
-   
+    //
+    // If features i and j have never been observed simultaneously, or one of
+    // the two features has been observed only once, then covariance(i,j) is
+    // set to MISSING_VALUE.
+    // The first  case occurs when sum^i,j_k w(k) == 0.
+    // The second case occurs when sum^i,j_k w(k) == sqrt(sum^i,j_k w(k)^2)
+    //                                            == sum^{i or j}_k w(k)
     static Vec meanvec;
     assert( compute_covariance && cov.length() == cov.width() );
     int d = cov.length();
@@ -411,13 +418,23 @@ void VecStatsCollector::getCovariance(Mat& covar) const {
                 + sum_non_missing_square_weights;
             real mean_i = meanvec[i];
             real mean_j = meanvec[j];
-            covar(i,j) = (cov(i,j) + mean_i * mean_j * sum_cross_weights_i_j
-                          - mean_j * sum_cross(i,j)
-                          - mean_i * sum_cross(j,i)
-                ) /
-                (  sum_cross_weights_i_j
-                   + (sum_cross_weights_i_j - sum_weights_i - sum_weights_j)
-                   * sum_cross_square_weights_i_j / (sum_weights_i * sum_weights_j)
+            if (sum_cross_weights_i_j == 0 ||
+                (fast_is_equal(sum_cross_weights_i_j,
+                               sqrt(sum_cross_square_weights_i_j)) &&
+                 (fast_is_equal(sum_cross_weights_i_j, sum_weights_i) ||
+                  fast_is_equal(sum_cross_weights_i_j, sum_weights_j))))
+                // One of the two cases described above.
+                covar(i,j) = MISSING_VALUE;
+            else
+                covar(i,j) =
+                    (cov(i,j) + mean_i * mean_j * sum_cross_weights_i_j
+                              - mean_j * sum_cross(i,j)
+                              - mean_i * sum_cross(j,i)
+                    ) /
+                    (  sum_cross_weights_i_j
+                     + (sum_cross_weights_i_j - sum_weights_i - sum_weights_j)
+                     * sum_cross_square_weights_i_j
+                     / (sum_weights_i * sum_weights_j)
                     );
             if (j == i)
                 covar(i,j) += epsilon;
