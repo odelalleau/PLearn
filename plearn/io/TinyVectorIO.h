@@ -38,8 +38,6 @@
 
 // Authors: Nicolas Chapados
 
-/*! \file TinyVectorIO.h */
-
 
 #ifndef TinyVectorIO_INC
 #define TinyVectorIO_INC
@@ -55,7 +53,9 @@
 namespace PLearn {
 
 /**
- *  This file provides I/O functionality of TinyVectors for PStreams
+ *  @file TinyVectorIO.h
+ *
+ *  This file provides I/O functionality of TinyVectors for PStreams.
  */
 
 template <class T, unsigned N, class TTrait>
@@ -88,7 +88,7 @@ PStream& operator>>(PStream& is, TinyVector<T,N,TTrait>& tiny_vec)
 {
     TVec<T> v;
     is >> v;
-    tiny_vec.resize(v.size);
+    tiny_vec.resize(v.size());
     copy(v.begin(), v.end(), tiny_vec.begin());
     return is;
 }
