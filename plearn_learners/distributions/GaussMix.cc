@@ -52,18 +52,20 @@ using namespace std;
 //////////////
 // GaussMix //
 //////////////
-GaussMix::GaussMix() 
-    : PDistribution(),
-      D(0),
-      n_eigen_computed(0),
-      nsamples(0),
-      alpha_min(1e-5),
-      epsilon(1e-6),
-      kmeans_iterations(3),
-      L(1),
-      n_eigen(-1),
-      sigma_min(1e-5),
-      type("spherical")
+GaussMix::GaussMix():
+    PDistribution(),
+    conditional_updating_time(0),
+    D(0),
+    n_eigen_computed(0),
+    nsamples(0),
+    training_time(0),
+    alpha_min(1e-5),
+    epsilon(1e-6),
+    kmeans_iterations(3),
+    L(1),
+    n_eigen(-1),
+    sigma_min(1e-5),
+    type("spherical")
 {
     nstages = 10;
 }
@@ -182,6 +184,13 @@ void GaussMix::declareOptions(OptionList& ol)
 
     declareOption(ol, "sigma", &GaussMix::sigma, OptionBase::learntoption,
                   "The standard deviation in all directions, for type == 'spherical'.\n");
+
+    declareOption(ol, "conditional_updating_time",
+            &GaussMix::conditional_updating_time, OptionBase::learntoption,
+            "Time spent in updating from conditional sorting.");
+
+    declareOption(ol, "training_time", &GaussMix::training_time, OptionBase::learntoption,
+            "Time spent in training the model.");
 
     // Would be used if the 'factor' type is implemented some day.
   
@@ -608,6 +617,8 @@ void GaussMix::forget()
     stage = 0;
     if (seed_ >= 0)
         manual_seed(seed_);
+    training_time = 0;
+    conditional_updating_time = 0;
 }
 
 //////////////
@@ -1070,6 +1081,9 @@ void GaussMix::train()
         PLERROR("In GaussMix::train - No training set specified");
     }
 
+    // Mark start of training
+    clock_t training_start = clock();
+
     // When training, we want to learn the full joint distribution.
     TVec<int> old_flags;
     bool restore_flags = ensureFullJointDistribution(old_flags);
@@ -1130,6 +1144,7 @@ void GaussMix::train()
     log_p_j_x.clear();
     // Options have changed: build is necessary.
     build();
+    training_time += real(clock() - training_start) / real(CLOCKS_PER_SEC);
 }
 
 //////////////////////////////////
@@ -1138,6 +1153,7 @@ void GaussMix::train()
 void GaussMix::updateFromConditionalSorting() const {
     static Mat inv_cov_x, tmp_cov, work_mat1, work_mat2;
     Vec eigenvals;
+    clock_t updating_start = clock();
     // Update the centers of the Gaussians.
     sortFromFlags(mu);
     if (type == "spherical") {
@@ -1231,6 +1247,8 @@ void GaussMix::updateFromConditionalSorting() const {
     } else {
         PLERROR("In GaussMix::updateFromConditionalSorting - Not implemented for this type");
     }
+    conditional_updating_time +=
+        real(clock() - updating_start) / real(CLOCKS_PER_SEC);
 }
 
 ///////////////////

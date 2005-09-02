@@ -62,6 +62,7 @@ protected:
     // * protected options *
     // *********************
 
+    mutable real conditional_updating_time;
     Mat eigenvalues;
     TVec<Mat> eigenvectors;
     int D;
@@ -73,6 +74,7 @@ protected:
     int n_eigen_computed;
     int nsamples;
     Vec p_j_x;
+    real training_time;
 
     // Fields below are not options.
 
