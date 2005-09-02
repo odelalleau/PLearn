@@ -294,9 +294,45 @@ void GaussMix::computeMeansAndCovariances() {
             diags(j) << stddev;
         } else if (type == "general") {
             Vec center = mu(j);
-            // weighted_train_set->saveAMAT("weighted_train_set_" + tostring(j) + ".amat");
+            // weighted_train_set->saveAMAT
+            //   ("weighted_train_set_" + tostring(j) + ".amat");
             computeInputMeanAndCovar(weighted_train_set, center, covariance);
+            if (center.hasMissing()) {
+                // There are features missing in all points assigned to this
+                // Gaussian. We sample a new random value for these features.
+                for (int i = 0; i < D; i++)
+                    if (is_missing(center[i])) {
+                        center[i] =
+                            random->gaussian_mu_sigma(mean_training  [i],
+                                                      stddev_training[i]);
 #ifdef BOUNDCHECK
+                        // Safety check: the corresponding row and column in
+                        // the covariance matrix should be missing.
+                        for (int k = 0; k < D; k++) {
+                            if (!is_missing(covariance(i,k)) ||
+                                !is_missing(covariance(k,i)))
+                                PLERROR(
+                                    "In GaussMix::computeMeansAndCovariances -"
+                                    " Expected a missing value in covariance");
+                        }
+#endif
+                    }
+            }
+            if (covariance.hasMissing())
+                // The covariance matrix may have some missing values when not
+                // enough samples were seen to get simultaneous observations of
+                // some pairs of features.
+                // Those missing values are replaced with zero.
+                for (int i = 0; i < D; i++)
+                    for (int k = i; k < D; k++)
+                        if (is_missing(covariance(i,k))) {
+                            covariance(i,k) = 0;
+                            assert( is_missing(covariance(k,i)) ||
+                                    covariance(k,i) == 0 );
+                            covariance(k,i) = 0;
+                        }
+#ifdef BOUNDCHECK
+            // At this point there should be no more missing values.
             if (covariance.hasMissing() || center.hasMissing())
                 PLERROR("In GaussMix::computeMeansAndCovariances - Found missing values "
                         "when computing weighted mean and covariance");
@@ -304,15 +340,18 @@ void GaussMix::computeMeansAndCovariances() {
             Vec eigenvals = eigenvalues(j); // The eigenvalues vector of the j-th Gaussian.
             eigenVecOfSymmMat(covariance, n_eigen_computed, eigenvals, eigenvectors[j]);
             assert( eigenvals.length() == n_eigen_computed );
-#ifdef BOUNDCHECK
             // Make sure there are no negative eigenvalues.
             for (int i = n_eigen_computed - 1; i >= 0; i--)
                 if (eigenvals[i] < 0)
-                    PLERROR("In GaussMix::computeMeansAndCovariances - Eigenvalue %d "
-                            "(equal to %f) is negative", i, eigenvals[i]);
+                    if (is_equal(eigenvals[i], 0))
+                        // The eigenvalue is approximately zero: must be the
+                        // consequence of some numerical precision loss.
+                        eigenvals[i] = 0;
+                    else
+                        PLERROR("In GaussMix::computeMeansAndCovariances - Eigenvalue %d "
+                                "(equal to %f) is negative", i, eigenvals[i]);
                 else
                     break;
-#endif
         } else
             PLERROR("In GaussMix::computeMeansAndCovariances - Not implemented for this type of Gaussian");
     }
@@ -681,8 +720,24 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
 
     // Compute mean and standard deviation for all fields (will be used to
     // generate some random values to replace missing values).
-    Vec mean, stddev;
-    computeMeanAndStddev(samples, mean, stddev);
+    computeMeanAndStddev(samples, mean_training, stddev_training);
+
+    if (mean_training.hasMissing())
+        // Some features are completely missing: we assume mean is 0 and
+        // standard deviation is 1.
+        for (int i = 0; i < mean_training.length(); i++)
+            if (is_missing(mean_training[i])) {
+                mean_training[i] = 0;
+                stddev_training[i] = 1;
+            }
+
+    if (stddev_training.hasMissing())
+        // There may be only one sample with a non-missing value, we assume the
+        // standard deviation is 1 (probably not always a good idea, but it
+        // should not really matter in any real-life application).
+        for (int i = 0; i < stddev_training.length(); i++)
+            if (is_missing(stddev_training[i]))
+                stddev_training[i] = 1;
 
     // build a nclust-long vector of samples indexes to initialize clusters centers
     TVec<int> start_idx(nclust, -1);
@@ -713,7 +768,8 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
         center = clust(i);
         for (int k = 0; k < center.length(); k++)
             if (is_missing(center[k]))
-                center[k] = random->gaussian_mu_sigma(mean[k], stddev[k]);
+                center[k] = random->gaussian_mu_sigma(mean_training  [k],
+                                                      stddev_training[k]);
     }
 
 
@@ -762,7 +818,8 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
             // Replace missing values by randomly generated values.
             for (int k = 0; k < clust_i.length(); k++)
                 if (is_missing(clust_i[k]))
-                    clust_i[k] = random->gaussian_mu_sigma(mean[k], stddev[k]);
+                    clust_i[k] = random->gaussian_mu_sigma(mean_training  [k],
+                                                           stddev_training[k]);
         }
 
         ok=true;
@@ -843,6 +900,8 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(full_cov,copies);
     deepCopyField(y_x_mat,copies);
 
+    deepCopyField(mean_training,copies);
+    deepCopyField(stddev_training,copies);
     deepCopyField(posteriors,copies);
     deepCopyField(initial_weights,copies);
     deepCopyField(updated_weights,copies);

@@ -85,6 +85,9 @@ protected:
     TVec<Mat> full_cov;         //!< The full covariance matrix.
     TVec<Mat> y_x_mat;          //!< The product K2 * K1^-1 to compute E[Y|x].
 
+    //! Mean and standard deviation of the training set.
+    Vec mean_training, stddev_training;
+
     //! The posterior probabilities P(j | s_i), where j is the index of a Gaussian
     //! and i is the index of a sample.
     Mat posteriors;
