@@ -224,6 +224,11 @@ inline void operator<<(TinyVector<T,N,TTrait>& x,
  *  defines a static constant named "Missing", which is the missing value for
  *  the type.  These missing values are used, in turn, to determine what is and
  *  is not an element of a TinyVector.
+ *
+ *  In addition, it defines a type "IOType" which is the type of value that we
+ *  should convert to/from when performing PStream I/O.  This is mostly useful
+ *  for ensuring that the character types don't get serialized and deserialized
+ *  as characters, but integers.
  */
     
 template <typename T> class TinyVectorTrait {};
@@ -231,36 +236,43 @@ template <typename T> class TinyVectorTrait {};
 template <> class TinyVectorTrait<unsigned char> {
 public:
     static const unsigned char Missing = UCHAR_MAX;
+    typedef unsigned IOType;
 };
 
 template <> class TinyVectorTrait<signed char> {
 public:
     static const signed char Missing = CHAR_MAX;
+    typedef int IOType;
 };
 
 template <> class TinyVectorTrait<char> {
 public:
     static const char Missing = CHAR_MAX;
+    typedef int IOType;
 };
 
 template <> class TinyVectorTrait<unsigned short> {
 public:
     static const unsigned short Missing = USHRT_MAX;
+    typedef unsigned short IOType;
 };
 
 template <> class TinyVectorTrait<short> {
 public:
     static const short Missing = SHRT_MAX;
+    typedef short IOType;
 };
 
 template <> class TinyVectorTrait<unsigned int> {
 public:
     static const unsigned int Missing = UINT_MAX;
+    typedef unsigned IOType;
 };
 
 template <> class TinyVectorTrait<int> {
 public:
     static const int Missing = INT_MAX;
+    typedef int IOType;
 };
 
   

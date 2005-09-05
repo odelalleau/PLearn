@@ -61,9 +61,10 @@ namespace PLearn {
 template <class T, unsigned N, class TTrait>
 ostream& operator<<(ostream& os, const TinyVector<T,N,TTrait>& tiny_vec)
 {
+    typedef typename TTrait::IOType IOType;
     os << '[';
     for (int i=0, n=int(tiny_vec.size()); i<n ; ++i) {
-        os << tiny_vec[i];
+        os << IOType(tiny_vec[i]);
         if (i < n-1)
             os << ',';
     }
@@ -73,9 +74,10 @@ ostream& operator<<(ostream& os, const TinyVector<T,N,TTrait>& tiny_vec)
 template <class T, unsigned N, class TTrait>
 PStream& operator<<(PStream& os, const TinyVector<T,N,TTrait>& tiny_vec)
 {
+    typedef typename TTrait::IOType IOType;
     os << '[';
     for (int i=0, n=int(tiny_vec.size()); i<n ; ++i) {
-        os << tiny_vec[i];
+        os << IOType(tiny_vec[i]);
         if (i < n-1)
             os << ',';
     }
@@ -86,7 +88,8 @@ PStream& operator<<(PStream& os, const TinyVector<T,N,TTrait>& tiny_vec)
 template <class T, unsigned N, class TTrait>
 PStream& operator>>(PStream& is, TinyVector<T,N,TTrait>& tiny_vec)
 {
-    TVec<T> v;
+    typedef typename TTrait::IOType IOType;
+    TVec<IOType> v;
     is >> v;
     tiny_vec.resize(v.size());
     copy(v.begin(), v.end(), tiny_vec.begin());
