@@ -293,6 +293,16 @@ void SparseIncrementalAffineTransformVariable::bprop()
         // Initialize gradient cumulator
         n_grad_samples=0;
         sums.clear();
+
+        for(int i=0; i< input1->size(); i++)
+        {
+          sc_input[i].forget();
+          for(int j=0; j< input2->width(); j++)
+          {
+            if(i==0) sc_grad[j].forget();
+            sc_input_grad(i,j).forget();
+          }
+        }
       }
     // Do actual bprop
     /*
