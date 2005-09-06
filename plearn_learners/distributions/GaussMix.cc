@@ -540,6 +540,8 @@ void GaussMix::computePosteriors() {
         train_set->getSubRow(i, 0, sample_row);
         // First we need to compute the likelihood P(s_i | j).
         for (int j = 0; j < L; j++) {
+            // TODO See if we can optimize some stuff when calling
+            // computeLogLikelihood for each value of j.
             log_likelihood_post[j] = computeLogLikelihood(sample_row, j) + log(alpha[j]);
 #ifdef BOUNDCHECK
 #ifdef __INTEL_COMPILER
@@ -1135,10 +1137,18 @@ void GaussMix::train()
     if (report_progress)
         pb = new ProgressBar("Training GaussMix", n_steps);
     while (stage < nstages) {
+        int n_tries = 0;
+        if (verbosity >= 5)
+            pout << endl << "Number of tries = " << flush;
         do {
+            n_tries++;
+            if (verbosity >= 5 && n_tries % 10 == 0)
+                pout << n_tries << ", " << flush;
             computePosteriors();
             replaced_gaussian = computeWeights();
         } while (replaced_gaussian);
+        if (verbosity >= 5)
+            pout << n_tries << endl;
         computeMeansAndCovariances();
         precomputeStuff();
         stage++;
@@ -1238,26 +1248,35 @@ void GaussMix::updateFromConditionalSorting() const {
                     inv_cov_x(i,i) += one_over_lambda0;
             }
             // Compute the covariance of y|x.
-            cov_y_x[j].resize(n_target, n_target);
-            cov_y_x[j] << full_cov[j].subMat(n_input, n_input, n_target, n_target);
-            y_x_mat[j].resize(n_target, n_input);
-            if (n_input > 0 && n_target > 0) {
-                tmp_cov = full_cov[j].subMat(n_input, 0, n_target, n_input);
-                product(work_mat1, tmp_cov, inv_cov_x);
-                productTranspose(work_mat2, work_mat1, tmp_cov);
-                cov_y_x[j] -= work_mat2;
-                y_x_mat[j] << work_mat1;
+            // It is only needed when there is an input part, since otherwise
+            // we can simply use the full covariance.
+            if (n_input > 0) {
+                cov_y_x[j].resize(n_target, n_target);
+                cov_y_x[j] <<
+                    full_cov[j].subMat(n_input, n_input, n_target, n_target);
+                y_x_mat[j].resize(n_target, n_input);
+                if (n_target > 0) {
+                    tmp_cov = full_cov[j].subMat(n_input,0, n_target, n_input);
+                    product(work_mat1, tmp_cov, inv_cov_x);
+                    productTranspose(work_mat2, work_mat1, tmp_cov);
+                    cov_y_x[j] -= work_mat2;
+                    y_x_mat[j] << work_mat1;
+                }
+                // Compute SVD of the covariance of y|x.
+                eigenvectors_y_x[j].resize(n_target, n_target);
+                eigenvals = eigenvalues_y_x(j);
+                // Ensure covariance matrix is perfectly symmetric.
+                assert( cov_y_x[j].isSymmetric(false, true) );
+                fillItSymmetric(cov_y_x[j]);
+                eigenVecOfSymmMat(cov_y_x[j], n_target, eigenvals, eigenvectors_y_x[j]);
+            } else {
+                // Resize to zero unused stuff just to make sure it cannot be
+                // used by mistake.
+                cov_y_x[j].resize(0,0);
+                y_x_mat[j].resize(0,0);
+                eigenvectors_y_x[j].resize(0,0);
+                eigenvalues_y_x.resize(0,0);
             }
-            // And its SVD.
-            eigenvectors_y_x[j].resize(n_target, n_target);
-            eigenvals = eigenvalues_y_x(j);
-//      static int eigen_2_count = 0;
-//      pout << "Eigen 2: " << ++eigen_2_count << endl;
-            // Ensure covariance matrix is perfectly symmetric.
-            assert( cov_y_x[j].isSymmetric(false, true) );
-            fillItSymmetric(cov_y_x[j]);
-            eigenVecOfSymmMat(cov_y_x[j], n_target, eigenvals, eigenvectors_y_x[j]);
-//      pout << "Eigen 2 done" << endl;
         }
     } else {
         PLERROR("In GaussMix::updateFromConditionalSorting - Not implemented for this type");
