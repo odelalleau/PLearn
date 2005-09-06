@@ -123,9 +123,6 @@ protected:
     //! SVD computation variables
     mutable Vec S_svd;
 
-    //! Parameters of the model
-    VarArray parameters;
-
 public:
 
     // ************************
@@ -133,6 +130,14 @@ public:
     // ************************
 
     // ### declare public option fields (such as build options) here
+
+    //! Parameters of the model
+    //! It is put here so that these parameters can
+    //! be shared by different NonLocalManifoldParzen
+    //! objects (eventually, should use the "friend class"
+    //! principal instead)
+    VarArray parameters;
+    
 
     // Embedding penalty weight
     //real weight_embedding;
@@ -217,9 +222,6 @@ protected:
     //! Declares this class' options.
     static void declareOptions(OptionList& ol);
 
-    //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
-    //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
-    virtual void forget();
     virtual void initializeParams();
 
 public:
@@ -230,6 +232,10 @@ public:
 
     //! Simply calls inherited::build() then build_().
     virtual void build();
+    
+    //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
+    //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
+    virtual void forget();
 
     //! Transforms a shallow copy into a deep copy.
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);

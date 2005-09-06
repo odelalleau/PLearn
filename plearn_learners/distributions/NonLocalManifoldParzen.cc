@@ -707,9 +707,6 @@ void NonLocalManifoldParzen::makeDeepCopyFromShallowCopy(CopiesMap& copies)
  varDeepCopyField(hidden_layer, copies);
  deepCopyField(optimizer, copies);
 
-
-
- // TODO : verify WTF with DistanceKernel
 }
 
 
@@ -755,7 +752,10 @@ void NonLocalManifoldParzen::train()
 
     if(optimizer)
     {
-        optimizer->setToOptimize(parameters, totalcost);  
+        if(shared_parameters.size()!=0)
+            optimizer->setToOptimize(shared_parameters, totalcost);  
+        else
+            optimizer->setToOptimize(parameters, totalcost);  
         optimizer->build();
     }
     else PLERROR("NonLocalManifoldParzen::train can't train without setting an optimizer first!");
