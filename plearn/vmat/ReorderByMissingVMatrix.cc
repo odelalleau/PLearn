@@ -62,7 +62,8 @@ PLEARN_IMPLEMENT_OBJECT(
 /////////////////////////////
 // ReorderByMissingVMatrix //
 /////////////////////////////
-ReorderByMissingVMatrix::ReorderByMissingVMatrix()
+ReorderByMissingVMatrix::ReorderByMissingVMatrix():
+    verbosity(1)
 {}
 
 ////////////////////
@@ -70,16 +71,8 @@ ReorderByMissingVMatrix::ReorderByMissingVMatrix()
 ////////////////////
 void ReorderByMissingVMatrix::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-
-    // ### ex:
-    // declareOption(ol, "myoption", &ReorderByMissingVMatrix::myoption, OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
+    declareOption(ol, "verbosity", &ReorderByMissingVMatrix::verbosity, OptionBase::buildoption,
+            "Control the amount of output.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -132,6 +125,8 @@ void ReorderByMissingVMatrix::build_()
         int n = source.length();
         int w = source.width();
         sourcerow.resize(w);
+        string previous_flags;
+        int n_flag_changes = 0;
         for (int i = 0; i < n; i++) {
             source->getRow(i, sourcerow);
             string missing_flags;
@@ -144,15 +139,31 @@ void ReorderByMissingVMatrix::build_()
             ex.index = i;
             ex.missing_flags = missing_flags;
             vec.push_back(ex);
+            if (!previous_flags.empty() && missing_flags != previous_flags)
+                n_flag_changes++;
+            previous_flags = missing_flags;
         }
+        if (verbosity >= 1)
+            pout << "Number of flag changes before sorting: "
+                 << n_flag_changes << endl;
         // Sort this vector.
         sort(vec.begin(), vec.end(), compare_index_and_missing_flags);
         // Build the 'indices' vector.
         indices.resize(n);
         indices.resize(0);
         vector<index_and_missing_flags>::const_iterator it = vec.begin();
-        for (; it != vec.end(); it++)
+        previous_flags = "";
+        n_flag_changes = 0;
+        for (; it != vec.end(); it++) {
             indices.append(it->index);
+            const string& missing_flags = it->missing_flags;
+            if (!previous_flags.empty() && missing_flags != previous_flags)
+                n_flag_changes++;
+            previous_flags = missing_flags;
+        }
+        if (verbosity >= 1)
+            pout << "Number of flag changes after sorting: "
+                 << n_flag_changes << endl;
         // Re-build the parent class according to the new 'indices' vector.
         inherited::build();
     }

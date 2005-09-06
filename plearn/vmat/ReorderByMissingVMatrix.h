@@ -58,6 +58,8 @@ class ReorderByMissingVMatrix : public SelectRowsVMatrix
 public:
     //#####  Public Build Options  ############################################
 
+    int verbosity;
+
 public:
     //#####  Public Member Functions  #########################################
 
