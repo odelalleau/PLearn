@@ -246,23 +246,26 @@ void OverlappingAdaBoost::train()
     //if (nstages < stage)        //!< Asking to revert to previous stage
     //  forget();
 
+    int penalty_index;
 
-    static Vec input;
-    static Vec output;
-    static Vec target;
+    Vec input;
+    Vec output;
+    Vec target;
+    Vec costs;
     real weight;
-    Vec theta;
+    Vec theta(outputsize());
     real max_weight;
     real sum_of_square_weights;
 
-    static Mat examples_error;
+    Mat examples_error;
     //static TVec<int> train_indices;
     //static Vec pseudo_loss;
 
 
     input.resize(inputsize());
+    if(!ordinary_boosting)
+        input.resize(input.length()+stage*outputsize());
     target.resize(targetsize());
-
 
 
     if (stage==0)
@@ -323,9 +326,6 @@ void OverlappingAdaBoost::train()
         VMat weak_learner_validation_set;
         {
 
-            ProgressBar *pb=0;
-            if(report_progress)  pb = new ProgressBar("OverlappingAdaBoost round " + tostring(stage) +
-                                                      ": making training set for weak learner", n);
             Array<VMat> temp_columns(1);
             // We shall now construct a training set for the new weak learner:
             /*
@@ -444,11 +444,11 @@ void OverlappingAdaBoost::train()
         if(adjust_training_set_size)
         {
             if(train_subset <= 0)
-                new_weak_learner->setTrainingSet(repeat_vmatrix(weak_learner_training_set,(int)(max_weight/sum_of_square_weights + 0.5)));
+                new_weak_learner->setTrainingSet(repeat_vmatrix(weak_learner_training_set,(int)(train_set->length()*max_weight*outputsize()+0.5)));
             else
-                new_weak_learner->setTrainingSet(vconcat(repeat_vmatrix(weak_learner_training_set,(int)(max_weight/sum_of_square_weights + 0.5))
+                new_weak_learner->setTrainingSet(vconcat(repeat_vmatrix(weak_learner_training_set,(int)(train_set->length()*max_weight*outputsize() + 0.5))
                                                          &
-                                                         repeat_vmatrix(weak_learner_validation_set,(int)(max_weight/sum_of_square_weights + 0.5))));
+                                                         repeat_vmatrix(weak_learner_validation_set,(int)(train_set->length()*max_weight*outputsize() + 0.5))));
         }
         else
         {
@@ -463,18 +463,7 @@ void OverlappingAdaBoost::train()
         if(expdir!="" && provide_learner_expdir)
             new_weak_learner->setExperimentDirectory(append_slash(expdir+"WeakLearner" + tostring(stage) + "Expdir"));
 
-        new_weak_learner->train();
-    
-
-        if(!ordinary_boosting)
-        {
-            TVec< PP<PLearner> > pl(1); pl[0] = new_weak_learner;
-            if(train_subset <= 0)
-                weak_learners_output.push_back(new MemoryVMatrix(new PLearnerOutputVMatrix(weak_learner_training_set, pl, false, false, false, false)));
-            else
-                weak_learners_output.push_back(new MemoryVMatrix(new PLearnerOutputVMatrix(vconcat(weak_learner_training_set&weak_learner_validation_set), pl, false, false, false, false)));
-            input.resize(input.length()+1);
-        }
+        new_weak_learner->train();        
 
         weak_learners.push_back(new_weak_learner);
 
@@ -484,18 +473,30 @@ void OverlappingAdaBoost::train()
     
 
         // compute the new learner's weight
-        //theta = 2*penalty_coefficient*new_weak_learner->penalty_cost();
         theta.fill(0);
-
-
+        costs.resize(new_weak_learner->getTestCostNames().length());
+        if(outputsize() > 1) input.resize(input.length()+outputsize());
+        new_weak_learner->computeCostsFromOutputs(input,output,target,costs);
+        if(outputsize() > 1) input.resize(input.length()-outputsize());
+        TVec<string> temp = new_weak_learner->getTestCostNames();
+        penalty_index = temp.find("penalty_cost_target_0");
+        theta << 2*penalty_coefficient*costs.subVec(penalty_index,outputsize());
         for(int i=0; i<theta.length(); i++)
             if(theta[i] >= 1) PLWARNING("theta[%d] is >= 1, this could cause problems",i);
     
+        if(!ordinary_boosting)
+        {
+            TVec< PP<PLearner> > pl(1); pl[0] = new_weak_learner;
+            if(train_subset <= 0)
+                weak_learners_output.push_back(new MemoryVMatrix(new PLearnerOutputVMatrix(weak_learner_training_set, pl, false, false, false, false)));
+            else
+                weak_learners_output.push_back(new MemoryVMatrix(new PLearnerOutputVMatrix(vconcat(weak_learner_training_set&weak_learner_validation_set), pl, false, false, false, false)));
+            input.resize(input.length()+outputsize());
+        }
 
         if(boosting_type == "ConfidenceBoost")
         {
             // Find optimal weight with line search, blame Norman if this doesn't work ;) 
-      
 
             real ax = -10;
             real bx = 1;
@@ -720,7 +721,7 @@ void OverlappingAdaBoost::computeOutput(const Vec& input, Vec& output) const
     temp_input.resize(input.size());
     temp_input << input;
     Vec bogus_weights(outputsize());
-    static Vec weak_learner_output(outputsize());
+    Vec weak_learner_output(outputsize());
     for (int i=0;i<voting_weights.length();i++)
     {
 
