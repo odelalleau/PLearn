@@ -69,8 +69,8 @@ private:
 
 protected:
   //TVec<TVec<int> > positions;
-  Vec<StatsCollector> sc_input;
-  Vec<StatsCollector> sc_grad;
+  TVec<StatsCollector> sc_input;
+  TVec<StatsCollector> sc_grad;
   TMat<StatsCollector> sc_input_grad;
   Mat positions;
   Mat sums;
