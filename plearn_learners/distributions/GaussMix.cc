@@ -1162,7 +1162,8 @@ void GaussMix::train()
 // updateFromConditionalSorting //
 //////////////////////////////////
 void GaussMix::updateFromConditionalSorting() const {
-    static Mat inv_cov_x, tmp_cov, work_mat1, work_mat2;
+    static Mat inv_cov_x, work_mat1, work_mat2;
+    Mat tmp_cov; // Not static for shared storage issues.
     Vec eigenvals;
     clock_t updating_start = clock();
     // Update the centers of the Gaussians.
@@ -1198,19 +1199,22 @@ void GaussMix::updateFromConditionalSorting() const {
             // First we compute the joint covariance matrix from the eigenvectors and
             // eigenvalues:
             // full_cov = sum_k (lambda_k - lambda0) v_k v_k' + lambda0.I
-            // TODO We could get rid of the marginalized part for faster computations.
-            full_cov[j].resize(D,D);
+            int n_total = n_input + n_target;
+            cov_x[j] = Mat(); // Free one potential reference to full_cov[j].
+            full_cov[j].resize(n_total, n_total);
             tmp_cov = full_cov[j];
             eigenvals = eigenvalues(j);
             lambda0 = max(var_min, eigenvals[n_eigen_computed - 1]);
 
             tmp_cov.fill(0);
-            Mat& eigenvectors_j = eigenvectors[j];
-            for (int k = 0; k < n_eigen_computed - 1; k++)
-                externalProductScaleAcc(tmp_cov, eigenvectors_j(k), eigenvectors_j(k),
-                                        max(var_min, eigenvals[k]) - lambda0);
-
-            for (int i = 0; i < D; i++)
+            Mat eigenvectors_j =
+                eigenvectors[j].subMat(0,0, eigenvectors[j].length(), n_total);
+            if (n_total > 0)
+                for (int k = 0; k < n_eigen_computed - 1; k++)
+                    externalProductScaleAcc(tmp_cov, eigenvectors_j(k),
+                            eigenvectors_j(k),
+                            max(var_min, eigenvals[k]) - lambda0);
+            for (int i = 0; i < n_total; i++)
                 tmp_cov(i,i) += lambda0;
             // Extract the covariance of the input x.
             cov_x[j] = full_cov[j].subMat(0, 0, n_input, n_input);
