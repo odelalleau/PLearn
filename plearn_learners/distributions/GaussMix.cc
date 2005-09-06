@@ -176,6 +176,10 @@ void GaussMix::declareOptions(OptionList& ol)
     declareOption(ol, "n_eigen_computed", &GaussMix::n_eigen_computed, OptionBase::learntoption,
                   "The actual number of principal components computed when type == 'general'.");
 
+    declareOption(ol, "n_tries", &GaussMix::n_tries, OptionBase::learntoption,
+                  "Element i is the number of iterations needed to complete\n"
+                  "stage i (if > 1, some Gaussian has been replaced).");
+
     declareOption(ol, "nsamples", &GaussMix::nsamples, OptionBase::learntoption,
                   "The number of samples in the training set.");
 
@@ -630,6 +634,7 @@ void GaussMix::forget()
         manual_seed(seed_);
     training_time = 0;
     conditional_updating_time = 0;
+    n_tries.resize(0);
 }
 
 //////////////
@@ -913,6 +918,7 @@ void GaussMix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(log_p_j_x,copies);
     deepCopyField(log_p_x_j_alphaj,copies);
     deepCopyField(mu_y_x,copies);
+    deepCopyField(n_tries, copies);
     deepCopyField(p_j_x,copies);
 
     deepCopyField(cov_x,copies);
@@ -1105,6 +1111,7 @@ void GaussMix::train()
     resizeStuffBeforeTraining();
 
     if (stage == 0) {
+        n_tries.resize(0);
         // Copy the sample weights.
         if (train_set->weightsize() <= 0) {
             initial_weights.fill(1);
@@ -1137,18 +1144,19 @@ void GaussMix::train()
     if (report_progress)
         pb = new ProgressBar("Training GaussMix", n_steps);
     while (stage < nstages) {
-        int n_tries = 0;
+        n_tries.resize(stage + 1);
+        n_tries[stage] = 0;
         if (verbosity >= 5)
             pout << endl << "Number of tries = " << flush;
         do {
-            n_tries++;
-            if (verbosity >= 5 && n_tries % 10 == 0)
-                pout << n_tries << ", " << flush;
+            n_tries[stage]++;
+            if (verbosity >= 5 && n_tries[stage] % 10 == 0)
+                pout << n_tries[stage] << ", " << flush;
             computePosteriors();
             replaced_gaussian = computeWeights();
         } while (replaced_gaussian);
         if (verbosity >= 5)
-            pout << n_tries << endl;
+            pout << n_tries[stage] << endl;
         computeMeansAndCovariances();
         precomputeStuff();
         stage++;

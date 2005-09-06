@@ -72,6 +72,7 @@ protected:
     Vec log_p_x_j_alphaj;
     mutable Mat mu_y_x;
     int n_eigen_computed;
+    TVec<int> n_tries;
     int nsamples;
     Vec p_j_x;
     real training_time;
