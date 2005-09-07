@@ -1192,6 +1192,7 @@ void GaussMix::train()
 // updateFromConditionalSorting //
 //////////////////////////////////
 void GaussMix::updateFromConditionalSorting() const {
+    static Mat dummy_mat; // Used for de-allocation of matrices.
     static Mat inv_cov_x, work_mat1, work_mat2;
     Mat tmp_cov; // Not static for shared storage issues.
     Vec eigenvals;
@@ -1224,13 +1225,27 @@ void GaussMix::updateFromConditionalSorting() const {
         for (int j = 0; j < L; j++) {
             // Update the eigenvectors.
             sortFromFlags(eigenvectors[j]);
+
+            cov_x[j] = dummy_mat; // Free potential reference to full_cov[j].
+
+            if (n_input == 0) {
+                // Resize to zero unused stuff just to make sure it cannot be
+                // used by mistake.
+                cov_y_x[j].resize(0,0);
+                y_x_mat[j].resize(0,0);
+                eigenvectors_y_x[j].resize(0,0);
+                eigenvalues_y_x.resize(0,0);
+                continue; // No more computations needed.
+            }
+            // In the following there is an input part (n_input > 0).
+
             // Compute the mean and covariance of x and y|x for the j-th Gaussian (we
             // will need them to compute the likelihood).
+
             // First we compute the joint covariance matrix from the eigenvectors and
             // eigenvalues:
             // full_cov = sum_k (lambda_k - lambda0) v_k v_k' + lambda0.I
             int n_total = n_input + n_target;
-            cov_x[j] = Mat(); // Free one potential reference to full_cov[j].
             full_cov[j].resize(n_total, n_total);
             tmp_cov = full_cov[j];
             eigenvals = eigenvalues(j);
@@ -1239,11 +1254,10 @@ void GaussMix::updateFromConditionalSorting() const {
             tmp_cov.fill(0);
             Mat eigenvectors_j =
                 eigenvectors[j].subMat(0,0, eigenvectors[j].length(), n_total);
-            if (n_total > 0)
-                for (int k = 0; k < n_eigen_computed - 1; k++)
-                    externalProductScaleAcc(tmp_cov, eigenvectors_j(k),
-                            eigenvectors_j(k),
-                            max(var_min, eigenvals[k]) - lambda0);
+            for (int k = 0; k < n_eigen_computed - 1; k++)
+                externalProductScaleAcc(tmp_cov, eigenvectors_j(k),
+                                        eigenvectors_j(k),
+                                        max(var_min, eigenvals[k]) - lambda0);
             for (int i = 0; i < n_total; i++)
                 tmp_cov(i,i) += lambda0;
             // Extract the covariance of the input x.
@@ -1251,52 +1265,40 @@ void GaussMix::updateFromConditionalSorting() const {
             // Compute its SVD.
             eigenvectors_x[j].resize(n_input, n_input);
             eigenvals = eigenvalues_x(j);
-            if (n_input > 0) {
-                // pout << "Eigen 1" << endl;
-                eigenVecOfSymmMat(cov_x[j], n_input, eigenvals, eigenvectors_x[j]);
-                // pout << "Eigen 1 done" << endl;
-                // And its inverse (we'll need it for the covariance of y|x).
-                inv_cov_x.fill(0);
-                lambda0 = max(var_min, eigenvals[n_input - 1]);
-                real one_over_lambda0 = 1 / lambda0;
-                Mat& eigenvectors_x_j = eigenvectors_x[j];
-                for (int k = 0; k < n_input - 1; k++)
-                    externalProductScaleAcc(
+            eigenVecOfSymmMat(cov_x[j], n_input, eigenvals, eigenvectors_x[j]);
+            // And its inverse (we'll need it for the covariance of y|x).
+            inv_cov_x.fill(0);
+            lambda0 = max(var_min, eigenvals[n_input - 1]);
+            real one_over_lambda0 = 1 / lambda0;
+            Mat& eigenvectors_x_j = eigenvectors_x[j];
+            for (int k = 0; k < n_input - 1; k++)
+                externalProductScaleAcc(
                         inv_cov_x, eigenvectors_x_j(k), eigenvectors_x_j(k),
                         1 / max(var_min, eigenvals[k]) - one_over_lambda0);
-                for (int i = 0; i < n_input; i++)
-                    inv_cov_x(i,i) += one_over_lambda0;
-            }
+            for (int i = 0; i < n_input; i++)
+                inv_cov_x(i,i) += one_over_lambda0;
+
             // Compute the covariance of y|x.
             // It is only needed when there is an input part, since otherwise
             // we can simply use the full covariance.
-            if (n_input > 0) {
-                cov_y_x[j].resize(n_target, n_target);
-                cov_y_x[j] <<
-                    full_cov[j].subMat(n_input, n_input, n_target, n_target);
-                y_x_mat[j].resize(n_target, n_input);
-                if (n_target > 0) {
-                    tmp_cov = full_cov[j].subMat(n_input,0, n_target, n_input);
-                    product(work_mat1, tmp_cov, inv_cov_x);
-                    productTranspose(work_mat2, work_mat1, tmp_cov);
-                    cov_y_x[j] -= work_mat2;
-                    y_x_mat[j] << work_mat1;
-                }
-                // Compute SVD of the covariance of y|x.
-                eigenvectors_y_x[j].resize(n_target, n_target);
-                eigenvals = eigenvalues_y_x(j);
-                // Ensure covariance matrix is perfectly symmetric.
-                assert( cov_y_x[j].isSymmetric(false, true) );
-                fillItSymmetric(cov_y_x[j]);
-                eigenVecOfSymmMat(cov_y_x[j], n_target, eigenvals, eigenvectors_y_x[j]);
-            } else {
-                // Resize to zero unused stuff just to make sure it cannot be
-                // used by mistake.
-                cov_y_x[j].resize(0,0);
-                y_x_mat[j].resize(0,0);
-                eigenvectors_y_x[j].resize(0,0);
-                eigenvalues_y_x.resize(0,0);
+            cov_y_x[j].resize(n_target, n_target);
+            cov_y_x[j] <<
+                full_cov[j].subMat(n_input, n_input, n_target, n_target);
+            y_x_mat[j].resize(n_target, n_input);
+            if (n_target > 0) {
+                tmp_cov = full_cov[j].subMat(n_input,0, n_target, n_input);
+                product(work_mat1, tmp_cov, inv_cov_x);
+                productTranspose(work_mat2, work_mat1, tmp_cov);
+                cov_y_x[j] -= work_mat2;
+                y_x_mat[j] << work_mat1;
             }
+            // Compute SVD of the covariance of y|x.
+            eigenvectors_y_x[j].resize(n_target, n_target);
+            eigenvals = eigenvalues_y_x(j);
+            // Ensure covariance matrix is perfectly symmetric.
+            assert( cov_y_x[j].isSymmetric(false, true) );
+            fillItSymmetric(cov_y_x[j]);
+            eigenVecOfSymmMat(cov_y_x[j], n_target, eigenvals, eigenvectors_y_x[j]);
         }
     } else {
         PLERROR("In GaussMix::updateFromConditionalSorting - Not implemented for this type");
