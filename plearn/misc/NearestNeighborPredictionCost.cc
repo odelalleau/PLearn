@@ -42,11 +42,12 @@
 
 
 #include "NearestNeighborPredictionCost.h"
-#include "plearn/var/ProjectionErrorVariable.h"
-#include "plearn/vmat/LocalNeighborsDifferencesVMatrix.h"
-#include "plearn/var/Func.h"
-#include "plearn/vmat/AutoVMatrix.h"
-#include "plearn/vmat/MemoryVMatrix.h"
+#include <plearn/var/ProjectionErrorVariable.h>
+#include <plearn/vmat/LocalNeighborsDifferencesVMatrix.h>
+#include <plearn/var/Func.h>
+#include <plearn/vmat/AutoVMatrix.h>
+#include <plearn/vmat/MemoryVMatrix.h>
+#include <plearn/io/load_and_save.h>
 
 namespace PLearn {
 //using namespace std;
