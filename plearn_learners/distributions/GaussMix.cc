@@ -1143,18 +1143,26 @@ void GaussMix::train()
     int n_steps = nstages - stage;
     if (report_progress)
         pb = new ProgressBar("Training GaussMix", n_steps);
+
+    // Update training_time.
+    training_time += real(clock() - training_start) / real(CLOCKS_PER_SEC);
+
     while (stage < nstages) {
         n_tries.resize(stage + 1);
         n_tries[stage] = 0;
         if (verbosity >= 5)
             pout << endl << "Number of tries = " << flush;
         do {
+            training_start = clock();
             n_tries[stage]++;
             if (verbosity >= 5 && n_tries[stage] % 10 == 0)
                 pout << n_tries[stage] << ", " << flush;
             computePosteriors();
             replaced_gaussian = computeWeights();
+            training_time +=
+                real(clock() - training_start) / real(CLOCKS_PER_SEC);
         } while (replaced_gaussian);
+        training_start = clock();
         if (verbosity >= 5)
             pout << n_tries[stage] << endl;
         computeMeansAndCovariances();
@@ -1162,9 +1170,12 @@ void GaussMix::train()
         stage++;
         if (report_progress)
             pb->update(n_steps - nstages + stage);
+        training_time += real(clock() - training_start) / real(CLOCKS_PER_SEC);
+        // TODO Would be nice to have an 'official' clock in PLearn.
     }
     if (pb)
         delete pb;
+    training_start = clock();
     // Restore conditional flags if necessary.
     if (restore_flags)
         setConditionalFlags(old_flags);
@@ -1173,6 +1184,7 @@ void GaussMix::train()
     log_p_j_x.clear();
     // Options have changed: build is necessary.
     build();
+    // Finish the computation of training time.
     training_time += real(clock() - training_start) / real(CLOCKS_PER_SEC);
 }
 
