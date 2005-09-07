@@ -38,8 +38,8 @@
  ******************************************************* */
 
 /*! \file Grapher.h */
-#ifndef GenerateDecisionPlot_INC
-#define GenerateDecisionPlot_INC
+#ifndef Grapher_INC
+#define Grapher_INC
 
 #include <plearn/base/Object.h>
 #include <plearn_learners/generic/PLearner.h>

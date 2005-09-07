@@ -41,6 +41,7 @@
 #include "GenerateDecisionPlot.h"
 #include <plearn/math/VecStatsCollector.h>
 #include <plearn/vmat/VMat_basic_stats.h>
+#include <plearn/io/load_and_save.h>
 
 namespace PLearn {
 using namespace std;
