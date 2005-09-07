@@ -141,8 +141,9 @@ void GaussianProcessRegressor::build_()
     if(expdir!="")
     {
         if(!force_mkdir(expdir))
-            PLERROR("In GaussianProcessRegressor Could not create experiment directory %s",expdir.c_str());
-        expdir = abspath(expdir);
+            PLERROR("In GaussianProcessRegressor Could not create experiment directory %s",expdir.absolute().c_str());
+        expdir = expdir.absolute() / "";
+        // expdir = abspath(expdir);
     }
   
     if (train_set)
