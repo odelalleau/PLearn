@@ -102,7 +102,7 @@ weight_decay(0), penalty_type("L2_square"),
 learn_mu(true), 
 //magnified_version(false), 
 reference_set(0), sigma_init(0.1), sigma_min(0.00001), nneighbors(5), nneighbors_density(-1), mu_nneighbors(2), ncomponents(1), sigma_threshold_factor(1), variances_transfer_function("softplus"), architecture_type("single_neural_network"),
-n_hidden_units(-1), batch_size(1), svd_threshold(1e-8)
+n_hidden_units(-1), batch_size(1), svd_threshold(1e-8),store_prediction(false)
 {
 }
 
@@ -206,22 +206,30 @@ void NonLocalManifoldParzen::declareOptions(OptionList& ol)
     declareOption(ol, "L", &NonLocalManifoldParzen::L, OptionBase::learntoption,
                   "Number of gaussians.\n"
         );
-
+    
 //  declareOption(ol, "Us", &NonLocalManifoldParzen::Us, OptionBase::learntoption,
 //		"The U matrices for the reference set.\n"
 //		);
-
-//  declareOption(ol, "mus", &NonLocalManifoldParzen::mus, OptionBase::learntoption,
-//		"The mu vectors for the reference set.\n"
-//                );
-
+    
+    declareOption(ol, "mus", &NonLocalManifoldParzen::mus, OptionBase::learntoption,
+                  "The mu vectors for the reference set.\n"
+        );
+    
 //  declareOption(ol, "sms", &NonLocalManifoldParzen::sms, OptionBase::learntoption,
 //		"The sm values for the reference set.\n"
 //                );
-  
-//  declareOption(ol, "sns", &NonLocalManifoldParzen::sns, OptionBase::learntoption,
-//		"The sn values for the reference set.\n"
-//                );
+    
+    declareOption(ol, "sns", &NonLocalManifoldParzen::sns, OptionBase::learntoption,
+                  "The sn values for the reference set.\n"
+        );
+    
+    declareOption(ol, "sms", &NonLocalManifoldParzen::sms, OptionBase::learntoption,
+                  "The sm values for the reference set.\n"
+        );
+    
+    declareOption(ol, "Fs", &NonLocalManifoldParzen::Fs, OptionBase::learntoption,
+                  "The F values for the reference set.\n"
+        );
 
     declareOption(ol, "sigma_min", &NonLocalManifoldParzen::sigma_min, OptionBase::buildoption,
                   "The minimum value for sigma noise.\n"
@@ -237,6 +245,14 @@ void NonLocalManifoldParzen::declareOptions(OptionList& ol)
 
     declareOption(ol, "rw_size_step", &NonLocalManifoldParzen::rw_size_step, OptionBase::buildoption,
                   "Size of the steps in the random walk (for compute output).\n"
+        );
+
+    declareOption(ol, "store_prediction", &NonLocalManifoldParzen::store_prediction, OptionBase::buildoption,
+                  "Indication that the predicted parameters should be stored.\n"
+                  "This may make testing faster. Note that the predictions are\n"
+                  "stored after the last training stage, so if the predictor is\n"
+                  "modified later on (e.g. if the parameters of the predictor are shared), then\n"
+                  "this option might give different testing results.\n"
         );
 
 //  declareOption(ol, "noise", &NonLocalManifoldParzen::noise, OptionBase::buildoption,
@@ -577,11 +593,14 @@ void NonLocalManifoldParzen::build_()
         sn_temp.resize(1);
         diff.resize(n);
 
-        //Us.resize(L);
-        //mus.resize(L, n);
-        //sms.resize(L,ncomponents);
-        //sns.resize(L);
-    
+        mus.resize(L, n);
+        sns.resize(L);
+        sms.resize(L,ncomponents);
+        Fs.resize(L);
+        for(int i=0; i<L; i++)
+        {
+            Fs[i].resize(ncomponents,n);
+        }
     }
 
 }
@@ -718,7 +737,20 @@ void NonLocalManifoldParzen::forget()
     
 void NonLocalManifoldParzen::train()
 {
-  
+
+    // Check whether gradient descent is going to be done
+    // If not, then we don't need to store the parameters,
+    // except for sn...
+    bool flag = (nstages == stage);
+
+    if(store_prediction && flag) 
+    {
+        for(int i=0; i<L; i++)
+        {
+            sns[i] += sigma_min - min_sig->value[0];
+        }
+    }
+
     // Update sigma_min, in case it was changed,
     // e.g. using an HyperLearner
     min_sig->value[0] = sigma_min;
@@ -790,7 +822,23 @@ void NonLocalManifoldParzen::train()
 
     if(pb)
         delete pb;
-  
+
+    if(store_prediction && !flag)
+    {
+        for(int t=0; t<L;t++)
+        {
+            reference_set->getRow(t,neighbor_row);
+            predictor->fprop(neighbor_row, F.toVec() & mus(t) & sns.subVec(t,1));                   
+            // N.B. this is the SVD of F'
+            lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
+            for (int k=0;k<ncomponents;k++)
+            {
+                sms(t,k) = mypow(S_svd[k],2);                
+                Fs[t](k) << Ut_svd(k);
+            }    
+
+        }
+    }
 //  update_reference_set_parameters();
 }
 
@@ -860,7 +908,10 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
 
     // Update sigma_min, in case it was changed,
     // e.g. using an HyperLearner
-    min_sig->value[0] = sigma_min;
+    // HUGO: I don't think this should be here,
+    //       the user should know that he needs
+    //       to run train()...
+    //min_sig->value[0] = sigma_min;
   
 /*
   if(magnified_version)
@@ -895,16 +946,24 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
         for(int neighbor=0; neighbor<t_nn.length(); neighbor++)
         {
             reference_set->getRow(t_nn[neighbor],neighbor_row);
-        
-            predictor->fprop(neighbor_row, F.toVec() & mu_temp & sn_temp);        
-            // N.B. this is the SVD of F'
-            lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
-            for (int k=0;k<ncomponents;k++)
+            if(!store_prediction)
+            {                
+                predictor->fprop(neighbor_row, F.toVec() & mu_temp & sn_temp);        
+                // N.B. this is the SVD of F'
+                lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
+                for (int k=0;k<ncomponents;k++)
+                {
+                    sm_temp[k] = mypow(S_svd[k],2);
+                    U_temp(k) << Ut_svd(k);
+                }    
+            }
+            else
             {
-                sm_temp[k] = mypow(S_svd[k],2);
-                U_temp(k) << Ut_svd(k);
-            }    
-
+                mu_temp << mus(t_nn[neighbor]);
+                sn_temp[0] = sns[t_nn[neighbor]];
+                sm_temp << sms(t_nn[neighbor]);
+                U_temp << Fs[t_nn[neighbor]];
+            }
             substract(t_row,neighbor_row,x_minus_neighbor);
             //substract(x_minus_neighbor,mus(t_nn[neighbor]),z);
             substract(x_minus_neighbor,mu_temp,z);
@@ -934,15 +993,25 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
         for(int t=0; t<L;t++)
         {
             reference_set->getRow(t,neighbor_row);
-            predictor->fprop(neighbor_row, F.toVec() & mu_temp & sn_temp);        
- 
-            // N.B. this is the SVD of F'
-            lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
-            for (int k=0;k<ncomponents;k++)
+            if(!store_prediction)
             {
-                sm_temp[k] = mypow(S_svd[k],2);
-                U_temp(k) << Ut_svd(k);
-            }    
+                predictor->fprop(neighbor_row, F.toVec() & mu_temp & sn_temp);        
+                
+                // N.B. this is the SVD of F'
+                lapackSVD(F, Ut_svd, S_svd, V_svd,'A',1.5);
+                for (int k=0;k<ncomponents;k++)
+                {
+                    sm_temp[k] = mypow(S_svd[k],2);
+                    U_temp(k) << Ut_svd(k);
+                }    
+            }
+            else
+            {
+                mu_temp << mus(t);
+                sn_temp[0] = sns[t];
+                sm_temp << sms(t);
+                U_temp << Fs[t];
+            }
 
             substract(t_row,neighbor_row,x_minus_neighbor);
             //substract(x_minus_neighbor,mus(t),z);

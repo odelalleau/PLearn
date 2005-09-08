@@ -123,6 +123,15 @@ protected:
     //! SVD computation variables
     mutable Vec S_svd;
 
+    //! Predictions for mu
+    Mat mus;
+    //! Predictions for sn
+    Vec sns;
+    //! Predictions for sm
+    Mat sms;
+    //! Predictions for F
+    TVec<Mat> Fs;
+
 public:
 
     // ************************
@@ -193,6 +202,8 @@ public:
     int rw_n_step;
     //! Size of the step;
     real rw_size_step;
+    //! Indication that the predicted parameters should be stored
+    bool store_prediction;
     //! Parameters to share
     VarArray shared_parameters;
 
