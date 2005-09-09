@@ -50,7 +50,7 @@
 /*********
  * Boost *
  *********/
-#include <commands/PLearnCommands/HTMLHelpCommand.h>
+//#include <commands/PLearnCommands/HTMLHelpCommand.h>
 #include <plearn/math/PRandom.h>
 
 /**********
