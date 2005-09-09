@@ -719,6 +719,11 @@ void NonLocalManifoldParzen::makeDeepCopyFromShallowCopy(CopiesMap& copies)
  deepCopyField(V_svd, copies);
  deepCopyField(S_svd, copies);
 
+ deepCopyField(mus, copies);
+ deepCopyField(sns, copies);
+ deepCopyField(sms, copies);
+ deepCopyField(Fs, copies);
+
  deepCopyField(parameters, copies);
  deepCopyField(shared_parameters, copies);
 
