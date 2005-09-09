@@ -908,10 +908,17 @@ real NonLocalManifoldParzen::log_density(const Vec& x) const {
 
     // Update sigma_min, in case it was changed,
     // e.g. using an HyperLearner
-    // HUGO: I don't think this should be here,
-    //       the user should know that he needs
-    //       to run train()...
-    //min_sig->value[0] = sigma_min;
+    
+    if(store_prediction && min_sig->value[0] != sigma_min) 
+    {
+        for(int i=0; i<L; i++)
+        {
+            sns[i] += sigma_min - min_sig->value[0];
+        }
+    }
+
+
+    min_sig->value[0] = sigma_min;
   
 /*
   if(magnified_version)
