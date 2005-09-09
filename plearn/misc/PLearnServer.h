@@ -69,7 +69,12 @@ protected:
     ObjMap objmap;
 public:
     PLearnServer(const PStream& input_output);
-  
+
+    //! Enters the server loop which listens for commands and executes them.
+    //! Returns false only if server kill command '!K' was issued
+    //! Returns true in all other cases (in particular for quit command '!Q')
+    //! In principle this call does not throw any exception (exceptions are caught 
+    //! inside the run loop and if possible transmitted to the client with a '!E' reply.)
     bool run();
 
 };
