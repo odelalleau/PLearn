@@ -98,15 +98,15 @@ void ReorderByMissingVMatrix::build()
 
 //! Simple class representing one sample (given by its index) with a string of
 //! '0' and '1' where '0' represents a missing value and '1' a non-missing one.
-struct index_and_missing_flags {
+struct IndexAndMissingFlags {
     int index;
     string missing_flags;
 };
 
 //! Comparison function used in sorting.
-struct {
-    bool operator() (const index_and_missing_flags& x,
-                     const index_and_missing_flags& y)
+struct compareIndexAndMissingFlags {
+    bool operator() (const IndexAndMissingFlags& x,
+                     const IndexAndMissingFlags& y)
     {
         return (x.missing_flags < y.missing_flags);
     }
@@ -121,7 +121,7 @@ void ReorderByMissingVMatrix::build_()
     if (source) {
         // Construct a vector containing each sample index associated with its
         // missing flags.
-        vector<index_and_missing_flags> vec;
+        vector<IndexAndMissingFlags> vec;
         int n = source.length();
         int w = source.width();
         sourcerow.resize(w);
@@ -135,7 +135,7 @@ void ReorderByMissingVMatrix::build_()
                     missing_flags += '0';
                 else
                     missing_flags += '1';
-            index_and_missing_flags ex;
+            IndexAndMissingFlags ex;
             ex.index = i;
             ex.missing_flags = missing_flags;
             vec.push_back(ex);
@@ -151,7 +151,7 @@ void ReorderByMissingVMatrix::build_()
         // Build the 'indices' vector.
         indices.resize(n);
         indices.resize(0);
-        vector<index_and_missing_flags>::const_iterator it = vec.begin();
+        vector<IndexAndMissingFlags>::const_iterator it = vec.begin();
         previous_flags = "";
         n_flag_changes = 0;
         for (; it != vec.end(); it++) {
