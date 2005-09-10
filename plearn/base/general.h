@@ -235,6 +235,7 @@ inline void clear_n(unsigned long* begin, int n)
 
 typedef int (*compare_function)(const void *, const void *);
 
+/*
 template<class T>
 inline void swap(T& a, T& b)
 { 
@@ -243,6 +244,7 @@ inline void swap(T& a, T& b)
     a = b;
     b = tmp;
 }
+*/
 
 //!  make a copy of a C string and return it
 char* strcopy(char* s);
