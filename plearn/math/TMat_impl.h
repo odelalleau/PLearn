@@ -230,7 +230,7 @@ TVec<T> removeElement(const TVec<T>& v, int elemnum)
 // **************
 
 template <class T>
-TMat<T>::TMat<T>(int the_length, int the_width, const TVec<T>& v)
+TMat<T>::TMat(int the_length, int the_width, const TVec<T>& v)
     : offset_(v.offset()), mod_(the_width), length_(the_length), width_(the_width), storage(v.storage)
 {
     if(length()*width()!=v.length())
