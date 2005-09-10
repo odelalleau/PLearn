@@ -44,14 +44,15 @@
 #ifndef diff_INC
 #define diff_INC
 
-#include <vector>
-#include <plearn/base/PP.h>
-#include <plearn/base/Option.h>
+#include <string>
 #include <plearn/base/OptionBase.h>
 #include <plearn/base/tostring.h>
 #include <plearn/io/openString.h>
+#include <plearn/io/PStream.h>
+#include <plearn/math/pl_math.h>    //!< For 'real'.
 #include <plearn/math/TVec_decl.h>
-//#include <plearn/vmat/VMatrix.h>
+
+using namespace std;
 
 namespace PLearn {
 
