@@ -101,12 +101,10 @@ public:
     virtual string optionHolderClassName(const Object* o) const
     { return dynamic_cast<const ObjectType*>(o)->ObjectType::_classname_(); }
 
-    virtual int diff(const string& refer, const string& other, PLearnDiff* diffs) const
+    virtual int diff(const string& refer, const string& other,
+                     PLearnDiff* diffs) const
     {
-        // TODO COMMIT WITH THE PLERROR UNTIL IT IS FIXED.
-        PLERROR("OLIVIER: gcc 3.4.4 n'aime pas la ligne ci-dessous...");
-        // return PLearn::diff(refer, other, this, diffs);
-        return -1;
+        return PLearn::diff(refer, other, this, diffs);
     }
 
     //! Implementation of isAccessibleAsObject() relies on caching since
