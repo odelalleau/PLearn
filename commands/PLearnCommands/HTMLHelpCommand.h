@@ -44,9 +44,14 @@
 #ifndef HTMLHelpCommand_INC
 #define HTMLHelpCommand_INC
 
+#include <iostream>
+
 #include "PLearnCommand.h"
 #include "PLearnCommandRegistry.h"
-#include <iostream>
+#include <plearn/base/Object.h>
+#include <plearn/base/PP.h>
+#include <plearn/math/TVec_decl.h>
+
 
 namespace PLearn {
 using namespace std;
