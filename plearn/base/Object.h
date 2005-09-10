@@ -351,8 +351,6 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
         int diff(const string& refer, const string& other,                              \
                  const Option<ObjectType, CLASSTYPE>* opt, PLearnDiff* diffs)           \
         {                                                                               \
-            pout << "Calling diff_Object with Option< ObjectType, "                     \
-                 << opt->optiontype() << " >" << endl;                                  \
             PP<OptionBase> new_opt = new Option<ObjectType, PP<CLASSTYPE> >             \
                 (opt->optionname(), 0, 0, "", "", "");                                  \
             return new_opt->diff(refer, other, diffs);                                  \
