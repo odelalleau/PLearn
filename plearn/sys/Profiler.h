@@ -147,6 +147,14 @@ public:
     static inline void end(const string& name_of_piece_of_code) { } 
 #endif
 
+    //! Return the number of clock ticks per second on this computer.
+#ifdef PROFILE
+    static long ticksPerSecond() { return sysconf(_SC_CLK_TCK); }
+#else
+    static long ticksPerSecond() { return 0; }
+#endif
+
+
     //! Return the statistics related to a piece of code.  This is useful
     //! for aggregators that collect and report a number of statistics
     static const Stats& getStats(const string& name_of_piece_of_code);
@@ -158,6 +166,7 @@ public:
     //!  Output a report on the output stream, giving
     //!  the statistics recorded for each of the named pieces of codes.
     static void report(ostream& out);
+
 
 protected:
     static map<string,Stats> codes_statistics;

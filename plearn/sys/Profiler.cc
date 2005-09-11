@@ -142,7 +142,7 @@ void Profiler::report(ostream& out)
         codes_statistics.begin(), end =  codes_statistics.end();
 
     out << "*** PLearn::Profiler Report ***" << endl;
-    out << "Ticks per second : " << sysconf(_SC_CLK_TCK)<<endl;
+    out << "Ticks per second : " << ticksPerSecond() <<endl;
     for ( ; it!=end ; ++it)
     {
         out << endl << "For " << it->first << " :" << endl;
