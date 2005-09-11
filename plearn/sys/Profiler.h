@@ -58,79 +58,111 @@
 namespace PLearn {
 using namespace std;
 
-/*!     Profiling tools, to count average time elapsed and number of times 
-  traversed for pieces of code delimited by two calls to the static
-  functions
-    
-  Profiler::start("name_of_piece_of_code");
-  ...
-  Profiler::end("name_of_piece_of_code");
-    
-  A static field of Profiler is used to maintain the statistics of 
-  occurence and durations for each piece of code. Calls to start/end
-  for the same name cannot be nested.
-    
-  Before the above calls, usually in the main program, the user
-  must call
-    
-  Profiler::activate();
-    
-  and after all the above calls, a report for all such pieces of code can then be obtained by calling 
-    
-  Profiler::report(cout);
-    
-  on an output stream. 
-    
-  This code is based on statistical averaging (using the C "times" function)
-  because the individual measurements of elapsed time with times are too
-  coarse (e.g. 100th of a second).
-*/
+/**
+ *  Profiling tools, to count average time elapsed and number of times 
+ *  traversed for pieces of code delimited by two calls to the static
+ *  functions.
+ *
+ *  @code
+ *  Profiler::start("name_of_piece_of_code");
+ *  // ...
+ *  Profiler::end("name_of_piece_of_code");
+ *  @endcode
+ *    
+ *  A static field of Profiler is used to maintain the statistics of 
+ *  occurence and durations for each piece of code. Calls to start/end
+ *  for the same name cannot be nested.  Three different durations are measured
+ *  for a piece of code:
+ *
+ *  - Wall duration (how long of "actual time" was measured, in clock ticks)
+ *  - User duration ("User" time, in clock ticks)
+ *  - System duration ("System" time, in clock ticks)
+ *    
+ *  Before the above calls, usually in the main program, the user
+ *  must call
+ *
+ *  @code
+ *  Profiler::activate();
+ *  @endcode
+ *    
+ *  and after all the above calls, a report for all such pieces of code can
+ *  then be obtained by calling
+ *
+ *  @code
+ *  Profiler::report(cout);
+ *  @endcode
+ *    
+ *  on an output stream. 
+ *    
+ *  This code is based on statistical averaging (using the C "times" function)
+ *  because the individual measurements of elapsed time with times are too
+ *  coarse (e.g. 100th of a second).
+ */
 
 class Profiler {
-protected:
-
+public:
     class Stats {
     public:
-        int frequency_of_occurence;
-        int total_duration;
-        clock_t time_of_last_start;
-        bool on_going;
+        long frequency_of_occurence;         //!< Number of start/stop cycles
+        long wall_duration;                  //!< Wall-so-far, in clock ticks
+        long user_duration;                  //!< User-so-far, in clock ticks
+        long system_duration;                //!< System-so-far, in clock ticks
+        clock_t wall_last_start;             //!< Wall when last started
+        clock_t user_last_start;             //!< User when last started
+        clock_t system_last_start;           //!< System when last started
+        bool on_going;                       //!< Whether we have started this stat
       
-        Stats(int f=0, int d=0) : 
-            frequency_of_occurence(f), total_duration(d), 
-            time_of_last_start(0), on_going(false) {}
+        Stats()
+            : frequency_of_occurence(0),
+              wall_duration(0),
+              user_duration(0),
+              system_duration(0),
+              wall_last_start(0),
+              user_last_start(0),
+              system_last_start(0),
+              on_going(false)
+        { }
     };
 
 public:
 
+    //! Enable profiling
     static void activate() { active=true; }
+
+    //! Disable profiling
     static void disactivate() { active=false; }
 
-    //!  start recording time for named piece of code
+    //!  Start recording time for named piece of code
 #ifdef PROFILE
     static void start(const string& name_of_piece_of_code);
 #else
     static inline void start(const string& name_of_piece_of_code) { }
 #endif
 
-    //!  end recording time for named piece of code, and increment
+    //!  End recording time for named piece of code, and increment
     //!  frequency of occurence and total duration of this piece of code.
 #ifdef PROFILE
     static void end(const string& name_of_piece_of_code);
 #else
     static inline void end(const string& name_of_piece_of_code) { } 
 #endif
+
+    //! Return the statistics related to a piece of code.  This is useful
+    //! for aggregators that collect and report a number of statistics
+    static const Stats& getStats(const string& name_of_piece_of_code);
+
+    //! Reset the statistics associated with a piece of code.  The piece of
+    //! code may not yet exist, this is fine.
+    static void reset(const string& name_of_piece_of_code);
     
-    //!  output a report on the output stream, giving
+    //!  Output a report on the output stream, giving
     //!  the statistics recorded for each of the named pieces of codes.
     static void report(ostream& out);
 
 protected:
-    
     static map<string,Stats> codes_statistics;
     static struct tms t;
     static bool active;
-
 };
 
 } // end of namespace PLearn

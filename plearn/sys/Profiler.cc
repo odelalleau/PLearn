@@ -59,7 +59,9 @@ void Profiler::start(const string& name_of_piece_of_code)
         {
             Stats stats;
             stats.on_going = true;
-            stats.time_of_last_start = times(&t);
+            stats.wall_last_start   = times(&t);
+            stats.user_last_start   = t.tms_utime;
+            stats.system_last_start = t.tms_stime;
             codes_statistics[name_of_piece_of_code] = stats;
         }
         else
@@ -69,13 +71,14 @@ void Profiler::start(const string& name_of_piece_of_code)
                 PLERROR("Profiler::start(%s) called while previous start had not ended",
                         name_of_piece_of_code.c_str());
             stats.on_going = true;
-            stats.time_of_last_start = times(&t);
+            stats.wall_last_start   = times(&t);
+            stats.user_last_start   = t.tms_utime;
+            stats.system_last_start = t.tms_stime;
         }
     }
 }
 
   
-
 // end recording time for named piece of code, and increment
 // frequency of occurence and total duration of this piece of code.
 void Profiler::end(const string& name_of_piece_of_code)
@@ -92,16 +95,45 @@ void Profiler::end(const string& name_of_piece_of_code)
         if (!stats.on_going)
             PLERROR("Profiler::end(%s) called before previous start was called",
                     name_of_piece_of_code.c_str());
+
         stats.on_going = false;
         stats.frequency_of_occurence++;
-        int duration = end_time - stats.time_of_last_start;
-        if (end_time < stats.time_of_last_start)
-        { duration=1; PLWARNING("Profiler: negative duration measured with times!"); }
-        stats.total_duration += duration;
+        long wall_duration   = end_time    - stats.wall_last_start;
+        long user_duration   = t.tms_utime - stats.user_last_start;
+        long system_duration = t.tms_stime - stats.system_last_start;
+        if (wall_duration < 0) {
+            wall_duration = user_duration = system_duration = 1;
+            PLWARNING("Profiler: negative duration measured with times!");
+        }
+        stats.wall_duration   += wall_duration;
+        stats.user_duration   += user_duration;
+        stats.system_duration += system_duration;
     }
 }
 #endif
-  
+
+
+//! Return the statistics related to a piece of code.  This is useful
+//! for aggregators that collect and report a number of statistics
+const Profiler::Stats& Profiler::getStats(const string& name_of_piece_of_code)
+{
+    map<string,Stats>::iterator it = codes_statistics.find(name_of_piece_of_code);
+    if (it == codes_statistics.end())
+        PLERROR("Profiler::getStats: cannot find statistics for '%s'",
+                name_of_piece_of_code.c_str());
+    return it->second;
+}
+
+
+//! Reset the statistics associated with a piece of code.  The piece of
+//! code may not yet exist, this is fine.
+void Profiler::reset(const string& name_of_piece_of_code)
+{
+    Stats empty;
+    codes_statistics[name_of_piece_of_code] = empty;
+}
+
+
 // output a report on the output stream, giving
 // the statistics recorded for each of the named pieces of codes.
 void Profiler::report(ostream& out)
@@ -109,19 +141,25 @@ void Profiler::report(ostream& out)
     map<string,Profiler::Stats>::iterator it =  
         codes_statistics.begin(), end =  codes_statistics.end();
 
-    for (;it!=end; ++it)
+    out << "*** PLearn::Profiler Report ***" << endl;
+    out << "Ticks per second : " << sysconf(_SC_CLK_TCK)<<endl;
+    for ( ; it!=end ; ++it)
     {
-        out << " Ticks per second : " << sysconf(_SC_CLK_TCK)<<endl;
-        out << "For " << it->first << " :" << endl;
+        out << endl << "For " << it->first << " :" << endl;
         Profiler::Stats& stats = it->second;
-        out << "Frequency of occurence = " << stats.frequency_of_occurence << endl;
-        out << "Total duration = " << stats.total_duration << endl;
-        double avg_duration = (double)stats.total_duration/stats.frequency_of_occurence;
-        out << "Average duration = " << avg_duration << endl;
-        out << endl;
+        out << "Frequency of occurence   = " << stats.frequency_of_occurence << endl;
+        out << "Wall duration   (ticks)  = " << stats.wall_duration << endl
+            << "User duration   (ticks)  = " << stats.user_duration << endl
+            << "System duration (ticks)  = " << stats.system_duration << endl;
+
+        double avg_wall = (double)stats.wall_duration/stats.frequency_of_occurence;
+        double avg_user = (double)stats.user_duration/stats.frequency_of_occurence;
+        double avg_sys  = (double)stats.system_duration/stats.frequency_of_occurence;
+        out << "Average wall   duration  = " << avg_wall << endl
+            << "Average user   duration  = " << avg_user << endl
+            << "Average system duration  = " << avg_sys  << endl;
     }
 }
-
 
 
 } // end of namespace PLearn
