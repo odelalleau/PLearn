@@ -741,7 +741,7 @@ TVec<int> BallTreeNearestNeighbors::BallKNN(
         BinBallTree node2 = node->getSecondChild();
 
         if (powdistance(t, node1->pivot, 2) > powdistance(t, node2->pivot, 2)) {
-            swap(node1,node2);
+            pl_swap(node1,node2);
             // node1 is closest to t
         }
 
