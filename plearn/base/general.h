@@ -235,16 +235,16 @@ inline void clear_n(unsigned long* begin, int n)
 
 typedef int (*compare_function)(const void *, const void *);
 
-/*
+//! Swap two variables. It is named 'pl_swap' to avoid a conflict with
+//! the STL 'swap' function.
 template<class T>
-inline void swap(T& a, T& b)
+inline void pl_swap(T& a, T& b)
 { 
     T tmp; 
     tmp = a;
     a = b;
     b = tmp;
 }
-*/
 
 //!  make a copy of a C string and return it
 char* strcopy(char* s);
