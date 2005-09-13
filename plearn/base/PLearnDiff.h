@@ -116,7 +116,11 @@ public:
     void addDiffPrefix(const string& prefix, int n);
 
     //! Display the differences that were found.
-    void printDiffs(PStream& out = pout);
+    //! 'indent' specifies the number of whitespaces to add before each line.
+    //! 'tab_step' specifies the canonical length of each element (name and
+    //! values for each difference), in order to obtain a fancy output.
+    void printDiffs(PStream& out = pout, unsigned int indent = 2,
+                                         unsigned int tab_step = 20);
 
     //! Return the number of differences found.
     int nDiffs() { return diffs.length(); }

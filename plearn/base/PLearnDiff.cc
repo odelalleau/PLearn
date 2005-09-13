@@ -175,11 +175,25 @@ void PLearnDiff::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////
 // printDiffs //
 ////////////////
-void PLearnDiff::printDiffs(PStream& out)
+void PLearnDiff::printDiffs(PStream& out, unsigned int indent,
+                                          unsigned int tab_step)
 {
     int n = nDiffs();
-    for (int i = 0; i < n; i++)
-        out << diffs(i, 0) << ": " << diffs(i, 1) << " != " << diffs(i, 2) << endl;
+    for (int i = 0; i < n; i++) {
+        const string& diff_name = diffs(i, 0);
+        const string& diff_val1 = diffs(i, 1);
+        const string& diff_val2 = diffs(i, 2);
+        unsigned int n_blanks_after_name =
+            tab_step - diff_name.size() % tab_step;
+        unsigned int n_blanks_after_val1 =
+            tab_step - diff_val1.size() % tab_step;
+        out << string(indent, ' ')
+            << diff_name << string(n_blanks_after_name, ' ')
+            << ":  "
+            << diff_val1 << string(n_blanks_after_val1, ' ')
+            << "  -->  "
+            << diff_val2 << endl;
+    }
 }
 
 
