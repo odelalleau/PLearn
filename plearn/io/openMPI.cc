@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// MPIPStreamBuf.h
+// openMPI.cc
 //
-// Copyright (C) 2005 Pascal Vincent 
+// Copyright (C) 2005 Pascal Vincent
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,64 +33,28 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: MPIPStreamBuf.h $ 
+ * $Id: openMPI.cc $ 
  ******************************************************* */
 
 // Authors: Pascal Vincent
 
-/*! \file MPIPStreamBuf.h */
+/*! \file openMPI.cc */
 
-
-#ifndef MPIPStreamBuf_INC
-#define MPIPStreamBuf_INC
-
-#include "PStreamBuf.h"
+#include "openMPI.h"
+#include <plearn/io/MPIPStreamBuf.h>
 
 namespace PLearn {
+using namespace std;
 
-class Poll;
-  
-/** An implementation of the PStreamBuf interface using MPI communication. */
-class MPIPStreamBuf: public PStreamBuf
+PStream openMPI(int peer_rank,
+                PStream::mode_t io_formatting)
 {
-    friend class PLearn::Poll;
-  
-private:
-  
-    typedef PStreamBuf inherited;
-    char* mpibuf;
-    streamsize mpibuf_capacity;
-    char* mpibuf_p;
-    streamsize mpibuf_len;
-    bool reached_eof;
-    streamsize max_chunksize;
-
-    void fill_mpibuf(int msglength);
-
-protected:
-    // *********************
-    // * protected options *
-    // *********************
-    int peerrank; //!< rank of MPI peer
-
-
-public:
-
-    MPIPStreamBuf(int peer_rank, streamsize chunksize=1024);
-    virtual ~MPIPStreamBuf();
-
-protected:
-
-    virtual streamsize read_(char* p, streamsize n);
-
-    //! writes exactly n characters from p (unbuffered, must flush)
-    virtual void write_(const char* p, streamsize n);
-
-};
+    PStream st = new MPIPStreamBuf(peer_rank);
+    st.setMode(io_formatting);
+    return st;
+}
 
 } // end of namespace PLearn
-
-#endif
 
 
 /*

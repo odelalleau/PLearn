@@ -68,12 +68,12 @@ MPIPStreamBuf::~MPIPStreamBuf()
 
 void MPIPStreamBuf::fill_mpibuf(int msglength)
 {
-    if (msglength>mpibuf_capacity)
+    if (msglength>int(mpibuf_capacity))
     {
         if(mpibuf)
             delete[] mpibuf;
         // inrease capacity
-        mpibuf_capacity = max(msglength,mpibuf_capacity*2);
+        mpibuf_capacity = max(msglength,int(mpibuf_capacity)*2);
         mpibuf = new char[mpibuf_capacity];
     }    
     MPI_Status status;
