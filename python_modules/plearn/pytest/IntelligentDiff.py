@@ -180,6 +180,9 @@ class IntelligentDiff:
 
         if toolkit.isvmat( bench ):
             diff_template = 'plearn --no-version vmat diff %s %s'
+
+        if bench.endswith('_rw'):
+            diff_template = 'plearn --no-version diff %s %s 1e-6'
         
         bench_dir = os.path.dirname(bench)
         other_dir = os.path.dirname(other)
