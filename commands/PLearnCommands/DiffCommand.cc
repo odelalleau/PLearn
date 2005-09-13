@@ -124,7 +124,7 @@ void DiffCommand::run(const vector<string>& args)
         diffs->forget();
         int n_diffs = diff(refer, other, diffs);
         if (n_diffs > 0) {
-            out << "Reference (" << obj_spec[0] << ") and object " << i << " ( "
+            out << "Reference (" << obj_spec[0] << ") and object " << i << " ("
                 << obj_spec[i] << ") differ:" << endl;
             diffs->printDiffs(out);
         }
