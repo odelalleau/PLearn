@@ -53,6 +53,7 @@ def public_attribute_predicate( name, value ):
     return not ( name.startswith("_")
                  or inspect.ismethod(value)
                  or inspect.isfunction(value)
+                 or inspect.isroutine(value)
                  or inspect.isclass(value)
                  or inspect.isbuiltin(value)
                  )

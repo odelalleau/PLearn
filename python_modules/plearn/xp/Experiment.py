@@ -103,8 +103,12 @@ class ExpKey( Bindings ):
             if neg in self:
                 del self[neg]
 
-    def strkey( self ):
-        return " ".join([ '='.join([str(key),str(value)]) for key,value in self.iteritems() ])
+    def listkey(self):
+        keyjoin = lambda key,val: (val is None and key) or "%s=%s"%(key,val)
+        return [ keyjoin(key, value) for key,value in self.iteritems() ]
+    
+    def strkey(self):
+        return " ".join(self.listkey())
 
 class Experiment(PyPLearnObject):
     ##
@@ -145,7 +149,8 @@ class Experiment(PyPLearnObject):
         for fname in dirlist:
             if fname.startswith( cls._expdir_prefix ):                
                 x = cls( path = os.path.join(exproot, fname) )
-                cls._cached.append( x )            
+                cls._cached.append( x )
+        return cls._cached
     cache_experiments = classmethod( cache_experiments )
 
     def match( cls, expkey=[] ):

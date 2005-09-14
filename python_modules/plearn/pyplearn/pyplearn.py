@@ -475,6 +475,7 @@ class plargs_namespace( object ):
     class __metaclass__( type ):
         _subclasses = {}
         def __init__(cls, name, bases, dict):
+            super(cls, cls).__init__(cls, name, bases, dict) 
             if cls.__name__ != 'plargs_namespace':
                 cls._subclasses[cls.__name__] = cls
         
@@ -491,8 +492,8 @@ class plargs_namespace( object ):
             return type.__new__( metacls, clsname, bases, dic )
 
         def __getattribute__( cls, attr ):            
-            a = object.__getattribute__( cls, attr )
+            a = type.__getattribute__( cls, attr )
             if metaprog.public_attribute_predicate( attr, a ):
                 setattr( cls, '__accessed', True )
             return a
-
+        
