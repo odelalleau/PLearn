@@ -57,6 +57,18 @@ private:
   
 protected:
 
+    //! Set to 'true' at build time iff we use the knn approximation, i.e.
+    //! knn_approximation > 0.
+    bool knn_approx;
+
+    //! Number of actual nearest neighbors to consider (will be less than 'knn'
+    //! when using the knn approximation, otherwise will be equal to 'knn').
+    int knn_sub;
+
+    //! Set to the number of points to sample when using the knn approximation.
+    //! When it is not the case, it is set to -1.
+    int n_approx;
+
     // *********************
     // * Protected options *
     // *********************
@@ -80,6 +92,7 @@ public:
     // ************************
 
     int knn;
+    real knn_approximation;
     int max_size_for_full_gram;
     string method;
     real threshold;
@@ -108,6 +121,10 @@ protected:
     //! Replace all elements in the Gram matrix K by 'threshold' when they meet
     //! the thresholding condition defined by the thresholding method.
     virtual void thresholdGramMatrix(const Mat& K) const;
+
+    //! Fill 'k_x_xi' with values of the source kernel evaluated at points
+    //! xi sampled randomly from the dataset.
+    void evaluate_random_k_x_i(const Vec& x, const Vec& k_x_xi) const;
 
 public:
 

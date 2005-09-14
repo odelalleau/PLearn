@@ -42,6 +42,7 @@
 
 
 #include "ThresholdedKernel.h"
+#include <plearn/math/PRandom.h>
 
 namespace PLearn {
 using namespace std;
@@ -49,30 +50,25 @@ using namespace std;
 ///////////////////////
 // ThresholdedKernel //
 ///////////////////////
-ThresholdedKernel::ThresholdedKernel() 
-    : knn(2),
-      max_size_for_full_gram(5000),
-      method("knn"),
-      threshold(0)
+ThresholdedKernel::ThresholdedKernel():
+    knn(2),
+    knn_approximation(0),
+    max_size_for_full_gram(5000),
+    method("knn"),
+    threshold(0)
 {
 }
 
 PLEARN_IMPLEMENT_OBJECT(ThresholdedKernel,
-                        "Thresholds an underlying kernel.",
-                        ""
-    );
+    "Thresholds an underlying kernel.",
+    ""
+);
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void ThresholdedKernel::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-
     declareOption(ol, "method", &ThresholdedKernel::method, OptionBase::buildoption,
                   "Which method is used to threshold the underlying kernel:\n"
                   " - 'knn' : if y is such that K(x,y) is strictly less than K(x,n_k(x)) where n_k(x)\n"
@@ -84,6 +80,15 @@ void ThresholdedKernel::declareOptions(OptionList& ol)
 
     declareOption(ol, "knn", &ThresholdedKernel::knn, OptionBase::buildoption,
                   "When 'method' is 'knn', this is 'k' in n_k(x) (x will be counted if in data matrix).");
+
+    declareOption(ol, "knn_approximation", &ThresholdedKernel::knn_approximation,
+                                           OptionBase::buildoption,
+                  "When 'method' is 'knn', this option can take several values:\n"
+                  " - 0          : it is ignored, the 'knn' nearest neighbors are computed normally\n"
+                  " - p > 1      : the value of K(x,n_k(x)) is estimated by computing K(x,y) for p\n"
+                  "                values of y taken randomly in the dataset (the same value of y\n"
+                  "                may be taken more than once)\n"
+                  " - 0 < f <= 1 : same as above, with p = f * n (n = dataset size)");
 
     declareOption(ol, "max_size_for_full_gram", &ThresholdedKernel::max_size_for_full_gram, OptionBase::buildoption,
                   "When the dataset has more than 'max_size_for_full_gram' samples, the full Gram\n"
@@ -110,6 +115,14 @@ void ThresholdedKernel::build_()
     if (source_kernel && !source_kernel->is_symmetric)
         PLERROR("In ThresholdedKernel::build_ - The source kernel must currently "
                 "be symmetric");
+    assert( knn_approximation >= 0);
+    knn_approx = (knn_approximation != 0);
+    if (knn_approx) {
+        if (knn_approximation > 1)
+            n_approx = int(round(knn_approximation));
+        // Otherwise, n_approx is set in setDataForKernelMatrix.
+    } else
+        n_approx = -1;
 }
 
 ///////////////////////
@@ -136,18 +149,25 @@ void ThresholdedKernel::computeGramMatrix(Mat K) const {
 real ThresholdedKernel::evaluate(const Vec& x1, const Vec& x2) const {
     real k_x1_x2 = source_kernel->evaluate(x1, x2);
     if (method == "knn") {
-        source_kernel->evaluate_all_x_i(x1, k_x_xi);
+        if (knn_approx)
+            evaluate_random_k_x_i(x1, k_x_xi);
+        else
+            source_kernel->evaluate_all_x_i(x1, k_x_xi);
         negateElements(k_x_xi);
-        partialSortRows(k_x_xi_mat, knn);
-        if (k_x1_x2 >= - k_x_xi[knn-1])
+        partialSortRows(k_x_xi_mat, knn_sub);
+        if (k_x1_x2 >= - k_x_xi[knn_sub-1])
             return k_x1_x2;
-        source_kernel->evaluate_all_i_x(k_x_xi, x2);
-        partialSortRows(k_x_xi_mat, knn);
+        if (knn_approx)
+            evaluate_random_k_x_i(x2, k_x_xi);
+        else
+            source_kernel->evaluate_all_i_x(k_x_xi, x2);
+        partialSortRows(k_x_xi_mat, knn_sub);
         negateElements(k_x_xi);
-        if (k_x1_x2 >= -k_x_xi[knn-1])
+        if (k_x1_x2 >= -k_x_xi[knn_sub-1])
             return k_x1_x2;
         return threshold;
     }
+    assert( false );
     return MISSING_VALUE;
 }
 
@@ -162,6 +182,7 @@ real ThresholdedKernel::evaluate_i_j(int i, int j) const {
         else
             return threshold;
     }
+    assert( false );
     return MISSING_VALUE;
 }
 
@@ -180,10 +201,13 @@ real ThresholdedKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x
 real ThresholdedKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) const {
     if (method == "knn") {
         if (first_time) {
-            source_kernel->evaluate_all_i_x(x, k_x_xi);
+            if (knn_approx)
+                evaluate_random_k_x_i(x, k_x_xi);
+            else
+                source_kernel->evaluate_all_i_x(x, k_x_xi);
             negateElements(k_x_xi);
-            partialSortRows(k_x_xi_mat, knn);
-            k_x_threshold = - k_x_xi[knn - 1];
+            partialSortRows(k_x_xi_mat, knn_sub);
+            k_x_threshold = - k_x_xi[knn_sub - 1];
         }
         real k_i_x = source_kernel->evaluate_i_x_again(i, x, squared_norm_of_x, first_time);
         if (k_i_x >= k_x_threshold || k_i_x >= knn_kernel_values[i])
@@ -191,7 +215,23 @@ real ThresholdedKernel::evaluate_i_x_again(int i, const Vec& x, real squared_nor
         else
             return threshold;
     }
+    assert( false );
     return MISSING_VALUE;
+}
+
+
+///////////////////////////
+// evaluate_random_k_x_i //
+///////////////////////////
+void ThresholdedKernel::evaluate_random_k_x_i(const Vec& x, const Vec& k_x_xi)
+                        const
+{
+    PP<PRandom> random = PRandom::common(false); // PRandom with fixed seed.
+    int k = k_x_xi.length();
+    for (int j = 0; j < k; j++) {
+        int i = random->uniform_multinomial_sample(n_examples);
+        k_x_xi[j] = source_kernel->evaluate_x_i(x,i);
+    }
 }
 
 //////////////////
@@ -207,10 +247,13 @@ real ThresholdedKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x
 real ThresholdedKernel::evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x, bool first_time) const {
     if (method == "knn") {
         if (first_time) {
-            source_kernel->evaluate_all_x_i(x, k_x_xi);
+            if (knn_approx)
+                evaluate_random_k_x_i(x, k_x_xi);
+            else
+                source_kernel->evaluate_all_x_i(x, k_x_xi);
             negateElements(k_x_xi);
-            partialSortRows(k_x_xi_mat, knn);
-            k_x_threshold = - k_x_xi[knn - 1];
+            partialSortRows(k_x_xi_mat, knn_sub);
+            k_x_threshold = - k_x_xi[knn_sub - 1];
         }
         real k_x_i = source_kernel->evaluate_x_i_again(x, i, squared_norm_of_x, first_time);
         if (k_x_i >= k_x_threshold || k_x_i >= knn_kernel_values[i])
@@ -238,12 +281,19 @@ void ThresholdedKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void ThresholdedKernel::setDataForKernelMatrix(VMat the_data) {
     inherited::setDataForKernelMatrix(the_data);
     int n = the_data->length();
-    k_x_xi.resize(n);
-    k_x_xi_mat = k_x_xi.toMat(n, 1);
     ProgressBar* pb = 0;
+    knn_sub = knn_approx ? int(round(knn * real(n_approx) / real(n)))
+                             : knn;
+    if (knn_sub <= 0)
+        PLERROR("In ThresholdedKernel::setDataForKernelMatrix - Not "
+                "enough neighbors considered");
     if (method == "knn") {
         knn_kernel_values.resize(n);
-        if (n <= max_size_for_full_gram) {
+        if (knn_approx && knn_approximation <= 1) {
+            n_approx = int(round(knn_approximation * n));
+            assert( n_approx >= 1 );
+        }
+        if (n <= max_size_for_full_gram && !knn_approx) {
             // Can afford to store the Gram matrix in memory.
             gram_matrix.resize(n,n);
             source_kernel->computeGramMatrix(gram_matrix);
@@ -268,8 +318,8 @@ void ThresholdedKernel::setDataForKernelMatrix(VMat the_data) {
                 // Free memory.
                 gram_matrix = Mat();
         } else {
-            // Computing the whole Gram matrix will probably not fit in memory.
-            Vec k_i(n);
+            // Computing the whole Gram matrix will probably not fit in memory,
+            // or we do not even want / afford to compute it.
             if (cache_gram_matrix) {
                 // We will cache the sparse Gram matrix.
                 sparse_gram_matrix.resize(n);
@@ -279,19 +329,34 @@ void ThresholdedKernel::setDataForKernelMatrix(VMat the_data) {
             if (report_progress)
                 pb = new ProgressBar("Computing Gram matrix of source kernel and "
                                      "finding nearest neighbors", n);
-            Mat k_i_mat(n, 1);
+            int n_used = knn_approx ? n_approx : n;
+            Mat k_i_mat(n_used, 1);
+            Vec k_i(n_used);
             Vec row(2);
             TVec<int> neighb_i, neighb_j;
+            PP<PRandom> random = PRandom::common(false); // Has fixed seed.
             for (int i = 0; i < n; i++) {
-                for (int j = 0; j < n; j++)
-                    k_i[j] = source_kernel->evaluate_i_j(i,j);
+                if (knn_approx) {
+                    for (int j = 0; j < n_approx; j++) {
+                        int k = random->uniform_multinomial_sample(n);
+                        k_i[j] = source_kernel->evaluate_i_j(i,k);
+                    }
+                } else {
+                    for (int j = 0; j < n; j++)
+                        k_i[j] = source_kernel->evaluate_i_j(i,j);
+                }
                 k_i_mat << k_i;
                 negateElements(k_i_mat);  // For sorting.
-                partialSortRows(k_i_mat, knn);
-                knn_kernel_values[i] = - k_i_mat(knn - 1, 0);
+                partialSortRows(k_i_mat, knn_sub);
+                knn_kernel_values[i] = - k_i_mat(knn_sub - 1, 0);
                 if (report_progress)
                     pb->update(i+1);
                 if (cache_gram_matrix) {
+                    if (knn_approx)
+                        PLERROR("In ThresholdedKernel::setDataForKernelMatrix "
+                                "- Cannot currently cache the Gram matrix when"
+                                " using the knn approximation");
+                    assert( !knn_approx );
                     // Let us cache the sparse Gram matrix.
                     if (threshold != 0)
                         PLWARNING("In ThresholdedKernel::setDataForKernelMatrix - The sparse "
@@ -327,6 +392,8 @@ void ThresholdedKernel::setDataForKernelMatrix(VMat the_data) {
                 delete pb;
         }
     }
+    k_x_xi.resize(knn_approx ? n_approx : n);
+    k_x_xi_mat = k_x_xi.toMat(k_x_xi.length(), 1);
 }
 
 /////////////////////////
@@ -357,7 +424,7 @@ void ThresholdedKernel::thresholdGramMatrix(const Mat& K) const {
 
 } // end of namespace PLearn
 
-
+
 /*
   Local Variables:
   mode:c++
