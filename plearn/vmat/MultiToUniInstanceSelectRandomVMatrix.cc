@@ -108,7 +108,7 @@ void MultiToUniInstanceSelectRandomVMatrix::build_()
  	fieldinfos.resize(width_);
         this->setFieldInfos(source->getFieldInfos()); 
     }
-// Building the indicies list that correspond to choosing randomly one instance per bag.
+// Building the indices list that correspond to choosing randomly one instance per bag.
 /* Notes for this task : 
    The bag signal values meaning :
    1 means the first instance of the bag
@@ -120,7 +120,7 @@ void MultiToUniInstanceSelectRandomVMatrix::build_()
     int bag_signal_column = source_->inputsize() + source_->targetsize() - 1;
     int first_row = 0;
 
-    indices.resize(0); // This get rid of the useri's build option value.
+    indices.resize(0); // This get rid of the user's build option value.
     for(int row=0; row<source_->length(); row++)
     {
         switch(int(source_->get(row, bag_signal_column)))
