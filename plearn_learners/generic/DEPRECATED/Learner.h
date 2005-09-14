@@ -58,7 +58,9 @@
 namespace PLearn {
 using namespace std;
 
-/*!     The base class for learning algorithms, which
+/*! @deprecated This class is DEPRECATED, derive from PLearner instead.
+
+  The base class for learning algorithms, which
   should be the main "products" of PLearn.
     
   The main thing that a Learner can do are:

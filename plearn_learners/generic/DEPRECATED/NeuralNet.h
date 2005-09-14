@@ -50,6 +50,9 @@
 namespace PLearn {
 using namespace std;
 
+/** @deprecated This class is DEPRECATED. Consider using NNet instead.
+ */
+
 class NeuralNet: public Learner
 {
 protected:
