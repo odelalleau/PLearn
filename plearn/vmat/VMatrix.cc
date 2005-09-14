@@ -438,23 +438,46 @@ void VMatrix::declareFieldNames(const TVec<string>& fnames)
 void VMatrix::saveFieldInfos() const
 {
     // check if we need to save the fieldinfos
-    if(fieldinfos.size()==0)
-        return;
-    Array<VMField> current_fieldinfos = getSavedFieldInfos();
-    if (current_fieldinfos==fieldinfos)
-        return;
+    if(fieldinfos.size() > 0) {
+        Array<VMField> current_fieldinfos = getSavedFieldInfos();
+        if (current_fieldinfos != fieldinfos) {
   
-    // Ensure that the metadatadir exists
-    if(!force_mkdir(getMetaDataDir()))
-        PLERROR("In VMatrix::saveFieldInfos could not create directory %s",getMetaDataDir().absolute().c_str());
+            // Ensure that the metadatadir exists
+            if(!force_mkdir(getMetaDataDir()))
+                PLERROR("In VMatrix::saveFieldInfos: could not create directory %s",
+                        getMetaDataDir().absolute().c_str());
   
-    PPath filename = getMetaDataDir() / "fieldnames";
-    PStream out = openFile(filename, PStream::raw_ascii, "w");
-    for(int i= 0; i < fieldinfos.length(); ++i)
-        out << fieldinfos[i].name << '\t' << fieldinfos[i].fieldtype << endl;
-    filename = getMetaDataDir() / "sizes";
-    out = openFile(filename, PStream::plearn_ascii, "w");
-    out << inputsize_ << targetsize_ << weightsize_ << endl;
+            PPath filename = getMetaDataDir() / "fieldnames";
+            PStream out = openFile(filename, PStream::raw_ascii, "w");
+            for(int i= 0; i < fieldinfos.length(); ++i)
+                out << fieldinfos[i].name << '\t' << fieldinfos[i].fieldtype << endl;
+        }
+    }
+
+    // check if we need to save the sizes
+    int inp, targ, weight;
+    bool sizes_exist = getSavedSizes(inp, targ, weight);
+    if ((! sizes_exist && inputsize_ != -1 && targetsize_ != -1 && weightsize_ != -1) ||
+        (inp != inputsize_ || targ != targetsize_ || weight != weightsize_))
+    {
+        // Slightly hackish phenomenon :: if the sizes file doesn't previously
+        // exist and we cannot write them, THIS IS NOT AN ERROR.  In this case,
+        // just catch the error and continue
+        try {
+            // Ensure that the metadatadir exists
+            if(!force_mkdir(getMetaDataDir()))
+                PLERROR("In VMatrix::saveFieldInfos: could not create directory %s",
+                        getMetaDataDir().absolute().c_str());
+            
+            PPath filename = getMetaDataDir() / "sizes";
+            PStream out = openFile(filename, PStream::plearn_ascii, "w");
+            out << inputsize_ << targetsize_ << weightsize_ << endl;
+        }
+        catch (const PLearnError& e) {
+            if (sizes_exist)
+                throw;
+        }
+    }
 }
 
 ////////////////////
@@ -464,14 +487,16 @@ void VMatrix::loadFieldInfos() const
 {
     Array<VMField> current_fieldinfos = getSavedFieldInfos();
     setFieldInfos(current_fieldinfos);
-    //fieldinfos = current_fieldinfos;
 
-    PPath filename = getMetaDataDir() / "sizes";
-    if (isfile(filename)) 
+    // Update only if they can successfully be read from the saved metadata
+    // and they don't already exist in the VMatrix
+    int inp, tar, weight;
+    if (getSavedSizes(inp,tar,weight) &&
+        inputsize_ == -1 && targetsize_ == -1 && weightsize_ == -1)
     {
-        PStream in = openFile(filename, PStream::plearn_ascii, "r");
-        // perr << "In loadFieldInfos() loading sizes from " << filename << endl;
-        in >> inputsize_ >> targetsize_ >> weightsize_;
+        inputsize_  = inp;
+        targetsize_ = tar;
+        weightsize_ = weight;
     }
 }
 
@@ -502,6 +527,24 @@ Array<VMField> VMatrix::getSavedFieldInfos() const
     }
     return current_fieldinfos;
 }
+
+///////////////////
+// getSavedSizes //
+///////////////////
+bool VMatrix::getSavedSizes(int& inputsize, int& targetsize, int& weightsize) const
+{
+    PPath filename = getMetaDataDir() / "sizes";
+    inputsize = targetsize = weightsize = -1;
+    if (isfile(filename)) 
+    {
+        PStream in = openFile(filename, PStream::plearn_ascii, "r");
+        // perr << "In loadFieldInfos() loading sizes from " << filename << endl;
+        in >> inputsize >> targetsize >> weightsize;
+        return true;                         // Successfully loaded
+    }
+    return false;
+}
+
 
 //////////////////////////
 // resolveFieldInfoLink //

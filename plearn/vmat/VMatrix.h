@@ -182,9 +182,22 @@ public:
     void setFieldInfos(const Array<VMField>& finfo) const;
     //! Returns true if fieldinfos have been set.
     bool hasFieldInfos() const;
-    //! If no fieldnames have been set, will set default field names to "0", "1", "2", ... i.e. their column index.
+
+    //! If no fieldnames have been set, will set default field names to "0",
+    //! "1", "2", ... i.e. their column index.
     Array<VMField>& getFieldInfos() const;
+
+    //! Read the fieldnames from the metadatadir.  Does not modify any internal members.
     Array<VMField> getSavedFieldInfos() const;
+
+    /**
+     *  Read the saved sizes from the metadatadir. If the "sizes" file does not
+     *  exist, return false.  If it exists but the format is wrong, generate a
+     *  PLerror.  If everything looks clean, the 3 arguments are set to the
+     *  sizes and return true.
+     */
+    bool getSavedSizes(int& inputsize, int& targetsize, int& weightsize) const;
+    
     VMField& getFieldInfos(int fieldindex) const { return getFieldInfos()[fieldindex]; }
     void declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype=VMField::UnknownType);
     void declareFieldNames(const TVec<string>& fnames);
