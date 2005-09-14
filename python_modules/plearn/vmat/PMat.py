@@ -33,7 +33,7 @@
 # Author: Pascal Vincent
 
 import numarray, sys, os, os.path
-from plearn.pyplearn import plearn_repr
+from plearn.pyplearn.plearn_repr import plearn_repr, format_list_elements
 
 def array_columns( a, cols ):
     indices = None
@@ -330,9 +330,9 @@ class PMat( VMat ):
         return self.length
 
     def __str__( self ):
-        return self.plearn_repr( indent_level = 0 )
+        return plearn_repr(self, indent_level=0)
     
-    def plearn_repr( self, indent_level = 0 ):
+    def plearn_repr( self, indent_level=0, inner_repr=plearn_repr ):
         # asking for plearn_repr could be to send specification over
         # to another prg so that will open the .pmat
         # So we make sure data is flushed to disk.
@@ -340,13 +340,13 @@ class PMat( VMat ):
 
         def elem_format( elem ):
             k, v = elem
-            return '%s = %s' % ( k, plearn_repr.plearn_repr(v, indent_level+1) )
+            return '%s = %s' % ( k, inner_repr(v, indent_level+1) )
 
         options = [ ( 'filename',   self.fname      ),
                     ( 'inputsize',  self.inputsize  ), 
                     ( 'targetsize', self.targetsize ),
                     ( 'weightsize', self.weightsize ) ]
-        return 'FileVMatrix(%s)' % plearn_repr.format_list_elements( options, elem_format, indent_level+1 )
+        return 'FileVMatrix(%s)' % format_list_elements( options, elem_format, indent_level+1 )
         
 if __name__ == '__main__':
     pmat = PMat( 'tmp.pmat', 'w', fieldnames=['F1', 'F2'] )

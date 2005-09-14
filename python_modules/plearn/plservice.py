@@ -34,6 +34,7 @@
 
 import os, string
 from plearn.pyplearn import *
+from plearn.pyplearn import plearn_repr
 import plearn.plio
 import sys
 
@@ -168,8 +169,7 @@ class RemotePLearnServer:
 
     def clearMaps(self):
         if self.clear_maps:
-            self.io.copies_map_in.clear()
-            self.io.copies_map_out.clear()
+            self.io.clear_maps()
 
     def sendFunctionCallHeader(self, funcname, nargs):
         self.clearMaps()

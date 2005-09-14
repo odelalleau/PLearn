@@ -34,7 +34,7 @@
 
 import sys, string, struct
 import numarray
-from plearn.pyplearn.plearn_repr import plearn_repr
+from plearn.pyplearn.plearn_repr import plearn_repr, clear_ref_map
 
 sign_and_digits = string.digits + "+-"
 float_chars = string.digits+"+-.eE"
@@ -70,7 +70,12 @@ class PLearnIO:
         self.pout = pout
         self.unreadstring = ''
         self.copies_map_in = {}
-        self.copies_map_out = {}
+        # self.copies_map_out = {}
+
+    def clear_maps(self):
+        self.copies_map_in.clear()
+        # self.copies_map_out.clear()
+        clear_ref_map()
 
     def read(self,size):
         result = self.unreadstring[0:size]
