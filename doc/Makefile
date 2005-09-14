@@ -1,4 +1,4 @@
-all: guides.all
+all: guides.all api.html
 
 # publish it all on the sourceforge web
 #publish:
@@ -6,7 +6,7 @@ all: guides.all
 publish: 
 	scp -r * plearner@shell.berlios.de:/home/groups/plearn/htdocs/
 
-guides.all: guides.ps guides.html guides.pdf api.html
+guides.all: guides.ps guides.html guides.pdf
 
 doxygen:
 	doxygen
