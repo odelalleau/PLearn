@@ -32,15 +32,7 @@ public:
     // ### Make sure the implementation in the .cc
     // ### initializes all fields to reasonable default values.
     DERIVEDCLASS();
-
-
-    //#####  RowBufferedVMatrix Member Functions  #############################
-
-    //! Fill the vector 'v' with the content of the i-th row.
-    //! v is assumed to be the right size.
-    virtual void getNewRow(int i, const Vec& v) const;
-
-    
+   
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
@@ -68,6 +60,11 @@ protected:
     // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
 
+    //! Fill the vector 'v' with the content of the i-th row.
+    //! 'v' is assumed to be the right size.
+    // (PLEASE IMPLEMENT IN .cc)
+    virtual void getNewRow(int i, const Vec& v) const;
+ 
 private: 
     //#####  Private Member Functions  ########################################
 
