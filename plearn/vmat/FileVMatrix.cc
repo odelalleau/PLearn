@@ -177,6 +177,10 @@ void FileVMatrix::build_()
             }
             fputc('\0',f);
         }
+
+        // Get rid of any pre-existing .metadata :: this ensures that old
+        // fieldsizes do not pollute a newly-created FileVMatrix
+        force_rmdir(filename_ + ".metadata");
     }
     else
     {
@@ -200,7 +204,10 @@ void FileVMatrix::build_()
             // been specified. In this case we must modify the file's length.
             need_update_header = true;
         } else if (file_length >= 0 && this->length_ >= 0 && file_length != this->length_) {
-            PLERROR("In FileVMatrix::build_ - Lengths of the VMatrix and of the file loaded differ");
+            PLWARNING("In FileVMatrix::build_ - The length option of the VMatrix and the "
+                      "loaded file differ; using the loaded file length (%d instead of %d)",
+                      file_length, this->length_);
+            this->length_ = file_length;
         } else {
             this->length_ = file_length;
         }
@@ -209,7 +216,10 @@ void FileVMatrix::build_()
             // Same as above, but for the width.
             need_update_header = true;
         } else if (file_width >= 0 && this->width_ >= 0 && file_width != this->width_) {
-            PLERROR("In FileVMatrix::build_ - Widths of the VMatrix and of the file loaded differ");
+            PLWARNING("In FileVMatrix::build_ - The width option of the VMatrix and the "
+                      "loaded file differ; using the loaded file width (%d instead of %d)",
+                      file_width, this->width_);
+            this->width_ = file_width;
         } else {
             this->width_ = file_width;
         }
@@ -260,7 +270,6 @@ void FileVMatrix::build_()
     }
 
     loadFieldInfos();
-
 }
 
 ////////////////
