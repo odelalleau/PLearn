@@ -569,6 +569,10 @@ void MultiInstanceNNet::computeCostsFromOutputs(const Vec& inputv, const Vec& ou
         costsv[0] = nll;
         costsv[1] = classification_error;
         // Add the lift output.
+        // Probably not working: it looks like it only takes into account the
+        // output for the last instance in the bag.
+        PLERROR("In MultiInstanceNNet::computeCostsFromOutputs - Probably
+                bugged, please check code");
         if (targetv[0] > 0) {
             costsv[2] = outputv[0];
         } else {
