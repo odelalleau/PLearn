@@ -196,22 +196,30 @@ int diff(const string& refer, const string& other, const Option<ObjectType, TMat
     return n_diffs;
 }
 
-//! diff for PP<>.
+//! diff for PP<PointedType>.
+//! If PointedType does not inherit from Object, use the default 'diff'
+//! function that simply compares the two strings.
 template<class ObjectType, class PointedType>
 int diff(const string& refer, const string& other, const Option<ObjectType, PP<PointedType> >* opt, PLearnDiff* diffs)
 {
     // pout << "Calling diff with Option< ObjectType, " << opt->optiontype() << " >" << endl;
-    PP<PointedType> refer_obj;
-    PP<PointedType> other_obj;
+    PP<PointedType> refer_pp, other_pp;
+    PP<Object> refer_obj, other_obj;
     PStream in = openString(refer, PStream::plearn_ascii);
-    in >> refer_obj;
+    in >> refer_pp;
     in = openString(other, PStream::plearn_ascii);
-    in >> other_obj;
-    int n_diffs = diff(static_cast<PointedType*>(refer_obj),
-                       static_cast<PointedType*>(other_obj), diffs);
+    in >> other_pp;
+    refer_obj = dynamic_cast<Object*>((PointedType*) refer_pp);
+    if (refer_obj.isNull())
+        // This is actually not an object: just compare the two strings.
+        return diff(diffs, refer, other, opt->optionname());
+    other_obj = dynamic_cast<Object*>((PointedType*) other_pp);
+    assert( other_obj.isNotNull() );
+    int n_diffs = diff(refer_obj, other_obj, diffs);
     addDiffPrefix(diffs, opt->optionname() + ".", n_diffs);
     return n_diffs;
 }
+
 
 /*
 //! diff for Object.
