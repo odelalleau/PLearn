@@ -181,7 +181,7 @@ void SelectRowsMultiInstanceVMatrix::build_()
     weightsize_ = source->weightsize(); 
  
     // ### In a SourceVMatrix, you will typically end build_() with:
-    // setMetaInfoFromSource();
+    setMetaInfoFromSource();
 }
 
 ///////////////
