@@ -45,7 +45,6 @@
 #define SelectRowsMultiInstanceVMatrix_INC
 
 #include <plearn/vmat/SourceVMatrix.h>
-#include <plearn/math/PRandom.h>
 
 namespace PLearn {
 
@@ -73,6 +72,9 @@ public:
     long seed;
     TVec<int> indices; // indices of the kept rows
     TVec<int> mi_info; // bag info for the reduced lookup set.
+    PP<MultiInstanceNNet> multi_nnet;
+    double frac;
+
 public:
     //#####  Public Member Functions  #########################################
 
@@ -99,7 +101,6 @@ public:
 protected:
 //! Random number generator
     PP<PRandom> random_generator;
-    PP<MultiInstanceNNet> multiNNet;
     //#####  Protected Options  ###############################################
 
     // ### Declare protected option fields (such as learned parameters) here

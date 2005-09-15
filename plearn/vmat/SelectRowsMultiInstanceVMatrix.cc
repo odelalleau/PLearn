@@ -39,6 +39,7 @@
 // Authors: Benoit Cromp
 
 /*! \file SelectRowsMultiInstanceVMatrix.cc */
+#include <plearn/math/PRandom.h>
 #include <plearn_learners/classifiers/MultiInstanceNNet.h>
 #include "SelectRowsMultiInstanceVMatrix.h"
 
@@ -80,8 +81,9 @@ void SelectRowsMultiInstanceVMatrix::declareOptions(OptionList& ol)
     //               "Help text describing this option");
     // ...
     declareOption(ol, "seed", &SelectRowsMultiInstanceVMatrix::seed, OptionBase::buildoption, "Random generator seed (>0) (exceptions : -1 = initialized from clock, 0 = no initialization).");
-    declareOption(ol, "indices", &SelectRowsMultiInstanceVMatrix::indices, OptionBase::buildoption, "Indices of kept rows");
-//    declareOption(ol, "multiNNet", &SelectRowsMultiInstanceVMatrix::multiNNet, OptionBase::buildoption, "psave of a learned MultiNNet from which you select instances");
+//    declareOption(ol, "indices", &SelectRowsMultiInstanceVMatrix::indices, OptionBase::buildoption, "Indices of kept rows");
+      declareOption(ol, "multi_nnet", &SelectRowsMultiInstanceVMatrix::multi_nnet, OptionBase::buildoption, "MultiNNet from which you select instances");
+      declareOption(ol, "frac", &SelectRowsMultiInstanceVMatrix::frac, OptionBase::buildoption, "Fraction of the bag to be randomly chosen (Note: this is the fraction of the bag to be randomly chosen in addition of the best instance, which is always added");
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
    
@@ -112,10 +114,11 @@ void SelectRowsMultiInstanceVMatrix::build_()
 
     random_generator->manual_seed(seed);
 
-// Generating 'indices' vector.
+// Generating 'indices' and 'mi_info' vector.
     
-    int bag_signal_column = source->inputsize() + source->targetsize() - 1;
+    int bag_signal_column = source->targetsize() - 1;
     int first_row = 0;
+    int x_max;
 
     indices.resize(0); // This get rid of the user's build option value.
     mi_info.resize(0);
@@ -123,30 +126,33 @@ void SelectRowsMultiInstanceVMatrix::build_()
     TVec<double> bag_prob;
     bag_indices.resize(0);
     bag_prob.resize(0);
-    ??? Vec prob;
-
+    // Vec prob;
+    Vec input,target,output;
+    real weight;
+    int indices_size;
     for(int row=0; row<source->length(); row++)
     {
-        switch(int(source->get(row, bag_signal_column)))
+      source->getExample(row,input,target,weight);
+        switch(int(target[bag_signal_column]))
         {
         case 0:
-            multiNNet.computeOutput(vecInput??, ??prob);
-            bag_prob.push_back(??prob[0]);
+            multi_nnet->computeOutput(input,output);
+            bag_prob.push_back(output[0]);
             break;
         case 1:
             first_row = row;
-            multiNNet.computeOutput(vecInput??, ??prob);
-            bag_prob.push_back(??prob[0]);
+            multi_nnet->computeOutput(input, output);
+            bag_prob.push_back(output[0]);
             break;
         case 2:
-            multiNNet.computeOutput(vecInput??, ??prob);
-            bag_prob.push_back(??prob[0]);
+            multi_nnet->computeOutput(input, output);
+            bag_prob.push_back(output[0]);
             x_max=argmax(bag_prob);
             bag_indices.resize(0);
             for(int i=0;i<row-first_row;i++) {
                 if(i!=x_max) bag_indices.push_back(i);
             }
-            shuffleElements(bag_indices);
+            random_generator->shuffleElements(bag_indices);
             // Append retained elements to indices
             indices_size = indices.length();
             indices.push_back(first_row+x_max);
@@ -170,6 +176,9 @@ void SelectRowsMultiInstanceVMatrix::build_()
 
 // ?? Modify the width, length, (tagetsize, inputsize and weight) size attribute.
     length_ = indices.length();
+    inputsize_ = source->inputsize();
+    targetsize_ = source->targetsize();
+    weightsize_ = source->weightsize(); 
  
     // ### In a SourceVMatrix, you will typically end build_() with:
     // setMetaInfoFromSource();
@@ -180,8 +189,8 @@ void SelectRowsMultiInstanceVMatrix::build_()
 ///////////////
 void SelectRowsMultiInstanceVMatrix::getNewRow(int i, const Vec& v) const
 {
-    int bag_signal_column = source->inputsize() + source->targetsize() - 1;
-    source->getSubRow(indices[i], 0, v);
+    int bag_signal_column = inputsize_ + targetsize_ - 1;
+    source->getRow(indices[i], v);
     v[bag_signal_column]=mi_info[i];
 }
 
