@@ -730,6 +730,27 @@ PStream& PStream::operator>>(char *x)
                     case 'n':
                         x[i++] = '\n';
                         break;
+                    case 't':
+                        x[i++] = '\t';
+                        break;
+                    case 'r':
+                        x[i++] = '\r';
+                        break;
+                    case '0':
+                        x[i++] = '\0';
+                        break;
+                    case 'a':
+                        x[i++] = '\a';
+                        break;
+                    case 'b':
+                        x[i++] = '\b';
+                        break;
+                    case 'v':
+                        x[i++] = '\v';
+                        break;
+                    case 'f':
+                        x[i++] = '\f';
+                        break;
 
                     default:
                         x[i++] = static_cast<char>(c);
@@ -802,10 +823,31 @@ PStream& PStream::operator>>(string& x)
                 if(c=='\\') // escaped character
                 {
                     c = get();
-                    switch (c)
+                    switch (c)             
                     {
                     case 'n':
                         x += '\n';
+                        break;
+                    case 't':
+                        x += '\t';
+                        break;
+                    case 'r':
+                        x += '\r';
+                        break;
+                    case '0':
+                        x += '\0';
+                        break;
+                    case 'a':
+                        x += '\a';
+                        break;
+                    case 'b':
+                        x += '\b';
+                        break;
+                    case 'v':
+                        x += '\v';
+                        break;
+                    case 'f':
+                        x += '\f';
                         break;
 
                     default:
