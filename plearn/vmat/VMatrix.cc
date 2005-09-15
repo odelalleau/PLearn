@@ -1348,17 +1348,21 @@ real VMatrix::dot(int i, const Vec& v) const
 //////////
 // find //
 //////////
-bool VMatrix::find(const Vec& input, real tolerance, int* i) const {
+bool VMatrix::find(const Vec& input, real tolerance, int* i, int i_start) const
+{
     get_row.resize(inputsize());
 #ifdef BOUNDCHECK
     if (input.length() != inputsize())
-        PLERROR("In VMatrix::find - The given vector must be the same size as inputsize");
+        PLERROR("In VMatrix::find - The given vector must be the same size as "
+                "inputsize");
 #endif
-    for (int j = 0; j < length(); j++) {
-        getSubRow(j, 0, get_row);
+    int n = length();
+    for (int j = 0; j < n; j++) {
+        int row = (j + i_start) % n;
+        getSubRow(row, 0, get_row);
         if (powdistance(input, get_row, 2.0) < tolerance) {
             if (i)
-                *i = j;
+                *i = row;
             return true;
         }
     }

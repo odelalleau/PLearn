@@ -490,7 +490,8 @@ public:
     //! corresponding data point, or with -1 if it does not exist in this VMat.
     //! The 'tolerance' parameter indicates the maximum squared distance between two
     //! points to consider them as equal.
-    virtual bool find(const Vec& input, real tolerance, int* i = 0) const;
+    //! 'i_start' specifies the row where the search begins.
+    bool find(const Vec& input, real tolerance, int* i = 0, int i_start = 0) const;
 
 /*! Returns a Mat with the same data as this VMat
   The default version of this method copies the data in a fresh Mat created in memory
