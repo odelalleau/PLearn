@@ -59,16 +59,19 @@ class DictionaryVMatrix: public RowBufferedVMatrix
 
 private:
   
-    //! Number of attributes in the input text file (\t separated)
-    int attributes_number;
+    
     typedef RowBufferedVMatrix inherited;
 
     Mat data;
+
 protected:
 
     // *********************
     // * protected options *
     // *********************
+
+    //! Number of attributes in the input text file (\t separated)
+    int n_attributes;
 
 public:
 
@@ -77,7 +80,7 @@ public:
     // ************************
 
     //! The text input file which is processed with dictionaries 
-    PPath input_file;
+    TVec<PPath> file_names;
 
     //! The dictionaries, one for each attributes
     TVec< PP<Dictionary> > dictionaries;
@@ -87,6 +90,7 @@ public:
 
     //! String delimiters for input file fields
     string delimiters;
+
 
     // ****************
     // * Constructors *
@@ -105,8 +109,7 @@ private:
     //! This does the actual building. 
     // (Please implement in .cc)
     void build_();
-    void extractDicType();
-    void buildDics();
+
 protected: 
 
     //! Declares this class' options

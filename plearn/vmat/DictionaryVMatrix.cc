@@ -42,7 +42,8 @@
 
 
 #include "DictionaryVMatrix.h"
-#include "DiskVMatrix.h"
+//#include "DiskVMatrix.h"
+#include "plearn/io/openFile.h"
 #include "plearn/io/fileutils.h"
 
 namespace PLearn {
@@ -50,7 +51,7 @@ using namespace std;
 
 
 DictionaryVMatrix::DictionaryVMatrix()
-    :inherited(),delimiters(" \t") 
+    :delimiters(" \t") 
     /* ### Initialise all fields to their default value */
 {
     data=0;
@@ -65,8 +66,11 @@ DictionaryVMatrix::DictionaryVMatrix(const string filename)
 
 
 PLEARN_IMPLEMENT_OBJECT(DictionaryVMatrix,
-                        "VMat encoded  with Dictionaries",
-                        "NO HELP"
+                        "VMat of text files, encoded  with Dictionaries",
+                        "The lines of the text files that are empty or commented\n"
+                        "out using the character # or ommited. If not Dictionary\n"
+                        "objects are given by the user, then new Dictionary objects\n"
+                        "are created and updated from the text files.\n"
     );
 
 void DictionaryVMatrix::getNewRow(int i, const Vec& v) const
@@ -125,18 +129,8 @@ Vec DictionaryVMatrix::getValues(const Vec& input, int col) const
 
 void DictionaryVMatrix::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-
-    // ### ex:
-    // declareOption(ol, "myoption", &DictionaryVMatrix::myoption, OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
-    declareOption(ol, "input_file", &DictionaryVMatrix::input_file, OptionBase::buildoption,
-		  "The text file from which we create the VMat");
+    declareOption(ol, "file_names", &DictionaryVMatrix::file_names, OptionBase::buildoption,
+		  "The text files from which we create the VMat");
     declareOption(ol, "dictionaries", &DictionaryVMatrix::dictionaries, OptionBase::buildoption,
                   "Vector of dictionaries\n");
     declareOption(ol, "option_fields", &DictionaryVMatrix::option_fields, OptionBase::buildoption,
@@ -145,6 +139,8 @@ void DictionaryVMatrix::declareOptions(OptionList& ol)
                   "Encoded Matrix\n");
     declareOption(ol, "delimiters", &DictionaryVMatrix::delimiters, OptionBase::buildoption,
                   "Delimiters for file fields (or attributs)\n");
+    declareOption(ol, "data", &DictionaryVMatrix::data, OptionBase::buildoption,
+                  "Matrix containing the concatenated and encoded text files\n");
   
   
     // Now call the parent class' declareOptions
@@ -153,58 +149,61 @@ void DictionaryVMatrix::declareOptions(OptionList& ol)
 
 void DictionaryVMatrix::build_()
 {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
-
-    // Nothing to do if the VMatrix is reloaded...
-    if(data.length()!=0)return;
-
-    if(option_fields.length()==0) option_fields.resize(dictionaries.length());
-
-    attributes_number = dictionaries.length();
-    input_file = input_file.absolute();
-    ifstream input_stream(input_file.c_str());
-    if (!input_stream) PLERROR("DictionaryVMatrix: can't open input_file %s", input_file.c_str());
-    // get file length
-    int input_length = 0;
     string line = "";
     vector<string> tokens;
-    // read first lines to set attributes_number value
-    while (!input_stream.eof()){
-        getline(input_stream, line, '\n');
-        if (line == "" || line[0] == '#') continue;
-        tokens = split(line, delimiters);
-        if( (int)attributes_number != (int)tokens.size()) PLERROR("Number of attributs is different from number of dictionaries on line: %s", line.c_str());
-        input_length++;
-    }
-    input_stream.close();
+    int it=0; 
 
-    ifstream input_stream2(input_file.c_str());
-    data.resize(input_length,attributes_number);
-    width_ = attributes_number;
-    length_ = input_length;
+    if(data.length()!=0) data.clear();
+    
+    length_ = 0;
+    for(int k=0; k<file_names.length(); k++)
+    {
+        PPath input_file = file_names[k];
+        int nlines = countNonBlankLinesOfFile(input_file);
+        length_ += nlines;
+        PStream input_stream = openFile(input_file, PStream::raw_ascii);
+        if(k>0) data.resize(length_,n_attributes);
+        while (!input_stream.eof()){
+            getNextNonBlankLine(input_stream, line);
+            tokens = split(line, delimiters);
 
-    int i=0;
-    while (!input_stream2.eof()){
-        getline(input_stream2, line, '\n');
-        if (line == "" || line[0] == '#') continue;
-        tokens = split(line, delimiters);
-        for(int j=0; j<(int)tokens.size(); j++)
-        {
-            TVec<string> options(option_fields[j].length());
-            for(int k=0; k<options.length(); k++)
-                options[k] = tokens[option_fields[j][k]];
-            data(i,j) = dictionaries[j]->getId(tokens[j],options);
-        }
-        i++;
+            // Set n_attributes
+            if(k==0 && it==0)
+            {
+                n_attributes = tokens.size();
+                data.resize(length_,n_attributes);
+                // If no dictionaries are specified, then create some
+                if(dictionaries.length() == 0)
+                {
+                    dictionaries.resize(n_attributes);
+                    for(int i=0; i<n_attributes; i++)
+                    {
+                        dictionaries[i] = new Dictionary();
+                        dictionaries[i]->update_mode = UPDATE;
+                        dictionaries[i]->build();
+                    }
+                    
+                }
+                if(dictionaries.length() != n_attributes)
+                    PLERROR("In DictionaryVMatrix::build_(): number of attributes (%d) and number of dictionaries (%d) is different", n_attributes, dictionaries.length());
+                if(option_fields.length()==0) option_fields.resize(n_attributes);
+            }
+
+            if((int)tokens.size() != n_attributes)
+                PLERROR("In DictionaryVMatrix::build_(): %d th line \"%s\" of file %s doesn't have %d attributes", it+1-length_+nlines, line.c_str(), input_file.c_str(), n_attributes);
+                
+            // Insert symbols in dictionaries (if they can be updated)
+            for(int j=0; j<n_attributes; j++)
+            {
+                TVec<string> options(option_fields[j].length());
+                for(int k=0; k<options.length(); k++)
+                    options[k] = tokens[option_fields[j][k]];
+                data(it,j) = dictionaries[j]->getId(tokens[j],options);
+            }
+            it++;
+        }       
     }
-    input_stream2.close();
-  
+    width_ = n_attributes;
 }
 
 // ### Nothing to add here, simply calls build_
@@ -217,7 +216,9 @@ void DictionaryVMatrix::build()
 void DictionaryVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
+ 
+    deepCopyField(data, copies);
+    deepCopyField(file_names, copies);
     deepCopyField(dictionaries, copies);
     deepCopyField(option_fields, copies);
 }
