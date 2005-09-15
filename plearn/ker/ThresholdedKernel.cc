@@ -289,9 +289,17 @@ void ThresholdedKernel::setDataForKernelMatrix(VMat the_data) {
                 "enough neighbors considered");
     if (method == "knn") {
         knn_kernel_values.resize(n);
-        if (knn_approx && knn_approximation <= 1) {
-            n_approx = int(round(knn_approximation * n));
-            assert( n_approx >= 1 );
+        if (knn_approx) {
+            if (knn_approximation <= 1) {
+                n_approx = int(round(knn_approximation * n));
+                assert( n_approx >= 1 );
+            } else {
+                int k_int = int(round(knn_approximation));
+                if (k_int > n)
+                    PLERROR("In ThresholdedKernel::setDataForKernelMatrix - "
+                            "'knn_approximation' (%d) cannot be more than the "
+                            " number of data points (%d)", k_int, n);
+            }
         }
         if (n <= max_size_for_full_gram && !knn_approx) {
             // Can afford to store the Gram matrix in memory.
@@ -394,6 +402,7 @@ void ThresholdedKernel::setDataForKernelMatrix(VMat the_data) {
     }
     k_x_xi.resize(knn_approx ? n_approx : n);
     k_x_xi_mat = k_x_xi.toMat(k_x_xi.length(), 1);
+    assert( !knn_kernel_values.hasMissing() );
 }
 
 /////////////////////////
