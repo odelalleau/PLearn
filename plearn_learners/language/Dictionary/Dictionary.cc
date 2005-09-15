@@ -76,14 +76,12 @@ void Dictionary::declareOptions(OptionList& ol)
 }
 
 void Dictionary::build_(){
-  
-    if(classname()=="Dictionary"){
-        if(update_mode==NO_UPDATE){
-            update_mode = UPDATE;
-            // the dictionary must contain oov
-            getId(OOV_TAG);
-            update_mode = NO_UPDATE;
-        }
+    int last_update_mode = update_mode;
+    if(!isIn(OOV_TAG)){
+        update_mode = UPDATE;
+        // the dictionary must contain oov
+        getId(OOV_TAG);
+        update_mode = last_update_mode;
     }
 }
 
@@ -94,7 +92,7 @@ void Dictionary::build()
     build_();
 }
 
-void  Dictionary::setUpdateMode(bool up_mode)
+void  Dictionary::setUpdateMode(int up_mode)
 {
     update_mode =up_mode;
 }
@@ -110,7 +108,7 @@ int Dictionary::getId(string symbol, TVec<string> options)
     {
         if(string_to_int.find(symbol) == string_to_int.end()){
             // word not found, add it
-            index=string_to_int.size();
+            index=size();
             string_to_int[symbol] = index;
             int_to_string[index] = symbol;
         }

@@ -49,8 +49,9 @@ namespace PLearn {
 using namespace std;
 
 /*! This class implements a Dictionary instantiated from a file. 
-  Each line of the Dictionary represents a symbol in the Dictionary.
-  The number of the line (starting at 0) is the id of the associated symbol.
+  Each line of the file should be a symbol to be inserted in the dictionary. 
+  Blanks are removed at the beginning and end of every line
+  Even if the OOV_TAG symbol is not present in the vector, it is added automatically.
 */
 
 class FileDictionary: public Dictionary

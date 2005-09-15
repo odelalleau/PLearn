@@ -56,10 +56,11 @@ FileDictionary::FileDictionary(string file_name, bool up_mode)
 }
 
 PLEARN_IMPLEMENT_OBJECT(FileDictionary,
-                        "Dictionary instantiation from a file",
+                        "Dictionary instantiated from a file",
                         "This class simply permits the instantiation of a Dictionary from a file that contains a list of symbols.\n"
-                        "Each line of the file should be a symbol in the dictionary. Blanks are removed at the beginning of every line\n"
-                        "The number of the line (starting at 0) is the id of the associated symbol.\n");
+                        "Each line of the file should be a symbol to be inserted in the dictionary.\n"
+                        "Blanks are removed at the beginning and end of every line.\n"
+                        "Even if the OOV_TAG symbol is not present in the vector, it is added automatically.\n");
 
 void FileDictionary::declareOptions(OptionList& ol)
 {
@@ -70,7 +71,7 @@ void FileDictionary::declareOptions(OptionList& ol)
 void FileDictionary::build_()
 {
     //initial building
-    if(string_to_int.size()==0) // Verifying if dictionary is new
+    if(isEmpty()) // Verifying if dictionary is new
     {
         // save update mode for later
         int saved_up_mode=update_mode;
@@ -85,10 +86,6 @@ void FileDictionary::build_()
             getId(removeblanks(line));
         }
         ifs.close();
-        if(saved_up_mode==NO_UPDATE){
-            // the dictionary must contain oov
-            getId(OOV_TAG);
-        }
         // restore update mode;
         update_mode=saved_up_mode;
     }

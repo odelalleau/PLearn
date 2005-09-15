@@ -58,8 +58,8 @@ VecDictionary::VecDictionary(TVec<string> symbols, bool up_mode)
 PLEARN_IMPLEMENT_OBJECT(VecDictionary,
                         "Dictionary instantiation from a TVec<string>",
                         "This class implements a Dictionary instantiated from a TVec<string>.\n" 
-                        "Each element of the TVec<string> is a symbol, and its index in the TVec<string> is\n"
-                        "its id.\n");
+                        "Each element of the TVec<string> is a symbol to be inserted in the Dictionary.\n"
+                        "Even if the OOV_TAG symbol is not present in the vector, it is added automatically.\n");
 
 void VecDictionary::declareOptions(OptionList& ol)
 {
@@ -70,7 +70,7 @@ void VecDictionary::declareOptions(OptionList& ol)
 void VecDictionary::build_()
 {
     //initial building
-    if(string_to_int.size()==0)
+    if(isEmpty())
     {
         // save update mode for later
         int saved_up_mode=update_mode;
@@ -79,10 +79,6 @@ void VecDictionary::build_()
     
         for(int i=0; i<vector_dict.size(); i++){
             getId(vector_dict[i]);
-        }
-        if(saved_up_mode==NO_UPDATE){
-            // the dictionary must contain oov
-            getId(OOV_TAG);
         }
         // restore update mode;
         update_mode=saved_up_mode;

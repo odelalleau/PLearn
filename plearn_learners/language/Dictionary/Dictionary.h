@@ -121,7 +121,7 @@ public:
     PLEARN_DECLARE_OBJECT(Dictionary);
 
     //! Set update dictionary mode : UPDATE/NO_UPDATE.
-    void  setUpdateMode(bool up_mode);
+    virtual void  setUpdateMode(int up_mode);
 
     //! Gives the id of a symbol in the dictionary
     //! If the symbol is not in the dictionary, 
@@ -143,7 +143,7 @@ public:
   
     //! Get dimension of the dictionary (number of differents values in the dictionary)
     //! Options can be specified to restrict the number of possible values. 
-    int getDimension(TVec<int> options=TVec<int>(0)){return string_to_int.size();}
+    virtual int getDimension(TVec<int> options=TVec<int>(0)){return string_to_int.size();}
 
     //! Returns a Vec containing every possible id values of the Dictionary
     //! Options can be specified to restrict the number of possible values. 
@@ -158,10 +158,21 @@ public:
     }
 
     //! Indicates if a symbol is in the dictionary
-    bool isIn(string symbol){return string_to_int.find(symbol) != string_to_int.end();};
+    virtual bool isIn(string symbol){return string_to_int.find(symbol) != string_to_int.end();};
   
     //! Indicates if an id is in the dictionary
-    bool isIn(int id){return int_to_string.find(id) != int_to_string.end();};
+    virtual bool isIn(int id){return int_to_string.find(id) != int_to_string.end();};
+
+    //! Get Dictionary size
+    virtual int size(){return int_to_string.size();};
+    
+    //! Indicates if Dictionary is empty
+    //! Note that a Dictionary is considered empty is
+    //! its size is 0 or if it only contains the OOV_TAG symbol
+    virtual bool isEmpty(){return size()==0 || (size()==1 && isIn(OOV_TAG));};
+
+    //! Clear or reinitialize the Dictionary
+    virtual void clear(){string_to_int.clear(); int_to_string.clear();};
 
     // simply calls inherited::build() then build_() 
     virtual void build();
