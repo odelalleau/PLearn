@@ -301,6 +301,10 @@ void ThresholdedKernel::setDataForKernelMatrix(VMat the_data) {
                             " number of data points (%d)", k_int, n);
             }
         }
+        if (knn_sub > n)
+            PLERROR("In ThresholdedKernel::setDataForKernelMatrix - The number"
+                    " of nearest neighbors to compute (%d) must be less than "
+                    "the length of the dataset (%d)", knn_sub, n);
         if (n <= max_size_for_full_gram && !knn_approx) {
             // Can afford to store the Gram matrix in memory.
             gram_matrix.resize(n,n);

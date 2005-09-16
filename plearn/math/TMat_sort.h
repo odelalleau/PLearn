@@ -125,6 +125,10 @@ inline void sortElements(const TVec<T>& vec)
 template<class T>
 void partialSortRows(const TMat<T>& mat, int k, int sortk=1, int col=0)
 {
+    if (k > mat.length())
+        PLERROR("In partialSortRows - The number of rows to sort (%d) must "
+                "be less than the length of the matrix (%d)",
+                k, mat.length());
     vector< pair<T,int> > order(mat.length());
     typename vector< pair<T,int> >::iterator it = order.begin();
     T* ptr = mat.data()+col;
