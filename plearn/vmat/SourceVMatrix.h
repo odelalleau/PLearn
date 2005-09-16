@@ -73,8 +73,9 @@ protected:
 
     // Fields below are not options.
 
-    //! To be used in subclasses for convenience.
-    Vec sourcerow;
+    //! To be used in subclasses for convenience.  Must be mutable since
+    //! can be modified in "const" getter functions.
+    mutable Vec sourcerow;
 
 public:
 
