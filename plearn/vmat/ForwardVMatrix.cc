@@ -75,9 +75,6 @@ ForwardVMatrix::build_()
         length_ = vm->length();
         width_ = vm->width();
         writable = vm->isWritable();
-        // Set empty field infos to make sure they are obtained from the
-        // underlying VMat in the 'setMetaInfoFrom' method.
-        setFieldInfos(Array<VMField>());
         setMetaInfoFrom(vm);
         if (vm->hasMetaDataDir() && !this->hasMetaDataDir())
             setMetaDataDir(vm->getMetaDataDir());
