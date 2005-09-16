@@ -171,7 +171,18 @@ void VMatrix::setFieldInfos(const Array<VMField>& finfo) const
 ///////////////////
 bool VMatrix::hasFieldInfos() const
 {
-    return fieldinfos.size()>0;
+    if (fieldinfos.length() != width())
+        return false;
+    // If there are some field infos, we check them to see whether they are
+    // default ones (i.e. 0, 1, ..., width-1), in which case 'false' is
+    // returned.
+    double x;
+    for (int i = 0; i < width(); i++) {
+        string name = fieldName(i);
+        if (!pl_isnumber(name, &x)  || !is_equal(x, i))
+            return true;
+    }
+    return false;
 }
 
 ///////////////////////////
