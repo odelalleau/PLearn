@@ -72,7 +72,7 @@ public:
     long seed;
     TVec<int> indices; // indices of the kept rows
     TVec<int> mi_info; // bag info for the reduced lookup set.
-    PP<MultiInstanceNNet> multi_nnet;
+    PP<PLearner> multi_nnet;
     double frac;
 
 public:

@@ -40,7 +40,7 @@
 
 /*! \file SelectRowsMultiInstanceVMatrix.cc */
 #include <plearn/math/PRandom.h>
-#include <plearn_learners/classifiers/MultiInstanceNNet.h>
+#include <plearn_learners/generic/PLearner.h>
 #include "SelectRowsMultiInstanceVMatrix.h"
 
 namespace PLearn {
@@ -127,7 +127,7 @@ void SelectRowsMultiInstanceVMatrix::build_()
     bag_indices.resize(0);
     bag_prob.resize(0);
     // Vec prob;
-    Vec input,target,output;
+    Vec input,target,output(1);
     real weight;
     int indices_size;
     for(int row=0; row<source->length(); row++)
