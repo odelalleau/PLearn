@@ -9,12 +9,12 @@
 
 namespace PLearn {
 
-int getSystemTotalMemory()
+size_t getSystemTotalMemory()
 {
-    int memory_size=0;
+    size_t memory_size=0;
     char units[1000];
     FILE* p=popen("grep MemTotal /proc/meminfo","r");
-    fscanf(p,"%*s %d %s",&memory_size,units);
+    fscanf(p,"%*s %u %s",&memory_size,units);
     if (strcmp(units,"kB")==0)
         memory_size*=1024;
     else 
@@ -23,17 +23,17 @@ int getSystemTotalMemory()
     return memory_size;
 }
 
-int getProcessDataMemory()
+size_t getProcessDataMemory()
 {
     pid_t pid = getpid();
-    int memory_size=-1;
+    size_t memory_size=0;
     string file = "/proc/"+tostring(pid)+"/status";
     ifstream ifs(file.c_str());
     while (ifs) {
         string line = pgetline(ifs);
         if (line.substr(0,7) == "VmData:") {
             vector<string> elements = split(line);
-            memory_size = toint(elements[1]);
+            memory_size = size_t(toint(elements[1]));
             if (elements[2] == "kB")
                 memory_size *= 1024;
             else
