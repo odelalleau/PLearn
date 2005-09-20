@@ -201,14 +201,10 @@ void SelectRowsMultiInstanceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copi
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("SelectRowsMultiInstanceVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(indices, copies);
+    deepCopyField(mi_info, copies);
+    deepCopyField(multi_nnet, copies);
+    deepCopyField(random_generator, copies);
 }
 
 } // end of namespace PLearn
