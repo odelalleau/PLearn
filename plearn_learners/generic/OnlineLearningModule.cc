@@ -46,7 +46,7 @@
 namespace PLearn {
 using namespace std;
 
-PLEARN_IMPLEMENT_OBJECT(
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
     OnlineLearningModule,
     "Learn to map inputs to outputs, online, using caller-provided gradients.",
     "This pure virtual class (i.e. an interface) can basically do two things:\n"
