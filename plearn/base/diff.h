@@ -68,6 +68,9 @@ int diff(PLearnDiff* diffs, const string& refer, const string& other, const stri
 real get_absolute_tolerance(PLearnDiff* diffs);
 real get_relative_tolerance(PLearnDiff* diffs);
  
+//! Useful function to compare two objects.
+int diff(PP<Object> refer, PP<Object> other, PLearnDiff* diffs = 0);
+
 //! Default diff function: compare the two strings.
 template<class ObjectType, class OptionType>
 int diff(const string& refer, const string& other,
@@ -269,7 +272,6 @@ int diff(const string& refer, const string& other, const Option<ObjectType, VMat
   }
 */
 
- int diff(PP<Object> refer, PP<Object> other, PLearnDiff* diffs = 0);
 
 /*
 //! If 'refer != other, add a new difference with name 'name', reference
