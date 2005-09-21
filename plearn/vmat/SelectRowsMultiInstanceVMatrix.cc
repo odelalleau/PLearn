@@ -149,7 +149,7 @@ void SelectRowsMultiInstanceVMatrix::build_()
             bag_prob.push_back(output[0]);
             x_max=argmax(bag_prob);
             bag_indices.resize(0);
-            for(int i=0;i<row-first_row;i++) {
+            for(int i=0;i<=row-first_row;i++) {
                 if(i!=x_max) bag_indices.push_back(i);
             }
             random_generator->shuffleElements(bag_indices);
