@@ -83,6 +83,25 @@ void compute_sign(const TVec<T>& vec, const TVec<T>& dest)
     }
 }
 
+//! v1 and v2 have their elements in increasing order.
+//! Do they have at least one element in common?
+//! Use the 'merge sort' principle to find out.
+template <class T>
+bool sortedVectorsIntersect(const TVec<T>& v1, const TVec<T>& v2)
+{
+    int i1=0,i2=0;
+    do
+    {
+        T v1i = v1[i1];
+        T v2i = v2[i2];
+        if (v1i==v2i) return true;
+        if (v1i<v2i) i1++;
+        else i2++;
+    }
+    while (i1<v1.size() && i2<v2.size());
+    return false;
+}
+
 // target is an integer between 0 and N-1
 // output is a vector of N discriminant functions 
 // (each of which tries to separate class i from the others)
