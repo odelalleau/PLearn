@@ -163,14 +163,9 @@ void ToBagSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     Splitter::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
+    deepCopyField(bags_index, copies);
+    deepCopyField(sub_splitter, copies);
 
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("ToBagSplitter::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 ///////////////////
