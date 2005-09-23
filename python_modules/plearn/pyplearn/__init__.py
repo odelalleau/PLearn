@@ -54,9 +54,9 @@ class PyPLearnScript( PyPLearnObject ):
     files to be writen in the experiment directory after the experiment was
     ran.
     """
-    expdir        = None
-    metainfos     = None
-    plearn_script = None
+    expdir        = PLOption(None)
+    metainfos     = PLOption(None)
+    plearn_script = PLOption(None)
 
     def __init__(self, main_object, **overrides):
         PyPLearnObject.__init__(self, **overrides)

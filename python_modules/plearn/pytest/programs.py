@@ -117,7 +117,7 @@ class LocalProgram(Program):
     def is_global(self):
         return False
 
-class Compilable:
+class Compilable(PyTestObject):
     ## This map will be used to ensure that there are no doubled
     ## compilation attempts.
     _compilation_status = {}

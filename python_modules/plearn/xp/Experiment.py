@@ -113,9 +113,9 @@ class ExpKey( Bindings ):
 class Experiment(PyPLearnObject):
     ##
     # Options
-    path    = None
-    expkey  = None
-    abspath = None
+    path    = PLOption(None)
+    expkey  = PLOption(None)
+    abspath = PLOption(None)
             
     ##
     # Class variables

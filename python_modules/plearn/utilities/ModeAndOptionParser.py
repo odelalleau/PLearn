@@ -6,7 +6,7 @@ import inspect, os, string, sys, types
 from optparse                       import *
 from plearn.utilities               import toolkit
 from plearn.utilities               import metaprog
-from plearn.pyplearn.PyPLearnObject import PyPLearnObject
+from plearn.pyplearn.PyPLearnObject import PLOption, PyPLearnObject
 
 __all__ = [ 'OptionGroup', 'Mode', 'ModeAndOptionParser' ]
 
@@ -31,16 +31,6 @@ class Mode( PyPLearnObject ):
         return True
     _unreferenced = classmethod( _unreferenced )
 
-    def option_names( cls, ordered = None ):
-        """Code Optimization.
-
-        Since the Mode class and its subclasses make no use of the option
-        mecanism, it fastens the code to return explicitly an empty list
-        instead of letting PyPLearnObject introspect the class.
-        """
-        return []
-    option_names = classmethod( option_names )
-    
     def aliases( cls ):
         return []
     aliases = classmethod( aliases )
@@ -88,21 +78,21 @@ class Mode( PyPLearnObject ):
         return "".join(result)
 
 class ModeParsingOptions( PyPLearnObject ):
-    usage             = None
-    option_list       = None
+    usage             = PLOption(None)
+    option_list       = PLOption(None)
     # option_class      = Option
-    version           = None
-    conflict_handler  = "error"
-    description       = None
-    formatter         = None
-    add_help_option   = True
-    prog              = None    
+    version           = PLOption(None)
+    conflict_handler  = PLOption("error")
+    description       = PLOption(None)
+    formatter         = PLOption(None)
+    add_help_option   = PLOption(True)
+    prog              = PLOption(None)    
     
 class ModeAndOptionParser( OptionParser ):
     def __init__(self, **overrides):
         defaults = ModeParsingOptions()
         
-        optparser_overrides = dict( defaults.option_pairs() )        
+        optparser_overrides = dict( defaults.iteritems() )        
         optparser_overrides.update( overrides )        
 
         OptionParser.__init__( self, **optparser_overrides )

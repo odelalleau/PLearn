@@ -3,10 +3,10 @@ from plearn.utilities          import toolkit
 from plearn.utilities.metaprog import public_attributes
 from plearn.utilities.Bindings import Bindings
 
-__unreferenced_types = [ int ,   float , str ,
-                         tuple , list ,  dict,
-                         numarray.numarraycore.NumArray
-                         ]
+## __unreferenced_types = [ int ,   float , str ,
+##                          tuple , list ,  dict,
+##                          numarray.numarraycore.NumArray
+##                          ]
 
 #
 #  Deprecated functions
@@ -51,7 +51,8 @@ class PRefMap( Bindings ):
     def __setitem__( self, key, value ):
         assert key not in self.ordered_keys, "Representations can not be updated."
         Bindings.__setitem__( self, key, value )
-        
+
+        #raw_input((len(self.ordered_keys), key, value ))
         self.references[ key ] = PRef( len(self.ordered_keys) )
 
     def __getitem__( self, key ):
@@ -80,20 +81,25 @@ def plearn_repr( obj, indent_level = 0 ):
         return __plearn_repr( obj, indent_level )
     
     # Instances of some types are never referenced
-    t = type(obj)
-    for typ in __unreferenced_types:
-        if issubclass( t, typ ):
-            return __plearn_repr( obj, indent_level )
+    # t = type(obj)
+    # for typ in __unreferenced_types:
+    #     if issubclass( t, typ ):
+    #         return __plearn_repr( obj, indent_level )
 
-    
-    # The current object can be referenced
-    object_id = id( obj )
+    # To be referenced, object must provide the serial number interface
+    if hasattr(obj, 'serial_number') and callable(obj.serial_number):        
+        # The current object can be referenced
+        object_id = obj.serial_number()
 
-    # Create a first representation of the object.
-    if object_id not in __pref_map:
-        __pref_map[ object_id ] = __plearn_repr( obj, indent_level )
+        # Create a first representation of the object.
+        if object_id not in __pref_map:
+            __pref_map[ object_id ] = __plearn_repr( obj, indent_level )
+
+        return __pref_map[ object_id ]
+
+    else:
+        return __plearn_repr( obj, indent_level )
     
-    return __pref_map[ object_id ]
 
 __pyrepr_map = {}
 def python_repr( obj, indent_level = 0 ):
@@ -121,7 +127,7 @@ def python_repr( obj, indent_level = 0 ):
 def format_list_elements( the_list, element_format, indent_level ):
     n_elems = len(the_list)
     if n_elems == 0:
-        elems_as_str = " "
+        elems_as_str = " "    
 
     elif n_elems == 1:
         elemstr = element_format( the_list[0] )
