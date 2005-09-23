@@ -80,7 +80,7 @@ public:
     // Your other public member functions go here
 
     //! given the input, compute the output (possibly resize it  appropriately)
-    virtual void fprop(const Vec input, Vec& output) = 0;
+    virtual void fprop(const Vec input, Vec& output) const = 0;
 
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop; it should be

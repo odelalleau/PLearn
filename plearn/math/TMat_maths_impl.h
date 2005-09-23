@@ -1676,6 +1676,19 @@ void substract(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destinat
         d[i] = s1[i]-s2[i];
 }
 
+// destination[i] = source1-source2[i]
+template<class T>
+void substract(T source1, const TVec<T>& source2, TVec<T>& destination)
+{
+  int n=source2.length();
+  if (n!=destination.length())
+    destination.resize(n);
+  T* s2=source2.data();
+  T* d=destination.data();
+  for (int i=0;i<n;i++)
+    d[i] = source1-s2[i];
+}
+
 template<class T>
 inline void divide(const TVec<T>& source1, T source2, TVec<T>& destination)
 { multiply(source1,1.0/source2,destination); }
