@@ -540,8 +540,8 @@ void PDistribution::sortFromFlags(Vec& v) const {
     static Vec tmp_copy;
     tmp_copy.resize(v.length());
     tmp_copy << v;
-    for (int i = 0; i < cond_swap.length();) {
-        v[cond_swap[i++]] = tmp_copy[cond_swap[i++]];
+    for (int i = 0; i < cond_swap.length(); i += 2) {
+        v[cond_swap[i]] = tmp_copy[cond_swap[i+1]];
     }
 }
 
