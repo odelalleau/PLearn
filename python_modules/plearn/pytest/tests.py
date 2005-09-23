@@ -53,6 +53,11 @@ class TestStatus(PyPLearnObject):
     _status_types     = [ "NEW", "STARTED" ] + _completion_types
     _stats_book       = StatsBook(_completion_types)    
 
+    def headerLegend(cls, rjust=0):
+        return ('   '.join([ "%s: %s"%(s[0],s) for s in cls._completion_types ]).rjust(rjust)
+                + '\n' + '(SKIPPED implies a PyTest internal error!)'.rjust(rjust) )
+    headerLegend = classmethod(headerLegend)
+
     def summary(cls):
         return str(cls._stats_book)
     summary = classmethod(summary)
@@ -302,6 +307,7 @@ class Test(PyTestObject):
         
         if self._status.isCompleted():
             if not self._logged_header:
+                vprint(TestStatus.headerLegend(C+N+S+H)+'\n', 1)
                 vpformat("N/%d"%self._test_count, "Test Name", "Status", statsHeader)
                 self.__class__._logged_header = True
 
