@@ -14,18 +14,6 @@ instance_cc
 
 [1.0]
 []
-
-ALittleMore(
-    optionC = "optionC",
-    optionB = "optionB",
-    listOption = [ 1.0 ],
-    cc = "cc",
-    c = "c",
-    b = "b",
-    a = "a",
-    instance_more = "instance_more",
-    added_option = "+++option"
-    )
 *1 -> ALittleMore(
     optionC = "optionC",
     optionB = "optionB",

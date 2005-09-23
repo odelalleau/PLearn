@@ -75,19 +75,11 @@ def plearn_repr( obj, indent_level = 0 ):
     maps most Python objects to a representation understood by the PLearn
     serialization mechanism.
     """ 
-
     # Classes may specify themselves as unreferenced.
-    if hasattr( obj, '_unreferenced' ) and obj._unreferenced():
-        return __plearn_repr( obj, indent_level )
+    noref = hasattr( obj, '_unreferenced' ) and obj._unreferenced()
     
-    # Instances of some types are never referenced
-    # t = type(obj)
-    # for typ in __unreferenced_types:
-    #     if issubclass( t, typ ):
-    #         return __plearn_repr( obj, indent_level )
-
     # To be referenced, object must provide the serial number interface
-    if hasattr(obj, 'serial_number') and callable(obj.serial_number):        
+    if not noref and hasattr(obj, 'serial_number') and callable(obj.serial_number):        
         # The current object can be referenced
         object_id = obj.serial_number()
 
@@ -109,17 +101,19 @@ def python_repr( obj, indent_level = 0 ):
 
         eval( repr(obj) ) == obj
     """
-    # The current object can be referenced
-    object_id = id( obj )
+    # To be referenced, object must provide the serial number interface
+    if hasattr(obj, 'serial_number') and callable(obj.serial_number):        
+        # The current object can be referenced
+        object_id = obj.serial_number()
 
-    # Create a first representation of the object.
-    if object_id not in __pyrepr_map:
-        try:
+        # Create a first representation of the object.
+        if object_id not in __pref_map:
             __pyrepr_map[ object_id ] = __plearn_repr( obj, indent_level, python_repr )
-        except TypeError:
-            __pyrepr_map[ object_id ] = repr(obj)
-    
-    return __pyrepr_map[ object_id ]
+
+        return __pyrepr_map[ object_id ]
+
+    else:
+        return repr(obj)    
     
 #
 #  Helper functions

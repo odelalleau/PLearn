@@ -420,8 +420,8 @@ if __name__ == '__main__':
     print moreobj.listOption
     print ALittleMore().listOption
     
-    print
-    print python_repr(moreobj)
+    # print
+    # print python_repr(moreobj)
     
     del moreobj.cc
     print moreobj
