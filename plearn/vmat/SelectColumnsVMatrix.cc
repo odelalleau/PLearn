@@ -210,8 +210,20 @@ void SelectColumnsVMatrix::build_()
                         }
             }
         }
+
+        // Copy matrix dimensions
         width_ = indices.length();
         length_ = source->length();
+
+        // Give warning if inputsize, and friends are not specified, since we
+        // can't just copy the values from the underlying VMat. A smarter
+        // version of this class could Figure out the right size for inputsize,
+        // targetsize and weightsize, at least for some cases (for example when
+        // the indices are nondecreasing).
+        if (inputsize_ < 0 || targetsize_ < 0 || weightsize_ < 0) 
+            PLWARNING("In SelectColumnsVMatrix::build_ inputsize, targetsize or weightsize "
+                      "not set. You may want to set them yourself in the .plearn file.");
+        
         // Copy the appropriate VMFields
         fieldinfos.resize(width());
         if (source->getFieldInfos().size() > 0) {
