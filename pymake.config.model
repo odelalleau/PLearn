@@ -26,11 +26,10 @@ qtdir = '/usr/lib/qt-3.1/'
 plearndir = ppath('PLEARNDIR')
 libdir    = ppath('PLEARN_LIBDIR')
 
-# use ssh @ Apstat
-if socket.getfqdn().endswith('apstat.com'):
+# Force use of ssh @ Apstat & Lisa
+domain_name = socket.getfqdn();
+if domain_name.endswith('apstat.com') or domain_name.endswith('iro.umontreal.ca'):
     rshcommand= 'ssh -x'
-else:
-    rshcommand= 'rsh'
 
 nice_value = '1'
 
