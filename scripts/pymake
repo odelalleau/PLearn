@@ -405,6 +405,7 @@ def printusage():
     print '        Works on AMD64 (linux-x86_64) and linux-i386 machines, probably also on ia64.'
     print '        Allows to compile on .pymake/linux-x86_64.hosts,'
     print '        linux-ia64.hosts and linux-i386.hosts.'
+    print '  -ssh: run compilation commands on remote hosts with ssh instead of rsh (default).'
     print
     print "A special option is -dependency: if this is given, target won't be compiled or linked,"
     print "but information regarding the dependency graph will be produced insted, as follows:"
@@ -599,7 +600,11 @@ if create_so and create_dll:
 if static_linking and (create_so or create_dll):
     print 'Incompatible command line options specified: you may specify only one of -static, -so, -dll'
     sys.exit()
-    
+
+if 'ssh' in optionargs:
+    # Re-define 'rshcommand' in order to use ssh instead.
+    rshcommand = 'ssh -x'
+    optionargs.remove('ssh')
 
 #if options_choices[0][0] == 'icc'
 if 'icc' in optionargs:
@@ -1153,7 +1158,8 @@ class FileInfo:
                 
 
     def launch_compilation(self,hostname):
-        """Launches the compilation of this .cc file on given host using rsh.
+        """Launches the compilation of this .cc file on given host using rsh
+        (or ssh if the -ssh option is given).
         The call returns the pid of the launched process.
         This will create a field 'launched', which is a Popen3 object,
         and 'hostname' to remember on which host it has been launched.
