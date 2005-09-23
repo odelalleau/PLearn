@@ -4,7 +4,7 @@ import plearn.utilities.toolkit as toolkit
 from plearn                         import pyplearn
 from plearn.pyplearn.pyplearn       import generate_expdir
 from plearn.pyplearn.plearn_repr    import plearn_repr, python_repr
-from plearn.pyplearn.PyPLearnObject import PyPLearnObject
+from plearn.pyplearn.PyPLearnObject import PLOption, PyPLearnObject
 from plearn.utilities.moresh        import *
 from plearn.utilities.Bindings      import *
 from plearn.vmat.PMat               import PMat

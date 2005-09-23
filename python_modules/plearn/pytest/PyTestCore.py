@@ -1,11 +1,10 @@
 from plearn.utilities               import toolkit
 from plearn.utilities.verbosity     import vprint
-from plearn.pyplearn.PyPLearnObject import PyPLearnObject
+from plearn.pyplearn.PyPLearnObject import PLOption, PyPLearnObject
 
-class PyTestObject( PyPLearnObject ):
-    def _unreferenced( cls ):
+class PyTestObject(PyPLearnObject):
+    def _unreferenced(self):
         return True
-    _unreferenced = classmethod( _unreferenced )
 
 class PyTestUsageError(Exception): 
     def __init__(self, msg):
@@ -24,13 +23,14 @@ if __name__ == '__main__':
     import modes
     from plearn.utilities.ModeAndOptionParser import Mode
 
-    def vsystem( cmd ):        
+    def vsystem(cmd):        
         print >>sys.stderr, '#\n#  %s\n#' % cmd
         os.system( cmd + ' > /dev/null' )
         print >>sys.stderr, ''
         
-    vsystem( 'pytest' )
-    vsystem( 'pytest -h' )
+    vsystem('pytest')
+    vsystem('pytest -h')
 
-    for mode_name in Mode.mode_list():
-        vsystem( 'pytest %s -h' % mode_name )
+    for mode in Mode.mode_list():
+        mode_name = mode.__name__
+        vsystem('pytest %s -h' % mode_name)

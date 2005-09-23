@@ -1,13 +1,12 @@
-_cvs_id__ = "$Id$"
+_cvs_id__ = "$Id: modes.py 3647 2005-06-23 15:49:51Z dorionc $"
 
 import copy, shutil
 import plearn.utilities.version_control as version_control
 import plearn.utilities.ppath           as ppath
 import plearn.utilities.toolkit         as toolkit
 
-from Test                                 import *
+from tests                                import *
 from programs                             import *
-from routines                             import *
 from plearn.utilities.toolkit             import *
 from plearn.utilities.verbosity           import *
 from plearn.utilities.ModeAndOptionParser import *
@@ -20,7 +19,6 @@ __all__ = [
     ]
 
 class PyTestMode( Mode ):
-
     def target_options( cls, parser ):
         target_options = OptionGroup( parser, "Target Options", "" )
 
@@ -393,7 +391,7 @@ class RoutineBasedMode( PyTestMode ):
             test_instances = Test._instances_map.items()
 
         self.dispatch_tests( test_instances )
-        print_stats()
+        # STATS: print_stats()
 
     def dispatch_tests(self, test_instances):
         for (test_name, test) in test_instances:

@@ -1,4 +1,4 @@
-__version_id__ = "$Id$"
+__version_id__ = "$Id: IntelligentDiff.py 4080 2005-09-13 13:49:47Z tihocan $"
 
 import copy, os, string
 

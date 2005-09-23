@@ -2,21 +2,21 @@
 
 import os
 from plearn           import pytest
-from plearn.utilities import toolkit
+from plearn.utilities import svn
 
 # Builds are tuples of the form (major, minor, plearn_revision) where
 # plearn_revision is the SVN revision of the PLearn project when the
 # project's version was released.
 build_list = [
-    # Major, Minor, PLearn Rev 
-    (   0,     0,       0     ),
-    (   0,     7,       3591  ),
-    (   0,     9,       3646  )
+    # Major.Minor PLearn Rev 
+    (   "0.0",     0     ),
+    (   "0.7",     3591  ),
+    (   "0.9",     3646  ),
+    (   "0.9.1",   4126  )
     ]
 
 def pytest_version( ):
     pytest_dir = os.path.dirname( pytest.__file__ )
-    vtup = toolkit.version( pytest_dir, build_list )
-    return '.'.join([ str(v) for v in vtup ])
+    return svn.project_version(pytest_dir, build_list)
 
 pytest.main( pytest_version )

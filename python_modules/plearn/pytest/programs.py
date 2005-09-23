@@ -1,4 +1,4 @@
-__version_id__ = "$Id$"
+__version_id__ = "$Id: programs.py 3647 2005-06-23 15:49:51Z dorionc $"
 
 import os, string, types
 import plearn.utilities.ppath          as     ppath
@@ -50,10 +50,9 @@ def plcommand(command_name):
 ########################################
     
 class Program(PyTestObject):
-    name                  = None
-    # Declaration order imposes the options' order.
+    name                  = PLOption(None)
 
-
+    # Internal variables
     _path                 = None
     _processing_directory = None
         
@@ -122,10 +121,9 @@ class Compilable(PyTestObject):
     ## compilation attempts.
     _compilation_status = {}
 
-    compiler        = 'pymake'
-    compile_options = ''
-    # Declaration order imposes the options' order.
-
+    # Options
+    compiler        = PLOption('pymake')
+    compile_options = PLOption('')
         
     def __init__(self, **overides):
         raise NotImplementedError(

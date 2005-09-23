@@ -1,4 +1,4 @@
-__version_id__ = "$Id$"
+__version_id__ = "$Id: __init__.py 3647 2005-06-23 15:49:51Z dorionc $"
                             
 import os, sys, time
 import modes
@@ -13,17 +13,6 @@ __all__ = [ "main"
     
 ########################################################################
 ## Functions are listed by alphabetical order
-
-def dynamic_version_header( pytest_version ):
-    # Dynamic version header
-    c = lambda s: toolkit.centered_square( s, 70 ) 
-
-    vprint( "\n%s\n%s\n%s\n"
-            % ( c("PyTest -- version " + pytest_version()),
-                c("(c) 2004 Christian Dorion"),
-                c("Report problems to dorionc@apstat.com") ),
-            1
-            )
 
 def mail():
     raise DeprecationWarning
@@ -97,7 +86,11 @@ def main( pytest_version ):
     ############################################################
     
     ## Program name and copyrights with version number
-    dynamic_version_header(  pytest_version  )
+    newline = '\n  '
+    vprint(newline.join([ "%sPyTest %s"%(newline,pytest_version()),
+                          "(c) 2004, 2005, Christian Dorion",
+                          "This is free software distributed under a BSD type license.",
+                          "Report problems to dorionc@apstat.com\n" ]), 1)
 
     try:
         modes.current_mode( targets, options )    

@@ -716,7 +716,7 @@ import inspect, os
 from pyplearn                  import *
 from pyplearn                  import _plargs_storage_readonly
 from plearn_repr               import plearn_repr
-from PyPLearnObject            import PyPLearnObject
+from PyPLearnObject            import PLOption, PyPLearnObject
 from plearn.utilities.Tutorial import *
 
 #

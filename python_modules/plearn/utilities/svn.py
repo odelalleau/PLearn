@@ -1,5 +1,6 @@
 import os
-from   verbosity import vprint
+from ppath import ppath
+from verbosity import vprint
 
 def __report_status( cmd ):
     return os.WEXITSTATUS( os.system( cmd ) ) == 0
@@ -24,6 +25,18 @@ def commit(files, msg):
     
 def last_user_to_commit(file_path):
     raise NotImplementedError
+
+def project_version(project_path, build_list):
+    """Automatic version control.
+    
+    Builds are tuples of the form (major, minor, plearn_revision) where
+    plearn_revision is the SVN revision of the PLearn project when the
+    project's version was released.
+    """    
+    #plearn_version  = int(repository_revision(ppath('PLEARN')))
+    #project_version = int(repository_revision(ppath(project_path)))
+    version_number, release_version = build_list[-1]
+    return "%s (Released on PL%d)"%(version_number, release_version)
 
 def query(option, fname, lookingFor, delim = "\n"):
     raise NotImplementedError
