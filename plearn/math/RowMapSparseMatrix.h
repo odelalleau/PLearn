@@ -106,7 +106,7 @@ public:
 
     //!  Accepts a FORTRAN formatted sparse matrix as an initializer.
     RowMapSparseMatrix(const SparseMatrix& sm, int n_rows, int n_cols, T nullelem=0) : 
-        rows(n_rows), _width(n_cols), save_binary(false), null_elem(nuellelem) {
+        rows(n_rows), _width(n_cols), save_binary(false), null_elem(nullelem) {
 
         for (int j = 0; j < n_cols; j++) {
             int bcol_j = (int)sm.beginRow[j];
