@@ -70,7 +70,7 @@ real pl_gammln(real z)
     return(gz);
 }
 
-// returns d(pl_gammln(z))/dz
+// returns d(pl_gammln(z))/dz also known as the digamma function
 real pl_dgammlndz(real z)
 {
     real tmp0= pl_gammln_cof[0],

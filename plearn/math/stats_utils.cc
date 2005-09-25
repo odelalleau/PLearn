@@ -304,6 +304,54 @@ real paired_t_test(Vec u, Vec v)
     return (ubar - vbar) * sqrt( n*(n-1) / sumsquare(u2-v2));
 }
 
+/**
+ * Estimate the parameters of a Dirichlet by maximum-likelihood
+ *
+ * p(t,i) are the observed probabilities (all between 0 and 1)
+ * for t-th case, i ranging from 0 to N-1.
+ * alphal[i] are the resulting parameters of the Dirichlet,
+ * with i ranging from 0 to N-1.
+ */
+void DirichletEstimatorMMoments(const Mat& p, Vec& alpha)
+{
+    static Vec mean_p, mean_p2, var_p; // NON-REENTRANT CODE
+    int N=p.width();
+    alpha.resize(N);
+    mean_p.resize(N);
+    mean_p2.resize(N);
+    var_p.resize(N);
+    columnMean(p, mean_p);
+    columnSumOfSquares(p, mean_p2);
+    mean_p2 *= 1.0/N;
+    columnVariance(p, var_p, mean_p);
+    real log_sum_alpha = 0;
+    for (int i=0;i<N;i++)
+        log_sum_alpha += safeflog(mean_p[i]*(1-mean_p[i])/var_p[i]-1);
+    log_sum_alpha /= (N-1);
+    multiply(mean_p, exp(log_sum_alpha), alpha);
+}
+
+/**
+ * Estimate the parameters of a Dirichlet by maximum-likelihood
+ *
+ * p(t,i) are the observed probabilities (all between 0 and 1)
+ * for t-th case, i ranging from 0 to N-1.
+ * alphal[i] are the resulting parameters of the Dirichlet,
+ * with i ranging from 0 to N-1.
+ *
+ * The method of moments is used to initialize the estimator,
+ * and a globally convergent iteration is then followed.
+ *
+ */
+void DirichletEstimatorMaxLik(const Mat& p, Vec alpha)
+{
+    DirichletEstimatorMMoments(p,alpha);
+    int N=alpha.length();
+    // Have a look at Tom Minka's paper on estimating Dirichlet parameters...
+    // TO BE IMPLEMENTED
+}
+
+
 } // end of namespace PLearn
 
 /* 

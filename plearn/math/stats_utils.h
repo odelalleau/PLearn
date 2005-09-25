@@ -150,6 +150,31 @@ real KS_test(Vec& v1, Vec& v2, int conv=10);
  */
 real paired_t_test(Vec u, Vec v);
 
+
+/**
+ * Estimate the parameters of a Dirichlet by maximum-likelihood
+ *
+ * p(t,i) are the observed probabilities (all between 0 and 1)
+ * for t-th case, i ranging from 0 to N-1.
+ * alphal[i] are the resulting parameters of the Dirichlet,
+ * with i ranging from 0 to N-1.
+ */
+void DirichletEstimatorMMoments(const Mat& p, Vec& alpha);
+
+/**
+ * Estimate the parameters of a Dirichlet by maximum-likelihood
+ *
+ * p(t,i) are the observed probabilities (all between 0 and 1)
+ * for t-th case, i ranging from 0 to N-1.
+ * alphal[i] are the resulting parameters of the Dirichlet,
+ * with i ranging from 0 to N-1.
+ *
+ * The method of moments is used to initialize the estimator,
+ * and a globally convergent iteration is then followed.
+ *
+ */
+void DirichletEstimatorMaxLik(const Mat& p, Vec& alpha);
+
 } // end of namespace PLearn
 
 

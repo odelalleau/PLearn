@@ -48,7 +48,7 @@ using namespace std;
 real pl_gammln(real z);
 
 //! d(pl_gammln(z))/dz 
-//! derivate of pl_gammln(z)
+//! derivate of pl_gammln(z) = digamma function = d(log(gamma(z))/dz
 real pl_dgammlndz(real z);
 
 //!  returns the series value of
