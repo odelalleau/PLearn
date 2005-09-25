@@ -44,6 +44,7 @@
 
 
 #include "distr_maths.h"
+#include "random.h"
 #include "TMat_maths.h"
 
 namespace PLearn {
@@ -247,6 +248,20 @@ real logPFittedGaussian(const Vec& x, const Mat& X, real lambda)
     computeMeanAndCovar(X, mu, C);
     addToDiagonal(C, lambda);
     return logOfNormal(x, mu, C);
+}
+
+//! Returns the density of a proportion x under a Beta(alpha,beta) distribution,
+//! equal to 
+//!    x^{alpha-1} (1-x}^{beta-1} / Beta(a,b)
+//! where
+//!    Beta(a,b) = Gamma(a)Gamma(b)/Gamma(a+b)
+real beta_density(real x, real alpha, real beta)
+{
+    return exp(log_beta_density(x,alpha,beta));
+}
+real log_beta_density(real x, real alpha, real beta)
+{
+    return (alpha-1)*safelog(x) + (beta-1)*safelog(1-x)  - log_beta(alpha,beta);
 }
 
 
