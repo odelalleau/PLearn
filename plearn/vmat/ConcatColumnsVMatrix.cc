@@ -115,7 +115,8 @@ void ConcatColumnsVMatrix::build_()
                 map<string,real> map = array[i]->getStringToRealMapping(j);
                 if (!map.empty())
                     setStringMapping(fieldindex, map);
-                fieldinfos[fieldindex++] = VMField(tostring(fieldindex));
+                fieldinfos[fieldindex] = VMField(tostring(fieldindex));
+                fieldindex++;
             }
         }
     }
