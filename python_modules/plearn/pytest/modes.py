@@ -18,9 +18,9 @@ __all__ = [
     'current_mode'
     ]
 
-class PyTestMode( Mode ):
-    def target_options( cls, parser ):
-        target_options = OptionGroup( parser, "Target Options", "" )
+class PyTestMode(Mode):
+    def target_options(cls, parser):
+        target_options = OptionGroup(parser, "Target Options", "")
 
         target_options.add_option( "--all",
                                     action="store_true", default=False,
@@ -40,10 +40,10 @@ class PyTestMode( Mode ):
                                     default='' )
 
         return target_options
-    target_options = classmethod( target_options )
+    target_options = classmethod(target_options)
 
-    def testing_options( cls, parser ):
-        testing_options = OptionGroup( parser, "Testing Options", "" )
+    def testing_options(cls, parser):
+        testing_options = OptionGroup(parser, "Testing Options", "")
 
         testing_options.add_option( '-l', '--localhost',
                                     action='store_true',
@@ -58,7 +58,7 @@ class PyTestMode( Mode ):
     testing_options = classmethod( testing_options )
 
     ## Static method
-    def build_tests( args, directory, dirlist):
+    def build_tests(args, directory, dirlist):
         options, ignored_directories = args
         
         if ignore.is_ignored(directory, dirlist):
@@ -78,7 +78,7 @@ class PyTestMode( Mode ):
             if options.traceback:
                 raise
             else:
-                vprint( "%s: %s." % (e.__class__.__name__,e) )
+                vprint( "%s: %s" % (e.__class__.__name__,e) )
     build_tests = staticmethod(build_tests)
 
     #
@@ -88,14 +88,14 @@ class PyTestMode( Mode ):
         return True
     requires_config_parsing = classmethod(requires_config_parsing)
 
-    def option_groups( cls, parser ):
+    def option_groups(cls, parser):
         return []
     option_groups = classmethod( option_groups )
 
     #
     #  Instance methods
     #
-    def __init__( self, targets, options ):
+    def __init__(self, targets, options):
         Mode.__init__(self, targets, options)
 
         # --all: Run all tests found in subdirectories of directories in
@@ -130,6 +130,9 @@ class PyTestMode( Mode ):
                 ignored.extend( [ '    '+ign for ign in ignored_directories ] )
                 vprint.highlight( ignored, highlighter='x' ) 
 
+        # If a single test is to be ran, restrict the loaded test to that only one.
+        if self.options.test_name:
+            Test.restrictTo(self.options.test_name)
             
 
 class ignore(PyTestMode):
@@ -183,8 +186,8 @@ class list(PyTestMode):
     #
     #  Instance methods
     #
-    def __init__( self, targets, options ):
-        super( list, self ).__init__( targets, options )
+    def __init__(self, targets, options):
+        super(list, self).__init__(targets, options)
 
         formatted_string = lambda n,d: ( "%s Disabled: %s"
                                          % (string.ljust(n, 25), string.ljust(str(d), 15))
@@ -204,9 +207,25 @@ class list(PyTestMode):
             if formatted_strings:
                 vprint( "In %s\n    %s\n"
                         % ( family, string.join(formatted_strings, '\n    ') )
-                        )    
-        
+                        )            
 
+class locate(list):
+    """Locates the named test.
+
+    Usage: pytest locate <test_name>
+    (Equivalent to 'pytest list --all -n <test_name>')
+    """
+    def __init__(self, targets, options):
+        if len(targets) != 1:
+            vprint("Usage: pytest locate <test_name>")
+
+        else:
+            options.all = True
+            options.test_name = targets[0]        
+            try:
+                super(locate, self).__init__(targets, options)
+            except KeyError:
+                vprint("No test named %s found."%options.test_name)
 
 class prune( PyTestMode ):
     """Removes all pytest directories within given test directories."""
@@ -235,6 +254,28 @@ class prune( PyTestMode ):
                 os.chdir( family )
                 shutil.rmtree( "pytest" )
 
+#TO_BE_ADDED: class report(PyTestMode):
+#TO_BE_ADDED:     """Test diagnosis."""
+#TO_BE_ADDED:     def __init__(self, targets, options):
+#TO_BE_ADDED:         super(report, self).__init__(targets, options)
+#TO_BE_ADDED: 
+#TO_BE_ADDED:         for (family, tests) in Test._families_map.iteritems():
+#TO_BE_ADDED:             formatted_strings = []
+#TO_BE_ADDED: 
+#TO_BE_ADDED:             for test in tests:
+#TO_BE_ADDED:                 if self.options.disabled and not test.disabled:
+#TO_BE_ADDED:                     continue
+#TO_BE_ADDED:                 if self.options.enabled  and test.disabled:
+#TO_BE_ADDED:                     continue
+#TO_BE_ADDED:                 formatted_strings.append(
+#TO_BE_ADDED:                     formatted_string(test.name, test.disabled)
+#TO_BE_ADDED:                     )
+#TO_BE_ADDED: 
+#TO_BE_ADDED:             if formatted_strings:
+#TO_BE_ADDED:                 vprint( "In %s\n    %s\n"
+#TO_BE_ADDED:                         % ( family, string.join(formatted_strings, '\n    ') )
+#TO_BE_ADDED:                         )            
+
 class vc_add( PyTestMode ):
     """Add PyTest's config file and results to version control."""
     def __init__( self, targets, options ):
@@ -251,7 +292,7 @@ class vc_add( PyTestMode ):
                 for test in tests:
                     version_control.recursive_add( test.test_results( Test._expected_results ) )
             except version_control.VersionControlError:
-                raise PyTestUsageError(
+                raise PyTestError(
                     "The directory in which lies a config file must be added to version control by user.\n"
                     "%s was not." % family
                     )
@@ -347,7 +388,7 @@ class update( FamilyConfigMode ):
         """
         pass
     
-class RoutineBasedMode( PyTestMode ):
+class RoutineBasedMode(PyTestMode):
     #
     #  Class methods
     #
@@ -372,26 +413,25 @@ class RoutineBasedMode( PyTestMode ):
     #  Instance methods
     #    
     def __init__( self, targets, options ):
-        super( RoutineBasedMode, self ).__init__( targets, options )
+        super(RoutineBasedMode, self).__init__(targets, options)
 
         ## --traceback: This flag triggers routines to report the traceback of
-        ## PyTestUsageError. By default, only the class's name and meesage
+        ## PyTestError. By default, only the class's name and meesage
         ## are reported.
         Routine._report_traceback = self.options.traceback
 
-        test_instances = None
-        if self.options.test_name:
-            test_instances = [( self.options.test_name,
-                                Test._instances_map[ self.options.test_name ]
-                                )]
-
-            Test._statistics.restrict( self.options.test_name )
-            
-        else:
-            test_instances = Test._instances_map.items()
-
-        self.dispatch_tests( test_instances )
-        # STATS: print_stats()
+        # test_instances = None
+        # if self.options.test_name:
+        #     test_instances = [( self.options.test_name,
+        #                         Test._instances_map[ self.options.test_name ]
+        #                         )]
+        #     Test._test_count = 1
+        #     
+        # else:
+        #     test_instances = Test._instances_map.items()
+        test_instances = Test._instances_map.items()
+        
+        self.dispatch_tests(test_instances)
 
     def dispatch_tests(self, test_instances):
         for (test_name, test) in test_instances:
@@ -404,19 +444,9 @@ class compile( RoutineBasedMode ):
     def routine_type( cls, options=None ): return CompilationRoutine
     routine_type = classmethod( routine_type )
 
-class results( RoutineBasedMode ):
-    def routine_type( cls, options=None ): return ResultsCreationRoutine
-    routine_type = classmethod( routine_type )
-
-class run( RoutineBasedMode ):    
-    def routine_type(cls, options=None):
-        if options:
-            RunTestRoutine.no_compile_option = options.no_compile
-        return RunTestRoutine
-    routine_type = classmethod( routine_type )
-
+class ResultsBasedMode(RoutineBasedMode):
     def option_groups( cls, parser ):
-        ogroups = RoutineBasedMode.option_groups( parser )
+        ogroups = RoutineBasedMode.option_groups(parser)
 
         ogroups[1].add_option( '--no-compile', default=False,
                                action="store_true",
@@ -424,4 +454,19 @@ class run( RoutineBasedMode ):
 
         return ogroups        
     option_groups = classmethod( option_groups )
+    
+class results(ResultsBasedMode):
+    def routine_type( cls, options=None ):
+        if options:
+            ResultsCreationRoutine.no_compile_option = options.no_compile
+        return ResultsCreationRoutine
+    routine_type = classmethod(routine_type)
+
+class run(ResultsBasedMode):    
+    def routine_type(cls, options=None):
+        if options:
+            RunTestRoutine.no_compile_option = options.no_compile
+        return RunTestRoutine
+    routine_type = classmethod(routine_type)
+
     

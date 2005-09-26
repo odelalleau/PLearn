@@ -85,13 +85,21 @@ class GlobalProgram(Program):
         command_path = plcommand(self.name)
 
         if command_path is None:
-            path = toolkit.command_output( "which %s"%self.name )[0]
-            path = string.rstrip(path, ' \n')
-            if os.path.exists(path):
-                command_path = os.path.abspath(path)
+            wlines = toolkit.command_output( "which %s"%self.name )
+            if len(wlines) != 1:
+                if self.name == 'source':
+                    command_path = self.name
+                else:
+                    raise PyTestError("In %s: which %s resulted in those %d lines \n%s"
+                                      %(self.classname(), self.name, len(wlines), ''.join(wlines)))
+            else:
+                path = wlines[0]
+                path = string.rstrip(path, ' \n')
+                if os.path.exists(path):
+                    command_path = os.path.abspath(path)
         
         if command_path is None:
-            raise PyTestUsageError(
+            raise PyTestError(
                 "The only GlobalProgram and GlobalCompilableProgram currently "
                 "supported must be found in <plearn_branch>/commands/. Program "
                 "%s was not." % self.name

@@ -2,7 +2,7 @@ __version_id__ = "$Id: IntelligentDiff.py 4080 2005-09-13 13:49:47Z tihocan $"
 
 import copy, os, string
 
-from   programs                      import PyTestUsageError
+from   programs                      import PyTestError
 
 import plearn.utilities.ppath        as     ppath
 import plearn.utilities.toolkit      as     toolkit
@@ -35,7 +35,7 @@ class Resources:
             os.system( link_cmd )
 
         elif must_exist:
-            raise PyTestUsageError(
+            raise PyTestError(
                 "In %s: %s used as a resource but path doesn't exist."
                 % ( os.getcwd(), resource )
                 )

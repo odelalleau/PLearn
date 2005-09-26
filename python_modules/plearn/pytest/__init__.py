@@ -59,7 +59,7 @@ def main( pytest_version ):
     parser.add_option( '--traceback',
                        action="store_true",
                        help="This flag triggers routines to report the traceback of "
-                       "PyTestUsageError or KeyboardInterrupt. By default, "
+                       "PyTestError or KeyboardInterrupt. By default, "
                        "only the test's name and message are reported.",
                        default = False )
     
@@ -94,7 +94,7 @@ def main( pytest_version ):
 
     try:
         modes.current_mode( targets, options )    
-    except PyTestUsageError, e: 
+    except PyTestError, e: 
         if options.traceback:
             raise
         else:

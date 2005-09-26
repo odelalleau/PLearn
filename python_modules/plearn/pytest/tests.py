@@ -1,4 +1,4 @@
-__version_id__ = "$Id:  $"
+__version_id__ = "$Id:$"
 
 import os, shutil 
 import plearn.utilities.toolkit as toolkit
@@ -6,7 +6,6 @@ from plearn.pyplearn.plearn_repr import python_repr
 
 from programs                   import *
 from PyTestCore                 import *
-# STATS: from BasicStats                 import BasicStats
 from IntelligentDiff            import *          
 from plearn.utilities.verbosity import *
 from plearn.utilities.version_control import is_under_version_control
@@ -24,13 +23,9 @@ def config_file_path( directory = None ):
         return 'pytest.config'
     return os.path.join( os.path.abspath(directory), 'pytest.config' )
 
-# STATS: def print_stats():
-# STATS:     Test._statistics.print_stats()
-
-
-class DuplicateName( PyTestUsageError ):
+class DuplicateName( PyTestError ):
     def __init__(self, test1, test2):
-        PyTestUsageError.__init__(
+        PyTestError.__init__(
             self, "Two tests have the same name: %s and %s."
             % ( test1.get_path(), test2.get_path() )
             )        
@@ -161,6 +156,26 @@ class Test(PyTestObject):
     _test_count    = 0
     _log_count     = 0
     _logged_header = False
+
+    _instances_map    = {}
+    _families_map     = {}
+
+    def restrictTo(cls, test_name):
+        test = cls._instances_map[test_name]
+
+        # Resets the instance map
+        cls._instances_map = { test_name : test }
+
+        # Resets the families map
+        cls._families_map = { test.directory() : [test] }
+
+        # Resets the instance counter
+        cls._test_count = 1        
+    restrictTo = classmethod(restrictTo)
+    
+    _expected_results = os.path.join(ppath.pytest_dir, "expected_results")
+    _run_results      = os.path.join(ppath.pytest_dir, "run_results")
+
     
     # Options
     name        = PLOption(None)
@@ -169,21 +184,6 @@ class Test(PyTestObject):
     arguments   = PLOption('')
     resources   = PLOption([])
     disabled    = PLOption(False)
-
-    ## Internal attributes
-    _directory        = None
-    _metaprotocol     = None
-        
-    _instances_map    = {}
-    _families_map     = {}
-    
-    # STATS: _statistics       = BasicStats("Test statistics")
-    _expected_results = os.path.join(ppath.pytest_dir, "expected_results")
-    _run_results      = os.path.join(ppath.pytest_dir, "run_results")
-
-## STATS:     def current_stats(cls):
-## STATS:         return cls._statistics.current_stats()
-## STATS:     current_stats = classmethod(current_stats)
     
     def __init__(self, **overrides):
         PyTestObject.__init__(self, **overrides)        
@@ -196,7 +196,6 @@ class Test(PyTestObject):
         if Test._instances_map.has_key( self.name ):
             raise DuplicateName( Test._instances_map[self.name], self )
         else:
-            # STATS: Test._statistics.new_test( self.directory(), self.name )
             Test._instances_map[self.name] = self
             if Test._families_map.has_key( self.directory() ):
                 Test._families_map[self.directory()].append(self)
@@ -218,7 +217,7 @@ class Test(PyTestObject):
 
     def sanity_check(self):
         if self.name == '':
-            raise PyTestUsageError(                
+            raise PyTestError(                
                 "Test must be named. Directory %s contains an unnamed test." 
                 % self.directory()
                 )
@@ -230,7 +229,7 @@ class Test(PyTestObject):
                   )
 
         if check != -4:
-            raise PyTestUsageError(
+            raise PyTestError(
                 "%s\n Test.name should contain none of the following chars: "
                 "' ', '/', '<', '>'."
                 % self.get_path()
@@ -262,7 +261,7 @@ class Test(PyTestObject):
                                         "you want to generate new results (yes or no)? " % results )
 
                 if answer == 'no':
-                    raise PyTestUsageError("Results creation interrupted by user")
+                    raise PyTestError("Results creation interrupted by user")
 
                 ## YES
                 version_control.recursive_remove( results )
@@ -295,8 +294,8 @@ class Test(PyTestObject):
     def is_disabled(self):
         return self.disabled
     
-    def setStatus(self, status):
-        self._status.setStatus(status)
+    def setStatus(self, status, log=''):
+        self._status.setStatus(status, log)
 
         statsHeader = TestStatus.summaryHeader()
 
@@ -317,9 +316,6 @@ class Test(PyTestObject):
             self.__class__._log_count += 1
             vpformat(str(self._log_count), self.get_name(),
                      str(self._status), TestStatus.summary())
-
-        # STATS: if self._status.isCompleted():
-        # STATS:     self._statistics.set_status( self.get_name(), TestStatus.tmpMapper(status) )
 
     def test_results(self, results):
         if results in [Test._expected_results, Test._run_results]:
@@ -394,10 +390,9 @@ class Test(PyTestObject):
 
 class Routine( PyTestObject ):
     _report_traceback = False
+    
+    test = PLOption(None)
 
-    test            = PLOption(None)
-    completion_hook = PLOption(None)
-        
     def __init__( self, **overrides ):        
         PyTestObject.__init__( self, **overrides ) 
         os.chdir( self.test.directory() )
@@ -412,7 +407,7 @@ class Routine( PyTestObject ):
         self.test.compile()
         if not self.test.compilation_succeeded():
             vprint("Compilation failed.", 2)
-            self.test.setStatus("FAILED")
+            self.test.setStatus("FAILED", "Compilation failed.")
             return False
         vprint("Compilation succeedded.", 2)
         return True
@@ -423,28 +418,20 @@ class Routine( PyTestObject ):
             if self.test.is_disabled():
                 vprint("Test %s is disabled." % self.test.name, 2)
                 self.test.setStatus("DISABLED")
-                self.signal_completion()
             else:                
                 self.routine()
 
-        except PyTestUsageError, e: 
+        except PyTestError, e: 
             if Routine._report_traceback:
                 raise
             else:
-                e.print_error()
-            self.test.setStatus("SKIPPED")            
-            self.signal_completion()
-
-    def signal_completion(self):
-        tname = self.test.get_name()
-        if self.completion_hook is not None:
-            self.completion_hook( self )
+                self.test.setStatus("SKIPPED", e.pretty_str())            
                     
 class CompilationRoutine(Routine):
     """Launches the compilation of target tests' compilable files."""    
     def routine(self):
         if self.compile_program():
-            self.test.setStatus( "PASSED" )
+            self.test.setStatus("PASSED")
 
 
 class ResultsRelatedRoutine(Routine):
@@ -519,7 +506,7 @@ class ResultsCreationRoutine(ResultsRelatedRoutine):
         self.run_test( Test._expected_results )
 
     def status_hook(self):
-        self.test.setStatus( "PASSED" )
+        self.test.setStatus("PASSED")
 
 class RunTestRoutine( ResultsRelatedRoutine ):        
     """Compares current results to expected ones.
@@ -541,10 +528,12 @@ class RunTestRoutine( ResultsRelatedRoutine ):
         ResultsRelatedRoutine.__init__( self, **overrides )
         self.expected_results = self.test.test_results( Test._expected_results )
         self.run_results      = self.test.test_results( Test._run_results )
+        if os.path.exists(self.run_results):
+            shutil.rmtree(self.run_results)
         
         if ( not self.test.disabled and
              not os.path.exists( self.expected_results ) ):
-            raise PyTestUsageError(
+            raise PyTestError(
                 "%s\n Expected results must be generated by the 'results' mode "
                 "prior to any use of the 'run' mode."
                 % self.test.get_path()
@@ -557,10 +546,10 @@ class RunTestRoutine( ResultsRelatedRoutine ):
         idiff  =  IntelligentDiff( self.test )
         diffs  =  idiff.diff( self.expected_results, self.run_results )
         if diffs == []:
-            self.test.setStatus( "PASSED" )
+            self.test.setStatus("PASSED")
         else:
             report_path = os.path.join( Test._run_results,
                                         self.test.get_name()+'.failed' )
             toolkit.lines_to_file( diffs, report_path )
-            self.test.setStatus( "FAILED" )
+            self.test.setStatus("FAILED")
         
