@@ -37,11 +37,19 @@ from plearn.pyplearn import *
 from plearn.pyplearn import plearn_repr
 import plearn.plio
 import sys
+import socket
 
 def launch_plearn_server(command = 'plearn server', logger=None):
     if logger: logger.info('LAUNCHING PLEARN SERVER: command = '+command)                
     to_server, from_server = os.popen2(command, 'b')
     return RemotePLearnServer(from_server, to_server, logger)
+
+def connect_to_plearn_server(hostname, port, logger=None):
+    if logger: logger.info('CONNECTING TO PLEARN SERVER ON HOST '+hostname+', PORT '+str(port))                
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((hostname, port))
+    io = s.makefile()
+    return RemotePLearnServer(io, io, logger)    
         
 class RemotePLearnServer:
 
