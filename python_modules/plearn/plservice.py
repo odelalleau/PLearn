@@ -69,8 +69,14 @@ class RemotePLearnServer:
         self.closed = False
         if self.log: self.log.info('CONNEXION ESTABLISHED WITH PLEARN SERVER')
         self.callFunction("binary")
-        self.callFunction("implicit_storage",True)
-
+        self.callFunction("implicit_storage",True)        
+        
+    def set_return_lists(ret_lists=True):
+        """If this is called with True, PLearn sequences will be
+        returned as lists (rather than as arrays, which is the default
+        behaviour, and can be restored by calling this with False)"""
+        self.io.return_lists = ret_lists
+        
     def reserve_new_id(self):
         """Returns an available object id and adds it to self.reserved_ids"""
         newid = 1

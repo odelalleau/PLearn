@@ -71,6 +71,7 @@ class PLearnIO:
         self.unreadstring = ''
         self.copies_map_in = {}
         # self.copies_map_out = {}
+        self.return_lists = False # set it to true if you want binread of sequences to return lista rather than arrays
 
     def clear_maps(self):
         self.copies_map_in.clear()
@@ -321,6 +322,8 @@ class PLearnIO:
         if sys.byteorder!=endianness:
             ar.byteswap()
 
+        if self.return_lists:
+            ar = ar.tolist()
         return ar
 
 ##         elif elemtype==0x01: # signed char
