@@ -190,7 +190,7 @@ class IntelligentDiff:
         ## self.preprocess(other, bench_dir, other_dir)
         some_diff = toolkit.command_output(diff_template % (bench, other))
         if some_diff:
-            self.differences.append("%s and %s differ" % (bench,other) )
+            self.differences.append("%s and %s differ:\n" % (bench,other) )
             self.differences.extend( some_diff )
             self.differences.append( "" )
 
