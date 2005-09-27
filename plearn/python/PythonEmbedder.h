@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// EmbeddedPython.h
+// PythonEmbedder.h
 //
 // Copyright (C) 2004 Nicolas Chapados 
 // 
@@ -38,11 +38,11 @@
 
 // Authors: Nicolas Chapados
 
-/*! \file EmbeddedPython.h */
+/*! \file PythonEmbedder.h */
 
 
-#ifndef EmbeddedPython_INC
-#define EmbeddedPython_INC
+#ifndef PythonEmbedder_INC
+#define PythonEmbedder_INC
 
 // Put includes here
 

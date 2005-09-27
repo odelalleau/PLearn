@@ -111,7 +111,8 @@ public:
     
 public:
     //! Default constructor
-    PythonCodeSnippet(const string& code = "");
+    PythonCodeSnippet(const string& code = "",
+                      bool remap_python_exceptions = false);
 
     //! Default copy ctor, assignment op, dtor
 

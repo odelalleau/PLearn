@@ -36,9 +36,8 @@
 
 
 /**
- *  @file   basic_identity_calls
- *  @brief  Tests the core of PythonCodeSnippet through identity function
- *          calls in Python
+ *  @file   interfunction_xchg
+ *  @brief  Test data exchange within a single snippet and exception mapping
  */
 
 

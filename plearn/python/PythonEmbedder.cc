@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// EmbeddedPython.cc
+// PythonEmbedder.cc
 //
 // Copyright (C) 2004 Nicolas Chapados 
 // 
@@ -38,11 +38,11 @@
 
 // Authors: Nicolas Chapados
 
-/*! \file EmbeddedPython.cc */
+/*! \file PythonEmbedder.cc */
 
 
-#include "EmbeddedPython.h"
-#include <python2.3/Python.h>
+#include "PythonEmbedder.h"
+#include "PythonIncludes.h"
 
 namespace PLearn {
 using namespace std;

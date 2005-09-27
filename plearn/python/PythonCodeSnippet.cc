@@ -42,9 +42,9 @@
 
 // Python stuff must be included first
 #include "PythonCodeSnippet.h"
+#include "PythonEmbedder.h"
 
 // From PLearn
-#include <plearn/misc/EmbeddedPython.h>
 #include <plearn/io/fileutils.h>
 
 
@@ -68,10 +68,11 @@ PLEARN_IMPLEMENT_OBJECT(
     );
   
 
-PythonCodeSnippet::PythonCodeSnippet(const string& code)
+PythonCodeSnippet::PythonCodeSnippet(const string& code,
+                                     bool remap_python_exceptions)
     : inherited(),
       m_code(code),
-      m_remap_python_exceptions(false),
+      m_remap_python_exceptions(remap_python_exceptions),
       m_compiled_code()
 {
     // Compile the code if any
