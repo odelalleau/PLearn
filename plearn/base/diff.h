@@ -44,6 +44,7 @@
 #ifndef diff_INC
 #define diff_INC
 
+#include <map>
 #include <string>
 #include <plearn/base/OptionBase.h>
 #include <plearn/base/tostring.h>
@@ -64,6 +65,8 @@ class VMat;
 class VMatrix;
 class PLearnDiff;
 void addDiffPrefix(PLearnDiff* diffs, const string& prefix, int n);
+void setSaveDiffs(PLearnDiff* diffs, bool save_diffs,
+                                     bool* save_diffs_backup);
 int diff(PLearnDiff* diffs, const string& refer, const string& other, const string& name);
 real get_absolute_tolerance(PLearnDiff* diffs);
 real get_relative_tolerance(PLearnDiff* diffs);
@@ -205,6 +208,115 @@ int diff(const string& refer, const string& other, const Option<ObjectType, TMat
             out.flush();
             n_diffs += option_elem->diff(refer_ij, other_ij, diffs);
         }
+    return n_diffs;
+}
+
+//! diff for map.
+template<class ObjectType, class MapKeyType, class MapElementType>
+int diff(const string& refer, const string& other, const Option<ObjectType,
+        map<MapKeyType, MapElementType> >* opt, PLearnDiff* diffs)
+{
+    // pout << "Calling diff(..., const Option<ObjectType, TVec<T> > opt, ...)" << endl;
+    int n_diffs = 0;
+    map<MapKeyType, MapElementType> refer_map;
+    map<MapKeyType, MapElementType> other_map;
+    string option = opt->optionname();
+    PStream in;
+    in = openString(refer, PStream::plearn_ascii);
+    in >> refer_map;
+    in = openString(other, PStream::plearn_ascii);
+    in >> other_map;
+    in.flush();
+    PP<OptionBase> option_elem = new Option<ObjectType, MapElementType>
+        ("", 0, 0, TypeTraits<MapElementType>::name(), "", "");
+    string refer_i, other_i;
+    typename map<MapKeyType, MapElementType>::iterator it_refer;
+    typename map<MapKeyType, MapElementType>::iterator it_other;
+    it_refer = refer_map.begin();
+    it_other = other_map.begin();
+    TVec<string> missing_in_refer, missing_in_other;
+    while (it_refer != refer_map.end()) {
+        const MapKeyType& refer_key = it_refer->first;
+        option_elem->setOptionName(opt->optionname() + "[ " +
+                tostring(refer_key) + " ]");
+        if (other_map.find(refer_key) == other_map.end()) {
+            // 'refer_map' contains a key 'other_map' does not.
+            PStream out =
+                openString(refer_i, PStream::plearn_ascii, "w");
+            out << refer_key;
+            out.flush();
+            /*
+            refer_i = "<In map>";
+            other_i = "<Not in map>";
+            n_diffs += option_elem->diff(refer_i, other_i, diffs);
+            */
+            missing_in_other.append(refer_i);
+        } else {
+            // Compare the two values.
+            const MapElementType& refer_val = it_refer->second;
+            const MapElementType& other_val = other_map[refer_key];
+            PStream out =
+                openString(refer_i, PStream::plearn_ascii, "w");
+            out << refer_val;
+            out.flush();
+            out =
+                openString(other_i, PStream::plearn_ascii, "w");
+            out << other_val;
+            out.flush();
+            n_diffs += option_elem->diff(refer_i, other_i, diffs);
+        }
+        it_refer++;
+    }
+    // Now look for keys in 'other_map' not present in 'refer_map'.
+    while (it_other != other_map.end()) {
+        const MapKeyType& other_key = it_other->first;
+        option_elem->setOptionName(opt->optionname() + "[ " +
+                tostring(other_key) + " ]");
+        if (refer_map.find(other_key) == refer_map.end()) {
+            PStream out =
+                openString(other_i, PStream::plearn_ascii, "w");
+            out << other_key;
+            out.flush();
+            /*
+            refer_i = "<Not in map>";
+            other_i = "<In map>";
+            n_diffs += option_elem->diff(refer_i, other_i, diffs);
+            */
+            missing_in_refer.append(other_i);
+        }
+        it_other++;
+    }
+    /* TODO See how to compare keys properly.
+     */
+    // Now deal with different keys.
+    PP<OptionBase> option_key = new Option<ObjectType, MapKeyType>
+        ("", 0, 0, TypeTraits<MapKeyType>::name(), "", "");
+    bool save_diffs_backup;
+    setSaveDiffs(diffs, false, &save_diffs_backup);
+    for (int i = 0; i < missing_in_other.length(); i++) {
+        for (int j = 0; j < missing_in_refer.length(); j++) {
+            int is_diff =
+                option_key->diff(missing_in_other[i], missing_in_refer[j],
+                        diffs);
+            if (is_diff == 0) {
+                // The keys are actually the same (even if not exactly).
+                missing_in_refer.remove(j);
+                j = missing_in_refer.length(); // No need to go further.
+                missing_in_other.remove(i);
+                i--;
+            }
+        }
+    }
+    setSaveDiffs(diffs, save_diffs_backup, 0);
+    for (int i = 0; i < missing_in_other.length(); i++) {
+        n_diffs += diff(diffs, "<In map>", "<Not in map>",
+                opt->optionname() + "[ " + missing_in_other[i] + " ] ");
+    }
+    for (int i = 0; i < missing_in_refer.length(); i++) {
+        n_diffs += diff(diffs, "<In map>", "<Not in map>",
+                opt->optionname() + "[ " + missing_in_refer[i] + " ] ");
+    }
+
     return n_diffs;
 }
 
