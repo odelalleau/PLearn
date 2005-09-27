@@ -44,6 +44,7 @@
 
 #include <plearn/python/PythonCodeSnippet.h>
 #include <iostream>
+#include <plearn/io/openString.h>
 
 using namespace PLearn;
 using namespace std;
@@ -70,6 +71,15 @@ string python_code =
 "def unary_str(x):\n"
 "    assert isinstance(x,str)\n"
 "    return x\n"
+"\n"
+"def unary_vec(x):\n"
+"    assert isinstance(x,numarraycore.NumArray) and len(x.shape) == 1\n"
+"    return x\n"
+"\n"
+"def unary_mat(x):\n"
+"    print >>sys.stderr, 'Called unary_mat with:',x\n"
+"    assert isinstance(x,numarraycore.NumArray) and len(x.shape) == 2\n"
+"    return x\n"
 ;
 
 
@@ -93,6 +103,20 @@ void unary(const PythonCodeSnippet* python)
 
     cout << "Calling unary_str('Hello')  : "
          << python->callFunction("unary_str", "Hello").as<string>() << endl;
+
+    Vec v;
+    PStream is = openString("[2,3,5,7,11,13,17,19,23]", PStream::plearn_ascii);
+    is >> v;
+    Mat m(3,3);
+    m.toVec() << v;
+
+    cout << "Calling unary_vec(v)        : "
+         << tostring( python->callFunction("unary_vec", v).as<Vec>() )
+         << endl;
+
+    cout << "Calling unary_mat(m)        : "
+         << tostring( python->callFunction("unary_mat", m).as<Mat>() )
+         << endl;
 }
 
 

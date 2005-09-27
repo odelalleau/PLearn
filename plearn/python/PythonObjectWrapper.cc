@@ -62,6 +62,19 @@ void PLPythonConversionError(const char* function_name,
     PLERROR("Cannot convert Python object using %s", function_name);
 }
 
+// Python initialization
+void PythonObjectWrapper::initializePython()
+{
+    static bool numarray_initialized = false;
+    if (! numarray_initialized) {
+        // must be in each translation unit that makes use of libnumarray;
+        // weird stuff related to table of function pointers that's being
+        // initialized into a STATIC VARIABLE of the translation unit!
+        import_libnumarray();
+        numarray_initialized = true;
+    }
+}
+
 
 //#####  ConvertFromPyObject  #################################################
 

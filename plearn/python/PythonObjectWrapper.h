@@ -289,6 +289,13 @@ public:
     template <class T, class U>
     static PyObject* newPyObject(const std::map<T,U>&);
 
+    /**
+     *  This function is called by PythonCodeSnippet to carry out
+     *  initializations related to libnumarray.
+     */
+    static void initializePython();
+    
+    
 protected:
     OwnershipMode m_ownership;               //!< Whether we own the PyObject or not
     PyObject* m_object;

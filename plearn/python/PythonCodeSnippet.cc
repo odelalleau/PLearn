@@ -116,6 +116,8 @@ void PythonCodeSnippet::build_()
         // initialized into a STATIC VARIABLE of the translation unit!
         import_libnumarray();
         numarray_initialized = true;
+        
+        PythonObjectWrapper::initializePython();
     }
 
     // Compile code into global environment
