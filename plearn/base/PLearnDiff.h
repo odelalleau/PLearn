@@ -119,8 +119,11 @@ public:
     //! 'indent' specifies the number of whitespaces to add before each line.
     //! 'tab_step' specifies the canonical length of each element (name and
     //! values for each difference), in order to obtain a fancy output.
+    //! 'max_width' specifies the maximum number of characters printed on each
+    //! line (note that a long option value or name that exceeds this number
+    //! will still be printed unchanged).
     void printDiffs(PStream& out = pout, unsigned int indent = 2,
-                                         unsigned int tab_step = 20);
+                    unsigned int tab_step = 20, unsigned int max_width = 80);
 
     //! Return the number of differences found.
     int nDiffs() { return diffs.length(); }
