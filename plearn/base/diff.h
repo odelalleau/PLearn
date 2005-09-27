@@ -67,6 +67,9 @@ void addDiffPrefix(PLearnDiff* diffs, const string& prefix, int n);
 int diff(PLearnDiff* diffs, const string& refer, const string& other, const string& name);
 real get_absolute_tolerance(PLearnDiff* diffs);
 real get_relative_tolerance(PLearnDiff* diffs);
+
+// TODO Clean code (more comments, less duplications, maybe less 'hacky' code
+// too...).
  
 //! Useful function to compare two objects.
 int diff(PP<Object> refer, PP<Object> other, PLearnDiff* diffs = 0);
@@ -76,7 +79,10 @@ template<class ObjectType, class OptionType>
 int diff(const string& refer, const string& other,
          const Option<ObjectType, OptionType>* opt, PLearnDiff* diffs)
 {
-    // pout << "Calling basic diff with Option< ObjectType, " << opt->optiontype() << " >" << endl;
+    /*
+    pout << "Calling basic diff with Option< ObjectType, "
+         << opt->optiontype() << " >" << endl;
+    */
     assert( diffs );
     return diff(diffs, refer, other, opt->optionname());
 }
@@ -134,14 +140,17 @@ int diff(const string& refer, const string& other, const Option<ObjectType, TVec
     in >> other_vec;
     in.flush();
     int n = refer_vec.length();
-    if (other_vec.length() != n)
+    if (other_vec.length() != n) {
+        // pout << "Not same length" << endl;
         // If the two vectors do not have the same size, no need to go further.
         n_diffs += diff(diffs, tostring(n), tostring(other_vec.length()),
                         opt->optionname() + ".length");
+    }
     else {
         PP<OptionBase> option_elem = new Option<ObjectType, VecElementType>
             ("", 0, 0, TypeTraits<VecElementType>::name(), "", "");
         string refer_i, other_i;
+        // pout << "TVec of " << TypeTraits<VecElementType>::name() << endl;
         for (int i = 0; i < n; i++) {
             option_elem->setOptionName(opt->optionname() + "[" + tostring(i) + "]");
             PStream out = openString(refer_i, PStream::plearn_ascii, "w");
