@@ -346,7 +346,8 @@ void DirichletEstimatorMMoments(const Mat& p, Vec& alpha)
 void DirichletEstimatorMaxLik(const Mat& p, Vec alpha)
 {
     DirichletEstimatorMMoments(p,alpha);
-    int N=alpha.length();
+    // int N=alpha.length(); Commented out to remove compiler warning.
+    PLERROR("In DirichletEstimatorMaxLik - Not implemented yet");
     // Have a look at Tom Minka's paper on estimating Dirichlet parameters...
     // TO BE IMPLEMENTED
 }
