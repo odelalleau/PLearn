@@ -377,7 +377,7 @@ PyObject* PythonObjectWrapper::newPyObject(const TVec<T>& data)
         // Since PyList_SET_ITEM steals the reference to the item being set,
         // one does not need to Py_XDECREF the inserted string as was required
         // for the PyArrayObject code above...
-        PyList_SET_ITEM(newlist, i, newPyObject<T>(data[i]));
+        PyList_SET_ITEM(newlist, i, newPyObject(data[i]));
     }
     return newlist;
 }
@@ -390,7 +390,7 @@ PyObject* PythonObjectWrapper::newPyObject(const std::vector<T>& data)
         // Since PyList_SET_ITEM steals the reference to the item being set,
         // one does not need to Py_XDECREF the inserted string as was required
         // for the PyArrayObject code above...
-        PyList_SET_ITEM(newlist, i, newPyObject<T>(data[i]));
+        PyList_SET_ITEM(newlist, i, newPyObject(data[i]));
     }
     return newlist;
 }
@@ -405,8 +405,8 @@ PyObject* PythonObjectWrapper::newPyObject(const std::map<T,U>& data)
     for (typename std::map<T,U>::const_iterator it = data.begin(), end = data.end() ;
          it != end ; ++it)
     {
-        PyObject* new_key = newPyObject<T>(it->first);
-        PyObject* new_val = newPyObject<T>(it->second);
+        PyObject* new_key = newPyObject(it->first);
+        PyObject* new_val = newPyObject(it->second);
         int non_success = PyDict_SetItem(newdict, new_key, new_val);
         Py_XDECREF(new_key);
         Py_XDECREF(new_val);

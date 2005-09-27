@@ -44,6 +44,8 @@
 
 #include <plearn/python/PythonCodeSnippet.h>
 #include <iostream>
+#include <vector>
+#include <map>
 #include <plearn/io/openString.h>
 
 using namespace PLearn;
@@ -77,9 +79,26 @@ string python_code =
 "    return x\n"
 "\n"
 "def unary_mat(x):\n"
-"    print >>sys.stderr, 'Called unary_mat with:',x\n"
+"    print >>sys.stderr, 'Called unary_mat with:\\n',x\n"
 "    assert isinstance(x,numarraycore.NumArray) and len(x.shape) == 2\n"
 "    return x\n"
+"\n"
+"def unary_list_str(x):\n"
+"    assert isinstance(x,list)\n"
+"    return x\n"
+"\n"
+"def unary_dict(x):\n"
+"    assert isinstance(x,dict)\n"
+"    return x\n"
+"\n"
+"def binary(a,b):\n"
+"    return a,b\n"
+"\n"
+"def ternary(a,b,c):\n"
+"    return a,b,c\n"
+"\n"
+"def quaternary(a,b,c,d):\n"
+"    return a,b,c,d\n"
 ;
 
 
@@ -114,8 +133,52 @@ void unary(const PythonCodeSnippet* python)
          << tostring( python->callFunction("unary_vec", v).as<Vec>() )
          << endl;
 
-    cout << "Calling unary_mat(m)        : "
+    cout << "Calling unary_mat(m)        : " << endl
          << tostring( python->callFunction("unary_mat", m).as<Mat>() )
+         << endl;
+
+    TVec<string> tvs;
+    PStream is_tvs = openString("[\"Cela\", \"est\", \"juste\", \"et\", \"bon\"]",
+                                PStream::plearn_ascii);
+    is_tvs >> tvs;
+    vector<string> vecs(tvs.begin(), tvs.end());
+
+    cout << "Calling unary_list_str(tvs) : "
+         << tostring( python->callFunction("unary_list_str", tvs).as< TVec<string> >() )
+         << endl;
+    cout << "Calling unary_list_str(vecs): "
+         << tostring( TVec<string>(python->callFunction("unary_list_str", vecs)
+                                   .as< vector<string> >() ))
+         << endl;
+
+    map<string,long> mapsd;
+    PStream is_mapsd = openString("{ Oui:16 il:32 est:64 juste:128 et:256 bon:512 }",
+                                  PStream::plearn_ascii);
+    is_mapsd >> mapsd;
+
+    cout << "Calling unary_dict(mapsd)   : "
+         << tostring( python->callFunction("unary_dict", mapsd).as< map<string,long> >() )
+         << endl;
+}
+
+void binary(const PythonCodeSnippet* python)
+{
+    cout << "Calling binary(2,4)         : "
+         << tostring( python->callFunction("binary",2,4).as< TVec<int> >())
+         << endl;
+}
+
+void ternary(const PythonCodeSnippet* python)
+{
+    cout << "Calling ternary(2,4,8)      : "
+         << tostring( python->callFunction("ternary",2,4,8).as< TVec<int> >())
+         << endl;
+}
+
+void quaternary(const PythonCodeSnippet* python)
+{
+    cout << "Calling quaternary(2,4,8,16): "
+         << tostring( python->callFunction("quaternary",2,4,8,16).as< TVec<int> >())
          << endl;
 }
 
@@ -128,8 +191,11 @@ int main()
     PP<PythonCodeSnippet> python = new PythonCodeSnippet(python_code);
     nullary(python);
     unary(python);
-  
-  return 0;
+    binary(python);
+    ternary(python);
+    quaternary(python);
+    
+    return 0;
 }
 
 
