@@ -215,6 +215,12 @@ void SelectColumnsVMatrix::build_()
         width_ = indices.length();
         length_ = source->length();
 
+#if 0
+        // Disabled for now, since it gives way too many false positives in
+        // some cases. Todo: figure out a way to warn in a useful way when
+        // a SelectColumnsVMatrix is given as a train or test set to a learner,
+        // with inputsize and friends not set manually.
+
         // Give warning if inputsize, and friends are not specified, since we
         // can't just copy the values from the underlying VMat. A smarter
         // version of this class could Figure out the right size for inputsize,
@@ -223,6 +229,7 @@ void SelectColumnsVMatrix::build_()
         if (inputsize_ < 0 || targetsize_ < 0 || weightsize_ < 0) 
             PLWARNING("In SelectColumnsVMatrix::build_ inputsize, targetsize or weightsize "
                       "not set. You may want to set them yourself in the .plearn file.");
+#endif
         
         // Copy the appropriate VMFields
         fieldinfos.resize(width());
