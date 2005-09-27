@@ -57,13 +57,20 @@ using std::string;
 //! Forward declarations.
 template <class T> class TVec;
 class PLearnDiff;
+class StatsCollectorCounts;
 
+// Hack for GCC 4.0.1: hopefully this problem will be solved soon.
 #if defined(__GNUC__) && (__GNUC__ == 4)
 template<class ObjectType, class OptionType> class Option;
 class StatsCollector;
 template<class ObjectType>
 int diff(const string& refer, const string& other,
          const Option<ObjectType, StatsCollector>* opt, PLearnDiff* diffs);
+
+template<class ObjectType>
+int diff(const string& refer, const string& other,
+         const Option<ObjectType, StatsCollectorCounts>* opt,
+         PLearnDiff* diffs);
 #endif
 
 //#####  Generic Option  ######################################################

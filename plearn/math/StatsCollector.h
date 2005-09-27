@@ -40,13 +40,17 @@
 #ifndef StatsCollector_INC
 #define StatsCollector_INC
 
+#include <string>
 #include <plearn/base/general.h>
 #include <plearn/base/Object.h>
-#include "TMat.h"
 #include <plearn/base/RealMapping.h>
+#include "TMat.h"
 
 namespace PLearn {
 using namespace std;
+
+//! Forward declarations.
+class PLearnDiff;
 
 class StatsCollectorCounts
 {
@@ -71,6 +75,41 @@ inline PStream& operator>>(PStream& in, StatsCollectorCounts& c)
 
 inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
 { out << c.n << c.nbelow << c.sum << c.sumsquare << c.id; return out; }
+
+template<class ObjectType>
+int diff(const string& refer, const string& other,
+         const Option<ObjectType, StatsCollectorCounts>* opt,
+         PLearnDiff* diffs)
+{
+    StatsCollectorCounts refer_sc, other_sc;
+    PStream in = openString(refer, PStream::plearn_ascii);
+    in >> refer_sc;
+    in.flush();
+    in = openString(other, PStream::plearn_ascii);
+    in >> other_sc;
+    in.flush();
+    int n_diffs = 0;
+    PP<OptionBase> opt_double = new Option<ObjectType, double>
+        ("", 0, 0, TypeTraits<double>::name(), "", "");
+    PP<OptionBase> opt_int = new Option<ObjectType, int>
+        ("", 0, 0, TypeTraits<int>::name(), "", "");
+    opt_double->setOptionName(opt->optionname() + ".n");
+    n_diffs +=  opt_double->diff(tostring(refer_sc.n),
+                                 tostring(other_sc.n), diffs);
+    opt_double->setOptionName(opt->optionname() + ".nbelow");
+    n_diffs += opt_double->diff(tostring(refer_sc.nbelow),
+                                tostring(other_sc.nbelow), diffs);
+    opt_double->setOptionName(opt->optionname() + ".sum");
+    n_diffs += opt_double->diff(tostring(refer_sc.sum),
+                                tostring(other_sc.sum), diffs);
+    opt_double->setOptionName(opt->optionname() + ".sumsquare");
+    n_diffs += opt_double->diff(tostring(refer_sc.sumsquare),
+                                tostring(other_sc.sumsquare), diffs);
+    opt_int->setOptionName(opt->optionname() + ".id");
+    n_diffs += opt_int->diff(tostring(refer_sc.id),
+                                tostring(other_sc.id), diffs);
+    return n_diffs;
+}
 
 /*!
   "A StatsCollector allows to compute basic global statistics for a series of numbers,\n"
