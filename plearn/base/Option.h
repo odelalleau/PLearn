@@ -58,6 +58,14 @@ using std::string;
 template <class T> class TVec;
 class PLearnDiff;
 
+#if defined(__GNUC__) && (__GNUC__ == 4)
+template<class ObjectType, class OptionType> class Option;
+class StatsCollector;
+template<class ObjectType>
+int diff(const string& refer, const string& other,
+         const Option<ObjectType, StatsCollector>* opt, PLearnDiff* diffs);
+#endif
+
 //#####  Generic Option  ######################################################
   
 //! Template class for option definitions
@@ -104,6 +112,10 @@ public:
     virtual int diff(const string& refer, const string& other,
                      PLearnDiff* diffs) const
     {
+        /*
+        pout << "Calling Option<" << TypeTraits<ObjectType>::name()
+            << "," << TypeTraits<OptionType>::name() << ">::diff" << endl;
+        */
         return PLearn::diff(refer, other, this, diffs);
     }
 
@@ -292,7 +304,6 @@ inline void redeclareOption(OptionList& ol,
                 "not been declared before", optionname.c_str());
     }
 }
-
 
 } // end of namespace PLearn
 
