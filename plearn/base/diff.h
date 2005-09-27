@@ -313,7 +313,7 @@ int diff(const string& refer, const string& other, const Option<ObjectType,
                 opt->optionname() + "[ " + missing_in_other[i] + " ] ");
     }
     for (int i = 0; i < missing_in_refer.length(); i++) {
-        n_diffs += diff(diffs, "<In map>", "<Not in map>",
+        n_diffs += diff(diffs, "<Not in map>", "<In map>",
                 opt->optionname() + "[ " + missing_in_refer[i] + " ] ");
     }
 
