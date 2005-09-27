@@ -188,6 +188,23 @@ optionalLibrary( name = 'X',
                  linkeroptions = '-L/usr/X11R6/lib/ -lXi -lXext -lX11'
 )
 
+### Using Python code snippets in C++ code
+if domain_name == 'iro.umontreal.ca':
+    numpy_includedirs   = [ '/u/lisa/local/linux-i386/include/' ]
+    numpy_site_packages = '/u/lisa/local/linux-i386/lib/python2.3/site-packages/numarray -lutil'
+else:
+    numpy_includedirs   = []
+    numpy_site_packages = '/usr/lib/python2.3/site-packages/numarray' 
+
+optionalLibrary( name = 'python',
+                 triggers = '[Pp]ython*',
+                 includedirs = numpy_includedirs,
+                 linkeroptions = ( '-L%s -lnumarray ' % numpy_site_packages + 
+                                   '-L/usr/lib/python2.3/config -lpython2.3 ' +
+                                   '-Xlinker -export-dynamic ' + 
+                                   '-Xlinker -rpath -Xlinker %s' % numpy_site_packages )
+                 )
+
 # Operating system as defined by Torch when creating libraries.
 if platform=='win32': ## os.uname is not defined under Windows...
   os.uname = lambda: ('Win32',)
