@@ -49,7 +49,8 @@ using namespace std;
 
 PLearnDiff::PLearnDiff():
     absolute_tolerance(ABSOLUTE_TOLERANCE),
-    relative_tolerance(RELATIVE_TOLERANCE)
+    relative_tolerance(RELATIVE_TOLERANCE),
+    save_diffs(true)
 {
     build_();
     forget();
@@ -67,6 +68,10 @@ void PLearnDiff::declareOptions(OptionList& ol)
 
     declareOption(ol, "relative_tolerance", &PLearnDiff::relative_tolerance, OptionBase::buildoption,
             "The relative tolerance used when comparing real numbers and one is more than 1.");
+
+    declareOption(ol, "save_diffs", &PLearnDiff::save_diffs, OptionBase::buildoption,
+            "If set to 1, each call to 'diff' will save any difference found.\n"
+            "Otherwise, differences will not be saved.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -114,10 +119,12 @@ int PLearnDiff::diff(const string& refer, const string& other, const string& nam
     static TVec<string> diff_row;
     diff_row.resize(3);
     if (refer != other) {
-        diff_row[0] = name;
-        diff_row[1] = refer;
-        diff_row[2] = other;
-        diffs.appendRow(diff_row);
+        if (save_diffs) {
+            diff_row[0] = name;
+            diff_row[1] = refer;
+            diff_row[2] = other;
+            diffs.appendRow(diff_row);
+        }
         return 1;
     } else
         return 0;
@@ -204,6 +211,22 @@ void PLearnDiff::printDiffs(PStream& out, unsigned int indent,
                 << diff_val2 << endl;
         }
     }
+}
+
+
+//////////////////
+// setSaveDiffs //
+//////////////////
+void PLearnDiff::setSaveDiffs(bool save_diffs, bool* save_diffs_backup)
+{
+    if (save_diffs_backup)
+        *save_diffs_backup = this->save_diffs;
+    this->save_diffs = save_diffs;
+}
+
+void setSaveDiffs(PLearnDiff* diffs, bool save_diffs, bool* save_diffs_backup)
+{
+    diffs->setSaveDiffs(save_diffs, save_diffs_backup);
 }
 
 

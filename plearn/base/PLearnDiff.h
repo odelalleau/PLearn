@@ -74,6 +74,7 @@ public:
 
     real absolute_tolerance;
     real relative_tolerance;
+    bool save_diffs;
 
     // ****************
     // * Constructors *
@@ -123,10 +124,15 @@ public:
     //! line (note that a long option value or name that exceeds this number
     //! will still be printed unchanged).
     void printDiffs(PStream& out = pout, unsigned int indent = 2,
-                    unsigned int tab_step = 20, unsigned int max_width = 80);
+                    unsigned int tab_step = 20, unsigned int max_width = 120);
 
     //! Return the number of differences found.
     int nDiffs() { return diffs.length(); }
+
+    //! Set 'save_diffs' option.
+    //! If 'save_diffs_backup' is provided, copy the old value of 'save_diffs'
+    //! in it.
+    void setSaveDiffs(bool save_diffs, bool* save_diffs_backup = 0);
 
 };
 
@@ -140,6 +146,11 @@ void addDiffPrefix(PLearnDiff* diffs, const string& prefix, int n);
 //! Just call diffs->diff(refer, other, name);
 //! This function is used so that it can be forward-declared.
 int diff(PLearnDiff* diffs, const string& refer, const string& other, const string& name);
+
+//! Just call diffs->setSaveDiffs(save_diffs, save_diffs_backup).
+//! This function is used so that it can be forward-declared.
+void setSaveDiffs(PLearnDiff* diffs, bool save_diffs,
+                                     bool* save_diffs_backup = 0);
 
 //! Return the absolute tolerance of a PLearnDiff.
 real get_absolute_tolerance(PLearnDiff* diffs);
