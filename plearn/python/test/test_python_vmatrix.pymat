@@ -1,0 +1,31 @@
+from plearn.pyplearn import *
+
+source_mat = pl.MemoryVMatrix(
+    data = TMat(4, 2, [ 2, 3,
+                        5, 7,
+                        11,13,
+                        17,19 ]),
+    inputsize = 1, targetsize = 1, weightsize = 0)
+
+processing_code = """
+from numarray import *
+
+def getRow(row_no, source_row):
+    return concatenate((10*row_no, 2*source_row))
+
+def getFieldNames(source_field_names):
+    return ['tricky_rownum', 'field1', 'field2']
+
+#def getSizes(source_inputsize, source_targetsize, source_weightsize):
+
+#def build():
+"""
+                
+
+processed_mat = pl.PythonProcessedVMatrix(
+    source = source_mat,
+    code = processing_code)
+    
+
+def main():
+    return processed_mat
