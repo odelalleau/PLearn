@@ -163,6 +163,7 @@ void quaternary(const PythonCodeSnippet* python)
 int main()
 {
     PP<PythonCodeSnippet> python = new PythonCodeSnippet(python_code);
+    python->build();
 
     const int N = 10000;
     ProgressBar pb("Calling Python Functions", N);

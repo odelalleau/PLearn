@@ -189,6 +189,8 @@ int main()
          << ">>>" << python_code << "<<<" << endl;
     
     PP<PythonCodeSnippet> python = new PythonCodeSnippet(python_code);
+    python->build();
+    
     nullary(python);
     unary(python);
     binary(python);

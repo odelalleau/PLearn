@@ -67,6 +67,8 @@ int main()
     
     PP<PythonCodeSnippet> python       = new PythonCodeSnippet(python_code);
     PP<PythonCodeSnippet> python_other = new PythonCodeSnippet(python_code, true);
+    python->build();
+    python_other->build();
     
     string survivor = "This string should survive within the Python environment";
     cout << "Setting the string:   '" << survivor << "'" << endl;
