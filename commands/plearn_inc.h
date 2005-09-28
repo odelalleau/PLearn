@@ -52,6 +52,13 @@
 #define PLEARN_MINOR_VERSION 92
 #define PLEARN_FIXLEVEL 0
 
+/*******************************************************************************
+ * Python (experimental) -- python includes must come FIRST, as per Python doc *
+ *******************************************************************************/
+// #include <plearn/python/PythonCodeSnippet.h>
+// #include <plearn/python/PythonProcessedVMatrix.h>
+
+
 /*****************
  * Miscellaneous *
  *****************/
