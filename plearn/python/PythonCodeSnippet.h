@@ -46,9 +46,14 @@
 // Python stuff must be included first
 #include <plearn/python/PythonObjectWrapper.h>
 
+// Boost stuff
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
+
 // PLearn stuff
 #include <plearn/base/Object.h>
 #include <plearn/base/plexceptions.h>
+#include <plearn/base/PMemPool.h>
 
 
 namespace PLearn {
@@ -81,13 +86,20 @@ public:
  *  PythonCodeSnippet calling protocol.
  *
  *  Note that global variables can be used, in the Python code, to keep a
- *  "living state", used to carry information across time-steps.  This state is
- *  reset when resetInternalState() is called.
+ *  "living state", used to carry information across calls to Python functions.
  */
 class PythonCodeSnippet : public Object
 {
     typedef Object inherited;
 
+public:
+    /**
+     *  Typedef for an external C function that can be injected into the Python
+     *  environment.
+     */
+    typedef boost::function<PythonObjectWrapper (
+        const TVec<PythonObjectWrapper>& args)> StandaloneFunction;
+    
 public:
     /**
      *  Python statement list that should be compiled at build time to provide
@@ -110,7 +122,9 @@ public:
     bool m_remap_python_exceptions;
     
 public:
-    //! Default constructor
+    //! Default constructor.  Note that "build" IS NOT CALLED from the
+    //! constructor and must be called manually after all external functions
+    //! have been injected (if necessary).
     PythonCodeSnippet(const string& code = "",
                       bool remap_python_exceptions = false);
 
@@ -161,7 +175,49 @@ public:
                                      const U& arg2,
                                      const V& arg3,
                                      const W& arg4) const;
+
+
+    //#####  Function Injection Interface  ####################################
+
+    /**
+     *  Inject into the Python code the specified stand-alone function object
+     *  under the given name.  Note that the function must take accept a TVec
+     *  of PythonObjectWrapper (the arguments) and return a
+     *  PythonObjectWrapper.  The return value needs to have controlled
+     *  ownership (the default).  You can use the Boost bind library in order
+     *  to transform a class member function into such a stand-alone function.
+     *  Note that the PythonCodeSnippet must have been compiled (with build)
+     *  BEFORE injecting the desired functions.  A typical idiom would be :
+     *
+     *      @code
+     *      PP<PythonCodeSnippet> python = new PythonCodeSnippet(my_code);
+     *      python->build();
+     *      python->injectFunction("func1", my_func1);
+     *      python->injectFunction("func2", my_func2);
+     *      // ...
+     *      @endcode
+     *
+     *  Note that a new call to build() would have the effect of "forgetting"
+     *  the injections, so they have to be carried out again.
+     */
+    void injectFunction(const char* python_name, StandaloneFunction function_ptr);
+
+    /**
+     *  Inject a bound C++ member function into the Python code under the given
+     *  name (const version).
+     */
+    template <class T>
+    void injectFunction(const char* python_name, const T* object,
+                        PythonObjectWrapper (T::*)(const TVec<PythonObjectWrapper>&) const);
     
+    /**
+     *  Inject a bound C++ member function into the Python code under the given
+     *  name (non-const version).
+     */
+    template <class T>
+    void injectFunction(const char* python_name, T* object,
+                        PythonObjectWrapper (T::*)(const TVec<PythonObjectWrapper>&));
+
 
     //#####  PLearn::Object Standard Functions  ###############################
 
@@ -187,10 +243,24 @@ protected:
     //! traceback and abort
     void handlePythonErrors() const;
 
+    //! This is the trampoline function actually called by Python
+    static PyObject* pythonTrampoline(PyObject* self, PyObject* args);
+
+    //! This performs the low-level injection into the compiled Python code.
+    //! Note that the pointer to StandaloneFunction must remain valid for the
+    //! entire duration of the compiled code validity.
+    void injectFunctionInternal(const char* python_name, StandaloneFunction* function_ptr);
+    
 protected:
     //! Compiled Python code module and global environment
     PythonObjectWrapper m_compiled_code;
 
+    //! Functions to be injected into the compiled Python code
+    PObjectPool<StandaloneFunction> m_injected_functions;
+
+    //! Injected Python method definitions
+    PObjectPool<PyMethodDef> m_python_methods;
+    
 private: 
     //! This does the actual building.  This is where the Python code
     //! is in fact compiled
@@ -369,6 +439,29 @@ PythonCodeSnippet::callFunction(const char* function_name,
 
     return PythonObjectWrapper(return_value);
 }
+
+
+//#####  Implementation of injectFunction  ####################################
+
+template <class T>
+void PythonCodeSnippet::injectFunction(
+    const char* python_name, const T* object,
+    PythonObjectWrapper (T::*member_function)(const TVec<PythonObjectWrapper>&) const)
+{
+    StandaloneFunction func = boost::bind(member_function, object, _1);
+    injectFunction(python_name, func);
+}
+
+template <class T>
+void PythonCodeSnippet::injectFunction(
+    const char* python_name, T* object,
+    PythonObjectWrapper (T::*member_function)(const TVec<PythonObjectWrapper>&))
+{
+    StandaloneFunction func = boost::bind(member_function, object, _1);
+    injectFunction(python_name, func);
+}
+
+
 
 } // end of namespace PLearn
 
