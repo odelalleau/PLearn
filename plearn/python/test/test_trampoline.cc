@@ -67,7 +67,7 @@ int main()
     python->setGlobalObject("injected_c_function", py_funcobj);
 
     // And now call our darling
-    python->callFunction("trampoline_call", 64);
+    python->call("trampoline_call", 64);
 
     Py_XDECREF(py_funcobj);
     return 0;

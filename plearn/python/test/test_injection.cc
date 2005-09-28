@@ -59,13 +59,13 @@ int main()
 
     X x(13370);
     
-    python->injectFunction("injected_c_function", basic_function);
-    python->injectFunction("injected_c_function2", basic_function);
-    python->injectFunction("injected_c_method1", &x, &X::f);
-    python->injectFunction("injected_c_method2", &x, &X::g);
+    python->inject("injected_c_function", basic_function);
+    python->inject("injected_c_function2", basic_function);
+    python->inject("injected_c_method1", &x, &X::f);
+    python->inject("injected_c_method2", &x, &X::g);
 
-    python->callFunction("trampoline_function_call", 64);
-    python->callFunction("trampoline_method_call",   128);
+    python->call("trampoline_function_call", 64);
+    python->call("trampoline_method_call",   128);
 
     return 0;
 }

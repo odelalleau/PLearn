@@ -106,22 +106,22 @@ void nullary(const PythonCodeSnippet* python)
 {
     cout << "isCallable(nullary)         : " << python->isCallable("nullary") << endl;
     cout << "Calling nullary             : " << flush;
-    python->callFunction("nullary");
+    python->call("nullary");
 }
 
 void unary(const PythonCodeSnippet* python)
 {
     cout << "Calling unary_int(42)       : "
-         << python->callFunction("unary_int", 42).as<int>() << endl;
+         << python->call("unary_int", 42).as<int>() << endl;
 
     cout << "Calling unary_long(42L)     : "
-         << python->callFunction("unary_long", 42L).as<long>() << endl;
+         << python->call("unary_long", 42L).as<long>() << endl;
 
     cout << "Calling unary_float(42.01)  : "
-         << python->callFunction("unary_float", 42.01).as<double>() << endl;
+         << python->call("unary_float", 42.01).as<double>() << endl;
 
     cout << "Calling unary_str('Hello')  : "
-         << python->callFunction("unary_str", "Hello").as<string>() << endl;
+         << python->call("unary_str", "Hello").as<string>() << endl;
 
     Vec v;
     PStream is = openString("[2,3,5,7,11,13,17,19,23]", PStream::plearn_ascii);
@@ -130,11 +130,11 @@ void unary(const PythonCodeSnippet* python)
     m.toVec() << v;
 
     cout << "Calling unary_vec(v)        : "
-         << tostring( python->callFunction("unary_vec", v).as<Vec>() )
+         << tostring( python->call("unary_vec", v).as<Vec>() )
          << endl;
 
     cout << "Calling unary_mat(m)        : " << endl
-         << tostring( python->callFunction("unary_mat", m).as<Mat>() )
+         << tostring( python->call("unary_mat", m).as<Mat>() )
          << endl;
 
     TVec<string> tvs;
@@ -144,10 +144,10 @@ void unary(const PythonCodeSnippet* python)
     vector<string> vecs(tvs.begin(), tvs.end());
 
     cout << "Calling unary_list_str(tvs) : "
-         << tostring( python->callFunction("unary_list_str", tvs).as< TVec<string> >() )
+         << tostring( python->call("unary_list_str", tvs).as< TVec<string> >() )
          << endl;
     cout << "Calling unary_list_str(vecs): "
-         << tostring( TVec<string>(python->callFunction("unary_list_str", vecs)
+         << tostring( TVec<string>(python->call("unary_list_str", vecs)
                                    .as< vector<string> >() ))
          << endl;
 
@@ -157,28 +157,28 @@ void unary(const PythonCodeSnippet* python)
     is_mapsd >> mapsd;
 
     cout << "Calling unary_dict(mapsd)   : "
-         << tostring( python->callFunction("unary_dict", mapsd).as< map<string,long> >() )
+         << tostring( python->call("unary_dict", mapsd).as< map<string,long> >() )
          << endl;
 }
 
 void binary(const PythonCodeSnippet* python)
 {
     cout << "Calling binary(2,4)         : "
-         << tostring( python->callFunction("binary",2,4).as< TVec<int> >())
+         << tostring( python->call("binary",2,4).as< TVec<int> >())
          << endl;
 }
 
 void ternary(const PythonCodeSnippet* python)
 {
     cout << "Calling ternary(2,4,8)      : "
-         << tostring( python->callFunction("ternary",2,4,8).as< TVec<int> >())
+         << tostring( python->call("ternary",2,4,8).as< TVec<int> >())
          << endl;
 }
 
 void quaternary(const PythonCodeSnippet* python)
 {
     cout << "Calling quaternary(2,4,8,16): "
-         << tostring( python->callFunction("quaternary",2,4,8,16).as< TVec<int> >())
+         << tostring( python->call("quaternary",2,4,8,16).as< TVec<int> >())
          << endl;
 }
 
