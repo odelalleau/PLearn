@@ -1,5 +1,7 @@
 from plearn.pyplearn import *
 
+### This is an inline Matrix that will be processed (transformed) by the
+### PythonProcessedVMatrix.
 source_mat = pl.MemoryVMatrix(
     data = TMat(4, 2, [ 2, 3,
                         5, 7,
@@ -7,6 +9,15 @@ source_mat = pl.MemoryVMatrix(
                         17,19 ]),
     inputsize = 1, targetsize = 1, weightsize = 0)
 
+
+### This is the processing code that will be applied to the matrix from
+### within the PythonProcessedVMatrix.  Please note the use of triple quotes
+### """ to separate this code from the .pymat script itself.  Both are Python,
+### but the processing_code executes later from within PLearn.
+###
+### It is NOT RECOMMENDED to indent this processing_code further, since the
+### indentation would be reflected inside the string and Python is very
+### indentation-sensitive.
 processing_code = """
 from numarray import *
 
@@ -21,11 +32,13 @@ def getFieldNames(source_field_names):
 #def build():
 """
                 
-
+### Finally the VMatrix object itself that wraps the source with
+### the processing_code.
 processed_mat = pl.PythonProcessedVMatrix(
     source = source_mat,
     code = processing_code)
     
 
+### The main function must return the VMatrix object.
 def main():
     return processed_mat
