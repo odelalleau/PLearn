@@ -1,0 +1,20 @@
+Python code to be executed: 
+>>>import sys
+
+def set_value(x):
+    global buf
+    buf = x
+
+def get_value():
+    global buf
+    return buf
+<<<
+Setting the string:   'This string should survive within the Python environment'
+Read back the string: 'This string should survive within the Python environment'
+Trying to read back from second snippet:
+Caught Python Exception: 'Encountered Python Exception
+Exception Type: exceptions.NameError
+Exception Value: global name 'buf' is not defined
+Traceback: <traceback object at 0xb7231464>'
+Associated 'some_global_map' with: {"Oui" : 16 , "bon" : 512 , "est" : 64 , "et" : 256 , "il" : 32 , "juste" : 128 }
+Read back from Python environment: {"Oui" : 16 , "bon" : 512 , "est" : 64 , "et" : 256 , "il" : 32 , "juste" : 128 }
