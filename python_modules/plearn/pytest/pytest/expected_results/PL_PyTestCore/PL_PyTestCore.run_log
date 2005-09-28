@@ -31,6 +31,10 @@
 #
 
 #
+#  pytest locate -h
+#
+
+#
 #  pytest prune -h
 #
 

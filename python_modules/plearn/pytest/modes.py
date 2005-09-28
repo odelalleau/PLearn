@@ -19,6 +19,39 @@ __all__ = [
     ]
 
 class PyTestMode(Mode):
+    #
+    #  Static method
+    #
+    def build_tests(args, directory, dirlist):
+        options, ignored_directories = args
+        
+        if ignore.is_ignored(directory, dirlist):
+            toolkit.exempt_list_of( dirlist, copy.copy(dirlist) )
+            ignored_directories.append( directory )
+            return
+
+        toolkit.exempt_list_of( dirlist, ppath.special_directories )    
+        os.chdir(directory)
+
+        config = config_file_path()
+        try:
+            if config in dirlist:
+                execfile(config)
+        except Exception, e:
+            vprint( "+++ In %s" % os.path.join(directory, config) )
+            if options.traceback:
+                raise
+            else:
+                vprint( "%s: %s" % (e.__class__.__name__,e) )
+    build_tests = staticmethod(build_tests)
+
+    #
+    #  Class methods
+    #
+    def requires_config_parsing(cls):
+        return True
+    requires_config_parsing = classmethod(requires_config_parsing)
+
     def target_options(cls, parser):
         target_options = OptionGroup(parser, "Target Options", "")
 
@@ -57,40 +90,9 @@ class PyTestMode(Mode):
         return testing_options
     testing_options = classmethod( testing_options )
 
-    ## Static method
-    def build_tests(args, directory, dirlist):
-        options, ignored_directories = args
-        
-        if ignore.is_ignored(directory, dirlist):
-            toolkit.exempt_list_of( dirlist, copy.copy(dirlist) )
-            ignored_directories.append( directory )
-            return
-
-        toolkit.exempt_list_of( dirlist, ppath.special_directories )    
-        os.chdir(directory)
-
-        config = config_file_path()
-        try:
-            if config in dirlist:
-                execfile(config)
-        except Exception, e:
-            vprint( "+++ In %s" % os.path.join(directory, config) )
-            if options.traceback:
-                raise
-            else:
-                vprint( "%s: %s" % (e.__class__.__name__,e) )
-    build_tests = staticmethod(build_tests)
-
-    #
-    #  Class methods
-    #
-    def requires_config_parsing(cls):
-        return True
-    requires_config_parsing = classmethod(requires_config_parsing)
-
-    def option_groups(cls, parser):
-        return []
-    option_groups = classmethod( option_groups )
+    def option_groups(cls, parser):        
+        return [ cls.target_options(parser) ]
+    option_groups = classmethod(option_groups)
 
     #
     #  Instance methods
@@ -130,9 +132,12 @@ class PyTestMode(Mode):
                 ignored.extend( [ '    '+ign for ign in ignored_directories ] )
                 vprint.highlight( ignored, highlighter='x' ) 
 
-        # If a single test is to be ran, restrict the loaded test to that only one.
-        if self.options.test_name:
-            Test.restrictTo(self.options.test_name)
+        self.restrictTo(self.options.test_name)
+
+    def restrictTo(self, test_name):
+        """If a single test is to be ran, restrict the loaded test to that only one."""
+        if test_name:
+            Test.restrictTo(test_name)
             
 
 class ignore(PyTestMode):
@@ -152,6 +157,10 @@ class ignore(PyTestMode):
         return False
     is_ignored = staticmethod(is_ignored)
 
+    def option_groups(cls, parser):        
+        return []
+    option_groups = classmethod(option_groups)
+
     def requires_config_parsing(cls):
         return False
     requires_config_parsing = classmethod(requires_config_parsing)
@@ -164,7 +173,7 @@ class ignore(PyTestMode):
             
 class list(PyTestMode):
     """Lists all tests within target directories."""
-    def option_groups( cls, parser ):
+    def option_groups(cls, parser):
         list_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
                                     "Available under list mode only." )
 
@@ -179,8 +188,8 @@ class list(PyTestMode):
                                  default=False,
                                  help= "The list provided will contain only enabled tests." 
                                  )
-
-        return [ cls.target_options(parser), list_options ]
+        
+        return [ list_options ] + PyTestMode.option_groups(parser)
     option_groups = classmethod( option_groups )
 
     #
@@ -228,11 +237,7 @@ class locate(list):
                 vprint("No test named %s found."%options.test_name)
 
 class prune( PyTestMode ):
-    """Removes all pytest directories within given test directories."""
-    def option_groups( cls, parser ):
-        return [ cls.target_options(parser) ]
-    option_groups = classmethod( option_groups )
-    
+    """Removes all pytest directories within given test directories."""    
     def __init__( self, targets, options ):
         super( prune, self ).__init__( targets, options )
         
@@ -279,7 +284,7 @@ class prune( PyTestMode ):
 class vc_add( PyTestMode ):
     """Add PyTest's config file and results to version control."""
     def __init__( self, targets, options ):
-        super( vc_add, self ).__init__( targets, options )
+        super(vc_add, self).__init__(targets, options)
         
         for (family, tests) in Test._families_map.iteritems():
             os.chdir( family )
@@ -297,11 +302,7 @@ class vc_add( PyTestMode ):
                     "%s was not." % family
                     )
 
-class FamilyConfigMode( PyTestMode ):
-    def option_groups( cls, parser ):
-        return [ cls.target_options(parser) ]
-    option_groups = classmethod( option_groups )
-
+class FamilyConfigMode(PyTestMode):
     def __init__( self, targets, options ):
         super( FamilyConfigMode, self ).__init__( targets, options )
         
@@ -323,8 +324,11 @@ class FamilyConfigMode( PyTestMode ):
 
     def test_hook(self, test):
         raise NotImplementedError
+
+    def restrictTo(self, test_name):
+        self.test_name = test_name
     
-class add( FamilyConfigMode ):
+class add(FamilyConfigMode):
     """Adds a test in a given directory.
     
     A directory is considered to be a test directory as soon as it
@@ -339,36 +343,69 @@ class add( FamilyConfigMode ):
     requested before defining the test.
     """
 
-    def __init__( self, targets, options ):
+    def option_groups(cls, parser):
+        add_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
+                                   "Available under %s mode only." % cls.__name__ )
+
+        add_options.add_option( "--program-type",
+                                choices=["LocalProgram", "LocalCompilableProgram",
+                                         "GlobalProgram", "GlobalCompilableProgram"], 
+                                default="GlobalCompilableProgram",
+                                help="The added test uses the program-type for its program attribute." 
+                                )
+
+        add_options.add_option( "--program-name",
+                                 default="plearn",
+                                 help="The added test uses program-name as name for its program attribute." 
+                                 )
+
+        add_options.add_option( "--arguments",
+                                 default="",
+                                 help="Arguments' string to be used by the test." 
+                                 )
+
+        add_options.add_option( "--resources",
+                                 default="",
+                                 help="Comma separated list of resources to be used by the test." 
+                                 )
+
+        return [ add_options ] + PyTestMode.option_groups(parser)
+    option_groups = classmethod( option_groups )
+
+
+    def __init__(self, targets, options):
         test_name = options.test_name
         if test_name == '':
             test_name = 'MANDATORY_TEST_NAME' 
 
-        #
-        #  Caught by Test's instances management 
-        #
-        Test( name    = test_name,
-              program = GlobalCompilableProgram( name = "plearn")  )
+        ProgClass = globals()[options.program_type]
+        program = ProgClass(name=options.program_name)
 
-        super( add, self ).__init__( targets, options )
+        # Caught by Test's instances management         
+        Test( name=test_name, program=program,
+              arguments=options.arguments,
+              resources=options.resources.split(',') )              
+        super(add, self).__init__(targets, options)
                 
     def test_hook(self, test):
         pass
     
-class disable( FamilyConfigMode ):
+class disable(FamilyConfigMode):
     """Disables targeted tests.
 
     The disabled tests can be restored (L{enable mode<enable>}) afterwards.
     """
-    def test_hook( self, test ):
-        test.disabled = True
+    def test_hook(self, test):
+        if self.test_name=="" or self.test_name==test.name:
+            test.disabled = True
 
-class enable( FamilyConfigMode ):
+class enable(FamilyConfigMode):
     """Enables disabled (L{disable mode<disable>}) tests."""
-    def test_hook( self, test ):
-        test.disabled = False
+    def test_hook(self, test):
+        if self.test_name=="" or self.test_name==test.name:
+            test.disabled = False
 
-class update( FamilyConfigMode ):
+class update(FamilyConfigMode):
     """Updates the PyTest config file to the current format.
 
     If the PyTest developers change anything of the PyTest config
@@ -377,7 +414,7 @@ class update( FamilyConfigMode ):
     config mode should be enough to migrate an old PyTest config file
     the new format.
     """
-    def test_hook( self, test ):
+    def test_hook(self, test):
         """Does nothing.
 
         Tests are parsed by L{initialize}, called in the
@@ -440,12 +477,12 @@ class RoutineBasedMode(PyTestMode):
             routine.start()
 
 
-class compile( RoutineBasedMode ):
-    def routine_type( cls, options=None ): return CompilationRoutine
-    routine_type = classmethod( routine_type )
+class compile(RoutineBasedMode):
+    def routine_type(cls, options=None): return CompilationRoutine
+    routine_type = classmethod(routine_type)
 
 class ResultsBasedMode(RoutineBasedMode):
-    def option_groups( cls, parser ):
+    def option_groups(cls, parser):
         ogroups = RoutineBasedMode.option_groups(parser)
 
         ogroups[1].add_option( '--no-compile', default=False,
@@ -453,10 +490,10 @@ class ResultsBasedMode(RoutineBasedMode):
                                help='Any program compilation is bypassed.' )
 
         return ogroups        
-    option_groups = classmethod( option_groups )
+    option_groups = classmethod(option_groups)
     
 class results(ResultsBasedMode):
-    def routine_type( cls, options=None ):
+    def routine_type(cls, options=None):
         if options:
             ResultsCreationRoutine.no_compile_option = options.no_compile
         return ResultsCreationRoutine
@@ -470,3 +507,45 @@ class run(ResultsBasedMode):
     routine_type = classmethod(routine_type)
 
     
+if __name__ == '__main__':
+    import os, sys
+    def vsystem(cmd):        
+        print >>sys.stderr, '#  %s\n' % cmd
+        os.system( '%s > /dev/null'%cmd )
+        print >>sys.stderr, ''
+
+    ## Since run results are not under version control...
+    os.chdir(os.path.join(ppath.ppath('PLEARNDIR'), 'test_suite/svn_tests'))
+
+    ## Creates a new test script
+    f = open('INTERNAL_SCRIPT.py', 'w')
+    f.write("print 'INTERNAL_SCRIPT'\n")
+    f.close()
+    
+    ## Add it
+    vsystem("pytest add -n PYTEST_INTERNAL --program-type GlobalProgram --program-name python "
+              "--arguments INTERNAL_SCRIPT.py --resources INTERNAL_SCRIPT.py")
+    
+    ## Generate results & run the test
+    vsystem("pytest results")
+    vsystem("pytest run")
+    
+    ## vc_add && commit
+    vsystem('pytest vc_add')
+    vsystem('svn commit -m "PYTEST INTERNAL TEST"')
+        
+    ## shutil.rmtree
+    print >>sys.stderr, '#\n#  shutil.rmtree\n#'
+    shutil.rmtree("pytest")
+    
+    ## svn up && run
+    vsystem('svn up')
+    vsystem('pytest run')
+    
+    ## svn remove -f
+    vsystem('svn remove --force pytest pytest.config')
+    vsystem('svn commit -m "PYTEST INTERNAL TEST"')
+    os.remove('INTERNAL_SCRIPT.py')
+
+    ## Verify that directory is empty
+    print os.listdir(os.getcwd())
