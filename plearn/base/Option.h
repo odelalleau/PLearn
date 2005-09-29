@@ -1,9 +1,10 @@
-// -*- C++ -*-4 1999/10/29 20:41:34 dugas
+// -*- C++ -*-
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 1999-2002 Pascal Vincent and Yoshua Bengio
 // Copyright (C) 2002 Frederic Morin
+// Copyright (C) 2002-2005 University of Montreal
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -56,22 +57,25 @@ using std::string;
 
 //! Forward declarations.
 template <class T> class TVec;
-class PLearnDiff;
-class StatsCollectorCounts;
-
-// Hack for GCC 4.0.1: hopefully this problem will be solved soon.
-#if defined(__GNUC__) && (__GNUC__ == 4)
 template<class ObjectType, class OptionType> class Option;
-class StatsCollector;
-template<class ObjectType>
-int diff(const string& refer, const string& other,
-         const Option<ObjectType, StatsCollector>* opt, PLearnDiff* diffs);
+class PLearnDiff;
 
-template<class ObjectType>
-int diff(const string& refer, const string& other,
-         const Option<ObjectType, StatsCollectorCounts>* opt,
-         PLearnDiff* diffs);
-#endif
+template<class ObjectType, class OptionType>
+class DiffTemplate
+{
+public:
+    static int diff(const string& refer, const string& other,
+                    const Option<ObjectType, OptionType>* opt,
+                    PLearnDiff* diffs)
+    {
+        /*
+        pout << "Called defaut DiffTemplate<" << TypeTraits<ObjectType>::name()
+            << " , " << TypeTraits<OptionType>::name() << ">::diff(...)" <<
+            endl;
+        */
+        return PLearn::diff(refer, other, opt, diffs);
+    }
+};
 
 //#####  Generic Option  ######################################################
   
@@ -123,7 +127,9 @@ public:
         pout << "Calling Option<" << TypeTraits<ObjectType>::name()
             << "," << TypeTraits<OptionType>::name() << ">::diff" << endl;
         */
-        return PLearn::diff(refer, other, this, diffs);
+        // return PLearn::diff(refer, other, this, diffs);
+        return DiffTemplate<ObjectType, OptionType>::diff(refer, other,
+                                                          this, diffs);
     }
 
     //! Implementation of isAccessibleAsObject() relies on caching since

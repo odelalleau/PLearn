@@ -111,6 +111,8 @@ int diff(const string& refer, const string& other,
     return n_diffs;
 }
 
+DECLARE_SPECIALIZED_DIFF_CLASS(StatsCollectorCounts)
+
 /*!
   "A StatsCollector allows to compute basic global statistics for a series of numbers,\n"
   "as well as statistics within automatically determined ranges.\n"

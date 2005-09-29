@@ -2,8 +2,9 @@
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2005 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 1999-2005 Pascal Vincent and Yoshua Bengio
 // Copyright (C) 2002 Frederic Morin
+// Copyright (C) 1999-2005 University of Montreal
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -300,7 +301,22 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
             _static_initializer_(&CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::                    \
                                  _static_initialize_);
 
-
+/** Declare a partially specialized class specific to a given class. This is to
+ * ensure the 'diff' static method that is called in Option.h is the one
+ * specific to this class.
+*/
+#define DECLARE_SPECIALIZED_DIFF_CLASS(CLASSTYPE)                                               \
+        template<class ObjectType>                                                              \
+        class DiffTemplate<ObjectType, CLASSTYPE> {                                             \
+            public:                                                                             \
+                static int diff(const string& refer, const string& other,                       \
+                                const Option<ObjectType, CLASSTYPE>* opt,                       \
+                                PLearnDiff* diffs)                                              \
+                {                                                                               \
+                    return PLearn::diff(refer, other, opt, diffs);                              \
+                }                                                                               \
+        };
+ 
 /*! The following macro should be called just *after* the declaration of
   an object subclass. It declares and defines a few inline functions needed for
   the serialization of pointers to the newly declared object type and the
@@ -355,6 +371,7 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
                 (opt->optionname(), 0, 0, "", "", "");                                  \
             return new_opt->diff(refer, other, diffs);                                  \
         }                                                                               \
+        DECLARE_SPECIALIZED_DIFF_CLASS(CLASSTYPE)                                       \
         DECLARE_TYPE_TRAITS(CLASSTYPE)
 
 #define DECLARE_TEMPLATE_OBJECT_PTR(CLASSTYPE)                                                  \
