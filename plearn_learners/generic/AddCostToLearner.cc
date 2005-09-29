@@ -338,10 +338,20 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
         for (int i = 0; i < sub_learner_output.length(); i++) {
             out = sub_learner_output[i];
             if (out < output_min) {
-                PLERROR("In AddCostToLearner::computeCostsFromOutputs - Sub-learner output (%f) is lower than %f", out, output_min);
+                if (fast_is_equal(out, output_min))
+                    sub_learner_output[i] = output_min;
+                else 
+                    PLERROR("In AddCostToLearner::computeCostsFromOutputs - "
+                            "Sub-learner output (%f) is lower than %f",
+                            out, output_min);
             }
             if (out > output_max) {
-                PLERROR("In AddCostToLearner::computeCostsFromOutputs - Sub-learner output (%f) is higher than %f", out, output_max);
+                if (fast_is_equal(out, output_max))
+                    sub_learner_output[i] = output_max;
+                else
+                    PLERROR("In AddCostToLearner::computeCostsFromOutputs - "
+                            "Sub-learner output (%f) is higher than %f",
+                            out, output_max);
             }
         }
     }
