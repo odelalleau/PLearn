@@ -67,7 +67,8 @@ class PLearnDiff;
 void addDiffPrefix(PLearnDiff* diffs, const string& prefix, int n);
 void setSaveDiffs(PLearnDiff* diffs, bool save_diffs,
                                      bool* save_diffs_backup);
-int diff(PLearnDiff* diffs, const string& refer, const string& other, const string& name);
+int diff(PLearnDiff* diffs,
+         const string& refer, const string& other, const string& name);
 real get_absolute_tolerance(PLearnDiff* diffs);
 real get_relative_tolerance(PLearnDiff* diffs);
 
