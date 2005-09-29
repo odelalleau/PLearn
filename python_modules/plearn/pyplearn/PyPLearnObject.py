@@ -3,10 +3,28 @@ import copy, inspect, operator
 from plearn.pyplearn.plearn_repr import plearn_repr, python_repr, format_list_elements
 deprecated_methods = [ 'allow_unexpected_options', ### No more a classmethod
                        'get_members',
-                       "option_names", ### Way modified
+                       "option_names", 
                        'option_pairs',
                        'to_list' ### In PyPLearnList
                        ]
+
+# Since those methods were added to PyPLearnObject (or its subclass) using
+# the lower_case_with_underscores convention, these are prone to clashing
+# with plearn options. An explicit check is made to avoid this
+# eventuality. This should be fixed whenever possible.
+_clash_prone_methods = [ 'inherited_options',
+                         'class_options',
+                         'allow_unexpected_options',
+                         'instances',
+                         'classname',
+                         'plearn_repr' ]
+
+def _checkForNameClashes(key, value):
+    if key in _clash_prone_methods and not callable(value):
+        PyPLearnError("It seems you are trying to set an PLOption %s "
+                      "which clashes with the %s internal method. "
+                      "Contact support.")
+        
 
 #
 #  Classes
@@ -70,6 +88,7 @@ class MetaPLOptionDict( type ):
         return value
         
     def __setattr__(self, name, value):
+        _checkForNameClashes(name, value)
         super(MetaPLOptionDict, self).__setattr__(name, value)
         if not name.startswith('_'):
             options_slot = MetaPLOptionDict.__options_slot%self.__name__
@@ -130,7 +149,7 @@ class PLOptionDict( object ):
                     setattr(self, optname, optval())
 
         keys = overrides.keys()
-        keys.sort()        
+        keys.sort()
         for key in keys:
             setattr(self, key, overrides[key])
 
@@ -144,6 +163,7 @@ class PLOptionDict( object ):
             raise PLOptionError("Disallowed attribute %s"%key)
             
     def __setattr__(self, key, value):
+        _checkForNameClashes(key, value)
         self.__addoption__(key)
         super(PLOptionDict, self).__setattr__(key, value)
 
@@ -186,13 +206,13 @@ class PLOptionDict( object ):
         """
         return True
 
-    def option_names(self):
+    def getOptionNames(self):
         return copy.deepcopy(self.__instance_option_names)
 
     ### Behaviours Emulating dict    ###########################################
 
     def __len__(self):
-        return len( self.option_names() )
+        return len( self.getOptionNames() )
 
     def __iter__(self):
         return self.iterkeys()
@@ -332,7 +352,7 @@ class PyPLearnObject( PLOptionDict ):
                             format_list_elements([ (optname,optval) for (optname,optval) in self.iteritems() ],
                                                  elem_format, indent_level+1 ) )
 
-    def serial_number(self):
+    def _serial_number(self):
         return self.__serial_number
 
 class PyPLearnList( PyPLearnObject ):
@@ -398,14 +418,12 @@ if __name__ == '__main__':
     ccobj = CC( instance_cc = 'instance_cc' )
     print ccobj.instance_cc
     print CC.class_options()
-    print ccobj.option_names()
+    print ccobj.getOptionNames()
     
     class ALittleMore(CC):
         optionC = PLOption("optionC")
         optionB = PLOption("optionB")
         listOption = PLOption( list )
-    
-        #__option_names = [ "optionC", "optionB", "listOption" ]
     
     print
     moreobj = ALittleMore( instance_more = 'instance_more' )
@@ -413,7 +431,7 @@ if __name__ == '__main__':
     
     print moreobj.added_option
     print ALittleMore.class_options()
-    print moreobj.option_names()
+    print moreobj.getOptionNames()
     
     print
     moreobj.listOption.append( 1.0 )

@@ -8,6 +8,8 @@ from programs                   import *
 from PyTestCore                 import *
 from IntelligentDiff            import *          
 from plearn.utilities.verbosity import *
+
+import plearn.utilities.version_control as version_control
 from plearn.utilities.version_control import is_under_version_control
 
 def config_file_path( directory = None ):

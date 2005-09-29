@@ -21,21 +21,16 @@ class __pyplearn_magic_module:
     an instance of the class. Hence, names of the function's arguments are
     considered as the PLearn object's option names.
     """
-    class OnTheFly( PyPLearnObject ):
-        def option_names( klass, ordered = None ):
-            return []
-        option_names = classmethod( option_names )
-            
     def __getattr__(self, name):
         if name.startswith('__'):
             raise AttributeError
 
-        klass = new.classobj(name, (self.OnTheFly,), {})
-        assert issubclass( klass, PyPLearnObject )
-
         def initfunc(**kwargs):
+            klass = new.classobj(name, (PyPLearnObject,), {})
+            assert issubclass( klass, PyPLearnObject )
+
             obj = klass(**kwargs)
-            assert isinstance( obj, PyPLearnObject )
+            assert isinstance(obj, PyPLearnObject)
             return obj
         
         return initfunc

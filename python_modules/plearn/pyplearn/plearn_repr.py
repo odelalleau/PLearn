@@ -79,9 +79,9 @@ def plearn_repr( obj, indent_level = 0 ):
     noref = hasattr( obj, '_unreferenced' ) and obj._unreferenced()
     
     # To be referenced, object must provide the serial number interface
-    if not noref and hasattr(obj, 'serial_number') and callable(obj.serial_number):        
+    if not noref and hasattr(obj, '_serial_number') and callable(obj._serial_number):        
         # The current object can be referenced
-        object_id = obj.serial_number()
+        object_id = obj._serial_number()
 
         # Create a first representation of the object.
         if object_id not in __pref_map:
@@ -102,9 +102,9 @@ def python_repr( obj, indent_level = 0 ):
         eval( repr(obj) ) == obj
     """
     # To be referenced, object must provide the serial number interface
-    if hasattr(obj, 'serial_number') and callable(obj.serial_number):        
+    if hasattr(obj, '_serial_number') and callable(obj._serial_number):        
         # The current object can be referenced
-        object_id = obj.serial_number()
+        object_id = obj._serial_number()
 
         # Create a first representation of the object.
         if object_id not in __pref_map:
