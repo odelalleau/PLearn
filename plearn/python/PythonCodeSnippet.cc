@@ -201,7 +201,7 @@ bool PythonCodeSnippet::isCallable(const char* function_name) const
 
 // Zero-argument function call
 PythonObjectWrapper
-PythonCodeSnippet::callFunction(const char* function_name) const
+PythonCodeSnippet::call(const char* function_name) const
 {
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
@@ -214,7 +214,7 @@ PythonCodeSnippet::callFunction(const char* function_name) const
             handlePythonErrors();
     }
     else
-        PLERROR("PythonCodeSnippet::callFunction: cannot call function '%s'",
+        PLERROR("PythonCodeSnippet::call: cannot call function '%s'",
                 function_name);
 
     return PythonObjectWrapper(return_value);
@@ -250,8 +250,8 @@ PyObject* PythonCodeSnippet::pythonTrampoline(PyObject* self, PyObject* args)
 
 
 // Bind "standalone functions" to a Python name
-void PythonCodeSnippet::injectFunctionInternal(const char* python_name,
-                                               StandaloneFunction* function_ptr)
+void PythonCodeSnippet::injectInternal(const char* python_name,
+                                       StandaloneFunction* function_ptr)
 {
     // Wrap the function_ptr into a PyCObject
     PyObject* self = PyCObject_FromVoidPtr(function_ptr, NULL);
@@ -275,18 +275,18 @@ void PythonCodeSnippet::injectFunctionInternal(const char* python_name,
         Py_XDECREF(self);
     }
     else
-        PLERROR("PythonCodeSnippet::injectFunctionInternal: failed to inject "
+        PLERROR("PythonCodeSnippet::injectInternal: failed to inject "
                 "Python function '%s'", python_name);
 }
 
 
 // High-level injection interface
-void PythonCodeSnippet::injectFunction(const char* python_name,
-                                       StandaloneFunction function_ptr)
+void PythonCodeSnippet::inject(const char* python_name,
+                               StandaloneFunction function_ptr)
 {
     StandaloneFunction* pfunc = m_injected_functions.allocate();
     new(pfunc) StandaloneFunction(function_ptr); // In-place copy constructor
-    injectFunctionInternal(python_name, pfunc);
+    injectInternal(python_name, pfunc);
 }
 
 

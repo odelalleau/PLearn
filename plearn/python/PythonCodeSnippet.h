@@ -148,33 +148,33 @@ public:
     bool isCallable(const char* function_name) const;
 
     //! Call the specified function taking 0 arguments.
-    PythonObjectWrapper callFunction(const char* function_name) const;
+    PythonObjectWrapper call(const char* function_name) const;
 
     //! Call the specified function with 1 argument.
     template <class T>
-    PythonObjectWrapper callFunction(const char* function_name,
-                                     const T& arg1) const;
+    PythonObjectWrapper call(const char* function_name,
+                             const T& arg1) const;
     
     //! Call the specified function with 2 arguments.
     template <class T, class U>
-    PythonObjectWrapper callFunction(const char* function_name,
-                                     const T& arg1,
-                                     const U& arg2) const;
+    PythonObjectWrapper call(const char* function_name,
+                             const T& arg1,
+                             const U& arg2) const;
     
     //! Call the specified function with 3 arguments.
     template <class T, class U, class V>
-    PythonObjectWrapper callFunction(const char* function_name,
-                                     const T& arg1,
-                                     const U& arg2,
-                                     const V& arg3) const;
+    PythonObjectWrapper call(const char* function_name,
+                             const T& arg1,
+                             const U& arg2,
+                             const V& arg3) const;
     
     //! Call the specified function with 4 arguments.
     template <class T, class U, class V, class W>
-    PythonObjectWrapper callFunction(const char* function_name,
-                                     const T& arg1,
-                                     const U& arg2,
-                                     const V& arg3,
-                                     const W& arg4) const;
+    PythonObjectWrapper call(const char* function_name,
+                             const T& arg1,
+                             const U& arg2,
+                             const V& arg3,
+                             const W& arg4) const;
 
 
     //#####  Function Injection Interface  ####################################
@@ -192,31 +192,31 @@ public:
      *      @code
      *      PP<PythonCodeSnippet> python = new PythonCodeSnippet(my_code);
      *      python->build();
-     *      python->injectFunction("func1", my_func1);
-     *      python->injectFunction("func2", my_func2);
+     *      python->inject("func1", my_func1);
+     *      python->inject("func2", my_func2);
      *      // ...
      *      @endcode
      *
      *  Note that a new call to build() would have the effect of "forgetting"
      *  the injections, so they have to be carried out again.
      */
-    void injectFunction(const char* python_name, StandaloneFunction function_ptr);
+    void inject(const char* python_name, StandaloneFunction function_ptr);
 
     /**
      *  Inject a bound C++ member function into the Python code under the given
      *  name (const version).
      */
     template <class T>
-    void injectFunction(const char* python_name, const T* object,
-                        PythonObjectWrapper (T::*)(const TVec<PythonObjectWrapper>&) const);
+    void inject(const char* python_name, const T* object,
+                PythonObjectWrapper (T::*)(const TVec<PythonObjectWrapper>&) const);
     
     /**
      *  Inject a bound C++ member function into the Python code under the given
      *  name (non-const version).
      */
     template <class T>
-    void injectFunction(const char* python_name, T* object,
-                        PythonObjectWrapper (T::*)(const TVec<PythonObjectWrapper>&));
+    void inject(const char* python_name, T* object,
+                PythonObjectWrapper (T::*)(const TVec<PythonObjectWrapper>&));
 
 
     //#####  PLearn::Object Standard Functions  ###############################
@@ -249,7 +249,7 @@ protected:
     //! This performs the low-level injection into the compiled Python code.
     //! Note that the pointer to StandaloneFunction must remain valid for the
     //! entire duration of the compiled code validity.
-    void injectFunctionInternal(const char* python_name, StandaloneFunction* function_ptr);
+    void injectInternal(const char* python_name, StandaloneFunction* function_ptr);
     
 protected:
     //! Compiled Python code module and global environment
@@ -271,12 +271,12 @@ private:
 DECLARE_OBJECT_PTR(PythonCodeSnippet);
 
 
-//#####  Implementation of callFunction  ######################################
+//#####  Implementation of call  ##############################################
 
 template <class T>
 PythonObjectWrapper
-PythonCodeSnippet::callFunction(const char* function_name,
-                                const T& arg1) const
+PythonCodeSnippet::call(const char* function_name,
+                        const T& arg1) const
 {
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
@@ -290,7 +290,7 @@ PythonCodeSnippet::callFunction(const char* function_name,
 
         if (! (py_arg1)) {
             Py_XDECREF(py_arg1);
-            PLERROR("PythonCodeSnippet::callFunction: error during argument conversion "
+            PLERROR("PythonCodeSnippet::call: error during argument conversion "
                     "from C++ to Python for function '%s'", function_name);
         }
         
@@ -302,7 +302,7 @@ PythonCodeSnippet::callFunction(const char* function_name,
             handlePythonErrors();
     }
     else
-        PLERROR("PythonCodeSnippet::callFunction: cannot call function '%s'",
+        PLERROR("PythonCodeSnippet::call: cannot call function '%s'",
                 function_name);
 
     return PythonObjectWrapper(return_value);
@@ -311,9 +311,9 @@ PythonCodeSnippet::callFunction(const char* function_name,
 
 template <class T, class U>
 PythonObjectWrapper
-PythonCodeSnippet::callFunction(const char* function_name,
-                                const T& arg1,
-                                const U& arg2) const
+PythonCodeSnippet::call(const char* function_name,
+                        const T& arg1,
+                        const U& arg2) const
 {
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
@@ -329,7 +329,7 @@ PythonCodeSnippet::callFunction(const char* function_name,
         if (! (py_arg1 && py_arg2)) {
             Py_XDECREF(py_arg1);
             Py_XDECREF(py_arg2);
-            PLERROR("PythonCodeSnippet::callFunction: error during argument conversion "
+            PLERROR("PythonCodeSnippet::call: error during argument conversion "
                     "from C++ to Python for function '%s'", function_name);
         }
         
@@ -342,7 +342,7 @@ PythonCodeSnippet::callFunction(const char* function_name,
             handlePythonErrors();
     }
     else
-        PLERROR("PythonCodeSnippet::callFunction: cannot call function '%s'",
+        PLERROR("PythonCodeSnippet::call: cannot call function '%s'",
                 function_name);
 
     return PythonObjectWrapper(return_value);
@@ -351,10 +351,10 @@ PythonCodeSnippet::callFunction(const char* function_name,
 
 template <class T, class U, class V>
 PythonObjectWrapper
-PythonCodeSnippet::callFunction(const char* function_name,
-                                const T& arg1,
-                                const U& arg2,
-                                const V& arg3) const
+PythonCodeSnippet::call(const char* function_name,
+                        const T& arg1,
+                        const U& arg2,
+                        const V& arg3) const
 {
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
@@ -372,7 +372,7 @@ PythonCodeSnippet::callFunction(const char* function_name,
             Py_XDECREF(py_arg1);
             Py_XDECREF(py_arg2);
             Py_XDECREF(py_arg3);
-            PLERROR("PythonCodeSnippet::callFunction: error during argument conversion "
+            PLERROR("PythonCodeSnippet::call: error during argument conversion "
                     "from C++ to Python for function '%s'", function_name);
         }
         
@@ -386,7 +386,7 @@ PythonCodeSnippet::callFunction(const char* function_name,
             handlePythonErrors();
     }
     else
-        PLERROR("PythonCodeSnippet::callFunction: cannot call function '%s'",
+        PLERROR("PythonCodeSnippet::call: cannot call function '%s'",
                 function_name);
 
     return PythonObjectWrapper(return_value);
@@ -395,11 +395,11 @@ PythonCodeSnippet::callFunction(const char* function_name,
 
 template <class T, class U, class V, class W>
 PythonObjectWrapper
-PythonCodeSnippet::callFunction(const char* function_name,
-                                const T& arg1,
-                                const U& arg2,
-                                const V& arg3,
-                                const W& arg4) const
+PythonCodeSnippet::call(const char* function_name,
+                        const T& arg1,
+                        const U& arg2,
+                        const V& arg3,
+                        const W& arg4) const
 {
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
@@ -419,7 +419,7 @@ PythonCodeSnippet::callFunction(const char* function_name,
             Py_XDECREF(py_arg2);
             Py_XDECREF(py_arg3);
             Py_XDECREF(py_arg4);
-            PLERROR("PythonCodeSnippet::callFunction: error during argument conversion "
+            PLERROR("PythonCodeSnippet::call: error during argument conversion "
                     "from C++ to Python for function '%s'", function_name);
         }
         
@@ -434,31 +434,31 @@ PythonCodeSnippet::callFunction(const char* function_name,
             handlePythonErrors();
     }
     else
-        PLERROR("PythonCodeSnippet::callFunction: cannot call function '%s'",
+        PLERROR("PythonCodeSnippet::call: cannot call function '%s'",
                 function_name);
 
     return PythonObjectWrapper(return_value);
 }
 
 
-//#####  Implementation of injectFunction  ####################################
+//#####  Implementation of inject  ############################################
 
 template <class T>
-void PythonCodeSnippet::injectFunction(
+void PythonCodeSnippet::inject(
     const char* python_name, const T* object,
     PythonObjectWrapper (T::*member_function)(const TVec<PythonObjectWrapper>&) const)
 {
     StandaloneFunction func = boost::bind(member_function, object, _1);
-    injectFunction(python_name, func);
+    inject(python_name, func);
 }
 
 template <class T>
-void PythonCodeSnippet::injectFunction(
+void PythonCodeSnippet::inject(
     const char* python_name, T* object,
     PythonObjectWrapper (T::*member_function)(const TVec<PythonObjectWrapper>&))
 {
     StandaloneFunction func = boost::bind(member_function, object, _1);
-    injectFunction(python_name, func);
+    inject(python_name, func);
 }
 
 
