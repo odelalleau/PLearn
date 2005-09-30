@@ -11,6 +11,7 @@ from plearn.utilities.verbosity import *
 
 import plearn.utilities.version_control as version_control
 from plearn.utilities.version_control import is_under_version_control
+from plearn.utilities.Bindings import Bindings
 
 def config_file_path( directory = None ):
     """The path to a pytest configuration file.
@@ -159,8 +160,8 @@ class Test(PyTestObject):
     _log_count     = 0
     _logged_header = False
 
-    _instances_map    = {}
-    _families_map     = {}
+    _instances_map    = Bindings()
+    _families_map     = Bindings()
 
     def restrictTo(cls, test_name):
         test = cls._instances_map[test_name]
