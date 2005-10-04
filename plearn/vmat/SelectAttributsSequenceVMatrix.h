@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// SelectAttributsSequenceVMatrix.h
+// ProcessSymbolicSequenceVMatrix.h
 //
 // Copyright (C) 2004 Hugo Larochelle 
 // 
@@ -38,11 +38,11 @@
 
 // Authors: Hugo Larochelle
 
-/*! \file SelectAttributsSequenceVMatrix.h */
+/*! \file ProcessSymbolicSequenceVMatrix.h */
 
 
-#ifndef SelectAttributsSequenceVMatrix_INC
-#define SelectAttributsSequenceVMatrix_INC
+#ifndef ProcessSymbolicSequenceVMatrix_INC
+#define ProcessSymbolicSequenceVMatrix_INC
 
 #include <plearn/vmat/RowBufferedVMatrix.h>
 #include <plearn/vmat/VMat.h>
@@ -53,8 +53,12 @@
 namespace PLearn {
 using namespace std;
 
-//! This class creates context rows from a sequence of elements (symbol and attributs) in a VMat
-class SelectAttributsSequenceVMatrix: public RowBufferedVMatrix
+//! This class creates context rows from a sequence of elements (a symbol and its attributes) in a VMat
+//! Note that, in the commentaries, we use the word 'target' for two things. There is the 'target element'
+//! of a context, which is the word around which we collect context words, and there is the PLearn
+//! relatd use of 'target', which corresponds to fields in a VMatrix that are to be learned by a PLearner.
+//! We tried to make those two usage of 'target' as less ambigous as possible...
+class ProcessSymbolicSequenceVMatrix: public RowBufferedVMatrix
 {
 
 private:
@@ -67,12 +71,12 @@ private:
     bool fixed_context;
     //! Maximum length of a context
     int max_context_length;
-    //! Number of attributs
-    int n_attributs;
+    //! Number of attributes
+    int n_attributes;
 
     // fields for usage of last row buffer
   
-    //! Position in the last context of the target element (symbol and attributs)
+    //! Position in the last context of the target element (symbol and attributes)
     mutable int current_target_pos;
     //! Position in the source sequence of the first element in the last context
     mutable int lower_bound;
@@ -122,8 +126,8 @@ public:
     //! Indication that ignored elements of context should be replaced by the next nearest valid element.
     bool full_context;
 
-    //! Indication that the only output fields of a VMatrix row should be the output fields of the target element
-    bool put_only_target_output;
+    //! Indication that the only target fields of the VMatrix rows should be the (target) attributes of the context's target element
+    bool put_only_target_attributes;
 
     //! Indication that the last accessed context should be put in a buffer.
     bool use_last_context;
@@ -155,9 +159,9 @@ public:
 
     // Default constructor, make sure the implementation in the .cc
     // initializes all fields to reasonable default values.
-    SelectAttributsSequenceVMatrix();
+    ProcessSymbolicSequenceVMatrix();
 
-    SelectAttributsSequenceVMatrix(VMat s, int l_context,int r_context);
+    ProcessSymbolicSequenceVMatrix(VMat s, int l_context,int r_context);
 
     // ******************
     // * Object methods *
@@ -185,7 +189,7 @@ private:
         {
             int_format[int_format_length+i].first = str_format[i].first;
             real value = source->getStringVal(str_format[i].first,str_format[i].second);
-            if(is_missing(value)) PLERROR("In SelectAttributsSequenceVMatrix::from_string_to_int_format : %s not a valid string symbol for column %d", 
+            if(is_missing(value)) PLERROR("In ProcessSymbolicSequenceVMatrix::from_string_to_int_format : %s not a valid string symbol for column %d", 
                                           str_format[i].second.c_str(), str_format[i].first);
             int_format[int_format_length+i].second = (int)value;
         }
@@ -197,7 +201,7 @@ private:
         for(int i=0; i<conditions.length(); i++)
         {
             condition_satisfied = true;
-            if(conditions[i].length() == 0) PLERROR("SelectAttributsSequenceVMatrix::is_true : conditions[%d] should not be empty", i);
+            if(conditions[i].length() == 0) PLERROR("ProcessSymbolicSequenceVMatrix::is_true : conditions[%d] should not be empty", i);
             for(int j=0; j<conditions[i].length(); j++)
             {
                 if(row[conditions[i][j].first] != conditions[i][j].second)
@@ -240,16 +244,18 @@ public:
     virtual Vec getValues(int row, int col) const;
 
     virtual Vec getValues(const Vec& input, int col) const;
-
-    virtual int getDictionarySize(int row, int col) const;
+    
+    //! Return the Dictionary object for a certain field, or a null pointer
+    //! if there isn't one
+    virtual PP<Dictionary> getDictionary(int col) const;
 
     //! Declare name and deepCopy methods.
-    PLEARN_DECLARE_OBJECT(SelectAttributsSequenceVMatrix);
+    PLEARN_DECLARE_OBJECT(ProcessSymbolicSequenceVMatrix);
 
 
 };
 
-DECLARE_OBJECT_PTR(SelectAttributsSequenceVMatrix);
+DECLARE_OBJECT_PTR(ProcessSymbolicSequenceVMatrix);
 
 } // end of namespace PLearn
 #endif
