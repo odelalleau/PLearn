@@ -465,6 +465,83 @@ void SelectAttributsSequenceVMatrix::build()
     build_();
 }
 
+real SelectAttributsSequenceVMatrix::getStringVal(int col, const string & str) const
+{
+    if(source)
+    {
+        int src_col;
+        if(col < inputsize_)
+            src_col = col%source->inputsize();
+        else
+            src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
+        return source->getStringVal(src_col,str);
+    }
+      
+    return MISSING_VALUE;
+}
+
+string SelectAttributsSequenceVMatrix::getValString(int col, real val) const
+{
+    if(source)
+    {
+        int src_col;
+        if(col < inputsize_)
+            src_col = col%source->inputsize();
+        else
+            src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
+        return source->getValString(src_col,val);
+    }
+      
+    return "";
+}
+
+Vec SelectAttributsSequenceVMatrix::getValues(int row, int col) const
+{
+    if(row < 0 || row >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getValues() : invalid row %d, length()=%d", row, length_);
+    if(col < 0 || col >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
+    if(source)
+    {
+        int src_col;
+        if(col < inputsize_)
+            src_col = col%source->inputsize();
+        else
+            src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
+        return source->getValues(indices[row],src_col);
+    }
+    return Vec(0);
+}
+
+Vec SelectAttributsSequenceVMatrix::getValues(const Vec& input, int col) const
+{
+    if(col < 0 || col >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
+    if(source)
+    {
+        int src_col;
+        if(col < inputsize_)
+            src_col = col%source->inputsize();
+        else
+            src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
+        return source->getValues(input,src_col);
+    }
+    return Vec(0);
+}
+
+int SelectAttributsSequenceVMatrix::getDictionarySize(int row, int col) const
+{
+    if(row < 0 || row >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getDictionarySize() : invalid row %d, length()=%d", row, length_);
+    if(col < 0 || col >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getDictionarySize() : invalid col %d, width()=%d", col, width_);
+    if(source)
+    {
+        int src_col;
+        if(col < inputsize_)
+            src_col = col%source->inputsize();
+        else
+            src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
+        return source->getDictionarySize(indices[row],src_col);
+    }
+    return -1;
+}
+
 void SelectAttributsSequenceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);

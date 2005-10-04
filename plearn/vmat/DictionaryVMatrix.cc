@@ -59,12 +59,6 @@ DictionaryVMatrix::DictionaryVMatrix()
     // build_();
 }
 
-DictionaryVMatrix::DictionaryVMatrix(const string filename)
-{
-    load(filename);
-}
-
-
 PLEARN_IMPLEMENT_OBJECT(DictionaryVMatrix,
                         "VMat of text files, encoded  with Dictionaries",
                         "The lines of the text files that are empty or commented\n"
@@ -91,37 +85,44 @@ string DictionaryVMatrix::getValString(int col, real val) const
     return dictionaries[col]->getSymbol((int)val);
 }
 
-int DictionaryVMatrix::getDimension(int row, int col) const
+int DictionaryVMatrix::getDictionarySize(int row, int col) const
 {
-    if(row < 0 || row >= length_) PLERROR("In DictionaryVMatrix::getDimension() : invalid row %d, length()=%d", row, length_);
-    if(col < 0 || col >= length_) PLERROR("In DictionaryVMatrix::getDimension() : invalid col %d, width()=%d", col, width_);
-    TVec<int> options(option_fields[col].length());
+    if(row < 0 || row >= length_) PLERROR("In DictionaryVMatrix::getDictionarySize() : invalid row %d, length()=%d", row, length_);
+    if(col < 0 || col >= width_) PLERROR("In DictionaryVMatrix::getDictionarySize() : invalid col %d, width()=%d", col, width_);
+    TVec<string> options(option_fields[col].length());
     for(int i=0; i<options.length(); i++)
     {
-        options[i] = (int)data(row,option_fields[col][i]);
+        options[i] = dictionaries[option_fields[col][i]]->getSymbol((int)data(row,option_fields[col][i]));
     }
-    return  dictionaries[col]->getDimension(options);
+    return  dictionaries[col]->size(options);
 }
+
+PP<Dictionary>  DictionaryVMatrix::getDictionary(int col) const
+{
+    if(col < 0 || col >= width_) PLERROR("In DictionaryVMatrix::getDictionary() : invalid col %d, width()=%d", col, width_);
+    return  dictionaries[col];
+}
+
 
 Vec DictionaryVMatrix::getValues(int row, int col) const
 {
     if(row < 0 || row >= length_) PLERROR("In DictionaryVMatrix::getValues() : invalid row %d, length()=%d", row, length_);
-    if(col < 0 || col >= length_) PLERROR("In DictionaryVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
-    TVec<int> options(option_fields[col].length());
+    if(col < 0 || col >= width_) PLERROR("In DictionaryVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
+    TVec<string> options(option_fields[col].length());
     for(int i=0; i<options.length(); i++)
     {
-        options[i] = (int)data(row,option_fields[col][i]);
+        options[i] = dictionaries[option_fields[col][i]]->getSymbol((int)data(row,option_fields[col][i]));
     }
     return  dictionaries[col]->getValues(options);
 }
 
 Vec DictionaryVMatrix::getValues(const Vec& input, int col) const
 {
-    if(col < 0 || col >= length_) PLERROR("In DictionaryVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
-    TVec<int> options(option_fields[col].length());
+    if(col < 0 || col >= width_) PLERROR("In DictionaryVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
+    TVec<string> options(option_fields[col].length());
     for(int i=0; i<options.length(); i++)
     {
-        options[i] = (int)input[option_fields[col][i]];
+        options[i] = dictionaries[option_fields[col][i]]->getSymbol((int)input[option_fields[col][i]]);
     }
     return  dictionaries[col]->getValues(options);
 }
@@ -195,10 +196,15 @@ void DictionaryVMatrix::build_()
             // Insert symbols in dictionaries (if they can be updated)
             for(int j=0; j<n_attributes; j++)
             {
-                TVec<string> options(option_fields[j].length());
-                for(int k=0; k<options.length(); k++)
-                    options[k] = tokens[option_fields[j][k]];
-                data(it,j) = dictionaries[j]->getId(tokens[j],options);
+                if(tokens[j] == "nan") // Detect missing values
+                    data(it,j) = MISSING_VALUE;
+                else
+                {
+                    TVec<string> options(option_fields[j].length());
+                    for(int k=0; k<options.length(); k++)
+                        options[k] = tokens[option_fields[j][k]];
+                    data(it,j) = dictionaries[j]->getId(tokens[j],options);
+                }
             }
             it++;
         }       

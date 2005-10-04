@@ -139,7 +139,7 @@ public:
     PLEARN_DECLARE_OBJECT(SourceVMatrix);
   
     //! Return the dimension of the values for a certain field, -1 if continuous   
-    virtual int getDimension(int row, int col) const;
+    virtual int getDictionarySize(int row, int col) const;
 
     //! Returns the possible values for a certain field in the VMatrix
     virtual Vec getValues(int row, int col) const;

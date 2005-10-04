@@ -231,87 +231,20 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     //! returns value associated with a string (or MISSING_VALUE if there's no association for this string)
-    virtual real getStringVal(int col, const string & str) const
-    {
-        if(source)
-        {
-            int src_col;
-            if(col < inputsize_)
-                src_col = col%source->inputsize();
-            else
-                src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
-            return source->getStringVal(src_col,str);
-        }
-      
-        return MISSING_VALUE;
-    }
+    virtual real getStringVal(int col, const string & str) const;
 
     //! returns the string associated with value val 
     //! for field# col. Or returns "" if no string is associated.
-    virtual string getValString(int col, real val) const
-    {
-        if(source)
-        {
-            int src_col;
-            if(col < inputsize_)
-                src_col = col%source->inputsize();
-            else
-                src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
-            return source->getValString(src_col,val);
-        }
-      
-        return "";
-    }
+    virtual string getValString(int col, real val) const;
+
+    virtual Vec getValues(int row, int col) const;
+
+    virtual Vec getValues(const Vec& input, int col) const;
+
+    virtual int getDictionarySize(int row, int col) const;
 
     //! Declare name and deepCopy methods.
     PLEARN_DECLARE_OBJECT(SelectAttributsSequenceVMatrix);
-
-    virtual Vec getValues(int row, int col) const
-    {
-        if(row < 0 || row >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getValues() : invalid row %d, length()=%d", row, length_);
-        if(col < 0 || col >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
-        if(source)
-        {
-            int src_col;
-            if(col < inputsize_)
-                src_col = col%source->inputsize();
-            else
-                src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
-            return source->getValues(indices[row],src_col);
-        }
-        return Vec(0);
-    }
-
-    virtual Vec getValues(const Vec& input, int col) const
-    {
-        if(col < 0 || col >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
-        if(source)
-        {
-            int src_col;
-            if(col < inputsize_)
-                src_col = col%source->inputsize();
-            else
-                src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
-            return source->getValues(input,src_col);
-        }
-        return Vec(0);
-    }
-
-    virtual int getDimension(int row, int col) const
-    {
-        if(row < 0 || row >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getDimension() : invalid row %d, length()=%d", row, length_);
-        if(col < 0 || col >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getDimension() : invalid col %d, width()=%d", col, width_);
-        if(source)
-        {
-            int src_col;
-            if(col < inputsize_)
-                src_col = col%source->inputsize();
-            else
-                src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
-            return source->getDimension(indices[row],src_col);
-        }
-        return -1;
-    }
 
 
 };

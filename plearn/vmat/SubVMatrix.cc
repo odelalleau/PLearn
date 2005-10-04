@@ -235,13 +235,13 @@ void SubVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
     deepCopyField(parent, copies);
 }
 
-int SubVMatrix::getDimension(int row, int col) const
+int SubVMatrix::getDictionarySize(int row, int col) const
 {
 #ifdef BOUNDCHECK
     if(row<0 || row>=length() || col<0 || col>width())
-        PLERROR("In SubVMatrix::getDimension(row,col) OUT OF BOUND access");
+        PLERROR("In SubVMatrix::getDictionarySize(row,col) OUT OF BOUND access");
 #endif
-    return parent->getDimension(row+istart,col+jstart);
+    return parent->getDictionarySize(row+istart,col+jstart);
 }
 
 Vec SubVMatrix::getValues(int row, int col) const

@@ -867,9 +867,9 @@ void VMatrix::setMetaDataDir(const PPath& the_metadatadir)
 }
 
 //////////////////
-// getDimension //
+// getDictionarySize //
 //////////////////
-int VMatrix::getDimension(int row, int col) const
+int VMatrix::getDictionarySize(int row, int col) const
 {
     //! Return the dimension of the column col, -1 if continuous 
     return -1;

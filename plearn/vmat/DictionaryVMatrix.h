@@ -100,10 +100,6 @@ public:
     // initializes all fields to reasonable default values.
     DictionaryVMatrix();
 
-    // ******************
-    // * Object methods *
-    // ******************
-    DictionaryVMatrix(const string filename);
 private: 
 
     //! This does the actual building. 
@@ -120,25 +116,28 @@ protected:
     //! v is assumed to be the right size.
     virtual void getNewRow(int i, const Vec& v) const;
 
+public:
+
     //! returns value associated with a string (or MISSING_VALUE if there's no association for this string)
     virtual real getStringVal(int col, const string & str) const;
   
     virtual string getValString(int col, real val) const;
   
-    virtual int getDimension(int row, int col) const;
+    virtual int getDictionarySize(int row, int col) const;
 
     virtual Vec getValues(int row, int col) const;
 
     //! Gives the possible values of a certain field (column) given the input
     virtual Vec getValues(const Vec& input, int col) const;
 
-public:
-
     // Simply call inherited::build() then build_().
     virtual void build();
 
     //! Transform a shallow copy into a deep copy.
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+    //! Get Dictionary from a certain column
+    virtual PP<Dictionary> getDictionary(int col) const;
   
     //  virtual void save(const string& filename) ;  
     //! Declare name and deepCopy methods.

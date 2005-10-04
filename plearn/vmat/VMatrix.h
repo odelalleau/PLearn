@@ -320,7 +320,7 @@ public:
     virtual void getRowAsStrings(int i, TVec<string>& v_str) const;
 
     //! Return the dimension of the values for a certain field, -1 if continuous  
-    virtual int getDimension(int row, int col) const;
+    virtual int getDictionarySize(int row, int col) const;
 
     ////////////////////////
   
