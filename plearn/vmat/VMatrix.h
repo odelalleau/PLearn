@@ -49,7 +49,7 @@
 #include <plearn/math/TMat.h>
 #include <plearn/math/StatsCollector.h>
 #include "VMField.h"
-
+#include <plearn_learners/language/Dictionary/Dictionary.h>
 #include <plearn/math/TMat_maths_impl.h>
 
 #include <plearn/io/PPath.h>
@@ -319,8 +319,9 @@ public:
     //! Copy row i (converted to string values, using string mappings when they exist) into v.
     virtual void getRowAsStrings(int i, TVec<string>& v_str) const;
 
-    //! Return the dimension of the values for a certain field, -1 if continuous  
-    virtual int getDictionarySize(int row, int col) const;
+    //! Return the Dictionary object for a certain field, or a null pointer
+    //! if there isn't one
+    virtual PP<Dictionary> getDictionary(int col) const;
 
     ////////////////////////
   

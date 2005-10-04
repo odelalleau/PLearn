@@ -145,9 +145,9 @@ void SourceVMatrix::getNewRow(int i, const Vec& v) const {
     PLERROR("In SourceVMatrix::getNewRow - getNewRow not implemented for this subclass of SourceVMatrix");
 }
 
-int SourceVMatrix::getDictionarySize(int row, int col) const
+PP<Dictionary> SourceVMatrix::getDictionary(int col) const
 {
-    return source->getDictionarySize(row,col);
+    return source->getDictionary(col);
 }
 
 Vec SourceVMatrix::getValues(int row, int col) const

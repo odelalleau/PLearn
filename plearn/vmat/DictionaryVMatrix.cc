@@ -85,18 +85,6 @@ string DictionaryVMatrix::getValString(int col, real val) const
     return dictionaries[col]->getSymbol((int)val);
 }
 
-int DictionaryVMatrix::getDictionarySize(int row, int col) const
-{
-    if(row < 0 || row >= length_) PLERROR("In DictionaryVMatrix::getDictionarySize() : invalid row %d, length()=%d", row, length_);
-    if(col < 0 || col >= width_) PLERROR("In DictionaryVMatrix::getDictionarySize() : invalid col %d, width()=%d", col, width_);
-    TVec<string> options(option_fields[col].length());
-    for(int i=0; i<options.length(); i++)
-    {
-        options[i] = dictionaries[option_fields[col][i]]->getSymbol((int)data(row,option_fields[col][i]));
-    }
-    return  dictionaries[col]->size(options);
-}
-
 PP<Dictionary>  DictionaryVMatrix::getDictionary(int col) const
 {
     if(col < 0 || col >= width_) PLERROR("In DictionaryVMatrix::getDictionary() : invalid col %d, width()=%d", col, width_);

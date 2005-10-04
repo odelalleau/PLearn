@@ -123,8 +123,6 @@ public:
   
     virtual string getValString(int col, real val) const;
   
-    virtual int getDictionarySize(int row, int col) const;
-
     virtual Vec getValues(int row, int col) const;
 
     //! Gives the possible values of a certain field (column) given the input

@@ -90,8 +90,9 @@ public:
     PLEARN_DECLARE_OBJECT(SubVMatrix);
     virtual void build();
 
-    //! Return the dimension of the values for a certain field, -1 if continuous   
-    virtual int getDictionarySize(int row, int col) const;
+    //! Return the Dictionary object for a certain field, or a null pointer
+    //! if there isn't one
+    virtual PP<Dictionary>  getDictionary(int col) const;
 
     //! Returns the possible values for a certain field in the VMatrix
     virtual Vec getValues(int row, int col) const;

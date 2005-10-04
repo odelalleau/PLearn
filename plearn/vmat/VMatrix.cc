@@ -866,13 +866,12 @@ void VMatrix::setMetaDataDir(const PPath& the_metadatadir)
     loadAllStringMappings();
 }
 
-//////////////////
-// getDictionarySize //
-//////////////////
-int VMatrix::getDictionarySize(int row, int col) const
-{
-    //! Return the dimension of the column col, -1 if continuous 
-    return -1;
+///////////////////
+// getDictionary //
+///////////////////
+PP<Dictionary> VMatrix::getDictionary(int col) const
+{    
+    return 0;
 }  
 
 ///////////////////
