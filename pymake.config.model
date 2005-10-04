@@ -189,18 +189,26 @@ optionalLibrary( name = 'X',
 )
 
 ### Using Python code snippets in C++ code
-if domain_name == 'iro.umontreal.ca':
-    numpy_includedirs   = [ '/u/lisa/local/linux-i386/include/' ]
-    numpy_site_packages = '/u/lisa/local/linux-i386/lib/python2.3/site-packages/numarray -lutil'
+### TODO Using /u/lisa/... is quite ugly. But the PLEARN_LIBDIR ppath may also
+### be problematic (it should be different depending on the platform) => must
+### find a better way to know where to find the libraries.
+### TODO Should find a way to automatically find python version ?
+if domain_name.endswith('iro.umontreal.ca'):
+    numpy_includedirs   = [ '/u/lisa/local/' + platform + '/include/' ]
+    ### NB: The '-lutil' is necessary on i386 LISA computers.
+    numpy_site_packages = '/u/lisa/local/' + platform + '/lib/python2.4/site-packages/numarray -lutil'
+    python_version = '2.4'
+    compileflags += ' -DPL_PYTHON_VERSION=240'
 else:
     numpy_includedirs   = []
     numpy_site_packages = '/usr/lib/python2.3/site-packages/numarray' 
+    python_version = '2.3'
 
 optionalLibrary( name = 'python',
                  triggers = '[Pp]ython*',
                  includedirs = numpy_includedirs,
                  linkeroptions = ( '-L%s -lnumarray ' % numpy_site_packages + 
-                                   '-L/usr/lib/python2.3/config -lpython2.3 ' +
+                                   '-L/usr/lib/python%s/config -lpython%s ' % (python_version, python_version) +
                                    '-Xlinker -export-dynamic ' + 
                                    '-Xlinker -rpath -Xlinker %s' % numpy_site_packages )
                  )
@@ -255,7 +263,7 @@ optionalLibrary( name='boost_filesystem',
 
 optionalLibrary( name = 'boost_python',
                  triggers = 'boost/python.hpp',
-                 includedirs = '/usr/include/python2.3',
+                 includedirs = '/usr/include/python%s' % python_version,
                  linkeroptions = '-lboost_python'
                  )
 
