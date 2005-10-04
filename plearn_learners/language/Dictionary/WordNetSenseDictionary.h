@@ -41,22 +41,14 @@
 /*! \file WordNetSenseDictionary.h */
 
 
-#ifndef WordSenseNetDictionary_INC
-#define WordSenseNetDictionary_INC
+#ifndef WordNetSenseDictionary_INC
+#define WordNetSenseDictionary_INC
 #include "Dictionary.h"
-#include <plearn_learners/language/WordNet/WordNetOntology.h>
 
-//for WordNet senses only
-// No sense exists for this word
-#define NO_SENSE -1
-//#define NO_SENSE_TAG "no_sense"
-// Sense exists but is hidden (un-known)
-#define HIDDEN_SENSE 0
 namespace PLearn {
 using namespace std;
 
-/*! This class implements a Dictionary instantiated from WordNetOntology files.
-  Basically, this class gives a simpler interface to the WordNetOntology class.
+/*! This class implements a Dictionary for WordNet senses.
   The symbols in the instantiated dictionary are senses (not words!).
 */
 
@@ -68,25 +60,21 @@ private:
     typedef Dictionary inherited;
 
 protected:
-    // *********************
-    // * protected options *
-    // *********************
-
-    //! WordNet ontology of the dictionary
-    WordNetOntology *wno;
 
 public:
 
     // ************************
     // * public build options *
     // ************************
+
     //! Stem word before including in dictionary STEM/NO_STEM (ontology only)
-    bool stem_mode;
-    //! path to ontology
-    string ontology_file_name;
-  
-    // ### declare public option fields (such as build options) here
-    // ...
+    bool options_stem_words;
+    
+    //! Put words to lower case
+    bool options_to_lower_case;
+
+    //! Type of representation (symbol) of the senses
+    string symbol_type;
 
     // ****************
     // * Constructors *
@@ -95,17 +83,6 @@ public:
     //! Default constructor.
     WordNetSenseDictionary();
 
-    //! Destructor
-    ~WordNetSenseDictionary();
-
-    //! Constructor
-    /*!
-      \param 
-      \param up_mode update mode : NO_UPDATE, UPDATE
-    */
-    WordNetSenseDictionary(string ontology_name,bool up_mode=DEFAULT_UPDATE);
-  
-  
     // ******************
     // * Object methods *
     // ******************
@@ -114,29 +91,21 @@ private:
     //! This does the actual building. 
     void build_();
 
-    //! Set stem mode NO_STEM/STEM
-    void setStemMode(bool stem);
-
-
 protected: 
     //! Declares this class' options.
     static void declareOptions(OptionList& ol);
+
+    TVec<string> getSensesFromWordNet(TVec<string> options);
 
 public:
     // Declares other standard object methods.
     PLEARN_DECLARE_OBJECT(WordNetSenseDictionary);
 
-    //! Gives the id of a symbol in the dictionary
-    //! If the symbol is not in the dictionary, 
-    //! returns index of OOV_TAG if update_mode = NO_UPDATE
-    //! insert the new word otherwise and return its index
-    int getId(string symbol, TVec<string> options = TVec<string>(0));
+    virtual int getId(string symbol, TVec<string> options = TVec<string>(0));
 
-    //! Const version. Do not insert unknown words
-    int getId(string symbol, TVec<string> options = TVec<string>(0))const;
-  
-    //! Gives the symbol from an id of the dictionary
-    string getSymbol(int id, TVec<string> options = TVec<string>(0))const;
+    virtual Vec getValues(TVec<string> options=TVec<string>(0));
+    
+    virtual int size(TVec<string> options=TVec<string>(0));
 
     // simply calls inherited::build() then build_() 
     virtual void build();

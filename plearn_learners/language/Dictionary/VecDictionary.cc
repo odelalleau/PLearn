@@ -70,7 +70,7 @@ void VecDictionary::declareOptions(OptionList& ol)
 void VecDictionary::build_()
 {
     //initial building
-    if(isEmpty())
+    if(size() == 0)
     {
         // save update mode for later
         int saved_up_mode=update_mode;

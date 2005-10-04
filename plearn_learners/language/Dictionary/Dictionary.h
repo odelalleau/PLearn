@@ -88,6 +88,8 @@ protected:
     map<string,int> string_to_int;
     //! int to string mapping
     map<int,string> int_to_string;
+    //! id of OOV_TAG
+    int oov_tag_id;
 
 public:
 
@@ -132,46 +134,30 @@ public:
     //! Options can be specified ...
     virtual  int getId(string symbol, TVec<string> options = TVec<string>(0));
 
-    //! Const version. Do not insert unknown words
-    //! Options can be specified ...
-    virtual  int getId(string symbol, TVec<string> options = TVec<string>(0))const;
-  
     //! Gives the symbol from an id of the dictionary
     //! If the id is invalid, the string returned is ""
     //! Options can be specified ...
-    virtual  string getSymbol(int id, TVec<int> options = TVec<int>(0))const;
+    virtual  string getSymbol(int id, TVec<string> options = TVec<string>(0))const;
   
-    //! Get dimension of the dictionary (number of differents values in the dictionary)
+    //! Get size of the dictionary (number of differents values in the dictionary)
     //! Options can be specified to restrict the number of possible values. 
-    virtual int getDimension(TVec<int> options=TVec<int>(0)){return string_to_int.size();}
+    virtual int size(TVec<string> options=TVec<string>(0));
 
     //! Returns a Vec containing every possible id values of the Dictionary
     //! Options can be specified to restrict the number of possible values. 
     //! Here, values is simply copied (which can be costly!), and then the copy is returned
-    virtual Vec getValues(TVec<int> options=TVec<int>(0))
-    { 
-        Vec ret(string_to_int.size());
-        int i=0;
-        for(map<string,int>::iterator it = string_to_int.begin(); it != string_to_int.end(); it++)
-            ret[i++] = it->second;
-        return ret;
-    }
+    virtual Vec getValues(TVec<string> options=TVec<string>(0));
 
     //! Indicates if a symbol is in the dictionary
-    virtual bool isIn(string symbol){return string_to_int.find(symbol) != string_to_int.end();};
-  
+    //! The OOV_TAG, is by definition, out of the dictionary
+    //! Options can be specified ...
+    virtual bool isIn(string symbol, TVec<string> options=TVec<string>(0));
+
     //! Indicates if an id is in the dictionary
-    virtual bool isIn(int id){return int_to_string.find(id) != int_to_string.end();};
+    //! The OOV_TAG id, is by definition, out of the dictionary
+    //! Options can be specified ...
+    virtual bool isIn(int id, TVec<string> options=TVec<string>(0)) { return getSymbol(id,options) != OOV_TAG;};
 
-    //! Get Dictionary size
-    virtual int size(){return int_to_string.size();};
-    
-    //! Indicates if Dictionary is empty
-    //! Note that a Dictionary is considered empty is
-    //! its size is 0 or if it only contains the OOV_TAG symbol
-    virtual bool isEmpty(){return size()==0 || (size()==1 && isIn(OOV_TAG));};
-
-    //! Clear or reinitialize the Dictionary
     virtual void clear(){string_to_int.clear(); int_to_string.clear();};
 
     // simply calls inherited::build() then build_() 

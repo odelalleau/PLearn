@@ -70,19 +70,18 @@ PLEARN_IMPLEMENT_OBJECT(Dictionary,
 void Dictionary::declareOptions(OptionList& ol)
 {
     declareOption(ol, "update_mode", &Dictionary::update_mode, OptionBase::buildoption, "update_mode : 0(no_update)/1(update). Default is update");
-    declareOption(ol, "string_to_int", &Dictionary::string_to_int, OptionBase::buildoption, "string to int mapping");
-    declareOption(ol, "int_to_string", &Dictionary::int_to_string, OptionBase::buildoption, "int to string mapping");
+    declareOption(ol, "string_to_int", &Dictionary::string_to_int, OptionBase::learntoption, "string to int mapping");
+    declareOption(ol, "int_to_string", &Dictionary::int_to_string, OptionBase::learntoption, "int to string mapping");
+    declareOption(ol, "oov_tag_id", &Dictionary::oov_tag_id, OptionBase::learntoption, "id of the OOV_TAG");
     inherited::declareOptions(ol);
 }
 
 void Dictionary::build_(){
     int last_update_mode = update_mode;
-    if(!isIn(OOV_TAG)){
-        update_mode = UPDATE;
-        // the dictionary must contain oov
-        getId(OOV_TAG);
-        update_mode = last_update_mode;
-    }
+    update_mode = UPDATE;
+    // the dictionary must contain oov
+    oov_tag_id = getId(OOV_TAG);
+    update_mode = last_update_mode;
 }
 
 // ### Nothing to add here, simply calls build_
@@ -108,7 +107,7 @@ int Dictionary::getId(string symbol, TVec<string> options)
     {
         if(string_to_int.find(symbol) == string_to_int.end()){
             // word not found, add it
-            index=size();
+            index=string_to_int.size();
             string_to_int[symbol] = index;
             int_to_string[index] = symbol;
         }
@@ -126,27 +125,37 @@ int Dictionary::getId(string symbol, TVec<string> options)
     }
 }
 
-int Dictionary::getId(string symbol, TVec<string> options)const
-{
-    // Const version
-    // Gives the id of a symbol in the dictionary
-    // If the symbol is not in the dictionary, 
-    // returns index of OOV_TAG
-
-    if(string_to_int.find(symbol) == string_to_int.end()){
-        // word not found, return oov
-        return string_to_int.find(OOV_TAG)->second;
-    }else{
-        return string_to_int.find(symbol)->second;
-    }
-}
-
-string Dictionary::getSymbol(int id, TVec<int>options)const
+string Dictionary::getSymbol(int id, TVec<string>options)const
 {
     if(int_to_string.find(id) == int_to_string.end())
-        return "";
+        return OOV_TAG;
     else
         return int_to_string.find(id)->second;
+}
+
+int Dictionary::size(TVec<string> options){
+    if(string_to_int.size() < 1)
+        PLERROR("In Dictionary::size(): string mapping should at least contain the OOV_TAG (did you forget to call build()?)");
+    // By definition, OOV_TAG is not in the Dictionary (but of course
+    // must be in the string mapping...
+    return string_to_int.size()-1;
+}
+
+Vec Dictionary::getValues(TVec<string> options)
+{ 
+    Vec ret(string_to_int.size());
+    int i=0;
+    for(map<string,int>::iterator it = string_to_int.begin(); it != string_to_int.end(); it++)
+        ret[i++] = it->second;
+    return ret;
+}
+
+bool Dictionary::isIn(string symbol, TVec<string> options){
+    int last_update_mode = update_mode;
+    update_mode = NO_UPDATE;
+    int id = getId(symbol,options);
+    update_mode = last_update_mode;
+    return id != oov_tag_id;
 }
 
 void Dictionary::makeDeepCopyFromShallowCopy(CopiesMap& copies)

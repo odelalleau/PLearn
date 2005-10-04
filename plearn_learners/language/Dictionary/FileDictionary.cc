@@ -71,7 +71,7 @@ void FileDictionary::declareOptions(OptionList& ol)
 void FileDictionary::build_()
 {
     //initial building
-    if(isEmpty()) // Verifying if dictionary is new
+    if(size() == 0) // Verifying if dictionary is new
     {
         // save update mode for later
         int saved_up_mode=update_mode;

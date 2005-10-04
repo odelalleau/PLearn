@@ -42,58 +42,102 @@
 
 
 #include "WordNetSenseDictionary.h"
+#include "wn.h"
+#include <plearn/base/stringutils.h>
 
 namespace PLearn {
 using namespace std;
+
+// Tool functions
+
+char* cstr(string& str)
+{
+    char* cstr = new char[str.size() + 1];
+    for (unsigned int i = 0; i < str.size(); i++)
+        *(cstr + i) = str[i];
+    cstr[str.size()] = '\0';
+    return cstr;
+}
+
+TVec<string> extractSenses(string word, int wn_pos, string symbol_type)
+{
+    char* cword = cstr(word);
+    SynsetPtr ssp = NULL;
+    IndexPtr idx = getindex(cword, wn_pos);
+    ssp = findtheinfo_ds(cword, wn_pos, -HYPERPTR, ALLSENSES);
+    
+    TVec<string> ret(0);
+
+    if (ssp == NULL) return ret;
+    
+    int wnsn = 0;
+    // extract all senses for a given word
+    while (ssp != NULL)
+    {
+        char *charsk = WNSnsToStr(idx, ++wnsn);
+        if(symbol_type == "sense_key") ret.push_back(string(charsk));
+        else PLERROR("In extractSenses(): symbol_type %s not valid", symbol_type.c_str());
+        ssp = ssp->nextss;
+    }
+    free_syns(ssp);
+    delete cword;
+    return ret;
+}
+
+string stemWord(string word)
+{
+    char* input_word = cstr(word);
+    char* lemma = morphword(input_word, NOUN);
+    if (lemma == NULL)
+    {
+        lemma = morphword(input_word, VERB);
+        if (lemma == NULL)
+        {
+            lemma = morphword(input_word, ADJ);
+            if (lemma == NULL)
+            {
+                lemma = morphword(input_word, ADV);
+            }
+        }
+    }
+ 
+    delete input_word;
+    if (lemma == NULL) return word;
+    else return string(lemma);
+}
+
+string stemWord(string word, int wn_pos)
+{
+    char* input_word = cstr(word);
+    char* lemma = morphword(input_word, wn_pos);
+    delete input_word;
+    if (lemma == NULL)
+        return word;
+    else
+        return string(lemma);
+}
+
   
 WordNetSenseDictionary::WordNetSenseDictionary()
-    :
-    inherited(),
-    ontology_file_name("default")
+    : options_stem_words(false), symbol_type("sense_key")
 {}
-
-WordNetSenseDictionary::~WordNetSenseDictionary()
-{
-    if(wno && wno->getVocSize()!=1){
-        wno->finalize();
-        wno->save(ontology_file_name + ".voc");
-        wno->save(ontology_file_name + ".synsets", ontology_file_name + ".ontology", ontology_file_name + ".sense_key");
-    }
-}
-  
-WordNetSenseDictionary::WordNetSenseDictionary(string ontology_name,bool up_mode)
-{
-    setUpdateMode(up_mode);
-    ontology_file_name=abspath(ontology_name);
-}
-
-  
   
 PLEARN_IMPLEMENT_OBJECT(WordNetSenseDictionary,
-                        "Dictionary instantiation from WordNetOntology files",
-                        "Basically, this class gives a simpler interface to the WordNetOntology class.\n"
+                        "Dictionary of WordNet senses",
                         "The symbols in the instantiated dictionary are senses (not words!).\n");
   
 void WordNetSenseDictionary::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "ontology_file_name", &WordNetSenseDictionary::ontology_file_name, OptionBase::buildoption, "path to the ontology");
+    declareOption(ol, "options_stem_words", &WordNetSenseDictionary::options_stem_words, OptionBase::buildoption, "Indication that words given as options should be stemmed when looking at their possible senses");
+    declareOption(ol, "options_to_lower_case", &WordNetSenseDictionary::options_to_lower_case, OptionBase::buildoption, "Indication that words given as options should be put to lower case");
+    declareOption(ol, "symbol_type", &WordNetSenseDictionary::symbol_type, OptionBase::buildoption, "Type of representation (symbol) of the senses. The currently supported types are:\n"
+        "   - \"sense_key\" (standard WordNet representation)");
     inherited::declareOptions(ol);
 }
   
 void WordNetSenseDictionary::build_()
 {
-    // Loading ontology...
-    string voc_file = ontology_file_name + ".voc";
-    string synset_file = ontology_file_name + ".synsets";
-    string ontology_file = ontology_file_name + ".ontology";
-    string sense_key_file = ontology_file_name + ".sense_key";
-    wno = new WordNetOntology(voc_file, synset_file, ontology_file, sense_key_file, false, false);
-    wno->fillTempWordToSensesTVecMap();
-    wno->getWordSenseUniqueIdSize();
-  
-    // Add OOV 
-    string_to_int[OOV_TAG] = NO_SENSE;
-    int_to_string[NO_SENSE] = OOV_TAG;
+    wninit();
 }
 
 // ### Nothing to add here, simply calls build_
@@ -103,63 +147,107 @@ void WordNetSenseDictionary::build()
     build_();
 }
 
+TVec<string> WordNetSenseDictionary::getSensesFromWordNet(TVec<string> options)
+{
+    string word = "";
+    string stemmed_word = "";
+    int wn_pos = -1;
+    TVec<string> ret(0);
+
+    // Do nothing if no options are specified
+    if(options.length() == 0) return ret;
+
+    if(options.length() == 1) 
+    {
+        word = removeblanks(options[0]);
+        if(options_to_lower_case) word = lowerstring(word);
+    }
+        
+    if(wn_pos < 0)
+    {
+        // Extract senses for all possible POS
+
+        // NOUN
+        ret.append(extractSenses(word,NOUN,symbol_type));
+        if(options_stem_words) 
+        {
+            stemmed_word = stemWord(word,NOUN);
+            if(word != stemmed_word)
+                ret.append(extractSenses(stemmed_word,NOUN,symbol_type));
+        }
+
+        // VERB
+        ret.append(extractSenses(word,VERB,symbol_type));
+        if(options_stem_words) 
+        {
+            stemmed_word = stemWord(word,VERB);
+            if(word != stemmed_word)
+                ret.append(extractSenses(stemmed_word,VERB,symbol_type));
+        }
+       
+        // ADJ
+        ret.append(extractSenses(word,ADJ,symbol_type));
+        if(options_stem_words) 
+        {
+            stemmed_word = stemWord(word,ADJ);
+            if(word != stemmed_word)
+                ret.append(extractSenses(stemmed_word,ADJ,symbol_type));
+        }
+       
+        // ADV
+        ret.append(extractSenses(word,ADV,symbol_type));
+        if(options_stem_words) 
+        {
+            stemmed_word = stemWord(word,ADV);
+            if(word != stemmed_word)
+                ret.append(extractSenses(stemmed_word,ADV,symbol_type));
+        }           
+    }
+    else
+    {
+        // Extract senses only for wn_pos
+        ret.append(extractSenses(word,wn_pos,symbol_type));
+        if(options_stem_words) 
+        {
+            stemmed_word = stemWord(word,wn_pos);
+            if(word != stemmed_word)
+                ret.append(extractSenses(stemmed_word,wn_pos,symbol_type));
+        }  
+    }
+
+    return ret;
+}
 
 int WordNetSenseDictionary::getId(string symbol, TVec<string> options)
 {
-    // Gives the id of a symbol in the dictionary
-    // If the symbol is not in the dictionary, 
-    // returns index of OOV_TAG if update_mode = NO_UPDATE
-    // insert the new word otherwise and return its index
-
-    if(!wno) PLERROR("WordNetSenseDictionary::getId : wno is not instantiated. build() should be called");
-    int index;
-    if(update_mode== UPDATE){
-        //  word not found in the ontology, add it and extract its senses
-        if(string_to_int.find(symbol) == string_to_int.end()){
-            if(options.length()!=1)PLERROR("WordNetSenseDictionary: need word to get id of a sense - You must specify the position of the word attribute with option_fields ");
-            if(!wno->containsWord(options[0])){
-                wno->extractWord(options[0], ALL_WN_TYPE, true, true, false);
-            }
-            // sense not found in the map, store it
-            index =wno->getSynsetIDForSenseKey(wno->getWordId(options[0]),symbol);
-            if(index!=NO_SENSE){
-                string_to_int[symbol] = index;
-                int_to_string[index] = symbol;
-                // TODO : values ----- 
-            }
-        }else{
-            index = string_to_int[symbol];
-        }
-    }else{
-        if(string_to_int.find(symbol) == string_to_int.end()){
-            if(options.length()!=1)PLERROR("WordNetSenseDictionary: need word to get id of a sense");
-            // sense not found in the map, store it
-            index =wno->getSynsetIDForSenseKey( wno->getWordId(options[0]),symbol);
-            if(index!=NO_SENSE){
-                string_to_int[symbol] = index;
-                int_to_string[index] = symbol;
-            }
-        }else{
-            index = string_to_int[symbol];
-        }
+    if(update_mode == UPDATE && !isIn(symbol,options))
+    {
+        TVec<string> sret = getSensesFromWordNet(options);        
+        for(int i=0; i<sret.length(); i++)
+            getId(sret[i]);
+        if(options.length() != 0 && sret.find(symbol) < 0)
+            PLWARNING("In WordNetSenseDictionary::getId(): sense %s is not among possible symbols",symbol.c_str());
+        
+        return inherited::getId(symbol,options);
     }
-    return index;;  
+    else return inherited::getId(symbol,options);    
 }
 
-int WordNetSenseDictionary::getId(string symbol, TVec<string> options)const
-{
-    return -1;
+Vec WordNetSenseDictionary::getValues(TVec<string> options)
+{ 
+    Vec ret;
+    TVec<string> sret = getSensesFromWordNet(options);
+    ret.resize(sret.length());
+    for(int i=0; i<sret.length(); i++)
+        ret[i] = getId(sret[i]);
+    return ret;
 }
 
-string WordNetSenseDictionary::getSymbol(int id, TVec<string> options)const
-{
-    if(!wno) PLERROR("WordNetSenseDictionary::getId : wno is not instantiated. build() should be called");
-    if(int_to_string.find(id)==int_to_string.end()){
-        PLERROR("Entry %d  doesn't exist in mapping ", id);
-    }else{
-        return int_to_string.find(id)->second;
-    }
-    return "";
+int WordNetSenseDictionary::size(TVec<string> options){
+    if(options.length() == 0)
+        return inherited::size();
+    else         
+        return getSensesFromWordNet(options).length();            
 }
 
 void WordNetSenseDictionary::makeDeepCopyFromShallowCopy(CopiesMap& copies)
