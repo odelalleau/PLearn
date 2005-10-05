@@ -238,7 +238,7 @@ void SubVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
 PP<Dictionary> SubVMatrix::getDictionary(int col) const
 {
 #ifdef BOUNDCHECK
-    if(row<0 || row>=length() || col<0 || col>width())
+    if(col<0 || col>width())
         PLERROR("In SubVMatrix::getDictionary(col) OUT OF BOUND access");
 #endif
     return parent->getDictionary(col+jstart);
