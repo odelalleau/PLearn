@@ -25,6 +25,7 @@ qtdir = '/usr/lib/qt-3.1/'
 # New: The PPath configuration file contains all PLearn relative settings
 plearndir = ppath('PLEARNDIR')
 libdir    = ppath('PLEARN_LIBDIR')
+homedir   = ppath('HOME')
 
 # Force use of ssh @ Apstat & Lisa
 domain_name = socket.getfqdn();
@@ -143,7 +144,7 @@ optionalLibrary( name = 'xml-apstat',
 
 optionalLibrary( name = 'arpack',
                  triggers = 'arpack_proto.h',
-                 linkeroptions = '-L'+ libdir +'/ARPACK/OBJS/' + target_platform + ' -larpack' )
+                 linkeroptions = '-L'+ libdir +'/ARPACK/OBJS/' + target_platform + ' -larpack -lg2c' )
 
 # Note: now blas and lapack are together.
 #optionalLibrary( name = 'lapack',
@@ -199,16 +200,24 @@ if domain_name.endswith('iro.umontreal.ca'):
     numpy_site_packages = '/u/lisa/local/' + platform + '/lib/python2.4/site-packages/numarray -lutil'
     python_version = '2.4'
     compileflags += ' -DPL_PYTHON_VERSION=240'
+    python_lib_root = '/usr/lib'
+elif domain_name.endswith('.ms'):
+    numpy_includedirs = [ '/opt/python2.4/include' ]
+    numpy_site_packages = join(homedir, '../delallea/local/lib/python2.4/site-packages/numarray -lutil')
+    python_version = '2.4'
+    compileflags += ' -DPL_PYTHON_VERSION=240'
+    python_lib_root = '/opt/python2.4/lib'
 else:
     numpy_includedirs   = []
     numpy_site_packages = '/usr/lib/python2.3/site-packages/numarray' 
     python_version = '2.3'
+    python_lib_root = '/usr/lib'
 
 optionalLibrary( name = 'python',
                  triggers = '[Pp]ython*',
                  includedirs = numpy_includedirs,
                  linkeroptions = ( '-L%s -lnumarray ' % numpy_site_packages + 
-                                   '-L/usr/lib/python%s/config -lpython%s ' % (python_version, python_version) +
+                                   '-L%s/python%s/config -lpython%s ' % (python_lib_root, python_version, python_version) +
                                    '-Xlinker -export-dynamic ' + 
                                    '-Xlinker -rpath -Xlinker %s' % numpy_site_packages )
                  )
@@ -313,7 +322,7 @@ pymakeOption( name = 'g++3',
 
 pymakeOption( name = 'icc',   # For C++, it is actually icpc
               description = 'compiling with Intel Compiler (version 8.0), with no MPI support',
-              compiler = 'icpc -w1 -wd981 -wd383 -wd869 -wd444 -wd810 -wd1418 -wd654',
+              compiler = 'icpc -w1 -wd981 -wd383 -wd869 -wd444 -wd810 -wd1418 -wd654 -wd279',
               compileroptions = '-DUSING_MPI=0 ',
               linker = 'icpc  '
 						)
