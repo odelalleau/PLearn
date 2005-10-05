@@ -58,17 +58,17 @@
 
 #if PL_PYTHON_VERSION >= 240
 
-#  include <python2.4/Python.h>
-#  include <python2.4/compile.h>  // define PyCodeObject
-#  include <python2.4/eval.h>     // for accessing PyEval_EvalCode: not included by default
-#  include <python2.4/numarray/libnumarray.h>
+#include <python2.4/Python.h>
+#include <python2.4/compile.h>  // define PyCodeObject
+#include <python2.4/eval.h>     // for accessing PyEval_EvalCode: not included by default
+#include <python2.4/numarray/libnumarray.h>
 
 #elif PL_PYTHON_VERSION >= 230
 
-#  include <python2.3/Python.h>
-#  include <python2.3/compile.h>  // define PyCodeObject
-#  include <python2.3/eval.h>     // for accessing PyEval_EvalCode: not included by default
-#  include <python2.3/numarray/libnumarray.h>
+#include <python2.3/Python.h>
+#include <python2.3/compile.h>  // define PyCodeObject
+#include <python2.3/eval.h>     // for accessing PyEval_EvalCode: not included by default
+#include <python2.3/numarray/libnumarray.h>
 
 #else
 
