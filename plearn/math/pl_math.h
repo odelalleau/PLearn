@@ -173,14 +173,8 @@ inline bool fast_is_equal(real a, real b, real absolute_tolerance_threshold = 1.
 {
     // Check for 'nan' or 'inf' values in debug mode.
 #ifdef BOUNDCHECK
-#ifdef __INTEL_COMPILER
-#pragma warning(disable:279)  // Get rid of compiler warning.
-#endif
     if (isnan(a) || isinf(a) || isnan(b) || isinf(b))
         PLERROR("In fast_is_equal - Either 'a' or 'b' is 'nan' or 'inf'");
-#ifdef __INTEL_COMPILER
-#pragma warning(default:279)
-#endif
 #endif
     real a_abs = fabs(a);
     real b_abs = fabs(b);
@@ -324,20 +318,12 @@ inline real d_hinge_loss(const real& output, int target)
 template<class T>
 inline bool is_missing(const T& x) { return false; }
 
-#ifdef __INTEL_COMPILER
-#pragma warning(disable:279)  // Get rid of compiler warning.
-#endif
-
 //! Missing value for double and float are represented by NaN
 inline bool is_missing(double x) { return isnan(x); }
 
 //! Missing value for double and float are represented by NaN
 inline bool is_missing(float x) { return isnan(x); }
   
-#ifdef __INTEL_COMPILER
-#pragma warning(default:279)
-#endif
-
 inline bool is_integer(real x) { return real(int(x))==x; }
 
 inline real FABS(real x)

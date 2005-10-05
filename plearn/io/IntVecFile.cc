@@ -176,13 +176,7 @@ void IntVecFile::writeFileSignature()
 
 void IntVecFile::getVersionAndSize()
 {
-#ifdef __INTEL_COMPILER
-#pragma warning(disable:279)  // Get rid of compiler warning.
-#endif
     if (sizeof(int) != 4)
-#ifdef __INTEL_COMPILER
-#pragma warning(default:279)
-#endif
         PLERROR("IntVecFile::getVersionAndSize: "
                 "IntVecFile not yet designed to handle sizeof(int) != 4");
   

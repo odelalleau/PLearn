@@ -70,9 +70,6 @@ PLMathInitializer::~PLMathInitializer()
   
 PLMathInitializer pl_math_initializer;
 
-#ifdef __INTEL_COMPILER
-#pragma warning(disable:279)  // Get rid of compiler warning.
-#endif
 //////////////
 // is_equal //
 //////////////
@@ -93,9 +90,6 @@ bool is_equal(real a, real b, real absolute_tolerance_threshold,
         return false;
     return fast_is_equal(a, b, absolute_tolerance_threshold, absolute_tolerance, relative_tolerance);
 }
-#ifdef __INTEL_COMPILER
-#pragma warning(default:279)
-#endif
 
 real safeflog(real a)
 {

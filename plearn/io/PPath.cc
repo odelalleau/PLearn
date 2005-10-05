@@ -647,9 +647,6 @@ string PPath::canonical() const
     // "FOO:bar" (we may want to change this behavior in the future).
 
     string canonic_path = *this;
-#ifdef __INTEL_COMPILER
-#pragma warning(disable:279)  // Get rid of compiler warning.
-#endif
     DBG_LOG << plhead("canonic_path: "+canonic_path) << endl;
 
     map<string, PPath>::const_iterator it  = metaprotocolToMetapath().begin();
@@ -700,9 +697,6 @@ string PPath::canonical() const
         metapath     = candidate;
         DBG_LOG << "Kept:\n\t" 
                 << it->first << " -> " << candidate.c_str() << endl;
-#ifdef __INTEL_COMPILER
-#pragma warning(default:279)
-#endif
         ++it; // We iterate to find the longest matching candidate.
     }
 

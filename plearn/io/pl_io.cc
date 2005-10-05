@@ -431,14 +431,8 @@ inline void write_compr_mode_and_size_ptr(char*& out, unsigned char mode, int si
     union {unsigned short s;char cs[2];} unis;
     union {unsigned int i;char ci[4];} unii;
 
-#ifdef __INTEL_COMPILER
-#pragma warning(disable:279)  // Get rid of compiler warning.
-#endif
     if(sizeof(unsigned int)!=4)
         PLERROR("Function write_compr_mode_and_size_ptr is not ready for 64 bit.");
-#ifdef __INTEL_COMPILER
-#pragma warning(default:279)
-#endif
 
 #ifdef BOUNDCHECK
     if(size<0 || size>=(1<<30))

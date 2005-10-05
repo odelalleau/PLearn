@@ -133,14 +133,8 @@ struct Field {
             PLERROR("Unknown field type %d with name %s",
                     int(field_type), name.c_str());
         }
-#ifdef __INTEL_COMPILER
-#pragma warning(disable:279)  // Get rid of compiler warning.
-#endif
         if (sizeof(PDate) != 4)
             PLERROR("A PLearn PDate must have sizeof equal to 4");
-#ifdef __INTEL_COMPILER
-#pragma warning(default:279)
-#endif
     }
 
     bool operator==(const Field& x) const {

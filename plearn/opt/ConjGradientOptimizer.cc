@@ -685,13 +685,7 @@ real ConjGradientOptimizer::fletcherSearchMain (
     //     We then use f1 = f(alpha1) and g1 = g(alpha1)
     real f1,g1;
     bool repeated = false;
-#ifdef __INTEL_COMPILER
-#pragma warning(disable:279)  // Get rid of compiler warning.
-#endif
     while (true) {
-#ifdef __INTEL_COMPILER
-#pragma warning(default:279)
-#endif
         // cout << "Splitting : alpha1 = " << alpha1 << endl << "            a1 = " << a1 << endl << "            b1 = " << b1 << endl;
         // cout << "Interval : [" << a1 + tau2 * (b1-a1) << " , " << b1 - tau3 * (b1-a1) << "]" << endl;
         alpha1 = findMinWithCubicInterpol(
