@@ -250,7 +250,6 @@
 #include <plearn/vmat/RegularGridVMatrix.h>
 #include <plearn/vmat/RemoveDuplicateVMatrix.h>
 #include <plearn/vmat/ReorderByMissingVMatrix.h>
-#include <plearn/vmat/SelectAttributsSequenceVMatrix.h>
 #include <plearn/vmat/SelectRowsMultiInstanceVMatrix.h>
 #include <plearn/vmat/ShuffleColumnsVMatrix.h>
 #include <plearn/vmat/SortRowsVMatrix.h>
