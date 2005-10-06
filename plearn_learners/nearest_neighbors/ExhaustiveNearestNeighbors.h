@@ -102,7 +102,7 @@ public:
 
     //! Kernel that must be used to evaluate distances.  Default is a
     //! DistanceKernel with n=2, which gives an Euclidian distance.
-    Ker kernel;
+    //! Ker kernel; ==> SHOULD BE distance_kernel, defined in super-class
 
     //! Whether the kernel should be interpreted as a (pseudo-)distance
     //! measure (true) or a similarity measure (false). Default = true.

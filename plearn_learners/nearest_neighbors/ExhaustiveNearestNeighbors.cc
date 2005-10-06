@@ -65,8 +65,8 @@ PLEARN_IMPLEMENT_OBJECT(
     "DistanceKernel is a distance measure.  The option\n"
     "'kernel_is_pseudo_distance' controls this:\n"
     "\n"
-    "   - if false: the kernel is a similarity measure\n"
-    "   - if true (the default): the kernel is a distance measure\n"
+    "   - if false: the distance_kernel is a similarity measure\n"
+    "   - if true (the default): the distance_kernel is a distance measure\n"
     "\n"
     "The output costs are simply the kernel values for each found training\n"
     "point.  The costs are named 'ker0', 'ker1', ..., 'kerK-1'.\n"
@@ -79,12 +79,13 @@ PLEARN_IMPLEMENT_OBJECT(
 Ker ExhaustiveNearestNeighbors::default_kernel = new DistanceKernel();
   
 ExhaustiveNearestNeighbors::ExhaustiveNearestNeighbors(
-    Ker kernel_, bool kernel_is_pseudo_distance_)
+    Ker distance_kernel_, bool kernel_is_pseudo_distance_)
     : inherited(),
       training_mat(),
-      kernel(kernel_),
       kernel_is_pseudo_distance(kernel_is_pseudo_distance_)
-{ }
+{
+    distance_kernel = distance_kernel_;
+}
 
 void ExhaustiveNearestNeighbors::declareOptions(OptionList& ol)
 {
@@ -92,12 +93,6 @@ void ExhaustiveNearestNeighbors::declareOptions(OptionList& ol)
         ol, "training_mat", &ExhaustiveNearestNeighbors::training_mat,
         OptionBase::learntoption,
         "Saved training set");
-
-    declareOption(
-        ol, "kernel", &ExhaustiveNearestNeighbors::kernel,
-        OptionBase::buildoption,
-        "Kernel that must be used to evaluate distances.  Default is a\n"
-        "DistanceKernel with n=2, which gives an Euclidian distance.");
 
     declareOption(
         ol, "kernel_is_pseudo_distance",
@@ -112,8 +107,8 @@ void ExhaustiveNearestNeighbors::declareOptions(OptionList& ol)
 
 void ExhaustiveNearestNeighbors::build_()
 {
-    if (! kernel)
-        PLERROR("ExhaustiveNearestNeighbors::build_: the 'kernel' option "
+    if (! distance_kernel)
+        PLERROR("ExhaustiveNearestNeighbors::build_: the 'distance_kernel' option "
                 "must be specified");
 }
 
@@ -130,7 +125,6 @@ void ExhaustiveNearestNeighbors::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(training_mat, copies);
     deepCopyField(costs,        copies);
     deepCopyField(dummy_vec,    copies);
-    deepCopyField(kernel,       copies);
     deepCopyField(indices,      copies);
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
@@ -234,7 +228,7 @@ void ExhaustiveNearestNeighbors::findNearestNeighbors(
     int inputsize = train_set->inputsize();
     for(int i=0, n=training_mat.length() ; i<n ; ++i) {
         train_input = training_mat(i).subVec(0,inputsize);
-        real kernel_value = kernel(input, train_input);
+        real kernel_value = distance_kernel(input, train_input);
         real q_value = (kernel_is_pseudo_distance? -1 : +1) * kernel_value;
         q.push(make_pair(q_value, i));
     }

@@ -123,18 +123,17 @@ void BallTreeNearestNeighbors::declareOptions( OptionList& ol )
 
 void BallTreeNearestNeighbors::build_()
 {
+    if (train_set) {
+        // initialize nb_train_points
+        nb_train_points = train_set.length();
+        
+        // if point_indices isn't specified, we take all the points in train_set
+        if( !point_indices )
+            point_indices = TVec<int>( 0, nb_train_points-1, 1 );
 
-    // initialize nb_train_points
-    nb_train_points = train_set.length();
-
-    // if point_indices isn't specified, we take all the points in train_set
-    if( !point_indices )
-    {
-        point_indices = TVec<int>( 0, nb_train_points-1, 1 );
+        // initialize nb_points
+        nb_points = point_indices.size();
     }
-
-    // initialize nb_points
-    nb_points = point_indices.size();
 }
 
 
