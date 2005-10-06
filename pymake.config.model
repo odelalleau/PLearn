@@ -189,6 +189,8 @@ optionalLibrary( name = 'X',
                  linkeroptions = '-L/usr/X11R6/lib/ -lXi -lXext -lX11'
 )
 
+linkeroptions_tail = ''
+
 ### Using Python code snippets in C++ code
 ### TODO Using /u/lisa/... is quite ugly. But the PLEARN_LIBDIR ppath may also
 ### be problematic (it should be different depending on the platform) => must
@@ -207,6 +209,12 @@ elif domain_name.endswith('.ms'):
     python_version = '2.4'
     compileflags += ' -DPL_PYTHON_VERSION=240'
     python_lib_root = '/opt/python2.4/lib'
+elif domain_name.endswith('.rqchp.qc.ca'):
+    numpy_includedirs   = []
+    numpy_site_packages = '' 
+    python_version = ''
+    python_lib_root = ''
+    linkeroptions_tail += ' -lcprts'
 else:
     numpy_includedirs   = []
     numpy_site_packages = '/usr/lib/python2.3/site-packages/numarray' 
@@ -293,7 +301,7 @@ optionalLibrary( name = 'NSPR',
                  linkeroptions = '-L/usr/lib/mozilla -lnspr4')
 
 # What linker options to put always after those from the optional libraries
-linkeroptions_tail = '-L' + libdir + ' -lm'
+linkeroptions_tail += ' -L' + libdir + ' -lm'
 
 # List of lists of mutually exclusive pymake options.
 # First option that appears in each group is the default, and is assumed if you don't specify any option from that group
