@@ -98,10 +98,11 @@ Calendar::Calendar(const JTimeVec& timestamps)
 }
 
 
-PCalendar Calendar::makeCalendar(Vec dates)
+PCalendar Calendar::makeCalendar(const Vec& dates)
 {
     static int Jan1_1900_JDN  = PDate(1900,01,01).toJulianDay();
     static int Dec31_2199_JDN = PDate(2199,12,31).toJulianDay();
+    TVec<JTime> jdates(dates.length());
   
     // Start by converting the dates to Julian
     for (int i=0, n=dates.size() ; i<n ; ++i) {
@@ -112,12 +113,12 @@ PCalendar Calendar::makeCalendar(Vec dates)
             int year  = int(date_i / 10000);
             int month = (int(date_i) % 10000) / 100;
             int day   = int(date_i) % 100;
-            dates[i]  = PDate(year,month,day).toJulianDay();
+            jdates[i] = PDate(year,month,day).toJulianDay();
         }
 
         // CYYMMDD (up to 2099/12/31, since 1900/01/01 == JDN-2415021)
         else if (date_i >= 000101 && date_i <= 1991231) {
-            dates[i] = float_to_date(date_i).toJulianDay();
+            jdates[i] = float_to_date(date_i).toJulianDay();
         }
 
         // Otherwise check it's in the proper range for a JDN
@@ -126,12 +127,14 @@ PCalendar Calendar::makeCalendar(Vec dates)
             PLERROR("The date value '%g' at index %d could not be interpreted\n"
                     "as a date in YYYYMMDD, CYYMMDD or JDN in the 1900/01/01 to\n"
                     "2199/12/31 range.", date_i, i);
+        else
+            jdates[i] = JTime(date_i);
     }
 
     // Next sort by increasing value...
-    sortElements(dates);
+    sortElements(jdates);
 
-    return new Calendar(dates);
+    return new Calendar(jdates);
 }
 
 void Calendar::build_()

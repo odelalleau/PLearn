@@ -322,7 +322,7 @@ void DirichletEstimatorMMoments(const Mat& p, Vec& alpha)
     var_p.resize(N);
     columnMean(p, mean_p);
     columnSumOfSquares(p, mean_p2);
-    mean_p2 *= 1.0/N;
+    mean_p2 *= real(1.0/N);
     columnVariance(p, var_p, mean_p);
     real log_sum_alpha = 0;
     for (int i=0;i<N;i++)

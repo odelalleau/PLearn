@@ -155,10 +155,10 @@ public:
     //! This returns a calendar from a vector of "dates".  The following
     //! are supported: YYYYMMDD, CYYMMDD, julian dates.  The format is
     //! recognized automatically.  The dates need not be sorted; they will
-    //! be sortd automatically.  Note that the storage for the dates vector
-    //! is captured and kept; it should not be modified after calling
-    //! this function.
-    static PCalendar makeCalendar(Vec dates);
+    //! be sorted automatically.
+    //! The storage for the dates vector is copied, thus 'dates' is not
+    //! altered by this function, and can be safely modified afterwards.
+    static PCalendar makeCalendar(const Vec& dates);
 
 private:
     //! This does the actual building. 
