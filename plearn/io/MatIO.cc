@@ -199,7 +199,7 @@ void savePVec(const string& filename, const TVec<float>& vec)
 #endif
 
     // Pad the header with whites and terminate it with '\n'
-    for(int pos=(int)strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
+    for(size_t pos = strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
         header[pos] = ' ';
     header[DATAFILE_HEADERLENGTH-1] = '\n';
 
@@ -232,7 +232,7 @@ void savePVec(const string& filename, const TVec<double>& vec)
 #endif
 
     // Pad the header with whites and terminate it with '\n'
-    for(int pos=(int)strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
+    for(size_t pos = strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
         header[pos] = ' ';
     header[DATAFILE_HEADERLENGTH-1] = '\n';
 
@@ -368,7 +368,7 @@ void savePMat(const string& filename, const TMat<float>& mat)
 #endif
 
     // Pad the header with whites and terminate it with '\n'
-    for(int pos=(int)strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
+    for(size_t pos = strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
         header[pos] = ' ';
     header[DATAFILE_HEADERLENGTH-1] = '\n';
 
@@ -400,7 +400,7 @@ void savePMat(const string& filename, const TMat<double>& mat)
 #endif
 
     // Pad the header with whites and terminate it with '\n'
-    for(int pos=(int)strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
+    for(size_t pos=strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
         header[pos] = ' ';
     header[DATAFILE_HEADERLENGTH-1] = '\n';
 
@@ -1093,7 +1093,7 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols,
     char *word=buffer;
     char *cp2;
     real *p;
-    int line_len;
+    size_t line_len;
 
     if (!f)
         PLERROR("In loadUCIMLDB, could not open file %s for reading",filename.c_str());
@@ -1310,9 +1310,9 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols,
 
     if(!to_symbols)
     {
-        for (int i=0; i<mat.width(); i++) 
+        for (i=0; i<mat.width(); i++) 
         {
-            for (int j=0; j<n_symbols[i]; j++)
+            for (j=0; j<n_symbols[i]; j++)
                 free(symbols[i][j]);
             free(symbols[i]);
         }
@@ -1340,7 +1340,7 @@ Mat loadSTATLOG(const string& filename, char ****to_symbols, int **to_n_symbols)
     char *word=buffer;
     char *cp2;
     real *p;
-    int line_len;
+    size_t line_len;
 
     if (!f) 
         PLERROR("In loadSTATLOG, could not open file %s for reading",filename.c_str());
@@ -1498,9 +1498,9 @@ Mat loadSTATLOG(const string& filename, char ****to_symbols, int **to_n_symbols)
 
     if(!to_symbols)
     {
-        for (int i=0; i<mat.width(); i++) 
+        for (i=0; i<mat.width(); i++) 
         {
-            for (int j=0; j<n_symbols[i]; j++)
+            for (j=0; j<n_symbols[i]; j++)
                 free(symbols[i][j]);
             free(symbols[i]);
         }
