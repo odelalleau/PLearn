@@ -105,25 +105,28 @@ string RealRange::getString() const
 
 
 bool RealRange::contains(real val) const
-{ return (val>=low) && (val<=high) && (val!=low || leftbracket=='[') && (val!=high || rightbracket==']'); }
+{ return (val>=low) && (val<=high)
+                    && (!fast_exact_is_equal(val, low)  || leftbracket=='[')
+                    && (!fast_exact_is_equal(val, high) || rightbracket==']');
+}
 
 bool RealRange::operator<(real x) const
-{ return high < x || high == x && rightbracket == '['; }
+{ return high < x || fast_exact_is_equal(high, x) && rightbracket == '['; }
 
 bool RealRange::operator>(real x) const
-{ return low > x || low == x && leftbracket == ']'; }
+{ return low > x || fast_exact_is_equal(low, x) && leftbracket == ']'; }
 
 bool RealRange::operator<(const RealRange& x) const
-{ return high < x.low || (high == x.low && (rightbracket=='[' || x.leftbracket==']')); }
+{ return high < x.low || (fast_exact_is_equal(high, x.low) && (rightbracket=='[' || x.leftbracket==']')); }
 
 bool RealRange::operator>(const RealRange& x) const
-{ return low > x.high || (low == x.high && (leftbracket==']' || x.rightbracket=='[')); }
+{ return low > x.high || (fast_exact_is_equal(low, x.high) && (leftbracket==']' || x.rightbracket=='[')); }
 
 bool RealRange::operator==(const RealRange& rr) const
 {
-    return (rr.low == low && 
-            rr.high == high && 
-            rr.leftbracket == leftbracket && 
+    return (fast_exact_is_equal(rr.low, low)  && 
+            fast_exact_is_equal(rr.high,high) && 
+            rr.leftbracket == leftbracket     && 
             rr.rightbracket == rightbracket);
 }
 
@@ -133,9 +136,9 @@ bool RealRange::operator==(const RealRange& rr) const
 bool RealMapping::operator==(const RealMapping& rm) const
 {
     return (rm.mapping == mapping && 
-            (rm.missing_mapsto == missing_mapsto || (isnan(missing_mapsto)&&isnan(rm.missing_mapsto))) &&
+            is_equal(rm.missing_mapsto, missing_mapsto, 1, 0, 0) &&
             rm.keep_other_as_is == keep_other_as_is &&
-            (rm.other_mapsto == other_mapsto || (isnan(other_mapsto)&&isnan(rm.other_mapsto))));
+            is_equal(rm.other_mapsto, other_mapsto, 1, 0, 0));
 }
 
 bool operator<(RealMapping::single_mapping_t a, RealMapping::single_mapping_t b)
