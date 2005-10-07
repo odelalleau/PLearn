@@ -126,7 +126,7 @@ void * MemoryMap(const char *filename,tFileHandle & handle, bool read_only,  off
         addr = mmap(0, filesize, PROT_READ, MAP_SHARED, handle, 0);
     }
     else {
-        int handle = open(filename,O_RDWR);
+        handle = open(filename,O_RDWR);
         if (handle<0)
             PLERROR("In Storage: Could not open specified memory-mapping file for read-write");
         filesize = lseek(handle,0,SEEK_END); 
