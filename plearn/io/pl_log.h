@@ -98,7 +98,7 @@ public:
     PStream& logger(int requested_verbosity);
 
     //! Return number of times logger() has been called
-    int loggerCount() const                   { return logger_count; }
+    long loggerCount() const                   { return logger_count; }
   
     //! Return system-wide PL_Log
     static PL_Log& instance();
