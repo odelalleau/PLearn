@@ -103,7 +103,7 @@ void Object::setOption(const string& optionname, const string& value)
 string Object::getOption(const string &optionname) const
 { 
     string s;
-    PStream out = openString(s, PStream::plearn_ascii);
+    PStream out = openString(s, PStream::plearn_ascii, "w");
     writeOptionVal(out, optionname);
     return removeblanks(s);
 }

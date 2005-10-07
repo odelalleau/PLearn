@@ -72,7 +72,7 @@ bool OptionBase::shouldBeSkipped() const
 string OptionBase::writeIntoString(const Object* o) const
 {
     string s;
-    PStream out = openString(s, PStream::plearn_ascii);
+    PStream out = openString(s, PStream::plearn_ascii, "w");
     write(o, out);
     out.flush(); // May not be necessary ?
     return s;
