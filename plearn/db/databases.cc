@@ -453,8 +453,9 @@ int loadLetters(VMat& training_set, VMat& validation_set, VMat& test_set, char* 
     training_set = VMat(training_data);
     validation_set = VMat(validation_data);
     test_set = VMat(test_data);
-    return strlen(which_letters); 
+    return int(strlen(which_letters));
 }
+
 VMat loadLetters(int n_letters, bool do_shuffle)
 {
     if (n_letters > 26 || n_letters < 1)
@@ -772,10 +773,10 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
     }
     else if(dbname=="breast")
     {
-        VMat dbname = loadBreastCancerWisconsin();
-        inputsize = dbname.width()-1;
+        VMat dbname_vm = loadBreastCancerWisconsin();
+        inputsize = dbname_vm.width()-1;
         nclasses = 2;
-        split(dbname,0.5,trainset,testset);
+        split(dbname_vm,0.5,trainset,testset);
     }
     else if(dbname=="usps")
     {
@@ -860,14 +861,14 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
         meanvec = meanvec.subVec(0,inputsize);
         stddevvec = stddevvec.subVec(0,inputsize);
         for (int i = 0; i < stddevvec.length(); i++) {
-            if (stddevvec[i] == 0) {
+            if (fast_exact_is_equal(stddevvec[i], 0)) {
                 // The standard dev is 0, the row must be constant. Since we don't
                 // want nans we put 1 instead.
                 stddevvec[i] = 1;
             }
         }
         for (int i=0;i<inputsize;i++)
-            if (stddevvec[i]==0) stddevvec[i]=1;
+            if (fast_exact_is_equal(stddevvec[i], 0)) stddevvec[i]=1;
         trainset = normalize(trainset,meanvec,stddevvec);
         testset = normalize(testset,meanvec,stddevvec);
     }
