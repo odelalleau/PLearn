@@ -191,9 +191,9 @@ void PLearnDiff::printDiffs(PStream& out, unsigned int indent,
         const string& diff_val1 = diffs(i, 1);
         const string& diff_val2 = diffs(i, 2);
         unsigned int n_blanks_after_name =
-            tab_step - diff_name.size() % tab_step;
+            tab_step - (unsigned int)(diff_name.size()) % tab_step;
         unsigned int n_blanks_after_val1 =
-            tab_step - diff_val1.size() % tab_step;
+            tab_step - (unsigned int)(diff_val1.size()) % tab_step;
         if (indent + diff_name.size() + n_blanks_after_name + 3 
             + diff_val1.size() + n_blanks_after_val1 + 7 + diff_val2.size()
             < max_width) {

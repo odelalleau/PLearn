@@ -71,7 +71,7 @@ int Poll::waitForEvents(int timeout) {
         PLERROR("Poll::waitforEvents: called with no streams to watch.");
     
     m_next_unexamined_event = 0;
-    return PR_Poll(&m_poll_descriptors[0], m_poll_descriptors.size(),
+    return PR_Poll(&m_poll_descriptors[0], PRIntn(m_poll_descriptors.size()),
                    timeout);
 }
 

@@ -209,7 +209,7 @@ StdPStreamBuf::streamsize StdPStreamBuf::read_(char* p, streamsize n)
 {
     if (pin==0)
         PLERROR("StdPStreamBuf::read_ with pin==0");
-    streamsize nread = pin->readsome(p,n);
+    streamsize nread = pin->readsome(p, std::streamsize(n));
     if(nread>0)      
         return nread;
 
@@ -223,7 +223,7 @@ void StdPStreamBuf::write_(const char* p, streamsize n)
 {
     if (pout==0)      
         PLERROR("StdPStreamBuf::write_ with pout==0");
-    pout->write(p,n);
+    pout->write(p, std::streamsize(n));
     pout->flush();
 }
 
