@@ -93,7 +93,7 @@ void FilteredVMatrix::openIndex()
             if (report_progress)
                 pb->update(i);
             program.run(i,result);
-            if(result[0]!=0)
+            if(!fast_exact_is_equal(result[0], 0))
                 indexes.append(i);
         }
         if (pb)

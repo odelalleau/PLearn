@@ -170,7 +170,7 @@ void ShiftAndRescaleVMatrix::build_()
                 negateElements(shift);
             if (!no_scale) {
                 for (int i=0;i<scale.length();i++) 
-                    if (scale[i]==0)
+                    if (fast_exact_is_equal(scale[i], 0))
                     {
                         if (verbosity >= 1)
                             PLWARNING("ShiftAndRescale: data column number %d is constant",i);

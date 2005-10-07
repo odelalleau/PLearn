@@ -337,7 +337,7 @@ inline bool is_missing(double x) { return isnan(x); }
 //! Missing value for double and float are represented by NaN
 inline bool is_missing(float x) { return isnan(x); }
   
-inline bool is_integer(real x) { return real(int(x))==x; }
+inline bool is_integer(real x) { return fast_exact_is_equal(real(int(x)), x); }
 
 inline real FABS(real x)
 { return x>=0. ?x :-x; }
@@ -345,7 +345,7 @@ inline real FABS(real x)
 #define FSWAP(a,b) do {real _c; _c = *(a); *(a) = *(b); *(b) = _c;} while(0)
 
 inline real mypow(real x, real p)
-{ return x==0 ?0 :pow(x,p); }
+{ return fast_exact_is_equal(x, 0) ? 0 :pow(x,p); }
 
 inline real ipow(real x, int p)
 { 
@@ -429,7 +429,7 @@ inline real inverse_softplus(real y)
         return MISSING_VALUE;
     if (y>=30)
         return y;
-    if (y==0)
+    if (fast_exact_is_equal(y, 0))
         return -30;
     return log(exp(y)-1);
 }
@@ -447,7 +447,7 @@ inline real hard_slope(real x, real left=0, real right=1)
 // It is always monotonically increasing wrt x (positive derivative in x).
 inline real soft_slope(real x, real smoothness=1, real left=0, real right=1)
 {
-    if (smoothness==0)
+    if (fast_exact_is_equal(smoothness, 0))
         return 0.5;
     if (smoothness>1000)
         return hard_slope(x,left,right);
@@ -456,7 +456,7 @@ inline real soft_slope(real x, real smoothness=1, real left=0, real right=1)
 
 inline real tabulated_soft_slope(real x, real smoothness=1, real left=0, real right=1)
 {
-    if (smoothness==0)
+    if (fast_exact_is_equal(smoothness, 0))
         return 0.5;
     if (smoothness>1000)
         return hard_slope(x,left,right);

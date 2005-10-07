@@ -217,7 +217,7 @@ real positive_dilogarithm(real x)
         return small_dilogarithm(x);
     else if (x<1.0)
         return Pi*Pi/6.0 - small_dilogarithm(1.0-x) - log(x)*log(1-x);
-    else if (x==1.0)
+    else if (fast_exact_is_equal(x, 1.0))
         return Pi*Pi/6.0;
     else if (x<=1.01)
     {
@@ -255,7 +255,7 @@ real dilogarithm(real x)
     if (x<0)
         return -positive_dilogarithm(-x) + 0.5*positive_dilogarithm(x*x);
     else 
-        if (x==0) return 0;
+        if (fast_exact_is_equal(x, 0)) return 0;
         else
             return positive_dilogarithm(x);
 }
@@ -283,7 +283,7 @@ real hard_slope_integral(real l, real r, real a, real b)
 
 real soft_slope_integral(real smoothness, real left, real right, real a, real b)
 {
-    if (smoothness==0)
+    if (fast_exact_is_equal(smoothness, 0))
         return 0.5*(b-a);
     if (smoothness<100)
         return 
@@ -296,7 +296,7 @@ real soft_slope_integral(real smoothness, real left, real right, real a, real b)
 
 real tabulated_soft_slope_integral(real smoothness, real left, real right, real a, real b)
 {
-    if (smoothness==0)
+    if (fast_exact_is_equal(smoothness, 0))
         return 0.5*(b-a);
     if (smoothness<100)
         return 

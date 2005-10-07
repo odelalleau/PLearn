@@ -210,12 +210,12 @@ VMat rebalanceNClasses(VMat inputs, int nclasses, const string& filename)
             int c_map = int(remap[c]);
             if (c == 0)
             {
-                if (n[0] == capacity[c_map]) n[0] = 0;
+                if (fast_exact_is_equal(n[0], capacity[c_map])) n[0] = 0;
                 new_index = int(index[c_map][n[0]++]);
             }
             else
             {
-                if (n[c] == capacity[c_map])
+                if (fast_exact_is_equal(n[c], capacity[c_map]))
                 {
                     n[c] = 0;
                     index_used[c_map].clear();
@@ -224,7 +224,7 @@ VMat rebalanceNClasses(VMat inputs, int nclasses, const string& filename)
                 int start_pos = binary_search(index[c_map], real(new_index));
                 for (int j=start_pos+1; j<capacity[c_map]; j++)
                 {
-                    if (index_used[c_map][j] == 0)
+                    if (fast_exact_is_equal(index_used[c_map][j], 0))
                     {
                         index_used[c_map][j] = 1;
                         new_index = int(index[c_map][j]);
@@ -237,7 +237,7 @@ VMat rebalanceNClasses(VMat inputs, int nclasses, const string& filename)
                 {
                     for (int j=0; j<start_pos; j++)
                     {
-                        if (index_used[c_map][j] == 0)
+                        if (fast_exact_is_equal(index_used[c_map][j], 0))
                         {
                             index_used[c_map][j] = 1;
                             new_index = int(index[c_map][j]);
@@ -272,7 +272,7 @@ void fullyRebalance2Classes(VMat inputs, const string& filename, bool save_indic
         Vec last = inputs.lastColumn()->toMat().toVecCopy();
         for (int i=0; i<len;i++)
         {
-            if (last[i] == 0)
+            if (fast_exact_is_equal(last[i], 0))
                 zeros[n_zeros++] = i;
             else
                 ones[n_ones++] = i;

@@ -257,10 +257,10 @@ void ManifoldParzen2::train()
             // last, i.e. smallest, non-zero eigenvalue).
             int last=ncomponents;
             lambda0 = eigvals[last];
-            while (lambda0==0 && last>0)
+            while (fast_exact_is_equal(lambda0, 0) && last>0)
                 lambda0 = eigvals[--last];
             // the sigma-square for all remaining dimensions
-            if (lambda0 == 0)
+            if (fast_exact_is_equal(lambda0, 0))
                 PLERROR("All (%i) principal components have zero variance!?",eigvals.length());
         }
         else lambda0 = global_lambda0;
@@ -304,7 +304,7 @@ real ManifoldParzen2::evaluate(Vec x1,Vec x2,real scale)
     real ret;
     int i = find_nearest_neighbor(train_set,x2);  
   
-    if(scale == 1)
+    if(fast_exact_is_equal(scale, 1))
         ret = computeLogLikelihood(x1,i);
     else
     {
@@ -333,7 +333,7 @@ real ManifoldParzen2::evaluate_i_j(int i,int j,real scale)
 {
     real ret;
   
-    if(scale == 1)
+    if(fast_exact_is_equal(scale, 1))
         ret = computeLogLikelihood(mu(i),j);
     else
     {

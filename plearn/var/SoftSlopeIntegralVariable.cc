@@ -139,7 +139,7 @@ void SoftSlopeIntegralVariable::bprop()
     real* dright = varray[2]->gradientdata;
     for(int i=0; i<n; i++,smoothness+=m1,left+=m2,right+=m3,dsmoothness+=m1,dleft+=m2,dright+=m3)
     {
-        if (*smoothness == 0) continue;
+        if (fast_exact_is_equal(*smoothness, 0)) continue;
         // soft_slope_integral =
         // (b - a) + (softplus_primitive(-smoothness*(b-right)) - softplus_primitive(-smoothness*(b-left))
         //    -softplus_primitive(-smoothness*(a-right)) + softplus_primitive(-smoothness*(a-left)))/

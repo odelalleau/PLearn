@@ -114,7 +114,7 @@ void MatrixOneHotSquaredLoss::bprop()
     {
         real gr = gradientdata[k];
         int classnum = (int) input2->valuedata[k];
-        if (gr!=1.)
+        if (!fast_exact_is_equal(gr, 1.))
         {
             gr = gr+gr;
             for (int i=0; i<n; i++)

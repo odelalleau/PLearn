@@ -175,7 +175,7 @@ Var operator/(Var v, real cte)
 
 Var operator/(real cte, Var v)
 {
-    if(cte==1.0)
+    if(fast_exact_is_equal(cte, 1.0))
         return invertElements(v);
     else
         return cte*invertElements(v);
