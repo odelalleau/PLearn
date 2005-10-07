@@ -51,7 +51,7 @@
 #include <iterator>
 #include <numeric>
 #include <functional>
-#include <strstream>
+#include <sstream>
 
 #include <plearn/base/general.h>
 #include <plearn/base/Storage.h>
@@ -759,7 +759,7 @@ public:
 
     void operator<<(const string& datastring) const
     {
-        istrstream in(datastring.c_str());
+        istringstream in(datastring);
         input(in);
     }
 

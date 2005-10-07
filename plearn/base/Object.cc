@@ -102,13 +102,9 @@ void Object::setOption(const string& optionname, const string& value)
 
 string Object::getOption(const string &optionname) const
 { 
-    ostrstream out_;
-    PStream out(&out_);
+    string s;
+    PStream out = openString(s, PStream::plearn_ascii);
     writeOptionVal(out, optionname);
-    char* buf = out_.str();
-    int n = out_.pcount();
-    string s(buf,n);
-    out_.freeze(false); // return ownership to the stream, so that it may free it...
     return removeblanks(s);
 }
 

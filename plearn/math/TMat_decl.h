@@ -802,7 +802,7 @@ public:
 
     inline void operator<<(const string& datastring) const
     { 
-        istrstream in(datastring.c_str());
+        istringstream in(datastring);
         input(in); 
     }
 

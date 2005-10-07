@@ -657,7 +657,7 @@ void loadGnuplot(const string& filename, Mat& mat)
             nrows++;
             if(ncols==0)
             {
-                istrstream inputline(buf);
+                istringstream inputline(buf);
                 real value;
                 while(inputline)
                 {
@@ -683,7 +683,7 @@ void loadGnuplot(const string& filename, Mat& mat)
                 pos++;
             firstchar = buf[pos];
         }
-        istrstream inputline(buf);      
+        istringstream inputline(buf);      
         for(int j=0; j<ncols; j++)
             inputline >> mat(i,j);
     }

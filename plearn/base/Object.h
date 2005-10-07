@@ -49,6 +49,7 @@
 
 #include <map>
 #include <string>
+#include <sstream>
 #include "PP.h"
 #include "StaticInitializer.h"
 #include "TypeFactory.h"
@@ -801,11 +802,11 @@ Object* macroLoadObject(const PPath &filename, map<string,string>& vars);
 Object* macroLoadObject(const PPath &filename);
 
 //! Creates a new object according to the given representation.
-//! This actually calls readObject on an istrstream, so anything
+//! This actually calls readObject on an istringstream, so anything
 //! understandable by readObject can be used here
 inline Object* newObject(const string& representation)
 {
-    istrstream in(representation.c_str());
+    istringstream in(representation);
     return readObject(in);
 }
 

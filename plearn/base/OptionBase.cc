@@ -71,13 +71,10 @@ bool OptionBase::shouldBeSkipped() const
 
 string OptionBase::writeIntoString(const Object* o) const
 {
-    ostrstream out_;
-    PStream out(&out_);
+    string s;
+    PStream out = openString(s, PStream::plearn_ascii);
     write(o, out);
-    char* buf = out_.str();
-    int n = out_.pcount();
-    string s(buf,n);
-    out_.freeze(false); // return ownership to the stream, so that it may free it...
+    out.flush(); // May not be necessary ?
     return s;
 }
 
