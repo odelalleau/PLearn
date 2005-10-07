@@ -105,6 +105,7 @@ string Object::getOption(const string &optionname) const
     string s;
     PStream out = openString(s, PStream::plearn_ascii, "w");
     writeOptionVal(out, optionname);
+    out.flush();
     return removeblanks(s);
 }
 
