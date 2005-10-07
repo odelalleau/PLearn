@@ -159,7 +159,7 @@ void DictionaryVMatrix::build_()
             // Set n_attributes
             if(k==0 && it==0)
             {
-                n_attributes = tokens.size();
+                n_attributes = int(tokens.size());
                 data.resize(length_,n_attributes);
                 // If no dictionaries are specified, then create some
                 if(dictionaries.length() == 0)
@@ -189,8 +189,8 @@ void DictionaryVMatrix::build_()
                 else
                 {
                     TVec<string> options(option_fields[j].length());
-                    for(int k=0; k<options.length(); k++)
-                        options[k] = tokens[option_fields[j][k]];
+                    for(int k_it=0; k_it<options.length(); k_it++)
+                        options[k_it] = tokens[option_fields[j][k_it]];
                     data(it,j) = dictionaries[j]->getId(tokens[j],options);
                 }
             }
