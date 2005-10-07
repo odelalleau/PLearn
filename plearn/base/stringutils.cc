@@ -151,7 +151,7 @@ string removeblanks(const string& s)
     size_t start=0;
     size_t end=0;
     size_t i;
-    int j;
+    string::size_type j;
     for(i=0; i<s.length(); i++)
         if(s[i]!=' ' && s[i]!='\t' && s[i]!='\n' && s[i]!='\r')
             break;
@@ -161,10 +161,10 @@ string removeblanks(const string& s)
     else
         start = i;
 
-    for(j=s.length()-1; j>=0; j--)
-        if(s[j]!=' ' && s[j]!='\t' && s[j]!='\n' && s[j]!='\r')
+    for(j=s.length(); j>=1; j--)
+        if(s[j-1]!=' ' && s[j-1]!='\t' && s[j-1]!='\n' && s[j-1]!='\r')
             break;
-    end = size_t(j);
+    end = size_t(j - 1);
     return s.substr(start,end-start+1);
 }
 
@@ -183,18 +183,18 @@ string removeallblanks(const string& s)
 
 string removenewline(const string& s)
 {
-    int pos = s.length()-1;
-    while(pos>=0 && (s[pos]=='\r' || s[pos]=='\n'))
+    string::size_type pos = s.length();
+    while(pos>=1 && (s[pos - 1]=='\r' || s[pos - 1]=='\n'))
         pos--;
-    return s.substr(0,pos+1);
+    return s.substr(0,pos);
 }
 
 string remove_trailing_slash(const string& s)
 {
-    int pos = s.length()-1;
-    while(pos >= 0 && s[pos]==slash_char)
+    string::size_type pos = s.length();
+    while(pos >= 1 && s[pos - 1]==slash_char)
         pos--;
-    return s.substr(0,pos+1);
+    return s.substr(0,pos);
 }
 
 string append_slash(const string& path)
@@ -252,7 +252,7 @@ string pgetline(PStream& in)
 
 bool isBlank(const string& s)
 {
-    int l = (int)s.length();
+    string::size_type l = s.length();
     for(int i=0; i<l; i++)
     {
         char c = s[i];
@@ -267,7 +267,7 @@ bool isBlank(const string& s)
 
 bool isParagraphBlank(const string& s)
 {
-    int l = (int)s.length();
+    string::size_type l = s.length();
     bool in_comment=false;
     for(int i=0; i<l; i++)
     {
@@ -330,7 +330,7 @@ int search_replace(string& text, const string& searchstr, const string& replaces
 vector<string> split(const string& s, char delimiter)
 {
     vector<string> res;
-    int l = (int)s.length();
+    string::size_type l = s.length();
     int beg = 0;
     int end = 0;
   
@@ -449,7 +449,7 @@ vector<string> remove(const vector<string> &v, string element)
 int findpos(const vector<string> &v, string element)
 {
     for (size_t i=0;i<v.size();i++)
-        if (v[i]==element) return (int)i;
+        if (v[i]==element) return int(i);
     return -1;
 }
 
@@ -501,7 +501,7 @@ vector<string> stringvector(int argc, char** argv)
 string get_option(const vector<string> &command_line, 
                   const string& option, const string& default_value)
 {
-    int n=(int)command_line.size();
+    vector<string>::size_type n = command_line.size();
     for (int i=0;i<n;i++)
         if (command_line[i]==option && i+1<n) return command_line[i+1];
     return default_value;
@@ -509,7 +509,7 @@ string get_option(const vector<string> &command_line,
 
 bool find(const vector<string> &command_line, const string& option)
 {
-    int n=(int)command_line.size();
+    vector<string>::size_type n = command_line.size();
     for (int i=0;i<n;i++)
         if (command_line[i]==option) return true;
     return false;
