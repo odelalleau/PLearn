@@ -193,7 +193,7 @@ void loadJPEGrgb(const string& jpeg_filename, Mat& rgbmat, int& row_size, int sc
 
 
 template<class T>
-void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, TVec<map<string,real> >* map_sr=0)
+void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, TVec<map<string,real> >* map_sr)
 { 
     int inputsize=-1, targetsize=-1, weightsize=-1;
     loadAscii(filename, mat, fieldnames, inputsize, targetsize, weightsize, map_sr);
@@ -202,7 +202,7 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, TV
 // Intelligent function that will load a file in almost all ascii formats that ever existed in this lab.
 // Additionally, if 'map_sr' is provided, it will fill it with the string -> real mappings encountered.
 template<class T>
-void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, int& inputsize, int& targetsize, int& weightsize, TVec<map<string,real> >* map_sr=0)
+void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, int& inputsize, int& targetsize, int& weightsize, TVec<map<string,real> >* map_sr)
 {
     PStream in = openFile(filename, PStream::raw_ascii, "r");
   
@@ -304,7 +304,7 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, in
                             current_map[j] = int(current_max[j] + 1);
                         map<string,real>& m = (*map_sr)[j];
                         for (map<string,real>::iterator it = m.begin(); it != m.end(); it++) {
-                            if (it->second == val) {
+                            if (fast_exact_is_equal(it->second, val)) {
                                 // We're screwed, there is currently a mapping between a string
                                 // and this numeric value. We have to change it.
                                 // We pick either the next string mapping value, or the current
@@ -318,7 +318,7 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, in
                                 current_map[j]++;
                                 // In addition, we have to modify all previous data, which sucks.
                                 for (int k = 0; k < i; k++) {
-                                    if (mat(k, j) == val)
+                                    if (fast_exact_is_equal(mat(k, j), val))
                                         mat(k, j) = it->second;
                                 }
                             }
