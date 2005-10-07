@@ -178,8 +178,7 @@ void SortRowsVMatrix::sortRows(VMat& m, TVec<int>& indices, TVec<int>& sort_colu
                 val = m(indices[i],col);
                 int j = i+1;
                 while (   j <= iend
-                          && (   (m(indices[j],col) == val)
-                                 || (is_missing(val) && is_missing(m(indices[j], col)))))
+                          && ( is_equal(m(indices[j],col), val, 1.0)))
                     j++;
                 j--;
                 if (j > i) {
