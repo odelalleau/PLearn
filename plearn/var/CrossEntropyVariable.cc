@@ -78,7 +78,6 @@ CrossEntropyVariable::build_()
 void CrossEntropyVariable::recomputeSize(int& l, int& w) const
 { l=1, w=1; }
 
-
 void CrossEntropyVariable::fprop()
 {
     real cost = 0.0;
@@ -86,6 +85,8 @@ void CrossEntropyVariable::fprop()
     {
         real output = input1->valuedata[i];
         real target = input2->valuedata[i];
+        assert( target == 0 || target == 1 );
+        assert( output >= 0 && output <= 1 );
         if ((output == 0.0 && target != 0) || (output == 1.0 && target != 1))
             PLERROR("CrossEntropyVariable::fprop: model output is either exactly "
                     "0.0 or 1.0; cannot compute cost function");
@@ -95,7 +96,6 @@ void CrossEntropyVariable::fprop()
     }
     valuedata[0] = -cost;
 }
-
 
 void CrossEntropyVariable::bprop()
 {
@@ -112,7 +112,6 @@ void CrossEntropyVariable::bprop()
         input1->gradientdata[i] += gr*(-target/output + (1.0-target)/(1.0-output));
     }
 }
-
 
 } // end of namespace PLearn
 
