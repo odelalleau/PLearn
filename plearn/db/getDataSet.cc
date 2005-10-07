@@ -83,7 +83,7 @@ VMat getDataSet(const PPath& dataset_path)
         if (ext == "amat") {
             // Check if the extension is ".bin.amat".
             // (old deprecated extension)
-            if (dataset.find(".bin.", ((unsigned int) dataset.size()) - 9) != string::npos) {
+            if (dataset.find(".bin.", ((string::size_type) dataset.size()) - 9) != string::npos) {
                 PLERROR("In getDataSet - The '.bin.amat' extension is deprecated, you "
                         "must now use the .abmat extension");
             } else

@@ -439,7 +439,8 @@ string HTMLHelpCommand::highlight_known_classes(string typestr) const
     vector<string> tokens = split(typestr, " \t\n\r<>,.';:\"");
     set<string> replaced; // Carry out replacements for a given token only once
     const TypeMap& type_map = TypeFactory::instance().getTypeMap();
-    for (int i=0, n=tokens.size() ; i<n ; ++i) {
+    vector<string>::size_type n=tokens.size();
+    for (int i=0; i<n ; ++i) {
         TypeMap::const_iterator it = type_map.find(tokens[i]);
         if (it != type_map.end() && replaced.find(tokens[i]) == replaced.end()) {
             replaced.insert(tokens[i]);

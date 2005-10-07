@@ -60,12 +60,12 @@ PLearnCommandRegistry AutoRunCommand::reg_(new AutoRunCommand);
 void AutoRunCommand::run(const vector<string>& args)
 {
     string scriptname = args[0];
-    int nargs = (int)args.size();
+    int nargs = int(args.size());
 
     vector<string> runargs(1);
     runargs[0] = scriptname;
 
-    TVec<int> times(nargs);
+    TVec<time_t> times(nargs);
 
     for(;;)
     {

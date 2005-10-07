@@ -129,8 +129,8 @@ string backslash_to_slash(string str);
 
 inline bool string_begins_with(const string& s, const string& beginning)
 {
-    int n = beginning.size();
-    return ((int)s.size() >= n && s.substr(0,n) == beginning);
+    string::size_type n = beginning.size();
+    return (s.size() >= n && s.substr(0,n) == beginning);
 }
 
   

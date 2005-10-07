@@ -105,7 +105,8 @@ PStream& operator<<(PStream& p, PL_Log::Heading heading)
     //   string msg = "#####  " + tostring(PL_Log::instance().loggerCount())
     //     + (heading.h.size() > 0? (": "+heading.h) : string("")) + "  ";
     string msg = "#####  " + (heading.h.size() > 0? (heading.h + "  ") : string(""));
-    string rest(max(75-int(msg.size()),5),'#');
+    string::size_type rest_length = msg.size() > 70 ? 5 : 75 - msg.size();
+    string rest(rest_length,'#');
     return p << endl << (msg + rest) << endl;
 }
 
