@@ -106,7 +106,7 @@ class __TMat:
             self.nrows, self.ncols, 
             inner_repr( self.content, indent_level+1 ) 
             )
-    
+
 def TMat( *args ):
     """Returns the PyPLearn representation of a TMat.
 
@@ -164,7 +164,9 @@ def TMat( *args ):
     # TMat<T> where T is not real
     return __TMat( nrows, ncols, content )
 
-        
+def getPythonSnippet(module):
+    from inspect import getsourcelines
+    return "\\n".join([ s.rstrip() for s in getsourcelines(module)[0] ])
 
 if __name__ == "__main__":
     print TMat(2, 2, ["allo", "mon", "petit", "coco"]).plearn_repr()

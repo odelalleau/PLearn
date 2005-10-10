@@ -68,7 +68,7 @@ Section 1: Introductory Examples
                 targetsize = 2,
                 weightsize = 0
                 ),
-            expdir = "expdir_2005_06_28_11:17:37",
+            expdir = "expdir_2005_10_03_07:31:19",
             learner = *2 -> LinearRegressor( ),
             provide_learner_expdir = 1,
             save_test_confidence = 1,
@@ -217,7 +217,7 @@ Section 2: What's Wrong with PLearn Scripts?
         #
 
         *59 -> MyWeardTester(
-            expdir = "expdir_2005_06_28_11:17:38",
+            expdir = "expdir_2005_10_03_07:31:20",
             learner = *58 -> CombinerLearner(
                 underlying_learners = [
                     *6 -> SomeLearner(
@@ -343,24 +343,24 @@ Section 2: What's Wrong with PLearn Scripts?
                         )
                     ],
                 weights = [
-                    0.0397961519858,
-                    0.0660380024182,
-                    0.0367282632288,
-                    0.0488920964683,
-                    0.041391789881,
-                    0.083109532308,
-                    0.0763786513904,
-                    0.0567314312783,
-                    0.0253257509008,
-                    0.0331038200457,
-                    0.0552613031989,
-                    0.0844679358821,
-                    0.0479528234363,
-                    0.0991157947931,
-                    0.0739145192219,
-                    0.0682308904419,
-                    0.00868527858883,
-                    0.0548759645317
+                    0.0212686267598,
+                    0.0338842027765,
+                    0.0907093929726,
+                    0.0435869436257,
+                    0.0609181028976,
+                    0.0572259417081,
+                    0.0463130367582,
+                    0.0744705650975,
+                    0.0239017860297,
+                    0.0844796032593,
+                    0.0887779125194,
+                    0.0207178945011,
+                    0.00447208179073,
+                    0.0562313036312,
+                    0.0804618304301,
+                    0.0347107313282,
+                    0.0846586366907,
+                    0.0932114072236
                     ]
                 ),
             provide_learner_expdir = 1
@@ -410,21 +410,16 @@ Section 4: How Does it Work?
             an instance of the class. Hence, names of the function's arguments are
             considered as the PLearn object's option names.
             \"\"\"
-            class OnTherFly( PyPLearnObject ):
-                def option_names( klass, ordered = None ):
-                    return []
-                option_names = classmethod( option_names )
-                    
             def __getattr__(self, name):
                 if name.startswith('__'):
                     raise AttributeError
         
-                klass = new.classobj(name, (self.OnTherFly,), {})
-                assert issubclass( klass, PyPLearnObject )
-        
                 def initfunc(**kwargs):
+                    klass = new.classobj(name, (PyPLearnObject,), {})
+                    assert issubclass( klass, PyPLearnObject )
+        
                     obj = klass(**kwargs)
-                    assert isinstance( obj, PyPLearnObject )
+                    assert isinstance(obj, PyPLearnObject)
                     return obj
                 
                 return initfunc
@@ -603,6 +598,8 @@ Section 6: Command-Line Arguments
     --------------------------------
     Subclasses will have there class variables binded to B{prefixed} plargs.
 
+    PLEASE UPDATE!!!
+    
     The plarg will be prefixed by the classname, e.g.::
 
         class MLM( plargs_namespace ):
