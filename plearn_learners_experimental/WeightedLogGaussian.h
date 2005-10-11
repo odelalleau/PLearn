@@ -60,12 +60,11 @@ class WeightedLogGaussian: public NaryVariable
 public:
   //!  Default constructor for persistence
   WeightedLogGaussian() {}
-  WeightedLogGaussian(int class_label, Var input_index, Var mu, Var sigma, MoleculeTemplate templates);
-  WeightedLogGaussian(int class_label, Var input_index, VMat train_set, Var mu, Var sigma, MoleculeTemplate templates);
+  WeightedLogGaussian(bool training_mode, int class_label, Var input_index, Var mu, Var sigma, MoleculeTemplate templates);
 
   int class_label ;   
   bool training_mode ;
-  VMat train_set ;
+  VMat test_set ;
 
   PLEARN_DECLARE_OBJECT(WeightedLogGaussian);
 

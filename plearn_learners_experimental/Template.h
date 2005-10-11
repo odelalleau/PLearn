@@ -13,7 +13,7 @@ typedef PP< Template > MoleculeTemplate;
 class Template : public Molecule{
 
 private:
-		typedef Object inherited;
+		typedef Molecule inherited;
 
 
     public:

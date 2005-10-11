@@ -140,7 +140,7 @@ namespace PLearn {
     
     void MoleculeTemplateLearner::build_()
     {
-        if (train_set){
+        if (train_set || !training_mode){
 
 			n_templates = n_active_templates + n_inactive_templates ; 
 
@@ -244,13 +244,7 @@ namespace PLearn {
                         
             for(int i=0 ; i<n_templates ; ++i) 
             {                
-				if (training_mode) {
-					S[i] = new WeightedLogGaussian(i, input_index, mu[i], sigma_square[i] , templates[i]) ; 
-				}
-				else {
-					S[i] = new WeightedLogGaussian(i, input_index, train_set, mu[i], sigma_square[i] , templates[i]) ; 
-				}
-                
+					S[i] = new WeightedLogGaussian(training_mode , i, input_index, mu[i], sigma_square[i] , templates[i]) ; 
             }
             
             V = Var(nhidden , n_templates , "V") ; 
@@ -262,6 +256,7 @@ namespace PLearn {
             sigma_square_S.resize(n_templates) ; 
 
 
+            S_after_scaling.resize(n_templates) ; 
             
             
             for(int i=0 ; i<n_templates ; ++i) { 
@@ -270,19 +265,20 @@ namespace PLearn {
                 sigma_square_S[i] = new SquareVariable(sigma_S[i]) ;             
                 params.push_back(mu_S[i]);
                 params.push_back(sigma_S[i]);
-                S[i] = new DivVariable(S[i] - mu_S[i] , sigma_square_S[i] ) ; 
+                S_after_scaling[i] = new DivVariable(S[i] - mu_S[i] , sigma_square_S[i] ) ; 
             }
             
             S_std.resize(n_templates)  ; 
+            
           
             for(int i=0 ; i<n_templates ; ++i) { 
                 
-                S[i] = new NoBpropVariable (S[i] , &S_std[i] ) ;
+                S_after_scaling[i] = new NoBpropVariable (S_after_scaling[i] , &S_std[i] ) ;
                 
             }
 
             
-            temp_S = new ConcatRowsVariable(S) ; 
+            temp_S = new ConcatRowsVariable(S_after_scaling) ; 
             hl = tanh(product(V,temp_S) + V_b) ; 
             
             params.push_back(V);
@@ -406,6 +402,7 @@ namespace PLearn {
           deepCopyField(sigma_square_S , copies) ; 
           deepCopyField(sigma_square , copies) ; 
           deepCopyField(S , copies) ; 
+          deepCopyField(S_after_scaling , copies) ; 
           deepCopyField(params , copies) ; 
           deepCopyField(costs , copies) ; 
           deepCopyField(temp_output , copies) ; 
@@ -468,7 +465,12 @@ namespace PLearn {
             
             train_set->getRow(i , training_row) ; 
             current_index[0] = training_row[0] ; 
-			WeightedLogGaussian* ppp = (WeightedLogGaussian*) S[i]; //->molecule = Molecules[(int)training_row[0]] ; 
+			
+            for(int j=0 ; j<n_templates ; ++j) { 
+                PP<WeightedLogGaussian> ppp = dynamic_cast<WeightedLogGaussian*>( (Variable*) S[j]); //->molecule = Molecules[(int)training_row[0]] ; 
+                ppp->molecule = Molecules[(int)training_row[0]] ; 
+            }
+
             computeS->fprop(current_index , current_S ) ;             
             
             for(int j=0 ; j<n_templates ; ++j) { 
@@ -551,7 +553,9 @@ namespace PLearn {
 //						string s =  train_set->getString(k,0) ; 
 //                        performLP(Molecules[(int)training_row[0]],templates[i], temp_mat , false) ; 
 //                        W_lp[i][(int)training_row[0]]->matValue << temp_mat ; 
-					S[i]->molecule = Molecules[(int)training_row[0]] ; 
+			        PP<WeightedLogGaussian> ppp = dynamic_cast<WeightedLogGaussian*>( (Variable*) S[i]); //->molecule = Molecules[(int)training_row[0]] ; 
+                    ppp->molecule = Molecules[(int)training_row[0]] ; 
+//					S[i]->molecule = Molecules[(int)training_row[0]] ; 
                 }
 
                 // clear statistics of previous epoch
@@ -597,6 +601,7 @@ namespace PLearn {
 
         output_target_to_costs->recomputeParents();
         test_costf->recomputeParents();
+        training_mode = false ; 
 
 //		molecule = NULL ; 
 
@@ -650,6 +655,15 @@ namespace PLearn {
     void MoleculeTemplateLearner::initializeParams(){
        
 
+    }
+    void MoleculeTemplateLearner::test(VMat testset, PP<VecStatsCollector> test_stats, 
+                      VMat testoutputs, VMat testcosts)const {
+        for(int i=0 ; i<n_templates ; ++i) { 
+                PP<WeightedLogGaussian> ppp = dynamic_cast<WeightedLogGaussian*>( (Variable*) S[i]); //->molecule = Molecules[(int)training_row[0]] ; 
+                ppp->test_set = testset ; 
+        }
+
+        inherited::test(testset , test_stats , testoutputs , testcosts) ; 
     }
 
 

@@ -71,7 +71,8 @@ protected:
   VarArray mu_S, sigma_S ; 
   VarArray sigma_square_S ; 
   VarArray sigma_square ; 
-  VarArray S ; 
+  mutable VarArray S ; 
+  VarArray S_after_scaling ; 
   VarArray params ; 
   VarArray penalties;
   Var w_lp ; 
@@ -121,6 +122,7 @@ public:
 
   TVec<MoleculeTemplate> templates ; 
   Vec paramsvalues ;
+
 
   // ****************
   // * Constructors *
@@ -209,6 +211,9 @@ public:
   //! for which it updates the VecStatsCollector train_stats.
   // (PLEASE IMPLEMENT IN .cc)
   virtual TVec<std::string> getTrainCostNames() const;
+    
+  virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
+                      VMat testoutputs=0, VMat testcosts=0)const ;
   
   void initializeParams() ;
 

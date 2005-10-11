@@ -56,23 +56,14 @@ namespace PLearn {
 							"-1/2 \\sum_{t,t'}w_{tt'}.....\n"
 						   );
 
-	WeightedLogGaussian::WeightedLogGaussian(int the_class_label, Var input_index, Var mu, Var sigma, MoleculeTemplate the_template)
+	WeightedLogGaussian::WeightedLogGaussian(bool the_training_mode , int the_class_label, Var input_index, Var mu, Var sigma, MoleculeTemplate the_template)
 	: inherited(input_index & mu & sigma, 1 , 1)
 	{
 		build_();
 		class_label = the_class_label ; 		
 		current_template = the_template ; 
-		molecule = NULL ; 
-		training_mode = true ; 
-	}
-	WeightedLogGaussian::WeightedLogGaussian(int the_class_label, Var input_index, VMat the_train_set, Var mu, Var sigma, MoleculeTemplate the_template):
-		inherited(input_index & mu & sigma ,  1 , 1){
-		build_();
-		train_set = the_train_set ; 
-		class_label = the_class_label ; 
-		training_mode = false ; 
-		current_template = the_template ; 
-		molecule = NULL ;
+//		molecule = new Molecule() ; 
+		training_mode = the_training_mode ; 
 	}
 
 	void
@@ -103,10 +94,10 @@ namespace PLearn {
 		Mat W_lp ; 
 		int training_index = input_index()->value[0] ; 
 
-		if (! training_mode && class_label == 0 )  // read in the file only once
+		if (! training_mode )  // read in the file only once
 		{		
-			string filename = train_set->getValString(0, input_index()->value[0]) ;  			
-			molecule = Molecule::readMolecule(filename + ".amat" ) ; 
+			string filename = test_set->getValString(0, input_index()->value[0]) ;  			
+			molecule = Molecule::readMolecule(filename) ; 
 		}
 
 
