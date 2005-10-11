@@ -335,7 +335,6 @@ namespace PLearn {
 //            displayVarFn(f_output , 0) ; 
             
 
-//            training_cost = costs[0] ; 
             training_cost = hconcat(sum(hconcat(costs[0] & penalties)));
             training_cost->setName("training cost");
 
