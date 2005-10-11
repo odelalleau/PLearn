@@ -73,14 +73,14 @@ int main()
     
     string survivor = "This string should survive within the Python environment";
     cout << "Setting the string:   '" << survivor << "'" << endl;
-    python->call("set_value", survivor);
+    python->invoke("set_value", survivor);
     cout << "Read back the string: '"
-         << python->call("get_value").as<string>()
+         << python->invoke("get_value").as<string>()
          << "'" << endl;
 
     cout << "Trying to read back from second snippet:" << endl;
     try {
-        string s = python_other->call("get_value").as<string>();
+        string s = python_other->invoke("get_value").as<string>();
         cout << "Read back the string: '" << s << "'" << endl;
     }
     catch (const PythonException& e) {

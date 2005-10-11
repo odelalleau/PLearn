@@ -64,8 +64,8 @@ int main()
     python->inject("injected_c_method1", &x, &X::f);
     python->inject("injected_c_method2", &x, &X::g);
 
-    python->call("trampoline_function_call", 64);
-    python->call("trampoline_method_call",   128);
+    python->invoke("trampoline_function_call", 64);
+    python->invoke("trampoline_method_call",   128);
 
     return 0;
 }

@@ -104,15 +104,15 @@ string python_code =
 
 void nullary(const PythonCodeSnippet* python)
 {
-    python->call("nullary");
+    python->invoke("nullary");
 }
 
 void unary(const PythonCodeSnippet* python)
 {
-    int i    = python->call("unary_int", 42).as<int>();
-    long l   = python->call("unary_long", 42L).as<long>();
-    double d = python->call("unary_float", 42.01).as<double>();
-    string s = python->call("unary_str", "Hello").as<string>();
+    int i    = python->invoke("unary_int", 42).as<int>();
+    long l   = python->invoke("unary_long", 42L).as<long>();
+    double d = python->invoke("unary_float", 42.01).as<double>();
+    string s = python->invoke("unary_str", "Hello").as<string>();
 
     i = i;
     l = l;
@@ -124,8 +124,8 @@ void unary(const PythonCodeSnippet* python)
     Mat m(3,3);
     m.toVec() << v;
 
-    Vec py_vec = python->call("unary_vec", v).as<Vec>();
-    Mat py_mat = python->call("unary_mat", m).as<Mat>();
+    Vec py_vec = python->invoke("unary_vec", v).as<Vec>();
+    Mat py_mat = python->invoke("unary_mat", m).as<Mat>();
 
     TVec<string> tvs;
     PStream is_tvs = openString("[\"Cela\", \"est\", \"juste\", \"et\", \"bon\"]",
@@ -133,30 +133,30 @@ void unary(const PythonCodeSnippet* python)
     is_tvs >> tvs;
     vector<string> vecs(tvs.begin(), tvs.end());
 
-    TVec<string> py_tvs    = python->call("unary_list_str", tvs).as< TVec<string> >();
-    vector<string> py_vecs = python->call("unary_list_str", vecs).as< vector<string> >();
+    TVec<string> py_tvs    = python->invoke("unary_list_str", tvs).as< TVec<string> >();
+    vector<string> py_vecs = python->invoke("unary_list_str", vecs).as< vector<string> >();
 
     map<string,long> mapsd;
     PStream is_mapsd = openString("{ Oui:16 il:32 est:64 juste:128 et:256 bon:512 }",
                                   PStream::plearn_ascii);
     is_mapsd >> mapsd;
 
-    map<string,long> py_mapsd = python->call("unary_dict", mapsd).as< map<string,long> >();
+    map<string,long> py_mapsd = python->invoke("unary_dict", mapsd).as< map<string,long> >();
 }
 
 void binary(const PythonCodeSnippet* python)
 {
-    TVec<int> v = python->call("binary",2,4).as< TVec<int> >();
+    TVec<int> v = python->invoke("binary",2,4).as< TVec<int> >();
 }
 
 void ternary(const PythonCodeSnippet* python)
 {
-    TVec<int> v = python->call("ternary",2,4,8).as< TVec<int> >();
+    TVec<int> v = python->invoke("ternary",2,4,8).as< TVec<int> >();
 }
 
 void quaternary(const PythonCodeSnippet* python)
 {
-    TVec<int> v = python->call("quaternary",2,4,8,16).as< TVec<int> >();
+    TVec<int> v = python->invoke("quaternary",2,4,8,16).as< TVec<int> >();
 }
 
 
@@ -166,7 +166,7 @@ int main()
     python->build();
 
     const int N = 10000;
-    ProgressBar pb("Calling Python Functions", N);
+    ProgressBar pb("Invoking Python Functions", N);
     
     for (int i=0 ; i<N ; ++i) {
         pb.update(i);
