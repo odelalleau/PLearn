@@ -123,6 +123,13 @@ namespace PLearn {
 		declareOption(ol, "training_mode", &MoleculeTemplateLearner::training_mode, OptionBase::buildoption, 
 				"training_mode\n");
 
+		declareOption(ol, "templates", &MoleculeTemplateLearner::templates, OptionBase::learntoption, 
+				"templates\n");
+
+		declareOption(ol, "paramsvalues", &MoleculeTemplateLearner::paramsvalues, OptionBase::learntoption, 
+				"paramsvalues\n");
+
+
         
         
         // Now call the parent class' declareOptions
@@ -198,16 +205,16 @@ namespace PLearn {
             for(int i=0 ; i<n_templates ; ++i) { 
 
 				if (training_mode) {
-					mu[i] = Var(Molecules[id_templates[i]].chem.length() , Molecules[id_templates[i]].chem.width() , "Mu") ; 
-					mu[i]->matValue << Molecules[id_templates[i]].chem ;  
+					mu[i] = Var(Molecules[id_templates[i]]->chem.length() , Molecules[id_templates[i]]->chem.width() , "Mu") ; 
+					mu[i]->matValue << Molecules[id_templates[i]]->chem ;  
 
-					sigma[i] = Var(Molecules[id_templates[i]].chem.length() , Molecules[id_templates[i]].chem.width() , "Sigma") ; 
+					sigma[i] = Var(Molecules[id_templates[i]]->chem.length() , Molecules[id_templates[i]]->chem.width() , "Sigma") ; 
 					sigma[i]->value.fill(0) ; 
 
 				}
 				else {				
-					mu[i] = Var(templates[i].chem.length() , templates[i].chem.width() ,"Mu" ) ; 					
-					sigma[i] = Var(templates[i].dev.length() , templates[i].dev.width() , "Sigma") ; 
+					mu[i] = Var(templates[i]->chem.length() , templates[i]->chem.width() ,"Mu" ) ; 					
+					sigma[i] = Var(templates[i]->dev.length() , templates[i]->dev.width() , "Sigma") ; 
 				}
                 
                 params.push_back(mu[i]) ;
@@ -220,15 +227,16 @@ namespace PLearn {
 				}
 				
                 if (training_mode) {
-				
-                templates[i].chem.resize(mu[i]->matValue.length() , mu[i]->matValue.width()) ; 
-                templates[i].chem << mu[i]->matValue ; 
+
+				templates[i] = new Template() ; 
+                templates[i]->chem.resize(mu[i]->matValue.length() , mu[i]->matValue.width()) ; 
+                templates[i]->chem << mu[i]->matValue ; 
                 
-                templates[i].geom.resize(Molecules[id_templates[i]].geom.length() , Molecules[id_templates[i]].geom.width()) ;                 
-                templates[i].geom << Molecules[id_templates[i]].geom ;                 
+                templates[i]->geom.resize(Molecules[id_templates[i]]->geom.length() , Molecules[id_templates[i]]->geom.width()) ;                 
+                templates[i]->geom << Molecules[id_templates[i]]->geom ;                 
                 
-                templates[i].dev.resize (sigma_square[i]->matValue.length() ,  sigma_square[i]->matValue.width() ) ; 
-                templates[i].dev << sigma_square[i]->matValue ;  // SIGMA_SQUARE has not the right value yet ??????
+                templates[i]->dev.resize (sigma_square[i]->matValue.length() ,  sigma_square[i]->matValue.width() ) ; 
+                templates[i]->dev << sigma_square[i]->matValue ;  // SIGMA_SQUARE has not the right value yet ??????
 
 				}
             
@@ -236,12 +244,13 @@ namespace PLearn {
                         
             for(int i=0 ; i<n_templates ; ++i) 
             {                
-
-//                    performLP(Molecules[j],templates[i], temp_mat , false) ; 
-//                    W_lp[i][j] = Var(temp_mat.length() , temp_mat.width()) ; 
-//                    W_lp[i][j]->matValue << temp_mat ; 
-
-                S[i] = new WeightedLogGaussian(i, input_index, mu[i], sigma_square[i] , templates[i], molecule) ; 
+				if (training_mode) {
+					S[i] = new WeightedLogGaussian(i, input_index, mu[i], sigma_square[i] , templates[i]) ; 
+				}
+				else {
+					S[i] = new WeightedLogGaussian(i, input_index, train_set, mu[i], sigma_square[i] , templates[i]) ; 
+				}
+                
             }
             
             V = Var(nhidden , n_templates , "V") ; 
@@ -294,32 +303,44 @@ namespace PLearn {
 
             params.push_back(W_b);
 
-            for(int i=0 ; i<n_templates ; ++i) { 
-                mu_S[i]->value.fill(0) ; 
-                sigma_S[i]->value.fill(1) ; 
-            }
+			// initialize all the parameters
+			if (training_mode) {
+
+				paramsvalues.resize(params.nelems());
+
+				for(int i=0 ; i<n_templates ; ++i) { 
+					mu_S[i]->value.fill(0) ; 
+					sigma_S[i]->value.fill(1) ; 
+				}
+				Vec t_mean(n_templates) , t_std(n_templates) ; 
+
+				compute_S_mean_std(t_mean,t_std) ;        
+
+				for(int i=0 ; i<n_templates ; ++i) { 
+					mu_S[i]->value[0] = t_mean[i] ;         
+					sigma_S[i]->value[0] = sqrt(t_std[i]) ; 
+				}
+
+				for(int i=0 ; i<n_templates ; ++i) { 
+					S_std[i] = lrate2 ; 
+				}
+
+				manual_seed(seed_) ;
+
+				fill_random_uniform(V->matValue,-1,1) ;         
+				fill_random_uniform(V_b->matValue,-1,1) ;                 
+				//        fill_random_uniform(V_direct->matValue,-0.0001,0.0001) ;                 
+				fill_random_uniform(W->matValue,-1,1) ; 
+				fill_random_uniform(W_b->matValue,-1,1) ; 
 
 
-            Vec t_mean(n_templates) , t_std(n_templates) ; 
+			}
+			else {			
+//		                params << paramsvalues;
+			}
 
-            compute_S_mean_std(t_mean,t_std) ;        
+			params.makeSharedValue(paramsvalues);
 
-            for(int i=0 ; i<n_templates ; ++i) { 
-                mu_S[i]->value[0] = t_mean[i] ;         
-                sigma_S[i]->value[0] = sqrt(t_std[i]) ; 
-            }
-
-            for(int i=0 ; i<n_templates ; ++i) { 
-                S_std[i] = lrate2 ; 
-            }
-
-            manual_seed(seed_) ;
-
-            fill_random_uniform(V->matValue,-1,1) ;         
-            fill_random_uniform(V_b->matValue,-1,1) ;                 
-            //        fill_random_uniform(V_direct->matValue,-0.0001,0.0001) ;                 
-            fill_random_uniform(W->matValue,-1,1) ; 
-            fill_random_uniform(W_b->matValue,-1,1) ; 
 
             target = Var(1 , "the target") ; 
 
@@ -447,6 +468,7 @@ namespace PLearn {
             
             train_set->getRow(i , training_row) ; 
             current_index[0] = training_row[0] ; 
+			WeightedLogGaussian* ppp = (WeightedLogGaussian*) S[i]; //->molecule = Molecules[(int)training_row[0]] ; 
             computeS->fprop(current_index , current_S ) ;             
             
             for(int j=0 ; j<n_templates ; ++j) { 
@@ -515,25 +537,28 @@ namespace PLearn {
                 //update the template 
                 for(int i=0 ; i<n_templates ; ++i) 
                 {
-                    templates[i].chem << mu[i]->matValue ; 
+                    templates[i]->chem << mu[i]->matValue ; 
 
-                    templates[i].dev << sigma_square[i]->matValue ; 
+                    templates[i]->dev << sigma_square[i]->matValue ; 
 
                 }
                 //align only the next training example
                 Mat temp_mat ;                 
                 Vec training_row(2) ; 
+				train_set->getRow(k , training_row) ; 
                 for(int i=0 ; i<n_templates ; ++i) { 
-                        train_set->getRow(k , training_row) ; 
-//						string s =  train_set.getString(k) ; 
+                        
+//						string s =  train_set->getString(k,0) ; 
 //                        performLP(Molecules[(int)training_row[0]],templates[i], temp_mat , false) ; 
 //                        W_lp[i][(int)training_row[0]]->matValue << temp_mat ; 
+					S[i]->molecule = Molecules[(int)training_row[0]] ; 
                 }
 
                 // clear statistics of previous epoch
                 train_stats->forget();
 
 //                displayVarFn(f_output , true) ; 
+				
                 optimizer->optimizeN(*train_stats);
 //                temp_S->verifyGradient(1e-4) ; 
 
@@ -543,9 +568,6 @@ namespace PLearn {
                 
                 if(pb)
                     pb->update(stage);
-
-
-
             }
            
             
@@ -557,7 +579,7 @@ namespace PLearn {
 
 
         }        
-
+/*
         Mat temp_mat ;                 
         for(int i=0 ; i<n_templates ; ++i) { 
             W_lp[i].resize(Molecules.size()) ; 
@@ -566,7 +588,7 @@ namespace PLearn {
                 W_lp[i][j]->matValue << temp_mat ; 
             }
         }
-
+*/
         for(int i=0 ; i<n_templates ; ++i) {         
             cout << "mu[0]" << mu[i]->matValue << endl ; 
             cout << "sigma[0]" << sigma_square[i]->matValue << endl ; 
@@ -575,6 +597,8 @@ namespace PLearn {
 
         output_target_to_costs->recomputeParents();
         test_costf->recomputeParents();
+
+//		molecule = NULL ; 
 
     }
 

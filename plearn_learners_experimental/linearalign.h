@@ -345,13 +345,13 @@ void static autoThreshLP(const Mat& dist1,const Mat& dist2,const Mat& nk,const v
 @param : isweighted : take into account deviations ?
 @descr : given the molecule names , reads the vrml files and the properties and passes on the appropriate data to autoThreshLP. this is the front end that is used.
 @see : autoThreshLP */
-void static performLP(const Molecule & name1,const Molecule & name2,Mat& wm,bool isweighted){
+void static performLP(PMolecule name1,MoleculeTemplate name2,Mat& wm,bool isweighted){
 try{	
 //	cout<<"performing lp on "<<name1<<" "<<name2<<endl;
 	Mat xprpt,yprpt;
 
-    xprpt = name1.chem ; 
-    yprpt = name2.chem ; 
+    xprpt = name1->chem ; 
+    yprpt = name2->chem ; 
     
 	Mat dev;
 //	if(isweighted){
@@ -391,16 +391,16 @@ try{
 	
 	/*reading distances*/
 	Mat dist1,dist2;
-	calculateEuclDist(name1.geom,dist1);
-	calculateEuclDist(name2.geom,dist2);
+	calculateEuclDist(name1->geom,dist1);
+	calculateEuclDist(name2->geom,dist2);
 	if(dist1.nrows()!=rows || dist2.nrows()!=cols){
 		cout<<dist1.nrows()<<" "<<dist2.nrows()<<" "<<rows<<" "<<cols<<endl;
 		PLERROR("the dimensions in dist files and nkmat do not match\n");
 	}
 	Mat xmat,ymat;
 
-    xmat = name1.geom ; 
-    ymat = name2.geom ; 
+    xmat = name1->geom ; 
+    ymat = name2->geom ; 
     
 	//cout<<"got vertex coords"<<endl;
 	for(int i=0;i<n;i++){

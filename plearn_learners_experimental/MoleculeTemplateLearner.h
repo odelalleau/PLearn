@@ -92,10 +92,10 @@ protected:
   Func f_output ;     
   Func output_target_to_costs ;
   Func test_costf ;
-  TVec<VarArray> W_lp ; 
+  TVec<VarArray> W_lp ;   
 
-  vector<Molecule> Molecules ; 
-  Molecule * molecule ; 
+  vector<PMolecule> Molecules ; 
+//  PMolecule  molecule ; 
 
     
 public:
@@ -119,8 +119,8 @@ public:
   // Build options related to the optimization:
   PP<Optimizer> optimizer; // the optimizer to use (no default)
 
-  TVec<Template> templates ; 
-
+  TVec<MoleculeTemplate> templates ; 
+  Vec paramsvalues ;
 
   // ****************
   // * Constructors *

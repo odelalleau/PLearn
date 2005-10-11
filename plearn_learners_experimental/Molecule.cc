@@ -3,7 +3,8 @@
 #include <plearn/vmat/VMat.h>
 
 using namespace std ; 
-using namespace PLearn ; 
+namespace PLearn {
+
                                                                                                                                                   
 Molecule::Molecule(){}
 Molecule::Molecule(Mat _chem, Mat _geom) {
@@ -15,14 +16,40 @@ Molecule::Molecule(Mat _chem, Mat _geom) {
     
 }
 
-Molecule::Molecule(const Molecule & m) {
-    
-    chem.resize(m.chem.length(), m.chem.width() ) ; 
-    chem << m.chem ; 
-     
-    geom.resize(m.geom.length(), m.geom.width() ) ; 
-    geom << m.geom ; 
-    
+PLEARN_IMPLEMENT_OBJECT(Molecule,
+    "A Molecule",
+    ""
+);
+
+void Molecule::declareOptions(OptionList& ol)
+{
+  declareOption(ol, "chem", &Molecule::chem, OptionBase::buildoption,
+                "Chemical Properties");
+
+  declareOption(ol, "geom", &Molecule::geom,
+                OptionBase::buildoption,
+                "Geom Properties");
+
+  // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
+
+void Molecule::build_()
+{}
+
+void Molecule::build()
+{
+  inherited::build();
+  build_();
+}
+
+void Molecule::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+
+  deepCopyField(chem, copies);
+  deepCopyField(geom, copies);
+
 }
 
 
@@ -66,27 +93,38 @@ void Molecule::getVrmlVertexCoords(const string& name,Mat& xmat){
 }
 
 //append to storage the molecules from file 1
-void Molecule::readMolecules(const string & fileName, vector<Molecule> & storage ) {
+PMolecule Molecule::readMolecule(const string & file){
+
+
+	Vec column_indices(3) ; 
+	for(int i=0 ; i<3 ; ++i) column_indices[i] = i ; 
+
+
+	Mat chem, geom ; 
+	VMat t = getDataSet(file + ".amat") ; 
+	Mat full_chem = t.toMat() ; 
+	chem.resize(full_chem.length() ,3 ) ; 
+	selectColumns(full_chem , column_indices , chem) ; 
+	normalize(chem) ;         
+	Molecule::getVrmlVertexCoords(file,geom);
+//        Molecule m(chem,geom) ; 
+
+	PMolecule pm = new Molecule(chem , geom ) ; 
+	return pm ;
+
+}
+void Molecule::readMolecules(const string & fileName, vector<PMolecule> & storage ) {
 
 	ifstream f(fileName.c_str());
 	string file;
-	Mat chem, geom ; 
-
-    Vec column_indices(3) ; 
-    for(int i=0 ; i<3 ; ++i) column_indices[i] = i ; 
     
 
 	while(f>>file){
 //		load(file+"SurfacePrpi.mat",chem);
-        VMat t = getDataSet(file+".amat") ; 
-        Mat full_chem = t.toMat() ; 
-        chem.resize(full_chem.length() ,3 ) ; 
-        selectColumns(full_chem , column_indices , chem) ; 
-        normalize(chem) ;         
-		Molecule::getVrmlVertexCoords(file,geom);
-        Molecule m(chem,geom) ; 
-		storage.push_back(m) ; 
+		storage.push_back(readMolecule(file)) ; 		
 	}
     
+}
+
 }
 

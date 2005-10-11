@@ -5,8 +5,17 @@
 #include <string>
 #include "Molecule.h"
 
+namespace PLearn {
+
+class Template;
+typedef PP< Template > MoleculeTemplate;
 
 class Template : public Molecule{
+
+private:
+		typedef Object inherited;
+
+
     public:
         //the properties of the template
         PLearn::Mat dev;
@@ -23,19 +32,31 @@ class Template : public Molecule{
             dev.resize(t.dev.length(), t.dev.width() ) ; 
             dev << t.dev ; 
         }
+		virtual ~Template() {}
 
-        Template & operator= (const Template & t) {
-            chem.resize(t.chem.length(), t.chem.width() ) ; 
-            chem << t.chem ; 
+private: 
+  //! This does the actual building. 
+  void build_();
 
-            geom.resize(t.geom.length(), t.geom.width() ) ; 
-            geom << t.geom ; 
+protected: 
+  //! Declares this class' options.
+  static void declareOptions(OptionList& ol);
 
-            dev.resize(t.dev.length(), t.dev.width() ) ; 
-            dev << t.dev ; 
-            
-            return *this ; 
-        }
+public:
+  // Declares other standard object methods.
+  PLEARN_DECLARE_OBJECT(Template);
+
+  // simply calls inherited::build() then build_() 
+  virtual void build();
+
+  //! Transforms a shallow copy into a deep copy
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+
+
 
 };
+// Declares a few other classes and functions related to this class
+DECLARE_OBJECT_PTR(Template);
+
+}
 #endif

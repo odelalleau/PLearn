@@ -56,13 +56,23 @@ namespace PLearn {
 							"-1/2 \\sum_{t,t'}w_{tt'}.....\n"
 						   );
 
-	WeightedLogGaussian::WeightedLogGaussian(int the_class_label, Var input_index, Var mu, Var sigma, Template the_template, Molecule * the_molecule)
+	WeightedLogGaussian::WeightedLogGaussian(int the_class_label, Var input_index, Var mu, Var sigma, MoleculeTemplate the_template)
 	: inherited(input_index & mu & sigma, 1 , 1)
 	{
 		build_();
 		class_label = the_class_label ; 		
 		current_template = the_template ; 
-		molecule = the_molecule ; 
+		molecule = NULL ; 
+		training_mode = true ; 
+	}
+	WeightedLogGaussian::WeightedLogGaussian(int the_class_label, Var input_index, VMat the_train_set, Var mu, Var sigma, MoleculeTemplate the_template):
+		inherited(input_index & mu & sigma ,  1 , 1){
+		build_();
+		train_set = the_train_set ; 
+		class_label = the_class_label ; 
+		training_mode = false ; 
+		current_template = the_template ; 
+		molecule = NULL ;
 	}
 
 	void
@@ -92,7 +102,15 @@ namespace PLearn {
 		int p = mu()->width() ;
 		Mat W_lp ; 
 		int training_index = input_index()->value[0] ; 
-		performLP(*molecule,current_template, W_lp , false) ; 
+
+		if (! training_mode && class_label == 0 )  // read in the file only once
+		{		
+			string filename = train_set->getValString(0, input_index()->value[0]) ;  			
+			molecule = Molecule::readMolecule(filename + ".amat" ) ; 
+		}
+
+
+		performLP(molecule,current_template, W_lp , false) ; 
 		int n = W_lp.width() ; 
 		int m = W_lp.length() ; 
 
@@ -134,10 +152,16 @@ namespace PLearn {
 	{
 		int n = mu()->length() ; 
 		int p = mu()->width() ;
-		int training_index = input_index()->value[0] ; 
-		int m = W_lp[training_index]->matValue.length() ; 
+		Mat W_lp ; 
 		Mat input ;
-		input = molecule->chem ;
+//		int training_index = input_index()->value[0] ; 
+
+		input = (molecule)->chem ;
+		
+
+		int m = W_lp.length() ; 
+		
+		
 //    cout << "MATGRDIENT" << class_label<< endl ; 
 
 
@@ -145,8 +169,8 @@ namespace PLearn {
 			for (int k=0 ; k<p ; ++k) {
 				sigma()->matGradient[i][k] -= gradientdata[0] / sigma()->matValue[i][k] ; 
 				for (int j=0 ; j<m ; ++j) {
-					mu()->matGradient[i][k] += gradientdata[0] * W_lp[training_index]->matValue[j][i] * (input[j][k] - mu()->matValue[i][k]) / square(sigma()->matValue[i][k]) ;
-					sigma()->matGradient[i][k] += gradientdata[0] * W_lp[training_index]->matValue[j][i] * square(input[j][k] - mu()->matValue[i][k]) / cube(sigma()->matValue[i][k]) ;
+					mu()->matGradient[i][k] += gradientdata[0] * W_lp[j][i] * (input[j][k] - mu()->matValue[i][k]) / square(sigma()->matValue[i][k]) ;
+					sigma()->matGradient[i][k] += gradientdata[0] * W_lp[j][i] * square(input[j][k] - mu()->matValue[i][k]) / cube(sigma()->matValue[i][k]) ;
 
 					if (fabs(sigma()->matGradient[i][k]) > 5) {
 //                 char buf[20] ; 
@@ -156,7 +180,7 @@ namespace PLearn {
 //                 fprintf(fo , " W_lp[training_index]->matValue[j][i]= %lf \n" , W_lp[training_index]->matValue[j][i]) ; 
 //                 fprintf(fo , " input[j][k] = %lf \n" , input[j][k]) ; 
 //                 fprintf(fo , " mu()->matValue[i][k] = %lf \n" , mu()->matValue[i][k]) ; 
-						printf(" sigma()->matValue[i][k] = %lf \n" , sigma()->matValue[i][k]) ; 
+//						printf(" sigma()->matValue[i][k] = %lf \n" , sigma()->matValue[i][k]) ; 
 //                 fclose(fo) ;
 //                 exit(1) ; 
 					}
