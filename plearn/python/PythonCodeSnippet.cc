@@ -189,7 +189,7 @@ void PythonCodeSnippet::setGlobalObject(const string& object_name,
 
 //#####  Function Call Interface  #############################################
 
-bool PythonCodeSnippet::isCallable(const char* function_name) const
+bool PythonCodeSnippet::isInvokable(const char* function_name) const
 {
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
@@ -201,7 +201,7 @@ bool PythonCodeSnippet::isCallable(const char* function_name) const
 
 // Zero-argument function call
 PythonObjectWrapper
-PythonCodeSnippet::call(const char* function_name) const
+PythonCodeSnippet::invoke(const char* function_name) const
 {
     PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
                                            function_name);
@@ -214,7 +214,7 @@ PythonCodeSnippet::call(const char* function_name) const
             handlePythonErrors();
     }
     else
-        PLERROR("PythonCodeSnippet::call: cannot call function '%s'",
+        PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
                 function_name);
 
     return PythonObjectWrapper(return_value);

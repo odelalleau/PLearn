@@ -139,10 +139,10 @@ void PythonProcessedVMatrix::build_()
     assert( source );
     
     // Next ensure that we have some consistency
-    if (! python->isCallable("getRow"))
+    if (! python->isInvokable("getRow"))
         PLERROR("PythonProcessedVMatrix: the Python code snippet must define the function "
                 "'getRow'");
-    if (! python->isCallable("getFieldNames"))
+    if (! python->isInvokable("getFieldNames"))
         PLERROR("PythonProcessedVMatrix: the Python code snippet must define the function "
                 "'getFieldNames'");
 
@@ -156,14 +156,14 @@ void PythonProcessedVMatrix::build_()
     
     // Get the new fieldnames (and the new width by the same token)
     TVec<string> fieldnames =
-        python->call("getFieldNames", source->fieldNames()).as< TVec<string> >();
+        python->invoke("getFieldNames", source->fieldNames()).as< TVec<string> >();
     length_ = source->length();
     width_  = fieldnames.size();
     declareFieldNames(fieldnames);
     
     // Obtain and set the new sizes if defined
-    if (python->isCallable("getSizes")) {
-        TVec<int> sizes = python->call("getSizes",
+    if (python->isInvokable("getSizes")) {
+        TVec<int> sizes = python->invoke("getSizes",
                                        source->inputsize(),
                                        source->targetsize(),
                                        source->weightsize()).as< TVec<int> >();
@@ -179,9 +179,9 @@ void PythonProcessedVMatrix::build_()
     // Finish building from source informations...
     setMetaInfoFromSource();
 
-    // Finally, call the Python builder if one exist
-    if (python->isCallable("build"))
-        python->call("build");
+    // Finally, call the Python builder if one exists
+    if (python->isInvokable("build"))
+        python->invoke("build");
 }
 
 
@@ -194,7 +194,7 @@ void PythonProcessedVMatrix::getNewRow(int i, const Vec& v) const
     source->getRow(i, sourcerow);
 
     // Process this row using Python
-    Vec processed = python->call("getRow", i, sourcerow).as<Vec>();
+    Vec processed = python->invoke("getRow", i, sourcerow).as<Vec>();
 
     // Ensure it has the correct size and copy into v
     if (processed.size() != v.size())
