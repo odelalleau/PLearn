@@ -688,6 +688,7 @@ void NNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv,
 ///////////////////
 void NNet::computeOutput(const Vec& inputv, Vec& outputv) const
 {
+    outputv.resize(outputsize());
     f->fprop(inputv,outputv);
 }
 
@@ -697,6 +698,7 @@ void NNet::computeOutput(const Vec& inputv, Vec& outputv) const
 void NNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
                                  Vec& outputv, Vec& costsv) const
 {
+    outputv.resize(outputsize());
     test_costf->fprop(inputv&targetv, outputv&costsv);
 }
 
