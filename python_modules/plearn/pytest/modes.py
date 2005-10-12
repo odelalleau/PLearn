@@ -380,11 +380,15 @@ class add(FamilyConfigMode):
 
         ProgClass = globals()[options.program_type]
         program = ProgClass(name=options.program_name)
+	
+	resources = []
+        if options.resources != "":
+            resources = options.resources.split(',')
 
         # Caught by Test's instances management         
         Test( name=test_name, program=program,
               arguments=options.arguments,
-              resources=options.resources.split(',') )              
+              resources=resources )              
         super(add, self).__init__(targets, options)
                 
     def test_hook(self, test):
