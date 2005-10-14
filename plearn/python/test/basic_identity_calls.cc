@@ -124,7 +124,8 @@ void unary(const PythonCodeSnippet* python)
          << python->invoke("unary_str", "Hello").as<string>() << endl;
 
     Vec v;
-    PStream is = openString("[2,3,5,7,11,13,17,19,23]", PStream::plearn_ascii);
+    string str_vec = "[2,3,5,7,11,13,17,19,23]";
+    PStream is = openString(str_vec, PStream::plearn_ascii);
     is >> v;
     Mat m(3,3);
     m.toVec() << v;
@@ -138,8 +139,8 @@ void unary(const PythonCodeSnippet* python)
          << endl;
 
     TVec<string> tvs;
-    PStream is_tvs = openString("[\"Cela\", \"est\", \"juste\", \"et\", \"bon\"]",
-                                PStream::plearn_ascii);
+    string str_tvs = "[\"Cela\", \"est\", \"juste\", \"et\", \"bon\"]";
+    PStream is_tvs = openString(str_tvs, PStream::plearn_ascii);
     is_tvs >> tvs;
     vector<string> vecs(tvs.begin(), tvs.end());
 
@@ -152,8 +153,8 @@ void unary(const PythonCodeSnippet* python)
          << endl;
 
     map<string,long> mapsd;
-    PStream is_mapsd = openString("{ Oui:16 il:32 est:64 juste:128 et:256 bon:512 }",
-                                  PStream::plearn_ascii);
+    string str_mapsd = "{ Oui:16 il:32 est:64 juste:128 et:256 bon:512 }";
+    PStream is_mapsd = openString(str_mapsd, PStream::plearn_ascii);
     is_mapsd >> mapsd;
 
     cout << "Calling unary_dict(mapsd)   : "
