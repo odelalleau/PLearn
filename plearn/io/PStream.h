@@ -1078,7 +1078,9 @@ void readSequence(PStream& in, SequenceType& seq)
     {
         in.skipBlanksAndComments();
         int c = in.peek();
-        if(c=='[') // read until ']'
+        if (c == EOF)
+            PLERROR("In PStream.h / readSequence - The input stream is empty");
+        else if(c=='[') // read until ']'
         {
             in.get(); // skip '['
             in.skipBlanksAndCommentsAndSeparators();
