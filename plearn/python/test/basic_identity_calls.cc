@@ -133,8 +133,8 @@ void unary(const PythonCodeSnippet* python)
          << tostring( python->invoke("unary_vec", v).as<Vec>() )
          << endl;
 
-    cout << "Calling unary_mat(m)        : " << endl
-         << tostring( python->invoke("unary_mat", m).as<Mat>() )
+    cout << "Calling unary_mat(m)        : " << endl;
+    cout << tostring( python->invoke("unary_mat", m).as<Mat>() )
          << endl;
 
     TVec<string> tvs;

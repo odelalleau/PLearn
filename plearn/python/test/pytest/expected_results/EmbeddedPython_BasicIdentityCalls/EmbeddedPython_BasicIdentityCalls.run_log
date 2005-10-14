@@ -54,11 +54,11 @@ Calling unary_long(42L)     : 42
 Calling unary_float(42.01)  : 42.01
 Calling unary_str('Hello')  : Hello
 Calling unary_vec(v)        : 2           3           5           7           11          13          17          19          23          
+Calling unary_mat(m)        : 
 Called unary_mat with:
 [[  2.   3.   5.]
  [  7.  11.  13.]
  [ 17.  19.  23.]]
-Calling unary_mat(m)        : 
 2           3           5           
 7           11          13          
 17          19          23          
