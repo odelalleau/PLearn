@@ -209,6 +209,8 @@ void VMatrix::unduplicateFieldNames()
 TVec<string> VMatrix::fieldNames() const
 {
     int d = width();
+    if (d < 0)
+        return TVec<string>();
     TVec<string> names(d);
     for(int i=0; i<d; i++)
         names[i] = fieldName(i);

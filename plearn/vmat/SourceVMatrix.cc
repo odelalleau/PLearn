@@ -66,7 +66,10 @@ PLEARN_IMPLEMENT_OBJECT(SourceVMatrix,
 void SourceVMatrix::setMetaDataDir(const PPath& the_metadatadir)
 {
     inherited::setMetaDataDir(the_metadatadir);
-  
+
+    if (!source)
+        return;
+
     if(!source->hasMetaDataDir())
         source->setMetaDataDir(the_metadatadir/"Source");
 

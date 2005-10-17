@@ -114,6 +114,9 @@ void SelectRowsMultiInstanceVMatrix::build_()
 
     random_generator->manual_seed(seed);
 
+    if (!source)
+        return;
+
 // Generating 'indices' and 'mi_info' vector.
     
     int bag_signal_column = source->targetsize() - 1;
