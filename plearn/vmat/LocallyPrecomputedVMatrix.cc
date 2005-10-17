@@ -61,18 +61,24 @@ LocallyPrecomputedVMatrix::LocallyPrecomputedVMatrix()
     precomp_type = "pmat";
 }
 
-PLEARN_IMPLEMENT_OBJECT(LocallyPrecomputedVMatrix,
-                        "A VMat that precomputes its source in a local directory.",
-                        "The 'sequential_access' option can be used to ensure that parallel experiments\n"
-                        "do not access simultaneously the source VMat, in order to stay nice with the\n"
-                        "disk usage. This is achieved thanks to a system lock file in the metadatadir of\n"
-                        "the source VMat. Because it may happen that a lock file remains after an experiment\n"
-                        "crashed, it will be ignored when it gets older than 'max_wait' minutes.\n"
-                        "The default behavior (which can be modified through this VMat's options) is to\n"
-                        "automatically delete the precomputed file when it is not used anymore (actually,\n"
-                        "the whole metadata directory will be deleted, so you should not store important\n"
-                        "informations in it).\n"
-    );
+PLEARN_IMPLEMENT_OBJECT(
+    LocallyPrecomputedVMatrix,
+    "A VMat that precomputes its source in a local directory.",
+    "The 'sequential_access' option can be used to ensure that parallel experiments\n"
+    "do not access simultaneously the source VMat, in order to stay nice with the\n"
+    "disk usage. This is achieved thanks to a system lock file in the metadatadir of\n"
+    "the source VMat. Because it may happen that a lock file remains after an experiment\n"
+    "crashed, it will be ignored when it gets older than 'max_wait' minutes.\n"
+    "The default behavior (which can be modified through this VMat's options) is to\n"
+    "automatically delete the precomputed file when the underlying VMatrix is deleted.\n"
+    "Note that the whole metadata directory will be deleted, so you should not store\n"
+    "important data in it).\n"
+    "Two formats are accepted: 'pmat' (FileVMatrix) and 'dmat'. The behavior with a 'pmat'\n"
+    "file is currently safer, as the file will not be deleted until we can assume no other\n"
+    "FileVMatrix is accessing the precomputed file. On the other hand, the precomputed\n"
+    "'dmat' directory will be deleted as soon as the underlying DiskVMatrix object is\n"
+    "deleted, even if an additional DiskVMatrix using the same directory has been loaded.\n"
+);
 
 ////////////////////
 // declareOptions //
@@ -99,9 +105,6 @@ void LocallyPrecomputedVMatrix::declareOptions(OptionList& ol)
 
     redeclareOption(ol, "metadatadir", &LocallyPrecomputedVMatrix::metadatadir, OptionBase::nosave,
                     "The metadatadir will be defined by the 'local_dir' option.");
-
-    redeclareOption(ol, "precomp_type", &LocallyPrecomputedVMatrix::precomp_type, OptionBase::nosave,
-                    "We always use 'pmat' here.");
 }
 
 ///////////
@@ -118,7 +121,7 @@ void LocallyPrecomputedVMatrix::build()
 ////////////
 void LocallyPrecomputedVMatrix::build_()
 {
-    if (metadatadir == "") {
+    if (!hasMetaDataDir()) {
         bool made_dir = force_mkdir(local_dir);
         if (!made_dir) {
             PLWARNING(
@@ -137,7 +140,9 @@ void LocallyPrecomputedVMatrix::build_()
         }
         inherited::build();
         precomp_source->setOption("remove_when_done", tostring(remove_when_done));
-        precomp_source->setOption("track_ref", "1");
+        if (precomp_type == "pmat")
+            // The 'track_ref' option is currently only available for '.pmat'.
+            precomp_source->setOption("track_ref", "1");
         precomp_source->build();
         if (sequential_access)
             source->unlockMetaDataDir();
@@ -157,22 +162,41 @@ void LocallyPrecomputedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////////////////////
 LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix()
 {
-    if (remove_when_done && metadatadir != "") {
+    if (remove_when_done && hasMetaDataDir()) {
+        bool remove_metadata;
         // Get the name of the precomputed file.
-        string filename_option;
-        openString(precomp_source->getOption("filename"), PStream::plearn_ascii)
-            >> filename_option;
-        PPath precomputed_file = PPath(filename_option);
-        // First we delete the precomputed source, so that it does not try to save
-        // more stuff in the metadatadir after it has been deleted.
-        precomp_source = 0;
-        // Let's check whether more FileVMatrix are accessing the same precomputed file.
-        if (FileVMatrix::countRefs(precomputed_file) == 0) {
-            bool removed = force_rmdir(metadatadir);
+        if (precomp_type == "pmat") {
+            string filename_option;
+            openString(precomp_source->getOption("filename"), PStream::plearn_ascii)
+                >> filename_option;
+            PPath precomputed_file = PPath(filename_option);
+            // First we delete the precomputed source, so that it does not try to save
+            // more stuff in the metadatadir after it has been deleted.
+            precomp_source = 0;
+            // Let's check whether more FileVMatrix are accessing the same precomputed file.
+            if (FileVMatrix::countRefs(precomputed_file) == 0) {
+                remove_metadata = true;
+            } else
+                remove_metadata = false;
+        } else {
+            assert( precomp_type == "dmat" );
+            string dirname_option;
+            openString(precomp_source->getOption("dirname"), PStream::plearn_ascii)
+                >> dirname_option;
+            PPath precomputed_dir = PPath(dirname_option);
+            // Deleting the precomputed source should trigger the removal of
+            // its data and metadata directories.
+            precomp_source = 0;
+            remove_metadata = true;
+        }
+        if (remove_metadata) {
+            PPath mdir = getMetaDataDir();
+            bool removed = force_rmdir(mdir);
             if (!removed && verbosity >= 1)
-                PLWARNING("In LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix - "
-                          "The precomputed data (in '%s') could not be removed",
-                          metadatadir.absolute().c_str());
+                PLWARNING(
+                    "In LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix "
+                    "- The precomputed data (in '%s') could not be removed",
+                    mdir.absolute().c_str());
         }
     }
 }
