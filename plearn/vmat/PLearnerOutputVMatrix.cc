@@ -86,11 +86,11 @@ void PLearnerOutputVMatrix::getNewRow(int i, const Vec& v) const
     int c=0;
     if (learners_need_train) {
         // We need to train the learners first.
-        for (int i = 0; i < learners.length(); i++)
+        for (int k = 0; k < learners.length(); k++)
         {
             PP<VecStatsCollector> stats = new VecStatsCollector();
-            learners[i]->setTrainStatsCollector(stats);
-            learners[i]->train();
+            learners[k]->setTrainStatsCollector(stats);
+            learners[k]->train();
             stats->finalize();
         }
         learners_need_train = false;
