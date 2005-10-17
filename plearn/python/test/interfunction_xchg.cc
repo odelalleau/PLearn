@@ -101,8 +101,8 @@ int main()
     }
 
     map<string,long> mapsd;
-    PStream is_mapsd = openString("{ Oui:16 il:32 est:64 juste:128 et:256 bon:512 }",
-                                  PStream::plearn_ascii);
+    string str_mapsd = "{ Oui:16 il:32 est:64 juste:128 et:256 bon:512 }";
+    PStream is_mapsd = openString(str_mapsd, PStream::plearn_ascii);
     is_mapsd >> mapsd;
 
     python_other->setGlobalObject("some_global_map", PythonObjectWrapper(mapsd));
