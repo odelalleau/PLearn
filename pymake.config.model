@@ -210,11 +210,12 @@ elif domain_name.endswith('.ms'):
     compileflags += ' -DPL_PYTHON_VERSION=240'
     python_lib_root = '/opt/python2.4/lib'
 elif domain_name.endswith('.rqchp.qc.ca'):
-    numpy_includedirs   = []
-    numpy_site_packages = '' 
-    python_version = ''
-    python_lib_root = ''
-    linkeroptions_tail += ' -lcprts'
+    numpy_includedirs   = [ '/usr/network.ALTIX/python-2.4.1/include' ]
+    numpy_site_packages = join(homedir, '../delallea/local/lib/python2.4/site-packages/numarray -lutil')
+    python_version = '2.4'
+    compileflags += ' -DPL_PYTHON_VERSION=240'
+    python_lib_root = '/usr/network.ALTIX/python-2.4.1/lib'
+    linkeroptions_tail += '-lcprts -lifcore -lcxa' # -lunwind -lguide' # -lguide_stats -lifcoremt -lifport -limf -lipr'
 else:
     numpy_includedirs   = []
     numpy_site_packages = '/usr/lib/python2.3/site-packages/numarray' 
@@ -454,7 +455,7 @@ pymakeOption( name = 'veclib',
 pymakeOption( name = 'scs',
               description = "BLAS and lapack intel super optimized library",
               compileroptions = '-D USE_BLAS_SPECIALISATIONS',
-              linkeroptions = '-lscs')
+              linkeroptions = '-lscs -lpthread')
 
 pymakeOption( name = 'float',
               description = 'float mode (real==float)',
