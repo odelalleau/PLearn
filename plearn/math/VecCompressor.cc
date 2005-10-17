@@ -70,7 +70,7 @@ signed char* VecCompressor::compressVec(const Vec& v, signed char* data)
     real val = vdata[i];
 
     signed char mode = 'F';
-    if(val==0.)
+    if(fast_exact_is_equal(val, 0.))
         mode = '0';
     else if(issmallint(val))
         mode = 'I';
@@ -288,7 +288,7 @@ void VecCompressor::writeCompressedVec(ostream& out, const Vec& v)
     real val = vdata[i];
 
     signed char mode = 'F';
-    if(val==0.)
+    if(fast_exact_is_equal(val, 0.))
         mode = '0';
     else if(issmallint(val))
         mode = 'I';

@@ -175,12 +175,12 @@ void binwrite_compressed(ostream& out, const double* data, int l)
     while(l)
     {
         val = *data;
-        if(val==0.)
+        if(fast_exact_is_equal(val, 0.))
         {
             int n=0;
-            while(l && *data==0.)
+            while(l && fast_exact_is_equal(*data, 0.))
             { ++n; ++data; --l; }
-            if(l && *data==1.)
+            if(l && fast_exact_is_equal(*data, 1.))
             {
                 write_compr_mode_and_size(out, 1, n);
                 ++data; --l;
@@ -188,16 +188,18 @@ void binwrite_compressed(ostream& out, const double* data, int l)
             else
                 write_compr_mode_and_size(out, 0, n);              
         }
-        else if(val==1.)
+        else if(fast_exact_is_equal(val,1.))
         {
             write_compr_mode_and_size(out, 1, 0);
             ++data; --l;
         }
-        else if( double(char(val))==val )
+        else if( fast_exact_is_equal(double(char(val)),val) )
         {
             const double* start = data;
             int n=0;
-            while(l && double(char(val=*data))==val && val!=0 && val!=1)
+            while(l && fast_exact_is_equal(double(char(val=*data)), val)
+                    && !fast_exact_is_equal(val, 0)
+                    && !fast_exact_is_equal(val, 1))
             { ++n; ++data; --l; }
             write_compr_mode_and_size(out, 2, n);
             while(n--)
@@ -207,7 +209,9 @@ void binwrite_compressed(ostream& out, const double* data, int l)
         {
             const double* start = data;
             int n=0; 
-            while(l && (val=*data)!=0 && val!=1 && double(char(val))!=val)
+            while(l && !fast_exact_is_equal((val=*data), 0)
+                    && !fast_exact_is_equal(val, 1)
+                    && !fast_exact_is_equal(double(char(val)), val))
             { ++n; ++data; --l; }
             write_compr_mode_and_size(out, 3, n);
             binwrite(out,start,n);
@@ -260,12 +264,12 @@ void binwrite_compressed(ostream& out, const float* data, int l)
     while(l)
     {
         val = *data;
-        if(val==0.)
+        if(fast_exact_is_equal(val, 0.))
         {
             int n=0;
-            while(l && *data==0.)
+            while(l && fast_exact_is_equal(*data, 0.))
             { ++n; ++data; --l; }
-            if(l && *data==1.)
+            if(l && fast_exact_is_equal(*data, 1.))
             {
                 write_compr_mode_and_size(out, 1, n);
                 ++data; --l;
@@ -273,16 +277,18 @@ void binwrite_compressed(ostream& out, const float* data, int l)
             else
                 write_compr_mode_and_size(out, 0, n);              
         }
-        else if(val==1.)
+        else if(fast_exact_is_equal(val, 1.))
         {
             write_compr_mode_and_size(out, 1, 0);
             ++data; --l;
         }
-        else if( float(char(val))==val )
+        else if( fast_exact_is_equal(float(char(val)), val) )
         {
             const float* start = data;
             int n=0;
-            while(l && float(char(val=*data))==val && val!=0 && val!=1)
+            while(l && fast_exact_is_equal(float(char(val=*data)), val)
+                    && !fast_exact_is_equal(val, 0)
+                    && !fast_exact_is_equal(val, 1))
             { ++n; ++data; --l; }
             write_compr_mode_and_size(out, 2, n);
             while(n--)
@@ -292,7 +298,9 @@ void binwrite_compressed(ostream& out, const float* data, int l)
         {
             const float* start = data;
             int n=0; 
-            while(l && (val=*data)!=0 && val!=1 && float(char(val))!=val)
+            while(l && !fast_exact_is_equal((val=*data), 0)
+                    && !fast_exact_is_equal(val, 1)
+                    && !fast_exact_is_equal(float(char(val)), val))
             { ++n; ++data; --l; }
             write_compr_mode_and_size(out, 3, n);
             binwrite(out,start,n);
@@ -543,12 +551,12 @@ void compress_vec(char* comprbuf, const double* data, int l, bool double_stored_
     while(l)
     {
         val = *data;
-        if(val==0.)
+        if(fast_exact_is_equal(val, 0.))
         {
             int n=0;
-            while(l && *data==0.)
+            while(l && fast_exact_is_equal(*data, 0.))
             { ++n; ++data; --l; }
-            if(l && *data==1.)
+            if(l && fast_exact_is_equal(*data, 1.))
             {
                 write_compr_mode_and_size_ptr(comprbuf, 1, n);
                 ++data; --l;
@@ -556,16 +564,18 @@ void compress_vec(char* comprbuf, const double* data, int l, bool double_stored_
             else
                 write_compr_mode_and_size_ptr(comprbuf, 0, n);              
         }
-        else if(val==1.)
+        else if(fast_exact_is_equal(val, 1.))
         {
             write_compr_mode_and_size_ptr(comprbuf, 1, 0);
             ++data; --l;
         }
-        else if( double(char(val))==val )
+        else if( fast_exact_is_equal(double(char(val)), val) )
         {
             const double* start = data;
             int n=0;
-            while(l && double(char(val=*data))==val && val!=0 && val!=1)
+            while(l && fast_exact_is_equal(double(char(val=*data)), val)
+                    && !fast_exact_is_equal(val, 0)
+                    && !fast_exact_is_equal(val, 1))
             { ++n; ++data; --l; }
             write_compr_mode_and_size_ptr(comprbuf, 2, n);
             while(n--)
@@ -575,7 +585,9 @@ void compress_vec(char* comprbuf, const double* data, int l, bool double_stored_
         {
             const double* start = data;
             int n=0; 
-            while(l && (val=*data)!=0 && val!=1 && double(char(val))!=val)
+            while(l && !fast_exact_is_equal((val=*data), 0)
+                    && !fast_exact_is_equal(val, 1)
+                    && !fast_exact_is_equal(double(char(val)), val))
             { ++n; ++data; --l; }
             write_compr_mode_and_size_ptr(comprbuf, 3, n);
             memcpy(comprbuf,start,n*sizeof(double));
@@ -725,9 +737,10 @@ unsigned char new_get_compr_data_type(double x, double tolerance)
 {
     if(is_missing(x))
         return 1;
-    else if(x==1.)
+    else if(fast_exact_is_equal(x, 1.))
         return 0;
-    else if(double(char(x))==x && x!=-128)
+    else if(fast_exact_is_equal(double(char(x)), x) &&
+            !fast_exact_is_equal(x, -128))
         return 1;
     else if(fabs(double(float(x))-x)<=tolerance)
         return 2;
@@ -738,9 +751,9 @@ unsigned char new_get_compr_data_type(float x)
 {
     if(is_missing(x))
         return 1;
-    else if(x==1.)
+    else if(fast_exact_is_equal(x, 1.))
         return 0;
-    else if(float(char(x))==x)
+    else if(fast_exact_is_equal(float(char(x)), x))
         return 1;
     return 2;
 }
@@ -830,7 +843,7 @@ size_t new_write_compressed(FILE* out, real* vec, int l, double tolerance, bool 
     while(l)
     {
         int nzeroes = 0;
-        while(l && *vec==0.)
+        while(l && fast_exact_is_equal(*vec, 0.))
         {
             ++nzeroes;
             ++vec;
@@ -846,7 +859,7 @@ size_t new_write_compressed(FILE* out, real* vec, int l, double tolerance, bool 
             ++nvals;
             ++ptr;
             --l;
-            while(l && *ptr!=0. && new_get_compr_data_type(*ptr, tolerance)==data_type)
+            while(l && !fast_exact_is_equal(*ptr, 0.) && new_get_compr_data_type(*ptr, tolerance)==data_type)
             {
                 ++nvals;
                 ++ptr;

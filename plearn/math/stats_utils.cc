@@ -97,7 +97,7 @@ TMat<int> SpearmanRankCorrelation(const VMat &x, const VMat& y, Mat& r, bool ign
                     xi = xi_placeholder;
                     xi << xi_back;
                     for (int k = 0; k < y_ranks.length(); k++)
-                        if (y_ranks(k,j) == -1) // -1 rank <-> missing value
+                        if (fast_exact_is_equal(y_ranks(k,j), -1)) // -1 rank <-> missing value
                             xi(k,0) = MISSING_VALUE;
                 }
                 TVec<int> n_nonmissing = computeRanks(xi, x_rank, ignore_missing);
@@ -110,7 +110,7 @@ TMat<int> SpearmanRankCorrelation(const VMat &x, const VMat& y, Mat& r, bool ign
                 if (n < n_ynonmissing[j]) {
                     y_copy << y.column(j).toMat();
                     for (int k = 0; k < x_rank.length(); k++)
-                        if (x_rank(k,0) == -1)
+                        if (fast_exact_is_equal(x_rank(k,0), -1))
                             y_copy(k,0) = MISSING_VALUE;
                     computeRanks(y_copy, y_rankj, ignore_missing);
                 } else
@@ -118,7 +118,7 @@ TMat<int> SpearmanRankCorrelation(const VMat &x, const VMat& y, Mat& r, bool ign
                 for (int k = 0; k < x_rank.length(); k++) {
                     real x_r = x_rank(k,0);
                     real y_r = y_rankj(k,0);
-                    if (x_r != -1) // -1 rank <-> missing value
+                    if (!fast_exact_is_equal(x_r, -1)) // -1 rank <-> missing value
                         r_i[j] += (x_r - half) * (y_r - half) * rank_normalization;
                 }
             }
@@ -199,8 +199,8 @@ real max_cdf_diff(Vec& v1, Vec& v2)
                 break;
         }
 
-        if ((i1>0 && v1[i1]==v1[i1-1]) ||
-            (i2>0 && v2[i2]==v2[i2-1]) ||
+        if ((i1>0 && fast_exact_is_equal(v1[i1], v1[i1-1])) ||
+            (i2>0 && fast_exact_is_equal(v2[i2], v2[i2-1])) ||
             (v1[i1]<v2[i2] && v1[i1+1]<v2[i2]))
             continue; // to deal with discrete-valued variables: only look at "changing-value" places
 

@@ -42,6 +42,7 @@
 
 
 #include "tostring.h"
+#include <plearn/math/pl_math.h>    //!< For 'fast_exact_is_equal'.
 
 namespace PLearn {
 using namespace std;
@@ -50,7 +51,7 @@ string tostring(const double& x)
 {
     ostringstream out;
     int ix = (int)x;
-    if (ix == x)
+    if (fast_exact_is_equal(ix, x))
         out << ix;
     else {
         out.precision(12);
@@ -63,7 +64,7 @@ string tostring(const float& x)
 {
     ostringstream out;
     int ix = (int)x;
-    if (ix == x)
+    if (fast_exact_is_equal(ix, x))
         out << ix;
     else {
         out.precision(8);

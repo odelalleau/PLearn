@@ -70,9 +70,9 @@ Var softmax(Var input, int index)
 
 Var pownorm(Var input, real n)
 {
-    if(n==2.0)
+    if(fast_exact_is_equal(n, 2.0))
         return sum(square(input));
-    else if(n==1.0)
+    else if(fast_exact_is_equal(n, 1.0))
         return sum(abs(input));
     else
         return sum(pow(abs(input),n));
@@ -80,9 +80,9 @@ Var pownorm(Var input, real n)
 
 Var norm(Var input, real n)
 {
-    if(n==2.0)
+    if(fast_exact_is_equal(n,2.0))
         return sqrt(sum(square(input)));
-    else if(n==1.0)
+    else if(fast_exact_is_equal(n, 1.0))
         return sum(abs(input));
     else
         return pow(sum(pow(abs(input),n)),1.0/n);

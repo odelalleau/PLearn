@@ -60,16 +60,16 @@ class VecCompressor
 protected:
 
     static inline bool issmallint(real x)
-    { int intx = int(x); return floor(x)==x && intx<=127 && intx>=-127; }
+    { int intx = int(x); return fast_exact_is_equal(floor(x), x) && intx<=127 && intx>=-127; }
 
     static inline bool is0(real x)
-    { return x==0.; }
+    { return fast_exact_is_equal(x, 0.); }
 
     static inline bool isI(real x)
-    { return x!=0. && issmallint(x); }
+    { return !fast_exact_is_equal(x, 0.) && issmallint(x); }
 
     static inline bool isF(real x)
-    { return x!=0. && !issmallint(x); }
+    { return !fast_exact_is_equal(x, 0.) && !issmallint(x); }
   
 public:
 /*!     writes v in a compressed form in the data buffer passed as argument.
