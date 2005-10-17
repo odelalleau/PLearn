@@ -68,6 +68,7 @@ public:
     // Build options
     PPath dirname;
     //bool readwritemode;
+    bool remove_when_done;
     double tolerance;    // the error tolerance for storing doubles as floats
   
     DiskVMatrix();
@@ -98,6 +99,10 @@ protected:
 
     virtual void getNewRow(int i, const Vec& v) const;
     static void declareOptions(OptionList & ol);
+
+    //! Close all current files opened by this DiskVMatrix.
+    //! As a side effect, empty the 'dataf' vector and set 'indexf' to 0.
+    virtual void closeCurrentFiles();
 
 public:
 

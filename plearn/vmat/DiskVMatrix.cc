@@ -86,9 +86,16 @@ for backward compatibility only. ]
 
 */
 
+PLEARN_IMPLEMENT_OBJECT(
+    DiskVMatrix,
+    "VMatrix whose data are precomputed on disk (in a .dmat directory).",
+    ""
+);
+
     DiskVMatrix::DiskVMatrix()
         : indexf(0),freshnewfile(false),
           old_format(false),swap_endians(false),
+          remove_when_done(false),
           tolerance(1e-6)
     {
         writable = false;
@@ -98,6 +105,7 @@ DiskVMatrix::DiskVMatrix(const string& the_dirname, bool readwrite)
     : indexf(0),freshnewfile(false),
       old_format(false),swap_endians(false),
       dirname(remove_trailing_slash(the_dirname)),
+      remove_when_done(false),
       tolerance(1e-6)
 {
     writable = readwrite;
@@ -110,6 +118,7 @@ DiskVMatrix::DiskVMatrix(const string& the_dirname, int the_width, bool write_do
       freshnewfile(true),
       old_format(false),swap_endians(false),
       dirname(remove_trailing_slash(the_dirname)),
+      remove_when_done(false),
       tolerance(1e-6)
 {
     writable = true;
@@ -124,6 +133,7 @@ void DiskVMatrix::build()
 
 void DiskVMatrix::build_()
 {
+    closeCurrentFiles(); // All file pointers will be re-created.
     if(!freshnewfile)
     {
         if(!isdir(dirname))
@@ -229,9 +239,35 @@ void DiskVMatrix::declareOptions(OptionList &ol)
 {
     declareOption(ol, "dirname", &DiskVMatrix::dirname, OptionBase::buildoption, "Directory name of the.dmat");
     declareOption(ol, "tolerance", &DiskVMatrix::tolerance, OptionBase::buildoption, "The absolute error tolerance for storing doubles as floats");
+    declareOption(ol, "remove_when_done", &DiskVMatrix::remove_when_done,
+            OptionBase::buildoption,
+            "If set to 1, the associated data and metadata directories will be removed\n"
+            "when this object is deleted (note this is not exactly the same behavior as\n"
+            "a FileVMatrix with the 'remove_when_done' option set to 1).");
     inherited::declareOptions(ol);
 }
 
+///////////////////////
+// closeCurrentFiles //
+///////////////////////
+void DiskVMatrix::closeCurrentFiles()
+{
+    for (int i = 0; i < dataf.length(); i++)
+        if(dataf[i]) {
+            fclose(dataf[i]);
+            dataf[i] = 0;
+        }
+
+    dataf.resize(0);
+    if (indexf) {
+        fclose(indexf);
+        indexf = 0;
+    }
+}
+
+///////////////
+// getNewRow //
+///////////////
 void DiskVMatrix::getNewRow(int i, const Vec& v) const
 { 
 #ifdef BOUNDCHECK
@@ -298,6 +334,9 @@ void DiskVMatrix::appendRow(Vec v)
     fwrite(&le,sizeof(int),1,indexf);
 }
 
+///////////
+// flush //
+///////////
 void DiskVMatrix::flush()
 {
     int filenum = dataf.size()-1;
@@ -306,21 +345,20 @@ void DiskVMatrix::flush()
     fflush(indexf);
 }
 
+//////////////////
+// ~DiskVMatrix //
+//////////////////
 DiskVMatrix::~DiskVMatrix()
 {
-    for(int i=0; i<dataf.size(); i++)
-    {
-        if(dataf[i])
-            fclose(dataf[i]);
-    }
-  
-    if(indexf)
-        fclose(indexf);
-  
     saveFieldInfos();
+    closeCurrentFiles();
+    if (remove_when_done) {
+        force_rmdir(dirname);
+        if (hasMetaDataDir())
+            force_rmdir(getMetaDataDir());
+    }
 }
 
-PLEARN_IMPLEMENT_OBJECT(DiskVMatrix, "ONE LINE DESCR", "NO HELP");
 
 #ifdef WIN32
 #undef unlink
