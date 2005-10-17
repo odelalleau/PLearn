@@ -129,7 +129,7 @@ TVec<VMat> FractionSplitter::getSplit(int k)
 
         if(fend>1) // absolute end position
             end = int(fend);
-        else if(fend==1) // until last element inclusive
+        else if(is_equal(fend,1)) // until last element inclusive
             end = l;
         else {// relative end position
             if (round_to_closest) {
