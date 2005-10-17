@@ -439,7 +439,7 @@ void DX_create_grid_outputs_file(const string& filename, PP<PLearner> learner, V
             for(int j=0; j<outputsize; j++)
                 out << output[j] << " ";
             out << "\n";
-            if(logsum==-FLT_MAX)
+            if(is_equal(logsum, -FLT_MAX))
                 logsum = output[0];
             else 
                 logsum = logadd(logsum, output[0]);
@@ -688,14 +688,14 @@ void Grapher::plot_2D_classification(string epsfname, VMat trainset,
         if(target.length()==1)
         {
             if(bw)
-                gs.setgray(target[0]==0 ?0 :1);
+                gs.setgray(fast_exact_is_equal(target[0], 0) ?0 :1);
             else
                 gs.setcolor(color(int(target[0]),0.2));
         }
         else
         {
             if(bw)
-                gs.setgray(target[0]==0 ?0 :1);
+                gs.setgray(fast_exact_is_equal(target[0], 0) ?0 :1);
             else
                 gs.setcolor(color(argmax(target),0.2));
         }
