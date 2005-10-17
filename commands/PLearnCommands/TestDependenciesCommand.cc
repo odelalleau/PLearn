@@ -91,9 +91,9 @@ void TestDependenciesCommand::run(const vector<string>& args)
     MEMORYSTATUS stat;
     GlobalMemoryStatus (&stat);
     // Total available memory in bytes
-    int memory_size = (int)stat.dwAvailVirtual;
+    int memory_size = int(stat.dwAvailVirtual);
 #else
-    int memory_size = getSystemTotalMemory();
+    int memory_size = int(getSystemTotalMemory());
 #endif 
     int n_rowblocks = int(ceil(data.length() / real(row_blocksize)));
   
@@ -120,7 +120,7 @@ void TestDependenciesCommand::run(const vector<string>& args)
         VMat y = data.subMat(rowblockstart,inputsize,rowblocklen,targetsize);
         Mat r = var_rank_corr(rowblock).toMat(inputsize,targetsize);
         Mat pvalues = var_rc_pvalue(rowblock).toMat(inputsize,targetsize);
-        int col_blocksize = memory_size/(2*sizeof(real)*rowblocklen);
+        int col_blocksize = memory_size/int(2*sizeof(real)*rowblocklen);
         if (col_blocksize>=inputsize) // everything fits in half the memory
         {
             x = VMat(x.toMat());
