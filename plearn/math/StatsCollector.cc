@@ -150,8 +150,8 @@ StatsCollector::StatsCollector(int the_maxnvalues)
 
 int sortIdComparator(const void* i1, const void* i2)
 {
-    double d = ((PairRealSCCType*)i1)->first - ((PairRealSCCType*)i2)->first;
-    return (d<0)?-1:(d==0?0:1);
+    real d = ((PairRealSCCType*)i1)->first - ((PairRealSCCType*)i2)->first;
+    return (d<0)?-1:(fast_exact_is_equal(d, 0) ? 0:1);
 }
 
 //! fix 'id' attribute of all StatCollectorCounts so that increasing ids correspond to increasing real values
@@ -163,7 +163,7 @@ void StatsCollector::sortIds()
     for(map<real,StatsCollectorCounts>::iterator it = counts.begin();it!=counts.end();++it,i++)
         allreals[i]=make_pair(it->first,&(it->second));
     qsort(allreals,counts.size(),sizeof(PairRealSCCType),sortIdComparator);
-    for(int i=0;i<(int)counts.size();i++)
+    for(i=0;i<counts.size();i++)
         allreals[i].second->id=i;
     delete allreals;
 }
@@ -279,7 +279,7 @@ void StatsCollector::update(real val, real weight)
         //sum_ += val * weight;
         //sumsquare_ += val*val * weight;
         last_ = val;
-        if(nnonmissing_==0)                      // first value encountered
+        if(fast_exact_is_equal(nnonmissing_,0))    // first value encountered
             min_ = max_ = first_ = last_ = val;
         else if(val<min_)
             min_ = val;
@@ -306,7 +306,7 @@ void StatsCollector::update(real val, real weight)
                     // Indeed, depending on the compiler, counts.size() may differ by 1
                     // because the [] operator may be called before or after. That's why
                     // we explicitely call counts.size() first.
-                    int id = counts.size() - 1;
+                    int id = int(counts.size()) - 1;
                     counts[val].id = id;
                 }
                 counts[val].n += weight;
@@ -314,7 +314,7 @@ void StatsCollector::update(real val, real weight)
             else // We've filled up counts already
             {
                 it = counts.lower_bound(val);
-                if(it->first==val) // found the exact value
+                if(fast_exact_is_equal(it->first, val)) // found the exact value
                     it->second.n += weight;
                 else // found the value just above val (possibly FLT_MAX)
                 {
@@ -345,16 +345,16 @@ void StatsCollector::remove_observation(real val, real weight)
 
         if( !no_removal_warnings )
         {
-            if(val == first_)
+            if(fast_exact_is_equal(val, first_))
                 PLWARNING( "Removed value is equal to the first value encountered.\n"
                            "StatsCollector::first() may not be valid anymore." );
-            if(val == last_)
+            if(fast_exact_is_equal(val, last_))
                 PLWARNING( "Removed value is equal to the last value encountered.\n"
                            "StatsCollector::last() may not be valid anymore." );
-            if(val == min_)
+            if(fast_exact_is_equal(val, min_))
                 PLWARNING( "Removed value is equal to the min value encountered.\n"
                            "StatsCollector::min() may not be valid anymore." );
-            if(val == max_)
+            if(fast_exact_is_equal(val, max_))
                 PLWARNING( "Removed value is equal to the max value encountered.\n"
                            "StatsCollector::max() may not be valid anymore." );
         }
@@ -365,7 +365,7 @@ void StatsCollector::remove_observation(real val, real weight)
         sumcube_   -= sqval*(val-first_) * weight;
         sumfourth_ -= sqval*sqval        * weight;
 
-        if(nnonmissing_==0) {
+        if(fast_exact_is_equal(nnonmissing_, 0)) {
             // first value encountered
             min_ = max_ = first_ = last_ = MISSING_VALUE;
             sum_ = sumsquare_ = sumcube_ = sumfourth_ = sumsquarew_ = 0.0;
@@ -394,7 +394,7 @@ RealMapping StatsCollector::getBinMapping(double discrete_mincount,
     RealMapping mapping;
     mapping.setMappingForOther(-1);
     map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
-    int nleft = (int)counts.size()-1; // loop on all but last
+    int nleft = int(counts.size())-1; // loop on all but last
 
     if(fcount)
     {
@@ -479,7 +479,7 @@ RealMapping StatsCollector::getBinMapping(double discrete_mincount,
     if(m.first.high<max_)
     {
         if( ((real)cnt/(real)continuous_mincount)>(1.-tolerance) ||
-            (m.first.low == m.first.high))
+            (fast_exact_is_equal(m.first.low, m.first.high)))
         {
             // don't join last bin with last-but-one bin
             mapping.addMapping(RealRange(m.first.rightbracket=='[' ? '[' : ']',m.first.high,max_,']'),
@@ -501,7 +501,7 @@ RealMapping StatsCollector::getBinMapping(double discrete_mincount,
             }
         }   
     }
-    else if(m.first.high==max_)  // make sure we have a closing bracket on the max_
+    else if(fast_exact_is_equal(m.first.high, max_))  // make sure we have a closing bracket on the max_
     {
         mapping.removeMapping(m.first);
         mapping.addMapping(RealRange(m.first.leftbracket, m.first.low, max_, ']'),
@@ -529,7 +529,7 @@ RealMapping StatsCollector::getAllValuesMapping(TVec<bool>* to_be_included,
     if(fcount)
     {
         (*fcount) = TVec<double>();
-        fcount->resize(0,counts.size()+2);
+        fcount->resize(0,int(counts.size())+2);
         fcount->append(nmissing_);
         fcount->append(0);
     }
@@ -659,7 +659,7 @@ real StatsCollector::pseudo_quantile(real q) const
     real previous_total = 0.0;
     real current_total = MISSING_VALUE;
     real previous_position = MISSING_VALUE;
-    if (nnonmissing_ == 0)
+    if (fast_exact_is_equal(nnonmissing_, 0))
         return MISSING_VALUE;
   
     for ( ; it != end ; ++it ) {
@@ -682,7 +682,7 @@ real StatsCollector::pseudo_quantile(real q) const
 
     // If we stopped at last bin, do not interpolate with current bin which
     // should be equal to FLT_MAX
-    if (it->first == FLT_MAX)
+    if (fast_exact_is_equal(it->first, FLT_MAX))
         return previous_position;
 
     // Otherwise, interpolate linearly between previous_position and
@@ -996,7 +996,7 @@ Vec StatsCollector::dmodes() const
     it = counts.begin();
     for(; it!=itend; ++it)
     {
-        if(it->second.n == cmax)
+        if(fast_exact_is_equal(it->second.n, cmax))
             cargmax.push_back(it->first);
     }
 
