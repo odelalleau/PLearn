@@ -137,24 +137,36 @@ inline void binread_double(istream& in, float& x) { double d; binread_double(in,
 
 
 //!  multi-element versions, giving address and number of elements
-inline void binwrite(ostream& out, const int* x, int n) { out.write((char*)x, n*sizeof(int)); }
-inline void binread(istream& in, int* x, int n) { in.read((char*)x, n*sizeof(int));  }
-inline void binwrite(ostream& out, const unsigned int* x, int n) { out.write((char*)x, n*sizeof(unsigned int)); }
-inline void binread(istream& in, unsigned int* x, int n)  { in.read((char*)x, n*sizeof(unsigned int));  }
-inline void binwrite(ostream& out, const short* x, int n) { out.write((char*)x, n*sizeof(short)); }
-inline void binread(istream& in, short* x, int n) { in.read((char*)x, n*sizeof(short));  }
-inline void binwrite(ostream& out, const unsigned short* x, int n) { out.write((char*)x, n*sizeof(unsigned short)); }
-inline void binread(istream& in, unsigned short* x, int n) { in.read((char*)x, n*sizeof(unsigned short));  }
+inline void binwrite(ostream& out, const int* x, int n)
+    { out.write((char*)x, int(n*sizeof(int))); }
+inline void binread(istream& in, int* x, int n)
+    { in.read((char*)x, int(n*sizeof(int))); }
+inline void binwrite(ostream& out, const unsigned int* x, int n)
+    { out.write((char*)x, int(n*sizeof(unsigned int))); }
+inline void binread(istream& in, unsigned int* x, int n)
+    { in.read((char*)x, int(n*sizeof(unsigned int))); }
+inline void binwrite(ostream& out, const short* x, int n)
+    { out.write((char*)x, int(n*sizeof(short))); }
+inline void binread(istream& in, short* x, int n)
+    { in.read((char*)x, int(n*sizeof(short))); }
+inline void binwrite(ostream& out, const unsigned short* x, int n)
+    { out.write((char*)x, int(n*sizeof(unsigned short))); }
+inline void binread(istream& in, unsigned short* x, int n)
+    { in.read((char*)x, int(n*sizeof(unsigned short))); }
 
 // The followind read/write 4-byte-floats on disk (whether we pass them a float* or a double*)
-inline void binwrite(ostream& out, const float *x, int n) { out.write((char*)x, n*sizeof(float)); }
-inline void binread(istream& in, float* x, int n) { in.read((char*)x, n*sizeof(float));  }
+inline void binwrite(ostream& out, const float *x, int n)
+    { out.write((char*)x, int(n*sizeof(float))); }
+inline void binread(istream& in, float* x, int n)
+    { in.read((char*)x, int(n*sizeof(float))); }
 inline void binwrite(ostream& out, const double* x, int n) { for(int i=0; i<n; i++) binwrite(out,x[i]); }
 inline void binread(istream& in, double* x, int n) { for(int i=0; i<n; i++) binread(in,x[i]); }
 
 // The followind read/write 8-byte-doubles on disk (whether we pass them a float* or a double*)
-inline void binwrite_double(ostream& out, const double *x, int n) { out.write((char*)x, n*sizeof(double)); }
-inline void binread_double(istream& in, double* x, int n) { in.read((char*)x, n*sizeof(double));  }
+inline void binwrite_double(ostream& out, const double *x, int n)
+    { out.write((char*)x, int(n*sizeof(double))); }
+inline void binread_double(istream& in, double* x, int n)
+    { in.read((char*)x, int(n*sizeof(double))); }
 inline void binwrite_double(ostream& out, const float* x, int n) { for(int i=0; i<n; i++) binwrite(out,x[i]); }
 inline void binread_double(istream& in, float* x, int n) { for(int i=0; i<n; i++) binread(in,x[i]); }
 
