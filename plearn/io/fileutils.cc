@@ -193,6 +193,7 @@ vector<string> lsdir(const PPath& dirpath)
         && e != 0
         && e != PR_FILE_NOT_FOUND_ERROR
         && e != PR_NOT_DIRECTORY_ERROR
+        && e != PR_DIRECTORY_NOT_EMPTY_ERROR
 #endif
         )
         PLERROR("In lsdir: error while listing directory: %s.",
