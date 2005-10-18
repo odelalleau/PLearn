@@ -103,7 +103,7 @@ CompactVMatrix::CompactVMatrix(int the_length, int nvariables, int n_binary,
         delta[i]=(fixedpoint_max[i]-fixedpoint_min[i])/USHRT_MAX;
     symbols_offset = (int)ceil(n_bits/8.0);
     fixedpoint_offset = symbols_offset + n_symbols;
-    row_n_bytes =  fixedpoint_offset + sizeof(unsigned short)*n_fixed_point;
+    row_n_bytes =  fixedpoint_offset + int(sizeof(unsigned short))*n_fixed_point;
     data.resize(length_ * row_n_bytes);
     set_n_bits_in_byte();
 }
@@ -139,7 +139,9 @@ CompactVMatrix::CompactVMatrix(VMat m, int keep_last_variables_last, bool onehot
         }
         else 
         {
-            if (stat.min()!=0 || (stat.max()-stat.min()+1)!=stat.counts.size())
+            if (!fast_exact_is_equal(stat.min(), 0) ||
+                !fast_exact_is_equal((stat.max()-stat.min()+1),
+                                     stat.counts.size()))
                 PLERROR("CompactVMatrix:: variable %d looks discrete but has zero-frequency intermediate values or min!=0",i);
             if (n_values==2)
                 bits_position[n_bits++]=i;
@@ -176,7 +178,7 @@ CompactVMatrix::CompactVMatrix(VMat m, int keep_last_variables_last, bool onehot
     setOneHotMode(one_hot_encoding);
     symbols_offset = (int)ceil(n_bits/8.0);
     fixedpoint_offset = symbols_offset + n_symbols;
-    row_n_bytes =  fixedpoint_offset + sizeof(unsigned short)*n_fixedpoint;
+    row_n_bytes =  fixedpoint_offset + int(sizeof(unsigned short))*n_fixedpoint;
     data.resize(length_ * row_n_bytes);
 
     // copy the field infos and stats? not really useful with one-hot encoding
@@ -513,7 +515,7 @@ void CompactVMatrix::encodeAndPutRow(int i, Vec v)
     {
         real val = vp[perm[c]];
         int s = int(val);
-        if (s!=val)
+        if (!fast_exact_is_equal(s, val))
             PLERROR("CompactVMatrix::encodeAndPutRow(%d,v): v[%d]=%g not an integer",
                     i,int(perm[c]),val);
         encoded_row[symbols_offset+b] = s; // ASSUMES THAT v IS NOT ONE-HOT ENCODED
@@ -564,10 +566,11 @@ void CompactVMatrix::putSubRow(int i, int j, Vec v)
                 for (int k=0;k<n;k++)
                 {
                     real vk=vp[c+k-j];
-                    if (vk!=0 && vk!=1)
+                    if (!fast_exact_is_equal(vk, 0) &&
+                        !fast_exact_is_equal(vk, 1))
                         PLERROR("CompactVMatrix::putRow(%d,v): v[%d]=%g!=0 or 1 (not one-hot-code)",
                                 i,c,vk);
-                    if (vk==1) 
+                    if (fast_exact_is_equal(vk, 1)) 
                     {
                         if (pos<0) pos=k;
                         else PLERROR("CompactVMatrix::putRow(%d,v): %d-th symbol not one-hot-encoded",
@@ -586,7 +589,7 @@ void CompactVMatrix::putSubRow(int i, int j, Vec v)
             {
                 real val = vp[c-j];
                 int s = int(val);
-                if (s!=val)
+                if (!fast_exact_is_equal(s, val))
                     PLERROR("CompactVMatrix::encodeAndPutRow(%d,v): v[%d]=%g not an integer",
                             i,c,val);
                 encoded_row[symbols_offset+b] = s; // ASSUMES THAT v IS NOT ONE-HOT ENCODED
