@@ -106,7 +106,7 @@ void VMat::precompute(const PPath& pmatfile, bool use_existing_file)
 { 
     VMat backup = *this;
     Array<VMField> infos = (*this)->getFieldInfos();
-    if(!use_existing_file || !file_exists(pmatfile))
+    if(!use_existing_file || !pathexists(pmatfile))
         save(pmatfile); 
     *this = new FileVMatrix(pmatfile); 
     (*this)->setFieldInfos( infos );

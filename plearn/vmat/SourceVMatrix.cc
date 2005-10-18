@@ -42,6 +42,7 @@
 
 
 #include "SourceVMatrix.h"
+#include <plearn/io/fileutils.h>        //!< For 'isfile(..)'.
 #include <plearn/base/stringutils.h>
 
 namespace PLearn {
@@ -79,13 +80,13 @@ void SourceVMatrix::setMetaDataDir(const PPath& the_metadatadir)
         for(int j=0; j<width_; j++)
         {
             string fnam = fieldName(j);
-            if(!file_exists(getSFIFFilename(fnam,".smap")) && file_exists(source->getSFIFFilename(fnam,".smap")))            
+            if(!isfile(getSFIFFilename(fnam,".smap")) && isfile(source->getSFIFFilename(fnam,".smap")))            
                 setSFIFFilename(fnam, ".smap", source->getSFIFFilename(fnam,".smap"));
 
-            if(!file_exists(getSFIFFilename(fnam,".notes")) && file_exists(source->getSFIFFilename(fnam,".notes")))            
+            if(!isfile(getSFIFFilename(fnam,".notes")) && isfile(source->getSFIFFilename(fnam,".notes")))            
                 setSFIFFilename(fnam, ".notes", source->getSFIFFilename(fnam,".notes"));
 
-            if(!file_exists(getSFIFFilename(fnam,".binning")) && file_exists(source->getSFIFFilename(fnam,".binning")))            
+            if(!isfile(getSFIFFilename(fnam,".binning")) && isfile(source->getSFIFFilename(fnam,".binning")))            
                 setSFIFFilename(fnam, ".binning", source->getSFIFFilename(fnam,".binning"));
         }
     }

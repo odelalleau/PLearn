@@ -232,7 +232,7 @@ void TextFilesVMatrix::build_()
     }
 
     // open the index file
-    if(!file_exists(idxfname))
+    if(!isfile(idxfname))
         buildIdx(); // (re)build it first!
     idxfile = fopen(idxfname.c_str(),"rb");
     if(fgetc(idxfile) != byte_order())
@@ -274,7 +274,7 @@ void TextFilesVMatrix::loadMappings()
     for(int k=0; k<n; k++)
     {
         string fname = getMapFilePath(k);
-        if (file_exists(fname)) {
+        if (isfile(fname)) {
             vector<string> all_lines = getNonBlankLines(loadFileAsString(fname));
             for (size_t i = 0; i < all_lines.size(); i++) {
                 string map_line = all_lines[i];

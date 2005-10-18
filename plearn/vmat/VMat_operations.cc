@@ -107,7 +107,7 @@ map<real, TVec<int> > indicesOfOccurencesInColumn(VMat m, int col)
 
 VMat grep(VMat d, int col, Vec values, const string& indexfile, bool exclude)
 {
-    if(!file_exists(indexfile))
+    if(!isfile(indexfile))
     {
         IntVecFile indices(indexfile,true);
         for(int i=0; i<d.length(); i++)
@@ -122,7 +122,7 @@ VMat grep(VMat d, int col, Vec values, const string& indexfile, bool exclude)
 
 VMat filter(VMat d, const string& indexfile)
 {
-    if(!file_exists(indexfile) || file_size(indexfile)==0)
+    if(!isfile(indexfile) || filesize(indexfile)==0)
     {
         IntVecFile indices(indexfile,true);
         Vec v(d.width());
@@ -170,7 +170,7 @@ VMat bootstrap(VMat d, bool reorder, bool norepeat)
 
 VMat rebalanceNClasses(VMat inputs, int nclasses, const string& filename)
 {
-    if (!file_exists(filename))
+    if (!isfile(filename))
     {
         IntVecFile indices(filename, true);
         Vec last = inputs.lastColumn()->toMat().toVecCopy();
@@ -260,7 +260,7 @@ VMat rebalanceNClasses(VMat inputs, int nclasses, const string& filename)
 
 void fullyRebalance2Classes(VMat inputs, const string& filename, bool save_indices)
 {
-    if (!file_exists(filename))
+    if (!isfile(filename))
     {
         int len = inputs.length();
 

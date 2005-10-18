@@ -62,7 +62,7 @@ PLearnCommandRegistry RunCommand::reg_(new RunCommand);
 void RunCommand::run(const vector<string>& args)
 {
     string scriptfile = args[0];
-    if (!file_exists(scriptfile))
+    if (!isfile(scriptfile))
         PLERROR("Non-existent script file: %s\n",scriptfile.c_str());
 
     const string extension = extract_extension(scriptfile);

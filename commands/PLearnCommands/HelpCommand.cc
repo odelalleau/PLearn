@@ -43,6 +43,7 @@
 #include <plearn/base/general.h>        //!< For prgname().
 #include <plearn/base/stringutils.h>
 #include <plearn/base/TypeFactory.h>    //!< For displayObjectHelp().
+#include <plearn/io/fileutils.h>        //!< For isfile().
 
 namespace PLearn {
 using namespace std;
@@ -117,7 +118,7 @@ void HelpCommand::helpDatasets()
 
 void HelpCommand::helpAboutScript(const string& fname)
 {
-    if(!file_exists(fname))
+    if(!isfile(fname))
         PLERROR("Could not open script file %s", fname.c_str());
     pout << 
         "Help about a script file not yet implemented \n"

@@ -62,7 +62,7 @@ using namespace std;
 Mat input2dSet(const string& filename)
 {
     Mat data;
-    if(!file_exists(filename))
+    if(!pathexists(filename))
     {
         string systemstring = string(JAVA) + " InputPoints " + filename + " -1 1 -1 1";
         system(systemstring.c_str());

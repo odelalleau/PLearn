@@ -203,7 +203,7 @@ void PyPLearnScript::close()
 {
     if ( expdir != "" )
     {
-        if ( ! file_exists( expdir ) )
+        if ( ! isdir( expdir ) )
             PLERROR( "The expdir '%s' managed by this PyPLearnScript was not created.",
                      expdir.c_str() );
     

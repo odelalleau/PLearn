@@ -131,7 +131,7 @@ vector<vector<string> > VVMatrix::extractSourceMatrix(const string & str,const s
                 string potential_dir = extract_directory(filename);
                 size_t p = srcstr.find(":");
                 string potential_path = potential_dir + srcstr.substr(0,p);
-                if(file_exists(potential_path))              
+                if(pathexists(potential_path))              
                     srcstr=potential_dir+srcstr;
             }
             mstr[i][j] = srcstr;

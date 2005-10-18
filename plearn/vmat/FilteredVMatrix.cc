@@ -77,7 +77,7 @@ void FilteredVMatrix::openIndex()
     if(!force_mkdir(getMetaDataDir()))
         PLERROR("In FilteredVMatrix::openIndex could not create directory %s",getMetaDataDir().absolute().c_str());
 
-    if(file_exists(idxfname) && mtime(idxfname)>=getMtime())
+    if(isfile(idxfname) && mtime(idxfname)>=getMtime())
         indexes.open(idxfname);
     else  // let's (re)create the index
     {
