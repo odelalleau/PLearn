@@ -219,10 +219,10 @@ void MultiInstanceVMatrix::build_()
     
         // get the actual data columns + the target
         mat_i = data_[lineNum];
-        for(int i = 0; i < inputsize_ + source_targetsize; i++)
+        for(int k = 0; k < inputsize_ + source_targetsize; k++)
         {
             inFile >> inp_element;
-            mat_i[i] = strtod(inp_element.c_str(), 0);
+            mat_i[k] = strtod(inp_element.c_str(), 0);
         }
 
         // close the last bag if necessary
