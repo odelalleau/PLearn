@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.cc,v 1.10 2004/08/31 17:22:40 plearner Exp $
+   * $Id$
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -295,7 +295,7 @@ void GhostScript::setcolor(char* colorname)
 void GhostScript::multilineShow(real x, real y, const string& text, real newlinesize, char halign, char valign)
 {
   vector<string> splits = split(text, '\n');
-  int nsplits = (int)splits.size();
+  vector<string>::size_type nsplits = splits.size();
   for(int i=0; i<nsplits; i++)
     {
       show(x,y,splits[i].c_str(),halign,valign);
