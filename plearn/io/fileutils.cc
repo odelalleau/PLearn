@@ -308,7 +308,7 @@ string loadFileAsString(const PPath& filepath)
     long n = filesize(filepath);
 
     string result;
-    in.read(result, n);
+    in.read(result, streamsize(n));
     return result;
 }
 
@@ -386,10 +386,10 @@ void mvforce(const PPath& source, const PPath& destination)
 // readWhileMatches //
 //////////////////////
 void readWhileMatches(PStream& in, const string& s){
-    int i = 0;
+    string::size_type i = 0;
     int c;
     c = in.get();
-    int n = (int) s.length();
+    string::size_type n = s.length();
     while(c!=EOF)
     {
         if(s[i]!=c)
@@ -507,7 +507,7 @@ PPath newFilename(const PPath& directory, const string& prefix, bool is_director
 #else
     // TODO Better implementation with PPath.
     const string tmpdirname = remove_trailing_slash(directory.absolute());
-    const int length = tmpdirname.length() + 1 + prefix.length() + 6 + 1;
+    const int length = int(tmpdirname.length() + 1 + prefix.length() + 6 + 1);
     char* tmpfilename = new char[length];
     if (tmpdirname=="") //!<  save in current dir
         sprintf(tmpfilename,"%sXXXXXX",prefix.c_str());
@@ -700,7 +700,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
 {
     string text; // the processed text to return
     bool inside_a_quoted_string=false; // inside a quoted string we don't skip characters following a #
-    int c=EOF,last_c=EOF;
+    int c=EOF, last_c=EOF;
     while(in)
     {
         last_c = c;
@@ -720,7 +720,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
             text += c;
         else  // We have a $ macro command
         {
-            int c = in.peek();
+            c = in.peek();
             switch(c)
             {
             case '{':  // expand a defined variable ${varname}
@@ -745,7 +745,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                 string expr;
                 readWhileMatches(in, "CHAR");
                 bool syntax_ok = true;
-                int c = in.get();
+                c = in.get();
                 if(c == '{')
                     in.smartReadUntilNext("}", expr, true);
                 else
@@ -789,7 +789,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                     string expr1, expr2;
                     readWhileMatches(in, "IVIDE");
                     bool syntax_ok = true;
-                    int c = in.get();
+                    c = in.get();
                     if (syntax_ok) {
                         if(c == '{')
                             in.smartReadUntilNext("}", expr1, true);
@@ -832,7 +832,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                     string expr;
                     readWhileMatches(in, "CHO");
                     bool syntax_ok = true;
-                    int c = in.get();
+                    c = in.get();
                     if(c == '{')
                         in.smartReadUntilNext("}", expr, true);
                     else
@@ -849,7 +849,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                     string expr;
                     readWhileMatches(in, "VALUATE");
                     bool syntax_ok = true;
-                    int c = in.get();
+                    c = in.get();
                     if(c == '{')
                         in.smartReadUntilNext("}", expr, true);
                     else
@@ -873,7 +873,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                 string expr;
                 readWhileMatches(in, "GETENV");
                 bool syntax_ok = true;
-                int c = in.get();
+                c = in.get();
                 if(c == '{')
                     in.smartReadUntilNext("}", expr, true);
                 else
@@ -900,7 +900,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                     string cond, expr_cond_true, expr_cond_false, expr_evaluated;
                     readWhileMatches(in, "F");
                     bool syntax_ok = true;
-                    int c = in.get();
+                    c = in.get();
                     if(c == '{')
                         in.smartReadUntilNext("}", cond, true);
                     else
@@ -938,7 +938,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
 
                 case 'N':
                 {
-                    int next = in.get();
+                    next = in.get();
                     next = in.peek();   // Next character.
                     switch(next) {
 
@@ -946,7 +946,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                     {
                         string raw_includefilepath; // The raw path read from the script.
                         readWhileMatches(in, "CLUDE");
-                        int c = in.get();
+                        c = in.get();
                         if(c=='<')
                             in.smartReadUntilNext(">", raw_includefilepath, true);
                         else if(c=='{')
@@ -967,7 +967,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                         string expr;
                         readWhileMatches(in, "T");
                         bool syntax_ok = true;
-                        int c = in.get();
+                        c = in.get();
                         if(c == '{')
                             in.smartReadUntilNext("}", expr, true);
                         else
@@ -989,7 +989,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                 case 'S':
                 {
 
-                    int next = in.get();
+                    next = in.get();
                     next = in.peek();   // Next character.
                     switch(next) {
 
@@ -998,7 +998,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                         string expr;
                         readWhileMatches(in, "DEFINED");
                         bool syntax_ok = true;
-                        int c = in.get();
+                        c = in.get();
                         if(c == '{')
                             in.smartReadUntilNext("}", expr, true);
                         else
@@ -1022,7 +1022,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                         string expr1, expr2;
                         readWhileMatches(in, "EQUAL");
                         bool syntax_ok = true;
-                        int c = in.get();
+                        c = in.get();
                         if(c == '{')
                             in.smartReadUntilNext( "}", expr1, true);
                         else
@@ -1053,7 +1053,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                         string expr1, expr2;
                         readWhileMatches(in, "HIGHER");
                         bool syntax_ok = true;
-                        int c = in.get();
+                        c = in.get();
                         if(c == '{')
                             in.smartReadUntilNext("}", expr1, true);
                         else
@@ -1094,7 +1094,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                 string expr1, expr2;
                 readWhileMatches(in, "MINUS");
                 bool syntax_ok = true;
-                int c = in.get();
+                c = in.get();
                 if (syntax_ok) {
                     if(c == '{')
                         in.smartReadUntilNext("}", expr1,true);
@@ -1127,7 +1127,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                 string expr1, expr2;
                 readWhileMatches(in, "OR");
                 bool syntax_ok = true;
-                int c = in.get();
+                c = in.get();
                 if (syntax_ok) {
                     if(c == '{')
                         in.smartReadUntilNext("}", expr1,true);
@@ -1163,7 +1163,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                 string expr1, expr2;
                 readWhileMatches(in, "PLUS");
                 bool syntax_ok = true;
-                int c = in.get();
+                c = in.get();
                 if (syntax_ok) {
                     if(c == '{')
                         in.smartReadUntilNext("}", expr1,true);
@@ -1199,7 +1199,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                 readWhileMatches(in, "SWITCH");
                 bool syntax_ok = true;
                 // First read 'expr'.
-                int c = in.get();
+                c = in.get();
                 if (syntax_ok) {
                     if(c == '{')
                         in.smartReadUntilNext("}", expr, true);
@@ -1259,7 +1259,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                 string expr1, expr2;
                 readWhileMatches(in, "TIMES");
                 bool syntax_ok = true;
-                int c = in.get();
+                c = in.get();
                 if (syntax_ok) {
                     if(c == '{')
                         in.smartReadUntilNext("}", expr1, true);
@@ -1292,7 +1292,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                 string expr;
                 readWhileMatches(in, "UNDEFINE");
                 bool syntax_ok = true;
-                int c = in.get();
+                c = in.get();
                 if(c == '{')
                     in.smartReadUntilNext("}", expr, true);
                 else
@@ -1313,6 +1313,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
                         "${varname}, $CHAR, $DEFINE, $DIVIDE, $ECHO, $EVALUATE, $GETENV, $IF, $INCLUDE, $INT, $ISDEFINED, $ISEQUAL, $ISHIGHER, $MINUS, $PLUS, $OR, $SWITCH, $TIMES, $UNDEFINE."
                         "But I read $%c !!",c);
             }
+            c = ' '; // Make sure we do not believe it is a quoted string.
         }
     }
 
