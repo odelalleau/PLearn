@@ -128,7 +128,7 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
     if (start > 0)
         i_start = start >= 1 ? int(round(start)) : int(round(n_data * start));
     int i_end = n_data;
-    if (end != 1)
+    if (!fast_exact_is_equal(end, 1))
         i_end   = end   >= 1 ? int(round(end))   : int(round(n_data * end));
     // The cross validation will be done only on examples i_start, ..., i_end - 1.
     int n_cross_data = i_end - i_start;

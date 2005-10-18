@@ -173,10 +173,11 @@ void VariableSelectionWithDirectedGradientDescent::train()
                     n7_value += input_weights(i, col) * train_set(row, col);
                 }
 #ifdef BOUNDCHECK
-                if (target != 0 && target != 1.0)
+                if (!fast_exact_is_equal(target, 0.0) &&
+                    !fast_exact_is_equal(target, 1.0))
                     PLERROR("In VariableSelectionWithDirectedGradientDescent::train - The target should be 0 or 1");
 #endif
-                if (target == 0) target = -1; // We work with -1 and 1 instead.
+                if (fast_exact_is_equal(target, 0)) target = -1; // We work with -1 and 1 instead.
                 n8_value = target * n7_value;
                 n9_value = 1.0 / (1.0 + exp(-n8_value));
                 n10_value = -log(n9_value);
@@ -237,7 +238,7 @@ void VariableSelectionWithDirectedGradientDescent::train()
     {   
         train_set->getExample(row, sample_input, sample_target, sample_weight);
         for (int i = 0; i < sample_target.length(); i++)
-            if (sample_target[i] == 0) sample_target[i] = -1; // We work with -1 and 1.
+            if (fast_exact_is_equal(sample_target[i], 0)) sample_target[i] = -1; // We work with -1 and 1.
         computeOutput(sample_input, sample_output);
         computeCostsFromOutputs(sample_input, sample_output, sample_target, sample_cost);
         train_stats->update(sample_cost);

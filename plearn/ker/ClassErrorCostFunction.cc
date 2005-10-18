@@ -57,8 +57,8 @@ real ClassErrorCostFunction::evaluate(const Vec& output, const Vec& target) cons
     if(output_is_classnum)
     {
         if(is_integer(output[0]))
-            return output[0]==target[0] ?0 :1;
-        else if(target[0]==1.)
+            return fast_exact_is_equal(output[0], target[0]) ? 0 :1;
+        else if(fast_exact_is_equal(target[0], 1.))
             return output[0]>0.5 ?0 :1;
         else // target[0]==0 or -1
             return output[0]<=0.5 ?0 :1;

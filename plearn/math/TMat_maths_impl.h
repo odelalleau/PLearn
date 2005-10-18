@@ -883,7 +883,7 @@ T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n,
     result = 0.0;
     T* v1 = vec1.data();
     T* v2 = vec2.data();
-    if(n==1.0) // L1 distance
+    if(fast_exact_is_equal(n, 1.0)) // L1 distance
     {
         for(int i=0; i<length; i++, v1++, v2++)
             if (!ignore_missing || (!is_missing(*v1) && !is_missing(*v2))) {
@@ -894,7 +894,7 @@ T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n,
                     result -= diff;
             }
     }
-    else if(n==2.0)
+    else if(fast_exact_is_equal(n, 2.0))
     {
         for(int i=0; i<length; i++, v1++, v2++)
             if (!ignore_missing || (!is_missing(*v1) && !is_missing(*v2))) {
@@ -922,9 +922,9 @@ inline T powdistance(const TVec<T>& vec1, const TVec<T>& vec2)
 template<class T>
 T dist(const TVec<T>& vec1, const TVec<T>& vec2, double n)
 {
-    if(n==T(1.0))
+    if(fast_exact_is_equal(n, T(1.0)))
         return powdistance(vec1, vec2, T(1.0));
-    else if(n==T(2.0))
+    else if(fast_exact_is_equal(n, T(2.0)))
         return sqrt(powdistance(vec1, vec2, T(2.0)));
     else
         return mypow(powdistance(vec1, vec2, n), T(1.0)/n);
@@ -5063,7 +5063,7 @@ void  choleskyDecomposition(const TMat<T>& A, TMat<T>& L)
                     if (sum <= 0.0)
                     {
                         T eps = -1.1*sum;
-                        if (sum==0) eps=1e-8;
+                        if (fast_exact_is_equal(sum,0.0)) eps=1e-8;
                         PLWARNING("Cholesky decomposition would fail: add %g to diagonal",eps);
                         T* Aii=A.data();
                         int addm=A.mod()+1;

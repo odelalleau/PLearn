@@ -86,7 +86,7 @@ void EqualScalarVariable::fprop()
 {
     real eqv = input2->valuedata[0];
     for(int i=0; i<nelems(); i++)
-        valuedata[i] = (input1->valuedata[i] == eqv);
+        valuedata[i] = (fast_exact_is_equal(input1->valuedata[i], eqv));
 }
 
 

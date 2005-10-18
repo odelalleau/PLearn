@@ -143,7 +143,7 @@ void SoftSlopeVariable::bprop()
     real* dright = varray[3]->gradientdata;
     for(int i=0; i<n; i++,x+=m1,smoothness+=m2,left+=m3,right+=m4,dx+=m1,dsmoothness+=m2,dleft+=m3,dright+=m4)
     {
-        if (*smoothness == 0) continue;
+        if (fast_exact_is_equal(*smoothness, 0)) continue;
         real inv_smoothness = 1.0 / *smoothness;
         real t1 = sigmoid(- *smoothness*(*x-*left));
         real t2 = sigmoid(- *smoothness*(*x-*right));

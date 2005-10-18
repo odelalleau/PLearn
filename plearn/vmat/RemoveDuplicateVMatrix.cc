@@ -147,7 +147,7 @@ void RemoveDuplicateVMatrix::build_()
         TVec<bool> removed(n);
         removed.fill(false);
         Vec row_i, row_j;
-        if (epsilon == 0 || !compute_gram) {
+        if (fast_exact_is_equal(epsilon, 0) || !compute_gram) {
             int w = only_input ? source->inputsize() : source->width();
             row_i.resize(w);
             row_j.resize(w);
@@ -172,7 +172,7 @@ void RemoveDuplicateVMatrix::build_()
                             source->getSubRow(j, 0, row_j);
                             equal = (dk.evaluate(row_i, row_j) < delta);
                         }
-                        if (equal && epsilon == 0) {
+                        if (equal && fast_exact_is_equal(epsilon, 0)) {
                             // More accurate check.
                             if (compute_gram) {
                                 source->getSubRow(i, 0, row_i);
@@ -182,7 +182,7 @@ void RemoveDuplicateVMatrix::build_()
                             real* data_j = row_j->data();
                             int w = row_i->length();
                             for (int k = 0; k < w; k++, data_i++, data_j++)
-                                if (*data_i != *data_j)
+                                if (!fast_exact_is_equal(*data_i, *data_j))
                                     equal = false;
                         }
                         if (equal) {

@@ -464,7 +464,7 @@ void affineNormalization(Mat data, Mat W, Vec bias, real regularizer)
     Mat covar(d,d);
     computeMeanAndCovar(data,mu,covar);
     Vec evalues(d);
-    if (regularizer!=0)
+    if (!fast_exact_is_equal(regularizer, 0))
         for (int i=0;i<d;i++)
             covar(i,i) += regularizer; 
     int nev=0;

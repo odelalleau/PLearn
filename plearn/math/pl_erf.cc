@@ -92,7 +92,7 @@ real pl_gser(real a, real x) {
     real sum,term;
     if (x<0 || a<0)
         PLERROR("Error in function pl_gser. Bad argument.");
-    else if (x==0) 
+    else if (fast_exact_is_equal(x, 0)) 
         return 0;
 
     sum = term = 1/a;  

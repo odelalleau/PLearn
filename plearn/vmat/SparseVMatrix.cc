@@ -80,7 +80,7 @@ SparseVMatrix::SparseVMatrix(VMat m)
         {
             m->getRow(i,v);
             for(int j=0; j<v.length(); j++)
-                if(vptr[j]!=0.)
+                if(!fast_exact_is_equal(vptr[j], 0.))
                     nelements++;
         }
     }
@@ -102,7 +102,7 @@ SparseVMatrix::SparseVMatrix(VMat m)
             r.row_startpos = pos; 
             int nelem = 0;
             for(int j=0; j<v.length(); j++)
-                if(vptr[j]!=0.)
+                if(!fast_exact_is_equal(vptr[j], 0.))
                 {
                     positions[pos] = j;
                     values[pos] = (float)vptr[j];

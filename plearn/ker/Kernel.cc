@@ -382,7 +382,7 @@ void Kernel::computeSparseGramMatrix(TVec<Mat> K) const
             K_i.resize(0,2);
             real* gram_ij = gram_matrix[i];
             for (int j = 0; j < n; j++, gram_ij++)
-                if (*gram_ij != 0) {
+                if (!fast_exact_is_equal(*gram_ij, 0)) {
                     row[0] = j;
                     row[1] = *gram_ij;
                     K_i.appendRow(row);
@@ -411,7 +411,7 @@ void Kernel::computeSparseGramMatrix(TVec<Mat> K) const
         for (int j=0; j<=i; j++)
         {
             j_and_Kij[1] = evaluate_i_j(i,j);
-            if (j_and_Kij[1] != 0) {
+            if (!fast_exact_is_equal(j_and_Kij[1], 0)) {
                 j_and_Kij[0] = j;
                 K[i].appendRow(j_and_Kij);
                 if (j < i) {
@@ -582,12 +582,12 @@ real Kernel::test(VMat d, real threshold, real sameness_below_threshold, real sa
         cerr << "[" << kernelvalue << " " << sameness << "]\n";
         if(kernelvalue<threshold)
         {
-            if(sameness==sameness_above_threshold)
+            if(fast_exact_is_equal(sameness, sameness_above_threshold))
                 nerrors++;
         }
         else // kernelvalue>=threshold
         {
-            if(sameness==sameness_below_threshold)
+            if(fast_exact_is_equal(sameness, sameness_below_threshold))
                 nerrors++;
         }
     }
@@ -733,7 +733,7 @@ Mat Kernel::estimateHistograms(Mat input_and_class, real minval, real maxval, in
             if(j!=i)
             {
                 real dist = evaluate(input, inputs(j));
-                if(classes(j,0)==input_class)
+                if(fast_exact_is_equal(classes(j,0), input_class))
                 {
                     sameclass_meandist += dist;
                     if(dist<sameclass_mindist)
@@ -806,7 +806,7 @@ Mat findClosestPairsOfDifferentClass(int k, VMat data, Ker dist)
         for(int j=0; j<data.length(); j++)
         {
             data->getRow(j,rowj);
-            if(targeti!=targetj)
+            if(!fast_exact_is_equal(targeti, targetj))
             {
                 real d = dist(inputi,inputj);
                 if(kk<k)

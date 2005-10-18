@@ -215,7 +215,8 @@ void BinaryStump::train()
     for (int i=0; i<n; ++i) 
     {
         train_target[i]= train_set->get(i,inputsize_);
-        if(train_target[i] != 0 & train_target[i] != 1)
+        if(!fast_exact_is_equal(train_target[i], 0) &&
+           !fast_exact_is_equal(train_target[i], 1))
             PLERROR("In BinaryStump:train() : target should be either 1 or 0");
     }
 
@@ -234,7 +235,7 @@ void BinaryStump::train()
             w_sum += example_weights[i];
             //train_set->getExample(i,input,target,weight);
             //if(target[0] == 1)
-            if(train_target[i] == 1)
+            if(fast_exact_is_equal(train_target[i], 1))
                 w_sum_1 += example_weights[i];
         }
 
@@ -300,11 +301,11 @@ void BinaryStump::train()
                 //target = train_set->getExample(sf[i].first,inputsize_);
                 //real classe = target[0];
                 real classe = train_target[sf[i].first];
-                if(classe == 1)
+                if(fast_exact_is_equal(classe, 1))
                     w_sum_l_1+=example_weights[sf[i].first];
                 w_sum_l += example_weights[sf[i].first];
 
-                if(f1 == f2)
+                if(fast_exact_is_equal(f1, f2))
                     continue;
 
                 real w_sum_error_1 = w_sum_l - w_sum_l_1 + w_sum_1 - w_sum_l_1;
@@ -358,10 +359,11 @@ void BinaryStump::computeCostsFromOutputs(const Vec& input, const Vec& output,
 {
     costs.resize(outputsize());
 
-    if(target[0] != 0 && target[0] != 1)
+    if(!fast_exact_is_equal(target[0], 0) &&
+       !fast_exact_is_equal(target[0], 1))
         PLERROR("In BinaryStump:computeCostsFromOutputs() : target should be either 1 or 0");
 
-    costs[0] = output[0] != target[0]; 
+    costs[0] = !fast_exact_is_equal(output[0], target[0]); 
 }                                
 
 TVec<string> BinaryStump::getTestCostNames() const

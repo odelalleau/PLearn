@@ -135,7 +135,7 @@ void SpiralDistribution::generate(Vec& v) const
   
     real x, y;
     real u =  bounded_uniform(0,1);
-    real t = (uniformity==1)?u:pow(u,uniformity);
+    real t = (fast_is_equal(uniformity, 1))?u:pow(u,uniformity);
     t = tmin+(tmax-tmin)*t;
     curve(t,x,y);
     x += gaussian_mu_sigma(0, sigma);

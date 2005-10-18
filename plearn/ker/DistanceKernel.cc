@@ -100,7 +100,7 @@ real DistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
 //////////////////
 real DistanceKernel::evaluate_i_j(int i, int j) const {
     static real d;
-    if (optimized && n == 2.0) {
+    if (optimized && fast_exact_is_equal(n, 2.0)) {
         if (i == j)
             // The case 'i == j' can cause precision issues because of the optimized
             // formula below. Thus we make sure we always return 0.
@@ -131,7 +131,7 @@ real DistanceKernel::evaluate_i_j(int i, int j) const {
 void DistanceKernel::setDataForKernelMatrix(VMat the_data)
 {
     inherited::setDataForKernelMatrix(the_data);
-    if (n == 2.0) {
+    if (fast_exact_is_equal(n, 2.0)) {
         squarednorms.resize(data.length());
         for(int index=0; index<data.length(); index++) {
             squarednorms[index] = data->dot(index, index, data_inputsize);
