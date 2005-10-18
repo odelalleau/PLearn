@@ -68,22 +68,6 @@ PLearnInit::PLearnInit()
 
 PLearnInit::~PLearnInit(){}
 
-int  file_size(const string& filename)
-{
-#ifdef _MSC_VER
-    struct _stat buf;
-    if (_stat(filename.c_str(),&buf)==0)
-#else
-        struct stat buf;
-    if (stat(filename.c_str(),&buf)==0)
-#endif
-  
-        return buf.st_size;
-    else
-        return -1;
-}
-
-
 char* strcopy(char* s)
 {
     if (!s) return 0;
@@ -111,18 +95,6 @@ void pretty_print_number(char* buffer, real number)
     }   
 }
 
-bool file_exists(const string& filename)
-{
-    FILE* fp = fopen(filename.c_str(),"r");
-    if (fp)
-    {
-        fclose(fp);
-        return true;
-    }
-    return false;
-}
-
-
 bool isMapKeysAreInt(map<real,int>& m)
 {
     map<real,int>::iterator it;
@@ -130,7 +102,8 @@ bool isMapKeysAreInt(map<real,int>& m)
     {
         real key_rvalue = it->first;
         int key_ivalue = int(key_rvalue);
-        if (key_rvalue != key_ivalue) return false;
+        if (!fast_exact_is_equal(key_rvalue, key_ivalue))
+            return false;
     }
     return true;
 }

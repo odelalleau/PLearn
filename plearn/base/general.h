@@ -252,11 +252,6 @@ char* strcopy(char* s);
 //!  print a number without unnecessary trailing zero's, into buffer
 void pretty_print_number(char* buffer, real number);
 
-//!  Simple file info
-int   file_size(const string& filename);
-bool file_exists(const string& filename);
-
-	
 //!  check that all keys of the map are int values
 bool isMapKeysAreInt(map<real,int>& m);
 
