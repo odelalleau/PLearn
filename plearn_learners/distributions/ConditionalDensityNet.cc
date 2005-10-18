@@ -532,9 +532,9 @@ void ConditionalDensityNet::build_()
         costs[1] = nll;
         costs[2] = square(target-expected_value);
         // for debugging gradient computation error
-        if (log_likelihood_vs_squared_error_balance==1)
+        if (fast_exact_is_equal(log_likelihood_vs_squared_error_balance, 1))
             costs[0] = costs[1];
-        else if (log_likelihood_vs_squared_error_balance==0)
+        else if (fast_exact_is_equal(log_likelihood_vs_squared_error_balance, 0))
             costs[0] = costs[2];
         else costs[0] = log_likelihood_vs_squared_error_balance*costs[1]+
                  (1-log_likelihood_vs_squared_error_balance)*costs[2];
@@ -574,14 +574,17 @@ void ConditionalDensityNet::build_()
 
         // create penalties
         penalties.resize(0);  // prevents penalties from being added twice by consecutive builds
-        if(w1 && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
+        if(w1 && (!fast_exact_is_equal(layer1_weight_decay + weight_decay, 0) ||
+                  !fast_exact_is_equal(layer1_bias_decay   + bias_decay,   0)))
             penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), penalty_type));
-        if(w2 && ((layer2_weight_decay + weight_decay)!=0 || (layer2_bias_decay + bias_decay)!=0))
+        if(w2 && (!fast_exact_is_equal(layer2_weight_decay + weight_decay, 0) ||
+                  !fast_exact_is_equal(layer2_bias_decay   + bias_decay,   0)))
             penalties.append(affine_transform_weight_penalty(w2, (layer2_weight_decay + weight_decay), (layer2_bias_decay + bias_decay), penalty_type));
-        if(wout && ((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
+        if(wout && (!fast_exact_is_equal(output_layer_weight_decay + weight_decay, 0) ||
+                    !fast_exact_is_equal(output_layer_bias_decay   + bias_decay,   0)))
             penalties.append(affine_transform_weight_penalty(wout, (output_layer_weight_decay + weight_decay), 
                                                              (output_layer_bias_decay + bias_decay), penalty_type));
-        if(wdirect && (direct_in_to_out_weight_decay + weight_decay) != 0)
+        if(wdirect && !fast_exact_is_equal(direct_in_to_out_weight_decay + weight_decay, 0))
         {
             if (penalty_type == "L1_square")
                 penalties.append(square(sumabs(wdirect))*(direct_in_to_out_weight_decay + weight_decay));
@@ -664,46 +667,46 @@ void ConditionalDensityNet::build_()
   
         VarArray outputs_array;
 
-        for (unsigned int i=0;i<outputs_def.length();i++)
+        for (unsigned int k=0;k<outputs_def.length();k++)
         {
-            if (outputs_def[i]=='e')
+            if (outputs_def[k]=='e')
                 outputs_array &= expected_value;
-            else if (outputs_def[i]=='t')
+            else if (outputs_def[k]=='t')
             {
                 Func survival_f(target&output,var(1.0)-cumulative);
                 Var threshold_y(1,1);
                 threshold_y->valuedata[0]=thresholdY;
                 outputs_array &= survival_f(threshold_y & output);
             }
-            else if (outputs_def[i]=='S' || outputs_def[i]=='C' ||
-                     outputs_def[i]=='L' || outputs_def[i]=='D')
+            else if (outputs_def[k]=='S' || outputs_def[k]=='C' ||
+                     outputs_def[k]=='L' || outputs_def[k]=='D')
             {
-                Func prob_f(target&output,outputs_def[i]=='S'?(var(1.0)-cumulative):
-                            (outputs_def[i]=='C'?cumulative:
-                             (outputs_def[i]=='D'?density:log(density))));
+                Func prob_f(target&output,outputs_def[k]=='S'?(var(1.0)-cumulative):
+                            (outputs_def[k]=='C'?cumulative:
+                             (outputs_def[k]=='D'?density:log(density))));
                 y_values.resize(n_curve_points);
                 if (curve_positions=="uniform")
                 {
                     real delta = maxY/(n_curve_points-1);
-                    for (int i=0;i<n_curve_points;i++)
+                    for (int j=0;j<n_curve_points;j++)
                     {
-                        y_values[i] = var(i*delta);
-                        y_values[i]->setName("y"+tostring(i));
-                        outputs_array &= prob_f(y_values[i] & output);
+                        y_values[j] = var(j*delta);
+                        y_values[j]->setName("y"+tostring(j));
+                        outputs_array &= prob_f(y_values[j] & output);
                     }
                 } else // log-scale
                 {
                     real denom = 1.0/(1-exp(-scale));
-                    for (int i=0;i<n_curve_points;i++)
+                    for (int j=0;j<n_curve_points;j++)
                     {
-                        y_values[i] = var((exp(scale*(i-n_output_density_terms)/n_output_density_terms)-exp(-scale))*denom);
-                        y_values[i]->setName("y"+tostring(i));
-                        outputs_array &= prob_f(y_values[i] & output);
+                        y_values[j] = var((exp(scale*(j-n_output_density_terms)/n_output_density_terms)-exp(-scale))*denom);
+                        y_values[j]->setName("y"+tostring(j));
+                        outputs_array &= prob_f(y_values[j] & output);
                     }    
                 }
             } else
                 outputs_array &= expected_value;
-//          PLERROR("ConditionalDensityNet::build: can't handle outputs_def with option value = %c",outputs_def[i]);
+//          PLERROR("ConditionalDensityNet::build: can't handle outputs_def with option value = %c",outputs_def[k]);
         }
         outputs = hconcat(outputs_array);
         if (mu_is_fixed)
@@ -1091,14 +1094,14 @@ void ConditionalDensityNet::train()
                 PLERROR("In ConditionalDensityNet::train - Found a negative target");
             if (y > maxY)
                 PLERROR("In ConditionalDensityNet::train - Found a target > maxY");
-            if (y == 0)
+            if (fast_exact_is_equal(y, 0))
                 unconditional_p0 += weight;
             if (init_mu_from_data)
                 sc.update(y,weight);
             else
-                for (int j=0;j<n_output_density_terms;j++)
-                    if (y<=mu_values[j]) 
-                        unconditional_cdf[j] += weight;
+                for (int k=0;k<n_output_density_terms;k++)
+                    if (y<=mu_values[k]) 
+                        unconditional_cdf[k] += weight;
             sum_w += weight;
         }
         static Mat cdf;
@@ -1112,24 +1115,24 @@ void ConditionalDensityNet::train()
             real current_mean_fraction = 0;
             real prev_cdf = unconditional_p0;
             real prev_y = 0;
-            for (int j=0;j<n_output_density_terms;j++)
+            for (int q=0;q<n_output_density_terms;q++)
             {
-                real target_fraction = mean_y*(j+1.0)/n_output_density_terms;
+                real target_fraction = mean_y*(q+1.0)/n_output_density_terms;
                 for (;k<cdf.length() && current_mean_fraction < target_fraction;k++)
                 {
                     current_mean_fraction += (cdf(k,0)+prev_y)*0.5*(cdf(k,1)-prev_cdf);
                     prev_cdf = cdf(k,1);
                     prev_y = cdf(k,0);
                 }
-                if (j==n_output_density_terms-1)
+                if (q==n_output_density_terms-1)
                 {
-                    mu_values[j]=maxY;
-                    unconditional_cdf[j]=1.0;
+                    mu_values[q]=maxY;
+                    unconditional_cdf[q]=1.0;
                 }
                 else
                 {
-                    mu_values[j]=cdf(k,0);
-                    unconditional_cdf[j]=cdf(k,1);
+                    mu_values[q]=cdf(k,0);
+                    unconditional_cdf[q]=cdf(k,1);
                 }
             }
         }
@@ -1168,7 +1171,7 @@ void ConditionalDensityNet::train()
         real *dcdf = unconditional_delta_cdf->valuedata;
         if (separate_mass_point)
             a_[0] = unconditional_p0>0?inverse_sigmoid(unconditional_p0):-50;
-        else if (dcdf[0]==0)
+        else if (fast_exact_is_equal(dcdf[0], 0))
             a_[0]=unconditional_p0>0?inverse_softplus(unconditional_p0):-50;
         else
         {
@@ -1240,7 +1243,7 @@ void ConditionalDensityNet::train()
         //if (verify_gradient)
         //  training_cost->verifyGradient(verify_gradient);
         //if (stage==nstages-1 && verify_gradient)
-        static real verify_gradient = 0;
+        static bool verify_gradient = false;
         if (verify_gradient)
         {
             if (batch_size == 0)
