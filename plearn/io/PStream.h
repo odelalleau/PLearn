@@ -358,10 +358,10 @@ public:
     }
 
     inline PStream& unread(const char* p)
-    { return unread(p,strlen(p)); }
+    { return unread(p, streamsize(strlen(p))); }
 
     inline PStream& unread(const string& s)
-    { return unread(s.data(),s.length()); }
+    { return unread(s.data(), streamsize(s.length())); }
 
 
     inline PStream& read(char* s, streamsize n) 
@@ -388,7 +388,7 @@ public:
     {
         char* buf = new char[n];
 #if STREAMBUFVER == 1
-        streamsize nread = ptr->read(buf, n);
+        string::size_type nread = ptr->read(buf, n);
         s.assign(buf, nread);
 #else
         read(buf, n);
@@ -457,13 +457,13 @@ public:
     // These are convenient method for writing raw strings (whatever the outmode):
     inline PStream& write(const char* s) 
     { 
-        write(s, strlen(s));
+        write(s, streamsize(strlen(s)));
         return *this; 
     }
 
     inline PStream& write(const string& s) 
     { 
-        write(s.data(),s.length());
+        write(s.data(), streamsize(s.length()));
         return *this; 
     }
 
@@ -857,59 +857,59 @@ inline void binwrite_(PStream& out, const bool* x, unsigned int n)
 }
 
 inline void binwrite_(PStream& out, const char* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(char)); }
+{ out.write((char*)x, streamsize(n*sizeof(char))); }
 inline void binwrite_(PStream& out, char* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(char)); }
+{ out.write((char*)x, streamsize(n*sizeof(char))); }
 
 inline void binwrite_(PStream& out, const signed char* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(signed char)); }
+{ out.write((char*)x, streamsize(n*sizeof(signed char))); }
 inline void binwrite_(PStream& out, signed char* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(signed char)); }
+{ out.write((char*)x, streamsize(n*sizeof(signed char))); }
 
 inline void binwrite_(PStream& out, const unsigned char* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(unsigned char)); }
+{ out.write((char*)x, streamsize(n*sizeof(unsigned char))); }
 inline void binwrite_(PStream& out, unsigned char* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(unsigned char)); }
+{ out.write((char*)x, streamsize(n*sizeof(unsigned char))); }
 
 inline void binwrite_(PStream& out, const short* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(short)); }
+{ out.write((char*)x, streamsize(n*sizeof(short))); }
 inline void binwrite_(PStream& out, short* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(short)); }
+{ out.write((char*)x, streamsize(n*sizeof(short))); }
 
 inline void binwrite_(PStream& out, const unsigned short* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(unsigned short)); }
+{ out.write((char*)x, streamsize(n*sizeof(unsigned short))); }
 inline void binwrite_(PStream& out, unsigned short* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(unsigned short)); }
+{ out.write((char*)x, streamsize(n*sizeof(unsigned short))); }
 
 inline void binwrite_(PStream& out, const int* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(int)); }
+{ out.write((char*)x, streamsize(n*sizeof(int))); }
 inline void binwrite_(PStream& out, int* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(int)); }
+{ out.write((char*)x, streamsize(n*sizeof(int))); }
 
 inline void binwrite_(PStream& out, const unsigned int* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(unsigned int)); }
+{ out.write((char*)x, streamsize(n*sizeof(unsigned int))); }
 inline void binwrite_(PStream& out, unsigned int* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(unsigned int)); }
+{ out.write((char*)x, streamsize(n*sizeof(unsigned int))); }
 
 inline void binwrite_(PStream& out, const long* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(long)); }
+{ out.write((char*)x, streamsize(n*sizeof(long))); }
 inline void binwrite_(PStream& out, long* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(long)); }
+{ out.write((char*)x, streamsize(n*sizeof(long))); }
 
 inline void binwrite_(PStream& out, const unsigned long* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(unsigned long)); }
+{ out.write((char*)x, streamsize(n*sizeof(unsigned long))); }
 inline void binwrite_(PStream& out, unsigned long* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(unsigned long)); }
+{ out.write((char*)x, streamsize(n*sizeof(unsigned long))); }
 
 inline void binwrite_(PStream& out, const float* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(float)); }
+{ out.write((char*)x, streamsize(n*sizeof(float))); }
 inline void binwrite_(PStream& out, float* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(float)); }
+{ out.write((char*)x, streamsize(n*sizeof(float))); }
 
 inline void binwrite_(PStream& out, const double* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(double)); }
+{ out.write((char*)x, streamsize(n*sizeof(double))); }
 inline void binwrite_(PStream& out, double* x, unsigned int n) 
-{ out.write((char*)x, n*sizeof(double)); }
+{ out.write((char*)x, streamsize(n*sizeof(double))); }
 
 // The typecode indicates the type and format of the elements in the stream
 
