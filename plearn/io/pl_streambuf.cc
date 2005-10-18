@@ -86,7 +86,7 @@ pl_streambuf::int_type pl_streambuf::underflow()
     if(gptr() < egptr())
         return *gptr(); 
 
-    int oldbuflen= egptr()-inbuf; //< current length used
+    int oldbuflen = int(egptr()-inbuf); //< current length used
     //if at end of buffer, make it twice as long as before
     if(egptr() == inbuf+inbuflen)
     {

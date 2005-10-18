@@ -80,7 +80,7 @@ streamsize  pl_fdstreambuf::showmanyc()
 
 int pl_fdstreambuf::underflow()
 {
-    int msglength= read(fd, inbuf, inbuf_capacity);
+    int msglength= int(read(fd, inbuf, inbuf_capacity));
     if(msglength < 1)
         return EOF;
     setg(inbuf, inbuf, inbuf+msglength);
@@ -93,7 +93,7 @@ int pl_fdstreambuf::overflow(int c)
     {
         if(pbase()) // buffered mode
 	{
-            streamsize n = pptr() - pbase();
+            streamsize n = streamsize(pptr() - pbase());
             *pptr()= char(c); // put it in extra space
             if(write(fd, pbase(), n) < 0)
                 return EOF;
@@ -112,7 +112,7 @@ int pl_fdstreambuf::overflow(int c)
     {
         if(pbase()) // buffered mode
 	{
-            streamsize n = pptr() - pbase();
+            streamsize n = streamsize(pptr() - pbase());
             if(write(fd, pbase(), n) < 0)
                 return EOF;
             pbump(-n);
@@ -123,7 +123,7 @@ int pl_fdstreambuf::overflow(int c)
 
 int pl_fdstreambuf::sync()
 {
-    streamsize n = pptr() - pbase();
+    streamsize n = streamsize(pptr() - pbase());
     if(n>0)
     {
         if(write(fd, pbase(), n) < 0)

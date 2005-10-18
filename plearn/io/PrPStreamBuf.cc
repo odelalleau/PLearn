@@ -82,13 +82,13 @@ PrPStreamBuf::~PrPStreamBuf()
 
 PrPStreamBuf::streamsize PrPStreamBuf::read_(char* p, streamsize n)
 {
-    return PR_Read(in, p, n);
+    return PR_Read(in, p, PRInt32(n));
 }
 
 //! writes exactly n characters from p (unbuffered, must flush)
 void PrPStreamBuf::write_(const char* p, streamsize n)
 {
-    streamsize nwritten = ::PR_Write(out, p, n);
+    streamsize nwritten = ::PR_Write(out, p, PRInt32(n));
     if (nwritten != n)
         PLERROR("In PrPStreamBuf::write_ failed to write the requested number of bytes: wrote %d instead of %d",nwritten,n);
 }

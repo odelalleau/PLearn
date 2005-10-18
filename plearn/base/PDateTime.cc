@@ -149,10 +149,10 @@ PDateTime double_to_datetime(double f)
     if (! is_missing(f)) {
         long d = long(f);
         double fraction = f-d;
-        date.year = 1900 + d/10000;
+        date.year = short(1900 + d/10000);
         d %= 10000;
-        date.month = d/100;
-        date.day = d%100;
+        date.month = (unsigned char) (d/100);
+        date.day = (unsigned char) (d%100);
 
         int hh,mm,ss;
         double_to_hhmmss(fraction,hh,mm,ss);
