@@ -253,7 +253,7 @@ string pgetline(PStream& in)
 bool isBlank(const string& s)
 {
     string::size_type l = s.length();
-    for(int i=0; i<l; i++)
+    for(unsigned int i=0; i<l; i++)
     {
         char c = s[i];
         if(c=='#' || c=='\n' || c=='\r')
@@ -269,7 +269,7 @@ bool isParagraphBlank(const string& s)
 {
     string::size_type l = s.length();
     bool in_comment=false;
-    for(int i=0; i<l; i++)
+    for(unsigned int i=0; i<l; i++)
     {
         char c = s[i];
         if(c=='#')
@@ -331,8 +331,8 @@ vector<string> split(const string& s, char delimiter)
 {
     vector<string> res;
     string::size_type l = s.length();
-    int beg = 0;
-    int end = 0;
+    unsigned int beg = 0;
+    unsigned int end = 0;
   
     while(end<=l)
     {
@@ -502,7 +502,7 @@ string get_option(const vector<string> &command_line,
                   const string& option, const string& default_value)
 {
     vector<string>::size_type n = command_line.size();
-    for (int i=0;i<n;i++)
+    for (unsigned int i=0;i<n;i++)
         if (command_line[i]==option && i+1<n) return command_line[i+1];
     return default_value;
 }
@@ -510,7 +510,7 @@ string get_option(const vector<string> &command_line,
 bool find(const vector<string> &command_line, const string& option)
 {
     vector<string>::size_type n = command_line.size();
-    for (int i=0;i<n;i++)
+    for (unsigned int i=0;i<n;i++)
         if (command_line[i]==option) return true;
     return false;
 }
