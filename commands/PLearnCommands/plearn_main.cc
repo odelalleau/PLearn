@@ -57,7 +57,7 @@ static bool is_command( string& possible_command )
     if(PLearnCommandRegistry::is_registered(possible_command))
         return true; 
 
-    if( file_exists(possible_command) )
+    if( isfile(possible_command) )
     {
         possible_command = "run";
         return false;
@@ -89,7 +89,7 @@ static void set_global_calendars(string command_line_option)
     // Assume command-line-option of the form
     // CalendarName1:CalendarFilename1,CalendarName2:CalendarFilename2,...
     vector<string> names_files = split(command_line_option, ',');
-    for (int i=0, n=names_files.size() ; i<n ; ++i) {
+    for (vector<string>::size_type i=0, n=names_files.size() ; i<n ; ++i) {
         vector<string> namefile = split(names_files[i], ':');
         if (namefile.size() != 2)
             PLERROR("Cannot understand '%s' for specifying a global calendar.",
@@ -107,7 +107,7 @@ static void set_global_calendars(string command_line_option)
 static string global_options( vector<string>& command_line,
                               int major_version, int minor_version, int fixlevel )
 {
-    int argc                 = command_line.size();
+    int argc                 = int(command_line.size());
 
     // Note that the findpos function (stringutils.h) returns -1 if the
     // option is not found.
