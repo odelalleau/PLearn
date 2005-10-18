@@ -35,7 +35,6 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
-
 /* *******************************************************      
  * $Id$
  * This file is part of the PLearn library.
@@ -49,12 +48,12 @@
 
 #include <map>
 #include <string>
-#include <sstream>
 #include "PP.h"
 #include "StaticInitializer.h"
 #include "TypeFactory.h"
 #include "Option.h"
 #include <plearn/io/PPath.h>
+#include <plearn/io/openString.h>
 
 namespace PLearn {
 using namespace std;
@@ -211,7 +210,7 @@ PLEARN_DECLARE_TEMPLATE_OBJECT(Toto)
 ...
 };
 
-PLEARN_IMPLEMENT_TEMPLATE_OBJECT(Toto)
+PLEARN_IMPLEMENT_TEMPLATE_OBJECT(Toto,"One line description","Multi line help")
 
 // Puis au besoin, pour chaque version de template instanciée, il faudra
 // peut-être définir le _static_initializer_ (si le compilo n'est pas assez 
@@ -802,11 +801,12 @@ Object* macroLoadObject(const PPath &filename, map<string,string>& vars);
 Object* macroLoadObject(const PPath &filename);
 
 //! Creates a new object according to the given representation.
-//! This actually calls readObject on an istringstream, so anything
+//! This actually calls readObject on a PStream obtained with 
+//! openString,  so anything
 //! understandable by readObject can be used here
 inline Object* newObject(const string& representation)
 {
-    istringstream in(representation);
+    PStream in = openString(representation, PStream::plearn_ascii);
     return readObject(in);
 }
 

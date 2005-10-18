@@ -38,6 +38,7 @@
 #include "PrPStreamBuf.h"
 #include <plearn/math/pl_math.h>
 #include <mozilla/nspr/prio.h>
+#include <ctype.h>
 
 // norman:
 #ifdef WIN32
@@ -573,14 +574,14 @@ void PStream::readAsciiNum(double &x)
         break;
     case 'n':
     case 'N':
-        if(get()=='a' && get()=='n')
+        if(toupper(get())=='A' && toupper(get())=='N')
             x = MISSING_VALUE;
         else
             PLERROR(error_msg);
         break;
     case 'i':
     case 'I':
-        if (get()=='n' && get()=='f')
+        if (toupper(get())=='N' && toupper(get())=='F')
             x = opposite ? - INFINITY : INFINITY;
         else
             PLERROR(error_msg);

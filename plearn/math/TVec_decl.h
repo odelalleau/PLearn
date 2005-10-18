@@ -57,6 +57,8 @@
 #include <plearn/base/Storage.h>
 #include <plearn/base/Range.h>
 #include <plearn/io/plstreams.h>
+#include <plearn/io/PStream.h>
+#include <plearn/io/openString.h>
 
 namespace PLearn {
 using namespace std;
@@ -451,7 +453,7 @@ public:
     //! Fills the vector with the given value; no-op if vector is null
     inline void fill(const T& value) const
     {
-        if (storage)
+        if (isNotEmpty())
             fill_n(data(), length(), value);
     }
 
@@ -470,7 +472,7 @@ public:
     { fill(f); }
 
     inline void clear() const
-    { if(!isNull()) clear_n(data(),length()); }
+    { if(isNotEmpty()) clear_n(data(),length()); }
 
     //!  inserts element at position (actually between values at position-1 and posiion). Length is increased by 1.
     inline void insert(int position, T value)
@@ -752,6 +754,7 @@ public:
     void print(ostream& out, const string& separator) const; //!<  each value is printed with the given separator string between them
 
     void input(istream& in=cin) const;
+    void input(PStream& in) const;
 
     // calls print with cerr, usefull with gdb (> call obj.debugprint() )
     void debugPrint(){print(cerr);}
@@ -759,7 +762,8 @@ public:
 
     void operator<<(const string& datastring) const
     {
-        istringstream in(datastring);
+        // istrstream in(datastring.c_str());
+        PStream in = openString(datastring,PStream::plearn_ascii);
         input(in);
     }
 

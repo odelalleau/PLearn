@@ -296,7 +296,7 @@ void GhostScript::multilineShow(real x, real y, const string& text, real newline
 {
   vector<string> splits = split(text, '\n');
   vector<string>::size_type nsplits = splits.size();
-  for(int i=0; i<nsplits; i++)
+  for(int i=0; i<(int)nsplits; i++)
     {
       show(x,y,splits[i].c_str(),halign,valign);
       y -= newlinesize;

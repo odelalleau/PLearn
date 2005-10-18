@@ -653,7 +653,7 @@ public:
 
     void fill(const T& value) const
     {
-        if (isNotNull()) {
+        if (isNotEmpty()) {
             if(isCompact())
                 fill_n(data(),size(),value); 
             else
@@ -674,16 +674,19 @@ public:
 
     inline void clear() const
     { 
-        if(isCompact())
-            clear_n(data(),size()); 
-        else
+        if(isNotEmpty())
         {
-            int l = length();
-            T* ptr = data();
-            while(l--)
+            if(isCompact())
+                clear_n(data(),size()); 
+            else
             {
-                clear_n(ptr, width());
-                ptr += mod();
+                int l = length();
+                T* ptr = data();
+                while(l--)
+                {
+                    clear_n(ptr, width());
+                    ptr += mod();
+                }
             }
         }
     }
@@ -795,6 +798,7 @@ public:
     //!  C++ stream output
     void print(ostream& out = cout) const;
     void input(istream& in = cin) const;
+    void input(PStream& in) const;
 
     // calls print with cerr, usefull with gdb (> call obj.debugprint() )
     void debugPrint(){print(cerr);}
@@ -802,7 +806,8 @@ public:
 
     inline void operator<<(const string& datastring) const
     { 
-        istringstream in(datastring);
+        // istrstream in(datastring.c_str());
+        PStream in = openString(datastring,PStream::plearn_ascii);
         input(in); 
     }
 

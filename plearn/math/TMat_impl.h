@@ -113,6 +113,18 @@ void TVec<T>::input(istream& in) const
 }
 
 template <class T>
+void TVec<T>::input(PStream& in) const
+{
+    T* v = data();
+    for(int i=0; i<length(); i++)
+    {
+        if(!(in>>v[i]))
+            PLERROR("In TVec::input error encountered while reading vector");
+    
+    }
+}
+
+template <class T>
 void TVec<T>::print(ostream& out) const
 {
     if(storage && 0 < length())
@@ -317,6 +329,19 @@ void TMat<T>::input(istream& in) const
     }
 }
 
+template <class T>
+void TMat<T>::input(PStream& in) const
+{
+    for(int i=0; i<length(); i++)
+    {
+        T* v = rowdata(i);
+        for (int j=0;j<width();j++)
+        {
+            if(!(in>>v[j]))
+                PLERROR("In TMat<T>::input error encountered while reading matrix");
+        }
+    }
+}
 
 // Deep copying
 
