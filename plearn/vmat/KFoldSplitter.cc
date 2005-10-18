@@ -62,8 +62,8 @@ KFoldSplitter::KFoldSplitter(int k)
 PLEARN_IMPLEMENT_OBJECT(KFoldSplitter,
                         "K-fold cross-validation splitter.", 
                         "KFoldSplitter implements K splits of the dataset into a training-set and a test-set.\n"
-                        "If the number of splits is higher than the number of examples, leave-one-out cross-validation\n"
-                        "will be performed.\n"
+                        "To perform leave-one-out cross-validation, K must be set to -1 (or, obviously, to the\n"
+                        "exact number of examples).\n"
                         "The cross-validation may be performed only on a subset of the source data, using the option\n"
                         "'cross_range', that will define a range of samples on which to perform cross-validation.\n"
                         "All samples before this range will systematically be added to the train set, while all samples\n"
@@ -73,7 +73,7 @@ PLEARN_IMPLEMENT_OBJECT(KFoldSplitter,
 void KFoldSplitter::declareOptions(OptionList& ol)
 {
     declareOption(ol, "K", &KFoldSplitter::K, OptionBase::buildoption,
-                  "Split dataset in K parts.");
+                  "Split dataset in K parts (you can use K = -1 to perform leave-one-out CV");
 
     declareOption(ol, "append_train", &KFoldSplitter::append_train, OptionBase::buildoption,
                   "If set to 1, the trainset will be appended after in the returned sets.");
@@ -92,6 +92,7 @@ void KFoldSplitter::declareOptions(OptionList& ol)
 
 void KFoldSplitter::build_()
 {
+    assert( K > 0 || K == -1 );
 }
 
 void KFoldSplitter::build()
@@ -102,7 +103,9 @@ void KFoldSplitter::build()
 
 int KFoldSplitter::nsplits() const
 {
-    return K;
+    return K > 0 ? K
+                 : dataset ? dataset->length()
+                           : -1;
 }
 
 int KFoldSplitter::nSetsPerSplit() const
@@ -117,8 +120,9 @@ int KFoldSplitter::nSetsPerSplit() const
 
 TVec<VMat> KFoldSplitter::getSplit(int k)
 {
-    if (k >= K)
-        PLERROR("KFoldSplitter::getSplit() - k (%d) cannot be greater than K (%d)", k, K);
+    if (k >= nsplits())
+        PLERROR("KFoldSplitter::getSplit() - k (%d) cannot be greater than "
+                " the number of splits (%d)", k, nsplits());
 
     real start = cross_range.first;
     real end   = cross_range.second;
@@ -133,6 +137,11 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
     // The cross validation will be done only on examples i_start, ..., i_end - 1.
     int n_cross_data = i_end - i_start;
     bool do_partial_cross = (n_cross_data != n_data);
+    if (K > 0 && K > n_data)
+        PLERROR("In KFoldSplitter::getSplit - The number of splits (%d) cannot"
+                " be greater than the number of samples in the dataset (%d). "
+                "If you want to perform leave-one-out cross-validation, please"
+                "set K = -1", K, n_data);
     real test_fraction = K > 0 ? (n_cross_data/(real)K) : 0;
     if ((int)(test_fraction) < 1)
         test_fraction = 1; // leave-one-out cross-validation
