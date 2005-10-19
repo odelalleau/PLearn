@@ -115,6 +115,7 @@ void AddCostToLearner::declareOptions(OptionList& ol)
     declareOption(ol, "costs", &AddCostToLearner::costs, OptionBase::buildoption,
                   "The costs to be added:\n"
                   " - 'class_error': 1 if (t != o), 0 otherwise\n"
+                  " - 'binary_class_error': same as class error with output = (o > 0.5)\n"
                   " - 'lift_output': to compute the lift cost (for the positive class)\n"
                   " - 'opposite_lift_output': to compute the lift cost (for the negative) class\n"
                   " - 'cross_entropy': t*log(o) + (1-t)*log(1-o)\n"
@@ -214,6 +215,7 @@ void AddCostToLearner::build_()
         } else if (c == "mse") {
         } else if (c == "squared_norm_reconstruction_error") {
         } else if (c == "class_error") {
+        } else if (c == "binary_class_error") {
         } else {
             PLERROR("In AddCostToLearner::build_ - Invalid cost requested (make sure you are using the new costs syntax)");
         }
@@ -429,12 +431,14 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
             } else if (target_length == 1) {
                 // We assume the target is a number between 0 and c-1, and the output
                 // is a vector of length c giving the weight for each class.
-                good = (argmax(output) == int(desired_target[0]));
+                good = (argmax(sub_learner_output) == int(desired_target[0]));
             }
-            if (good)
-                costs[ind_cost] = 0;
-            else
-                costs[ind_cost] = 1;
+            costs[ind_cost] = real(!good);
+        } else if (c == "binary_class_error") {
+            assert( target_length == 1 );
+            real t = desired_target[0];
+            assert( fast_exact_is_equal(t, 0) || fast_exact_is_equal(t, 1));
+            costs[ind_cost] = real((sub_learner_output[0] > 0.5) != bool(t));
         } else if (c == "mse") {
             costs[ind_cost] = powdistance(desired_target, sub_learner_output);
         } else if (c == "squared_norm_reconstruction_error") {
