@@ -158,7 +158,7 @@ bool SDBWithStats::hasStats()
 {
     string numstatsfile = getPath()+getName()+".stats"; 
     string symstatsfile = getPath()+getName()+".symbols";
-    return file_exists(numstatsfile.c_str()) && file_exists(symstatsfile.c_str());
+    return isfile(numstatsfile) && isfile(symstatsfile);
 }
 
 void SDBWithStats::saveStats()

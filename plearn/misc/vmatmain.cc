@@ -373,7 +373,7 @@ void printDistanceStatistics(VMat vm, int inputsize)
   if(m->hasMetaDataDir())
   {
   string fpath = apppend_slash(m->getMetaDataDir())+"CachedColumns/"+tostring(col);
-  if(!file_exists(filepath))
+  if(!isfile(filepath))
         
       
   }

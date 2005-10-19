@@ -941,7 +941,7 @@ void Learner::load(const PPath& filename)
 void Learner::stop_if_wanted()
 {
     string stopping_filename = basename()+".stop";
-    if (file_exists(stopping_filename.c_str()))
+    if (isfile(stopping_filename))
     {
 #ifdef PROFILE
         string profile_report_name = basename();
