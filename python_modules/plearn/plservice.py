@@ -71,7 +71,7 @@ class RemotePLearnServer:
         self.callFunction("binary")
         self.callFunction("implicit_storage",True)        
         
-    def set_return_lists(ret_lists=True):
+    def set_return_lists(self, ret_lists=True):
         """If this is called with True, PLearn sequences will be
         returned as lists (rather than as arrays, which is the default
         behaviour, and can be restored by calling this with False)"""
