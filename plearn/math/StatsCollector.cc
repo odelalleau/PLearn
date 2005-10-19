@@ -163,7 +163,7 @@ void StatsCollector::sortIds()
     for(map<real,StatsCollectorCounts>::iterator it = counts.begin();it!=counts.end();++it,i++)
         allreals[i]=make_pair(it->first,&(it->second));
     qsort(allreals,counts.size(),sizeof(PairRealSCCType),sortIdComparator);
-    for(i=0;i<counts.size();i++)
+    for(i=0;i<(int)counts.size();i++)
         allreals[i].second->id=i;
     delete allreals;
 }
