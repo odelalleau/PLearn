@@ -81,29 +81,32 @@ public:
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    // ### If your class is not instantiatable (it has pure virtual methods)
-    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
     PLEARN_DECLARE_OBJECT(TemporaryDiskVMatrix);
 
     // Simply calls inherited::build() then build_() 
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
+
+    //! A list of the files last opened by this VMatrix.
+    TVec<PPath> last_files_opened;
+    
+    //! Last main directory opened by this VMatrix.
+    PPath last_dirname;
+    
     //#####  Protected Options  ###############################################
 
-    // ### Declare protected option fields (such as learned parameters) here
-    // ...
-    
 protected:
     //#####  Protected Member Functions  ######################################
     
     //! Declares the class options.
-    // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
+
+    //! Overridden to properly update the counter of references to open files.
+    virtual void closeCurrentFiles();
 
 private: 
     //#####  Private Member Functions  ########################################

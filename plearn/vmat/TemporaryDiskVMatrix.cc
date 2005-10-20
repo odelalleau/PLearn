@@ -90,6 +90,28 @@ void TemporaryDiskVMatrix::build()
 ////////////
 void TemporaryDiskVMatrix::build_()
 {
+    last_files_opened.resize(0);
+    last_dirname = dirname;
+    addReferenceToFile(dirname);
+    if (indexf)
+        last_files_opened.append(dirname / "indexfile");
+    for (int i = 0; i < dataf.length(); i++)
+        if (dataf[i])
+            last_files_opened.append(dirname / (tostring(i) + ".data"));
+    for (int i = 0; i < last_files_opened.length(); i++)
+        addReferenceToFile(last_files_opened[i]);
+}
+
+///////////////////////
+// closeCurrentFiles //
+///////////////////////
+void TemporaryDiskVMatrix::closeCurrentFiles()
+{
+    inherited::closeCurrentFiles();
+    for (int i = 0; i < last_files_opened.length(); i++)
+        removeReferenceToFile(last_files_opened[i]);
+    removeReferenceToFile(last_dirname);
+    last_files_opened.resize(0);
 }
 
 /////////////////////////////////
@@ -97,6 +119,13 @@ void TemporaryDiskVMatrix::build_()
 /////////////////////////////////
 void TemporaryDiskVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
+    // Clearing 'last_files_opened' is important: no file has been opened yet
+    // by this VMat, as file pointers need to be recreated (this will be done
+    // in inherited::makeDeepCopyFromShallowCopy(..)).
+    // Similarly, 'last_dirname' needs to be cleared since it has not actually
+    // been opened yet by this VMat.
+    last_files_opened = TVec<PPath>();
+    last_dirname = "";
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
@@ -105,9 +134,41 @@ void TemporaryDiskVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ///////////////////////////
 TemporaryDiskVMatrix::~TemporaryDiskVMatrix()
 {
-    force_rmdir(dirname);
-    if (hasMetaDataDir())
-        force_rmdir(getMetaDataDir());
+    TVec<PPath> backup_files_opened = last_files_opened.copy();
+    closeCurrentFiles();
+    bool can_delete_whole_dir = true;
+    bool one_file_deleted = false;
+    for (int i = 0; i < backup_files_opened.length(); i++) {
+        if (noReferenceToFile(backup_files_opened[i])) {
+            rm(backup_files_opened[i]);
+            one_file_deleted = true;
+        } else
+            can_delete_whole_dir = false;
+    }
+    if (one_file_deleted && !can_delete_whole_dir)
+        PLERROR("In TemporaryDiskVMatrix::~TemporaryDiskVMatrix - Some data "
+                "file has been deleted, but not all of them: something must "
+                "be wrong");
+    if (can_delete_whole_dir && !noReferenceToFile(dirname))
+        PLERROR("In TemporaryDiskVMatrix::~TemporaryDiskVMatrix - Was able to "
+                "delete all files in '%s', but it looks like someone is still "
+                "using this directory: something must be wrong",
+                dirname.absolute().c_str());
+    if (!can_delete_whole_dir && noReferenceToFile(dirname))
+        PLERROR("In TemporaryDiskVMatrix::~TemporaryDiskVMatrix - Directory "
+                "'%s' is said to have noone referencing it, however it looks "
+                "like some files in the directory are still being used: this "
+                "should not happen",
+                dirname.absolute().c_str());
+    if (can_delete_whole_dir) {
+        force_rmdir(last_dirname);
+        if (hasMetaDataDir()) {
+            force_rmdir(getMetaDataDir());
+            // Clear the metadatadir so that the parent class does not try to
+            // do anything with it.
+            metadatadir = "";
+        }
+    }
 }
 
 } // end of namespace PLearn
