@@ -364,7 +364,8 @@ void DiskVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 //////////////////
 DiskVMatrix::~DiskVMatrix()
 {
-    saveFieldInfos();
+    if (hasMetaDataDir())
+        saveFieldInfos();
     closeCurrentFiles();
 }
 
