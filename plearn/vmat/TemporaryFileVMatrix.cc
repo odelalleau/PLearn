@@ -61,11 +61,20 @@ PLEARN_IMPLEMENT_OBJECT(
 // TemporaryFileVMatrix //
 //////////////////////////
 TemporaryFileVMatrix::TemporaryFileVMatrix()
+{}
+
+TemporaryFileVMatrix::TemporaryFileVMatrix(const PPath& filename,
+                                           bool writable):
+    inherited(filename, writable)
 {
-    // ...
-    // ### You may (or not) want to call build_() to finish building the object
-    // ### (doing so assumes the parent classes' build_() have been called too
-    // ### in the parent classes' constructors, something that you must ensure)
+    build_();
+}
+
+TemporaryFileVMatrix::TemporaryFileVMatrix(const PPath& filename,
+                                           int the_length, int the_width):
+    inherited(filename, the_length, the_width)
+{
+    build_();
 }
 
 ////////////////////

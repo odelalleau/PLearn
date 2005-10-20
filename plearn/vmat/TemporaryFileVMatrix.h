@@ -72,6 +72,10 @@ public:
     //! Default constructor
     TemporaryFileVMatrix();
 
+    //! Convenient constructors
+    TemporaryFileVMatrix(const PPath& filename, bool writable = true);
+    TemporaryFileVMatrix(const PPath& filename, int the_length, int the_width);
+
     //! Destructor.
     virtual ~TemporaryFileVMatrix();
     
