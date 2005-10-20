@@ -112,9 +112,22 @@ void TemporaryFileVMatrix::build()
 ////////////
 void TemporaryFileVMatrix::build_()
 {
-    removeReferenceToFile(previous_filename);
-    addReferenceToFile(filename_);
-    previous_filename = filename_;
+    if (f) {
+        // File has been opened successfully.
+        addReferenceToFile(filename_);
+        last_filename = filename_;
+    } else
+        last_filename = "";
+}
+
+//////////////////////
+// closeCurrentFile //
+//////////////////////
+void TemporaryFileVMatrix::closeCurrentFile()
+{
+    if (f)
+        removeReferenceToFile(last_filename);
+    inherited::closeCurrentFile();
 }
 
 /////////////////////////////////
@@ -122,12 +135,12 @@ void TemporaryFileVMatrix::build_()
 /////////////////////////////////
 void TemporaryFileVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    // Clearing 'previous_filename' is important: since at this point it is a
-    // shallow copy, the file pointed by 'previous_filename' has not actually
+    // Clearing 'last_filename' is important: since at this point it is a
+    // shallow copy, the file pointed by 'last_filename' has not actually
     // been opened by this object, thus there is no need to decrease its
     // number of references when build() is called in the parent
     // makeDeepCopyFromShallowCopy(..) method.
-    previous_filename = "";
+    last_filename = "";
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
@@ -137,7 +150,6 @@ void TemporaryFileVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 TemporaryFileVMatrix::~TemporaryFileVMatrix()
 {
     closeCurrentFile();
-    removeReferenceToFile(filename_);
     if (noReferenceToFile(filename_)) {
         rm(filename_);
         if (hasMetaDataDir()) {
