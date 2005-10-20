@@ -72,23 +72,37 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
     "implements most of the functionalities of the abstract VMatrix interface in terms\n"
     "of a few simple virtual functions to be overridden by the user.");
 
-VMatrix::VMatrix()
-    : length_(-1), width_(-1), mtime_(0), 
-      inputsize_(-1), targetsize_(-1), weightsize_(-1),
-      writable(false)
+VMatrix::VMatrix(bool call_build_):
+    inherited   (call_build_),
+    length_     (-1),
+    width_      (-1),
+    mtime_      (0), 
+    inputsize_  (-1),
+    targetsize_ (-1),
+    weightsize_ (-1),
+    writable    (false)
 {
     lockf_ = PStream();
+    if (call_build_)
+        build_();
 }
 
-VMatrix::VMatrix(int the_length, int the_width)
-    : length_(the_length), width_(the_width), mtime_(0), 
-      inputsize_(-1), targetsize_(-1), weightsize_(-1),
-      writable(false),
-      map_sr(TVec<map<string,real> >(the_width)),
-      map_rs(TVec<map<real,string> >(the_width)),
-      fieldstats(0)
+VMatrix::VMatrix(int the_length, int the_width, bool call_build_):
+    inherited                       (call_build_),
+    length_                         (the_length),
+    width_                          (the_width),
+    mtime_                          (0),
+    inputsize_                      (-1),
+    targetsize_                     (-1),
+    weightsize_                     (-1),
+    writable                        (false),
+    map_sr(TVec<map<string,real> >  (the_width)),
+    map_rs(TVec<map<real,string> >  (the_width)),
+    fieldstats                      (0)
 {
     lockf_ = PStream();
+    if (call_build_)
+        build_();
 }
 
 ////////////////////
@@ -254,7 +268,7 @@ int VMatrix::getFieldIndex(const string& fieldname_or_num) const
 ////////////
 void VMatrix::build_()
 {
-    if(metadatadir!="")
+    if(!metadatadir.isEmpty())
         setMetaDataDir(metadatadir); // make sure we perform all necessary operations 
 }
 

@@ -73,8 +73,11 @@ PLEARN_IMPLEMENT_OBJECT(
 
 //#####  Basic PLearn::Object Protocol  #######################################
 
-Object::Object()
-{ }
+Object::Object(bool call_build_)
+{
+    if (call_build_)
+        build_();
+}
 
 Object::~Object()
 {}

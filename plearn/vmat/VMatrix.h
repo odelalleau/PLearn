@@ -122,9 +122,9 @@ public:
     Array<VMFieldStat> fieldstats;
 
     //! Default constructor.
-    VMatrix();
+    VMatrix(bool call_build_ = false);
 
-    VMatrix(int the_length, int the_width);
+    VMatrix(int the_length, int the_width, bool call_build_ = false);
 
     //! Simply calls inherited::build() then build_().
     virtual void build();

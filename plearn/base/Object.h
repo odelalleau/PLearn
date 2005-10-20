@@ -482,7 +482,7 @@ public:
      *  declareOptions).  Completing the actual building of the object is left
      *  to the build_() and build() methods (see below).
      */
-    Object();
+    Object(bool call_build_ = false);
 
     //! Virtual Destructor
     virtual ~Object();

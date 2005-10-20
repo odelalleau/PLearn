@@ -92,19 +92,24 @@ PLEARN_IMPLEMENT_OBJECT(
     ""
 );
 
-    DiskVMatrix::DiskVMatrix()
-        : indexf(0),freshnewfile(false),
-          old_format(false),swap_endians(false),
-          tolerance(1e-6)
-    {
-        writable = false;
-    }
+DiskVMatrix::DiskVMatrix():
+    indexf      (0),
+    freshnewfile(false),
+    old_format  (false),
+    swap_endians(false),
+    tolerance   (1e-6)
+{
+    writable = false;
+}
 
-DiskVMatrix::DiskVMatrix(const PPath& the_dirname, bool readwrite)
-    : indexf(0),freshnewfile(false),
-      old_format(false),swap_endians(false),
-      dirname(the_dirname),
-      tolerance(1e-6)
+DiskVMatrix::DiskVMatrix(const PPath& the_dirname, bool readwrite):
+    inherited   (true),
+    indexf      (0),
+    freshnewfile(false),
+    old_format  (false),
+    swap_endians(false),
+    dirname     (the_dirname),
+    tolerance   (1e-6)
 {
     writable = readwrite;
     dirname.removeTrailingSlash(); // For safety.
@@ -112,13 +117,14 @@ DiskVMatrix::DiskVMatrix(const PPath& the_dirname, bool readwrite)
 }
 
 DiskVMatrix::DiskVMatrix(const PPath& the_dirname, int the_width,
-                         bool write_double_as_float)  
-    : RowBufferedVMatrix(0,the_width),
-      indexf(0), 
-      freshnewfile(true),
-      old_format(false),swap_endians(false),
-      dirname(the_dirname),
-      tolerance(1e-6)
+                         bool write_double_as_float):
+    inherited   (0, the_width, true),
+    indexf      (0), 
+    freshnewfile(true),
+    old_format  (false),
+    swap_endians(false),
+    dirname     (the_dirname),
+    tolerance   (1e-6)
 {
     writable = true;
     dirname.removeTrailingSlash(); // For safety.

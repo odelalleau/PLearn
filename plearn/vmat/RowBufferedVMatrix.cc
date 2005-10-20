@@ -46,27 +46,36 @@ using namespace std;
 
 /** RowBufferedVMatrix **/
 
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(RowBufferedVMatrix,
-                                 "A base class for VMatrices that keep the last row(s) in a buffer for faster access.",
-                                 "");
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
+    RowBufferedVMatrix,
+    "Base class for VMatrices keeping the last row(s) in a buffer for faster access.",
+    ""
+);
 
-RowBufferedVMatrix::RowBufferedVMatrix(int the_length, int the_width)
-    :VMatrix(the_length, the_width), 
-     current_row_index(-1), current_row(the_width), 
-     other_row_index(-1), other_row(the_width) 
-{}
+RowBufferedVMatrix::RowBufferedVMatrix(int the_length, int the_width,
+                                       bool call_build_):
+    inherited           (the_length, the_width, call_build_),
+    current_row_index   (-1),
+    current_row         (the_width), 
+    other_row_index     (-1),
+    other_row           (the_width) 
+{
+    // Never calling build_() since it is not overridden for this class.
+}
 
-RowBufferedVMatrix::RowBufferedVMatrix()
-    :current_row_index(-1), other_row_index(-1)
-{}
-
+RowBufferedVMatrix::RowBufferedVMatrix(bool call_build_):
+    inherited        (call_build_),
+    current_row_index(-1),
+    other_row_index  (-1)
+{
+    // Never calling build_() since it is not overridden for this class.
+}
 
 void RowBufferedVMatrix::invalidateBuffer() const
 {
     current_row_index = -1;
     other_row_index = -1;
 }
-
 
 real RowBufferedVMatrix::get(int i, int j) const
 {

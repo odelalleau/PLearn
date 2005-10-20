@@ -75,8 +75,8 @@ protected:
   
 public:
 
-    RowBufferedVMatrix();
-    RowBufferedVMatrix(int the_length, int the_width);
+    RowBufferedVMatrix(bool call_build_ = false);
+    RowBufferedVMatrix(int the_length, int the_width, bool call_build_ = false);
 
     //! These methods are implemented by buffering calls to getNewRow.
     virtual real get(int i, int j) const; //!<  returns element (i,j)

@@ -57,18 +57,19 @@ PLEARN_IMPLEMENT_OBJECT(
 // FileVMatrix //
 /////////////////
 FileVMatrix::FileVMatrix():
-    filename_(""),
-    f(0),
-    build_new_file(false)
+    filename_       (""),
+    f               (0),
+    build_new_file  (false)
 {
     writable=true;
     remove_when_done = track_ref = -1;
 }
 
 FileVMatrix::FileVMatrix(const PPath& filename, bool writable_):
-    filename_(filename.absolute()),
-    f(0),
-    build_new_file(!isfile(filename))
+    inherited       (true),
+    filename_       (filename.absolute()),
+    f               (0),
+    build_new_file  (!isfile(filename))
 {
     remove_when_done = track_ref = -1;
     writable = writable_;
@@ -76,9 +77,10 @@ FileVMatrix::FileVMatrix(const PPath& filename, bool writable_):
 }
 
 FileVMatrix::FileVMatrix(const PPath& filename, int the_length, int the_width):
-    inherited(the_length, the_width),
-    filename_(filename.absolute()), f(0),
-    build_new_file(true)
+    inherited       (the_length, the_width, true),
+    filename_       (filename.absolute()),
+    f               (0),
+    build_new_file  (true)
 {
     remove_when_done = track_ref = -1;
     writable = true;
@@ -87,10 +89,10 @@ FileVMatrix::FileVMatrix(const PPath& filename, int the_length, int the_width):
 
 FileVMatrix::FileVMatrix(const PPath& filename, int the_length,
                          const TVec<string>& fieldnames):
-    inherited(the_length, fieldnames.length()),
-    filename_(filename.absolute()),
-    f(0),
-    build_new_file(true)
+    inherited       (the_length, fieldnames.length(), true),
+    filename_       (filename.absolute()),
+    f               (0),
+    build_new_file  (true)
 {
     remove_when_done = track_ref = -1;
     writable = true;
