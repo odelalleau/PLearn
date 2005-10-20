@@ -11,10 +11,11 @@ namespace PLearn {
 
 size_t getSystemTotalMemory()
 {
-    size_t memory_size=0;
+    unsigned int memory_size_uint = 0;
     char units[1000];
     FILE* p=popen("grep MemTotal /proc/meminfo","r");
-    fscanf(p,"%*s %u %s",&memory_size,units);
+    fscanf(p,"%*s %u %s", &memory_size_uint, units);
+    size_t memory_size = size_t(memory_size_uint);
     if (strcmp(units,"kB")==0)
         memory_size*=1024;
     else 

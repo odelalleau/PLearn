@@ -163,7 +163,7 @@ void RemoveDuplicateVMatrix::build_()
             if (!removed[i]) {
                 if (!compute_gram)
                     source->getSubRow(i, 0, row_i);
-                for (int j = i + 1; j < n; j++, iterate) {
+                for (int j = i + 1; j < n; j++) {
                     if (!removed[j]) {
                         bool equal;
                         if (compute_gram)
