@@ -52,7 +52,7 @@ using namespace std;
 // LocallyPrecomputedVMatrix //
 ///////////////////////////////
 LocallyPrecomputedVMatrix::LocallyPrecomputedVMatrix():
-    local_dir("/Tmp"),
+    local_dir("/tmp"),
     max_wait(30),
     remove_when_done(-1),
     sequential_access(true),
