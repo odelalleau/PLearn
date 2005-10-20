@@ -159,11 +159,11 @@ int sortIdComparator(const void* i1, const void* i2)
 void StatsCollector::sortIds()
 {
     PairRealSCCType* allreals= new PairRealSCCType[counts.size()];
-    int i=0;
+    unsigned int i=0;
     for(map<real,StatsCollectorCounts>::iterator it = counts.begin();it!=counts.end();++it,i++)
         allreals[i]=make_pair(it->first,&(it->second));
     qsort(allreals,counts.size(),sizeof(PairRealSCCType),sortIdComparator);
-    for(i=0;i<(int)counts.size();i++)
+    for(i=0;i<counts.size();i++)
         allreals[i].second->id=i;
     delete allreals;
 }
