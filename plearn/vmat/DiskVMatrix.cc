@@ -280,6 +280,7 @@ void DiskVMatrix::getNewRow(int i, const Vec& v) const
     if(swap_endians)
         endianswap(&position);
     FILE* f = dataf[int(filenum)];
+    assert( f );
     fseek(f,position,SEEK_SET);
     if(old_format)
         binread_compressed(f,v.data(),v.length());
@@ -339,6 +340,24 @@ void DiskVMatrix::flush()
     fflush(f);
     fflush(indexf);
 }
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void DiskVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+    // Hand-made 'deep-copy' of 'dataf' (just create a new storage).
+    // TODO See how to make deepCopyField(dataf, copies) work.
+    dataf = TVec<FILE*>(dataf.length());
+    // Set pointers to zero, because we will open again the file (file pointers
+    // should not be shared between copied objects).
+    indexf = 0;
+    dataf.fill(0);
+    dataf.resize(0);
+    build(); // Open again the dataset.
+}
+
 
 //////////////////
 // ~DiskVMatrix //

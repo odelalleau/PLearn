@@ -94,6 +94,9 @@ public:
 
     virtual void build();
 
+    //! Transform a shallow copy into a deep copy.
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
 protected:
 
     virtual void getNewRow(int i, const Vec& v) const;
