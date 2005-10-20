@@ -83,7 +83,7 @@ protected:
     virtual void getNewRow(int i, const Vec& v) const;
 
     //! Close the current '.pmat' file.
-    void closeCurrentFile();
+    virtual void closeCurrentFile();
 
 public:
 
