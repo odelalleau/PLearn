@@ -1320,6 +1320,65 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
     return text;
 }
 
+static map<string, unsigned int> count_refs_to_file;
+
+////////////////////////
+// addReferenceToFile //
+////////////////////////
+void addReferenceToFile(const PPath& file)
+{
+    if (file.isEmpty())
+        return;
+    string s = file.canonical();
+    if (count_refs_to_file.find(s) != count_refs_to_file.end())
+        count_refs_to_file[s]++;
+    else
+        count_refs_to_file[s] = 1;
+}
+
+///////////////////////
+// noReferenceToFile //
+///////////////////////
+bool noReferenceToFile(const PPath& file)
+{
+    return nReferencesToFile(file) == 0;
+}
+
+///////////////////////
+// nReferencesToFile //
+///////////////////////
+unsigned int nReferencesToFile(const PPath& file)
+{
+    if (file.isEmpty())
+        return 0;
+    string s = file.canonical();
+    if (count_refs_to_file.find(s) != count_refs_to_file.end())
+        return count_refs_to_file[s];
+    else
+        return 0;
+}
+
+///////////////////////////
+// removeReferenceToFile //
+///////////////////////////
+void removeReferenceToFile(const PPath& file)
+{
+    if (file.isEmpty())
+        return;
+    string s = file.canonical();
+    if (count_refs_to_file.find(s) != count_refs_to_file.end())
+        if (count_refs_to_file[s] == 0)
+            PLERROR("In removeReferenceToFile - Trying to decrease the counter"
+                    " of references to file '%s', but it is already zero",
+                    file.absolute().c_str());
+        else
+            count_refs_to_file[s]--;
+    else
+        PLERROR("In removeReferenceToFile - Trying to decrease the counter of "
+                "references to file '%s', but it is not in the counter map",
+                file.absolute().c_str());
+}
+
 #ifdef WIN32
 #undef chdir
 #endif

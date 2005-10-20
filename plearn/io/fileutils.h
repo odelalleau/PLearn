@@ -226,6 +226,23 @@ inline string readFileAndMacroProcess(const PPath& filepath)
     map<string, string> variables;
     return readFileAndMacroProcess(filepath, variables);
 }
+
+//! Increase by one the number of references to a file.
+//! This references system is used in order to track which files are currently
+//! being used, e.g. to be able to delete a temporary file when it is not used
+//! anymore (see TemporaryFileVMatrix and TemporaryDiskVMatrix).
+//! Note that in this function (and related functions below), an empty PPath
+//! will be ignored (and considered to have no reference to it).
+void addReferenceToFile(const PPath& file);
+
+//! Decrease by one the number of references to a file.
+void removeReferenceToFile(const PPath& file);
+
+//! Return the number of references to a file.
+unsigned int nReferencesToFile(const PPath& file);
+
+//! Return 'true' iff there is no reference to a file.
+bool noReferenceToFile(const PPath& file);
   
 } // end of namespace PLearn
 
