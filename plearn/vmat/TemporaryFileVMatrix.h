@@ -95,7 +95,7 @@ public:
 
 protected:
 
-    PPath previous_filename;
+    PPath last_filename;
     
     //#####  Protected Options  ###############################################
 
@@ -106,8 +106,10 @@ protected:
     //#####  Protected Member Functions  ######################################
     
     //! Declares the class options.
-    // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
+
+    //! Overridden to properly update the counter of references to the file.
+    virtual void closeCurrentFile();
    
 private: 
     //#####  Private Member Functions  ########################################
