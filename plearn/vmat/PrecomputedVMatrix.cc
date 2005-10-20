@@ -3,6 +3,7 @@
 // PrecomputedVMatrix.cc
 //
 // Copyright (C) 2003 Pascal Vincent 
+// Copyright (C) 2005 Olivier Delalleau
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -44,6 +45,8 @@
 #include "PrecomputedVMatrix.h"
 #include "DiskVMatrix.h"
 #include "FileVMatrix.h"
+#include "TemporaryDiskVMatrix.h"
+#include "TemporaryFileVMatrix.h"
 #include <plearn/io/PPath.h>
 #include <plearn/io/fileutils.h> //!< For force_rmdir()
 
@@ -51,21 +54,30 @@ namespace PLearn {
 using namespace std;
 
 
-PrecomputedVMatrix::PrecomputedVMatrix()
-    :precomp_type("dmat")
-{
-}
+PrecomputedVMatrix::PrecomputedVMatrix():
+    precomp_type("dmat"),
+    temporary(false)
+{}
 
-PLEARN_IMPLEMENT_OBJECT(PrecomputedVMatrix, 
-                        "VMatrix that caches (pre-computes on disk) the content of a source vmatrix", 
-                        "This sub-class of SourceVMatrix pre-computes the content of a source vmatrix\n"
-                        "in a dmat or pmat file. The name of the disk file is obtained from the metadatadir option\n"
-                        "followed by precomp.dmat or precomp.pmat");
+PLEARN_IMPLEMENT_OBJECT(
+    PrecomputedVMatrix, 
+    "VMatrix that pre-computes on disk the content of a source VMatrix",
+    "This sub-class of SourceVMatrix pre-computes the content of a source\n"
+    "VMatrix in a 'dmat' (DiskVMatrix) or 'pmat' (FileVMatrix) file. The\n"
+    "name of the disk file is obtained from the metadatadir option, followed\n"
+    "by 'precomp.dmat' or 'precomp.pmat'.\n"
+    "With the 'temporary' option, one may automatically delete the\n"
+    "precomputed data once it is not used anymore.\n"
+);
 
+///////////////
+// getNewRow //
+///////////////
 void PrecomputedVMatrix::getNewRow(int i, const Vec& v) const
 {
     if(precomp_source.isNull())
-        PLERROR("Source has not been precomputed. Did you properly set the MetaDataDir?");
+        PLERROR("Source has not been precomputed. Did you properly set the "
+                "MetaDataDir?");
     precomp_source->getRow(i,v);
 }
 
@@ -74,17 +86,13 @@ void PrecomputedVMatrix::getNewRow(int i, const Vec& v) const
 ////////////////////
 void PrecomputedVMatrix::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-
-    // ### ex:
     declareOption(ol, "precomp_type", &PrecomputedVMatrix::precomp_type, OptionBase::buildoption,
-                  "The type of vmatrix to be used for the cached precomputed version of the source.\n"
-                  "Currently supported are: dmat, pmat");
-    // ...
+        "The type of VMatrix to be used for the cached precomputed version\n"
+        "of the source. Currently supported are 'dmat' and 'pmat'.");
+
+    declareOption(ol, "temporary", &PrecomputedVMatrix::temporary, OptionBase::buildoption,
+        "If set to 1, the created precomputed data will be temporary, i.e.\n"
+        "will be deleted when not used anymore.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -104,6 +112,9 @@ void PrecomputedVMatrix::declareOptions(OptionList& ol)
                     "Unused option.");
 }
 
+////////////////////
+// setMetaDataDir //
+////////////////////
 void PrecomputedVMatrix::setMetaDataDir(const PPath& the_metadatadir)
 {
     inherited::setMetaDataDir(the_metadatadir);
@@ -122,7 +133,8 @@ void PrecomputedVMatrix::usePrecomputed()
     
         if ( isdir(dmatdir) )
         {
-            precomp_source = new DiskVMatrix(dmatdir);
+            precomp_source = temporary ? new TemporaryDiskVMatrix(dmatdir)
+                                       : new DiskVMatrix(dmatdir);
             if(precomp_source->getMtime() >= source->getMtime())
                 recompute = false;
         }
@@ -131,7 +143,8 @@ void PrecomputedVMatrix::usePrecomputed()
         {
             force_rmdir(dmatdir);
             source->saveDMAT(dmatdir);
-            precomp_source = new DiskVMatrix(dmatdir);
+            precomp_source = temporary ? new TemporaryDiskVMatrix(dmatdir)
+                                       : new DiskVMatrix(dmatdir);
         }
         length_ = precomp_source->length();
     }
@@ -143,7 +156,8 @@ void PrecomputedVMatrix::usePrecomputed()
 
         if ( isfile(pmatfile) )
         {
-            precomp_source = new FileVMatrix(pmatfile);
+            precomp_source = temporary ? new TemporaryFileVMatrix(pmatfile)
+                                       : new FileVMatrix(pmatfile);
             if(precomp_source->getMtime() >= source->getMtime())
                 recompute = false;
         }
@@ -152,7 +166,8 @@ void PrecomputedVMatrix::usePrecomputed()
         {
             rm(pmatfile);
             source->savePMAT(pmatfile);
-            precomp_source = new FileVMatrix(pmatfile);
+            precomp_source = temporary ? new TemporaryFileVMatrix(pmatfile)
+                                       : new FileVMatrix(pmatfile);
         }
         length_ = precomp_source->length();
     }

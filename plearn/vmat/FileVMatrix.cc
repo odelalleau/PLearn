@@ -47,34 +47,56 @@ using namespace std;
 
 /** FileVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(FileVMatrix,
-                        "Saves and reads '.pmat' files.",
-                        "The 'track_ref' option can be used to count how many FileVMatrix are\n"
-                        "accessing a given file. This can be useful to remove the '.pmat' file\n"
-                        "only when nobody else accesses it."
-    );
+PLEARN_IMPLEMENT_OBJECT(
+    FileVMatrix,
+    "VMatrix whose data is stored on disk in an uncompressed '.pmat' file.",
+    ""
+);
 
 /////////////////
 // FileVMatrix //
 /////////////////
-FileVMatrix::FileVMatrix()
-    : filename_(""), f(0), build_new_file(false),
-      old_filename(""),
-      remove_when_done(false),
-      track_ref(false)
-
+FileVMatrix::FileVMatrix():
+    filename_(""),
+    f(0),
+    build_new_file(false)
 {
     writable=true;
+    remove_when_done = track_ref = -1;
 }
 
-FileVMatrix::FileVMatrix(const PPath& filename, bool writable_)
-    : filename_(filename.absolute()), f(0), build_new_file(!isfile(filename)),
-      old_filename(""),
-      remove_when_done(false),
-      track_ref(false)
+FileVMatrix::FileVMatrix(const PPath& filename, bool writable_):
+    filename_(filename.absolute()),
+    f(0),
+    build_new_file(!isfile(filename))
 {
+    remove_when_done = track_ref = -1;
     writable = writable_;
     build_();
+}
+
+FileVMatrix::FileVMatrix(const PPath& filename, int the_length, int the_width):
+    inherited(the_length, the_width),
+    filename_(filename.absolute()), f(0),
+    build_new_file(true)
+{
+    remove_when_done = track_ref = -1;
+    writable = true;
+    build_();
+}
+
+FileVMatrix::FileVMatrix(const PPath& filename, int the_length,
+                         const TVec<string>& fieldnames):
+    inherited(the_length, fieldnames.length()),
+    filename_(filename.absolute()),
+    f(0),
+    build_new_file(true)
+{
+    remove_when_done = track_ref = -1;
+    writable = true;
+    build_();
+    declareFieldNames(fieldnames);
+    saveFieldInfos();
 }
 
 static int strlen(char* s) {
@@ -82,30 +104,6 @@ static int strlen(char* s) {
     while (s[n]!=0) 
         n++;
     return n;
-}
-
-FileVMatrix::FileVMatrix(const PPath& filename, int the_length, int the_width)
-    : inherited(the_length, the_width), filename_(filename.absolute()), f(0),
-      build_new_file(true),
-      old_filename(""),
-      remove_when_done(false),
-      track_ref(false)
-{
-    writable = true;
-    build_();
-}
-
-FileVMatrix::FileVMatrix(const PPath& filename, int the_length, const TVec<string>& fieldnames)
-    : inherited(the_length, fieldnames.length()), filename_(filename.absolute()), f(0),
-      build_new_file(true),
-      old_filename(""),
-      remove_when_done(false),
-      track_ref(false)
-{
-    writable = true;
-    build_();
-    declareFieldNames(fieldnames);
-    saveFieldInfos();
 }
 
 ///////////
@@ -122,17 +120,27 @@ void FileVMatrix::build()
 ////////////
 void FileVMatrix::build_()
 {
-  
-    // Code below is commented because the filename may have been changed,
-    // in which case f should be modified.
-
+    // Check for deprecated options.
+    if (remove_when_done != -1) { 
+        PLDEPRECATED("In FileVMatrix::build_ - The option 'remove_when_done' "
+                     "is now deprecated, please use the "
+                     "TemporaryFileVMatrix class instead: this data file "
+                     "may thus not be properly deleted");
+        assert( remove_when_done == 0 || remove_when_done == 1 );
+    }
+    if (track_ref != -1) { 
+        PLDEPRECATED("In FileVMatrix::build_ - The option 'track_ref' "
+                     "is now deprecated, please use the "
+                     "TemporaryFileVMatrix class instead: this data file "
+                     "may thus not be properly deleted");
+        assert( track_ref == 0 || track_ref == 1 );
+    }
     // Since we are going to re-create it, we can close the current f.
-    if (f) {
-        fclose(f);
-    }
-    if (track_ref && old_filename != "") {
-        count_refs[old_filename.absolute()]--;
-    }
+    closeCurrentFile();
+
+    // If no file is given, we can stop here.
+    if (filename_.isEmpty())
+        return;
 
     char header[DATAFILE_HEADERLENGTH];
     char matorvec[20];
@@ -258,33 +266,19 @@ void FileVMatrix::build_()
     if (width_ >= 0)
         getFieldInfos();
 
-    if (track_ref) {
-        string abs = filename_.absolute();
-        if (count_refs.find(abs) != count_refs.end())
-            count_refs[abs]++;
-        else
-            count_refs[abs] = 1;
-        old_filename = filename_;
-    } else {
-        old_filename = "";
-    }
-
     loadFieldInfos();
 }
 
-////////////////
-// count_refs //
-////////////////
-map<string, int> FileVMatrix::count_refs;
 
-///////////////
-// countRefs //
-///////////////
-int FileVMatrix::countRefs(const PPath& filename) {
-    string abs = filename.absolute();
-    if (count_refs.find(abs) == count_refs.end())
-        return 0;
-    return count_refs[abs];
+//////////////////////
+// closeCurrentFile //
+//////////////////////
+void FileVMatrix::closeCurrentFile()
+{
+    if (f) {
+        fclose(f);
+        f = 0;
+    }
 }
 
 ////////////////////
@@ -294,12 +288,13 @@ void FileVMatrix::declareOptions(OptionList & ol)
 {
     declareOption(ol, "filename", &FileVMatrix::filename_, OptionBase::buildoption, "Filename of the matrix");
 
-    declareOption(ol, "remove_when_done", &FileVMatrix::remove_when_done, OptionBase::buildoption,
-                  "If set to 1, the file 'filename' will be deleted when this object is deleted\n"
-                  "(and we think no other FileVMatrix is accessing it).");
+    declareOption(ol, "remove_when_done", &FileVMatrix::remove_when_done,
+            OptionBase::learntoption,
+            "Deprecated option! (use TemporaryFileVMatrix instead).");
 
-    declareOption(ol, "track_ref", &FileVMatrix::track_ref, OptionBase::buildoption,
-                  "If set to 1, will be counted in the FileVMatrix that access 'filename', which may prevent conflicts.");
+    declareOption(ol, "track_ref", &FileVMatrix::track_ref,
+            OptionBase::learntoption,
+            "Deprecated option! (use TemporaryFileVMatrix instead).");
 
     inherited::declareOptions(ol);
 }
@@ -312,7 +307,6 @@ void FileVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     f = 0;   // Because we will open again the file (f should not be shared).
-    old_filename = ""; // Because build() has not yet been called for this FileVMatrix.
     build(); // To open the file.
 }
 
@@ -321,18 +315,9 @@ void FileVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 //////////////////
 FileVMatrix::~FileVMatrix()
 { 
-    saveFieldInfos();
-    if(f) {
-        fclose(f); 
-    }
-    if (track_ref)
-        count_refs[filename_]--;
-
-    if (remove_when_done && !filename_.isEmpty())
-        if (!track_ref || count_refs[filename_] == 0) {
-            rm(filename_);
-            force_rmdir(getMetaDataDir());
-        }
+    if (hasMetaDataDir())
+        saveFieldInfos();
+    closeCurrentFile();
 }
 
 ///////////////

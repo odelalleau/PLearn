@@ -95,33 +95,33 @@ PLEARN_IMPLEMENT_OBJECT(
     DiskVMatrix::DiskVMatrix()
         : indexf(0),freshnewfile(false),
           old_format(false),swap_endians(false),
-          remove_when_done(false),
           tolerance(1e-6)
     {
         writable = false;
     }
 
-DiskVMatrix::DiskVMatrix(const string& the_dirname, bool readwrite)
+DiskVMatrix::DiskVMatrix(const PPath& the_dirname, bool readwrite)
     : indexf(0),freshnewfile(false),
       old_format(false),swap_endians(false),
-      dirname(remove_trailing_slash(the_dirname)),
-      remove_when_done(false),
+      dirname(the_dirname),
       tolerance(1e-6)
 {
     writable = readwrite;
+    dirname.removeTrailingSlash(); // For safety.
     build_();
 }
 
-DiskVMatrix::DiskVMatrix(const string& the_dirname, int the_width, bool write_double_as_float)  
+DiskVMatrix::DiskVMatrix(const PPath& the_dirname, int the_width,
+                         bool write_double_as_float)  
     : RowBufferedVMatrix(0,the_width),
       indexf(0), 
       freshnewfile(true),
       old_format(false),swap_endians(false),
-      dirname(remove_trailing_slash(the_dirname)),
-      remove_when_done(false),
+      dirname(the_dirname),
       tolerance(1e-6)
 {
     writable = true;
+    dirname.removeTrailingSlash(); // For safety.
     build_();
 }
 
@@ -239,11 +239,6 @@ void DiskVMatrix::declareOptions(OptionList &ol)
 {
     declareOption(ol, "dirname", &DiskVMatrix::dirname, OptionBase::buildoption, "Directory name of the.dmat");
     declareOption(ol, "tolerance", &DiskVMatrix::tolerance, OptionBase::buildoption, "The absolute error tolerance for storing doubles as floats");
-    declareOption(ol, "remove_when_done", &DiskVMatrix::remove_when_done,
-            OptionBase::buildoption,
-            "If set to 1, the associated data and metadata directories will be removed\n"
-            "when this object is deleted (note this is not exactly the same behavior as\n"
-            "a FileVMatrix with the 'remove_when_done' option set to 1).");
     inherited::declareOptions(ol);
 }
 
@@ -352,11 +347,6 @@ DiskVMatrix::~DiskVMatrix()
 {
     saveFieldInfos();
     closeCurrentFiles();
-    if (remove_when_done) {
-        force_rmdir(dirname);
-        if (hasMetaDataDir())
-            force_rmdir(getMetaDataDir());
-    }
 }
 
 

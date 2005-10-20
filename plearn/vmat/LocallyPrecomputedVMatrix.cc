@@ -2,7 +2,7 @@
 
 // LocallyPrecomputedVMatrix.cc
 //
-// Copyright (C) 2004 Olivier Delalleau 
+// Copyright (C) 2004-2005 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -51,14 +51,15 @@ using namespace std;
 ///////////////////////////////
 // LocallyPrecomputedVMatrix //
 ///////////////////////////////
-LocallyPrecomputedVMatrix::LocallyPrecomputedVMatrix()
-    : local_dir("/Tmp"),
-      max_wait(30),
-      remove_when_done(true),
-      sequential_access(true),
-      verbosity(2)
+LocallyPrecomputedVMatrix::LocallyPrecomputedVMatrix():
+    local_dir("/Tmp"),
+    max_wait(30),
+    remove_when_done(-1),
+    sequential_access(true),
+    verbosity(2)
 {
     precomp_type = "pmat";
+    temporary = true;
 }
 
 PLEARN_IMPLEMENT_OBJECT(
@@ -73,11 +74,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "automatically delete the precomputed file when the underlying VMatrix is deleted.\n"
     "Note that the whole metadata directory will be deleted, so you should not store\n"
     "important data in it).\n"
-    "Two formats are accepted: 'pmat' (FileVMatrix) and 'dmat'. The behavior with a 'pmat'\n"
-    "file is currently safer, as the file will not be deleted until we can assume no other\n"
-    "FileVMatrix is accessing the precomputed file. On the other hand, the precomputed\n"
-    "'dmat' directory will be deleted as soon as the underlying DiskVMatrix object is\n"
-    "deleted, even if an additional DiskVMatrix using the same directory has been loaded.\n"
+    "Two formats are accepted: 'pmat' (FileVMatrix) and 'dmat' (DiskVMatrix).\n"
 );
 
 ////////////////////
@@ -88,8 +85,10 @@ void LocallyPrecomputedVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "local_dir", &LocallyPrecomputedVMatrix::local_dir, OptionBase::buildoption,
                   "The local directory in which we want to save the precomputed data.");
 
-    declareOption(ol, "remove_when_done", &LocallyPrecomputedVMatrix::remove_when_done, OptionBase::buildoption,
-                  "Whether we want or not to remove the precomputed data when this object is deleted.");
+    declareOption(ol, "remove_when_done",
+                      &LocallyPrecomputedVMatrix::remove_when_done,
+                      OptionBase::learntoption,
+        "Deprecated! (use 'temporary' instead).");
 
     declareOption(ol, "sequential_access", &LocallyPrecomputedVMatrix::sequential_access, OptionBase::buildoption,
                   "If set to 1, ensures there are no multiple parallel precomputations (see class help).");
@@ -121,6 +120,15 @@ void LocallyPrecomputedVMatrix::build()
 ////////////
 void LocallyPrecomputedVMatrix::build_()
 {
+    // Check for deprecated option.
+    if (remove_when_done != -1) {
+        PLDEPRECATED("In LocallyPrecomputedVMatrix::build_ - You should now be"
+                     " using the 'temporary' option instead of "
+                     "the 'remove_when_done' option, which is deprecated.");
+        assert( remove_when_done == 0 || remove_when_done == 1 );
+        temporary = remove_when_done;
+    }
+
     if (!hasMetaDataDir()) {
         bool made_dir = force_mkdir(local_dir);
         if (!made_dir) {
@@ -139,11 +147,6 @@ void LocallyPrecomputedVMatrix::build_()
                 PLERROR("In LocallyPrecomputedVMatrix::build_ - The source VMatrix must have a metadatadir");
         }
         inherited::build();
-        precomp_source->setOption("remove_when_done", tostring(remove_when_done));
-        if (precomp_type == "pmat")
-            // The 'track_ref' option is currently only available for '.pmat'.
-            precomp_source->setOption("track_ref", "1");
-        precomp_source->build();
         if (sequential_access)
             source->unlockMetaDataDir();
     }
@@ -162,34 +165,26 @@ void LocallyPrecomputedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////////////////////
 LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix()
 {
-    if (remove_when_done && hasMetaDataDir()) {
-        bool remove_metadata;
+    if (temporary && hasMetaDataDir()) {
+        string filename_option;
         // Get the name of the precomputed file.
-        if (precomp_type == "pmat") {
-            string filename_option;
+        if (precomp_type == "pmat")
             openString(precomp_source->getOption("filename"), PStream::plearn_ascii)
                 >> filename_option;
-            PPath precomputed_file = PPath(filename_option);
-            // First we delete the precomputed source, so that it does not try to save
-            // more stuff in the metadatadir after it has been deleted.
-            precomp_source = 0;
-            // Let's check whether more FileVMatrix are accessing the same precomputed file.
-            if (FileVMatrix::countRefs(precomputed_file) == 0) {
-                remove_metadata = true;
-            } else
-                remove_metadata = false;
-        } else {
+        else {
             assert( precomp_type == "dmat" );
-            string dirname_option;
             openString(precomp_source->getOption("dirname"), PStream::plearn_ascii)
-                >> dirname_option;
-            PPath precomputed_dir = PPath(dirname_option);
-            // Deleting the precomputed source should trigger the removal of
-            // its data and metadata directories.
-            precomp_source = 0;
-            remove_metadata = true;
+                >> filename_option;
         }
-        if (remove_metadata) {
+        PPath precomputed_file(filename_option);
+        // First we delete the precomputed source, so that it does not try
+        // to save more stuff in the metadatadir after it has been deleted.
+        // This should also trigger the deletion of the underlying data.
+        precomp_source = 0;
+        // If there is nobody accessing the data file (i.e. it should have
+        // been deleted by now), we can also remove the metadata directory
+        // of this VMatrix (the one that contained the data file).
+        if (noReferenceToFile(precomputed_file)) {
             PPath mdir = getMetaDataDir();
             bool removed = force_rmdir(mdir);
             if (!removed && verbosity >= 1)
@@ -200,7 +195,6 @@ LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix()
         }
     }
 }
-
 
 } // end of namespace PLearn
 

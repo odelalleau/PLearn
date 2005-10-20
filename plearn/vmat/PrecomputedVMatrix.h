@@ -3,6 +3,7 @@
 // PrecomputedVMatrix.h
 //
 // Copyright (C) 2003 Pascal Vincent 
+// Copyright (C) 2005 Olivier Delalleau
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -54,7 +55,9 @@ class PrecomputedVMatrix: public SourceVMatrix
     typedef SourceVMatrix inherited;
 
 protected:
-    VMat precomp_source; // The precomputed source, as a DiskVMatrix
+
+    //! The precomputed source (FileVMatrix or DiskVMatrix).
+    VMat precomp_source;
 
 public:
     // ************************
@@ -62,6 +65,7 @@ public:
     // ************************
 
     string precomp_type;
+    bool temporary;
 
     // ****************
     // * Constructors *

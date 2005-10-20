@@ -50,7 +50,8 @@ namespace PLearn {
 using namespace std;
  
 
-//!  A VMatrix that exists in a .pmat file (native plearn matrix format, same as for Mat)
+//! A VMatrix that exists in a .pmat file (native PLearn matrix format,
+//! same as for Mat).
 class FileVMatrix: public RowBufferedVMatrix
 {
 
@@ -69,10 +70,6 @@ private:
 
     bool build_new_file;
 
-    //! Used to remember which file we were accessing before build was called for
-    //! the last time.
-    PPath old_filename;
-
 public:
 
     FileVMatrix();
@@ -85,12 +82,13 @@ protected:
     static void declareOptions(OptionList & ol);
     virtual void getNewRow(int i, const Vec& v) const;
 
+    //! Close the current '.pmat' file.
+    void closeCurrentFile();
+
 public:
 
-    // Options.
-
-    bool remove_when_done;
-    bool track_ref;
+     int remove_when_done; //!< Deprecated!
+     int track_ref;        //!< Deprecated!
 
     //! Re-write the header with all current field values.
     virtual void updateHeader();
@@ -102,26 +100,18 @@ public:
 
     virtual void build();
 
-    //! Return count_refs[filename.absolute()].
-    static int countRefs(const PPath& filename);
-
     PLEARN_DECLARE_OBJECT(FileVMatrix);
 
 
     //! Transform a shallow copy into a deep copy.
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+    //! Destructor.
     virtual ~FileVMatrix();
 
 private:
 
     void build_();
-
-private:
-
-    //! Maps a filename to the number of FileVMatrix that currently read it and
-    //! have the 'track_ref' option set to 1.
-    static map<string, int> count_refs;
 
 };
 

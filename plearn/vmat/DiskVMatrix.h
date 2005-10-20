@@ -68,7 +68,6 @@ public:
     // Build options
     PPath dirname;
     //bool readwritemode;
-    bool remove_when_done;
     double tolerance;    // the error tolerance for storing doubles as floats
   
     DiskVMatrix();
@@ -78,7 +77,7 @@ public:
   If readwrite is false (the default), then the files are opened in read only mode, and calling appendRow 
   will issue an error.
 */
-    DiskVMatrix(const string& the_dirname, bool readwrite=false); 
+    DiskVMatrix(const PPath& the_dirname, bool readwrite=false); 
 
 /*!     Create a new one. 
   If directory already exist an error is issued
@@ -87,7 +86,7 @@ public:
   (this was to allow TmpFilenames to be used with this class).
   Files are opened in read/write mode so appendRow can be called.
 */
-    DiskVMatrix(const string& the_dirname, int the_width, bool write_double_as_float=false);
+    DiskVMatrix(const PPath& the_dirname, int the_width, bool write_double_as_float=false);
 
     virtual void putRow(int i, Vec v);
     virtual void appendRow(Vec v);

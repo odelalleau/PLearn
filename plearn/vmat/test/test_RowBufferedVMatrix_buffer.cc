@@ -2,7 +2,7 @@
 
 #include <plearn/io/fileutils.h>
 #include <plearn/vmat/VMat.h>
-#include <plearn/vmat/FileVMatrix.h>
+#include <plearn/vmat/TemporaryFileVMatrix.h>
 #include <plearn/math/TVec.h>
 
 using namespace std;
@@ -18,8 +18,7 @@ int main(int argc, const char* argv[]) {
     double first_insert_data[] = { 20010101, -1, 42 };
     double second_insert_data[] = { 20000813, 37, 49 };
 
-    VMat mat = new FileVMatrix(argv[1], 0, row_size);
-    mat->setOption("remove_when_done", "1");
+    VMat mat = new TemporaryFileVMatrix(argv[1], 0, row_size);
     mat->insertRow(0, Vec(row_size, first_insert_data));
     mat->insertRow(0, Vec(row_size, second_insert_data));
 

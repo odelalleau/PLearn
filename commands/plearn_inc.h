@@ -255,6 +255,8 @@
 #include <plearn/vmat/SortRowsVMatrix.h>
 #include <plearn/vmat/SparseVMatrix.h>
 #include <plearn/vmat/SubInputVMatrix.h>
+#include <plearn/vmat/TemporaryDiskVMatrix.h>
+#include <plearn/vmat/TemporaryFileVMatrix.h>
 #include <plearn/vmat/TextFilesVMatrix.h>
 #include <plearn/vmat/ThresholdVMatrix.h>
 #include <plearn/vmat/TransposeVMatrix.h>
