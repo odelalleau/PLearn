@@ -761,7 +761,8 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
     if(dbname=="2d")
     {
         trainset = input2dSet();
-        Mat mapping(2,2); mapping << "-1 0 1 1";
+        Mat mapping(2,2);
+        mapping << string("-1 0 1 1");
         trainset = remapLastColumn(trainset,mapping);
         testset = trainset;
         inputsize = 2;
