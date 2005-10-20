@@ -69,7 +69,7 @@ public:
 
     string local_dir;
     int max_wait;
-    bool remove_when_done;
+    int remove_when_done;
     bool sequential_access;
     int verbosity;
 
