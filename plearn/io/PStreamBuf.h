@@ -40,8 +40,6 @@
 #ifndef PStreamBuf_INC
 #define PStreamBuf_INC
 
-#define STREAMBUFVER 1
-
 #include <plearn/base/PP.h>
 
 namespace PLearn {

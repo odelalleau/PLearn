@@ -39,11 +39,7 @@
 /*! \file PTester.cc */
 
 #include <plearn/io/load_and_save.h>
-#if STREAMBUFVER == 1
 #include <plearn/io/openString.h>
-#else
-#error Comment out include of openString in PTester.cc to compile with pymake.
-#endif
 #include <plearn/math/VecStatsCollector.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <assert.h>

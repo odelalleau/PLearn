@@ -153,23 +153,12 @@ PStream& ws(PStream& in)
     return in;
 }
 
-#if STREAMBUFVER == 0
-PStream::PStream()
-    :inherited(new StdPStreamBuf),
-     inmode(plearn_ascii), 
-     outmode(plearn_ascii), 
-     implicit_storage(true), compression_mode(compr_none)
-{}
-
-#else
 PStream::PStream()
     :inherited(0),
      inmode(plearn_ascii), 
      outmode(plearn_ascii), 
      implicit_storage(true), compression_mode(compr_none)
-{
-}
-#endif
+{}
 
 PStream::PStream(streambuftype* sb)
     :inherited(sb),

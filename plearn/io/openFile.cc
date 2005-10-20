@@ -71,9 +71,6 @@ PStream openFile(const PPath& filepath_, PStream::mode_t io_formatting,
     const PPath filepath = filepath_.absolute();
     
     PStream st;
-#if STREAMBUFVER == 0
-    PLERROR("openFile not implemented for STREAMBUFVER == 0");
-#else
     PRFileDesc* fd;
     if (openmode == "r")
     {
@@ -98,7 +95,6 @@ PStream openFile(const PPath& filepath_, PStream::mode_t io_formatting,
     }
     else
         PLERROR("In openFile, invalid openmode=\"%s\" ",openmode.c_str());    
-#endif
     
     st.setMode(io_formatting);
     return st;

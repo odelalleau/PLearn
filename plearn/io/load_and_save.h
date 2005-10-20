@@ -60,34 +60,20 @@ using namespace std;
 template <class T> 
 inline void load(const PPath& filepath, T &x)
 {
-#if STREAMBUFVER == 1
     PStream in = openFile( filepath, PStream::plearn_ascii, "r" );
     in >> x;
-#else
-    ifstream in_( filepath.absolute().c_str() );
-    if (!in_)
-        PLERROR("Could not open file \"%s\" for reading", filepath.c_str());
-    PStream in(&in_);
-    in >> x;
-#endif
 }
 
 //! If necessary, missing directories along the filepath will be created
+//! A PStream is opened for saving with mode io_formatting and implicit_storage set as specified
+//! (see PStream.h for a 
 template<class T> 
-inline void save(const PPath& filepath, const T& x, PStream::mode_t io_formatting=PStream::plearn_ascii)
+inline void save(const PPath& filepath, const T& x, PStream::mode_t io_formatting=PStream::plearn_ascii, bool implicit_storage = true)
 { 
     force_mkdir_for_file(filepath);
-#if STREAMBUF == 1
     PStream out = openFile( filepath, io_formatting, "w" );
+    out.implicit_storage = implicit_storage;
     out << x;
-#else
-    ofstream out_( filepath.absolute().c_str() ); 
-    if(!out_)
-        PLERROR( "Could not open file %s for writing", filepath.c_str() );  
-    PStream out(&out_);
-    out.setMode(io_formatting);
-    out << x;
-#endif
 }
 
 

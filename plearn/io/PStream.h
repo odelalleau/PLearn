@@ -66,12 +66,7 @@ using namespace std;
  *   - an 'attach' function to attach the stream to a POSIX file descriptor;
  */
 
-class PStream 
-#if STREAMBUFVER == 0
-    : public PP<StdPStreamBuf>
-#elif  STREAMBUFVER == 1
-        : public PP<PStreamBuf>
-#endif
+class PStream : public PP<PStreamBuf>
 
 {
 public:
@@ -80,13 +75,8 @@ public:
 
 private:
 
-#if STREAMBUFVER == 0
-    typedef PP<StdPStreamBuf> inherited;
-    typedef StdPStreamBuf streambuftype;
-#elif  STREAMBUFVER == 1
     typedef PP<PStreamBuf> inherited;
     typedef PStreamBuf streambuftype;
-#endif
 
 public:
 
@@ -181,37 +171,6 @@ public:
     { return PP<PStreamBuf>::operator==(other); }
 
 
-
-#if STREAMBUFVER == 0
-    inline PStream& operator()(istream* pin)
-    { ptr->setIn(pin); return *this; }
-
-    inline PStream& operator()(ostream* pout)
-    { ptr->setOut(pout);  return *this; }
-
-    inline PStream& operator()(iostream* pios)
-    { 
-        ptr->setIn(pios); 
-        ptr->setOut(pios);  
-        return *this; 
-    }
-
-    inline PStream& operator()(istream* pin, ostream* pout)
-    { 
-        ptr->setIn(pin); 
-        ptr->setOut(pout);  
-        return *this; 
-    }
-
-    inline PStream& operator=(istream* pin) { return operator()(pin); }
-    inline PStream& operator=(ostream* pout)  { return operator()(pout); }
-    inline PStream& operator=(iostream* pios)  { return operator()(pios); }
-
-    inline PStream& operator()(const PStream& pios)  { return operator=(pios); }
-#endif
-
-
-
     void writeAsciiNum(char x);
     void writeAsciiNum(unsigned char x);
     void writeAsciiNum(signed char x);
@@ -240,62 +199,29 @@ public:
     void writeAsciiHexNum(unsigned char x);
 
     inline bool eof() const 
-    { 
-#if STREAMBUFVER == 0 
-        return (*this)->rawin()->eof(); 
-#elif STREAMBUFVER == 1
-        return ptr->eof();
-#endif
-    }
+    { return ptr->eof(); }
 
-#if STREAMBUFVER == 0
-    inline bool good() const
-    { return ptr->rawin() && ptr->rawin()->good() || ptr->rawout() && ptr->rawout()->good(); }
-
-    //! op bool: true if the stream is in a valid state (e.g. "while(stm) stm >> x;")
-    // This implementation does not seem to work: commented out [Pascal]
-    // inline operator bool() { return (!pin || *pin) && (!pout || *pout) && (pin || pout); }
-    // This is a temporary fix [Pascal]
-    inline operator bool() 
-    { return good(); }
-
-    //! DEPRECATED access to underlying istream
-    inline istream& _do_not_use_this_method_rawin_() 
-    { return *(ptr->rawin()); }   
-#else
     bool good() const
     { return ptr && ptr->good(); }
 
     operator bool() const
     { return good(); }
-#endif
   
     /******
      * The folowing methods are 'forwarded' from {i|o}stream.
      */
     inline int get() 
-    {
-#if STREAMBUFVER == 1 
-        return ptr->get();
-#else
-        return ptr->rawin()->get(); 
-#endif
-    }
+    { return ptr->get(); }
 
     inline PStream& get(char& c) 
     { 
-#if STREAMBUFVER == 1 
         c = (char)ptr->get();
-#else
-        ptr->rawin()->get(c); 
-#endif
         return *this; 
     }
 
     //! Delimitor is read from stream but not appended to string. 
     inline PStream& getline(string& line, char delimitor='\n')
     { 
-#if STREAMBUFVER == 1 
         line.clear();
         int c = get();
         while (c != EOF && c != delimitor)
@@ -303,9 +229,6 @@ public:
             line += (char)c;
             c = get();
         }
-#else
-        std::getline(*ptr->rawin(), line, delimitor); 
-#endif
         return *this; 
     }
 
@@ -313,47 +236,27 @@ public:
     { string s; getline(s); return s; }
 
     inline int peek() 
-    { 
-#if STREAMBUFVER == 1 
-        return ptr->peek();
-#else
-        // return ptr->rawin()->peek() does not seem to work, so we use this [Pascal]
-        int c = ptr->rawin()->get(); 
-        ptr->rawin()->unget(); 
-        return c; 
-#endif
-    }
+    { return ptr->peek(); }
   
     //! If you put back the result of a call to get(), make sure it is not EOF.
     inline PStream& putback(char c) 
     { 
-#if STREAMBUFVER == 1 
         ptr->putback(c);
-#else
-        ptr->rawin()->putback(c); 
-#endif
         return *this; 
     }
 
     //! Put back the last character read by the get() or read() methods.
     //! You can only call this method once (use the unread() method if you want
     //! to put back more than one character).
-    inline PStream& unget() {
-#if STREAMBUFVER == 1 
+    inline PStream& unget() 
+    {
         ptr->unget();
         return *this;
-#else
-        ptr->rawin()->unget(); return *this; 
-#endif
     }
 
     inline PStream& unread(const char* p, streamsize n)
     {
-#if STREAMBUFVER == 1 
         ptr->unread(p,n);
-#else
-        PLERROR("unread not supported for STREAMBUFVER==0");
-#endif
         return *this;
     }
 
@@ -366,34 +269,15 @@ public:
 
     inline PStream& read(char* s, streamsize n) 
     { 
-#if STREAMBUFVER == 1 
         ptr->read(s,n);
         return *this;
-#else
-        // The following line does not Work!!!! [Pascal]
-        //    ptr->rawin()->read(s,n);
-        // So it's temporarily replaced by this (ugly and slow):
-        while (n)
-        {
-            int c = get();
-            if (c == EOF) break;
-            *s++ = (char) c;
-            n--;
-        }
-        return *this; 
-#endif
     }
 
     inline PStream& read(string& s, streamsize n) 
     {
         char* buf = new char[n];
-#if STREAMBUFVER == 1
         string::size_type nread = ptr->read(buf, n);
         s.assign(buf, nread);
-#else
-        read(buf, n);
-        s.assign(buf, n);
-#endif
         delete[] buf;
         return *this;
     }
@@ -412,21 +296,13 @@ public:
 
     inline PStream& write(const char* s, streamsize n) 
     { 
-#if STREAMBUFVER == 1 
         ptr->write(s,n);
-#else
-        ptr->rawout()->write(s,n); 
-#endif
         return *this; 
     }
 
     inline PStream& put(char c) 
     { 
-#if STREAMBUFVER == 1 
         ptr->put(c);
-#else
-        ptr->rawout()->put(c);
-#endif
         return *this;
     }
 
@@ -439,11 +315,7 @@ public:
 
     inline PStream& flush() 
     { 
-#if STREAMBUFVER == 1 
         ptr->flush();
-#else
-        ptr->rawout()->flush();
-#endif
         return *this; 
     }
 
@@ -466,16 +338,6 @@ public:
         write(s.data(), streamsize(s.length()));
         return *this; 
     }
-
-#if STREAMBUFVER == 1 
-    // not the way to do it woth new PStreamBuf
-#else
-    //! attach this stream to a POSIX file descriptor.
-    inline void attach(int fd)
-    {
-        ptr->attach(fd);
-    }
-#endif
 
     // Useful skip functions
 
@@ -552,12 +414,6 @@ public:
     PStream& operator<<(unsigned short x);
     PStream& operator<<(pl_pstream_manip func) { return (*func)(*this); }
  
-#if STREAMBUFVER == 0
-    //! returns the markable input buffer
-    //! DEPRECATED: TO BE REMOVED SOON, DO NOT USE!
-    inline pl_streambuf* pl_rdbuf() { return ptr->pl_rdbuf(); }
-#endif
-
 };
 
 /*! PStream objects to replace the standard cout, cin, ... */

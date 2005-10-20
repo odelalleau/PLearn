@@ -86,11 +86,7 @@ using namespace std;
     sprintf(command_string,"gs -sDEVICE=x11 -g%d%c%d > /dev/null",width,'x',height);
 
     gs_cstream = popen(command_string,"w");
-#if STREAMBUFVER == 0
-    togs.attach(fileno(gs_cstream));
-#else
     togs = new FdPStreamBuf(-1, fileno(gs_cstream));
-#endif
     togs.outmode=PStream::raw_ascii;
   }
 
@@ -99,11 +95,7 @@ using namespace std;
     // :gs_cstream(0), togs(filename.c_str())
   {
     gs_cstream= fopen(filename.c_str(), "w");
-#if STREAMBUFVER == 0
-    togs.attach(fileno(gs_cstream));
-#else
     togs = new FdPStreamBuf(-1, fileno(gs_cstream));
-#endif
     togs.outmode=PStream::raw_ascii;
     togs << "%!PS-Adobe-2.0 EPSF-2.0" << endl;
     togs << "%%BoundingBox: " << x1 << " " << y1 << " " << x2 << " " << y2 << endl;

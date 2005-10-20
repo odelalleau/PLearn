@@ -41,10 +41,7 @@
 #include "string.h"
 #include <plearn/base/plerror.h>
 #include <stdio.h>
-
-#if STREAMBUFVER == 1
 #include <plearn/io/FdPStreamBuf.h>
-#endif
 
 namespace PLearn {
 using namespace std;
@@ -71,18 +68,11 @@ int PLMPI::tag = 2909;
 
 void PLMPI::init(int* argc, char*** argv)
 {
-#ifndef WIN32
-    
-#if STREAMBUFVER == 0
-    mycout(&cout);//.rdbuf(cout.rdbuf());
-    mycerr(&cerr);//.rdbuf(cerr.rdbuf());
-    mycin(&cin);//.rdbuf(cin.rdbuf());
-#elif STREAMBUFVER == 1
+#ifndef WIN32    
     mycin = new FdPStreamBuf(0, -1);
     mycout = new FdPStreamBuf(-1, 1);
     mycerr = new FdPStreamBuf(-1, 2, false, false);
-#endif
-
+    
 #if USING_MPI
     MPI_Init( argc, argv );
     MPI_Comm_size( MPI_COMM_WORLD, &size) ;

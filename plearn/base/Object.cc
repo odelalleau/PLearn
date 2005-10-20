@@ -522,14 +522,7 @@ void Object::load(const PPath& filename)
 
 Object* loadObject(const PPath &filename)
 {
-#if STREAMBUFVER == 1
     PStream in = openFile(filename, PStream::plearn_ascii, "r");
-#else
-    ifstream in_(filename.c_str());
-    if (!in_)
-        PLERROR("loadObject() - Could not open file \"%s\" for reading", filename.c_str());
-    PStream in(&in_);
-#endif
     Object *o = readObject(in);
     o->build();
     return o;
@@ -554,11 +547,6 @@ Object* readObject(PStream &in, unsigned int id)
 {
     Object *o=0;
     in.skipBlanksAndCommentsAndSeparators();
-
-    //pl_streambuf* buf = dynamic_cast<pl_streambuf*>(in.rdbuf());
-#if STREAMBUFVER == 0
-    pl_streammarker fence(in.pl_rdbuf());
-#endif
 
     string head;
 
@@ -589,11 +577,7 @@ Object* readObject(PStream &in, unsigned int id)
         o = TypeFactory::instance().newObject(cl);
         if (!o)
             PLERROR("readObject() - Type \"%s\" not declared in TypeFactory map (did you do a proper DECLARE_NAME_AND_DEEPCOPY?)", cl.c_str());
-#if STREAMBUFVER == 0
-        in.pl_rdbuf()->seekmark(fence);
-#else
         in.unread(cl+'(');
-#endif
         o->newread(in);
     }
 

@@ -53,7 +53,6 @@
 
 #include <plearn/math/Mat.h>
 #include <plearn/base/plerror.h>
-#include <plearn/io/plstreams.h>
 // norman: changed to standard calls
 #include <iostream>
 #include <fstream>
