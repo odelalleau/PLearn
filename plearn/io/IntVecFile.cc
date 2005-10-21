@@ -126,10 +126,10 @@ IntVecFile::~IntVecFile()
 #endif
 TVec<int> IntVecFile::getVec() const
 {
-    int tt;
+    size_t tt;
     TVec<int> res(length());
     seek_to_index(0);
-    if((tt=fread(res.data(), sizeof(int), length(), f)) != length())
+    if((tt=fread(res.data(), sizeof(int), length(), f)) != size_t(length()))
         PLERROR("fread error in IntVecFile::getVec()");
     // Switch byte order if necessary
     if (byte_order() != endianness_)
@@ -207,11 +207,11 @@ void IntVecFile::getVersionAndSize()
         PLERROR("IntVecFile::getVersionAndSize: "
                 "File version (%d) is not supported", version_number_);
 
-    length_ = the_filesize / sizeof(int) - header_size[version_number_];
+    length_ = int(the_filesize / sizeof(int) - header_size[version_number_]);
     return;
 
  version0:
-    length_ = the_filesize / sizeof(int);
+    length_ = int(the_filesize / sizeof(int));
     version_number_ = 0;
     endianness_ = 'L';
 }
