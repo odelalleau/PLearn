@@ -353,9 +353,7 @@ void DiskVMatrix::flush()
 void DiskVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    // Hand-made 'deep-copy' of 'dataf' (just create a new storage).
-    // TODO See how to make deepCopyField(dataf, copies) work.
-    dataf = TVec<FILE*>(dataf.length());
+    deepCopyField(dataf, copies);
     // Set pointers to zero, because we will open again the file (file pointers
     // should not be shared between copied objects).
     indexf = 0;

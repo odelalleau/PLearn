@@ -50,19 +50,20 @@ Take a close look at the Object class in Object.h to see how this is done.
 
 //! Types that do not require deep copy.
 NODEEPCOPY(double)
-    NODEEPCOPY(float)
-    NODEEPCOPY(int)
-    NODEEPCOPY(bool)
-    NODEEPCOPY(map_string_float)
-    NODEEPCOPY(map_string_double)
-    NODEEPCOPY(map_float_string)
-    NODEEPCOPY(map_double_string)
-    NODEEPCOPY(map_string_string)
-    NODEEPCOPY(map_float_float)
-    NODEEPCOPY(map_double_double)
-    NODEEPCOPY(string)
-    NODEEPCOPY(VMField)
-    NODEEPCOPY(VMFieldStat)
+NODEEPCOPY(float)
+NODEEPCOPY(int)
+NODEEPCOPY(bool)
+NODEEPCOPY(map_string_float)
+NODEEPCOPY(map_string_double)
+NODEEPCOPY(map_float_string)
+NODEEPCOPY(map_double_string)
+NODEEPCOPY(map_string_string)
+NODEEPCOPY(map_float_float)
+NODEEPCOPY(map_double_double)
+NODEEPCOPY(string)
+NODEEPCOPY(VMField)
+NODEEPCOPY(VMFieldStat)
+NODEEPCOPY(FILE*)   //!< There is currently no proper way to deep copy these.
 
 //! Pairs handle deepCopying by distributing it to each element
     template <class T, class U>
