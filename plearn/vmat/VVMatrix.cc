@@ -92,7 +92,7 @@ void VVMatrix::generateFilterIndexFile(VMat source, const string & code, const s
     for(int i=0;i<source.length();i++)
     {
         filt.run(i,bla);
-        if(bla[0])
+        if(!fast_exact_is_equal(bla[0], 0))
             ivf.append(i);
         pb(i);
     }
@@ -189,7 +189,7 @@ void VVMatrix::processJoinSection(const vector<string> & code, VMat & tmpsource)
             PLERROR("In JOIN section, field correspondance syntax is : [master1,master2] -> [slave1,slave2]");
         vector<string> mfields=split(mess[0],",");
         vector<string> sfields=split(mess[2],",");
-        TVec<int> midx(mfields.size()),sidx(sfields.size());
+        TVec<int> midx(int(mfields.size())), sidx(int(sfields.size()));
         for(unsigned int j=0;j<mfields.size();j++)
             midx[j]=tmpsource->fieldIndex(mfields[j]);
         for(unsigned int j=0;j<sfields.size();j++)
@@ -452,12 +452,12 @@ VMat VVMatrix::createPreproVMat(const string & filename)
         } else {
 
             vector<vector<string> > mstr = extractSourceMatrix(sec,filename);      
-            Array<VMat> vmrows(mstr.size());
+            Array<VMat> vmrows(int(mstr.size()));
             // we need to build a VMat that is the concatenation of the datasets contained in 'mstr'
 
             for(unsigned int i=0;i<mstr.size();i++)
             {
-                Array<VMat> ar(mstr[i].size());
+                Array<VMat> ar(int(mstr[i].size()));
                 for(unsigned int j=0;j<mstr[i].size();j++)
                 {
                     vector<string> vecstr;
