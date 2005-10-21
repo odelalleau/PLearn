@@ -92,7 +92,7 @@ void VVMatrix::generateFilterIndexFile(VMat source, const string & code, const s
     for(int i=0;i<source.length();i++)
     {
         filt.run(i,bla);
-        if(!fast_exact_is_equal(bla[0], 0))
+        if(fast_exact_is_not_equal(bla[0], 0))
             ivf.append(i);
         pb(i);
     }

@@ -106,8 +106,8 @@ string RealRange::getString() const
 
 bool RealRange::contains(real val) const
 { return (val>=low) && (val<=high)
-                    && (!fast_exact_is_equal(val, low)  || leftbracket=='[')
-                    && (!fast_exact_is_equal(val, high) || rightbracket==']');
+                    && (fast_exact_is_not_equal(val, low)  || leftbracket=='[')
+                    && (fast_exact_is_not_equal(val, high) || rightbracket==']');
 }
 
 bool RealRange::operator<(real x) const

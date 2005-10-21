@@ -429,7 +429,7 @@ real  poidev(real xm)
     real em,t,y;
 
     if (xm < 12.0) {
-        if (!fast_exact_is_equal(xm, oldm)) {
+        if (fast_exact_is_not_equal(xm, oldm)) {
             oldm=xm;
             g=exp(-xm);
         }
@@ -440,7 +440,7 @@ real  poidev(real xm)
             t *= uniform_sample();
         } while (t > g);
     } else {
-        if (!fast_exact_is_equal(xm, oldm)) {
+        if (fast_exact_is_not_equal(xm, oldm)) {
             oldm=xm;
             sq=sqrt(2.0*xm);
             alxm=log(xm);
@@ -491,7 +491,7 @@ real  bnldev(real pp, int n)
             en=n;
             oldg=log_gamma(en+1.0);
             nold=n;
-        } if (!fast_exact_is_equal(p, pold)) {
+        } if (fast_exact_is_not_equal(p, pold)) {
             pc=1.0-p;
             plog=log(p);
             pclog=log(pc);
@@ -510,7 +510,7 @@ real  bnldev(real pp, int n)
         } while (uniform_sample() > t);
         bnl=em;
     }
-    if (!fast_exact_is_equal(p, pp)) bnl=n-bnl;
+    if (fast_exact_is_not_equal(p, pp)) bnl=n-bnl;
     return bnl;
 }
 
@@ -853,9 +853,9 @@ return( t );
 	qkm2 = qkm1;
 	qkm1 = qk;
 
-	if( !fast_exact_is_equal(qk, 0) )
+	if( fast_exact_is_not_equal(qk, 0) )
             r = pk/qk;
-	if( !fast_exact_is_equal(r, 0) )
+	if( fast_exact_is_not_equal(r, 0) )
         {
             t = fabs( (ans - r)/r );
             ans = r;

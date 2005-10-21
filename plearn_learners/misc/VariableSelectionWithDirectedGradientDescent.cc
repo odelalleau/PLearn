@@ -173,8 +173,8 @@ void VariableSelectionWithDirectedGradientDescent::train()
                     n7_value += input_weights(i, col) * train_set(row, col);
                 }
 #ifdef BOUNDCHECK
-                if (!fast_exact_is_equal(target, 0.0) &&
-                    !fast_exact_is_equal(target, 1.0))
+                if (fast_exact_is_not_equal(target, 0.0) &&
+                    fast_exact_is_not_equal(target, 1.0))
                     PLERROR("In VariableSelectionWithDirectedGradientDescent::train - The target should be 0 or 1");
 #endif
                 if (fast_exact_is_equal(target, 0)) target = -1; // We work with -1 and 1 instead.

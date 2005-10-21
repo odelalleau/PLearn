@@ -102,7 +102,7 @@ bool isMapKeysAreInt(map<real,int>& m)
     {
         real key_rvalue = it->first;
         int key_ivalue = int(key_rvalue);
-        if (!fast_exact_is_equal(key_rvalue, key_ivalue))
+        if (fast_exact_is_not_equal(key_rvalue, key_ivalue))
             return false;
     }
     return true;

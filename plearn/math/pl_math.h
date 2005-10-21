@@ -184,17 +184,28 @@ inline bool fast_is_equal(real a, real b, real absolute_tolerance_threshold = 1.
     return diff_abs <= relative_tolerance*a_abs && diff_abs <= relative_tolerance*b_abs;
 }
 
-//! Test exact float equality (does not deal with 'nan' and 'inf' values).
+//! Test exact float equality.
 //! The goal of this function is to prevent a compiler warning when comparing
 //! real values.
-//! It also provides additional safety checks in debug mode.
 inline bool fast_exact_is_equal(real a, real b)
 {
+/* For compatibility with previous code, it should allow all values.
 #ifdef BOUNDCHECK
     if (isnan(a) || isinf(a) || isnan(b) || isinf(b))
         PLERROR("In fast_exact_is_equal - Either 'a' or 'b' is 'nan' or 'inf'");
 #endif
+*/
     return (a <= b && b <= a);
+}
+
+//! Test exact float inequality.
+//! The goal of this function is to prevent a compiler warning when comparing
+//! real values.
+//! Note that if either 'a' or 'b' is nan, this will give a different result
+//! than fast_exact_is_not_equal(a, b) (the goal is to mimic the '!=' operator).
+inline bool fast_exact_is_not_equal(real a, real b)
+{
+    return (a > b || b > a);
 }
 
 template<class T>

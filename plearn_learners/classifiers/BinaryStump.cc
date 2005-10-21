@@ -215,8 +215,8 @@ void BinaryStump::train()
     for (int i=0; i<n; ++i) 
     {
         train_target[i]= train_set->get(i,inputsize_);
-        if(!fast_exact_is_equal(train_target[i], 0) &&
-           !fast_exact_is_equal(train_target[i], 1))
+        if(fast_exact_is_not_equal(train_target[i], 0) &&
+           fast_exact_is_not_equal(train_target[i], 1))
             PLERROR("In BinaryStump:train() : target should be either 1 or 0");
     }
 
@@ -359,11 +359,11 @@ void BinaryStump::computeCostsFromOutputs(const Vec& input, const Vec& output,
 {
     costs.resize(outputsize());
 
-    if(!fast_exact_is_equal(target[0], 0) &&
-       !fast_exact_is_equal(target[0], 1))
+    if(fast_exact_is_not_equal(target[0], 0) &&
+       fast_exact_is_not_equal(target[0], 1))
         PLERROR("In BinaryStump:computeCostsFromOutputs() : target should be either 1 or 0");
 
-    costs[0] = !fast_exact_is_equal(output[0], target[0]); 
+    costs[0] = fast_exact_is_not_equal(output[0], target[0]); 
 }                                
 
 TVec<string> BinaryStump::getTestCostNames() const

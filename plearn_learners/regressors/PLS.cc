@@ -525,7 +525,7 @@ void PLS::train()
         Mat tmp2(n,p);
         tmp2.fill(0);
         for (int i = 0; i < D.length(); i++) {
-            if (!fast_exact_is_equal(D[i], 0)) {
+            if (fast_exact_is_not_equal(D[i], 0)) {
                 tmp2(i) << D[i] * Vt(i);
             }
         }

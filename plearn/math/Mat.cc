@@ -113,8 +113,8 @@ Mat* newIndexedMatArray(int n, Mat& m, int indexcolumn)
         inputs = m.subMatColumns(0,m.width()-1);
         classnums = m.column(m.width()-1);      
     }
-    if(!fast_exact_is_equal(classnums(0,0),                    0)    ||
-       !fast_exact_is_equal(classnums(classnums.length()-1,0), n-1))
+    if(fast_exact_is_not_equal(classnums(0,0),                    0)    ||
+       fast_exact_is_not_equal(classnums(classnums.length()-1,0), n-1))
         PLERROR("In newIndexedMatArray(int n, const Mat& m, int indexcolumn) Values in the indexcolumn should range from 0 to n-1");
 
     Mat* marray = new Mat[n];

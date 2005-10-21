@@ -139,8 +139,8 @@ CompactVMatrix::CompactVMatrix(VMat m, int keep_last_variables_last, bool onehot
         }
         else 
         {
-            if (!fast_exact_is_equal(stat.min(), 0) ||
-                !fast_exact_is_equal((stat.max()-stat.min()+1),
+            if (fast_exact_is_not_equal(stat.min(), 0) ||
+                fast_exact_is_not_equal((stat.max()-stat.min()+1),
                                      stat.counts.size()))
                 PLERROR("CompactVMatrix:: variable %d looks discrete but has zero-frequency intermediate values or min!=0",i);
             if (n_values==2)
@@ -515,7 +515,7 @@ void CompactVMatrix::encodeAndPutRow(int i, Vec v)
     {
         real val = vp[perm[c]];
         int s = int(val);
-        if (!fast_exact_is_equal(s, val))
+        if (fast_exact_is_not_equal(s, val))
             PLERROR("CompactVMatrix::encodeAndPutRow(%d,v): v[%d]=%g not an integer",
                     i,int(perm[c]),val);
         encoded_row[symbols_offset+b] = s; // ASSUMES THAT v IS NOT ONE-HOT ENCODED
@@ -566,8 +566,8 @@ void CompactVMatrix::putSubRow(int i, int j, Vec v)
                 for (int k=0;k<n;k++)
                 {
                     real vk=vp[c+k-j];
-                    if (!fast_exact_is_equal(vk, 0) &&
-                        !fast_exact_is_equal(vk, 1))
+                    if (fast_exact_is_not_equal(vk, 0) &&
+                        fast_exact_is_not_equal(vk, 1))
                         PLERROR("CompactVMatrix::putRow(%d,v): v[%d]=%g!=0 or 1 (not one-hot-code)",
                                 i,c,vk);
                     if (fast_exact_is_equal(vk, 1)) 
@@ -589,7 +589,7 @@ void CompactVMatrix::putSubRow(int i, int j, Vec v)
             {
                 real val = vp[c-j];
                 int s = int(val);
-                if (!fast_exact_is_equal(s, val))
+                if (fast_exact_is_not_equal(s, val))
                     PLERROR("CompactVMatrix::encodeAndPutRow(%d,v): v[%d]=%g not an integer",
                             i,c,val);
                 encoded_row[symbols_offset+b] = s; // ASSUMES THAT v IS NOT ONE-HOT ENCODED

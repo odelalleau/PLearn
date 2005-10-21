@@ -503,9 +503,9 @@ real ConjGradientOptimizer::findMinWithCubicInterpol (
     // cout << "Interpol : a=" << a << " , b=" << b << " , c=" << c << " , d=" << d << endl;
     real mini_transformed = mini;
     real maxi_transformed = maxi;
-    if (!fast_exact_is_equal(mini, -FLT_MAX))
+    if (fast_exact_is_not_equal(mini, -FLT_MAX))
         mini_transformed = (mini - p1) / (p2 - p1);
-    if (!fast_exact_is_equal(maxi, FLT_MAX))
+    if (fast_exact_is_not_equal(maxi, FLT_MAX))
         maxi_transformed = (maxi - p1) / (p2 - p1);
     real xmin = minCubic(a, b, c, mini_transformed, maxi_transformed);
     if (fast_exact_is_equal(xmin, -FLT_MAX) ||
@@ -822,7 +822,7 @@ bool ConjGradientOptimizer::lineSearch() {
     if (step < 0)
         if (verbosity >= 1)
             cout << "Ouch, negative step !" << endl;
-    if (!fast_exact_is_equal(step, 0)) params.update(step, search_direction);
+    if (fast_exact_is_not_equal(step, 0)) params.update(step, search_direction);
     if (fast_exact_is_equal(step, 0))
         if (verbosity >= 2)
             cout << "No more progress made by the line search, stopping" << endl;
@@ -835,7 +835,7 @@ bool ConjGradientOptimizer::lineSearch() {
 real ConjGradientOptimizer::minCubic(
     real a, real b, real c,
     real mini, real maxi) {
-    if (fast_exact_is_equal(a, 0) || (!fast_exact_is_equal(b, 0) && abs(a/b) < 0.0001)) // heuristic value for a == 0
+    if (fast_exact_is_equal(a, 0) || (fast_exact_is_not_equal(b, 0) && abs(a/b) < 0.0001)) // heuristic value for a == 0
         return minQuadratic(b, c, mini, maxi);
     // f' = 3a.x^2 + 2b.x + c
     real aa = 3*a;
@@ -893,7 +893,7 @@ real ConjGradientOptimizer::minCubic(
 real ConjGradientOptimizer::minQuadratic(
     real a, real b,
     real mini, real maxi) {
-    if (fast_exact_is_equal(a, 0) || (!fast_exact_is_equal(b, 0) && abs(a/b) < 0.0001)) { // heuristic for a == 0
+    if (fast_exact_is_equal(a, 0) || (fast_exact_is_not_equal(b, 0) && abs(a/b) < 0.0001)) { // heuristic for a == 0
         if (b > 0)
             return mini;
         else

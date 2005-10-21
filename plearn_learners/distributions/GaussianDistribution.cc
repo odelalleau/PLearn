@@ -140,7 +140,7 @@ void GaussianDistribution::build()
 ////////////
 void GaussianDistribution::build_()
 {
-    if (!fast_exact_is_equal(ignore_weights_below, 0))
+    if (fast_exact_is_not_equal(ignore_weights_below, 0))
         PLERROR("In GaussianDistribution::build_ - For the sake of simplicity, the "
                 "option 'ignore_weights_below' in GaussianDistribution has been "
                 "removed. If you were using it, please feel free to complain.");

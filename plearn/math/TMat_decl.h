@@ -751,7 +751,7 @@ public:
         if (exact_check) {
             for (int i = 0; i < n - 1 ; i++)
                 for (int j = i + 1; j < n; j++)
-                    if ( !fast_exact_is_equal((*this)[i][j], (*this)[j][i]) )
+                    if ( fast_exact_is_not_equal((*this)[i][j], (*this)[j][i]) )
                         return false;
         } else {
             for (int i = 0; i < n ; i++)
