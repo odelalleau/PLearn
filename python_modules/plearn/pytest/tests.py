@@ -392,8 +392,6 @@ class Test(PyTestObject):
         os.putenv( "PLEARN_DATE_TIME", "YES" )
 
 class Routine( PyTestObject ):
-    _report_traceback = False
-    
     test = PLOption(None)
 
     def __init__( self, **overrides ):        
@@ -417,22 +415,23 @@ class Routine( PyTestObject ):
 
     ## Overrides run and succeeded
     def start(self):
-        try:
-            if self.test.is_disabled():
-                vprint("Test %s is disabled." % self.test.name, 2)
-                self.test.setStatus("DISABLED")
-            else:                
-                self.routine()
-
-        except PyTestError, e: 
-            if Routine._report_traceback:
-                raise
-            else:
-                self.test.setStatus("SKIPPED", e.pretty_str())            
+        raise NotImplementedError("Abstract method: please implement.")
+        # try:
+        #     if self.test.is_disabled():
+        #         vprint("Test %s is disabled." % self.test.name, 2)
+        #         self.test.setStatus("DISABLED")
+        #     else:                
+        #         self.routine()
+        # 
+        # except PyTestError, e: 
+        #     if Routine._report_traceback:
+        #         raise
+        #     else:
+        #         self.test.setStatus("SKIPPED", e.pretty_str())            
                     
 class CompilationRoutine(Routine):
     """Launches the compilation of target tests' compilable files."""    
-    def routine(self):
+    def start(self):
         if self.compile_program():
             self.test.setStatus("PASSED")
 
@@ -443,7 +442,7 @@ class ResultsRelatedRoutine(Routine):
     Subclasses should only implement status hook and there routine
     should look like::
 
-        def routine(self):
+        def start(self):
             self.run_test( APPROPRIATE_DIRECTORY )
     """    
     no_compile_option = PLOption(False)
@@ -505,7 +504,7 @@ class ResultsCreationRoutine(ResultsRelatedRoutine):
 
     B{Do not modify} the results directory manually.
     """
-    def routine(self):
+    def start(self):
         self.run_test( Test._expected_results )
 
     def status_hook(self):
@@ -542,7 +541,7 @@ class RunTestRoutine( ResultsRelatedRoutine ):
                 % self.test.get_path()
                 )
 
-    def routine(self):        
+    def start(self):        
         self.run_test( Test._run_results )
     
     def status_hook(self):

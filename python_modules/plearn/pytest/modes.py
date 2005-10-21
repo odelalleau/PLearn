@@ -456,10 +456,7 @@ class RoutineBasedMode(PyTestMode):
     def __init__( self, targets, options ):
         super(RoutineBasedMode, self).__init__(targets, options)
 
-        ## --traceback: This flag triggers routines to report the traceback of
-        ## PyTestError. By default, only the class's name and meesage
-        ## are reported.
-        Routine._report_traceback = self.options.traceback
+        self.report_traceback = options.traceback
 
         # test_instances = None
         # if self.options.test_name:
@@ -475,10 +472,23 @@ class RoutineBasedMode(PyTestMode):
         self.dispatch_tests(test_instances)
 
     def dispatch_tests(self, test_instances):
-        for (test_name, test) in test_instances:
-            RoutineType = self.routine_type( self.options )
-            routine     = RoutineType( test = test )
-            routine.start()
+        for (test_name, test) in test_instances:            
+            if test.is_disabled():
+                vprint("Test %s is disabled." % test.name, 2)
+                test.setStatus("DISABLED")
+            else:
+                try:
+                    RoutineType = self.routine_type( self.options )            
+                    routine     = RoutineType(test=test)
+                    routine.routine() # routine.start()
+                except PyTestError, e:
+                    # --traceback: This flag triggers routines to report
+                    # the traceback of PyTestError. By default, only the
+                    # class's name and meesage are reported.
+                    if self.options.traceback:
+                        raise
+                    else:
+                        test.setStatus("SKIPPED", e.pretty_str())
 
 
 class compile(RoutineBasedMode):
