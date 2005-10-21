@@ -201,11 +201,9 @@ inline bool fast_exact_is_equal(real a, real b)
 //! Test exact float inequality.
 //! The goal of this function is to prevent a compiler warning when comparing
 //! real values.
-//! Note that if either 'a' or 'b' is nan, this will give a different result
-//! than fast_exact_is_not_equal(a, b) (the goal is to mimic the '!=' operator).
 inline bool fast_exact_is_not_equal(real a, real b)
 {
-    return (a > b || b > a);
+    return !(a <= b && b <= a);
 }
 
 template<class T>
