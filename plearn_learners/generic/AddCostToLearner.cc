@@ -438,7 +438,8 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
             assert( target_length == 1 );
             real t = desired_target[0];
             assert( fast_exact_is_equal(t, 0) || fast_exact_is_equal(t, 1));
-            costs[ind_cost] = real((sub_learner_output[0] > 0.5) != bool(t));
+            costs[ind_cost] = real((sub_learner_output[0] > 0.5) ==
+                                   fast_exact_is_equal(t,0));
         } else if (c == "mse") {
             costs[ind_cost] = powdistance(desired_target, sub_learner_output);
         } else if (c == "squared_norm_reconstruction_error") {

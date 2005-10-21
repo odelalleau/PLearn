@@ -242,7 +242,7 @@ void VecStatsCollector::remove_observation(const Vec& x, real weight)
   
     // This removes the observation x contribution to the covariance matrix.
     if( compute_covariance ) {
-        if (stats[0].nnonmissing() == 0) {
+        if (fast_exact_is_equal(stats[0].nnonmissing(), 0)) {
             // We removed the last observation. It may be safer to reset everything
             // so that numerical approximations do not lead to negative values for
             // statistics that should always be positive.
@@ -418,7 +418,7 @@ void VecStatsCollector::getCovariance(Mat& covar) const {
                 + sum_non_missing_square_weights;
             real mean_i = meanvec[i];
             real mean_j = meanvec[j];
-            if (sum_cross_weights_i_j == 0 ||
+            if (fast_exact_is_equal(sum_cross_weights_i_j, 0) ||
                 (fast_is_equal(sum_cross_weights_i_j,
                                sqrt(sum_cross_square_weights_i_j)) &&
                  (fast_is_equal(sum_cross_weights_i_j, sum_weights_i) ||

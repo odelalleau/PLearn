@@ -91,8 +91,9 @@ void LiftOutputVariable::fprop()
 {
     real output = input1->valuedata[0];
     real target = input2->valuedata[0];
-    if (target == 1.0) {
-        if (output == 0.0) {
+    assert(fast_exact_is_equal(target, 0) || fast_exact_is_equal(target, 1.0));
+    if (fast_exact_is_equal(target, 1.0)) {
+        if (fast_exact_is_equal(output, 0.0)) {
             // We need to make sure the output is positive.
             output = 1e-10;
         }

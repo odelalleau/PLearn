@@ -316,7 +316,7 @@ void ConjGradientOptimizer::build_() {
 //////////////////////////////
 void ConjGradientOptimizer::computeCostAndDerivative(
     real alpha, ConjGradientOptimizer* opt, real& cost, real& derivative) {
-    if (alpha == 0) {
+    if (fast_exact_is_equal(alpha, 0)) {
         cost = opt->last_cost;
         derivative = -dot(opt->search_direction, opt->current_opp_gradient);
     } else {
@@ -340,7 +340,7 @@ void ConjGradientOptimizer::computeCostAndDerivative(
 real ConjGradientOptimizer::computeCostValue(
     real alpha,
     ConjGradientOptimizer* opt) {
-    if (alpha == 0) {
+    if (fast_exact_is_equal(alpha, 0)) {
         return opt->last_cost;
     }
     opt->params.copyTo(opt->tmp_storage);
@@ -357,7 +357,7 @@ real ConjGradientOptimizer::computeCostValue(
 real ConjGradientOptimizer::computeDerivative(
     real alpha,
     ConjGradientOptimizer* opt) {
-    if (alpha == 0)
+    if (fast_exact_is_equal(alpha, 0))
         return -dot(opt->search_direction, opt->current_opp_gradient);
     opt->params.copyTo(opt->tmp_storage);
     opt->params.update(alpha, opt->search_direction);
@@ -503,12 +503,13 @@ real ConjGradientOptimizer::findMinWithCubicInterpol (
     // cout << "Interpol : a=" << a << " , b=" << b << " , c=" << c << " , d=" << d << endl;
     real mini_transformed = mini;
     real maxi_transformed = maxi;
-    if (mini != -FLT_MAX)
+    if (!fast_exact_is_equal(mini, -FLT_MAX))
         mini_transformed = (mini - p1) / (p2 - p1);
-    if (maxi != FLT_MAX)
+    if (!fast_exact_is_equal(maxi, FLT_MAX))
         maxi_transformed = (maxi - p1) / (p2 - p1);
     real xmin = minCubic(a, b, c, mini_transformed, maxi_transformed);
-    if (xmin == -FLT_MAX || xmin == FLT_MAX)
+    if (fast_exact_is_equal(xmin, -FLT_MAX) ||
+        fast_exact_is_equal(xmin,  FLT_MAX))
         return xmin;
     // cout << "min is : xmin = " << p1 + xmin*(p2-p1) << endl;
     return p1 + xmin*(p2-p1);
@@ -612,9 +613,9 @@ real ConjGradientOptimizer::fletcherSearchMain (
     f0 = (*f)(0, opt);
     f_0 = f0;
     g_0 = g0;
-    if (mu == FLT_MAX)
+    if (fast_exact_is_equal(mu, FLT_MAX))
         mu = (fmax - f0) / (rho * g0);
-    if (alpha1 == FLT_MAX)
+    if (fast_exact_is_equal(alpha1, FLT_MAX))
         alpha1 = mu / 100; // My own heuristic
     if (g0 >= 0) {
         if (opt->verbosity >= 2)
@@ -627,7 +628,9 @@ real ConjGradientOptimizer::fletcherSearchMain (
     // Bracketing
     while (!isBracketed) {
         // cout << "Bracketing : alpha1 = " << alpha1 << endl << "             alpha0 = " << alpha0 << endl;
-        if (alpha1 == mu && alpha1 == alpha2) { // NB: Personal hack... hopefully that should not happen
+        if (fast_exact_is_equal(alpha1, mu) &&
+            fast_exact_is_equal(alpha1, alpha2)) {
+            // NB: Personal hack... hopefully that should not happen
             if (opt->verbosity >= 2)
                 cout << "Warning : alpha1 == alpha2 == mu during bracketing" << endl;
             return alpha1;
@@ -819,11 +822,11 @@ bool ConjGradientOptimizer::lineSearch() {
     if (step < 0)
         if (verbosity >= 1)
             cout << "Ouch, negative step !" << endl;
-    if (step != 0) params.update(step, search_direction);
-    if (step == 0)
+    if (!fast_exact_is_equal(step, 0)) params.update(step, search_direction);
+    if (fast_exact_is_equal(step, 0))
         if (verbosity >= 2)
             cout << "No more progress made by the line search, stopping" << endl;
-    return (step == 0);
+    return (fast_exact_is_equal(step, 0));
 }
 
 //////////////
@@ -832,7 +835,7 @@ bool ConjGradientOptimizer::lineSearch() {
 real ConjGradientOptimizer::minCubic(
     real a, real b, real c,
     real mini, real maxi) {
-    if (a == 0 || (b != 0 && abs(a/b) < 0.0001)) // heuristic value for a == 0
+    if (fast_exact_is_equal(a, 0) || (!fast_exact_is_equal(b, 0) && abs(a/b) < 0.0001)) // heuristic value for a == 0
         return minQuadratic(b, c, mini, maxi);
     // f' = 3a.x^2 + 2b.x + c
     real aa = 3*a;
@@ -847,7 +850,7 @@ real ConjGradientOptimizer::minCubic(
         d = sqrt(d);
         real p2 = (-bb + d) / (2*aa);
         if (a > 0) {
-            if (p2 < mini || mini == -FLT_MAX)
+            if (p2 < mini || fast_exact_is_equal(mini, -FLT_MAX))
                 return mini;
             if (p2 > maxi) { // the minimum is beyond the range
                 if ( (mini-maxi) * ( ( a * mini + b) * (mini + maxi) + a * maxi * maxi + c) > 0)
@@ -864,7 +867,7 @@ real ConjGradientOptimizer::minCubic(
             else
                 return mini;
         } else {
-            if (p2 > maxi || maxi == FLT_MAX)
+            if (p2 > maxi || fast_exact_is_equal(maxi, FLT_MAX))
                 return maxi;
             if (p2 < mini) { // the minimum is before the range
                 if ((mini-maxi) * (( a * mini + b) * (mini + maxi) + a * maxi * maxi + c) > 0)
@@ -890,16 +893,16 @@ real ConjGradientOptimizer::minCubic(
 real ConjGradientOptimizer::minQuadratic(
     real a, real b,
     real mini, real maxi) {
-    if (a == 0 || (b != 0 && abs(a/b) < 0.0001)) { // heuristic for a == 0
+    if (fast_exact_is_equal(a, 0) || (!fast_exact_is_equal(b, 0) && abs(a/b) < 0.0001)) { // heuristic for a == 0
         if (b > 0)
             return mini;
         else
             return maxi;
     }
     if (a < 0) {
-        if (mini == -FLT_MAX)
+        if (fast_exact_is_equal(mini, -FLT_MAX))
             return -FLT_MAX;
-        if (maxi == FLT_MAX)
+        if (fast_exact_is_equal(maxi, FLT_MAX))
             return FLT_MAX;
         if (mini*mini + mini * b / a > maxi*maxi + maxi * b / a)
             return mini;
@@ -1154,7 +1157,7 @@ void ConjGradientOptimizer::reset() {
 // updateSearchDirection //
 ///////////////////////////
 void ConjGradientOptimizer::updateSearchDirection(real gamma) {
-    if (gamma==0)
+    if (fast_exact_is_equal(gamma, 0))
         search_direction << delta;
     else
         for (int i=0; i<search_direction.length(); i++)
@@ -1420,14 +1423,15 @@ real ConjGradientOptimizer::brentSearch()
             else
                 br_max = u;
 
-            if( fu <= fw || w == x )
+            if( fu <= fw || fast_exact_is_equal(w, x) )
             {
                 v = w;
                 w = u;
                 fv = fw;
                 fw = fu;
             }
-            else if( fu <= fv || v == x || v == w )
+            else if( fu <= fv || fast_exact_is_equal(v, x) ||
+                                 fast_exact_is_equal(v, w) )
             {
                 v = u;
                 fv = fu;

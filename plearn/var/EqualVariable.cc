@@ -85,7 +85,8 @@ void EqualVariable::fprop()
 {
     bool equal=true;
     for (int i=0; i<nelems(); i++)
-        equal = equal && (input1->valuedata[i] == input2->valuedata[i]);
+        equal = equal && 
+                fast_exact_is_equal(input1->valuedata[i],input2->valuedata[i]);
     valuedata[0]=equal;
 }
 

@@ -91,9 +91,7 @@ void IfThenElseVariable::fprop()
 {
     if(If()->isScalar())
     {
-        //bool test = (bool)If()->valuedata[0];
-        // norman: replaced a bad cast with a better boolean conversion
-        bool test = If()->valuedata[0] == 0 ? false : true;
+        bool test = !fast_exact_is_equal(If()->valuedata[0], 0);
         if (test)
             value << Then()->value;
         else
@@ -106,9 +104,7 @@ void IfThenElseVariable::fprop()
         real* elsev = Else()->valuedata;
         for (int k=0;k<nelems();k++)
         {
-            //if ((bool)ifv[k])
-            // norman: replaced a bad cast with a better boolean conversion
-            if ( ifv[k] == 0 ? false:true )
+            if ( !fast_exact_is_equal(ifv[k], 0) )
                 valuedata[k]=thenv[k];
             else
                 valuedata[k]=elsev[k];
@@ -121,10 +117,7 @@ void IfThenElseVariable::bprop()
 {
     if(If()->isScalar())
     {
-        // bool test = (bool)If()->valuedata[0];
-        // norman: replaced a bad cast with a better boolean conversion
-        bool test = If()->valuedata[0] == 0 ? false : true;
-        if (test)
+        if (!fast_exact_is_equal(If()->valuedata[0], 0))
             Then()->gradient += gradient;
         else
             Else()->gradient += gradient;
@@ -136,9 +129,7 @@ void IfThenElseVariable::bprop()
         real* elseg = Else()->gradientdata;
         for (int k=0;k<nelems();k++)
         {
-            //if ((bool)ifv[k])
-            // norman: replaced a bad cast with a better boolean conversion
-            if ( ifv[k] == 0 ? false:true )
+            if ( !fast_exact_is_equal(ifv[k], 0)  )
                 theng[k] += gradientdata[k];
             else
                 elseg[k] += gradientdata[k];
@@ -160,10 +151,7 @@ void IfThenElseVariable::rfprop()
     if (rValue.length()==0) resizeRValue();
     if(If()->isScalar())
     {
-        //bool test = (bool)If()->valuedata[0];
-        // norman: replaced a bad cast to a better boolean conversion
-        bool test = If()->valuedata[0] == 0 ? false : true;
-        if (test)
+        if (!fast_exact_is_equal(If()->valuedata[0], 0))
             rValue << Then()->rValue;
         else
             rValue << Else()->rValue;
@@ -175,9 +163,7 @@ void IfThenElseVariable::rfprop()
         real* relsev = Else()->rvaluedata;
         for (int k=0;k<nelems();k++)
         {
-            //if ((bool)ifv[k])
-            // norman: replaced a bad cast with a better boolean conversion
-            if ( ifv[k] == 0 ? false:true )
+            if ( !fast_exact_is_equal(ifv[k], 0) )
                 rvaluedata[k]=rthenv[k];
             else
                 rvaluedata[k]=relsev[k];

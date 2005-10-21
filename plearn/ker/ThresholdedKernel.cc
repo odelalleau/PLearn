@@ -116,7 +116,7 @@ void ThresholdedKernel::build_()
         PLERROR("In ThresholdedKernel::build_ - The source kernel must currently "
                 "be symmetric");
     assert( knn_approximation >= 0);
-    knn_approx = (knn_approximation != 0);
+    knn_approx = !fast_exact_is_equal(knn_approximation, 0);
     if (knn_approx) {
         if (knn_approximation > 1)
             n_approx = int(round(knn_approximation));
@@ -370,7 +370,7 @@ void ThresholdedKernel::setDataForKernelMatrix(VMat the_data) {
                                 " using the knn approximation");
                     assert( !knn_approx );
                     // Let us cache the sparse Gram matrix.
-                    if (threshold != 0)
+                    if (!fast_exact_is_equal(threshold, 0))
                         PLWARNING("In ThresholdedKernel::setDataForKernelMatrix - The sparse "
                                   "Gram matrix will be cached based on a non-zero threshold");
                     real k_min = knn_kernel_values[i];

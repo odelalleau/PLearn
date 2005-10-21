@@ -199,9 +199,9 @@ FNetLayerVariable::build_()
         fill_random_uniform(varray[1]->matValue, -delta, delta);
         varray[2]->matValue.fill(0.0);
         varray[3]->matValue.fill(1.0);
-        if (c1_ != 0)
+        if (!fast_exact_is_equal(c1_, 0))
             varray[3]->value[0] = c1_;
-        if (c2_ != 0)
+        if (!fast_exact_is_equal(c2_, 0))
             varray[3]->value[1] = c2_;
         // Set correct sizes.
         resize(minibatch_size, n_hidden);
@@ -387,11 +387,11 @@ void FNetLayerVariable::bprop()
                 if (inhibit_next_units && i>0)
                 {
                     real inh_ki = inh_k[i]; 
-                    if (!c1_) // c1 is optimized.
+                    if (!fast_exact_is_equal(c1_, 0)) // c1 is optimized.
                         dc1 -= dai * inh_ki;
                     if (squashed_inhibition) {
                         real dinh_ki = - dai * c1 * inh_ki * (1 - inh_ki);
-                        if (!c2_) // c2 is optimized.
+                        if (!fast_exact_is_equal(c2_, 0)) // c2 is optimized.
                             dc2 += dinh_ki * cum_inh_k[i];
                         if (inhibit_by_sum)
                             dcum_s += dinh_ki * c2;

@@ -153,7 +153,7 @@ Mat computeBasicStats(const VMat& m)
                 if(val>max_row[j])
                     max_row[j] = val;
 
-                if(val==0.) 
+                if(fast_exact_is_equal(val, 0.)) 
                     nzero_row[j]++;
                 else if(val>0.)
                 {
