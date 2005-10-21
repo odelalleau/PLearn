@@ -370,7 +370,7 @@ DiskVMatrix::~DiskVMatrix()
 {
     if (hasMetaDataDir())
         saveFieldInfos();
-    closeCurrentFiles();
+    DiskVMatrix::closeCurrentFiles();
 }
 
 

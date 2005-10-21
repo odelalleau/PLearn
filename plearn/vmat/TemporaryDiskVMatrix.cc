@@ -136,7 +136,7 @@ void TemporaryDiskVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 TemporaryDiskVMatrix::~TemporaryDiskVMatrix()
 {
     TVec<PPath> backup_files_opened = last_files_opened.copy();
-    closeCurrentFiles();
+    TemporaryDiskVMatrix::closeCurrentFiles();
     bool can_delete_whole_dir = true;
     bool one_file_deleted = false;
     for (int i = 0; i < backup_files_opened.length(); i++) {

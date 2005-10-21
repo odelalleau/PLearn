@@ -149,7 +149,7 @@ void TemporaryFileVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ///////////////////////////
 TemporaryFileVMatrix::~TemporaryFileVMatrix()
 {
-    closeCurrentFile();
+    TemporaryFileVMatrix::closeCurrentFile();
     if (noReferenceToFile(filename_)) {
         rm(filename_);
         if (hasMetaDataDir()) {

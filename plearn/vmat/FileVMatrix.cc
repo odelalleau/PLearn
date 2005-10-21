@@ -319,7 +319,7 @@ FileVMatrix::~FileVMatrix()
 { 
     if (hasMetaDataDir())
         saveFieldInfos();
-    closeCurrentFile();
+    FileVMatrix::closeCurrentFile();
 }
 
 ///////////////
