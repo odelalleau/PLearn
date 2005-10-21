@@ -163,10 +163,10 @@ void KNNVMatrix::build_() {
                         }
                     } else {
                         // Maybe it's a SubVMatrix of the matrix whose nearest neighbours have been computed.
-                        PP<SubVMatrix> smat = dynamic_cast<SubVMatrix*>((VMatrix*) source);
-                        if (    !smat.isNull()
-                                &&  smat->parent->length() == k_nn_mat->length()
-                                &&  smat->width() == smat->parent->width()) {
+                        PP<SubVMatrix> smat_sub = dynamic_cast<SubVMatrix*>((VMatrix*) source);
+                        if (    !smat_sub.isNull()
+                                &&  smat_sub->parent->length() == k_nn_mat->length()
+                                &&  smat_sub->width() == smat_sub->parent->width()) {
                             // Bingo !
                             // Safety warning just in case it is not what we want.
                             PLWARNING("In KNNVMatrix::build_ - Will consider the given k_nn_mat has been computed on source's parent VMat");
@@ -175,16 +175,16 @@ void KNNVMatrix::build_() {
                             Vec store_nn(k_nn_mat->width());
                             for (int i = 0; i < n; i++) {
                                 nn(i,0) = i;  // The nearest neighbour is always itself.
-                                k_nn_mat->getRow(i + smat->istart, store_nn);
+                                k_nn_mat->getRow(i + smat_sub->istart, store_nn);
                                 int k = 1;
                                 for (int j = 1; j < knn; j++) {
                                     bool ok = false;
                                     while (!ok && k < store_nn.length()) {
-                                        int q = int(store_nn[k]) - smat->istart;
-                                        if (q >= 0 && q < smat->length()) {
-                                            // The k-th nearest neighbour in smat->parent is in smat.
+                                        int q = int(store_nn[k]) - smat_sub->istart;
+                                        if (q >= 0 && q < smat_sub->length()) {
+                                            // The k-th nearest neighbour in smat_sub->parent is in smat_sub.
                                             ok = true;
-                                            nn(i,j) = q - smat->istart;
+                                            nn(i,j) = q - smat_sub->istart;
                                         }
                                         k++;
                                     }
@@ -246,9 +246,9 @@ void KNNVMatrix::build_() {
             inputsize_++;
             width_++;
             kernel_pij->setDataForKernelMatrix(source);
-            int n = source->length();
-            pij.resize(n, knn-1);
-            for (int i = 0; i < n; i++) {
+            int l = source->length();
+            pij.resize(l, knn-1);
+            for (int i = 0; i < l; i++) {
                 real sum = 0;
                 real k_ij;
                 for (int j = 1; j < knn; j++) {
