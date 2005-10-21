@@ -288,7 +288,8 @@ void FinancePreprocVMatrix::build_()
             for (int j=1; j<underlying.length(); j++)
             {
                 real expiration_date = underlying->get(j,expiration_index[i]);
-                if (!is_missing(expiration_date) && expiration_date!=last_expiration_date)
+                if (!is_missing(expiration_date) &&
+                    !is_equal(expiration_date, last_expiration_date))
                 {
                     if (!is_missing(last_expiration_date))
                         rollover_date[i].append(j);
