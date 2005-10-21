@@ -119,12 +119,13 @@ void TemporaryDiskVMatrix::closeCurrentFiles()
 /////////////////////////////////
 void TemporaryDiskVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
+    deepCopyField(last_files_opened, copies);
     // Clearing 'last_files_opened' is important: no file has been opened yet
     // by this VMat, as file pointers need to be recreated (this will be done
     // in inherited::makeDeepCopyFromShallowCopy(..)).
     // Similarly, 'last_dirname' needs to be cleared since it has not actually
     // been opened yet by this VMat.
-    last_files_opened = TVec<PPath>();
+    last_files_opened.resize(0);
     last_dirname = "";
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
