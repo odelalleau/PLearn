@@ -222,6 +222,17 @@ int findpos(const vector<string> &v, string element);
 //!  return vector with all instances of element removed
 vector<string> remove(const vector<string> &v, string element);
 
+
+/**
+ *  "Universal compare".  If x and y "look like" numbers (according to
+ *  'todouble'), compare them as numbers: return <0 if x<y, ==0 if x==y and >0
+ *  if x>y.  Equality checking for numbers is performed with
+ *  pl_math.cc::is_equal function.  Otherwise, return x.compare(y) [[string
+ *  comparison]]
+ */
+int universal_compare(const string& x, const string& y);
+
+
 //!  ** File path manipulation functions ** 
 
 /////////////////////////////////////////////////////////////////////////////////////////

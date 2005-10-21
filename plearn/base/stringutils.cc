@@ -446,12 +446,31 @@ vector<string> remove(const vector<string> &v, string element)
     return res;
 }
 
+
 int findpos(const vector<string> &v, string element)
 {
     for (size_t i=0;i<v.size();i++)
         if (v[i]==element) return int(i);
     return -1;
 }
+
+
+int universal_compare(const string& x, const string& y)
+{
+    // Try numerical comparison
+    double x_double = todouble(x);
+    double y_double = todouble(y);
+    if (! (is_missing(x_double) || is_missing(y_double))) {
+        if (is_equal(x_double, y_double))
+            return 0;
+        else
+            return int(x_double - y_double);
+    }
+
+    // Fall back to string comparison
+    return x.compare(y);
+}
+
 
 vector<string> addprepostfix(const string& prefix, const vector<string>& names, const string& postfix)
 {
