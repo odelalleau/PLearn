@@ -91,8 +91,7 @@ namespace PLearn {
 	{
 		real ret = 0.0 ; 
 		int p = mu()->width() ;
-		Mat W_lp ; 
-		int training_index = input_index()->value[0] ; 
+	    int training_index = input_index()->value[0] ; 
 
 		if (! training_mode )  // read in the file only once
 		{		
@@ -143,7 +142,7 @@ namespace PLearn {
 	{
 		int n = mu()->length() ; 
 		int p = mu()->width() ;
-		Mat W_lp ; 
+//		Mat W_lp ; 
 		Mat input ;
 //		int training_index = input_index()->value[0] ; 
 

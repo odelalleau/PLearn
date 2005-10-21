@@ -81,6 +81,7 @@ public:
 
   MoleculeTemplate current_template ; 
   PMolecule   molecule; 
+  Mat W_lp ; 
 
 protected:
     void build_();

@@ -128,6 +128,7 @@ namespace PLearn {
 
 		declareOption(ol, "paramsvalues", &MoleculeTemplateLearner::paramsvalues, OptionBase::learntoption, 
 				"paramsvalues\n");
+		
 
 
         
@@ -220,11 +221,16 @@ namespace PLearn {
                 params.push_back(mu[i]) ;
                 params.push_back(sigma[i]) ;
 
-                sigma_square[i] = new ExpVariable(sigma[i]) ; 
+                if (training_mode)
+                    sigma_square[i] = new ExpVariable(sigma[i]) ; 
+                else
+                    sigma_square[i] = sigma[i] ; 
 
-				if (!training_mode) {
-					sigma_square[i]->value.fill(1) ; 
-				}
+                    
+
+//				if (!training_mode) {
+//					sigma_square[i]->value.fill(1) ; 
+//				}
 				
                 if (training_mode) {
 
@@ -258,11 +264,16 @@ namespace PLearn {
 
             S_after_scaling.resize(n_templates) ; 
             
+            sigma_s_vec.resize(n_templates) ; 
             
             for(int i=0 ; i<n_templates ; ++i) { 
                 mu_S[i] = Var(1 , 1) ;                 
                 sigma_S[i] = Var(1 , 1) ;
-                sigma_square_S[i] = new SquareVariable(sigma_S[i]) ;             
+                if (training_mode)
+                    sigma_square_S[i] = new SquareVariable(sigma_S[i]) ;
+                else
+                    sigma_square_S[i] = sigma_S[i] ; 
+
                 params.push_back(mu_S[i]);
                 params.push_back(sigma_S[i]);
                 S_after_scaling[i] = new DivVariable(S[i] - mu_S[i] , sigma_square_S[i] ) ; 
@@ -332,11 +343,32 @@ namespace PLearn {
 
 			}
 			else {			
-//		                params << paramsvalues;
+		                params << paramsvalues;
 			}
 
 			params.makeSharedValue(paramsvalues);
 
+            if (!training_mode) {
+
+                for(int i=0 ; i<n_templates ; ++i) { 
+                    sigma_S[i]->value[0] *= sigma_S[i]->value[0] ; 
+                }
+                
+                for(int i=0 ; i<n_templates ; ++i) {                     
+                    for(int j=0 ; j<sigma_square[i]->matValue.length() ; ++j) { 
+                        for(int k=0 ; k<sigma_square[i]->matValue.width() ; ++k) { 
+                            sigma_square[i]->matValue[j][k] = exp(sigma[i]->matValue[j][k]) ; 
+                        }
+                    }
+                }
+            }
+
+/*            
+            for(int i=0 ; i<n_templates ; ++i) {     
+                sigma_s_vec[i] = sigma_S[i]->value[0] ; 
+            }
+*/            
+            
 
             target = Var(1 , "the target") ; 
 
@@ -347,7 +379,6 @@ namespace PLearn {
             costs[2] = lift_output(y , target);
             
             
-
             f_output = Func(input_index, y) ; 
 //            displayVarFn(f_output , 0) ; 
             
@@ -359,8 +390,9 @@ namespace PLearn {
             test_costs->setName("testing cost");
             
             output_target_to_costs = Func(y & target , test_costs) ; 
-            test_costf = Func(input_index & target, y & test_costs);
-              
+
+            test_costf = Func(input_index & target , y & test_costs);
+
         }
     }
 
@@ -460,6 +492,7 @@ namespace PLearn {
         
         computeS->recomputeParents();
         
+        FILE * f = fopen("nicolas.txt","wt") ; 
         
         for(int i=0 ; i<l ; ++i) { 
             
@@ -478,8 +511,10 @@ namespace PLearn {
                 t_mean[j] += current_S[j] ; 
                 cout << i << " " << current_S[j]  << endl ; 
             }
+            fprintf( f , "%f %f %d\n" ,  current_S[0] , current_S[1] , training_row[1] > 0 ? 1 : -1 ) ; 
             
         }
+        fclose(f) ; 
 
         for(int i=0 ; i<n_templates ; ++i) { 
             t_mean[i]/= l  ; t_mean[i]/=l ; 

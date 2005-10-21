@@ -89,6 +89,7 @@ protected:
   int n_actives ; 
   int n_inactives ; 
   Vec S_std  ; 
+  Vec sigma_s_vec ; 
 
   Func f_output ;     
   Func output_target_to_costs ;
