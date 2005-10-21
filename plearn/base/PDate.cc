@@ -222,10 +222,10 @@ PDate float_to_date(float f)
     PDate date;                     // missing by default
     if (! is_missing(f)) {
         long d = long(f);
-        date.year = 1900 + d/10000;
+        date.year = short(1900 + d/10000);
         d %= 10000;
-        date.month = d/100;
-        date.day = d%100;
+        date.month = (unsigned char) (d/100);
+        date.day = (unsigned char) (d%100);
     }
     return date;
 }
@@ -243,10 +243,10 @@ PDate double_to_date(double d)
     PDate date;                     // missing by default
     if (! is_missing(d)) {
         long l = long(d);
-        date.year = l/10000;
+        date.year = short(l/10000);
         l %= 10000;
-        date.month = l/100;
-        date.day = l%100;
+        date.month = (unsigned char) (l/100);
+        date.day = (unsigned char) (l%100);
     }
     return date;
 }
