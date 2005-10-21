@@ -185,7 +185,7 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
         // There is an input part, and it is not the same as in the previous call.
         setInput(input_part);
     }
-    int l = (int) outputs_def.length();
+    string::size_type l = outputs_def.length();
     int k = 0;
     for(int i=0; i<l; i++)
     {
