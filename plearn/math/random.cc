@@ -272,7 +272,7 @@ real uniform_sample()
     k=idum2/IQ2;
     idum2=IA2*(idum2-k*IQ2)-k*IR2;
     if (idum2 < 0) idum2 += IM2;
-    j=iy/NDIV1;
+    j=int(iy/NDIV1);
     iy=iv[j]-idum2;
     iv[j] = the_seed;
     if (iy < 1) iy += IMM1;
@@ -321,7 +321,7 @@ real  expdev()
 
     do
         dum=uniform_sample();
-    while (dum == 0.0);
+    while (fast_exact_is_equal(dum, 0.0));
     return -log(dum);
 }
 
@@ -335,7 +335,7 @@ real gaussian_01()
             v1=2.0*uniform_sample()-1.0;
             v2=2.0*uniform_sample()-1.0;
             rsq=v1*v1+v2*v2;
-        } while (rsq >= 1.0 || rsq == 0.0);
+        } while (rsq >= 1.0 || fast_exact_is_equal(rsq, 0.0));
         fac=sqrt(-2.0*log(rsq)/rsq);
         gset=v1*fac;
         iset=1;
@@ -429,7 +429,7 @@ real  poidev(real xm)
     real em,t,y;
 
     if (xm < 12.0) {
-        if (xm != oldm) {
+        if (!fast_exact_is_equal(xm, oldm)) {
             oldm=xm;
             g=exp(-xm);
         }
@@ -440,7 +440,7 @@ real  poidev(real xm)
             t *= uniform_sample();
         } while (t > g);
     } else {
-        if (xm != oldm) {
+        if (!fast_exact_is_equal(xm, oldm)) {
             oldm=xm;
             sq=sqrt(2.0*xm);
             alxm=log(xm);
@@ -491,7 +491,7 @@ real  bnldev(real pp, int n)
             en=n;
             oldg=log_gamma(en+1.0);
             nold=n;
-        } if (p != pold) {
+        } if (!fast_exact_is_equal(p, pold)) {
             pc=1.0-p;
             plog=log(p);
             pclog=log(pc);
@@ -510,7 +510,7 @@ real  bnldev(real pp, int n)
         } while (uniform_sample() > t);
         bnl=em;
     }
-    if (p != pp) bnl=n-bnl;
+    if (!fast_exact_is_equal(p, pp)) bnl=n-bnl;
     return bnl;
 }
 
@@ -853,9 +853,9 @@ return( t );
 	qkm2 = qkm1;
 	qkm1 = qk;
 
-	if( qk != 0 )
+	if( !fast_exact_is_equal(qk, 0) )
             r = pk/qk;
-	if( r != 0 )
+	if( !fast_exact_is_equal(r, 0) )
         {
             t = fabs( (ans - r)/r );
             ans = r;
