@@ -457,7 +457,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
 
             for(unsigned int i=0;i<mstr.size();i++)
             {
-                Array<VMat> ar(int(mstr[i].size()));
+                Array<VMat> ar( (int)mstr[i].size() );
                 for(unsigned int j=0;j<mstr[i].size();j++)
                 {
                     vector<string> vecstr;
