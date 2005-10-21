@@ -48,6 +48,8 @@
 
 namespace PLearn {
 
+//#####  ParentableObject  ####################################################
+
 /**
  *  Object which maintains a "parent" pointer as part of an object graph.
  *
@@ -105,7 +107,81 @@ private:
 
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(ParentableObject);
-  
+
+
+//#####  TypedParentableObject  ###############################################
+
+/**
+ *  This is a simple subclass of ParentableObject that injects type information
+ *  about the parent.  Its build function also dynamically ensures that the
+ *  parent is of the right type.
+ */
+#define TEMPLATE_DEF_TypedParentableObject  class ParentT
+#define TEMPLATE_ARGS_TypedParentableObject ParentT
+#define TEMPLATE_NAME_TypedParentableObject \
+        string("TypedParentableObject< ") + TypeTraits<ParentT>::name() + " >"
+
+template <class ParentT>
+class TypedParentableObject : public ParentableObject
+{
+    typedef ParentableObject inherited;
+
+public:
+    //! Typed version of parent accessor (hides the inherited one; this is OK)
+    ParentT* parent()
+    {
+        return static_cast<ParentT*>(m_parent);
+    }
+
+    const ParentT* parent() const
+    {
+        return static_cast<const ParentT*>(m_parent);
+    }
+
+    
+    //#####  PLearn::Object Protocol  #########################################
+
+    // Declares other standard object methods.    
+    PLEARN_DECLARE_TEMPLATE_OBJECT(TypedParentableObject);
+
+    // Simply calls inherited::build() then build_() 
+    virtual void build();
+
+private: 
+    //! This does the actual building. 
+    void build_();
+};
+
+// Declares a few other classes and functions related to this class
+DECLARE_TEMPLATE_OBJECT_PTR(TypedParentableObject);
+
+PLEARN_IMPLEMENT_TEMPLATE_OBJECT(
+    TypedParentableObject,
+    "Injects type information about the parent",
+    "This is a simple subclass of ParentableObject that injects type information\n"
+    "about the parent.  Its build function also dynamically ensures that the\n"
+    "parent is of the right type."
+    );
+
+template <class T>
+void TypedParentableObject<T>::build()
+{
+    inherited::build();
+    build_();
+}
+
+template <class T>
+void TypedParentableObject<T>::build_()
+{
+    // We simply dynamically check that the parent, if any, makes sense
+    if (m_parent)
+        if (! dynamic_cast<T*>(m_parent))
+            PLERROR("TypedParentableObject::build_: Expected a parent of type %s "
+                    "but got one of type %s", T::_classname_().c_str(),
+                    m_parent->classname().c_str());
+}
+
+
 } // end of namespace PLearn
 
 #endif
