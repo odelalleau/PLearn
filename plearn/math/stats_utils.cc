@@ -118,7 +118,7 @@ TMat<int> SpearmanRankCorrelation(const VMat &x, const VMat& y, Mat& r, bool ign
                 for (int k = 0; k < x_rank.length(); k++) {
                     real x_r = x_rank(k,0);
                     real y_r = y_rankj(k,0);
-                    if (fast_exact_is_not_equal(x_r, -1)) // -1 rank <-> missing value
+                    if (!fast_exact_is_equal(x_r, -1)) // -1 rank <-> missing value
                         r_i[j] += (x_r - half) * (y_r - half) * rank_normalization;
                 }
             }

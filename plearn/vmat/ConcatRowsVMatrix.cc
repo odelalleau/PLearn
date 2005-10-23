@@ -207,7 +207,7 @@ void ConcatRowsVMatrix::ensureMappingsConsistency() {
                 find_map = cur_map->find(it->first);
                 if (find_map != cur_map->end()) {
                     // The string mapped in VMat 'i' is also mapped in our current mapping.
-                    if (fast_exact_is_not_equal(find_map->second, it->second)) {
+                    if (!fast_exact_is_equal(find_map->second, it->second)) {
                         // But the same string is not mapped to the same value.
                         // This needs to be fixed.
                         /*cout << find_map->first << endl;

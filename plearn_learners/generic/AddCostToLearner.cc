@@ -376,8 +376,8 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
                 // The 'opposite_lift cost' is 1-output when the target is 0, and
                 // -(1-output) when thte target is 1.
 #ifdef BOUNDCHECK
-                if (fast_exact_is_not_equal(desired_target[0], 0) &&
-                    fast_exact_is_not_equal(desired_target[0], 1)) {
+                if (!fast_exact_is_equal(desired_target[0], 0) &&
+                    !fast_exact_is_equal(desired_target[0], 1)) {
                     // Invalid target.
                     PLERROR("In AddCostToLearner::computeCostsFromOutputs - Target "
                             "%f isn't compatible with lift", desired_target[0]);
@@ -410,8 +410,8 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
             }
         } else if (c == "cross_entropy") {
 #ifdef BOUNDCHECK
-            if (fast_exact_is_not_equal(desired_target[0], 0) &&
-                fast_exact_is_not_equal(desired_target[0], 1)) {
+            if (!fast_exact_is_equal(desired_target[0], 0) &&
+                !fast_exact_is_equal(desired_target[0], 1)) {
                 // Invalid target.
                 PLERROR("In AddCostToLearner::computeCostsFromOutputs - Target isn't compatible with cross_entropy");
             }
@@ -423,7 +423,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
             bool good = true;
             if (fast_exact_is_equal(output_length, target_length)) {
                 for (int k = 0; k < desired_target.length(); k++)
-                    if (fast_exact_is_not_equal(desired_target[k],
+                    if (!fast_exact_is_equal(desired_target[k],
                                              sub_learner_output[k])) {
                         good = false;
                         break;

@@ -110,7 +110,7 @@ void OneHotSquaredLoss::bprop()
     int n = input1->value.size();
     int classnum = (int) input2->valuedata[0];
     real* input1grptr = input1->gradientdata;
-    if(fast_exact_is_not_equal(gr, 1.))
+    if(!fast_exact_is_equal(gr, 1.))
     {
         gr = gr+gr;
         for(int i=0; i<n; i++)

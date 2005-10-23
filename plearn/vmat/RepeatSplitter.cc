@@ -192,7 +192,7 @@ void RepeatSplitter::build_()
                                         // Find a sample to swap in the current window.
                                         while (!can_swap) {
                                             to_swap = int(uniform_sample() * first_pass_step);
-                                            if (fast_exact_is_not_equal(dataset->get(shuffled[k + to_swap], tc), t)) {
+                                            if (!fast_exact_is_equal(dataset->get(shuffled[k + to_swap], tc), t)) {
                                                 can_swap = true;
                                             }
                                         }
@@ -248,7 +248,7 @@ void RepeatSplitter::build_()
                                             if (next >= shuffled.length()) {
                                                 next = 0;
                                             }
-                                            if (fast_exact_is_not_equal(dataset->get(shuffled[next], tc), t)) {
+                                            if (!fast_exact_is_equal(dataset->get(shuffled[next], tc), t)) {
                                                 can_swap = true;
                                             }
                                         }

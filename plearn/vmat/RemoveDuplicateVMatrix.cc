@@ -182,7 +182,7 @@ void RemoveDuplicateVMatrix::build_()
                             real* data_j = row_j->data();
                             int w = row_i->length();
                             for (int k = 0; k < w; k++, data_i++, data_j++)
-                                if (fast_exact_is_not_equal(*data_i, *data_j))
+                                if (!fast_exact_is_equal(*data_i, *data_j))
                                     equal = false;
                         }
                         if (equal) {

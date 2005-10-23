@@ -66,10 +66,10 @@ protected:
     { return fast_exact_is_equal(x, 0.); }
 
     static inline bool isI(real x)
-    { return fast_exact_is_not_equal(x, 0.) && issmallint(x); }
+    { return !fast_exact_is_equal(x, 0.) && issmallint(x); }
 
     static inline bool isF(real x)
-    { return fast_exact_is_not_equal(x, 0.) && !issmallint(x); }
+    { return !fast_exact_is_equal(x, 0.) && !issmallint(x); }
   
 public:
 /*!     writes v in a compressed form in the data buffer passed as argument.

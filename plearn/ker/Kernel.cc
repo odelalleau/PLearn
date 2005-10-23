@@ -382,7 +382,7 @@ void Kernel::computeSparseGramMatrix(TVec<Mat> K) const
             K_i.resize(0,2);
             real* gram_ij = gram_matrix[i];
             for (int j = 0; j < n; j++, gram_ij++)
-                if (fast_exact_is_not_equal(*gram_ij, 0)) {
+                if (!fast_exact_is_equal(*gram_ij, 0)) {
                     row[0] = j;
                     row[1] = *gram_ij;
                     K_i.appendRow(row);
@@ -411,7 +411,7 @@ void Kernel::computeSparseGramMatrix(TVec<Mat> K) const
         for (int j=0; j<=i; j++)
         {
             j_and_Kij[1] = evaluate_i_j(i,j);
-            if (fast_exact_is_not_equal(j_and_Kij[1], 0)) {
+            if (!fast_exact_is_equal(j_and_Kij[1], 0)) {
                 j_and_Kij[0] = j;
                 K[i].appendRow(j_and_Kij);
                 if (j < i) {
@@ -806,7 +806,7 @@ Mat findClosestPairsOfDifferentClass(int k, VMat data, Ker dist)
         for(int j=0; j<data.length(); j++)
         {
             data->getRow(j,rowj);
-            if(fast_exact_is_not_equal(targeti, targetj))
+            if(!fast_exact_is_equal(targeti, targetj))
             {
                 real d = dist(inputi,inputj);
                 if(kk<k)
