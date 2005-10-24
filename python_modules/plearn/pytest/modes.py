@@ -480,7 +480,7 @@ class RoutineBasedMode(PyTestMode):
                 try:
                     RoutineType = self.routine_type( self.options )            
                     routine     = RoutineType(test=test)
-                    routine.routine() # routine.start()
+                    routine.start()
                 except PyTestError, e:
                     # --traceback: This flag triggers routines to report
                     # the traceback of PyTestError. By default, only the
