@@ -145,7 +145,7 @@ def __plearn_repr( obj, indent_level, inner_repr = plearn_repr ):
 
     if hasattr( obj, 'plearn_repr' ) and callable( obj.plearn_repr ):
         try:            
-            return obj.plearn_repr( indent_level, inner_repr )
+            return obj.plearn_repr(indent_level, inner_repr)
         except TypeError:
             raise TypeError('%s.plearn_repr signature should be:'
                             'plearn_repr(self, indent_level=0, inner_repr=plearn_repr)'

@@ -65,6 +65,11 @@ protected:
     //! be the same.
     bool synch_data;
 
+    /*!
+      If provided, will be used to set this vmatrix's fieldnames. 
+    */
+    TVec<string> fieldnames;
+    
 public:
 
     Mat data;

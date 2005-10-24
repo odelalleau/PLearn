@@ -293,7 +293,7 @@ class PLearnSnippet:
     def _unreferenced( self ):
         return True
 
-    def plearn_repr( self, indent_level = 0 ):
+    def plearn_repr(self, indent_level=0, inner_repr=plearn_repr):
         return self.s
 
 class _plargs_storage_fallback( object ):

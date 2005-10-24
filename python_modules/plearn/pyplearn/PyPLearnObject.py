@@ -334,23 +334,38 @@ class PyPLearnObject( PLOptionDict ):
         # references should be printed.
         return python_repr( self, indent_level = 0 )
 
-    def plearn_repr( self, indent_level = 0, inner_repr = plearn_repr ):
+    def _optionFormat(self, option_pair, indent_level, inner_repr):
+        k, v = option_pair
+        try:
+            return '%s = %s' % ( k, inner_repr(v, indent_level+1) )
+        except Exception, e:
+            raise PLOptionError( 'Option %s in %s instance caused an error in %s:\n  %s: %s'
+                                 % ( k, self.classname(), inner_repr.__name__,
+                                     e.__class__.__name__, str(e) ) )                 
+        
+    def plearn_repr(self, indent_level=0, inner_repr=plearn_repr):
         """PLearn representation of this python object.
 
         Are considered as options any 'public' instance attributes.
         """
-        def elem_format( elem ):
-            k, v = elem
-            try:
-                return '%s = %s' % ( k, inner_repr(v, indent_level+1) )
-            except Exception, e:
-                raise PLOptionError( 'Option %s in %s instance caused an error in %s:\n  %s: %s'
-                                     % ( k, self.classname(), inner_repr.__name__,
-                                         e.__class__.__name__, str(e) ) ) 
-        
-        return "%s(%s)" % ( self.classname(),
-                            format_list_elements([ (optname,optval) for (optname,optval) in self.iteritems() ],
-                                                 elem_format, indent_level+1 ) )
+        options = format_list_elements(
+            [ (optname,optval) for (optname,optval) in self.iteritems() ],
+            lambda opt_pair: self._optionFormat(opt_pair, indent_level, inner_repr),
+            indent_level+1
+            )
+        return "%s(%s)" % (self.classname(), options)
+        # def elem_format( elem ):
+        #     k, v = elem
+        #     try:
+        #         return '%s = %s' % ( k, inner_repr(v, indent_level+1) )
+        #     except Exception, e:
+        #         raise PLOptionError( 'Option %s in %s instance caused an error in %s:\n  %s: %s'
+        #                              % ( k, self.classname(), inner_repr.__name__,
+        #                                  e.__class__.__name__, str(e) ) ) 
+        # 
+        # return "%s(%s)" % ( self.classname(),
+        #                     format_list_elements([ (optname,optval) for (optname,optval) in self.iteritems() ],
+        #                                          elem_format, indent_level+1 ) )
 
     def _serial_number(self):
         return self.__serial_number

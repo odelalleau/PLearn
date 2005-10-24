@@ -98,6 +98,11 @@ void MemoryVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "data_vm", &MemoryVMatrix::data_vm, OptionBase::buildoption,
                   "The underlying VMatrix. Will overwrite 'data' if provided.");
 
+    declareOption(
+        ol, "fieldnames", &MemoryVMatrix::fieldnames,
+        OptionBase::buildoption,
+        "If provided, will be used to set this vmatrix's fieldnames. " );
+ 
     inherited::declareOptions(ol);
 }
 
@@ -151,6 +156,9 @@ void MemoryVMatrix::build_()
     if (synch_data)
         // Restore data so that it is equal to memory_data.
         data = memory_data;
+    
+    if ( fieldnames.length() == data.width() )
+        declareFieldNames(fieldnames);    
 }
 
 ///////////
