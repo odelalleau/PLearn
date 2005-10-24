@@ -44,9 +44,30 @@
 #ifndef WordNetSenseDictionary_INC
 #define WordNetSenseDictionary_INC
 #include "Dictionary.h"
+#include "wn.h"
 
 namespace PLearn {
 using namespace std;
+
+// Tool functions
+
+//! Takes a string and returns a char array of that string.
+//! Helps, when a char array representation that doesn't
+//! need to be constant (const) is needed.
+char* cstr(string& str);
+//! Returns a synset key from a SynsetPtr
+string getSynsetKey(SynsetPtr ssp);
+//! Extract senses for a word and a certain POS tag, as a certain
+//! symbol type
+TVec<string> extractSenses(string word, int wn_pos, string symbol_type);
+//! Stems a word
+string stemWord(string word);
+//! Stems a word, according to a POS
+string stemWord(string word, int wn_pos);
+//! Lists the possible stemmed variation of a word
+TVec<string> stemsOfWord(string word, int wn_pos);
+//! Lists the possible stemmed variation of a word using its POS
+TVec<string> stemsOfWord(string word);
 
 /*! This class implements a Dictionary for WordNet senses.
   The symbols in the instantiated dictionary are senses (not words!).

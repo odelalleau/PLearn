@@ -42,13 +42,10 @@
 
 
 #include "WordNetSenseDictionary.h"
-#include "wn.h"
 #include <plearn/base/stringutils.h>
 
 namespace PLearn {
 using namespace std;
-
-// Tool functions
 
 char* cstr(string& str)
 {
@@ -57,6 +54,17 @@ char* cstr(string& str)
         *(cstr + i) = str[i];
     cstr[str.size()] = '\0';
     return cstr;
+}
+
+//! Returns a synset key from a SynsetPtr
+string getSynsetKey(SynsetPtr ssp)
+{
+    if(!ssp) PLERROR("In getSynsetKey(): SynsetPtr is NULL");
+    string ssk = tostring(ssp->words[0]);
+    for(int i=1; i<ssp->wcount && i<3; i++)
+        ssk = ssk + "," + tostring(ssp->words[i]);
+    ssk = ssk + ":" + tostring(ssp->pos) + "#" + tostring(ssp->hereiam);
+    return ssk;
 }
 
 TVec<string> extractSenses(string word, int wn_pos, string symbol_type)
@@ -74,15 +82,26 @@ TVec<string> extractSenses(string word, int wn_pos, string symbol_type)
     // extract all senses for a given word
     while (ssp != NULL)
     {
-        char *charsk = WNSnsToStr(idx, ++wnsn);
-        if(symbol_type == "sense_key") ret.push_back(string(charsk));
+
+        if(symbol_type == "sense_key")
+        {
+            char *charsk = WNSnsToStr(idx, ++wnsn);
+            ret.push_back(string(charsk));
+        }
+        else if(symbol_type == "synset_key")
+        {
+            ret.push_back(getSynsetKey(ssp));
+        }
         else PLERROR("In extractSenses(): symbol_type %s not valid", symbol_type.c_str());
         ssp = ssp->nextss;
     }
     free_syns(ssp);
+    free_index(idx);
     delete cword;
     return ret;
 }
+
+
 
 string stemWord(string word)
 {
@@ -103,7 +122,7 @@ string stemWord(string word)
  
     delete input_word;
     if (lemma == NULL) return word;
-    else return string(lemma);
+    else return removeblanks(tostring(lemma));
 }
 
 string stemWord(string word, int wn_pos)
@@ -114,13 +133,81 @@ string stemWord(string word, int wn_pos)
     if (lemma == NULL)
         return word;
     else
-        return string(lemma);
+        return removeblanks(tostring(lemma));
 }
 
-  
+TVec<string> stemsOfWord(string word, int wn_pos)
+{
+    TVec<string> stems;
+    stems.push_back(word);
+    char* input_word = cstr(word);
+    char* lemma = morphstr(input_word, wn_pos);
+    string lemma_str;
+    while(lemma)
+    {
+        lemma_str = removeblanks(tostring(lemma));
+        if(lemma_str != word)
+            stems.push_back(lemma_str);
+        lemma = morphstr(NULL, wn_pos);
+    }
+    delete input_word;
+    return stems;
+}
+
+TVec<string> stemsOfWord(string word)
+{
+    TVec<string> stems;
+    stems.push_back(word);
+    char* input_word = cstr(word);
+
+    char* lemma = morphstr(input_word, NOUN);
+    string lemma_str;
+    while(lemma)
+    {
+        lemma_str = removeblanks(tostring(lemma));
+        if(lemma_str != word)
+            stems.push_back(lemma_str);
+        lemma = morphstr(NULL, NOUN);
+    }
+
+    lemma = morphstr(input_word, VERB);
+    while(lemma)
+    {
+        lemma_str = removeblanks(tostring(lemma));
+        if(lemma_str != word)
+            stems.push_back(lemma_str);
+        lemma = morphstr(NULL, VERB);
+    }
+
+    lemma = morphstr(input_word, ADJ);
+    while(lemma)
+    {
+        lemma_str = removeblanks(tostring(lemma));
+        if(lemma_str != word)
+            stems.push_back(lemma_str);
+        lemma = morphstr(NULL, ADJ);
+    }
+
+    lemma = morphstr(input_word, ADV);
+    while(lemma)
+    {
+        lemma_str = removeblanks(tostring(lemma));
+        if(lemma_str != word)
+            stems.push_back(lemma_str);
+        lemma = morphstr(NULL, ADV);
+    }
+
+    delete input_word;
+    return stems;
+}
+
+
 WordNetSenseDictionary::WordNetSenseDictionary()
     : options_stem_words(false), symbol_type("sense_key")
-{}
+{
+    if(wninit()<0)
+        PLERROR("In WordNetSenseDictionary(): could not open WordNet database files");
+}
   
 PLEARN_IMPLEMENT_OBJECT(WordNetSenseDictionary,
                         "Dictionary of WordNet senses",
@@ -131,14 +218,15 @@ void WordNetSenseDictionary::declareOptions(OptionList& ol)
     declareOption(ol, "options_stem_words", &WordNetSenseDictionary::options_stem_words, OptionBase::buildoption, "Indication that words given as options should be stemmed when looking at their possible senses");
     declareOption(ol, "options_to_lower_case", &WordNetSenseDictionary::options_to_lower_case, OptionBase::buildoption, "Indication that words given as options should be put to lower case");
     declareOption(ol, "symbol_type", &WordNetSenseDictionary::symbol_type, OptionBase::buildoption, "Type of representation (symbol) of the senses. The currently supported types are:\n"
-        "   - \"sense_key\" (standard WordNet representation)");
+        "   - \"sense_key\" (standard WordNet representation)\n"
+        "   - \"synset_key\" (custom made representation, that consists of maximum three words from the synset, the POS category and the byte offset of the synset)\n"
+        "Note that the Dictionary will always accept \"sense_key\" symbols as input, but will convert it automatically to\n"
+        "the symbol_type representation and treat it as such.");
     inherited::declareOptions(ol);
 }
   
 void WordNetSenseDictionary::build_()
-{
-    wninit();
-}
+{}
 
 // ### Nothing to add here, simply calls build_
 void WordNetSenseDictionary::build()
@@ -150,7 +238,7 @@ void WordNetSenseDictionary::build()
 TVec<string> WordNetSenseDictionary::getSensesFromWordNet(TVec<string> options)
 {
     string word = "";
-    string stemmed_word = "";
+    TVec<string> stemmed_words;
     int wn_pos = -1;
     TVec<string> ret(0);
 
@@ -171,36 +259,40 @@ TVec<string> WordNetSenseDictionary::getSensesFromWordNet(TVec<string> options)
         ret.append(extractSenses(word,NOUN,symbol_type));
         if(options_stem_words) 
         {
-            stemmed_word = stemWord(word,NOUN);
-            if(word != stemmed_word)
-                ret.append(extractSenses(stemmed_word,NOUN,symbol_type));
+            TVec<string> stemmed_words = stemsOfWord(word,NOUN);
+            for(int i=0; i<stemmed_words.length(); i++)
+                if(word != stemmed_words[i])
+                    ret.append(extractSenses(stemmed_words[i],NOUN,symbol_type));
         }
 
         // VERB
         ret.append(extractSenses(word,VERB,symbol_type));
         if(options_stem_words) 
         {
-            stemmed_word = stemWord(word,VERB);
-            if(word != stemmed_word)
-                ret.append(extractSenses(stemmed_word,VERB,symbol_type));
+            TVec<string> stemmed_words = stemsOfWord(word,VERB);
+            for(int i=0; i<stemmed_words.length(); i++)
+                if(word != stemmed_words[i])
+                    ret.append(extractSenses(stemmed_words[i],VERB,symbol_type));
         }
        
         // ADJ
         ret.append(extractSenses(word,ADJ,symbol_type));
         if(options_stem_words) 
         {
-            stemmed_word = stemWord(word,ADJ);
-            if(word != stemmed_word)
-                ret.append(extractSenses(stemmed_word,ADJ,symbol_type));
+            TVec<string> stemmed_words = stemsOfWord(word,ADJ);
+            for(int i=0; i<stemmed_words.length(); i++)
+                if(word != stemmed_words[i])
+                    ret.append(extractSenses(stemmed_words[i],ADJ,symbol_type));
         }
        
         // ADV
         ret.append(extractSenses(word,ADV,symbol_type));
         if(options_stem_words) 
         {
-            stemmed_word = stemWord(word,ADV);
-            if(word != stemmed_word)
-                ret.append(extractSenses(stemmed_word,ADV,symbol_type));
+            TVec<string> stemmed_words = stemsOfWord(word,ADV);
+            for(int i=0; i<stemmed_words.length(); i++)
+                if(word != stemmed_words[i])
+                    ret.append(extractSenses(stemmed_words[i],ADV,symbol_type));
         }           
     }
     else
@@ -209,9 +301,10 @@ TVec<string> WordNetSenseDictionary::getSensesFromWordNet(TVec<string> options)
         ret.append(extractSenses(word,wn_pos,symbol_type));
         if(options_stem_words) 
         {
-            stemmed_word = stemWord(word,wn_pos);
-            if(word != stemmed_word)
-                ret.append(extractSenses(stemmed_word,wn_pos,symbol_type));
+            TVec<string> stemmed_words = stemsOfWord(word,wn_pos);
+            for(int i=0; i<stemmed_words.length(); i++)
+                if(word != stemmed_words[i])
+                    ret.append(extractSenses(stemmed_words[i],wn_pos,symbol_type));
         }  
     }
 
@@ -220,6 +313,19 @@ TVec<string> WordNetSenseDictionary::getSensesFromWordNet(TVec<string> options)
 
 int WordNetSenseDictionary::getId(string symbol, TVec<string> options)
 {
+    // This permits converting an input symbol as sense_key
+    // to some other symbol_type...
+    if(strchr(symbol.c_str(),'%') && symbol_type != "sense_key")
+    {
+        if(symbol_type == "synset_key")
+        {
+            char* symbol_cstr = cstr(symbol);
+            symbol = getSynsetKey(GetSynsetForSense(symbol_cstr));
+            delete symbol_cstr;
+        }
+        else PLERROR("In getId(): symbol_type %s not valid", symbol_type.c_str());
+    }
+         
     if(update_mode == UPDATE && !isIn(symbol,options))
     {
         TVec<string> sret = getSensesFromWordNet(options);        
