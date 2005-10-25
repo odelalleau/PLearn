@@ -146,8 +146,8 @@ TVec<VMat> ToBagSplitter::getSplit(int k)
         // Turn it into a TVec<int>.
         TVec<int> indices_int;
         for (int j = 0; j < indices.length(); j++) {
-            for (int k = 0; k < indices(j, 0); k++) {
-                int indice = int(indices(j, k + 1));
+            for (int q = 0; q < indices(j, 0); q++) {
+                int indice = int(indices(j, q + 1));
                 indices_int.append(indice);
             }
         }
