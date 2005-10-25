@@ -98,8 +98,16 @@ void ExhaustiveNearestNeighbors::declareOptions(OptionList& ol)
         ol, "kernel_is_pseudo_distance",
         &ExhaustiveNearestNeighbors::kernel_is_pseudo_distance,
         OptionBase::buildoption,
-        "Whether the kernel should be interpreted as a (pseudo-)distance\n"
-        "measure (true) or a similarity measure (false). Default = true.");
+        "Whether the kernel defined by the 'distance_kernel' option should be\n"
+        "interpreted as a (pseudo-)distance measure (true) or a similarity\n"
+        "measure (false). Default = true.  Note that this interpretation is\n"
+        "strictly specific to the class ExhaustiveNearestNeighbors.\n");
+
+    declareOption(
+        ol, "kernel", &GenericNearestNeighbors::distance_kernel,
+        OptionBase::buildoption | OptionBase::nosave,
+        "Alternate name for 'distance_kernel'.  (Deprecated; use only so that\n"
+        "existing scripts can run.)");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
