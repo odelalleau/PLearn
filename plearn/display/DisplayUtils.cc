@@ -46,7 +46,6 @@
 #include "DisplayUtils.h"
 #include <plearn/io/openString.h>
 #include <plearn/io/TmpFilenames.h>
-#include <strstream>
 
 #ifdef WIN32
 #include <io.h>
@@ -145,7 +144,7 @@ using namespace std;
     ylow = regulargrid_x_y_rgbreal(0,1);
     yhigh = regulargrid_x_y_rgbreal(l-1,1);
     int ny=1;
-    while(regulargrid_x_y_rgbreal(ny,1)!=ylow)
+    while(!fast_exact_is_equal(regulargrid_x_y_rgbreal(ny,1), ylow))
       ++ny;
 
     int nx = l/ny;
@@ -229,7 +228,7 @@ void displayHistogram(Gnuplot& gp, Mat dataColumn,
 	  int first_of_mass_point = 0;
 	  for (int i=0;i<n;i++)
 	    {
-	      if (previous==v[i])
+	      if (fast_exact_is_equal(previous, v[i]))
 		{
 		  if (previous_n_repeat==0) first_of_mass_point = i-1;
 		  n_repeat++;
@@ -289,7 +288,10 @@ void displayHistogram(Gnuplot& gp, Mat dataColumn,
   for (int i=0;i<n_bins;i++)
     {
       real deltax = left_side[2*(i+1)]-left_side[2*i];
-      if (deltax==0) { PLWARNING("displayHistogram: 0 deltax!"); deltax=1.0; }
+      if (fast_exact_is_equal(deltax, 0)) {
+          PLWARNING("displayHistogram: 0 deltax!");
+          deltax=1.0;
+      }
       frequency[i*2] *= norm_factor/deltax;
     }
 
@@ -359,7 +361,7 @@ void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth
         {
           Var v = varray[i];
           real old_y = center(v->varnum,1);
-          if (old_y != FLT_MAX) // remove pair (old_y,v) from layers
+          if (!fast_exact_is_equal(old_y, FLT_MAX)) // remove pair (old_y,v) from layers
           {
             pair<mmit,mmit> range = layers.equal_range(old_y);
             for (mmit it = range.first; it != range.second; it++)
@@ -385,7 +387,7 @@ void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth
     {
       Var v = sources[i];
       real old_y = center(v->varnum,1);
-      if (old_y != FLT_MAX) // remove pair (old_y,v) from layers
+      if (!fast_exact_is_equal(old_y, FLT_MAX)) // remove pair (old_y,v) from layers
       {
         pair<mmit,mmit> range = layers.equal_range(old_y);
         for (mmit it = range.first; it != range.second; it++)
@@ -411,12 +413,12 @@ void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth
   // Find the maximum number of vars in a level...
   int maxvarsperlevel = sources.size();
 
-  for (real y=boxheight;y<=topy;y+=deltay)
+  for (real y_=boxheight;y_<=topy;y_+=deltay)
   {
-    pair<mmit,mmit> range = layers.equal_range(y);
-    int nvars = (int)distance(range.first,range.second);
-    if (maxvarsperlevel < nvars)
-      maxvarsperlevel = nvars;
+    pair<mmit,mmit> range = layers.equal_range(y_);
+    int nvars_ = (int)distance(range.first,range.second);
+    if (maxvarsperlevel < nvars_)
+      maxvarsperlevel = nvars_;
   }
 
   real usewidth = (maxvarsperlevel+1)*(boxwidth+boxheight);
@@ -432,17 +434,17 @@ void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth
   min_y -= boxheight/2;
   max_y += boxheight/2;
 
-  for (real y=boxheight;y<=topy;y+=deltay)
+  for (real y_=boxheight;y_<=topy;y_+=deltay)
   {
-    pair<mmit,mmit> range = layers.equal_range(y);
-    int nvars = (int)distance(range.first,range.second);
-    real deltax = usewidth/(nvars+1);
+    pair<mmit,mmit> range = layers.equal_range(y_);
+    int nvars_ = (int)distance(range.first,range.second);
+    real deltax = usewidth/(nvars_+1);
     real x = deltax;
     for (mmit it = range.first; it != range.second; it++, x+=deltax)
     {
       Var v = it->second;
       center(v->varnum,0) = x;
-      center(v->varnum,1) = y;
+      center(v->varnum,1) = y_;
     }
   }
 
@@ -455,17 +457,17 @@ void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth
 
   // gs.setlinewidth(1.0);
 
-  for (real y=boxheight;y<=topy;y+=deltay)
+  for (real y_=boxheight;y_<=topy;y_+=deltay)
   {
-    pair<mmit,mmit> range = layers.equal_range(y);
-    int nvars = (int)distance(range.first,range.second);
-    real deltax = usewidth/(nvars+1);
+    pair<mmit,mmit> range = layers.equal_range(y_);
+    int nvars_ = (int)distance(range.first,range.second);
+    real deltax = usewidth/(nvars_+1);
     real x = deltax;
     for (mmit it = range.first; it != range.second; it++, x+=deltax)
     {
       Var v = it->second;
       real my_x = x;
-      real my_y = y;
+      real my_y = y_;
 
       // Display v
       gs.drawBox(my_x-boxwidth/2, my_y-boxheight/2, boxwidth, boxheight);
@@ -650,15 +652,15 @@ void OldDisplayVarGraph(const VarArray& outputs, bool display_values, real boxwi
     {
       Var v = varray[i];
       real x = center(v->varnum,0);
-      real y = center(v->varnum,1);
+      real y_ = center(v->varnum,1);
       if(x<min_x)
         min_x = x;
-      if(y<min_y)
-        min_y = y;
+      if(y_<min_y)
+        min_y = y_;
       if(x>max_x)
         max_x = x;
-      if(y>max_y)
-        max_y = y;
+      if(y_>max_y)
+        max_y = y_;
     }
   min_x -= boxwidth/2;
   max_x += boxwidth/2;
