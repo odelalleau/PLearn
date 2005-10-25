@@ -332,11 +332,11 @@ void VMatrix::printFieldInfo(PStream& out, int fieldnum, bool print_binning) con
         {
             real val = it->first;
             const StatsCollectorCounts& co = it->second;
-            string s = getValString(fieldnum, val);
+            string str = getValString(fieldnum, val);
             ostringstream os;
             os.setf(ios::left);
             os << "  "          << setw(12) << val
-               << "  "          << setw(12) << s
+               << "  "          << setw(12) << str
                << "  n="        << setw(10) << co.n
                << "  nbelow="   << setw(10) << co.nbelow
                << "  sumbelow=" << setw(10) << co.sum
@@ -500,7 +500,7 @@ void VMatrix::saveFieldInfos() const
             PStream out = openFile(filename, PStream::plearn_ascii, "w");
             out << inputsize_ << targetsize_ << weightsize_ << endl;
         }
-        catch (const PLearnError& e) {
+        catch (const PLearnError&) {
             if (sizes_exist)
                 throw;
         }
