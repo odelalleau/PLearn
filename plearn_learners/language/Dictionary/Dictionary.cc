@@ -107,7 +107,7 @@ int Dictionary::getId(string symbol, TVec<string> options)
     {
         if(string_to_int.find(symbol) == string_to_int.end()){
             // word not found, add it
-            index=string_to_int.size();
+            index=int(string_to_int.size());
             string_to_int[symbol] = index;
             int_to_string[index] = symbol;
         }
@@ -138,12 +138,12 @@ int Dictionary::size(TVec<string> options){
         PLERROR("In Dictionary::size(): string mapping should at least contain the OOV_TAG (did you forget to call build()?)");
     // By definition, OOV_TAG is not in the Dictionary (but of course
     // must be in the string mapping...
-    return string_to_int.size()-1;
+    return int(string_to_int.size())-1;
 }
 
 Vec Dictionary::getValues(TVec<string> options)
 { 
-    Vec ret(string_to_int.size());
+    Vec ret((int) string_to_int.size());
     int i=0;
     for(map<string,int>::iterator it = string_to_int.begin(); it != string_to_int.end(); it++)
         ret[i++] = it->second;

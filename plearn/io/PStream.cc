@@ -372,55 +372,55 @@ void PStream::writeAsciiHexNum(unsigned char x)
 void PStream::writeAsciiNum(char x)
 {
     snprintf(tmpbuf, sizeof(tmpbuf), "%d", (int)x);
-    write(tmpbuf, strlen(tmpbuf));
+    write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(unsigned char x)
 {
     snprintf(tmpbuf, sizeof(tmpbuf), "%d", (int)x);
-    write(tmpbuf, strlen(tmpbuf));
+    write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(signed char x)
 {
     snprintf(tmpbuf, sizeof(tmpbuf), "%d", (int)x);
-    write(tmpbuf, strlen(tmpbuf));
+    write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(short x)
 {
     snprintf(tmpbuf, sizeof(tmpbuf), "%hd", x);
-    write(tmpbuf, strlen(tmpbuf));
+    write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(unsigned short x)
 {
     snprintf(tmpbuf, sizeof(tmpbuf), "%hu", x);
-    write(tmpbuf, strlen(tmpbuf));
+    write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(int x)
 {
     snprintf(tmpbuf, sizeof(tmpbuf), "%d", x);
-    write(tmpbuf, strlen(tmpbuf));
+    write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(unsigned int x)
 {
     snprintf(tmpbuf, sizeof(tmpbuf), "%u", x);
-    write(tmpbuf, strlen(tmpbuf));
+    write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(long x)
 {
     snprintf(tmpbuf, sizeof(tmpbuf), "%ld", x);
-    write(tmpbuf, strlen(tmpbuf));
+    write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(unsigned long x)
 {
     snprintf(tmpbuf, sizeof(tmpbuf), "%lu", x);
-    write(tmpbuf, strlen(tmpbuf));
+    write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(float x)
@@ -430,7 +430,7 @@ void PStream::writeAsciiNum(float x)
     else
     {
         snprintf(tmpbuf, sizeof(tmpbuf), "%.8g", x);
-        write(tmpbuf, strlen(tmpbuf));
+        write(tmpbuf, streamsize(strlen(tmpbuf)));
     }
 }
 
@@ -441,7 +441,7 @@ void PStream::writeAsciiNum(double x)
     else
     {
         snprintf(tmpbuf, sizeof(tmpbuf), "%.18g", x);
-        write(tmpbuf, strlen(tmpbuf));
+        write(tmpbuf, streamsize(strlen(tmpbuf)));
     }
 }
 
@@ -1634,13 +1634,13 @@ void binread_(PStream& in, BASETYPE* x,                \
 {                                                      \
   if(typecode==TypeTraits<BASETYPE>::little_endian_typecode()) \
     {                                                  \
-      in.read((char*)x, n*sizeof(BASETYPE));           \
+      in.read((char*)x, streamsize(n*sizeof(BASETYPE)));       \
       if(byte_order()==BIG_ENDIAN_ORDER)               \
         endianswap(x,n);                               \
     }                                                  \
   else if(typecode==TypeTraits<BASETYPE>::big_endian_typecode()) \
     {                                                  \
-      in.read((char*)x, n*sizeof(BASETYPE));           \
+      in.read((char*)x, streamsize(n*sizeof(BASETYPE)));       \
       if(byte_order()==LITTLE_ENDIAN_ORDER)            \
         endianswap(x,n);                               \
     }                                                  \
@@ -1663,14 +1663,14 @@ IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(short)
 { 
     if(typecode==TypeTraits<double>::little_endian_typecode())
     {
-        in.read((char*)x, n*sizeof(double)); 
+        in.read((char*)x, streamsize(n*sizeof(double))); 
 #ifdef BIGENDIAN
         endianswap(x,n); 
 #endif      
     }
     else if(typecode==TypeTraits<double>::big_endian_typecode())
     {
-        in.read((char*)x, n*sizeof(double)); 
+        in.read((char*)x, streamsize(n*sizeof(double))); 
 #ifdef LITTLEENDIAN
         endianswap(x,n); 
 #endif
@@ -1709,14 +1709,14 @@ void binread_(PStream& in, float* x, unsigned int n, unsigned char typecode)
 { 
     if(typecode==TypeTraits<float>::little_endian_typecode())
     {
-        in.read((char*)x, n*sizeof(float)); 
+        in.read((char*)x, streamsize(n*sizeof(float))); 
 #ifdef BIGENDIAN
         endianswap(x,n); 
 #endif      
     }
     else if(typecode==TypeTraits<float>::big_endian_typecode())
     {
-        in.read((char*)x, n*sizeof(float)); 
+        in.read((char*)x, streamsize(n*sizeof(float))); 
 #ifdef LITTLEENDIAN
         endianswap(x,n); 
 #endif

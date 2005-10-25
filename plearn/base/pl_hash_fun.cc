@@ -82,7 +82,7 @@ size_t hashbytes(const char* byte_start, size_t byte_length)
     {
         unsigned char t = (HKey >> 24);
         HKey = (HKey << 8) + byte_start[i];
-        HKey ^= PL_HASH_NOMBRES_MAGIQUES[t];
+        HKey ^= (unsigned int) PL_HASH_NOMBRES_MAGIQUES[t];
     }
     return HKey;
 }
