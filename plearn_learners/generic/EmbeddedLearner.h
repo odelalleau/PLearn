@@ -60,6 +60,7 @@ public:
     //! A string which should be appended to the expdir for the inner learner
     string expdir_append;
 
+    bool forward_test;
     bool provide_learner_expdir;
 
     // ****************
@@ -141,6 +142,14 @@ public:
                                      real probability,
                                      TVec< pair<real,real> >& intervals) const;
   
+    //! The behavior of this method depends on the value of the 'forward_test'
+    //! option. If set to 'true', the call will be forwarded to the underlying
+    //! learner. If set to 'false' (default), simply call inherited::test(..).
+    //! This is to allow forwarding of this method in subclasses of
+    //! EmbeddedLearner that need it, while most of them will not need it.
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
+                      VMat testoutputs=0, VMat testcosts=0) const;
+
     // NOT forwarded by default
     // virtual void computeCostsOnly(const Vec& input, const Vec& target,
     //                               Vec& costs) const;
@@ -151,10 +160,6 @@ public:
     // NOT forwarded by default
     // virtual void useOnTrain(Mat& outputs) const;  
   
-    // NOT forwarded by default
-    // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
-    //                   VMat testoutputs=0, VMat testcosts=0) const;
-
     //! Forwarded to inner learner
     virtual TVec<string> getTestCostNames() const;
 

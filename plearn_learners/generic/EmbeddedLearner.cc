@@ -62,6 +62,7 @@ PLEARN_IMPLEMENT_OBJECT(
 EmbeddedLearner::EmbeddedLearner(string expdir_append_)
     : learner_(0),
       expdir_append(expdir_append_),
+      forward_test(false),
       provide_learner_expdir(true)
 { }
 
@@ -81,6 +82,11 @@ void EmbeddedLearner::declareOptions(OptionList& ol)
                   "A string which should be appended to the expdir for the inner learner;"
                   "default = \"\".");
 
+    // 'forward_test' is set as a 'nosave' option: each subclass should set it
+    // to either 'true' or 'false' depending on its specific needs.
+    declareOption(ol, "forward_test", &EmbeddedLearner::forward_test,
+                  OptionBase::nosave,
+                  "If set to 1, will forward calls to test(..) method to the inner learner.");
  
     inherited::declareOptions(ol);
 }
@@ -170,6 +176,16 @@ void EmbeddedLearner::train()
     assert( learner_ );
     learner_->train();
     stage = learner_->stage;
+}
+
+void EmbeddedLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
+                           VMat testoutputs, VMat testcosts) const;
+{
+    if (forward_test) {
+        assert( learner_ );
+        learner_->test(testset, test_stats, testoutputs, testcosts);
+    } else
+        inherited::test(testset, test_stats, testoutputs, testcosts);
 }
 
 void EmbeddedLearner::computeOutput(const Vec& input, Vec& output) const
