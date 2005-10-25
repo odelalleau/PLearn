@@ -65,6 +65,8 @@ TVec<string> HyperLearner::getTrainCostNames() const
 HyperLearner::HyperLearner()
     : provide_strategy_expdir(true), save_final_learner(true)
 {
+    // Forward the 'test' method to the underlying learner.
+    forward_test = true;
     // The default behavior is to let the PTester decide whether or not
     // to provide the underlying learner with an experiment directory.
     provide_learner_expdir = false;
