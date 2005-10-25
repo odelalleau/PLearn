@@ -575,8 +575,8 @@ void VMatLanguage::compileString(const string & code, TVec<string>& fieldnames)
 {
     vector<string> names;
     compileString(code, names);
-    fieldnames.resize(names.size());
-    for(int i=0; i<(int)names.size(); i++)
+    fieldnames.resize(int(names.size()));
+    for(unsigned int i=0; i< names.size(); i++)
         fieldnames[i] = names[i];
 }
 
@@ -611,8 +611,8 @@ void VMatLanguage::compileStream(PStream & in, vector<string>& fieldnames)
     // the filednames parameter is an output vector in which we put the fieldnames of the final VMat
     fieldnames.clear();
     preprocess(in, defines, processed_sourcecode, fieldnames);
-    outputfieldnames.resize(fieldnames.size());
-    for(int k=0; k<(int)fieldnames.size(); k++)
+    outputfieldnames.resize(int(fieldnames.size()));
+    for(unsigned int k=0; k < fieldnames.size(); k++)
         outputfieldnames[k] = fieldnames[k];
 
     if(output_preproc)
@@ -765,12 +765,12 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
         case 11: // ==
             b = pstack.pop();
             a = pstack.pop();
-            pstack.push( ((float)a==(float)b) ?1 :0);
+            pstack.push(fast_exact_is_equal((float)a, (float)b) ?1 :0);
             break;
         case 12: // !=
             b = pstack.pop();
             a = pstack.pop();
-            pstack.push(((float)a!=(float)b) ?1 :0);
+            pstack.push(!fast_exact_is_equal((float)a, (float)b) ?1 :0);
             break;
         case 13: // >
             b = pstack.pop();
@@ -795,21 +795,23 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
         case 17: // and
             b = pstack.pop();
             a = pstack.pop();
-            pstack.push((a&&b) ?1 :0);
+            pstack.push((!fast_exact_is_equal(a, 0) &&
+                         !fast_exact_is_equal(b, 0)) ?1 :0);
             break;
         case 18: // or
             b = pstack.pop();
             a = pstack.pop();
-            pstack.push((a||b) ?1 :0);
+            pstack.push((!fast_exact_is_equal(a, 0) ||
+                         !fast_exact_is_equal(b, 0)) ?1 :0);
             break;
         case 19: // not
-            pstack.push((pstack.pop()==0) ?1 :0);
+            pstack.push(fast_exact_is_equal(pstack.pop(), 0) ?1 :0);
             break;
         case 20: // ifelse
             c = pstack.pop();
             b = pstack.pop();
             a = pstack.pop();
-            pstack.push((a!=0)?b:c);
+            pstack.push(!fast_exact_is_equal(a, 0)?b:c);
             break;
         case 21: // fabs
             pstack.push(fabs(pstack.pop()));
