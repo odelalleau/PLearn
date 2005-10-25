@@ -121,50 +121,75 @@ void iterate(ObjectGraphIterator grit, ObjectGraphIterator grend)
 }
 
 
+const char* test_objects[] = {
+    "Z(sub_objects = [])",
+
+    "Z(sub_objects = [X(name=\"X1\"),          \n"
+    "                 *1->X(name=\"X2\"),      \n"
+    "                 Y(name=\"Y3\"),          \n"
+    "                 *1,                      \n"
+    "                 *2->Y(name=\"Y5\"),      \n"
+    "                 X(name=\"X6\",           \n"
+    "                   child = X(child = Y(name = \"innerY\"))) \n"
+    "                 *2])"
+};
+
+const int num_tests = sizeof(test_objects) / sizeof(test_objects[0]);
+
+
 int main()
 {
-    string test_objects =
-        "Z(sub_objects = [X(name=\"X1\"),          \n"
-        "                 *1->X(name=\"X2\"),      \n"
-        "                 Y(name=\"Y3\"),          \n"
-        "                 *1,                      \n"
-        "                 *2->Y(name=\"Y5\"),      \n"
-        "                 X(name=\"X6\",           \n"
-        "                   child = X(child = Y(name = \"innerY\"))) \n"
-        "                 *2])";
+    try {
+        for (int i=0 ; i<num_tests ; ++i) {
+            string test_object = test_objects[i];
+            cout << endl
+                 << "- - - - - - - - - - -" << endl
+                 << "Building object structure from:" << endl
+                 << test_object << endl;
 
-    cout << "Building object structure from:" << endl
-         << test_objects << endl;
-
-    PStream strin = openString(test_objects, PStream::plearn_ascii);
-    PP<Object> o;
-    strin >> o;
+            PStream strin = openString(test_object, PStream::plearn_ascii);
+            PP<Object> o;
+            strin >> o;
     
-    pout << endl << "Built structure: " << endl
-         << o << flush;
+            pout << endl << "Built structure: " << endl
+                 << o << flush;
 
-    cout << endl << "Now traversing the graph in breadth-first:" << endl;
-    iterate(ObjectGraphIterator(o, ObjectGraphIterator::BreadthOrder, true),
-            ObjectGraphIterator());
+            cout << endl << "Now traversing the graph in breadth-first:" << endl;
+            iterate(ObjectGraphIterator(o, ObjectGraphIterator::BreadthOrder, true),
+                    ObjectGraphIterator());
 
-    cout << endl << "Traversing only Y objects in depth-first:" << endl;
-    iterate(ObjectGraphIterator(o, ObjectGraphIterator::DepthPreOrder, true, "Y"),
-            ObjectGraphIterator());
+            cout << endl << "Traversing only Y objects in depth-first:" << endl;
+            iterate(ObjectGraphIterator(o, ObjectGraphIterator::DepthPreOrder, true, "Y"),
+                    ObjectGraphIterator());
 
-    cout << endl << "Broadcast a call to X::printName()" << endl;
-    memfun_broadcast(o, &X::printName);
+            cout << endl << "Broadcast a call to X::printName()" << endl;
+            memfun_broadcast(o, &X::printName);
     
-    cout << endl << "Broadcast a call to Y::printName()" << endl;
-    memfun_broadcast(o, &Y::printName);
+            cout << endl << "Broadcast a call to Y::printName()" << endl;
+            memfun_broadcast(o, &Y::printName);
 
-    cout << endl << "Broadcast a breadth-first call to X::method1(\"foo\")" << endl;
-    memfun_broadcast(o, &X::method1, string("foo"), ObjectGraphIterator::BreadthOrder);
+            cout << endl << "Broadcast a breadth-first call to X::method1(\"foo\")" << endl;
+            memfun_broadcast(o, &X::method1, string("foo"), ObjectGraphIterator::BreadthOrder);
 
-    cout << endl << "Broadcast a breadth-first call to X::method1(option_name)" << endl;
-    memfun_broadcast_optname(o, &X::method1, ObjectGraphIterator::BreadthOrder);
+            cout << endl << "Broadcast a breadth-first call to X::method1(option_name)" << endl;
+            memfun_broadcast_optname(o, &X::method1, ObjectGraphIterator::BreadthOrder);
 
-    cout << endl << "Broadcast a breadth-first call to X::method2(\"foo\",42)" << endl;
-    memfun_broadcast(o, &X::method2, string("foo"), 42, ObjectGraphIterator::BreadthOrder);
+            cout << endl << "Broadcast a breadth-first call to X::method2(\"foo\",42)" << endl;
+            memfun_broadcast(o, &X::method2, string("foo"), 42, ObjectGraphIterator::BreadthOrder);
+        }
+    }
+    
+    catch(const PLearnError& e)
+    {
+        cerr << "FATAL ERROR: " << e.message() << endl;
+        return 1;
+    }
+    catch (...) 
+    {
+        cerr << "FATAL ERROR: uncaught unknown exception "
+             << "(ex: out-of-memory when allocating a matrix)" << endl;
+        return 2;
+    }
 
     return 0;
 }
