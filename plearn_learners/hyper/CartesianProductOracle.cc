@@ -48,13 +48,14 @@ CartesianProductOracle::CartesianProductOracle()
 {
 }
 
-PLEARN_IMPLEMENT_OBJECT(CartesianProductOracle, 
-                        "This OptionsOracle generates all combinations of values for a set of options", 
-                        "This 'oracle' traverses a fixed list of option values, obtained from a set"
-                        "of values associated with each option of interest. That list is the cartesian"
-                        "product of those sets, i.e. it is the list of all combinations of values."
-                        "The user specifies the names of each option, and for each of them, a list"
-                        "of the values that should be tried."
+PLEARN_IMPLEMENT_OBJECT(
+    CartesianProductOracle, 
+    "This OptionsOracle generates all combinations of values for a set of options", 
+    "This 'oracle' traverses a fixed list of option values, obtained from a set"
+    "of values associated with each option of interest. That list is the cartesian"
+    "product of those sets, i.e. it is the list of all combinations of values."
+    "The user specifies the names of each option, and for each of them, a list"
+    "of the values that should be tried."
     );
 
 void CartesianProductOracle::declareOptions(OptionList& ol)
@@ -77,7 +78,8 @@ TVec<string>  CartesianProductOracle::getOptionNames() const
     return option_names; 
 }
 
-TVec<string> CartesianProductOracle::generateNextTrial(const TVec<string>& older_trial, real obtained_objective)
+TVec<string> CartesianProductOracle::generateNextTrial(const TVec<string>& older_trial,
+                                                       real obtained_objective)
 {
     if (last_combination)
         return TVec<string>();
@@ -108,6 +110,21 @@ void CartesianProductOracle::forget()
 
 void CartesianProductOracle::build_()
 {
+    // Ensure consistency between option_names and option_values
+    if (option_names.size() != option_values.size())
+        PLERROR("CartesianProductOracle::build_: the 'option_names' and 'option_values'\n"
+                "fields don't have the same length; len(option_names)=%d / len(option_values)=%d",
+                option_names.size(), option_values.size());
+    if (option_names.size() == 0 || option_values.size() == 0)
+        PLWARNING("CartesianProductOracle::build_: either 'option_names' or 'option_values'\n"
+                  "has size zero; is this what you want?");
+
+    // Try to detect zero-length subarrays of options
+    for (int i=0, n=option_values.size() ; i<n ; ++i)
+        if (option_values[i].size() == 0)
+            PLWARNING("CartesianProductOracle::build_: zero option values were specified\n"
+                      "for option '%s'", option_names[i].c_str());
+    
     int n=option_names.length();
     option_values_indices.resize(n);
     forget();
