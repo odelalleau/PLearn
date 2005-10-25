@@ -179,7 +179,6 @@ void AsciiVMatrix::build_()
 
         if (length==-1)  // still looking for size info...
         {
-            string line;
             getNextNonBlankLine(file,line);
             int nfields1 = (int)split(line).size();
             getNextNonBlankLine(file,line);
@@ -200,7 +199,10 @@ void AsciiVMatrix::build_()
                 // file.clear(); // TODO Same question
                 // vmatlength_pos = file.tellp(); // TODO See how to do this with PStreams.
                 file >> a >> b;
-                if (guesslength == int(a)+1 && real(int(a))==a && real(int(b))==b && a>0 && b>0 && int(b)==nfields2) // it's clearly an old .amat
+                if (guesslength == int(a)+1              &&
+                    fast_exact_is_equal(real(int(a)), a) &&
+                    fast_exact_is_equal(real(int(b)), b) &&
+                    a>0 && b>0 && int(b)==nfields2) // it's clearly an old .amat
                 {
                     length = int(a);
                     width = int(b);
@@ -239,7 +241,6 @@ void AsciiVMatrix::build_()
         // file.clear();
         if (could_be_old_amat && rewrite_length)
         {
-            string line;
             file.getline(line);
         }
         pos_rows.clear();
@@ -247,7 +248,6 @@ void AsciiVMatrix::build_()
         {
             file >> ws;
             // if (file.peek()!='#' && file.peek()!=EOF) pos_rows.push_back(file.tellg()); // TODO See how to do this with PStreams.
-            string line;
             file.getline(line);
         }
         // file.clear(); // TODO See how to do this with PStreams.
