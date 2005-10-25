@@ -230,7 +230,7 @@ void KernelProjection::computeOutput(const Vec& input, Vec& output) const
     } else if (normalize == "unit_coord") {
         output << result;
         real norm = PLearn::norm(output,2);
-        if (norm != 0)
+        if (!fast_exact_is_equal(norm, 0))
             output /= norm;
     } else {
         PLERROR("In KernelProjection::computeOutput - Wrong value for 'normalize')");

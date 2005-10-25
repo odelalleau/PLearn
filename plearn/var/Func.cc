@@ -85,7 +85,7 @@ VarArray Func::operator()(const VarArray& new_inputs) const
 
 Func operator/(Func f, real value)
 { 
-    if(value==1.0)
+    if(fast_exact_is_equal(value, 1.0))
         return f;
     else
     {
@@ -626,7 +626,7 @@ void Function::verifyrfprop(const Vec& in, real step)
     {
         b = fbbRgradient[i];
         r = rfpropRgradient[i];
-        if (b==0 && r==0)
+        if (fast_exact_is_equal(b, 0) && fast_exact_is_equal(r, 0))
             rel[i] = 0.0;
         else rel[i] = fabs(b-r)/(fabs(b)+fabs(r));
     }    

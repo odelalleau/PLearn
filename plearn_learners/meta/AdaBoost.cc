@@ -328,7 +328,7 @@ void AdaBoost::train()
                     }
                     else
                     {
-                        if (y_i==1)
+                        if (fast_exact_is_equal(y_i, 1))
                         {
                             if (f_i<output_threshold)
                             {
@@ -355,7 +355,7 @@ void AdaBoost::train()
             cout << "weak learner at stage " << stage << " has average loss = " << learners_error[stage] << endl;
 
         // stopping criterion (in addition to n_stages)
-        if (early_stopping && (learners_error[stage] == 0 || learners_error[stage] > target_error - 0.01))
+        if (early_stopping && (fast_exact_is_equal(learners_error[stage], 0) || learners_error[stage] > target_error - 0.01))
         {
             nstages = stage;
             cout << "AdaBoost::train early stopping because learner's loss at stage " << stage << " is " << learners_error[stage] << endl;
@@ -541,10 +541,10 @@ void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
     if (target.size() > 1)
         PLERROR("AdaBoost::computeCostsFromOutputs: target must contain "
                 "one element only: the 0/1 class");
-    if (target[0] == 0) {
+    if (fast_exact_is_equal(target[0], 0)) {
         costs[0] = output[0] >= output_threshold; 
     }
-    else if (target[0] == 1) {
+    else if (fast_exact_is_equal(target[0], 1)) {
         costs[0] = output[0] < output_threshold; 
     }
     else PLERROR("AdaBoost::computeCostsFromOutputs: target must be "

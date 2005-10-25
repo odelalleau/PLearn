@@ -101,7 +101,7 @@ void RemapLastColumnVMatrix::getNewRow(int i, const Vec& samplevec) const
     {
         underlying_distr->getRow(i,samplevec);
         real& lastelem = samplevec.lastElement();
-        if(lastelem==if_equals_val)
+        if(fast_exact_is_equal(lastelem, if_equals_val))
             lastelem = then_val;
         else
             lastelem = else_val;
@@ -115,7 +115,7 @@ void RemapLastColumnVMatrix::getNewRow(int i, const Vec& samplevec) const
         int k;
         for(k=0; k<mapping.length(); k++)
         {
-            if(mapping(k,0)==val)
+            if(fast_exact_is_equal(mapping(k,0), val))
             {
                 samplevec.subVec(underlying_width-1,replacement_width) << mapping(k).subVec(1,replacement_width);
                 break;

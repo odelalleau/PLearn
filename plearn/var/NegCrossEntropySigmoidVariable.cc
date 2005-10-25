@@ -95,18 +95,18 @@ void NegCrossEntropySigmoidVariable::fprop()
     {
         real output = sigmoid(input1->valuedata[i]);
         real target = input2->valuedata[i];
-        if (output == 0.0) {
-            if (target == 1.0) {
+        if (fast_exact_is_equal(output,0.0)) {
+            if (fast_exact_is_equal(target, 1.0)) {
                 PLWARNING("NegCrossEntropySigmoidVariable::fprop: model output is 0 and target is 1, cost should be infinite !");
                 cost += -1e9;
             } // If target == 0.0 do nothing, cost is 0.
-        } else if (output == 1.0) {
-            if (target == 0.0) {
+        } else if (fast_exact_is_equal(output, 1.0)) {
+            if (fast_exact_is_equal(target, 0.0)) {
                 PLWARNING("NegCrossEntropySigmoidVariable::fprop: model output is 1 and target is 0, cost should be infinite !");
                 cost += -1e9;
             } // If target == 1.0 do nothing, cost is 0.
         } else {
-            if (!regularizer) {
+            if (fast_exact_is_equal(regularizer, 0)) {
                 // Standard cross entropy.
                 cost += target*log(output) + (1.0-target)*log(1.0-output);
             } else {
@@ -129,14 +129,14 @@ void NegCrossEntropySigmoidVariable::bprop()
     {
         real output = sigmoid(input1->valuedata[i]);
         real target = input2->valuedata[i];
-        if (!regularizer) {
+        if (fast_exact_is_equal(regularizer, 0)) {
             // Standard cross entropy.
             input1->gradientdata[i] += gr*(output - target);
         } else {
             // Regularized cross entropy.
-            if (target == 0.0) {
+            if (fast_exact_is_equal(target, 0.0)) {
                 input1->gradientdata[i] += gr*((1-regularizer) * output - regularizer * (1-output));
-            } else if (target == 1.0) {
+            } else if (fast_exact_is_equal(target, 1.0)) {
                 input1->gradientdata[i] += gr*(regularizer * output - (1-regularizer) * (1-output));
             } else {
                 PLERROR("NegCrossEntropySigmoidVariable::bprop: target is neither 0 nor 1");

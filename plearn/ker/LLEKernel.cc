@@ -114,7 +114,7 @@ void LLEKernel::build_()
 {
     // Let's make sure the value of 'reconstruct_coeff' is not set accidentally
     // to an unusual value.
-    if (reconstruct_coeff == 0) {
+    if (fast_exact_is_equal(reconstruct_coeff, 0)) {
         PLWARNING("In LLEKernel::build_ - 'reconstruct_coeff' is set to 0, you won't be able to apply this kernel out-of-sample");
     } else if (reconstruct_coeff > 0) {
         PLWARNING("In LLEKernel::build_ - 'reconstruct_coeff' is > 0, this may give weird results out-of-sample for small coefficients");
@@ -138,7 +138,7 @@ void LLEKernel::build_()
 ///////////////////////
 void LLEKernel::computeGramMatrix(Mat K) const {
     reconstruct_ker->computeLLEMatrix(K);
-    if (reconstruct_coeff != 0) {
+    if (!fast_exact_is_equal(reconstruct_coeff, 0)) {
         for (int i = 0; i < n_examples; i++) {
             K(i, i) += fabs(reconstruct_coeff);
         }
@@ -206,7 +206,7 @@ real LLEKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const 
 // evaluate_i_x_again //
 ////////////////////////
 real LLEKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) const {
-    if (reconstruct_coeff == 0) {
+    if (fast_exact_is_equal(reconstruct_coeff, 0)) {
         // This kernel should only be evaluated on training points.
         if (first_time) {
             x_is_training_point = isInData(x, &x_index);

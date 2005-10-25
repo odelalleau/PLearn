@@ -151,7 +151,7 @@ void RankLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
             desired_rank = left + (val - sorted_targets[left]) / frac;
     }
     learner_target[0] = desired_rank;
-    if (last_output[0] != output[0])
+    if (!fast_exact_is_equal(last_output[0], output[0]))
         // This case is not handled yet.
         PLERROR("In RankLearner::computeCostsFromOutputs - Currently, one can only use computeCostsFromOutputs() "
                 "after calling computeOutput.");

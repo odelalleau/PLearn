@@ -267,7 +267,7 @@ void Gnuplot::plotClasses(const Mat& m)
       real x = s(i,0);
       real y = s(i,1);
       real c = s(i,2);
-      if(c!=oldc)
+      if(!fast_exact_is_equal(c, oldc))
         {
           if(i>0)
             {
@@ -422,7 +422,8 @@ void Gnuplot::plotdensity(Vec feature, const string& title, int halfwindowsize, 
     int highi = std::min(i+halfwindowsize,v.length()-2);
     real lowx = 0.5*(v[lowi-1]+v[lowi]);
     real highx = 0.5*(v[highi+1]+v[highi]);
-    if (highx == lowx) PLERROR("In Gnuplot::plotdensity(...), density at this point is inf, use larger windowsize");
+    if (fast_exact_is_equal(highx, lowx))
+      PLERROR("In Gnuplot::plotdensity(...), density at this point is inf, use larger windowsize");
     real density = (highi-lowi+1)/(highx-lowx);
     out << x << ' ' << density << "\n";
   }

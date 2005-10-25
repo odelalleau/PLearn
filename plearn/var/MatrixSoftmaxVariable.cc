@@ -77,7 +77,7 @@ void MatrixSoftmaxVariable::fprop()
         real curmax = column_max[j];
         for(int i=0; i<input->length(); i++)      
             s += (matValue[i][j] = safeexp(input->matValue[i][j]-curmax));
-        if (s == 0) PLERROR("trying to divide by 0 in softmax");
+        if (fast_exact_is_equal(s, 0)) PLERROR("trying to divide by 0 in softmax");
         s = 1.0 / s;
         for(int i=0; i<input->length(); i++)
             matValue[i][j] *= s;

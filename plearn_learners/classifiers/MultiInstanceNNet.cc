@@ -315,14 +315,17 @@ void MultiInstanceNNet::build_()
 
         // create penalties
         penalties.resize(0);  // prevents penalties from being added twice by consecutive builds
-        if(w1 && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
+        if(w1 && (!fast_exact_is_equal(layer1_weight_decay + weight_decay,0) ||
+                  !fast_exact_is_equal(layer1_bias_decay + bias_decay,    0)))
             penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), penalty_type));
-        if(w2 && ((layer2_weight_decay + weight_decay)!=0 || (layer2_bias_decay + bias_decay)!=0))
+        if(w2 && (!fast_exact_is_equal(layer2_weight_decay + weight_decay,0) ||
+                  !fast_exact_is_equal(layer2_bias_decay + bias_decay,    0)))
             penalties.append(affine_transform_weight_penalty(w2, (layer2_weight_decay + weight_decay), (layer2_bias_decay + bias_decay), penalty_type));
-        if(wout && ((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
+        if(wout && (!fast_exact_is_equal(output_layer_weight_decay + weight_decay, 0) ||
+                    !fast_exact_is_equal(output_layer_bias_decay + bias_decay, 0)))
             penalties.append(affine_transform_weight_penalty(wout, (output_layer_weight_decay + weight_decay), 
                                                              (output_layer_bias_decay + bias_decay), penalty_type));
-        if(wdirect && (direct_in_to_out_weight_decay + weight_decay) != 0)
+        if(wdirect && !fast_exact_is_equal(direct_in_to_out_weight_decay + weight_decay, 0))
         {
             if (penalty_type=="L1_square")
                 penalties.append(square(sumabs(wdirect))*(direct_in_to_out_weight_decay + weight_decay));

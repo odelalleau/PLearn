@@ -129,7 +129,8 @@ void RankedVMatrix::build_()
                 else if (ref_index == sorted_targets.length())
                     // There is no target higher or equal.
                     the_index = sorted_targets.length() - 1;
-                else if (sorted_targets(i,0) == ref_sorted_targets(ref_index, 0))
+                else if (fast_exact_is_equal(sorted_targets(i,0),
+                                             ref_sorted_targets(ref_index, 0)))
                     // We have an exact match.
                     the_index = ref_index;
                 else {
