@@ -108,8 +108,9 @@ void SoftHistogramBinner::build_()
     // ### You should assume that the parent class' build_() has already been called.
   
     // Check validity of the 'samples_per_bin' option.
-    if (samples_per_bin != -1 && !(samples_per_bin >= 0 && samples_per_bin < 1)
-        && !(samples_per_bin >= 1 && fabs(samples_per_bin - int(samples_per_bin)) < 1e-8))
+    if (!is_equal(samples_per_bin, -1)                 &&
+        !(samples_per_bin >= 0 && samples_per_bin < 1) &&
+        !(samples_per_bin >= 1 && fabs(samples_per_bin - int(samples_per_bin)) < 1e-8))
         PLERROR("In SoftHistogramBinner::build_ - Invalid value for 'samples_per_bin'");
 }
 
@@ -119,12 +120,12 @@ void SoftHistogramBinner::build_()
 TVec< TVec<int> > SoftHistogramBinner::getBins(const Vec& v) const {
     // Find out how many samples we have in each bin.
     int n;
-    if (samples_per_bin == -1)
+    if (is_equal(samples_per_bin, -1))
         n = v.length();
     else if (samples_per_bin < 1)
         n = int(samples_per_bin * v.length());
     else
-        n = int(samples_per_bin);
+        n = int(round(samples_per_bin));
     if (n == 0)
         PLERROR("In SoftHistogramBinner::getBins - You can't ask for empty bins");
     // Sort the data to make things easier.
@@ -134,11 +135,11 @@ TVec< TVec<int> > SoftHistogramBinner::getBins(const Vec& v) const {
     sortRows(w);
     // Construct bins.
     TVec< TVec<int> > bins(n_bins);
-    real min = w(0,0);
-    real max = w(w.length() - 1, 0);
-    real bin_width = (max - min) / real(n_bins);
+    real min_w = w(0,0);
+    real max_w = w(w.length() - 1, 0);
+    real bin_width = (max_w - min_w) / real(n_bins);
     for (int i = 0; i < n_bins; i++) {
-        real bin_left = min + i * bin_width;
+        real bin_left = min_w + i * bin_width;
         real bin_right = bin_left + bin_width;
         real bin_mid = (bin_left + bin_right) / 2;  // Center of the bin.
         // Find data point closest to bin_mid.
