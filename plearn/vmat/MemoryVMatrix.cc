@@ -101,7 +101,7 @@ void MemoryVMatrix::declareOptions(OptionList& ol)
     declareOption(
         ol, "fieldnames", &MemoryVMatrix::fieldnames,
         OptionBase::buildoption,
-        "If provided, will be used to set this vmatrix's fieldnames. " );
+        "If provided, will be used to set this VMatrix's fieldnames." );
  
     inherited::declareOptions(ol);
 }
@@ -112,9 +112,10 @@ void MemoryVMatrix::declareOptions(OptionList& ol)
 void MemoryVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(memory_data, copies);
-    deepCopyField(data, copies);
-    deepCopyField(data_vm, copies);
+    deepCopyField(memory_data,  copies);
+    deepCopyField(fieldnames,   copies);
+    deepCopyField(data,         copies);
+    deepCopyField(data_vm,      copies);
 }
 
 ////////////
