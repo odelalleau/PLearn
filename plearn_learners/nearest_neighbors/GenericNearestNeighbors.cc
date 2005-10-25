@@ -136,11 +136,14 @@ void GenericNearestNeighbors::declareOptions(OptionList& ol)
         "(as the row number, zero-based, in the training set.)\n"
         "(Default = false)");
   
-    declareOption(ol, "distance_kernel", &GenericNearestNeighbors::distance_kernel,
-                  OptionBase::buildoption,
-                  "An optional alternative to the Euclidean distance (DistanceKernel with n=2 and pow_distance=1).\n"
-                  "It should be a 'distance-like' kernel rather than a 'dot-product-like' kernel, i.e. small\n"
-                  "when the arguments are similar, and it should always be non-negative, and 0 only if arguments are equal.\n");
+    declareOption(
+        ol, "distance_kernel", &GenericNearestNeighbors::distance_kernel,
+        OptionBase::buildoption,
+        "An optional alternative to the Euclidean distance (DistanceKernel with\n"
+        "n=2 and pow_distance=1).  It should be a 'distance-like' kernel rather\n"
+        "than a 'dot-product-like' kernel, i.e. small when the arguments are\n"
+        "similar, and it should always be non-negative, and 0 only if arguments\n"
+        "are equal.\n");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);

@@ -122,7 +122,13 @@ public:
     //! (as the row number, zero-based, in the training set.)
     bool copy_index;
   
-    //! An optional alternative to the Euclidean distance
+    /**
+     *  An optional alternative to the Euclidean distance (DistanceKernel with
+     *  n=2 and pow_distance=1).  It should be a 'distance-like' kernel rather
+     *  than a 'dot-product-like' kernel, i.e. small when the arguments are
+     *  similar, and it should always be non-negative, and 0 only if arguments
+     *  are equal.
+     */
     Ker distance_kernel;
 
 public:
