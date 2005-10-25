@@ -76,7 +76,7 @@ LiftStatsCollector::LiftStatsCollector()
 //////////////////
 PLEARN_IMPLEMENT_OBJECT(
     LiftStatsCollector,
-    "Used to evaluate the performance of a binary classifier.",
+    "(DEPRECATED) Used to evaluate the performance of a binary classifier.",
     "The following statistics can be requested out of getStat():\n"
     "- LIFT = % of positive examples in the first n samples, divided by the % of positive examples in the whole database\n"
     "- LIFT_MAX = best performance that could be achieved, if all positive examples were selected in the first n samples\n"
@@ -161,6 +161,9 @@ void LiftStatsCollector::build()
 ////////////
 void LiftStatsCollector::build_()
 {
+    PLDEPRECATED("The 'LiftStatsCollector class is now deprecated: one should "
+                 "instead use a standard 'VecStatsCollector', that is now able"
+                 " to compute lift statistics");
     if (output_column != "") {
         int i = this->getFieldNum(output_column);
         if (i >= 0) {
