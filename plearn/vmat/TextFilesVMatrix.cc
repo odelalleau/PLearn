@@ -136,7 +136,11 @@ void TextFilesVMatrix::buildIdx()
         // read the data rows and build the index
         for(;;)
         {
-            int pos = ftell(f);
+            long pos_long = ftell(f);
+            if (pos_long > INT_MAX)
+                PLERROR("In TextFilesVMatrix::buildIdx - 'pos_long' cannot be "
+                        "more than %d", INT_MAX);
+            int pos = int(pos_long);
             if(!fgets(buf, sizeof(buf), f))
                 break;
             buf[sizeof(buf)-1] = '\0';         // ensure null-terminated
@@ -419,7 +423,7 @@ real TextFilesVMatrix::getMapping(int fieldnum, const string& strval) const
         PLERROR("No mapping found for field %d (%s) string-value \"%s\" ", fieldnum, fieldspec[fieldnum].first.c_str(), strval.c_str());
 
     // OK, let's extend the mapping...
-    real val = real(-1000-int(m.size()));
+    real val = real(-1000 - int(m.size()));
     m[strval] = val;
 
     if(!mapfiles[fieldnum])
