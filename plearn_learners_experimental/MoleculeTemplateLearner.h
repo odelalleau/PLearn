@@ -115,6 +115,7 @@ public:
   real lrate2 ; 
 
   bool training_mode ; 
+  bool builded ; 
 
   // Build options related to the optimization:
   PP<Optimizer> optimizer; // the optimizer to use (no default)

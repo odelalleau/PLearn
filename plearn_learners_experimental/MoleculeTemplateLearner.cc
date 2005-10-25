@@ -78,7 +78,8 @@ namespace PLearn {
         batch_size(1),
         scaling_factor(1),
         lrate2(1),
-	    training_mode(true)
+	    training_mode(true),
+	      builded(false)
             /* ### Initialize all fields to their default value here */
     {
         // load the molecules in a vector
@@ -141,7 +142,9 @@ namespace PLearn {
     
     void MoleculeTemplateLearner::build_()
     {
-        if (train_set || !training_mode){
+      if ((train_set || !training_mode) && !builded){
+
+      builded = true ; 
 
 			n_templates = n_active_templates + n_inactive_templates ; 
 
