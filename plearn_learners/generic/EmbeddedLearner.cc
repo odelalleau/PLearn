@@ -179,7 +179,7 @@ void EmbeddedLearner::train()
 }
 
 void EmbeddedLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
-                           VMat testoutputs, VMat testcosts) const;
+                           VMat testoutputs, VMat testcosts) const
 {
     if (forward_test) {
         assert( learner_ );
