@@ -144,7 +144,7 @@ void Calendar::build_()
     bool disordered = false;
     for (int i=1; i<timestamps_.length(); i++)
     {
-        if (timestamps_[i] == timestamps_[i-1])
+        if (fast_exact_is_equal(timestamps_[i], timestamps_[i-1]))
         {
             doublons = true;
             if (disordered) break;
@@ -185,7 +185,7 @@ CTime Calendar::getCalendarTime(JTime julian_time, bool use_lower_bound) const
     if (timestamps_.isEmpty())
         PLERROR("In Calendar::getCalendarTime(), this calendar is empty.");
     if (last_calendar_time_ == -1 ||
-        last_julian_time_ != julian_time ||
+        !fast_exact_is_equal(last_julian_time_, julian_time) ||
         last_use_lower_bound != use_lower_bound) // *** that one could be made more efficient
     {
         JTimeVec::iterator result;
@@ -218,7 +218,7 @@ CTime Calendar::convertCalendarTime(const Calendar& source_calendar,
 bool Calendar::containsTime(JTime julian_time, CTime *calendar_time) const
 {
     CTime found = getCalendarTime(julian_time);
-    if (timestamps_[found] == julian_time)
+    if (fast_exact_is_equal(timestamps_[found], julian_time))
     {
         if (calendar_time)
             *calendar_time = found;
@@ -268,7 +268,7 @@ PCalendar Calendar::unite(const TVec<PCalendar>& raw_calendars)
                       (*it)->timestamps_.begin(),  (*it)->timestamps_.end(),
                       inserter(timestamps, timestamps.begin()));
         }
-        united->timestamps_.resize(timestamps.size());
+        united->timestamps_.resize(int(timestamps.size()));
         copy(timestamps.begin(), timestamps.end(), united->timestamps_.begin());
     }
 
@@ -305,7 +305,7 @@ PCalendar Calendar::intersect(const TVec<PCalendar>& raw_calendars)
                                           intersection.begin());
             }
             intersected->timestamps_ =
-                intersection.subVec(0,curend-intersection.begin()).copy();
+                intersection.subVec(0, int(curend-intersection.begin())).copy();
         }
     }
 
@@ -320,7 +320,7 @@ PCalendar Calendar::calendarDiff(const Calendar* cal, const JTimeVec& to_remove)
     for (int i=0, n=to_remove.size() ; i<n ; ++i)
         cal_times.erase(to_remove[i]);
 
-    JTimeVec new_timestamps(cal_times.size());
+    JTimeVec new_timestamps(int(cal_times.size()));
     copy(cal_times.begin(), cal_times.end(), new_timestamps.begin());
     return new Calendar(new_timestamps);
 }
