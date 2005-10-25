@@ -265,6 +265,11 @@ public:
     {
         return PyFloat_FromDouble(x);
     }
+
+    static PyObject* newPyObject(const char* x)
+    {
+        return PyString_FromString(x);
+    }
     
     static PyObject* newPyObject(const string& x)
     {
@@ -289,6 +294,15 @@ public:
     template <class T, class U>
     static PyObject* newPyObject(const std::map<T,U>&);
 
+    //! For a general PythonObjectWrapper: we simply increment the refcount
+    //! to the underlying Python object, no matter whether we own it or not.
+    static PyObject* newPyObject(const PythonObjectWrapper& pow)
+    {
+        Py_XINCREF(pow.m_object);
+        return pow.m_object;
+    }
+    
+    
     /**
      *  This function is called by PythonCodeSnippet to carry out
      *  initializations related to libnumarray.
