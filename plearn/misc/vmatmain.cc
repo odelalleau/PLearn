@@ -231,7 +231,7 @@ void interactiveDisplayCDF(const Array<VMat>& vmats)
         // pout << "RANGES: " << endl;
         // pout << ranges[varnum];
 
-        if(low == -FLT_MAX)
+        if(is_equal(low,-FLT_MAX))
             gp << "set xrange [*:*]" << endl;      
         else
             gp << "set xrange [" << low << ":" << high << "]" << endl;
@@ -259,7 +259,7 @@ void displayBasicStats(VMat vm)
     fieldlen++;
   
     cout << std::left << setw(6)  << "# "
-         << setw(fieldlen) << " fieldname " << std::right
+         << setw(int(fieldlen)) << " fieldname " << std::right
          << setw(15) << " mean "
          << setw(15) << " stddev "
          << setw(15) << " min "
@@ -270,7 +270,7 @@ void displayBasicStats(VMat vm)
     for(int k=0; k<nfields; k++)
     {
         cout << std::left << setw(6)  << k << " " 
-             << setw(fieldlen) << vm->fieldName(k) << " " << std::right
+             << setw(int(fieldlen)) << vm->fieldName(k) << " " << std::right
              << setw(15) << stats[k].mean() << " " 
              << setw(15) << stats[k].stddev() << " "
              << setw(15) << stats[k].min() << " " 
@@ -595,7 +595,9 @@ void viewVMat(const VMat& vm)
               
                     if(hide_sameval == 2 && i>starti && (is_equal(val,oldv[j])) )
                         mvprintw(y, x, valstrformat, "...");                
-                    else if(hide_sameval == 1 && i>starti &&  (val==oldv[j] || is_missing(val)&&is_missing(oldv[j])))
+                    else if(fast_exact_is_equal(hide_sameval, 1) && i>starti &&
+                            (fast_exact_is_equal(val, oldv[j]) ||
+                             is_missing(val) && is_missing(oldv[j])))
                         mvprintw(y, x, valstrformat, "...");                
                     else
                         mvprintw(y, x, valstrformat, s.substr(0,valstrwidth).c_str());
@@ -824,7 +826,8 @@ void viewVMat(const VMat& vm)
                 clrtoeol();
                 refresh();
                 ++curi; // start searching from next row
-                while(curi<vm_showed->length() && cached[curi]!=searchval)
+                while(curi<vm_showed->length() &&
+                      !fast_exact_is_equal(cached[curi], searchval))
                     ++curi;
                 if(curi>=vm_showed->length())
                     curi = 0;
@@ -1763,8 +1766,8 @@ int vmatmain(int argc, char** argv)
         for(int i=0;i<bins.size();i++)
         {
             int b=bins[i];
-            PPath name = vm->getMetaDataDir() / "bins"+tostring(b)+".def";
-            PStream bfile = openFile(name, PStream::raw_ascii, "w");
+            PPath f_name = vm->getMetaDataDir() / "bins"+tostring(b)+".def";
+            PStream bfile = openFile(f_name, PStream::raw_ascii, "w");
             RealMapping rm;
             for(int j=0;j<sc.size();j++)
             {
@@ -1908,7 +1911,7 @@ int vmatmain(int argc, char** argv)
             for(int i=0;i<vm.length();i++)
             {
                 vpl.run(i,answer);
-                if(answer[0]) {
+                if(!fast_exact_is_equal(answer[0], 0)) {
                     vm->getRow(i, tmp);
                     pout<<tmp<<endl;
                 }
