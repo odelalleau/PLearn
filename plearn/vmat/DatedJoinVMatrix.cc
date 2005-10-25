@@ -419,9 +419,9 @@ void DatedJoinVMatrix::build_()
 
             // get the list of matching slave rows
             Maptype::const_iterator it,low,upp; 
-            pair<Maptype::const_iterator,Maptype::const_iterator> matches=mp.equal_range(key);
-            low=matches.first;
-            upp=matches.second;
+            pair<Maptype::const_iterator,Maptype::const_iterator> matches_it=mp.equal_range(key);
+            low=matches_it.first;
+            upp=matches_it.second;
             if (low!=mp.end())
             {
                 PDate master_date;
