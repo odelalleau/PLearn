@@ -75,7 +75,6 @@ protected:
   VarArray S_after_scaling ; 
   VarArray params ; 
   VarArray penalties;
-  Var w_lp ; 
   Var V , W , V_b , W_b, V_direct ; 
   Var hl ;
   Var y ; // the output 
@@ -94,7 +93,6 @@ protected:
   Func f_output ;     
   Func output_target_to_costs ;
   Func test_costf ;
-  TVec<VarArray> W_lp ;   
 
   vector<PMolecule> Molecules ; 
 //  PMolecule  molecule ; 

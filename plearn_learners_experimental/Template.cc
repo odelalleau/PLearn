@@ -32,7 +32,6 @@ void Template::build()
 void Template::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
   deepCopyField(dev, copies);
   
 }

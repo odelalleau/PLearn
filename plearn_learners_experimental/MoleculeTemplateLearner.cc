@@ -413,20 +413,8 @@ namespace PLearn {
         // ### shallow-copied.
         // ### ex:
         // deepCopyField(trainvec, copies);
-          varDeepCopyField(w_lp , copies) ;
-          varDeepCopyField(V , copies) ;
-          varDeepCopyField(W , copies) ;
-          varDeepCopyField(V_b , copies) ;
-          varDeepCopyField(W_b , copies) ;
-          varDeepCopyField(V_direct , copies) ;
-          varDeepCopyField(hl , copies) ;
-          varDeepCopyField(y , copies) ;
-          varDeepCopyField(y_before_transfer , copies) ;
-          varDeepCopyField(training_cost , copies) ;
-          varDeepCopyField(test_costs , copies) ;
-          varDeepCopyField(target , copies) ;
-          varDeepCopyField(temp_S , copies) ;
-            
+  
+          varDeepCopyField(input_index,copies) ; 
           deepCopyField(mu , copies) ; 
           deepCopyField(sigma , copies) ; 
           deepCopyField(mu_S , copies) ; 
@@ -434,23 +422,35 @@ namespace PLearn {
           deepCopyField(sigma_square_S , copies) ; 
           deepCopyField(sigma_square , copies) ; 
           deepCopyField(S , copies) ; 
-          deepCopyField(S_after_scaling , copies) ; 
+          deepCopyField(S_after_scaling, copies) ; 
           deepCopyField(params , copies) ; 
+          deepCopyField(penalties , copies) ; 
+          
+          varDeepCopyField(V,copies) ; 
+          varDeepCopyField(W,copies) ; 
+          varDeepCopyField(V_b,copies) ; 
+          varDeepCopyField(W_b,copies) ; 
+          varDeepCopyField(V_direct,copies) ; 
+          varDeepCopyField(hl,copies) ; 
+          varDeepCopyField(y,copies) ; 
+          varDeepCopyField(y_before_transfer,copies) ; 
+          varDeepCopyField(training_cost,copies) ; 
+          varDeepCopyField(test_costs,copies) ; 
+          varDeepCopyField(target,copies) ; 
+          varDeepCopyField(temp_S,copies) ; 
+          
           deepCopyField(costs , copies) ; 
           deepCopyField(temp_output , copies) ; 
           deepCopyField(S_std , copies) ; 
+          deepCopyField(sigma_s_vec , copies) ; 
           deepCopyField(f_output , copies) ; 
           deepCopyField(output_target_to_costs , copies) ; 
           deepCopyField(test_costf , copies) ; 
-          deepCopyField(W_lp , copies) ; 
           deepCopyField(optimizer , copies) ; 
           deepCopyField(templates , copies) ; 
-          deepCopyField(penalties , copies) ; 
+          deepCopyField(paramsvalues , copies) ; 
           
     
-
-        // ### Remove this line when you have fully implemented this method.
-//        PLERROR("MoleculeTemplateLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
     }
 
 
@@ -636,7 +636,6 @@ namespace PLearn {
 
         output_target_to_costs->recomputeParents();
         test_costf->recomputeParents();
-        training_mode = false ; 
 
 //		molecule = NULL ; 
 
