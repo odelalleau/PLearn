@@ -260,6 +260,11 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
             learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
         proppath.clearGradient();
         cost->gradient[0] = -learning_rate;
+
+        static bool display_var_graph_before_fbprop=false;
+        if (display_var_graph_before_fbprop)
+            displayVarGraph(proppath, true, 333);
+
         proppath.fbprop(); 
 #ifdef BOUNDCHECK
         int np = params.size();
