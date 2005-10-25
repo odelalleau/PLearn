@@ -143,8 +143,10 @@ const ObjectOptionsIterator& ObjectOptionsIterator::operator++()
         m_invalid = (m_cur_option >= n);
 
         // Condition below: keep incrementing as long as we are hitting a null
-        // object (and skipping nulls is requested)
-    } while (!m_invalid && m_skip_nulls && !**this);
+        // object (and skipping nulls is requested), or an empty array/vector
+    } while (!m_invalid &&
+             ( (!m_max_index && m_skip_nulls && !**this) ||
+               ( m_max_index && m_cur_index >= m_max_index ) ));
 
     return *this;
 }

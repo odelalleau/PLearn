@@ -107,15 +107,20 @@ inline bool isConvertibleToObjectPtr(const TVec< PP<T> >& x)
 //#####  indexableObjectSize  #################################################
 
 /**
- * @function indexableObjectSize
+ *  @function indexableObjectSize
  *
- * @brief Return 0 if the object is not indexable; otherwise, return one more
- * than the maximum index allowed by \c toIndexedObjectPtr(); in other words,
- * return the equivalent of the \c size() accessor on a vector.
+ *  @brief Return 0 if the object is not indexable; otherwise, return one more
+ *  than the maximum index allowed by \c toIndexedObjectPtr(); in other words,
+ *  return the equivalent of the \c size() accessor on a vector.
  *
- * Note that, for performance, the function \c isConvertibleToObjectPtr() is
- * not called again; it is assumed that the user _knows_ that the object is
- * accessible.
+ *  @note  Minor hack: if the object is indexable and its size() is zero,
+ *  we cannot return zero since this would mean the object is not indexable.
+ *  In this case, we return -1.  I know, this is not the most elegant thing
+ *  in the world...
+ *
+ *  Note that, for performance, the function \c isConvertibleToObjectPtr() is
+ *  not called again; it is assumed that the user _knows_ that the object is
+ *  accessible.
  */
 template <class T>
 inline int indexableObjectSize(const T& x)
@@ -126,13 +131,13 @@ inline int indexableObjectSize(const T& x)
 template <class T>
 inline int indexableObjectSize(const Array<T>& x)
 {
-    return x.size();
+    return (x.size() > 0? x.size() : -1);
 }
 
 template <class T>
 inline int indexableObjectSize(const TVec<T>& x)
 {
-    return x.size();
+    return (x.size() > 0? x.size() : -1);
 }
 
 
