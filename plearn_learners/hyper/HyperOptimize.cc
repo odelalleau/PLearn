@@ -284,6 +284,11 @@ Vec HyperOptimize::optimize()
         ++trialnum;
     }
 
+    // Detect the case where no trials at all were performed!
+    if (trialnum == 0)
+        PLWARNING("In HyperOptimize::optimize - No trials at all were completed;\n"
+                  "perhaps the oracle settings are wrong?");
+    
     // revert to best_learner
     hlearner->setLearner(best_learner);
 
