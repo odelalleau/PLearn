@@ -331,7 +331,10 @@ pymakeOption( name = 'g++3',
 
 pymakeOption( name = 'icc',   # For C++, it is actually icpc
               description = 'compiling with Intel Compiler (version 8.0), with no MPI support',
-              compiler = 'icpc -w1 -wd981 -wd383 -wd869 -wd444 -wd810 -wd1418 -wd654 -wd279',
+              # Disable some warnings:
+              # remark #1683: explicit conversion of a 64-bit integral type to a smaller
+              #               integral type (potential portability problem)
+              compiler = 'icpc -w1 -wd981 -wd383 -wd869 -wd444 -wd810 -wd1418 -wd654 -wd279 -wd1683',
               compileroptions = '-DUSING_MPI=0 ',
               linker = 'icpc  '
 						)
