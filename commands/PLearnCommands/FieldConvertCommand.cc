@@ -126,7 +126,7 @@ void FieldConvertCommand::run(const vector<string> & args)
     precompute = "none";
     int uniformize = 0;
     
-    for(int i=0;i<(signed)args.size();i++)
+    for(unsigned int i=0;i<args.size();i++)
     {
         vector<string> val = split(args[i],"=");
         if(val.size()<2)
@@ -405,7 +405,7 @@ void FieldConvertCommand::run(const vector<string> & args)
             for (map<real,StatsCollectorCounts>::iterator it = sc[i].getCounts()->begin(); k < count; ++it) {
                 real val = it->first;
                 k++;
-                if((val-(int)val) != 0)
+                if(!fast_exact_is_equal(val-(int)val, 0))
                 {
                     may_be_fraction = true;
                     break;
@@ -510,7 +510,7 @@ void FieldConvertCommand::run(const vector<string> & args)
                     type=continuous;
                     // cout << "Uncorrelated + discrete + sparse: " << i << " (max = " << sc[i].max() << ", min = " << sc[i].min() << ", count = " << count << ")" << endl;
                 }
-                else if((real)(sc[i].max()-sc[i].min()+1) != (real)(count) )
+                else if(!fast_exact_is_equal(real(sc[i].max()-sc[i].min()+1), real(count)) )
                     message = "(edit force.txt): Data is made of a semi-sparse (density<50%) distribution of integers (uncorrelated with target). max: "+tostring(sc[i].max())+" min:"+tostring(sc[i].min())+" count:"+tostring(count);
                 else {
                     // data is discrete, not sparse, and not correlated to target,
