@@ -38,7 +38,7 @@ from popen2 import *
 
 print "pymake 2.0 [ (C) 2001, Pascal Vincent. This is free software distributed under a BSD type license. Report problems to vincentp@iro.umontreal.ca ]"
 
-# initialise a few variables from the environment
+# initialize a few variables from the environment
 platform = sys.platform
 if platform=='linux2':
     linux_type = os.uname()[4]
@@ -406,6 +406,8 @@ def printusage():
     print '        Allows to compile on .pymake/linux-x86_64.hosts,'
     print '        linux-ia64.hosts and linux-i386.hosts.'
     print '  -ssh: run compilation commands on remote hosts with ssh instead of rsh (default).'
+    print '  -dummyobjs: at link time, will create links to the used object files (of the form'
+    print '              1.o, 2.o, etc) in order to obtain a smaller link command line'
     print
     print "A special option is -dependency: if this is given, target won't be compiled or linked,"
     print "but information regarding the dependency graph will be produced insted, as follows:"
@@ -539,6 +541,10 @@ if 'm32' in optionargs:
         print 'Warning: you probably shouldn\'t be using "-m32" option'
     optionargs.remove('m32')
 
+dummyobjs = 0;
+if 'dummyobjs' in optionargs:
+    dummyobjs = 1
+    optionargs.remove('dummyobjs')
 
 if 'dist' in optionargs:
     distribute = 1
@@ -734,6 +740,7 @@ class FileInfo:
     - fileext:  file extension
     - is_ccfile: true if this file has a .cc or similar extension, false if it has a .h or similar extension
     - includes_from_sourcedirs: list of FileInfo of the files that this one includes found in the sourcedirs
+    - objsfilelist: list of object files used at link time
     - triggered_libraries: list of OptionalLibrary objects triggered by this file's includes
 
     QT specific:
@@ -1328,10 +1335,20 @@ digraph G
 
     def link_command(self):
         """returns the command for making executable target from the .o files in objsfilelist"""        
-        objsfilelist = []
+        self.objsfilelist = []
+        objs_count = 0
         for ccfile in self.get_ccfiles_to_link():
 #             print ccfile.filebase
-            objsfilelist.append(ccfile.corresponding_ofile)
+            if dummyobjs:
+                dummy_obj_file = '%d.o' % objs_count;
+                if os.access(dummy_obj_file, os.F_OK):
+                    # First remove an old object file.
+                    os.remove(dummy_obj_file)
+                os.symlink(ccfile.corresponding_ofile, dummy_obj_file)
+                objs_count += 1
+                self.objsfilelist.append(dummy_obj_file)
+            else:
+                self.objsfilelist.append(ccfile.corresponding_ofile)
 
         linker = default_linker
         linkeroptions = ""
@@ -1349,7 +1366,7 @@ digraph G
             if optdef.linker:
                 linker = optdef.linker
 
-        command = linker + so_options + ' -o ' + self.corresponding_output + ' ' + string.join(objsfilelist,' ') + ' ' + self.get_optional_libraries_linkeroptions() + ' ' + linkeroptions + ' ' + linkeroptions_tail
+        command = linker + so_options + ' -o ' + self.corresponding_output + ' ' + string.join(self.objsfilelist,' ') + ' ' + self.get_optional_libraries_linkeroptions() + ' ' + linkeroptions + ' ' + linkeroptions_tail
 
         # print "CALLED link_command WITH optional_libraries_linkeroptions of: ", self.get_optional_libraries_linkeroptions()        
         if dorionc_hacked_pymake:
@@ -1366,6 +1383,9 @@ digraph G
         if verbose>=3:
 	        print command
         os.system(command)
+        if dummyobjs:
+            for objfile in self.objsfilelist:
+                os.remove(objfile)
         if not os.path.exists(self.corresponding_output):
           print "Link command failed to create file " + self.corresponding_output
         else:
@@ -1378,9 +1398,9 @@ digraph G
         
     def dll_command(self):
         """returns the command for making dll target from the .o files in objsfilelist and the corresponding .def file"""        
-        objsfilelist = []
+        self.objsfilelist = []
         for ccfile in self.get_ccfiles_to_link():
-            objsfilelist.append(ccfile.corresponding_ofile)
+            self.objsfilelist.append(ccfile.corresponding_ofile)
 
         dll_wrapper = default_wrapper
         linkeroptions = ""
@@ -1388,7 +1408,7 @@ digraph G
           linkeroptions = '--def='+self.corresponding_def_file
         linkeroptions = linkeroptions + ' ' + dllwrap_basic_options
 
-        command = dll_wrapper + ' ' + linkeroptions + ' -o ' + self.corresponding_output + ' ' + string.join(objsfilelist,' ') + ' ' + self.get_optional_libraries_linkeroptions()
+        command = dll_wrapper + ' ' + linkeroptions + ' -o ' + self.corresponding_output + ' ' + string.join(self.objsfilelist,' ') + ' ' + self.get_optional_libraries_linkeroptions()
 
         return command
 
