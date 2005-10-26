@@ -100,10 +100,6 @@
 //!  data files (.pmat and .pvec)
 #define DATAFILE_HEADERLENGTH 64
 
-//! INFINITY is not defined under Windows
-#ifdef _MSC_VER
-#define INFINITY HUGE_VAL
-#endif
 
 namespace std {
   
@@ -148,7 +144,7 @@ inline unsigned long* copy(unsigned long* first, unsigned long* last, unsigned l
 namespace PLearn {
 using namespace std;
 
-#if defined(_MINGW_) || defined(WIN32)
+#if (defined(_MINGW_) || defined(WIN32)) && !defined(__CYGWIN__)
 #define sleep(t) _sleep(t*1000)
 #endif
 

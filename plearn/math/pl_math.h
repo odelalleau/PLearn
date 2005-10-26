@@ -81,6 +81,12 @@ extern _plearn_nan_type plearn_nan;
 #else
 #define MISSING_VALUE (plearn_nan.d)
 #endif
+
+//! INFINITY is not defined under Windows
+// TODO Use std::numeric_limits for better cross-platform compatibility.
+#if defined(MSC_VER) || defined(__CYGWIN__)
+#define INFINITY HUGE_VAL
+#endif
   
 using namespace std;
 
