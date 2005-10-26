@@ -268,8 +268,8 @@ protected:
  *
  *  The global function memfun_broadcast is used to call a member function on a
  *  graph of \c Objects, but only for those objects that are of a class that
- *  can accept the member function.  Right now, forms with 0, 1 or 2 arguments
- *  are supported.
+ *  can accept the member function.  Right now, forms with 0-, 1-, 2- or 3-
+ *  argument forms are supported.
  *
  *  Both const and non-const forms are supported.
  *
@@ -355,6 +355,36 @@ void memfun_broadcast(Object* o, U (T::*func)(V,W),
     for ( ; grit != grend ; ++grit)
         if (T* t = const_cast<T*>(dynamic_cast<const T*>(*grit)))
             (t->*func)(arg1,arg2);
+}
+
+
+// Three arguments, const
+template <class T, class U, class V, class W, class X>
+void memfun_broadcast(const Object* o, U (T::*func)(V,W,X) const,
+                      typename boost::call_traits<V>::param_type arg1,
+                      typename boost::call_traits<W>::param_type arg2,
+                      typename boost::call_traits<X>::param_type arg3,
+                      ObjectGraphIterator::TraversalType tt = ObjectGraphIterator::DepthPreOrder)
+{
+    ObjectGraphIterator grit(o, tt, false, T::_classname_()), grend;
+    for ( ; grit != grend ; ++grit)
+        if (const T* t = dynamic_cast<const T*>(*grit))
+            (t->*func)(arg1,arg2,arg3);
+}
+
+
+// Three arguments, non-const
+template <class T, class U, class V, class W, class X>
+void memfun_broadcast(Object* o, U (T::*func)(V,W,X),
+                      typename boost::call_traits<V>::param_type arg1,
+                      typename boost::call_traits<W>::param_type arg2,
+                      typename boost::call_traits<X>::param_type arg3,
+                      ObjectGraphIterator::TraversalType tt = ObjectGraphIterator::DepthPreOrder)
+{
+    ObjectGraphIterator grit(o, tt, false, T::_classname_()), grend;
+    for ( ; grit != grend ; ++grit)
+        if (T* t = const_cast<T*>(dynamic_cast<const T*>(*grit)))
+            (t->*func)(arg1,arg2,arg3);
 }
 
 
