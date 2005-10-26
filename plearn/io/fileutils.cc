@@ -335,8 +335,11 @@ void cp(const PPath& srcpath, const PPath& destpath)
 ////////
 // rm //
 ////////
-void rm(const PPath& file)
+bool rm(const PPath& file)
 {
+    // New cross-platform version.
+    return (PR_Delete(file.absolute().c_str()) == PR_SUCCESS);
+    /*
     // TODO Better cross-platform version ?
 #ifdef WIN32
     // For the moment works ONLY with files!!!
@@ -360,6 +363,7 @@ void rm(const PPath& file)
     string command = "\\rm -rf " + file.absolute();
     system(command.c_str());
 #endif
+*/
 }
 
 ////////

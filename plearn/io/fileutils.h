@@ -109,8 +109,8 @@ long filesize(const PPath& filename);
 //! Calls system with cp -R to recursively copy source to destination.
 void cp(const PPath& srcpath, const PPath& destpath);
 
-//! Calls system rm command to remove the given file.
-void rm(const PPath& file);
+//! Remove a file (return 'true' if removed sucessfully).
+bool rm(const PPath& file);
 
 //! Calls system mv command to move the given source file to destination.
 void mv(const PPath& source, const PPath& dest);
