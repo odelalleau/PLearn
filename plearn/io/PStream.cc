@@ -40,8 +40,9 @@
 #include <mozilla/nspr/prio.h>
 #include <ctype.h>
 
-// norman:
-#ifdef WIN32
+
+// This is probably an ugly hack to get it to work under Visual Studio.
+#if defined(WIN32) && !defined(__CYGWIN__)
 #define snprintf _snprintf
 #endif
 
