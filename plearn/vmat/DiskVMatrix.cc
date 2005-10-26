@@ -48,7 +48,7 @@
 namespace PLearn {
 using namespace std;
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(__CYGWIN__)
 #include <io.h>
 #define unlink _unlink
 #endif
