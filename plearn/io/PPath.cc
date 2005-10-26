@@ -54,8 +54,12 @@
 // DOS SETTINGS
 #if defined(WIN32)
 
+#if defined(__CYGWIN__)
+#define SYS_GETCWD     PLearn::getCygwinCwd
+#else
 #include <direct.h>
 #define SYS_GETCWD     _getcwd
+#endif
   
 ///////////////////////  
 // POSIX SETTINGS
@@ -70,6 +74,22 @@
 
 namespace PLearn {
 using namespace std;
+
+#if defined(__CYGWIN__)
+
+extern "C" void cygwin_conv_to_full_win32_path(const char *path,
+                                               char *win32_path);
+const char* getCygwinCwd(char* buf, size_t n)
+{
+    const char* cwd = ::getcwd(buf, n);
+    if (!cwd)
+        return 0;
+    string cwd_str = buf;
+    cygwin_conv_to_full_win32_path(cwd_str.c_str(), buf);
+    // TODO How to find out if it failed?
+    return buf;
+}
+#endif
 
 ////////////////////////////////////////////////////////
 //  Stringutils.h         //////////////////////////////
@@ -229,10 +249,10 @@ PPath PPath::getenv(const string& var, const PPath& default_)
 ////////////////////////////
 // metaprotocolToMetapath //
 ////////////////////////////
+map<string, PPath> PPath::metaprotocol_to_metapath;
+
 const map<string, PPath>& PPath::metaprotocolToMetapath()
 {
-    // A map to store the bindings metaprotocol <-> metapath.
-    static  map<string, PPath>  metaprotocol_to_metapath;
     static  bool                mappings;
   
     if ( !mappings )
@@ -257,7 +277,7 @@ const map<string, PPath>& PPath::metaprotocolToMetapath()
                     if (ppath_config)
                         PLERROR("In PPath::metaprotocolToMetapath - Error while parsing PPath config file (%s): read "
                                 "a blank line before reaching the end of the file",
-                                config_file_path.absolute().c_str());
+                                config_file_path.errorDisplay().c_str());
                     else
                         // Nothing left to read.
                         break;
@@ -265,13 +285,18 @@ const map<string, PPath>& PPath::metaprotocolToMetapath()
                 if (next_metapath.empty())
                     PLERROR("In PPath::metaprotocolToMetapath - Error in PPath config file (%s): could not read the "
                             "path associated with '%s'",
-                            config_file_path.absolute().c_str(), next_metaprotocol.c_str());
+                            config_file_path.errorDisplay().c_str(), next_metaprotocol.c_str());
         
                 // For the sake of simplicity, we do not allow a metapath to end with
                 // a slash unless it is a root directory.
                 next_metapath.removeTrailingSlash();
         
-                metaprotocol_to_metapath[ next_metaprotocol  ] = next_metapath;
+                if (!addMetaprotocolBinding(next_metaprotocol, next_metapath))
+                    PLWARNING("In PPath::metaprotocolToMetapath - Metaprotocol"
+                              " '%s' is being redefined, please check your "
+                              "ppath.config (%s)",
+                              next_metaprotocol.c_str(),
+                              config_file_path.errorDisplay().c_str());
             }       
         }
         else
@@ -289,6 +314,21 @@ const map<string, PPath>& PPath::metaprotocolToMetapath()
 
     return metaprotocol_to_metapath;
 }
+
+////////////////////////////
+// addMetaprotocolBinding //
+////////////////////////////
+bool PPath::addMetaprotocolBinding(const string& metaprotocol,
+                                   const PPath& metapath,
+                                   bool  force)
+{
+    const map<string, PPath>& bindings = metaprotocolToMetapath();
+    bool already_here = bindings.find(metaprotocol) != bindings.end();
+    if (!already_here || force)
+        metaprotocol_to_metapath[metaprotocol] = metapath;
+    return !already_here;
+}
+
 
 // This method MUST NOT return a path since it would lead to an infinite
 // loop of constructors.
@@ -321,6 +361,18 @@ string PPath::expandEnvVariables(const string& path)
     return expanded;
 }
 
+
+//////////////////////////
+// setCanonicalInErrors //
+//////////////////////////
+bool PPath::canonical_in_errors = false;
+
+void PPath::setCanonicalInErrors(bool canonical)
+{
+    PPath::canonical_in_errors = canonical;
+}
+
+
 //////////////////////////////////////////////  
 // PPath methods
 
@@ -344,6 +396,8 @@ PPath::PPath(const string& path_)
     expandMetaprotocols ( );
     resolveDots         ( );    
     parseProtocol       ( );
+    // pout << "Creating PPath from '" << path_ << "' --> '" << string(*this)
+    //      << "'" << endl;
 }
 
 ///////////////////////
@@ -391,9 +445,7 @@ void PPath::expandMetaprotocols()
     if ( endmeta != npos )    
     {
         string meta = substr(0, endmeta);
-
         map<string, PPath>::const_iterator it = metaprotocolToMetapath().find(meta);
-
         if ( it != metaprotocolToMetapath().end() )
         {      
             string after_colon = endmeta == length()-1 ? "" : substr(endmeta+1);
@@ -499,7 +551,8 @@ void PPath::resolveDoubleDots() {
             if (pos_previous_slash == npos) {
                 // We need to make sure we are not trying to go up on a root directory.
                 if (PPath(substr(0, pos_sdd + 1)).isRoot())
-                    PLERROR("In PPath::resolveDots - '%s' is invalid", c_str());
+                    PLERROR("In PPath::resolveDots - '%s' is invalid",
+                            errorDisplay().c_str());
                 if (   (pos_sdd == 2 && substr(0,2) == "..")
                        || (pos_sdd == 1 && operator[](0) == '.'))
                     // We are in the case "../.." or "./.."
@@ -721,6 +774,17 @@ string PPath::canonical() const
     return canonic_path;
 }
 
+//////////////////
+// errorDisplay //
+//////////////////
+string PPath::errorDisplay() const
+{
+    if (PPath::canonical_in_errors)
+        return this->canonical();
+    else
+        return this->absolute();
+}
+
 /////////////////
 // addProtocol //
 /////////////////
@@ -729,7 +793,7 @@ PPath PPath::addProtocol()  const
     if ( _protocol.empty()) {
         if (!isAbsPath())
             PLERROR("In PPath::addProtocol - A protocol can only be added to an "
-                    "absolute path, and '%s' is relative", canonical().c_str());
+                    "absolute path, and '%s' is relative", errorDisplay().c_str());
         return ( PPath(string(FILE_PROTOCOL) + ':' + string(*this)) );
     }
     return PPath( *this );
@@ -802,7 +866,7 @@ PPath PPath::up() const
 {
     if (isEmpty() || isRoot())
         PLERROR("In PPath::up - Cannot go up on directory '%s'",
-                absolute().c_str());
+                errorDisplay().c_str());
     return *this / "..";
 }
 
@@ -926,7 +990,11 @@ PPath PPath::drive() const
 
 bool PPath::isabs() const
 {
-    return !drive().isEmpty() || isHttpPath() || isFtpPath() || _protocol == FILE_PROTOCOL;
+    // Note that a Win32 path is considered absolute if starting with a '\'
+    // character: this is so that the path resulting from removing the protocol
+    // in a ftp path for instance is still considered as absolute.
+    return !drive().isEmpty() || isHttpPath() || isFtpPath() ||
+           _protocol == FILE_PROTOCOL || startsWith(c_str(), _slash_char());
 }
 
 #else

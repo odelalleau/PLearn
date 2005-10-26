@@ -3,6 +3,7 @@
 // PPath.h
 //
 // Copyright (C) 2005 Pascal Vincent 
+// Copyright (C) 2005 Olivier Delalleau
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -179,6 +180,27 @@ PPath::home, PPath::getenv (with a default value!) and PPath::getcwd.
                  static PPath home  ();
                  static PPath getcwd();
                  static PPath getenv(const string& var, const PPath& default_="")  ;
+                 
+                 /*!
+                  *  Add a new metaprotocol-to-metapath binding.
+                  *  Return 'true' iff the given metaprotocol was not already
+                  *  binded.
+                  *  If 'force' is set to true, the binding will be made even
+                  *  if the given metaprotocol was already binded. Otherwise,
+                  *  the existing metaprotocol will be preserved.
+                  */
+                 static bool addMetaprotocolBinding(const string& metaprotocol,
+                                                    const PPath& metapath,
+                                                    bool  force = true);
+
+                 /*!
+                  *  Decide whether or not to display canonical paths in error
+                  *  messages. The default behavior is to display absolute
+                  *  paths, but canonical paths might sometimes be preferred
+                  *  (e.g. in testing, for cross-platform compatibility, or for
+                  *  debug purpose).
+                  */
+                 static void setCanonicalInErrors(bool canonical);
 
              protected:
 
@@ -276,6 +298,13 @@ PPath::home, PPath::getenv (with a default value!) and PPath::getcwd.
                  //! It is a string because it needs to be converted to a system-dependent
                  //! version before it can be used directly as a PPath.
                  string canonical() const;
+
+                 //! Return the string that should be displayed in an error
+                 //! message. It will be either the absolute or canonical
+                 //! string, depending on the value of the global PPath
+                 //! boolean 'canonical_in_errors' (the default being to
+                 //! display the absolute path).
+                 string errorDisplay() const;
   
                  /*!
                    Even if the default protocol is considered to be the file protocol,
@@ -461,6 +490,19 @@ PPath::home, PPath::getenv (with a default value!) and PPath::getcwd.
                     It is protected because one should use isAbsPath().
                  */
                  bool isabs() const;  
+
+             private:
+
+                 //! The map storing the bindings metaprotocol <-> metapath.
+                 //! It should never be manipulated directly: instead, use the
+                 //! metaprotocolToMetapath() and addMetaprotocolToMetapath()
+                 //! functions.
+                 static map<string, PPath> metaprotocol_to_metapath;
+
+                 //! Whether or not to display the canonical path in
+                 //! errorDisplay(). Default value is 'false', and it can be
+                 //! modified through the setCanonicalInErrors(..) function.
+                 static bool canonical_in_errors;
 
              };
 
