@@ -80,6 +80,7 @@ PLEARN_IMPLEMENT_OBJECT(Y, "", "");
 
 class Z : public Object
 {
+    typedef Object inherited;
     PLEARN_DECLARE_OBJECT(Z);
 
 public:
