@@ -104,8 +104,12 @@ public:
     //! DistanceKernel with n=2, which gives an Euclidian distance.
     //! Ker kernel; ==> SHOULD BE distance_kernel, defined in super-class
 
-    //! Whether the kernel should be interpreted as a (pseudo-)distance
-    //! measure (true) or a similarity measure (false). Default = true.
+    /**
+     *  Whether the kernel defined by the 'distance_kernel' option should be
+     *  interpreted as a (pseudo-)distance measure (true) or a similarity
+     *  measure (false). Default = true.  Note that this interpretation is
+     *  strictly specific to the class ExhaustiveNearestNeighbors.
+     */
     bool kernel_is_pseudo_distance;
 
 public:
