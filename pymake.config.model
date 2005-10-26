@@ -309,7 +309,7 @@ linkeroptions_tail += ' -L' + libdir + ' -lm'
 # List of lists of mutually exclusive pymake options.
 # First option that appears in each group is the default, and is assumed if you don't specify any option from that group
 options_choices = [
-  [ 'g++', 'g++3', 'icc', 'mpi', 'purify', 'quantify' ],
+  [ 'g++', 'g++3', 'icc', 'icc8', 'icc9', 'mpi', 'purify', 'quantify' ],
   [ 'dbg', 'opt', 'pintel', 'gprof', 'safegprof', 'safeopt', 'checkopt' ],
   [ 'double', 'float' ],
   [ 'throwerrors', 'exiterrors' ], 
@@ -332,7 +332,23 @@ pymakeOption( name = 'g++3',
               linker = 'g++3' )
 
 pymakeOption( name = 'icc',   # For C++, it is actually icpc
-              description = 'compiling with Intel Compiler (version 8.0), with no MPI support',
+              description = '(DEPRECATED, use icc8 or icc9 instead) compiling with Intel Compiler (version 8.x), with no MPI support',
+              # Disable some warnings:
+              compiler = 'icpc -w1 -wd981 -wd383 -wd869 -wd444 -wd810 -wd1418 -wd654 -wd279',
+              compileroptions = '-DUSING_MPI=0 ',
+              linker = 'icpc  '
+						)
+
+pymakeOption( name = 'icc8',   # For C++, it is actually icpc
+              description = 'compiling with Intel Compiler (version 8.x), with no MPI support',
+              # Disable some warnings:
+              compiler = 'icpc -w1 -wd981 -wd383 -wd869 -wd444 -wd810 -wd1418 -wd654 -wd279',
+              compileroptions = '-DUSING_MPI=0 ',
+              linker = 'icpc  '
+						)
+
+pymakeOption( name = 'icc9',   # For C++, it is actually icpc
+              description = 'compiling with Intel Compiler (version 9.x), with no MPI support',
               # Disable some warnings:
               # remark #1683: explicit conversion of a 64-bit integral type to a smaller
               #               integral type (potential portability problem)
