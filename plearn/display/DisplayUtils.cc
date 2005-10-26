@@ -47,7 +47,7 @@
 #include <plearn/io/openString.h>
 #include <plearn/io/TmpFilenames.h>
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(__CYGWIN__)
 #include <io.h>
 #define unlink _unlink
 #endif

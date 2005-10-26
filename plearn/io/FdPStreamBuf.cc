@@ -40,7 +40,7 @@
 
 /*! \file FdPStreamBuf.cc */
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(__CYGWIN__)
 // This file does not compile under windows and should not be used anyways.
 
 #else // POSIX

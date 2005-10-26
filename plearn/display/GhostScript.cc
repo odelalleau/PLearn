@@ -45,7 +45,7 @@
 #include "GhostScript.h"
 #include <plearn/io/FdPStreamBuf.h>
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(__CYGWIN__)
 #include <io.h>
 // norman: potentially dangerous if there is a function called with the same name in this
 //         file. Beware!
