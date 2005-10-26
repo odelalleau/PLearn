@@ -75,6 +75,8 @@ elif platform=='win32' :
     compileflags = '-DWIN32 -D_MINGW_ -DLITTLEENDIAN'
 elif platform=='darwin' :
     compileflags = '-DDARWIN -DBIGENDIAN -fno-coalesce'
+elif platform=='cygwin' :
+    compileflags = '-DWIN32 -DLITTLEENDIAN'
 else:
     print 'Unknown platform: ' + platform
     sys.exit()

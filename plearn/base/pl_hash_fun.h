@@ -120,7 +120,7 @@ SET_HASH_WITH_FUNCTION_NOCONSTREF(const char*, _s, PLearn::hashval(_s))
 //};
 
 
-#if defined(WIN32) & !defined(_MINGW_)
+#if defined(WIN32) && !defined(_MINGW_) && !defined(__CYGWIN__)
 
     using namespace stdext;
 
