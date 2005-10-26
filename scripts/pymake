@@ -391,11 +391,13 @@ def printusage():
             print '   -'+item + ': ' + pymake_options_defs[item].description
     print
     print 'Other possible options are:'
-    print '  -force: forces recompilation of all necessary files, even if they are up to date.'
+    print '  -force: force recompilation of all necessary files, even if they are up to date.'
     print '  -local: don\'t use parallel compilation, even if there is a .pymake/<platform>.hosts file.'
+    print '  -tmp[=tmp_dir]: compile all objects into a single directory (default is /tmp/OBJS).'
+    print '                  This option currently implies \'-local\'.'
     print '  -clean: removes all OBJS subrdirectories recursively in all given directories'
     print '  -checkobj: will report all source files that don\'t have *any* correponding .o in OBJS.'
-    print '             This processes recursively from  given directories and is typically called'
+    print '             This processes recursively from given directories and is typically called'
     print '             after a pymake -clean, and a pymake . to get the list of files that failed to compile.'
     print '  -static: produce a statically linked executable'
     print '  -so:  create a shared object (.so) instead of an executable file.'
@@ -406,8 +408,8 @@ def printusage():
     print '        Allows to compile on .pymake/linux-x86_64.hosts,'
     print '        linux-ia64.hosts and linux-i386.hosts.'
     print '  -ssh: run compilation commands on remote hosts with ssh instead of rsh (default).'
-    print '  -dummyobjs: at link time, will create links to the used object files (of the form'
-    print '              1.o, 2.o, etc) in order to obtain a smaller link command line'
+    print '  -symlinkobjs: at link time, will create links to the used object files (of the form'
+    print '                1.o, 2.o, etc) in order to obtain a smaller link command line.'
     print
     print "A special option is -dependency: if this is given, target won't be compiled or linked,"
     print "but information regarding the dependency graph will be produced insted, as follows:"
@@ -541,10 +543,10 @@ if 'm32' in optionargs:
         print 'Warning: you probably shouldn\'t be using "-m32" option'
     optionargs.remove('m32')
 
-dummyobjs = 0;
-if 'dummyobjs' in optionargs:
-    dummyobjs = 1
-    optionargs.remove('dummyobjs')
+symlinkobjs = 0;
+if 'symlinkobjs' in optionargs:
+    symlinkobjs = 1
+    optionargs.remove('symlinkobjs')
 
 if 'dist' in optionargs:
     distribute = 1
@@ -630,11 +632,26 @@ else:
     usingOpt = 0
 
 temp_objs=0
+
+for option in optionargs:
+    if option.count('tmp', 0, 3) == 1:
+        if (option != 'tmp'):
+            if (option[3] != '='):
+                print 'Syntax for \'-tmp\' option is \'-tmp=<directory>\', but' \
+                      ' read \'' + option + '\': the default tmp directory '    \
+                      'will be used'
+                objsdir = ''
+            else:
+                objsdir = option[4:]
+            optionargs.remove(option)
+            optionargs.append('tmp')
+
 if 'tmp' in optionargs:
     objspolicy = 2
     temp_objs=1
     local_compilation = 1
-    objsdir = '/tmp/OBJS'
+    if (objsdir == ''):
+        objsdir = '/tmp/OBJS'
     optionargs.remove('tmp')
 else:
     temp_objs = 0
@@ -1339,7 +1356,7 @@ digraph G
         objs_count = 0
         for ccfile in self.get_ccfiles_to_link():
 #             print ccfile.filebase
-            if dummyobjs:
+            if symlinkobjs:
                 dummy_obj_file = '%d.o' % objs_count;
                 if os.access(dummy_obj_file, os.F_OK):
                     # First remove an old object file.
@@ -1383,7 +1400,7 @@ digraph G
         if verbose>=3:
 	        print command
         os.system(command)
-        if dummyobjs:
+        if symlinkobjs:
             for objfile in self.objsfilelist:
                 os.remove(objfile)
         if not os.path.exists(self.corresponding_output):
