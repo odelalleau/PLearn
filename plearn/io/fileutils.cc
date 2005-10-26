@@ -42,7 +42,7 @@
  ******************************************************* */
 
 // Win32 specific declarations
-#ifdef WIN32
+#if defined(WIN32) && !defined(__CYGWIN__)
 #include <direct.h>
 #define chdir _chdir
 #include <Windows.h>
