@@ -30,11 +30,11 @@ PPath('foo/bar/') / 'file.cc' == 'foo/bar/file.cc'          True
 
 #####  Methods up and dirname  ############################################
 
-PPath('/').up()                                             FATAL ERROR: In PPath::up - Cannot go up on directory '/'
+PPath('PL_ROOT:').up()                                      FATAL ERROR: In PPath::up - Cannot go up on directory 'PL_ROOT:'
 
 PPath('').up()                                              FATAL ERROR: In PPath::up - Cannot go up on directory ''
 
-PPath('/foo').up() == '/'                                   True
+PPath('PL_ROOT:foo').up() == 'PL_ROOT:'                     True
 
 PPath('foo/bar').up() == 'foo'                              True
 
@@ -76,9 +76,9 @@ PPath('/foo/bar').addProtocol()                             file:/foo/bar
 
 PPath('foo/bar').addProtocol()                              FATAL ERROR: In PPath::addProtocol - A protocol can only be added to an absolute path, and 'foo/bar' is relative
 
-PPath('file:/foo/bar').removeProtocol()                     /foo/bar
+PPath('file:/foo/bar').removeProtocol()                     PL_ROOT:foo/bar
 
-PPath('/foo/bar').removeProtocol()                          /foo/bar
+PPath('PL_ROOT:foo/bar').removeProtocol()                   PL_ROOT:foo/bar
 
 
 #####  PPath comparisons  #################################################
@@ -87,7 +87,7 @@ PPath('foo') == 'foo/'                                      True
 
 !(PPath('foo') != 'foo/')                                   True
 
-PPath('') == '                                              True
+PPath('') == ''                                             True
 
 !(PPath('') != '')                                          True
 
@@ -99,7 +99,7 @@ PPath('ftp:/foo/bar') == 'ftp:/foo/bar/'                    True
 
 !(PPath('ftp:/foo/bar') != 'ftp:/foo/bar/')                 True
 
-PPath('/foo') != 'ftp:/foo'                                 True
+PPath('PL_ROOT:foo') != 'ftp:/foo'                          True
 
 PPath('file:/foo') != 'http:/foo'                           True
 
@@ -112,11 +112,11 @@ PPath('file:/foo') != 'http:/foo'                           True
 
 .                                                           .
 
-/.                                                          /
+PL_ROOT:.                                                   PL_ROOT:
 
-/./                                                         /
+PL_ROOT:./                                                  PL_ROOT:
 
-/./foo                                                      /foo
+PL_ROOT:./foo                                               PL_ROOT:foo
 
 foo/.                                                       foo
 
@@ -128,9 +128,9 @@ foo/.bar                                                    foo/.bar
 
 foo./bar                                                    foo./bar
 
-/..                                                         FATAL ERROR: In PPath::resolveDots - '/..' is invalid
+PL_ROOT:..                                                  FATAL ERROR: In PPath::resolveDots - 'PL_ROOT:..' is invalid
 
-/../foo                                                     FATAL ERROR: In PPath::resolveDots - '/../foo' is invalid
+PL_ROOT:../foo                                              FATAL ERROR: In PPath::resolveDots - 'PL_ROOT:../foo' is invalid
 
 ../foo                                                      ../foo
 
@@ -138,15 +138,15 @@ foo/..                                                      .
 
 foo/../                                                     ./
 
-/foo/..                                                     /
+PL_ROOT:foo/..                                              PL_ROOT:
 
-/foo/../                                                    /
+PL_ROOT:foo/../                                             PL_ROOT:
 
 foo/../bar                                                  bar
 
-/foo/../bar                                                 /bar
+PL_ROOT:foo/../bar                                          PL_ROOT:bar
 
-/..foo                                                      /..foo
+PL_ROOT:..foo                                               PL_ROOT:..foo
 
 foo../                                                      foo../
 
@@ -160,7 +160,7 @@ foo/bar/foobar/.././../../foobi/../foobo/../..              ..
 
 foo/bar/foobar/.././../../foobi/../foobo/                   foobo/
 
-/foo/bar/foobar/.././../../foobi/../                        /
+PL_ROOT:foo/bar/foobar/.././../../foobi/../                 PL_ROOT:
 
 PLEARNDIR:                                                  PLEARNDIR:
 
@@ -183,9 +183,9 @@ PPath('./foo//bar\toto')
 isAbsPath()
   DOS: r:/dorionc             POSIX: /home/dorionc          True
 
-absolute('/home/dorionc') == ...
+absolute('HOME:dorionc') == ...
   DOS: r:/dorionc             POSIX: /home/dorionc          True
 
-absolute('/home/dorionc').drive() == ...
-  DOS: r                      POSIX:                        True
+absolute('HOME:dorionc').drive() == ...
+  DOS: r:                     POSIX:                        True
 
