@@ -89,7 +89,7 @@ public:
     int dummy_option2;
     
 public:
-    Z() {}
+    Z() { dummy_option2 = 0; }
     
     static void declareOptions(OptionList& ol)
     {
