@@ -73,6 +73,7 @@ public:
     TVec<int> indices; // indices of the kept rows
     TVec<int> mi_info; // bag info for the reduced lookup set.
     PP<PLearner> multi_nnet;
+    VMat source_select;
     double frac;
 
 public:

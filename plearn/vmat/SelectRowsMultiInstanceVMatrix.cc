@@ -48,14 +48,22 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     SelectRowsMultiInstanceVMatrix,
-    "ONE LINE DESCRIPTION",
-    "MULTI-LINE \nHELP"
-    );
+    "Inside a multi-instance vmat, select randomly a fraction of the bag.",
+    "source_select and multi_nnet should be compatible, as to produce \n"
+    " a selection of the best conformation from each bag.If source_select \n"
+    " is not provided, source is used instead. If source_select is provided,\n"
+    " we consider that source is a ConcatColumnVMatrix of some VMatrix to pass \n"
+    " along and a VMatrix of the same SIZES as source_select. We get rid of this last \n"
+    " part after computing the best conformation of a bag.\n"
+    "Then, we randomly select a fraction of the remaining conformation for each bag.\n"
+    "If we don't provide source_select(i.e. 0*) then source_ is used\n"    );
 
-//////////////////
+////////////////////////////////////
 // SelectRowsMultiInstanceVMatrix //
-//////////////////
+////////////////////////////////////
 SelectRowsMultiInstanceVMatrix::SelectRowsMultiInstanceVMatrix() :
+    seed(-1),
+    frac(0.5),
     random_generator(new PRandom())
 /* ### Initialize all fields to their default value */
 {
@@ -76,14 +84,10 @@ void SelectRowsMultiInstanceVMatrix::declareOptions(OptionList& ol)
     // ### OptionBase::tuningoption. Another possible flag to be combined with
     // ### is OptionBase::nosave
 
-    // ### ex:
-    // declareOption(ol, "myoption", &SelectRowsMultiInstanceVMatrix::myoption, OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
     declareOption(ol, "seed", &SelectRowsMultiInstanceVMatrix::seed, OptionBase::buildoption, "Random generator seed (>0) (exceptions : -1 = initialized from clock, 0 = no initialization).");
-//    declareOption(ol, "indices", &SelectRowsMultiInstanceVMatrix::indices, OptionBase::buildoption, "Indices of kept rows");
-      declareOption(ol, "multi_nnet", &SelectRowsMultiInstanceVMatrix::multi_nnet, OptionBase::buildoption, "MultiNNet from which you select instances");
-      declareOption(ol, "frac", &SelectRowsMultiInstanceVMatrix::frac, OptionBase::buildoption, "Fraction of the bag to be randomly chosen (Note: this is the fraction of the bag to be randomly chosen in addition of the best instance, which is always added");
+    declareOption(ol, "multi_nnet", &SelectRowsMultiInstanceVMatrix::multi_nnet, OptionBase::buildoption, "MultiNNet from which you select instances");
+    declareOption(ol, "source_select", &SelectRowsMultiInstanceVMatrix::source_select, OptionBase::buildoption, "The VMat from which we compute the example to be selected.");
+    declareOption(ol, "frac", &SelectRowsMultiInstanceVMatrix::frac, OptionBase::buildoption, "Fraction of the bag to be randomly chosen (Note: this is the fraction of the bag to be randomly chosen in addition of the best instance, which is always added");
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
    
@@ -116,6 +120,15 @@ void SelectRowsMultiInstanceVMatrix::build_()
 
     if (!source)
         return;
+ 
+//    VMat source_of_indices = source_select ? source_select : source;
+
+//     if (!source_of_indices)
+//         return;
+
+    if (source_select && source && source_select->width() >= source->width())
+        PLERROR("In SelectRowsMultiInstanceVMatrix::build_ - VMats 'source_select'"
+                "should be completely present inside 'source'. Width does not work.");
 
 // Generating 'indices' and 'mi_info' vector.
     
@@ -135,7 +148,11 @@ void SelectRowsMultiInstanceVMatrix::build_()
     int indices_size;
     for(int row=0; row<source->length(); row++)
     {
-      source->getExample(row,input,target,weight);
+        source->getExample(row,input,target,weight);
+        if (source_select) {
+            int minnet_inputsize = source->width() - source_select->inputsize() - source_select->targetsize() - source_select->weightsize();
+            input = input.subVec(minnet_inputsize-1,source_select->inputsize());
+        }
         switch(int(target[bag_signal_column]))
         {
         case 0:
@@ -178,8 +195,9 @@ void SelectRowsMultiInstanceVMatrix::build_()
     }
 
 // ?? Modify the width, length, (tagetsize, inputsize and weight) size attribute.
+   // We suppose that the source and source_select have the same targetsize and weightsize
     length_ = indices.length();
-    inputsize_ = source->inputsize();
+    inputsize_ = source->width() - source_select->inputsize()- (2 * source_select->targetsize()) - (2 * source_select->weightsize());
     targetsize_ = source->targetsize();
     weightsize_ = source->weightsize(); 
  
@@ -207,6 +225,7 @@ void SelectRowsMultiInstanceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copi
     deepCopyField(indices, copies);
     deepCopyField(mi_info, copies);
     deepCopyField(multi_nnet, copies);
+    deepCopyField(source_select, copies);
     deepCopyField(random_generator, copies);
 }
 
