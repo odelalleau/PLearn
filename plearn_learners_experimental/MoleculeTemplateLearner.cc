@@ -252,9 +252,8 @@ namespace PLearn {
             }
                         
             for(int i=0 ; i<n_templates ; ++i) 
-            {                
-					S[i] = new WeightedLogGaussian(training_mode , i, input_index, mu[i], sigma_square[i] , templates[i]) ; 
-            }
+    					S[i] = new WeightedLogGaussian(training_mode , i, input_index, mu[i], sigma_square[i] , templates[i]) ; 
+
             
             V = Var(nhidden , n_templates , "V") ; 
             V_b = Var(nhidden , 1 , "V_b") ;

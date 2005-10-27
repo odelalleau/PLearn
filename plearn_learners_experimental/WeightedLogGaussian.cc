@@ -103,6 +103,8 @@ namespace PLearn {
 		performLP(molecule,current_template, W_lp , false) ; 
 		int n = W_lp.width() ; 
 		int m = W_lp.length() ; 
+    
+//    printf("(%d %d) -> length allignment = (%d %d) \n" ,training_index , class_label,n,m) ; 
 
 		Mat input ;
 		input = molecule->chem ; 

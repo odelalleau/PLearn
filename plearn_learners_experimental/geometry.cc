@@ -128,7 +128,7 @@ Mat boundingBoxToVertices( const Mat& bbox )
       << bbox(1,0) << " " << bbox(0,1) << " " << bbox(0,2) << " "
       << bbox(1,0) << " " << bbox(0,1) << " " << bbox(1,2) << " "
       << bbox(1,0) << " " << bbox(1,1) << " " << bbox(0,2) << " "
-      << bbox(1,0) << " " << bbox(1,1) << " " << bbox(1,2) ;
+      << bbox(1,0) << " " << bbox(1,1) << " " << bbox(1,2) << " " ;
 
   vertices << buf.str();
   return vertices;
