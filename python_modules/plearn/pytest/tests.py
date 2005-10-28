@@ -187,7 +187,13 @@ class Test(PyTestObject):
     arguments   = PLOption('')
     resources   = PLOption([])
     disabled    = PLOption(False)
-    
+
+    def _optionFormat(self, option_pair, indent_level, inner_repr):
+        optname, val = option_pair
+        if optname == "description" and self.description.find('\n')!=-1:
+            return 'description = \"\"\"%s\"\"\"'%self.description
+        return super(Test, self)._optionFormat(option_pair, indent_level, inner_repr)
+        
     def __init__(self, **overrides):
         PyTestObject.__init__(self, **overrides)        
 
