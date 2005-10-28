@@ -80,7 +80,7 @@ def toldiff(filename1, filename2, numtol=1e-6, blanktol=0):
     c1 = ' '
     c2 = ' '
 
-    while c1 and c2:
+    while c1 or c2:
         if c1 in numerical:
             num1 = ''
             num2 = ''
