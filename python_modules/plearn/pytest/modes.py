@@ -417,7 +417,28 @@ class update(FamilyConfigMode):
     will be made taking in considerations that a simple call to the
     config mode should be enough to migrate an old PyTest config file
     the new format.
+
+    This mode can also be used with options --test-name and --new-name to
+    rename a test (works only under SVN).
     """
+    def option_groups(cls, parser):
+        update_options = OptionGroup( parser, "Mode Specific Options --- %s" % cls.__name__,
+                                      "Available under %s mode only." % cls.__name__ )
+
+        update_options.add_option( '--test-name',
+                                   default=None,
+                                   help='The test to be renamed.',
+                                   )
+
+        update_options.add_option( "--new-name",                                   
+                                   default=None,
+                                   help="Must be used in conjunction with --test-name: Test which name is "
+                                   "'test_name' will be renamed to 'new_name'." 
+                                   )
+
+        return [ update_options ]
+    option_groups = classmethod(option_groups)
+
     def test_hook(self, test):
         """Does nothing.
 
@@ -427,7 +448,29 @@ class update(FamilyConfigMode):
         any FamilyConfigMode. For the Test class' internal behavior,
         changes will be made to support
         """
-        pass
+        name = self.options.test_name
+        if name is not None and test.name == name:
+            new_name = self.options.new_name
+            assert new_name is not None,\
+                "Options --test-name and --new-name must be used together."
+            
+            assert os.getcwd() == test.directory()
+            expected_results = test.test_results(Test._expected_results)
+            
+            walker = os.walk(expected_results, topdown=False)
+            for root, dirs, files in walker:
+                if root.find(".svn") != -1:
+                    continue
+                
+                for fname in dirs+files:
+                    if fname.find(name) != -1:
+                        old_path = os.path.join(root, fname)
+                        new_path = os.path.join(root, fname.replace(name, new_name))
+                        os.system('svn mv --force %s %s'%(old_path, new_path))
+
+            os.system('svn mv --force %s %s'%(expected_results, expected_results.replace(name, new_name)))
+            test.name = new_name
+                        
     
 class RoutineBasedMode(PyTestMode):
     #
