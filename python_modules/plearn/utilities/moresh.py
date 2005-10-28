@@ -20,6 +20,18 @@ def ls( path = None ):
     if path is None:
         path = os.getcwd()
     return os.listdir( path )
+
+def path_type(path=None):
+    TYPES = { "link" : os.path.islink,
+              "dir"  : os.path.isdir,
+              "file" : os.path.isfile }
+    if path is None:
+        return TYPES.keys()
+    
+    for typ, check in TYPES.iteritems():
+        if check(path):
+            return typ
+    raise ValueError("Invalid path '%s'."%path)
     
 def pushd( path = None ):
     if path is None:

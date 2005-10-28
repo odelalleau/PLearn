@@ -66,8 +66,8 @@ def command_output(command):
     @return: Output lines.
     @rtype:  Array of strings.
     """
-    breakpoint( command, False and command.startswith('diff') )
-    process = popen2.Popen4( command )
+    breakpoint(command, False and command.startswith('diff'))
+    process = popen2.Popen4(command)
 
     return process.fromchild.readlines()
 
