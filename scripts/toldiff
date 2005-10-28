@@ -69,7 +69,7 @@ def floats_are_equal(a, b, numtol=1e-6):
 
 
 def toldiff(filename1, filename2, numtol=1e-6, blanktol=0):
-
+    """Returns an error message or an empty string if the files are tol-identical."""
     f1 = open(filename1,'rb')
     f2 = open(filename2,'rb')
 
@@ -77,11 +77,12 @@ def toldiff(filename1, filename2, numtol=1e-6, blanktol=0):
     numerical = '+-0123456789.'
     numerical_e = numerical+'eE'
 
-    c1 = ' '
-    c2 = ' '
+    c1 = f1.read(1) 
+    c2 = f2.read(1)
 
-    while c1 or c2:
-        if c1 in numerical:
+    errmsg = lambda : 'Files differ before positions: %d %d'%(f1.tell(),f2.tell())
+    while c1 or c2:            
+        if c1 and c1 in numerical:
             num1 = ''
             num2 = ''
             while c1 and c1 in numerical_e:
@@ -93,9 +94,10 @@ def toldiff(filename1, filename2, numtol=1e-6, blanktol=0):
             if num1!=num2:
                 try:
                     if not floats_are_equal(float(num1),float(num2),numtol):
-                        break
+                        return errmsg()
                 except ValueError:
-                    break
+                    return errmsg()
+
         elif blanktol>0 and c1 in blanks:
             n1 = 0   # number of blanks in first file
             n2 = 0   # number of blanks in second file
@@ -106,19 +108,18 @@ def toldiff(filename1, filename2, numtol=1e-6, blanktol=0):
                 n2 += 1
                 c2 = f2.read(1)
             if abs(n1-n2)>blanktol:
-                break
+                return errmsg()
+
         elif c1!=c2:
-            break
+            return errmsg()
+
         else:
             c1 = f1.read(1)
             c2 = f2.read(1)
-            
-    else:       # We exited the while loop normally
-        return False
 
-    # We exited the while loop with a break statement
-    print filename1,'and',filename2,'differ before positions:',f1.tell(),f2.tell()
-    return True
+    # No errors encountered: empty error message.
+    return ''
+
     
 
 
@@ -143,4 +144,6 @@ if __name__=='__main__':
     except IndexError:
         blanktol = 0
     
-    toldiff(filename1, filename2, numtol, blanktol)
+    err = toldiff(filename1, filename2, numtol, blanktol)
+    if err:
+        print err
