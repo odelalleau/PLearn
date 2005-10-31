@@ -139,7 +139,7 @@ class Compilable(PyTestObject):
             "GlobalCompilableProgram or LocalCompilableProgram instead."
             )
 
-    def compilation_succeeded(self):
+    def compilationSucceeded(self):
         if Compilable._compilation_status.has_key(self._path):
             return Compilable._compilation_status[self._path]
 
@@ -185,7 +185,7 @@ class Compilable(PyTestObject):
         os.chdir( directory_when_called )
 
         ## This initializes the compilation status
-        self.compilation_succeeded()
+        self.compilationSucceeded()
 
     def path_to_target(self):
         raise NotImplementedError

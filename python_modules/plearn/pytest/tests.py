@@ -45,7 +45,7 @@ class StatsBook(dict):
     def inc(self, key):
         self[key] += 1 
         
-class TestStatus(PyPLearnObject):
+class TestStatus(PyPLearnObject):    
     _logfile_basename = 'STATUS.log'
     _completion_types = [ "PASSED", "DISABLED", "FAILED", "SKIPPED" ]
     _status_types     = [ "NEW", "STARTED" ] + _completion_types
@@ -65,10 +65,10 @@ class TestStatus(PyPLearnObject):
     summaryHeader = classmethod(summaryHeader)
 
     # Options
-    status = 'NEW'
-    directory = None
-    log = ''
-    test = ''
+    status = PLOption('NEW')
+    directory = PLOption(None)
+    log = PLOption('')
+    test = PLOption('')
 
     def __init__(self, test):        
         directory = test.directory()
@@ -102,7 +102,10 @@ class TestStatus(PyPLearnObject):
 
     def __str__(self):
         if self.status == "FAILED":
-            return "** FAILED **"
+            if self.test.compilationSucceeded():
+                return "** FAILED **"
+            else:
+                return "*C FAILED C*"
         return self.status
         
 if __name__ == '__main__':
@@ -244,13 +247,13 @@ class Test(PyTestObject):
                 % self.get_path()
                 )
             
-    def compilation_succeeded(self):
+    def compilationSucceeded(self):
         """Forwards compilation status request to the program.
 
         B{Note} that the call will raise an exception if the program
         is not compilable.
         """
-        return self.program.compilation_succeeded()
+        return self.program.compilationSucceeded()
 
     def compile(self):
         """Forwards compilation request to the program.
@@ -412,7 +415,7 @@ class Routine( PyTestObject ):
         vprint("------------", 2)
         
         self.test.compile()
-        if not self.test.compilation_succeeded():
+        if not self.test.compilationSucceeded():
             vprint("Compilation failed.", 2)
             self.test.setStatus("FAILED", "Compilation failed.")
             return False
