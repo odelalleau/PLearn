@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.3
+#!/usr/bin/env python
 __cvs_id__ = "$Id$"
 
 import sys
