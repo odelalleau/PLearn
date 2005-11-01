@@ -87,7 +87,7 @@ int main()
         string exception_msg = e.message();
         // Remove memory addresses from the exception message, as they may
         // differ from one computer to another, causing the test to fail.
-        boost::regex memory_adr("0x[abcdef0123456789]{8,}",
+        boost::regex memory_adr("0x[abcdef0123456789]{6,}",
                                 boost::regex::perl|boost::regex::icase);
         string msg_without_adr = regex_replace(exception_msg, memory_adr,
                                                "0x[memory_address]");
