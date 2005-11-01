@@ -126,8 +126,8 @@ void Popen::launch(const string& program, const vector<string>& arguments)
     if (!process) {
         PR_Close(stdin_parent);
         PR_Close(stdout_parent);
-        PLERROR("Popen: could not create subprocess. (%s)",
-                getPrErrorString().c_str());
+        PLERROR("Popen: could not create subprocess for command '%s'. (%s)",
+                program.c_str(), getPrErrorString().c_str());
     }
     process_alive = true;
 
