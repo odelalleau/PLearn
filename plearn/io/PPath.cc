@@ -52,14 +52,10 @@
 
 ///////////////////////  
 // DOS SETTINGS
-#if defined(WIN32)
+#if defined(WIN32) && !defined(__CYGWIN__)
 
-#if defined(__CYGWIN__)
-#define SYS_GETCWD     PLearn::getCygwinCwd
-#else
 #include <direct.h>
 #define SYS_GETCWD     _getcwd
-#endif
   
 ///////////////////////  
 // POSIX SETTINGS
@@ -74,22 +70,6 @@
 
 namespace PLearn {
 using namespace std;
-
-#if defined(__CYGWIN__)
-
-extern "C" void cygwin_conv_to_full_win32_path(const char *path,
-                                               char *win32_path);
-const char* getCygwinCwd(char* buf, size_t n)
-{
-    const char* cwd = ::getcwd(buf, n);
-    if (!cwd)
-        return 0;
-    string cwd_str = buf;
-    cygwin_conv_to_full_win32_path(cwd_str.c_str(), buf);
-    // TODO How to find out if it failed?
-    return buf;
-}
-#endif
 
 ////////////////////////////////////////////////////////
 //  Stringutils.h         //////////////////////////////
@@ -372,6 +352,11 @@ void PPath::setCanonicalInErrors(bool canonical)
     PPath::canonical_in_errors = canonical;
 }
 
+#if defined(__CYGWIN__)
+
+extern "C" void cygwin_conv_to_win32_path(const char *path,
+                                          char *win32_path);
+#endif
 
 //////////////////////////////////////////////  
 // PPath methods
@@ -385,10 +370,25 @@ PPath::PPath(const string& path_)
     // Empty path.
     if ( path_.empty() ) 
         return;
-    
+    const string* the_path = &path_;
+#ifdef __CYGWIN__
+    static char buf[3000];
+    string new_path;
+    // This is a hack to try to get the right DOS path from Cygwin.
+    // Because Cygwin has its own translation rules, not necessarily compatible
+    // with the PPath ones, we ask it to translate the path iff it starts with
+    // a UNIX '/' character. TODO We will need a home-made function
+    // to translate paths safely.
+    if (startsWith(*the_path, '/')) {
+        cygwin_conv_to_win32_path(the_path->c_str(), buf);
+        new_path = string(buf);
+        the_path = &new_path;
+    }
+#endif
+  
     // The path_ argument may contain environment variables that must be
     // expanded prior to any other processing.
-    string internal =  expandEnvVariables(  path_   );
+    string internal =  expandEnvVariables( *the_path );
   
     // The PPath internal string is set here
     string::operator=   ( internal );
@@ -396,7 +396,7 @@ PPath::PPath(const string& path_)
     expandMetaprotocols ( );
     resolveDots         ( );    
     parseProtocol       ( );
-    // pout << "Creating PPath from '" << path_ << "' --> '" << string(*this)
+    // pout << "Creating PPath from '" << *the_path << "' --> '" << string(*this)
     //      << "'" << endl;
 }
 
@@ -1019,8 +1019,8 @@ bool PPath::isRoot() const
     if (!isAbsPath())
         return false;
     PPath no_prot = removeProtocol();
-    PPath drv = no_prot.drive();
-    return string(no_prot) == string(drv) + _slash();
+    string drv = no_prot.drive();
+    return string(no_prot) == drv + _slash();
 }
 
 
