@@ -37,30 +37,30 @@ Z(sub_objects = [X(name="X1"),
                  *2])
 
 Built structure: 
-*2 ->Z(
+*1 ->Z(
 dummy_option1 = "" ;
-sub_objects = 7 [ *3 ->X(
+sub_objects = 7 [ *2 ->X(
 name = "X1" ;
 child = *0  )
-*4 ->X(
+*3 ->X(
 name = "X2" ;
 child = *0  )
-*5 ->Y(
+*4 ->Y(
 name = "Y3" ;
 child = *0  )
-*4  *6 ->Y(
+*3  *5 ->Y(
 name = "Y5" ;
 child = *0  )
-*7 ->X(
+*6 ->X(
 name = "X6" ;
-child = *8 ->X(
+child = *7 ->X(
 name = "" ;
-child = *9 ->Y(
+child = *8 ->Y(
 name = "innerY" ;
 child = *0  )
  )
  )
-*6  ] ;
+*5  ] ;
 dummy_option2 = 0  )
 
 Now traversing the graph in breadth-first:

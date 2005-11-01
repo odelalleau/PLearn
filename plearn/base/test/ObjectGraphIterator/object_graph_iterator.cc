@@ -155,6 +155,7 @@ int main()
     
             cout << endl << "Built structure: " << endl;
             pout << o << flush;
+            pout.copies_map_out.clear();
 
             cout << endl << "Now traversing the graph in breadth-first:" << endl;
             iterate(ObjectGraphIterator(o, ObjectGraphIterator::BreadthOrder, true),
