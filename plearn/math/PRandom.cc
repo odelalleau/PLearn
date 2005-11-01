@@ -203,7 +203,7 @@ void PRandom::fill_random_normal(const Vec& dest, real mean, real stddev) {
 /////////////////////////
 // fill_random_uniform //
 /////////////////////////
-void PRandom::fill_random_uniform(const Vec& dest, real min = 0, real max = 1)
+void PRandom::fill_random_uniform(const Vec& dest, real min, real max)
 {
     for (int i = 0; i < dest.length(); i++)
         dest[i] = bounded_uniform(min, max);
