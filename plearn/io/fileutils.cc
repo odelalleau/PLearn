@@ -231,25 +231,18 @@ vector<PPath> lsdir_fullpath(const PPath& dirpath)
 /////////////////
 bool force_mkdir(const PPath& dirname)
 {
-    // TODO Should be able to rewrite it better with PPath.
     if(isdir(dirname))
         return true;
-    string path = dirname.absolute();
-    string pathpart;
-    for (size_t pos = 1; pos != string::npos;) {
-        // Keep ++pos here!
-        ++pos;
-        pos = path.find(slash, pos);
-        if (pos != string::npos)
-            pathpart = path.substr(0, pos);
-        else
-            pathpart = path;
-
-        if(!isdir(pathpart)) {
-            if (PR_MkDir(pathpart.c_str(), 0775) != PR_SUCCESS)
-                return false;
-        }
+    vector<PPath> paths;
+    PPath path = dirname.absolute();
+    while (!path.isRoot()) {
+        paths.push_back(path);
+        path = path.up();
     }
+    for (int i = int(paths.size()) - 1; i >= 0; i--)
+        if (!isdir(paths[i]) &&
+            PR_MkDir(paths[i].absolute().c_str(), 0775) != PR_SUCCESS)
+            return false;
     return true;
 }
 
