@@ -55,6 +55,16 @@ class PyPLearnScript: public Object
 public:
     // STATIC METHODS
 
+// Althouth 'pyplearn_driver.py' is supposed to be in the path, it cannot be
+// executed by NSPR under Windows. Thus we have to give it to the Python
+// executable, which will need the full path to correctly run the script.
+#ifdef WIN32
+#define PYPLEARN_DRIVER_PATH \
+    PPath("PLEARNDIR:scripts/pyplearn_driver.py").absolute()
+#else
+#define PYPLEARN_DRIVER_PATH "pyplearn_driver.py"
+#endif
+
     /*!
       Given a filename, call an external process with the given name (default
       = "pyplearn_driver.py") to preprocess it and return the preprocessed
@@ -66,7 +76,7 @@ public:
     static PP<PyPLearnScript> process(
         const std::string& filename,
         const std::vector<std::string>& args = std::vector<std::string>(),
-        const std::string& drivername        = "pyplearn_driver.py" );
+        const std::string& drivername        = PYPLEARN_DRIVER_PATH );
 
     /*!
      * This static method forwards its arguments to process() and returns a 
@@ -78,7 +88,7 @@ public:
     static PP<Obj> load(
         const std::string& filename,
         const std::vector<std::string>& args = std::vector<std::string>(),
-        const std::string& drivername        = "pyplearn_driver.py" )
+        const std::string& drivername        = PYPLEARN_DRIVER_PATH )
     {
         PP<PyPLearnScript> script = PyPLearnScript::process(filename, args, drivername);
 
