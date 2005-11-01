@@ -207,9 +207,13 @@ public:
     //! Return a random number generated from a Gaussian with mean mu and stddev sigma.
     real gaussian_mu_sigma(real mu, real sigma);
 
-    //! Fill vector 'dest' with sample generated from a normal distribution
+    //! Fill vector 'dest' with samples generated from a normal distribution
     //! with mean 'mean' and standard deviation 'stddev'.
     void fill_random_normal(const Vec& dest, real mean = 0, real stddev = 1);
+
+    //! Fill vector 'dest' with samples generated from a uniform distribution
+    //! between 'minval' and 'maxval'.
+    void fill_random_uniform(const Vec& dest, real min = 0, real max = 1);
 
     //! Return a random number generated from an exponential distribution with
     //! parameter lambda = 1.
