@@ -69,6 +69,11 @@ process( const string& scriptfile,
     // the ${varname} syntax.
     map<string, string> vars;
 
+#ifdef WIN32
+    // Under Windows, we must specify that the driver needs to be run with
+    // Python, thus the driver becomes an argument.
+    final_args.push_back(drivername);
+#endif
     final_args.push_back(scriptfile);
   
     // This option is understood by the pyplearn driver so that is returns a
@@ -135,8 +140,11 @@ process( const string& scriptfile,
             }
         }
     }
-
+#ifdef WIN32
+    Popen popen("python2.4.exe", final_args);
+#else
     Popen popen(drivername, final_args);
+#endif
     PP<PyPLearnScript> pyplearn_script = new PyPLearnScript();
 
     popen.in >> *pyplearn_script;
