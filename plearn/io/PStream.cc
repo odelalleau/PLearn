@@ -1333,6 +1333,30 @@ PStream& PStream::operator<<(const char *x)
     return *this;
 }
 
+PStream& PStream::operator<<(const void* x)
+{
+    switch(outmode)
+    {
+    case PStream::raw_ascii:
+    case PStream::pretty_ascii:
+    case PStream::raw_binary:
+    case PStream::plearn_ascii:
+    case PStream::plearn_binary:
+    {
+        char buffer[1000];
+        snprintf(buffer, 1000, "%p ", x);
+        buffer[999] = '\0';
+        write(buffer);
+        break;
+    }
+    default:
+        PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
+        break;
+    }
+    return *this;
+}
+
+
 // TODO What if the string contains a word separator ??
 PStream& PStream::operator<<(const string &x)
 {

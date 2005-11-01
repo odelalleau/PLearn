@@ -394,6 +394,9 @@ public:
     //! (if you want to output a raw string use the write method instead)
     PStream& operator<<(const char *x);
 
+    //! Overload to print out raw pointers in the form 0x????????
+    PStream& operator<<(const void *x);
+    
     //! Warning: string output will be formatted according to outmode
     //! (if you want to output a raw string use the write method instead)
     //! (unless you're in raw_ascii or raw_binary mode!)
@@ -491,7 +494,7 @@ inline PStream& operator>>(PStream& in, T*& x)
 
 
 template <class T> 
-inline PStream& operator<<(PStream& out, const T*& x)
+inline PStream& operator<<(PStream& out, T const * const & x)
 {
     if(x)
     {
@@ -541,7 +544,7 @@ inline PStream& operator<<(PStream& out, const PP<T> &o)
 template <class T> 
 inline PStream& operator<<(PStream& out, T*& ptr)
 {
-    out << const_cast<const T * &>(ptr);
+    out << const_cast<T const * const &>(ptr);
     return out;
 }  
 
