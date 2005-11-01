@@ -199,12 +199,16 @@ linkeroptions_tail = ''
 ### find a better way to know where to find the libraries.
 ### TODO Should find a way to automatically find python version ?
 if domain_name.endswith('iro.umontreal.ca'):
-    numpy_includedirs   = [ '/u/lisa/local/' + platform + '/include/' ]
-    ### NB: The '-lutil' is necessary on i386 LISA computers.
-    numpy_site_packages = '/u/lisa/local/' + platform + '/lib/python2.4/site-packages/numarray -lutil'
     python_version = '2.4'
     compileflags += ' -DPL_PYTHON_VERSION=240'
     python_lib_root = '/usr/lib'
+    if platform == 'cygwin':
+        numpy_includedirs = [ ]
+        numpy_site_packages = '$HOME/local-cygwin/lib/python2.4/site-packages/numarray'
+    else:
+        numpy_includedirs   = [ '/u/lisa/local/' + platform + '/include/' ]
+        ### NB: The '-lutil' is necessary on i386 LISA computers.
+        numpy_site_packages = '/u/lisa/local/' + platform + '/lib/python2.4/site-packages/numarray -lutil'
 elif domain_name.endswith('.ms'):
     numpy_includedirs = [ '/opt/python2.4/include' ]
     numpy_site_packages = join(homedir, '../delallea/local/lib/python2.4/site-packages/numarray -lutil')
