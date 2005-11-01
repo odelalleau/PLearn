@@ -352,7 +352,6 @@ class Test(PyTestObject):
         ## Link 'physical' resources
         resources = []
         resources.extend( self.resources )
-        resources.append( self.program._path )        
         Resources.link_resources( self.directory(), resources, test_results )
 
         ## What remains of this method is used to make the following
@@ -385,8 +384,8 @@ class Test(PyTestObject):
         ppath.write_bindings( internal_config_file.write )
 
         ## This process now consider the internal_plearn_configs
-        os.putenv( "PLEARN_CONFIGS",   internal_plearn_configs )
-        os.putenv( "PLEARN_DATE_TIME", "NO"  )
+        os.environ[ 'PLEARN_CONFIGS'   ] =  internal_plearn_configs
+        os.environ[ 'PLEARN_DATE_TIME' ] = 'NO'
 
         ## Returns the test's results directory path
         return test_results
@@ -396,9 +395,9 @@ class Test(PyTestObject):
 
         @param test_results: B{Must} be the value returned by I{link_resources}.
         """
-        Resources.unlink_resources( test_results )
+        Resources.unlink_resources( self.resources, test_results )
         ppath.remove_binding( self.metaprotocol() )
-        os.putenv( "PLEARN_DATE_TIME", "YES" )
+        os.environ[ 'PLEARN_DATE_TIME' ] = 'YES'
 
 class Routine( PyTestObject ):
     test = PLOption(None)
@@ -479,9 +478,11 @@ class ResultsRelatedRoutine(Routine):
 
         test_results  = self.test.link_resources( results )
 
-        run_command   = ( "./%s %s >& %s"
-                          % ( self.test.program.get_name(), self.test.arguments, self.test.name+'.run_log' )
-                          )
+        run_command   = ( "%s %s >& %s" \
+                          % ( os.path.join(os.path.dirname(self.test.program.get_path()), \
+                                           self.test.program.get_name()),                 \
+                              self.test.arguments, self.test.name+'.run_log' )            \
+                        )
         
         vprint(run_command, 2)
 
@@ -493,9 +494,10 @@ class ResultsRelatedRoutine(Routine):
         self.clean_cwd( )
         os.chdir( cwd )
 
+        ## Clean directory from linked / copied resources.
+        self.test.unlink_resources( test_results )
         ## Set the status and quit
         self.status_hook()
-        self.test.unlink_resources( test_results )
 
     def status_hook(self):
         raise NotImplementedError
