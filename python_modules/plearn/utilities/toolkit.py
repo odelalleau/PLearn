@@ -107,7 +107,8 @@ def cross_product( list1,  list2,
                        ])
     return cross
 
-def date_time_string():
+def date_time_string(date_separator = '_', time_separator = ':', \
+                     date_time_separator = '_'):
     t = time.localtime()
     year  = str(t[0])
 
@@ -123,11 +124,15 @@ def date_time_string():
     mins  = length2( t[4] )
     secs  = length2( t[5] )
 
-    return "%s_%s_%s_%s:%s:%s" % ( year, month, day,
-                                   hour, mins,  secs ) 
+    return "%s%s%s%s%s%s%s%s%s%s%s" % ( year, date_separator, month,
+                                              date_separator, day,
+                                        date_time_separator,
+                                        hour, time_separator, mins,
+                                              time_separator, secs ) 
 
-def date_time_random_string():
-    s = date_time_string()
+def date_time_random_string(date_separator = '_', time_separator = ':', \
+                            date_time_separator = '_'):
+    s = date_time_string(date_separator, time_separator, date_time_separator)
     s += "_%d" % random.randint(1e03, 1e09)    
     return s
 
