@@ -141,6 +141,7 @@ const int num_tests = sizeof(test_objects) / sizeof(test_objects[0]);
 int main()
 {
     try {
+        pout.setMode(PStream::plearn_ascii);
         for (int i=0 ; i<num_tests ; ++i) {
             string test_object = test_objects[i];
             cout << endl
@@ -152,8 +153,8 @@ int main()
             PP<Object> o;
             strin >> o;
     
-            pout << endl << "Built structure: " << endl
-                 << o << flush;
+            cout << endl << "Built structure: " << endl;
+            pout << o << flush;
 
             cout << endl << "Now traversing the graph in breadth-first:" << endl;
             iterate(ObjectGraphIterator(o, ObjectGraphIterator::BreadthOrder, true),
