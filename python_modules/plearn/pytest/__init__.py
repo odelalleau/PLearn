@@ -41,8 +41,8 @@ def mail():
 ###################################################################################
 ## MAIN PROGRAM
 def main( pytest_version ):
-    os.environ['PyTest'] = 'Running'
-    
+    os.environ['PYTEST_STATE'] = 'Running'
+ 
     parser = ModeAndOptionParser( usage = "%prog mode [options] target*",
                                   version = "%prog " + pytest_version()   )
     

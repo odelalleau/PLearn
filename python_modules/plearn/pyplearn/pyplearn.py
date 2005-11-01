@@ -134,8 +134,8 @@ def generate_expdir( ):
     from plearn.utilities.toolkit import date_time_string    
 
     expdir = "expdir"        
-    if os.getenv('PyTest', '') != 'Running':                        
-        expdir = '%s_%s' % ( expdir, date_time_string() )
+    if (os.environ.get('PYTEST_STATE', '') != 'Running'):
+        expdir = '%s_%s' % ( expdir, date_time_string('_','_') )
 
     return expdir
 
