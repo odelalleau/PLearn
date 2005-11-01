@@ -6,7 +6,7 @@ DIR_STACK = []
 def cd( path = None ):
     """Emulate shell's cd --- forwards the call to os.chdir().
 
-    Mainly called as cd() as a shorthand to os.chdir( os.getenv('HOME') ).  
+    Mainly called as cd() as a shorthand to os.chdir( os.environ.get('HOME') ).  
     """
     if path is None:
         path = ppath.ppath('HOME')

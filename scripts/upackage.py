@@ -33,7 +33,7 @@
 #  library, go to the PLearn Web site at www.plearn.org
 
 # Author: Pascal Vincent
-__cvs_id__ = "$Id: upackage.py,v 1.8 2004/12/21 16:23:47 dorionc Exp $"
+__cvs_id__ = "$Id$"
 
 
 import sys
@@ -41,7 +41,7 @@ import os
 import string
 import urllib
 
-upackagedir = os.getenv('UPACKAGEDIR',os.path.join(os.getenv(os.getenv('HOME')),'.upackage'))
+upackagedir = os.environ.get('UPACKAGEDIR',os.path.join(os.environ.get(os.environ.get('HOME')),'.upackage'))
 
 def check_setup():
     """Checks setup for upackage."""
@@ -66,7 +66,7 @@ upackage_sources = [
     mkdir(os.path.join(upackagedir,'upackages'))
 
     improper_environment = False
-    if upackagedir not in string.split(os.getenv('PYTHONPATH'),':'):        
+    if upackagedir not in string.split(os.environ.get('PYTHONPATH'),':'):        
         print 'You must add '+upackagedir+' to the PYTHONPATH environment variable.'
         improper_environment = True
 
@@ -76,20 +76,20 @@ upackage_sources = [
     mkdir(prefixpath)
 
     libdir = os.path.join(prefixpath,'lib')
-    if libdir not in string.split(os.getenv('LD_LIBRARY_PATH'),':'):
+    if libdir not in string.split(os.environ.get('LD_LIBRARY_PATH'),':'):
         print 'You must add '+libdir+' to the LD_LIBRARY_PATH environment variable.'
         improper_environment = True
 
-    if libdir not in string.split(os.getenv('LIBRARY_PATH'),':'):
+    if libdir not in string.split(os.environ.get('LIBRARY_PATH'),':'):
         print 'You must add '+libdir+' to the LIBRARY_PATH environment variable.'
         improper_environment = True
 
     includedir = os.path.join(prefixpath,'include')
-    if includedir not in string.split(os.getenv('CPATH'),':'):
+    if includedir not in string.split(os.environ.get('CPATH'),':'):
         print 'You must add '+includedir+' to the CPATH environment variable.'
         improper_environment = True
 
-    execpath = string.split(os.getenv('PATH'),':')
+    execpath = string.split(os.environ.get('PATH'),':')
     bindir = os.path.join(prefixpath,'bin')
     if bindir not in execpath:
         print 'You must add '+bindir+' to the PATH environment variable.'
@@ -281,13 +281,13 @@ def get_environment_prefixpath():
     then the function calls environment_help_and_exit()
     """
 
-    upackage_prefix_path = os.getenv('UPACKAGE_PREFIX_PATH')
+    upackage_prefix_path = os.environ.get('UPACKAGE_PREFIX_PATH')
     if not upackage_prefix_path:
         print 'Environment variable UPACKAGE_PREFIX_PATH not defined!!!\n'
         environment_help_and_exit()
     upackage_prefix_path = [ string.rstrip(d,'/') for d in string.split(upackage_prefix_path,':') if d!='' ]
 
-    ld_library_path = os.getenv('LD_LIBRARY_PATH')
+    ld_library_path = os.environ.get('LD_LIBRARY_PATH')
     if not ld_library_path:
         print 'Environment variable LD_LIBRARY_PATH not defined!!!\n'
         environment_help_and_exit()
@@ -297,7 +297,7 @@ def get_environment_prefixpath():
             print os.path.join(d,'lib'), 'not in LD_LIBRARY_PATH' 
             environment_help_and_exit()
 
-    library_path = os.getenv('LIBRARY_PATH')
+    library_path = os.environ.get('LIBRARY_PATH')
     if not library_path:
         print 'Environment variable LIBRARY_PATH not defined!!!\n'
         environment_help_and_exit()
@@ -307,7 +307,7 @@ def get_environment_prefixpath():
             print os.path.join(d,'lib'), 'not in LIBRARY_PATH' 
             environment_help_and_exit()
 
-    cpath = os.getenv('CPATH')
+    cpath = os.environ.get('CPATH')
     if not cpath:
         print 'Environment variable CPATH not defined!!!\n'
         environment_help_and_exit()

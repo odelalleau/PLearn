@@ -171,7 +171,7 @@ def locate_lib(libfilename):
     If found, returns the full path of the library file.
     If not found, returns the empty string."""
 
-    libdirs = ['/lib','/usr/lib'] + string.split(os.getenv('LD_LIBRARY_PATH',''),':') + string.split(os.getenv('LIBRARY_PATH',''),':')
+    libdirs = ['/lib','/usr/lib'] + string.split(os.environ.get('LD_LIBRARY_PATH',''),':') + string.split(os.environ.get('LIBRARY_PATH',''),':')
     libdirs = [ d for d in libdirs if d!='' ] 
     for dirpath in libdirs:
         filepath = os.path.join(dirpath,libfilename)
@@ -186,7 +186,7 @@ def locate_include(includename):
     If found, returns the path of the directory containing the file.
     If not found, returns the empty string."""
 
-    includedirs = ['/usr/include','/usr/local/include'] + string.split(os.getenv('CPATH',''),':') + string.split(os.getenv('C_INCLUDE_PATH',''),':') + string.split(os.getenv('CPLUS_INCLUDE_PATH',''),':')
+    includedirs = ['/usr/include','/usr/local/include'] + string.split(os.environ.get('CPATH',''),':') + string.split(os.environ.get('C_INCLUDE_PATH',''),':') + string.split(os.environ.get('CPLUS_INCLUDE_PATH',''),':')
     includedirs = [ d for d in includedirs if d!='' ] 
     for dirpath in includedirs:
         filepath = os.path.join(dirpath,includename)
@@ -200,7 +200,7 @@ def locate_bin(binname):
     If found, returns the full path of the the file.
     If not found, returns the empty string."""
 
-    bindirs = ['/bin','/usr/bin','/usr/local/bin'] + string.split(os.getenv('PATH',''),':')
+    bindirs = ['/bin','/usr/bin','/usr/local/bin'] + string.split(os.environ.get('PATH',''),':')
     bindirs = [ d for d in bindirs if d!='' ] 
     for dirpath in bindirs:
         filepath = os.path.join(dirpath,binname)

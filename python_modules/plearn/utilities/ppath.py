@@ -50,11 +50,11 @@ __all__ = [
 ########################################
 
 ## Under Windows, the user must define its home prior to running this setup
-home                   = os.getenv( 'HOME', "" )
+home                   = os.environ.get( 'HOME', "" )
 
 ## The main PLearn     environment variable: PLEARN_CONFIGS
-plearn_configs         = os.getenv( 'PLEARN_CONFIGS',
-                                   os.path.join(home, '.plearn') )
+plearn_configs         = os.environ.get( 'PLEARN_CONFIGS',
+                                         os.path.join(home, '.plearn') )
 
 ## The file path to     the ppath_config file
 config_file_path       = os.path.join( plearn_configs, "ppath.config" )
@@ -112,7 +112,7 @@ def expandEnvVariables( path ):
     while begvar != -1 and endvar != -1:        
         start    = begvar+2;
         envvar   = expanded[start:endvar]
-        envpath  = os.getenv(envvar, "");
+        envpath  = os.environ.get(envvar, "");
 
         if envpath == "":
             raise ValueError( "Unknown environment variable %s in %s."
