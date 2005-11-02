@@ -209,18 +209,21 @@ void PyPLearnScript::declareOptions(OptionList& ol)
 
 void PyPLearnScript::close()
 {
-    if ( expdir != "" )
+    if ( !expdir.isEmpty() )
     {
-        if ( ! isdir( expdir ) )
-            PLERROR( "The expdir '%s' managed by this PyPLearnScript was not created.",
-                     expdir.c_str() );
-    
-        PStream out = openFile( expdir / "metainfos.txt", PStream::raw_ascii, "w" );
-        out << "__REVISION__ = " << pl_repository_revision() << endl;
-        out << metainfos << endl;
+        if ( ! isdir( expdir ) ) {
+            // TODO Why should the expdir be systematically created?
+        //     PLERROR( "The expdir '%s' managed by this PyPLearnScript was not created.",
+        //           expdir.c_str() );
+        } else {
 
-        out = openFile( expdir / "experiment.plearn", PStream::raw_ascii, "w" );
-        out << plearn_script << endl;
+            PStream out = openFile( expdir / "metainfos.txt", PStream::raw_ascii, "w" );
+            out << "__REVISION__ = " << pl_repository_revision() << endl;
+            out << metainfos << endl;
+
+            out = openFile( expdir / "experiment.plearn", PStream::raw_ascii, "w" );
+            out << plearn_script << endl;
+        }
     }
 }
 
