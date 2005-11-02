@@ -1,9 +1,8 @@
 // -*- C++ -*-
 
-// plearn_tests_inc.h
+// plearn_tests.cc
+// Copyright (C) 2005 Olivier Delalleau
 //
-// Copyright (C) 2005 Olivier Delalleau 
-// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -32,44 +31,32 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
+
 /* *******************************************************      
- * $Id: plearn_tests_inc.h 4275 2005-10-20 00:34:14Z tihocan $ 
+ * $Id: plearn.cc 3995 2005-08-25 13:58:23Z chapados $
  ******************************************************* */
 
-// Authors: Olivier Delalleau
+// Include only what is necessary to run the C++ PTest tests.
 
-/*! \file plearn_inc.h */
+#include "plearn_tests_inc.h"
+#include "PLearnCommands/plearn_main.h"
 
-/*! Include here all PLearn test classes */
+using namespace PLearn;
 
-#ifndef plearn_tests_inc_INC
-#define plearn_tests_inc_INC
+int main(int argc, char** argv)
+{
+    return plearn_main( argc, argv );
+}
 
-// Convenient vim macro to comment all tests (useful to debug a given test):
-//      %s/\(\#include\(.\)\+Test.h>\)/\/\/\1/
-// And another vim macro to restore all tests:
-//      %s/\/\/\#include/#include/
-
-/*********
- * PTest *
- *********/
-#include <plearn/misc/PTest.h>
-#include <plearn/io/test/PPathTest.h>
-#include <plearn/math/test/TMat/TMatTest.h>
-
-// Some other minimal includes to be able to run tests.
-
-/***********
- * Command *
- ***********/
-#include <commands/PLearnCommands/DiffCommand.h>
-#include <commands/PLearnCommands/ReadAndWriteCommand.h>
-#include <commands/PLearnCommands/RunCommand.h>
-
-/**********
- * Object *
- **********/
-#include <plearn/misc/RunObject.h>
-
-#endif
-
+
+/*
+  Local Variables:
+  mode:c++
+  c-basic-offset:4
+  c-file-style:"stroustrup"
+  c-file-offsets:((innamespace . 0)(inline-open . 0))
+  indent-tabs-mode:nil
+  fill-column:79
+  End:
+*/
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :

@@ -70,10 +70,6 @@
 #include <plearn/misc/RunObject.h>
 #include <plearn/db/UCISpecification.h>
 #include <plearn_learners/testers/PTester.h>
-// You can safely comment out the line below if you do not wish to run the
-// PLearn test suite.
-#include <commands/plearn_tests_inc.h>
-
 
 /***********
  * Command *
