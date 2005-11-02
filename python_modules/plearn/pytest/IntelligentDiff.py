@@ -1,8 +1,6 @@
 __version_id__ = "$Id: IntelligentDiff.py 4080 2005-09-13 13:49:47Z tihocan $"
 
-import copy, os, string, sys
-
-from   shutil                        import copy, copytree
+import copy, os, shutil, string, sys
 
 from   programs                      import PyTestError
 
@@ -28,11 +26,11 @@ class Resources:
                 if (os.path.isdir(resource)):
                     vprint( "Recursively copying resource: %s <- %s." \
                             % ( target, resource ), 3 )
-                    copytree( resource, target, symlinks = False )
+                    shutil.copytree( resource, target, symlinks = False )
                 else:
                     vprint( "Copying resource: %s <- %s." \
                             % ( target, resource ), 3 )
-                    copy ( resource, target )
+                    shutil.copy( resource, target )
 
             else:
                 vprint( "Linking resource: %s -> %s." % ( target, resource ), 3 )
