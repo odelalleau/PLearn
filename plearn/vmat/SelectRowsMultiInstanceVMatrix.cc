@@ -197,7 +197,11 @@ void SelectRowsMultiInstanceVMatrix::build_()
 // ?? Modify the width, length, (tagetsize, inputsize and weight) size attribute.
    // We suppose that the source and source_select have the same targetsize and weightsize
     length_ = indices.length();
-    inputsize_ = source->width() - source_select->inputsize()- (2 * source_select->targetsize()) - (2 * source_select->weightsize());
+    if(!source_select) {
+        inputsize_ = source->inputsize();    
+    } else {
+        inputsize_ = source->width() - source_select->inputsize()- (2 * source_select->targetsize()) - (2 * source_select->weightsize());
+    }
     targetsize_ = source->targetsize();
     weightsize_ = source->weightsize(); 
  
