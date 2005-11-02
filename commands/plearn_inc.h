@@ -70,6 +70,10 @@
 #include <plearn/misc/RunObject.h>
 #include <plearn/db/UCISpecification.h>
 #include <plearn_learners/testers/PTester.h>
+// You can safely comment out the line below if you do not wish to run the
+// PLearn test suite.
+#include <commands/plearn_tests_inc.h>
+
 
 /***********
  * Command *
@@ -201,7 +205,6 @@
 #include <plearn/vmat/ToBagSplitter.h>
 #include <plearn/vmat/TrainTestSplitter.h>
 #include <plearn/vmat/TrainValidTestSplitter.h>
-#include <plearn/vmat/UCIDataVMatrix.h>
 
 /************
  * Variable *
@@ -260,6 +263,7 @@
 #include <plearn/vmat/TextFilesVMatrix.h>
 #include <plearn/vmat/ThresholdVMatrix.h>
 #include <plearn/vmat/TransposeVMatrix.h>
+#include <plearn/vmat/UCIDataVMatrix.h>
 #include <plearn/vmat/ViewSplitterVMatrix.h>
 #include <plearn/vmat/VMatrixFromDistribution.h>
 #endif
