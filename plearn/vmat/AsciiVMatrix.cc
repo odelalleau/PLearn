@@ -168,7 +168,7 @@ void AsciiVMatrix::build_()
                     //file.seekg(current_pos); // TODO How to do this with PStreams ?
 
                     // we set length_max
-                    int width_ndigits = (int)log(real(width)) + 1;
+                    int width_ndigits = (int)pl_log(real(width)) + 1;
                     string remain = removenewline(line.substr(pos+1));
                     int length_ndigits = (int)remain.length() - width_ndigits - 1;
                     length_max = (int)pow(10.0,double(length_ndigits)) - 1;
@@ -209,7 +209,7 @@ void AsciiVMatrix::build_()
 
                     // file.seekg(vmatlength_pos); // TODO How to do this with PStreams ?
                     file.getline(line);
-                    int width_ndigits = (int)log(real(width)) + 1;
+                    int width_ndigits = (int)pl_log(real(width)) + 1;
                     int max_length_ndigits = (int)line.length() - width_ndigits - 1;
                     length_max = (int)pow(10.0,double(max_length_ndigits)) - 1;
                 }

@@ -262,7 +262,7 @@ void GaussMix::build_()
     if (n_input == 0) {
         // No input part: the p_j_x must be obtained from the alpha.
         for (int j = 0; j < L; j++) {
-            log_p_j_x[j] = log(alpha[j]);
+            log_p_j_x[j] = pl_log(alpha[j]);
         }
         p_j_x << alpha;
     }
@@ -546,7 +546,7 @@ void GaussMix::computePosteriors() {
         for (int j = 0; j < L; j++) {
             // TODO See if we can optimize some stuff when calling
             // computeLogLikelihood for each value of j.
-            log_likelihood_post[j] = computeLogLikelihood(sample_row, j) + log(alpha[j]);
+            log_likelihood_post[j] = computeLogLikelihood(sample_row, j) + pl_log(alpha[j]);
 #ifdef BOUNDCHECK
 #ifdef __INTEL_COMPILER
 #pragma warning(disable:279)  // Get rid of compiler warning.
@@ -971,10 +971,10 @@ void GaussMix::precomputeStuff() {
                 if (var_min<epsilon && eigenvalues(j,k) < epsilon)
                     PLWARNING("In GaussMix::precomputeStuff - An eigenvalue is near zero");
 #endif
-                log_det += log(max(var_min,eigenvalues(j,k)));
+                log_det += pl_log(max(var_min,eigenvalues(j,k)));
             }
             if (D - n_eigen_computed > 0)
-                log_det += log(max(var_min,eigenvalues(j, n_eigen_computed - 1))) * (D - n_eigen_computed);
+                log_det += pl_log(max(var_min,eigenvalues(j, n_eigen_computed - 1))) * (D - n_eigen_computed);
             log_coeff[j] = - 0.5 * (D * Log2Pi + log_det );
         }
     } else
@@ -1074,7 +1074,7 @@ void GaussMix::setInput(const Vec& input) const {
         PLERROR("In GaussMix::setInput - Not implemented for this type");
     }
     for (int j = 0; j < L; j++)
-        log_p_x_j_alphaj[j] = computeLogLikelihood(input, j, true) + log(alpha[j]);
+        log_p_x_j_alphaj[j] = computeLogLikelihood(input, j, true) + pl_log(alpha[j]);
     real log_p_x = logadd(log_p_x_j_alphaj);
     real t;
     for (int j = 0; j < L; j++) {

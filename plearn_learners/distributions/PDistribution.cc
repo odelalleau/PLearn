@@ -281,7 +281,7 @@ void PDistribution::computeCostsFromOutputs(const Vec& input, const Vec& output,
     }
     else if(outputs_def[0] == 'd')
     {
-        costs[0] = -log(output[0]);
+        costs[0] = -pl_log(output[0]);
     }
     else
         PLERROR("In PDistribution::computeCostsFromOutputs currently can only 'compute' \n"

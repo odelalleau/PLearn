@@ -61,12 +61,12 @@ real pl_gammln(real z)
 {
     double gz,tmp;
     static double gamma = 5.0;
-    gz = (z+0.5)*log(z+gamma+0.5);
+    gz = (z+0.5)*pl_log(z+gamma+0.5);
     gz -= z+gamma+0.5;
-    gz += 0.5*log(2*Pi);
+    gz += 0.5*pl_log(2*Pi);
     tmp = pl_gammln_cof[0];
     for(int i=1;i<7;i++) tmp += pl_gammln_cof[i]/(z+i);
-    gz += log(tmp/z);
+    gz += pl_log(tmp/z);
     return(gz);
 }
 
@@ -80,7 +80,7 @@ real pl_dgammlndz(real z)
         tmp0+= pl_gammln_cof[i]/(z+i);
         tmp1-= pl_gammln_cof[i]/((z+i)*(z+i));
     }
-    return (0.5+z)/(5.5+z)-1 + z*(-tmp0/(z*z) + tmp1/z)/tmp0 + log(5.5+z);
+    return (0.5+z)/(5.5+z)-1 + z*(-tmp0/(z*z) + tmp1/z)/tmp0 + pl_log(5.5+z);
 }
 
 
@@ -101,7 +101,7 @@ real pl_gser(real a, real x) {
         sum += term;
         if (term < sum*EPSILON) break;
     }
-    return exp(-x+a*log(x)-g)*sum;
+    return exp(-x+a*pl_log(x)-g)*sum;
 }
 
 
@@ -135,7 +135,7 @@ real  pl_gcf(real a, real x)
         PLWARNING("\"a\" is too large, ITMAX too small in "
                   "calling pl_gcf(%f,%f)", a,x);
     }
-    return exp(-x+a*log(x)-(gln))*h;
+    return exp(-x+a*pl_log(x)-(gln))*h;
 }
 
 
@@ -203,7 +203,7 @@ real gauss_01_log_density(real x)
 real gauss_log_density_var(real x, real mu, real var)
 {
     real dx=x-mu;
-    return -0.5*(dx*dx/var + Log2Pi + log(var));
+    return -0.5*(dx*dx/var + Log2Pi + pl_log(var));
 
 }
 
@@ -215,7 +215,7 @@ real gauss_density_var(real x, real mu, real var) {
 real gauss_log_density_stddev(real x, real mu, real sigma)
 {
     real dx = (x-mu) / sigma;
-    return -0.5*(dx*dx + Log2Pi) - log(sigma);
+    return -0.5*(dx*dx + Log2Pi) - pl_log(sigma);
 }
 
 real p_value(real mu, real vn)

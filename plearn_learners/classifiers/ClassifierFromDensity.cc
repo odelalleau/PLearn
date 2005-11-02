@@ -170,7 +170,7 @@ void ClassifierFromDensity::train()
         map<real, TVec<int> > indices = indicesOfOccurencesInColumn(train_set, inputsize());
 
         for(int c=0; c<nclasses; c++)
-            log_priors[c] = log(real(indices[real(c)].length())) - log(real(train_set.length())); // how many do we have?
+            log_priors[c] = pl_log(real(indices[real(c)].length())) - pl_log(real(train_set.length())); // how many do we have?
 
         PPath expd = getExperimentDirectory();
 

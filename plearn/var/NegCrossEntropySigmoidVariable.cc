@@ -108,11 +108,11 @@ void NegCrossEntropySigmoidVariable::fprop()
         } else {
             if (fast_exact_is_equal(regularizer, 0)) {
                 // Standard cross entropy.
-                cost += target*log(output) + (1.0-target)*log(1.0-output);
+                cost += target*pl_log(output) + (1.0-target)*pl_log(1.0-output);
             } else {
                 // Regularized cross entropy.
-                cost += target*((1 - regularizer) * log(output) + regularizer * log(1.0 - output)) +
-                    (1.0-target)*((1 - regularizer) * log(1.0-output) + regularizer * log(output));
+                cost += target*((1 - regularizer) * pl_log(output) + regularizer * pl_log(1.0 - output)) +
+                    (1.0-target)*((1 - regularizer) * pl_log(1.0-output) + regularizer * pl_log(output));
             }
         }
     }

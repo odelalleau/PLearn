@@ -826,7 +826,7 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
             pstack.push(ceil(pstack.pop()));
             break;
         case 25: // log
-            pstack.push(log(pstack.pop()));
+            pstack.push(pl_log(pstack.pop()));
             break;
         case 26: // exp
             pstack.push(exp(pstack.pop()));

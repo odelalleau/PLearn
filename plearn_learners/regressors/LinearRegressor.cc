@@ -396,9 +396,9 @@ void LinearRegressor::computeInformationCriteria(real squared_error, int n)
     // NOTE the change in semantics: squared_error is now a MEAN squared error
 
     real M = weights.length() * weights.width();
-    real lnsqerr = log(squared_error);
+    real lnsqerr = pl_log(squared_error);
     AIC = lnsqerr + 2*M/n;
-    BIC = lnsqerr + M*log(real(n))/n;
+    BIC = lnsqerr + M*pl_log(real(n))/n;
 }
 
 void LinearRegressor::computeResidualsVariance(const Vec&

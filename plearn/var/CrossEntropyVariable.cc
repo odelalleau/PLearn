@@ -93,7 +93,7 @@ void CrossEntropyVariable::fprop()
             PLERROR("CrossEntropyVariable::fprop: model output is either exactly "
                     "0.0 or 1.0; cannot compute cost function");
         if (!fast_exact_is_equal(output,0) && !fast_exact_is_equal(output,1)) {
-            cost += target*log(output) + (1.0-target)*log(1.0-output);
+            cost += target*pl_log(output) + (1.0-target)*pl_log(1.0-output);
         }
     }
     valuedata[0] = -cost;

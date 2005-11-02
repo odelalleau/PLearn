@@ -97,7 +97,7 @@ real safeflog(real a)
         PLERROR("safeflog: negative argument (%f)", a);
     if (a < 1e-25)
         return -57.5;
-    else return (real)log((double)a);
+    else return (real)pl_log((double)a);
 }
 
 real safeexp(real a)
@@ -114,12 +114,12 @@ real safeexp(real a)
 
 real log(real base, real a)
 {
-    return log(a) / log(base);
+    return pl_log(a) / pl_log(base);
 }
 
 real logtwo(real a)
 {
-    return log(a) / LOG_2;
+    return pl_log(a) / LOG_2;
 }
 
 real safeflog(real base, real a)
@@ -216,13 +216,13 @@ real positive_dilogarithm(real x)
     if (x<0.5)
         return small_dilogarithm(x);
     else if (x<1.0)
-        return Pi*Pi/6.0 - small_dilogarithm(1.0-x) - log(x)*log(1-x);
+        return Pi*Pi/6.0 - small_dilogarithm(1.0-x) - pl_log(x)*pl_log(1-x);
     else if (fast_exact_is_equal(x, 1.0))
         return Pi*Pi/6.0;
     else if (x<=1.01)
     {
         real delta=x-1.0;
-        real log_delta=log(delta);
+        real log_delta=pl_log(delta);
         return Pi*Pi/6.0 + delta*(1-log_delta+delta*
                                   ((2*log_delta-1)/4 + delta*
                                    ((1-3*log_delta)/9 + delta*
@@ -234,11 +234,11 @@ real positive_dilogarithm(real x)
     }
     else if (x<=2.0)
     {
-        real logx = log(x);
-        return Pi*Pi/6.0 + small_dilogarithm(1.0-1.0/x) - logx*(0.5*logx+log(1-1/x));
+        real logx = pl_log(x);
+        return Pi*Pi/6.0 + small_dilogarithm(1.0-1.0/x) - logx*(0.5*logx+pl_log(1-1/x));
     } else 
     {
-        real logx = log(x);
+        real logx = pl_log(x);
         return Pi*Pi/3.0 - small_dilogarithm(1.0/x) - 0.5*logx*logx;
     }
 }

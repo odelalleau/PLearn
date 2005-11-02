@@ -198,13 +198,13 @@ real logOfCompactGaussian(const Vec& x, const Vec& mu,
             lambda_i += gamma;
         if(lambda_i<=0) // we've reached a 0 eigenvalue, stop computation here.
             break;
-        log_det += log(lambda_i);
+        log_det += pl_log(lambda_i);
         q += (1./lambda_i - inv_gamma)*square(dot(eigenvectors(i),x_minus_mu));
     }
     if(kk<d)
-        log_det += log(gamma)*(d-i);
+        log_det += pl_log(gamma)*(d-i);
 
-    double logp = -0.5*( d*log(2*M_PI) + log_det + q);
+    double logp = -0.5*( d*pl_log(2*M_PI) + log_det + q);
     // cerr << "logOfCompactGaussian q=" << q << " log_det=" << log_det << " logp=" << logp << endl;
     // exit(0);
     return real(logp);
@@ -229,14 +229,14 @@ real logOfNormal(const Vec& x, const Vec& mu, const Mat& C)
     // det(C) = square(product_i L_ii)
     double logdet = 0;
     for(int i=0; i<n; i++)
-        logdet += log(L(i,i));
+        logdet += pl_log(L(i,i));
     logdet += logdet;
 
     // Finally find z, such that C.z = x-mu
     choleskySolve(L, x_mu, z, y);
 
     double q = dot(x_mu, z);
-    double logp = -0.5*( n*log(2*M_PI) + logdet + q);
+    double logp = -0.5*( n*pl_log(2*M_PI) + logdet + q);
     // cerr << "logOfNormal q=" << q << " logdet=" << logdet << " logp=" << logp << endl;
     return real(logp);
 }

@@ -865,7 +865,7 @@ real ConditionalDensityNet::log_density(const Vec& y) const
     d.resize(1);
     target->value << y;
     density_f->fprop(output_and_target_values, d);
-    return log(d[0]);
+    return pl_log(d[0]);
 }
 
 real ConditionalDensityNet::survival_fn(const Vec& y) const

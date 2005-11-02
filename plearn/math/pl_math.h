@@ -87,10 +87,23 @@ extern _plearn_nan_type plearn_nan;
 #if defined(MSC_VER) || defined(__CYGWIN__)
 #define INFINITY HUGE_VAL
 #endif
-  
+
+//! Under Cygwin with GCC, log(x) with x < 0 returns -Inf instead of NaN.
+//! Thus one should use the 'pl_log' function instead of 'log', so that this
+//! behavior can safely be fixed.
+inline real log_force_nan_if_negative(real a)
+    { return a < 0 ? MISSING_VALUE : std::log(a); }
+#if defined(__CYGWIN__) && defined(__GNUC__)
+#define pl_log log_force_nan_if_negative
+#else
+#define pl_log std::log
+#endif
+// Every now and then, uncomment the line below in order to spot places where
+// 'log' is used instead of 'pl_log'.
+// #define log USE_pl_log_INSTEAD_OF_log
+
 using namespace std;
 
-using std::log;
 using std::sqrt;
 using std::pow;
 using std::exp;
@@ -155,7 +168,7 @@ inline real negative(real a) { if (a<0) return a; return 0; }
 //!  declared it obsolete in 1990 or so
 #define drand48() ( rand()/ (double)(RAND_MAX+1) )
 //!  Non-ansi, BSD function
-#define log1p(a) log((real)1.0+(real)a)
+#define log1p(a) pl_log((real)1.0+(real)a)
 #define rint(a) (int)(a+(real)0.5)
 #define isnan(x) _isnan(x)
 #define finite(x) _finite(x)
@@ -389,7 +402,7 @@ inline real inverse_sigmoid(real x)
     else if (fast_is_equal(x,1.,REAL_MAX,1e-5))
         return 14.5;
     else
-        return real(-log(1./x - 1.));
+        return real(-pl_log(1./x - 1.));
 }
 
 //!  numerically stable computation of log(1+exp(x))
@@ -435,7 +448,7 @@ inline real inverse_softplus(real y)
         return y;
     if (fast_exact_is_equal(y, 0))
         return -30;
-    return log(exp(y)-1);
+    return pl_log(exp(y)-1);
 }
 
 inline real hard_slope(real x, real left=0, real right=1)

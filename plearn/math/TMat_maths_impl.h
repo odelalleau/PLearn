@@ -380,7 +380,7 @@ T sum_of_log(const TVec<T>& vec)
     double res = 0.0;
     T* v = vec.data();
     for(int i=0; i<vec.length(); i++)
-        res += log(v[i]);
+        res += pl_log(v[i]);
     return T(res);
 }
 
@@ -1032,7 +1032,7 @@ void compute_log(const TVec<T>& src, const TVec<T>& dest)
     T* pd = dest.data();
     int n = src.length();
     for(int i=0; i<n; i++)
-        *pd++ = log(*ps++);
+        *pd++ = pl_log(*ps++);
 }
 
 template<class T>
@@ -4032,7 +4032,7 @@ T geometric_mean(const TMat<T>& mat)
             if (mij<=0)
                 PLERROR("geometric_mean(TMat<T>): argument %g <=0 at position (%d,%d)",
                         mij,i,j);
-            res += log(m_i[j]);
+            res += pl_log(m_i[j]);
         }
     return T(exp(res/(mat.length()*mat.width())));
 }
@@ -5346,9 +5346,9 @@ real choleskyInvert(const TMat<T>& A, TMat<T>& Ainv)
     choleskyDecomposition(A,L);
     // now L L' = A
 
-    real logdet = log(fabs(L(0,0)));
+    real logdet = pl_log(fabs(L(0,0)));
     for(int i=1; i<n; i++)
-        logdet += log(fabs(L(i,i)));
+        logdet += pl_log(fabs(L(i,i)));
     logdet *= 2;
 
     // Compute Linv and put its transpose above L's diagonal.

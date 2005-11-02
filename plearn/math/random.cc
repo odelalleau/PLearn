@@ -79,10 +79,10 @@ real  log_gamma(real xx)
 
     y=x=xx;
     tmp=x+5.5;
-    tmp -= (x+0.5)*log(tmp);
+    tmp -= (x+0.5)*pl_log(tmp);
     ser=1.000000000190015;
     for (j=0;j<=5;j++) ser += gamma_coeffs[j]/++y;
-    return -tmp+log(2.5066282746310005*ser/x);
+    return -tmp+pl_log(2.5066282746310005*ser/x);
 }
 
 /*! returns the natural logarithm of the beta function */
@@ -147,7 +147,7 @@ real incomplete_beta(real z, real x, real y)
 {
     if (z>1 || z<0) PLERROR("incomplete_beta(z,x,y): z =%f must be in [0,1]",z);
     real coeff = 0;
-    if (z>0 && z<1) coeff = exp(x*log(z)+y*log(1.-z)-log_beta(x,y));
+    if (z>0 && z<1) coeff = exp(x*pl_log(z)+y*pl_log(1.-z)-log_beta(x,y));
     if (z*(x+y+2)<x+1) {
         return coeff*incomplete_beta_continued_fraction(z,x,y)/x;
     }
@@ -322,7 +322,7 @@ real  expdev()
     do
         dum=uniform_sample();
     while (fast_exact_is_equal(dum, 0.0));
-    return -log(dum);
+    return -pl_log(dum);
 }
 
 real gaussian_01() 
@@ -336,7 +336,7 @@ real gaussian_01()
             v2=2.0*uniform_sample()-1.0;
             rsq=v1*v1+v2*v2;
         } while (rsq >= 1.0 || fast_exact_is_equal(rsq, 0.0));
-        fac=sqrt(-2.0*log(rsq)/rsq);
+        fac=sqrt(-2.0*pl_log(rsq)/rsq);
         gset=v1*fac;
         iset=1;
         return v2*fac;
@@ -399,7 +399,7 @@ real  gamdev(int ia)
     if (ia < 6) {
         x=1.0;
         for (j=1;j<=ia;j++) x *= uniform_sample();
-        x = -log(x);
+        x = -pl_log(x);
     } else {
         do {
             do {
@@ -412,7 +412,7 @@ real  gamdev(int ia)
                 s=sqrt(2.0*am+1.0);
                 x=s*y+am;
             } while (x <= 0.0);
-            e=(1.0+y*y)*exp(am*log(x/am)-s*y);
+            e=(1.0+y*y)*exp(am*pl_log(x/am)-s*y);
         } while (uniform_sample() > e);
     }
     return x;
@@ -443,7 +443,7 @@ real  poidev(real xm)
         if (!fast_exact_is_equal(xm, oldm)) {
             oldm=xm;
             sq=sqrt(2.0*xm);
-            alxm=log(xm);
+            alxm=pl_log(xm);
             g=xm*alxm-log_gamma(xm+1.0);
         }
         do {
@@ -493,8 +493,8 @@ real  bnldev(real pp, int n)
             nold=n;
         } if (!fast_exact_is_equal(p, pold)) {
             pc=1.0-p;
-            plog=log(p);
-            pclog=log(pc);
+            plog=pl_log(p);
+            pclog=pl_log(pc);
             pold=p;
         }
         sq=sqrt(2.0*am*pc);

@@ -180,7 +180,7 @@ void VariableSelectionWithDirectedGradientDescent::train()
                 if (fast_exact_is_equal(target, 0)) target = -1; // We work with -1 and 1 instead.
                 n8_value = target * n7_value;
                 n9_value = 1.0 / (1.0 + exp(-n8_value));
-                n10_value = -log(n9_value);
+                n10_value = -pl_log(n9_value);
                 train_criterion[i] += n10_value;
                 n10_gradient = 1.0;
                 n9_gradient = n10_gradient * (-1.0 / n9_value);
@@ -315,7 +315,7 @@ void VariableSelectionWithDirectedGradientDescent::computeCostsFromOutputs(const
     }
     // Note that the "2 * target - 1" operation is only here to transform a 0/1
     // target into -1/1.
-    costsv[0] = -log(1.0 / (1.0 + exp(-(2.0 * targetv[0] - 1) * outputv[0])));;
+    costsv[0] = -pl_log(1.0 / (1.0 + exp(-(2.0 * targetv[0] - 1) * outputv[0])));;
 }
 
 ////////////////////

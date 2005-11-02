@@ -94,10 +94,10 @@ Var entropy(Var v, bool normalize)
     {
         Var absx = abs(v);
         Var normalized = absx/sum(absx);
-        return sum(plogp(normalized))*(-1.0/log(2.0));
+        return sum(plogp(normalized))*(-1.0/pl_log(2.0));
     }
     else
-        return sum(plogp(v))*(-1.0/log(2.0));
+        return sum(plogp(v))*(-1.0/pl_log(2.0));
 }
 
 Var distance(Var input1, Var input2, real n)
