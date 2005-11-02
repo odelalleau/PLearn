@@ -2,7 +2,7 @@
 
 // RunObject.h
 //
-// Copyright (C) 2004 Olivier Delalleau 
+// Copyright (C) 2004-2005 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -72,6 +72,11 @@ public:
     // ************************
 
     PP<Object> underlying_object;
+    PPath save_object_name;
+
+    TVec< PP<Object> >  objects;
+    TVec<PPath>         save_files;
+    bool                run_objects;
 
     // ****************
     // * Constructors *
@@ -93,7 +98,7 @@ protected:
 
     //! Declares this class' options
     static void declareOptions(OptionList& ol);
-    string save_object_name;
+
 public:
 
     // Declares other standard object methods
