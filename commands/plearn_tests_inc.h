@@ -53,8 +53,9 @@
 /*********
  * PTest *
  *********/
-#include <plearn/misc/PTest.h>
+#include <plearn/io/test/PLLogTest.h>
 #include <plearn/io/test/PPathTest.h>
+#include <plearn/io/test/PStreamBufTest.h>
 #include <plearn/math/test/TMat/TMatTest.h>
 
 // Some other minimal includes to be able to run tests.
