@@ -1,0 +1,22 @@
+### Run the TMatTest object with various vector lengths.
+
+from plearn.pyplearn import pl
+
+def main():
+    loops = 10  # Number of tests to perform
+    bound = 10  # Range of the uniform sampling for vector initialization
+    tmat_tests = []
+
+    for i in range(loops):
+        vec_length = i * 20 + 1
+        tmat_tests.append(
+            pl.TMatTest( vec_length = vec_length,
+                         bound      = bound,
+                         save_path  = "tmat_test_vec_length=%s_bound=%s.psave" \
+                                      % ( vec_length, bound)
+                       )
+        )
+
+    return pl.RunObject( objects     = tmat_tests,
+                         run_objects = True
+                       )
