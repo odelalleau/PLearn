@@ -160,10 +160,6 @@ void PLMathTest::perform()
         results["is_equal_1.00000001"].append(is_equal(x, x * 1.00000001));
         results["is_equal_1.001"].append(is_equal(x, x * 1.001));
         results["square"].append(square(x));
-        results["fasttanh"].append(fasttanh(x));
-        results["fastsigmoid"].append(fastsigmoid(x));
-        results["ultrafasttanh"].append(ultrafasttanh(x));
-        results["ultrafastsigmoid"].append(ultrafastsigmoid(x));
         results["hinge_loss_1"].append(hinge_loss(x, 1));
         results["d_hinge_loss_1"].append(d_hinge_loss(x, 1));
         results["is_missing"].append(is_missing(x));
@@ -179,11 +175,9 @@ void PLMathTest::perform()
         if (x >= 0 && x <= 1)
             results["inverse_sigmoid"].append(inverse_sigmoid(x));
         results["softplus"].append(softplus(x));
-        results["tabulated_softplus"].append(tabulated_softplus(x));
         results["inverse_softplus"].append(inverse_softplus(x));
         results["hard_slope"].append(hard_slope(x));
         results["soft_slope"].append(soft_slope(x));
-        results["tabulated_soft_slope"].append(tabulated_soft_slope(x));
         results["d_soft_slope"].append(d_soft_slope(x));
         results["n_choose"].append(n_choose(int(x), int(x) + 2));
         if (x >= 0) {
@@ -203,6 +197,12 @@ void PLMathTest::perform()
         if (!is_missing(x) && !isinf(x)) {
             results["logsub"].append(logsub(x, x - 1));
             results["dilogarithm"].append(dilogarithm(x));
+            results["fasttanh"].append(fasttanh(x));
+            results["fastsigmoid"].append(fastsigmoid(x));
+            results["ultrafasttanh"].append(ultrafasttanh(x));
+            results["ultrafastsigmoid"].append(ultrafastsigmoid(x));
+            results["tabulated_softplus"].append(tabulated_softplus(x));
+            results["tabulated_soft_slope"].append(tabulated_soft_slope(x));
         }
         if (FABS(x) < 100) {
             results["softplus_primitive"].append(softplus_primitive(x));
