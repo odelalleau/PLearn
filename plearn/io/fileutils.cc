@@ -231,6 +231,8 @@ vector<PPath> lsdir_fullpath(const PPath& dirpath)
 /////////////////
 bool force_mkdir(const PPath& dirname)
 {
+    if (dirname.isEmpty())
+        PLERROR("In force_mkdir - Parameter 'dirname' is empty");
     if(isdir(dirname))
         return true;
     vector<PPath> paths;
