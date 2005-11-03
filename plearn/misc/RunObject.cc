@@ -150,8 +150,9 @@ void RunObject::run() {
                                  || save_files.length() == objects.length() );
     if (!save_files.isEmpty()) {
         TVec<PPath> paths = save_files;
-        if (paths.length() == 1) {
+        if (paths.length() != objects.length()) {
             // Automatically generate paths with an increasing counter.
+            assert( paths.length() == 1 );
             PPath basepath = paths[0];
             PPath no_ext = basepath.no_extension();
             string ext = basepath.extension(true);
