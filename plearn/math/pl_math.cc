@@ -192,6 +192,7 @@ real logsub(real log_a, real log_b)
 
 real small_dilogarithm(real x)
 {
+    // TODO Deal with x == 0.
     real somme = x;
     real prod = x;
     int i=2;
@@ -206,7 +207,7 @@ real small_dilogarithm(real x)
     if (i==1000 && !warning_was_raised) 
     {
         warning_was_raised=true;
-        PLWARNING("dilogarithm: insufficient precision");
+        PLWARNING("dilogarithm (%f): insufficient precision", x);
     }
     return somme;
 }
