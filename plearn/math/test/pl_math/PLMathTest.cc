@@ -132,7 +132,8 @@ void PLMathTest::perform()
 {
     int n = 20;
     TVec<int> bounds;
-    PStream read_bounds = openString("[ 1 10 50 1000 ]", PStream::plearn_ascii);
+    string bounds_str = "[ 1 10 50 1000 ]";
+    PStream read_bounds = openString(bounds_str, PStream::plearn_ascii);
     read_bounds >> bounds;
     read_bounds.flush();
     Vec samples;
