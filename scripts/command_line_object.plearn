@@ -1,0 +1,2 @@
+$IF{$ISDEFINED{object}}{}{$DEFINE{object}{$ECHO{Usage: plearn PLEARNDIR:scripts/command_line_object.plearn "object=Object(...)"} RunObject()}}
+${object}
