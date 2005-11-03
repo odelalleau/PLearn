@@ -3,6 +3,7 @@
 // PPathTest.cc
 //
 // Copyright (C) 2005 Olivier Delalleau 
+// Copyright (C) 2005 Christian Dorion
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -36,7 +37,7 @@
    * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
    ******************************************************* */
 
-// Authors: Olivier Delalleau
+// Authors: Olivier Delalleau, Christian Dorion
 
 /*! \file PPathTest.cc */
 

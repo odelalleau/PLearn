@@ -2,6 +2,7 @@
 
 // PLLogTest.cc
 //
+// Copyright (C) 2005 Nicolas Chapados
 // Copyright (C) 2005 Olivier Delalleau 
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -36,7 +37,7 @@
    * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
    ******************************************************* */
 
-// Authors: Olivier Delalleau
+// Authors: Nicolas Chapados, Olivier Delalleau
 
 /*! \file PLLogTest.cc */
 
