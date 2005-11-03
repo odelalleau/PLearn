@@ -250,7 +250,7 @@ public:
 #if defined(LINUX) && !defined(__INTEL_COMPILER)  // note: intel compiler on SGI does not like that
 #define DOUBLE_TO_INT(in,out) __asm__ __volatile__ ("fistpl %0" : "=m" (out) : "t" (in) : "st")  
 #else
-#define DOUBLE_TO_INT(in, out)  out = int(in)
+#define DOUBLE_TO_INT(in, out)  out = int(round(in))
 #endif
 
 extern float tanhtable[TANHTABLESIZE];
