@@ -474,17 +474,20 @@ Vec PTester::perform(bool call_forget)
         for(int splitnum=0; splitnum<nsplits; splitnum++)
         {
             PPath splitdir;
-            if(expdir!="")
+            bool is_splitdir = false;
+            if(!expdir.isEmpty()) {
                 splitdir = expdir / ("Split"+tostring(splitnum));
+                is_splitdir = true;
+            }
 
             TVec<VMat> dsets = splitter->getSplit(splitnum);
             VMat trainset = dsets[0];
-            if(splitdir!="" && save_data_sets)
+            if(is_splitdir && save_data_sets)
                 PLearn::save(splitdir/"training_set.psave",trainset);
 
             if(train && provide_learner_expdir)
             {  
-                if(splitdir!="")
+                if(is_splitdir)
                     learner->setExperimentDirectory( splitdir/"LearnerExpdir/" );
                 else
                     learner->setExperimentDirectory("");
@@ -499,15 +502,15 @@ Vec PTester::perform(bool call_forget)
 
             if (train)
             {
-                if(splitdir!="" && save_initial_learners)
+                if(is_splitdir && save_initial_learners)
                     PLearn::save(splitdir/"initial_learner.psave",learner);
       
                 train_stats->forget();
                 learner->train();
                 train_stats->finalize();
-                if(splitdir != "" && save_stat_collectors)
+                if(is_splitdir && save_stat_collectors)
                     PLearn::save(splitdir/"train_stats.psave",train_stats);
-                if(splitdir != "" && save_learners)
+                if(is_splitdir && save_learners)
                     PLearn::save(splitdir/"final_learner.psave",learner);
             }
             else
@@ -517,17 +520,18 @@ Vec PTester::perform(bool call_forget)
                 VMat testset = dsets[setnum];
                 PP<VecStatsCollector> test_stats = stcol[setnum];
                 string setname = "test"+tostring(setnum);
-                if(splitdir!="" && save_data_sets)
+                if(is_splitdir && save_data_sets)
                     PLearn::save(splitdir/(setname+"_set.psave"),testset);
                 VMat test_outputs;
                 VMat test_costs;
                 VMat test_confidence;
-                force_mkdir(splitdir);
-                if(splitdir != "" && save_test_outputs)
+                if (is_splitdir)
+                    force_mkdir(splitdir); // TODO Why is this done so late?
+                if(is_splitdir && save_test_outputs)
                     test_outputs = new FileVMatrix(splitdir/(setname+"_outputs.pmat"),0,outputsize);
-                if(splitdir != "" && save_test_costs)
+                if(is_splitdir && save_test_costs)
                     test_costs = new FileVMatrix(splitdir/(setname+"_costs.pmat"),0,testcostsize);
-                if(splitdir != "" && save_test_confidence)
+                if(is_splitdir && save_test_confidence)
                     test_confidence = new FileVMatrix(splitdir/(setname+"_confidence.pmat"),
                                                       0,2*outputsize);
           
@@ -544,7 +548,7 @@ Vec PTester::perform(bool call_forget)
                 learner->test(testset, test_stats, test_outputs, test_costs);
                 if (reset_stats)
                     test_stats->finalize();
-                if(splitdir != "" && save_stat_collectors)
+                if(is_splitdir && save_stat_collectors)
                     PLearn::save(splitdir/(setname+"_stats.psave"),test_stats);
 
                 computeConfidence(testset, test_confidence);
