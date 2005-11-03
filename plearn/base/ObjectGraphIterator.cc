@@ -154,8 +154,10 @@ const ObjectOptionsIterator& ObjectOptionsIterator::operator++()
 
 //#####  ObjectGraphIterator  #################################################
 
-ObjectGraphIterator::ObjectGraphIterator()
-    : m_isa_tester()
+ObjectGraphIterator::ObjectGraphIterator():
+    m_it(0),
+    m_end(0),
+    m_isa_tester()
 { }
 
 
