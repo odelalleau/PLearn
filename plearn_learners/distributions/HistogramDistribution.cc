@@ -198,7 +198,7 @@ void HistogramDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 double HistogramDistribution::log_density(const Vec& x) const
 { 
-    return log(density(x));
+    return pl_log(density(x));
 }
 
 
