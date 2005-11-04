@@ -58,7 +58,8 @@ PLEARN_IMPLEMENT_OBJECT(
 ///////////
 // PTest //
 ///////////
-PTest::PTest() 
+PTest::PTest():
+    save(true)
 {}
 
 ///////////
@@ -101,8 +102,12 @@ void PTest::declareOptions(OptionList& ol)
         "The name of this test. If left empty, it will be set to classname()\n"
         "at build time.");
 
+    declareOption(ol, "save", &PTest::save, OptionBase::buildoption,
+        "If set to 1, this object will be saved to 'save_path'.");
+
     declareOption(ol, "save_path", &PTest::save_path, OptionBase::buildoption,
-        "The file where this test object should be saved (empty = no save)");
+        "The file where this test object should be saved (if empty, it will\n"
+        "be set to 'name'.psave).");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -123,12 +128,13 @@ void PTest::build_()
 void PTest::run()
 {
     this->perform();
-    if (!save_path.isEmpty()) {
-        if (pathexists(save_path))
+    if (save) {
+        PPath file = save_path.isEmpty() ? PPath(name + ".psave") : save_path;
+        if (pathexists(file))
             PLERROR("In PTest::run - File '%s' already exists",
-                    save_path.errorDisplay().c_str());
+                    file.errorDisplay().c_str());
         PP<PTest> test_to_save = this;
-        PLearn::save(save_path, test_to_save);
+        PLearn::save(file, test_to_save);
     }
 }
 

@@ -59,6 +59,7 @@ public:
     //#####  Public Build Options  ############################################
 
     string name;
+    bool save;
     PPath save_path;
 
 public:
