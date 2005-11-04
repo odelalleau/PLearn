@@ -1,8 +1,10 @@
 // -*- C++ -*-
 
-// test_AutoVMatrix.cc
+// AutoVMatrixTest.cc
 //
-// Copyright (C) 2005 Christian Dorion 
+// Copyright (C) 2005 Nicolas Chapados
+// Copyright (C) 2005 Olivier Delalleau 
+// Copyright (C) 2005 Christian Dorion
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,18 +35,97 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id$ 
- ******************************************************* */
+   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+   ******************************************************* */
 
-// Authors: Christian Dorion
+// Authors: Nicolas Chapados, Olivier Delalleau, Christian Dorion
 
-/*! \file test_AutoVMatrix.cc */
+/*! \file AutoVMatrixTest.cc */
 
-#include <plearn/io/pl_log.h>
-#include <plearn/vmat/AutoVMatrix.h>
-#include <plearn/math/TMat_maths.h>
 
-using namespace PLearn;
+#include "AutoVMatrixTest.h"
+
+namespace PLearn {
+using namespace std;
+
+PLEARN_IMPLEMENT_OBJECT(
+    AutoVMatrixTest,
+    "Test various VMat conversions.",
+    ""
+);
+
+//////////////////
+// AutoVMatrixTest //
+//////////////////
+AutoVMatrixTest::AutoVMatrixTest() 
+    /* ### Initialize all fields to their default value */
+{
+    // ...
+
+    // ### You may (or not) want to call build_() to finish building the object
+    // ### (doing so assumes the parent classes' build_() have been called too
+    // ### in the parent classes' constructors, something that you must ensure)
+}
+
+///////////
+// build //
+///////////
+void AutoVMatrixTest::build()
+{
+    inherited::build();
+    build_();
+}
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void AutoVMatrixTest::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    // ### Call deepCopyField on all "pointer-like" fields 
+    // ### that you wish to be deepCopied rather than 
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
+
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("AutoVMatrixTest::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+}
+
+////////////////////
+// declareOptions //
+////////////////////
+void AutoVMatrixTest::declareOptions(OptionList& ol)
+{
+    // ### Declare all of this object's options here
+    // ### For the "flags" of each option, you should typically specify  
+    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+    // ### OptionBase::tuningoption. Another possible flag to be combined with
+    // ### is OptionBase::nosave
+
+    // ### ex:
+    // declareOption(ol, "myoption", &AutoVMatrixTest::myoption, OptionBase::buildoption,
+    //               "Help text describing this option");
+    // ...
+
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
+}
+
+////////////
+// build_ //
+////////////
+void AutoVMatrixTest::build_()
+{
+    // ### This method should do the real building of the object,
+    // ### according to set 'options', in *any* situation. 
+    // ### Typical situations include:
+    // ###  - Initial building of an object from a few user-specified options
+    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+    // ### You should assume that the parent class' build_() has already been called.
+}
 
 void save_load_compare( const AutoVMatrix& vm,
                         const PPath& prefix,
@@ -104,12 +185,16 @@ inline void UNIT_TEST(const string& argument)
     }
 }
 
-int main()
+
+/////////////
+// perform //
+/////////////
+void AutoVMatrixTest::perform()
 {
     try {
         PL_Log::instance().verbosity(VLEVEL_NORMAL);
         PL_Log::instance().outmode(PStream::plearn_ascii);
-    
+
         UNIT_TEST("data.amat");
         UNIT_TEST("data.pmat");
         UNIT_TEST("PLEARNDIR:test_suite/data/eslt_mixture/data_train.amat");
@@ -122,9 +207,10 @@ int main()
     {
         cerr << "FATAL ERROR: uncaught unknown exception" << endl << endl;
     }
-  
-    return 0;
+
 }
+
+} // end of namespace PLearn
 
 
 /*
