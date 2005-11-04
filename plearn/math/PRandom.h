@@ -215,6 +215,10 @@ public:
     //! between 'minval' and 'maxval'.
     void fill_random_uniform(const Vec& dest, real min = 0, real max = 1);
 
+    //! Fill matrix 'dest' with samples generated from a uniform distribution
+    //! between 'minval' and 'maxval'.
+    void fill_random_uniform(const Mat& dest, real min = 0, real max = 1);
+
     //! Return a random number generated from an exponential distribution with
     //! parameter lambda = 1.
     real exp_sample();

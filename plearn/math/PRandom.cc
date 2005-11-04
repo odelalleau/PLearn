@@ -209,6 +209,12 @@ void PRandom::fill_random_uniform(const Vec& dest, real min, real max)
         dest[i] = bounded_uniform(min, max);
 }
 
+void PRandom::fill_random_uniform(const Mat& dest, real min, real max)
+{
+    for (int i = 0; i < dest.length(); i++)
+        fill_random_uniform(dest(i), min, max);
+}
+
 /////////////////
 // gaussian_01 //
 /////////////////
