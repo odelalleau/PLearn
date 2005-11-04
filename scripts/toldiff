@@ -56,9 +56,7 @@ newline, carriage return) are considered equivalent if their lengths do
 not differ by more than whitespace_tolerance characters.
 """
 
-import sys
-import re
-
+import os, re, sys
 
 def floats_are_equal(a, b, numtol=1e-6):
     # print "Comparing floats ",a,b,numtol
@@ -147,3 +145,7 @@ if __name__=='__main__':
     err = toldiff(filename1, filename2, numtol, blanktol)
     if err:
         print err
+        # Uncomment these lines if you want a more helpful output when toldiff fails.
+        # print 'Output of a standard diff command is:'
+        # os.system('diff -u %s %s' % (filename1, filename2))
+        
