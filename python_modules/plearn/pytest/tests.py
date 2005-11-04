@@ -157,6 +157,10 @@ class Test(PyTestObject):
     The elements of the list must be string representations of the path, absolute or relative,
     to the resource.
     @type resources: List of Strings
+
+    @ivar precision: The precision (absolute and relative) used when comparing
+    floating numbers in the test output (default = 1e-6)
+    @type precision: Float
     """
     # Class variables
     _test_count    = 0
@@ -190,6 +194,7 @@ class Test(PyTestObject):
     arguments   = PLOption('')
     resources   = PLOption([])
     disabled    = PLOption(False)
+    precision   = PLOption(1e-6)
 
     def _optionFormat(self, option_pair, indent_level, inner_repr):
         optname, val = option_pair
