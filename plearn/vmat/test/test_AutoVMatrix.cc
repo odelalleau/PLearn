@@ -108,6 +108,7 @@ int main()
 {
     try {
         PL_Log::instance().verbosity(VLEVEL_NORMAL);
+        PL_Log::instance().outmode(PStream::plearn_ascii);
     
         UNIT_TEST("data.amat");
         UNIT_TEST("data.pmat");
