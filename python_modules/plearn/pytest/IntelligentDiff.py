@@ -181,6 +181,11 @@ class IntelligentDiff:
         return self.differences
 
     def diff_directories(self, bench, other):
+        if toolkit.isvmat( bench ):
+            ### Ex: a '.dmat' directory represents a PLearn DiskVMatrix
+            self.diff_files(bench, other)
+            return
+
         other_list = os.listdir( other )
         toolkit.exempt_list_of( other_list,
                                 ppath.special_directories )
