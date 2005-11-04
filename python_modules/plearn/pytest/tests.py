@@ -193,8 +193,8 @@ class Test(PyTestObject):
     program     = PLOption(None)
     arguments   = PLOption('')
     resources   = PLOption([])
-    disabled    = PLOption(False)
     precision   = PLOption(1e-6)
+    disabled    = PLOption(False)
 
     def _optionFormat(self, option_pair, indent_level, inner_repr):
         optname, val = option_pair
