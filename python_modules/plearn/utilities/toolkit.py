@@ -247,9 +247,9 @@ def istexfile(file_path):
     return ext in ['.tex','.sty','.bib']
 
 def isvmat( file_path ):
-    """True if the extension of I{file_path} is one of I{.amat}, I{.pmat} or I{.vmat}."""
+    """True if the extension of I{file_path} is one of I{.amat}, I{.dmat}, I{.pmat} or I{.vmat}."""
     (base,ext) = os.path.splitext(file_path)
-    return ext in [ '.amat','.pmat','.vmat' ]
+    return ext in [ '.amat', '.dmat', '.pmat','.vmat' ]
 
 def is_recursively_empty(directory):
     """Checks if the I{directory} is a the root of an empty hierarchy.
