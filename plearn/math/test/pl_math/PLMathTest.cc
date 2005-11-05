@@ -170,11 +170,16 @@ void PLMathTest::perform()
         if (int(x) >= 0) {
             results["ipow_real"].append(ipow(x,int(x)));
             results["ipow_int"].append(ipow(int(x),int(x)));
+        } else {
+            results["ipow_real"].append(0);
+            results["ipow_int"].append(0);
         }
         results["sigmoid"].append(sigmoid(x));
         results["is_positive"].append(is_positive(x));
         if (x >= 0 && x <= 1)
             results["inverse_sigmoid"].append(inverse_sigmoid(x));
+        else
+            results["inverse_sigmoid"].append(0);
         results["softplus"].append(softplus(x));
         results["inverse_softplus"].append(inverse_softplus(x));
         results["hard_slope"].append(hard_slope(x));
@@ -186,6 +191,11 @@ void PLMathTest::perform()
             results["safeflog"].append(safeflog(x));
             results["safeflog"].append(safeflog(x, x + 3));
             results["safeflog2"].append(safeflog2(x));
+        } else {
+            results["safelog"].append(0);
+            results["safeflog"].append(0);
+            results["safeflog"].append(0);
+            results["safeflog2"].append(0);
         }
         results["sqrt"].append(sqrt(x));
         results["tanh"].append(tanh(x));
@@ -204,6 +214,15 @@ void PLMathTest::perform()
             results["ultrafastsigmoid"].append(ultrafastsigmoid(x));
             results["tabulated_softplus"].append(tabulated_softplus(x));
             results["tabulated_soft_slope"].append(tabulated_soft_slope(x));
+        } else {
+            results["logsub"].append(0);
+            results["dilogarithm"].append(0);
+            results["fasttanh"].append(0);
+            results["fastsigmoid"].append(0);
+            results["ultrafasttanh"].append(0);
+            results["ultrafastsigmoid"].append(0);
+            results["tabulated_softplus"].append(0);
+            results["tabulated_soft_slope"].append(0);
         }
         if (FABS(x) < 100) {
             results["softplus_primitive"].append(softplus_primitive(x));
@@ -211,6 +230,12 @@ void PLMathTest::perform()
             results["hard_slope_integral"].append(hard_slope_integral(x));
             results["soft_slope_integral"].append(soft_slope_integral(x));
             results["tabulated_soft_slope_integral"].append(tabulated_soft_slope_integral(x));
+        } else {
+            results["softplus_primitive"].append(0);
+            results["tabulated_softplus_primitive"].append(0);
+            results["hard_slope_integral"].append(0);
+            results["soft_slope_integral"].append(0);
+            results["tabulated_soft_slope_integral"].append(0);
         }
         if (pb)
             pb->update(i + 1);
