@@ -159,12 +159,12 @@ real CorrelationKernel::evaluate(const Vec& x1, const Vec& x2) const {
             // The variables are considered equal.
             result = 1;
         else {
-            real m = - log(sin12);
+            real m = - pl_log(sin12);
             real epsilon = exp(0.5) / sqrt(2 * Pi);
             real sigma1 = sqrt(variance(x1_c.toMat(1,n), 0.0));
             real sigma2 = sqrt(variance(x2_c.toMat(1,n), 0.0));
-            real h1 = 0.5 + log(sqrt(2 * Pi) * (sigma1 + epsilon));
-            real h2 = 0.5 + log(sqrt(2 * Pi) * (sigma2 + epsilon));
+            real h1 = 0.5 + pl_log(sqrt(2 * Pi) * (sigma1 + epsilon));
+            real h2 = 0.5 + pl_log(sqrt(2 * Pi) * (sigma2 + epsilon));
             if (h1 <= 0 || h2 <= 0)
                 PLERROR("In CorrelationKernel::evaluate - Entropy should always be > 0");
             result = m / (sqrt(h1) * sqrt(h2));
