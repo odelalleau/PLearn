@@ -1,0 +1,67 @@
+*1 ->GaussMix(
+L = 1 ;
+type = "general" ;
+n_eigen = -1 ;
+alpha_min = 1.00000000000000008e-05 ;
+sigma_min = 1.00000000000000008e-05 ;
+epsilon = 9.99999999999999955e-07 ;
+kmeans_iterations = 5 ;
+alpha = 1 [ 1 ] ;
+eigenvalues = 1  4  [ 
+12666.4930233106352 	458.781023436978103 	0.573484989952497415 	0.00219190324806235867 	
+]
+;
+eigenvectors = 1 [ 4  4  [ 
+0.000988821712955273999 	0.00880822163979268734 	0.890970870803750037 	0.453973947316771653 	
+-0.0172789682695909178 	0.00620286016779082999 	0.45388180908682263 	-0.890872754753084695 	
+0.993727966303320054 	-0.110389351032057159 	0.00809837125651698131 	-0.0159165495123830512 	
+0.11047709479265666 	0.993830031210570897 	-0.009829910593247667 	-0.000231188015813323181 	
+]
+] ;
+D = 4 ;
+diags = 0  0  [ 
+]
+;
+log_coeff = 1 [ -8.12389408250443523 ] ;
+log_p_j_x = 1 [ 0 ] ;
+log_p_x_j_alphaj = 1 [ 0 ] ;
+mu = 1  4  [ 
+-0.0868066666666664766 	-0.062603333333333358 	-1.50779199999992364 	5.35029800000000844 	
+]
+;
+mu_y_x = 1  4  [ 
+-0.0868066666666664766 	-0.062603333333333358 	-1.50779199999992364 	5.35029800000000844 	
+]
+;
+n_eigen_computed = 4 ;
+n_tries = 10 [ 1 1 1 1 1 1 1 1 1 1 ] ;
+nsamples = 150 ;
+p_j_x = 1 [ 0 ] ;
+sigma = TVec(0 0 *0 )
+;
+conditional_updating_time = 0 ;
+training_time = 0.0100000000000000002 ;
+outputs_def = "l" ;
+conditional_flags = 4 [ 1 1 2 0 ] ;
+provide_input = TVec(0 0 *0 )
+;
+n_curve_points = -1 ;
+lower_bound = 0 ;
+upper_bound = 0 ;
+cond_sort = 4 [ 0 1 2 3 ] ;
+n_input = 2 ;
+n_target = 1 ;
+n_margin = 1 ;
+expdir = "PYTEST__GaussMix__RESULTS:expdir_gaussmix_L=1_type=general_n_eigen=-1_kmeans_iterations=5_conditional_flags=1120_seed=123456_nstages=10/Split0/LearnerExpdir/" ;
+seed = 123456 ;
+stage = 10 ;
+n_examples = 150 ;
+inputsize = 4 ;
+targetsize = 0 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 10 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = ""  )
