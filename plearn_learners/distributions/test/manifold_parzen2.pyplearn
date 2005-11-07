@@ -1,0 +1,43 @@
+# Train ManifoldParzen2.
+
+from plearn.pyplearn import pl
+
+def main():
+    distrib = []    # Array containing the PDistribution objects.
+    # Values of options tested.
+    l_ncomponents = [ 2 ]
+    l_nneighbors = [ 5, 10 ]
+
+    for ncomponents in l_ncomponents:
+        for nneighbors in l_nneighbors:
+            distrib.append(
+                    pl.ManifoldParzen2(
+                        ncomponents = ncomponents,
+                        nneighbors  = nneighbors
+                    )
+            )
+
+    ptesters = []
+    for distr in distrib:
+        # Create the appropriate PTester.
+        ptesters.append(
+            pl.PTester(
+                expdir = "expdir_manifold_parzen2_ncomponents=%s_nneighbors=%s" \
+                        % ( distr.ncomponents, distr.nneighbors ),
+                dataset = \
+                    pl.AutoVMatrix( specification = "PLEARNDIR:plearn_learners/regressors/test/LinearRegressor/data.amat" ),
+                splitter = pl.TrainTestSplitter( test_fraction = 0.25, append_train = True ),
+                statnames = [ "E[test1.E[NLL]]", "E[test2.E[NLL]]" ],
+                learner = distr,
+                save_initial_tester = 0,
+                save_test_outputs = 0,
+                provide_learner_expdir = 1
+            )
+        )
+
+    return \
+        pl.RunObject(
+            objects     = ptesters,
+            run_objects = True
+        )
+
