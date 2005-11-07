@@ -1,0 +1,37 @@
+*1 ->VecStatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+fieldnames = 1 [ "NLL" ] ;
+compute_covariance = 0 ;
+epsilon = 0 ;
+stats = 1 [ StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 150 ;
+sumsquarew_ = 150 ;
+sum_ = -27.8211258821926073 ;
+sumsquare_ = 205.706631860125924 ;
+sumcube_ = 195.980398838404255 ;
+sumfourth_ = 1060.12677688851704 ;
+min_ = 10.9432252703689574 ;
+max_ = 17.0411899937043927 ;
+first_ = 12.584747319865869 ;
+last_ = 14.6508057123157869 ;
+counts = {};
+more_than_maxnvalues = 1  )
+] ;
+cov = 0  0  [ 
+]
+;
+sum_cross = 0  0  [ 
+]
+;
+sum_cross_weights = 0  0  [ 
+]
+;
+sum_cross_square_weights = 0  0  [ 
+]
+;
+sum_non_missing_weights = 0 ;
+sum_non_missing_square_weights = 0  )
