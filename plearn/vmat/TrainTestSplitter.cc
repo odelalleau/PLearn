@@ -48,15 +48,20 @@ namespace PLearn {
 using namespace std;
 
 TrainTestSplitter::TrainTestSplitter(real the_test_fraction)
-    : append_train(0), test_fraction(the_test_fraction), calc_with_pct(true), test_fraction_abs(0)
+    : append_train(false), test_fraction(the_test_fraction), calc_with_pct(true), test_fraction_abs(0)
 {}
 
 TrainTestSplitter::TrainTestSplitter(int the_test_fraction_abs)
-    : append_train(0), test_fraction(0.0), calc_with_pct(false), test_fraction_abs(the_test_fraction_abs)
+    : append_train(false), test_fraction(0.0), calc_with_pct(false), test_fraction_abs(the_test_fraction_abs)
 {}
 
-PLEARN_IMPLEMENT_OBJECT(TrainTestSplitter, "ONE LINE DESCR",
-                        "TrainTestSplitter implements a single split of the dataset into a training-set and a test-set (the test part being the last few samples of the dataset)");
+PLEARN_IMPLEMENT_OBJECT(
+    TrainTestSplitter,
+    "Simple splitter to split between train and test sets.",
+    "TrainTestSplitter implements a single split of the dataset into a\n"
+    "training set and a test set (the test part being the last few samples\n"
+    "of the dataset)\n"
+);
 
 void TrainTestSplitter::declareOptions(OptionList& ol)
 {

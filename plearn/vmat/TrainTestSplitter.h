@@ -65,7 +65,7 @@ public:
     // * public build options *
     // ************************
 
-    int append_train;
+    bool append_train;
     real test_fraction; // the fraction of the dataset to be used as test (hese will be the last few samples of the dataset)
     bool calc_with_pct;
     int test_fraction_abs;
