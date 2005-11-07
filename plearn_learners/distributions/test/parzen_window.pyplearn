@@ -1,0 +1,37 @@
+# Train ParzenWindow.
+
+from plearn.pyplearn import pl
+
+def main():
+    distrib = []    # Array containing the PDistribution objects.
+    distrib.append(
+        pl.ParzenWindow(
+            conditional_updating_time = -1,
+            training_time = -1
+        )
+    )
+
+    ptesters = []
+    for distr in distrib:
+        # Create the appropriate PTester.
+        ptesters.append(
+            pl.PTester(
+                expdir = "expdir_parzen_window",
+                dataset = \
+                    pl.AutoVMatrix( specification = "PLEARNDIR:plearn_learners/regressors/test/LinearRegressor/data.amat" ),
+                splitter = pl.TrainTestSplitter( test_fraction = 0.25, append_train = True ),
+                statnames = [ "E[test1.E[NLL]]", "E[test2.E[NLL]]" ],
+                learner = distr,
+                save_initial_tester = 0,
+                save_stat_collectors = 0,
+                save_test_outputs = 0,
+                provide_learner_expdir = 0
+            )
+        )
+
+    return \
+        pl.RunObject(
+            objects     = ptesters,
+            run_objects = True
+        )
+
