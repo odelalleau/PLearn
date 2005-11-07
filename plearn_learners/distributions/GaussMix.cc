@@ -3,7 +3,7 @@
 // GaussMix.cc
 // 
 // Copyright (C) 2003 Julien Keable
-// Copyright (C) 2004-2005 Université de Montréal
+// Copyright (C) 2004-2005 University of Montreal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -189,12 +189,15 @@ void GaussMix::declareOptions(OptionList& ol)
     declareOption(ol, "sigma", &GaussMix::sigma, OptionBase::learntoption,
                   "The standard deviation in all directions, for type == 'spherical'.\n");
 
-    declareOption(ol, "conditional_updating_time",
-            &GaussMix::conditional_updating_time, OptionBase::learntoption,
-            "Time spent in updating from conditional sorting.");
+    declareOption(ol, "training_time", &GaussMix::training_time,
+        OptionBase::learntoption,
+        "Time spent in training the model. If initially set to a negative\n"
+        "value, it will not be updated during training.");
 
-    declareOption(ol, "training_time", &GaussMix::training_time, OptionBase::learntoption,
-            "Time spent in training the model.");
+    declareOption(ol, "conditional_updating_time",
+        &GaussMix::conditional_updating_time, OptionBase::learntoption,
+        "Time spent in updating from conditional sorting. If initially set\n"
+        "to a negative value, it will not be updated during training.");
 
     // Would be used if the 'factor' type is implemented some day.
   
@@ -632,8 +635,10 @@ void GaussMix::forget()
     stage = 0;
     if (seed_ >= 0)
         manual_seed(seed_);
-    training_time = 0;
-    conditional_updating_time = 0;
+    if (training_time >= 0)
+        training_time = 0;
+    if (conditional_updating_time >= 0)
+        conditional_updating_time = 0;
     n_tries.resize(0);
 }
 
@@ -1145,7 +1150,8 @@ void GaussMix::train()
         pb = new ProgressBar("Training GaussMix", n_steps);
 
     // Update training_time.
-    training_time += real(clock() - training_start) / real(CLOCKS_PER_SEC);
+    if (training_time >= 0)
+        training_time += real(clock() - training_start) / real(CLOCKS_PER_SEC);
 
     while (stage < nstages) {
         n_tries.resize(stage + 1);
@@ -1159,8 +1165,9 @@ void GaussMix::train()
                 pout << n_tries[stage] << ", " << flush;
             computePosteriors();
             replaced_gaussian = computeWeights();
-            training_time +=
-                real(clock() - training_start) / real(CLOCKS_PER_SEC);
+            if (training_time >= 0)
+                training_time +=
+                    real(clock() - training_start) / real(CLOCKS_PER_SEC);
         } while (replaced_gaussian);
         training_start = clock();
         if (verbosity >= 5)
@@ -1170,7 +1177,8 @@ void GaussMix::train()
         stage++;
         if (report_progress)
             pb->update(n_steps - nstages + stage);
-        training_time += real(clock() - training_start) / real(CLOCKS_PER_SEC);
+        if (training_time >= 0)
+            training_time += real(clock() - training_start) / real(CLOCKS_PER_SEC);
         // TODO Would be nice to have an 'official' clock in PLearn.
     }
     if (pb)
@@ -1185,7 +1193,8 @@ void GaussMix::train()
     // Options have changed: build is necessary.
     build();
     // Finish the computation of training time.
-    training_time += real(clock() - training_start) / real(CLOCKS_PER_SEC);
+    if (training_time >= 0)
+        training_time += real(clock() - training_start) / real(CLOCKS_PER_SEC);
 }
 
 //////////////////////////////////
@@ -1260,6 +1269,11 @@ void GaussMix::updateFromConditionalSorting() const {
                                         max(var_min, eigenvals[k]) - lambda0);
             for (int i = 0; i < n_total; i++)
                 tmp_cov(i,i) += lambda0;
+            // By construction, the resulting matrix is symmetric. However,
+            // it may happen that it is not exactly the case due to numerical
+            // approximations. Thus we ensure it is perfectly symmetric.
+            assert( tmp_cov.isSymmetric(false) );
+            fillItSymmetric(tmp_cov);
             // Extract the covariance of the input x.
             cov_x[j] = full_cov[j].subMat(0, 0, n_input, n_input);
             // Compute its SVD.
@@ -1303,8 +1317,9 @@ void GaussMix::updateFromConditionalSorting() const {
     } else {
         PLERROR("In GaussMix::updateFromConditionalSorting - Not implemented for this type");
     }
-    conditional_updating_time +=
-        real(clock() - updating_start) / real(CLOCKS_PER_SEC);
+    if (conditional_updating_time >= 0)
+        conditional_updating_time +=
+            real(clock() - updating_start) / real(CLOCKS_PER_SEC);
 }
 
 ///////////////////
