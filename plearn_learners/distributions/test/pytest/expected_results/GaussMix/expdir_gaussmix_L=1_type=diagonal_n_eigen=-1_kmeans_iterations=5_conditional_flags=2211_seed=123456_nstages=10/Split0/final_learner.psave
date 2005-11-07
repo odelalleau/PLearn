@@ -1,0 +1,63 @@
+*1 ->GaussMix(
+L = 1 ;
+type = "diagonal" ;
+n_eigen = -1 ;
+alpha_min = 1.00000000000000008e-05 ;
+sigma_min = 1.00000000000000008e-05 ;
+epsilon = 9.99999999999999955e-07 ;
+kmeans_iterations = 5 ;
+alpha = 1 [ 1 ] ;
+eigenvalues = 0  0  [ 
+]
+;
+eigenvectors = TVec(0 0 *0 )
+;
+D = 4 ;
+diags = 1  4  [ 
+100.744943207475913 	54.5397186407694221 	0.845990712712336057 	1.00475472778631381 	
+]
+;
+log_coeff = TVec(0 0 *0 )
+;
+log_p_j_x = 1 [ 0 ] ;
+log_p_x_j_alphaj = 1 [ 0 ] ;
+mu = 1  4  [ 
+-1.50779199999992364 	5.35029800000000844 	-0.0868066666666664766 	-0.062603333333333358 	
+]
+;
+mu_y_x = 1  4  [ 
+-1.50779199999992364 	5.35029800000000844 	-0.0868066666666664766 	-0.062603333333333358 	
+]
+;
+n_eigen_computed = 0 ;
+n_tries = 10 [ 1 1 1 1 1 1 1 1 1 1 ] ;
+nsamples = 150 ;
+p_j_x = 1 [ 0 ] ;
+sigma = TVec(0 0 *0 )
+;
+training_time = -1 ;
+conditional_updating_time = -1 ;
+outputs_def = "l" ;
+conditional_flags = 4 [ 2 2 1 1 ] ;
+provide_input = TVec(0 0 *0 )
+;
+n_curve_points = -1 ;
+lower_bound = 0 ;
+upper_bound = 0 ;
+cond_sort = 4 [ 2 3 0 1 ] ;
+n_input = 2 ;
+n_target = 2 ;
+n_margin = 0 ;
+expdir = "PYTEST__GaussMix__RESULTS:expdir_gaussmix_L=1_type=diagonal_n_eigen=-1_kmeans_iterations=5_conditional_flags=2211_seed=123456_nstages=10/Split0/LearnerExpdir/" ;
+seed = 123456 ;
+stage = 10 ;
+n_examples = 150 ;
+inputsize = 4 ;
+targetsize = 0 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 10 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = ""  )
