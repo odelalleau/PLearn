@@ -28,7 +28,9 @@ def main():
                                         kmeans_iterations = kmeans_iterations,
                                         conditional_flags = conditional_flags,
                                         seed              = seed,
-                                        nstages           = nstages
+                                        nstages           = nstages,
+                                        training_time     = -1,
+                                        conditional_updating_time = -1
                                     )
                                 )
 
