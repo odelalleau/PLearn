@@ -1,0 +1,46 @@
+# Train GaussianDistribution.
+
+from plearn.pyplearn import pl
+
+def main():
+    distrib = []    # Array containing the PDistribution objects.
+    # Values of options tested.
+    l_k = [ 2 ]
+    l_use_last_eig = [ True ]
+    l_seed = [ 123456 ]
+
+    for k in l_k:
+        for use_last_eig in l_use_last_eig:
+            for seed in l_seed:
+                distrib.append(
+                        pl.GaussianDistribution(
+                            k = k,
+                            use_last_eig = use_last_eig,
+                            seed = seed
+                        )
+                )
+
+    ptesters = []
+    for distr in distrib:
+        # Create the appropriate PTester.
+        ptesters.append(
+            pl.PTester(
+                expdir = "expdir_gaussian_distribution_k=%s_use_last_eig=%s_seed=%s" \
+                        % ( distr.k, distr.use_last_eig, distr.seed ),
+                dataset = \
+                    pl.AutoVMatrix( specification = "PLEARNDIR:plearn_learners/regressors/test/LinearRegressor/data.amat" ),
+                splitter = pl.TrainTestSplitter( test_fraction = 0.25, append_train = True ),
+                statnames = [ "E[test1.E[NLL]]", "E[test2.E[NLL]]" ],
+                learner = distr,
+                save_initial_tester = 0,
+                save_test_outputs = 0,
+                provide_learner_expdir = 1
+            )
+        )
+
+    return \
+        pl.RunObject(
+            objects     = ptesters,
+            run_objects = True
+        )
+
