@@ -39,6 +39,7 @@
 #include <plearn/math/pl_math.h>
 #include <mozilla/nspr/prio.h>
 #include <ctype.h>
+#include <limits>
 
 
 // This is probably an ugly hack to get it to work under Visual Studio.
@@ -572,7 +573,9 @@ void PStream::readAsciiNum(double &x)
     case 'i':
     case 'I':
         if (toupper(get())=='N' && toupper(get())=='F')
-            x = opposite ? - INFINITY : INFINITY;
+//            x = opposite ? - INFINITY : INFINITY;
+            x = opposite ? (- numeric_limits<real>::infinity())
+                         : numeric_limits<real>::infinity();
         else
             PLERROR(error_msg);
         break ; 
