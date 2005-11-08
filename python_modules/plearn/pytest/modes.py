@@ -355,7 +355,7 @@ class add(FamilyConfigMode):
                                 )
 
         add_options.add_option( "--program-name",
-                                 default="plearn",
+                                 default="plearn_tests",
                                  help="The added test uses program-name as name for its program attribute." 
                                  )
 

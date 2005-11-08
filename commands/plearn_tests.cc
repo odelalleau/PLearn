@@ -36,8 +36,10 @@
  * $Id: plearn.cc 3995 2005-08-25 13:58:23Z chapados $
  ******************************************************* */
 
-// Include only what is necessary to run the C++ PTest tests.
+// Include everything, and PTest subclasses in particular (C++ PLearn tests).
 
+#include "plearn_inc.h"
+#include "plearn_full_inc.h"
 #include "plearn_tests_inc.h"
 #include "PLearnCommands/plearn_main.h"
 

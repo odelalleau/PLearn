@@ -39,9 +39,6 @@
 //! All includes should now go into plearn_inc.h and plearn_full_inc.h
 #include "plearn_inc.h"
 #include "plearn_full_inc.h"
-// You can safely comment out the line below if you do not wish to run the
-// PLearn test suite.
-#include "plearn_tests_inc.h"
 #include "PLearnCommands/plearn_main.h"
 
 using namespace PLearn;
