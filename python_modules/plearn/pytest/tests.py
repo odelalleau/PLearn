@@ -186,6 +186,9 @@ class Test(PyTestObject):
     _expected_results = os.path.join(ppath.pytest_dir, "expected_results")
     _run_results      = os.path.join(ppath.pytest_dir, "run_results")
 
+    # Names of test for which the results were removed from version control
+    # by ensure_results_directory
+    _results_vc_removed = []
     
     # Options
     name        = PLOption(None)
@@ -283,10 +286,11 @@ class Test(PyTestObject):
                 ## YES
                 version_control.recursive_remove( results )
                 version_control.commit( '.', 'Removal of %s for new results creation.'%results )
+                self._results_vc_removed.append(self.get_name())
 
             ## Will have been removed under svn
-            if ( os.path.exists( results ) ):
-                shutil.rmtree( results )
+            if ( os.path.exists(results) ):
+                shutil.rmtree(results)
 
         ## Make a fresh directory
         os.makedirs( results )
@@ -522,6 +526,11 @@ class ResultsCreationRoutine(ResultsRelatedRoutine):
     """
     def start(self):
         self.run_test( Test._expected_results )
+        if Test._results_vc_removed:            
+            vprint("\n*** Results were changed for the following test%s: %s. "
+                   "Once you've checked the results validity, DO NOT FORGET to do a 'pytest vc_add'."
+                   % (toolkit.plural(len(Test._results_vc_removed)), ', '.join(Test._results_vc_removed)),
+                   priority=0)
 
     def status_hook(self):
         self.test.setStatus("PASSED")
