@@ -285,7 +285,7 @@ class Test(PyTestObject):
 
                 ## YES
                 version_control.recursive_remove( results )
-                version_control.commit( '.', 'Removal of %s for new results creation.'%results )
+                version_control.commit( ppath.pytest_dir, 'Removal of %s for new results creation.'%results )
                 self._results_vc_removed.append(self.get_name())
 
             ## Will have been removed under svn
