@@ -100,11 +100,11 @@ void DERIVEDCLASS::train()
     target.resize(targetsize())  // the train_set's targetsize()
     real weight
 
-    if(!train_stats)  // make a default stats collector, in case there's none
-    train_stats = new VecStatsCollector()
-
-    if(nstages<stage) // asking to revert to a previous stage!
-    forget()  // reset the learner to stage=0
+    // This generic PLearner method does a number of standard stuff useful for
+    // (almost) any learner, and return 'false' if no training should take
+    // place. See PLearner.h for more details.
+    if (!initTrain())
+        return;
 
     while(stage<nstages)
     {

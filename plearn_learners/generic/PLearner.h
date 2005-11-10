@@ -222,6 +222,23 @@ protected:
     //! Building part of the PLearner that needs the train_set
     virtual void build_from_train_set() {}
 
+    //! This method may be called by any PLearner at the very beginning of the
+    //! 'train' method. It will:
+    //! - ensure that 'nstages' is non-negative (return false otherwise)
+    //! - compare the stage to reach ('nstages') to the current PLearner stage:
+    //!   + if nstages > stage, do nothing (standard case)
+    //!   + if nstages == stage, return false
+    //!   + if nstages < stage, display a warning message (when verbosity >= 1)
+    //!     and call forget() (reverting to a previous stage means we need to 
+    //!     start again from stage 0)
+    //! - check that a training set has been properly set (if it is not the
+    //!   case, a warning is displayed and 'false' is returned)
+    //! - initialize a standard train_stats VecStatsCollector if there is none
+    //!   already
+    //! Except in the cases described above, 'true' is returned. A 'false'
+    //! value means that no training should take place.
+    bool initTrain();
+
 private:
     /*!       **** SUBCLASS WRITING: ****
       This method should finalize building of the object,

@@ -505,6 +505,57 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
 
 }
 
+///////////////
+// initTrain //
+///////////////
+bool PLearner::initTrain()
+{
+    string warn_msg = "In PLearner::trainingCheck (called by '" +
+        this->classname() + "') - ";
+    
+    // Check 'nstages' is valid.
+    if (nstages < 0) {
+        PLWARNING((warn_msg + "Option nstages (set to " + tostring(nstages)
+                    + ") must be non-negative").c_str());
+        return false;
+    }
+
+    // Check we actually need to train.
+    if (stage == nstages) {
+        if (verbosity >= 1)
+            PLWARNING((warn_msg + "The learner is already trained").c_str());
+        return false;
+    }
+
+    if (stage > nstages) {
+        if (verbosity >= 1) {
+            string msg = warn_msg + "Learner was already trained up to stage "
+                + tostring(stage) + ", but asked to train up to nstages="
+                + tostring(nstages) + ": it will be reverted to stage 0 and "
+                                      "trained again";
+            PLWARNING(msg.c_str());
+        }
+        forget();
+    }
+
+    // Check there is a training set.
+    if (!train_set) {
+        if (verbosity >= 1)
+            PLWARNING((warn_msg + "No training set specified").c_str());
+        return false;
+    }
+
+    // Initialize train_stats if needed.
+    if (!train_stats)
+        train_stats = new VecStatsCollector();
+
+    // Everything is fine.
+    return true;
+}
+
+////////////////////////
+// resetInternalState //
+////////////////////////
 void PLearner::resetInternalState()
 {}
 
