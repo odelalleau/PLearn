@@ -11,17 +11,8 @@ eigenvectors = 2  4  [
 ]
 ;
 outputs_def = "l" ;
-conditional_flags = TVec(0 0 *0 )
-;
-provide_input = TVec(0 0 *0 )
-;
-n_curve_points = -1 ;
-lower_bound = 0 ;
-upper_bound = 0 ;
-cond_sort = 4 [ 0 1 2 3 ] ;
 n_input = 0 ;
-n_target = 4 ;
-n_margin = 0 ;
+n_target = -1
 expdir = "PYTEST__PL_GaussianDistribution__RESULTS:expdir_gaussian_distribution_k=2_use_last_eig=True_seed=123456/Split0/LearnerExpdir/" ;
 seed = 123456 ;
 stage = 0 ;

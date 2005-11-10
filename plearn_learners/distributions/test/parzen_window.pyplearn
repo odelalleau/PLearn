@@ -6,8 +6,8 @@ def main():
     distrib = []    # Array containing the PDistribution objects.
     distrib.append(
         pl.ParzenWindow(
-            conditional_updating_time = -1,
-            training_time = -1
+            # conditional_updating_time = -1,
+            # training_time = -1
         )
     )
 

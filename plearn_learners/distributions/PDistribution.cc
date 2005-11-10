@@ -2,8 +2,8 @@
 
 // PDistribution.cc
 //
-// Copyright (C) 2003  Pascal Vincent 
-// Copyright (C) 2004-2005  University of Montreal
+// Copyright (C) 2003 Pascal Vincent 
+// Copyright (C) 2004-2005 University of Montreal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -51,17 +51,28 @@ using namespace std;
 ///////////////////
 PDistribution::PDistribution():
     random(new PRandom()),
-    n_input(0),
-    n_margin(0),
-    n_target(0),
-    already_sorted(false),
+    n_input(-1),
+    n_target(-1),
+    n_input_(0),
+    n_target_(-1),
     delta_curve(0.1),
-    full_joint_distribution(true),
     need_set_input(true),
     lower_bound(0.),
     upper_bound(0.),
     n_curve_points(-1),
     outputs_def("l")
+
+    /*
+    n_input(0),
+    n_margin(0),
+    n_target(0),
+    */
+    // already_sorted(false),
+    //full_joint_distribution(true),
+    /*
+    need_set_input(true),
+    */
+    // TODO Do initialization.
 {}
 
 PLEARN_IMPLEMENT_OBJECT(PDistribution, 
@@ -71,11 +82,14 @@ PLEARN_IMPLEMENT_OBJECT(PDistribution,
                         "The default implementations of the learner-type methods for computing outputs and costs work as follows:\n"
                         "  - the outputs_def option allows to choose which outputs are produced\n"
                         "  - cost is a vector of size 1 containing only the negative log-likelihood (NLL), i.e. -log_density.\n"
+                        "A PDistribution may be conditional...\n" // TODO Document
+                        /*
                         "A PDistribution may be conditional P(Y|X), if the option 'conditional_flags' is set. If it is the case,\n"
                         "the input should always be made of both the 'input' part (X) and the 'target' part (Y), even if the\n"
                         "output may not need to use the Y part. The exception is when computeOutput() needs to be called\n"
                         "successively with the same value of X: in this case, after a first call with both X and Y, one may\n"
                         "only provide Y as input, and X will be assumed to be unchanged.\n"
+                        */
     );
 
 ////////////////////
@@ -104,7 +118,9 @@ void PDistribution::declareOptions(OptionList& ol)
         "The number of curve points is determined by the 'n_curve_points' option.\n"
         "Note that the upper case letters only work for SCALAR variables.\n"
         );
+    // TODO Make it TVec<string> and document?
 
+    /*
     declareOption(ol, "conditional_flags", &PDistribution::conditional_flags, OptionBase::buildoption,
                   "This vector should be set for conditional distributions. It indicates what\n"
                   "each input variable corresponds to:\n"
@@ -114,11 +130,20 @@ void PDistribution::declareOptions(OptionList& ol)
                   "If this vector is empty, then all variables are considered targets (thus\n"
                   "it is an unconditional distribution)."
         );
+        */
 
-    declareOption(ol, "provide_input", &PDistribution::provide_input, OptionBase::buildoption,
-                  "If provided, then setInput() will be called at build time with this input\n"
-                  "(this defines the input part for conditional distributions).");
+    declareOption(ol, "input_part", &PDistribution::input_part,
+                                    OptionBase::buildoption,
+        "For conditional distributions, the input part (= X in P(Y|X)).\n");
+ 
+    /*
+    declareOption(ol, "provide_input", &PDistribution::provide_input,
+                                       OptionBase::buildoption,
+        "If provided, then setInput() will be called at build time with this\n"
+        "input (this defines the input part for conditional distributions).");
+        */
 
+    /*
     declareOption(ol, "n_curve_points", &PDistribution::n_curve_points, OptionBase::buildoption,
                   "The number of points for which the output is evaluated when outputs_defs\n"
                   "is upper case (produces a histogram).\n"
@@ -133,22 +158,36 @@ void PDistribution::declareOptions(OptionList& ol)
     declareOption(ol, "upper_bound",  &PDistribution::upper_bound, OptionBase::buildoption,
                   "The upper bound of scalar Y values to compute a histogram of the distribution\n"
                   "when upper case outputs_def are specified.\n");
+                  */
 
     // Learnt options.
 
+    /*
     declareOption(ol, "cond_sort",  &PDistribution::cond_sort, OptionBase::learntoption,
                   "A vector containing the indices of the variables, so that they are ordered like\n"
                   "this: input, target, margin.");
+                  */
 
-    declareOption(ol, "n_input",  &PDistribution::n_input, OptionBase::learntoption,
-                  "The size of the input x in p(y|x).");
+    declareOption(ol, "n_input",  &PDistribution::n_input_,
+                                  OptionBase::buildoption,
+        "The (user-provided) size of the input x in p(y|x).");
 
-    declareOption(ol, "n_target",  &PDistribution::n_target, OptionBase::learntoption,
-                  "The size of the target y in p(y|x).");
+    declareOption(ol, "n_target",  &PDistribution::n_target_,
+                                   OptionBase::buildoption,
+        "The (user-provided) size of the target y in p(y|x).");
+
+   // TODO Better documentation (either here or in help).
+    declareOption(ol, "n_input_learnt",  &PDistribution::n_input, OptionBase::learntoption,
+                  "The (true) size of the input x in p(y|x).");
+
+    declareOption(ol, "n_target_learnt",  &PDistribution::n_target, OptionBase::learntoption,
+                  "The (true) size of the target y in p(y|x).");
       
+    /*
     declareOption(ol, "n_margin",  &PDistribution::n_margin, OptionBase::learntoption,
                   "The size of the variables that are marginalized in p(y|x). E.g., if the whole\n"
                   "input contains (x,y,z), and we want to compute p(y|x), then n_margin = z.length().");
+                  */
       
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -168,11 +207,15 @@ void PDistribution::build()
 ////////////
 void PDistribution::build_()
 {
-    resetGenerator(seed_);
+    resetGenerator(seed_); // TODO Is that a good idea? Better do it when?
+    setInputTargetSizes(n_input_, n_target_);
+    PDistribution::setInput(input_part, false); // TODO Explain why.
+    /*
     if (n_curve_points > 0)
         delta_curve = (upper_bound - lower_bound) / real(n_curve_points);
+        */
     // Precompute the stuff associated to the conditional flags.
-    setConditionalFlagsWithoutUpdate(conditional_flags);
+    //setConditionalFlagsWithoutUpdate(conditional_flags);
 }
 
 ///////////////////
@@ -180,14 +223,17 @@ void PDistribution::build_()
 ///////////////////
 void PDistribution::computeOutput(const Vec& input, Vec& output) const
 {
+    // TODO Add a cost to generate samples.
+    splitCond(input);
+    /*
     need_set_input = splitCond(input);
-    if (need_set_input) {
+    if (need_set_input)
         // There is an input part, and it is not the same as in the previous call.
-        setInput(input_part);
-    }
+        setInput(input);
+        */
     string::size_type l = outputs_def.length();
     int k = 0;
-    for(int i=0; i<l; i++)
+    for(unsigned int i=0; i<l; i++)
     {
         switch(outputs_def[i])
         {
@@ -262,6 +308,7 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
             break;
         default:
             // Maybe a subclass knows about this output?
+            // TODO This is quite ugly. See how to do this better.
             unknownOutput(outputs_def[i], input, output, k);
             break;
         }
@@ -274,6 +321,7 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
 void PDistribution::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                             const Vec& target, Vec& costs) const
 {
+    // TODO See if that's fine.
     costs.resize(1);
     if(outputs_def[0] == 'l')
     {
@@ -286,9 +334,9 @@ void PDistribution::computeCostsFromOutputs(const Vec& input, const Vec& output,
     else
         PLERROR("In PDistribution::computeCostsFromOutputs currently can only 'compute' \n"
                 "negative log likelihood from log likelihood or density returned as first output \n");
-
 }                                
 
+/*
 /////////////////////////////////
 // ensureFullJointDistribution //
 /////////////////////////////////
@@ -307,24 +355,29 @@ bool PDistribution::ensureFullJointDistribution(TVec<int>& old_flags) {
     }
     return restore_flags;
 }
+*/
 
+/*
 ////////////////////////////
 // finishConditionalBuild //
 ////////////////////////////
 void PDistribution::finishConditionalBuild() {
     updateFromConditionalSorting();
     // Set the input part for a conditional distribution, if provided.
-    if (provide_input.isNotEmpty() && provide_input.length() == n_input) {
+    if (need_set_input && provide_input.isNotEmpty() &&
+                          provide_input.length() == n_input) {
         input_part << provide_input;
         setInput(input_part);
     }
 }
+*/
 
 //////////////////////
 // getTestCostNames //
 //////////////////////
 TVec<string> PDistribution::getTestCostNames() const
 {
+    // TODO Is that ok?
     static TVec<string> nll_cost;
     if (nll_cost.isEmpty())
         nll_cost.append("NLL");
@@ -337,8 +390,8 @@ TVec<string> PDistribution::getTestCostNames() const
 TVec<string> PDistribution::getTrainCostNames() const
 {
     // Default = no train cost computed. This may be overridden in subclasses.
-    static TVec<string> c;
-    return c;
+    static TVec<string> no_cost;
+    return no_cost;
 }
 
 ///////////////
@@ -347,8 +400,9 @@ TVec<string> PDistribution::getTrainCostNames() const
 void PDistribution::generateN(const Mat& Y) const
 {
     Vec v;
-    if (Y.width()!=inputsize())
-        PLERROR("In PDistribution::generateN  matrix width (%d) differs from inputsize() (%d)", Y.width(), inputsize());
+    if (Y.width() != n_target)
+        PLERROR("In PDistribution::generateN - Matrix width (%d) differs from "
+                "n_target (%d)", Y.width(), n_target);
     int N = Y.length();  
     for(int i=0; i<N; i++)
     {
@@ -362,17 +416,20 @@ void PDistribution::generateN(const Mat& Y) const
 /////////////////////////////////
 void PDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
+    // TODO Check this!
+    /*
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(store_expect,       copies);
     deepCopyField(store_result,       copies);
     deepCopyField(store_cov,          copies);
     deepCopyField(random,             copies);
-    deepCopyField(cond_sort,          copies);
-    deepCopyField(cond_swap,          copies);
+    //deepCopyField(cond_sort,          copies);
+    //deepCopyField(cond_swap,          copies);
     deepCopyField(input_part,         copies);
     deepCopyField(target_part,        copies);
-    deepCopyField(conditional_flags,  copies);
+    //deepCopyField(conditional_flags,  copies);
     deepCopyField(provide_input,      copies);
+    */
 }
 
 ////////////////
@@ -382,13 +439,14 @@ int PDistribution::outputsize() const
 {
     int l = 0;
     for (size_t i=0; i<outputs_def.length(); i++) {
-        if (outputs_def[i]=='L' || outputs_def[i]=='D' || outputs_def[i]=='C' || outputs_def[i]=='S'
-            || outputs_def[i]=='E' || outputs_def[i]=='V')
+        if (outputs_def[i]=='L' || outputs_def[i]=='D' || outputs_def[i]=='C'
+         || outputs_def[i]=='S' || outputs_def[i]=='E' || outputs_def[i]=='V')
             l+=n_curve_points;
         else if (outputs_def[i]=='e')
             l += n_target;
-        else if (outputs_def[i]=='v') // by default assume variance is full nxn matrix 
-            l += n_target * n_target;
+        else if (outputs_def[i]=='v')
+            // Variance is full (n x n) matrix.
+            l += square(n_target);
         else l++;
     }
     return l;
@@ -400,9 +458,11 @@ int PDistribution::outputsize() const
 void PDistribution::resetGenerator(long g_seed) const
 {
 // seed_ = seed; // TODO See how to do this
+    // TODO Think about it?
     random->manual_seed(g_seed);
 }
 
+/*
 /////////////////
 // resizeParts //
 /////////////////
@@ -410,7 +470,9 @@ void PDistribution::resizeParts() const {
     input_part.resize(n_input);
     target_part.resize(n_target);
 }
+*/
 
+/*
 /////////////////////////
 // setConditionalFlags //
 /////////////////////////
@@ -421,7 +483,9 @@ void PDistribution::setConditionalFlags(const TVec<int>& flags) const {
     // sorting (this method should be written in subclasses).
     updateFromConditionalSorting();
 }
+*/
 
+/*
 //////////////////////////////////////
 // setConditionalFlagsWithoutUpdate //
 //////////////////////////////////////
@@ -515,13 +579,58 @@ void PDistribution::setConditionalFlagsWithoutUpdate(const TVec<int>& flags) con
     conditional_flags.resize(flags.length());
     conditional_flags << flags;
 }
+*/
 
 //////////////
 // setInput //
 //////////////
-void PDistribution::setInput(const Vec& input) const {
+void PDistribution::setInput(const Vec& input, bool call_parent) const {
     // Default behavior: only fill input_part with input.
-    input_part << input;
+    // TODO Is that ok?
+    input_part << input.subVec(0, n_input);
+}
+
+/////////////////////////
+// setInputTargetSizes //
+/////////////////////////
+bool PDistribution::setInputTargetSizes(int n_input, int n_target)
+{
+    assert( (n_input  >= 0 || n_input  == -1) &&
+            (n_target >= 0 || n_target == -1) );
+    int backup_n_input = this->n_input;
+    int backup_n_target = this->n_target;
+    this->n_input = n_input;
+    this->n_target = n_target;
+    if (this->n_input < 0) {
+        if (this->n_target < 0)
+            PLERROR("In PDistribution::setInputTargetSizes - You need to "
+                    "specify at least one non-negative value");
+        if (inputsize_ >= 0) {
+            if (this->n_target > inputsize_)
+                PLERROR("In PDistribution::setInputTargetSizes - 'n_target' "
+                        "(%d) cannot be higher than inputsize (%d)",
+                        this->n_target, inputsize_);
+            this->n_input = inputsize_ - this->n_target;
+        }
+    } else if (this->n_target < 0) {
+        if (inputsize_ >= 0) {
+            if (this->n_input > inputsize_)
+                PLERROR("In PDistribution::setInputTargetSizes - 'n_input' "
+                        "(%d) cannot be higher than inputsize (%d)",
+                        this->n_input, inputsize_);
+            this->n_target = inputsize_ - this->n_input;
+        }
+    }
+    if (inputsize_ >= 0 && this->n_input + this->n_target != inputsize_)
+        PLERROR("In PDistribution::setInputTargetSizes - n_input (%d) + "
+                "n_target (%d) != inputsize (%d)",
+                this->n_input, this->n_target, inputsize_);
+    if (this->n_input >= 0)
+        input_part.resize(this->n_input);
+    if (this->n_target >= 0)
+        target_part.resize(this->n_target);
+    return (this->n_input  != backup_n_input ||
+            this->n_target != backup_n_target);
 }
 
 ////////////////////
@@ -529,10 +638,14 @@ void PDistribution::setInput(const Vec& input) const {
 ////////////////////
 void PDistribution::setTrainingSet(VMat training_set, bool call_forget) {
     inherited::setTrainingSet(training_set, call_forget);
+    /*
     // Update internal data according to conditional_flags.
-    setConditionalFlags(conditional_flags);
+    //setConditionalFlags(conditional_flags);
+    // TODO Do we need to do something?
+    */
 }
 
+/*
 ///////////////////
 // sortFromFlags //
 ///////////////////
@@ -566,43 +679,41 @@ void PDistribution::sortFromFlags(Mat& m, bool sort_columns, bool sort_rows) con
         }
     }
 }
+*/
 
 ///////////////
 // splitCond //
 ///////////////
 bool PDistribution::splitCond(const Vec& input) const {
-    if (n_input == 0 || (n_input > 0 && input.length() == n_target + n_margin)) {
-        // No input part provided: this means this is the same as before.
-        if (already_sorted) {
-            target_part << input.subVec(0, n_target);
-        } else {
-            // A bit messy here. It probably won't happen, so it's not implemented
-            // for now (but wouldn't be that hard to do it).
-            PLERROR("In PDistribution::splitCond - You'll need to implement this case!");
-        }
+    if (n_input == 0 || (n_input > 0 && input.length() == n_target)) {
+        // No input part provided: this means this is the same as before (or
+        // that there is none at all).
+        target_part << input;
         return false;
-    }
-    if (already_sorted) {
-        input_part << input.subVec(0, n_input);
-        target_part << input.subVec(n_input, n_target);
     } else {
-        for (int i = 0; i < n_input; i++) {
-            input_part[i] = input[cond_sort[i]];
-        }
-        for (int i = 0; i < n_target; i++) {
-            target_part[i] = input[cond_sort[i + n_input]];
-        }
+        assert( input.length() == n_input + n_target );
+        target_part << input.subVec(n_input, n_target);
+        setInput(input);
+        return true;
     }
-    return true;
+    // TODO See if we can get rid of return value, and maybe remove
+    // 'need_set_input' ?
 }
+
+////////////
+// forget //
+////////////
+void PDistribution::forget() {
+    stage = 0;
+    n_input = -1;
+    n_target = -1;
+    resetGenerator(seed_); // TODO Is that a good idea?
+}
+
 
 ////////////////////
 // subclass stuff //
 ////////////////////
-
-void PDistribution::forget() {
-    PLERROR("forget not implemented for this PDistribution");
-}
 
 real PDistribution::log_density(const Vec& y) const
 { PLERROR("density not implemented for this PDistribution"); return 0; }
@@ -632,10 +743,14 @@ void PDistribution::train()
 // unknownOutput //
 ///////////////////
 void PDistribution::unknownOutput(char def, const Vec& input, Vec& output, int& k) const {
+    /*
     // Default is to throw an error.
+    // TODO Do we need this?
     PLERROR("In PDistribution::unknownOutput - Unrecognized outputs_def character: %c", def);
+    */
 }
 
+/*
 //////////////////////////////////
 // updateFromConditionalSorting //
 //////////////////////////////////
@@ -643,6 +758,7 @@ void PDistribution::updateFromConditionalSorting() const {
     // Default does nothing.
     return;
 }
+*/
 
 } // end of namespace PLearn
 

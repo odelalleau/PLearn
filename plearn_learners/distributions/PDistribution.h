@@ -2,7 +2,8 @@
 
 // PDistribution.h
 //
-// Copyright (C) 2003  Pascal Vincent 
+// Copyright (C) 2003 Pascal Vincent 
+// Copyright (C) 2004-2005 University of Montreal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -49,6 +50,7 @@ using namespace std;
 //! Note that many methods are declared as 'const' because of the 'const'
 //! plague, but are actually not true 'const' methods.
 //! This is also why almost everything is mutable.
+// TODO See if still the case.
 class PDistribution: public PLearner
 {
 
@@ -57,6 +59,7 @@ private:
     typedef PLearner inherited;
 
     //! Global storage to save memory allocations.
+    // TODO See if still used.
     mutable Vec store_expect, store_result;
     mutable Mat store_cov;
 
@@ -69,13 +72,18 @@ protected:
     // * protected options *
     // *********************
 
-    mutable TVec<int> cond_sort;
-    mutable int n_input;
-    mutable int n_margin;
-    mutable int n_target;
+    /*mutable*/ int n_input;
+    // mutable TVec<int> cond_sort;
+    // mutable int n_margin;
+    /*mutable*/ int n_target;
+    int n_input_;
+    int n_target_;
+    // TODO Document the _ and not _, and make sure options point to the right
+    // ones, and that forget erases the not _.
 
     // Fields below are not options.
 
+    /*
     //! A boolean indicating whether the input, target and margin part are
     //! already sorted nicely, so we actually don't have to swap indices
     //! when given a new vector.
@@ -86,19 +94,24 @@ protected:
     //! order. It is made of pairs (j,k) indicating that the new j-th variable
     //! must be the old k-th variable.
     mutable TVec<int> cond_swap;
+    */
 
     //! The step when plotting the curve (upper case outputs_def).
+    // TODO Is this needed?
     real delta_curve;
 
+    /*
     //! A boolean indicating whether the distribution is only a full joint
     //! distribution (no conditional or marginalized variables). Its value is
     //! deduced from the conditional flags.
     mutable bool full_joint_distribution;
+    */
 
     //! A boolean indicating whether the input part has changed since last time,
     //! and thus if setInput() needs to be called.
     mutable bool need_set_input;
 
+    // TODO Do we need to keep target_part?
     mutable Vec input_part;       //!< Used to store the x part in p(y|x).
     mutable Vec target_part;      //!< Used to store the y part in p(y|x).
 
@@ -108,11 +121,10 @@ public:
     // * public build options *
     // ************************
 
-    mutable TVec<int> conditional_flags;
-    real lower_bound, upper_bound; 
-    int n_curve_points;
-    string outputs_def;
-    Vec provide_input;
+    // mutable TVec<int> conditional_flags;
+    real lower_bound, upper_bound;  // TODO Still used?
+    int n_curve_points;  // TODO Still used?
+    string outputs_def; // TODO Replace this by a TVec<string>
 
     // ****************
     // * Constructors *
@@ -179,15 +191,26 @@ public:
 
 private:
 
+    /*
     //! Set the conditional flags, but does not call updateFromConditionalSorting().
     //! This method is called at build time so that flags information is available
     //! to subclasses during their build. The updateFromConditionalSorting() method
     //! should then be called when the subclass' build ends (this will be done in
     //! finishConditionalBuild()).
     void setConditionalFlagsWithoutUpdate(const TVec<int>& flags) const;
+    */
 
 protected:
 
+    //! Split an input into the part corresponding to the 'real' input (in
+    //! 'input_part'), and the target (in 'target_part').
+    //! Note that the 'margin' part is lost, since we don't need it. // TODO Scrap
+    //! Return true iff the input part has changed since last time (this is false
+    //! only it is absent from input, which can be seen from its length).
+    // TODO See if doc is ok.
+    bool splitCond(const Vec& input) const;
+
+    /*
     //! If the full joint distribution was already the one computed, return
     //! false and old_flags is of length 0.
     //! Otherwise, return true, conditional_flags is emptied (in order to compute
@@ -209,46 +232,50 @@ protected:
     void sortFromFlags(Vec& v) const;
     void sortFromFlags(Mat& m, bool sort_columns = true, bool sort_rows = false) const;
 
-    //! Split an input into the part corresponding to the 'real' input (in
-    //! 'input_part'), and the target (in 'target_part').
-    //! Note that the 'margin' part is lost, since we don't need it.
-    //! Return true iff the input part has changed since last time (this is false
-    //! only it is absent from input, which can be seen from its length).
-    bool splitCond(const Vec& input) const;
-
-    //! Called in computeOutput when an unknown character is found.
-    virtual void unknownOutput(char def, const Vec& input, Vec& output, int& k) const;
-  
     //! This method updates the internal data given a new sorting of the variables
     //! defined by the conditional flags. The default version does nothing: it
     //! should be implemented in each conditional subclass.
     virtual void updateFromConditionalSorting() const;
+    */
+
+    //! Called in computeOutput when an unknown character is found.
+    virtual void unknownOutput(char def, const Vec& input, Vec& output, int& k) const;
 
 public:
 
+    /*
     //! Set the conditional flags.
     void setConditionalFlags(const TVec<int>& flags) const;
+    */
+
+    // TODO Document
+    bool setInputTargetSizes(int n_input, int n_target);
 
     //! Set the value for the input part of a conditional probability.
     //! This needs to be implemented in subclasses if there is something
     //! special to do (like precomputing some stuff).
-    virtual void setInput(const Vec& input) const;
+    // TODO See if doc is ok (in particular we use only the first 'n_input'
+    // elements from 'input').
+    virtual void setInput(const Vec& input, bool call_parent = true) const;
 
     //! Overridden so that some stuff is updated according to the conditional
     //! flags when the training set is set.
+    // TODO Still need to override?
     virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
     //! Return [ "NLL" ].
+    // TODO Is that true?
     virtual TVec<string> getTestCostNames() const;
 
     //! Return [ ].
+    // TODO Is that true?
     virtual TVec<string> getTrainCostNames() const;
 
     //! Return log of probability density log(p(y | x)).
     virtual real log_density(const Vec& y) const;
 
-    //! Return probability density p(y | x)
-    //! (default version returns exp(log_density(y))).
+    //! Return probability density p(y | x) (default version simply returns
+    //! exp(log_density(..))).
     virtual real density(const Vec& y) const;
   
     //! Return survival function: P(Y>y | x).
@@ -275,6 +302,9 @@ public:
     //! X must be a N x inputsize() matrix. that will be filled.
     //! This will call generate N times to fill the N rows of the matrix. 
     void generateN(const Mat& Y) const;
+
+    //! TODO Document
+    int get_n_target() { return n_target; }
 
 };
 

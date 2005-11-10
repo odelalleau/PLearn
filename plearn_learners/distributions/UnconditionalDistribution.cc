@@ -96,6 +96,7 @@ void UnconditionalDistribution::declareOptions(OptionList& ol)
                     "Note that the upper case letters only work for SCALAR variables."
         );
 
+    /* TODO See what kind of option we must hide now (e.g. input_part?)
     redeclareOption(ol, "conditional_flags", &UnconditionalDistribution::conditional_flags, OptionBase::nosave,
                     "Unused in unconditional distributions.");
 
@@ -104,6 +105,7 @@ void UnconditionalDistribution::declareOptions(OptionList& ol)
 
     redeclareOption(ol, "cond_sort",  &UnconditionalDistribution::cond_sort, OptionBase::nosave,
                     "Unused in unconditional distributions.");
+                    */
 
     redeclareOption(ol, "n_input",  &UnconditionalDistribution::n_input, OptionBase::nosave,
                     "Unused in unconditional distributions.");
@@ -111,8 +113,10 @@ void UnconditionalDistribution::declareOptions(OptionList& ol)
     redeclareOption(ol, "n_target",  &UnconditionalDistribution::n_target, OptionBase::nosave,
                     "Unused in unconditional distributions.");
 
+    /*
     redeclareOption(ol, "n_margin",  &UnconditionalDistribution::n_margin, OptionBase::nosave,
                     "Unused in unconditional distributions.");
+                    */
 
 }
 

@@ -3,6 +3,7 @@
 // ManifoldParzen2.cc
 // 
 // Copyright (C) 2003 Pascal Vincent, Julien Keable
+// Copyright (C) 2005 University of Montreal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -192,10 +193,10 @@ void computePrincipalComponents(Mat dataset, Vec& eig_values, Mat& eig_vectors, 
 
 void computeLocalPrincipalComponents(Mat& dataset, int which_pattern, Mat& delta_neighbors, Vec& eig_values, Mat& eig_vectors, Vec& mean, bool learn_mu=false,real global_lambda0=0)
 {
-    Vec center = dataset(which_pattern);
-    if (center.hasMissing())
+    Vec center_ = dataset(which_pattern);
+    if (center_.hasMissing())
         PLERROR("dataset row %d has missing values!", which_pattern);
-    computeNearestNeighbors(dataset, center, delta_neighbors, which_pattern);
+    computeNearestNeighbors(dataset, center_, delta_neighbors, which_pattern);
     if(learn_mu)
     {
         mean.resize(delta_neighbors.width());  // Hugo: the mean should be the current point...
@@ -216,8 +217,8 @@ void ManifoldParzen2::train()
     L = l;
     D = ncomponents;
     n_eigen = ncomponents;
-    GaussMix::build();
-    resizeStuffBeforeTraining();
+    GaussMix::build(); // TODO Still needed?
+    // resizeStuffBeforeTraining();
 //  setMixtureTypeGeneral(l, ncomponents, w); // TODO Remove this line when it works.
 
     // storage for neighbors
@@ -230,14 +231,16 @@ void ManifoldParzen2::train()
             cerr << "[SEQUENTIAL TRAIN: processing pattern #" << i << "/" << l << "]\n";
       
         // center is sample
-        mu(i) << trainset(i);
+        center(i) << trainset(i);
     
-        Vec center(mu.width());
-        center << trainset(i);
+        Vec center_(center.width());
+        center_ << trainset(i);
         if(use_last_eigenval)
-            computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs, center,learn_mu);
+            computeLocalPrincipalComponents(trainset, i, delta_neighbors,
+                    eigvals, components_eigenvecs, center_,learn_mu);
         else
-            computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs, center,learn_mu,global_lambda0);
+            computeLocalPrincipalComponents(trainset, i, delta_neighbors,
+                    eigvals, components_eigenvecs, center_,learn_mu,global_lambda0);
 
         eigvals *= scale_factor;
 
@@ -270,14 +273,14 @@ void ManifoldParzen2::train()
         //GaussMix::build();
         //resizeStuffBeforeTraining();
         if(learn_mu)
-            mu(i) << center;   // Hugo: the mean should be current point... 
+            center(i) << center_;   // Hugo: the mean should be current point... 
         eigenvalues(i) << eigvals;
-        eigenvalues(i, n_eigen_computed - 1) = lambda0;
+        // eigenvalues(i, n_eigen_computed - 1) = lambda0; TODO Put back!
         eigenvectors[i] << components_eigenvecs;
 //    setGaussianGeneral(i, 1.0/l, center, eigvals.subVec(0,eigvals.length()-1), components_eigenvecs.subMatRows(0,eigvals.length()-1), lambda0);
     }
     stage = 1;
-    precomputeStuff();
+    // precomputeStuff(); TODO Put back?
     build();
 }
 
@@ -334,7 +337,7 @@ real ManifoldParzen2::evaluate_i_j(int i,int j,real scale)
     real ret;
   
     if(fast_exact_is_equal(scale, 1))
-        ret = computeLogLikelihood(mu(i),j);
+        ret = computeLogLikelihood(center(i),j);
     else
     {
         eigenval_copy << eigenvalues(j);
@@ -342,7 +345,7 @@ real ManifoldParzen2::evaluate_i_j(int i,int j,real scale)
 
         // Maybe sigma_min should be adjusted!
 
-        ret = computeLogLikelihood(mu(i),j);
+        ret = computeLogLikelihood(center(i),j);
 
         eigenvalues(j) << eigenval_copy;
     }
@@ -379,9 +382,9 @@ void ManifoldParzen2::computeOutput(const Vec& input, Vec& output) const
         t_row.resize(input.length());
         row.resize(input.length());
         t_row << input;
-        mu_temp.resize(mu.length(),mu.width());
+        mu_temp.resize(center.length(),center.width());
         temp_eigv.resize(input.length());
-        mu_temp << mu;
+        mu_temp << center;
         for(int s=0; s<nstep;s++)
         {
             i = find_nearest_neighbor(new MemoryVMatrix(mu_temp),t_row);  

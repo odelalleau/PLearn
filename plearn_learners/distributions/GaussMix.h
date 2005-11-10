@@ -52,9 +52,14 @@ private:
 
     typedef PDistribution inherited;
 
+    // TODO Document
+    Vec sample_row;
+    Vec log_likelihood_post;
+
+    /*
     //! Storage vectors to save memory allocations.
-    Vec sample_row, log_likelihood_post;
     mutable Vec x_minus_mu_x, mu_target, log_likelihood_dens;
+    */
 
 protected:
 
@@ -62,23 +67,33 @@ protected:
     // * protected options *
     // *********************
 
-    mutable real conditional_updating_time;
+    int D;
+    /*mutable*/ Mat diags;
     Mat eigenvalues;
     TVec<Mat> eigenvectors;
-    int D;
-    mutable Mat diags;
     Vec log_coeff;
-    Vec log_p_j_x;
+    int nsamples;
+    mutable Vec p_j_x;
+    mutable Vec log_p_j_x;
+    /*
+    mutable real conditional_updating_time;
     Vec log_p_x_j_alphaj;
     mutable Mat mu_y_x;
     int n_eigen_computed;
     TVec<int> n_tries;
-    int nsamples;
-    Vec p_j_x;
     real training_time;
+    */
 
     // Fields below are not options.
 
+    // TODO Document.
+    int type_id;
+
+    //! The posterior probabilities P(j | s_i), where j is the index of a
+    //! Gaussian and i is the index of a sample.
+    Mat posteriors;
+
+    /*
     TVec<Mat> cov_x;            //!< The covariance of x.
     TVec<Mat> cov_y_x;          //!< The covariance of y|x.
     mutable Mat eigenvalues_x;  //!< The eigenvalues of the covariance of X.
@@ -91,21 +106,21 @@ protected:
     //! Mean and standard deviation of the training set.
     Vec mean_training, stddev_training;
 
-    //! The posterior probabilities P(j | s_i), where j is the index of a Gaussian
-    //! and i is the index of a sample.
-    Mat posteriors;
+
+
+    //! Storage for the (weighted) covariance matrix of the dataset.
+    //! It is only used with when type == "general".
+    Mat covariance;
+    */
 
     //! The initial weights of the samples s_i in the training set, copied for
     //! efficiency concerns.
     Vec initial_weights;
 
-    //! A matrix whose j-th line is a Vec with the weights of each sample s_i,
-    //! multiplied by the posterior P(j | s_i).
+    //! A matrix whose j-th line is a Vec with the weights of each sample s_i
+    //! for Gaussian j, i.e. the initial weight of s_i multiplied by the
+    //! posterior P(j | s_i).
     Mat updated_weights;
-
-    //! Storage for the (weighted) covariance matrix of the dataset.
-    //! It is only used with when type == "general".
-    Mat covariance;
 
 public:
 
@@ -118,13 +133,16 @@ public:
     int kmeans_iterations;
     int L;
     int n_eigen;
+    Vec sigma;
     real sigma_min;
     string type;
+    /*
 
     // Currently learnt options, but may be build options in the future.
+    */
+
     Vec alpha;
-    mutable Mat mu;  
-    Vec sigma;
+    /*mutable*/ Mat center;
 
     // ****************
     // * Constructors *
@@ -139,46 +157,60 @@ public:
 
 protected:
 
+    //! Generate a sample 's' from the given Gaussian. If 'given_gaussian' is
+    //! equal to -1, then a random Gaussian will be chosen according to the
+    //! weights alpha.
+    // TODO Check doc.
+    /*virtual*/ void generateFromGaussian(Vec& s, int given_gaussian) const;
+
+    //! TODO Document
+    void getInitialWeightsFrom(const VMat& vmat);
+
     //! Given the posteriors, fill the centers and covariance of each Gaussian.
     virtual void computeMeansAndCovariances();
 
-    //! Compute log p(y | x,j), where j < L is the index of a component of the mixture.
-    //! If 'is_input' is set to true, then it will instead compute log p(x | j)
-    //! (here x = the method argument y), the probability of input part x given j.
-    virtual real computeLogLikelihood(const Vec& y, int j, bool is_input = false) const;
-
-    //! Compute the posteriors P(j | s_i) for each sample point and each Gaussian.
+    //! Compute posteriors P(j | s_i) for each sample point and each Gaussian.
+    //! Note that actual weights (stored in 'update_weights') will not be
+    //! until you explicitely call 'updateSampleWeights'.
     virtual void computePosteriors();
 
-    //! Compute the weight of each mixture (the coefficient alpha).
-    //! If a mixture has a too low coefficient, it will be removed, and the method
-    //! will return 'true' (otherwise it will return 'false').
-    virtual bool computeWeights();
+    // TODO Document.
+    void computeAllLogLikelihoods(const Vec& sample, const Vec& log_like);
 
-    //! Generate a sample s from the given Gaussian. If 'given_gaussian' is equal
-    //! to -1, then a random Gaussian will be chosen according to the weights alpha.
-    virtual void generateFromGaussian(Vec& s, int given_gaussian) const;
+    //! Compute log p(y | x,j), with j < L the index of a mixture's component,
+    //! and 'x' the current input part.
+    //! If 'is_input' is set to true, then it is the likelihood of the input
+    //! that will be returned, i.e. log p(X = y | j).
+    real computeLogLikelihood(const Vec& y, int j, bool is_input=false) const;
+
+    /*
+
 
     //! Precompute stuff specific to each Gaussian, given its current parameters.
     //! This method is called after each training step.
     virtual void precomputeStuff();
 
+
+    */
+
+    //! Make sure everything has the right size when training starts.
+    void resizeDataBeforeTraining();
+
+    //! Compute the weight of each Gaussian (the coefficient 'alpha').
+    //! If a Gaussian's coefficient is too low, this Gaussian will be removed
+    //! and replaced by a new one, while this method will return 'true'
+    //! (otherwise it will return 'false').
+    /*virtual*/ bool computeMixtureWeights();
+
     //! Replace the j-th Gaussian with another one (probably because that one is
     //! not appropriate). The new one is centered on a random point sampled from
     //! the Gaussian with highest weight alpha, and has the same covariance.
-    virtual void replaceGaussian(int j);
-
-    //! Resize everything before training.
-    void resizeStuffBeforeTraining();
+    /*virtual*/ void replaceGaussian(int j);
 
     //! Update the sample weights according to their initial weights and the current
-    //! posterior probabilities.
+    //! posterior probabilities (see documentation of 'updated_weights' for the
+    //! exact formula).
     void updateSampleWeights();
-
-public:
-
-    //! Overridden.
-    virtual void generate(Vec& s) const;
 
 private: 
 
@@ -191,10 +223,15 @@ protected:
     static void declareOptions(OptionList& ol);
 
     //! Perform K-means.
-    void kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clust, int maxit=9999);
+    void kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
+                Mat& clust, int maxit=9999);
+
+    /*
+
 
     //! Overridden so as to compute specific GaussMix outputs.
     virtual void unknownOutput(char def, const Vec& input, Vec& output, int& k) const;
+    */
 
 public:
 
@@ -218,19 +255,23 @@ public:
     //! Trains the model.
     virtual void train();
 
+    /*
     //! Overridden to take into account new outputs computed.
     virtual int outputsize() const;
+    */
 
     // *************************
     // * PDistribution methods *
     // *************************
 
     //! Set the value for the input part of the conditional probability.
-    virtual void setInput(const Vec& input) const;
+    virtual void setInput(const Vec& input, bool call_parent = true) const;
 
+    /*
     //! This method updates the internal data given a new sorting of the variables
     //! defined by the conditional flags.
     virtual void updateFromConditionalSorting() const;
+    */
 
     //! return density p(y | x)
     virtual real log_density(const Vec& y) const;
@@ -245,13 +286,19 @@ public:
     virtual void expectation(Vec& mu) const;
 
     //! Compute Var[Y | x]
+    // TODO Say that not implemented.
     virtual void variance(Mat& cov) const;
 
+    //! Overridden. TODO Better doc.
+    virtual void generate(Vec& s) const;
+
     //! "Get" methods.
+    /*
     int getNEigenComputed() const;
     Mat getEigenvectors(int j) const;
     Vec getEigenvals(int j) const;
     Vec getLogLikelihoodDens() const { return log_likelihood_dens; }
+    */
 
 };
 

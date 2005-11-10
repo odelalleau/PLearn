@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
 // 
-// Copyright (C) 2004 Université de Montréal
+// Copyright (C) 2004-2005 University of Montreal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -73,6 +73,7 @@ void ParzenWindow::build()
 }
 
 // TODO Hide the options from GaussMix that are overwritten.
+// TODO Yeah that's really needed!
 
 ////////////////////
 // declareOptions //
@@ -112,7 +113,7 @@ void ParzenWindow::train()
     L = l;
     D = -1;
     GaussMix::build();
-    resizeStuffBeforeTraining();
+    resizeDataBeforeTraining(); // TODO See exactly what this does.
 //  setMixtureTypeGeneral(l, ncomponents, w); // TODO Remove this line when it works.
   
 
@@ -122,15 +123,15 @@ void ParzenWindow::train()
             cerr << "[SEQUENTIAL TRAIN: processing pattern #" << i << "/" << l << "]\n";
       
         // center is sample
-        mu(i) << trainset(i);
+        center(i) << trainset(i);
         sigma[i] = sigma_square;
 
         alpha[i] = 1.0 / l;
         GaussMix::build();
-        resizeStuffBeforeTraining();
+        // resizeStuffBeforeTraining(); TODO Put back?
     }
     stage = 1;
-    precomputeStuff();
+    // precomputeStuff(); TODO Put back?
     build();
 }
 

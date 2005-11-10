@@ -726,7 +726,7 @@ void ConditionalDensityNet::build_()
         if (use_paramsvalues)
             test_costf->recomputeParents();
     }
-    PDistribution::finishConditionalBuild();
+    // PDistribution::finishConditionalBuild();
 }
 
 
@@ -1042,8 +1042,10 @@ void ConditionalDensityNet::train()
     if(!train_stats)
         PLERROR("In ConditionalDensityNet::train, you did not setTrainStatsCollector");
 
+    /*
     if (!already_sorted || n_margin > 0)
         PLERROR("In ConditionalDensityNet::train - Currently, can only be trained if the data is given as input, target");
+        */
 
     if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
         build();

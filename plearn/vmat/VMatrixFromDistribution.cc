@@ -93,7 +93,7 @@ void VMatrixFromDistribution::build_()
         if(mode=="sample")
         {
             length_ = nsamples;
-            width_ = distr->inputsize();
+            width_ = distr->get_n_target();
             inputsize_ = width_;
             targetsize_ = 0;
             weightsize_ = 0;
