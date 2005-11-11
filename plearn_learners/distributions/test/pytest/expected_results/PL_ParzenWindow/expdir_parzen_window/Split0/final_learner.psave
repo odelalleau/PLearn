@@ -10,7 +10,7 @@ eigenvalues = 0  0  [
 ;
 eigenvectors = TVec(0 0 *0 )
 ;
-# D = 4 ;
+D = 4 ;
 #diags = 0  0  [ 
 #]
 ;
