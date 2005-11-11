@@ -208,7 +208,7 @@ void PDistribution::build()
 void PDistribution::build_()
 {
     resetGenerator(seed_); // TODO Is that a good idea? Better do it when?
-    setInputTargetSizes(n_input_, n_target_);
+    PDistribution::setInputTargetSizes(n_input_, n_target_, false); // TODO Explain why.
     PDistribution::setInput(input_part, false); // TODO Explain why.
     /*
     if (n_curve_points > 0)
@@ -430,6 +430,7 @@ void PDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     //deepCopyField(conditional_flags,  copies);
     deepCopyField(provide_input,      copies);
     */
+    PLERROR("PDistribution::makeDeepCopyFromShallowCopy not implemented");
 }
 
 ////////////////
@@ -593,7 +594,8 @@ void PDistribution::setInput(const Vec& input, bool call_parent) const {
 /////////////////////////
 // setInputTargetSizes //
 /////////////////////////
-bool PDistribution::setInputTargetSizes(int n_input, int n_target)
+bool PDistribution::setInputTargetSizes(int n_input, int n_target,
+                                        bool call_parent)
 {
     assert( (n_input  >= 0 || n_input  == -1) &&
             (n_target >= 0 || n_target == -1) );

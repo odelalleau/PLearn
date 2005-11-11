@@ -96,15 +96,20 @@ protected:
     //! Gaussian and i is the index of a sample.
     Mat posteriors;
 
+    // TODO Check.
+    TVec<Mat> eigenvectors_x;   //!< The eigenvectors of the covariance of X.
+    Mat eigenvalues_x;  //!< The eigenvalues of the covariance of X.
+//    TVec<Mat> full_cov;         //!< The full covariance matrix.
+    TVec<Mat> y_x_mat;          //!< The product K2 * K1^-1 to compute E[Y|x].
+    TVec<Mat> eigenvectors_y_x; //!< The eigenvectors of the covariance of Y|x.
+    Mat eigenvalues_y_x;//!< The eigenvalues of the covariance of Y|x.
+
+    // TODO Document.
+    Vec log_coeff_x;
+    Vec log_coeff_y_x;
+
     /*
     TVec<Mat> cov_x;            //!< The covariance of x.
-    TVec<Mat> cov_y_x;          //!< The covariance of y|x.
-    mutable Mat eigenvalues_x;  //!< The eigenvalues of the covariance of X.
-    mutable Mat eigenvalues_y_x;//!< The eigenvalues of the covariance of Y|x.
-    TVec<Mat> eigenvectors_x;   //!< The eigenvectors of the covariance of X.
-    TVec<Mat> eigenvectors_y_x; //!< The eigenvectors of the covariance of Y|x.
-    TVec<Mat> full_cov;         //!< The full covariance matrix.
-    TVec<Mat> y_x_mat;          //!< The product K2 * K1^-1 to compute E[Y|x].
 
 
 
@@ -169,6 +174,10 @@ protected:
     // TODO Check doc.
     /*virtual*/ void generateFromGaussian(Vec& s, int given_gaussian) const;
 
+       // TODO Document
+        virtual bool setInputTargetSizes(int n_input, int n_target,
+                                                     bool call_parent = true);
+
     //! TODO Document
     void getInitialWeightsFrom(const VMat& vmat);
 
@@ -192,10 +201,16 @@ protected:
     //! Precompute stuff specific to each Gaussian, given its current parameters.
     //! This method is called after each training step.
     // TODO Better help.
-    void precomputeGaussianCoefficients();
+    void precomputeAllGaussianLogCoefficients();
+
+    // TODO Document.
+    real precomputeGaussianLogCoefficient(const Vec& eigenvals, int dimension);
 
     //! Make sure everything has the right size when training starts.
     void resizeDataBeforeTraining();
+
+    //! TODO Document.
+    void resizeDataBeforeUsing();
 
     //! Compute the weight of each Gaussian (the coefficient 'alpha').
     //! If a Gaussian's coefficient is too low, this Gaussian will be removed

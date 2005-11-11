@@ -249,7 +249,8 @@ public:
     */
 
     // TODO Document
-    bool setInputTargetSizes(int n_input, int n_target);
+    virtual bool setInputTargetSizes(int n_input, int n_target,
+                                     bool call_parent = true);
 
     //! Set the value for the input part of a conditional probability.
     //! This needs to be implemented in subclasses if there is something
