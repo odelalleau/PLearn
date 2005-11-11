@@ -72,6 +72,7 @@ protected:
     Mat eigenvalues;
     TVec<Mat> eigenvectors;
     Vec log_coeff;
+    int n_eigen_computed;
     int nsamples;
     mutable Vec p_j_x;
     mutable Vec log_p_j_x;
@@ -79,7 +80,6 @@ protected:
     mutable real conditional_updating_time;
     Vec log_p_x_j_alphaj;
     mutable Mat mu_y_x;
-    int n_eigen_computed;
     TVec<int> n_tries;
     real training_time;
     */
@@ -88,6 +88,9 @@ protected:
 
     // TODO Document.
     int type_id;
+
+    // TODO Document.
+    mutable Vec y_centered;
 
     //! The posterior probabilities P(j | s_i), where j is the index of a
     //! Gaussian and i is the index of a sample.
@@ -103,15 +106,18 @@ protected:
     TVec<Mat> full_cov;         //!< The full covariance matrix.
     TVec<Mat> y_x_mat;          //!< The product K2 * K1^-1 to compute E[Y|x].
 
+
+
+    */
+
     //! Mean and standard deviation of the training set.
+    // TODO Check doc + do they need to be learnt options?
     Vec mean_training, stddev_training;
-
-
 
     //! Storage for the (weighted) covariance matrix of the dataset.
     //! It is only used with when type == "general".
+    // TODO Check help.
     Mat covariance;
-    */
 
     //! The initial weights of the samples s_i in the training set, copied for
     //! efficiency concerns.
@@ -183,15 +189,10 @@ protected:
     //! that will be returned, i.e. log p(X = y | j).
     real computeLogLikelihood(const Vec& y, int j, bool is_input=false) const;
 
-    /*
-
-
     //! Precompute stuff specific to each Gaussian, given its current parameters.
     //! This method is called after each training step.
-    virtual void precomputeStuff();
-
-
-    */
+    // TODO Better help.
+    void precomputeGaussianCoefficients();
 
     //! Make sure everything has the right size when training starts.
     void resizeDataBeforeTraining();
