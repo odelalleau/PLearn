@@ -579,6 +579,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
             }
     } else {
         assert( type_id == TYPE_GENERAL );
+        // TODO Put both cases (n_input == 0 and other) in same code (they are
+        // very close one to each other).
         if (n_input == 0) {
             // Simple case: there is no input part.
             assert( !is_input );
@@ -972,7 +974,7 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
 
     // The assert below may fail if one forgets to provide an input part
     // through the 'setInput' method.
-    assert( p_j_x.length() == L );
+    assert( n_input == 0 || p_j_x.length() == L );
 
     if (given_gaussian < 0)
         j = random->multinomial_sample(n_input == 0 ? alpha : p_j_x);
