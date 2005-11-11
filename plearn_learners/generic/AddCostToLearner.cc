@@ -55,7 +55,10 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(AddCostToLearner,
                         "A PLearner that just adds additional costs to another PLearner.",
                         "In addition, this learner can be used to compute costs on bags instead of\n"
-                        "individual samples, using the option 'compute_costs_on_bags'.\n"
+                        "individual samples, using the option 'compute_costs_on_bags' (this will\n"
+                        "also automatically remove the bags column from the training set, so that\n"
+                        "the learner can be trained as usual).\n"
+                        "\n"
                         "Note that for now, the added costs are only added as test costs.\n"
                         "\n"
                         "Feel free to make this class evolve by adding new costs, or rewriting it\n"
