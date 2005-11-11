@@ -48,6 +48,7 @@ class merge( XpMode ):
     
 
     def __init__( self, targets, options ):
+        super(merge, self).__init__(targets, options)
         if options.name:
             dirname = options.name
         else:
@@ -64,6 +65,7 @@ class merge( XpMode ):
 
 class mkdir( XpMode ):
     def __init__( self, targets, options ):
+        super(mkdir, self).__init__(targets, options)
         dirname = targets[0]
         
         vsystem( 'mkdir %s'             % dirname )
@@ -91,6 +93,7 @@ class mkdir( XpMode ):
 
 class running( XpMode ):
     def __init__( self, targets, options ):
+        super(running, self).__init__(targets, options)
         assert not targets
         
         r = 0
@@ -113,6 +116,7 @@ class running( XpMode ):
 #
 class ExpKeyMode( XpMode ):
     def __init__( self, targets, options ):
+        super(ExpKeyMode, self).__init__(targets, options)
         # MOVED IN Experiment.cache_experiments...
         # exproot = pyplearn.config.get_option( 'EXPERIMENTS', 'expdir_root' )
         # if exproot:
