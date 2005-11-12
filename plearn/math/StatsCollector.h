@@ -1,7 +1,9 @@
 // -*- C++ -*-
 
 // PLearn (A C++ Machine Learning Library)
+//
 // Copyright (C) 2001,2002 Pascal Vincent
+// Copyright (C) 2005 University of Montreal
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -113,12 +115,6 @@ int diff(const string& refer, const string& other,
 
 DECLARE_SPECIALIZED_DIFF_CLASS(StatsCollectorCounts)
 
-/*!
-  "A StatsCollector allows to compute basic global statistics for a series of numbers,\n"
-  "as well as statistics within automatically determined ranges.\n"
-  "The first maxnvalues encountered values will be used as points to define\n"
-  "the ranges, so to get reasonable results, your sequence should be iid, and NOT sorted!"
-*/
 class StatsCollector: public Object
 {
     typedef Object inherited;
@@ -131,8 +127,6 @@ public:
 
     // ** Build options **
 
-    //! maximum number of different values to keep track of in counts
-    //! (if 0, we will only keep track of global statistics)
     int maxnvalues; 
 
     /**
@@ -162,9 +156,6 @@ public:
     real last_;            //!< last encountered nonmissing observation
     bool more_than_maxnvalues;
 
-    //! will contain up to maxnvalues values and associated Counts
-    //! as well as a last element which maps FLT_MAX, so that we don't miss anything
-    //! (empty if maxnvalues=0)
     map<real,StatsCollectorCounts> counts; 
 
 protected:
@@ -188,6 +179,10 @@ protected:
 
     //! Sort values stored in 'counts' by magnitude, so as to fill 'sorted_values'.
     void sort_values_by_magnitude() const;
+
+    //! Return 'true' iff this StatsCollector needs to fill the 'counts' map,
+    //! i.e. iff maxnvalues is set to either -1 or a strictly positive value.
+    bool storeCounts() { return (maxnvalues == -1 || maxnvalues > 0); }
 
 public:
 
@@ -283,8 +278,8 @@ public:
 
     /**
      * Return the position of the pseudo-quantile Q.  This is derived from
-     * the bin-mapping, so maxnvalues must be greater than zero for this
-     * function to return something meaningful
+     * the bin-mapping, so maxnvalues must not be zero for this function
+     * to return something meaningful.
      */
     real pseudo_quantile(real q) const;
 

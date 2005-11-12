@@ -69,8 +69,6 @@ public:
     // * public build options *
     // ************************
 
-    //! maximum number of different values to keep track of for each element
-    //! (default: 0, meaning we only keep track of global statistics)
     int maxnvalues; 
 
     /**

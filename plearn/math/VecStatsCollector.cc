@@ -62,9 +62,11 @@ PLEARN_IMPLEMENT_OBJECT(VecStatsCollector,
 
 void VecStatsCollector::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "maxnvalues", &VecStatsCollector::maxnvalues, OptionBase::buildoption,
-                  "maximum number of different values to keep track of for each element\n"
-                  "(default: 0, meaning we only keep track of global statistics)");
+    declareOption(ol, "maxnvalues", &VecStatsCollector::maxnvalues,
+                                    OptionBase::buildoption,
+        "Maximum number of different values to keep track of for each element.\n"
+        "If -1, we will keep track of all different values.\n"
+        "If 0, we will only keep track of global statistics.\n");
 
     declareOption( ol, "no_removal_warnings", &VecStatsCollector::no_removal_warnings,
                    OptionBase::buildoption,
@@ -167,6 +169,10 @@ void VecStatsCollector::update(const Vec& x, real weight)
         stats.resize(n);
         for(int k=0; k<n; k++)
         {
+            // TODO It would be cool to have a simple (or automatic) mechanism
+            // to be able to specify a different value of 'maxnvalues' for each
+            // StatsCollector (e.g. when only one StatsCollector is meant to
+            // compute a lift statistics).
             stats[k].maxnvalues          = maxnvalues;
             stats[k].no_removal_warnings = no_removal_warnings;
             stats[k].forget();

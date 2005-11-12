@@ -1,7 +1,9 @@
 // -*- C++ -*-
 
 // PLearn (A C++ Machine Learning Library)
+//
 // Copyright (C) 2001,2002 Pascal Vincent
+// Copyright (C) 2005 University of Montreal
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -57,10 +59,18 @@ static const real SQRT2_ABSOLUTE_TOLERANCE = sqrt(SQRT_ABSOLUTE_TOLERANCE);
 PLEARN_IMPLEMENT_OBJECT(
     StatsCollector,
     "Collects basic statistics",
-    "A StatsCollector allows to compute basic global statistics for a series of numbers,\n"
-    "as well as statistics within automatically determined ranges.\n"
-    "The first maxnvalues encountered values will be used as reference points to define\n"
-    "the ranges, so to get reasonable results, your sequence should be iid, and NOT sorted!\n"
+    "A StatsCollector allows to compute basic global statistics for a series\n"
+    "of numbers, as well as statistics within automatically determined\n"
+    "ranges.\n"
+    "The first 'maxnvalues' encountered values will be used as reference\n"
+    "points to define the ranges, so to get reasonable results, your\n"
+    "sequence should be i.i.d., and NOT sorted!\n"
+    "The 'maxnvalues' option also indicates the maximum number of unique\n"
+    "values that will be kept in memory. It can be important for computing\n"
+    "statistics such as the lift, that require to remember all values for an\n"
+    "exact computation. One may set this option to '-1' in order to keep all\n"
+    "values automatically (the only limitation being the amount of memory\n"
+    "available).\n"
     "\n"
     "The following statistics are available:\n"
     "  - E            -  Sample mean\n"
@@ -87,7 +97,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "  - PZ1t         -  One-tailed probability of the Z-Statistic\n"
     "  - PZ2t         -  Two-tailed probability of the Z-Statistic\n"
     "  - PSEUDOQ(q)   -  Return the location of the pseudo-quantile q, where 0 < q < 1.\n"
-    "                    NOTE that bin counting must be enabled, i.e. maxnvalues > 0\n"
+    "                    NOTE that bin counting must be enabled, i.e. maxnvalues != 0\n"
     "  - IQR          -  The interquartile range, i.e. PSEUDOQ(0.75) - PSEUDOQ(0.25)\n"
     "  - PRR          -  The pseudo robust range, i.e. PSEUDOQ(0.99) - PSEUDOQ(0.01)\n"
     "  - LIFT(f)      -  Lift computed at fraction f (0 <= f <= 1)\n"
@@ -98,9 +108,9 @@ PLEARN_IMPLEMENT_OBJECT(
     "\n"
     "Notes:\n"
     "  - When computing LIFT-related statistics, all values encountered need to be stored\n"
-    "    which means that 'maxnavalues' should be set to a high value. Also, a value should\n"
-    "    be positive when the real target is the class of interest (positive example), and\n"
-    "    negative otherwise, the magnitude being the estimated likelihood of the example.\n"
+    "    which means that 'maxnvalues' should be set to a high value (or -1). Also, a value\n"
+    "    should be positive when the real target is the class of interest (positive example),\n"
+    "    and negative otherwise, the magnitude being the estimated likelihood of the example.\n"
     "  - Formulas to compute LIFT-related statistics. Let n+ = number of positive examples,\n"
     "    n = total number of examples, v_i the value assigned to example i, and assume\n"
     "    examples are sorted by order of magnitude |v_i|:\n"
@@ -172,9 +182,11 @@ void StatsCollector::declareOptions(OptionList& ol)
 {
     // buid options
 
-    declareOption(ol, "maxnvalues", &StatsCollector::maxnvalues, OptionBase::buildoption,
-                  "maximum number of different values defining ranges to keep track of in counts\n"
-                  "(if 0, we will only keep track of global statistics)");
+    declareOption(ol, "maxnvalues", &StatsCollector::maxnvalues, 
+                                    OptionBase::buildoption,
+        "Maximum number of different values to keep track of in counts.\n"
+        "If -1, we will keep track of all different values.\n"
+        "If 0, we will only keep track of global statistics.\n");
 
     declareOption( ol, "no_removal_warnings", &StatsCollector::no_removal_warnings,
                    OptionBase::buildoption,
@@ -211,10 +223,13 @@ void StatsCollector::declareOptions(OptionList& ol)
                   "first encountered observation");
     declareOption(ol, "last_", &StatsCollector::last_, OptionBase::learntoption,
                   "last encountered observation");
-    declareOption(ol, "counts", &StatsCollector::counts, OptionBase::learntoption,
-                  "will contain up to maxnvalues values and associated Counts\n"
-                  "as well as a last element which maps FLT_MAX, so that we don't miss anything\n"
-                  "(remains empty if maxnvalues=0)");
+
+    declareOption(ol, "counts", &StatsCollector::counts,
+                                OptionBase::learntoption,
+        "Will contain up to 'maxnvalues' values and associated counts, as\n"
+        "well as a last element which maps FLT_MAX, so that we do not miss\n"
+        "anything (remains empty if maxnvalues == 0).");
+
     declareOption(ol, "more_than_maxnvalues", &StatsCollector::more_than_maxnvalues, OptionBase::learntoption,
                   "Set to 1 when more than 'maxnvalues' are seen. This is to warn the user when computing\n"
                   "statistics that may be inaccurate when not all values are kept (e.g., LIFT).");
@@ -228,9 +243,10 @@ void StatsCollector::declareOptions(OptionList& ol)
 ////////////
 void StatsCollector::build_()
 {
+    assert( maxnvalues == -1 || maxnvalues >= 0 );
     // make sure counts.size==0. If not, the object must have been loaded, and FLT_MAX is an existing key
     // but rounded to some precision, and there would be 2 keys approx.=  FLT_MAX
-    if(maxnvalues>0 && counts.size()==0)
+    if(storeCounts() && counts.size()==0)
         counts[FLT_MAX] = StatsCollectorCounts();
     // If no values are kept, then we always see more than 0 values.
     if (maxnvalues == 0)
@@ -293,12 +309,15 @@ void StatsCollector::update(real val, real weight)
         sumcube_   += sqval*(val-first_) * weight;
         sumfourth_ += sqval*sqval        * weight;
     
-        if(maxnvalues>0)  // also remembering statistics inside values ranges
+
+        if (storeCounts())
         {
+            // Also remembering statistics inside values ranges.
             sorted = false;
             map<real,StatsCollectorCounts>::iterator it;        
-            if(int(counts.size())<=maxnvalues) // Still remembering new unseen values
+            if(maxnvalues == -1 || int(counts.size())<=maxnvalues)
             {
+                // Still remembering new unseen values
                 it = counts.find(val);
                 if(it==counts.end()) {
                     // Create a new entry.
@@ -314,6 +333,9 @@ void StatsCollector::update(real val, real weight)
             else // We've filled up counts already
             {
                 it = counts.lower_bound(val);
+                // TODO Should we allow approximate match? Note that it could
+                // potentially be a bit dangerous... But also maybe necessary
+                // when reloading a saved StatsCollector.
                 if(fast_exact_is_equal(it->first, val)) // found the exact value
                     it->second.n += weight;
                 else // found the value just above val (possibly FLT_MAX)
@@ -380,8 +402,9 @@ void StatsCollector::remove_observation(real val, real weight)
             sumfourth_ = 0.0;
         assert( sumsquare_ >= 0.0 && sumfourth_ >= 0.0 );
     
-        if(maxnvalues>0)
-            PLERROR("The remove observation mechanism is incompatible with maxnvalues.");
+        if(storeCounts())
+            PLERROR("The remove observation mechanism is incompatible with "
+                    "maxnvalues.");
     }
 }                           
 
@@ -726,6 +749,7 @@ void StatsCollector::newwrite(PStream& out) const
     }
 }
 
+// TODO Remove this (apparently) deprecated method?
 void StatsCollector::oldwrite(ostream& out) const
 {
     writeHeader(out,"StatsCollector",0);
@@ -753,42 +777,6 @@ void StatsCollector::oldwrite(ostream& out) const
     }
     writeFooter(out,"StatsCollector");
 }
-
-/* TODO Remove (deprecated)
-   void StatsCollector::oldread(istream& in)
-   {
-   int version = readHeader(in,"StatsCollector");
-   if(version!=0)
-   PLERROR("In StatsCollector::oldead don't know how to read this version");
-   readField(in, "nmissing_", nmissing_);    
-   readField(in, "nnonmissing_", nnonmissing_);    
-   readField(in, "sum_", sum_);
-   readField(in, "sumsquare_", sumsquare_);
-   readField(in, "min_", min_);
-   readField(in, "max_", max_);
-   readField(in, "maxnvalues", maxnvalues);
-
-   readFieldName(in, "counts", true);
-   counts.clear();
-   int ncounts;
-   PLearn::read(in, ncounts);
-   readNewline(in);
-   for(int i=0; i<ncounts; i++)
-   {
-   real value;
-   StatsCollectorCounts c;
-   PLearn::read(in, value);
-   PLearn::read(in, c.n);
-   PLearn::read(in, c.nbelow);
-   PLearn::read(in, c.sum);
-   PLearn::read(in, c.sumsquare);
-   readNewline(in);
-   counts[value] = c;
-   }
-   readFooter(in,"StatsCollector");
-   }
-*/
-
 
 /////////////
 // getStat //
@@ -916,7 +904,8 @@ real StatsCollector::mean_over_skewness_ms() const
 real StatsCollector::lift(int k, int& n_pos_in_k, int n_pos_in_k_minus_1, real pos_fraction) const
 {
     if (more_than_maxnvalues)
-        PLWARNING("In StatsCollector::lift - You need to increase 'maxnvalues' to get an accurate statistic");
+        PLWARNING("In StatsCollector::lift - You need to increase 'maxnvalues'"
+                  " (or set it to -1) to get an accurate statistic");
     if (k <= 0)
         PLERROR("In StatsCollector::lift - It makes no sense to compute a lift with k <= 0");
     if (!sorted)
@@ -939,7 +928,9 @@ real StatsCollector::lift(int k, int& n_pos_in_k, int n_pos_in_k_minus_1, real p
 real StatsCollector::nips_lift() const
 {
     if (more_than_maxnvalues)
-        PLWARNING("In StatsCollector::nips_lift - You need to increase 'maxnvalues' to get an accurate statistic");
+        PLWARNING("In StatsCollector::nips_lift - You need to increase "
+                  "'maxnvalues' (or set it to -1) to get an accurate "
+                  "statistic");
     if (!sorted)
         sort_values_by_magnitude();
     real n_total = real(sorted_values.length());
@@ -960,7 +951,8 @@ real StatsCollector::nips_lift() const
 real StatsCollector::prbp() const
 {
     if (more_than_maxnvalues)
-        PLWARNING("In StatsCollector::prbp - You need to increase 'maxnvalues' to get an accurate statistic");
+        PLWARNING("In StatsCollector::prbp - You need to increase 'maxnvalues'"
+                  " (or set it to -1) to get an accurate statistic");
     if (!sorted)
         sort_values_by_magnitude();
     int n_pos = int(round(PLearn::sum(sorted_values.column(1))));
