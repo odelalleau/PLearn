@@ -75,7 +75,7 @@ ConcatRowsVariable::build_()
         int w = varray[0]->width();
         for (int i = 1; i < varray.size(); i++)
             if (w != varray[i]->width())
-                PLERROR("ConcatRowsVariable: all non-null variables must have the same width");
+                PLERROR("ConcatRowsVariable: all non-null variables must have the same width (%d != %d)", w, varray[i]->width());
     }
 }
 

@@ -73,7 +73,7 @@ ConcatColumnsVariable::build_()
         int l = varray[0]->length();
         for (int i = 1; i < varray.size(); i++)
             if (l != varray[i]->length())
-                PLERROR("ConcatColumnsVariable: all non-null variables must have the same length");
+                PLERROR("ConcatColumnsVariable: all non-null variables must have the same length (%d != %d)", l, varray[i]->length());
     }
 }
 

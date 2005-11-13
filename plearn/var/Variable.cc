@@ -71,16 +71,25 @@ Var::Var(Variable* v) :PP<Variable>(v) {}
 Var::Var(Variable* v, const char* name) :PP<Variable>(v) { ptr->setName(name); }
 Var::Var(const Var& other) :PP<Variable>(other) {}
 Var::Var(const Var& other, const char* name) :PP<Variable>(other) { ptr->setName(name); }
+Var::Var(const Var &other, const string &name) : PP<Variable>(other) { ptr->setName(name); }
 
 Var::Var(int the_length, const char* name) 
     :PP<Variable>(new SourceVariable(the_length,1)) 
 { ptr->setName(name); }
+
+Var::Var(int the_length, const string &name)
+    : PP<Variable>(new SourceVariable(the_length, 1))
+{ ptr->setName(name); };
 
 Var::Var(int the_length, int the_width)
     :PP<Variable>(new SourceVariable(the_length,the_width)) {}
 
 Var::Var(int the_length, int the_width, const char* name)
     :PP<Variable>(new SourceVariable(the_length,the_width)) { ptr->setName(name); }
+
+Var::Var(int the_length, int the_width, const string &name)
+    : PP<Variable>(new SourceVariable(the_length, the_width))
+{ ptr->setName(name); }
 
 Var::Var(const Vec& v, bool vertical) 
     :PP<Variable>(new SourceVariable(v,vertical)) 

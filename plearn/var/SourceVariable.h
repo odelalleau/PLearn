@@ -59,7 +59,6 @@ public:
     SourceVariable(const Vec& v, bool vertical=true);
     SourceVariable(const Mat& m);
 
-
     virtual void setParents(const VarArray& parents)
     { PLERROR("In Variable::setParents  trying to set parents of a SourceVariable..."); }
 

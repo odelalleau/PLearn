@@ -66,9 +66,12 @@ public:
     Var(Variable* v, const char* name);
     Var(const Var& other);
     Var(const Var& other, const char* name);
+    Var(const Var &other, const string &name);
     explicit Var(int the_length, int width_=1);
     Var(int the_length, int the_width, const char* name);
+    Var(int the_length, int the_width, const string &name);
     Var(int the_length, const char* name);
+    Var(int the_length, const string &name);
     explicit Var(const Vec& vec, bool vertival=true);
     explicit Var(const Mat& mat);
 
