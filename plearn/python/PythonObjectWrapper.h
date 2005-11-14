@@ -184,7 +184,10 @@ public:
     PythonObjectWrapper(OwnershipMode o = control_ownership)
         : m_ownership(o),
           m_object(Py_None)
-    { }
+    {
+        if (m_ownership == control_ownership)
+            Py_XINCREF(m_object);
+    }
     
     //! Constructor for pre-existing PyObject
     PythonObjectWrapper(PyObject* pyobj, OwnershipMode o = control_ownership)
