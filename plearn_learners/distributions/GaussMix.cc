@@ -40,7 +40,6 @@
 /*! \file GaussMix.cc */
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include "GaussMix.h"
-//#include <plearn/ker/DistanceKernel.h>
 #include <plearn/math/pl_erf.h>   //!< For gauss_log_density_stddev().
 #include <plearn/math/plapack.h>
 #include <plearn/math/random.h>
@@ -1140,9 +1139,7 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
 
     // Store the distance from each point to the 'nclust' cluster centers.
     Mat distances(vmat_length, nclust);
-    // DistanceKernel dk;
     Vec min_distances(vmat_length);
-    // dk.setDataForKernelMatrix(samples);
     int farthest_sample = random->uniform_multinomial_sample(vmat_length);
     Vec input_k;
     for (int i=0; i<nclust; i++)
@@ -1150,6 +1147,14 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
         start_idx[i] = farthest_sample;
         samples->getExample(farthest_sample,input,target,weight);    
         clust(i) << input;
+        // Ensure there are no missing values in the initial centers.
+        // To do so we generate random values based on 'mean' and 'stddev' if
+        // the center we picked turns out to have missing values.
+        Vec cl_center = clust(i);
+        for (int k = 0; k < cl_center.length(); k++)
+            if (is_missing(cl_center[k]))
+                cl_center[k] = random->gaussian_mu_sigma(mean_training[k],
+                                                         stddev_training[k]);
         if (i < nclust - 1) {
             // Find next cluster center.
             for (int k = 0; k < vmat_length; k++) {
@@ -1157,8 +1162,8 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
                 real dist = 0;
                 int count = 0;
                 for (int j = 0; j < input_k.length(); j++)
-                    if (!is_missing(input_k[j]) && !is_missing(input[j])) {
-                        dist += fabs(input_k[j] - input[j]);
+                    if (!is_missing(input_k[j])) {
+                        dist += fabs(input_k[j] - cl_center[j]);
                         count++;
                     }
                 if (count > 0)
@@ -1169,18 +1174,6 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
             farthest_sample = argmax(min_distances);
         }
     }
-
-    // Ensure there are no missing values in the initialized centers.
-    // To do so we generate random values based on 'mean' and 'stddev'.
-    Vec center;
-    for (int i = 0; i < nclust; i++) {
-        center = clust(i);
-        for (int k = 0; k < center.length(); k++)
-            if (is_missing(center[k]))
-                center[k] = random->gaussian_mu_sigma(mean_training  [k],
-                                                      stddev_training[k]);
-    }
-
 
     ProgressBar* pb = 0;
     if (report_progress)
@@ -2101,6 +2094,7 @@ real GaussMix::cdf(const Vec& x) const
 //////////////
 void GaussMix::variance(Mat& cov) const
 { 
+    // TODO Variance could be at least implemented for L == 1.
     PLERROR("variance not implemented for GaussMix");
 }
 
