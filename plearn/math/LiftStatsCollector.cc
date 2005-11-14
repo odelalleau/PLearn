@@ -161,9 +161,11 @@ void LiftStatsCollector::build()
 ////////////
 void LiftStatsCollector::build_()
 {
+    /*
     PLDEPRECATED("The 'LiftStatsCollector class is now deprecated: one should "
                  "instead use a standard 'VecStatsCollector', that is now able"
                  " to compute lift statistics");
+                 */
     if (output_column != "") {
         int i = this->getFieldNum(output_column);
         if (i >= 0) {
