@@ -79,7 +79,7 @@ Var::Var(int the_length, const char* name)
 
 Var::Var(int the_length, const string &name)
     : PP<Variable>(new SourceVariable(the_length, 1))
-{ ptr->setName(name); };
+{ ptr->setName(name); }
 
 Var::Var(int the_length, int the_width)
     :PP<Variable>(new SourceVariable(the_length,the_width)) {}
