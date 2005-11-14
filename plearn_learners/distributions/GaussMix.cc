@@ -1174,6 +1174,12 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
             farthest_sample = argmax(min_distances);
         }
     }
+    /*
+    string strmat = " 4 3 [ 0, 0, 0, 10, 10, 10, 0, 10, 0, 10, 0, 0 ] ";
+    PStream in = openString(strmat, PStream::plearn_ascii);
+    in >> clust;
+    in.flush();
+    */
 
     ProgressBar* pb = 0;
     if (report_progress)
@@ -1792,6 +1798,12 @@ void GaussMix::train()
     if (report_progress)
         pb = new ProgressBar("Training GaussMix", n_steps);
 
+    TVec<Mat> save_center;
+    // save_center.resize(L);
+    for (int i = 0; i < save_center.length(); i++)
+        save_center[i].resize(n_steps, D);
+    int count_step = 0;
+
     bool replaced_gaussian = false;
     while (stage < nstages) {
         do {
@@ -1801,6 +1813,9 @@ void GaussMix::train()
         } while (replaced_gaussian);
         computeMeansAndCovariances();
         precomputeAllGaussianLogCoefficients();
+        for (int i = 0; i < save_center.length(); i++)
+            save_center[i](count_step) << center(i);
+        count_step++;
         stage++;
         if (report_progress)
             pb->update(n_steps - nstages + stage);
@@ -1811,6 +1826,11 @@ void GaussMix::train()
     // Restore original input and target sizes if necessary.
     if (need_restore_sizes)
         setInputTargetSizes(n_input_, n_target_);
+
+    for (int i = 0; i < save_center.length(); i++) {
+        VMat vm(save_center[i]);
+        vm->saveAMAT("save_center_" + tostring(i) + ".amat");
+    }
 
     /*
 
