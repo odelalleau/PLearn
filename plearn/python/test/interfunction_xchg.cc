@@ -58,6 +58,9 @@ string python_code =
 "def get_value():\n"
 "    global buf\n"
 "    return buf\n"
+"\n"
+"def print_global_map():\n"
+"    print 'Printing some_global_map within Python:', some_global_map\n"
 ;
 
 
@@ -100,16 +103,35 @@ int main()
         cout << "Caught unknown exception..." << endl;
     }
 
-    map<string,long> mapsd;
-    string str_mapsd = "{ Oui:16 il:32 est:64 juste:128 et:256 bon:512 }";
-    PStream is_mapsd = openString(str_mapsd, PStream::plearn_ascii);
-    is_mapsd >> mapsd;
 
-    python_other->setGlobalObject("some_global_map", PythonObjectWrapper(mapsd));
-    cout << "Associated 'some_global_map' with: " << tostring(mapsd) << endl;
-    cout << "Read back from Python environment: "
-         << tostring(python_other->getGlobalObject("some_global_map").as< map<string,long> >())
-         << endl;
+    try {
+        map<string,long> mapsd;
+        string str_mapsd = "{ Oui:16 il:32 est:64 juste:128 et:256 bon:512 }";
+        PStream is_mapsd = openString(str_mapsd, PStream::plearn_ascii);
+        is_mapsd >> mapsd;
+
+        python_other->setGlobalObject("some_global_map", PythonObjectWrapper(mapsd));
+        cout << "Associated 'some_global_map' with: " << tostring(mapsd) << endl;
+        cout << "Read back from Python environment: "
+             << tostring(python_other->getGlobalObject("some_global_map").as< map<string,long> >())
+             << endl;
+        python_other->invoke("print_global_map");
+
+        cout << "Dump of the 'python_other' compiled environment" << endl;
+    }
+    catch(const PLearnError& e)
+    {
+        cerr << "FATAL ERROR: " << e.message() << endl;
+        return 1;
+    }
+    catch (...) 
+    {
+        cerr << "FATAL ERROR: uncaught unknown exception "
+             << "(ex: out-of-memory when allocating a matrix)" << endl;
+        return 2;
+    }
+
+    return 0;
     
     return 0;
 }
