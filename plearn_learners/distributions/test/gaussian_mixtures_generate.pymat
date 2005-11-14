@@ -4,7 +4,7 @@
 from numarray        import array
 from plearn.pyplearn import pl
 
-def spherical():
+def spherical(n_input):
     return pl.GaussMix(
             L = 4,
             type = "spherical",
@@ -13,8 +13,9 @@ def spherical():
             sigma = [ 0.3, 1, 0.5, 2 ],
             center = array([ [ 10, 0, 0 ], [ 10, 10, 10 ], [ 0, 10, 0 ], [ 0, 0, 0 ] ]),
             outputs_def = "l",
-            n_input = 0,
-            n_target = 3,
+            n_input = n_input,
+            n_target = 3 - n_input,
+            input_part = [ 0 ],
             seed = 123456,
             stage = 1,
             inputsize = 3,
@@ -44,5 +45,11 @@ def generate_vmat(mixture, n_samples):
     return pl.ConcatRowsVMatrix( array = [ generated_data, expectation ] )
 
 def main():
-    return generate_vmat(spherical(), 20)
+    return pl.ConcatRowsVMatrix(
+            fill_missing = 1,
+            array = [
+                generate_vmat(spherical(0), 20),
+                generate_vmat(spherical(1), 20)
+            ]
+           )
 
