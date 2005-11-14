@@ -215,6 +215,7 @@
 /***********
  * VMatrix *
  ***********/
+#include <plearn/vmat/AddMissingVMatrix.h>
 #include <plearn/vmat/AsciiVMatrix.h>
 #include <plearn/vmat/AutoVMatrix.h>
 #include <plearn/vmat/BatchVMatrix.h>
