@@ -219,6 +219,13 @@ public:
                 PythonObjectWrapper (T::*)(const TVec<PythonObjectWrapper>&));
 
 
+    /**
+     *  Produces a dump of the Python compiled code object to stderr; for
+     *  debugging purposes.
+     */
+    void dumpPythonEnvironment();
+    
+
     //#####  PLearn::Object Standard Functions  ###############################
 
     // Declares other standard object methods
@@ -250,7 +257,7 @@ protected:
     //! Note that the pointer to StandaloneFunction must remain valid for the
     //! entire duration of the compiled code validity.
     void injectInternal(const char* python_name, StandaloneFunction* function_ptr);
-    
+
 protected:
     //! Compiled Python code module and global environment
     PythonObjectWrapper m_compiled_code;

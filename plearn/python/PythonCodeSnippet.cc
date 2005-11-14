@@ -258,10 +258,10 @@ void PythonCodeSnippet::injectInternal(const char* python_name,
     
     // Create a Python Function Object
     PyMethodDef* py_method = m_python_methods.allocate();
-    py_method->ml_name  = NULL;
+    py_method->ml_name  = const_cast<char*>(python_name);
     py_method->ml_meth  = pythonTrampoline;
     py_method->ml_flags = METH_VARARGS;
-    py_method->ml_doc   = NULL;
+    py_method->ml_doc   = "injected-function-from-PythonCodeSnippet";
     
     PyObject* py_funcobj = PyCFunction_NewEx(py_method,
                                              self /* info for trampoline */,
@@ -353,6 +353,13 @@ void PythonCodeSnippet::handlePythonErrors() const
 }
 
 
+void PythonCodeSnippet::dumpPythonEnvironment()
+{
+    PyObject_Print(m_compiled_code.getPyObject(), stderr, 0);
+}
+
+
+    
 } // end of namespace PLearn
 
 
