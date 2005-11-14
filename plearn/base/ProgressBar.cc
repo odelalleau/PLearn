@@ -104,6 +104,10 @@ void ProgressBar::close()
     plugin->killProgressBar(this);
 }              
 
+
+int TextProgressBarPlugin::width = 100;
+
+
 TextProgressBarPlugin::TextProgressBarPlugin(ostream& _out)
     :out(&_out)
 {
@@ -122,7 +126,7 @@ void TextProgressBarPlugin::addProgressBar(ProgressBar * pb)
     {
 #endif
         string fulltitle = string(" ") + pb->title + " (" + tostring(pb->maxpos) + ") ";
-        out << "[" + center(fulltitle,100,'-') + "]\n[";
+        out << "[" + center(fulltitle,width,'-') + "]\n[";
         out.flush();
 #if USING_MPI
     }
@@ -140,13 +144,14 @@ void TextProgressBarPlugin::update(ProgressBar * pb,unsigned long newpos)
         {
             pb->currentpos=0;
             string fulltitle = string(" ") + pb->title + " (" + tostring(pb->maxpos) + ") ";
-            out << "\n[" + center(fulltitle,100,'-') + "]\n[";
+            out << "\n[" + center(fulltitle,width,'-') + "]\n[";
             out.flush();
         }
 
         if(!pb->maxpos || newpos>pb->maxpos)
             return;
-        int ndots = int(newpos / (double(pb->maxpos) / 100)) - int(pb->currentpos / (double(pb->maxpos) / 100));
+        int ndots = int(newpos / (double(pb->maxpos) / width)) -
+            int(pb->currentpos / (double(pb->maxpos) / width));
         if (ndots < 0)
             PLERROR("In TextProgressBarPlugin::update - Trying to plot an infinite number of dots");
         while(ndots--)

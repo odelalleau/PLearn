@@ -84,6 +84,9 @@ public:
 
     TextProgressBarPlugin(ostream& _out);
     TextProgressBarPlugin(PStream& _out);
+
+    //! Displayed width of the text progress bar.  Default=100
+    static int width;
 };
 
 
