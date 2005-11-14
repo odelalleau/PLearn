@@ -8,7 +8,7 @@ def main():
     l_L = [ 1, 5 ]
     l_type = [ "spherical" ]
     l_kmeans_iterations = [ 5 ]
-    l_n_input = [ 0 ]
+    l_n_input = [ 0, 1 ]
     l_seed = [ 123456 ]
     l_nstages = [ 10 ]
 
