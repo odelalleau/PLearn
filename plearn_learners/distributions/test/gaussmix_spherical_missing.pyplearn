@@ -52,9 +52,7 @@ def main():
                 report_stats = 0,
                 save_initial_tester = 0,
                 save_stat_collectors = 0,
-                # No need to save output: this is already tested in the
-                # 'PL_GaussMix_Spherical' test.
-                save_test_outputs = 0,
+                save_test_outputs = 1,
                 provide_learner_expdir = 0
             )
         )
