@@ -1,0 +1,67 @@
+# Test the 'spherical' type of Gaussian mixture with missing values.
+
+from plearn.pyplearn import pl
+
+def main():
+    distr = []    # Array containing the distribution objects.
+    # Values of options tested.
+    l_L = [ 1, 5 ]
+    l_type = [ "spherical" ]
+    l_kmeans_iterations = [ 5 ]
+    l_n_input = [ 0 ]
+    l_seed = [ 123456 ]
+    l_nstages = [ 10 ]
+
+    for L in l_L:
+        for type in l_type:
+            for kmeans_iterations in l_kmeans_iterations:
+                for n_input in l_n_input:
+                        for seed in l_seed:
+                            for nstages in l_nstages:
+                                distr.append(
+                                    pl.GaussMix(
+                                        L                 = L,
+                                        type              = type,
+                                        kmeans_iterations = kmeans_iterations,
+                                        n_input           = n_input,
+                                        seed              = seed,
+                                        nstages           = nstages
+                                    )
+                                )
+
+    ptesters = []
+    for gm in distr:
+        # Create a PTester object for each mixture to train.
+        dataset = pl.LocallyPrecomputedVMatrix(
+                local_dir = ".",
+                sequential_access = False,
+                source = pl.AddMissingVMatrix(
+                    missing_prop = 0.5,
+                    seed = 123456,
+                    source = pl.AutoVMatrix(specification = "PLEARNDIR:plearn_learners/regressors/test/LinearRegressor/data.amat")
+                )
+        )
+
+        ptesters.append(
+            pl.PTester(
+                expdir = "expdir_gaussmix_spherical_L=%s_type=%s_kmeans_iterations=%s_n_input=%s_seed=%s_nstages=%s" \
+                        % ( gm.L, gm.type, gm.kmeans_iterations, gm.n_input, gm.seed, gm.nstages ),
+                dataset = dataset,
+                splitter = pl.TrainTestSplitter( test_fraction = 0.25 ),
+                learner = gm,
+                report_stats = 0,
+                save_initial_tester = 0,
+                save_stat_collectors = 0,
+                # No need to save output: this is already tested in the
+                # 'PL_GaussMix_Spherical' test.
+                save_test_outputs = 0,
+                provide_learner_expdir = 0
+            )
+        )
+
+    return \
+        pl.RunObject(
+            objects     = ptesters,
+            run_objects = True
+        )
+
