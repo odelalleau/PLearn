@@ -40,6 +40,7 @@
 /*! \file GaussMix.cc */
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include "GaussMix.h"
+//#include <plearn/ker/DistanceKernel.h>
 #include <plearn/math/pl_erf.h>   //!< For gauss_log_density_stddev().
 #include <plearn/math/plapack.h>
 #include <plearn/math/random.h>
@@ -887,6 +888,7 @@ bool GaussMix::computeMixtureWeights() {
 /////////////////
 void GaussMix::expectation(Vec& mu) const
 {
+    mu.resize(n_target);
     if (type_id == TYPE_SPHERICAL || type_id == TYPE_DIAGONAL ||
        (type_id == TYPE_GENERAL && n_input == 0)) {
         // The expectation is the same in the 'spherical' and 'diagonal' cases.
@@ -1130,26 +1132,42 @@ void GaussMix::kmeans(const VMat& samples, int nclust, TVec<int>& clust_idx,
             if (is_missing(stddev_training[i]))
                 stddev_training[i] = 1;
 
-    // build a nclust-long vector of samples indexes to initialize clusters centers
+    // Build a nclust-long vector of samples indexes to initialize cluster
+    // centers. In order to avoid some local minima, try to span as much of the
+    // space as possible by systematically choosing as initial cluster center
+    // the point 'farthest' from current centers.
     TVec<int> start_idx(nclust, -1);
-    int val;
-    for(int i=0;i<nclust;i++)
+
+    // Store the distance from each point to the 'nclust' cluster centers.
+    Mat distances(vmat_length, nclust);
+    // DistanceKernel dk;
+    Vec min_distances(vmat_length);
+    // dk.setDataForKernelMatrix(samples);
+    int farthest_sample = random->uniform_multinomial_sample(vmat_length);
+    Vec input_k;
+    for (int i=0; i<nclust; i++)
     {
-        bool ok = false;
-        while(!ok)
-        {
-            ok = true;
-            val = random->uniform_multinomial_sample(vmat_length);
-            for(int j=0;j<nclust && start_idx[j] != -1;j++)
-                if(start_idx[j]==val)
-                {
-                    ok = false;
-                    break;
-                }
+        start_idx[i] = farthest_sample;
+        samples->getExample(farthest_sample,input,target,weight);    
+        clust(i) << input;
+        if (i < nclust - 1) {
+            // Find next cluster center.
+            for (int k = 0; k < vmat_length; k++) {
+                samples->getExample(k, input_k, target, weight);
+                real dist = 0;
+                int count = 0;
+                for (int j = 0; j < input_k.length(); j++)
+                    if (!is_missing(input_k[j]) && !is_missing(input[j])) {
+                        dist += fabs(input_k[j] - input[j]);
+                        count++;
+                    }
+                if (count > 0)
+                    dist /= real(count);
+                distances(k, i) = dist;
+                min_distances[k] = min(distances(k).subVec(0, i + 1));
+            }
+            farthest_sample = argmax(min_distances);
         }
-        start_idx[i]=val;
-        samples->getExample(val,input,target,weight);    
-        clust(i)<<input;
     }
 
     // Ensure there are no missing values in the initialized centers.

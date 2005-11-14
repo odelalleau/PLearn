@@ -1,0 +1,35 @@
+# Generate data from Gaussian mixtures.
+
+from numarray        import array
+from plearn.pyplearn import pl
+
+def spherical():
+    return pl.GaussMix(
+            L = 4,
+            type = "spherical",
+            kmeans_iterations = 5,
+            alpha = [ 0.1, 0.3, 0.2, 0.4 ],
+            sigma = [ 0.3, 1, 0.5, 2 ],
+            center = array([ [ 10, 0, 0 ], [ 10, 10, 10 ], [ 0, 10, 0 ], [ 0, 0, 0 ] ]),
+            outputs_def = "l",
+            n_input = 0,
+            n_target = 3,
+            seed = 123456,
+            stage = 1,
+            inputsize = 3,
+            targetsize = 0,
+            weightsize = 0,
+            report_progress = 1,
+            verbosity = 1
+    )
+
+def generate_vmat(mixture, n_samples):
+    return pl.VMatrixFromDistribution(
+            distr = mixture,
+            mode = "sample",
+            generator_seed = 123456,
+            nsamples = n_samples)
+
+def main():
+    return generate_vmat(spherical(), 20)
+
