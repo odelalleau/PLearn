@@ -5,7 +5,7 @@ from plearn.pyplearn import pl
 def main():
     distr = []    # Array containing the distribution objects.
     # Values of options tested.
-    l_L = [ 5 ]
+    l_L = [ 1, 5 ]
     l_type = [ "spherical" ]
     l_kmeans_iterations = [ 5 ]
     l_n_input = [ 0 ]
