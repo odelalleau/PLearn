@@ -1,4 +1,5 @@
 # Generate data from Gaussian mixtures.
+# Also test the 'expecation' method.
 
 from numarray        import array
 from plearn.pyplearn import pl
@@ -24,11 +25,23 @@ def spherical():
     )
 
 def generate_vmat(mixture, n_samples):
-    return pl.VMatrixFromDistribution(
+
+    generated_data = pl.VMatrixFromDistribution(
             distr = mixture,
             mode = "sample",
             generator_seed = 123456,
             nsamples = n_samples)
+
+    mixture.outputs_def = "e"
+    expectation = pl.PLearnerOutputVMatrix(
+            data = pl.MemoryVMatrix(
+                data = array([ [ 0, 0, 0] ]),
+                inputsize = 3,
+                targetsize = 0,
+                weightsize = 0),
+            learners = [ mixture ]
+            )
+    return pl.ConcatRowsVMatrix( array = [ generated_data, expectation ] )
 
 def main():
     return generate_vmat(spherical(), 20)
