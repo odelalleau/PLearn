@@ -209,6 +209,9 @@ void GaussMix::declareOptions(OptionList& ol)
         "Number of dimensions in input space.");
     // TODO Doc: Including input & target.
 
+    // TODO Do we really need to save this?
+    declareOption(ol, "center_y_x", &GaussMix::center_y_x, OptionBase::learntoption,
+        "The expectation E[Y | x] for each Gaussian.");
  
     /*
 
@@ -219,9 +222,6 @@ void GaussMix::declareOptions(OptionList& ol)
     declareOption(ol, "log_p_x_j_alphaj", &GaussMix::log_p_x_j_alphaj,
                                           OptionBase::learntoption,
         "The logarithm of p(x|j) * alpha_j, where x is the input part.");
-
-    declareOption(ol, "mu_y_x", &GaussMix::mu, OptionBase::learntoption,
-        "The expectation E[Y | x] for each Gaussian.");
 
     declareOption(ol, "n_tries", &GaussMix::n_tries, OptionBase::learntoption,
         "Element i is the number of iterations needed to complete\n"
@@ -293,6 +293,11 @@ void GaussMix::build_()
 
     // TODO Doc.
     resizeDataBeforeUsing();
+
+    // TODO Explain why.
+    // TODO 'log_coeff' does not need to be declared as an option, does it?
+    if (stage > 0)
+        precomputeAllGaussianLogCoefficients();
 
     // TODO Explain why.
     GaussMix::setInputTargetSizes(n_input_, n_target_, false);
@@ -627,7 +632,8 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const
                 y_centered.resize(n_input);
             } else {
                 log_likelihood = log_coeff_y_x[j];
-                mu = center(j).subVec(n_input, n_target);
+                //mu = center(j).subVec(n_input, n_target); // TODO WRONG!
+                mu = center_y_x(j);
                 eigenvals = eigenvalues_y_x(j);
                 eigenvecs = eigenvectors_y_x[j];
                 y_centered.resize(n_target);
@@ -1004,7 +1010,8 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
             Mat eigenvecs = eigenvectors[j].subMat(0, 0, n_eigen_computed,
                                                          n_target);
             int n_eig = n_eigen_computed;
-            Vec mu_y = center(j);
+            //Vec mu_y = center(j); // WRONG!
+            Vec mu_y = center_y_x(j);
 
             norm_vec.resize(n_eig - 1);
             random->fill_random_normal(norm_vec);
@@ -1431,10 +1438,12 @@ void GaussMix::resizeDataBeforeUsing()
 {
     eigenvectors_x.resize(0);
     eigenvectors_y_x.resize(0);
+    log_coeff.resize(0);
     log_coeff_x.resize(0);
     log_coeff_y_x.resize(0);
     y_x_mat.resize(0);
 
+    center_y_x.resize(0, 0);
     eigenvalues_x.resize(0, 0);
     eigenvalues_y_x.resize(0, 0);
 
@@ -1450,8 +1459,13 @@ void GaussMix::resizeDataBeforeUsing()
         log_coeff_y_x.resize(L);
         y_x_mat.resize(L);
 
-        eigenvalues_x.resize(L, n_input);
-        eigenvalues_y_x.resize(L, n_target);
+        if (n_input >= 0)
+            eigenvalues_x.resize(L, n_input);
+        if (n_target >= 0) {
+            center_y_x.resize(L, n_target);
+            eigenvalues_y_x.resize(L, n_target);
+        }
+        log_coeff.resize(L);
     }
 }
 
@@ -1468,7 +1482,6 @@ void GaussMix::resizeDataBeforeTraining() {
 
     alpha.resize(L);
     eigenvectors.resize(0);
-    log_coeff.resize(0);
     mean_training.resize(0);
     sigma.resize(0);
     stddev_training.resize(0);
@@ -1497,7 +1510,6 @@ void GaussMix::resizeDataBeforeTraining() {
         eigenvectors.resize(L);
         for (int i = 0; i < eigenvectors.length(); i++)
             eigenvectors[i].resize(n_eigen_computed, D);
-        log_coeff.resize(L);
     }
 
     /*
@@ -1529,6 +1541,7 @@ void GaussMix::resizeDataBeforeTraining() {
 //////////////
 void GaussMix::setInput(const Vec& input, bool call_parent) const {
     static Vec log_p_x_j_alphaj;
+    static Vec x_minus_mu_x; // Used to store 'x - mu_x'.
 
     if (call_parent)
         inherited::setInput(input);
@@ -1551,7 +1564,24 @@ void GaussMix::setInput(const Vec& input, bool call_parent) const {
 
 //    assert( type_id != TYPE_GENERAL || n_input == 0 );
     // TODO See what to do with general type.
+    // TODO Check ::expectation with n_input > 0
 
+    if (type_id == TYPE_GENERAL) {
+        // We need to compute E[Y|x,j].
+        x_minus_mu_x.resize(n_input);
+        Vec mu_target;
+        for (int j = 0; j < L; j++) {
+            x_minus_mu_x << input_part;
+            x_minus_mu_x -= center(j).subVec(0, n_input);
+            mu_target = center_y_x(j);
+            if (n_input > 0)
+                product(mu_target, y_x_mat[j], x_minus_mu_x);
+            else
+                mu_target.fill(0);
+            mu_target += center(j).subVec(n_input, n_target);
+        }
+    }
+ 
     log_p_x_j_alphaj.resize(L);
     for (int j = 0; j < L; j++)
         log_p_x_j_alphaj[j] = computeLogLikelihood(input_part, j, true)
@@ -1703,23 +1733,25 @@ bool GaussMix::setInputTargetSizes(int n_i, int n_t,
             // And its inverse (we'll need it for the covariance of y|x).
             inv_cov_x.resize(n_input, n_input);
             inv_cov_x.fill(0);
-            // I am not sure about this assert, but since we extract the
-            // covariance of x from a matrix whose eigenvalues are all more
-            // than 'var_min', it looks like the eigenvalues of the covariance
-            // of x should also be more than 'var_min'. If I am wrong, remove
-            // the assert and see if it is needed to potentially set lambda0 to
-            // var_min.
-            assert( eigenvals[n_input - 1] >= var_min );
-            lambda0 = eigenvals[n_input - 1];
-            real one_over_lambda0 = 1 / lambda0;
-            Mat& eigenvectors_x_j = eigenvectors_x[j];
-            // TODO Are the formula below correct?
-            for (int k = 0; k < n_input - 1; k++)
-                externalProductScaleAcc(
+            if (n_input > 0) {
+                // I am not sure about this assert, but since we extract the
+                // covariance of x from a matrix whose eigenvalues are all more
+                // than 'var_min', it looks like the eigenvalues of the
+                // covariance of x should also be more than 'var_min'. If I am
+                // wrong, remove the assert and see if it is needed to
+                // potentially set lambda0 to var_min.
+                assert( eigenvals[n_input - 1] >= var_min );
+                lambda0 = eigenvals[n_input - 1];
+                real one_over_lambda0 = 1 / lambda0;
+                Mat& eigenvectors_x_j = eigenvectors_x[j];
+                // TODO Are the formula below correct?
+                for (int k = 0; k < n_input - 1; k++)
+                    externalProductScaleAcc(
                         inv_cov_x, eigenvectors_x_j(k), eigenvectors_x_j(k),
                         1 / max(var_min, eigenvals[k]) - one_over_lambda0);
-            for (int i = 0; i < n_input; i++)
-                inv_cov_x(i,i) += one_over_lambda0;
+                for (int i = 0; i < n_input; i++)
+                    inv_cov_x(i,i) += one_over_lambda0;
+            }
 
             // Compute the covariance of y|x.
             // It is only needed when there is an input part, since otherwise
@@ -1732,11 +1764,13 @@ bool GaussMix::setInputTargetSizes(int n_i, int n_t,
             y_x_mat[j].resize(n_target, n_input);
             // TODO Keep this test?
 //            if (n_target > 0) {
+            if (n_input > 0) {
                 cross_cov = full_cov_j.subMat(n_input,0, n_target, n_input);
                 product(work_mat1, cross_cov, inv_cov_x);
                 productTranspose(work_mat2, work_mat1, cross_cov);
                 cov_y_x_j -= work_mat2;
                 y_x_mat[j] << work_mat1;
+            }
 //            }
             // Compute SVD of the covariance of y|x.
             eigenvectors_y_x[j].resize(n_target, n_target);

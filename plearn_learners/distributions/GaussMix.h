@@ -67,6 +67,8 @@ protected:
     // * protected options *
     // *********************
 
+    Mat center_y_x; // TODO DOcument
+
     int D;
     /*mutable*/ Mat diags;
     Mat eigenvalues;
