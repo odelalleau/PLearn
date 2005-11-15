@@ -1010,8 +1010,7 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
             Mat eigenvecs = eigenvectors[j].subMat(0, 0, n_eigen_computed,
                                                          n_target);
             int n_eig = n_eigen_computed;
-            //Vec mu_y = center(j); // WRONG!
-            Vec mu_y = center_y_x(j);
+            Vec mu_y = center(j);
 
             norm_vec.resize(n_eig - 1);
             random->fill_random_normal(norm_vec);
@@ -1027,6 +1026,7 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
             sample += norm_vec * sqrt(lambda0);
             sample += mu_y;
         } else {
+            Vec mu_y = center_y_x(j);
             assert( false ); // TODO Implement
         }
         /* Should work sooner or later...
