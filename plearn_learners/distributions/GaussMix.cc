@@ -1026,8 +1026,27 @@ void GaussMix::generateFromGaussian(Vec& sample, int given_gaussian) const {
             sample += norm_vec * sqrt(lambda0);
             sample += mu_y;
         } else {
+            // TODO Get rid of code duplication with above.
+
+            Vec eigenvals = eigenvalues_y_x(j);
+            Mat eigenvecs = eigenvectors_y_x[j];
+
+            int n_eig = n_target;
             Vec mu_y = center_y_x(j);
-            assert( false ); // TODO Implement
+
+            norm_vec.resize(n_eig - 1);
+            random->fill_random_normal(norm_vec);
+            real var_min = square(sigma_min);
+            real lambda0 = max(var_min, eigenvals[n_eig - 1]);
+            sample.fill(0);
+            for (int k = 0; k < n_eig - 1; k++)
+                // TODO See if can use more optimized function.
+                sample += sqrt(max(var_min, eigenvals[k]) - lambda0)
+                          * norm_vec[k] * eigenvecs(k);
+            norm_vec.resize(n_target);
+            random->fill_random_normal(norm_vec);
+            sample += norm_vec * sqrt(lambda0);
+            sample += mu_y;
         }
         /* Should work sooner or later...
            if (n_margin > 0)
