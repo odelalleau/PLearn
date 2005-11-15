@@ -4,6 +4,27 @@
 from numarray        import array
 from plearn.pyplearn import pl
 
+def diagonal(n_input):
+    return pl.GaussMix(
+            L = 4,
+            type = "diagonal",
+            kmeans_iterations = 5,
+            alpha = [ 0.1, 0.3, 0.2, 0.4 ],
+            diags = array([ [ 2, 1, 0.5 ], [ 0.3, 2, 1 ], [ 0.5, 0.3, 2 ], [ 1, 0.5, 0.3 ] ]),
+            center = array([ [ 10, 0, 0 ], [ 10, 10, 10 ], [ 0, 10, 0 ], [ 0, 0, 0 ] ]),
+            outputs_def = "l",
+            n_input = n_input,
+            n_target = 3 - n_input,
+            input_part = [ 0 ],
+            seed = 123456,
+            stage = 1,
+            inputsize = 3,
+            targetsize = 0,
+            weightsize = 0,
+            report_progress = 1,
+            verbosity = 1
+    )
+
 def spherical(n_input):
     return pl.GaussMix(
             L = 4,
@@ -49,7 +70,9 @@ def main():
             fill_missing = 1,
             array = [
                 generate_vmat(spherical(0), 20),
-                generate_vmat(spherical(1), 20)
+                generate_vmat(spherical(1), 20),
+                generate_vmat(diagonal(0), 20),
+                generate_vmat(diagonal(1), 20)
             ]
            )
 
