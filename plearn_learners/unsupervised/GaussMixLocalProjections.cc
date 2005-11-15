@@ -155,11 +155,17 @@ void GaussMixLocalProjections::computeOutput(const Vec& input, Vec& output) cons
     int index = 0;
     // Compute densities in order to be able to get posteriors.
     real log_density = gauss_mix->log_density(input);
-    Vec log_likelihood_dens = gauss_mix->getLogLikelihoodDens();
+    Vec log_likelihood_dens;
+    // log_likelihood_dens = gauss_mix->getLogLikelihoodDens();
+    PLERROR("In GaussMixLocalProjections::computeOutput - The line above must "
+            "be uncommented (will not work with the modified GaussMix)");
     for (int k = 0; k < gauss_mix->L; k++) {
         // Obtain the (right number of) eigenvectors.
         output[index] = 1.0;
-        eigen_vec = gauss_mix->getEigenvectors(k).subMatRows(0, size_k);
+        // eigen_vec = gauss_mix->getEigenvectors(k).subMatRows(0, size_k);
+        PLERROR("In GaussMixLocalProjections::computeOutput - The line above "
+                "must be uncommented (will not work with the modified "
+                "GaussMix)");
         // Compute local coordinates.
         product(output.subVec(index+1, size_k), eigen_vec, input);
         // Scale by the responsibility.
