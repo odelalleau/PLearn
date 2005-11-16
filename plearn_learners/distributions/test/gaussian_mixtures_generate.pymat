@@ -25,6 +25,34 @@ def diagonal(n_input):
             verbosity = 1
     )
 
+def general(n_input):
+    return pl.GaussMix(
+            L = 4,
+            type = "general",
+            kmeans_iterations = 5,
+            alpha = [ 0.1, 0.3, 0.2, 0.4 ],
+            eigenvalues = array( [ [ 5.6266, 0.2229, 0.1294 ], [ 3.9589, 1.0099, 0.2522 ],
+                                   [ 4.7447, 2.4120, 0.1737 ], [ 8.3573, 2.6007, 0.1924 ] ] ),
+            eigenvectors = [ array( [ [ -0.3359, 0.6577, -0.6742 ], [ -0.8944, 0.0016, 0.4473 ], [ 0.2953,  0.7532, 0.5877 ] ] ),
+                             array( [ [ -1, 0, 0                 ], [ 0, 1, 0                 ], [ 0, 0, 1                 ] ] ),
+                             array( [ [ -0.5846, -0.1119, 0.8036 ], [ 0.4047, 0.8182, 0.4083  ], [ -0.7032, 0.5639, -0.4330] ] ),
+                             array( [ [ 0.6159,  -0.6446, -0.4530], [ 0.6687, 0.1235,  0.7332 ], [ 0.4166, 0.7545, -0.5071 ] ] ) ],
+
+            center = array([ [ 5, 10, 5 ], [ -10, -10, 10 ], [ 10, 5, -10 ], [ 0, 0, 0 ] ]),
+
+            outputs_def = "l",
+            n_input = n_input,
+            n_target = 3 - n_input,
+            input_part = [ 0 ],
+            seed = 123456,
+            stage = 1,
+            inputsize = 3,
+            targetsize = 0,
+            weightsize = 0,
+            report_progress = 1,
+            verbosity = 1
+    )
+
 def spherical(n_input):
     return pl.GaussMix(
             L = 4,
@@ -72,7 +100,9 @@ def main():
                 generate_vmat(spherical(0), 20),
                 generate_vmat(spherical(1), 20),
                 generate_vmat(diagonal(0), 20),
-                generate_vmat(diagonal(1), 20)
+                generate_vmat(diagonal(1), 20),
+                generate_vmat(general(0), 20),
+                generate_vmat(general(1), 20)
             ]
            )
 
