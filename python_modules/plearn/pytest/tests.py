@@ -382,7 +382,6 @@ class Test(PyTestObject):
         ## Link 'physical' resources
         resources = []
         resources.extend(self.resources)
-        resources.append(self.program._path)
         Resources.link_resources(self.directory(), resources, test_results)
 
         ## What remains of this method is used to make the following
@@ -422,7 +421,7 @@ class Test(PyTestObject):
 
         @param test_results: B{Must} be the value returned by I{linkResources}.
         """
-        Resources.unlink_resources( test_results )
+        Resources.unlink_resources( self.resources, test_results )
         ppath.remove_binding(self.metaprotocol())
         os.environ[ 'PLEARN_DATE_TIME' ] = 'YES'
         vprint("Resources unlinked.", 2)
@@ -494,9 +493,15 @@ class ResultsRelatedRoutine(Routine):
 
         test_results  = self.test.linkResources(results)
 
-        run_command   = ( "./%s %s >& %s"
-                          % ( self.test.program.getName(), self.test.arguments, self.run_log )
-                          )        
+        #run_command   = ( "./%s %s >& %s"
+        #                  % ( self.test.program.getName(), self.test.arguments, self.run_log )
+        #                  )        
+        run_command   = ( "%s %s >& %s" \
+                         % ( os.path.join(os.path.dirname(self.test.program.get_path()),
+                                          self.test.program.getName()),
+                             self.test.arguments, self.run_log )
+                        )
+
 
         ## Run the test from inside the test_results directory and return
         ## to the cwd
@@ -508,7 +513,6 @@ class ResultsRelatedRoutine(Routine):
 
         ## Set the status and quit
         self.status_hook()
-        self.test.unlinkResources(test_results)
 
     def status_hook(self):
         """Overriden by subclasses to set the test's status."""
