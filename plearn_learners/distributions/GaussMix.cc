@@ -291,11 +291,25 @@ void GaussMix::build_()
     } else
         PLERROR("In GaussMix::build_ - Type '%s' is unknown", type.c_str());
 
+    // TODO Explain why.
+    // TODO 'log_coeff' does not need to be declared as an option, does it?
+    if (stage > 0) {
+        assert( D == -1 || D == center.width() );
+        // TODO Explain
+        if (D == -1)
+            D = center.width();
+        assert( n_eigen_computed == -1 ||
+                n_eigen_computed == eigenvalues.width() );
+        if (n_eigen_computed == -1)
+            n_eigen_computed = eigenvalues.width();
+        assert( n_eigen == -1 || n_eigen_computed <= n_eigen + 1 );
+        assert( n_eigen_computed <= D );
+    }
+
     // TODO Doc.
     resizeDataBeforeUsing();
 
     // TODO Explain why.
-    // TODO 'log_coeff' does not need to be declared as an option, does it?
     if (stage > 0)
         precomputeAllGaussianLogCoefficients();
 
@@ -897,7 +911,7 @@ void GaussMix::expectation(Vec& mu) const
     if (type_id == TYPE_SPHERICAL || type_id == TYPE_DIAGONAL ||
        (type_id == TYPE_GENERAL && n_input == 0)) {
         // The expectation is the same in the 'spherical' and 'diagonal' cases.
-        mu.clear();
+        mu.fill(0);
         real* coeff = n_input == 0 ? alpha.data() : p_j_x.data();
         for (int j = 0; j < L; j++)
             mu += center(j).subVec(n_input, n_target) * coeff[j];
@@ -905,7 +919,9 @@ void GaussMix::expectation(Vec& mu) const
         assert( type_id == TYPE_GENERAL );
         // The case 'n_input == 0' is considered above.
         assert( n_input > 0 );
-        assert( false ); // TODO See where to take mu_y_x.
+        mu.fill(0);
+        for (int j = 0; j < L; j++)
+            mu += center_y_x(j) * p_j_x[j];
     }
  
     /*
@@ -946,6 +962,8 @@ void GaussMix::forget()
     inherited::forget();
     log_p_j_x.resize(0);
     p_j_x.resize(0);
+    D = -1;
+    n_eigen_computed = -1;
     /*
     stage = 0;
     */
