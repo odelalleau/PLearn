@@ -173,6 +173,7 @@
 // PDistribution
 #include <plearn_learners/distributions/ConditionalDensityNet.h>
 #include <plearn_learners/distributions/GaussianDistribution.h>
+#include <plearn_learners/distributions/GaussMix.h>
 #include <plearn_learners/distributions/ManifoldParzen2.h>
 #include <plearn_learners/distributions/ParzenWindow.h>
 #include <plearn_learners/distributions/SpiralDistribution.h>
